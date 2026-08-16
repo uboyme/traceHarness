@@ -5,28 +5,69 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import threading
 from collections import defaultdict
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
+from typing import TypeVar
 from urllib.parse import quote, unquote
 
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.session.event_store import ConcurrencyConflict, Durability
+from traceh.session.file_lock import FileLockCancelled, exclusive_file_lock
 
-try:  # pragma: no cover - Windows fallback is intentionally simple
-    import fcntl
-except ImportError:  # pragma: no cover
-    fcntl = None  # type: ignore[assignment]
+_T = TypeVar("_T")
 
 
 class CorruptEventStream(RuntimeError):
     pass
 
 
+@dataclass(frozen=True)
+class _StreamLockSignals:
+    """Cross-thread signals for one locked store operation.
+
+    ``waiting`` is set by the worker thread when it starts trying to take the
+    OS lock, ``cancel`` asks that worker to abandon the wait, and ``finished``
+    is set once the worker has fully converged. ``_run_locked()`` guarantees
+    ``finished`` is set before ``CancelledError`` reaches the caller, which is
+    what makes "no detached background work" observable rather than assumed.
+    """
+
+    waiting: threading.Event = field(default_factory=threading.Event)
+    cancel: threading.Event = field(default_factory=threading.Event)
+    finished: threading.Event = field(default_factory=threading.Event)
+
+
 class JsonlEventStore:
-    def __init__(self, root: Path, *, repair_partial_tail: bool = True) -> None:
+    """Append-only JSONL store guarded by a real cross-process stream lock.
+
+    Every critical section (head lookup, partial-tail repair, ``expected_seq``
+    check, append and flush) runs while holding an exclusive OS lock on the
+    stream's ``.lock`` file, so independent processes serialize instead of
+    racing. The in-process ``asyncio.Lock`` remains as a cheap fast path for
+    tasks inside one interpreter.
+
+    The blocking work runs on a worker thread, so cancellation is handled
+    explicitly by ``_run_locked()``: cancelling ``append``/``read``/``head``
+    never leaves a detached thread waiting for the lock or writing to the
+    stream.
+    """
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        repair_partial_tail: bool = True,
+        lock_timeout: float | None = None,
+    ) -> None:
         self.root = root.resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self.repair_partial_tail = repair_partial_tail
+        self.lock_timeout = lock_timeout
         self._locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     def _path(self, stream_id: str) -> Path:
@@ -86,17 +127,15 @@ class JsonlEventStore:
                 )
             return event.seq
 
-    def _head_locked_sync(self, stream_id: str) -> int:
-        lock_path = self._lock_path(stream_id)
-        lock_path.touch(exist_ok=True)
-        with lock_path.open("rb") as lock_handle:
-            if fcntl is not None:
-                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-            try:
-                return self._head_unlocked(stream_id)
-            finally:
-                if fcntl is not None:
-                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+    def _stream_lock(
+        self, stream_id: str, signals: _StreamLockSignals
+    ) -> AbstractContextManager[None]:
+        return exclusive_file_lock(
+            self._lock_path(stream_id),
+            timeout=self.lock_timeout,
+            cancel_event=signals.cancel,
+            waiting_event=signals.waiting,
+        )
 
     def _read_unlocked(self, stream_id: str) -> tuple[EventEnvelope, ...]:
         path = self._path(stream_id)
@@ -141,58 +180,112 @@ class JsonlEventStore:
                 last_good_offset = handle.tell()
         return tuple(events)
 
-    def _read_locked_sync(self, stream_id: str) -> tuple[EventEnvelope, ...]:
-        lock_path = self._lock_path(stream_id)
-        lock_path.touch(exist_ok=True)
-        with lock_path.open("rb") as lock_handle:
-            if fcntl is not None:
-                # Exclusive because a partial-tail repair may truncate the stream.
-                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-            try:
-                return self._read_unlocked(stream_id)
-            finally:
-                if fcntl is not None:
-                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
-
-    def _append_sync(
+    def _append_unlocked(
         self,
         stream_id: str,
         expected_seq: int,
         pending_events: tuple[PendingEvent, ...],
         durability: Durability,
     ) -> tuple[EventEnvelope, ...]:
-        lock_path = self._lock_path(stream_id)
-        lock_path.touch(exist_ok=True)
-        with lock_path.open("rb") as lock_handle:
-            if fcntl is not None:
-                fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        current_seq = self._head_unlocked(stream_id)
+        if current_seq != expected_seq:
+            raise ConcurrencyConflict(
+                f"stream {stream_id!r} expected seq {expected_seq}, "
+                f"current seq is {current_seq}"
+            )
+        materialized = tuple(
+            EventEnvelope.materialize(stream_id, current_seq + index, event)
+            for index, event in enumerate(pending_events, start=1)
+        )
+        path = self._path(stream_id)
+        with path.open("ab") as output:
+            for event in materialized:
+                line = json.dumps(
+                    event.to_dict(),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                output.write(line + b"\n")
+            output.flush()
+            if durability is Durability.SYNC:
+                os.fsync(output.fileno())
+        return materialized
+
+    def _new_lock_signals(self) -> _StreamLockSignals:
+        return _StreamLockSignals()
+
+    def _call_locked(
+        self,
+        stream_id: str,
+        work: Callable[[], _T],
+        signals: _StreamLockSignals,
+    ) -> _T:
+        """Run ``work`` under the stream lock; executed on a worker thread."""
+
+        try:
+            with self._stream_lock(stream_id, signals):
+                if signals.cancel.is_set():
+                    # Cancelled while waiting; the critical section never began.
+                    raise FileLockCancelled(f"stream {stream_id!r} operation was cancelled")
+                return work()
+        finally:
+            # Runs after the lock has been released, so an observer that sees
+            # ``finished`` knows the stream is free and untouched from here on.
+            signals.finished.set()
+
+    @staticmethod
+    async def _await_worker_convergence(future: asyncio.Future[_T]) -> None:
+        """Wait for ``future``'s worker to finish, however often we are cancelled.
+
+        Cancelling again while the worker is still inside the critical section
+        must not release the caller early, so every additional
+        ``CancelledError`` is absorbed and the *same* future is awaited again.
+        The worker's own outcome (a value, ``FileLockCancelled``,
+        ``ConcurrencyConflict`` or anything else) is retrieved here so it can
+        never surface later as a never-retrieved future exception.
+        """
+
+        while not future.done():
             try:
-                current_seq = self._head_unlocked(stream_id)
-                if current_seq != expected_seq:
-                    raise ConcurrencyConflict(
-                        f"stream {stream_id!r} expected seq {expected_seq}, current seq is {current_seq}"
-                    )
-                materialized = tuple(
-                    EventEnvelope.materialize(stream_id, current_seq + index, event)
-                    for index, event in enumerate(pending_events, start=1)
-                )
-                path = self._path(stream_id)
-                with path.open("ab") as output:
-                    for event in materialized:
-                        line = json.dumps(
-                            event.to_dict(),
-                            ensure_ascii=False,
-                            sort_keys=True,
-                            separators=(",", ":"),
-                        ).encode("utf-8")
-                        output.write(line + b"\n")
-                    output.flush()
-                    if durability is Durability.SYNC:
-                        os.fsync(output.fileno())
-                return materialized
-            finally:
-                if fcntl is not None:
-                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+                await asyncio.shield(future)
+            except asyncio.CancelledError:
+                # Repeated cancellation: keep waiting for this worker.
+                continue
+            except BaseException:
+                # The worker itself failed; it has converged either way.
+                break
+        if future.done() and not future.cancelled():
+            future.exception()
+
+    async def _run_locked(self, stream_id: str, work: Callable[[], _T]) -> _T:
+        """Await ``work`` under the stream lock with real cancellation support.
+
+        A thread cannot be killed, so cancellation is cooperative in two stages:
+        the lock wait is abandoned through the cancel token, and the coroutine
+        then waits for the worker to converge before letting ``CancelledError``
+        reach the caller. No detached thread can therefore still be waiting for,
+        or writing to, the stream after ``append``/``read``/``head`` returns.
+        Convergence survives repeated cancellation - a second, third or tenth
+        ``cancel()`` cannot release the caller while the worker is still alive.
+
+        If cancellation arrives once the uninterruptible critical section is
+        already running, that section completes atomically: the caller still
+        sees ``CancelledError``, but the file has stopped changing before it
+        resumes.
+        """
+
+        signals = self._new_lock_signals()
+        loop = asyncio.get_running_loop()
+        future = loop.run_in_executor(None, self._call_locked, stream_id, work, signals)
+        try:
+            # Shielded so that cancelling this coroutine does not detach the
+            # worker; convergence is handled explicitly below.
+            return await asyncio.shield(future)
+        except asyncio.CancelledError as cancellation:
+            signals.cancel.set()
+            await self._await_worker_convergence(future)
+            raise cancellation
 
     async def append(
         self,
@@ -205,12 +298,11 @@ class JsonlEventStore:
         if not events:
             return ()
         async with self._locks[stream_id]:
-            return await asyncio.to_thread(
-                self._append_sync,
+            # The whole critical section - head lookup, partial-tail repair,
+            # expected_seq check, write and flush - runs under one exclusive lock.
+            return await self._run_locked(
                 stream_id,
-                expected_seq,
-                events,
-                durability,
+                partial(self._append_unlocked, stream_id, expected_seq, events, durability),
             )
 
     async def read(
@@ -220,12 +312,16 @@ class JsonlEventStore:
         from_seq: int = 1,
     ) -> tuple[EventEnvelope, ...]:
         async with self._locks[stream_id]:
-            events = await asyncio.to_thread(self._read_locked_sync, stream_id)
+            # Exclusive because a partial-tail repair may truncate the stream.
+            events = await self._run_locked(
+                stream_id, partial(self._read_unlocked, stream_id)
+            )
         return tuple(event for event in events if event.seq >= from_seq)
 
     async def head(self, stream_id: str) -> int:
         async with self._locks[stream_id]:
-            return await asyncio.to_thread(self._head_locked_sync, stream_id)
+            # Exclusive because the head lookup may repair a partial tail.
+            return await self._run_locked(stream_id, partial(self._head_unlocked, stream_id))
 
     async def list_streams(self, *, prefix: str | None = None) -> tuple[str, ...]:
         def scan() -> tuple[str, ...]:

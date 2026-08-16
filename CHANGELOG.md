@@ -9,6 +9,13 @@
 - Add `--env-file` and `TRACEH_*` configuration with explicit CLI/environment/file
   precedence.
 - Extend `traceh doctor` with non-secret provider and API-key-presence diagnostics.
+- Guard every `JsonlEventStore` critical section with a real cross-process file lock on
+  both POSIX (`fcntl`) and Windows (`msvcrt` byte-range locking), with an optional
+  `lock_timeout`, and cover it with independent-process tests plus a Windows CI job.
+- Make cancelling `JsonlEventStore.append`/`read`/`head` abandon the lock wait and
+  converge its worker thread before `CancelledError` reaches the caller, so a cancelled
+  operation can no longer write to the stream in the background. Convergence absorbs
+  repeated cancellation instead of treating it as an early exit.
 
 ## 0.3.0
 

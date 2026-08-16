@@ -20,3 +20,18 @@ jobs:
       - run: python -m compileall -q src
       - run: pytest
       - run: traceh doctor --data-dir /tmp/traceh-ci
+
+  # Minimal Windows coverage: the JSONL event store uses a different OS locking
+  # primitive there (msvcrt instead of fcntl), so the cross-process tests must
+  # run on a real Windows runner.
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m compileall -q src
+      - run: pytest
+      - run: traceh doctor --data-dir ${{ runner.temp }}/traceh-ci

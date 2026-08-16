@@ -36,7 +36,7 @@
 | Python 包 | `traceh` |
 | 当前版本 | `0.3.0` 维护线，另有 `.env` 支持等 Unreleased 改进 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
-| Python | `>=3.12`；CI 覆盖 3.12、3.13 |
+| Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | Python 标准库，无第三方运行时依赖 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
 | 当前 Agent 模型 | 单进程、单 Session 同时最多一个活跃 Turn |
@@ -45,7 +45,8 @@
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell` |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | 一次命令执行一个 Turn，不是交互式 TUI |
-| 当前自动化测试 | 31 项，通过后才允许更新本表 |
+| 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
+| 当前自动化测试 | 43 项，通过后才允许更新本表 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
 当前开发重点是把 v0.3 的可靠性、真实使用体验、可观察性和文档治理做扎实；v0.4+ 插件与多 Agent 仅保留协议边界，不视为已实现能力。
@@ -90,16 +91,16 @@ traceharness/
 │   ├── kernel/                       Scope、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
 │   ├── runtime/                      AgentRuntime、AgentLoop、请求、Continuation、Verifier
-│   ├── session/                      EventStore、投影、恢复、压缩和不变量
+│   ├── session/                      EventStore、跨进程文件锁、投影、恢复、压缩和不变量
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、执行与内置工具
-├── tests/                            单元、契约、恢复、取消、端到端和 Benchmark 测试
+├── tests/                            单元、契约、恢复、取消、跨进程、端到端和 Benchmark 测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
 ├── benchmarks/                       独立复制 Workspace 的评估案例
 ├── docs/
 │   ├── note/                         当前项目正式版与通俗版上下文
 │   ├── adr/                          已接受设计决定及原因
 │   └── *.md                          专题设计、协议、恢复、测试和演进说明
-├── .github/workflows/ci.yml          Python 3.12/3.13 编译、测试和 doctor
+├── .github/workflows/ci.yml          Ubuntu 3.12/3.13 与 Windows 3.12 编译、测试和 doctor
 ├── pyproject.toml                    包元数据、依赖、pytest 与 ruff 配置
 ├── README.md                         安装和使用入口
 ├── ROADMAP.md                        未来版本计划，不代表当前已实现
@@ -194,8 +195,8 @@ sequenceDiagram
 
 ### 5.3 并发与取消
 
-- `AgentRuntime` 用内存锁和 `_active` 表保证同一 Session 同时只有一个活跃 Turn；这是单进程保证。
-- `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。
+- `AgentRuntime` 用内存锁和 `_active` 表保证同一 Session 同时只有一个活跃 Turn；这是单进程保证。事件写入层（6.5）已有跨进程锁，但“同一 Session 只跑一个 Turn”仍未跨进程强制：两个进程同时 run 同一 Session 时，事件文件不会损坏，结果是事件交错或 `SessionService.append_event()` 抛出 `ConcurrencyConflict`，而不是被 Runtime 提前拒绝。
+- `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。`JsonlEventStore` 的取消语义见 6.6：被取消的 Store 操作不会留下仍在后台写入的线程。
 - `AgentLoop` 在取消/异常时追加 Attempt、Step、Turn 的终止或错误事件；ToolRuntime 尽量补齐未完成调用的 Tool Result。
 - `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn；Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
 
@@ -235,14 +236,58 @@ sequenceDiagram
 默认 `JsonlEventStore`：
 
 - 一个事件一行 JSON，文件名由 Stream ID URL 编码；
-- 每个 Stream 有进程内 `asyncio.Lock`；
-- Unix-like 平台有 `fcntl.flock` 文件锁；
+- 每个 Stream 有进程内 `asyncio.Lock`，作为同一事件循环内的快速路径；
+- 每个 Stream 有 `.lock` 文件上的操作系统级排他锁，跨进程有效（见 6.5）；
 - 写入可选 `SYNC` 或 `BATCHED` Durability；SYNC flush 后执行 `fsync`；
-- `head()` 从文件尾读取最后完整行，成本与末行大小相关；
+- `head()` 从文件尾读取最后完整行，成本与末行大小相关，不扫描完整文件；
 - 尾部半行可自动截断到最后完整事件；
 - 中间坏行、Stream ID 不符或序号不连续会报 `CorruptEventStream`。
 
-Windows 当前没有 `fcntl`，因此 `.lock` 文件会创建，但跨进程互斥没有等价 OS 锁；现有可靠保证主要是单进程内锁。这是 v0.3 需继续加固的事实边界。
+### 6.5 跨进程 Stream 锁
+
+[`session/file_lock.py`](../../src/traceh/session/file_lock.py) 提供 `exclusive_file_lock()` 上下文管理器，只使用标准库：
+
+| 平台 | 原语 | 语义 |
+|---|---|---|
+| POSIX | `fcntl.flock(fd, LOCK_EX)` | 无 timeout 且无取消令牌时在内核阻塞；否则用 `LOCK_NB` 轮询 |
+| Windows | `msvcrt.locking(fd, LK_NBLCK, 1)` | 锁定 `.lock` 文件偏移 0 起的 1 字节区间，轮询重试 |
+
+关键语义：
+
+- 锁定前显式 `lseek` 到偏移 0，因为 `msvcrt.locking` 从当前文件指针开始锁定；
+- 允许锁定文件尾之后的区间，因此空 `.lock` 文件（每个 Stream 首次创建时的状态）也能锁定，不需要预写字节；
+- 轮询从 1ms 退避到 25ms 上限；`JsonlEventStore(lock_timeout=...)` 为 `None` 时无限等待，为数值时超时抛 `FileLockTimeout`；
+- 只有真正表示“区间被占用”的错误码（POSIX `EWOULDBLOCK`/`EACCES`，Windows `EACCES`/`EDEADLOCK`）才重试，其他 `OSError` 直接上抛；
+- 正常、异常、`ConcurrencyConflict` 和取消路径都在 `finally` 中解锁并关闭描述符；解锁失败被吞掉，因为关闭描述符本身就会释放锁，不能掩盖临界区的原始异常；
+- 进程崩溃或被杀死时，操作系统关闭描述符即释放锁，`.lock` 文件残留不会造成永久死锁。
+
+`append()`、`read()`、`head()` 的完整临界区（读取 Stream Head、尾部半行检查与截断、`expected_seq` 校验、写入与 flush/fsync）都在同一把锁内完成，因此两个独立 Python 进程操作同一 Stream 时会排队，而不是同时读到相同 Head 后各写一条相同序号的事件。
+
+`expected_seq` 仍然是必需的：锁只保证临界区互斥，调用方通常先 `head()` 再 `append()`，两次调用之间的 Head 可能已被另一个进程推进，此时第二个写入者会得到明确的 `ConcurrencyConflict`，而不是静默覆盖。
+
+该锁是本机文件锁：跨网络文件系统（NFS、SMB）的行为取决于具体实现，不在当前保证范围内。
+
+### 6.6 EventStore 的取消语义
+
+阻塞的锁等待和文件 I/O 在 Worker 线程上执行，而线程无法被杀死。因此 `_run_locked()` 把取消实现为两段式协作，绝不允许出现“调用方已经收到 `CancelledError`，后台线程稍后拿到锁又继续写 Stream”的脱缰操作：
+
+| 取消发生的时刻 | 行为 | 调用方看到 |
+|---|---|---|
+| 仍在等待 OS 锁 | 置位取消令牌，等待被 `Event.wait()` 立即唤醒，抛 `FileLockCancelled`，Stream 未被触碰 | `CancelledError`，无任何写入 |
+| 已拿到锁但临界区尚未开始 | 进入临界区前重新检查取消令牌，直接放弃 | `CancelledError`，无任何写入 |
+| 临界区已在执行 | 该段不可中断，按原子完成语义跑完并 flush/fsync | `CancelledError`，但事件已完整落盘 |
+
+实现要点：
+
+- Worker 通过 `asyncio.shield()` 提交，取消协程不会把它变成脱缰线程；
+- 协程捕获 `CancelledError` 后先置位 `cancel`，再显式等待 Worker 收敛，然后才向调用方重新抛出；因此 `append()`/`read()`/`head()` 返回时文件已经不再变化；
+- 收敛由 `_await_worker_convergence()` 承担，它循环 `await asyncio.shield(future)` 直到 `future.done()`：**重复取消（第二次、第三次乃至更多次 `CancelledError`）被吸收后继续等待同一个 Worker**，不能被当作提前退出的出口；这里不使用 `suppress(BaseException)`；
+- Worker 自身的返回值、`FileLockCancelled`、`ConcurrencyConflict` 或其他异常在收敛结束时被显式取回，不会遗留"future exception was never retrieved"告警；
+- `signals.finished` 在锁释放之后置位，且必定早于 Future 完成，因此“调用方拿到 `CancelledError`”蕴含“锁已释放且 Worker 已收敛”；
+- `_StreamLockSignals` 的 `waiting`/`cancel`/`finished` 三个 `threading.Event` 让“线程确实开始等锁”和“线程确实已收敛”可被观测，而不是靠时序猜测；
+- 由于取消令牌的存在，POSIX 的无限等待从内核阻塞改为可中断轮询：等待仍然无限，但可被 asyncio 取消。
+
+第三行是**提交点边界（may-have-committed）**：取消恰好落在写入过程中时，调用方收到 `CancelledError`，事件却已经提交。这里没有任何自动重试机制，因此不应称为 at-least-once。调用方不能假设“收到取消 = 没有写入”；正确做法是重新读取 Stream，并按 `event_id`、correlation 或业务身份判断该操作是否已经落盘，而不是只看 Head 数值——Head 也可能是别的写入者推进的。
 
 ## 7. Composition、Surface 与可重建请求
 
@@ -509,9 +554,11 @@ python -m compileall -q src tests
 python -m pytest -q
 ```
 
-当前测试套件共 31 项，覆盖：
+当前测试套件共 43 项，覆盖：
 
 - EventStore expected-seq、尾部恢复和读取；
+- 跨进程 Stream 锁：两个独立 Python 进程并发追加、`expected_seq` 竞争、跨进程尾部半行修复、持锁期间阻塞、崩溃后可再取锁、异常路径解锁；
+- EventStore 取消语义：等锁期间取消 `append`/`head`/`read` 时 Worker 线程先收敛再抛 `CancelledError`、被取消的 append 绝不落盘、临界区内取消按原子完成收尾、连续多次取消也无法打断收敛；
 - Session/Surface/Compaction/Invariant；
 - AgentLoop 端到端工具循环和 Verification；
 - Tool Schema、Policy、Middleware、失败、超时和并发 Barrier；
@@ -523,19 +570,30 @@ python -m pytest -q
 - Inspector、Request Reconstruction 和 Benchmark；
 - 未来 Plugin/Agent/Workspace Protocol 可构造性。
 
+跨进程测试通过 `tests/cross_process_worker.py` 启动真实独立解释器，用握手文件而不是长 sleep 同步；它们在临界区内制造确定性重叠窗口，因此去掉 OS 锁后会稳定失败。该 Worker 文件不以 `test_` 开头，pytest 不会收集它。
+
 ### 15.2 CI
 
-GitHub Actions 在 push 和 pull request 上运行 Python 3.12、3.13 矩阵：可编辑安装、compileall、pytest、`traceh doctor`。
+GitHub Actions 在 push 和 pull request 上运行两个 Job：
+
+| Job | 平台 | Python | 步骤 |
+|---|---|---|---|
+| `test` | `ubuntu-latest` | 3.12、3.13 矩阵 | 可编辑安装、compileall、pytest、`traceh doctor` |
+| `test-windows` | `windows-latest` | 3.12 | 同上 |
+
+Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt` 而不是 `fcntl`，必须在真实 Windows Runner 上执行。
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能将当前测试增加到 31 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项，当前共 43 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
-| Windows 持久化 | 无 `fcntl`，缺少等价跨进程文件锁 | Windows 原生锁或明确单进程约束与测试 |
+| Stream 锁边界 | 已有 `fcntl`/`msvcrt` 跨进程锁，但只是同机 Advisory Lock：绕过 `JsonlEventStore` 直接写文件不受约束，网络文件系统行为未验证 | 需要更强隔离时改用 SQLite 或独立 Store |
+| Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
+| 取消的提交点边界 | 取消恰好落在写入过程中时，调用方收到 `CancelledError` 但事件已提交（6.6）；无自动重试，因此不是 at-least-once | 调用方重新读取 Stream，按 `event_id`/correlation/业务身份判断是否已落盘 |
 | Model Attempt 恢复 | 未闭合 Attempt 无专门恢复事件 | 补齐 Attempt 恢复语义和不变量 |
 | CLI 体验 | 非交互式，无审批、流式 UI、会话内连续输入 | 在不破坏 Runtime 边界下新增 Surface/UI 层 |
 | Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |

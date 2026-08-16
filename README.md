@@ -308,6 +308,8 @@ reporting.
 
 ## Design documents
 
+- [Current project context (formal, Chinese)](docs/note/project-context.md)
+- [Current project context (plain-language Chinese)](docs/note/project-context-plain-zh.md)
 - [Architecture](docs/architecture.md)
 - [Event protocol](docs/event-protocol.md)
 - [Recovery semantics](docs/recovery-semantics.md)

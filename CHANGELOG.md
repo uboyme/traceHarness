@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add shared `AGENTS.md` / `CLAUDE.md` development instructions and continuously
+  maintained formal/plain-language project context documents under `docs/note/`.
 - Load OpenAI-compatible provider settings and secrets from `.env` without adding a
   runtime dependency.
 - Add `--env-file` and `TRACEH_*` configuration with explicit CLI/environment/file

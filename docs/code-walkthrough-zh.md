@@ -454,10 +454,10 @@ while 还有步骤预算:
 
 ### 完善 v0.3 时应保持清醒的边界
 
-- CLI 仍是“一次输入、执行到底、打印结果”，不是交互式聊天 TUI；
+- `traceh chat` 已经能在一个 Session 里连续多轮对话，但它是行式提示符，不是流式 TUI：没有 token 流式输出、实时 Tool Call 时间线和执行前审批，Turn 运行期间也不能继续输入；
 - 事件写入已有 POSIX/Windows 跨进程文件锁，但“同一 Session 只跑一个 Turn”仍只在单进程内强制；
 - 未闭合 Model Attempt 现在会被恢复器按证据收敛，但恢复只能说明"是否有完整响应"，无法找回丢失的 token 用量；
-- CLI 的用户取消、危险操作审批体验仍较薄；
+- 危险操作的执行前审批仍然没有；`chat` 的 Ctrl+C 会把当前 Turn 收敛掉并退出，而不是留在提示符上继续聊。宿主最终显示的退出码不由程序决定：常规 Ctrl+C 时程序内部返回 130，硬中断（Ctrl+Break、关闭控制台）则绕过收敛代码由操作系统终止，这时靠崩溃恢复兜底；
 - Benchmark 数量少，尚不能代表复杂真实 Coding 任务质量；
 - OpenAI-Compatible Provider 目前不是完整流式、重试和 Fallback 实现。
 

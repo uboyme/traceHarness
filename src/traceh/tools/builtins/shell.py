@@ -7,14 +7,33 @@ from dataclasses import dataclass, field
 
 from traceh.api.json_types import JsonValue
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
-
+from traceh.tools.process_control import capture_output, converge_process
 
 _SENSITIVE_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "AUTH")
+
+# Windows loads Winsock, and therefore anything importing `asyncio`, relative to
+# SystemRoot. Without these a child dies with WinError 10106 before running a
+# single line, so a verifier command as ordinary as `python -m pytest` cannot
+# start. They describe the machine, not the user, and the sensitive-marker
+# filter below still applies.
+_WINDOWS_ESSENTIALS = frozenset(
+    {"SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "SYSTEMDRIVE", "PROCESSOR_ARCHITECTURE"}
+)
 
 
 def sanitized_environment() -> dict[str, str]:
     safe: dict[str, str] = {}
-    allowed_exact = {"PATH", "HOME", "USER", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "PYTHONPATH"}
+    allowed_exact = {
+        "PATH",
+        "HOME",
+        "USER",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+        "LANG",
+        "LC_ALL",
+        "PYTHONPATH",
+    } | _WINDOWS_ESSENTIALS
     for key, value in os.environ.items():
         upper = key.upper()
         if any(marker in upper for marker in _SENSITIVE_MARKERS):
@@ -22,6 +41,13 @@ def sanitized_environment() -> dict[str, str]:
         if key in allowed_exact or key.startswith("LC_"):
             safe[key] = value
     safe["TRACEH_CHILD_PROCESS"] = "1"
+    # Output is captured as bytes and decoded as UTF-8. A Windows Python child
+    # would otherwise encode its stdout with the system code page (CP936 on a
+    # Chinese install), and every non-ASCII character would arrive as U+FFFD.
+    # This settles the encoding for Python children only; a native tool still
+    # follows whatever the console code page says.
+    safe["PYTHONUTF8"] = "1"
+    safe["PYTHONIOENCODING"] = "utf-8"
     return safe
 
 
@@ -51,30 +77,30 @@ class ShellTool:
             raise ValueError("empty command")
         timeout = float(arguments.get("timeout", self.default_timeout))
         timeout = max(0.1, min(timeout, 300.0))
-        process = await asyncio.create_subprocess_exec(
-            *argv,
-            cwd=context.workspace,
-            env=sanitized_environment(),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        timed_out = False
-        try:
-            async with asyncio.timeout(timeout):
-                stdout_bytes, stderr_bytes = await process.communicate()
-        except TimeoutError:
-            timed_out = True
-            process.kill()
-            stdout_bytes, stderr_bytes = await process.communicate()
-        except asyncio.CancelledError:
-            process.terminate()
+        # The captured files are the one owner of this command's output, so
+        # whatever it flushed survives a timeout or a cancellation.
+        with capture_output() as capture:
+            process = await asyncio.create_subprocess_exec(
+                *argv,
+                cwd=context.workspace,
+                env=sanitized_environment(),
+                stdout=capture.stdout,
+                stderr=capture.stderr,
+            )
+            timed_out = False
             try:
-                async with asyncio.timeout(2.0):
+                async with asyncio.timeout(timeout):
                     await process.wait()
             except TimeoutError:
-                process.kill()
-                await process.wait()
-            raise
+                timed_out = True
+                # Converge first, then read: a cancellation arriving during the
+                # shutdown is absorbed and only re-raised once the child is gone.
+                if await converge_process(process):
+                    raise asyncio.CancelledError from None
+            except asyncio.CancelledError:
+                await converge_process(process)
+                raise
+            stdout_bytes, stderr_bytes = capture.read()
 
         stdout = stdout_bytes.decode("utf-8", errors="replace")
         stderr = stderr_bytes.decode("utf-8", errors="replace")

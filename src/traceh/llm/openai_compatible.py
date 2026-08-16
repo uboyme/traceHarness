@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage
+from traceh.concurrency import await_worker_convergence
 
 
 class ProviderHttpError(RuntimeError):
@@ -146,4 +147,20 @@ class OpenAICompatibleProvider:
         )
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
-        return await asyncio.to_thread(self._complete_sync, request)
+        """Run the blocking HTTP call on a worker thread.
+
+        Cancellation cannot abort a `urllib` request that is already in flight,
+        and a detached worker would keep the socket open and keep writing into
+        the runtime after the caller was told the turn had ended. So the worker
+        is shielded, waited for, and only then is the original cancellation
+        re-raised. In the worst case that wait lasts until `timeout_seconds`
+        expires: this is convergence, not an immediate abort of the request.
+        """
+
+        loop = asyncio.get_running_loop()
+        worker = loop.run_in_executor(None, self._complete_sync, request)
+        try:
+            return await asyncio.shield(worker)
+        except asyncio.CancelledError as cancellation:
+            await await_worker_convergence(worker)
+            raise cancellation

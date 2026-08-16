@@ -12,7 +12,10 @@ from dataclasses import asdict
 from pathlib import Path
 
 from traceh.api.llm import ModelResponse
+from traceh.cli.chat import INTERRUPTED_EXIT_CODE, chat_target, run_chat
+from traceh.cli.console import configure_stdio, default_console
 from traceh.cli.env_file import EnvFileError, EnvLoadReport, load_env_file
+from traceh.cli.errors import CliConfigurationError
 from traceh.evaluation.runner import BenchmarkRunner
 from traceh.inspector import SessionInspector
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
@@ -22,9 +25,7 @@ from traceh.runtime.request_builder import verify_request_snapshots
 
 _PROVIDERS = ("scripted", "openai-compatible")
 
-
-class CliConfigurationError(ValueError):
-    pass
+__all__ = ["CliConfigurationError", "build_parser", "main"]
 
 
 def _add_env_file_argument(parser: argparse.ArgumentParser) -> None:
@@ -108,10 +109,15 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
 def _provider_and_model(args: argparse.Namespace):
     if args.provider == "scripted":
         provider = (
+            # An explicit script is a fixture: running past its end is a real
+            # error and stays one.
             ScriptedLlmProvider.from_file(args.script)
             if args.script
+            # The built-in placeholder has no turn budget to run out of, so it
+            # repeats instead of failing the second turn of `traceh chat`.
             else ScriptedLlmProvider(
-                (ModelResponse(content="TraceHarness scripted runtime is ready."),)
+                (ModelResponse(content="TraceHarness scripted runtime is ready."),),
+                repeat_last=True,
             )
         )
         return provider, args.model or "scripted-model"
@@ -156,6 +162,18 @@ async def _run(args: argparse.Namespace) -> int:
         return 0 if result.reason == "completed" else 2
     finally:
         await runtime.dispose()
+
+
+async def _chat(args: argparse.Namespace) -> int:
+    workspace, session_id = chat_target(args.workspace, args.session_id)
+    configure_stdio()
+    runtime = _runtime(args)
+    return await run_chat(
+        runtime,
+        default_console(),
+        workspace=workspace,
+        session_id=session_id,
+    )
 
 
 async def _resume(args: argparse.Namespace) -> int:
@@ -272,6 +290,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_runtime_arguments(run)
     run.set_defaults(handler=_run)
 
+    chat = sub.add_parser("chat", help="Talk to the agent over several turns in one session")
+    chat.add_argument(
+        "workspace",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="Workspace for a new session; omit it when using --session-id",
+    )
+    chat.add_argument(
+        "--session-id",
+        default=None,
+        help="Continue an existing session; its workspace comes from the event log",
+    )
+    _add_runtime_arguments(chat)
+    chat.set_defaults(handler=_chat)
+
     resume = sub.add_parser("resume", help="Recover a session and continue in a new turn")
     resume.add_argument("session_id")
     resume.add_argument(
@@ -337,10 +371,16 @@ def main(argv: list[str] | None = None) -> None:
     except (CliConfigurationError, EnvFileError) as error:
         parser.error(str(error))
     handler = args.handler
-    if asyncio.iscoroutinefunction(handler):
-        code = asyncio.run(handler(args))
-    else:
-        code = handler(args)
+    try:
+        if asyncio.iscoroutinefunction(handler):
+            code = asyncio.run(handler(args))
+        else:
+            code = handler(args)
+    except (CliConfigurationError, EnvFileError) as error:
+        # Usage problems are reported as usage problems, never as a traceback.
+        parser.error(str(error))
+    except KeyboardInterrupt:
+        code = INTERRUPTED_EXIT_CODE
     raise SystemExit(code)
 
 

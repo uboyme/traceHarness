@@ -39,6 +39,67 @@ python -m traceh.cli.main doctor
 pytest
 ```
 
+## Chat over several turns
+
+`traceh chat` keeps one session open and reads turn after turn from the terminal:
+
+```powershell
+traceh chat .
+```
+
+It prints the session id, workspace, provider and model, then waits at a `you>` prompt.
+Every line you send becomes a new Turn in the same session, and the model history is
+projected from the event log rather than kept in memory, so `inspect` and `replay` show
+the whole conversation afterwards.
+
+Continue an earlier session by id; its workspace comes from the event log, so you do not
+repeat it:
+
+```powershell
+traceh chat --session-id <session-id>
+```
+
+Continuing first runs crash recovery. A short `recovered: ...` line appears only when
+something actually needed repair, and no turn is started until you type one — nothing is
+injected on your behalf.
+
+Internal commands, recognised only when they are the whole line:
+
+```text
+/help     show the commands
+/session  show session id, workspace, provider and model
+/exit     leave the chat
+/quit     leave the chat
+```
+
+Blank lines are ignored. `Ctrl+D` (or `Ctrl+Z` then Enter on Windows) behaves like
+`/exit`.
+
+What `Ctrl+C` does depends on the host shell, so no single exit code is promised. When the
+shell turns it into a Python `KeyboardInterrupt` - the usual case in a Linux/macOS terminal
+or in PowerShell - the running turn is converged through the normal cancellation path, the
+session id to resume with is printed, and the process returns 130 from inside Python; what
+the shell finally reports is still up to the shell. A hard break instead (Windows
+`Ctrl+Break`, closing the console window) is handled by the operating system: the process
+is terminated without running any of that, and Windows reports exit code `3221225786`.
+That is what the session id printed at startup is for - `traceh chat --session-id
+<session-id>` runs crash recovery first and closes whatever was left open.
+
+This is a plain line-based prompt, not a streaming TUI: output appears when a turn ends,
+there is no live tool timeline, no approval prompt, and no input while a turn runs.
+
+### Chinese and other non-ASCII text on Windows
+
+The chat command configures stdin, stdout and stderr as UTF-8 with `errors="replace"`, so
+`chcp 65001` is not required. A leading byte-order mark is stripped from input because it
+belongs to the stream rather than to the message: Windows PowerShell 5.1 writes one with
+`Out-File -Encoding utf8`, while PowerShell 7's `utf8` is BOM-less (`utf8BOM` opts back
+in).
+
+If a line still contains U+FFFD, its original characters were already lost while decoding.
+TraceHarness refuses that line, tells you so, and does not write a `user/message` or guess
+what you meant. Send the text as UTF-8 instead.
+
 ## Run the deterministic coding demo
 
 The demo starts with an incorrect `add()` implementation. Copy it before running,
@@ -141,6 +202,12 @@ PYTHONPATH=src python -m traceh.cli.main run ./your-project \
 The adapter uses `/chat/completions` and non-streaming HTTP in v0.3. The event protocol
 already separates Model Attempts, so streaming, retry and provider fallback can be
 added without changing Step semantics.
+
+Cancelling a turn cannot abort a `urllib` request that is already in flight. Rather than
+detaching the worker, the provider waits for it and only then re-raises the cancellation,
+so nothing keeps talking to the endpoint after the CLI says the turn ended. In the worst
+case that wait lasts until the provider timeout expires; it is convergence, not an
+immediate abort.
 
 ## Programmatic use
 
@@ -250,6 +317,12 @@ With `--verify-command`, a final model response is checked against the real work
 A failed verifier is fed back into the next Step, subject to the configured retry and
 Step budgets.
 
+Cancelling or timing out a verifier does not leave its command running: the child is
+terminated, then killed if needed, and the caller only resumes once it has actually
+exited. Child processes also run with `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`, so a
+Python child on Windows reports non-ASCII output as UTF-8 instead of the system code page.
+A native, non-Python tool still follows the console code page.
+
 ## Project layout
 
 ```text
@@ -268,6 +341,7 @@ tests                   contract, recovery, cancellation and E2E tests
 
 ```text
 traceh run
+traceh chat
 traceh resume
 traceh recover
 traceh inspect
@@ -286,6 +360,8 @@ Use `traceh <command> --help` for details.
   The kernel activation/scope primitives are present, but there is no third-party Plugin
   Manager yet.
 - There is one live Agent Runtime per process and no `AgentSupervisor` yet.
+- `traceh chat` is line-based: no token streaming, no live tool timeline, no approval
+  prompts, and no typing while a turn is running.
 - JSONL provides one-writer optimistic concurrency but is not a distributed database.
 - The OpenAI-compatible adapter is non-streaming and has no retry/fallback middleware.
 - `apply_patch` performs exact text replacement rather than parsing unified diffs.

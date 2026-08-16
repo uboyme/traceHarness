@@ -20,8 +20,8 @@ from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CommandVerifier, CompletionVerifier
 from traceh.session.compaction import CompactionService
-from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.event_store import EventStore
+from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.jsonl import JsonlEventStore
 from traceh.session.recovery import RecoveryReport, RecoveryService
 from traceh.session.service import SessionService
@@ -197,8 +197,11 @@ def build_default_runtime(
     surface = SurfaceProjector()
 
     llms = LlmRegistry()
+    # The built-in placeholder answers every turn; an explicitly supplied
+    # provider keeps whatever exhaustion behaviour its caller configured.
     actual_provider = provider or ScriptedLlmProvider(
-        (ModelResponse(content="TraceHarness scripted runtime is ready."),)
+        (ModelResponse(content="TraceHarness scripted runtime is ready."),),
+        repeat_last=True,
     )
     llms.register(actual_provider)
     if actual_provider.name != config.provider:

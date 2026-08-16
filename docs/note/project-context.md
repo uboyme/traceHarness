@@ -44,9 +44,9 @@
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell` |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | 一次命令执行一个 Turn，不是交互式 TUI |
+| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互；其余命令仍是一次执行一个 Turn。不是流式 TUI |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 70 项，通过后才允许更新本表 |
+| 当前自动化测试 | 114 项，通过后才允许更新本表 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
 当前开发重点是把 v0.3 的可靠性、真实使用体验、可观察性和文档治理做扎实；v0.4+ 插件与多 Agent 仅保留协议边界，不视为已实现能力。
@@ -75,7 +75,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - Docker、远程沙箱或操作系统级安全隔离；
 - 分布式 Event Store；
 - 完整流式模型输出、重试、Fallback 与限流中间件；
-- 类似 Codex/Claude Code 的持续交互式终端界面。
+- 类似 Codex/Claude Code 的富交互终端界面：`traceh chat` 只是行式多轮提示符，没有流式输出、Tool Call 时间线和执行前审批。
 
 ## 3. 仓库目录与职责
 
@@ -85,14 +85,15 @@ traceharness/
 ├── CLAUDE.md                         Claude Code 薄入口，导入 AGENTS.md
 ├── src/traceh/
 │   ├── api/                          公共协议、不可变 DTO 和扩展边界
-│   ├── cli/                          命令解析、.env 加载和运行入口
+│   ├── concurrency.py                不可取消 Worker 的收敛等待
+│   ├── cli/                          命令解析、.env 加载、交互式 chat 循环和终端编码
 │   ├── evaluation/                   确定性 Benchmark Runner
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       Scope、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
 │   ├── runtime/                      AgentRuntime、AgentLoop、请求、Continuation、Verifier
 │   ├── session/                      EventStore、跨进程文件锁、投影、恢复、压缩和不变量
-│   └── tools/                        Tool Registry、Schema、Policy、Middleware、执行与内置工具
+│   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程收敛与内置工具
 ├── tests/                            单元、契约、恢复、取消、跨进程、端到端和 Benchmark 测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
 ├── benchmarks/                       独立复制 Workspace 的评估案例
@@ -200,6 +201,21 @@ sequenceDiagram
 - `AgentLoop` 在取消/异常时追加 Attempt、Step、Turn 的终止或错误事件；ToolRuntime 尽量补齐未完成调用的 Tool Result。
 - `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn；Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
 
+### 5.4 一个 Session 中的多个 Turn
+
+`run`/`resume` 各产生一个 Turn；`traceh chat`（见 13.4）在同一 Session 中按用户输入连续产生多个 Turn。无论谁驱动，Turn 的语义完全一致：每个 Turn 都通过 `AgentRuntime.run_existing()` 进入 `AgentLoop`，历史来自事件日志投影，调用方不持有第二份对话状态。
+
+```mermaid
+flowchart LR
+    IN["用户输入一行"] --> RE["AgentRuntime.run_existing()"]
+    RE --> TURN["AgentLoop：一个完整 Turn"]
+    TURN --> EV["Session Stream 追加事件"]
+    EV --> SUR["SurfaceProjector 重建模型可见历史"]
+    SUR --> RE
+    TURN --> OUT["打印最终文本与摘要"]
+    OUT --> IN
+```
+
 ## 6. 事件模型与持久化
 
 ### 6.1 Event Envelope
@@ -281,7 +297,7 @@ sequenceDiagram
 
 - Worker 通过 `asyncio.shield()` 提交，取消协程不会把它变成脱缰线程；
 - 协程捕获 `CancelledError` 后先置位 `cancel`，再显式等待 Worker 收敛，然后才向调用方重新抛出；因此 `append()`/`read()`/`head()` 返回时文件已经不再变化；
-- 收敛由 `_await_worker_convergence()` 承担，它循环 `await asyncio.shield(future)` 直到 `future.done()`：**重复取消（第二次、第三次乃至更多次 `CancelledError`）被吸收后继续等待同一个 Worker**，不能被当作提前退出的出口；这里不使用 `suppress(BaseException)`；
+- 收敛由共享的 [`await_worker_convergence()`](../../src/traceh/concurrency.py) 承担，它循环 `await asyncio.shield(future)` 直到 `future.done()`：**重复取消（第二次、第三次乃至更多次 `CancelledError`）被吸收后继续等待同一个 Worker**，不能被当作提前退出的出口；这里不使用 `suppress(BaseException)`。同一个函数也被 OpenAI-Compatible Provider 复用（见 8.3）；
 - Worker 自身的返回值、`FileLockCancelled`、`ConcurrencyConflict` 或其他异常在收敛结束时被显式取回，不会遗留"future exception was never retrieved"告警；
 - `signals.finished` 在锁释放之后置位，且必定早于 Future 完成，因此“调用方拿到 `CancelledError`”蕴含“锁已释放且 Worker 已收敛”；
 - `_StreamLockSignals` 的 `waiting`/`cancel`/`finished` 三个 `threading.Event` 让“线程确实开始等锁”和“线程确实已收敛”可被观测，而不是靠时序猜测；
@@ -358,6 +374,7 @@ flowchart LR
 - HTTP/URL/响应结构错误转换为 `ProviderHttpError`。
 
 当前没有流式读取、自动重试、Fallback、并发限流或厂商专属协议适配。
+取消语义：`urllib` 请求一旦发出就无法中止，因此 `complete()` 用 `asyncio.shield` 保护 Worker，取消时先用共享的 `await_worker_convergence()` 等它收敛再重新抛出原 `CancelledError`，重复取消不会提前返回。这样不会出现"Chat 已经宣布 interrupted、后台 HTTP Worker 仍在运行"的情况。代价必须说清楚：这是收敛而不是立即中止网络请求，最坏情况下要等到 `timeout_seconds`（默认 120 秒）到期。
 
 ## 9. Tool Runtime 与内置工具
 
@@ -420,6 +437,48 @@ flowchart LR
 
 Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以结束 Turn，此时 `verification_passed` 为 `None`，不能把它解释成“外部验证已通过”。
 
+### 10.1 Verifier 的子进程与输出所有权
+
+`CommandVerifier` 在 Workspace 中运行真实命令。取消或超时时必须把这个子进程带走，否则它会在调用方已经认为该 Turn 结束之后继续改动 Workspace；同时，在**会返回结果的路径**上，它已经产生的输出是证据，不能在收尾过程中丢掉。这两件事由同一个所有权模型解决。
+
+**输出只有一个归属**：子进程的 stdout/stderr 不接管道，而是直接写进本进程持有的临时文件（[`capture_output()`](../../src/traceh/tools/process_control.py)）。因此：
+
+- 三条路径共用**同一套捕获机制**，因此不存在“哪条路径拿到的是另一份输出”的问题；子进程 flush 过的内容在超时被察觉之前就已经被捕获、对本进程可见；
+- 读取是普通文件读，不会阻塞在孙进程仍持有的管道上，也可以重复读而不丢字节；
+- 不存在"取消第一次 `communicate()` 再调第二次"的动作，也就不存在第一次已读入缓冲区的输出被丢弃的问题。
+
+**子进程收敛**：超时或取消时先调用 `converge_process()` —— terminate → 有界等待（默认 2 秒）→ kill → 等待退出，返回前直接子进程必定已退出。等待吸收取消并记录“曾经被取消过”，因此收尾过程中到达的取消不会提前放行，而是压到收敛之后再重新抛出 `CancelledError`。
+
+**三条路径各自做什么**（这一点必须精确，不能笼统地说“输出总会被保留”）：
+
+| 路径 | 直接子进程 | 输出 |
+|---|---|---|
+| 正常完成 | `await process.wait()` 自然返回 | 读取捕获文件，装入 `VerificationResult`；AgentLoop 据此追加 `verification/result` |
+| 超时 | 先 `converge_process()` 收敛，再读 | 读取捕获文件；完整文本进入 `VerificationResult.stdout`/`stderr`，尾部进入 summary，并经 `DefaultContinuationRuntime` 注入下一 Step |
+| 取消 | 只做 `converge_process()` 收敛，保证子进程不逃逸 | **不读取、不返回 `VerificationResult`、不追加 `verification/result`**；随后临时文件关闭，捕获内容随之丢弃 |
+
+换句话说：取消路径的承诺只有“子进程一定不会逃逸”，没有任何输出证据的承诺。只有调用方追加到 Session/Effect Event Log 的事件才是持久化事实（Verifier 路径是 `verification/result`，Tool 路径是 `effect/outcome` 与 `tool/result`，按路径适用）；临时文件里的字节只是本次调用期间的捕获。
+
+**ShellTool 与两类超时的边界**：`ShellTool` 使用同一套捕获与收敛机制，但它归 `ToolRuntime` 调度，因此存在两个不同的超时：
+
+| 超时来源 | 触发方式 | 上报内容 |
+|---|---|---|
+| Tool 自身（`shell` 的 `timeout` 参数） | `ShellTool` 收敛子进程后主动 `raise TimeoutError(content)`，content 含实际命令、`exit_code`、`timed_out=true` 与已捕获的 stdout/stderr | `ToolRuntime` 在嵌套边界上把它重贴为 `ToolReportedTimeout`，据此写 `effect/outcome`（`reported_by=tool`）与 `tool/result`，**保留工具自己的文本与时长**，并按 `max_output_chars` 截断 |
+| Runtime 预算（`ToolRuntime.timeout_seconds`） | `asyncio.timeout()` 到期 | 保持通用语义：`Tool timed out after <预算>s`，`effect/outcome` 标 `reported_by=runtime`；子进程仍由 `ShellTool` 的取消路径收敛 |
+
+两者靠**嵌套异常边界**区分，不靠错误文本匹配：工具自己抛出的 `TimeoutError` 在内层被立即重贴为领域异常 `ToolReportedTimeout`，因此外层负责 Runtime 预算的 `except TimeoutError` 不可能再吞掉它。修复前两者共用一个 `except TimeoutError`，结果是 Shell 的 stdout/stderr 从 `effect/outcome` 与 `tool/result` 中消失，且内部超时被误报成 Runtime 预算时长。
+
+**本地资源不需要私有 API 收尾**：改用临时文件后不存在 stdout/stderr 管道子传输，`await process.wait()` 返回时 subprocess transport 已自行关闭。因此不访问 `process._transport`，也不需要任何手动关闭步骤。实测（Windows，孙进程仍持有继承句柄）：返回时 `transport_closed=True`、`open_pipe_transports=0`，独立解释器跑完后事件循环关闭时 stderr 没有 `unclosed transport` 或 `Event loop is closed`。
+
+**明确不管理孙进程**：子进程派生的孙进程会继承捕获文件句柄，可能在直接子进程退出后继续运行、继续往文件里写。本模块保证的是**直接子进程**已退出。至于输出会不会被保留，取决于调用方走的是哪条路径，只有这两条会读取捕获：**Verifier 正常完成**、以及**组件自己拥有的超时**（`CommandVerifier` 自身超时、`ShellTool` 自身超时）。**直接取消**与 **`ToolRuntime` 预算先到期**都不读取捕获——后者会取消工具，工具走取消路径，最终只产生 Runtime 通用超时结果。对孙进程不作任何承诺；由于输出走文件而不是管道，孙进程的存在不会拖住收尾。
+
+
+`sanitized_environment()` 的两项平台修正：
+
+- 保留 `SYSTEMROOT`、`WINDIR`、`COMSPEC`、`PATHEXT` 等 Windows 必需变量。缺少它们时子进程在 `import asyncio` 阶段就以 WinError 10106 失败，`python -m pytest` 这类最普通的 Verifier 命令在 Windows 上根本无法启动；
+- 设置 `PYTHONUTF8=1` 与 `PYTHONIOENCODING=utf-8`。父进程按 UTF-8 解码捕获到的字节，而 Windows 上的 Python 子进程默认会用系统代码页（中文环境为 CP936）输出，中文会整段变成 U+FFFD。这条只对 **Python 子进程**成立；非 Python 的原生工具仍然遵循系统代码页，其输出可能依旧是乱码。
+
+这些变量描述机器而不是用户，且仍然经过 KEY/TOKEN/SECRET 等敏感名过滤。
 ## 11. 崩溃恢复与生命周期收敛
 
 `RecoveryService.recover()` 按固定顺序追加事件，使修复后的流与健康流读起来顺序一致：
@@ -530,6 +589,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | 命令 | 当前用途 |
 |---|---|
 | `traceh run` | 创建 Session 并运行一个 Turn |
+| `traceh chat` | 在一个 Session 中连续多轮交互（见 13.4） |
 | `traceh resume` | 恢复 Session 后追加一个新 Turn |
 | `traceh recover` | 只执行恢复，不调用模型 |
 | `traceh inspect` | 状态、不变量、请求重建和事件检查，可导出 HTML |
@@ -539,7 +599,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh eval` | 运行 Benchmark 目录 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
 
-CLI 当前是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要；没有持续对话输入循环、实时审批 UI 或 TUI 面板。
+除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，但仍是行式提示符：没有 token 流式输出、实时 Tool Call 时间线、执行前审批，也不能在 Turn 运行期间继续输入。
 
 ### 13.2 `.env` 与配置优先级
 
@@ -573,6 +633,42 @@ CLI 当前是 run-to-completion：接收一次任务，执行到 Turn 结束，�
 | data dir | `.traceh` |
 | provider/model | `scripted` / `scripted-model` |
 
+### 13.4 `traceh chat` 交互循环
+
+Chat 是 v0.3 的交互式 MVP，由 [`cli/chat.py`](../../src/traceh/cli/chat.py) 与 [`cli/console.py`](../../src/traceh/cli/console.py) 实现，`cli/main.py` 只负责解析参数与装配 Runtime。
+
+启动方式二选一，必须恰好提供一个，否则报使用错误（退出码 2，无 traceback）：
+
+| 形式 | 行为 |
+|---|---|
+| `traceh chat <workspace>` | 校验 Workspace，创建新 Session，打印 session_id/workspace/provider/model，进入循环 |
+| `traceh chat --session-id <id>` | 从事件日志读取原 Workspace，先执行 `RecoveryService.recover()`，仅当 `changed=true` 时打印一行恢复摘要，不创建 Turn、不注入任何隐藏指令 |
+
+循环语义：
+
+- 每条普通输入调用 `AgentRuntime.run_existing()`，在同一 Session 中新建一个 Turn；模型历史由事件日志投影，Chat 层不维护第二份 messages；
+- 每轮打印 `assistant> <最终文本>` 和 `[reason=... steps=... tokens=... verification=...]`；
+- `reason` 非 `completed` 时照常打印并返回提示符，不销毁 Session；
+- Turn 抛异常时 AgentLoop 已写入 `runtime/error` 并闭合生命周期，Chat 只打印 `error: <类型>: <消息>`，不打印 traceback，继续等待下一条输入；
+- 内部命令只在整行匹配时生效：`/help`、`/session`、`/exit`、`/quit`；空行忽略；未知斜杠命令给出提示；以上都不产生 `user/message` 或 Turn；
+- EOF 等同 `/exit`，退出码 0；
+- Ctrl+C 的行为取决于宿主 Shell 与 Python 的信号处理，文档不做绝对承诺：
+  - 宿主把 Ctrl+C 变成 `KeyboardInterrupt` 时（Linux/macOS 终端、Windows PowerShell 常见情况），Chat 通过既有取消语义收敛当前 Turn（`AgentRuntime.cancel()`），打印可恢复的 session_id，然后从进程内部以 130 返回。宿主最终显示的退出码仍由 Shell 决定，因此不承诺"PowerShell 一定看到 130"；
+  - 硬中断（Windows Ctrl+Break、控制台关闭）由操作系统直接终止进程，Python 处理器不会运行：实测退出码为 `3221225786`（`0xC000013A`），没有收敛提示行。此时依赖崩溃恢复：启动时打印的 `session_id=` 就是入口，`traceh chat --session-id <id>` 或 `traceh recover` 会把残留生命周期闭合；
+- `runtime.dispose()` 在 `finally` 中执行，覆盖 Python 能够处理的所有退出路径（`/exit`、`/quit`、EOF、`KeyboardInterrupt`、取消、异常）。被操作系统直接终止的硬中断不在此列：那条路径上没有任何 Python 代码运行，靠的是崩溃恢复。
+
+Turn 通过 `asyncio.shield` 提交，因此中断到达时 Runtime 仍持有该 Turn，可以走正常取消路径收敛，而不是留下脱缰任务。
+
+### 13.5 终端编码策略
+
+`configure_stdio()` 把 stdin/stdout/stderr 统一配置为 UTF-8 且 `errors="replace"`，不依赖 `chcp 65001`；不支持 `reconfigure` 的流（测试中的 `StringIO`）安全降级并在报告中标明。
+
+输入侧规则：
+
+- 行首 U+FEFF 属于流而非消息，被剥离。Windows PowerShell 5.1 的 `Out-File -Encoding utf8` 会写入 BOM；PowerShell 7 的 `utf8` 默认无 BOM，需要时用 `utf8BOM`；
+- 中文等非 ASCII 内容原样进入 `user/message`，只去除首尾空白；
+- 若行内出现 U+FFFD，说明原字符在解码时已经丢失：调用模型前拒绝该行、打印提示、不写 `user/message`、不猜测原文。
+
 ## 14. 已有扩展边界与未来接口
 
 当前代码中存在但尚未形成完整产品能力的边界：
@@ -598,7 +694,7 @@ python -m compileall -q src tests
 python -m pytest -q
 ```
 
-当前测试套件共 70 项，覆盖：
+当前测试套件共 114 项，覆盖：
 
 - EventStore expected-seq、尾部恢复和读取；
 - 跨进程 Stream 锁：两个独立 Python 进程并发追加、`expected_seq` 竞争、跨进程尾部半行修复、持锁期间阻塞、崩溃后可再取锁、异常路径解锁；
@@ -608,10 +704,16 @@ python -m pytest -q
 - Tool Schema、Policy、Middleware、失败、超时和并发 Barrier；
 - Workspace 越界与精确 Patch；
 - 取消、子进程收敛和崩溃恢复；
+- 取消时的资源收敛：Verifier 与 Shell 子进程在调用方返回前必定已退出（用子进程持有的 OS 锁判定存活，不靠等待猜测）、超时清理过程中再次取消仍不放行、进入收敛后逐次取消调用方始终不返回、`sanitized_environment()` 仍能启动 Python 子进程、OpenAI-Compatible Worker 在本地 gated HTTP Server 下先收敛再抛 `CancelledError`；
+- 输出所有权与本地资源：超时结果必须包含子进程超时前已 flush 的 stdout/stderr（用 marker 文件证明输出动作确已完成）、超时 summary 经 `DefaultContinuationRuntime.decide()` 注入后模型确实能看到这两段输出、summary 的尾部界限与普通结果一致、独立解释器跑完一次超时后事件循环关闭时 stderr 无 `Event loop is closed`/`unclosed transport`/`Exception ignored` 且无遗留 Task、测试用的 PID 清理只停自己记录的进程；
+- 两类超时的边界（经真实 `ToolRuntime.execute_batch()`，不是直接调用 `ShellTool.execute()`）：Tool 内部超时时 `ToolRunResult`、`effect/outcome`、`tool/result` 三处都保留 stdout/stderr 且不误报 Runtime 预算时长；Runtime 预算先到期时仍走通用超时语义并完成子进程收敛；
+- 子进程中文输出：Python 子进程的原始字节可严格按 UTF-8 解码并与原文完全一致（不使用 `errors="replace"` 掩盖）；
+- 内置默认 Scripted Provider 可连续应答多轮，显式 `--script` 仍在耗尽时报错；
 - Model Attempt 恢复：崩后仅有 Start、仅有 Chunk、已有匹配 `assistant/message`、跨 Step 与跨 Turn 消息不算证据、错作用域消息在前正确消息在后、Start 之前的消息不算证据、Chunk 按作用域与 seq 计数、`attempt_id` 为 `None`/数字/纯空白时跳过、重复 recover 幂等、旧版本已闭合 Step/Turn 的 Append-only 修复、多 Attempt 按序收敛；
 - Model Attempt 不变量：End 无 Start、重复 Start/End、payload 作用域不符、无法使用的 `attempt_id`（`None`/数字/布尔/空串/空白）、Start 不在真正开放的 Turn/Step 内、普通 End 迟于 Step 关闭、缺 `causation_id` 的迟到 `recovered` End、同 Step 双开、已闭合 Step 缺 End，以及正常配对、运行中 Attempt 与合法 Append-only 修复不误报；
 - Scripted/OpenAI-Compatible Provider；
 - `.env` 解析、优先级、秘密不打印和测试隔离；
+- `traceh chat`：参数互斥校验与 `.env` 继承、单 Session 连续两轮、第二轮 Request 能看到第一轮 Surface、已有 Session 先恢复且不自动建 Turn、干净 Session 不写 `runtime/recovered`、内部命令与空行不产生 Turn、含斜杠的自然语言不被误判、Turn 失败后可继续、EOF 与 dispose、运行中 Turn 被中断后收敛、中文往返、BOM 剥离、U+FFFD 拒绝、终端编码降级；
 - Kernel Scope、Activation、Hooks、Lifespan、Owned Tasks；
 - Inspector、Request Reconstruction 和 Benchmark；
 - 未来 Plugin/Agent/Workspace Protocol 可构造性。
@@ -631,7 +733,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项，当前共 70 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项到 70 项，`traceh chat` 再增加 24 项到 94 项，取消收敛与子进程编码加固再增加 12 项到 106 项，输出所有权与本地资源收敛再增加 3 项到 109 项，超时证据入下一 Step 与测试清理再增加 3 项到 112 项，Tool 与 Runtime 两类超时的边界再增加 2 项，当前共 114 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -639,9 +741,13 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 |---|---|---|
 | Stream 锁边界 | 已有 `fcntl`/`msvcrt` 跨进程锁，但只是同机 Advisory Lock：绕过 `JsonlEventStore` 直接写文件不受约束，网络文件系统行为未验证 | 需要更强隔离时改用 SQLite 或独立 Store |
 | Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
+| 子进程输出磁盘占用 | 捕获用的临时文件当前没有大小上限，失控命令可以写满临时目录；上层 Tool Result 截断只影响读出后的文本，不会减少读取前已经占用的磁盘 | 需要时在捕获层增加大小上限并在超限时截断 |
+| 临时文件删除延后 | 孙进程继承捕获句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭 | 与“不管理孙进程”是同一条边界，必要时由外部清理 |
 | 取消的提交点边界 | 取消恰好落在写入过程中时，调用方收到 `CancelledError` 但事件已提交（6.6）；无自动重试，因此不是 at-least-once | 调用方重新读取 Stream，按 `event_id`/correlation/业务身份判断是否已落盘 |
 | Model Attempt 证据上限 | 未闭合 Attempt 已按证据补 End（11.1），但 `unknown_after_crash` 只说明“无法证明”，且丢失的 `usage`/`finish_reason` 无法找回 | 需要精确计费时在 Provider 边界先落盘用量 |
-| CLI 体验 | 非交互式，无审批、流式 UI、会话内连续输入 | 在不破坏 Runtime 边界下新增 Surface/UI 层 |
+| CLI 体验 | `chat` 已支持会话内连续输入，但仍无 token 流式输出、实时 Tool Call 时间线、执行前审批，也不能在 Turn 运行期间输入 | 在不破坏 Runtime 边界下扩展 Surface/UI 层 |
+| 中断退出码 | 退出码由宿主 Shell 和 Python 信号处理决定；硬中断（Ctrl+Break/关闭控制台）实测为 `3221225786`，不会运行收敛代码 | 依赖启动时打印的 session_id 与崩溃恢复，不承诺统一退出码 |
+| 模型调用中断 | 取消 OpenAI-Compatible 请求时会等待 HTTP Worker 收敛，最坏等到 `timeout_seconds` | 需要立即中止时改用可中断的 HTTP 客户端 |
 | Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |
 | OpenAI Provider | 非流式、无重试/Fallback/限流 | 在 LlmRuntime/Provider 边界扩展 |
 | JSONL 扩展性 | read 仍全量扫描；非分布式 | Checkpoint、SQLite 或其他 EventStore |

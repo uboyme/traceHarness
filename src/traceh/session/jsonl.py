@@ -16,6 +16,7 @@ from typing import TypeVar
 from urllib.parse import quote, unquote
 
 from traceh.api.events import EventEnvelope, PendingEvent
+from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import ConcurrencyConflict, Durability
 from traceh.session.file_lock import FileLockCancelled, exclusive_file_lock
 
@@ -234,30 +235,6 @@ class JsonlEventStore:
             # ``finished`` knows the stream is free and untouched from here on.
             signals.finished.set()
 
-    @staticmethod
-    async def _await_worker_convergence(future: asyncio.Future[_T]) -> None:
-        """Wait for ``future``'s worker to finish, however often we are cancelled.
-
-        Cancelling again while the worker is still inside the critical section
-        must not release the caller early, so every additional
-        ``CancelledError`` is absorbed and the *same* future is awaited again.
-        The worker's own outcome (a value, ``FileLockCancelled``,
-        ``ConcurrencyConflict`` or anything else) is retrieved here so it can
-        never surface later as a never-retrieved future exception.
-        """
-
-        while not future.done():
-            try:
-                await asyncio.shield(future)
-            except asyncio.CancelledError:
-                # Repeated cancellation: keep waiting for this worker.
-                continue
-            except BaseException:
-                # The worker itself failed; it has converged either way.
-                break
-        if future.done() and not future.cancelled():
-            future.exception()
-
     async def _run_locked(self, stream_id: str, work: Callable[[], _T]) -> _T:
         """Await ``work`` under the stream lock with real cancellation support.
 
@@ -284,7 +261,7 @@ class JsonlEventStore:
             return await asyncio.shield(future)
         except asyncio.CancelledError as cancellation:
             signals.cancel.set()
-            await self._await_worker_convergence(future)
+            await await_worker_convergence(future)
             raise cancellation
 
     async def append(

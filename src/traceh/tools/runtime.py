@@ -18,6 +18,21 @@ from traceh.tools.results import ToolRunResult
 from traceh.tools.schema import ToolArgumentError, validate_arguments
 
 
+class ToolReportedTimeout(RuntimeError):
+    """A tool decided its own operation timed out.
+
+    Distinct from the runtime's budget expiring: the tool ran to a conclusion it
+    controls and produced evidence about it, so its own message and duration
+    must be reported rather than replaced by the runtime's generic wording.
+    Raised at a nested boundary so the two cases never have to be told apart by
+    inspecting error text.
+    """
+
+    def __init__(self, error: BaseException) -> None:
+        super().__init__(str(error))
+        self.error = error
+
+
 @dataclass(frozen=True, slots=True)
 class ToolBatchContext:
     session_id: str
@@ -274,10 +289,16 @@ class ToolRuntime:
 
         try:
             async with asyncio.timeout(self.timeout_seconds):
-                output = await invoke_middleware_chain(
-                    self.middlewares,
-                    ToolInvocation(call=call, tool=tool, context=call_context),
-                )
+                try:
+                    output = await invoke_middleware_chain(
+                        self.middlewares,
+                        ToolInvocation(call=call, tool=tool, context=call_context),
+                    )
+                except TimeoutError as error:
+                    # The tool timed itself out and already knows what happened,
+                    # including whatever the command printed first. Re-labelled
+                    # here so the runtime's own budget handler cannot swallow it.
+                    raise ToolReportedTimeout(error) from error
             content = output.content
             truncated = False
             if len(content) > self.max_output_chars:
@@ -307,6 +328,37 @@ class ToolRuntime:
                 data=output.data,
                 effect_id=effect_id,
             )
+        except ToolReportedTimeout as reported:
+            # Keep the tool's own account of its timeout: it carries the real
+            # duration and whatever the command managed to print.
+            message = str(reported)
+            truncated = False
+            if len(message) > self.max_output_chars:
+                message = message[: self.max_output_chars] + "\n...[truncated by TraceHarness]"
+                truncated = True
+            await self.sessions.append_effect(
+                context.session_id,
+                "effect/outcome",
+                {
+                    "effect_id": effect_id,
+                    "tool_call_id": call.id,
+                    "tool_name": call.name,
+                    "status": "failed",
+                    "error_type": type(reported.error).__name__,
+                    "message": message,
+                    "truncated": truncated,
+                    "reported_by": "tool",
+                },
+                causation_id=intent.event_id,
+            )
+            return ToolRunResult(
+                call.id,
+                call.name,
+                "failed",
+                message,
+                effect_id=effect_id,
+                error_type=type(reported.error).__name__,
+            )
         except TimeoutError:
             message = f"Tool timed out after {self.timeout_seconds:.1f}s"
             await self.sessions.append_effect(
@@ -319,6 +371,7 @@ class ToolRuntime:
                     "status": "failed",
                     "error_type": "TimeoutError",
                     "message": message,
+                    "reported_by": "runtime",
                 },
                 causation_id=intent.event_id,
             )

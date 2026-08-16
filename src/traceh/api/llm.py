@@ -1,0 +1,179 @@
+"""Model-neutral request and response protocol."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Protocol
+
+from traceh.api.json_types import JsonValue, to_json_value
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCall:
+    id: str
+    name: str
+    arguments: dict[str, JsonValue]
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {"id": self.id, "name": self.name, "arguments": self.arguments}
+
+    @classmethod
+    def from_dict(cls, raw: Mapping[str, object]) -> "ToolCall":
+        arguments = raw.get("arguments", {})
+        if not isinstance(arguments, dict):
+            raise ValueError("tool call arguments must be an object")
+        return cls(
+            id=str(raw["id"]),
+            name=str(raw["name"]),
+            arguments={str(k): to_json_value(v) for k, v in arguments.items()},
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModelMessage:
+    role: str
+    content: str = ""
+    tool_call_id: str | None = None
+    tool_calls: tuple[ToolCall, ...] = ()
+    name: str | None = None
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        result: dict[str, JsonValue] = {"role": self.role, "content": self.content}
+        if self.tool_call_id is not None:
+            result["tool_call_id"] = self.tool_call_id
+        if self.tool_calls:
+            result["tool_calls"] = [call.to_dict() for call in self.tool_calls]
+        if self.name is not None:
+            result["name"] = self.name
+        return result
+
+    @classmethod
+    def from_dict(cls, raw: Mapping[str, object]) -> "ModelMessage":
+        raw_calls = raw.get("tool_calls", [])
+        if not isinstance(raw_calls, list):
+            raise ValueError("message.tool_calls must be a list")
+        return cls(
+            role=str(raw["role"]),
+            content=str(raw.get("content") or ""),
+            tool_call_id=(str(raw["tool_call_id"]) if raw.get("tool_call_id") else None),
+            tool_calls=tuple(ToolCall.from_dict(item) for item in raw_calls if isinstance(item, dict)),
+            name=str(raw["name"]) if raw.get("name") else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ToolSchema:
+    name: str
+    description: str
+    input_schema: dict[str, JsonValue]
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "input_schema": self.input_schema,
+        }
+
+    @classmethod
+    def from_dict(cls, raw: Mapping[str, object]) -> "ToolSchema":
+        schema = raw.get("input_schema", {})
+        if not isinstance(schema, dict):
+            raise ValueError("tool schema input_schema must be an object")
+        return cls(
+            name=str(raw["name"]),
+            description=str(raw.get("description") or ""),
+            input_schema={str(k): to_json_value(v) for k, v in schema.items()},
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Usage:
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        return self.input_tokens + self.output_tokens
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "total_tokens": self.total_tokens,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ModelRequest:
+    provider: str
+    model: str
+    messages: tuple[ModelMessage, ...]
+    tools: tuple[ToolSchema, ...] = ()
+    system_prompt: str | None = None
+    temperature: float | None = None
+    max_output_tokens: int | None = None
+    metadata: Mapping[str, JsonValue] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {
+            "provider": self.provider,
+            "model": self.model,
+            "system_prompt": self.system_prompt,
+            "messages": [message.to_dict() for message in self.messages],
+            "tools": [tool.to_dict() for tool in self.tools],
+            "temperature": self.temperature,
+            "max_output_tokens": self.max_output_tokens,
+            "metadata": dict(self.metadata),
+        }
+
+    @classmethod
+    def from_dict(cls, raw: Mapping[str, object]) -> "ModelRequest":
+        raw_messages = raw.get("messages", [])
+        raw_tools = raw.get("tools", [])
+        if not isinstance(raw_messages, list) or not isinstance(raw_tools, list):
+            raise ValueError("request messages and tools must be lists")
+        metadata = raw.get("metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        return cls(
+            provider=str(raw["provider"]),
+            model=str(raw["model"]),
+            system_prompt=(str(raw["system_prompt"]) if raw.get("system_prompt") else None),
+            messages=tuple(
+                ModelMessage.from_dict(item) for item in raw_messages if isinstance(item, dict)
+            ),
+            tools=tuple(ToolSchema.from_dict(item) for item in raw_tools if isinstance(item, dict)),
+            temperature=float(raw["temperature"]) if raw.get("temperature") is not None else None,
+            max_output_tokens=(
+                int(raw["max_output_tokens"])
+                if raw.get("max_output_tokens") is not None
+                else None
+            ),
+            metadata={str(k): to_json_value(v) for k, v in metadata.items()},
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModelResponse:
+    content: str = ""
+    tool_calls: tuple[ToolCall, ...] = ()
+    finish_reason: str = "stop"
+    usage: Usage = field(default_factory=Usage)
+    raw: Mapping[str, JsonValue] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        return {
+            "content": self.content,
+            "tool_calls": [call.to_dict() for call in self.tool_calls],
+            "finish_reason": self.finish_reason,
+            "usage": self.usage.to_dict(),
+            "raw": dict(self.raw),
+        }
+
+
+class LlmProvider(Protocol):
+    name: str
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        ...

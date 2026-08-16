@@ -1,0 +1,7 @@
+{
+  "name": "fix_addition",
+  "task": "Fix the addition bug and run the tests.",
+  "verify_command": "python -m unittest -v",
+  "initial_dir": "initial",
+  "script": "script.json"
+}

@@ -9,6 +9,21 @@ from uuid import UUID, uuid4
 from traceh.api.json_types import JsonValue, to_json_value
 
 
+def attempt_identity(data: dict[str, JsonValue]) -> str | None:
+    """Read a usable `attempt_id` from a model attempt payload.
+
+    Only a non-empty, non-blank string identifies an attempt. ``None``, numbers,
+    booleans, empty strings and whitespace are missing identities, not values to
+    be coerced: ``str(None)`` would invent an attempt called ``"None"`` and make
+    unrelated broken events look like the same attempt.
+    """
+
+    value = data.get("attempt_id")
+    if isinstance(value, str) and value.strip():
+        return value
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class PendingEvent:
     type: str

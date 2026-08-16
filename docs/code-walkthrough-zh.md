@@ -359,18 +359,33 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    C["读取 Session 与 Effect 事件"] --> U{"存在没有 Tool Result 的 Tool Call？"}
+    C["读取 Session 与 Effect 事件"] --> MA{"存在没有 attempt-end 的 Model Attempt？"}
+    MA -- "有匹配的完整 assistant/message" --> OK["追加 attempt-end：succeeded"]
+    MA -- "没有，或只有 chunk" --> UK["追加 attempt-end：unknown_after_crash"]
+    MA -- "没有" --> U{"存在没有 Tool Result 的 Tool Call？"}
+    OK --> U
+    UK --> U
     U -- "有 Outcome" --> SR["合成 tool/result"]
     U -- "没有可确认 Outcome" --> UN["记录 unknown_after_crash"]
     U -- "没有" --> OS{"有未闭合 Step / Turn？"}
     SR --> OS
     UN --> OS
     OS -- "有" --> CL["追加 interrupted 的 step/end / turn/end"]
-    OS -- "没有" --> DN["无需改变"]
-    CL --> RP["追加 runtime/recovered"]
+    OS -- "没有" --> ANY{"本次修过任何东西吗？"}
+    CL --> ANY
+    ANY -- "修过" --> RP["追加 runtime/recovered"]
+    ANY -- "什么都没修" --> DN["无变更，一条事件都不追加"]
 ```
 
-这套机制已经覆盖“工具副作用与 Session 结果脱节”和“生命周期未闭合”的主要场景。当前 v0.3 对未闭合 Model Attempt 的专门收敛仍可继续加强，这是完善 v0.3 时值得补的边界之一。
+Model Attempt 的收敛完全由证据决定，而不是乐观假设：
+
+- 只有当某条 `assistant/message` 的 `attempt_id`、`turn_id`、`step_id` 与 Attempt Start 完全一致，**并且写在 Start 之后**时，才算"模型确实完整答复过"，补的 End 记 `succeeded`；先出现一条作用域不对的消息、后面才出现正确消息时，认的是后面那条；
+- 只有 Start、或者只有零散 `assistant/chunk` 时，无法证明模型答完，补的 End 记 `unknown_after_crash` 加 `error_type=RecoveredAfterCrash`；
+- 无论哪种情况都不会重新调用模型，不会把 Chunk 拼成完整消息，也不会伪造 `usage` 和 `finish_reason`；
+- `attempt_id` 必须是非空、非纯空白的字符串；`None`、数字、布尔值一律按"没有身份"处理并跳过，绝不会凭空造出一个叫 `"None"` 的 Attempt；
+- 恢复出来的 End 用 `causation_id` 指回原 Start，并继承它的 `correlation_id` 与 `composition_revision`。这不只是为了审计：不变量正是靠 `recovered=true` 加这个 `causation_id` 才允许一条 End 晚于 `step/end` 出现。
+
+这套机制现在覆盖了"工具副作用与 Session 结果脱节"、"生命周期未闭合"和"Model Attempt 未闭合"三类场景。
 
 ## 12. 读源码的推荐顺序
 
@@ -441,7 +456,7 @@ while 还有步骤预算:
 
 - CLI 仍是“一次输入、执行到底、打印结果”，不是交互式聊天 TUI；
 - 事件写入已有 POSIX/Windows 跨进程文件锁，但“同一 Session 只跑一个 Turn”仍只在单进程内强制；
-- 未闭合 Model Attempt 的恢复语义还可以补强；
+- 未闭合 Model Attempt 现在会被恢复器按证据收敛，但恢复只能说明"是否有完整响应"，无法找回丢失的 token 用量；
 - CLI 的用户取消、危险操作审批体验仍较薄；
 - Benchmark 数量少，尚不能代表复杂真实 Coding 任务质量；
 - OpenAI-Compatible Provider 目前不是完整流式、重试和 Fallback 实现。

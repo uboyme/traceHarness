@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import NamedTuple
+from uuid import UUID
 
-from traceh.api.events import EventEnvelope
+from traceh.api.events import EventEnvelope, attempt_identity
 from traceh.api.json_types import JsonValue
 
 
@@ -14,6 +16,13 @@ class InvariantViolation:
     message: str
     seq: int | None = None
     details: dict[str, JsonValue] | None = None
+
+
+class _AttemptStart(NamedTuple):
+    turn_id: str
+    step_id: str
+    seq: int
+    event_id: UUID
 
 
 class CoreInvariantChecker:
@@ -30,6 +39,9 @@ class CoreInvariantChecker:
         results: set[str] = set()
         closed_steps: set[str] = set()
         seen_seqs: set[int] = set()
+        attempt_starts: dict[str, _AttemptStart] = {}
+        attempt_ends: set[str] = set()
+        open_attempt: str | None = None
 
         for event in session_events:
             if event.seq != expected_seq:
@@ -123,6 +135,122 @@ class CoreInvariantChecker:
                         )
                     )
                 open_step = step_id
+            elif event.type == "model/attempt-start":
+                attempt_id = attempt_identity(event.data)
+                declared_turn = str(event.data.get("turn_id", ""))
+                declared_step = str(event.data.get("step_id", ""))
+                if attempt_id is None:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-id-present",
+                            "model attempt start has no usable attempt_id",
+                            event.seq,
+                        )
+                    )
+                elif attempt_id in attempt_starts:
+                    violations.append(
+                        InvariantViolation(
+                            "single-attempt-start",
+                            f"model attempt {attempt_id} started more than once",
+                            event.seq,
+                        )
+                    )
+                else:
+                    attempt_starts[attempt_id] = _AttemptStart(
+                        declared_turn, declared_step, event.seq, event.event_id
+                    )
+                # The payload does not get to declare its own scope: the attempt
+                # must sit inside the turn and step that are really open here.
+                if open_turn is None or open_step is None:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-start-inside-step",
+                            f"model attempt {attempt_id} started outside an open turn or step",
+                            event.seq,
+                        )
+                    )
+                elif declared_turn != open_turn or declared_step != open_step:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-start-inside-step",
+                            f"model attempt {attempt_id} claims turn {declared_turn} step "
+                            f"{declared_step}, but turn {open_turn} step {open_step} is open",
+                            event.seq,
+                        )
+                    )
+                if open_attempt is not None:
+                    violations.append(
+                        InvariantViolation(
+                            "single-open-attempt",
+                            f"model attempt {attempt_id} started while {open_attempt} is open",
+                            event.seq,
+                        )
+                    )
+                if attempt_id is not None:
+                    open_attempt = attempt_id
+            elif event.type == "model/attempt-end":
+                attempt_id = attempt_identity(event.data)
+                if attempt_id is None:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-id-present",
+                            "model attempt end has no usable attempt_id",
+                            event.seq,
+                        )
+                    )
+                else:
+                    if attempt_id in attempt_ends:
+                        violations.append(
+                            InvariantViolation(
+                                "single-attempt-end",
+                                f"model attempt {attempt_id} ended more than once",
+                                event.seq,
+                            )
+                        )
+                    start = attempt_starts.get(attempt_id)
+                    if start is None:
+                        violations.append(
+                            InvariantViolation(
+                                "attempt-end-has-start",
+                                f"model attempt end {attempt_id} has no earlier start",
+                                event.seq,
+                            )
+                        )
+                    else:
+                        if start.turn_id != str(
+                            event.data.get("turn_id", "")
+                        ) or start.step_id != str(event.data.get("step_id", "")):
+                            violations.append(
+                                InvariantViolation(
+                                    "attempt-end-same-scope",
+                                    f"model attempt {attempt_id} ended in a different turn "
+                                    "or step",
+                                    event.seq,
+                                )
+                            )
+                        # An append-only repair cannot be written back into the
+                        # closed step, so a recovery end that names its start is
+                        # allowed to arrive late. Everything else must close
+                        # while its own step is still open.
+                        repaired = (
+                            event.data.get("recovered") is True
+                            and event.causation_id is not None
+                            and event.causation_id == start.event_id
+                        )
+                        if not repaired and (
+                            open_turn != start.turn_id or open_step != start.step_id
+                        ):
+                            violations.append(
+                                InvariantViolation(
+                                    "attempt-end-inside-step",
+                                    f"model attempt {attempt_id} ended after its turn or step "
+                                    "was closed",
+                                    event.seq,
+                                )
+                            )
+                    attempt_ends.add(attempt_id)
+                if open_attempt == attempt_id:
+                    open_attempt = None
             elif event.type == "tool/call":
                 call_id = str(event.data.get("tool_call_id"))
                 calls[call_id] = (str(event.data.get("step_id")), event.seq)
@@ -165,6 +293,10 @@ class CoreInvariantChecker:
                     )
                 closed_steps.add(step_id)
                 open_step = None
+                # An attempt is only "running" inside its own step. Once the
+                # step is closed an unpaired attempt is a missing-end problem,
+                # reported once at the end, not a concurrency problem.
+                open_attempt = None
             elif event.type == "turn/end":
                 turn_id = str(event.data.get("turn_id"))
                 if open_step is not None:
@@ -184,6 +316,20 @@ class CoreInvariantChecker:
                         )
                     )
                 open_turn = None
+                open_attempt = None
+
+        # Checked over the whole stream rather than at step/end, so an
+        # append-only recovery that closes an attempt after the step was already
+        # closed counts as paired instead of failing forever.
+        for attempt_id, start in attempt_starts.items():
+            if attempt_id not in attempt_ends and start.step_id in closed_steps:
+                violations.append(
+                    InvariantViolation(
+                        "attempt-has-end",
+                        f"model attempt {attempt_id} in closed step {start.step_id} has no end",
+                        start.seq,
+                    )
+                )
 
         for call_id, (step_id, call_seq) in calls.items():
             if call_id not in results and step_id in closed_steps:

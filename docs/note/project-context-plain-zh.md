@@ -18,7 +18,7 @@
 - ADR 是“当初为什么这样决定”的会议决议；
 - Roadmap 是未来打算，不代表今天已经拥有。
 
-所以，不能因为 Roadmap 写了“多 Agent”，就说当前代码已经能创建子 Agent；也不能因为旧验证文档写了 24 项测试，就忽略今天实际已经有 43 项。
+所以，不能因为 Roadmap 写了“多 Agent”，就说当前代码已经能创建子 Agent；也不能因为旧验证文档写了 24 项测试，就忽略今天实际已经有 70 项。
 
 每次开发结束，不是在文档末尾写一句“今天又加了某功能”，而是找到原来的相关章节，把它改成项目现在的真实样子。旧状态应该由 Git 和 CHANGELOG 保存，不该残留在“当前项目地图”里误导下一次 AI。
 
@@ -48,7 +48,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有多 Agent 吗 | 只有 DTO/Protocol，没有可以工作的 Supervisor |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
-| 当前测试数 | 43 项 |
+| 当前测试数 | 70 项 |
 
 运行时只依赖 Python 标准库，说明最终用户不需要为了核心 Runtime 安装 HTTP 客户端、数据库框架等第三方包。pytest、ruff 只是开发工具。
 
@@ -432,11 +432,19 @@ CommandVerifier 会在真实 Workspace 里重新运行配置命令。退出码 0
 - 有 Outcome、没有 Tool Result：说明现实结果已经持久化，可以合成 Result；
 - 有 Call/Intent，但没有可确认 Outcome：写 `unknown_after_crash`，不自动重放；
 - Step 或 Turn 没有 End：追加 `interrupted` 的 End；
-- 做过恢复动作：再写 `runtime/recovered`，留下恢复说明。
+- **确实修过东西**（补了 Attempt End、补了 Tool Result，或关掉了没闭合的 Step/Turn）：最后再写一条 `runtime/recovered`，留下恢复说明；
+- **什么都没需要修**：一条事件都不追加，报告里的 `changed` 是 `false`。所以对一个健康 Session 反复执行 recover，账本不会越长越胖。
 
 为什么读操作也统一进 Effect Ledger？统一协议让 Inspector 和恢复器不用猜不同工具的记录方式；同时 `EffectKind.is_retry_safe` 明确告诉未来恢复策略哪些是读、哪些是危险副作用。
 
-当前一个缺口是：如果有 `model/attempt-start` 没有对应 `model/attempt-end`，恢复器会关闭外层 Step/Turn，但不会为 Attempt 单独追加恢复结束事件。因此 Model Attempt 的严格配对还需加固。
+如果有 `model/attempt-start` 没有对应 `model/attempt-end`，恢复器现在会先把这次模型调用收敛掉，再去处理 Tool Result 和 Step/Turn。它怎么判断？看有没有“完整的那句话”：
+
+- **有完整 `assistant/message`**（attempt、turn、step 三个身份全对得上，而且写在这次调用开始之后）：说明模型确实答完了，只是没来得及写结束事件，补的结束事件记 `succeeded`；
+- **只有 Start，或者只有零散 `assistant/chunk`**：Chunk 只是“说到一半”的碎片，证明不了模型答完，补的结束事件记 `unknown_after_crash`。
+
+两种情况都绝不会偷偷再问一次模型，也不会把碎片拼成一句完整回答，更不会编造当时的 token 用量和结束原因——没观测到就是没观测到。带同一个 attempt_id 但属于别的 Step、别的 Turn，或者写在这次调用开始之前的消息，统统不算数——它们证明不了这次调用完成了。如果先出现一条作用域不对的消息、后面才出现正确的那条，认的是正确的那条。`attempt_id` 本身也必须是真正的字符串，`None` 或数字都当作没有身份，直接跳过并在报告里说明，绝不会造出一个叫 `"None"` 的调用。
+
+补出来的结束事件会用 `causation_id` 指回原来的 Start，便于事后审计：这条是恢复补的，不是当时真实发生的。旧版本留下的、Step 和 Turn 都已经关掉但 Attempt 还开着的老 Session 也能修：因为账本只能追加不能插队，补的结束事件排在旧的 `step/end` 之后，不变量也按整条流判断配对，所以这种老 Session 修完之后同样是干净的。
 
 `resume` 先恢复再开新 Turn，而且默认提醒模型重新查看 Workspace 和恢复结果。这样可以减少模型看到旧对话后直接重复写操作的风险。
 
@@ -449,6 +457,16 @@ CommandVerifier 会在真实 Workspace 里重新运行配置命令。退出码 0
 ### CoreInvariantChecker
 
 它检查协议是否自洽，例如序号是否连续、Turn/Step 是否正确嵌套、Tool Call 是否有结果、Effect 是否能对应、Composition 是否存在。它不是业务测试，而是检查“轨迹本身有没有违反规则”。
+
+模型调用也在检查范围内：一次 Attempt 的开始和结束必须成对、`attempt_id` 必须是真正的非空字符串（`None`、数字、布尔值一律算“没有身份”）、不能重复开始或重复结束、开始和结束必须属于同一个 Turn 和 Step、同一个 Step 里不能同时开着两次调用、已经关闭的 Step 里不能留下没有结束的调用。
+
+还有一点很关键：检查器**不采信事件自己写的 turn_id / step_id**，而是看当时真正开着的是哪个 Turn 和 Step。一次 Attempt 如果开在没有任何开放 Step 的地方，或者声称自己属于另一个 Step，都算违规；一次普通的结束事件如果拖到 Step 都关了才出现，同样算违规。
+
+每条规则都有一个固定的名字（例如 `attempt-has-end`、`attempt-end-same-scope`、`attempt-start-inside-step`），排查时按名字找即可，不用去猜错误文案。
+
+有两种情况**不算**违规，这很重要：Step 还开着、调用正在进行中，不算；老 Session 因为 Append-only 只能把补的结束事件排在旧 `step/end` 之后，也不算——配对是按整条流判断的，不是按物理先后。
+
+但第二种豁免有门槛，不是谁迟到都能用：那条结束事件必须带 `recovered=true`，而且 `causation_id` 要正好指向它所修复的那次 Start。随手补一条普通的迟到结束事件，或者指错了对象，照样违规。
 
 ### Surface Compaction
 
@@ -544,7 +562,7 @@ python -m compileall -q src tests
 python -m pytest -q
 ```
 
-Compileall 主要发现语法和导入前的字节码编译问题；pytest 检查具体行为。当前 43 项测试大致分成：
+Compileall 主要发现语法和导入前的字节码编译问题；pytest 检查具体行为。当前 70 项测试大致分成：
 
 - JSONL 是否按序写、尾部半行能否恢复；
 - 两个真正独立的 Python 进程同时写同一个 Stream 时是否安全；
@@ -556,6 +574,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 - 路径能否逃出 Workspace；
 - Patch 是否严格检查替换次数；
 - 取消和崩溃恢复是否闭合；
+- 崩在模型调用中途时，Attempt 能否按证据收敛，会不会伪造模型答复；
 - 两类 Provider 是否正确转换数据；
 - `.env` 是否按优先级加载且不打印秘密；
 - Kernel 原语是否正确回滚和清理；
@@ -569,12 +588,12 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发包、编译、跑测试、再执行 doctor；Windows 上用 Python 3.12 跑同样的步骤。加 Windows Job 的原因很具体：Windows 走的是 `msvcrt` 而不是 `fcntl`，这条代码路径只有在真的 Windows 机器上跑才算验证过。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。今天的 43 项 = 发布时 24 项 + `.env` 等后续测试到 31 项 + 跨进程文件锁与取消语义的 12 项。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。今天的 70 项 = 发布时 24 项 + `.env` 等后续测试到 31 项 + 跨进程文件锁与取消语义的 12 项 + Model Attempt 恢复与不变量的 27 项。一个是历史发布快照，一个是当前代码状态，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
 1. **锁的边界**：Windows 和 Linux 现在都有真正的跨进程文件锁，但它是同机的“协作锁”——只对经过 `JsonlEventStore` 的写入有效，绕开它直接改 JSONL 文件不受保护；放在网络盘（NFS/SMB）上的行为也没有验证过。另外，事件写入安全不等于 Session 级排队，两个进程同时 `run` 同一个 Session 仍然不会被 Runtime 提前拒绝。还有一条要记住：取消如果正好落在写文件的中途，你会收到取消，但那条事件已经提交了——“收到取消”不等于“没写入”。因为没有自动重试，这不是 at-least-once，而是“可能已提交”的提交点边界；要重新读 Stream、按 `event_id` 或业务身份认领，才知道到底写没写。
-2. **Model Attempt 恢复**：外层生命周期能收敛，但 Attempt 还没有专门恢复闭合。
+2. **Model Attempt 的证据上限**：崩在模型调用中途时，Attempt 现在会被补上结束事件，但“不知道”就是“不知道”——恢复只能说明有没有完整答复，找不回当时的 token 用量和 finish_reason。
 3. **CLI 体验**：Runtime 能运行 Coding Agent，不代表已经有好用的交互式 Coding Agent 产品界面。
 4. **Shell Policy**：挡住几个危险命令不等于模型已被沙箱隔离。
 5. **Provider 能力**：能调 OpenAI-Compatible 接口不等于支持流式、重试和自动换模型。

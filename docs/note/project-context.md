@@ -46,7 +46,7 @@
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | 一次命令执行一个 Turn，不是交互式 TUI |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 43 项，通过后才允许更新本表 |
+| 当前自动化测试 | 70 项，通过后才允许更新本表 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
 当前开发重点是把 v0.3 的可靠性、真实使用体验、可观察性和文档治理做扎实；v0.4+ 插件与多 Agent 仅保留协议边界，不视为已实现能力。
@@ -422,29 +422,73 @@ Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以
 
 ## 11. 崩溃恢复与生命周期收敛
 
-`RecoveryService.recover()`：
+`RecoveryService.recover()` 按固定顺序追加事件，使修复后的流与健康流读起来顺序一致：
 
 1. 读取 Session 与 Effect Streams；
-2. 找出没有 `tool/result` 的 `tool/call`；
-3. 有持久化 Outcome/Reconciled 时据此合成 Result；
-4. 没有可确认 Outcome 时标记 `unknown_after_crash`，有 Intent 则追加 `effect/reconciled`；
-5. 对未闭合 Step/Turn 追加 `reason=interrupted` 的结束事件；
-6. 发生改变时追加 `runtime/recovered`。
+2. 找出没有 `model/attempt-end` 的 `model/attempt-start`，按证据补写 Attempt End（见 11.1）；
+3. 找出没有 `tool/result` 的 `tool/call`；
+4. 有持久化 Outcome/Reconciled 时据此合成 Result；
+5. 没有可确认 Outcome 时标记 `unknown_after_crash`，有 Intent 则追加 `effect/reconciled`；
+6. 对未闭合 Step/Turn 追加 `reason=interrupted` 的结束事件；
+7. 发生改变时追加 `runtime/recovered`。
 
 ```mermaid
 flowchart TD
-    READ["读取两个 Stream"] --> CALL{"孤立 Tool Call？"}
+    READ["读取两个 Stream"] --> ATT{"Attempt 未闭合？"}
+    ATT -- "有匹配的 assistant/message" --> ASUC["attempt-end: succeeded"]
+    ATT -- "无消息或仅有 chunk" --> AUNK["attempt-end: unknown_after_crash"]
+    ATT -- "没有" --> CALL{"孤立 Tool Call？"}
+    ASUC --> CALL
+    AUNK --> CALL
     CALL -- "有 Outcome" --> SYN["合成 tool/result"]
     CALL -- "结果不明" --> UNK["unknown_after_crash，不重放"]
     CALL -- "没有" --> LIFE{"Step / Turn 未闭合？"}
     SYN --> LIFE
     UNK --> LIFE
     LIFE -- "是" --> CLOSE["追加 interrupted end events"]
-    LIFE -- "否" --> DONE["无变更"]
-    CLOSE --> REC["runtime/recovered"]
+    LIFE -- "否" --> ANY{"本次是否修复过任何东西？"}
+    CLOSE --> ANY
+    ANY -- "是" --> REC["追加 runtime/recovered"]
+    ANY -- "否" --> DONE["无变更，不追加任何事件"]
 ```
 
-当前恢复器没有单独扫描和收敛未闭合 `model/attempt-start`；它通过关闭 Step/Turn 使 Session 回到非活跃状态，但 Model Attempt 配对语义仍是待加固项。
+只要 Attempt、Tool Result 或生命周期中有任意一项被修复，就追加一条 `runtime/recovered`；三项都没有修复时不追加任何事件，`changed` 为 `false`。
+
+### 11.1 Model Attempt 收敛
+
+Attempt 已开始不代表模型答复过，因此状态由持久化证据决定：
+
+| 持久化证据 | 恢复状态 | 关键字段 |
+|---|---|---|
+| 至少存在一条合格 `assistant/message` | `succeeded` | `recovered=true`、`recovered_from=assistant/message` |
+| 没有合格消息，或只有 `assistant/chunk` | `unknown_after_crash` | `recovered=true`、`error_type=RecoveredAfterCrash`、`recovered_from=none`、`partial_chunks` |
+
+一条事件成为某次 Attempt 的合格证据，必须同时满足三条（`partial_chunks` 使用同一套筛选）：
+
+1. `attempt_id` 与 Start 相同；
+2. `turn_id`、`step_id` 与 Start 相同，按值比较，`1` 不会匹配 `"1"`；
+3. `seq` 晚于 Start —— Start 之前写下的事件描述的不是这次调用。
+
+只要存在任意一条合格消息即判为 `succeeded`，因此"先有错作用域消息、后有正确消息"能被正确识别。
+
+`attempt_id` 只有在是非空、非纯空白字符串时才算有效身份。`None`、数字、布尔值、`""` 和纯空白一律视为缺失：Start 被跳过、在 `notes` 中说明、不写 Attempt End，绝不通过 `str()` 造出名为 `"None"` 的 Attempt。
+
+两种情况共同的硬约束：
+
+- 绝不重新调用 Provider；
+- 绝不伪造 `usage` 与 `finish_reason`（从未观测到）；
+- 绝不把 Chunk 拼成 `assistant/message`，Chunk 只作为审计证据保留；
+- 已有 `assistant/message` 只作证据，不重复追加；
+- 已闭合的 Attempt 不被修改，因此重复 recover 幂等；
+- 多个未闭合 Attempt 按 Start 事件原始顺序确定性收敛；
+- 恢复生成的 End 继承 Start 的 `correlation_id` 与 `composition_revision`，`causation_id` 指向 Start 的 `event_id`；
+- `attempt_id` 缺失的 Start 无法关联，跳过并在报告中说明，由不变量报告问题而不是伪造身份。
+
+`RecoveryReport` 与 `runtime/recovered` 都包含 `closed_model_attempts` 计数。
+
+旧版本写下的 Session 可能已经关闭 Step/Turn 却遗留未闭合 Attempt。Append-only 不允许插入历史位置，因此恢复器在既有 `step/end`/`turn/end` 之后追加 Attempt End，`CoreInvariantChecker` 也据此在整条流范围内判断配对，使这类历史 Session 重新变为不变量干净。
+
+这条豁免有明确门槛：晚于所属 Step 关闭才出现的 Attempt End，只有同时带 `recovered=true` 且 `causation_id` 等于对应 Start 的 `event_id` 时才被接受；普通的迟到 End、或指向别的事件的 `recovered=true` End，仍然违反 `attempt-end-inside-step`。
 
 `resume` 总是先 recover，再在同一 Session 追加一个新 Turn，并提醒模型重新检查 Workspace 和恢复结果后再重复副作用。
 
@@ -453,7 +497,7 @@ flowchart TD
 ### 12.1 State 与不变量
 
 - `StateProjector` 推导 Session 状态、当前开放 Turn/Step、完成数量和最后序号；
-- `CoreInvariantChecker` 检查序号、生命周期嵌套、Attempt、Tool Call/Result、Effect 与 Composition 等协议关系；
+- `CoreInvariantChecker` 检查序号、生命周期嵌套、Model Attempt 身份/配对/真实作用域、Tool Call/Result、Effect 与 Composition 等协议关系；检查按事件流中真正开放的 Turn/Step 判断，不采信 payload 自报的作用域；
 - 投影和检查不修改事件。
 
 ### 12.2 手动 Surface 压缩
@@ -554,7 +598,7 @@ python -m compileall -q src tests
 python -m pytest -q
 ```
 
-当前测试套件共 43 项，覆盖：
+当前测试套件共 70 项，覆盖：
 
 - EventStore expected-seq、尾部恢复和读取；
 - 跨进程 Stream 锁：两个独立 Python 进程并发追加、`expected_seq` 竞争、跨进程尾部半行修复、持锁期间阻塞、崩溃后可再取锁、异常路径解锁；
@@ -564,6 +608,8 @@ python -m pytest -q
 - Tool Schema、Policy、Middleware、失败、超时和并发 Barrier；
 - Workspace 越界与精确 Patch；
 - 取消、子进程收敛和崩溃恢复；
+- Model Attempt 恢复：崩后仅有 Start、仅有 Chunk、已有匹配 `assistant/message`、跨 Step 与跨 Turn 消息不算证据、错作用域消息在前正确消息在后、Start 之前的消息不算证据、Chunk 按作用域与 seq 计数、`attempt_id` 为 `None`/数字/纯空白时跳过、重复 recover 幂等、旧版本已闭合 Step/Turn 的 Append-only 修复、多 Attempt 按序收敛；
+- Model Attempt 不变量：End 无 Start、重复 Start/End、payload 作用域不符、无法使用的 `attempt_id`（`None`/数字/布尔/空串/空白）、Start 不在真正开放的 Turn/Step 内、普通 End 迟于 Step 关闭、缺 `causation_id` 的迟到 `recovered` End、同 Step 双开、已闭合 Step 缺 End，以及正常配对、运行中 Attempt 与合法 Append-only 修复不误报；
 - Scripted/OpenAI-Compatible Provider；
 - `.env` 解析、优先级、秘密不打印和测试隔离；
 - Kernel Scope、Activation、Hooks、Lifespan、Owned Tasks；
@@ -585,7 +631,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项，当前共 43 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项，当前共 70 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -594,7 +640,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Stream 锁边界 | 已有 `fcntl`/`msvcrt` 跨进程锁，但只是同机 Advisory Lock：绕过 `JsonlEventStore` 直接写文件不受约束，网络文件系统行为未验证 | 需要更强隔离时改用 SQLite 或独立 Store |
 | Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
 | 取消的提交点边界 | 取消恰好落在写入过程中时，调用方收到 `CancelledError` 但事件已提交（6.6）；无自动重试，因此不是 at-least-once | 调用方重新读取 Stream，按 `event_id`/correlation/业务身份判断是否已落盘 |
-| Model Attempt 恢复 | 未闭合 Attempt 无专门恢复事件 | 补齐 Attempt 恢复语义和不变量 |
+| Model Attempt 证据上限 | 未闭合 Attempt 已按证据补 End（11.1），但 `unknown_after_crash` 只说明“无法证明”，且丢失的 `usage`/`finish_reason` 无法找回 | 需要精确计费时在 Provider 边界先落盘用量 |
 | CLI 体验 | 非交互式，无审批、流式 UI、会话内连续输入 | 在不破坏 Runtime 边界下新增 Surface/UI 层 |
 | Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |
 | OpenAI Provider | 非流式、无重试/Fallback/限流 | 在 LlmRuntime/Provider 边界扩展 |

@@ -12,6 +12,14 @@
 - Guard every `JsonlEventStore` critical section with a real cross-process file lock on
   both POSIX (`fcntl`) and Windows (`msvcrt` byte-range locking), with an optional
   `lock_timeout`, and cover it with independent-process tests plus a Windows CI job.
+- Close unfinished Model Attempts during crash recovery: an attempt with a durable
+  `assistant/message` in the same turn and step, written after the attempt started, is closed as
+  `succeeded`, anything else as `unknown_after_crash`, without ever calling the provider again,
+  merging chunks or inventing usage and finish reasons. Starts whose `attempt_id` is not a
+  non-blank string are skipped instead of being coerced into an invented identity.
+- Report the repair as `closed_model_attempts` in `RecoveryReport` and `runtime/recovered`, and
+  add Model Attempt identity, pairing, duplication and real-lifecycle-scope invariants to
+  `CoreInvariantChecker`.
 - Make cancelling `JsonlEventStore.append`/`read`/`head` abandon the lock wait and
   converge its worker thread before `CancelledError` reaches the caller, so a cancelled
   operation can no longer write to the stream in the background. Convergence absorbs

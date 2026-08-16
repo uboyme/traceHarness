@@ -45,6 +45,24 @@ effect/outcome
 effect/reconciled
 ```
 
+## Model Attempt payloads
+
+`model/attempt-start` carries `turn_id`, `step_id`, `attempt_id`, `provider` and `model`.
+`model/attempt-end` carries the same scope plus `status`, and depending on how the attempt
+finished:
+
+| `status` | Written by | Extra fields |
+|---|---|---|
+| `succeeded` | AgentLoop | `finish_reason`, `usage` |
+| `cancelled` | AgentLoop | `error_type=CancelledError`, `message` |
+| `failed` | AgentLoop | `error_type`, `message` |
+| `succeeded` | RecoveryService | `recovered=true`, `recovered_from=assistant/message`, `message` |
+| `unknown_after_crash` | RecoveryService | `recovered=true`, `error_type=RecoveredAfterCrash`, `recovered_from=none`, `partial_chunks`, `message` |
+
+Recovered ends never carry `usage` or `finish_reason`: those were never observed, so
+inventing them would corrupt the audit trail. See
+[`recovery-semantics.md`](recovery-semantics.md).
+
 ## Core invariants
 
 - Sequence numbers are contiguous in the JSONL implementation.
@@ -56,6 +74,33 @@ effect/reconciled
 - A Turn closes after its Step closes.
 - Request fingerprints are reconstructable from the persisted Surface boundary and
   Composition Snapshot.
+
+Model Attempt invariants, each reported under a stable `InvariantViolation.name`:
+
+| Name | Meaning |
+|---|---|
+| `attempt-id-present` | A `model/attempt-*` event carries no usable `attempt_id` |
+| `single-attempt-start` | One `attempt_id` was started more than once |
+| `single-attempt-end` | One `attempt_id` was ended more than once |
+| `attempt-end-has-start` | An end has no earlier start with the same `attempt_id` |
+| `attempt-end-same-scope` | Start and end payloads disagree about `turn_id` or `step_id` |
+| `attempt-start-inside-step` | The attempt started with no open Turn/Step, or claimed a scope other than the one really open |
+| `attempt-end-inside-step` | The attempt ended after its own Turn or Step was closed, without being a recognised repair |
+| `single-open-attempt` | A second attempt started while one was still open in that Step |
+| `attempt-has-end` | An attempt in an already closed Step never received an end |
+
+`attempt_id` must be a non-empty, non-blank string. `None`, numbers, booleans, `""` and
+whitespace are treated as missing rather than coerced, so nothing is ever tracked under an
+invented id such as `"None"`.
+
+The scope checks read the Turn and Step that are actually open at that point in the stream,
+not just what the payload claims about itself.
+
+`attempt-has-end` is evaluated over the whole stream, not at `step/end`, so an append-only
+recovery that closes an attempt after the Step was already closed counts as paired. Such a
+late end escapes `attempt-end-inside-step` only when it carries `recovered=true` and a
+`causation_id` equal to the `event_id` of its own start. An attempt still running inside an
+open Step is not a violation.
 
 ## Versioning
 

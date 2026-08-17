@@ -74,8 +74,13 @@ class EventEnvelope:
     What is not: nothing isolates two consumers automatically. An envelope is a
     plain object, so passing one to two consumers shares one mutable payload
     between them. Any component that fans an event out to several recipients
-    owes each of them its own ``detach_event()`` copy. (No such fan-out exists
-    in this version.)
+    owes each of them its own ``detach_event()`` copy.
+
+    That fan-out exists today: `SessionEventFeed` hands one store-accepted event
+    to every in-process subscriber, and satisfies this rule by calling
+    ``detach_event()`` once *per subscriber* rather than once per publish. It is
+    an application of the ownership principle here, not an exception to it - the
+    envelope's own guarantees are unchanged.
     """
 
     event_id: UUID

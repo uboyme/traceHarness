@@ -2,6 +2,66 @@
 
 ## Unreleased
 
+- Add `SessionEventFeed`, an in-process channel for observing events an `EventStore` has
+  accepted, plus `PublishingEventStore`, a decorator that wraps any `EventStore` and
+  announces what it just accepted. The decorator is the boundary because `store.append()`
+  in `session/service.py` is the only append call site in `src/`, so every writer is
+  observable through one place and announcing a non-accepted event is not expressible.
+  The feed persists nothing, adds no event type, replays no history, keeps no state and is
+  visible only inside one process; recovery, the inspector and the invariant checks keep
+  reading the store. See [`docs/event-feed.md`](docs/event-feed.md).
+- Publish only after a successful append, and in sequence order. A conflict, a failure or a
+  cancellation publishes nothing - including on the may-have-committed path, since the feed
+  may miss events and the log may not. Publication means the store *accepted* the event for
+  the `Durability` its caller requested, not that it is fsynced: `durability` is passed
+  through unchanged, `BATCHED` is never upgraded to `SYNC`, and crash durability stays
+  entirely the store's contract. The feed adds no persisted fact of its own. One lock per stream spans append and publish, so two
+  concurrent writers cannot invert: the store serializes the writes, but the callers resume
+  independently, so seq 10's writer could otherwise publish after seq 11's.
+- Detach once per subscriber rather than once per publish, extending the event ownership
+  contract from the store boundary to fan-out. A subscriber mutating its own event changes
+  neither stored history, nor another subscriber's event, nor a later subscriber's.
+- Show a live activity timeline in `traceh chat` while a turn runs: step boundaries, model
+  attempts, the tool lifecycle, verification results, runtime errors, cancellation and
+  recovery. Every line carries the event's real persisted `seq`, so a line can be found
+  again with `traceh inspect`; the numbers are intentionally non-contiguous because hidden
+  events keep their sequence numbers. `--no-timeline` turns it off for scripts and quiet
+  output, and is a startup flag rather than a chat command.
+- Keep the timeline conservative about what it prints. Prompts, request and composition
+  snapshots, assistant text, file contents, patches and command output are never shown, and
+  an unrecognised event type renders as nothing instead of a raw payload dump. Tool argument
+  summaries are limited to a per-tool allowlist, clipped to one bounded line, and suppressed
+  entirely when the value looks like a credential; an unknown tool shows only its name and
+  call id.
+- Keep the loop free of presentation: timeline wording lives in `cli/timeline.py` as a pure
+  projection from `EventEnvelope` to one line or nothing, and `AgentLoop` imports no CLI,
+  console or timeline code. The timeline never enters the model surface and cannot change a
+  request fingerprint.
+- Give consumers a read-only `EventFeed` interface - `subscribe()` and `subscriber_count()`
+  only - and keep publication private to the store that owns the feed. A public `publish`
+  would let any holder inject an envelope the store never accepted, which a subscriber could
+  not tell from a real event, so the timeline would faithfully display a step that never
+  happened. `AgentRuntime.events` is now required and must be the same feed its
+  `PublishingEventStore` publishes to: defaulting it handed callers a subscribable object
+  that stayed silent forever.
+- Treat every timeline string as untrusted input. A tool name comes from a model response and
+  an error type from an arbitrary exception, so rendering one raw let a newline forge an extra
+  timeline row and an ESC byte emit a live terminal control sequence. All payload text now
+  passes through one `sanitize()`: control and format characters - including bidirectional
+  overrides - become spaces, whitespace collapses to exactly one line, and length is bounded.
+- Stop displaying a `shell` command entirely, and stop displaying a `runtime/error` message.
+  A command line is the most likely place for a credential and no keyword scan recognises
+  every secret shape, so the command is withheld unconditionally rather than filtered; an
+  exception message is arbitrary text that can quote a request or a credential. Shell shows
+  its name and call id, `runtime/error` shows its type. Displayable read-tool paths are still
+  checked for credential shapes and dropped whole when one matches.
+- Converge the timeline printer when a drain is cancelled. `asyncio.shield` protected the
+  printer but did not keep the drain waiting, so a cancelled drain returned while the printer
+  was still writing to the console - the same detached-worker shape already fixed for store
+  and provider workers. The drain now waits through `await_worker_convergence()`, absorbing
+  repeated cancellation, and re-raises the original `CancelledError` only once the printer is
+  done. A printer that raises is dropped as a display bug: it can neither fail a turn that
+  succeeded nor mask the caller's own exception or cancellation.
 - Stop `InMemoryEventStore` from handing out the very events it stores. `append()` and
   `read()` returned the objects held in the stream, and `EventEnvelope` being frozen only
   prevents rebinding its fields - the nested dicts and lists inside `data` stayed mutable.

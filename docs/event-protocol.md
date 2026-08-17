@@ -18,9 +18,9 @@ are mutable, and `event.data["nested"]["value"] = ...` is legal Python. There is
 
 History is therefore protected by an ownership rule rather than by the type system:
 **a boundary that hands an event to someone who may edit it hands over a detached copy.**
-Today that boundary is `EventStore.append()` and `read()`. The rule is not automatic: an
+The store boundary is `EventStore.append()` and `read()`. The rule is not automatic: an
 envelope is a plain object, so anything that fans one event out to several recipients owes
-each of them its own copy. No such fan-out exists in this version.
+each of them its own copy - see the fan-out paragraph below.
 
 `detach_event()` rebuilds the JSON graph through `to_json_value()` and carries every other
 field over by value, with no JSON text round trip, so ids and timestamps stay `UUID` and
@@ -49,6 +49,18 @@ Detachment covers the top-level payload, nested dicts, nested lists and dicts in
 Two `PendingEvent`s that reuse one nested input object still produce independent events.
 The guarantee is that stored history cannot be rewritten through a handed-out event - not
 that the copy itself is immutable. A caller may freely edit its own copy.
+
+Fan-out extends this rule rather than replacing it. `SessionEventFeed`
+([`event-feed.md`](event-feed.md)) hands the same store-accepted event to several in-process
+subscribers, so it calls `detach_event()` once **per subscriber**: one copy per publish
+would give them a shared mutable payload. A subscriber mutating its own event changes
+neither stored history, nor another subscriber's event, nor what a later subscriber
+receives. Any future component that distributes one event to several recipients owes them
+the same treatment.
+
+The feed is not part of the persisted protocol: it introduces no event type, persists
+nothing, replays no history and is visible only inside one process. Recovery, the inspector
+and the invariant checks read the store, never the feed.
 
 `JsonlEventStore` needs no store-specific `detach_event()` call, because its history lives
 in the file and both directions already pass through the shared `EventEnvelope`

@@ -44,9 +44,9 @@
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell` |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互；其余命令仍是一次执行一个 Turn。不是流式 TUI |
+| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，并在 Turn 运行期间实时打印 Step/Tool Timeline（可用 `--no-timeline` 关闭）；其余命令仍是一次执行一个 Turn。不是流式 TUI |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 137 项，通过后才允许更新本表 |
+| 当前自动化测试 | 362 项，通过后才允许更新本表 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
 当前开发重点是把 v0.3 的可靠性、真实使用体验、可观察性和文档治理做扎实；v0.4+ 插件与多 Agent 仅保留协议边界，不视为已实现能力。
@@ -75,7 +75,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - Docker、远程沙箱或操作系统级安全隔离；
 - 分布式 Event Store；
 - 完整流式模型输出、重试、Fallback 与限流中间件；
-- 类似 Codex/Claude Code 的富交互终端界面：`traceh chat` 只是行式多轮提示符，没有流式输出、Tool Call 时间线和执行前审批。
+- 类似 Codex/Claude Code 的富交互终端界面：`traceh chat` 已有实时 Tool Timeline（见 13.6），但仍是行式提示符，没有 token 流式输出、可交互 TUI 和执行前审批。
 
 ## 3. 仓库目录与职责
 
@@ -86,13 +86,13 @@ traceharness/
 ├── src/traceh/
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
-│   ├── cli/                          命令解析、.env 加载、交互式 chat 循环和终端编码
+│   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影和终端编码
 │   ├── evaluation/                   确定性 Benchmark Runner
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       Scope、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
 │   ├── runtime/                      AgentRuntime、AgentLoop、请求、Continuation、Verifier
-│   ├── session/                      EventStore、跨进程文件锁、投影、恢复、压缩和不变量
+│   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、压缩和不变量
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程收敛与内置工具
 ├── tests/                            单元、契约、恢复、取消、跨进程、端到端和 Benchmark 测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
@@ -134,14 +134,17 @@ flowchart TD
     AL --> SS["SessionService"]
     RB --> SP["SurfaceProjector"]
     TR --> SS
-    SS --> ES["EventStore"]
+    SS --> PS["PublishingEventStore"]
+    PS --> ES["EventStore"]
     ES --> JL["JSONL Session / Effect Streams"]
+    PS -. "内层 append 按请求的 Durability 正常返回后发布（不等于 fsync）" .-> FEED["SessionEventFeed（进程内、只读订阅）"]
+    FEED -. "只读观察" .-> UI["CLI Timeline"]
     REC["Recovery / Inspector / Invariants / Compaction"] --> SS
 ```
 
 依赖规则：
 
-- `AgentLoop` 只编排生命周期，不导入具体工具、JSONL 文件或厂商 HTTP 逻辑；
+- `AgentLoop` 只编排生命周期，不导入具体工具、JSONL 文件或厂商 HTTP 逻辑；也**不导入 CLI、Console、颜色或 Timeline 文案**：Timeline 是订阅 Feed 的界面层投影，主循环不知道它存在；
 - `AgentRuntime` 是对外门面和默认依赖装配点；
 - Provider 与 Tool 通过公共协议进入 Runtime；
 - Projector 和 Inspector 只消费事件，不反向修改历史事实；
@@ -230,9 +233,9 @@ flowchart LR
 
 因此“事件历史不会被改写”是一条**所有权契约**，而不是语言保证。这条契约由**具体边界**承担，不是自动生效的：
 
-- 当前的分发边界只有 `EventStore.append()` 与 `read()`，它们返回的 Envelope 归调用方所有；
+- Store 边界是 `EventStore.append()` 与 `read()`，它们返回的 Envelope 归调用方所有；
 - Envelope 只是普通对象，框架**不会**自动隔离两个消费者：同一个 `EventEnvelope` 被交给两个消费者时，它们共享同一份可变 payload；
-- 因此任何把一个事件分发给多个接收方的组件，都必须为每个接收方单独 detach。本版本不存在这种分发（未实现 Feed）。
+- 因此任何把一个事件分发给多个接收方的组件，都必须为每个接收方单独 detach。本版本确实存在这种扇出：`SessionEventFeed`（6.7）为**每个** Subscriber 单独 detach 一份。
 
 [`detach_event()`](../../src/traceh/api/events.py) 是可复用的边界 helper：它基于既有的 `to_json_value()` 重建整个 JSON 图，按值携带其余全部元数据（`event_id`、`stream_id`、`seq`、`type`、`schema_version`、`occurred_at`、`causation_id`、`correlation_id`、`actor_id`、`composition_revision`），不经过 JSON 文本编码，因此 Envelope 上的 `UUID` 与 `datetime` 不会退化成字符串。模块内部的 `_detach_json_data()` 只是实现细节，不作为公共 API，也不从包级 `__init__` 导出。
 
@@ -359,6 +362,77 @@ flowchart LR
 - 由于取消令牌的存在，POSIX 的无限等待从内核阻塞改为可中断轮询：等待仍然无限，但可被 asyncio 取消。
 
 第三行是**提交点边界（may-have-committed）**：取消恰好落在写入过程中时，调用方收到 `CancelledError`，事件却已经提交。这里没有任何自动重试机制，因此不应称为 at-least-once。调用方不能假设“收到取消 = 没有写入”；正确做法是重新读取 Stream，并按 `event_id`、correlation 或业务身份判断该操作是否已经落盘，而不是只看 Head 数值——Head 也可能是别的写入者推进的。
+
+### 6.7 进程内 Event Feed
+
+[`session/event_feed.py`](../../src/traceh/session/event_feed.py) 提供**观察通道**，让界面在 Turn 运行期间就能看到事件，而不必等 Turn 结束再读文件。它比事件日志弱得多，这些边界必须写清楚：
+
+| 维度 | Feed 的事实 |
+|---|---|
+| 新增持久化事实 | 否。不落盘、不参与恢复、不产生任何新事件类型 |
+| 额外的崩溃持久性 | 否。事件在内层 `append()` **按调用方请求的 `Durability` 正常返回之后**才发布。Feed 不把 `BATCHED` 升级成 `SYNC`，也不增加任何自己的保证：一条已发布事件能否在操作系统崩溃后存活，完全由 EventStore 原契约决定 |
+| 事实源 | 否。Runtime、`RecoveryService`、Inspector、不变量检查仍只读 `EventStore` |
+| 历史 | 否。订阅**不重放**历史；需要历史仍走 `EventStore.read()` |
+| 状态 | 否。Feed 不保存投影或缓存，不是第二份 State |
+| 跨进程 | 否。另一个进程直接写同一份 JSONL 时，本 Feed 收不到 |
+| 可丢失 | 是。append 返回之后、发布之前进程崩溃时，实时观察会漏；该事件的持久性仍然只由它请求的 `Durability` 决定，不会因此变差 |
+
+#### 为什么边界选在 EventStore Decorator
+
+`PublishingEventStore` 是包装任意 `EventStore` 的装饰器，而不是 `SessionService` 里的钩子。理由有两条，都可核查：
+
+1. **后端无关**：包装 `InMemoryEventStore` 与 `JsonlEventStore` 的可观察语义完全相同，换 Store 不改变 Feed 语义；
+2. **“Store 已接受”正好在这里成立**：`src/traceh/session/service.py` 中的 `store.append()` 是整个 `src` 树里唯一的 append 调用点，所有写入者（`AgentLoop`、`ToolRuntime`、`RecoveryService`、`CompactionService`、`AgentRuntime.cancel()`）都经过它。因此“发布 Store 从未接受的事件”在这个边界上无法表达，也不需要每个写入者自己记得通知。
+
+`build_default_runtime()` 无条件包装 Store，并把 `SessionEventFeed` 暴露为 `AgentRuntime.events`。无订阅者时代价是每次 append 一把无竞争的锁。
+
+#### 顺序与可见性契约
+
+```mermaid
+flowchart LR
+    W["写入者：AgentLoop / ToolRuntime / Recovery"] --> SS["SessionService.append_*"]
+    SS --> PS["PublishingEventStore.append（每 Stream 一把锁）"]
+    PS --> ES["内层 EventStore：按请求的 Durability 追加"]
+    ES -- "正常返回后，仍在锁内" --> FEED["SessionEventFeed（私有发布）"]
+    ES -- "失败 / 冲突 / 取消：发布 0 条" --> NONE["不发布"]
+    FEED --> SUB["每个 Subscriber 一份 detach_event() 副本"]
+    SUB --> TL["cli/timeline.py 投影为一行文本"]
+    TL --> OUT["traceh chat 实时打印"]
+    ES --> TRUTH["事实源：Recovery / Inspector / 不变量只读这里"]
+```
+
+契约要点：
+
+- **先被 Store 接受，后发布**：`_publish()` 只在内层 `append()` 正常返回后调用，因此 `ConcurrencyConflict`、序列化失败或任何 append 异常都发布 0 条；取消同样发布 0 条，**包括** may-have-committed 那条路径——Feed 允许漏，日志不允许丢；
+- **是“接受”，不是额外持久性**：`durability` 原样透传，因此一次 `Durability.BATCHED` 追加会在 Store 从「已 flush 未 fsync」的写入返回时就被发布，这正是调用方所要求的。发布只表示“Store 已接受”，绝不表示“已 fsync”；`BATCHED` 通知是合法的，对应事件在操作系统崩溃时仍受 `BATCHED` 边界约束；
+- **按 seq 顺序发布**：每个 Stream 一把 `asyncio.Lock`，同时覆盖“append + publish”。若只在 append 之后发布，两个并发写入者会自由竞争：Store 已序列化写入，但调用方各自恢复执行，seq 10 的写入者可能被调度器挂起、在 seq 11 之后才发布。把锁跨到发布之上，使“按 seq 顺序”成为结构性质，而不是依赖当前调度巧合。不同 Stream 用不同锁，互不阻塞；
+- **一批多条**按 seq 顺序发布；
+- **Stream 严格隔离**：Session Stream 的订阅者收不到别的 Session，也收不到 Effect Stream；
+- **每 Subscriber 一份**：见下节；
+- **发布不 await**：`publish()` 只往无界队列里 `put_nowait`，因此锁很快释放，任何订阅者都无法延长它。
+
+#### 消费者只拿到只读接口
+
+观察者拿到的是 `EventFeed` Protocol，只暴露 `subscribe()` 与 `subscriber_count()`。发布位于 `SessionEventFeed` 的私有 `_publish()`，唯一调用者是同模块的 `PublishingEventStore`。
+
+这条区分是承重的：如果消费者接口上有公共 `publish`，任何拿到 Feed 的代码都能注入一条 Store 从未接受的 Envelope，而 Subscriber 无法把它与真事件区分开——Timeline 会忠实地显示一个从未发生的 Step。把发布移出消费者接口，使“只有 Store 接受的事件才会被发布”成为 **API 形状的性质**，而不是依赖观察者自觉遵守的约定。下划线不是安全沙箱，但它明确了权限边界。
+
+同理，`AgentRuntime.events` 是**必填**构造参数，而且必须是该 Runtime 的 `PublishingEventStore` 实际发布的那一个 Feed 对象。给它一个默认值会交给调用方一个「可以订阅但永远沉默」的对象——接口存在而能力不存在。自定义装配必须显式把两者配对，正如 `build_default_runtime()` 所做的。
+
+#### Event 所有权从 Store 边界扩展到每个 Subscriber
+
+6.4 的所有权契约只覆盖 `append()`/`read()` 交回调用方的对象。Feed 引入了**扇出**，这正是 6.1 预留的那个缺口：把同一个 `EventEnvelope` 交给两个消费者，它们会共享同一份可变 payload。因此 `publish()` 为**每个** Subscriber 单独调用一次 `detach_event()`，而不是每次发布只复制一次。可观察结果：Subscriber A 修改嵌套 payload，不影响 Store 历史、不影响 Subscriber B 已收到的事件、也不影响此后任何 Subscriber 收到的事件。
+
+#### 无界队列的明确取舍
+
+每个 `EventSubscription` 有一个无界 `asyncio.Queue`：
+
+- **不对 Runtime 施加背压**：慢订阅者永远不能拖慢或弄失败一次 Store append；
+- **被遗弃或长期不消费的订阅者会占内存**，上限只有该 Session 产生的事件量；
+- **Chat 生命周期在每条退出路径上都关闭订阅**（正常、异常、取消、EOF、`/exit`），因此随包发布的消费者不泄漏；
+- **未来若改为有界队列，必须定义明确的 overflow 语义**：静默丢事件会让 Timeline 对已经发生的事情说谎。
+
+`EventSubscription.close()` 幂等：它把结束标记排在已发布事件之后，因此“先 close 再 drain”会打完所有已排队事件再结束——这正是 Chat 能承诺“Timeline 出现在最终回答之前”的原因，不依赖轮询或 sleep。对已耗尽的订阅再迭代返回空，不会死等一个已被消费掉的结束标记。
 
 ## 7. Composition、Surface 与可重建请求
 
@@ -654,7 +728,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh eval` | 运行 Benchmark 目录 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
 
-除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，但仍是行式提示符：没有 token 流式输出、实时 Tool Call 时间线、执行前审批，也不能在 Turn 运行期间继续输入。
+除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，以及 Turn 运行期间的实时 Step/Tool Timeline（13.6）；但它仍是行式提示符：没有 token 流式输出、执行前审批，也不能在 Turn 运行期间继续输入。`run`/`resume` 本轮**没有**接 Timeline。
 
 ### 13.2 `.env` 与配置优先级
 
@@ -724,6 +798,58 @@ Turn 通过 `asyncio.shield` 提交，因此中断到达时 Runtime 仍持有该
 - 中文等非 ASCII 内容原样进入 `user/message`，只去除首尾空白；
 - 若行内出现 U+FFFD，说明原字符在解码时已经丢失：调用模型前拒绝该行、打印提示、不写 `user/message`、不猜测原文。
 
+### 13.6 Chat 实时 Timeline
+
+Timeline 由两部分组成，职责分开：
+
+| 模块 | 职责 |
+|---|---|
+| [`session/event_feed.py`](../../src/traceh/session/event_feed.py) | 通用、后端无关的进程内 Feed（6.7），不含任何终端文案 |
+| [`cli/timeline.py`](../../src/traceh/cli/timeline.py) | 纯展示投影：`EventEnvelope` → 一行文本或 `None`，不打印、不写入、不改事件 |
+
+`cli/chat.py` 把两者接起来：Turn 开始前订阅 Session Stream，Turn 期间由一个独立 Task 逐行打印，Turn 结束后先 `close()` 再等该 Task 排空，然后才打印最终回答。
+
+行为事实：
+
+- 默认开启；启动参数 `--no-timeline` 关闭。它是**启动参数**，不是 Chat 内部命令，`/help` 里如此说明；
+- 每行格式为 `[event <seq>] <文本>`，其中 `<seq>` 是 Session Stream 里**真实的持久化序号**，不是 CLI 生成的行号；被隐藏的事件仍占用序号，所以行号通常不连续，这本身就是证据；
+- 真实输出示例（`read_file` 一步 + 收尾一步）：
+
+```text
+[event 4] Turn started
+[event 5] Step 1 started
+[event 9] Model scripted/m called
+[event 11] Model responded
+[event 12] Tool read_file requested hello.txt
+[event 13] Tool read_file started
+[event 14] Tool read_file succeeded
+[event 15] Step 1 completed
+[event 16] Step 2 started
+[event 23] Step 2 completed
+[event 24] Turn ended (completed)
+assistant> Done reading.
+[reason=completed steps=2 tokens=0 verification=None]
+```
+
+- 显示的事件类型：`turn/start`、`turn/end`、`step/start`、`step/end`、`model/attempt-start`、`model/attempt-end`、`tool/call`、`tool/admitted`、`tool/result`、`verification/result`、`runtime/error`、`runtime/cancel-requested`、`runtime/recovered`；
+- **默认不显示**：`composition/snapshot`、`request/snapshot`、`assistant/*`、`user/message`、`inbox/*`、`session/created`、`surface/replace`、Effect 事件，以及任何未知类型。未知类型渲染为空而不是打印原始 payload——会把不认识的东西一律打印的界面，正是秘密泄漏到终端的方式；
+- **每个 payload 字符串都被当作不可信输入**。`tool_name` 来自模型响应，`error_type` 来自任意异常，路径来自工具参数。原样插值时，一个换行会伪造出一整行 Timeline，一个 ESC 字节会变成真正的终端控制序列。因此所有 payload 文本（`tool_name`、`tool_call_id`、`provider`、`model`、`reason`、`status`、`error_type`、可显示路径）都必须经过统一的 `sanitize()`，且 `_text()` 是处理器读取字段的唯一入口——这样就不存在“某个字段忘了过滤”的可能：
+  - Unicode 分类为 `Cc`（含 ESC、CR、LF、退格）、`Cf`（含双向文本覆写）、`Cs`、`Co` 的字符统一替换为空格：ESC 序列失去 ESC 后剩下的括号文本是惰性的，换行再也无法伪造行，双向覆写再也不能重排用户看到的内容；
+  - 随后折叠空白，结果**严格是一行**；
+  - 统一长度上限 `MAX_DETAIL_CHARS`，超出则截断加省略号，长值无法把真实信息挤出屏幕。
+- **`shell` 的 `command` 默认完全不显示**。命令行是最可能出现凭据的地方，而没有任何关键词扫描能可靠识别所有秘密形态；“扫几个词然后把其余原样打印”只是在等一个不常见的 Token 格式出现。因此 Shell 调用只显示工具名与 call id，对它执行什么一概不显示——这是无条件规则，不会被“看起来无害”的命令绕过。
+- Tool 参数摘要因此只剩已知读取类工具的白名单参数（`list_files`/`read_file`/`search_text`/`apply_patch` 的 `path`）；这些值仍要经过凭据形态检查（关键词加上 `sk-`、`ghp_`、`xox?-`、URL basic auth 等形状），命中即**整段不显示**（部分遮蔽的秘密仍然是泄漏）。该检查是路径这一受限取值范围上的兜底，不是通用秘密探测器——这正是 `shell` 采取「不显示」而不是「扫描后显示」的原因。未知工具只显示工具名与 call id。
+- payload 缺字段或类型不对时降级为较短的一行，绝不抛异常终止 Chat；
+- **`runtime/error` 只显示 `error_type`**，不显示 `message`，也不显示 traceback。异常消息是任意文本：Provider 错误可能引用请求内容，认证失败可能引用它尝试过的凭据。Chat 自己那行 `error: <类型>: <消息>` 来自它捕获到的异常，是既有行为；Timeline 不再把同一段潜在秘密复制一遍。
+- 已知残余边界（如实记录）：注入文本中的方括号内容会作为**该行内部的惰性文本**保留，例如 `tool_name` 里的 `[event 999]` 仍会出现在同一行中。保证的是“无法产生第二行”“行首始终是真实事件号”，而不是“无法出现形似标记的字符”；为工具名转义所有方括号会损失可读性，收益不足。
+- `/help`、`/session`、空行、未知斜杠命令都不产生事件，因此也不产生 Timeline 行；
+- 继续旧 Session 时只显示订阅之后的新事件，不重刷历史；恢复摘要行为不变；
+- Turn 失败时：先排空已发布的 Timeline（含 `Runtime error` 那行），再打印原有 `error: <类型>: <消息>`，Chat 继续下一轮；
+- `/exit`、`/quit`、EOF、Ctrl+C、异常和取消都会关闭订阅，不留订阅、Task 或队列引用；
+- 输出为普通文本，无第三方运行时依赖，遵循既有 UTF-8 终端策略（13.5）。
+
+Timeline 是纯界面：它不进入 Model Surface，不改变 Request Fingerprint，也不写任何事件。
+
 ## 14. 已有扩展边界与未来接口
 
 当前代码中存在但尚未形成完整产品能力的边界：
@@ -749,10 +875,15 @@ python -m compileall -q src tests
 python -m pytest -q
 ```
 
-当前测试套件共 137 项，覆盖：
+当前测试套件共 362 项，覆盖：
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
+- 进程内 Event Feed 契约（[`tests/test_event_feed.py`](../../tests/test_event_feed.py)，全部用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：append 成功后才发布；`ConcurrencyConflict` 发布 0 条且 Head 不变；一批多条按 seq 顺序；三个真实竞争写入者（读 Head → append → 冲突重试）下发布顺序必须等于 Store 中的 seq 顺序；两个 Subscriber 都收到同一批逻辑事件；两个 Subscriber 的嵌套 payload 不共享；Subscriber 修改不污染 Store；先前 Subscriber 的修改不影响后来者；close 后不再投递且订阅计数归零；重复 close 安全；close 前已排队事件仍可 drain（这正是"Timeline 先于回答"的机制）；对已耗尽订阅再迭代返回空而不是死锁；完全不消费的订阅者不阻塞 20 次连续 append 且事件确实排队未丢；Session 与 Effect Stream 严格隔离；抛异常的消费者在自己的 Task 里失败、不影响该次 Store append，也不影响后续 append；发布不产生任何新事件类型；订阅不重放历史；装饰器完整代理 `read`/`head`/`list_streams`；
+- Feed 只读接口与连线：消费者接口上不存在任何公共 publish 方法，无法从公开观察面注入伪 Envelope（伪造的 Envelope 既到不了 Subscriber 也进不了日志）；`Durability` 由 Spy Store 证明原样透传，`BATCHED` 不被偷偷升级为 `SYNC` 且 `BATCHED` 追加照样会被发布；`AgentRuntime.events` 是必填参数（用签名断言）、且与 `PublishingEventStore` 发布目标是同一个对象；经 `runtime.sessions` 写入后 `runtime.events` 的订阅者确实收到事件；
+- Timeline 终端安全：10 种恶意 payload 值（`\n`、`\r`、`\x1b[2J`、`\b`、`\a`、`\0`、`\u202e`、`\u200b`，即换行、回车、清屏 ESC、退格、响铃、NUL、双向覆写、零宽字符，另加 ANSI 颜色序列与 500 字符超长值）× 13 个被插值字段（`tool_name`、`tool_call_id`、`provider`、`model`、`reason`、`status`、`error_type` 等）全部参数化，断言每行严格一行、无 `Cc`/`Cf`/`Cs`/`Co` 字符残留、无 ESC、长度有界；形如整行的伪造 `tool_name` 无法产生第二行且行首仍是真实事件号；6 种凭据形态的 Shell 命令（`sk-proj-`/`ghp_`/`xoxb-`/URL basic auth/环境变量赋值/连接串，全部为明确标注的 FAKE/FIXTURE 夹具）一律不显示，无害命令同样不显示；`runtime/error` 的 message 与 traceback 均不显示；`sanitize()` 幂等有界且不破坏正常中文；端到端一轮里模型选择的恶意工具名不会伪造 Console 行；
+- Timeline Drain 收敛：Gated Printer 自己点亮 `entered` 并阻塞，Drain 连续被取消 3 次、每次都让事件循环真正调度后断言 Drain **仍未结束**且 Printer 仍未结束，释放后 Drain 才重新抛出 `CancelledError`，并断言 Printer 已 done、订阅计数归零、无遗留 `traceh-chat-timeline` Task；Drain 必定先关闭订阅（否则真实 Printer 永不结束）；Renderer 主动抛异常时两轮 Turn 仍完成、两条最终回答都打印、Chat 继续、订阅与 Task 均清理，且事件日志未因观察者失败而出现 `runtime/error`；
+- Timeline 投影与 Chat 实时性（[`tests/test_cli_timeline.py`](../../tests/test_cli_timeline.py)）：**Gate 工具在 `execute()` 里点亮 `entered` 并阻塞，测试据此在 Turn 尚未结束时断言 Console 已出现 requested/started 行、且尚无 succeeded 与 `assistant>`，释放后再断言 succeeded 与最终回答，并断言两者的输出顺序**；每行携带真实持久化 seq 且渲染出的 seq 全部能在事件日志里找到、且刻意断言序号不连续（证明不是 CLI 行号）；`step/end` 复用 `step/start` 的编号，缺少 start 时仍能渲染；Tool 生命周期与失败 `error_type`；两种 Verification 结果；`runtime/*` 与 `runtime/recovered`；10 类噪声/未知事件一律渲染为空（含塞入假 Key 的 request payload）；11 组缺字段/错类型 payload 不抛异常；shell 摘要单行限长；命中凭据特征时整段不显示；未知工具只显示名与 call id；渲染不修改事件；`--no-timeline` 完全静默但最终回答与摘要不变；继续旧 Session 时最小显示序号大于既有历史长度（不重刷）；失败 Turn 保留 Timeline 且 Chat 可继续；内部命令与空行不产生 Timeline 行；正常结束与被取消后订阅计数归零且无遗留 Timeline Task；整轮 Timeline 输出不含 Prompt marker、文件内容与请求结构；`--no-timeline` 的解析默认值；
 - 跨进程 Stream 锁：两个独立 Python 进程并发追加、`expected_seq` 竞争、跨进程尾部半行修复、持锁期间阻塞、崩溃后可再取锁、异常路径解锁；
 - EventStore 取消语义：等锁期间取消 `append`/`head`/`read` 时 Worker 线程先收敛再抛 `CancelledError`、被取消的 append 绝不落盘、临界区内取消按原子完成收尾、连续多次取消也无法打断收敛；
 - Session/Surface/Compaction/Invariant；
@@ -789,7 +920,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项到 70 项，`traceh chat` 再增加 24 项到 94 项，取消收敛与子进程编码加固再增加 12 项到 106 项，输出所有权与本地资源收敛再增加 3 项到 109 项，超时证据入下一 Step 与测试清理再增加 3 项到 112 项，Tool 与 Runtime 两类超时的边界再增加 2 项到 114 项，Event 所有权与 EventStore 脱离契约再增加 23 项，当前共 137 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项到 70 项，`traceh chat` 再增加 24 项到 94 项，取消收敛与子进程编码加固再增加 12 项到 106 项，输出所有权与本地资源收敛再增加 3 项到 109 项，超时证据入下一 Step 与测试清理再增加 3 项到 112 项，Tool 与 Runtime 两类超时的边界再增加 2 项到 114 项，Event 所有权与 EventStore 脱离契约再增加 23 项到 137 项，进程内 Event Feed 与 Chat 实时 Timeline 再增加 71 项到 208 项，Feed 只读接口、Timeline 终端安全、Drain 收敛与 Feed 连线加固再增加 154 项，当前共 362 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -799,11 +930,15 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
 | 子进程输出磁盘占用 | 捕获用的临时文件当前没有大小上限，失控命令可以写满临时目录；上层 Tool Result 截断只影响读出后的文本，不会减少读取前已经占用的磁盘 | 需要时在捕获层增加大小上限并在超限时截断 |
 | 临时文件删除延后 | 孙进程继承捕获句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭 | 与“不管理孙进程”是同一条边界，必要时由外部清理 |
-| Event payload 可变性 | Store 历史已由脱离副本保护（6.4），但 `EventEnvelope.data` 本身仍是普通可变 JSON 图：拿到副本的代码可以随意修改自己那一份，语言层面不阻止。契约由具体边界承担而非自动生效：同一个 Envelope 被交给两个消费者时，框架不会自动隔离它们 | 需要更强保证时才考虑不可变 JSON 容器类型，代价是公共 API 与全部 `event.data` 读取点都要改；未来若引入 Feed 一类分发能力，必须为每个 subscriber 单独 detach（本版本无此能力） |
+| Event payload 可变性 | Store 历史已由脱离副本保护（6.4），但 `EventEnvelope.data` 本身仍是普通可变 JSON 图：拿到副本的代码可以随意修改自己那一份，语言层面不阻止。契约由具体边界承担而非自动生效：同一个 Envelope 被交给两个消费者时，框架不会自动隔离它们 | 需要更强保证时才考虑不可变 JSON 容器类型，代价是公共 API 与全部 `event.data` 读取点都要改。已有的扇出（`SessionEventFeed`）按契约为每个 Subscriber 单独 detach；任何新增分发点必须同样处理 |
 | Event 复制成本 | 复制只在 Event API 边界发生，单次规模等于一个事件 payload；一次 `read()` 的总成本与它解析并返回的 payload 总量相关。`InMemoryEventStore.read()` 为每个返回事件重建一次 JSON 图；JSONL 侧则由共享序列化边界重建（`from_dict()` 读、`to_dict()` 写），且 `read()` 的 `from_seq` 是过滤而非定位，仍解析整条 Stream | 属于正确性的必要代价；刻意不加缓存，因为缓存会重新引入共享引用。全量扫描是 JSONL 既有边界（见本表 JSONL 扩展性一行），需要时应换 Store 或加 Checkpoint，而不是回退到共享引用 |
 | 取消的提交点边界 | 取消恰好落在写入过程中时，调用方收到 `CancelledError` 但事件已提交（6.6）；无自动重试，因此不是 at-least-once | 调用方重新读取 Stream，按 `event_id`/correlation/业务身份判断是否已落盘 |
 | Model Attempt 证据上限 | 未闭合 Attempt 已按证据补 End（11.1），但 `unknown_after_crash` 只说明“无法证明”，且丢失的 `usage`/`finish_reason` 无法找回 | 需要精确计费时在 Provider 边界先落盘用量 |
-| CLI 体验 | `chat` 已支持会话内连续输入，但仍无 token 流式输出、实时 Tool Call 时间线、执行前审批，也不能在 Turn 运行期间输入 | 在不破坏 Runtime 边界下扩展 Surface/UI 层 |
+| CLI 体验 | `chat` 已支持会话内连续输入与实时 Step/Tool Timeline（13.6），但仍无 token 流式输出、执行前审批，也不能在 Turn 运行期间输入；`run`/`resume` 尚未接 Timeline | 在不破坏 Runtime 边界下扩展 Surface/UI 层，复用同一 Feed 与 Formatter |
+| Timeline 注入的残余边界 | 所有 payload 文本已统一 `sanitize()`：控制/格式字符被中和、严格一行、长度有界，因此无法伪造第二行、无法发出终端控制序列。但形似结构标记的**惰性文本**仍会留在该行内（例如 `tool_name` 里的 `[event 999]`） | 保证是“不产生第二行、行首为真实事件号”；如需更强，代价是为每个字段加转义或引号，可读性下降 |
+| Feed 只在同进程可见 | `SessionEventFeed` 是进程内通道：另一个进程直接写同一份 JSONL 时本进程收不到，因此没有跨进程实时观察能力 | 需要时才考虑文件 Tail 或独立通知机制；本版本刻意不做 |
+| Feed 无背压/溢出策略 | 队列无界：慢订阅者不会拖慢 Runtime，但被遗弃的订阅者会占内存，上限是该 Session 的事件量。Chat 在每条退出路径关闭订阅，因此随包消费者不泄漏 | 若改为有界队列，必须先定义明确 overflow 语义；静默丢事件会让 Timeline 说谎 |
+| Feed 可丢失，不是证据 | 内层 append 已正常返回、尚未发布时进程崩溃，Feed 通知会漏；Event Log 能否在操作系统崩溃后保留，仍由该次请求的 `Durability` 决定。Feed 不重放历史、不持久化 Offset | 恢复与审计继续只读 `EventStore`；需要历史用 `read()` |
 | 中断退出码 | 退出码由宿主 Shell 和 Python 信号处理决定；硬中断（Ctrl+Break/关闭控制台）实测为 `3221225786`，不会运行收敛代码 | 依赖启动时打印的 session_id 与崩溃恢复，不承诺统一退出码 |
 | 模型调用中断 | 取消 OpenAI-Compatible 请求时会等待 HTTP Worker 收敛，最坏等到 `timeout_seconds` | 需要立即中止时改用可中断的 HTTP 客户端 |
 | Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |
@@ -821,6 +956,8 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Agent Loop / Continuation | `runtime/agent_loop.py`、`continuation.py`、E2E/取消测试 | 4、5、10、11、15、16 |
 | Event/Store/Session | `api/events.py`、`session/*`、event/invariant/recovery 测试 | 5、6、7、11、12、15、16 |
 | Event 所有权 / Store 返回值 | `api/events.py`（`detach_event`、`to_dict`、`from_dict`、`materialize`）、`session/event_store.py`、`session/jsonl.py`、`tests/test_event_store_contract.py` | 6.1、6.4、15、16 |
+| Event Feed / 发布顺序 | `session/event_feed.py`、`runtime/agent_runtime.py` 的装配、`tests/test_event_feed.py` | 4、6.1、6.4、6.7、15、16 |
+| Timeline / Chat 输出 | `cli/timeline.py`、`cli/chat.py`、`cli/main.py`、`tests/test_cli_timeline.py`、`tests/test_cli_chat.py`、README | 1、3、13.4、13.6、15、16 |
 | Provider/Request | `api/llm.py`、`llm/*`、`request_builder.py` | 7、8、13、15、16 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |

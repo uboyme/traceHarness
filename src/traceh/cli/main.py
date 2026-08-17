@@ -173,6 +173,7 @@ async def _chat(args: argparse.Namespace) -> int:
         default_console(),
         workspace=workspace,
         session_id=session_id,
+        timeline=args.timeline,
     )
 
 
@@ -302,6 +303,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--session-id",
         default=None,
         help="Continue an existing session; its workspace comes from the event log",
+    )
+    chat.add_argument(
+        "--no-timeline",
+        dest="timeline",
+        action="store_false",
+        help="Do not print live step/tool activity while a turn runs",
     )
     _add_runtime_arguments(chat)
     chat.set_defaults(handler=_chat)

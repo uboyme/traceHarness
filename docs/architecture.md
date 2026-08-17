@@ -19,7 +19,7 @@ Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
 
 State
-  SessionService, EventStore, SurfaceProjector, RecoveryService
+  SessionService, EventStore, SessionEventFeed, SurfaceProjector, RecoveryService
 
 Kernel
   Scope, HookDispatcher, Activation, Lifespan, OwnedTaskSet
@@ -33,6 +33,15 @@ API.
 `EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out
 detached copies rather than references into its own history; see
 [`event-protocol.md`](event-protocol.md).
+
+`SessionEventFeed` sits in the State layer but points upward: it is an in-process
+notification channel that applications may subscribe to, never a store the runtime reads
+from. Consumers receive the read-only `EventFeed` interface - publication is private to the
+`PublishingEventStore` that owns the feed, so an observer cannot announce an event the store
+never accepted. Notification means "the store accepted this for the `Durability` requested",
+not "this is fsynced"; the feed adds no persisted fact and no crash durability of its own.
+Dependencies still point downward - the CLI timeline depends on the feed, and nothing in
+`runtime/` depends on the CLI. See [`event-feed.md`](event-feed.md).
 
 ## Thin loop
 

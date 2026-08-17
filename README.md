@@ -15,6 +15,8 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 五个 Coding Tools：`list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；
 - Workspace 路径边界和子进程环境变量清洗；
 - Event/EventStore 所有权契约：调用方修改 `append()` 或 `read()` 返回事件的嵌套内容，不会反向改写已经保存的历史；
+- 进程内 Session Event Feed：`EventStore` 接受事件之后（按调用方请求的 `Durability`）按真实 `seq` 顺序发布给订阅者，每个订阅者拿到独立副本；消费者接口只能订阅、不能发布；它不新增任何持久化事实，也不提升崩溃持久性，不是事实源；
+- `traceh chat` 的实时 Tool Timeline：Turn 运行期间即时显示 Step、模型调用、工具生命周期和验证结果，可用 `--no-timeline` 关闭；
 - Effect Intent / Dispatch / Outcome 记录，用于判断崩溃时间窗中的副作用；
 - Append-only 崩溃恢复：闭合孤立的 Model Attempt、Tool Call、Step 和 Turn，不盲目重放结果不明的副作用；
 - 通过可选外部命令 Verifier 实现 Evidence-Driven Completion；
@@ -60,6 +62,8 @@ traceh chat --session-id <session-id>
 /quit     退出 Chat
 ```
 
+`/help` 还会提示 `--no-timeline` 属于启动参数。内部命令、空行和无法识别的斜杠命令都不会创建 Turn，因此也不会产生 Timeline 行。
+
 空行会被忽略。`Ctrl+D`（Windows 上是 `Ctrl+Z` 后按 Enter）等同于 `/exit`。
 
 `Ctrl+C` 的行为取决于宿主 Shell，因此项目不承诺一个统一退出码。当 Shell 把它转换成 Python `KeyboardInterrupt` 时——Linux/macOS 终端或 PowerShell 中通常如此——正在运行的 Turn 会通过正常取消路径收敛，程序打印可继续使用的 Session ID，并从 Python 内部返回 130；Shell 最终显示什么仍由 Shell 决定。硬中断则不同，例如 Windows `Ctrl+Break` 或直接关闭控制台窗口：操作系统会直接终止进程，不运行上述收敛逻辑，Windows 实测退出码为 `3221225786`。
@@ -72,7 +76,44 @@ traceh chat --session-id <session-id>
 
 程序会先执行崩溃恢复，闭合之前遗留的生命周期，再继续对话。
 
-当前 Chat 是普通的行式提示符，不是流式 TUI：Turn 结束后才显示输出，没有实时 Tool Timeline、执行前审批，也不能在 Turn 运行期间继续输入。
+### 实时 Timeline
+
+Turn 运行期间，Chat 会实时打印它正在做什么，默认开启：
+
+```text
+you> 读一下 hello.txt
+[event 4] Turn started
+[event 5] Step 1 started
+[event 9] Model scripted/m called
+[event 11] Model responded
+[event 12] Tool read_file requested hello.txt
+[event 13] Tool read_file started
+[event 14] Tool read_file succeeded
+[event 15] Step 1 completed
+[event 16] Step 2 started
+[event 23] Step 2 completed
+[event 24] Turn ended (completed)
+assistant> Done reading.
+[reason=completed steps=2 tokens=0 verification=None]
+```
+
+方括号里的数字是 Session Stream 中**真实的持久化事件序号**，不是终端行号。序号通常不连续，因为被隐藏的事件（Prompt 快照、请求快照、模型原文等）同样占用序号。你可以用这个序号在 `traceh inspect` 中定位同一条事件。
+
+需要安静输出时（脚本、CI、日志采集）关闭它：
+
+```powershell
+traceh chat . --no-timeline
+```
+
+`--no-timeline` 是启动参数，不是 Chat 内部命令；关闭后最终回答和摘要行不变。
+
+Timeline 只显示生命周期与结果：Turn/Step 起止、模型调用与答复、工具的 requested/started/succeeded/failed、验证结果、运行时错误、取消请求和恢复。它**默认不显示** Prompt、请求快照、Composition 快照、模型原文、文件内容、完整 Patch、完整命令输出，遇到未知事件类型也不会打印原始 payload。
+
+输出侧按不可信内容处理：所有来自事件 payload 的字符串都会先清洗（去除 ESC 与其他控制/格式字符、折叠为严格一行、统一限长），因此模型返回的工具名或任意异常类型无法伪造额外的 Timeline 行，也无法发出终端控制序列。`shell` 执行的命令**默认完全不显示**（只显示工具名与调用 ID），因为命令行最容易带上凭据，而关键词扫描无法覆盖所有秘密形态；`runtime/error` 只显示错误类型，不显示消息与 traceback。可显示的读取类工具路径仍会做凭据形态检查，命中即整段不显示；未知工具只显示工具名与调用 ID。
+
+Timeline 是纯界面投影：它不进入模型可见历史，不改变 Request Fingerprint，也不写入任何事件。它只在当前进程内可见——另一个进程写同一份 JSONL 时不会实时出现在这里。
+
+当前 Chat 仍是行式提示符，不是流式 TUI：没有 Token Streaming、执行前审批，也不能在 Turn 运行期间继续输入。
 
 ### Windows 中文与其他非 ASCII 文本
 
@@ -237,7 +278,7 @@ Projectors / Recovery / Inspector / Invariants
 | 自定义完成行为 | `ContinuationRuntime` |
 | 自定义验证 | `CompletionVerifier` |
 | 新持久化后端 | `EventStore` |
-| 可观测性插件 | 类型化 NOTIFY Hooks |
+| 可观测性插件 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
 | 可逆插件装配 | `Activation`、`Lifespan`、`OwnedTaskSet` |
 | Step 安全的插件/模型/工具 Generation | `CompositionRuntime.lease()` |
 | Agent 专属能力 | 层级 `Scope` |
@@ -289,7 +330,7 @@ tests                   契约、恢复、取消和端到端测试
 
 ```text
 traceh run
-traceh chat
+traceh chat            # 支持 --no-timeline
 traceh resume
 traceh recover
 traceh inspect
@@ -306,7 +347,9 @@ traceh doctor
 
 - Plugin Entry Point 自动发现和热替换有意推迟到 v0.4+；Kernel 中已有 Activation/Scope 原语，但尚无第三方 PluginManager；
 - 每个进程只有一个活跃 Agent Runtime，尚无 `AgentSupervisor`；
-- `traceh chat` 是行式交互：没有 Token Streaming、实时 Tool Timeline、执行前审批，也不能在 Turn 运行期间输入；
+- `traceh chat` 是行式交互：已有实时 Tool Timeline，但没有 Token Streaming、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
+- Session Event Feed 只在同一进程内可见，没有跨进程实时观察；它的队列无上限，因此不对 Runtime 施加背压，但被遗弃的订阅者会占用内存，且尚无 Overflow 策略；它可丢失、不重放历史、不提升崩溃持久性（`SYNC`/`BATCHED` 语义仍由 `EventStore` 决定），不能当作恢复证据；
+- Timeline 已对注入做了清洗，但形似结构标记的惰性文本仍可能出现在该行内部：保证是"不会产生第二行、行首为真实事件号"，不是"不会出现形似标记的字符"；
 - JSONL 提供单机写入互斥与乐观并发控制，但不是分布式数据库；
 - OpenAI-Compatible Adapter 非流式，且没有 Retry/Fallback Middleware；
 - `apply_patch` 执行精确文本替换，不解析 Unified Diff；
@@ -328,6 +371,7 @@ PYTHONPATH=src python -m compileall -q src
 - [当前项目上下文（通俗版）](docs/note/project-context-plain-zh.md)
 - [架构说明](docs/architecture.md)
 - [事件协议](docs/event-protocol.md)
+- [Session Event Feed](docs/event-feed.md)
 - [恢复语义](docs/recovery-semantics.md)
 - [插件与多 Agent 演进](docs/plugin-evolution.md)
 - [测试策略](docs/testing.md)

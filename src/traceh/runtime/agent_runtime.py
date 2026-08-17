@@ -20,6 +20,7 @@ from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CommandVerifier, CompletionVerifier
 from traceh.session.compaction import CompactionService
+from traceh.session.event_feed import EventFeed, PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.jsonl import JsonlEventStore
@@ -82,6 +83,7 @@ class AgentRuntime:
         invariants: CoreInvariantChecker,
         hooks: HookDispatcher,
         compaction: CompactionService,
+        events: EventFeed,
     ) -> None:
         self.config = config
         self.sessions = sessions
@@ -91,6 +93,18 @@ class AgentRuntime:
         self.invariants = invariants
         self.hooks = hooks
         self.compaction = compaction
+        #: Read-only subscription surface for events this runtime's store has
+        #: accepted (see `session/event_feed.py`). A user interface may subscribe
+        #: to watch a turn as it happens; it adds no persisted fact, no history
+        #: and no state, so nothing in the runtime reads from it.
+        #:
+        #: Required, and required to be *connected*: it must be the same feed the
+        #: `PublishingEventStore` behind ``sessions`` publishes to. Defaulting it
+        #: would hand callers a subscribable object that stays silent forever -
+        #: an interface that exists while the capability does not. Custom
+        #: assemblies must therefore pair the two explicitly, as
+        #: `build_default_runtime()` does.
+        self.events = events
         self._active: dict[str, asyncio.Task[TurnResult]] = {}
         self._lock = asyncio.Lock()
         self._disposed = False
@@ -193,7 +207,16 @@ def build_default_runtime(
     config = config or RuntimeConfig()
     data_dir = config.data_dir.resolve()
     actual_event_store = event_store or JsonlEventStore(data_dir / "events")
-    sessions = SessionService(actual_event_store)
+    # Wrapping is unconditional so that every writer - the loop, the tool
+    # runtime, recovery, compaction - is observable through one boundary rather
+    # than through whichever of them remembered to announce itself. With no
+    # subscribers the decorator costs one uncontended lock per append.
+    #
+    # This one object is both the store's publication target and the runtime's
+    # subscription surface. Handing `AgentRuntime` any other instance would give
+    # callers a feed that never receives anything.
+    event_feed = SessionEventFeed()
+    sessions = SessionService(PublishingEventStore(actual_event_store, event_feed))
     surface = SurfaceProjector()
 
     llms = LlmRegistry()
@@ -270,4 +293,5 @@ def build_default_runtime(
         invariants=CoreInvariantChecker(),
         hooks=hooks,
         compaction=CompactionService(sessions),
+        events=event_feed,
     )

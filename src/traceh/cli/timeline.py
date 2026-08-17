@@ -23,26 +23,20 @@ recognise is how secrets end up on a terminal.
 type reaches this module from a model response, a tool argument or an exception
 message. Rendered raw, a newline forges an extra timeline row and an ESC byte
 becomes a live terminal control sequence. So no payload string is interpolated
-directly: every one goes through `sanitize()`, and `_text()` is the only way a
+directly: every one goes through `sanitize()`, and `payload_text()` is the only way a
 handler reads one.
 """
 
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from traceh.api.events import EventEnvelope
+from traceh.cli.text_safety import is_unsafe_character
 
 #: Upper bound for any payload-derived fragment. Long values are cut rather than
 #: wrapped, because one event must stay one line.
 MAX_DETAIL_CHARS = 60
-
-#: Character classes that must never survive into terminal output. ``Cc`` covers
-#: C0/C1 controls - ESC, CR, LF, backspace; ``Cf`` covers format characters
-#: including the bidirectional overrides that visually reorder a line;
-#: ``Cs``/``Co`` cover surrogates and private use.
-_UNSAFE_CATEGORIES = frozenset({"Cc", "Cf", "Cs", "Co"})
 
 #: Argument allowed to be summarised for each known tool. A tool absent from
 #: this table shows its name and call id only - the conservative default, since
@@ -75,17 +69,19 @@ _SENSITIVE = re.compile(
 def sanitize(value: str, *, limit: int = MAX_DETAIL_CHARS) -> str:
     """Make one untrusted payload string safe to place on a terminal line.
 
-    Control and format characters become spaces, which neutralises them without
-    pretending to interpret them: an ESC sequence loses its ESC and the remaining
-    bracket text is inert, a newline can no longer forge a row, and a
-    bidirectional override can no longer reorder what the user reads. Whitespace
-    then collapses so the result is exactly one line, and the length is bounded so
-    a long value cannot push real information off screen.
+    Control, format and line-separator characters become spaces, which
+    neutralises them without pretending to interpret them: an ESC sequence loses
+    its ESC and the remaining bracket text is inert, a newline can no longer forge
+    a row, and a bidirectional override can no longer reorder what the user reads.
+    The set comes from `cli/text_safety.py`, so `U+2028`/`U+2029` are covered here
+    for the same reason they are refused in a command - they are line breaks to
+    enough consumers to split one row into two. Whitespace then collapses so the
+    result is exactly one line, and the length is bounded so a long value cannot
+    push real information off screen.
     """
 
     scrubbed = "".join(
-        " " if unicodedata.category(character) in _UNSAFE_CATEGORIES else character
-        for character in value
+        " " if is_unsafe_character(character) else character for character in value
     )
     flat = " ".join(scrubbed.split())
     if len(flat) <= limit:
@@ -93,7 +89,7 @@ def sanitize(value: str, *, limit: int = MAX_DETAIL_CHARS) -> str:
     return flat[: limit - 1] + "…"
 
 
-def _text(data: dict, key: str) -> str | None:
+def payload_text(data: dict, key: str) -> str | None:
     """Read one payload string, sanitized, or ``None`` when unusable.
 
     The single funnel for payload text: a handler that wants a field calls this
@@ -115,7 +111,7 @@ def _tool_detail(data: dict) -> str:
     caller - it is silence about the argument.
     """
 
-    name = _text(data, "tool_name")
+    name = payload_text(data, "tool_name")
     if name is None:
         return ""
     argument = _TOOL_DETAIL_ARGUMENT.get(name)
@@ -138,7 +134,7 @@ def _tool_detail(data: dict) -> str:
 def _call_reference(data: dict) -> str:
     """Identify the call when its target cannot be shown."""
 
-    call_id = _text(data, "tool_call_id")
+    call_id = payload_text(data, "tool_call_id")
     return f" (call {call_id})" if call_id else ""
 
 
@@ -155,18 +151,26 @@ class TimelineRenderer:
     def __init__(self) -> None:
         self._step_numbers: dict[str, int] = {}
 
-    def render(self, event: EventEnvelope) -> str | None:
+    def render(self, event: EventEnvelope, *, elapsed_seconds: float | None = None) -> str | None:
         """One display line, or ``None`` when this event is not shown.
 
         Never raises on a surprising payload: a missing or wrongly typed field
         degrades the line, and an unrecognised type is skipped. A chat session
         must not die because an event carried less than expected.
+
+        ``elapsed_seconds`` appends how long the finished activity took. It is
+        measured by `cli/activity.py` from a monotonic clock, not read from the
+        payload and not derived from event timestamps, so it stays a display
+        annotation rather than a claim about persisted data.
         """
 
         body = self._body(event)
         if body is None:
             return None
-        return f"[event {event.seq}] {body}"
+        suffix = ""
+        if elapsed_seconds is not None and elapsed_seconds >= 0:
+            suffix = f" ({elapsed_seconds:.1f}s)"
+        return f"[event {event.seq}] {body}{suffix}"
 
     def _body(self, event: EventEnvelope) -> str | None:
         data = event.data if isinstance(event.data, dict) else {}
@@ -176,7 +180,7 @@ class TimelineRenderer:
         return handler(self, data)
 
     def _step_label(self, data: dict) -> str:
-        step_id = _text(data, "step_id")
+        step_id = payload_text(data, "step_id")
         number = self._step_numbers.get(step_id) if step_id else None
         return f"Step {number}" if number is not None else "Step"
 
@@ -187,11 +191,11 @@ class TimelineRenderer:
         return "Turn started"
 
     def _turn_end(self, data: dict) -> str:
-        reason = _text(data, "reason") or "ended"
+        reason = payload_text(data, "reason") or "ended"
         return f"Turn ended ({reason})"
 
     def _step_start(self, data: dict) -> str:
-        step_id = _text(data, "step_id")
+        step_id = payload_text(data, "step_id")
         number = data.get("number")
         if step_id and isinstance(number, int) and not isinstance(number, bool):
             self._step_numbers[step_id] = number
@@ -199,42 +203,42 @@ class TimelineRenderer:
 
     def _step_end(self, data: dict) -> str:
         label = self._step_label(data)
-        reason = _text(data, "reason")
+        reason = payload_text(data, "reason")
         if reason in (None, "model_response"):
             return f"{label} completed"
         return f"{label} ended ({reason})"
 
     def _attempt_start(self, data: dict) -> str:
-        provider = _text(data, "provider")
-        model = _text(data, "model")
+        provider = payload_text(data, "provider")
+        model = payload_text(data, "model")
         if provider and model:
             return f"Model {provider}/{model} called"
         return "Model called"
 
     def _attempt_end(self, data: dict) -> str | None:
-        status = _text(data, "status")
+        status = payload_text(data, "status")
         if status == "succeeded":
             return "Model responded"
         if status is None:
             return "Model attempt ended"
-        error_type = _text(data, "error_type")
+        error_type = payload_text(data, "error_type")
         if error_type:
             return f"Model attempt {status} ({error_type})"
         return f"Model attempt {status}"
 
     def _tool_call(self, data: dict) -> str:
-        name = _text(data, "tool_name") or "unknown tool"
+        name = payload_text(data, "tool_name") or "unknown tool"
         detail = _tool_detail(data) or _call_reference(data)
         return f"Tool {name} requested{detail}"
 
     def _tool_admitted(self, data: dict) -> str:
-        name = _text(data, "tool_name") or "unknown tool"
+        name = payload_text(data, "tool_name") or "unknown tool"
         return f"Tool {name} started"
 
     def _tool_result(self, data: dict) -> str:
-        name = _text(data, "tool_name") or "unknown tool"
-        status = _text(data, "status") or "finished"
-        error_type = _text(data, "error_type")
+        name = payload_text(data, "tool_name") or "unknown tool"
+        status = payload_text(data, "status") or "finished"
+        error_type = payload_text(data, "error_type")
         if status != "succeeded" and error_type:
             return f"Tool {name} {status} ({error_type})"
         return f"Tool {name} {status}"
@@ -254,7 +258,7 @@ class TimelineRenderer:
         # quote the credential it tried - so it is not shown here at all. Chat
         # prints its own error line from the exception it caught; the timeline
         # does not repeat that text. The traceback in this payload is never shown.
-        return f"Runtime error: {_text(data, 'error_type') or 'error'}"
+        return f"Runtime error: {payload_text(data, 'error_type') or 'error'}"
 
     def _cancel_requested(self, data: dict) -> str:
         return "Cancellation requested"

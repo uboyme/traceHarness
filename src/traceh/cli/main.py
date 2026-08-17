@@ -12,9 +12,20 @@ from dataclasses import asdict
 from pathlib import Path
 
 from traceh.api.llm import ModelResponse
-from traceh.cli.chat import INTERRUPTED_EXIT_CODE, chat_target, run_chat
+from traceh.cli.activity import DEFAULT_HEARTBEAT_SECONDS, validate_heartbeat_seconds
+from traceh.cli.chat import (
+    INTERRUPTED_EXIT_CODE,
+    ResumeEnvironment,
+    chat_target,
+    run_chat,
+)
 from traceh.cli.console import configure_stdio, default_console
-from traceh.cli.env_file import EnvFileError, EnvLoadReport, load_env_file
+from traceh.cli.env_file import (
+    EnvFileError,
+    EnvLoadReport,
+    load_env_file,
+    validate_env_var_name,
+)
 from traceh.cli.errors import CliConfigurationError
 from traceh.evaluation.runner import BenchmarkRunner
 from traceh.inspector import SessionInspector
@@ -88,12 +99,22 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
         )
     args.model = _from_environment(args, "model", "TRACEH_MODEL")
     args.base_url = _from_environment(args, "base_url", "TRACEH_BASE_URL")
+    explicit_verify_command = getattr(args, "verify_command", None) is not None
     args.api_key_env = _from_environment(
         args,
         "api_key_env",
         "TRACEH_API_KEY_ENV",
         "OPENAI_API_KEY",
     )
+    # Validated here, before any runtime or session exists. A name that cannot be
+    # looked up will never find a key, and accepting it only to drop it from the
+    # resume command meant the next run silently used a different variable. The
+    # rule does not depend on the provider: a scripted run ignoring the key does
+    # not make an unusable name valid.
+    if args.api_key_env is not None:
+        args.api_key_env = validate_env_var_name(
+            args.api_key_env, setting="--api-key-env / TRACEH_API_KEY_ENV"
+        )
     if hasattr(args, "max_steps"):
         raw_max_steps = _from_environment(args, "max_steps", "TRACEH_MAX_STEPS", 20)
         args.max_steps = _positive_integer(raw_max_steps, variable="TRACEH_MAX_STEPS")
@@ -103,6 +124,15 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
             "verify_command",
             "TRACEH_VERIFY_COMMAND",
         )
+    # Whether the *effective* verifier came from this env file, which is not the
+    # same as the file containing the key: an explicit --verify-command wins, so
+    # the file would not restore what is actually running.
+    args.verifier_from_env_file = bool(
+        report.loaded
+        and not explicit_verify_command
+        and getattr(args, "verify_command", None) is not None
+        and "TRACEH_VERIFY_COMMAND" in report.applied_keys
+    )
     return report
 
 
@@ -168,12 +198,32 @@ async def _chat(args: argparse.Namespace) -> int:
     workspace, session_id = chat_target(args.workspace, args.session_id)
     configure_stdio()
     runtime = _runtime(args)
+    heartbeat_seconds = validate_heartbeat_seconds(
+        args.heartbeat_seconds, timeline=args.timeline
+    )
+    # Everything non-secret that the resume command needs but `RuntimeConfig`
+    # does not carry. The env file is only named when one was actually loaded, so
+    # the command never points at a file that had no effect.
+    report: EnvLoadReport | None = getattr(args, "env_report", None)
+    loaded = report is not None and report.loaded
+    resume_environment = ResumeEnvironment(
+        base_url=args.base_url,
+        api_key_env=args.api_key_env,
+        env_file=report.path if loaded else None,
+        script=args.script,
+        # Which variables the env file actually applied, so the block can say
+        # "reloaded for you" instead of "supply it again" only when that is true.
+        env_file_supplies=frozenset(report.applied_keys) if loaded else frozenset(),
+        verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
+    )
     return await run_chat(
         runtime,
         default_console(),
         workspace=workspace,
         session_id=session_id,
         timeline=args.timeline,
+        heartbeat_seconds=heartbeat_seconds,
+        resume_environment=resume_environment,
     )
 
 
@@ -309,6 +359,15 @@ def build_parser() -> argparse.ArgumentParser:
         dest="timeline",
         action="store_false",
         help="Do not print live step/tool activity while a turn runs",
+    )
+    chat.add_argument(
+        "--heartbeat-seconds",
+        type=float,
+        default=DEFAULT_HEARTBEAT_SECONDS,
+        help=(
+            "Seconds between 'still working' lines while a model call or tool runs "
+            f"(default {DEFAULT_HEARTBEAT_SECONDS:g}; 0 disables them and keeps the timeline)"
+        ),
     )
     _add_runtime_arguments(chat)
     chat.set_defaults(handler=_chat)

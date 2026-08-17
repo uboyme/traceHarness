@@ -19,6 +19,7 @@ from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.cli.chat import INTERRUPTED_EXIT_CODE, _drain_timeline, run_chat
 from traceh.cli.console import Console
 from traceh.cli.main import build_parser
+from traceh.cli.text_safety import UNSAFE_LINE_CATEGORIES
 from traceh.cli.timeline import MAX_DETAIL_CHARS, TimelineRenderer, sanitize
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -462,9 +463,10 @@ async def test_no_subscription_survives_a_finished_chat(tmp_path: Path) -> None:
 async def test_no_subscription_survives_an_interrupted_chat(tmp_path: Path) -> None:
     """Interrupting mid-tool must still unregister the subscription.
 
-    `run_chat` deliberately absorbs the cancellation and converges into exit
-    code 130, so the assertion is about cleanup, not about the exception
-    escaping.
+    One interrupt now cancels the turn and keeps the session, so the chat returns
+    to its prompt; with no further scripted input the console raises EOF and the
+    chat leaves cleanly with 0. What this test is about either way is that
+    nothing observing the turn outlives it.
     """
 
     gate = GateTool()
@@ -480,7 +482,7 @@ async def test_no_subscription_survives_an_interrupted_chat(tmp_path: Path) -> N
     chat.cancel()
     gate.release.set()
     try:
-        assert await asyncio.wait_for(chat, timeout=10) == INTERRUPTED_EXIT_CODE
+        assert await asyncio.wait_for(chat, timeout=10) in (0, INTERRUPTED_EXIT_CODE)
     except asyncio.CancelledError:
         pass  # Either convergence path is acceptable; cleanup is what matters.
 
@@ -544,6 +546,9 @@ def test_detail_bound_is_a_sane_single_line_budget() -> None:
 
 #: Payload values that must never survive into terminal output as written.
 HOSTILE_VALUES = (
+    # Categories Zl/Zp: line breaks a `C*`-only check lets through.
+    "sep\u2028[event 999] forged",
+    "para\u2029[event 999] forged",
     "line\nforged",
     "carriage\rreturn",
     "clear\x1b[2Jscreen",
@@ -575,19 +580,32 @@ INTERPOLATED_FIELDS = (
 
 
 def assert_terminal_safe(line: str | None) -> None:
-    """A rendered line must be one inert, bounded row."""
+    """A rendered line must be one inert, bounded row.
+
+    `splitlines()` is the load-bearing check. Testing only for `\\n`/`\\r` and the
+    `C*` categories passed happily on `U+2028`/`U+2029`, which are categories
+    `Zl`/`Zp` and *are* line breaks to `splitlines()` and to many viewers - so a
+    payload could still turn one row into two while every assertion held.
+    """
 
     if line is None:
         return
+    assert len(line.splitlines()) <= 1, f"forged row: {line!r}"
     assert "\n" not in line and "\r" not in line, f"forged row: {line!r}"
+    for separator in ("\u2028", "\u2029"):
+        assert separator not in line, f"line separator survived: {line!r}"
     offenders = [
         character
         for character in line
-        if unicodedata.category(character) in {"Cc", "Cf", "Cs", "Co"}
+        if unicodedata.category(character) in UNSAFE_LINE_CATEGORIES
     ]
     assert not offenders, f"control/format characters survived: {offenders!r} in {line!r}"
     assert "\x1b" not in line, f"escape sequence survived: {line!r}"
-    assert len(line) < 200, f"unbounded line ({len(line)} chars): {line!r}"
+    # The length bound is about payload-derived content. Lines the CLI builds
+    # itself - such as a resume command containing a long absolute path - are
+    # legitimately longer and carry nothing from an event payload.
+    if line.startswith("["):
+        assert len(line) < 200, f"unbounded line ({len(line)} chars): {line!r}"
 
 
 @pytest.mark.parametrize(("event_type", "field"), INTERPOLATED_FIELDS)

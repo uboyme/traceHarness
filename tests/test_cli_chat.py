@@ -8,7 +8,12 @@ from pathlib import Path
 import pytest
 
 from traceh.api.llm import ModelRequest, ModelResponse
-from traceh.cli.chat import INTERRUPTED_EXIT_CODE, chat_target, run_chat
+from traceh.cli.chat import (
+    INTERRUPTED_EXIT_CODE,
+    INTERRUPTED_TURN_NOTICE,
+    chat_target,
+    run_chat,
+)
 from traceh.cli.console import (
     Console,
     configure_stdio,
@@ -408,7 +413,9 @@ async def test_interrupt_converges_the_session_and_prints_how_to_resume(tmp_path
 
     assert code == INTERRUPTED_EXIT_CODE
     session_id = (await runtime.sessions.list_sessions())[0]
-    assert f"traceh chat --session-id {session_id}" in console.output
+    # Shell-agnostic: the exact quoting depends on the rendered shell.
+    assert "resume later" in console.output
+    assert session_id in console.output
 
     events = await runtime.sessions.read_session(session_id)
     projection = StateProjector().project(events)
@@ -431,7 +438,10 @@ async def test_interrupting_a_running_turn_converges_it(tmp_path: Path) -> None:
 
     # Exactly the cancellation path Ctrl+C triggers while a turn is in flight.
     assert await runtime.cancel(session_id) is True
-    assert await chat == INTERRUPTED_EXIT_CODE
+    # An interrupted turn no longer ends the chat: the session stays open and the
+    # user leaves on their own terms, so this exits 0 via the following /exit.
+    assert await chat == 0
+    assert INTERRUPTED_TURN_NOTICE in console.output
 
     events = await runtime.sessions.read_session(session_id)
     types = event_types(events)
@@ -441,7 +451,9 @@ async def test_interrupting_a_running_turn_converges_it(tmp_path: Path) -> None:
     assert projection.open_turn_id is None
     assert projection.open_step_id is None
     assert not CoreInvariantChecker().check(events, await runtime.sessions.read_effects(session_id))
-    assert f"traceh chat --session-id {session_id}" in console.output
+    # Shell-agnostic: the exact quoting depends on the rendered shell.
+    assert "resume later" in console.output
+    assert session_id in console.output
     with pytest.raises(RuntimeError, match="disposed"):
         await runtime.run_existing(session_id, "after dispose")
 

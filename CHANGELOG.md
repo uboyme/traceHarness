@@ -2,6 +2,128 @@
 
 ## Unreleased
 
+- Treat `U+2028` and `U+2029` as line breaks everywhere a value reaches one terminal line.
+  The shell renderer, `escape_for_display`, the base URL check and the timeline each tested
+  the Unicode `C*` categories, so all four missed the explicit line and paragraph separators
+  (categories `Zl`/`Zp`): `escape_for_display("x\u2028note: forged").splitlines()` still
+  returned two lines, and `is_renderable` returned True. The rule now lives in one place,
+  `cli/text_safety.py`, which every caller reads. The test helpers were the reason this
+  passed unnoticed - they checked only `\n`/`\r` and the `C*` categories, and now assert with
+  `splitlines()` plus explicit separator checks.
+- Stop reporting the rejected value when an environment variable name is invalid. Escaping
+  defends against control characters, not against a printable secret, and the usual way this
+  setting is got wrong is by pasting the key itself where the variable *name* belongs - so
+  the invalid value is precisely what must not be echoed. Nothing derived from it is shown
+  either: no length, prefix, suffix or hash. The `.env` parser likewise reports only the line
+  number for a malformed name. The check validates shape, not intent: a key that happens to
+  be a valid identifier is accepted, and that boundary is documented and pinned by a test.
+- Decide the verifier's provenance from which value actually won, not from the env file
+  merely containing the key. Configuration resolves explicit `--verify-command` over an
+  existing environment variable over the file, so a file holding `TRACEH_VERIFY_COMMAND`
+  alongside an explicit flag would have restored a different verifier than the one running.
+  Argument resolution now records a boolean and passes only that; the verifier text has no
+  field to sit in on `ResumeEnvironment`, keeping it out of the repr, the command and any log.
+- Stop the base-URL credential check from crashing the chat. `urlparse` raises on inputs such
+  as `https://[bad`, and only when the netloc is inspected for userinfo - exactly what the
+  check does. Parsing and the userinfo access are now guarded, and an unparseable URL is
+  withheld with a reason rather than echoed or surfaced as a traceback.
+- Escape every value the unrenderable-command fallback shows. Printing them raw meant a data
+  dir containing a newline produced a second terminal line inside the block explaining that
+  no command could be shown safely; control and format characters now appear as their visible
+  escape spelling, and the user still sees escaped locating information and why.
+- Reject an unusable `--api-key-env` / `TRACEH_API_KEY_ENV` before any runtime or session is
+  built, instead of accepting it and quietly dropping it from the resume command - which let
+  the next run fall back to a different variable. The rule is shared with the `.env` parser
+  and does not vary by provider: a scripted run ignoring the key does not make an unlookupable
+  name valid. The rejected value is escaped in the message.
+- Build the resume command as argv tokens and render it for one named shell, instead of
+  quoting only values containing a space. PowerShell treats `&`, `;`, `|`, `$(...)` and the
+  backtick as syntax outside quotes, so an unquoted path or model name could end the command
+  and start another. PowerShell now gets single-quoted literals with its own doubling rule,
+  POSIX gets `shlex`, and the block says which shell it is for. Program and flag names stay
+  bare deliberately: PowerShell parses a quoted leading string as an expression, so
+  `'traceh' 'chat'` would print a word rather than run anything. Values carrying control
+  characters are refused rather than escaped, since a newline would produce a second command.
+- Stop echoing values whose safety cannot be shown. `--verify-command` is arbitrary shell
+  text that cannot be displayed and also promised credential-free, so it is omitted - restored
+  by the env file when that supplied it, and otherwise reported as
+  "Verifier command omitted from the displayed resume command; re-supply it manually." A base
+  URL is withheld when `urllib.parse` finds userinfo, a query or a fragment. That is a
+  structural rule, not a secret detector, and the documentation now states the specific
+  verifiable rules instead of promising that secrets are never printed.
+- Carry `--script` with its resolved absolute path, since omitting it silently substituted the
+  built-in placeholder provider, and say plainly that the scripted response cursor is not
+  persisted across processes - reloading the same file restarts from its first response.
+- Stop advertising an API key variable to a scripted session, where naming `OPENAI_API_KEY`
+  is a misleading instruction. It is shown only for a provider that sends one, only when the
+  name is a valid environment variable name, and the wording distinguishes "set it in that
+  shell" from "available from that env file or the shell" depending on what actually supplies
+  it. The key's value is never read.
+- Separate locating a session from restoring its behaviour throughout the docs, and remove the
+  bare `traceh chat --session-id <id>` form from the README, which omitted the data dir and
+  contradicted the full resume block further down.
+- Schedule each waiting notice from the activity's own deadline instead of a fixed tick.
+  Sleeping one interval at a time phase-locked the heartbeat to whenever the turn started
+  rather than to the work: with a 10s interval and a tool starting at t=10.1, the t=20 wake
+  saw only 9.9s and stayed silent, so the first notice landed at t=30 - nearly twenty seconds
+  into the wait this feature exists to cover. The test clock now records and honours
+  deadlines too; releasing every sleeper on any advance made a 0.1s wait and a 10s wait
+  indistinguishable, which is how the phase bug passed a suite that looked thorough.
+- Carry the non-secret configuration in the resume command. Provider and model may come from
+  a `.env` in the original working directory, so a command holding only a session id and data
+  dir re-resolved them wherever it ran: a session started on `custom-model` silently continued
+  on the default. `--provider`, `--model`, `--max-steps` and `--verify-command` are now
+  named explicitly, with the resolved absolute `--env-file` when one was actually loaded.
+  Secrets are still never printed - only the *name* of the API key variable, plus a note that
+  the new shell needs it set, since that is the one part a command cannot carry.
+- Say only what the events prove about a running tool. `ToolRuntime` gathers a parallel-safe
+  group and appends every `tool/result` once the whole group finishes, so a tool that has
+  already returned is indistinguishable from one still executing. The notice now reads
+  "has not reported completion" rather than "is still running", and a tool's reported duration
+  is documented as `tool/admitted` to the *persisted* `tool/result` - longer than its own
+  execution for a tool inside a group. A model attempt, whose end is appended as soon as the
+  provider returns, still reads "is still working".
+- Reprint the resume command when leaving through `/exit`, `/quit` or EOF, which the
+  documentation already claimed and the code did not do.
+- Record that a slow `CommandVerifier` is still silent: it has no start event - the protocol
+  carries only `verification/result`, appended after the command finishes - so the heartbeat
+  cannot cover it. Guessing from the absence of tool calls was rejected rather than shipped;
+  adding a `verification/start` event is a protocol change left to its own design.
+- Report waiting time while a model call or tool runs, so a slow provider stops looking like
+  a hang. A timeline built only from events is silent exactly between
+  `model/attempt-start` and `model/attempt-end`, which is the interval users worry about.
+  `cli/activity.py` fills that silence from the events it already sees, keyed by `attempt_id`
+  and `tool_call_id` so concurrent read tools are each tracked instead of one overwriting the
+  rest, and completion lines gain a measured duration. Configured with
+  `--heartbeat-seconds` (default 10; `0` disables it and keeps the timeline; `--no-timeline`
+  disables both; negative, NaN and infinity are configuration errors).
+- Keep the heartbeat out of the record: no event type, no append, no participation in
+  recovery, replay, the surface or request fingerprints, and a `[waiting …]` prefix rather
+  than `[event N]`, which stays reserved for a real persisted seq. Elapsed time comes from a
+  monotonic clock - a wall clock would jump or reverse if the system time were adjusted
+  mid-turn - and the clock is injectable so tests advance 10 seconds instead of waiting them.
+- Show the cancellation lifecycle when a turn is interrupted. `_run_turn()` used to close the
+  timeline subscription *before* `runtime.cancel()` appended `runtime/cancel-requested`, the
+  cancelled model attempt, `step/end` and `turn/end`, so all of it was published to nobody and
+  the output simply stopped. The subscription now stays open across convergence and is drained
+  afterwards, so those events reach the console ahead of the notice.
+- Make the first Ctrl+C cancel only the running turn. The session stays open, no new session
+  is created, nothing is injected, and the next turn is the one the user types; an idle Ctrl+C
+  at the prompt is what leaves, returning 130. Repeated interrupts cannot shorten convergence
+  - it is delegated to the shared `await_worker_convergence()` - and are honoured only once
+  the model, tools and subprocesses are done. A hard interrupt still runs no Python at all,
+  and that boundary is documented rather than papered over.
+- Print the resume command at startup instead of only on exit, since an exit-time hint cannot
+  survive a hard interrupt. It carries the resolved absolute `--data-dir`, because a session
+  id alone cannot locate a session whose store lives under a different data dir, and quotes
+  the path so a directory with spaces survives a copy-paste. A custom `--env-file` is
+  deliberately not reconstructed: guessing a path that may have moved would print a command
+  that silently does something else.
+- Explain the event numbers once at startup rather than renumbering them. `seq` 1-3 are
+  `session/created`, `inbox/accepted` and `inbox/claimed` - persisted but not displayed - so
+  the first visible line is normally `[event 4]`. Renumbering to 1 would destroy the only
+  property that makes the number useful: being the seq you can look up in the JSONL. The note
+  never begins with a bracket, so it cannot be mistaken for a timeline row.
 - Add `SessionEventFeed`, an in-process channel for observing events an `EventStore` has
   accepted, plus `PublishingEventStore`, a decorator that wraps any `EventStore` and
   announces what it just accepted. The decorator is the boundary because `store.append()`

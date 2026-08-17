@@ -2,11 +2,32 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from traceh.api.json_types import JsonValue, to_json_value
+
+
+def _detach_json_data(data: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    """Copy an event payload so it shares no mutable container with ``data``.
+
+    Implementation detail of this module; the reusable boundary helper is
+    ``detach_event()``.
+
+    Copying goes through ``to_json_value()`` so that one rule decides both what
+    an event payload may contain and what it is normalized into, instead of
+    adding a second, looser copying rule beside it. That rule is wider than
+    `JsonValue`: framework types the encoder supports - ``Path``, ``UUID``,
+    ``datetime``, ``Enum``, dataclasses, arbitrary ``Mapping`` and ``Sequence``
+    values other than ``str``, ``bytes`` and ``bytearray``, such as ``tuple`` -
+    are converted into their JSON form rather than rejected, so a ``tuple``
+    becomes a ``list`` and a ``Path`` becomes a string. Only genuinely
+    unsupported values (``set``, ``bytes``, arbitrary objects) raise
+    ``TypeError``. Immutable scalars are passed through unchanged.
+    """
+
+    return {str(key): to_json_value(value) for key, value in data.items()}
 
 
 def attempt_identity(data: dict[str, JsonValue]) -> str | None:
@@ -39,6 +60,24 @@ class PendingEvent:
 
 @dataclass(frozen=True, slots=True)
 class EventEnvelope:
+    """A persisted event.
+
+    ``frozen=True`` only prevents rebinding the fields themselves; ``data`` is
+    an ordinary JSON dict whose nested dicts and lists stay mutable. Ownership
+    of that graph is therefore a contract carried by specific boundaries, not a
+    language guarantee.
+
+    What is guaranteed: an envelope returned by a TraceHarness distribution
+    boundary - today an `EventStore`'s ``append()`` and ``read()`` - is
+    caller-owned, and editing it cannot rewrite stored history.
+
+    What is not: nothing isolates two consumers automatically. An envelope is a
+    plain object, so passing one to two consumers shares one mutable payload
+    between them. Any component that fans an event out to several recipients
+    owes each of them its own ``detach_event()`` copy. (No such fan-out exists
+    in this version.)
+    """
+
     event_id: UUID
     stream_id: str
     seq: int
@@ -59,7 +98,9 @@ class EventEnvelope:
             seq=seq,
             type=pending.type,
             schema_version=pending.schema_version,
-            data={str(k): to_json_value(v) for k, v in pending.data.items()},
+            # Detaches the payload from the caller's PendingEvent: later edits
+            # to the input graph cannot rewrite an event that was already made.
+            data=_detach_json_data(pending.data),
             occurred_at=pending.occurred_at or datetime.now(UTC),
             causation_id=pending.causation_id,
             correlation_id=pending.correlation_id,
@@ -74,7 +115,9 @@ class EventEnvelope:
             "seq": self.seq,
             "type": self.type,
             "schema_version": self.schema_version,
-            "data": self.data,
+            # Detached: the returned dict is the caller's to edit or serialize,
+            # and editing it must not reach back into this envelope.
+            "data": _detach_json_data(self.data),
             "occurred_at": self.occurred_at.isoformat(),
             "causation_id": str(self.causation_id) if self.causation_id else None,
             "correlation_id": str(self.correlation_id) if self.correlation_id else None,
@@ -93,7 +136,9 @@ class EventEnvelope:
             seq=int(raw["seq"]),
             type=str(raw["type"]),
             schema_version=int(raw.get("schema_version", 1)),
-            data={str(k): v for k, v in data.items()},
+            # Detached: a shallow rebuild would still share every nested dict
+            # and list with ``raw``, so editing the input would edit the event.
+            data=_detach_json_data(data),
             occurred_at=datetime.fromisoformat(str(raw["occurred_at"])),
             causation_id=UUID(str(raw["causation_id"])) if raw.get("causation_id") else None,
             correlation_id=(
@@ -106,3 +151,20 @@ class EventEnvelope:
                 else None
             ),
         )
+
+
+def detach_event(event: EventEnvelope) -> EventEnvelope:
+    """Return an equal envelope whose payload is detached from ``event.data``.
+
+    Every field except ``data`` is carried over by value; only the JSON graph is
+    rebuilt, and no JSON text round trip is involved, so ``UUID`` and
+    ``datetime`` metadata keep their types. Payload values are normalized by the
+    same rule as any other event payload - see ``_detach_json_data()``.
+
+    This is the reusable helper for any boundary that hands an event to someone
+    who may edit it: it lets a store return an event without also returning a
+    writable reference into its own history, and one copy per recipient is what
+    a future fan-out would need.
+    """
+
+    return replace(event, data=_detach_json_data(event.data))

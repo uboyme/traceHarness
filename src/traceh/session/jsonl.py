@@ -56,6 +56,16 @@ class JsonlEventStore:
     explicitly by ``_run_locked()``: cancelling ``append``/``read``/``head``
     never leaves a detached thread waiting for the lock or writing to the
     stream.
+
+    This store needs no store-specific `detach_event()` call, which is not the
+    same as doing no copying. History lives in the file, so reads and writes
+    already pass through the shared `EventEnvelope` serialization boundary, and
+    that boundary rebuilds the payload on both sides: ``read()`` parses a line
+    with ``json.loads()`` and then ``from_dict()`` normalizes it into a fresh
+    graph, while ``append()`` has ``to_dict()`` rebuild the payload before it is
+    serialized. The result is that callers get graphs nothing else observes -
+    the same contract `InMemoryEventStore` reaches by detaching explicitly -
+    reached through the serialization boundary rather than for free.
     """
 
     def __init__(
@@ -288,6 +298,14 @@ class JsonlEventStore:
         *,
         from_seq: int = 1,
     ) -> tuple[EventEnvelope, ...]:
+        """Read events from ``from_seq`` as caller-owned envelopes.
+
+        ``from_seq`` filters, it does not seek: the whole stream is parsed and
+        rebuilt first, so the cost tracks the total payload of the stream rather
+        than of the returned slice. This is the same full-scan boundary noted
+        for the JSONL store generally, not something detachment introduced.
+        """
+
         async with self._locks[stream_id]:
             # Exclusive because a partial-tail repair may truncate the stream.
             events = await self._run_locked(

@@ -25,9 +25,14 @@ Kernel
   Scope, HookDispatcher, Activation, Lifespan, OwnedTaskSet
 ```
 
-Dependencies point downward. `traceh.api` contains structural protocols and immutable
-values that future third-party packages should import. Runtime internals are not plugin
+Dependencies point downward. `traceh.api` contains structural protocols and frozen value
+types that future third-party packages should import. Runtime internals are not plugin
 API.
+
+"Frozen" is the dataclass guarantee - fields cannot be rebound - not deep immutability. An
+`EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out
+detached copies rather than references into its own history; see
+[`event-protocol.md`](event-protocol.md).
 
 ## Thin loop
 

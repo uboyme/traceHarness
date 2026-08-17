@@ -9,6 +9,61 @@ Composition revision.
 Core events use names such as `turn/start`. Future plugin events should use a namespace,
 for example `com.example.git/commit-created`.
 
+## Payload ownership
+
+`EventEnvelope` is a frozen dataclass, which stops its fields from being rebound but does
+not freeze what they point at. `data` is an ordinary JSON graph: its nested dicts and lists
+are mutable, and `event.data["nested"]["value"] = ...` is legal Python. There is no
+`FrozenDict`, and events are not recursively immutable.
+
+History is therefore protected by an ownership rule rather than by the type system:
+**a boundary that hands an event to someone who may edit it hands over a detached copy.**
+Today that boundary is `EventStore.append()` and `read()`. The rule is not automatic: an
+envelope is a plain object, so anything that fans one event out to several recipients owes
+each of them its own copy. No such fan-out exists in this version.
+
+`detach_event()` rebuilds the JSON graph through `to_json_value()` and carries every other
+field over by value, with no JSON text round trip, so ids and timestamps stay `UUID` and
+`datetime` instead of degrading into their JSON spelling.
+
+Payload values are normalized by the same rule that governs what a payload may contain,
+and that rule is wider than `JsonValue`: `Path`, `UUID`, `datetime`, `Enum`, dataclasses,
+arbitrary mappings and `Sequence` values other than `str`, `bytes` and `bytearray`, such as
+`tuple`, are **converted** into their JSON form - a `tuple` becomes a `list`, a `Path`
+becomes a string. Only genuinely unsupported values (`set`, `bytes`, arbitrary objects)
+raise `TypeError`. This is a payload copy under the event
+encoding rules, not a general deep copy.
+
+Every `EventStore` implementation owes a caller the same guarantees:
+
+| The caller mutates | Result |
+|---|---|
+| the original `PendingEvent.data` | stored history is unchanged |
+| an event returned by `append()` | stored history is unchanged |
+| an event returned by `read()` | stored history is unchanged; the next `read()` still shows the original fact |
+| one of two `read()` results | the other is unaffected |
+| the dict from `to_dict()` | the envelope is unchanged |
+| the dict passed to `from_dict()` | the decoded envelope is unchanged |
+
+Detachment covers the top-level payload, nested dicts, nested lists and dicts inside lists.
+Two `PendingEvent`s that reuse one nested input object still produce independent events.
+The guarantee is that stored history cannot be rewritten through a handed-out event - not
+that the copy itself is immutable. A caller may freely edit its own copy.
+
+`JsonlEventStore` needs no store-specific `detach_event()` call, because its history lives
+in the file and both directions already pass through the shared `EventEnvelope`
+serialization boundary. That boundary still rebuilds the payload: `read()` runs
+`json.loads()` and then `from_dict()` normalizes the result into a fresh graph, and
+`append()` has `to_dict()` rebuild the payload before serializing it. So the copying is
+reached through serialization, not avoided. `InMemoryEventStore` keeps the objects it
+returns, so it detaches explicitly instead of exposing its internal list. `head()` copies
+nothing.
+
+Cost follows from this rather than from detachment: a copy is one event payload, so a
+`read()` returning many events costs the total payload of what it parses and returns. In
+`JsonlEventStore` that is the whole stream - `from_seq` filters after the full parse rather
+than seeking - which is the pre-existing JSONL full-scan boundary.
+
 ## Session events
 
 ```text

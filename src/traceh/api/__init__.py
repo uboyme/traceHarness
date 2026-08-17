@@ -1,4 +1,4 @@
-"""Stable public protocols and immutable data structures."""
+"""Stable public protocols and frozen value types."""
 
 from traceh.api.agents import AgentSpec, AgentSupervisor, Budget
 from traceh.api.events import EventEnvelope, PendingEvent

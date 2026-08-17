@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+- Stop `InMemoryEventStore` from handing out the very events it stores. `append()` and
+  `read()` returned the objects held in the stream, and `EventEnvelope` being frozen only
+  prevents rebinding its fields - the nested dicts and lists inside `data` stayed mutable.
+  A caller editing its own event therefore rewrote stored history, silently and in the past.
+  Both methods now return detached copies; `head()` still copies nothing. `JsonlEventStore`
+  needed no change, because its history lives in the file and both directions already pass
+  through the shared `EventEnvelope` serialization boundary - which does rebuild the payload,
+  so this is "no store-specific detach call", not "no copying".
+- Detach the nested references that `EventEnvelope.to_dict()` and `from_dict()` shared with
+  their input. `to_dict()` handed out the envelope's own payload, and `from_dict()` rebuilt
+  only the top level, so editing either dict reached back into the event. `from_dict()`
+  still rejects a non-object payload rather than coercing it.
+- Add `detach_event()`, built on the existing `to_json_value()` so that one rule decides both
+  what an event payload may contain and how it is normalized. That rule reaches wider than
+  `JsonValue`: `Path`, `UUID`, `datetime`, `Enum`, dataclasses, mappings and `Sequence` values
+  other than `str`, `bytes` and `bytearray`, such as `tuple`, are converted into their JSON
+  form, and only genuinely unsupported values (`set`, `bytes`, arbitrary objects) raise
+  `TypeError`. No JSON text round trip is involved, so `UUID`
+  and `datetime` metadata on the envelope itself survive intact.
+- Add `tests/test_event_store_contract.py`, an ownership contract parametrised over both
+  stores: mutating the pending input, the append result or a read result never changes
+  stored history, two reads share nothing, `to_dict()`/`from_dict()` detach in both
+  directions, and `expected_seq`/`ConcurrencyConflict` semantics are untouched. Both sides of
+  the payload rule are pinned too: unsupported values raise, while `Path` and `tuple` are
+  normalized rather than rejected. The tests really mutate nested structures and read back,
+  rather than asserting non-identity.
+- Document the ownership contract on the `EventStore` protocol itself, not only on
+  `InMemoryEventStore`, since a replaceable backend must not change what callers may safely
+  do with a returned event.
 - Add shared `AGENTS.md` / `CLAUDE.md` development instructions and continuously
   maintained formal/plain-language project context documents under `docs/note/`.
 - Load OpenAI-compatible provider settings and secrets from `.env` without adding a

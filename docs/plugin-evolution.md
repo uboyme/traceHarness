@@ -22,19 +22,70 @@ Any failure unwinds every activation in reverse order. Cancellation unwinds iden
 then re-raises the original `CancelledError` - it is never reported as a plugin failure.
 
 No plugin mutates a live registry directly. Every registration is owned by an `Activation`
-and reversible, and `Runtime.dispose()` converges active turns before unloading plugins in
-reverse activation order.
+and reversible, and `Runtime.dispose()` converges active turns, drains retired Composition
+Generations, and only then unloads plugins in reverse activation order.
 
-### Still not implemented in v0.4
+## Stage A: Generation-backed Composition Runtime — shipped as infrastructure
 
-The two items the earlier draft of this page listed as part of the loader remain future
-work, because both change the meaning of a Step rather than the loader:
+Both default runtime factories now create the same Generation-backed Composition Runtime;
+the no-plugin path also uses it. A Step acquires one Lease, and that Lease binds the
+Provider, Prompt, ToolRuntime, plugin identities, policies/middleware and Composition
+Snapshot to one immutable Generation. `publish()` has a lock-protected linearization
+point; the old Generation is retired and new Leases see only the new one. Cleanup starts
+only after the last old Lease releases, runs at most once, and `drain()` waits for both
+Lease count zero and cleanup completion. Repeated cancellation is absorbed until the
+shared drain task converges. Cleanup errors are returned as a bounded deterministic
+structured failure after other generations have also been attempted; a failed cleanup
+poisons the runtime and future publication is rejected.
 
-- creating a **new Composition generation** per activation;
-- **draining** old generations after existing Step leases finish, i.e. hot reload.
+Generation identity is an internal lifecycle number. It is not put into the persisted
+Composition Snapshot or Request Fingerprint. `CompositionSnapshot.revision` remains a
+fingerprint of model-visible content, so distinct Generations with identical content may
+share a revision.
 
-The plugin set is fixed between startup and `dispose()`. Also absent: isolated
-(out-of-process) plugins, which a manifest may declare and activation explicitly rejects.
+The initial Generation freezes Tool metadata and schemas together with flat, idempotent
+execution adapters, Prompt and Plugin Identity inputs. The Tool adapter exposes read-only
+metadata properties and recursively frozen JSON schema data; it never offers a mutation
+method. Policy and middleware names used by the Snapshot are captured at construction.
+Runtime initialization fixes the identity of the main `ToolRuntime.sessions` object; a
+candidate using another `SessionService` is rejected before publication, preserving the
+Session Event Log as the only fact source. Generation-object publication ownership and
+resource cleanup ownership are separate states. Cleanup is carried by one explicit,
+one-shot `CompositionResourceOwner` handle created by the assembly layer. Raw
+`LlmRegistry`, `ToolRuntime`, `PromptAssembler`, Provider/Tool/Policy/Middleware components
+and frozen/compatibility wrappers propagate its binding directly; there is no global `id()`
+catalog and no object-graph scan to infer ownership. A public cleanup-bearing Generation
+without an explicit owner is rejected, and a raw slotted capability that cannot retain the
+binding marker is also rejected for cleanup ownership. Such a capability must first pass
+through a binding-capable controlled assembly; otherwise the same raw object could be put
+in two fresh containers with no way to prove that they share ownership. Generation
+construction performs all provider lookup and freezing before it commits the owner/binding.
+The binding is stored directly in the actual instance dictionary or declared slot and is
+read back for verification, so a custom setter cannot silently discard it. A partial commit
+restores the exact prior attribute state, including the difference between an absent field
+and a present `None`, so a failed candidate does not poison a retry. Runtime compatibility
+views are built from the frozen initial Generation before the owner claim; there is no
+second caller-controlled Prompt/Registry read after ownership becomes one-shot. A used binding cannot receive a new cleanup
+owner, and the same owner handle cannot be claimed by two Runtimes. Runtime initialization
+and `publish()` use the same validation/claim entry: frozen cleanup inputs, multi-hop
+derivations, wrapper aliases and cleanup added to an already-used binding are rejected
+before current changes. Stage A has no resource-level refcount, so a cleanup-bearing
+Generation must use an unclaimed exclusive capability assembly. Service values remain application-level registrations owned by
+PluginManager/AgentRuntime and are not yet bound to Generation lifecycle. Stage A also
+rejects a publication whose plugin identity tuple differs from the startup composition;
+Session migration is intentionally deferred.
+
+The two product capabilities the earlier draft listed as part of the loader remain future
+work, because they change the meaning of a Step rather than the loader:
+
+- a user-facing **hot-reload command** that builds, validates and publishes a candidate
+  Generation;
+- dynamically installing or uninstalling a Wheel while the process is running.
+
+The plugin set is still fixed between startup and `dispose()`, and PluginManager remains a
+startup activation owner. Also absent: Workspace/Preset/Agent Scope Overlay, isolated
+(out-of-process) plugins, and any new Provider, Policy, Middleware, EventStore or Verifier
+plugin contribution. The version remains `0.4.0`; Stage A is not a v0.5 release.
 
 ## Extension categories
 

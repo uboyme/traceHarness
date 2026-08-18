@@ -21,7 +21,7 @@ from traceh.llm.registry import LlmRegistry
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_loop import AgentLoop, TurnResult
-from traceh.runtime.composition_runtime import StaticCompositionRuntime
+from traceh.runtime.composition_runtime import GenerationCompositionRuntime
 from traceh.runtime.continuation import ContinuationRuntime
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
@@ -141,7 +141,7 @@ class AgentRuntime:
         self.events = events
         #: Full composition identity for this runtime: the core plus whichever
         #: external plugins were activated. Stamped into every Composition
-        #: Snapshot by `StaticCompositionRuntime`.
+        #: Snapshot by the generation-backed CompositionRuntime.
         self.plugins = plugins
         self.services = services or ServiceRegistry()
         self._plugin_manager = plugin_manager
@@ -342,11 +342,36 @@ class AgentRuntime:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-        # Turns converge first, then plugins are unloaded in reverse activation
-        # order. Unloading first would pull a tool or service out from under a
-        # turn that is still running.
+        # Turns converge first, then retired/current generations converge, then
+        # the PluginManager unloads the startup activation it uniquely owns.
+        # Unloading first would pull a tool or service out from under a turn or
+        # a still-live generation.  The default generation has no cleanup
+        # callback: its plugin resources remain owned by PluginManager, so this
+        # does not create a second cleanup owner.  If a generation cleanup
+        # fails, still give PluginManager its cleanup opportunity before
+        # reporting the shutdown failure.
+        shutdown_errors: list[BaseException] = []
+        composition_dispose = getattr(self.loop.compositions, "dispose", None)
+        if composition_dispose is not None:
+            try:
+                await composition_dispose()
+            except BaseException as error:
+                shutdown_errors.append(error)
         if self._plugin_manager is not None:
-            await self._plugin_manager.dispose()
+            try:
+                await self._plugin_manager.dispose()
+            except BaseException as error:
+                shutdown_errors.append(error)
+            finally:
+                finalize_external_cleanup = getattr(
+                    self.loop.compositions, "finalize_external_cleanup", None
+                )
+                if finalize_external_cleanup is not None:
+                    finalize_external_cleanup()
+        if len(shutdown_errors) == 1:
+            raise shutdown_errors[0]
+        if shutdown_errors:
+            raise ExceptionGroup("runtime shutdown failed", shutdown_errors)
 
     async def dispose(self) -> None:
         """Shut the runtime down exactly once, converging on repeat cancellation.
@@ -512,7 +537,7 @@ def _finish_default_runtime(
     )
     request_builder = RequestBuilder(prepared.sessions, prepared.surface)
     hooks = HookDispatcher()
-    composition_runtime = StaticCompositionRuntime(
+    composition_runtime = GenerationCompositionRuntime(
         llms=prepared.llms,
         tools=tool_runtime,
         prompt=prepared.prompt,
@@ -521,6 +546,7 @@ def _finish_default_runtime(
         temperature=config.temperature,
         max_output_tokens=config.max_output_tokens,
         plugins=plugins,
+        defer_external_cleanup=plugin_manager is not None,
     )
     loop = AgentLoop(
         sessions=prepared.sessions,
@@ -563,7 +589,7 @@ def build_default_runtime(
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
 ) -> AgentRuntime:
-    """Build the no-plugin runtime synchronously; behaviour is unchanged from v0.3."""
+    """Build the no-plugin runtime synchronously through the Generation path."""
 
     prepared = _prepare_default_runtime(
         config,
@@ -599,8 +625,8 @@ async def build_default_runtime_async(
     """Build a runtime after transactional startup-time plugin activation.
 
     With ``enabled_plugins`` empty this is exactly ``build_default_runtime``:
-    no discovery runs, no plugin module is imported, and the resulting runtime is
-    indistinguishable from the v0.3 one.
+    no discovery runs, no plugin module is imported, and the resulting runtime
+    still uses the same single initial Generation/Lease path.
     """
 
     prepared = _prepare_default_runtime(

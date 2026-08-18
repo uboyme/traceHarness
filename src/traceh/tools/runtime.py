@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint
 from traceh.api.llm import ToolCall
-from traceh.api.tools import EffectKind, ToolExecutionContext
+from traceh.api.tools import ToolExecutionContext
 from traceh.session.service import SessionService
 from traceh.tools.middleware import ToolInvocation, ToolMiddleware, invoke_middleware_chain
 from traceh.tools.policy import DecisionKind, ToolPolicy, evaluate_policies
@@ -58,6 +58,22 @@ class ToolRuntime:
         self.sessions = sessions
         self.policies = policies
         self.middlewares = middlewares
+        component_bindings = [
+            getattr(registry, "_composition_resource_binding", None),
+            *(getattr(policy, "_composition_resource_binding", None) for policy in policies),
+            *(
+                getattr(middleware, "_composition_resource_binding", None)
+                for middleware in middlewares
+            ),
+        ]
+        component_bindings = [binding for binding in component_bindings if binding is not None]
+        if component_bindings and any(
+            binding is not component_bindings[0] for binding in component_bindings[1:]
+        ):
+            raise ValueError("tool runtime mixes composition resource lineages")
+        self._composition_resource_binding = (
+            component_bindings[0] if component_bindings else None
+        )
         self.timeout_seconds = timeout_seconds
         self.max_output_chars = max_output_chars
 
@@ -266,7 +282,11 @@ class ToolRuntime:
             "tool_name": call.name,
             "effect_kind": tool.effect_kind.value,
             "operation_fingerprint": fingerprint(
-                {"tool": call.name, "arguments": call.arguments, "workspace": str(context.workspace)}
+                {
+                    "tool": call.name,
+                    "arguments": call.arguments,
+                    "workspace": str(context.workspace),
+                }
             ),
             "arguments": call.arguments,
             "retry_safe": tool.effect_kind.is_retry_safe,

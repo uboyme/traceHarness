@@ -14,6 +14,7 @@ class ToolConflictError(RuntimeError):
 class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, Tool] = {}
+        self._composition_resource_binding = None
 
     def register(self, tool: Tool, *, replace: bool = False) -> CallbackRegistration:
         """Register a tool and return the registration that reverses it.
@@ -22,6 +23,16 @@ class ToolRegistry:
         failed or disposed activation can put the registry back exactly as it
         was, including restoring a tool that ``replace=True`` shadowed.
         """
+
+        tool_binding = getattr(tool, "_composition_resource_binding", None)
+        if (
+            self._composition_resource_binding is not None
+            and tool_binding is not None
+            and self._composition_resource_binding is not tool_binding
+        ):
+            raise ValueError("tool registry mixes composition resource lineages")
+        if self._composition_resource_binding is None and tool_binding is not None:
+            self._composition_resource_binding = tool_binding
 
         previous = self._tools.get(tool.name)
         if previous is not None and not replace:

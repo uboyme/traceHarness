@@ -14,6 +14,7 @@ from plugin_fixtures import RecordingTool, ScriptedPlugin, entry_point_for, mani
 from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY
 from traceh.api.prompts import PromptSection
+from traceh.llm.registry import LlmRegistry
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.plugins.discovery import PluginDiscovery
 from traceh.runtime.agent_runtime import (
@@ -22,7 +23,11 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime,
     build_default_runtime_async,
 )
+from traceh.runtime.composition_runtime import CompositionGeneration, CompositionResourceOwner
+from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.tools.registry import ToolRegistry
+from traceh.tools.runtime import ToolRuntime
 from traceh.version import __version__
 
 
@@ -76,6 +81,62 @@ async def test_without_plugins_prompt_and_tools_are_unchanged(
     )
     assert through.plugins == (CORE_PLUGIN_IDENTITY,)
     assert through.enabled_plugin_ids == ()
+
+
+async def test_runtime_dispose_drains_generation_before_plugin_manager(
+    tmp_path: Path,
+) -> None:
+    record: list[str] = []
+    plugin = ScriptedPlugin(
+        manifest("order.example"),
+        tools=(RecordingTool("order_tool"),),
+        record=record,
+    )
+    runtime = await build(tmp_path, plugins=(plugin,), enabled=("order.example",))
+    compositions = runtime.loop.compositions
+    initial = compositions.current_generation
+
+    async def generation_cleanup() -> None:
+        record.append("cleanup:generation")
+
+    llms = LlmRegistry()
+    llms.register(
+        ScriptedLlmProvider(
+            (ModelResponse(content="unused"),),
+            repeat_last=True,
+        )
+    )
+    replacement_tools = ToolRegistry()
+    replacement_tools.register(RecordingTool("order_tool"))
+    replacement_runtime = ToolRuntime(
+        replacement_tools,
+        initial.tools.sessions,
+        policies=(),
+        middlewares=(),
+        timeout_seconds=initial.tools.timeout_seconds,
+        max_output_chars=initial.tools.max_output_chars,
+    )
+    replacement = CompositionGeneration(
+        llms=llms,
+        tools=replacement_runtime,
+        prompt=PromptAssembler(initial.prompt.sections()),
+        provider=initial.provider,
+        model=initial.model,
+        temperature=initial.temperature,
+        max_output_tokens=initial.max_output_tokens,
+        plugins=initial.plugins,
+        resource_owner=CompositionResourceOwner(generation_cleanup),
+        cleanup=generation_cleanup,
+    )
+    await compositions.publish(replacement)
+
+    await runtime.dispose()
+
+    assert record == [
+        "setup:order.example",
+        "cleanup:generation",
+        "cleanup:order.example",
+    ]
 
 
 async def test_installed_but_not_enabled_plugin_changes_nothing(

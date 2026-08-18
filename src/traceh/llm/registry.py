@@ -8,8 +8,18 @@ from traceh.api.llm import LlmProvider
 class LlmRegistry:
     def __init__(self) -> None:
         self._providers: dict[str, LlmProvider] = {}
+        self._composition_resource_binding = None
 
     def register(self, provider: LlmProvider, *, replace: bool = False) -> None:
+        provider_binding = getattr(provider, "_composition_resource_binding", None)
+        if (
+            self._composition_resource_binding is not None
+            and provider_binding is not None
+            and self._composition_resource_binding is not provider_binding
+        ):
+            raise ValueError("LLM registry mixes composition resource lineages")
+        if self._composition_resource_binding is None and provider_binding is not None:
+            self._composition_resource_binding = provider_binding
         if provider.name in self._providers and not replace:
             raise RuntimeError(f"LLM provider already registered: {provider.name}")
         self._providers[provider.name] = provider

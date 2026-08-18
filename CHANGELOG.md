@@ -1,5 +1,60 @@
 # Changelog
 
+## Unreleased
+
+### v0.5 Stage A infrastructure
+
+- Added Generation-backed Composition Runtime with Step Lease, Publish/Retire, last-Lease
+  cleanup, deterministic Drain, repeated-cancellation convergence and structured cleanup
+  failures.
+- Routed both default runtime factories and real AgentLoop Steps through the same
+  Generation/Lease path; request reconstruction and Composition revision fingerprints do
+  not include internal Generation identity.
+- Runtime shutdown now converges active Turns, Composition Drain and then the uniquely
+  owning PluginManager in that order.
+- Added deterministic Generation contract tests and reverse validation of the lease,
+  cleanup-order and repeated-cancellation boundaries.
+- Corrected the Stage A contracts found in follow-up review: Generation captures immutable
+  Prompt/Tool/Provider inputs instead of rereading live registries; Tool execution uses a
+  frozen metadata adapter; policy/middleware Snapshot names are captured; completed records
+  are removed; publication rejects plugin identity migration; Lease contexts are single-use
+  with one shared release result; cleanup failures are bounded and poison future publication;
+  and cleanup error type labels are terminal-safe. Service remains an application-level
+  PluginManager/AgentRuntime resource rather than a Generation field.
+- Follow-up review protections now fix the main `SessionService` identity for the runtime and
+  reject candidates bound to another EventStore or the current Generation object itself.
+  Replacing an already frozen Generation reuses one flat Tool adapter, so repeated candidate
+  publication cannot build an unbounded execution recursion chain. The chat cancellation
+  fixture now waits for the first Provider call to receive cancellation before releasing its
+  gate; the full suite is deterministic and green.
+- Final ownership hardening makes Tool metadata properties and nested schemas truly read-only.
+  Each Generation object is claimed at most once across all Runtimes; retired or cleaned
+  Generations cannot be republished, and candidates derived from cleanup-bearing published
+  Generations are rejected instead of sharing resources with a cleanup owner.
+- Follow-up ownership hardening now separates Generation-object publication claims from
+  cleanup ownership. Cleanup-bearing Generations carry one explicit, one-shot
+  `CompositionResourceOwner` handle created by the assembly layer; raw capability
+  components and frozen/compatibility wrappers propagate that binding directly. There is
+  no global `id()` catalog or object-graph scan. Bare cleanup callbacks, used bindings,
+  multi-hop cleanup derivations, wrapper aliases and a second owner claim are rejected by
+  the shared Runtime-construction/`publish()` validation path. The Tool contract also
+  tests deletion refusal for all frozen metadata fields.
+- Resource ownership is now conservative for slotted raw capabilities: a Provider, Tool,
+  Policy or Middleware that cannot retain the binding marker is rejected from a
+  cleanup-bearing Generation instead of being treated as verifiably fresh. Generation
+  construction freezes and validates all sources before committing owner/binding state, so
+  a bad Provider name leaves the same Owner and raw resources retryable.
+- Ownership binding now writes directly to verifiable instance-dictionary or declared-slot
+  storage, defeating custom setters that silently ignore the marker. Transaction rollback
+  restores the exact prior attribute state, and Runtime compatibility views are built from
+  the frozen initial Generation before the one-shot owner claim, closing the remaining
+  post-claim failure window.
+
+This does not add a user-facing hot-reload command, running Wheel install/uninstall, Scope
+Overlay, new plugin contribution categories, isolated plugins, multi-agent, Workflow, MCP,
+TUI or streaming output. The package version remains `0.4.0`; Stage A is not the v0.5
+release.
+
 ## 0.4.0
 
 ### Fixes from third-party review

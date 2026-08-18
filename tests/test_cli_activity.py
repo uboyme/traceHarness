@@ -153,12 +153,18 @@ class GatedProvider:
         self._responses = list(responses)
         self.calls = 0
         self.started = asyncio.Event()
+        self.first_cancelled = asyncio.Event()
         self.release = asyncio.Event()
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
         self.calls += 1
         self.started.set()
-        await self.release.wait()
+        try:
+            await self.release.wait()
+        except asyncio.CancelledError:
+            if self.calls == 1:
+                self.first_cancelled.set()
+            raise
         self.started.clear()
         self.release = asyncio.Event()
         return self._responses[min(self.calls - 1, len(self._responses) - 1)]
@@ -862,6 +868,7 @@ async def test_interrupting_a_model_call_shows_the_cancellation_lifecycle(
     assert runtime.events.subscriber_count(stream) == 1
 
     chat.cancel()  # exactly how Ctrl+C arrives under asyncio.run on 3.11+
+    await asyncio.wait_for(provider.first_cancelled.wait(), timeout=10)
     provider.release.set()
     assert await asyncio.wait_for(chat, timeout=10) == 0
 

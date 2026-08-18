@@ -2,24 +2,34 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True, slots=True)
-class PromptSection:
-    section_id: str
-    content: str
-    priority: int = 100
+from traceh.api.prompts import PromptSection
+from traceh.kernel.lifespan import CallbackRegistration
 
 
 class PromptAssembler:
     def __init__(self, sections: tuple[PromptSection, ...] = ()) -> None:
         self._sections = list(sections)
 
-    def register(self, section: PromptSection) -> None:
+    def register(self, section: PromptSection) -> CallbackRegistration:
+        """Register a section and return the registration that removes it again."""
+
         if any(item.section_id == section.section_id for item in self._sections):
             raise RuntimeError(f"prompt section already registered: {section.section_id}")
         self._sections.append(section)
+
+        async def cleanup() -> None:
+            for index, current in enumerate(self._sections):
+                if current is section:
+                    self._sections.pop(index)
+                    return
+
+        return CallbackRegistration(cleanup)
+
+    def section_ids(self) -> tuple[str, ...]:
+        return tuple(sorted(section.section_id for section in self._sections))
+
+    def sections(self) -> tuple[PromptSection, ...]:
+        return tuple(sorted(self._sections, key=lambda item: (item.priority, item.section_id)))
 
     def assemble(self, *, workspace: str) -> str:
         runtime_section = PromptSection(
@@ -27,8 +37,13 @@ class PromptAssembler:
             f"Workspace root: {workspace}\nAll file and process operations must stay in this workspace.",
             50,
         )
-        sections = sorted((*self._sections, runtime_section), key=lambda item: (item.priority, item.section_id))
-        return "\n\n".join(f"## {section.section_id}\n{section.content.strip()}" for section in sections)
+        sections = sorted(
+            (*self._sections, runtime_section),
+            key=lambda item: (item.priority, item.section_id),
+        )
+        return "\n\n".join(
+            f"## {section.section_id}\n{section.content.strip()}" for section in sections
+        )
 
 
 def default_coding_prompt() -> PromptAssembler:
@@ -54,3 +69,6 @@ def default_coding_prompt() -> PromptAssembler:
             ),
         )
     )
+
+
+__all__ = ["PromptAssembler", "PromptSection", "default_coding_prompt"]

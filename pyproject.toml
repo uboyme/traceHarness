@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traceharness-py"
-version = "0.3.0"
+# Read from traceh.version.__version__ so the wheel metadata and the imported
+# package can never disagree. See [tool.setuptools.dynamic] below.
+dynamic = ["version"]
 description = "An event-sourced, reconstructable Python runtime for traceable coding agents."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -18,7 +20,13 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: MIT License",
 ]
-dependencies = []
+# v0.4 introduces the project's first runtime dependency. PEP 440 version and
+# requirement parsing drives manifest compatibility, plugin dependency ranges
+# and entry-point distribution checks; a hand-rolled parser here would be an
+# incomplete PEP 440 implementation guarding a trust boundary.
+dependencies = [
+  "packaging>=24.0,<27",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -30,6 +38,9 @@ dev = [
 [project.scripts]
 traceh = "traceh.cli.main:main"
 
+[tool.setuptools.dynamic]
+version = { attr = "traceh.version.__version__" }
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -40,6 +51,9 @@ traceh = ["py.typed"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+  "slow: builds wheels and a clean virtual environment; deselect with -m 'not slow'",
+]
 
 [tool.ruff]
 line-length = 100

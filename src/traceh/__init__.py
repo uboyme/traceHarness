@@ -1,6 +1,17 @@
 """TraceHarness Py public package."""
 
-from traceh.runtime.agent_runtime import AgentRuntime, RuntimeConfig, build_default_runtime
+from traceh.runtime.agent_runtime import (
+    AgentRuntime,
+    RuntimeConfig,
+    build_default_runtime,
+    build_default_runtime_async,
+)
+from traceh.version import __version__
 
-__all__ = ["AgentRuntime", "RuntimeConfig", "build_default_runtime"]
-__version__ = "0.3.0"
+__all__ = [
+    "AgentRuntime",
+    "RuntimeConfig",
+    "__version__",
+    "build_default_runtime",
+    "build_default_runtime_async",
+]

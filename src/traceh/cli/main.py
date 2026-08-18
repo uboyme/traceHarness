@@ -27,12 +27,20 @@ from traceh.cli.env_file import (
     validate_env_var_name,
 )
 from traceh.cli.errors import CliConfigurationError
+from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
 from traceh.evaluation.runner import BenchmarkRunner
 from traceh.inspector import SessionInspector
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
 from traceh.llm.scripted import ScriptedLlmProvider
-from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.plugins import PluginError, resolve_enabled_plugins
+from traceh.runtime.agent_runtime import (
+    RuntimeConfig,
+    SessionPluginMismatchError,
+    build_default_runtime,
+    build_default_runtime_async,
+)
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.version import __version__
 
 _PROVIDERS = ("scripted", "openai-compatible")
 
@@ -66,6 +74,17 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--verify-command")
+    parser.add_argument(
+        "--plugin",
+        dest="plugins",
+        action="append",
+        default=None,
+        metavar="PLUGIN_ID",
+        help=(
+            "Explicitly enable an installed traceh.plugins entry point; repeat for more "
+            "than one. Any --plugin occurrence replaces TRACEH_PLUGINS entirely."
+        ),
+    )
 
 
 def _from_environment(args: argparse.Namespace, attribute: str, variable: str, default=None):
@@ -89,6 +108,13 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
     report = load_env_file(getattr(args, "env_file", None))
     if hasattr(args, "data_dir"):
         args.data_dir = Path(_from_environment(args, "data_dir", "TRACEH_DATA_DIR", ".traceh"))
+    if hasattr(args, "plugins"):
+        # Resolved once, here, so run, chat and resume share one selection rule
+        # and an invalid id fails before discovery imports anything.
+        args.plugins = resolve_enabled_plugins(
+            args.plugins,
+            os.environ.get("TRACEH_PLUGINS"),
+        )
     if not hasattr(args, "provider"):
         return report
 
@@ -166,7 +192,7 @@ def _provider_and_model(args: argparse.Namespace):
     return provider, args.model
 
 
-def _runtime(args: argparse.Namespace):
+async def _runtime(args: argparse.Namespace):
     provider, model = _provider_and_model(args)
     config = RuntimeConfig(
         data_dir=args.data_dir,
@@ -175,14 +201,22 @@ def _runtime(args: argparse.Namespace):
         max_steps=args.max_steps,
         verification_command=args.verify_command,
     )
-    return build_default_runtime(config, provider=provider)
+    return await build_default_runtime_async(
+        config,
+        provider=provider,
+        enabled_plugins=getattr(args, "plugins", ()),
+    )
 
 
 async def _run(args: argparse.Namespace) -> int:
-    runtime = _runtime(args)
-    session_id = await runtime.create_session(args.workspace, metadata={"cli": True})
-    print(f"session_id={session_id}")
+    runtime = await _runtime(args)
+    # Everything after a successful build belongs inside the guard. Creating the
+    # session can fail on its own - an unreadable workspace, a store error - and
+    # with that call outside the try, such a failure left the runtime (and any
+    # activated plugins) never disposed.
     try:
+        session_id = await runtime.create_session(args.workspace, metadata={"cli": True})
+        print(f"session_id={session_id}")
         result = await runtime.run_existing(session_id, args.task)
         print(result.final_text)
         print(
@@ -197,7 +231,7 @@ async def _run(args: argparse.Namespace) -> int:
 async def _chat(args: argparse.Namespace) -> int:
     workspace, session_id = chat_target(args.workspace, args.session_id)
     configure_stdio()
-    runtime = _runtime(args)
+    runtime = await _runtime(args)
     heartbeat_seconds = validate_heartbeat_seconds(
         args.heartbeat_seconds, timeline=args.timeline
     )
@@ -228,7 +262,7 @@ async def _chat(args: argparse.Namespace) -> int:
 
 
 async def _resume(args: argparse.Namespace) -> int:
-    runtime = _runtime(args)
+    runtime = await _runtime(args)
     try:
         recovery, result = await runtime.resume(args.session_id, instruction=args.instruction)
         print(json.dumps({"recovery": asdict(recovery)}, ensure_ascii=False, default=str, indent=2))
@@ -311,6 +345,18 @@ async def _eval(args: argparse.Namespace) -> int:
     return 0 if report.success_rate == 1.0 else 4
 
 
+def _plugins_list(args: argparse.Namespace) -> int:
+    return list_plugins(json_output=args.json)
+
+
+def _plugins_inspect(args: argparse.Namespace) -> int:
+    return inspect_plugin(args.plugin_id, json_output=args.json)
+
+
+async def _plugins_doctor(args: argparse.Namespace) -> int:
+    return await doctor_plugins(args.plugin_ids, json_output=args.json)
+
+
 def _doctor(args: argparse.Namespace) -> int:
     data_dir = args.data_dir.resolve()
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -332,7 +378,10 @@ def _doctor(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="traceh", description="TraceHarness Py v0.3")
+    parser = argparse.ArgumentParser(
+        prog="traceh",
+        description=f"TraceHarness Py v{__version__}",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     run = sub.add_parser("run", help="Create a session and run one agent turn")
@@ -419,6 +468,32 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--output", type=Path, default=Path(".traceh/eval"))
     evaluate.set_defaults(handler=_eval)
 
+    plugins = sub.add_parser(
+        "plugins",
+        help="Discover and diagnose installed plugins without starting an agent",
+    )
+    plugin_sub = plugins.add_subparsers(dest="plugin_command", required=True)
+
+    plugin_list = plugin_sub.add_parser("list", help="List metadata without importing plugins")
+    plugin_list.add_argument("--json", action="store_true")
+    plugin_list.set_defaults(handler=_plugins_list)
+
+    plugin_inspect = plugin_sub.add_parser(
+        "inspect",
+        help="Inspect one plugin's distribution and entry-point metadata",
+    )
+    plugin_inspect.add_argument("plugin_id")
+    plugin_inspect.add_argument("--json", action="store_true")
+    plugin_inspect.set_defaults(handler=_plugins_inspect)
+
+    plugin_doctor = plugin_sub.add_parser(
+        "doctor",
+        help="Load, validate, set up, health-check and dispose plugins",
+    )
+    plugin_doctor.add_argument("plugin_ids", nargs="*")
+    plugin_doctor.add_argument("--json", action="store_true")
+    plugin_doctor.set_defaults(handler=_plugins_doctor)
+
     doctor = sub.add_parser("doctor", help="Check the local runtime environment")
     _add_storage_arguments(doctor)
     doctor.add_argument("--provider", choices=_PROVIDERS, default=None)
@@ -434,7 +509,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     try:
         args.env_report = _configure_from_environment(args)
-    except (CliConfigurationError, EnvFileError) as error:
+    except (CliConfigurationError, EnvFileError, PluginError) as error:
         parser.error(str(error))
     handler = args.handler
     try:
@@ -442,8 +517,15 @@ def main(argv: list[str] | None = None) -> None:
             code = asyncio.run(handler(args))
         else:
             code = handler(args)
-    except (CliConfigurationError, EnvFileError) as error:
-        # Usage problems are reported as usage problems, never as a traceback.
+    except (
+        CliConfigurationError,
+        EnvFileError,
+        PluginError,
+        SessionPluginMismatchError,
+    ) as error:
+        # Usage and plugin problems are reported as usage problems, never as a
+        # traceback. PluginError messages are written by this repository, so no
+        # plugin exception text reaches the terminal here.
         parser.error(str(error))
     except KeyboardInterrupt:
         code = INTERRUPTED_EXIT_CODE

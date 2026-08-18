@@ -1,5 +1,176 @@
 # Changelog
 
+## 0.4.0
+
+### Fixes from third-party review
+
+Five blocking defects found by an independent Codex review of the v0.4 work, all
+reproduced before being fixed and reverse-verified afterwards (reverting each fix
+turns its tests red).
+
+- **Owned background task exceptions had no owner.** A task that raised *before*
+  shutdown completed on its own, and the done callback only dropped it from the
+  set - so `cancel_and_wait()` never saw it and never retrieved its exception.
+  asyncio then reported "Task exception was never retrieved" from the garbage
+  collector, at an unrelated moment. The callback now retrieves the outcome the
+  instant the task finishes via `task.exception()`, and **retains nothing**: an
+  earlier revision stored every failure in an unbounded list no mainline code
+  read, keeping untrusted plugin exceptions and their tracebacks alive for
+  nobody. Scope is stated explicitly: this is **lifecycle ownership, not a
+  supervisor** - v0.4 does not restart tasks, keep exceptions, log anything, or
+  escalate a background failure into a Runtime fault. Cancelled and successfully
+  completed tasks are not misreported.
+- **`AgentRuntime.dispose()` could strand plugins permanently.** With the
+  shutdown body inline, a caller cancelled while active turns were still
+  converging escaped *before* reaching `PluginManager.dispose()` - and because
+  the disposed flag was already set, every later `dispose()` returned
+  immediately, so the plugins were never unloaded and nothing reported it. The
+  whole shutdown now lives in one reusable internal task, awaited through
+  `shield` + `await_worker_convergence`: repeat cancellation cannot release the
+  caller early, turns still converge before plugins unload, the original
+  `CancelledError` is re-raised only after convergence, and a repeated
+  `dispose()` reuses the same outcome - including re-raising a failed shutdown
+  rather than silently reporting success.
+- **PEP 440 equivalent versions were rejected.** The session plugin identity
+  check normalised with `str(Version(...))` and compared strings, which does not
+  do what it looks like: `str(Version("1.0"))` is `"1.0"` and
+  `str(Version("1.0.0"))` is `"1.0.0"`. Two equivalent versions therefore read as
+  a composition change and the session was refused. Comparison now uses `Version`
+  objects. `1.0` vs `1.0.1` is still correctly refused, and unparseable versions
+  are still rejected as malformed.
+- **The reserved `traceh_plugins` metadata key was only conditionally reserved.**
+  It was rejected only when the supplied value differed from the expected one, so
+  `[]`, `None` and an exactly matching list all slipped through. It is now
+  rejected on presence alone - the key records what the runtime itself observed,
+  and no caller-supplied value can stand for that. All other caller metadata is
+  still stored unchanged.
+- **`traceh run` could leak a runtime.** `create_session` sat outside the
+  `try/finally`, so a failure there returned without ever calling
+  `runtime.dispose()` - leaking activated plugins and their owned tasks along
+  with it. It is now inside the guard. Normal output, ordering and exit codes are
+  unchanged.
+
+Test suite grows from 836 to 910 (909 passing, 1 skipped by platform).
+
+### Second-review refinements
+
+Follow-up review confirmed four of the five fixes but required tightening:
+
+- **The run-dispose CLI tests could still read the developer's real `.env`.**
+  Clearing `TRACEH_*` variables was not enough: `--env-file` defaults to the
+  relative path `.env`, so running from the repository root put the real file
+  back in reach. The tests now `chdir` into the pytest tmp directory (so the
+  default relative path finds nothing), `drive_run` pins a deliberately absent
+  test-owned env-file path and asserts `EnvLoadReport.loaded is False`, and five
+  new tests prove the isolation holds *without* any `_runtime` monkeypatch - the
+  real factory builds a scripted provider, and an explicit env file outside the
+  repository still works. The real file is never read or printed; removing the
+  `chdir` turns the isolation tests red with the repository's `openai-compatible`
+  value.
+- **`OwnedTaskSet.failures` was an unconsumed, unbounded exception list.**
+  Removed. The done callback still calls `task.exception()` to take ownership and
+  prevent "Task exception was never retrieved", then discards the object; nothing
+  is retained, and the owner's state does not grow with failures. No logging,
+  restart, reporting or failure escalation was added - real observability needs a
+  mainline consumer first, and would need bounded, structured, redacted records.
+- **`verify_session_plugins` collapsed "key absent" and "key is null".**
+  `dict.get()` answers `None` for both, so an explicitly recorded `null` was
+  treated as a pre-v0.4 plugin-free session. The reader now passes a dedicated
+  missing-sentinel as the `get()` default: a genuinely absent key is the v0.3
+  case and continues normally, an explicit `null` is malformed data and is
+  rejected - covered through real sessions written via `SessionService`
+  underneath the runtime.
+- **The active-turn dispose test reached its defect window by counting
+  scheduler iterations.** It now uses a deterministic cancellation latch: the
+  provider lights `cancellation_entered` when shutdown's cancellation arrives,
+  then stays parked absorbing a second and third cancel. The test waits on the
+  latch before cancelling `dispose()`, and asserts dispose is unfinished and
+  plugin cleanup has not run until the test releases the latch. The only sleeps
+  left are single `sleep(0)` calls delivering an already-requested cancellation;
+  none is evidence of reaching the window.
+
+### Plugin system
+
+- Add `traceh.plugins`: entry-point discovery for the `traceh.plugins` group, an explicit
+  enablement rule, and a transactional `PluginManager`. An externally built wheel can now
+  add a tool and a prompt section without editing this repository or `AgentLoop`. The
+  manager lives in the runtime assembly layer; plugin tools, prompt sections and services
+  join the *existing* registries, so there is no separate plugin tool runtime or agent loop.
+  See [`docs/plugins.md`](docs/plugins.md) and
+  [ADR-0007](docs/adr/0007-transactional-plugin-activation.md).
+- Discovery is metadata-only and never imports a plugin, so `traceh plugins list` is not
+  itself a code-execution step. Only explicitly enabled plugins are imported.
+- Installing never enables. `--plugin` (repeatable) and `TRACEH_PLUGINS` select plugins;
+  any `--plugin` occurrence replaces the environment value entirely rather than adding to
+  it, and `run`, `chat` and `resume` share the one rule.
+- Activation is a four-phase transaction: staged setup against private registries, a full
+  conflict check, health checks, then atomic publish. Conflicts are checked **before**
+  health checks - a plugin already known to collide with a built-in is rejected regardless
+  of what its health check would say, so running it first only gives known-doomed
+  third-party code another chance to execute or reach the network.
+- Any failure unwinds every activation in reverse order, converging owned tasks and
+  cleanups. `Runtime.dispose()` converges active turns first, then unloads plugins in
+  reverse activation order.
+- Add `traceh plugins list/inspect/doctor`, all with `--json`. `list` and `inspect` import
+  nothing, create no session and call no model; `doctor` sets up and health-checks against
+  throwaway registries and disposes immediately. Every rendered string is escaped to one
+  printable line, because it all comes from third-party metadata.
+- Composition Snapshots record real plugin ids and versions, and replay rebuilds them -
+  previously `composition_from_event` dropped them, so every reconstructed composition
+  claimed a plugin-free runtime.
+- Sessions record the external plugin identities they were created under. Continuing a
+  session under a different set raises `SessionPluginMismatchError` instead of silently
+  running with different tools. Sessions written before v0.4 have no such key, which reads
+  as "no plugins" and continues normally.
+- Add `examples/plugins/traceh-example-skill-plugin`, a real separately built distribution
+  contributing one prompt section and one read-only tool. It reads no user directory, no
+  environment variable and no network resource, and is never enabled by installation alone.
+
+### Cancellation during activation is cancellation, not failure
+
+Interrupting startup previously would have been reported as a broken plugin configuration:
+`CancelledError` was caught by a bare `except BaseException` and re-raised as
+`PluginActivationError`/`plugin-setup-failed`, and a repeated interrupt could cut rollback
+short and strand activations that had not been reached. Cancellation now unwinds every
+activation in reverse order, converges owned tasks and cleanups, and re-raises the original
+`CancelledError`; repeat cancellation is absorbed rather than treated as an escape hatch,
+reusing the project's existing `await_worker_convergence` rule.
+
+### Version contract
+
+- Bump to `0.4.0` and give the version a **single source**, `traceh.version.__version__`.
+  `pyproject.toml` reads it via `[tool.setuptools.dynamic]`, so the wheel metadata and the
+  imported package cannot drift. `traceh.core`'s plugin identity, the plugin API version,
+  the default manifest compatibility range, the Composition Snapshot and the CLI banner all
+  derive from it, and a test asserts the installed distribution agrees.
+- This closes a real divergence: a runtime built without plugins and a runtime built
+  through `PluginManager` would otherwise stamp different `traceh.core` versions into the
+  same kind of Composition Snapshot.
+
+### Runtime dependency
+
+- **`packaging` is now a runtime dependency** - the project's first. Manifest ranges,
+  plugin dependency specifiers and distribution requirements are all PEP 440, and a
+  hand-rolled parser guarding a trust boundary would be an incomplete PEP 440
+  implementation. The previous "standard library only at runtime" statement no longer holds
+  and has been corrected wherever it appeared.
+
+### Other
+
+- `ToolRegistry.register()` and `PromptAssembler.register()` now return a reversing
+  `CallbackRegistration`. Core assembly ignores it; plugin activation owns it.
+- `PromptSection` moved to `traceh.api.prompts` so the plugin SDK need not import the
+  runtime assembly layer. `traceh.runtime.prompt` re-exports it.
+- Add `build_default_runtime_async()`. With no plugins enabled it is exactly
+  `build_default_runtime()`: no discovery, no imports, an identical runtime.
+- Fix a dropped import that left `traceh recover/inspect/replay/compact/sessions`
+  unrunnable, and add the tests that path was missing.
+- Test suite grows from 583 to 836 for the plugin system itself, and to 910 with the
+  review fixes above (909 passing, 1 skipped on paths that cannot carry NUL). The new
+  tests include a `slow`-marked acceptance that builds both wheels, populates an offline
+  wheelhouse containing `packaging`, installs into a fresh virtual environment with
+  `--no-index`, and drives the whole mainline through the real entry point.
+
 ## Unreleased
 
 - Treat `U+2028` and `U+2029` as line breaks everywhere a value reaches one terminal line.

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, fingerprint
 from traceh.api.llm import ModelRequest, ToolSchema
+from traceh.api.plugins import PluginIdentity
 from traceh.kernel.composition import CompositionSnapshot
 from traceh.session.service import SessionService
 from traceh.session.surface import SurfaceProjector
@@ -59,13 +60,24 @@ def composition_from_event(event: EventEnvelope) -> CompositionSnapshot:
     if not isinstance(raw_tools, list):
         raise ValueError("composition tools must be a list")
     tools = tuple(ToolSchema.from_dict(item) for item in raw_tools if isinstance(item, dict))
+    # Plugin identities are part of what a step was composed from, so replay must
+    # rebuild them rather than assume none. Dropping them made every reconstructed
+    # composition claim a plugin-free runtime.
+    raw_plugins = data.get("plugins", [])
+    if not isinstance(raw_plugins, list):
+        raise ValueError("composition plugins must be a list")
+    plugins = tuple(
+        PluginIdentity(str(item["plugin_id"]), str(item["version"]))
+        for item in raw_plugins
+        if isinstance(item, dict) and "plugin_id" in item and "version" in item
+    )
     return CompositionSnapshot(
         revision=str(data["revision"]),
         provider=str(data["provider"]),
         model=str(data["model"]),
         system_prompt=str(data.get("system_prompt", "")),
         tools=tools,
-        plugins=(),
+        plugins=plugins,
         policies=tuple(str(item) for item in data.get("policies", []) if isinstance(item, str)),
         tool_middlewares=tuple(
             str(item)

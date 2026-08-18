@@ -1,15 +1,22 @@
-"""Public runtime facade and default composition factory."""
+"""Public runtime facade and default composition factories."""
 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+from packaging.version import InvalidVersion, Version
 
 from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
+from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.api.tools import Tool
+from traceh.concurrency import await_worker_convergence
 from traceh.kernel.hooks import HookDispatcher
+from traceh.kernel.registry import ServiceRegistry
 from traceh.llm.registry import LlmRegistry
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
@@ -38,6 +45,21 @@ from traceh.tools.middleware import ToolMiddleware
 from traceh.tools.policy import AllowByDefaultPolicy, DangerousShellPolicy, ToolPolicy
 from traceh.tools.registry import ToolRegistry
 from traceh.tools.runtime import ToolRuntime
+
+if TYPE_CHECKING:
+    from traceh.plugins.discovery import PluginDiscovery
+    from traceh.plugins.manager import PluginManager
+
+#: Session metadata key holding the external plugin identities a session was
+#: created under. Reserved: callers may not set it themselves.
+_PLUGIN_METADATA_KEY = "traceh_plugins"
+
+#: Sentinel for "the key is genuinely absent", which is what a pre-v0.4 session
+#: looks like. It exists because `dict.get()` returns `None` both for an absent
+#: key and for a key explicitly recorded as `null` - two different facts that
+#: must not share an answer. Absent means "written before this runtime recorded
+#: plugins"; an explicit `null` is corrupt data.
+_PLUGIN_METADATA_MISSING = object()
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +93,15 @@ class AgentAlreadyRunningError(RuntimeError):
     pass
 
 
+class SessionPluginMismatchError(RuntimeError):
+    """A persisted session was created under a different plugin composition.
+
+    Continuing anyway would let a turn run against tools and prompt sections the
+    earlier turns never had - or, worse, silently drop a plugin whose tool results
+    are already part of the session's history.
+    """
+
+
 class AgentRuntime:
     def __init__(
         self,
@@ -84,6 +115,9 @@ class AgentRuntime:
         hooks: HookDispatcher,
         compaction: CompactionService,
         events: EventFeed,
+        plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
+        plugin_manager: PluginManager | None = None,
+        services: ServiceRegistry | None = None,
     ) -> None:
         self.config = config
         self.sessions = sessions
@@ -105,9 +139,31 @@ class AgentRuntime:
         #: assemblies must therefore pair the two explicitly, as
         #: `build_default_runtime()` does.
         self.events = events
+        #: Full composition identity for this runtime: the core plus whichever
+        #: external plugins were activated. Stamped into every Composition
+        #: Snapshot by `StaticCompositionRuntime`.
+        self.plugins = plugins
+        self.services = services or ServiceRegistry()
+        self._plugin_manager = plugin_manager
         self._active: dict[str, asyncio.Task[TurnResult]] = {}
         self._lock = asyncio.Lock()
         self._disposed = False
+        self._dispose_task: asyncio.Task[None] | None = None
+
+    @property
+    def external_plugin_identities(self) -> tuple[PluginIdentity, ...]:
+        return tuple(
+            identity
+            for identity in self.plugins
+            if identity.plugin_id != CORE_PLUGIN_IDENTITY.plugin_id
+        )
+
+    @property
+    def enabled_plugin_ids(self) -> tuple[str, ...]:
+        return tuple(identity.plugin_id for identity in self.external_plugin_identities)
+
+    def _plugin_metadata(self) -> list[dict[str, str]]:
+        return [identity.to_dict() for identity in self.external_plugin_identities]
 
     async def create_session(
         self,
@@ -118,7 +174,105 @@ class AgentRuntime:
         workspace = workspace.resolve()
         if not workspace.exists() or not workspace.is_dir():
             raise NotADirectoryError(workspace)
-        return await self.sessions.create_session(workspace, metadata=metadata or {})
+        actual_metadata = dict(metadata or {})
+        # Rejected on *presence*, not on value. Comparing against the expected
+        # list would let a caller supply `[]`, `None`, or a copy that happens to
+        # match today - and a caller who can write the key at all is asserting
+        # something only the runtime is entitled to assert. Every other metadata
+        # key the caller provides is stored unchanged.
+        if _PLUGIN_METADATA_KEY in actual_metadata:
+            raise ValueError(f"{_PLUGIN_METADATA_KEY} is reserved by TraceHarness")
+        expected: JsonValue = self._plugin_metadata()
+        actual_metadata[_PLUGIN_METADATA_KEY] = expected
+        return await self.sessions.create_session(workspace, metadata=actual_metadata)
+
+    @staticmethod
+    def _identities_from_metadata(value: object) -> tuple[PluginIdentity, ...]:
+        """Parse persisted plugin identities, refusing anything malformed.
+
+        Only :data:`_PLUGIN_METADATA_MISSING` - the sentinel meaning the key was
+        genuinely absent - stands for a pre-v0.4 plugin-free session. An explicit
+        ``None`` is a recorded value, and a recorded ``null`` is not a claim this
+        runtime ever wrote, so it is corrupt data rather than "no plugins".
+        """
+
+        # Imported here rather than at module scope: `traceh.plugins` pulls in the
+        # manager, which imports `traceh.runtime.prompt` and therefore re-enters
+        # `traceh.runtime.__init__` while this module is still executing.
+        from traceh.plugins.selection import is_plugin_id
+
+        if value is _PLUGIN_METADATA_MISSING:
+            return ()
+        if not isinstance(value, list):
+            raise SessionPluginMismatchError("session plugin metadata is malformed")
+        identities: list[PluginIdentity] = []
+        seen: set[str] = set()
+        for item in value:
+            if not isinstance(item, dict):
+                raise SessionPluginMismatchError("session plugin metadata is malformed")
+            plugin_id = item.get("plugin_id")
+            version = item.get("version")
+            if not isinstance(plugin_id, str) or not isinstance(version, str):
+                raise SessionPluginMismatchError("session plugin metadata is malformed")
+            if not is_plugin_id(plugin_id):
+                raise SessionPluginMismatchError("session plugin metadata is malformed")
+            try:
+                # Parsed to reject anything that is not a version at all; the
+                # original text is kept so the mismatch message reports what the
+                # session actually recorded. Equivalence is decided by
+                # `_comparable()`, not by this string.
+                Version(version)
+            except InvalidVersion:
+                raise SessionPluginMismatchError("session plugin metadata is malformed") from None
+            if plugin_id in seen:
+                raise SessionPluginMismatchError("session plugin metadata contains duplicate ids")
+            seen.add(plugin_id)
+            identities.append(PluginIdentity(plugin_id, version))
+        return tuple(identities)
+
+    @staticmethod
+    def _comparable(
+        identities: tuple[PluginIdentity, ...],
+    ) -> tuple[tuple[str, Version], ...]:
+        """Key used to decide whether two plugin compositions are the same.
+
+        Versions compare as :class:`~packaging.version.Version` objects, not as
+        strings. ``str(Version("1.0"))`` is ``"1.0"`` and ``str(Version("1.0.0"))``
+        is ``"1.0.0"``, so string comparison - even after parsing - rejects two
+        PEP 440 equivalent versions as a composition change. ``Version("1.0") ==
+        Version("1.0.0")`` is True, while ``Version("1.0") == Version("1.0.1")``
+        is correctly False.
+        """
+
+        return tuple((item.plugin_id, Version(item.version)) for item in identities)
+
+    async def verify_session_plugins(self, session_id: str) -> None:
+        """Refuse to continue a session whose plugin composition no longer matches."""
+
+        events = await self.sessions.read_session(session_id)
+        if not events or events[0].type != "session/created":
+            # Not our call to diagnose: let the session layer raise its own
+            # "session not found" rather than inventing a plugin verdict.
+            await self.sessions.ensure_session(session_id)
+            return
+        metadata = events[0].data.get("metadata", {})
+        if not isinstance(metadata, dict):
+            raise SessionPluginMismatchError("session metadata is malformed")
+        # `get()` with a default would collapse "absent" and "recorded as null"
+        # into the same answer; the sentinel keeps them distinguishable.
+        persisted = self._identities_from_metadata(
+            metadata.get(_PLUGIN_METADATA_KEY, _PLUGIN_METADATA_MISSING)
+        )
+        active = self.external_plugin_identities
+        if self._comparable(persisted) != self._comparable(active):
+            required = (
+                ", ".join(f"{item.plugin_id}=={item.version}" for item in persisted) or "none"
+            )
+            current = ", ".join(f"{item.plugin_id}=={item.version}" for item in active) or "none"
+            raise SessionPluginMismatchError(
+                "session plugin composition does not match the active runtime; "
+                f"session requires [{required}], current runtime has [{current}]"
+            )
 
     async def run(self, workspace: Path, task: str) -> TurnResult:
         session_id = await self.create_session(workspace)
@@ -127,6 +281,7 @@ class AgentRuntime:
     async def run_existing(self, session_id: str, task: str) -> TurnResult:
         if self._disposed:
             raise RuntimeError("runtime is disposed")
+        await self.verify_session_plugins(session_id)
         async with self._lock:
             existing = self._active.get(session_id)
             if existing is not None and not existing.done():
@@ -152,6 +307,10 @@ class AgentRuntime:
             "before repeating any write or process side effect."
         ),
     ) -> tuple[RecoveryReport, TurnResult]:
+        # Checked before recovery: recovery appends events, and appending to a
+        # session under a composition it was not created with is the thing this
+        # check exists to prevent.
+        await self.verify_session_plugins(session_id)
         report = await self.recovery.recover(session_id)
         result = await self.run_existing(session_id, instruction)
         return report, result
@@ -173,8 +332,9 @@ class AgentRuntime:
             pass
         return True
 
-    async def dispose(self) -> None:
-        self._disposed = True
+    async def _shutdown(self) -> None:
+        """The whole shutdown, as one unit of work owned by a single task."""
+
         async with self._lock:
             tasks = tuple(self._active.values())
             self._active.clear()
@@ -182,6 +342,49 @@ class AgentRuntime:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
+        # Turns converge first, then plugins are unloaded in reverse activation
+        # order. Unloading first would pull a tool or service out from under a
+        # turn that is still running.
+        if self._plugin_manager is not None:
+            await self._plugin_manager.dispose()
+
+    async def dispose(self) -> None:
+        """Shut the runtime down exactly once, converging on repeat cancellation.
+
+        The entire shutdown lives in one internal task rather than in this
+        coroutine's own frame. That placement is the fix for a real defect: when
+        the body ran inline, a caller cancelled while active turns were still
+        converging escaped *before* reaching ``PluginManager.dispose()``, yet the
+        disposed flag was already set - so every later ``dispose()`` returned
+        immediately and the plugins were never unloaded at all.
+
+        Now the work belongs to the task, not to whoever is waiting on it:
+
+        * the caller waits through ``shield``, so its cancellation never touches
+          the shutdown itself;
+        * repeat cancellation is absorbed by ``await_worker_convergence`` - a
+          second and third Ctrl+C cannot release the caller early;
+        * the original ``CancelledError`` is re-raised only after shutdown has
+          fully converged;
+        * a later ``dispose()`` awaits the *same* task, so it reuses the one real
+          outcome. If shutdown failed, that failure is raised again rather than
+          being silently reported as success.
+        """
+
+        # Set before the task exists: no new turn may start from this point on,
+        # even while shutdown is still running.
+        self._disposed = True
+        if self._dispose_task is None:
+            self._dispose_task = asyncio.create_task(
+                self._shutdown(),
+                name="traceh-runtime-dispose",
+            )
+        task = self._dispose_task
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            await await_worker_convergence(task)
+            raise
 
     async def check_invariants(self, session_id: str):
         return self.invariants.check(
@@ -191,7 +394,30 @@ class AgentRuntime:
 
 
 
-def build_default_runtime(
+@dataclass(slots=True)
+class _PreparedRuntime:
+    """Everything assembled before plugins may contribute, and before the loop exists.
+
+    Splitting assembly in two is what lets plugin activation happen *between* the
+    registries being created and the composition being frozen around them, without
+    duplicating the assembly itself.
+    """
+
+    config: RuntimeConfig
+    data_dir: Path
+    sessions: SessionService
+    surface: SurfaceProjector
+    event_feed: SessionEventFeed
+    llms: LlmRegistry
+    tool_registry: ToolRegistry
+    prompt: PromptAssembler
+    policies: tuple[ToolPolicy, ...]
+    tool_middlewares: tuple[ToolMiddleware, ...]
+    verifier: CompletionVerifier | None
+    continuation: ContinuationRuntime | None
+
+
+def _prepare_default_runtime(
     config: RuntimeConfig | None = None,
     *,
     provider: LlmProvider | None = None,
@@ -203,7 +429,7 @@ def build_default_runtime(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
-) -> AgentRuntime:
+) -> _PreparedRuntime:
     config = config or RuntimeConfig()
     data_dir = config.data_dir.resolve()
     actual_event_store = event_store or JsonlEventStore(data_dir / "events")
@@ -246,52 +472,174 @@ def build_default_runtime(
         tool_registry.register(tool)
 
     effective_policies = policies or (DangerousShellPolicy(), AllowByDefaultPolicy())
-    tool_runtime = ToolRuntime(
-        tool_registry,
-        sessions,
-        policies=effective_policies,
-        middlewares=tool_middlewares,
-        timeout_seconds=config.tool_timeout_seconds,
-        max_output_chars=config.max_tool_output_chars,
-    )
-    request_builder = RequestBuilder(sessions, surface)
-    hooks = HookDispatcher()
     effective_verifier = verifier
     if effective_verifier is None and config.verification_command:
         effective_verifier = CommandVerifier(
             config.verification_command,
             config.verification_timeout_seconds,
         )
-
-    composition_runtime = StaticCompositionRuntime(
+    return _PreparedRuntime(
+        config=config,
+        data_dir=data_dir,
+        sessions=sessions,
+        surface=surface,
+        event_feed=event_feed,
         llms=llms,
-        tools=tool_runtime,
+        tool_registry=tool_registry,
         prompt=prompt or default_coding_prompt(),
+        policies=effective_policies,
+        tool_middlewares=tool_middlewares,
+        verifier=effective_verifier,
+        continuation=continuation,
+    )
+
+
+def _finish_default_runtime(
+    prepared: _PreparedRuntime,
+    *,
+    plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
+    plugin_manager: PluginManager | None = None,
+    services: ServiceRegistry | None = None,
+) -> AgentRuntime:
+    config = prepared.config
+    tool_runtime = ToolRuntime(
+        prepared.tool_registry,
+        prepared.sessions,
+        policies=prepared.policies,
+        middlewares=prepared.tool_middlewares,
+        timeout_seconds=config.tool_timeout_seconds,
+        max_output_chars=config.max_tool_output_chars,
+    )
+    request_builder = RequestBuilder(prepared.sessions, prepared.surface)
+    hooks = HookDispatcher()
+    composition_runtime = StaticCompositionRuntime(
+        llms=prepared.llms,
+        tools=tool_runtime,
+        prompt=prepared.prompt,
         provider=config.provider,
         model=config.model,
         temperature=config.temperature,
         max_output_tokens=config.max_output_tokens,
+        plugins=plugins,
     )
     loop = AgentLoop(
-        sessions=sessions,
+        sessions=prepared.sessions,
         compositions=composition_runtime,
         request_builder=request_builder,
         llm_runtime=LlmRuntime(),
-        data_dir=data_dir,
+        data_dir=prepared.data_dir,
         max_steps=config.max_steps,
-        continuation=continuation,
-        verifier=effective_verifier,
+        continuation=prepared.continuation,
+        verifier=prepared.verifier,
         max_verification_retries=config.max_verification_retries,
         hooks=hooks,
     )
     return AgentRuntime(
         config=config,
-        sessions=sessions,
+        sessions=prepared.sessions,
         loop=loop,
-        recovery=RecoveryService(sessions),
-        surface=surface,
+        recovery=RecoveryService(prepared.sessions),
+        surface=prepared.surface,
         invariants=CoreInvariantChecker(),
         hooks=hooks,
-        compaction=CompactionService(sessions),
-        events=event_feed,
+        compaction=CompactionService(prepared.sessions),
+        events=prepared.event_feed,
+        plugins=plugins,
+        plugin_manager=plugin_manager,
+        services=services,
     )
+
+
+def build_default_runtime(
+    config: RuntimeConfig | None = None,
+    *,
+    provider: LlmProvider | None = None,
+    prompt: PromptAssembler | None = None,
+    policies: tuple[ToolPolicy, ...] | None = None,
+    tool_middlewares: tuple[ToolMiddleware, ...] = (),
+    verifier: CompletionVerifier | None = None,
+    continuation: ContinuationRuntime | None = None,
+    event_store: EventStore | None = None,
+    additional_tools: tuple[Tool, ...] = (),
+    include_default_tools: bool = True,
+) -> AgentRuntime:
+    """Build the no-plugin runtime synchronously; behaviour is unchanged from v0.3."""
+
+    prepared = _prepare_default_runtime(
+        config,
+        provider=provider,
+        prompt=prompt,
+        policies=policies,
+        tool_middlewares=tool_middlewares,
+        verifier=verifier,
+        continuation=continuation,
+        event_store=event_store,
+        additional_tools=additional_tools,
+        include_default_tools=include_default_tools,
+    )
+    return _finish_default_runtime(prepared)
+
+
+async def build_default_runtime_async(
+    config: RuntimeConfig | None = None,
+    *,
+    provider: LlmProvider | None = None,
+    prompt: PromptAssembler | None = None,
+    policies: tuple[ToolPolicy, ...] | None = None,
+    tool_middlewares: tuple[ToolMiddleware, ...] = (),
+    verifier: CompletionVerifier | None = None,
+    continuation: ContinuationRuntime | None = None,
+    event_store: EventStore | None = None,
+    additional_tools: tuple[Tool, ...] = (),
+    include_default_tools: bool = True,
+    enabled_plugins: Sequence[str] = (),
+    plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+    plugin_discovery: PluginDiscovery | None = None,
+) -> AgentRuntime:
+    """Build a runtime after transactional startup-time plugin activation.
+
+    With ``enabled_plugins`` empty this is exactly ``build_default_runtime``:
+    no discovery runs, no plugin module is imported, and the resulting runtime is
+    indistinguishable from the v0.3 one.
+    """
+
+    prepared = _prepare_default_runtime(
+        config,
+        provider=provider,
+        prompt=prompt,
+        policies=policies,
+        tool_middlewares=tool_middlewares,
+        verifier=verifier,
+        continuation=continuation,
+        event_store=event_store,
+        additional_tools=additional_tools,
+        include_default_tools=include_default_tools,
+    )
+    if not enabled_plugins:
+        return _finish_default_runtime(prepared)
+
+    # Imported here so the stable runtime surface does not depend on discovery
+    # internals, and so `AgentLoop` never acquires a path to `PluginManager`.
+    from traceh.plugins.manager import PluginManager
+
+    services = ServiceRegistry()
+    manager = PluginManager(
+        tools=prepared.tool_registry,
+        prompt=prepared.prompt,
+        services=services,
+        discovery=plugin_discovery,
+        plugin_configs=plugin_configs,
+    )
+    await manager.activate(tuple(enabled_plugins))
+    try:
+        return _finish_default_runtime(
+            prepared,
+            plugins=manager.identities,
+            plugin_manager=manager,
+            services=services,
+        )
+    except BaseException:
+        # Activation succeeded but assembly did not: the plugins are live and
+        # nobody owns them, so unload before the exception leaves.
+        await manager.dispose()
+        raise

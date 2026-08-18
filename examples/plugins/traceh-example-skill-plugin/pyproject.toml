@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "traceh-example-skill-plugin"
+version = "0.1.0"
+description = "Example TraceHarness plugin: one prompt section and one read-only tool."
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "TraceHarness contributors" }]
+# The compatibility range the harness checks during metadata-only discovery.
+# Declaring it is mandatory: a distribution in the traceh.plugins group that does
+# not depend on traceharness-py is reported as an issue rather than loaded.
+dependencies = [
+  "traceharness-py>=0.4,<1.0",
+]
+
+# Installing this distribution makes the plugin *discoverable*. It does not make
+# it active: the operator still has to pass --plugin traceh.example.skill or set
+# TRACEH_PLUGINS. Nothing below is imported until that happens.
+[project.entry-points."traceh.plugins"]
+"traceh.example.skill" = "traceh_example_skill_plugin:ExampleSkillPlugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+traceh_example_skill_plugin = ["SKILL.md"]

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Protocol
 
 from traceh.api.llm import LlmProvider
-from traceh.api.plugins import PluginIdentity
+from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.kernel.composition import CompositionSnapshot, RuntimeComposition
 from traceh.llm.registry import LlmRegistry
 from traceh.runtime.prompt import PromptAssembler
@@ -58,6 +58,7 @@ class StaticCompositionRuntime:
         model: str,
         temperature: float | None = None,
         max_output_tokens: int | None = None,
+        plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
     ) -> None:
         self.llms = llms
         self.tools = tools
@@ -66,6 +67,7 @@ class StaticCompositionRuntime:
         self.model = model
         self.temperature = temperature
         self.max_output_tokens = max_output_tokens
+        self.plugins = plugins
 
     @asynccontextmanager
     async def lease(
@@ -83,7 +85,7 @@ class StaticCompositionRuntime:
             model=self.model,
             system_prompt=self.prompt.assemble(workspace=str(workspace)),
             tools=self.tools.registry.schemas(),
-            plugins=(PluginIdentity("traceh.core", "0.3.0"),),
+            plugins=self.plugins,
             policies=tuple(policy.name for policy in self.tools.policies),
             tool_middlewares=tuple(
                 middleware.name for middleware in self.tools.middlewares

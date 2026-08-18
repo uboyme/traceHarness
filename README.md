@@ -1,6 +1,6 @@
-# TraceHarness Py v0.3
+# TraceHarness Py v0.4
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.3 的基础实现刻意保持在可以理解的规模，同时通过稳定边界为未来的插件、分层 Composition、子 Agent 和 Workflow 留出扩展空间。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为运行中的 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。分层 Composition Generation、子 Agent 和 Workflow 仍然只是保留的扩展边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -25,7 +25,9 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 通过可选外部命令 Verifier 实现 Evidence-Driven Completion；
 - Request 重建检查、协议不变量、Replay、手动 Surface 压缩和静态 HTML Inspector；
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
-- 为未来可逆插件激活、类型化 Hook、层级 Scope 和 Owned Task 收敛准备的 Kernel 原语。
+- **插件系统（v0.4 新增）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section 和 Service 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
+- **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
+- 类型化 Hook、层级 Scope、可逆 Activation 和 Owned Task 收敛等 Kernel 原语，现在由 PluginManager 真正使用。
 
 ## 不安装直接运行
 
@@ -236,7 +238,34 @@ python -m pip install -e ".[dev]"
 traceh doctor
 ```
 
-源码在运行时只依赖 Python 标准库。项目使用 `setuptools` 作为构建后端，正常的 `pip` Build Isolation 会自动安装它。
+### 运行时依赖
+
+v0.4 引入了本项目的**第一个运行时第三方依赖**：[`packaging`](https://pypi.org/project/packaging/)（`>=24.0,<27`）。
+
+它被用来解析 PEP 440：Plugin Manifest 的 `requires_traceh` 兼容范围、插件之间的依赖版本区间，以及插件 Distribution 声明的 `traceharness-py` 依赖。这三处都位于信任边界上，自己实现一个不完整的 PEP 440 解析器风险更大，所以选择依赖标准实现。
+
+除此之外运行时仍然只使用 Python 标准库；`pytest`、`pytest-asyncio`、`ruff` 只是开发依赖。项目使用 `setuptools` 作为构建后端，正常的 `pip` Build Isolation 会自动安装它。
+
+> 注意：v0.3 及更早文档中"运行时只依赖标准库"的说法从 v0.4 起不再成立。
+
+### 安装并启用一个插件
+
+安装只是让插件**可被发现**，不等于启用：
+
+```powershell
+python -m pip install .\examples\plugins\traceh-example-skill-plugin
+traceh plugins list                       # 确认已发现；这一步不 import 插件
+traceh plugins doctor traceh.example.skill
+```
+
+启用是一个独立、显式的动作：
+
+```powershell
+traceh run <workspace> "任务" --plugin traceh.example.skill
+$env:TRACEH_PLUGINS = "traceh.example.skill"   # 等价写法
+```
+
+命令行上任何一次 `--plugin` 都会**整体替换** `TRACEH_PLUGINS`，而不是追加；`run`、`chat`、`resume` 使用同一套选择规则。完整作者契约见[插件说明](docs/plugins.md)。
 
 ## 运行内置 Benchmark
 
@@ -349,25 +378,34 @@ Projectors / Recovery / Inspector / Invariants
 - 模型可见历史：由事件投影得到的 Surface；
 - Model Request：Surface 与冻结 Composition Snapshot 的函数。
 
-### 已经存在的扩展边界
+### 扩展边界：哪些已经可用，哪些还只是接口
+
+第三方插件**现在就能**通过 `PluginContext` 提供：
+
+| 能力 | 插件调用 | 进入哪条主线 |
+|---|---|---|
+| 新 Tool | `context.register_tool()` | 既有 `ToolRegistry` 与 Tool Runtime |
+| Prompt 扩展 | `context.register_prompt()` | 既有 `PromptAssembler` |
+| 服务 | `await context.provide()` | 既有 `ServiceRegistry` |
+| 可逆清理 | `context.add_cleanup()` | 该插件的 `Activation` |
+| 后台任务 | `context.spawn_owned()` | 该插件的 `OwnedTaskSet` |
+
+以下边界**在代码中存在**，但插件还不能提供它们，需要直接装配 Runtime：
 
 | 未来能力 | 当前已有边界 |
 |---|---|
 | 新 Model Provider | `LlmProvider` + `LlmRegistry` |
-| 新 Tool | `Tool` + `ToolRegistry` |
-| Tool 授权 | `ToolPolicy` |
-| Prompt 扩展 | `PromptSection` + `PromptAssembler` |
+| Tool 授权 / 中间件 | `ToolPolicy`、`ToolMiddleware` |
 | 自定义完成行为 | `ContinuationRuntime` |
 | 自定义验证 | `CompletionVerifier` |
 | 新持久化后端 | `EventStore` |
-| 可观测性插件 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
-| 可逆插件装配 | `Activation`、`Lifespan`、`OwnedTaskSet` |
-| Step 安全的插件/模型/工具 Generation | `CompositionRuntime.lease()` |
-| Agent 专属能力 | 层级 `Scope` |
+| 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
+| Step 安全的多代 Generation 与热更新 | `CompositionRuntime.lease()`（尚无 Generation 引用计数与 Drain） |
+| Agent 专属能力 | 层级 `Scope`（v0.4 只装配 application scope） |
 | 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
 | 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
 
-延伸阅读：[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
+延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
 
 ## 重要设计选择
 
@@ -397,15 +435,18 @@ Tool Runtime 在派发前写入 `effect/intent`，操作完成后写入 `effect/
 ## 项目目录
 
 ```text
+src/traceh/version.py   版本与核心身份的唯一事实源
 src/traceh/api          稳定协议、冻结 DTO 和扩展边界
 src/traceh/kernel       Scope、Activation、Hooks、可逆生命周期
+src/traceh/plugins      Entry Point 发现、显式启用、事务式 PluginManager
 src/traceh/session      EventStore、Projector、Recovery、不变量
 src/traceh/runtime      AgentLoop、Composition Lease、Request、Continuation、Verification
 src/traceh/llm          Provider Registry 和 Adapter
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
 src/traceh/evaluation   确定性 Benchmark Runner
-tests                   契约、恢复、取消和端到端测试
+examples/plugins        可独立构建的示例插件 Distribution
+tests                   契约、恢复、取消、插件和端到端测试
 ```
 
 ## CLI 命令
@@ -420,14 +461,24 @@ traceh replay
 traceh compact
 traceh sessions
 traceh eval
+traceh plugins list     # 只读元数据，不 import 插件
+traceh plugins inspect  # 同上，针对单个插件
+traceh plugins doctor   # 会 import、setup、health check，随后立即 dispose
 traceh doctor
 ```
 
+`run`、`chat`、`resume` 支持 `--plugin`（可重复）；`inspect`、`replay`、`recover`、`compact`、`sessions` 不启用插件，因此也不接受该参数。
+
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.3 已知边界
+## v0.4 已知边界
 
-- Plugin Entry Point 自动发现和热替换有意推迟到 v0.4+；Kernel 中已有 Activation/Scope 原语，但尚无第三方 PluginManager；
+- 插件只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝，不会被降级成 trusted；
+- **没有热更新**：插件集合在启动到 `dispose()` 之间是固定的。Composition 多代发布、引用计数和 Drain 仍未实现（见 ROADMAP v0.5）；
+- 插件目前只能提供 Tool、Prompt Section 和 Service；**不能**提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`；
+- 没有 MCP、多 Agent 和 Workflow 接入面；
+- Session 记录创建时的插件身份，插件集合改变后拒绝继续该 Session；这是保护，不是迁移工具——目前没有改变插件集合后继续旧 Session 的办法。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；
+- 插件的 Owned Task 只有**生命周期所有权**，没有监督器：它们的异常会被取回（因此不会冒 `Task exception was never retrieved`），取回之后**立刻丢弃、不留存**，也不会被重启，更**不会**把后台任务失败升级成 Runtime 故障；
 - 每个进程只有一个活跃 Agent Runtime，尚无 `AgentSupervisor`；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat 和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
@@ -442,12 +493,21 @@ traceh doctor
 
 ## 开发与验证
 
-```bash
-PYTHONPATH=src pytest
-PYTHONPATH=src python -m compileall -q src
+```powershell
+python -m compileall -q src tests
+python -m pytest -o addopts='' -q
+python -m ruff check src tests
 ```
 
-当前共有 137 项自动化测试，覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、Scope、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复和 Benchmark 报告等能力。
+当前共有 910 项自动化测试（909 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、Scope、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、取消语义和 CLI 输出清洗。
+
+其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
+
+其中带 `slow` 标记的一项是真实打包验收：它构建 TraceHarness 与示例插件两个 Wheel，把 `packaging` 一并放进离线 wheelhouse，用 `--no-index` 装进全新虚拟环境，再通过真实 Entry Point 跑完整条主线。跳过它用：
+
+```powershell
+python -m pytest -o addopts='' -q -m "not slow"
+```
 
 ## 设计文档
 
@@ -457,13 +517,16 @@ PYTHONPATH=src python -m compileall -q src
 - [事件协议](docs/event-protocol.md)
 - [Session Event Feed](docs/event-feed.md)
 - [恢复语义](docs/recovery-semantics.md)
+- [插件说明（作者与运维契约）](docs/plugins.md)
 - [插件与多 Agent 演进](docs/plugin-evolution.md)
 - [测试策略](docs/testing.md)
-- [ADR](docs/adr/)
+- [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活的设计原因
 
 ## 项目来源说明
 
 本项目是一个独立的 Python 实现，参考了 DeepSeek Harness 中 Append-only Session、可重建请求、能力扩展边界、分层生命周期和可执行不变量等思想。它没有复制 DeepSeek Harness 的实现，不承诺与其 API 兼容，也不是 DeepSeek 官方项目。
+
+具体对照见[插件说明第 10 节](docs/plugins.md#10-relationship-to-deepseek-harness)：该节基于官方仓库 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness) 固定 Commit `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca` 的 `docs/architecture.md` 写成。简要结论是：借鉴了 shared context、reversible effects 和 composition 三个思想；**没有**引入 Cordis、TypeScript/Node，也**没有**采用"AgentLoop 本身也是插件、不存在特权内核"的方向——TraceHarness 刻意保留稳定内核与事件事实边界（见 [ADR-003](docs/adr/003-kernel-is-not-a-plugin.md)）。
 
 ## License
 

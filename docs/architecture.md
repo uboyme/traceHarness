@@ -2,9 +2,14 @@
 
 ## Goal
 
-TraceHarness v0.3 is a small coding-agent runtime whose current implementation can grow
+TraceHarness v0.4 is a small coding-agent runtime whose current implementation can grow
 without turning `AgentLoop` into a feature switchboard. The stable center is protocol
 semantics, not a specific provider, tool set or UI.
+
+That rule is why v0.4's plugin system sits in the runtime *assembly* layer rather than
+inside the loop: plugin tools, prompt sections and services join the existing registries,
+and `AgentLoop` has no reference to `PluginManager`. See
+[`plugins.md`](plugins.md) and [ADR-0007](adr/0007-transactional-plugin-activation.md).
 
 ## Layers
 
@@ -26,8 +31,10 @@ Kernel
 ```
 
 Dependencies point downward. `traceh.api` contains structural protocols and frozen value
-types that future third-party packages should import. Runtime internals are not plugin
-API.
+types that third-party packages import, re-exported for plugin authors through
+`traceh.plugins`. Runtime internals are not plugin API: `PluginContext` exposes tools,
+prompt sections, services, cleanups, owned tasks and configuration, and no `AgentRuntime`,
+`AgentLoop`, `EventStore`, `ToolRegistry` or `PromptAssembler` object.
 
 "Frozen" is the dataclass guarantee - fields cannot be rebound - not deep immutability. An
 `EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out
@@ -78,9 +85,10 @@ visible result.
 
 ### Telemetry
 
-Telemetry is intentionally absent from the durable protocol in v0.3. A future
+Telemetry is intentionally absent from the durable protocol in v0.4. A future
 OpenTelemetry plugin should subscribe to NOTIFY hooks and may sample or lose data without
-changing recovery semantics.
+changing recovery semantics. Note that v0.4's `PluginContext` does not yet expose hook
+subscription, so such a plugin is not writable today.
 
 ## Composition
 
@@ -88,9 +96,14 @@ Every Step obtains an `ActiveComposition` through `CompositionRuntime.lease()` a
 prompt, visible tool schemas, policies and plugin identities. The snapshot receives a
 canonical SHA-256 revision.
 
+`plugin identities` are real data as of v0.4: `traceh.core` at the single source version,
+plus each activated external plugin's true id and version. Replay rebuilds them from the
+event, so a plugin-affected request stays reconstructable.
+
 The lease retains the exact provider and Tool Runtime objects while the model/tool cycle runs. Step-local freezing prevents a future plugin update from changing tools halfway through
-one model/tool cycle. v0.3 creates a new immutable snapshot directly; v0.5 can replace
-that operation with a generation lease without changing the request or event schema.
+one model/tool cycle. v0.4 creates a new immutable snapshot directly and keeps the plugin
+set fixed for the process lifetime; v0.5 can replace that operation with a generation lease
+— the prerequisite for hot reload — without changing the request or event schema.
 
 ## Extension rule
 

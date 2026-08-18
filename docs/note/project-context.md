@@ -26,7 +26,7 @@
 - 代码行为、目录职责、状态、配置、验证结果或架构流程变化时更新对应章节。
 - Mermaid 图表达当前流程；历史案例必须明确标注为案例。
 - 不记录真实 `.env`、Key、Token、本机隐私路径或秘密输出。
-- 本文与通俗版使用相同的一级编号，便于逐章核对。
+- 本文与通俗版使用相同的一级编号（当前为 0–19），便于逐章核对。
 
 ## 1. 当前项目状态
 
@@ -34,22 +34,35 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `0.3.0` 维护线，另有 `.env` 支持等 Unreleased 改进 |
+| 当前版本 | `0.4.0`。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata 与被导入的包不可能不一致 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
-| 运行时依赖 | Python 标准库，无第三方运行时依赖 |
+| 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
 | 当前 Agent 模型 | 单进程、单 Session 同时最多一个活跃 Turn |
 | 持久化 | 本地 Append-only JSONL Session Stream 与 Effect Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
-| Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell` |
+| Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
+| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活（见 19 节）。仅 application scope、trusted、进程内；无热更新、无 isolated |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；其余命令仍是一次执行一个 Turn。不是流式 TUI |
+| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；其余命令仍是一次执行一个 Turn。不是流式 TUI。新增 `traceh plugins list/inspect/doctor` |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 583 项（582 通过，1 项在无法承载 NUL 的路径上跳过），通过后才允许更新本表 |
+| 当前自动化测试 | 910 项（909 通过，1 项在无法承载 NUL 的路径上跳过），通过后才允许更新本表 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
-当前开发重点是把 v0.3 的可靠性、真实使用体验、可观察性和文档治理做扎实；v0.4+ 插件与多 Agent 仅保留协议边界，不视为已实现能力。
+当前开发重点是把 v0.4 插件系统的事务语义、取消语义、打包验收和文档治理做扎实；多 Agent、Workflow、Composition Generation 与热更新仍然只保留协议边界，不视为已实现能力。
+
+### 1.1 为什么引入 `packaging`
+
+Plugin Manifest 的 `requires_traceh`、插件之间的依赖版本区间、以及插件 Distribution 声明的 `traceharness-py` 依赖，三者都是 PEP 440 文本，并且都位于**信任边界**上：解析结果决定一段第三方代码是否被 import 并执行。自己实现一个不完整的 PEP 440 解析器，等于用一个未经验证的比较器守门。因此保留 `packaging` 并在 `pyproject.toml` 显式声明。
+
+必须同时更新的一条旧事实：**“运行时只依赖标准库”从 v0.4 起不再成立**，README、通俗版和本表都已改写。离线 Wheel 验收的 wheelhouse 因此必须同时包含 `packaging` 的 Wheel，见 15.4。
+
+### 1.2 版本为什么必须只有一个来源
+
+`traceh.core` 的 `PluginIdentity` 会写进**每一条持久化的 Composition Snapshot**。如果版本散落在多处，两个来自同一次构建的 Runtime 可能给同一种 Step 写下不同的核心版本——这正是 Composition Snapshot 存在的意义所要排除的情况。
+
+因此以下全部派生自 `traceh.version.__version__`：`pyproject.toml` 的项目版本（dynamic attr）、`traceh.__version__`、`CORE_PLUGIN_IDENTITY`、`TRACEH_PLUGIN_API_VERSION`、`PluginManifest.requires_traceh` 默认值、`StaticCompositionRuntime` 的默认 plugins、`AgentRuntime` 的默认 plugins、CLI 描述。[`tests/test_version_contract.py`](../../tests/test_version_contract.py) 断言 `importlib.metadata.version("traceharness-py")` 与被导入的 `__version__` 相等，并断言默认兼容范围确实包含当前版本。
 
 ## 2. 系统目标与边界
 
@@ -69,8 +82,12 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 
 ### 2.2 当前不属于系统的能力
 
-- 完整 PluginManager、Entry Point 自动发现和热卸载；
+- 插件**热更新**：Composition 多代发布、Generation 引用计数与 Drain 都没有实现，插件集合在启动到 `dispose()` 之间固定；
+- **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
+- 插件提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`：`PluginContext` 目前只暴露 Tool、Prompt、Service、Cleanup 与 Owned Task；
+- application 之外的 Scope 装配（workspace / preset / agent）；
 - 活跃的 AgentSupervisor、子 Agent Tool 和 Workflow Engine；
+- MCP 接入；
 - Git Worktree/Overlay Workspace 分支与合并；
 - Docker、远程沙箱或操作系统级安全隔离；
 - 分布式 Event Store；
@@ -84,22 +101,26 @@ traceharness/
 ├── AGENTS.md                         跨 Coding Agent 的仓库开发规则
 ├── CLAUDE.md                         Claude Code 薄入口，导入 AGENTS.md
 ├── src/traceh/
-│   ├── api/                          公共协议、冻结 DTO 和扩展边界
+│   ├── version.py                    版本、Distribution 名、核心 plugin id 与默认兼容范围的唯一来源
+│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`）
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
-│   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染和终端编码
+│   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
 │   ├── evaluation/                   确定性 Benchmark Runner
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       Scope、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
+│   ├── plugins/                      Entry Point 发现、显式启用解析、结构化失败与事务式 PluginManager
 │   ├── runtime/                      AgentRuntime、AgentLoop、请求、Continuation、Verifier
 │   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、压缩和不变量
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程收敛与内置工具
-├── tests/                            单元、契约、恢复、取消、跨进程、端到端和 Benchmark 测试
+├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
+│   └── plugins/                      可独立构建安装的示例插件 Distribution
 ├── benchmarks/                       独立复制 Workspace 的评估案例
 ├── docs/
 │   ├── note/                         当前项目正式版与通俗版上下文
-│   ├── adr/                          已接受设计决定及原因
+│   ├── adr/                          已接受设计决定及原因（含 0007 插件事务激活）
+│   ├── plugins.md                    插件作者与运维契约
 │   └── *.md                          专题设计、协议、恢复、测试和演进说明
 ├── .github/workflows/ci.yml          Ubuntu 3.12/3.13 与 Windows 3.12 编译、测试和 doctor
 ├── pyproject.toml                    包元数据、依赖、pytest 与 ruff 配置
@@ -113,14 +134,24 @@ traceharness/
 
 ## 4. 运行时装配与依赖方向
 
-默认装配入口是 [`build_default_runtime()`](../../src/traceh/runtime/agent_runtime.py)。它创建或接受以下替换点：
+装配有两个入口，位于 [`runtime/agent_runtime.py`](../../src/traceh/runtime/agent_runtime.py)：
+
+| 入口 | 用途 |
+|---|---|
+| `build_default_runtime()` | 同步、无插件。行为与 v0.3 完全一致：不发现、不 import 任何插件 |
+| `build_default_runtime_async()` | 异步。`enabled_plugins` 为空时**就是**前者；非空时先执行插件激活事务，再完成装配 |
+
+两者共享 `_prepare_default_runtime()` 与 `_finish_default_runtime()`。拆成两段的原因很具体：插件必须在**注册表已创建、Composition 尚未围绕它们冻结**的那一刻贡献内容，而拆分让这一点成立，同时不需要把装配代码写两遍。
+
+它们创建或接受以下替换点：
 
 - `EventStore`；
 - `LlmProvider`；
 - `PromptAssembler`；
 - `Tool`、`ToolPolicy`、`ToolMiddleware`；
 - `CompletionVerifier`；
-- `ContinuationRuntime`。
+- `ContinuationRuntime`；
+- `PluginDiscovery`、`enabled_plugins`、`plugin_configs`（仅异步入口）。
 
 ```mermaid
 flowchart TD
@@ -142,10 +173,26 @@ flowchart TD
     REC["Recovery / Inspector / Invariants / Compaction"] --> SS
 ```
 
+插件在这张图上的位置见下：
+
+```mermaid
+flowchart TD
+    SEL["显式启用：--plugin / TRACEH_PLUGINS"] --> PM["PluginManager（装配层）"]
+    PM --> TR2["ToolRegistry（既有）"]
+    PM --> PA["PromptAssembler（既有）"]
+    PM --> SR["ServiceRegistry（既有）"]
+    TR2 --> CR2["CompositionRuntime"]
+    PA --> CR2
+    CR2 --> AL2["AgentLoop"]
+    PM -. "身份写入" .-> SNAP["composition/snapshot 的 plugins 字段"]
+    AL2 -. "不导入、也不知道 PluginManager 存在" .-> PM
+```
+
 依赖规则：
 
 - `AgentLoop` 只编排生命周期，不导入具体工具、JSONL 文件或厂商 HTTP 逻辑；也**不导入 CLI、Console、颜色或 Timeline 文案**：Timeline 是订阅 Feed 的界面层投影，主循环不知道它存在；
-- `AgentRuntime` 是对外门面和默认依赖装配点；
+- **`AgentLoop` 同样不知道 `PluginManager` 存在**。插件位于装配层，它的 Tool、Prompt 和 Service 进入既有的 `ToolRegistry`、`PromptAssembler` 和 `ServiceRegistry`，因此**没有** `PluginToolRuntime`，也**没有** `PluginAgentLoop`。`agent_runtime.py` 里对 `PluginManager` 的 import 是函数内局部 import，正是为了让这条边界在依赖图上也成立；
+- `AgentRuntime` 是对外门面和默认依赖装配点，并持有 `PluginManager`，以便 `dispose()` 先收敛 Turn 再反向卸载插件；
 - Provider 与 Tool 通过公共协议进入 Runtime；
 - Projector 和 Inspector 只消费事件，不反向修改历史事实；
 - 未来多 Agent 控制面应构建在单 Agent Runtime 之上，而不是塞入 `AgentLoop`。
@@ -202,7 +249,22 @@ sequenceDiagram
 - `AgentRuntime` 用内存锁和 `_active` 表保证同一 Session 同时只有一个活跃 Turn；这是单进程保证。事件写入层（6.5）已有跨进程锁，但“同一 Session 只跑一个 Turn”仍未跨进程强制：两个进程同时 run 同一 Session 时，事件文件不会损坏，结果是事件交错或 `SessionService.append_event()` 抛出 `ConcurrencyConflict`，而不是被 Runtime 提前拒绝。
 - `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。`JsonlEventStore` 的取消语义见 6.6：被取消的 Store 操作不会留下仍在后台写入的线程。
 - `AgentLoop` 在取消/异常时追加 Attempt、Step、Turn 的终止或错误事件；ToolRuntime 尽量补齐未完成调用的 Tool Result。
-- `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn；Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
+- `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn，然后卸载插件；完整语义见 5.5。Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
+
+### 5.5 `AgentRuntime.dispose()` 的收敛语义
+
+整个关闭过程位于**一个内部 Task**（`_shutdown()`）里，而不是 `dispose()` 自己的协程帧里。这条放置方式修复的是一个真实缺陷：关闭逻辑内联时，调用方在活跃 Turn 仍在收敛期间被取消，会在**到达 `PluginManager.dispose()` 之前**就逃出去；而 `_disposed` 已经置位，于是此后每一次 `dispose()` 都立即返回——插件从此再也不会被卸载，而且没有任何地方报告这件事。
+
+现在的规则：
+
+| 情形 | 行为 |
+|---|---|
+| 首次调用 | 置 `_disposed = True`（立刻拒绝新 Turn），创建唯一的 `traceh-runtime-dispose` Task，通过 `shield` 等待它 |
+| 等待期间被取消 | 用 [`await_worker_convergence()`](../../src/traceh/concurrency.py) 吸收取消并继续等待**同一个** Task；第二、三次取消同样不能提前放行；收敛完成后重新抛出**原始** `CancelledError` |
+| 再次调用 | `await` **同一个**已完成 Task，因此复用同一个真实结果，关闭不会跑第二遍 |
+| 关闭本身失败 | 该 Task 以异常完成，后续 `dispose()` 会再次抛出同一个异常，**不会**静默伪装成功 |
+
+工作属于 Task 而不属于等待它的人，所以调用方的取消永远碰不到关闭本身。顺序仍然是：先取消并 `gather` 全部活跃 Turn，**之后**才卸载插件（19.8）。
 
 ### 5.4 一个 Session 中的多个 Turn
 
@@ -448,7 +510,11 @@ flowchart LR
 - temperature、max output tokens；
 - 基于内容生成的 revision。
 
-当前实现是 `StaticCompositionRuntime`：每个 Step 都生成一致来源的快照，但 Lease 协议已经把对象生命周期与主循环分开。完整 generation、drain 和热更新尚未实现。
+`plugin identities` 从 v0.4 起是**真实数据**，不再是占位：它等于 `traceh.core`（版本来自 1.2 的唯一来源）加上本次激活的每个外部插件的真实 `plugin_id` 与 `version`。无插件运行时该列表只有一项。
+
+这条身份必须能被重建，否则 Replay 会正确地报告不一致。因此 [`composition_from_event()`](../../src/traceh/runtime/request_builder.py) 也从事件里重建 `plugins`；此前它固定返回 `()`，于是每个被重建的 Composition 都在声称自己来自一个无插件 Runtime。
+
+当前实现是 `StaticCompositionRuntime`：每个 Step 都生成一致来源的快照，但 Lease 协议已经把对象生命周期与主循环分开。完整 generation、drain 和热更新尚未实现——这也是 v0.4 不做插件热更新的直接原因（见 19.7）。
 
 ### 7.2 Surface
 
@@ -551,6 +617,12 @@ flowchart LR
 | `shell` | PROCESS | `shlex.split` 后用 `create_subprocess_exec` 执行 | 不使用 `shell=True`；清洗秘密环境变量；超时/取消收敛子进程 |
 
 所有路径读写通过 `resolve_workspace_path()` 解析后检查 Workspace 边界。默认 `DangerousShellPolicy` 屏蔽一组明显危险的可执行文件名，但它只是 Guardrail，不是安全沙箱。
+
+### 9.4 插件 Tool 走同一条管线
+
+被启用插件注册的 Tool 进入的是**同一个** `ToolRegistry`，因此 9.1 的整条管线对它逐字适用：Registry 查找、Schema 校验、单调 Policy、`tool/admitted`、`effect/intent`、按 Effect Kind 的并发或 Barrier 调度、Middleware、执行、`effect/outcome`、`tool/result`。没有 `PluginToolRuntime`，插件 Tool 在事件日志里与内置 Tool 无法区分——这正是目的。
+
+插件 Tool 名与内置 Tool 冲突时，激活在发布**之前**被拒绝（见 19.4），因此不存在“插件悄悄顶替 `read_file`”这种情况。
 
 ## 10. Continuation 与证据驱动完成
 
@@ -726,7 +798,12 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh compact` | 手动追加 Surface Replacement |
 | `traceh sessions` | 列出 Session |
 | `traceh eval` | 运行 Benchmark 目录 |
+| `traceh plugins list` | 列出已安装插件的元数据，**不 import 任何插件** |
+| `traceh plugins inspect <id>` | 同上，针对单个插件；未知或有问题时退出码 6 |
+| `traceh plugins doctor [ids...]` | import、setup、health check 后**立即 dispose**；失败时退出码 7 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
+
+`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`plugins` 子命令本身同理。
 
 除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，以及 Turn 运行期间的实时 Step/Tool Timeline（13.6）；但它仍是行式提示符：没有 token 流式输出、执行前审批，也不能在 Turn 运行期间继续输入。`run`/`resume` 本轮**没有**接 Timeline。
 
@@ -844,7 +921,7 @@ assistant> Done reading.
 - 继续旧 Session 时只显示订阅之后的新事件，不重刷历史；恢复摘要行为不变；
 - Turn 失败时：先排空已发布的 Timeline（含 `Runtime error` 那行），再打印原有 `error: <类型>: <消息>`，Chat 继续下一轮；
 - `/exit`、`/quit`、EOF、Ctrl+C、异常和取消都会关闭订阅，不留订阅、Task 或队列引用；
-- 输出为普通文本，无第三方运行时依赖，遵循既有 UTF-8 终端策略（13.5）。
+- 输出为普通文本，不引入任何终端/UI 第三方库（项目唯一的运行时依赖 `packaging` 只用于 PEP 440 解析，见 1.1），遵循既有 UTF-8 终端策略（13.5）。
 
 Timeline 是纯界面：它不进入 Model Surface，不改变 Request Fingerprint，也不写任何事件。
 
@@ -1045,17 +1122,19 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 当前代码中存在但尚未形成完整产品能力的边界：
 
-| 未来方向 | 已有协议/原语 | 当前缺失实现 |
+| 方向 | 已有协议/原语 | 当前状态 |
 |---|---|---|
-| 插件 | `PluginManifest`、`Plugin`、`PluginContext` | Entry Point Discovery、PluginManager、依赖解析、健康检查 |
-| 可逆生命周期 | `Activation`、`Lifespan`、`OwnedTaskSet` | 与真实 PluginManager 的完整集成 |
-| 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`Scope` | Application/Workspace/Preset/Agent 完整层级装配 |
-| Composition Generation | `CompositionSnapshot`、`CompositionRuntime.lease()` | 多代发布、引用计数、Drain、卸载 |
-| 多 Agent | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、Inbox、子 Agent Tools、冷恢复 |
-| Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调 |
-| Workflow | 可复用单 Agent Runtime 边界 | Workflow Engine、Map/Join/Approval 节点 |
+| 插件（Tool / Prompt / Service） | `PluginManifest`、`Plugin`、`PluginContext`、`PluginManager` | **已实现**，见 19 节 |
+| 可逆生命周期 | `Activation`、`Lifespan`、`OwnedTaskSet` | **已实现**并被 PluginManager 真正使用，含取消收敛。`OwnedTaskSet` 是**生命周期所有权，不是后台任务监督器**，见 19.12 |
+| 插件提供 Provider / Policy / Middleware / Store / Verifier | `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore`、`CompletionVerifier` | 协议存在，但 `PluginContext` 不暴露，只能直接装配 Runtime |
+| 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`Scope` | Service 已可由插件提供；Workspace/Preset/Agent 层级装配仍缺失，v0.4 只有 application scope |
+| Composition Generation 与热更新 | `CompositionSnapshot`、`CompositionRuntime.lease()` | 多代发布、引用计数、Drain、卸载仍缺失；插件集合在运行期固定 |
+| isolated 插件 | `PluginManifest.trust_mode` | 可声明，激活**明确拒绝**；无进程边界、无序列化契约、无崩溃子进程失败模型 |
+| 多 Agent | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、Inbox、子 Agent Tools、冷恢复均缺失 |
+| Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
+| Workflow | 可复用单 Agent Runtime 边界 | Workflow Engine、Map/Join/Approval 节点缺失 |
 
-这些类型证明接入方向，但不得在文档或对外说明中表述为“已实现插件系统/多 Agent”。
+标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
 ## 15. 测试与验证基线
 
@@ -1063,10 +1142,13 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 ```powershell
 python -m compileall -q src tests
-python -m pytest -q
+python -m pytest -o addopts='' -q
+python -m ruff check src tests
 ```
 
-当前测试套件共 583 项（582 通过，1 项按平台跳过），覆盖：
+带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
+
+当前测试套件共 910 项（909 通过，1 项按平台跳过），覆盖：
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
@@ -1104,9 +1186,39 @@ python -m pytest -q
 - `traceh chat`：参数互斥校验与 `.env` 继承、单 Session 连续两轮、第二轮 Request 能看到第一轮 Surface、已有 Session 先恢复且不自动建 Turn、干净 Session 不写 `runtime/recovered`、内部命令与空行不产生 Turn、含斜杠的自然语言不被误判、Turn 失败后可继续、EOF 与 dispose、运行中 Turn 被中断后收敛、中文往返、BOM 剥离、U+FFFD 拒绝、终端编码降级；
 - Kernel Scope、Activation、Hooks、Lifespan、Owned Tasks；
 - Inspector、Request Reconstruction 和 Benchmark；
-- 未来 Plugin/Agent/Workspace Protocol 可构造性。
+- 未来 Agent/Workspace Protocol 可构造性；
+- **版本契约**（[`tests/test_version_contract.py`](../../tests/test_version_contract.py)）：`importlib.metadata.version("traceharness-py")` 必须等于被导入的 `traceh.__version__`；`pyproject.toml` 不得写死字面版本且必须声明 dynamic attr；`CORE_PLUGIN_IDENTITY`、`TRACEH_PLUGIN_API_VERSION`、`installed_traceh_version()` 三者一致；默认 `requires_traceh` 范围必须包含当前版本；同步与异步两个装配入口报告同一个核心版本；Composition Snapshot 里的核心版本等于该唯一来源；
+- **插件发现**（`test_plugin_discovery.py`）：discovery 绝不调用 `EntryPoint.load()`；`to_dict()` 明示 manifest 未被读取；非法 Entry Point 名、缺失/非法 Distribution 元数据、不可读或非法 requirement、缺失/重复/不兼容的 `traceharness-py` 依赖各自报对应问题码；重复 Entry Point 名把**每一个**声明者都标为失败；其他 group 被忽略；元数据 Provider 抛异常时返回合成记录且不泄漏异常文本；排序确定；
+- **显式启用**（`test_plugin_selection.py`、`test_cli_plugin_selection.py`）：默认不启用任何插件；`TRACEH_PLUGINS` 逗号分隔并去空白；任一 `--plugin` 整体替换环境变量；空、非法（含大写、空格、控制字符、ESC、双向覆写、超长）、重复 id 全部拒绝；被拒绝的假凭据取值零回显且不泄漏长度/前后缀；错误消息单行无控制字符；`run`/`chat`/`resume` 解析结果一致；`plugins` 与只读命令不暴露该参数；CLI 报使用错误而非 traceback；
+- **Manifest 校验**（`test_plugin_manifest.py`）：非 Manifest 值、非法/不匹配/保留 `plugin_id`、非 PEP 440 版本、非法或不兼容 `requires_traceh`、非法依赖项与依赖版本、重复依赖、required 与 optional 冲突、非 tuple 依赖列表、空/未知/重复 scope、缺少 application scope、非法 trust mode、`isolated` 明确拒绝、非法与重复 `provides`；并断言**一次返回全部失败**而不是第一条；
+- **激活事务**（`test_plugin_manager.py`，58 项）：只 import 已启用插件、空选择完全不碰 discovery、未安装/元数据有问题的插件不被 import；import 失败与 setup 失败都不泄漏插件异常文本；类与工厂两种 Entry Point 目标；缺 `setup` 被拒；依赖先于依赖者 setup、未启用的必需依赖失败、依赖版本不兼容失败、核心依赖按唯一版本判定、缺失可选依赖只是 notice 而已启用但不兼容是失败、依赖环在任何 setup 之前被发现、`provides` 冲突、独立插件顺序确定；Tool/Prompt/Service 真正进入既有主线且 setup 期间核心注册表看不到 staged 内容；dispose 按反向依赖顺序移除全部贡献、单个 cleanup 失败不阻止其余；setup 失败逆序回滚且什么都不发布、Owned Task 被取消；与核心 Tool/Prompt/Service 冲突各自报对应码并完整回滚；**冲突插件的 `health_check` 从未被调用**；health 返回 `False`、抛异常、零参数签名、缺省四种情况；health 在全部 setup 之后运行；配置深拷贝隔离、缺键无默认报错、依赖提供的 Service 可被 `require()`；`spawn_owned` 拒绝非协程且任务名不使用插件提供的文本；非法 Tool 名与 Prompt section id 被拒；激活只能一次、状态表正确、身份含真实版本、重复 dispose 安全；
+- **取消语义**（`test_plugin_cancellation.py`，10 项，全部用显式 Event 门控而非 sleep）：setup 阻塞期间取消抛 `CancelledError` 而**不是** `PluginActivationError`；取消后 Tool/Prompt/Service 全部回滚、cleanup 全部执行、Owned Task 已收敛；health check 阻塞期间取消同理；回滚期间连续取消 3–4 次都不能让调用方提前返回（每次都真正让事件循环运行并断言仍未结束）；dispose 期间重复取消同样收敛；不产生任何 never-retrieved task exception（用事件循环异常处理器捕获断言为空）；取消**不**被记入插件失败状态；真实 setup 失败仍报 `plugin-setup-failed`；
+- **插件与 Runtime 主线**（`test_plugin_runtime.py`）：无插件时 Prompt 与 Tool 集合同步于同步装配入口；插件**已安装但未启用**时默认 Runtime 完全不变且 `setup` 从未被调用；启用后 Tool Schema 与 Prompt Section 确实进入模型可见面；模型真正调用插件 Tool，`tool/call` 与 `tool/result` 数量相等、`effect/intent` 与 `effect/outcome` 数量相等、不变量 0 项、Request 重建违规 0 项；Composition Snapshot 含真实插件身份且 `composition_from_event()` 能重建它；Session 记录外部插件身份、无插件时为空列表；插件集合相同可继续、丢插件/加插件/改版本三种情况都拒绝；v0.4 之前无该键的 Session 视为无插件可继续；畸形 metadata 被拒；保留键不可由调用方提供；Runtime dispose 卸载插件、幂等、且先收敛 Turn 再卸载；
+- **插件 CLI**（`test_cli_plugins.py`，36 项）：`list`/`inspect` 的 human 与 JSON 输出、排序、空集合、退出码；10 种恶意元数据值（换行、回车、清屏与颜色 ESC、退格、响铃、双向覆写、行/段分隔符、超长）断言输出严格单行、无 ESC、无 `Cf` 残留、长度有界；`list`/`inspect` 绝不 import 插件；`doctor` 完成 setup 与 health 后立即 dispose、默认覆盖全部已发现插件、失败时退出码 7 且不泄漏插件异常文本、报告未安装插件、报告可选依赖 notice、human 输出同样安全、使用一次性注册表因此不污染真实 Runtime；断言 `llm_used` 与 `session_created` 均为 false；
+- **只读 CLI 命令**（`test_cli_read_only_commands.py`）：`sessions`/`inspect`/`inspect --html`/`replay`/`recover`/`compact` 经 `main()` 真实执行并断言不变量与重建违规为 0；同时钉住它们不接受 `--plugin`。这组用例是本轮补上的覆盖缺口——一个被漏掉的 import 让这些命令全部无法运行，而当时没有任何测试会发现；
+- **真实打包验收**（`test_plugin_wheel_e2e.py`，标记 `slow`，见 15.4）；
+- **Owned Task 异常所有权**（[`tests/test_owned_task_ownership.py`](../../tests/test_owned_task_ownership.py)，13 项，全部安装真实事件循环 exception handler 并强制 `gc.collect()`，而不是读 stderr）：任务在 dispose **之前**自行抛错并完成时，dispose 前后都不得出现 `never retrieved`；关闭时仍在运行的任务由 `gather` 覆盖；**成功完成**与**被取消**的任务都不被误报；四种结局（成功、取消、自行失败、关闭期间失败）都不产生 `never retrieved`；取回即止——异常对象**不保留**：所有者身上没有 `failures` 属性，一百次失败后所有者状态不增长（钉住最小语义与“所有权而非监督”这条边界）；失败的后台任务**不会**让 `cancel_and_wait()` 抛错、不会阻止后续 spawn；`active_count` 忽略已完成任务；关闭后 spawn 被拒且不留下未 await 的协程告警；
+- **Runtime 关闭收敛**（[`tests/test_runtime_dispose.py`](../../tests/test_runtime_dispose.py)，11 项，活跃 Turn 与插件 cleanup 全部用 `asyncio.Event` 门控，不用 sleep 猜时序）：核心用例使用**确定性取消门闩**——`GatedCancellationProvider` 在收到 shutdown 的取消后点亮 `cancellation_entered` 并继续停驻、吸收第二、三次取消；测试**等待该门闩**之后才取消 `dispose()`，release 之前断言 dispose 未完成、插件 cleanup 未运行、Turn 未结束，release 之后才允许收敛并重新抛出原始 `CancelledError`（反向验证：改回内联写法，此用例报 `plugins were stranded by the cancellation`）。每次显式 `cancel()` 后的单个 `sleep(0)` 只负责投递已请求的取消信号，不是到达缺陷窗口的证据——窗口证据全部来自 Event；回滚期间连续 3 次取消都不能让调用方提前返回；被取消的 dispose 之后再次 dispose 复用同一次关闭而不是重跑；活跃 Turn 必定先于插件 cleanup 收敛；`dispose()` 一开始就拒绝新 Turn；重复与并发 dispose 只执行一次关闭；**关闭失败时后续 dispose 再次抛出同一异常**而不是伪装成功；无插件路径同样幂等且能收敛运行中的 Turn；普通 run 的行为不变；
+- **Session 插件身份**（[`tests/test_session_plugin_identity.py`](../../tests/test_session_plugin_identity.py)，36 项，全部用真实 Session 与真实事件日志）：6 组 PEP 440 等价版本（`1.0`↔`1.0.0`、`1.0`↔`1.0.0.0`、`2.0`↔`2.0.0` 等）创建的 Session 可以继续并真正跑完一个 Turn；6 组真实差异（`1.0` vs `1.0.1`、`1.1`、`2.0`、`1.0.post1` 等）仍然被拒绝；不匹配消息保留 Session 记录的原始版本文本；4 种无法解析的版本仍报 `malformed`；重复 id 仍被拒；保留键在 6 种取值（`[]`、`None`、完全相同的列表、别的插件、字符串、字典）下**一律按出现即拒绝**，无插件 Runtime 上同样如此；被拒绝时 Session 根本没有被创建；其余用户 metadata（含嵌套结构）照常保存，无论有没有插件；**缺键与显式 `null` 是两种事实**：经 `SessionService` 直接写入、`traceh_plugins` 键真正缺席的 Session 按 v0.3 无插件 Session 继续并跑完 Turn；同一路径写入显式 `None` 的 Session 在 `verify_session_plugins` 与 `run_existing` 上都报 `malformed`，插件 Runtime 上同样如此；`[]` 是 Runtime 自己写的合法无插件记录，仍然通过；
+- **`traceh run` 的 dispose 保护与 `.env` 隔离**（[`tests/test_cli_run_dispose.py`](../../tests/test_cli_run_dispose.py)，14 项）：Workspace 缺失、Store 失败、保留键被拒三种 `create_session` 失败路径都断言 `dispose()` **确实被调用**（用包装真实 Runtime 的 Spy，不是断言副作用）；失败时不会打印一个并不存在的 `session_id=`；正常完成与 Turn 抛异常两条既有路径继续 dispose；正常 run 的输出行、`session_id` 先于结果的顺序、退出码 0 与 `max_steps_exceeded` 的退出码 2 全部不变。**这组用例真正不读取开发者的 `.env`**：autouse fixture 把工作目录移到 `tmp_path`——`--env-file` 默认是相对路径 `.env`，把仓库根目录从可达范围里移走比让每个测试记得传参更可靠，也不依赖 fake `_runtime` 挡网络；`drive_run` 强制使用测试专属的不存在 env-file 路径，并**断言 `EnvLoadReport.loaded is False`**；另有 5 项专门验证隔离本身：仓库 `.env` 不在工作目录、默认参数解析结果为 `loaded=False`、Provider/Base URL/Model/Key 全是内置默认、真实 `_runtime()` 不经过任何 monkeypatch 就能构建出 Scripted Provider、而测试目录内的显式 env-file 仍然生效（隔离没有弄坏功能）。反向验证：去掉 chdir 后 4 项隔离测试立即变红，且失败内容正是仓库 `.env` 提供的 `openai-compatible`。
 
-跨进程测试通过 `tests/cross_process_worker.py` 启动真实独立解释器，用握手文件而不是长 sleep 同步；它们在临界区内制造确定性重叠窗口，因此去掉 OS 锁后会稳定失败。该 Worker 文件不以 `test_` 开头，pytest 不会收集它。
+跨进程测试通过 `tests/cross_process_worker.py` 启动真实独立解释器，用握手文件而不是长 sleep 同步；它们在临界区内制造确定性重叠窗口，因此去掉 OS 锁后会稳定失败。该 Worker 文件不以 `test_` 开头，pytest 不会收集它。同理，`tests/plugin_fixtures.py` 与 `tests/plugin_e2e_driver.py` 也不以 `test_` 开头。
+
+### 15.4 真实 Wheel / Entry Point 验收
+
+插件套件其余部分都注入假的 `entry_points` provider。这足以确定性地驱动 Manager，但它**证明不了打包**：无法说明一个声明 `traceharness-py>=0.4,<1.0` 的独立 Distribution 真的能与本次构建共存，也无法说明 `importlib.metadata` 找得到它。
+
+因此 [`tests/test_plugin_wheel_e2e.py`](../../tests/test_plugin_wheel_e2e.py) 做真实验收：
+
+1. 用 `pip wheel --no-deps` 构建 TraceHarness Wheel 与示例插件 Wheel；
+2. 用 `pip download` 把 `packaging` 放进同一个 wheelhouse——它现在是真实运行时依赖，离线安装必须能找到它；
+3. `python -m venv` 创建全新虚拟环境；
+4. `pip install --no-index --find-links <wheelhouse>` **离线**安装三者；
+5. 用该 venv 的解释器运行 [`tests/plugin_e2e_driver.py`](../../tests/plugin_e2e_driver.py)，它只能 import 这些 Wheel 装出来的东西。
+
+Driver 断言的事实（不需要任何 API Key，不调用真实模型，由 Scripted Provider 驱动）：真实 `importlib.metadata` Entry Point 被发现且值正确；discovery 无问题码；`plugins list/inspect/doctor` 全部返回 0；未启用插件时默认 Runtime 的 Tool 集合与 Prompt 完全不变；启用后模型可见 Tool Schema 与 Prompt Section；模型真正调用插件 Tool；`tool/call`↔`tool/result` 与 `effect/intent`↔`effect/outcome` 严格配对；Composition Snapshot 含 `traceh.core` 与插件真实身份；Session metadata 记录插件身份；不变量违规 0 项；Request 重建违规 0 项；dispose 后插件 Tool 消失。
+
+获取 `packaging` Wheel 这一步可能需要网络或已预热的 pip 缓存；不可用时该用例明确 skip 并说明原因，**安装本身**始终是 `--no-index` 的离线安装。
 
 ### 15.2 CI
 
@@ -1121,7 +1233,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项到 70 项，`traceh chat` 再增加 24 项到 94 项，取消收敛与子进程编码加固再增加 12 项到 106 项，输出所有权与本地资源收敛再增加 3 项到 109 项，超时证据入下一 Step 与测试清理再增加 3 项到 112 项，Tool 与 Runtime 两类超时的边界再增加 2 项到 114 项，Event 所有权与 EventStore 脱离契约再增加 23 项到 137 项，进程内 Event Feed 与 Chat 实时 Timeline 再增加 71 项到 208 项，Feed 只读接口、Timeline 终端安全、Drain 收敛与 Feed 连线加固再增加 154 项到 362 项，Activity Heartbeat、Ctrl+C 生命周期与恢复信息再增加 37 项到 399 项，Heartbeat 相位调度、恢复命令配置保真与并发工具措辞校正再增加 7 项到 406 项，恢复命令的 Shell 渲染安全与凭据回显规则再增加 73 项到 479 项，Verifier 来源判定、Base URL 解析健壮性、Fallback 转义与环境变量名校验再增加 47 项到 526 项，Unicode 行分隔符边界与拒绝值不回显再增加 57 项，当前共 583 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。此后 `.env` 功能把测试增加到 31 项，跨进程文件锁与取消语义再增加 12 项到 43 项，Model Attempt 恢复与不变量再增加 27 项到 70 项，`traceh chat` 再增加 24 项到 94 项，取消收敛与子进程编码加固再增加 12 项到 106 项，输出所有权与本地资源收敛再增加 3 项到 109 项，超时证据入下一 Step 与测试清理再增加 3 项到 112 项，Tool 与 Runtime 两类超时的边界再增加 2 项到 114 项，Event 所有权与 EventStore 脱离契约再增加 23 项到 137 项，进程内 Event Feed 与 Chat 实时 Timeline 再增加 71 项到 208 项，Feed 只读接口、Timeline 终端安全、Drain 收敛与 Feed 连线加固再增加 154 项到 362 项，Activity Heartbeat、Ctrl+C 生命周期与恢复信息再增加 37 项到 399 项，Heartbeat 相位调度、恢复命令配置保真与并发工具措辞校正再增加 7 项到 406 项，恢复命令的 Shell 渲染安全与凭据回显规则再增加 73 项到 479 项，Verifier 来源判定、Base URL 解析健壮性、Fallback 转义与环境变量名校验再增加 47 项到 526 项，Unicode 行分隔符边界与拒绝值不回显再增加 57 项到 583 项，v0.4 插件系统（版本契约、发现、启用、Manifest、激活事务、取消语义、Runtime 集成、插件 CLI、只读 CLI 覆盖与真实 Wheel 验收）再增加 253 项到 836 项，第三方复审确认的 5 个阻断项修复（Owned Task 异常所有权、Runtime 关闭收敛、PEP 440 等价比较、保留 metadata 键按出现拒绝、`traceh run` 的 dispose 保护）再增加 74 项，当前共 910 项。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1156,6 +1268,12 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Patch 能力 | 精确文本替换，不解析 unified diff | 增加独立工具实现，不改变 Tool Runtime |
 | Benchmark | 仅一个确定性简单案例 | 增加真实 Provider、失败恢复、复杂仓库案例 |
 | 自动压缩 | 只有手动 Replacement | 未来 Context/Compaction Plugin |
+| 插件无热更新 | 插件集合在启动到 `dispose()` 之间固定。没有 Composition 多代发布、引用计数或 Drain，因此无法在 Turn 运行期间替换插件 | 属于 Step 语义变更，需要先做 v0.5 的 Generation 与 Drain，而不是给 Loader 加功能 |
+| 插件不是沙箱 | v0.4 只有 trusted、进程内插件。`isolated` 可声明但被明确拒绝。一个被启用的插件与 Harness 同进程、同权限运行，能做任何 Python 能做的事 | 真正的隔离需要进程边界、每次 context 调用的序列化契约与子进程崩溃失败模型；在此之前，“启用插件”等于“信任其作者” |
+| 插件贡献面很窄 | 只能提供 Tool、Prompt Section 与 Service，不能提供 Provider、Policy、Middleware、EventStore 或 Verifier | 按 ROADMAP v0.5 扩展 `PluginContext`，但每扩一项都要同步 Composition Snapshot 的可重建性 |
+| Session 插件身份是保护而非迁移 | 插件集合改变后拒绝继续旧 Session。这防止用不同工具集续跑，但**没有**提供任何迁移路径。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化，但任何真实版本差异都会拒绝 | 需要有意变更时应新建 Session；跨组合迁移属于未设计的能力 |
+| 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
+| 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
 | API 稳定性 | Alpha，协议可能演进 | v1.0 前建立兼容策略和 Upcaster |
 
 ## 17. 变更影响矩阵
@@ -1173,7 +1291,16 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
 | Verifier/Eval | `verification.py`、`evaluation/*` | 10、12、15、16 |
-| Plugin/Multi-Agent Protocol | `api/plugins.py`、`agents.py`、`workspaces.py`、`kernel/*` | 2、3、4、14、15、16 |
+| 插件发现/启用/激活 | `plugins/*`、`api/plugins.py`、`api/prompts.py`、`kernel/activation.py`、`kernel/tasks.py`、`runtime/agent_runtime.py`、`tests/test_plugin_*.py` | 1、2、3、4、7.1、13、14、15、16、19 |
+| Runtime 关闭 / dispose | `runtime/agent_runtime.py`（`_shutdown`、`dispose`）、`plugins/manager.py` 的 `dispose`、`tests/test_runtime_dispose.py` | 5.3、5.5、15、16、19.8 |
+| Owned Task 所有权 | `kernel/tasks.py`、`kernel/activation.py`、`tests/test_owned_task_ownership.py` | 14、15、16、19.12 |
+| Session 插件身份比较 | `runtime/agent_runtime.py`（`_comparable`、`_identities_from_metadata`、`create_session`）、`tests/test_session_plugin_identity.py` | 15、16、19.9 |
+| CLI 命令的资源保护 | `cli/main.py` 的各 handler、`tests/test_cli_run_dispose.py`、`tests/test_cli_read_only_commands.py` | 13.1、15、16 |
+| 插件 CLI | `cli/plugins.py`、`cli/main.py`、`tests/test_cli_plugins.py`、`tests/test_cli_plugin_selection.py`、README、`docs/plugins.md` | 13.1、15、19.10 |
+| 版本 | `version.py`、`pyproject.toml`、`tests/test_version_contract.py`、CHANGELOG | 1、1.2、15、19 |
+| 运行时依赖 | `pyproject.toml`、README、打包验收 | 1、1.1、15.4、16 |
+| Composition 插件身份 | `composition_runtime.py`、`request_builder.py`、`session/service.py`、插件运行时测试 | 7.1、7.3、12、15、19.9 |
+| Multi-Agent/Workspace Protocol | `api/agents.py`、`api/workspaces.py`、`kernel/*` | 2、3、4、14、15、16 |
 | 开发流程/目录 | `AGENTS.md`、`CLAUDE.md`、CI、pyproject | 0、1、3、15、18 |
 
 ## 18. 当前维护流程
@@ -1198,3 +1325,150 @@ flowchart LR
 - README/CHANGELOG/ADR/专题文档按各自职责更新；
 - 示例只作为示例，秘密未进入 Git；
 - 最终交付说明变更、验证、文档同步和剩余边界。
+
+## 19. 插件系统（v0.4）
+
+作者与运维契约见 [`docs/plugins.md`](../plugins.md)，设计原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)。本节记录工程事实。
+
+### 19.1 模块职责
+
+| 模块 | 职责 |
+|---|---|
+| [`plugins/discovery.py`](../../src/traceh/plugins/discovery.py) | 读取 `traceh.plugins` Entry Point 组的 Distribution 元数据，**不 import 插件** |
+| [`plugins/selection.py`](../../src/traceh/plugins/selection.py) | 解析并校验显式启用列表，发生在发现与 import 之前 |
+| [`plugins/errors.py`](../../src/traceh/plugins/errors.py) | 结构化 `PluginFailure` 与异常层次 |
+| [`plugins/manager.py`](../../src/traceh/plugins/manager.py) | Manifest 校验、依赖解析、事务式激活、发布与卸载 |
+| [`cli/plugins.py`](../../src/traceh/cli/plugins.py) | `list`/`inspect`/`doctor` 的安全投影 |
+| [`api/plugins.py`](../../src/traceh/api/plugins.py) | `PluginManifest`、`PluginContext`、`Plugin`、`CORE_PLUGIN_IDENTITY` |
+| [`api/prompts.py`](../../src/traceh/api/prompts.py) | `PromptSection`，从 `runtime/prompt.py` 移出，使 SDK 不必导入装配层 |
+
+### 19.2 Discovery 只读元数据
+
+`PluginDiscovery.discover()` 通过 `importlib.metadata` 读取 Entry Point 与 Distribution 元数据，**从不调用 `EntryPoint.load()`**。这条分离是一个安全性质而不是性能优化：它使“列出这台机器上装了哪些插件”本身不成为一次代码执行。
+
+每条记录报告的问题码：`invalid-entry-point-name`、`distribution-metadata-missing`、`distribution-version-invalid`、`distribution-requirements-missing`、`distribution-requirement-invalid`、`traceh-dependency-missing`、`traceh-dependency-duplicate`、`traceh-distribution-incompatible`、`duplicate-entry-point`、`entry-point-metadata-error`。
+
+两个刻意的选择：
+
+- 同一个 Entry Point 名被两个 Distribution 声明时，**所有声明者都被标为失败**，而不是按安装顺序静默选一个；
+- 全局元数据 Provider 本身抛异常时，返回一条合成记录，绝不把它的异常文本或 traceback 交给 CLI。
+
+比较用的“已安装 TraceHarness 版本”取自 `traceh.version.__version__` 而不是 `importlib.metadata`：真正要承载插件的是被 import 的那份代码，而 `pyproject.toml` 又从同一属性派生版本，因此二者是构造性一致而非巧合一致。
+
+### 19.3 显式启用
+
+安装**不等于**启用。启用来自 `--plugin`（可重复）或 `TRACEH_PLUGINS`（逗号分隔）。命令行上任何一次 `--plugin` 都会**整体替换**环境变量值，而不是追加，因此一条命令行总能完全决定本次运行的插件集合。`run`、`chat`、`resume` 在 `_configure_from_environment()` 中共用同一次解析。
+
+校验发生在发现与 import 之前，因此非法 id 永远到不了第三方代码。被拒绝的取值**完全不回显**：这个设置最常见的写错方式是把 Token 粘到了插件 id 的位置。
+
+### 19.4 激活事务的四个阶段
+
+```mermaid
+flowchart TD
+    SEL["显式选择"] --> VAL["校验 id"]
+    VAL --> DISC["元数据发现（不 import）"]
+    DISC --> LOAD["只 import 已启用插件"]
+    LOAD --> MAN["逐字段校验 Manifest"]
+    MAN --> DEP["依赖解析 + 确定性拓扑排序"]
+    DEP --> P1["阶段 1：setup() 写入私有 staged registries"]
+    P1 --> P2["阶段 2：完整冲突检查"]
+    P2 --> P3["阶段 3：health check"]
+    P3 --> P4["阶段 4：原子发布进既有主线"]
+    P4 --> OK["装配完成；身份写入 Composition"]
+    P1 -. "失败或取消" .-> RB["逆序回滚全部 Activation"]
+    P2 -. "冲突" .-> RB
+    P3 -. "失败或取消" .-> RB
+    P4 -. "失败" .-> RB
+    RB --> ERR["PluginActivationError 或原始 CancelledError"]
+```
+
+**为什么冲突检查必须早于 health check。** 一个 Tool 与内置 Tool 同名的插件无论 health check 说什么都会被拒绝。先跑 health check 只是给一段已知注定失败的第三方代码额外一次执行、占用时间或访问网络的机会；而冲突完全由 Manager 已经持有的数据判定，先问插件不会得到任何新信息。候选实现的顺序是反的，本轮已修正，并由 `test_conflicting_plugin_health_check_is_never_called` 钉住（反向验证：把顺序换回去，该用例立即失败）。
+
+**为什么 setup 必须写进私有 staged registries。** 一个在 `setup()` 中途失败的插件，此前已经注册过的内容如果直接进了实时注册表，失败的激活就会留下一个任何配置都无法描述的状态。私有暂存使“全部成功之前什么都不可见”成为结构性质。插件之间的同名冲突因此在 setup 阶段就由共享的 staged registry 抛出，表现为后一个插件 `plugin-setup-failed`。
+
+**为什么发布必须原子。** 一个 Step 冻结一份 Composition。若逐个发布，某个 Step 可能由半发布的插件集合组成，而 Composition Snapshot 会描述一个从未连贯存在过的配置。
+
+### 19.5 取消不是失败
+
+候选实现用 `except BaseException` 捕获 `CancelledError` 并重写成 `PluginActivationError`/`plugin-setup-failed`，于是启动期按 Ctrl+C 会被报告成“插件配置有问题”。更糟的是回滚把重复取消当作停止展开的理由，第二次 Ctrl+C 可能让尚未回滚到的 Activation 就此滞留。
+
+现在的语义：
+
+| 取消发生的位置 | 行为 |
+|---|---|
+| setup 阻塞期间 | 停止继续 setup/health/publish，逆序回滚全部 Activation，重新抛出原始 `CancelledError` |
+| health check 阻塞期间 | 同上 |
+| publish 期间 | 同上 |
+| 回滚期间重复取消 | 被吸收；`Activation.dispose()` 已在重新抛出前收敛，因此记录取消意图并**继续展开其余 Activation** |
+
+调用方拿到 `CancelledError` 时，保证：全部 staged 注册已撤销、全部 Owned Task 已取消并等待完成、全部 cleanup 已执行、状态表中**没有**把取消记成插件失败。收敛复用既有的 [`await_worker_convergence()`](../../src/traceh/concurrency.py)（见 6.6、8.3、13.8）：重复取消是意愿声明，不是逃生出口。
+
+真实失败仍然是失败：`test_a_genuine_setup_failure_is_still_reported_as_a_failure` 防止这条修复把真错误变成静默取消。反向验证：去掉专门的 `CancelledError` 分支后，10 项取消测试中有 6 项立即变红，且报出的正是 `PluginActivationError: Plugin setup failed`。
+
+### 19.6 依赖与 Manifest
+
+- `requires_plugins` 的目标必须**也被显式启用**，仅安装不够，否则 `required-plugin-missing`。插件不能替运维启用它的依赖；
+- `optional_plugins` 缺失是 notice；**已启用但版本不兼容**是失败，不是可以耸肩略过的缺席；
+- 依赖环报 `plugin-dependency-cycle`，且此时任何插件的 `setup()` 都还没跑过；
+- 两个插件声明同一个 `provides` 能力报 `provides-conflict`；
+- 排序用最小堆做拓扑排序，所以同一组插件的 setup 顺序永远相同，复现是真的可复现；
+- `traceh.core` 是保留 id，任何外部插件声明它都报 `plugin-id-reserved`；
+- Manifest 校验**一次返回全部失败**而不是第一条，作者修一次就能看到全部问题。
+
+### 19.7 为什么 v0.4 不做热更新与 isolated
+
+热更新需要 Composition 多代发布、Generation 引用计数、Drain 活跃 Step Lease，还需要定义“Turn 中途 Composition 改变”对已持久化 Request Snapshot 意味着什么。那是对 Step 语义的改动，不是 Loader 的功能。因此插件集合在启动到 `dispose()` 之间固定。
+
+`trust_mode="isolated"` 被**明确拒绝**而不是降级成 trusted：把“请求隔离”当成“允许进程内运行”的许可，等于给了插件比它申请的更高权限。真正的隔离需要进程边界、每次 context 调用的序列化契约和子进程崩溃的失败模型，这些都还不存在。
+
+### 19.8 dispose 顺序
+
+`AgentRuntime.dispose()` 先取消并 `gather` 全部活跃 Turn，**之后**才调用 `PluginManager.dispose()`；后者按**激活的逆序**卸载。顺序相反会把某个仍在运行的 Turn 正在使用的 Tool 或 Service 抽走。
+
+整个关闭过程位于唯一的内部 Task 中，因此重复调用复用同一结果、重复取消无法提前放行、关闭失败不会被后续调用伪装成成功；完整语义与它修复的缺陷见 5.5。
+
+单个插件 cleanup 失败不阻止其余 cleanup：失败被收集成 `PluginDisposeError`，`Lifespan.close()` 本身也已保证逐条继续。该错误会通过 `AgentRuntime.dispose()` 传播出来，并在后续每一次 `dispose()` 上再次抛出。
+
+### 19.9 Session 插件身份
+
+`AgentRuntime.create_session()` 把外部插件身份写进 `session/created` 的 metadata 保留键 `traceh_plugins`。
+
+**保留键按“是否出现”判定，不看取值。** 只要调用方的 metadata 里出现 `traceh_plugins` 就抛 `ValueError`，无论它是 `[]`、`None`，还是与当前插件身份**完全相同**的列表。早期实现只在取值与预期不同时才拒绝，于是这三种写法都能通过——而这个键记录的是运行时**自己观测到什么**，任何调用方能写进去的值都是一个 Runtime 无法背书的断言。调用方提供的其余 metadata 键照常原样保存。
+
+`verify_session_plugins()` 在 `run_existing()`、`resume()` 和 `chat` 继续旧 Session 时执行，且**早于 recovery**——recovery 会追加事件，向一个用不同 Composition 创建的 Session 追加事件正是要防的事。不匹配抛 `SessionPluginMismatchError`，消息同时列出 Session 要求的与当前运行的两组身份，且**保留 Session 当时记录的原始版本文本**而不是改写过的形式。
+
+**缺键与显式 `null` 必须区分，读取端用缺失 sentinel 而不是 `get()`。** `dict.get()` 对“键不存在”和“键被显式记为 `null`”返回同一个 `None`，这是两个不同的事实：键真正缺席的是 v0.4 之前写下的无插件 Session；显式记录的 `null` 不是本 Runtime 任何版本会写下的值，属于损坏数据，必须报 `malformed` 而不是当“无插件”放行。`verify_session_plugins` 因此以 `_PLUGIN_METADATA_MISSING` 哨兵作为 `get()` 的默认值，只有哨兵本身代表“缺席”。
+
+**版本按 PEP 440 语义比较，用的是 `Version` 对象而不是字符串。** 这一条必须写准，因为直觉上的写法是错的：`str(Version("1.0"))` 是 `"1.0"`，`str(Version("1.0.0"))` 是 `"1.0.0"`，所以“先 `Version()` 解析再 `str()` 规范化然后比字符串”**并不会**把两个 PEP 440 等价版本判成相同——早期实现正是这样，于是 `1.0` 与 `1.0.0` 之间会被误判为组合变化并拒绝继续 Session。现在由 `AgentRuntime._comparable()` 生成 `(plugin_id, Version)` 键：`Version("1.0") == Version("1.0.0")` 为真，而 `Version("1.0") == Version("1.0.1")` 仍为假，因此真正的版本变化照旧被拒绝。无法解析的版本仍然报 `malformed`，等价性没有变成宽容。
+
+v0.4 之前写下的 Session 没有这个键，等价于“无插件”，可以正常继续。
+
+`traceh chat` 打印的恢复命令会带上所需的 `--plugin`，否则用户会遇到一个正确但没有线索的拒绝。
+
+### 19.10 CLI 输出安全
+
+`list`/`inspect`/`doctor` 打印的每一个字符串都来自第三方 Distribution 元数据，因此全部经过 `escape_for_display()`（与 13.8 的恢复命令、13.6 的 Timeline 共用同一套规则）：严格一行、无控制字符、有长度上限。`_safe()` 递归处理整个结构而不是几个预期字段，因此不存在“某个字段忘了清洗”。
+
+`doctor` 使用一次性 `ToolRegistry` 与 `PromptAssembler`，因此它激活的任何东西都到不了真实 Runtime；无论激活成功与否都在 `finally` 中 dispose。插件自身的异常文本从不外泄——所有 message 都由本仓库编写，失败只用固定 `code` 区分。
+
+### 19.11 示例插件
+
+[`examples/plugins/traceh-example-skill-plugin/`](../../examples/plugins/traceh-example-skill-plugin/) 是一个**可独立构建安装**的 Distribution，不是仓库内的测试夹具。它有自己的 `pyproject.toml`、`traceh.plugins` Entry Point、`PluginManifest`、一个 `PromptSection`、一个 `PURE_READ` 无副作用 Tool，以及一份打包进 Wheel 的 `SKILL.md` 资源（通过 `importlib.resources` 读取）。
+
+它明确**不**扫描用户的 Codex/Claude 目录、不读环境变量、不访问网络，也**不**因为被安装就成为默认能力。
+
+### 19.12 `OwnedTaskSet` 是生命周期所有权，不是监督器
+
+插件通过 `PluginContext.spawn_owned()` 创建的后台任务归 [`kernel/tasks.py`](../../src/traceh/kernel/tasks.py) 的 `OwnedTaskSet` 所有。必须准确描述它**拥有什么**：
+
+| 它保证 | 它不做 |
+|---|---|
+| 关闭时取消并等待全部 owned task 收敛 | 重启失败的任务 |
+| 取回每个任务的结果或异常，不留给 GC | 把后台任务失败升级为 Runtime 故障 |
+| —— | **保留**异常对象。取回之后立刻丢弃，不建立任何异常列表 |
+
+**为什么“取回异常”需要一个明确的所有者。** 一个在关闭之前就抛异常的任务会自行完成，done callback 把它从集合中移除——于是 `cancel_and_wait()` 永远看不到它，也永远不会取回它的异常。asyncio 随后会在垃圾回收时报 `Task exception was never retrieved`：时机与真正的原因无关，也不归属于任何组件。因此 done callback（`_retire()`）在任务完成的那一刻调用一次 `task.exception()`：被取消的任务直接跳过（取消是预期的关闭结果，而且此时 `task.exception()` 本身会抛 `CancelledError`），正常完成和真正失败的都只到“取回”为止。
+
+**为什么取回之后不留存。** 早期版本把每个失败对象追加进一个 `failures` 列表供“查询”，但该列表**没有任何主线消费者**——它是一份无界、永久增长、永远不会被读的记录。而每个异常对象都持有 traceback，traceback 又持有每一帧的局部变量：为无人读的数据保留不受信任的插件状态，既是内存泄漏，也是一道泄漏面。真正的可观测性必须从“有消费者”开始；在 v0.4 拥有消费者之前，所有权止步于取回。测试明确钉住这一点：所有者身上没有 `failures` 属性，一百次失败后所有者状态不增长。
+
+**为什么不升级成 Runtime 故障。** 把插件的后台任务崩溃翻译成“Runtime 失败”是一个 v0.4 尚未做出的策略决定：它会改变“运行时失败了”这句话的含义，也需要定义重启、退避和上报规则。本轮刻意只做所有权，并在此写明边界，而不是顺手发明一个未经授权的监督器。

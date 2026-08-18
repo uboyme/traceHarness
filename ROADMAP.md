@@ -2,25 +2,41 @@
 
 The order below preserves the current protocol and keeps `AgentLoop` stable.
 
-## v0.4: Plugin SDK and discovery
+## v0.4: Plugin SDK and discovery — done
 
-- Add `traceh.plugins.PluginContext` exposing only public registries and owned resources.
-- Discover packages through `importlib.metadata.entry_points(group="traceh.plugins")`.
-- Validate Plugin Manifest, TraceHarness API major and plugin dependencies before import.
-- Run setup inside a private `Activation`; publish only after health checks pass.
-- Add `traceh plugins list/inspect/doctor`.
-- Add Plugin Lifecycle contract tests.
+- ✅ `traceh.plugins` SDK with a `PluginContext` exposing only tools, prompts, services,
+  cleanups, owned tasks and configuration.
+- ✅ Discovery through `importlib.metadata.entry_points(group="traceh.plugins")`,
+  metadata-only: listing never imports a plugin.
+- ✅ Explicit enablement (`--plugin` / `TRACEH_PLUGINS`); installing never enables.
+- ✅ Manifest, TraceHarness compatibility range and plugin dependencies validated before
+  setup; selection validated before import.
+- ✅ Setup inside a private `Activation` against staged registries; conflicts checked, then
+  health checks, then atomic publish; reverse-order rollback on failure or cancellation.
+- ✅ `traceh plugins list/inspect/doctor`.
+- ✅ Plugin lifecycle tests, plus a built and installed example plugin wheel exercised in a
+  clean virtual environment.
 
-Definition of done: installing a separate wheel can add a tool and prompt section without
-editing this repository or `AgentLoop`.
+Definition of done **met**: installing a separate wheel adds a tool and a prompt section
+without editing this repository or `AgentLoop`. See
+[`docs/plugins.md`](docs/plugins.md) and
+[ADR-0007](docs/adr/0007-transactional-plugin-activation.md).
+
+Explicitly deferred out of v0.4: hot reload, Composition generation drain, isolated
+(out-of-process) plugins, and plugin-supplied providers, policies, middleware, event stores
+or verifiers.
 
 ## v0.5: Composition generations and scoped overlays
 
-- Add Application, Workspace, Preset and Agent Scope layers.
+- Add Application, Workspace, Preset and Agent Scope layers (v0.4 activates application
+  scope only).
 - Replace direct snapshot creation with a generation lease.
-- Drain old plugin generations after active Step leases are released.
-- Persist plugin versions and provider identities in Composition Snapshot.
+- Drain old plugin generations after active Step leases are released — the prerequisite for
+  hot reload, which v0.4 deliberately does not attempt.
+- ✅ Plugin versions already persist in the Composition Snapshot as of v0.4; provider
+  identities still to follow.
 - Add explicit override conflict diagnostics.
+- Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
 
 Definition of done: two Agents can see different tool/policy compositions, and updating a
 plugin cannot change a Step already in progress.

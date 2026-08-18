@@ -249,6 +249,10 @@ async def _open_session(
     # Converge whatever the previous process left open before the user can add
     # anything new. No turn is started and no instruction is injected: the next
     # turn is the one the user types.
+    #
+    # Checked before recovery, because recovery appends events: a session created
+    # under a different plugin set must be refused, not repaired and continued.
+    await runtime.verify_session_plugins(session_id)
     report = await runtime.recovery.recover(session_id)
     _write_session_banner(runtime, console, session, resume_environment)
     # Continuing a session needs this note more, not less: the first new event
@@ -674,6 +678,11 @@ def _write_resume_block(
 
     if config.max_steps:
         restore += [Literal("--max-steps"), str(config.max_steps)]
+
+    # Without these the resumed session would be refused by the plugin identity
+    # check - correctly, but with no hint about what to re-enable.
+    for plugin_id in runtime.enabled_plugin_ids:
+        restore += [Literal("--plugin"), plugin_id]
 
     if environment.script is not None:
         restore += [Literal("--script"), str(Path(environment.script).resolve())]

@@ -11,10 +11,20 @@ from traceh.api.llm import (
     ToolSchema,
     Usage,
 )
+from traceh.api.plugins import (
+    CORE_PLUGIN_IDENTITY,
+    Plugin,
+    PluginContext,
+    PluginDependency,
+    PluginIdentity,
+    PluginManifest,
+)
+from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
 from traceh.api.tools import EffectKind, Tool, ToolOutput
 
 __all__ = [
+    "CORE_PLUGIN_IDENTITY",
     "AgentSpec",
     "AgentSupervisor",
     "Budget",
@@ -25,6 +35,12 @@ __all__ = [
     "ModelRequest",
     "ModelResponse",
     "PendingEvent",
+    "Plugin",
+    "PluginContext",
+    "PluginDependency",
+    "PluginIdentity",
+    "PluginManifest",
+    "PromptSection",
     "Registration",
     "ServiceKey",
     "Tool",

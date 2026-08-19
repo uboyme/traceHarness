@@ -10,17 +10,41 @@ class PromptAssembler:
     def __init__(self, sections: tuple[PromptSection, ...] = ()) -> None:
         self._sections = list(sections)
 
-    def register(self, section: PromptSection) -> CallbackRegistration:
+    def register(
+        self,
+        section: PromptSection,
+        *,
+        replace: bool = False,
+    ) -> CallbackRegistration:
         """Register a section and return the registration that removes it again."""
 
-        if any(item.section_id == section.section_id for item in self._sections):
+        if not isinstance(replace, bool):
+            raise TypeError("prompt replace must be a bool")
+        previous_index = next(
+            (
+                index
+                for index, item in enumerate(self._sections)
+                if item.section_id == section.section_id
+            ),
+            None,
+        )
+        if previous_index is not None and not replace:
             raise RuntimeError(f"prompt section already registered: {section.section_id}")
-        self._sections.append(section)
+        previous = (
+            self._sections[previous_index] if previous_index is not None else None
+        )
+        if previous_index is None:
+            self._sections.append(section)
+        else:
+            self._sections[previous_index] = section
 
         async def cleanup() -> None:
             for index, current in enumerate(self._sections):
                 if current is section:
-                    self._sections.pop(index)
+                    if previous is None:
+                        self._sections.pop(index)
+                    else:
+                        self._sections[index] = previous
                     return
 
         return CallbackRegistration(cleanup)

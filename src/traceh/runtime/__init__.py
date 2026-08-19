@@ -1,5 +1,10 @@
 """Agent runtime and minimal control loop."""
 
+from traceh.kernel.composition_overlays import (
+    ScopedPolicyBinding,
+    ScopedPromptBinding,
+    ScopedToolBinding,
+)
 from traceh.kernel.scope import ScopedServiceBinding, ScopeKind
 from traceh.runtime.agent_runtime import (
     AgentRuntime,
@@ -16,6 +21,9 @@ __all__ = [
     "RuntimeConfig",
     "ScopeKind",
     "ScopedServiceBinding",
+    "ScopedPolicyBinding",
+    "ScopedPromptBinding",
+    "ScopedToolBinding",
     "SessionPluginMismatchError",
     "build_default_runtime",
     "build_default_runtime_async",

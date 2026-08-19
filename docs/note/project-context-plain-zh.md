@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本仍是 **`0.4.0`**。插件系统真的能用了；Stage A 把 Generation-backed Composition Runtime、Step Lease 和 Drain 接入默认主线，Stage B 又把 Generation-owned ActivationSet 接入启动插件和内部替换路径，Stage C 再把 `traceh chat` 的 `/plugins` 组合切换和 Session 显式迁移授权接入同一条主线。D0 把候选替换、会话迁移、共享 Gate 和在途任务收尾从 `AgentRuntime` 拆给专门的 `PluginCompositionCoordinator`。D1 则真的开始做 Scope：Service 现在会按 Application → Workspace → Preset → Agent 四层解析，并跟着 Generation 与 Step Lease 冻结；但插件 setup 仍只发生在 application 层，Tool/Prompt/Policy 还不能分层。这些都不等于 v0.5 已发布完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本仍是 **`0.4.0`**。插件系统真的能用了；Stage A 把 Generation-backed Composition Runtime、Step Lease 和 Drain 接入默认主线，Stage B 又把 Generation-owned ActivationSet 接入启动插件和内部替换路径，Stage C 再把 `traceh chat` 的 `/plugins` 组合切换和 Session 显式迁移授权接入同一条主线。D0 把候选替换、会话迁移、共享 Gate 和在途任务收尾从 `AgentRuntime` 拆给专门的 `PluginCompositionCoordinator`。D1 做了四层 Service，D2 又让宿主程序能把 Tool、Prompt、Policy 明确放进 Application、Workspace、Preset、Agent 四层；程序会先压成一整套有效能力，再交给原来的 Generation、Lease 和 Snapshot。插件 setup 仍只发生在 application 层，插件自己不能选择子层，也不能提供 Policy。这些都不等于 v0.5 已发布完成。
 
 ### 版本为什么只准写在一个地方
 
@@ -57,12 +57,12 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有插件系统吗 | **有**。装一个 Wheel 就能被发现，显式启用后它的工具和 Prompt 会进入正常主线（第 19 节）|
 | 装了插件就会自动生效吗 | **不会**。装了只是“能被发现”，还要用 `--plugin` 或 `TRACEH_PLUGINS` 明确点名才会加载 |
 | 能在运行中换插件吗 | 可以在空闲的 `traceh chat` 中用 `/plugins`、`/plugins reload`、`/plugins use ID...` 或 `--none` 切换当前进程已经能发现的已安装插件；这会重做 setup/conflict/health 并走 Generation/Lease/Drain，但不是 pip 安装、Wheel 替换或 Python module reload |
-| 有四层 Scope 吗 | Service 有：Python 装配时可明确把一个 Service 放进 Application、Workspace、Preset 或 Agent 层，越靠近 Agent 越优先，而且 Step 开始后不会被新 Generation 原地换掉。插件本身仍只在 application 层 setup，Tool/Prompt/Policy 分层还没有 |
+| 有四层 Scope 吗 | 有程序化装配：Service、Tool、Prompt、Policy 都能由宿主 Python 代码明确放进 Application、Workspace、Preset 或 Agent 层，越靠近 Agent 越优先，而且 Step 开始后不会被新 Generation 原地换掉。插件本身仍只在 application 层 setup，不能自行选择子层或提供 Policy |
 | 插件是被沙箱隔开的吗 | 不是。v0.4 的插件和 Harness 同进程同权限；`isolated` 可以写在 Manifest 里，但会被**明确拒绝** |
 | 有多 Agent 吗 | 只有 DTO/Protocol，没有可以工作的 Supervisor |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
-| 当前测试数 | 收集 1029 项；完整门禁 1028 通过、1 项跳过 |
+| 当前测试数 | 收集 1053 项；完整门禁 1052 通过、1 项跳过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -106,7 +106,7 @@ flowchart LR
 6. 崩溃后不确定的写操作不能因为“可能没执行”就自动再执行；
 7. 模型的自我评价不能代替真实测试。
 
-当前不做的事情也同样重要。v0.4 有了插件系统，Stage A/B/C 补上 Generation 生命周期、ActivationSet 和用户可操作的 Session 级组合切换，D1 又实现 Service 的四层 Scope，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，Workspace/Preset/Agent 还不能各自提供 Tool/Prompt/Policy。它也不是多 Agent 编排器、Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
+当前不做的事情也同样重要。v0.4 有了插件系统，Stage A/B/C 补上 Generation 生命周期、ActivationSet 和用户可操作的 Session 级组合切换，D1/D2 又实现四层 Service 与程序化 Tool/Prompt/Policy 装配，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，不能自己在 Workspace/Preset/Agent 层注册能力，也不能提供 Policy。它也不是多 Agent 编排器、Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
 
 ## 3. 从目录看懂整个项目
 
@@ -129,7 +129,7 @@ flowchart LR
 | `tools/process_control.py` | 子进程取消/超时后怎么确保它真的死了、输出怎么不丢 | `capture_output()`、`converge_process()` |
 | `llm/` | 把统一 ModelRequest 交给具体模型 | Scripted、OpenAI-Compatible Provider |
 | `tools/` | 模型想碰文件或进程时必须经过的安检与执行通道 | `ToolRuntime` 和五个内置工具 |
-| `kernel/` | 插件生命周期和四层 Service 解析的基础零件 | ScopeChain、ServiceRegistry/ServiceView、Activation、Hook、Lifespan、OwnedTaskSet |
+| `kernel/` | 插件生命周期和四层 Service/Composition 解析的基础零件 | ScopeChain、ServiceRegistry/ServiceView、CompositionOverlayPlan、Activation、Hook、Lifespan、OwnedTaskSet |
 | `plugins/` | 找到装了哪些插件、判断该不该加载、把加载做成一笔可回滚的事务 | `discovery.py`、`selection.py`、`manager.py` |
 | `version.py` | 版本号和核心身份的唯一出处，别的地方一律来这里取 | `__version__` |
 | `inspector/` | 把机器事件翻译成人能检查的文本或 HTML | `SessionInspector` |
@@ -152,6 +152,7 @@ flowchart LR
 - 组装 Prompt；
 - 配置 Verifier 和 Continuation；
 - 按显式 `ScopedServiceBinding` 组装 Application、Workspace、Preset、Agent 四层 Service；
+- 按显式 `ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding` 把四层能力压成一份有效 Composition；
 - 最后把这些交给 AgentLoop。
 
 ```mermaid
@@ -162,6 +163,7 @@ flowchart TD
     CONTROL --> COMP
     LOOP --> COMP["Generation Lease：冻结本步能力"]
     COMP --> SCOPE["四层 Service Scope：最近一层优先"]
+    COMP --> OVERLAY["四层 Tool / Prompt / Policy → 一份有效 Composition"]
     LOOP --> REQUEST["RequestBuilder：重建模型请求"]
     LOOP --> LLM["LlmRuntime：调用模型"]
     LOOP --> TOOLS["ToolRuntime：审核和执行工具"]
@@ -927,11 +929,11 @@ PluginManifest、Plugin Protocol 和 PluginContext 现在背后有真实的 Plug
 
 ### Scope
 
-Scope 是可以向父层查找服务的层级容器。D1 已把 Application → Workspace → Preset → Agent 四层 Service 真正接进默认 Runtime：Agent 层先找，找不到才一路向上。要在更近的一层盖住祖先，必须明确写 `replace=True`；没写会报固定的 `service-override-requires-replace`，API 大版本不一样则报 `service-override-api-major-mismatch`，不会把“名字差不多”当兼容。
+Scope 是可以向父层查找服务的层级容器。D1 已把 Application → Workspace → Preset → Agent 四层 Service 真正接进默认 Runtime：Agent 层先找，找不到才一路向上。要在更近的一层盖住祖先，必须明确写 `replace=True`；没写会报固定的 `service-override-requires-replace`，API 大版本不一样则报 `service-override-api-major-mismatch`，不会把“名字差不多”当兼容。D2 沿用同样四层顺序处理 Tool、Prompt、Policy，但它们不是向父层实时查找，而是在候选装配时先压成一份有效 Tool Registry、Prompt 和 Policy 列表，再交给 Generation 冻结。
 
 这条链不是一个摆设。每次插件候选都会拿到自己独立的四层链，Generation 会把有效 Agent Scope 和只读 ServiceView 一起捕获，Step Lease 也会拿到它。新插件组合发布以后，旧 Step 仍读旧 Service，新 Step 才读新 Service。发布后的 Scope 不能再调用 `provide()` 原地修改；插件内部要注册 Service，仍走 application Registry 的受控 Registration，并等旧 Lease 归零后才撤销。
 
-边界也要说清：`PluginManifest.allowed_scopes` 现在仍要求 application，插件 setup 看不到更近的 workspace/preset/agent 覆盖。D1 只开放 Python 装配层的 Service binding，不代表插件已经能按四层注册 Tool、Prompt 或 Policy，更不代表已经有多 Agent Supervisor。
+边界也要说清：`PluginManifest.allowed_scopes` 现在仍要求 application，插件 setup 看不到更近的 workspace/preset/agent 覆盖。D2 开放的是宿主 Python 装配层的 Tool/Prompt/Policy binding，不代表插件已经能自己挑一层注册，更不代表已经有多 Agent Supervisor。
 
 ### Composition Generation、Lease 与 Drain —— Stage A 已进入主线
 
@@ -945,7 +947,7 @@ Stage B 把插件生命周期单独放进 `PluginActivationSet`：每次候选�
 
 Stage C 已把用户控制面接到这条主线：`/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none` 都调用同一个装配层 Builder、私有注册表、ActivationSet、Generation、publish 和 Drain。它仍不是“从磁盘重新加载 Python 源码”：没有运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher。AgentLoop 仍只依赖 `CompositionRuntime.lease()`；插件集合的当前身份来自 current Generation，不是门面类另存的一份可变事实。
 
-D0 又把职责分清了一层：`AgentRuntime` 像总服务台，保留公开方法、活跃 Turn 名单和整机关闭顺序；`PluginCompositionCoordinator` 像插件变更柜台，独占候选替换、会话身份迁移、共享 Gate 和在途 replacement/admission 的收尾。总服务台原来允许人替换或审计公开迁移方法，这个入口不能因为拆分就失效，所以 reload 仍先读取总服务台公开的插件 id，再调用总服务台公开的迁移方法；协调器不保留一个能绕开它的 reload 快捷入口。一个 Turn 真正注册进活跃名单前，Gate 仍不能松；关闭时必须先收敛活跃 Turn，再让协调器收干净候选和准入，之后才 Drain Generation。这个拆分本身没有新事件、没有新命令；D1 的 Service Scope 由 Builder/ActivationSet/Generation 接管，也没有重新把状态机塞回 `AgentRuntime`。
+D0 又把职责分清了一层：`AgentRuntime` 像总服务台，保留公开方法、活跃 Turn 名单和整机关闭顺序；`PluginCompositionCoordinator` 像插件变更柜台，独占候选替换、会话身份迁移、共享 Gate 和在途 replacement/admission 的收尾。总服务台原来允许人替换或审计公开迁移方法，这个入口不能因为拆分就失效，所以 reload 仍先读取总服务台公开的插件 id，再调用总服务台公开的迁移方法；协调器不保留一个能绕开它的 reload 快捷入口。一个 Turn 真正注册进活跃名单前，Gate 仍不能松；关闭时必须先收敛活跃 Turn，再让协调器收干净候选和准入，之后才 Drain Generation。这个拆分本身没有新事件、没有新命令；D1/D2 的 Service 与 Composition Scope 由 Builder/ActivationSet/Generation 接管，也没有重新把状态机塞回 `AgentRuntime`。
 
 ### AgentSupervisor / Budget
 
@@ -955,7 +957,7 @@ D0 又把职责分清了一层：`AgentRuntime` 像总服务台，保留公开�
 
 存在 Snapshot、Branch、PatchArtifact、MergeResult 的协议，但没有 Git Worktree 实现，也没有并行 Agent 合并代码。
 
-正确说法是：“v0.4 实现了一个**范围明确**的插件系统（工具/Prompt/服务，application setup，进程内）；v0.5 Stage A–C 补上 Generation/Lease/Drain、Generation-owned ActivationSet 和空闲 Chat 内的组合切换，D0 拆出控制面，D1 把四层 Service Scope 接入 Generation/Step Lease”，并把其余接入边界放在代码里；错误说法有两种，都要避免——既不能说“还是只有协议、没有 PluginManager”（过时了），也不能说“插件已经能在四层提供所有能力或已经有多 Agent”（吹过头了）。
+正确说法是：“v0.4 实现了一个**范围明确**的插件系统（工具/Prompt/服务，application setup，进程内）；v0.5 Stage A–C 补上 Generation/Lease/Drain、Generation-owned ActivationSet 和空闲 Chat 内的组合切换，D0 拆出控制面，D1/D2 把四层 Service 与程序化 Tool/Prompt/Policy 装配接入 Generation/Step Lease”，并把其余接入边界放在代码里；错误说法有两种，都要避免——既不能说“还是只有协议、没有 PluginManager”（过时了），也不能说“插件已经能在四层自行 setup、提供 Policy 或已经有多 Agent”（吹过头了）。
 
 ## 15. 我们怎样知道当前代码没有悄悄坏掉
 
@@ -971,7 +973,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980 项、979 通过、1 项跳过；Stage C 后为 999 项、998 通过、1 项跳过；D0 后为 1003 项、1002 通过、1 项跳过；D1 当前真实总数是 1029 项，完整 pytest 结果为 1028 通过、1 项跳过。D1 测试直接检查四层顺序、`replace` 必须是真布尔值、同层和跨层必须明确覆盖、API Major、空白 Service Key、错误 code/来源层/责任插件、失败装配不能污染调用方 Registry、撤销覆盖后重新露出祖先、公开 Manager 候选不能丢掉 child Scope、默认 Runtime/Step Lease、新旧 Service 隔离，以及没有 Scope 属性的 D0 自定义 ActivationSet 仍能工作。原来的 Stage C/D0 控制面、迁移/CAS、fail-closed、公开分派和关机顺序测试全部继续通过。关键保护也反着试过：去掉布尔门槛、事务预检、child blueprint 传递、结构化插件冲突处理或 D0 兼容分支时，对应测试都会当场失败；恢复后全部通过。
+Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980 项、979 通过、1 项跳过；Stage C 后为 999 项、998 通过、1 项跳过；D0 后为 1003 项、1002 通过、1 项跳过；D1 后为 1029 项、1028 通过、1 项跳过；D2 当前真实总数是 1053 项，完整 pytest 结果为 1052 通过、1 项跳过。D1 测试继续检查 Service 四层；D2 新测试检查 Tool/Prompt/Policy 名字不能空白、四层顺序、`replace` 必须是真布尔值、同层和跨层稳定错误名、失败不能污染原 Registry/Prompt、Prompt 替换清理、两个 Runtime 的 Agent composition 不串线、真实 Tool 与 Policy admission、Request 重建、公开 Manager 候选不丢 child blueprint，以及插件 Tool 晚到以后会在 health 之前重新检查。它还故意造了两个名字相同、行为相反、却声称彼此“相等”的 Policy，确认 Runtime 认的是同一个对象而不是对方自报的 `__eq__`。原来的 Stage C/D0 控制面、迁移/CAS、fail-closed、公开分派和关机顺序测试全部继续通过。D2 关键保护也反着试过：去掉布尔门槛、插件晚贡献预检或候选 Policy 传递时，对应测试都会当场失败；旧的值相等守卫也会被新反例直接打穿，恢复对象身份守卫后全部通过。
 
 当前测试大致分成：
 
@@ -1065,7 +1067,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 当前真实状态是 1029 项收集、1028 通过、1 项按平台跳过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 当前真实状态是 1053 项收集、1052 通过、1 项按平台跳过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1086,7 +1088,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 15. **插件不是沙箱，这条最要紧**：一个被启用的插件和 Harness 跑在**同一个进程、同样的权限**里，Python 能做的它都能做。`isolated` 可以写在 Manifest 里，但会被明确拒绝——不会被悄悄降级成"就当 trusted 吧"，因为把"我请求隔离"当成"允许你进程内跑"，等于给了它比申请的更高的权限。所以**"启用一个插件"就等于"信任写它的人"**，没有中间地带。
 16. **用户可以在空闲 Chat 中切换插件组合，但这不是代码热重载**：`/plugins` 查看当前身份，`/plugins reload` 重做当前组合，`/plugins use ID...` 明确切换，`/plugins use --none` 去掉外部插件。身份变化会追加按 Session 记录的 `composition/migration-authorized`，候选失败就回滚；没有运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher。启动插件和替换后的插件都在对应 Generation 归零后才 cleanup。
 17. **插件能做的事很窄**：仍只能加工具、Prompt 段落和服务。**不能**换模型 Provider、不能加 Policy 或中间件、不能换事件存储、不能换验证器。
-18. **四层 Scope 目前只覆盖 Service**：Application、Workspace、Preset、Agent 的查找、显式覆盖和 Step 冻结已经接进主线，但插件还是只在 application 层 setup；没有按四层贡献 Tool/Prompt/Policy，也没有 AgentSupervisor。两套 Runtime 可以各有自己的 Agent Service，但这不等于产品已经能创建两个 Agent。
+18. **四层 Composition 是宿主装配，不是插件子层激活**：Application、Workspace、Preset、Agent 的 Service 查找，以及 Tool/Prompt/Policy 的显式覆盖和 Generation 冻结已经接进主线；但插件还是只在 application 层 setup，不能自己选择子层，也不能提供 Policy。两套 Runtime 可以各有自己的 Agent composition，但这不等于产品已经能创建两个 Agent。
 19. **换了插件不能偷偷迁移所有旧会话**：会话身份由事件日志重建；只有用户在某个空闲 Session 中执行 `/plugins use ...`，Runtime 才追加该 Session 的迁移授权。没有授权的旧会话仍会被拒绝，其他 Session 不会一起迁移；授权已落盘但新 Generation publish 失败时，Session fail-closed，不能偷偷恢复旧组合。
 20. **多了一个真依赖**：`packaging`。离线环境装 TraceHarness 时得自己把它的 Wheel 准备好。
 21. **插件后台任务死了，不会有人告诉你**：它的异常现在**有主人**了——关机时被取回，因此不会再冒 `Task exception was never retrieved`。但取回之后**立刻丢弃，不留存**：早期版本把这些异常对象攒进一个没人读的列表，而每个异常都拖着整条 traceback、进而拖着每一帧的局部变量——为无人读的数据保留不受信任的插件状态，既是内存泄漏也是一道泄漏面。它也**不会**因此让这一轮任务失败或让运行时报错，一个插件的后台任务静默死掉时你这一轮照样正常跑完。要真正的可观测性或监督（有界、脱敏的记录，重启、退避、上报），得先有一个真实主线消费者，并另行设计、明确授权。
@@ -1122,6 +1124,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 | Runtime 怎么关机 | `runtime/agent_runtime.py` 的 `_shutdown`/`dispose`、插件卸载、关机测试 | 顺序或收敛写错，插件会被悄悄落下而且没人报错 |
 | Generation / Lease / Drain | `composition_runtime.py`、默认 Runtime 工厂、AgentLoop 的 lease 调用、Generation 契约测试、插件 Runtime 顺序测试 | 每一步必须只看一代；旧代要等 Lease 和 cleanup 都收敛，不能和 PluginManager 重复清理 |
 | Service Scope | `api/services.py`、`kernel/registry.py`、`kernel/scope.py`、PluginGenerationBuilder、默认 Runtime 工厂、`tests/test_scope_overlays.py` | 最近层优先不能变成悄悄覆盖；发布后必须只读，旧 Lease 不能被新 Scope 原地改写 |
+| Tool/Prompt/Policy Overlay | `kernel/composition_overlays.py`、`plugins/manager.py`、默认 Runtime 工厂、`tests/test_composition_scope_overlays.py` | 必须按固定四层压成一份既有 Composition；插件晚贡献要在 health 前复检，Snapshot/ToolRuntime 必须用同一候选结果 |
 | 后台任务的所有权 | `kernel/tasks.py`、`kernel/activation.py`、后台任务测试 | 少取回一次异常，就会在无关的时刻冒出 GC 告警 |
 | 会话插件身份怎么比 | `session/plugin_identity.py` 负责从账本重建和按 PEP 440 比较，`runtime/plugin_composition.py` 负责校验/迁移/CAS，`AgentRuntime.create_session()` 与公开门面负责接入，身份及 Stage C/D0 控制面测试负责验证 | 比错了要么误拒合法会话，要么放过真正的组合变化；职责索引也必须指向真实存在的实现 |
 | CLI 某个命令的资源清理 | 对应 handler 的 `try/finally`、CLI 测试 | 建会话/建 Runtime 之后的任何失败都必须仍然 dispose |
@@ -1249,9 +1252,9 @@ Stage A 的 raw capability binding 仍不使用全局 `id()` catalog、对象图
 
 关机顺序不能反：`dispose()` 先在和 Turn admission 最终检查共用的 `_lock` 线性化点标记“停止接收新 Turn”，再把**还在跑的那一轮**取消并等它结束；接着让 `PluginCompositionCoordinator` 取消并等待在途候选/迁移及其回滚，也等待已经进了 Gate、但尚未注册成活跃 Turn 的准入任务；然后才 Drain Composition，让 current 和所有 retired Generation 的 ActivationSet 各自收敛，**最后**清理 application-level legacy 资源。关机会读取候选任务的真实终态：正常取消可以继续，但候选回滚的 `PluginDisposeError` 会让本次关机失败，后面再次关机还会看到同一个结果，不能在资源可能没清干净时假装成功。默认 Stage B/C 路径没有第二个 PluginManager cleanup owner；只有旧 v0.4 自定义装配才会在 Drain 后清理可选的 legacy PluginManager。这样 Service、Owned Task 和插件 Activation 不会在旧 Lease 仍活着时被抽走，也不会被两套系统清理。
 
-D0 做的就是把这段控制面从“总服务台”拆成一个明确负责人。过去 `AgentRuntime` 同时管公开 API、活跃 Turn、插件候选、Session 迁移、Gate 和在途任务，任何后续 Scope 功能都很容易继续往同一类里堆锁和分支。现在 `AgentRuntime` 只保留门面、活跃 Turn 和总关闭任务；协调器负责插件候选与会话迁移，但不能自己执行 Turn，也不能另存一份插件身份或会话状态。它查询的会话身份仍来自 Event Log，current 插件身份仍来自 Generation。D0 本身没有增加用户命令，也不是 Scope Overlay；D1 随后把 Service Scope 接到 Builder/ActivationSet/Generation，仍没有把新状态机塞回总服务台。
+D0 做的就是把这段控制面从“总服务台”拆成一个明确负责人。过去 `AgentRuntime` 同时管公开 API、活跃 Turn、插件候选、Session 迁移、Gate 和在途任务，任何后续 Scope 功能都很容易继续往同一类里堆锁和分支。现在 `AgentRuntime` 只保留门面、活跃 Turn 和总关闭任务；协调器负责插件候选与会话迁移，但不能自己执行 Turn，也不能另存一份插件身份或会话状态。它查询的会话身份仍来自 Event Log，current 插件身份仍来自 Generation。D0 本身没有增加用户命令，也不是 Scope Overlay；D1/D2 随后把 Service 与 Composition Scope 接到 Builder/ActivationSet/Generation，仍没有把新状态机塞回总服务台。
 
-Stage C 已有面向用户的 `/plugins`、`/plugins reload`、`/plugins use` 和 `--none`，D1 也有程序化四层 Service Scope；但仍没有运行中 pip install/uninstall、Wheel 替换、强制 module reload、文件 watcher、Workspace/Preset/Agent 层的插件 Tool/Prompt/Policy 组合，也没有扩展 Provider、Policy、Middleware、EventStore 或 Verifier 插件贡献面。
+Stage C 已有面向用户的 `/plugins`、`/plugins reload`、`/plugins use` 和 `--none`，D1/D2 也有程序化四层 Service 与 Tool/Prompt/Policy 装配；但仍没有运行中 pip install/uninstall、Wheel 替换、强制 module reload、文件 watcher、Workspace/Preset/Agent 层的插件 setup，也没有扩展 Provider、Policy、Middleware、EventStore 或 Verifier 插件贡献面。
 
 单个插件的清理函数报错，不会让其余插件的清理被跳过——错误会被收集起来一起报。
 
@@ -1289,7 +1292,17 @@ Stage C 已有面向用户的 `/plugins`、`/plugins reload`、`/plugins use` �
 
 方向也不能反过来：application 插件 setup 只能依赖 application Service，它看不到 workspace/preset/agent 的覆盖；最终 Runtime 和 Step 才从 agent 层向上读取。两个 Runtime 配不同 Agent binding 时各看各的，不会串线。这里传入的 `ScopedServiceBinding.value` 是“借来使用”的对象，它的创建者仍负责生命周期，Scope 不会擅自替你 close/dispose；只有插件通过 Registration 提供的 application Service 才跟着 ActivationSet 和 Generation 清理。
 
-D1 也没有强迫所有第三方 ActivationSet 都立刻实现 Scope。只要它满足 D0 原本的认领和清理合同，即使没有 `scope`/`services` 两个属性，仍可以继续使用，只是对应 Generation 和 Lease 的 Service 视图是 `None`；如果它选择提供 Scope，这两个属性就必须成对出现并来自同一条链。默认的 `PluginActivationSet` 始终提供完整四层。这样是“新增可选能力”，不是偷偷破坏旧替换接口。但这里仍然**没有**让 Manifest 在四层执行 setup，没有分层 Tool/Prompt/Policy，也没有真正的两个 Agent。Service 本身不直接进入模型请求，所以 Scope 不进入 Composition revision；等后续把 Tool/Policy 也分层时，仍必须由现有 Generation/Snapshot 记录模型真正看见的东西，不能另造一本能力账。
+D1 也没有强迫所有第三方 ActivationSet 都立刻实现 Scope。只要它满足 D0 原本的认领和清理合同，即使没有 `scope`/`services` 两个属性，仍可以继续使用，只是对应 Generation 和 Lease 的 Service 视图是 `None`；如果它选择提供 Scope，这两个属性就必须成对出现并来自同一条链。默认的 `PluginActivationSet` 始终提供完整四层。这样是“新增可选能力”，不是偷偷破坏旧替换接口。Service 本身不直接进入模型请求，所以 Scope 不进入 Composition revision；D2 真正影响模型可见内容的 Tool/Prompt/Policy 继续由现有 Generation/Snapshot 记录，见下一节。
+
+### 19.7.3 D2 的 Tool、Prompt、Policy 四层怎样工作
+
+可以把 D2 理解成“先叠四张能力清单，再把最上面真正生效的那一份封进 Generation”。`ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding` 都明确写目标层和能力对象。程序不相信传入顺序，而是固定按 Application、Workspace、Preset、Agent 处理；同名能力在同一层出现第二次，没有 `replace=True` 就报 `*-already-bound`，子层想盖祖先而没明确授权则报 `*-override-requires-replace`。字符串 `"false"`、数字 `1`、`None` 都不算授权。
+
+为什么不是保留四个活 Registry、让 Step 每次现查？因为那会让一个 Step 在运行中看到层级变化。现在 `CompositionOverlayPlan` 只在候选装配时工作：它在私有 fork 上解析出一个 ToolRegistry、一份 Prompt 和一个 Policy tuple，随后交给已有 ActivationSet 和 Generation。Generation 继续冻结 Tool Schema、Prompt 正文、Policy 名称，Snapshot revision 与 Request reconstruction 继续描述模型实际看到的内容。没有“Scoped ToolRuntime”，也没有第二本状态账。
+
+插件带来一个容易漏掉的时间差：子层 Overlay 第一次解析时，application 插件的 Tool/Prompt 还没 setup 完。如果不再检查，插件后加一个同名 Tool，就可能绕过 `replace=True`。现在 Manager 会把 staged 插件贡献投影到私有候选里，在 health check **之前**再解一次；冲突就带固定错误名和责任插件回滚，health 根本不会运行。真正发布插件注册以后再解最后一次，Tool、Prompt、Policy 一起交给 ActivationSet。以后 `/plugins` 切组合时也继续使用同一份 child blueprint，不会悄悄退回只有 Application。候选 ToolRuntime 的 Policy 还必须按数量、顺序和每个对象的真实身份与 ActivationSet 完全一致；不能靠自定义 `__eq__` 把行为不同的 Policy 冒充成同一份。
+
+生命周期边界没有变：宿主传进来的 Tool/Policy 是借来的，创建者仍负责它们；插件的 application Tool/Prompt/Service 才由 ActivationSet 清理。插件自己仍不能在四层 setup，也不能通过 PluginContext 提供 Policy。现在可以造两个配置不同的 Runtime，让它们看到不同 Agent Tool、Prompt、Policy，而且真实 Tool admission 与请求快照会反映差异；但没有 AgentSupervisor，所以产品还不能替用户真正创建、管理两个 Agent。
 
 ### 19.8 会话记得自己是在哪套插件下开的
 

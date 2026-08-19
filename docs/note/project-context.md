@@ -43,14 +43,14 @@
 | 持久化 | 本地 Append-only JSONL Session Stream 与 Effect Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
-| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，以及 Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权（见 19 节）。插件 setup 仍只在 application scope、trusted、进程内运行；D1 已把 Service 的 Application → Workspace → Preset → Agent 解析接入 Generation/Step Lease，但尚未开放 scoped plugin Tool/Policy 贡献 |
+| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，以及 Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权（见 19 节）。插件 setup 仍只在 application scope、trusted、进程内运行；D1/D2 已把 Service 与程序化 Tool/Prompt/Policy 的 Application → Workspace → Preset → Agent 装配接入同一 Generation/Step Lease 主线，但插件不能自行选择子层，也不能通过 `PluginContext` 提供 Policy |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。新增 `traceh plugins list/inspect/doctor` |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | `1029` collected；全量门禁 `1028 passed, 1 skipped`；D1 新增四层 Service Scope、严格布尔覆盖意图、事务式 Scope 装配、插件冲突归因、候选蓝图保真、只读发布视图、Generation/Lease 冻结和跨 Runtime 隔离契约，Stage C/D0 控制面与恢复契约继续全绿 |
+| 当前自动化测试 | `1053` collected；全量门禁 `1052 passed, 1 skipped`；D1/D2 覆盖四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、插件晚贡献复检、Policy 对象身份守卫、真实 Tool/Policy 执行、候选蓝图保真、Generation/Snapshot/Lease 冻结和跨 Runtime 隔离契约，Stage C/D0 控制面与恢复契约继续全绿 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
-当前版本仍为 0.4.0。Stage C 已在 Stage B 基础上把用户控制面接入默认 Runtime 主线；D0 随后把候选替换、Session 身份迁移、共享 Gate 和在途控制面收敛归 [`PluginCompositionCoordinator`](../../src/traceh/runtime/plugin_composition.py)，`AgentRuntime` 保留公开门面、活跃 Turn 表和总关闭顺序，`AgentLoop` 未修改。D1 再把 Service Scope 基础接入同一条 Generation 主线：默认工厂接受显式 `ScopedServiceBinding`，按 Application → Workspace → Preset → Agent 构建只读有效视图，新旧 Generation/Step Lease 各自持有自己的 Scope。它不是完整的 scoped plugin activation：插件 setup 仍发生在 application 层，Tool/Prompt/Policy 尚不能按 Workspace/Preset/Agent 分层。仍没有运行中 pip install/uninstall、强制 module reload、文件 watcher或其他未开放插件贡献面；D1 完成也不等于 v0.5 发布完成。多 Agent、Workflow、MCP、TUI、流式输出和 isolated 插件仍未实现。
+当前版本仍为 0.4.0。Stage C 已在 Stage B 基础上把用户控制面接入默认 Runtime 主线；D0 随后把候选替换、Session 身份迁移、共享 Gate 和在途控制面收敛归 [`PluginCompositionCoordinator`](../../src/traceh/runtime/plugin_composition.py)，`AgentRuntime` 保留公开门面、活跃 Turn 表和总关闭顺序，`AgentLoop` 未修改。D1 把 Service Scope 接入同一条 Generation 主线；D2 又让默认工厂接受显式 `ScopedToolBinding`、`ScopedPromptBinding` 与 `ScopedPolicyBinding`，按 Application → Workspace → Preset → Agent 解析出一份有效 Tool Registry、Prompt 与 Policy tuple，再交给既有 ActivationSet→Generation→Lease→Snapshot 路径。它仍不是完整的 scoped plugin activation：插件 setup 只发生在 application 层，插件不能自行选择 Workspace/Preset/Agent，也不能通过 `PluginContext` 提供 Policy。仍没有运行中 pip install/uninstall、强制 module reload、文件 watcher或其他未开放插件贡献面；D2 完成也不等于 v0.5 发布完成。多 Agent、Workflow、MCP、TUI、流式输出和 isolated 插件仍未实现。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -85,7 +85,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - 面向用户的插件**组合切换**：`traceh chat` 空闲提示符提供 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重新发现当前进程可见的 Entry Point 并重做 setup/conflict/health，不安装或卸载 Wheel，不强制 `importlib.reload()`，也不承诺从磁盘重新导入 Python 源码；
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`：`PluginContext` 目前只暴露 Tool、Prompt、Service、Cleanup 与 Owned Task；Provider、Policy、Middleware、EventStore、Verifier 贡献面仍未开放；
-- 插件在 workspace / preset / agent 层执行 setup 或贡献分层 Tool/Prompt/Policy；D1 只开放程序化 `ScopedServiceBinding` 与 Service 解析，不把 `allowed_scopes` 变成新的激活入口；
+- 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 `ScopedToolBinding`、`ScopedPromptBinding` 与 `ScopedPolicyBinding`，不把 `allowed_scopes` 变成新的激活入口，也不扩宽 `PluginContext`；
 - 活跃的 AgentSupervisor、子 Agent Tool 和 Workflow Engine；
 - MCP 接入；
 - Git Worktree/Overlay Workspace 分支与合并；
@@ -107,7 +107,7 @@ traceharness/
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
 │   ├── evaluation/                   确定性 Benchmark Runner
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
-│   ├── kernel/                       四层 Service Scope、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
+│   ├── kernel/                       四层 Service 与 Composition Overlay、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
 │   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
 │   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
@@ -152,6 +152,7 @@ traceharness/
 - `CompletionVerifier`；
 - `ContinuationRuntime`；
 - `ScopedServiceBinding`（Application / Workspace / Preset / Agent 的程序化 Service 装配；覆盖必须显式）；
+- `ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`（同样四层的程序化模型/执行能力装配；覆盖必须显式）；
 - `PluginDiscovery`、`enabled_plugins`、`plugin_configs`（仅异步入口）。
 
 ```mermaid
@@ -160,6 +161,7 @@ flowchart TD
     AR --> AL["AgentLoop"]
     AL --> CR["GenerationCompositionRuntime / Lease"]
     CR --> SC["Application → Workspace → Preset → Agent Service Scope"]
+    CR --> CO["四层 Tool / Prompt / Policy Overlay → 单一有效 Composition"]
     AL --> RB["RequestBuilder"]
     AL --> LR["LlmRuntime + Provider"]
     AL --> TR["ToolRuntime"]
@@ -528,7 +530,7 @@ Generation identity 是内部生命周期编号，只用于引用计数、retire
 
 Stage B 的插件 cleanup 不再使用上述 capability-wide owner 推断插件所有权：`PluginActivationSet` 显式持有插件 Activation、插件 Tool/Prompt/Service、Owned Task 与 cleanup，SessionService、EventStore、核心 Provider 和内置 Tool 只是 borrowed core。候选只在私有注册表中 setup，成功 publish 后由 Generation 接管；旧 Lease 结束前旧 set 不会被卸载。
 
-Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1 再把四层 Service Scope 绑定到 ActivationSet/Generation/Step Lease。`AgentLoop` 仍只调用 `CompositionRuntime.lease()`，不导入 Generation Manager、PluginManager、Builder 或 reload service。用户命令只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload；因此 v0.4.0 仍不是 v0.5 完成版，Tool/Prompt/Policy 的 scoped contribution 和其他贡献面仍未开放。
+Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1 把四层 Service Scope 绑定到 ActivationSet/Generation/Step Lease；D2 再把程序化 Tool/Prompt/Policy binding 在候选阶段压平成一份有效 Composition。`AgentLoop` 仍只调用 `CompositionRuntime.lease()`，不导入 Generation Manager、PluginManager、Builder、Scope resolver 或 reload service。用户命令只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload；因此 v0.4.0 仍不是 v0.5 完成版，插件自行选择子层、Provider/Middleware/EventStore/Verifier 等贡献面仍未开放。
 
 ### 7.2 Surface
 
@@ -1152,8 +1154,9 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | 插件（Tool / Prompt / Service） | `PluginManifest`、`Plugin`、`PluginContext`、`PluginManager` | **已实现**，见 19 节 |
 | 可逆生命周期 | `Activation`、`Lifespan`、`OwnedTaskSet` | **已实现**并被 PluginManager 真正使用，含取消收敛。`OwnedTaskSet` 是**生命周期所有权，不是后台任务监督器**，见 19.12 |
 | 插件提供 Provider / Policy / Middleware / Store / Verifier | `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore`、`CompletionVerifier` | 协议存在，但 `PluginContext` 不暴露，只能直接装配 Runtime |
-| 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`ServiceView`、`ScopeKind`、`ScopedServiceBinding`、`ScopeChain` | D1 已实现四层 Service 解析并接入默认 Runtime、插件候选 Generation 与 Step Lease；同层再次绑定必须显式 `replace=True`，跨层覆盖同样要求严格布尔值 `True` 且 API Major 相同，失败装配不污染调用方 Registry，发布后的公开视图只读。插件 setup 仍只在 application 层，Tool/Prompt/Policy scoped contribution 尚未开放 |
-| Composition Generation 与用户切换 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()`、`PluginActivationSet`、`PluginGenerationBuilder`、`composition/migration-authorized` | Stage A/B 生命周期、Stage C Chat `/plugins` 控制面和 D1 Service Scope 均进入默认主线；用户只能切换当前进程可发现的已安装组合，仍没有 Wheel/module 级热替换或完整 scoped plugin activation |
+| 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`ServiceView`、`ScopeKind`、`ScopedServiceBinding`、`ScopeChain` | D1 已实现四层 Service 解析并接入默认 Runtime、插件候选 Generation 与 Step Lease；同层再次绑定必须显式 `replace=True`，跨层覆盖同样要求严格布尔值 `True` 且 API Major 相同，失败装配不污染调用方 Registry，发布后的公开视图只读 |
+| Tool / Prompt / Policy Overlay | `ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`、`CompositionOverlayPlan` | D2 已按固定四层顺序解析同名能力；同层重复与跨层覆盖都要求严格布尔 `replace=True`，失败只发生在私有 fork；插件 application Tool/Prompt 晚贡献会在 health 前重新校验。解析结果进入已有 ToolRegistry、PromptAssembler、ToolRuntime Policy tuple 与 Composition Snapshot，不产生第二套 Runtime |
+| Composition Generation 与用户切换 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()`、`PluginActivationSet`、`PluginGenerationBuilder`、`composition/migration-authorized` | Stage A/B 生命周期、Stage C Chat `/plugins` 控制面和 D1/D2 Scope 装配均进入默认主线；用户只能切换当前进程可发现的已安装组合，仍没有 Wheel/module 级热替换或子层插件 setup |
 | isolated 插件 | `PluginManifest.trust_mode` | 可声明，激活**明确拒绝**；无进程边界、无序列化契约、无崩溃子进程失败模型 |
 | 多 Agent | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、Inbox、子 Agent Tools、冷恢复均缺失 |
 | Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
@@ -1173,7 +1176,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前测试套件收集 `1029` 项，完整门禁为 `1028 passed, 1 skipped`。D1 的 [`tests/test_scope_overlays.py`](../../tests/test_scope_overlays.py) 覆盖四层顺序、严格布尔 `replace`、同层与跨层显式覆盖、稳定冲突 code/source scope、插件责任身份、API Major 不兼容、空白 Service Key、失败装配不污染调用方 Application Registry、Registration 撤销后显露祖先、非法层级、默认 Runtime 与 Step Lease 主线、公开 `PluginManager.prepare_activation_set()` 保留既有 child Scope blueprint、候选替换后的新旧 Scope 隔离、application 插件不能反向读取更近的 workspace 覆盖、插件晚发布 application Service 后必须重新校验 child override，以及两个 Runtime 的 agent 层互不共享。[`tests/test_composition_generations.py`](../../tests/test_composition_generations.py) 还钉住 D0 自定义 ActivationSet 在不提供 D1 Scope 能力时继续可用；[`tests/test_plugin_activation_sets.py`](../../tests/test_plugin_activation_sets.py) 直接断言旧 Lease 仍读取 v1 Service，而 current Generation 已读取 v2。关键保护均做了反向验证：临时删除布尔门槛、事务预检、child blueprint 传递、结构化插件冲突处理或 D0 兼容分支时，对应反例稳定失败；既有只读封印与插件发布后覆盖复检的反向验证继续保留；恢复后全部通过。Stage C 的迁移/CAS/fail-closed、D0 的控制面所有权与公开分派、既有 Generation 的 Lease/Drain/资源所有权/请求重建测试全部继续包含在本次全量结果中。
+当前测试套件收集 `1053` 项，完整门禁为 `1052 passed, 1 skipped`。D1 的 [`tests/test_scope_overlays.py`](../../tests/test_scope_overlays.py) 继续覆盖四层 Service；D2 的 [`tests/test_composition_scope_overlays.py`](../../tests/test_composition_scope_overlays.py) 覆盖 Tool/Prompt/Policy 的非空身份、固定层级顺序、严格布尔 `replace`、同层与跨层稳定冲突 code、解析失败不污染来源 Registry/Prompt、Prompt replacement 的可逆清理、两个 Runtime 的 Agent composition 隔离、真实 AgentLoop Tool 与 Policy admission、Request Snapshot 重建、公开 Manager 候选保留 child composition blueprint，以及插件 application Tool 晚贡献在 health 前被复检并保留责任插件。它还用两个名称相同、行为相反且恶意 `__eq__` 总返回真的 Policy，证明 Generation 按逐项对象身份拒绝候选错配，不把值相等当成可执行能力身份。插件组合替换后程序化 child Overlay 继续存在，ActivationSet 的 Policy tuple 与 Tool/Prompt 一样成为 Generation 候选的一部分。[`tests/test_composition_generations.py`](../../tests/test_composition_generations.py) 仍钉住 D0 自定义 ActivationSet 兼容；[`tests/test_plugin_activation_sets.py`](../../tests/test_plugin_activation_sets.py) 继续验证 ActivationSet 所有权和旧 Lease 隔离。D2 关键保护也做了反向验证：临时移除严格布尔门槛时 3 个反例失败；移除插件晚贡献预检时 health 被错误执行；让替换候选退回 Runtime 基础 Policy 时候选在一致性检查处失败；原值相等实现会接受不同 Policy 对象，新身份反例在修复前稳定失败。恢复后全量门禁通过。
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
@@ -1258,7 +1261,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后的中间基线为 960 项（959 通过、1 项跳过）；Stage B 后为 980 项（979 通过、1 项跳过）；Stage C 后为 999 项（998 通过、1 项跳过）；D0 后为 1003 项（1002 通过、1 项跳过）；D1 四层 Service Scope 契约加入并完成本轮审查修复后，当前真实收集 1029 项，完整门禁为 1028 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后的中间基线为 960 项（959 通过、1 项跳过）；Stage B 后为 980 项（979 通过、1 项跳过）；Stage C 后为 999 项（998 通过、1 项跳过）；D0 后为 1003 项（1002 通过、1 项跳过）；D1 后为 1029 项（1028 通过、1 项跳过）；D2 程序化 Tool/Prompt/Policy Overlay 与 Policy 身份守卫加入后，当前真实收集 1053 项，完整门禁为 1052 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1296,7 +1299,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | 插件切换的代码边界 | Stage C 的 `traceh chat` 已有 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none`；它只重做当前进程可发现的 Entry Point 激活，不重新导入已在 `sys.modules` 中的模块，也不安装/卸载 Wheel | 后续若需要动态安装、module reload 或文件监听，必须另设安全与所有权设计 |
 | 插件不是沙箱 | v0.4 只有 trusted、进程内插件。`isolated` 可声明但被明确拒绝。一个被启用的插件与 Harness 同进程、同权限运行，能做任何 Python 能做的事 | 真正的隔离需要进程边界、每次 context 调用的序列化契约与子进程崩溃失败模型；在此之前，“启用插件”等于“信任其作者” |
 | 插件贡献面很窄 | 当前仍只能提供 Tool、Prompt Section 与 Service，不能提供 Provider、Policy、Middleware、EventStore 或 Verifier | 后续按 ROADMAP 扩展 `PluginContext`，但每扩一项都要同步 Composition Snapshot 的可重建性 |
-| Scope Overlay 仍是 Service 子集 | D1 的 Application → Workspace → Preset → Agent 只解析程序化 Service binding；插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup，也没有分层 Tool/Prompt/Policy 组合。当前单 Runtime 只有一条 Agent Scope 链，不等于已有 AgentSupervisor | 后续在不引入第二套 Composition 事实源的前提下，把 Tool/Policy 等贡献纳入同一个候选 Builder 与 Generation Lease；多 Agent 的 Scope 所有权留给 v0.6 Supervisor |
+| Scope Overlay 仍不是 scoped plugin activation | D1/D2 已解析程序化 Service、Tool、Prompt、Policy binding，并把模型可见结果纳入既有 Generation/Snapshot；但插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup，插件也不能通过 `PluginContext` 提供 Policy。当前单 Runtime 只有一条 Agent 层装配，不等于已有 AgentSupervisor | 子层插件生命周期与多 Agent Scope 所有权留给后续明确设计；不得把程序化 binding 误称为插件已能自行选择 scope |
 | Session 插件身份与迁移 | 当前身份由共享事件解析器按 `session/created`、合法 `composition/snapshot` 和 `composition/migration-authorized` 顺序重建；身份变化必须在全局 Gate 内以 `source_seq`/Session head CAS 追加授权。授权已落盘而 publish 失败时 fail-closed；不会自动迁移所有 Session。版本按 PEP 440 等价判定 | 仍没有 Session 自动迁移、批量迁移或跨进程迁移协调；每次授权仍由用户命令显式触发，Generation identity 不持久化 |
 | 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
 | 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
@@ -1322,6 +1325,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | 插件组合控制面 / Session 迁移 | `runtime/plugin_composition.py`、`runtime/agent_runtime.py` 门面、`tests/test_plugin_composition_coordinator.py`、Stage B/C 控制面测试 | 4、5.3、14、15、16、19.7–19.9 |
 | Composition Generation / Lease / Drain | `runtime/composition_runtime.py`、`runtime/agent_loop.py`（仅 lease 调用）、`runtime/agent_runtime.py` 工厂与 dispose、`tests/test_composition_generations.py`、插件 Runtime 顺序测试 | 4、5.5、7.1、7.3、14、15、16、19.7、19.8 |
 | Service Scope / Overlay | `api/services.py`、`kernel/registry.py`、`kernel/scope.py`、`plugins/manager.py` 的候选 Scope、默认 Runtime 工厂、`tests/test_scope_overlays.py` | 1、2、3、4、14、15、16、19.7、19.13 |
+| Tool / Prompt / Policy Overlay | `kernel/composition_overlays.py`、`runtime/prompt.py`、`plugins/manager.py` 的候选解析、默认 Runtime 工厂、`tests/test_composition_scope_overlays.py` | 1、2、3、4、7.1、14、15、16、19.7、19.14 |
 | Owned Task 所有权 | `kernel/tasks.py`、`kernel/activation.py`、`tests/test_owned_task_ownership.py` | 14、15、16、19.12 |
 | Session 插件身份比较 | `session/plugin_identity.py`（持久化身份重建与 PEP 440 比较）、`runtime/plugin_composition.py`（校验、迁移和 CAS）、`runtime/agent_runtime.py`（`create_session` 与公开门面）、`tests/test_session_plugin_identity.py`、Stage C/D0 控制面测试 | 15、16、19.9 |
 | CLI 命令的资源保护 | `cli/main.py` 的各 handler、`tests/test_cli_run_dispose.py`、`tests/test_cli_read_only_commands.py` | 13.1、15、16 |
@@ -1355,7 +1359,7 @@ flowchart LR
 - 示例只作为示例，秘密未进入 Git；
 - 最终交付说明变更、验证、文档同步和剩余边界。
 
-## 19. 插件系统（v0.4 / Stage A–D1）
+## 19. 插件系统（v0.4 / Stage A–D2）
 
 作者与运维契约见 [`docs/plugins.md`](../plugins.md)，v0.4 事务原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)，Stage B 所有权决定见 [ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)，Stage C Session 迁移决定见 [ADR-0010](../adr/0010-session-plugin-composition-migration.md)，D0 控制面所有权拆分见 [ADR-0011](../adr/0011-plugin-composition-control-plane-coordinator.md)。本节记录工程事实。
 
@@ -1458,11 +1462,11 @@ Generation identity 只服务内部生命周期，`CompositionSnapshot.revision`
 
 Stage B 提供 `AgentRuntime.replace_plugin_composition()` 这一装配层内部 API；Stage C 又提供 `AgentRuntime.migrate_session_plugin_composition()` / `reload_plugin_composition()`，由 `traceh chat` 的四条 `/plugins` 命令调用，但没有第二套 PluginManager、ToolRuntime 或 Registry。`/plugins reload` 重建当前外部 id；`/plugins use` 需要显式目标 id，身份变化时先写授权事件；`/plugins use --none` 只保留 `traceh.core`。命令只在空闲提示符执行，不创建 Turn。插件 id/version 输出经过受控身份验证；第三方 setup/health/cleanup 异常不直接打印。
 
-D0 不改变上述协议，只重新划清控制面所有权。[`runtime/plugin_composition.py`](../../src/traceh/runtime/plugin_composition.py) 的 `PluginCompositionCoordinator` 现在持有候选替换串行锁、共享 admission/migration Gate、replacement/admission 在途 Task 集合、Session durable identity 校验以及 migration CAS/may-have-committed/fail-closed 流程；[`runtime/agent_runtime.py`](../../src/traceh/runtime/agent_runtime.py) 保留公开方法的薄委托、活跃 Turn 表、最终 Turn admission 线性化点和总关闭 Task。公开门面之间原有的动态分派同样保留：`reload_plugin_composition()` 读取门面的 `enabled_plugin_ids` 并调用门面的 `migrate_session_plugin_composition()`，协调器没有另设 reload 捷径，因此继承、替换或审计公开迁移入口不会被抽取绕过。协调器通过窄回调查询“Runtime 是否关闭”“是否有活跃 Turn”“current Generation 的外部身份”，不保存第二份可变插件身份，也不执行 Turn。`AgentLoop` 完全未修改，继续只依赖 `CompositionRuntime.lease()`。D0 当时是进入 Scope 工作前的结构检查点；D1 的 Service Scope 随后接入 Builder/ActivationSet/Generation，没有把控制面复杂度塞回门面。
+D0 不改变上述协议，只重新划清控制面所有权。[`runtime/plugin_composition.py`](../../src/traceh/runtime/plugin_composition.py) 的 `PluginCompositionCoordinator` 现在持有候选替换串行锁、共享 admission/migration Gate、replacement/admission 在途 Task 集合、Session durable identity 校验以及 migration CAS/may-have-committed/fail-closed 流程；[`runtime/agent_runtime.py`](../../src/traceh/runtime/agent_runtime.py) 保留公开方法的薄委托、活跃 Turn 表、最终 Turn admission 线性化点和总关闭 Task。公开门面之间原有的动态分派同样保留：`reload_plugin_composition()` 读取门面的 `enabled_plugin_ids` 并调用门面的 `migrate_session_plugin_composition()`，协调器没有另设 reload 捷径，因此继承、替换或审计公开迁移入口不会被抽取绕过。协调器通过窄回调查询“Runtime 是否关闭”“是否有活跃 Turn”“current Generation 的外部身份”，不保存第二份可变插件身份，也不执行 Turn。`AgentLoop` 完全未修改，继续只依赖 `CompositionRuntime.lease()`。D0 当时是进入 Scope 工作前的结构检查点；D1/D2 的 Service 与 Composition Scope 随后接入 Builder/ActivationSet/Generation，没有把控制面复杂度塞回门面。
 
 当前身份事实由 [`session/plugin_identity.py`](../../src/traceh/session/plugin_identity.py) 共享计算：初始值来自 `session/created.metadata.traceh_plugins`，合法 `composition/snapshot` 更新到实际 Step 身份，合法 `composition/migration-authorized` 要求 `from_plugins` 等于此前身份且 `source_seq` 等于此前身份事实序号，然后更新到 `to_plugins`。迁移事件只记录外部插件，不写 `traceh.core`、Generation identity 或 Request Fingerprint。候选通过 setup/conflict/health 后才追加授权；append 取消会按稳定 `migration_id` 重读判断是否已落盘。若授权已落盘但 publish 失败，Runtime 不伪造成功，也不继续接受旧 Composition，Session 保持 fail-closed。
 
-本阶段仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup 与 Tool/Prompt/Policy 组合、Provider/Policy/Middleware/EventStore/Verifier 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D1 只实现四层 Service 解析。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。版本仍为 `0.4.0`，Stage D1 不是 v0.5 发布。
+本阶段仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup、Provider/Policy/Middleware/EventStore/Verifier 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D2 的 Tool/Prompt/Policy 是宿主程序显式装配的 binding，不是插件新增了子层 setup 权限。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。版本仍为 `0.4.0`，Stage D2 不是 v0.5 发布。
 
 `trust_mode="isolated"` 被**明确拒绝**而不是降级成 trusted：把“请求隔离”当成“允许进程内运行”的许可，等于给了插件比它申请的更高权限。真正的隔离需要进程边界、每次 context 调用的序列化契约和子进程崩溃的失败模型，这些都还不存在。
 
@@ -1528,4 +1532,14 @@ D1 没有另造一套“Scoped Runtime”。[`kernel/registry.py`](../../src/tra
 
 D1 的 Scope 能力是 ActivationSet 的可选扩展，不会反向收窄 D0 的 ownership/cleanup 协议：满足原有 claim/dispose 合同但没有 `scope`/`services` 属性的自定义 ActivationSet 仍可装配，其 Generation/Lease 的 Scope 视图为 `None`；如果自定义对象选择提供 D1 Scope，则 `scope` 与 `services` 必须成对出现并属于同一条链。默认 `PluginActivationSet` 始终提供完整四层视图。
 
-层级方向同样受约束：application 插件 setup 可以读取 application Service，但不能反向读取 workspace/preset/agent 覆盖；最终 Runtime/Step 从 agent 层向上查找。两个 Runtime 用不同 agent binding 时不会共享局部 Registry。`ScopedServiceBinding.value` 当前是由装配调用者持有生命周期的借用能力，Scope 只解析、不自动 dispose；插件通过 Registration 提供的 application Service 才随 ActivationSet/Generation 清理。这里没有把 `PluginManifest.allowed_scopes` 解锁：插件仍按 v0.4 规则只允许 application setup，D1 也没有 scoped Tool、Prompt、Policy 或多 Agent。Service 不直接进入模型请求，所以 Scope identity 不写进 `CompositionSnapshot.revision` 或 Request Fingerprint；真正影响模型可见 Tool/Prompt/Policy 的后续 Overlay 必须继续走现有 Generation/Snapshot 主线。
+层级方向同样受约束：application 插件 setup 可以读取 application Service，但不能反向读取 workspace/preset/agent 覆盖；最终 Runtime/Step 从 agent 层向上查找。两个 Runtime 用不同 agent binding 时不会共享局部 Registry。`ScopedServiceBinding.value` 当前是由装配调用者持有生命周期的借用能力，Scope 只解析、不自动 dispose；插件通过 Registration 提供的 application Service 才随 ActivationSet/Generation 清理。这里没有把 `PluginManifest.allowed_scopes` 解锁：插件仍按 v0.4 规则只允许 application setup。Service 不直接进入模型请求，所以 Scope identity 不写进 `CompositionSnapshot.revision` 或 Request Fingerprint；D2 真正影响模型可见内容的 Overlay 继续走现有 Generation/Snapshot 主线，见下一节。
+
+### 19.14 D2：Tool、Prompt 与 Policy 的四层程序化 Overlay
+
+D2 沿用 D1 的固定顺序，但没有复制一套“Scoped ToolRuntime”。[`kernel/composition_overlays.py`](../../src/traceh/kernel/composition_overlays.py) 接收 `ScopedToolBinding`、`ScopedPromptBinding` 与 `ScopedPolicyBinding`，先在私有 fork 上按 Application → Workspace → Preset → Agent 排序解析，再产出既有 `ToolRegistry`、`PromptAssembler` 和 Policy tuple。默认同步/异步工厂把这些显式 binding 交给 `PluginGenerationBuilder`；空插件、启动插件和后续 `/plugins` 候选替换都使用同一份不可变 blueprint。解析结果进入 `PluginActivationSet`，随后由既有 `CompositionGeneration` 冻结 Tool schema、Prompt、Policy 名称并生成 Snapshot revision。`AgentLoop`、RequestBuilder、Event Log 与 Replay 没有第二条路径。
+
+Tool、Prompt、Policy 都以稳定名字作为覆盖身份。相同 scope 的第二次绑定若没有 `replace=True`，分别得到 `tool-already-bound`、`prompt-already-bound`、`policy-already-bound`；较近层覆盖祖先而未授权时得到对应的 `*-override-requires-replace`。`replace` 必须是真正的 `bool`，字符串、数字和 `None` 都不能冒充授权。解析按 scope 排序而不信任输入顺序，且只修改 fork；即使 Policy 冲突发生在 Tool/Prompt 已完成候选替换之后，调用方原来的 Registry 与 Prompt 也保持不变。`PromptAssembler.register(..., replace=True)` 的 Registration 会在逆序清理时恢复旧 Section，与 ToolRegistry 的可逆替换语义一致。
+
+插件 Tool/Prompt 仍由 application setup 贡献，因此有一个晚到祖先问题：初次解析 child Overlay 时插件内容尚不存在。Manager 会把 staged application Tool/Prompt 投影到私有候选，**在 health check 之前**再次解析 child Overlay；隐式覆盖因此以稳定 code 和责任 `plugin_id` 失败并回滚，第三方 health 不会获得一次本来就不该发生的执行机会。全部插件真实发布后再解析一次，最终 Tool/Prompt/Policy 三者一起转移到 ActivationSet。后续插件组合替换继续使用 Builder 保存的 child blueprint；协调器构造候选 ToolRuntime 时必须使用 ActivationSet 的 Policy tuple，CompositionGeneration 按长度、顺序和逐项 `is` 对象身份校验二者一致，绝不调用可由第三方重载的 `__eq__`。因此名称相同但 admission 行为不同的 Policy 不能伪装成同一候选能力。
+
+D2 只增加宿主装配能力：`PluginContext` 仍只有 Tool、Prompt、Service、cleanup 和 owned task；插件不能提供 Policy，也不能选择 Workspace/Preset/Agent 执行 setup。Binding 中的程序化 Tool/Policy 是借用能力，其生命周期仍由装配调用者持有；application 插件资源仍由对应 ActivationSet 清理。两个 Runtime 可以装配不同的 Agent Tool/Prompt/Policy，真实 Tool admission 与 Request Snapshot 会反映各自结果，但当前还没有 `AgentSupervisor` 去创建和管理两个 Agent。

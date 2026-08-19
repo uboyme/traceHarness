@@ -49,6 +49,14 @@ from traceh.api.services import Registration, ServiceKey
 from traceh.api.tools import Tool
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.activation import Activation
+from traceh.kernel.composition_overlays import (
+    CompositionOverlayConflictError,
+    CompositionOverlayPlan,
+    ResolvedCompositionOverlay,
+    ScopedPolicyBinding,
+    ScopedPromptBinding,
+    ScopedToolBinding,
+)
 from traceh.kernel.lifespan import CallbackRegistration
 from traceh.kernel.registry import ServiceConflictError, ServiceRegistry, ServiceView
 from traceh.kernel.scope import Scope, ScopeChain, ScopedServiceBinding
@@ -61,6 +69,7 @@ from traceh.plugins.errors import (
 )
 from traceh.plugins.selection import is_plugin_id
 from traceh.runtime.prompt import PromptAssembler
+from traceh.tools.policy import ToolPolicy
 from traceh.tools.registry import ToolRegistry
 from traceh.version import __version__
 
@@ -188,6 +197,7 @@ class PluginActivationSet:
         prompt: PromptAssembler,
         services: ServiceRegistry,
         scope_chain: ScopeChain | None = None,
+        policies: tuple[ToolPolicy, ...] = (),
         identities: tuple[PluginIdentity, ...],
         activation_order: tuple[str, ...],
         activations: tuple[Activation, ...],
@@ -196,6 +206,7 @@ class PluginActivationSet:
     ) -> None:
         self.tools = tools
         self.prompt = prompt
+        self.policies = tuple(policies)
         self._application_services = services.view()
         self._scope_chain = scope_chain or ScopeChain.build(services)
         if not self._scope_chain.has_application_registry(services):
@@ -222,12 +233,14 @@ class PluginActivationSet:
         prompt: PromptAssembler,
         services: ServiceRegistry,
         scope_chain: ScopeChain | None = None,
+        policies: tuple[ToolPolicy, ...] = (),
     ) -> PluginActivationSet:
         return cls(
             tools=tools,
             prompt=prompt,
             services=services,
             scope_chain=scope_chain,
+            policies=policies,
             identities=(CORE_PLUGIN_IDENTITY,),
             activation_order=(),
             activations=(),
@@ -379,6 +392,10 @@ class PluginGenerationBuilder:
         prompt: PromptAssembler,
         services: ServiceRegistry,
         service_bindings: Sequence[ScopedServiceBinding] = (),
+        policies: Sequence[ToolPolicy] = (),
+        tool_bindings: Sequence[ScopedToolBinding] = (),
+        prompt_bindings: Sequence[ScopedPromptBinding] = (),
+        policy_bindings: Sequence[ScopedPolicyBinding] = (),
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
@@ -386,23 +403,50 @@ class PluginGenerationBuilder:
         self.prompt = prompt
         self.services = services
         self.service_bindings = tuple(service_bindings)
+        self.policies = tuple(policies)
+        self.composition_overlays = CompositionOverlayPlan(
+            tuple(tool_bindings),
+            tuple(prompt_bindings),
+            tuple(policy_bindings),
+        )
         self.discovery = discovery
         self.plugin_configs = plugin_configs
 
-    def _candidate_registries(
+    def _candidate_application(
         self,
-    ) -> tuple[ToolRegistry, PromptAssembler, ServiceRegistry, ScopeChain]:
+    ) -> tuple[
+        ResolvedCompositionOverlay,
+        ServiceRegistry,
+        ScopeChain,
+        CompositionOverlayPlan,
+    ]:
         services = self.services.fork(parent=None)
         scope_chain = ScopeChain.build(services, self.service_bindings)
-        return self.tools.fork(), self.prompt.fork(), services, scope_chain
+        application = self.composition_overlays.application_only().resolve(
+            self.tools,
+            self.prompt,
+            self.policies,
+        )
+        children = self.composition_overlays.children_only()
+        # Reject invalid core/programmatic layering before importing or running
+        # any plugin code. A later plugin may add a new application target, so
+        # the same plan is checked again inside PluginManager before health.
+        children.resolve(application.tools, application.prompt, application.policies)
+        return application, services, scope_chain, children
 
     def empty(self) -> PluginActivationSet:
-        tools, prompt, services, scope_chain = self._candidate_registries()
+        application, services, scope_chain, children = self._candidate_application()
+        effective = children.resolve(
+            application.tools,
+            application.prompt,
+            application.policies,
+        )
         return PluginActivationSet.empty(
-            tools=tools,
-            prompt=prompt,
+            tools=effective.tools,
+            prompt=effective.prompt,
             services=services,
             scope_chain=scope_chain,
+            policies=effective.policies,
         )
 
     async def prepare(
@@ -412,12 +456,14 @@ class PluginGenerationBuilder:
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> PluginActivationSet:
-        tools, prompt, services, scope_chain = self._candidate_registries()
+        application, services, scope_chain, children = self._candidate_application()
         manager = PluginManager(
-            tools=tools,
-            prompt=prompt,
+            tools=application.tools,
+            prompt=application.prompt,
             services=services,
             scope_chain=scope_chain,
+            policies=application.policies,
+            composition_overlays=children,
             discovery=discovery if discovery is not None else self.discovery,
             plugin_configs=(
                 plugin_configs if plugin_configs is not None else self.plugin_configs
@@ -827,6 +873,8 @@ class PluginManager:
         prompt: PromptAssembler,
         services: ServiceRegistry | None = None,
         scope_chain: ScopeChain | None = None,
+        policies: Sequence[ToolPolicy] = (),
+        composition_overlays: CompositionOverlayPlan | None = None,
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
@@ -834,6 +882,8 @@ class PluginManager:
         self.prompt = prompt
         self.services = services or ServiceRegistry()
         self._scope_chain = scope_chain
+        self._application_policies = tuple(policies)
+        self._composition_overlays = composition_overlays or CompositionOverlayPlan()
         self.discovery = discovery or PluginDiscovery()
         self._configs = {
             plugin_id: copy.deepcopy(dict(config))
@@ -847,6 +897,7 @@ class PluginManager:
         self._notices: list[PluginNotice] = []
         self._active = False
         self._dispose_task: asyncio.Task[None] | None = None
+        self._effective_composition: ResolvedCompositionOverlay | None = None
 
     @property
     def identities(self) -> tuple[PluginIdentity, ...]:
@@ -1181,16 +1232,74 @@ class PluginManager:
                         )
         return tuple(sorted(conflicts, key=lambda item: (item.plugin_id or "", item.code)))
 
+    def _resolve_effective_composition(
+        self,
+        order: Sequence[str],
+        *,
+        include_staged: bool,
+    ) -> ResolvedCompositionOverlay:
+        """Resolve child overlays against the candidate application layer.
+
+        Phase 2 uses a private projection of staged contributions so a child
+        overlay that forgot ``replace=True`` fails before plugin health code is
+        allowed to run. Phase 4 calls the same resolver after real publication;
+        the returned registries become the only Generation-visible composition.
+        """
+
+        tools = self.tools.fork()
+        prompt = self.prompt.fork()
+        if include_staged:
+            for plugin_id in order:
+                context = self._contexts[plugin_id]
+                for contribution in context.tools:
+                    tools.register(contribution.tool)
+                for contribution in context.prompts:
+                    prompt.register(contribution.section)
+        return self._composition_overlays.resolve(
+            tools,
+            prompt,
+            self._application_policies,
+        )
+
+    def _overlay_failure(
+        self,
+        error: CompositionOverlayConflictError,
+        order: Sequence[str],
+    ) -> PluginFailure:
+        responsible: str | None = None
+        if error.existing_scope == "application":
+            for plugin_id in order:
+                context = self._contexts[plugin_id]
+                if error.capability == "tool" and any(
+                    item.tool.name == error.name for item in context.tools
+                ):
+                    responsible = plugin_id
+                    break
+                if error.capability == "prompt" and any(
+                    item.section.section_id == error.name for item in context.prompts
+                ):
+                    responsible = plugin_id
+                    break
+        return PluginFailure(
+            error.code,
+            "conflict",
+            "Scoped composition overlay is invalid",
+            responsible,
+        )
+
     def _transfer_activation_set(self) -> PluginActivationSet:
         """Transfer successful activation ownership to a candidate set."""
 
         if not self._active:
             raise RuntimeError("plugin activation is not complete")
+        if self._effective_composition is None:
+            raise RuntimeError("plugin composition was not resolved")
         activation_set = PluginActivationSet(
-            tools=self.tools,
-            prompt=self.prompt,
+            tools=self._effective_composition.tools,
+            prompt=self._effective_composition.prompt,
             services=self.services,
             scope_chain=self._scope_chain,
+            policies=self._effective_composition.policies,
             identities=self._identities,
             activation_order=self._order,
             activations=tuple(self._activations),
@@ -1214,11 +1323,15 @@ class PluginManager:
             tools=self.tools,
             prompt=self.prompt,
             services=self.services,
+            policies=self._application_policies,
             service_bindings=(
                 self._scope_chain.child_bindings
                 if self._scope_chain is not None
                 else ()
             ),
+            tool_bindings=self._composition_overlays.tool_bindings,
+            prompt_bindings=self._composition_overlays.prompt_bindings,
+            policy_bindings=self._composition_overlays.policy_bindings,
             discovery=self.discovery,
             plugin_configs=self._configs,
         )
@@ -1286,6 +1399,10 @@ class PluginManager:
                 )
             )
         if not enabled:
+            self._effective_composition = self._resolve_effective_composition(
+                (),
+                include_staged=False,
+            )
             self._active = True
             return self._identities
 
@@ -1342,7 +1459,12 @@ class PluginManager:
             if conflicts:
                 self._fail(conflicts)
                 raise PluginValidationError(conflicts)
-
+            try:
+                self._resolve_effective_composition(order, include_staged=True)
+            except CompositionOverlayConflictError as error:
+                failure = self._overlay_failure(error, order)
+                self._fail((failure,))
+                raise PluginValidationError((failure,)) from None
             # Phase 3: health checks, now that publication is otherwise possible.
             for plugin_id in order:
                 health = getattr(loaded[plugin_id].plugin, "health_check", None)
@@ -1418,6 +1540,14 @@ class PluginManager:
                             ),
                         )
                     ) from None
+            try:
+                self._effective_composition = self._resolve_effective_composition(
+                    order,
+                    include_staged=False,
+                )
+            except CompositionOverlayConflictError as error:
+                failure = self._overlay_failure(error, order)
+                raise PluginValidationError((failure,)) from None
             for activation in self._activations:
                 activation.publish()
 

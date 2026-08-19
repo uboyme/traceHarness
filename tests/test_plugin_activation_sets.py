@@ -472,7 +472,11 @@ async def test_one_activation_set_cannot_be_published_to_two_runtimes(
         second_tools = ToolRuntime(
             candidate.tools,
             second.sessions,
-            policies=second._plugin_compositions._policies,
+            # D2 makes the ActivationSet's resolved Policy tuple part of the
+            # same candidate composition as its Tool and Prompt registries.
+            # Reuse that exact tuple so this test continues to reach the
+            # ownership guard it is intended to exercise.
+            policies=candidate.policies,
             middlewares=second._plugin_compositions._middlewares,
         )
         second_generation = CompositionGeneration(

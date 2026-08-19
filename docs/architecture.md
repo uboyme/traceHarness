@@ -27,7 +27,8 @@ State
   SessionService, EventStore, SessionEventFeed, SurfaceProjector, RecoveryService
 
 Kernel
-  ScopeChain, ServiceRegistry/View, HookDispatcher, Activation, Lifespan, OwnedTaskSet
+  ScopeChain, ServiceRegistry/View, CompositionOverlayPlan, HookDispatcher, Activation,
+  Lifespan, OwnedTaskSet
 ```
 
 Dependencies point downward. `traceh.api` contains structural protocols and frozen value
@@ -42,7 +43,14 @@ the Composition Generation and Step Lease; plugin setup still writes only to the
 application Registry. Assembly preflights the complete chain before mutating the caller-owned
 Application Registry, and public candidate preparation preserves existing child-layer
 bindings. D1 Scope remains optional for custom ActivationSets that implement the earlier D0
-ownership contract. This is the D1 Service foundation, not scoped Tool/Policy activation.
+ownership contract.
+
+D2 applies explicit Tool, Prompt and Policy bindings in the same four-layer order during
+candidate assembly. It resolves them on private forks and passes one effective ToolRegistry,
+PromptAssembler and Policy tuple through the existing ActivationSet → Generation → Lease →
+Snapshot path. Application plugin Tool/Prompt contributions are revalidated against child
+overlays before health checks. This is host assembly, not child-scope plugin setup, and it
+does not add a second scoped runtime or an `AgentLoop` dependency.
 
 "Frozen" is the dataclass guarantee - fields cannot be rebound - not deep immutability. An
 `EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out

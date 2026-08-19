@@ -27,7 +27,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
 - **插件系统（v0.4 新增）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section 和 Service 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
-- 类型化 Hook、Application → Workspace → Preset → Agent Service Scope、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层 Service 跟随 Generation/Step Lease，发布后只读。
+- 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
 
 ## 不安装直接运行
 
@@ -343,8 +343,9 @@ v0.3 Adapter 使用 `/chat/completions` 和非流式 HTTP。Event Protocol 已�
 ```python
 from pathlib import Path
 
-from traceh import ScopeKind, ScopedServiceBinding
+from traceh import ScopeKind, ScopedPromptBinding, ScopedServiceBinding
 from traceh.api.llm import ModelResponse
+from traceh.api.prompts import PromptSection
 from traceh.api.services import ServiceKey
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -371,13 +372,20 @@ runtime = build_default_runtime(
             replace=True,
         ),
     ),
+    # 示例：只让这个 Agent 的模型看到这一段 Prompt。
+    prompt_bindings=(
+        ScopedPromptBinding(
+            ScopeKind.AGENT,
+            PromptSection("example.agent", "Answer with concise evidence."),
+        ),
+    ),
 )
 
 result = await runtime.run(Path("./workspace"), "Inspect the project")
 await runtime.dispose()
 ```
 
-`build_default_runtime()` 还可以接收自定义 `EventStore`、`ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler、Verifier 和显式 `ScopedServiceBinding`。同层替换或更近层覆盖祖先都必须写真正的布尔值 `replace=True`（字符串等 truthy 值会被拒绝），且 API Major 必须一致；失败的四层装配不会把半成品写进调用方 Registry。发布后的 Runtime/Step 只拿到只读 Service 视图。需要更深度的定制时，可以向 Agent Loop 提供其他 `CompositionRuntime`，让一个 Step Lease 一套自洽的 Provider、Tool Set 和 Snapshot Generation。
+`build_default_runtime()` 还可以接收自定义 `EventStore`、`ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler、Verifier，以及显式 `ScopedServiceBinding`、`ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`。同层替换或更近层覆盖祖先都必须写真正的布尔值 `replace=True`（字符串等 truthy 值会被拒绝）；Service 的 API Major 还必须一致。失败的四层装配不会把半成品写进调用方 Registry/Prompt。Tool、Prompt、Policy 会先解析成一份有效 Composition，再由 Generation/Step Lease 和 Snapshot 冻结；没有第二套 Scoped Runtime。需要更深度的定制时，可以向 Agent Loop 提供其他 `CompositionRuntime`，让一个 Step Lease 一套自洽的 Provider、Tool Set 和 Snapshot Generation。
 
 ## 架构
 
@@ -430,7 +438,7 @@ Projectors / Recovery / Inspector / Invariants
 | 新持久化后端 | `EventStore` |
 | 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
 | Step 安全的多代 Generation 与组合切换 | `CompositionRuntime.lease()`、Generation/Lease/Drain、`traceh chat /plugins` 控制面；仍没有 Wheel/module 级热替换 |
-| Agent 专属 Service | 四层 `ScopeChain` 已接入默认 Runtime；插件 Tool/Prompt/Policy 仍未按 scope 分层 |
+| Agent 专属装配 | 四层 `ScopeChain` 与程序化 Tool/Prompt/Policy Overlay 已接入默认 Runtime；插件仍不能在子层 setup 或提供 Policy |
 | 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
 | 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
 
@@ -502,7 +510,7 @@ traceh doctor
 
 ## v0.4 已知边界
 
-- 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1 的四层能力仅是程序化、借用型 Service binding，不会替调用者清理该 value；插件还不能按 Workspace/Preset/Agent 提供 Tool/Prompt/Policy；
+- 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup，也不能提供 Policy；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
 - 插件目前只能提供 Tool、Prompt Section 和 Service；**不能**提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`；
 - 没有 MCP、多 Agent 和 Workflow 接入面；
@@ -528,7 +536,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前共有 1029 项自动化测试（1028 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service Scope、严格布尔覆盖意图、事务式装配、插件冲突归因以及插件晚发布后的覆盖复检、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
+当前共有 1053 项自动化测试（1052 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、Policy 对象身份守卫、插件冲突归因以及插件晚发布后的覆盖复检、真实 Tool/Policy admission、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 
@@ -549,7 +557,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [插件说明（作者与运维契约）](docs/plugins.md)
 - [插件与多 Agent 演进](docs/plugin-evolution.md)
 - [测试策略](docs/testing.md)
-- [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活的设计原因
+- [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明
 

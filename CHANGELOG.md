@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### v0.5 Stage D2 Tool, Prompt and Policy overlays
+
+- Added explicit Application, Workspace, Preset and Agent bindings for Tool, Prompt and
+  Policy composition. Resolution uses private forks and feeds one effective ToolRegistry,
+  PromptAssembler and Policy tuple into the existing ActivationSet/Generation/Lease/Snapshot
+  mainline; no parallel scoped runtime or new persistent fact was added.
+- Added strict boolean replacement intent and stable same-layer/cross-layer conflict codes.
+  Scope order is deterministic regardless of input order, failed resolution leaves caller
+  inputs unchanged, and reversible Prompt replacement restores the previous section.
+- Revalidate child Tool/Prompt overlays against staged application plugin contributions before
+  health checks, preserving responsible plugin identity and transactional rollback. Plugin
+  replacement retains the child composition blueprint and uses the candidate ActivationSet's
+  resolved Policy tuple. Generation validation compares each ordered Policy by object identity
+  so a caller-controlled `__eq__` cannot substitute different admission behavior.
+- Added real AgentLoop Tool/Policy admission, request reconstruction, cross-Runtime isolation,
+  public candidate preservation and reverse-validation tests. Plugin setup remains
+  application-only and `PluginContext` was not widened to Policy or other deferred categories.
+
 ### v0.5 Stage D1 Service Scope foundation
 
 - Added Application, Workspace, Preset and Agent Service layers to the default Runtime and

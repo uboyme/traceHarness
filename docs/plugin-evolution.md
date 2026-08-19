@@ -191,10 +191,44 @@ shadow into a successful candidate; the conflict keeps its stable code and respo
 id, and the candidate rolls back transactionally.
 
 This is deliberately the Service foundation, not complete scoped plugin activation.
-`PluginManifest.allowed_scopes` still requires application, and Tool, Prompt and Policy
-contributions are not yet layered. No new persistent event or model-visible fingerprint field
-is added because a Service binding is not itself model-visible; future scoped Tool/Prompt/
-Policy work must continue through the existing Generation and Composition Snapshot path.
+`PluginManifest.allowed_scopes` still requires application. No new persistent event or
+model-visible fingerprint field is added because a Service binding is not itself
+model-visible; the following D2 layer continues through the existing Generation and
+Composition Snapshot path.
+
+## Stage D2: Tool, Prompt and Policy overlays — shipped as host assembly
+
+`CompositionOverlayPlan` applies explicit `ScopedToolBinding`, `ScopedPromptBinding` and
+`ScopedPolicyBinding` values in the same fixed Application → Workspace → Preset → Agent
+order. Resolution occurs on private Tool/Prompt forks and produces one effective
+`ToolRegistry`, `PromptAssembler` and Policy tuple. Those ordinary core objects enter the
+existing `PluginActivationSet` → `CompositionGeneration` → Step Lease path; Tool schemas,
+Prompt content and Policy names therefore remain represented by the existing Composition
+Snapshot and request fingerprint. There is no scoped ToolRuntime, parallel fact source or
+`AgentLoop` branch.
+
+Capability identity is the Tool name, Prompt section id or Policy name. Same-scope duplicates
+and cross-scope overrides have stable `*-already-bound` and
+`*-override-requires-replace` codes, and `replace` accepts only a real boolean. Resolution is
+transactional: a late Policy conflict cannot leave earlier Tool/Prompt replacements in the
+caller-owned inputs. Prompt replacement now has the same reversible-registration behavior as
+Tool replacement and restores the previous section during reverse cleanup.
+
+Application plugins publish Tool and Prompt contributions after the initial child overlay is
+known. The manager therefore projects staged contributions into a private candidate and
+revalidates child overlays before health checks. A missing explicit override fails with the
+stable overlay code and responsible plugin id before third-party health code runs. The final
+resolved Tool/Prompt/Policy composition transfers together to the ActivationSet; subsequent
+plugin replacements preserve the same child binding blueprint and construct their
+ToolRuntime from that ActivationSet's Policy tuple. Generation validation compares the
+ordered Policy objects by identity, not `__eq__`: Policy is executable admission behavior,
+so two behaviorally different objects cannot claim to be the same candidate capability by
+overloading value equality.
+
+D2 does not widen plugin authority. Plugin setup remains application-only, `PluginContext`
+still cannot provide Policy, and host-provided child bindings are borrowed rather than owned
+by plugin cleanup. Two independently assembled Runtimes may now have different Agent-level
+Tool/Prompt/Policy compositions, but creating and supervising two Agents remains v0.6 work.
 
 ## Extension categories
 

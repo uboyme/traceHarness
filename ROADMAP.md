@@ -75,18 +75,26 @@ or verifiers.
   application scope only. `replace` is a strict boolean; failed assembly is transactional;
   public candidate preparation preserves child-layer bindings; and D0 custom ActivationSets
   remain compatible when they do not opt into the D1 Scope view.
-- Extend the same scoped candidate/Generation path to Tool, Prompt and Policy composition;
-  do not add a parallel scoped runtime.
+- **Stage D2 — completed as the model-visible composition overlay:** both default factories
+  and every plugin candidate accept explicit Application → Workspace → Preset → Agent
+  Tool, Prompt and Policy bindings. Same-layer duplicates and cross-layer overrides require
+  strict `replace=True`; plugin application Tool/Prompt contributions are revalidated before
+  health checks; and one effective ToolRegistry, PromptAssembler and Policy tuple enters the
+  existing ActivationSet → Generation → Lease → Snapshot path. There is no parallel scoped
+  runtime, no new persistent fact and no `AgentLoop` change. These are host assembly bindings,
+  not child-scope plugin setup or a new Policy contribution method on `PluginContext`.
 - Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
 
 Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
-file watching, scoped plugin setup and Tool/Prompt/Policy composition, Provider/Policy/
+file watching, scoped plugin setup, Provider/Policy/
 Middleware/EventStore/Verifier plugin contributions, isolated plugins, multi-agent,
 Workflow, MCP, TUI and model streaming. The version remains `0.4.0`; completing Stage A
-through D1 does not mean v0.5 is released.
+through D2 does not mean v0.5 is released.
 
-Definition of done for the later v0.5 product remains: two Agents can see different
-tool/policy compositions, and updating a plugin cannot change a Step already in progress.
+The D2 assembly contract now proves that two independently built Runtime/Agent scopes can
+see different Tool/Prompt/Policy compositions, and the existing Lease contract prevents a
+published Generation from changing an in-progress Step. A product-level two-Agent demo still
+depends on the v0.6 `AgentSupervisor`; D2 does not claim that capability.
 
 ## v0.6: AgentSupervisor and subagents
 

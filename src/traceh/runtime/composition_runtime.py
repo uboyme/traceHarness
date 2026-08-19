@@ -1096,6 +1096,29 @@ class CompositionGeneration:
                 raise ValueError(
                     "generation PromptAssembler must use its ActivationSet registry"
                 )
+            activation_policies = getattr(
+                self.activation_set,
+                "policies",
+                _RESOURCE_BINDING_MISSING,
+            )
+            if activation_policies is not _RESOURCE_BINDING_MISSING:
+                runtime_policies = tuple(self.tools.policies)
+                candidate_policies = tuple(activation_policies)
+                if len(runtime_policies) != len(candidate_policies) or any(
+                    runtime_policy is not candidate_policy
+                    for runtime_policy, candidate_policy in zip(
+                        runtime_policies,
+                        candidate_policies,
+                        strict=True,
+                    )
+                ):
+                    # Policy is executable admission behavior. Equality is not
+                    # an ownership or identity boundary: a caller-controlled
+                    # __eq__ could claim that two behaviorally different
+                    # policies are the same candidate capability.
+                    raise ValueError(
+                        "generation ToolRuntime must use its ActivationSet policies"
+                    )
             activation_scope = getattr(
                 self.activation_set, "scope", _RESOURCE_BINDING_MISSING
             )

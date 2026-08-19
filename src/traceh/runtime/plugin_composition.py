@@ -252,7 +252,9 @@ class PluginCompositionCoordinator:
             candidate_tools = ToolRuntime(
                 activation_set.tools,
                 self._sessions,
-                policies=self._policies,
+                policies=tuple(
+                    getattr(activation_set, "policies", self._policies)
+                ),
                 middlewares=self._middlewares,
                 timeout_seconds=self._tool_timeout_seconds,
                 max_output_chars=self._max_tool_output_chars,

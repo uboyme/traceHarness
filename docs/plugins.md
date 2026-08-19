@@ -87,7 +87,7 @@ Returning `False` fails activation exactly as raising does.
 | `requires_traceh` | PEP 440 specifier that must admit the running version; defaults to `>=0.4,<1.0` |
 | `requires_plugins` | Hard dependencies; each must also be **enabled**, not merely installed |
 | `optional_plugins` | Absent is a notice; present-but-incompatible is a failure |
-| `allowed_scopes` | Must still include `application`; D1 Service Scope does not enable scoped plugin setup |
+| `allowed_scopes` | Must still include `application`; D1/D2 host overlays do not enable scoped plugin setup |
 | `trust_mode` | `trusted` only; `isolated` is declarable and explicitly rejected |
 | `provides` | Capability ids; two enabled plugins may not provide the same one |
 
@@ -209,25 +209,27 @@ messages are written by this repository.
 | `manifest` | `plugin-id-mismatch`, `plugin-id-reserved`, `traceh-api-incompatible`, `application-scope-not-allowed`, `isolated-mode-unsupported`, `provides-duplicate` |
 | `dependency` | `required-plugin-missing`, `plugin-version-incompatible`, `plugin-dependency-cycle`, `provides-conflict` |
 | `setup` / `health` | `plugin-setup-failed`, `plugin-health-check-failed` |
-| `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict`, `service-override-api-major-mismatch` |
+| `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict`, `service-override-api-major-mismatch`, or a host-overlay `tool-*` / `prompt-*` replacement code |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.4 and Stage D1
+## 9. Limits of v0.4 and Stage D2
 
-- Plugin setup remains application scope, trusted and in-process only. D1 adds programmatic
-  Application → Workspace → Preset → Agent Service bindings to Runtime assembly, but a plugin
-  is not activated independently at those nearer layers.
+- Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
+  Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to
+  Runtime assembly, but a plugin is not activated independently at those nearer layers and
+  cannot provide Policy through `PluginContext`.
 - Chat composition switching is available only while the prompt is idle and only for
   already-installed, already-discoverable Entry Point plugins. It is a rebuild and publish,
   not source-code hot reload: there is no running `pip install/uninstall`, Wheel replacement,
   `importlib.reload()`, file watcher, or automatic Session migration.
-- Service resolution is captured per Generation and Step Lease, but scoped Tool, Prompt and
-  Policy composition is not implemented. A migration still requires no active Turn in the
-  Runtime and an explicit authorization for the current Session; other Sessions are not
-  migrated automatically.
-- Service override authority requires the literal boolean `replace=True`; truthy strings and
-  integers are rejected. Scope assembly is transactional, and plugin Service conflicts retain
-  the responsible plugin id.
+- Service resolution and the effective Tool/Prompt/Policy composition are captured per
+  Generation and Step Lease. A migration still requires no active Turn in the Runtime and an
+  explicit authorization for the current Session; other Sessions are not migrated
+  automatically.
+- Every scoped override requires the literal boolean `replace=True`; truthy strings and
+  integers are rejected. Scope assembly is transactional, and plugin Service/Tool/Prompt
+  conflicts retain the responsible plugin id. The Tool/Prompt/Policy bindings belong to host
+  assembly; they are not a new plugin registration API.
 - `isolated` is rejected, not implemented.
 - No plugin-supplied `LlmProvider`, `ToolPolicy`, `ToolMiddleware`, `EventStore` or
   `CompletionVerifier` yet - the context exposes tools, prompts and services only.

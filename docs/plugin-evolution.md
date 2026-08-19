@@ -138,9 +138,10 @@ durable but publish fails, the Session is fail-closed.
 
 This is a user-operable composition switch, not source-code hot reload. The process still
 does not install or uninstall Wheels, call `importlib.reload()`, watch files, or migrate
-other Sessions automatically. Also absent: Workspace/Preset/Agent Scope Overlay, isolated
-(out-of-process) plugins, and any new Provider, Policy, Middleware, EventStore or Verifier
-plugin contribution. The version remains `0.4.0`; Stage C is not a v0.5 release.
+other Sessions automatically. At the Stage C checkpoint, Workspace/Preset/Agent Scope
+Overlay was still absent; D1 below adds only the Service foundation. Isolated
+(out-of-process) plugins and new Provider, Policy, Middleware, EventStore or Verifier plugin
+contributions remain absent. The version remains `0.4.0`; Stage C is not a v0.5 release.
 
 ## Stage D0: plugin composition control-plane extraction — shipped as structure
 
@@ -165,6 +166,35 @@ reload shortcut that could bypass a subclass, instrumentation or audit seam.
 No Event Log fact, Session protocol, public Chat command or plugin capability was added.
 D0 is the boundary needed before Scope Overlay work; it is not Scope Overlay itself and is
 not a v0.5 release.
+
+## Stage D1: four-layer Service Scope — shipped as foundation
+
+D1 keeps `ServiceRegistry` as the only Service registration mainline and gives each layer a
+read-through parent. `ScopeChain` assembles Application, Workspace, Preset and Agent in a
+fixed order. A nearer binding must explicitly declare `replace=True`; same-layer duplicate,
+missing replacement and API-major mismatch outcomes have stable structured codes and source
+scope metadata. `replace` is a strict boolean, and complete assembly is preflighted on an
+isolated Registry fork so failure does not partially mutate the caller's Application layer.
+
+Both default factories accept explicit `ScopedServiceBinding` values. Every
+`PluginGenerationBuilder` candidate forks the application registry and reconstructs the
+remaining layers; `PluginActivationSet` owns that chain, and `CompositionGeneration` captures
+its effective Agent Scope and read-only `ServiceView`. A Step Lease therefore observes one
+generation's Service composition, while a later replacement receives a separate chain.
+Application plugin setup cannot read a nearer workspace/preset/agent override.
+The public `PluginManager.prepare_activation_set()` preserves an existing chain's child-layer
+binding blueprint. Custom D0 ActivationSets may omit Scope entirely; implementations that opt
+in must provide a matching Scope/ServiceView pair.
+Because plugin Services publish after initial child-layer assembly, the manager revalidates
+child override intent before Activations publish. A late ancestor cannot turn an implicit
+shadow into a successful candidate; the conflict keeps its stable code and responsible plugin
+id, and the candidate rolls back transactionally.
+
+This is deliberately the Service foundation, not complete scoped plugin activation.
+`PluginManifest.allowed_scopes` still requires application, and Tool, Prompt and Policy
+contributions are not yet layered. No new persistent event or model-visible fingerprint field
+is added because a Service binding is not itself model-visible; future scoped Tool/Prompt/
+Policy work must continue through the existing Generation and Composition Snapshot path.
 
 ## Extension categories
 

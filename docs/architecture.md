@@ -27,7 +27,7 @@ State
   SessionService, EventStore, SessionEventFeed, SurfaceProjector, RecoveryService
 
 Kernel
-  Scope, HookDispatcher, Activation, Lifespan, OwnedTaskSet
+  ScopeChain, ServiceRegistry/View, HookDispatcher, Activation, Lifespan, OwnedTaskSet
 ```
 
 Dependencies point downward. `traceh.api` contains structural protocols and frozen value
@@ -35,6 +35,14 @@ types that third-party packages import, re-exported for plugin authors through
 `traceh.plugins`. Runtime internals are not plugin API: `PluginContext` exposes tools,
 prompt sections, services, cleanups, owned tasks and configuration, and no `AgentRuntime`,
 `AgentLoop`, `EventStore`, `ToolRegistry` or `PromptAssembler` object.
+
+Default Runtime assembly builds one Application → Workspace → Preset → Agent Service chain
+for every plugin composition candidate. The effective read-only Service view is captured by
+the Composition Generation and Step Lease; plugin setup still writes only to the candidate's
+application Registry. Assembly preflights the complete chain before mutating the caller-owned
+Application Registry, and public candidate preparation preserves existing child-layer
+bindings. D1 Scope remains optional for custom ActivationSets that implement the earlier D0
+ownership contract. This is the D1 Service foundation, not scoped Tool/Policy activation.
 
 "Frozen" is the dataclass guarantee - fields cannot be rebound - not deep immutability. An
 `EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out

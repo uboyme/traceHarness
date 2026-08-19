@@ -1,6 +1,6 @@
 # TraceHarness Py v0.4
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。当前的 Stage C 还允许用户在空闲的 `traceh chat` 中切换已经能被当前进程发现的插件组合，并为当前 Session 追加显式迁移授权；这不是运行中安装 Wheel 或重新加载 Python module。分层 Composition Generation、子 Agent 和 Workflow 仍然只是保留的扩展边界。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。当前的 Stage C 允许用户在空闲的 `traceh chat` 中切换已经能被当前进程发现的插件组合，并为当前 Session 追加显式迁移授权；D1 又把 Application → Workspace → Preset → Agent 四层 Service 解析接入 Generation 和 Step Lease。这仍不是运行中安装 Wheel、重新加载 Python module、完整 scoped plugin activation、子 Agent 或 Workflow。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -27,7 +27,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
 - **插件系统（v0.4 新增）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section 和 Service 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
-- 类型化 Hook、层级 Scope、可逆 Activation 和 Owned Task 收敛等 Kernel 原语，现在由 PluginManager 真正使用。
+- 类型化 Hook、Application → Workspace → Preset → Agent Service Scope、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层 Service 跟随 Generation/Step Lease，发布后只读。
 
 ## 不安装直接运行
 
@@ -343,8 +343,10 @@ v0.3 Adapter 使用 `/chat/completions` 和非流式 HTTP。Event Protocol 已�
 ```python
 from pathlib import Path
 
-from traceh.llm.scripted import ScriptedLlmProvider
+from traceh import ScopeKind, ScopedServiceBinding
 from traceh.api.llm import ModelResponse
+from traceh.api.services import ServiceKey
+from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 
 provider = ScriptedLlmProvider((ModelResponse(content="done"),))
@@ -355,13 +357,27 @@ runtime = build_default_runtime(
         model="demo",
     ),
     provider=provider,
+    # 示例：Agent 层显式覆盖 Application 层的同一 Service 合同。
+    service_bindings=(
+        ScopedServiceBinding(
+            ScopeKind.APPLICATION,
+            ServiceKey("example.telemetry", 1),
+            object(),
+        ),
+        ScopedServiceBinding(
+            ScopeKind.AGENT,
+            ServiceKey("example.telemetry", 1),
+            object(),
+            replace=True,
+        ),
+    ),
 )
 
 result = await runtime.run(Path("./workspace"), "Inspect the project")
 await runtime.dispose()
 ```
 
-`build_default_runtime()` 还可以接收自定义 `EventStore`、`ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler 和 Verifier。需要更深度的定制时，可以向 Agent Loop 提供其他 `CompositionRuntime`，让一个 Step Lease 一套自洽的 Provider、Tool Set 和 Snapshot Generation。
+`build_default_runtime()` 还可以接收自定义 `EventStore`、`ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler、Verifier 和显式 `ScopedServiceBinding`。同层替换或更近层覆盖祖先都必须写真正的布尔值 `replace=True`（字符串等 truthy 值会被拒绝），且 API Major 必须一致；失败的四层装配不会把半成品写进调用方 Registry。发布后的 Runtime/Step 只拿到只读 Service 视图。需要更深度的定制时，可以向 Agent Loop 提供其他 `CompositionRuntime`，让一个 Step Lease 一套自洽的 Provider、Tool Set 和 Snapshot Generation。
 
 ## 架构
 
@@ -414,11 +430,11 @@ Projectors / Recovery / Inspector / Invariants
 | 新持久化后端 | `EventStore` |
 | 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
 | Step 安全的多代 Generation 与组合切换 | `CompositionRuntime.lease()`、Generation/Lease/Drain、`traceh chat /plugins` 控制面；仍没有 Wheel/module 级热替换 |
-| Agent 专属能力 | 层级 `Scope`（v0.4 只装配 application scope） |
+| Agent 专属 Service | 四层 `ScopeChain` 已接入默认 Runtime；插件 Tool/Prompt/Policy 仍未按 scope 分层 |
 | 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
 | 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
 
-延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
+延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[ADR-0012](docs/adr/0012-four-layer-service-scope.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
 
 ## 重要设计选择
 
@@ -486,7 +502,7 @@ traceh doctor
 
 ## v0.4 已知边界
 
-- 插件只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝，不会被降级成 trusted；
+- 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1 的四层能力仅是程序化、借用型 Service binding，不会替调用者清理该 value；插件还不能按 Workspace/Preset/Agent 提供 Tool/Prompt/Policy；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
 - 插件目前只能提供 Tool、Prompt Section 和 Service；**不能**提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`；
 - 没有 MCP、多 Agent 和 Workflow 接入面；
@@ -512,7 +528,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前共有 999 项自动化测试（998 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、Scope、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
+当前共有 1029 项自动化测试（1028 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service Scope、严格布尔覆盖意图、事务式装配、插件冲突归因以及插件晚发布后的覆盖复检、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

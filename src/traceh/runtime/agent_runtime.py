@@ -14,7 +14,8 @@ from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.api.tools import Tool
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.hooks import HookDispatcher
-from traceh.kernel.registry import ServiceRegistry
+from traceh.kernel.registry import ServiceRegistry, ServiceView
+from traceh.kernel.scope import Scope, ScopedServiceBinding
 from traceh.llm.registry import LlmRegistry
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
@@ -182,13 +183,26 @@ class AgentRuntime:
         return tuple(composition_plugins)
 
     @property
-    def services(self) -> ServiceRegistry:
-        activation_set = getattr(self.loop.compositions, "current_activation_set", None)
-        if activation_set is not None:
-            candidate_services = getattr(activation_set, "services", None)
-            if isinstance(candidate_services, ServiceRegistry):
-                return candidate_services
-        return self._services_base
+    def services(self) -> ServiceView:
+        try:
+            generation = self.loop.compositions.current_generation
+        except (AttributeError, RuntimeError):
+            generation = None
+        candidate_services = getattr(generation, "services", None)
+        if isinstance(candidate_services, ServiceView):
+            return candidate_services
+        return self._services_base.view()
+
+    @property
+    def scope(self) -> Scope | None:
+        """Return the effective Agent scope of the current Generation."""
+
+        try:
+            generation = self.loop.compositions.current_generation
+        except (AttributeError, RuntimeError):
+            generation = None
+        candidate_scope = getattr(generation, "scope", None)
+        return candidate_scope if isinstance(candidate_scope, Scope) else None
 
     @property
     def external_plugin_identities(self) -> tuple[PluginIdentity, ...]:
@@ -460,6 +474,7 @@ class _PreparedRuntime:
     tool_registry: ToolRegistry
     prompt: PromptAssembler
     services: ServiceRegistry
+    service_bindings: tuple[ScopedServiceBinding, ...]
     policies: tuple[ToolPolicy, ...]
     tool_middlewares: tuple[ToolMiddleware, ...]
     verifier: CompletionVerifier | None
@@ -478,6 +493,7 @@ def _prepare_default_runtime(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    service_bindings: Sequence[ScopedServiceBinding] = (),
 ) -> _PreparedRuntime:
     config = config or RuntimeConfig()
     data_dir = config.data_dir.resolve()
@@ -538,6 +554,7 @@ def _prepare_default_runtime(
         tool_registry=tool_registry,
         prompt=prompt or default_coding_prompt(),
         services=services,
+        service_bindings=tuple(service_bindings),
         policies=effective_policies,
         tool_middlewares=tool_middlewares,
         verifier=effective_verifier,
@@ -629,6 +646,7 @@ def build_default_runtime(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    service_bindings: Sequence[ScopedServiceBinding] = (),
 ) -> AgentRuntime:
     """Build the no-plugin runtime synchronously through the Generation path."""
 
@@ -643,6 +661,7 @@ def build_default_runtime(
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
+        service_bindings=service_bindings,
     )
     from traceh.plugins.manager import PluginGenerationBuilder
 
@@ -650,6 +669,7 @@ def build_default_runtime(
         tools=prepared.tool_registry,
         prompt=prepared.prompt,
         services=prepared.services,
+        service_bindings=prepared.service_bindings,
     )
     return _finish_default_runtime(
         prepared,
@@ -670,6 +690,7 @@ async def build_default_runtime_async(
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
+    service_bindings: Sequence[ScopedServiceBinding] = (),
     enabled_plugins: Sequence[str] = (),
     plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     plugin_discovery: PluginDiscovery | None = None,
@@ -692,6 +713,7 @@ async def build_default_runtime_async(
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
+        service_bindings=service_bindings,
     )
     from traceh.plugins.manager import PluginGenerationBuilder
 
@@ -699,6 +721,7 @@ async def build_default_runtime_async(
         tools=prepared.tool_registry,
         prompt=prepared.prompt,
         services=prepared.services,
+        service_bindings=prepared.service_bindings,
         discovery=plugin_discovery,
         plugin_configs=plugin_configs,
     )

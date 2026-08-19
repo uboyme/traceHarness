@@ -72,5 +72,5 @@ def test_scope_resolution_prefers_nearest_scope() -> None:
     child = Scope(name="child", parent=root)
     root.provide(key, "root")
     assert child.require(key) == "root"
-    child.provide(key, "child")
+    child.provide(key, "child", replace=True)
     assert child.require(key) == "child"

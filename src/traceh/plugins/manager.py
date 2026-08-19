@@ -50,7 +50,8 @@ from traceh.api.tools import Tool
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.activation import Activation
 from traceh.kernel.lifespan import CallbackRegistration
-from traceh.kernel.registry import ServiceRegistry
+from traceh.kernel.registry import ServiceConflictError, ServiceRegistry, ServiceView
+from traceh.kernel.scope import Scope, ScopeChain, ScopedServiceBinding
 from traceh.plugins.discovery import DiscoveredPlugin, PluginDiscovery
 from traceh.plugins.errors import (
     PluginActivationError,
@@ -186,6 +187,7 @@ class PluginActivationSet:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        scope_chain: ScopeChain | None = None,
         identities: tuple[PluginIdentity, ...],
         activation_order: tuple[str, ...],
         activations: tuple[Activation, ...],
@@ -194,7 +196,14 @@ class PluginActivationSet:
     ) -> None:
         self.tools = tools
         self.prompt = prompt
-        self.services = services
+        self._application_services = services.view()
+        self._scope_chain = scope_chain or ScopeChain.build(services)
+        if not self._scope_chain.has_application_registry(services):
+            raise ValueError(
+                "plugin ActivationSet scope must use its application service registry"
+            )
+        self._scope = self._scope_chain.effective
+        self._services = self._scope.services
         self.identities = tuple(identities)
         self.activation_order = tuple(activation_order)
         self.statuses = tuple(statuses)
@@ -212,11 +221,13 @@ class PluginActivationSet:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        scope_chain: ScopeChain | None = None,
     ) -> PluginActivationSet:
         return cls(
             tools=tools,
             prompt=prompt,
             services=services,
+            scope_chain=scope_chain,
             identities=(CORE_PLUGIN_IDENTITY,),
             activation_order=(),
             activations=(),
@@ -226,6 +237,22 @@ class PluginActivationSet:
     def claimed_by(self) -> object | None:
         with self._claim_lock:
             return self._claimed_by
+
+    @property
+    def application_services(self) -> ServiceView:
+        return self._application_services
+
+    @property
+    def scope_chain(self) -> ScopeChain:
+        return self._scope_chain
+
+    @property
+    def scope(self) -> Scope:
+        return self._scope
+
+    @property
+    def services(self) -> ServiceView:
+        return self._services
 
     @property
     def state(self) -> str:
@@ -351,23 +378,32 @@ class PluginGenerationBuilder:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        service_bindings: Sequence[ScopedServiceBinding] = (),
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
         self.services = services
+        self.service_bindings = tuple(service_bindings)
         self.discovery = discovery
         self.plugin_configs = plugin_configs
 
     def _candidate_registries(
         self,
-    ) -> tuple[ToolRegistry, PromptAssembler, ServiceRegistry]:
-        return self.tools.fork(), self.prompt.fork(), self.services.fork()
+    ) -> tuple[ToolRegistry, PromptAssembler, ServiceRegistry, ScopeChain]:
+        services = self.services.fork(parent=None)
+        scope_chain = ScopeChain.build(services, self.service_bindings)
+        return self.tools.fork(), self.prompt.fork(), services, scope_chain
 
     def empty(self) -> PluginActivationSet:
-        tools, prompt, services = self._candidate_registries()
-        return PluginActivationSet.empty(tools=tools, prompt=prompt, services=services)
+        tools, prompt, services, scope_chain = self._candidate_registries()
+        return PluginActivationSet.empty(
+            tools=tools,
+            prompt=prompt,
+            services=services,
+            scope_chain=scope_chain,
+        )
 
     async def prepare(
         self,
@@ -376,11 +412,12 @@ class PluginGenerationBuilder:
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> PluginActivationSet:
-        tools, prompt, services = self._candidate_registries()
+        tools, prompt, services, scope_chain = self._candidate_registries()
         manager = PluginManager(
             tools=tools,
             prompt=prompt,
             services=services,
+            scope_chain=scope_chain,
             discovery=discovery if discovery is not None else self.discovery,
             plugin_configs=(
                 plugin_configs if plugin_configs is not None else self.plugin_configs
@@ -789,12 +826,14 @@ class PluginManager:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry | None = None,
+        scope_chain: ScopeChain | None = None,
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
         self.services = services or ServiceRegistry()
+        self._scope_chain = scope_chain
         self.discovery = discovery or PluginDiscovery()
         self._configs = {
             plugin_id: copy.deepcopy(dict(config))
@@ -1116,10 +1155,8 @@ class PluginManager:
                         )
                     )
             for service_contribution in context.services:
-                if (
-                    self.services.get(service_contribution.key) is not None
-                    and not service_contribution.replace
-                ):
+                existing = self.services.resolve(service_contribution.key)
+                if existing is not None and not service_contribution.replace:
                     conflicts.append(
                         PluginFailure(
                             "service-publish-conflict",
@@ -1128,6 +1165,20 @@ class PluginManager:
                             plugin_id,
                         )
                     )
+                elif existing is None and service_contribution.replace:
+                    named = self.services.resolve_name(service_contribution.key.name)
+                    if (
+                        named is not None
+                        and named.key.api_major != service_contribution.key.api_major
+                    ):
+                        conflicts.append(
+                            PluginFailure(
+                                "service-override-api-major-mismatch",
+                                "conflict",
+                                "Plugin service API major does not match existing service",
+                                plugin_id,
+                            )
+                        )
         return tuple(sorted(conflicts, key=lambda item: (item.plugin_id or "", item.code)))
 
     def _transfer_activation_set(self) -> PluginActivationSet:
@@ -1139,6 +1190,7 @@ class PluginManager:
             tools=self.tools,
             prompt=self.prompt,
             services=self.services,
+            scope_chain=self._scope_chain,
             identities=self._identities,
             activation_order=self._order,
             activations=tuple(self._activations),
@@ -1162,6 +1214,11 @@ class PluginManager:
             tools=self.tools,
             prompt=self.prompt,
             services=self.services,
+            service_bindings=(
+                self._scope_chain.child_bindings
+                if self._scope_chain is not None
+                else ()
+            ),
             discovery=self.discovery,
             plugin_configs=self._configs,
         )
@@ -1324,12 +1381,43 @@ class PluginManager:
                 for prompt_contribution in context.prompts:
                     activation.own(self.prompt.register(prompt_contribution.section))
                 for service_contribution in context.services:
-                    registration = await self.services.provide(
-                        service_contribution.key,
-                        service_contribution.value,
-                        replace=service_contribution.replace,
-                    )
+                    try:
+                        registration = await self.services.provide(
+                            service_contribution.key,
+                            service_contribution.value,
+                            replace=service_contribution.replace,
+                        )
+                    except ServiceConflictError as error:
+                        code = (
+                            "service-publish-conflict"
+                            if error.code == "service-already-bound"
+                            and not service_contribution.replace
+                            else error.code
+                        )
+                        raise PluginValidationError(
+                            (
+                                PluginFailure(
+                                    code,
+                                    "publish",
+                                    "Plugin service could not be published",
+                                    plugin_id,
+                                ),
+                            )
+                        ) from None
                     activation.own(registration)
+            if self._scope_chain is not None:
+                try:
+                    self._scope_chain.validate_overrides()
+                except ServiceConflictError as error:
+                    raise PluginValidationError(
+                        (
+                            PluginFailure(
+                                error.code,
+                                "publish",
+                                "Service scope composition is invalid",
+                            ),
+                        )
+                    ) from None
             for activation in self._activations:
                 activation.publish()
 

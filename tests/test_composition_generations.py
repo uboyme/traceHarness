@@ -196,6 +196,32 @@ class _SecondReadFailsPrompt(PromptAssembler):
         return super().sections()
 
 
+class _LegacyActivationSet:
+    """D0 ownership contract without D1 Scope capabilities."""
+
+    identities: tuple[PluginIdentity, ...] = ()
+
+    def __init__(self) -> None:
+        self.claimed_by: object | None = None
+        self.dispose_calls = 0
+
+    def _ensure_claimable(self, owner: object) -> None:
+        del owner
+        if self.claimed_by is not None:
+            raise ValueError("already claimed")
+
+    def _claim_for_generation(self, owner: object) -> None:
+        self._ensure_claimable(owner)
+        self.claimed_by = owner
+
+    def _unclaim_for_generation(self, owner: object) -> None:
+        if self.claimed_by is owner:
+            self.claimed_by = None
+
+    async def dispose(self) -> None:
+        self.dispose_calls += 1
+
+
 def _resource_owner(cleanup) -> CompositionResourceOwner:
     return CompositionResourceOwner(cleanup)
 
@@ -277,6 +303,38 @@ async def _wait_for_composition_tasks_to_finish() -> None:
             and task.get_name().startswith("traceh-composition-")
         )
     )
+
+
+@pytest.mark.asyncio
+async def test_custom_activation_set_without_scope_remains_compatible(
+    tmp_path: Path,
+) -> None:
+    runtime, _unused, sessions = _runtime_parts("legacy-activation-runtime")
+    provider = _Provider("legacy-activation-provider", "legacy-response")
+    llms = LlmRegistry()
+    llms.register(provider)
+    activation_set = _LegacyActivationSet()
+    candidate = CompositionGeneration(
+        llms=llms,
+        tools=ToolRuntime(ToolRegistry(), sessions, policies=(), middlewares=()),
+        prompt=PromptAssembler((PromptSection("legacy", "legacy", 10),)),
+        provider=provider.name,
+        model="legacy-model",
+        plugins=(),
+        activation_set=activation_set,
+    )
+
+    try:
+        assert candidate.scope is None
+        assert candidate.services is None
+        await runtime.publish(candidate)
+        async with _lease(runtime, tmp_path) as active:
+            assert active.scope is None
+            assert active.services is None
+    finally:
+        await runtime.dispose()
+
+    assert activation_set.dispose_calls == 1
 
 
 @pytest.mark.asyncio

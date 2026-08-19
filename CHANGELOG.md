@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### v0.5 Stage D1 Service Scope foundation
+
+- Added Application, Workspace, Preset and Agent Service layers to the default Runtime and
+  every plugin composition candidate. `ScopedServiceBinding` is the explicit assembly input;
+  nearest-scope resolution reports the source layer.
+- Added stable conflict diagnostics for same-layer duplicates, missing `replace=True` and
+  API-major mismatch. Published Scope and Service views are read-only, and `ServiceKey`
+  rejects blank names and invalid API major values. Child overrides are revalidated after
+  application plugins publish Services, closing the setup-time shadowing gap while preserving
+  the structured conflict code and transactional rollback.
+- Hardened the override contract so `replace` accepts only a real boolean, Scope assembly
+  preflights all four layers before mutating the caller-owned Application Registry, and plugin
+  API-major failures retain both their stable code and responsible plugin id. The public
+  `PluginManager.prepare_activation_set()` now preserves existing child-scope bindings.
+- Preserved the D0 custom ActivationSet contract: Scope/ServiceView is an optional D1
+  capability, while implementations that expose it must provide a matching pair.
+- Captured the effective Scope and Service view in each Composition Generation and Step
+  Lease. A replacement creates a new chain, while an old Lease keeps its old plugin Service
+  alive until Generation cleanup.
+- Added D1 contract tests and reverse checks for explicit override, read-only publication and
+  late plugin-Service revalidation. Plugin setup remains application-scoped; scoped
+  Tool/Prompt/Policy composition and other plugin contribution categories are still deferred.
+
 ### v0.5 Stage D0 control-plane structure
 
 - Extracted plugin candidate replacement, Session plugin-identity migration, the shared
@@ -107,7 +130,8 @@
   post-claim failure window.
 
 This still does not add running Wheel install/uninstall, forced Python module reload, file
-watching, Scope Overlay, new plugin contribution categories, isolated plugins, multi-agent,
+watching, scoped plugin Tool/Prompt/Policy composition, new plugin contribution categories,
+isolated plugins, multi-agent,
 Workflow, MCP, TUI or streaming output. The package version remains `0.4.0`; Stage A, Stage B
 and Stage C are not the v0.5 release.
 

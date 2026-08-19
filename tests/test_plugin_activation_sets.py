@@ -561,6 +561,8 @@ async def test_old_lease_keeps_old_service_and_tool_until_exit(
             assert replacement.plugins[1].version == "2.0.0"
             assert first_plugin.cleanup_calls == 0
             assert runtime.services.require(ServiceKey("stage_b.service")).label == "v2"
+            assert old.services is not None
+            assert old.services.require(ServiceKey("stage_b.service")).label == "v1"
             assert [
                 schema.name for schema in old.snapshot.tools if schema.name.endswith("_tool")
             ] == ["v1_tool"]

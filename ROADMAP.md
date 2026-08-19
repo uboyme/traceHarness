@@ -65,16 +65,25 @@ or verifiers.
   replacement/admission convergence live in `PluginCompositionCoordinator`.
   `AgentRuntime` remains the public facade, active-Turn owner and overall shutdown owner;
   `AgentLoop` is unchanged. D0 adds no Scope Overlay and no new user command.
-- Add Application, Workspace, Preset and Agent Scope layers (v0.4 activates application
-  scope only).
-- Add explicit override conflict diagnostics.
+- **Stage D1 — completed as the Service Scope foundation:** default Runtime assembly and
+  every plugin candidate now build Application → Workspace → Preset → Agent Service layers.
+  Resolution prefers the nearest layer; same-layer conflicts, missing explicit replacement
+  and API-major mismatch have stable structured diagnostics. Published Scope/Service views
+  are read-only and captured by the Composition Generation and Step Lease, so a replacement
+  cannot mutate a running Step. Child overrides are revalidated after application plugin
+  Services publish, so setup order cannot bypass the same rules. Plugin setup still runs at
+  application scope only. `replace` is a strict boolean; failed assembly is transactional;
+  public candidate preparation preserves child-layer bindings; and D0 custom ActivationSets
+  remain compatible when they do not opt into the D1 Scope view.
+- Extend the same scoped candidate/Generation path to Tool, Prompt and Policy composition;
+  do not add a parallel scoped runtime.
 - Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
 
 Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
-file watching, Workspace/Preset/Agent Scope Overlay, Provider/Policy/Middleware/EventStore/
-Verifier plugin contributions, isolated plugins, multi-agent, Workflow, MCP, TUI and model
-streaming. The version remains `0.4.0`; completing Stage A, Stage B, Stage C or the D0
-structural checkpoint does not mean v0.5 is released.
+file watching, scoped plugin setup and Tool/Prompt/Policy composition, Provider/Policy/
+Middleware/EventStore/Verifier plugin contributions, isolated plugins, multi-agent,
+Workflow, MCP, TUI and model streaming. The version remains `0.4.0`; completing Stage A
+through D1 does not mean v0.5 is released.
 
 Definition of done for the later v0.5 product remains: two Agents can see different
 tool/policy compositions, and updating a plugin cannot change a Step already in progress.

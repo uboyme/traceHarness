@@ -21,6 +21,8 @@ from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.api.prompts import PromptSection
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.composition import CompositionSnapshot, RuntimeComposition
+from traceh.kernel.registry import ServiceView
+from traceh.kernel.scope import Scope
 from traceh.llm.registry import LlmRegistry
 from traceh.plugins.errors import PluginDisposeError
 from traceh.runtime.prompt import PromptAssembler
@@ -1040,6 +1042,8 @@ class CompositionGeneration:
     _prompt_sections: tuple[PromptSection, ...] = field(
         init=False, compare=False, repr=False
     )
+    _scope: Scope | None = field(init=False, compare=False, repr=False)
+    _services: ServiceView | None = field(init=False, compare=False, repr=False)
     _publication_state: _GenerationPublicationState = field(
         init=False, compare=False, repr=False
     )
@@ -1092,6 +1096,34 @@ class CompositionGeneration:
                 raise ValueError(
                     "generation PromptAssembler must use its ActivationSet registry"
                 )
+            activation_scope = getattr(
+                self.activation_set, "scope", _RESOURCE_BINDING_MISSING
+            )
+            activation_services = getattr(
+                self.activation_set, "services", _RESOURCE_BINDING_MISSING
+            )
+            if (
+                activation_scope is _RESOURCE_BINDING_MISSING
+                and activation_services is _RESOURCE_BINDING_MISSING
+            ):
+                # D0's replaceable ActivationSet ownership protocol remains
+                # valid. Scope is an optional D1 capability, not a new
+                # requirement imposed on every custom ActivationSet.
+                activation_scope = None
+                activation_services = None
+            elif not isinstance(activation_scope, Scope) or not isinstance(
+                activation_services, ServiceView
+            ):
+                raise TypeError(
+                    "generation ActivationSet scope and services must be provided together"
+                )
+            elif activation_scope.services is not activation_services:
+                raise ValueError(
+                    "generation ActivationSet service view must belong to its scope"
+                )
+        else:
+            activation_scope = None
+            activation_services = None
 
         # An ActivationSet is the Stage B ownership boundary.  Its candidate
         # registries may intentionally contain borrowed core objects, so do
@@ -1165,6 +1197,8 @@ class CompositionGeneration:
         object.__setattr__(self, "_prompt_sections", prompt_sections)
         object.__setattr__(self, "_policy_names", policy_names)
         object.__setattr__(self, "_middleware_names", middleware_names)
+        object.__setattr__(self, "_scope", activation_scope)
+        object.__setattr__(self, "_services", activation_services)
 
     def snapshot(self, *, workspace: Path) -> CompositionSnapshot:
         """Build the model-visible content from this generation only."""
@@ -1194,6 +1228,14 @@ class CompositionGeneration:
     @property
     def provider_instance(self) -> LlmProvider:
         return self._provider
+
+    @property
+    def scope(self) -> Scope | None:
+        return self._scope
+
+    @property
+    def services(self) -> ServiceView | None:
+        return self._services
 
     def _claim_for_runtime(self, owner: object) -> None:
         self._publication_state.claim(owner, self.resource_owner, self.activation_set)
@@ -1230,6 +1272,8 @@ class ActiveComposition:
     provider: LlmProvider
     tools: ToolRuntime
     generation_id: int = 0
+    scope: Scope | None = None
+    services: ServiceView | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1738,6 +1782,8 @@ class _GenerationLease:
             provider=record.generation.provider_instance,
             tools=record.generation.tools,
             generation_id=record.generation_id,
+            scope=record.generation.scope,
+            services=record.generation.services,
         )
 
     async def _release_once(self, *, suppress_cancellation: bool = False) -> None:

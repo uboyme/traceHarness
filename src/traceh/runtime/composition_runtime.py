@@ -14,7 +14,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import InitVar, dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Protocol
+from typing import Any, Protocol
 
 from traceh.api.llm import LlmProvider, ToolSchema
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
@@ -22,6 +22,7 @@ from traceh.api.prompts import PromptSection
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.composition import CompositionSnapshot, RuntimeComposition
 from traceh.llm.registry import LlmRegistry
+from traceh.plugins.errors import PluginDisposeError
 from traceh.runtime.prompt import PromptAssembler
 from traceh.session.service import SessionService
 from traceh.tools.registry import ToolRegistry
@@ -37,10 +38,16 @@ class _GenerationPublicationState:
     claimed_by: object | None = None
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
+    @property
+    def owner(self) -> object | None:
+        with self._lock:
+            return self.claimed_by
+
     def claim(
         self,
         owner: object,
         resource_owner: CompositionResourceOwner | None,
+        activation_set: object | None = None,
     ) -> None:
         """Atomically claim the generation and its optional cleanup owner.
 
@@ -54,8 +61,28 @@ class _GenerationPublicationState:
             if self.claimed_by is not None:
                 raise ValueError("generation is already bound to a runtime")
             if resource_owner is not None:
-                resource_owner._claim(owner)
-            self.claimed_by = owner
+                resource_owner._ensure_claimable(owner)
+            if activation_set is not None:
+                ensure_claimable = getattr(activation_set, "_ensure_claimable", None)
+                if not callable(ensure_claimable):
+                    raise TypeError("generation activation set has no ownership contract")
+                ensure_claimable(owner)
+            resource_claimed = False
+            activation_claimed = False
+            try:
+                if resource_owner is not None:
+                    resource_owner._claim(owner)
+                    resource_claimed = True
+                if activation_set is not None:
+                    activation_set._claim_for_generation(owner)
+                    activation_claimed = True
+                self.claimed_by = owner
+            except BaseException:
+                if activation_claimed:
+                    activation_set._unclaim_for_generation(owner)
+                if resource_claimed:
+                    resource_owner._unclaim(owner)
+                raise
 
 
 @dataclass(slots=True, weakref_slot=True)
@@ -179,6 +206,17 @@ class CompositionResourceOwner:
             if self._claimed_by is not None:
                 raise ValueError("composition resource owner is already bound to a runtime")
             self._claimed_by = runtime_owner
+
+    def _ensure_claimable(self, runtime_owner: object) -> None:
+        del runtime_owner
+        with self._lock:
+            if self._claimed_by is not None:
+                raise ValueError("composition resource owner is already bound to a runtime")
+
+    def _unclaim(self, runtime_owner: object) -> None:
+        with self._lock:
+            if self._claimed_by is runtime_owner:
+                self._claimed_by = None
 
 
 def _composition_components(
@@ -985,6 +1023,13 @@ class CompositionGeneration:
     resource_owner: CompositionResourceOwner | None = field(
         default=None, compare=False, repr=False
     )
+    # Stage B ownership is explicit at the ActivationSet boundary.  Its
+    # registries contain borrowed core entries plus generation-owned plugin
+    # registrations; the set, rather than a capability-wide cleanup owner,
+    # closes the latter.  Keeping this separate lets generations share core
+    # Provider/Tool/Session resources without pretending that a plugin set
+    # owns them.
+    activation_set: Any | None = field(default=None, compare=False, repr=False)
     # Compatibility input only: InitVar ensures the callback is validated
     # against the handle but is never stored on the Generation itself.
     cleanup: InitVar[CleanupCallback | None] = None
@@ -1013,24 +1058,68 @@ class CompositionGeneration:
                     "generation cleanup must be bound to its resource owner"
                 )
 
-        components = _composition_components(self.llms, self.tools, self.prompt)
-        resource_binding = _binding_for_components(components)
-        if resource_binding is None:
-            resource_binding = _CompositionResourceBinding()
-        elif (
-            resource_binding.owner is not None
-            and self.resource_owner is not None
-            and resource_binding.owner is not self.resource_owner
-        ):
+        if self.activation_set is not None and self.resource_owner is not None:
             raise ValueError(
-                "resource capabilities already belong to another cleanup owner"
+                "a Generation cannot combine an ActivationSet with a resource owner"
             )
-        elif resource_binding.used and (
-            self.resource_owner is not None or resource_binding.owner is not None
+
+        if self.activation_set is not None and not callable(
+            getattr(self.activation_set, "dispose", None)
         ):
-            raise ValueError(
-                "cleanup ownership cannot be derived from existing capabilities"
+            raise TypeError("generation activation_set must provide dispose()")
+        if self.activation_set is not None:
+            activation_identities = getattr(self.activation_set, "identities", None)
+            if activation_identities is not None and tuple(self.plugins) != tuple(
+                activation_identities
+            ):
+                raise ValueError(
+                    "generation plugin identities must match its ActivationSet"
+                )
+            activation_tools = getattr(self.activation_set, "tools", _RESOURCE_BINDING_MISSING)
+            activation_prompt = getattr(
+                self.activation_set, "prompt", _RESOURCE_BINDING_MISSING
             )
+            if activation_tools is not _RESOURCE_BINDING_MISSING and (
+                self.tools.registry is not activation_tools
+            ):
+                raise ValueError(
+                    "generation ToolRuntime must use its ActivationSet registry"
+                )
+            if (
+                activation_prompt is not _RESOURCE_BINDING_MISSING
+                and self.prompt is not activation_prompt
+            ):
+                raise ValueError(
+                    "generation PromptAssembler must use its ActivationSet registry"
+                )
+
+        # An ActivationSet is the Stage B ownership boundary.  Its candidate
+        # registries may intentionally contain borrowed core objects, so do
+        # not infer a capability-wide cleanup lineage from the object graph.
+        # Stage A's explicit CompositionResourceOwner path retains its strict
+        # one-shot capability binding rules for callers that use it directly.
+        if self.activation_set is not None and self.resource_owner is None:
+            components: tuple[object, ...] = ()
+            resource_binding: _CompositionResourceBinding | None = None
+        else:
+            components = _composition_components(self.llms, self.tools, self.prompt)
+            resource_binding = _binding_for_components(components)
+            if resource_binding is None:
+                resource_binding = _CompositionResourceBinding()
+            elif (
+                resource_binding.owner is not None
+                and self.resource_owner is not None
+                and resource_binding.owner is not self.resource_owner
+            ):
+                raise ValueError(
+                    "resource capabilities already belong to another cleanup owner"
+                )
+            elif resource_binding.used and (
+                self.resource_owner is not None or resource_binding.owner is not None
+            ):
+                raise ValueError(
+                    "cleanup ownership cannot be derived from existing capabilities"
+                )
         publication_state = _GenerationPublicationState()
         frozen_llms = _FrozenLlmRegistry.from_registry(
             self.llms,
@@ -1057,12 +1146,17 @@ class CompositionGeneration:
         # Commit ownership only after every fallible provider lookup and
         # projection has completed.  A bad provider name must leave the raw
         # capabilities and the explicit Owner retryable.
-        resource_binding.commit(components, self.resource_owner)
+        if components:
+            resource_binding.commit(components, self.resource_owner)
         object.__setattr__(self, "llms", frozen_llms)
         object.__setattr__(self, "tools", frozen_tools)
         object.__setattr__(self, "prompt", frozen_prompt)
         object.__setattr__(self, "plugins", tuple(self.plugins))
-        if self.resource_owner is None and resource_binding.owner is not None:
+        if (
+            self.resource_owner is None
+            and resource_binding is not None
+            and resource_binding.owner is not None
+        ):
             object.__setattr__(self, "resource_owner", resource_binding.owner)
         object.__setattr__(self, "_publication_state", publication_state)
         object.__setattr__(self, "_resource_binding", resource_binding)
@@ -1102,7 +1196,32 @@ class CompositionGeneration:
         return self._provider
 
     def _claim_for_runtime(self, owner: object) -> None:
-        self._publication_state.claim(owner, self.resource_owner)
+        self._publication_state.claim(owner, self.resource_owner, self.activation_set)
+
+    async def _cleanup_owned_resources(self) -> None:
+        errors: list[BaseException] = []
+        if self.resource_owner is not None:
+            try:
+                await self.resource_owner.cleanup()
+            except BaseException as error:
+                errors.append(error)
+        if self.activation_set is not None:
+            try:
+                dispose_for_generation = getattr(
+                    self.activation_set, "_dispose_for_generation", None
+                )
+                if callable(dispose_for_generation):
+                    await dispose_for_generation(self._publication_state.owner)
+                else:
+                    await self.activation_set.dispose()
+            except BaseException as error:
+                # ActivationSet has already attempted every plugin in reverse
+                # order and exposes only a bounded structured error.
+                errors.append(error)
+        if errors:
+            if len(errors) == 1:
+                raise errors[0]
+            raise ExceptionGroup("generation-owned cleanup failed", errors)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1127,7 +1246,7 @@ class GenerationCleanupFailure:
         }
 
 
-class CompositionDrainError(RuntimeError):
+class CompositionDrainError(PluginDisposeError):
     """Raised after every retired generation has attempted cleanup."""
 
     def __init__(self, failures: tuple[GenerationCleanupFailure, ...]) -> None:
@@ -1135,7 +1254,10 @@ class CompositionDrainError(RuntimeError):
         details = ", ".join(
             f"generation {item.generation_id}: {item.error_type}" for item in failures
         )
-        super().__init__(f"composition generation cleanup failed: {details}")
+        # Keep the Stage A structured GenerationCleanupFailure payload while
+        # remaining compatible with v0.4 callers that treated startup plugin
+        # teardown failures as PluginDisposeError.
+        RuntimeError.__init__(self, f"composition generation cleanup failed: {details}")
 
 
 class CompositionRuntime(Protocol):
@@ -1184,6 +1306,9 @@ class GenerationCompositionRuntime:
         plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
         cleanup: CleanupCallback | None = None,
         resource_owner: CompositionResourceOwner | None = None,
+        activation_set: Any | None = None,
+        compatibility_tools_source: ToolRuntime | None = None,
+        compatibility_prompt_source: PromptAssembler | None = None,
         defer_external_cleanup: bool = False,
     ) -> None:
         self._lock = asyncio.Lock()
@@ -1212,6 +1337,7 @@ class GenerationCompositionRuntime:
             max_output_tokens=max_output_tokens,
             plugins=plugins,
             resource_owner=resource_owner,
+            activation_set=activation_set,
             cleanup=cleanup,
         )
         compatibility_llms = _CompatibilityLlmRegistry.from_frozen_registry(
@@ -1240,8 +1366,8 @@ class GenerationCompositionRuntime:
         self._compatibility_llms = compatibility_llms
         self._compatibility_tools = compatibility_tools
         self._compatibility_prompt = compatibility_prompt
-        self._source_tools: ToolRuntime | None = tools
-        self._source_prompt: PromptAssembler | None = prompt
+        self._source_tools: ToolRuntime | None = compatibility_tools_source or tools
+        self._source_prompt: PromptAssembler | None = compatibility_prompt_source or prompt
         self._defer_external_cleanup = defer_external_cleanup
         self._cleanup_failure: GenerationCleanupFailure | None = None
         self._poisoned = False
@@ -1310,6 +1436,10 @@ class GenerationCompositionRuntime:
         )
 
     @property
+    def current_activation_set(self) -> object | None:
+        return self._current.generation.activation_set if self._current is not None else None
+
+    @property
     def generation_states(self) -> tuple[tuple[int, str, int], ...]:
         """Return lifecycle state for deterministic diagnostics and tests."""
 
@@ -1338,6 +1468,11 @@ class GenerationCompositionRuntime:
 
         if not isinstance(generation, CompositionGeneration):
             raise TypeError("published value must be a CompositionGeneration")
+        # Build every compatibility projection before the publication lock can
+        # claim the candidate.  The projection is legacy inspection state only;
+        # preparing it here closes the last fallible window in which a claimed
+        # candidate could otherwise fail after the old current was retired.
+        compatibility_views = self._compatibility_views_for(generation)
         async with self._lock:
             if self._disposed or self._current is None:
                 raise RuntimeError("composition runtime is disposed")
@@ -1358,6 +1493,7 @@ class GenerationCompositionRuntime:
             current = _GenerationRecord(generation_id, generation)
             self._records[generation_id] = current
             self._current = current
+            self._install_compatibility_views(compatibility_views)
             self._changed.set()
             return generation_id
 
@@ -1369,9 +1505,12 @@ class GenerationCompositionRuntime:
             raise ValueError(
                 "published generation must use the runtime session service"
             )
-        if tuple(generation.plugins) != self._startup_plugins:
+        if (
+            tuple(generation.plugins) != self._startup_plugins
+            and generation.activation_set is None
+        ):
             raise ValueError(
-                "published generation plugin identities must match the startup composition"
+                "published generation plugin identities require a Generation-owned ActivationSet"
             )
         generation._claim_for_runtime(self._owner_token)
 
@@ -1405,8 +1544,7 @@ class GenerationCompositionRuntime:
     async def _cleanup_generation(self, record: _GenerationRecord) -> None:
         failure: GenerationCleanupFailure | None = None
         try:
-            if record.generation.resource_owner is not None:
-                await record.generation.resource_owner.cleanup()
+            await record.generation._cleanup_owned_resources()
         except BaseException as error:
             failure = GenerationCleanupFailure(record.generation_id, _safe_error_type(error))
         async with self._lock:
@@ -1510,12 +1648,51 @@ class GenerationCompositionRuntime:
             self._source_tools = None
             self._source_prompt = None
 
-    def finalize_external_cleanup(self) -> None:
-        """Refresh compatibility views after the PluginManager has unloaded.
+    def _refresh_compatibility_views(self, generation: CompositionGeneration) -> None:
+        """Refresh the mutable v0.4 inspection projection from one Generation.
 
-        PluginManager remains the sole owner of startup plugin registrations.
-        AgentRuntime calls this after PluginManager.dispose(), so a previously
-        captured inspection view reflects the post-unload core registries.
+        The projection is never used by a Lease and is never the source of a
+        Snapshot.  Replacing it on publish keeps legacy inspection callers
+        aligned with the current Generation without exposing mutation methods
+        on the Generation-owned frozen objects.
+        """
+
+        self._install_compatibility_views(self._compatibility_views_for(generation))
+
+    def _compatibility_views_for(
+        self,
+        generation: CompositionGeneration,
+    ) -> tuple[LlmRegistry, ToolRuntime, PromptAssembler]:
+        return (
+            _CompatibilityLlmRegistry.from_frozen_registry(
+                generation.llms,
+                publication_state=generation._publication_state,
+                resource_binding=generation._resource_binding,
+            ),
+            _CompatibilityToolRuntime(
+                generation.tools,
+                publication_state=generation._publication_state,
+                resource_binding=generation._resource_binding,
+            ),
+            _CompatibilityPromptAssembler(
+                generation.prompt.sections(),
+                publication_state=generation._publication_state,
+                resource_binding=generation._resource_binding,
+            ),
+        )
+
+    def _install_compatibility_views(
+        self,
+        views: tuple[LlmRegistry, ToolRuntime, PromptAssembler],
+    ) -> None:
+        self._compatibility_llms, self._compatibility_tools, self._compatibility_prompt = views
+
+    def finalize_external_cleanup(self) -> None:
+        """Refresh a legacy compatibility view after external cleanup.
+
+        Stage B's default path has no external plugin owner: its ActivationSet
+        is drained by the Generation.  This hook remains only for custom v0.4
+        assemblies that still pass a legacy PluginManager separately.
         """
 
         if self._source_tools is not None:

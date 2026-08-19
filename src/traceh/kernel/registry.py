@@ -60,3 +60,10 @@ class ServiceRegistry:
 
     def snapshot(self) -> dict[str, object]:
         return {str(key): value for key, value in self._values.items()}
+
+    def fork(self) -> ServiceRegistry:
+        """Return an independent registry containing borrowed core services."""
+
+        forked = ServiceRegistry()
+        forked._values = dict(self._values)
+        return forked

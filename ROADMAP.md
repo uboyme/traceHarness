@@ -28,52 +28,43 @@ or verifiers.
 
 ## v0.5: Composition generations and scoped overlays
 
-- **Stage A — completed in the current worktree:** Generation-backed Composition Runtime
-  is now used by both default factories. Each Step acquires a generation-bound Lease;
+- **Stage A — completed:** Generation-backed Composition Runtime is used by both default
+  factories and the no-plugin path. Each Step acquires a generation-bound Lease;
   Publish/Retire, last-Lease cleanup, structured Drain failure reporting and repeated
-  cancellation convergence are implemented. Tool, Prompt and Plugin Identity inputs are
-  frozen per Generation, including truly read-only flat/idempotent Tool execution adapters,
-  nested Schema freezing and Snapshot policy/middleware names; each Generation object has
-  one-time publication ownership. Generation-object publication ownership is separate from
-  resource cleanup ownership: a cleanup-bearing Generation must carry one explicit,
-  one-shot CompositionResourceOwner handle created by the assembly layer. Raw
-  LlmRegistry/ToolRuntime/PromptAssembler roots, Provider/Tool/Policy/Middleware components
-  and frozen/compatibility views propagate that binding directly; there is no global id()
-  catalog or object-graph scan. Multi-hop replace(), wrapping frozen capabilities in new
-  registries, Runtime construction from used bindings and a second owner claim are rejected;
-  Runtime initialization and publish use the same validation/claim entry. Without
-  resource-level refcounting, a cleanup-bearing Generation must use an unclaimed exclusive
-  capability assembly rather than sharing resources that cleanup may close. Raw slotted
-  Provider/Tool/Policy/Middleware objects that cannot retain the binding marker are rejected
-  from cleanup-bearing Generations; they require a binding-capable controlled assembly.
-  Generation construction commits owner/binding only after Provider lookup and freezing
-  succeed. Binding is written to the actual instance dictionary or declared slot and
-  verified after the write; a partial commit restores the exact previous attribute state,
-  so a failed candidate can be retried with the same Owner and corrected source. Runtime
-  compatibility views are built from the frozen initial Generation before owner claim,
-  leaving no post-claim second read of caller-controlled Prompt or Registry sources.
-  The Runtime fixes the main SessionService identity and rejects
-  candidates using another EventStore or re-publishing any already-claimed Generation.
-  Service remains application-level and is not Generationized, and publication currently
-  rejects plugin identity migration. Cleanup failure is bounded and poisons the runtime for
-  future publication. This is lifecycle infrastructure, not a v0.5 release.
+  cancellation convergence are implemented. Model-visible Tool, Prompt, Provider,
+  Policy/Middleware names and Plugin Identity inputs are frozen per Generation. Generation
+  identity remains internal and is not part of Snapshot revision or Request Fingerprint.
+  Stage A remains lifecycle infrastructure, not a v0.5 release.
+- **Stage B — completed in the current worktree:** `PluginGenerationBuilder` constructs
+  each explicit candidate in private Tool, Prompt and Service registry views. Discovery,
+  dependency ordering, Manifest validation, setup, conflict checking and health checks
+  complete before a `PluginActivationSet` can be published. Successful Activation
+  ownership transfers to the new Composition Generation; an old Lease keeps its old
+  plugin Tool, Prompt, Service and Owned Task alive until the last Lease exits, then
+  cleanup runs in reverse dependency order. Candidate failures roll back immediately,
+  repeated cancellation converges before re-raising, and cleanup failures are bounded and
+  poison the runtime without skipping other plugins or Generations.
+- **Stage B default-mainline result:** both default factories, startup plugins, real
+  AgentLoop Steps and `AgentRuntime.dispose()` use the same ActivationSet/Generation/Lease/
+  Drain path. SessionService, EventStore, core Provider and built-in Tools are borrowed
+  core resources; plugin Activation, Tool, Prompt, Service, Owned Task and cleanup are
+  generation-owned. The internal `AgentRuntime.replace_plugin_composition()` API exists
+  for assembly tests and future control-plane work, but no user-facing reload command is
+  provided. Runtime disposal first cancels and waits for in-flight replacement Tasks;
+  replacement does not authorize an existing Session to migrate across plugin identities.
 - Add Application, Workspace, Preset and Agent Scope layers (v0.4 activates application
   scope only).
-- Add a user-facing hot-reload command that builds and validates a candidate Generation;
-  Stage A deliberately does not provide this command.
-- Support draining old plugin generations as part of an explicit hot-reload workflow;
-  the runtime primitive now exists, while PluginManager remains startup-only.
-- ✅ Plugin versions already persist in the Composition Snapshot as of v0.4; provider
-  identities still to follow.
+- Add a user-facing hot-reload command; Stage B deliberately exposes no CLI for it.
 - Add explicit override conflict diagnostics.
 - Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
 
-Still deferred beyond Stage A: running `pip install`/`uninstall` for Wheels, Workspace/
-Preset/Agent Scope Overlay, isolated plugins, multi-agent, Workflow, MCP, TUI and model
-streaming. The version remains `0.4.0`; completing Stage A does not mean v0.5 is released.
+Still deferred: running `pip install`/`uninstall` for Wheels, Workspace/Preset/Agent Scope
+Overlay, Provider/Policy/Middleware/EventStore/Verifier plugin contributions, isolated
+plugins, multi-agent, Workflow, MCP, TUI and model streaming. The version remains `0.4.0`;
+completing Stage A or Stage B does not mean v0.5 is released.
 
-Definition of done: two Agents can see different tool/policy compositions, and updating a
-plugin cannot change a Step already in progress.
+Definition of done for the later v0.5 product remains: two Agents can see different
+tool/policy compositions, and updating a plugin cannot change a Step already in progress.
 
 ## v0.6: AgentSupervisor and subagents
 

@@ -30,6 +30,8 @@ class Activation:
         self.tasks = OwnedTaskSet()
         self._published = False
         self._dispose_task: asyncio.Task[None] | None = None
+        self._tasks_closed = False
+        self._registrations_closed = False
 
     @property
     def published(self) -> bool:
@@ -37,7 +39,9 @@ class Activation:
 
     @property
     def disposed(self) -> bool:
-        return self._dispose_task is not None and self._dispose_task.done()
+        return (
+            self._dispose_task is not None and self._dispose_task.done()
+        ) or (self._tasks_closed and self._registrations_closed)
 
     def own(self, registration: CallbackRegistration) -> CallbackRegistration:
         return self.lifespan.add(registration)
@@ -50,6 +54,22 @@ class Activation:
             raise RuntimeError("cannot publish a disposing activation")
         self._published = True
 
+    async def _cancel_owned_tasks(self) -> None:
+        """Converge this activation's tasks without releasing registrations."""
+
+        try:
+            await self.tasks.cancel_and_wait()
+        finally:
+            self._tasks_closed = True
+
+    async def _close_registrations(self) -> None:
+        """Release this activation's registrations after tasks have stopped."""
+
+        try:
+            await self.lifespan.close()
+        finally:
+            self._registrations_closed = True
+
     async def rollback(self) -> None:
         await self.dispose()
 
@@ -58,7 +78,7 @@ class Activation:
         # Tasks first: a background task may still be using something a
         # registration is about to tear down.
         try:
-            await self.tasks.cancel_and_wait()
+            await self._cancel_owned_tasks()
         except asyncio.CancelledError:
             raise
         except BaseException as error:
@@ -67,7 +87,7 @@ class Activation:
         # registration must not skip the rest - Lifespan.close() already
         # guarantees the latter and reports the collected failures.
         try:
-            await self.lifespan.close()
+            await self._close_registrations()
         except asyncio.CancelledError:
             raise
         except BaseException as error:
@@ -87,6 +107,13 @@ class Activation:
         task = self._dispose_task
         try:
             await asyncio.shield(task)
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as cancellation:
             await await_worker_convergence(task)
-            raise
+            # Cancellation controls when the caller may leave; it must not
+            # rewrite the cleanup task's real terminal outcome.  The manager
+            # maps any raw plugin exception onto a bounded structured failure.
+            if not task.cancelled():
+                failure = task.exception()
+                if failure is not None:
+                    raise failure from None
+            raise cancellation

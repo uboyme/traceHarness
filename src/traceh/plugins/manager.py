@@ -26,6 +26,7 @@ import asyncio
 import copy
 import inspect
 import re
+import threading
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -74,6 +75,20 @@ _CONTRIBUTION_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,127}\Z")
 # manifest can declare future intent without becoming unparseable.
 _KNOWN_SCOPES = frozenset({"application", "workspace", "preset", "agent"})
 _MISSING = object()
+
+
+async def _await_cleanup_task(task: asyncio.Task[None]) -> None:
+    """Wait through cancellation without hiding cleanup's terminal failure."""
+
+    try:
+        await asyncio.shield(task)
+    except asyncio.CancelledError as cancellation:
+        await await_worker_convergence(task)
+        if not task.cancelled():
+            failure = task.exception()
+            if failure is not None:
+                raise failure from None
+        raise cancellation
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +167,227 @@ class _ServiceContribution:
     key: ServiceKey[Any]
     value: Any
     replace: bool
+
+
+class PluginActivationSet:
+    """One candidate plugin activation and its generation-owned registries.
+
+    The set is deliberately separate from :class:`PluginManager`.  A manager
+    is a builder/discovery object; once a candidate is prepared, this object is
+    the only owner of the plugin Activations, their candidate registries and
+    their cleanup.  ``claim_generation`` is the synchronous hand-off point
+    used by the Composition Runtime.  A set can be claimed by one Generation
+    exactly once and cannot be accepted by another Runtime.
+    """
+
+    def __init__(
+        self,
+        *,
+        tools: ToolRegistry,
+        prompt: PromptAssembler,
+        services: ServiceRegistry,
+        identities: tuple[PluginIdentity, ...],
+        activation_order: tuple[str, ...],
+        activations: tuple[Activation, ...],
+        statuses: tuple[PluginStatus, ...] = (),
+        notices: tuple[PluginNotice, ...] = (),
+    ) -> None:
+        self.tools = tools
+        self.prompt = prompt
+        self.services = services
+        self.identities = tuple(identities)
+        self.activation_order = tuple(activation_order)
+        self.statuses = tuple(statuses)
+        self.notices = tuple(notices)
+        self._activations = tuple(activations)
+        self._claim_lock = threading.Lock()
+        self._claimed_by: object | None = None
+        self._state = "candidate"
+        self._dispose_task: asyncio.Task[None] | None = None
+
+    @classmethod
+    def empty(
+        cls,
+        *,
+        tools: ToolRegistry,
+        prompt: PromptAssembler,
+        services: ServiceRegistry,
+    ) -> PluginActivationSet:
+        return cls(
+            tools=tools,
+            prompt=prompt,
+            services=services,
+            identities=(CORE_PLUGIN_IDENTITY,),
+            activation_order=(),
+            activations=(),
+        )
+
+    @property
+    def claimed_by(self) -> object | None:
+        with self._claim_lock:
+            return self._claimed_by
+
+    @property
+    def state(self) -> str:
+        with self._claim_lock:
+            return self._state
+
+    @property
+    def activations(self) -> tuple[Activation, ...]:
+        return self._activations
+
+    @property
+    def disposed(self) -> bool:
+        task = self._dispose_task
+        return task is not None and task.done()
+
+    def _ensure_claimable(self, generation_owner: object) -> None:
+        with self._claim_lock:
+            if self._claimed_by is not None:
+                raise ValueError("plugin ActivationSet is already bound to a Generation")
+            if self._dispose_task is not None or self._state != "candidate":
+                raise ValueError("plugin ActivationSet is no longer a candidate")
+            del generation_owner
+
+    def _claim_for_generation(self, generation_owner: object) -> None:
+        with self._claim_lock:
+            if self._claimed_by is not None:
+                raise ValueError("plugin ActivationSet is already bound to a Generation")
+            if self._dispose_task is not None or self._state != "candidate":
+                raise ValueError("plugin ActivationSet is no longer a candidate")
+            self._claimed_by = generation_owner
+            self._state = "owned"
+
+    def _unclaim_for_generation(self, generation_owner: object) -> None:
+        with self._claim_lock:
+            if self._claimed_by is generation_owner and self._state == "owned":
+                self._claimed_by = None
+                self._state = "candidate"
+
+    async def _dispose_for_generation(self, generation_owner: object) -> None:
+        """Dispose only through the Generation that claimed this set."""
+
+        with self._claim_lock:
+            if self._claimed_by is not generation_owner:
+                raise ValueError("plugin ActivationSet is not owned by this Generation")
+            if self._dispose_task is None:
+                self._dispose_task = asyncio.create_task(
+                    self._dispose_body(),
+                    name="traceh-plugin-activation-set-dispose",
+                )
+            task = self._dispose_task
+        await _await_cleanup_task(task)
+
+    async def _dispose_body(self) -> None:
+        failures: list[PluginFailure] = []
+        cancellation: asyncio.CancelledError | None = None
+        # Activation order is dependency order, so reverse order is the only
+        # safe order. Stop every plugin task before releasing any plugin
+        # registration: a task in one Activation may still use a Service owned
+        # by another Activation in the same set.
+        for activation in reversed(self._activations):
+            try:
+                await activation._cancel_owned_tasks()
+            except asyncio.CancelledError as error:
+                if cancellation is None:
+                    cancellation = error
+            except BaseException:
+                failures.append(
+                    PluginFailure(
+                        "plugin-cleanup-failed",
+                        "dispose",
+                        "Plugin Activation cleanup failed",
+                        activation.plugin_id,
+                    )
+                )
+        for activation in reversed(self._activations):
+            try:
+                await activation._close_registrations()
+            except asyncio.CancelledError as error:
+                if cancellation is None:
+                    cancellation = error
+            except BaseException:
+                # Do not retain the exception or traceback.  The structured
+                # failure is bounded by the number of Activations and contains
+                # only repository-authored text.
+                failures.append(
+                    PluginFailure(
+                        "plugin-cleanup-failed",
+                        "dispose",
+                        "Plugin Activation cleanup failed",
+                        activation.plugin_id,
+                    )
+                )
+        with self._claim_lock:
+            self._state = "cleanup_failed" if failures else "disposed"
+        if failures:
+            raise PluginDisposeError(tuple(failures))
+        if cancellation is not None:
+            raise cancellation
+
+    async def dispose(self) -> None:
+        """Converge reverse cleanup exactly once, absorbing repeat cancellation."""
+
+        with self._claim_lock:
+            if self._claimed_by is not None:
+                raise ValueError(
+                    "a Generation-owned ActivationSet must be disposed by its Generation"
+                )
+            if self._dispose_task is None:
+                self._dispose_task = asyncio.create_task(
+                    self._dispose_body(),
+                    name="traceh-plugin-activation-set-dispose",
+                )
+            task = self._dispose_task
+        await _await_cleanup_task(task)
+
+
+class PluginGenerationBuilder:
+    """Prepare independent plugin candidates for Composition Generations."""
+
+    def __init__(
+        self,
+        *,
+        tools: ToolRegistry,
+        prompt: PromptAssembler,
+        services: ServiceRegistry,
+        discovery: PluginDiscovery | None = None,
+        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+    ) -> None:
+        self.tools = tools
+        self.prompt = prompt
+        self.services = services
+        self.discovery = discovery
+        self.plugin_configs = plugin_configs
+
+    def _candidate_registries(
+        self,
+    ) -> tuple[ToolRegistry, PromptAssembler, ServiceRegistry]:
+        return self.tools.fork(), self.prompt.fork(), self.services.fork()
+
+    def empty(self) -> PluginActivationSet:
+        tools, prompt, services = self._candidate_registries()
+        return PluginActivationSet.empty(tools=tools, prompt=prompt, services=services)
+
+    async def prepare(
+        self,
+        enabled_plugin_ids: Sequence[str],
+        *,
+        discovery: PluginDiscovery | None = None,
+        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+    ) -> PluginActivationSet:
+        tools, prompt, services = self._candidate_registries()
+        manager = PluginManager(
+            tools=tools,
+            prompt=prompt,
+            services=services,
+            discovery=discovery if discovery is not None else self.discovery,
+            plugin_configs=(
+                plugin_configs if plugin_configs is not None else self.plugin_configs
+            ),
+        )
+        await manager.activate(tuple(enabled_plugin_ids))
+        return manager._transfer_activation_set()
 
 
 class _PluginContext:
@@ -536,12 +772,15 @@ def validate_manifest(manifest: object, *, expected_id: str) -> tuple[PluginFail
 
 
 class PluginManager:
-    """Discover, load, validate and atomically publish explicitly enabled plugins.
+    """Discover and transact explicitly enabled plugins for one registry set.
 
-    The manager lives in the runtime assembly layer. ``AgentLoop`` has no
-    knowledge of it: plugin tools, prompt sections and services join the same
-    ``ToolRegistry``, ``PromptAssembler`` and ``ServiceRegistry`` the core uses,
-    so there is no parallel plugin tool runtime or plugin agent loop.
+    The manager remains the v0.4 transaction engine and is also used by
+    :class:`PluginGenerationBuilder` against private registry forks.  In the
+    Stage B default path it transfers successful Activation ownership to a
+    :class:`PluginActivationSet`; it does not retain a second cleanup owner.
+    ``AgentLoop`` has no knowledge of either class: plugin tools, prompt
+    sections and services still use the core mainlines, so there is no parallel
+    plugin tool runtime or plugin agent loop.
     """
 
     def __init__(
@@ -891,6 +1130,47 @@ class PluginManager:
                     )
         return tuple(sorted(conflicts, key=lambda item: (item.plugin_id or "", item.code)))
 
+    def _transfer_activation_set(self) -> PluginActivationSet:
+        """Transfer successful activation ownership to a candidate set."""
+
+        if not self._active:
+            raise RuntimeError("plugin activation is not complete")
+        activation_set = PluginActivationSet(
+            tools=self.tools,
+            prompt=self.prompt,
+            services=self.services,
+            identities=self._identities,
+            activation_order=self._order,
+            activations=tuple(self._activations),
+            statuses=self.statuses,
+            notices=self.notices,
+        )
+        # The temporary manager is now only a builder record.  It must not
+        # retain a second cleanup owner for the same Activation objects.
+        self._activations.clear()
+        self._contexts.clear()
+        self._active = False
+        return activation_set
+
+    async def prepare_activation_set(
+        self,
+        enabled_plugin_ids: Sequence[str],
+    ) -> PluginActivationSet:
+        """Build a private candidate without touching this manager's registries."""
+
+        builder = PluginGenerationBuilder(
+            tools=self.tools,
+            prompt=self.prompt,
+            services=self.services,
+            discovery=self.discovery,
+            plugin_configs=self._configs,
+        )
+        return await builder.prepare(enabled_plugin_ids)
+
+    # Short alias for assembly code and callers that prefer the noun used by
+    # the Stage B design documents.
+    prepare = prepare_activation_set
+
     async def _rollback(self) -> tuple[tuple[PluginFailure, ...], asyncio.CancelledError | None]:
         """Unwind every activation in reverse order, whatever happens.
 
@@ -926,15 +1206,19 @@ class PluginManager:
         Cancellation is not a plugin failure. If the caller is cancelled at any
         point - during setup, during a health check, during publish, or during the
         rollback that follows - every activation is still unwound in reverse
-        order, owned tasks and cleanups converge, and the original
-        ``CancelledError`` is re-raised. A user pressing Ctrl+C never sees their
-        interrupt reported as a broken plugin configuration.
+        order and owned tasks and cleanups converge. Successful rollback re-raises
+        the original ``CancelledError``; a real rollback cleanup failure is
+        reported as a bounded ``PluginDisposeError`` instead of being hidden by
+        cancellation. A user pressing Ctrl+C never sees their interrupt reported
+        as a broken plugin configuration.
         """
 
         if self._active or self._activations:
             raise RuntimeError("plugin manager activation may run only once")
         enabled = tuple(enabled_plugin_ids)
-        if len(set(enabled)) != len(enabled) or any(not is_plugin_id(item) for item in enabled):
+        if len(set(enabled)) != len(enabled) or any(
+            not isinstance(item, str) or not is_plugin_id(item) for item in enabled
+        ):
             raise PluginValidationError(
                 (
                     PluginFailure(
@@ -1049,15 +1333,19 @@ class PluginManager:
             for activation in self._activations:
                 activation.publish()
 
-        except asyncio.CancelledError:
-            # Rollback failures are not reported on this path: the caller is
-            # being cancelled and receives the cancellation, not a failure list.
-            await self._rollback()
+        except asyncio.CancelledError as cancellation:
+            rollback_failures, _rollback_cancellation = await self._rollback()
             self._activations.clear()
             self._contexts.clear()
-            # The caller asked to stop, so it gets the cancellation it asked for -
-            # after every contribution, owned task and cleanup has converged.
-            raise
+            if rollback_failures:
+                # Cancellation caused rollback, but it cannot certify that the
+                # rollback succeeded.  A real cleanup failure is the terminal
+                # result; only repository-authored structured text escapes.
+                self._fail(rollback_failures)
+                raise PluginDisposeError(tuple(rollback_failures)) from None
+            # Pure cancellation retains the original cancellation object after
+            # every contribution, owned task and cleanup has converged.
+            raise cancellation
         except BaseException as error:
             rollback_failures, cancellation = await self._rollback()
             self._activations.clear()
@@ -1131,15 +1419,13 @@ class PluginManager:
                 name="traceh-plugin-manager-dispose",
             )
         task = self._dispose_task
-        try:
-            await asyncio.shield(task)
-        except asyncio.CancelledError:
-            await await_worker_convergence(task)
-            raise
+        await _await_cleanup_task(task)
 
 
 __all__ = [
     "TRACEH_PLUGIN_API_VERSION",
+    "PluginActivationSet",
+    "PluginGenerationBuilder",
     "PluginManager",
     "PluginNotice",
     "PluginStatus",

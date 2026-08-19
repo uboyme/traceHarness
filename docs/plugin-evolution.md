@@ -1,8 +1,9 @@
 # Plugin and multi-agent evolution
 
 This page tracks what is **shipped** versus what remains planned. For the author-facing
-contract see [`plugins.md`](plugins.md); for the reasoning see
-[ADR-0007](adr/0007-transactional-plugin-activation.md).
+contract see [`plugins.md`](plugins.md); for the v0.4 transaction reasoning see
+[ADR-0007](adr/0007-transactional-plugin-activation.md), and for the Generation-owned
+ActivationSet decision see [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md).
 
 ## v0.4 plugin manager — shipped
 
@@ -18,12 +19,15 @@ the plugins the operator explicitly enabled, and activates them as one transacti
 7. run `health_check()`;
 8. atomically publish tools, prompts and services into the existing mainlines.
 
-Any failure unwinds every activation in reverse order. Cancellation unwinds identically and
-then re-raises the original `CancelledError` - it is never reported as a plugin failure.
+Any failure unwinds every activation in reverse order. Cancellation unwinds identically;
+when rollback succeeds it re-raises the original `CancelledError`. A real rollback cleanup
+failure instead becomes a bounded `PluginDisposeError`, so cancellation cannot make a
+partially cleaned candidate look successful.
 
 No plugin mutates a live registry directly. Every registration is owned by an `Activation`
-and reversible, and `Runtime.dispose()` converges active turns, drains retired Composition
-Generations, and only then unloads plugins in reverse activation order.
+and reversible. In the Stage B default path, the manager runs against private registry
+forks and transfers successful Activation ownership to a `PluginActivationSet`; it does
+not retain a second cleanup owner.
 
 ## Stage A: Generation-backed Composition Runtime — shipped as infrastructure
 
@@ -70,22 +74,59 @@ owner, and the same owner handle cannot be claimed by two Runtimes. Runtime init
 and `publish()` use the same validation/claim entry: frozen cleanup inputs, multi-hop
 derivations, wrapper aliases and cleanup added to an already-used binding are rejected
 before current changes. Stage A has no resource-level refcount, so a cleanup-bearing
-Generation must use an unclaimed exclusive capability assembly. Service values remain application-level registrations owned by
-PluginManager/AgentRuntime and are not yet bound to Generation lifecycle. Stage A also
-rejects a publication whose plugin identity tuple differs from the startup composition;
-Session migration is intentionally deferred.
+Generation must use an unclaimed exclusive capability assembly. Stage B makes the
+plugin-owned boundary explicit: SessionService, EventStore, core Provider and built-in
+Tools are borrowed core resources, while each `PluginActivationSet` owns its plugin
+Activations, plugin Tools, Prompt sections, Services, Owned Tasks and cleanup callbacks.
+The same ActivationSet cannot be accepted by two Generations or Runtimes, and the
+temporary PluginManager cannot retain a second cleanup owner. Plugin identity may change
+between generations only through this ActivationSet path; an internal replacement does
+not authorize an existing Session to cross that composition boundary. Session migration
+is still intentionally deferred.
 
-The two product capabilities the earlier draft listed as part of the loader remain future
-work, because they change the meaning of a Step rather than the loader:
+## Stage B: Generation-owned Plugin ActivationSet — shipped as internal infrastructure
+
+`PluginGenerationBuilder` accepts an explicit enabled-plugin id tuple and creates a fresh
+candidate ToolRegistry, PromptAssembler and ServiceRegistry view. Discovery, dependency
+ordering, manifest validation, setup, conflict checking and health checks all happen
+before publication. A failed setup, health check, Generation construction or publish
+rolls the candidate back in reverse order immediately; current Generation and its
+registries do not change. Repeated cancellation is converged before the original
+`CancelledError` is re-raised when rollback succeeds. If rollback cleanup fails, the
+remaining activations are still attempted and the bounded structured failure wins over
+cancellation.
+
+After a successful publish, the ActivationSet is owned by the new Composition Generation.
+An old Lease keeps the old plugin Tool, Prompt and Service alive. When its last Lease
+exits, cleanup first cancels and waits for Owned Tasks, then reverses plugin registration
+and dependency order. Cleanup failures are bounded, structured and terminal-safe; one
+plugin failure does not skip other plugins, and the Composition Runtime poisons itself
+after a failed Generation cleanup. Runtime disposal converges active Turns, cancels and
+waits for in-flight candidate replacement Tasks, drains all Generations and ActivationSets,
+and only then releases optional legacy application-level builders or discovery resources.
+The default path has no second PluginManager cleanup owner. Runtime shutdown retrieves each
+in-flight replacement Task's outcome: ordinary cancellation is expected, while a rollback
+`PluginDisposeError` is included in the stable shutdown result and repeated `dispose()` calls
+report it again.
+
+The internal replacement API changes only the current Generation. It does not set a
+process-wide Session migration bypass: an existing Session must still match its latest
+durable Composition Snapshot, or its `session/created` identity when no Snapshot exists.
+Callers that need the new plugin combination create a new Session until Stage C defines
+an explicit per-Session migration protocol.
+
+This Stage B API is internal to the assembly layer. It is not called by a user-facing
+reload command. The following capabilities remain future work, because they change the
+meaning of a Step rather than only the loader:
 
 - a user-facing **hot-reload command** that builds, validates and publishes a candidate
   Generation;
 - dynamically installing or uninstalling a Wheel while the process is running.
 
-The plugin set is still fixed between startup and `dispose()`, and PluginManager remains a
-startup activation owner. Also absent: Workspace/Preset/Agent Scope Overlay, isolated
+There is still no user-facing reload command or running Wheel installation/uninstallation.
+Also absent: Workspace/Preset/Agent Scope Overlay, isolated
 (out-of-process) plugins, and any new Provider, Policy, Middleware, EventStore or Verifier
-plugin contribution. The version remains `0.4.0`; Stage A is not a v0.5 release.
+plugin contribution. The version remains `0.4.0`; Stage B is not a v0.5 release.
 
 ## Extension categories
 

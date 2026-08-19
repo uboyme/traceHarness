@@ -43,14 +43,14 @@
 | 持久化 | 本地 Append-only JSONL Session Stream 与 Effect Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
-| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，以及 Stage A 的 Generation/Lease/Drain 运行时基础（见 19 节）。仅 application scope、trusted、进程内；仍无用户可调用热更新、无 isolated |
+| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，以及 Stage A Generation/Lease/Drain 与 Stage B Generation-owned `PluginActivationSet`（见 19 节）。仅 application scope、trusted、进程内；仍无用户可调用热更新、无 isolated |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；其余命令仍是一次执行一个 Turn。不是流式 TUI。新增 `traceh plugins list/inspect/doctor` |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 960 项已收集；完整门禁为 959 通过、1 项按平台跳过 |
+| 当前自动化测试 | `980` collected；全量门禁 `979 passed, 1 skipped`；Stage B 新增 ActivationSet、替换事务、服务/任务生命周期、取消时 rollback 失败传播与 Session 恢复契约 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
-当前版本仍为 0.4.0。本轮 Stage A 已把 Generation-backed Composition Runtime、Step Lease、Publish/Retire/Drain 接入默认 Runtime 主线，但这不等于 v0.5 发布完成：当前仍没有面向用户的热更新命令，也没有运行中安装/卸载 Wheel。多 Agent、Workflow、Scope Overlay 与其他 v0.5 扩展仍未实现。
+当前版本仍为 0.4.0。本轮 Stage B 在 Stage A 基础上把 Generation-owned `PluginActivationSet` 接入默认 Runtime 主线：启动插件和内部候选替换都使用私有 Tool/Prompt/Service 注册表，Activation、Service、Owned Task 与逆序 cleanup 由对应 Generation 持有。仍没有面向用户的热更新命令，也没有运行中安装/卸载 Wheel；Stage A/B 完成不等于 v0.5 发布完成。多 Agent、Workflow、Scope Overlay 与其他 v0.5 扩展仍未实现。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -82,9 +82,9 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 
 ### 2.2 当前不属于系统的能力
 
-- 面向用户的插件**热更新**：Stage A 已实现 Composition 多代发布、Generation 引用计数、Lease 与 Drain 的生命周期基础，但还没有热更新命令，插件集合仍由启动期 PluginManager 激活；
+- 面向用户的插件**热更新**：Stage B 已提供装配层内部的 `AgentRuntime.replace_plugin_composition()`，但还没有用户可调用的热更新命令；候选仍须显式提供插件 id，且不支持运行中安装/卸载 Wheel；
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
-- 插件提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`：`PluginContext` 目前只暴露 Tool、Prompt、Service、Cleanup 与 Owned Task；
+- 插件提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`：`PluginContext` 目前只暴露 Tool、Prompt、Service、Cleanup 与 Owned Task；Provider、Policy、Middleware、EventStore、Verifier 贡献面仍未开放；
 - application 之外的 Scope 装配（workspace / preset / agent）；
 - 活跃的 AgentSupervisor、子 Agent Tool 和 Workflow Engine；
 - MCP 接入；
@@ -109,7 +109,7 @@ traceharness/
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       Scope、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表和调用边界
-│   ├── plugins/                      Entry Point 发现、显式启用解析、结构化失败与事务式 PluginManager
+│   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
 │   ├── runtime/                      AgentRuntime、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
 │   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、压缩和不变量
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程收敛与内置工具
@@ -138,8 +138,8 @@ traceharness/
 
 | 入口 | 用途 |
 |---|---|
-| `build_default_runtime()` | 同步、无插件。行为与 v0.3 完全一致：不发现、不 import 任何插件 |
-| `build_default_runtime_async()` | 异步。`enabled_plugins` 为空时**就是**前者；非空时先执行插件激活事务，再完成装配 |
+| `build_default_runtime()` | 同步、无插件；通过空的 Generation-owned `PluginActivationSet` 进入同一 Generation/Lease 主线，不发现、不 import 插件 |
+| `build_default_runtime_async()` | 异步。`enabled_plugins` 为空时使用空 ActivationSet；非空时在私有候选注册表中完成激活事务，再由初始 Generation 接管 |
 
 两者共享 `_prepare_default_runtime()` 与 `_finish_default_runtime()`。拆成两段的原因很具体：插件必须在**注册表已创建、Composition 尚未围绕它们冻结**的那一刻贡献内容，而拆分让这一点成立，同时不需要把装配代码写两遍。
 
@@ -177,23 +177,21 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    SEL["显式启用：--plugin / TRACEH_PLUGINS"] --> PM["PluginManager（装配层）"]
-    PM --> TR2["ToolRegistry（既有）"]
-    PM --> PA["PromptAssembler（既有）"]
-    PM --> SR["ServiceRegistry（既有）"]
-    TR2 --> CR2["CompositionRuntime"]
-    PA --> CR2
-    PM -. "Tool / Prompt / Plugin Identity 初始 Generation 来源" .-> CR2
-    CR2 --> AL2["AgentLoop"]
-    PM -. "身份写入" .-> SNAP["composition/snapshot 的 plugins 字段"]
-    AL2 -. "不导入、也不知道 PluginManager 存在" .-> PM
+    SEL["显式插件 ids"] --> PB["PluginGenerationBuilder"]
+    PB --> CAND["私有候选 Tool / Prompt / Service 注册表"]
+    CAND --> ACT["PluginActivationSet"]
+    ACT --> GEN["CompositionGeneration"]
+    GEN --> CR2["GenerationCompositionRuntime.publish"]
+    CR2 --> AL2["AgentLoop：只调用 lease()"]
+    ACT -. "旧 Lease 归零后逆序 dispose" .-> DRAIN["Composition Drain"]
+    AL2 -. "snapshot plugins" .-> SNAP["composition/snapshot"]
 ```
 
 依赖规则：
 
 - `AgentLoop` 只编排生命周期，不导入具体工具、JSONL 文件或厂商 HTTP 逻辑；也**不导入 CLI、Console、颜色或 Timeline 文案**：Timeline 是订阅 Feed 的界面层投影，主循环不知道它存在；
 - **`AgentLoop` 同样不知道 `PluginManager` 存在**。插件位于装配层，它的 Tool、Prompt 和 Service 进入既有的 `ToolRegistry`、`PromptAssembler` 和 `ServiceRegistry`，因此**没有** `PluginToolRuntime`，也**没有** `PluginAgentLoop`。`agent_runtime.py` 里对 `PluginManager` 的 import 是函数内局部 import，正是为了让这条边界在依赖图上也成立；
-- `AgentRuntime` 是对外门面和默认依赖装配点，并持有 `PluginManager`；默认工厂把无插件或启动期激活后的同一套 Tool/Prompt/Plugin Identity 冻结成初始 Generation。Service 仍由 application-level 的 PluginManager/AgentRuntime 持有，尚未 Generation 化。`dispose()` 先收敛 Turn，再 Drain Composition，最后由 PluginManager 按逆序卸载它唯一拥有的插件 Activation；
+- `AgentRuntime` 是对外门面和默认依赖装配点；默认工厂把空候选或启动期激活后的 `PluginActivationSet` 交给初始 Generation。Stage B 的内部 `replace_plugin_composition()` 也复用同一条候选→Generation→publish 主线。插件 Tool/Prompt/Service、Activation 与 Owned Task 由对应 Generation 的 ActivationSet 持有；SessionService、EventStore、核心 Provider、内置 Tool 和基础配置是 borrowed core，不能被插件 cleanup 关闭。`dispose()` 先收敛 Turn，再取消并等待在途候选替换及其 rollback，再 Drain 所有 Generation，最后仅清理仍属 application-level 的 legacy 构建器/发现器资源，不与 Generation 重复清理；
 - Provider 与 Tool 通过公共协议进入 Runtime；
 - Projector 和 Inspector 只消费事件，不反向修改历史事实；
 - 未来多 Agent 控制面应构建在单 Agent Runtime 之上，而不是塞入 `AgentLoop`。
@@ -265,7 +263,7 @@ sequenceDiagram
 | 再次调用 | `await` **同一个**已完成 Task，因此复用同一个真实结果，关闭不会跑第二遍 |
 | 关闭本身失败 | 该 Task 以异常完成，后续 `dispose()` 会再次抛出同一个异常，**不会**静默伪装成功 |
 
-工作属于 Task 而不属于等待它的人，所以调用方的取消永远碰不到关闭本身。顺序是：先取消并 `gather` 全部活跃 Turn，再让 Composition Runtime Drain 所有 retired Generation，最后才由 PluginManager 卸载它唯一拥有的启动 Activation（19.8）。默认 Generation 不持有插件 cleanup callback，避免与 PluginManager 双重清理。
+工作属于 Task 而不属于等待它的人，所以调用方的取消永远碰不到关闭本身。顺序是：先取消并 `gather` 全部活跃 Turn，再让 Composition Runtime Drain 所有 retired/current Generation；Drain 会由各代 ActivationSet 逆序卸载插件 Activation、取消并等待 Owned Task、撤销 Service/Tool/Prompt 注册，最后才清理仍属 application-level 的 legacy 构建器/发现器资源（19.8）。默认 Stage B Runtime 不让 PluginManager 和 Generation 同时拥有同一份插件 cleanup。
 
 ### 5.4 一个 Session 中的多个 Turn
 
@@ -519,7 +517,9 @@ flowchart LR
 
 Generation identity 是内部生命周期编号，只用于引用计数、retire、cleanup 和诊断，不写入事件或 Request Fingerprint。`CompositionSnapshot.revision` 仍是模型可见内容的 fingerprint；因此两个模型可见内容完全相同的 Generation 可以有不同 identity，但 revision 相同。Generation 构造时还会冻结 Tool 的 name、description、input_schema、effect_kind，并用真正只读、扁平、幂等的适配器把执行委托给原 Tool；嵌套 Schema 也不能改写，连续从冻结 Generation 构造无 cleanup 候选不会递归套适配器。Policy/Middleware 名称在构造时捕获，兼容性检查投影与当前 Generation 分离。Runtime 初始化会先从已经冻结的初始 Generation 构造全部兼容性视图，再一次性认领资源；认领后不再调用调用方可变的 Prompt/Registry 来源，因此第二次读取失败不会留下已认领但无 Runtime 接管的资源。Generation 被 retired 后，仍有 Lease 时绝不 cleanup；最后一个 Lease 释放才创建一次 cleanup Task。`drain()` 等待所有 retired Generation 的 Lease 归零并等待 cleanup 真正完成，cleanup 失败会在所有其他 Generation 都尝试后以有界的结构化 `CompositionDrainError.failures` 报告，并把 Runtime 标为 poisoned、拒绝后续 `publish()`。等待期间重复取消由共享内部 Task 和 `await_worker_convergence()` 吸收，收敛后再抛最初的 `CancelledError`。
 
-Stage A 已进入同步/异步默认 Runtime 主线，`AgentLoop` 仍只调用 `CompositionRuntime.lease()`，不导入 Generation Manager 或 PluginManager。这里还没有面向用户的热更新命令、Scope Overlay 或运行中 Wheel 安装/卸载，因此 v0.4.0 仍不是 v0.5 完成版。
+Stage B 的插件 cleanup 不再使用上述 capability-wide owner 推断插件所有权：`PluginActivationSet` 显式持有插件 Activation、插件 Tool/Prompt/Service、Owned Task 与 cleanup，SessionService、EventStore、核心 Provider 和内置 Tool 只是 borrowed core。候选只在私有注册表中 setup，成功 publish 后由 Generation 接管；旧 Lease 结束前旧 set 不会被卸载。
+
+Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；`AgentLoop` 仍只调用 `CompositionRuntime.lease()`，不导入 Generation Manager、PluginManager、Builder 或 reload service。这里还没有面向用户的热更新命令、Scope Overlay 或运行中 Wheel 安装/卸载，因此 v0.4.0 仍不是 v0.5 完成版。
 
 ### 7.2 Surface
 
@@ -1133,7 +1133,7 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | 可逆生命周期 | `Activation`、`Lifespan`、`OwnedTaskSet` | **已实现**并被 PluginManager 真正使用，含取消收敛。`OwnedTaskSet` 是**生命周期所有权，不是后台任务监督器**，见 19.12 |
 | 插件提供 Provider / Policy / Middleware / Store / Verifier | `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore`、`CompletionVerifier` | 协议存在，但 `PluginContext` 不暴露，只能直接装配 Runtime |
 | 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`Scope` | Service 已可由插件提供；Workspace/Preset/Agent 层级装配仍缺失，v0.4 只有 application scope |
-| Composition Generation 与热更新 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()` | Stage A 已实现单 current Generation、Publish/Retire、Lease 引用计数、一次性 cleanup 与 Drain；Generation 发布所有权也是一次性的，仍没有用户热更新命令，启动期 PluginManager 仍固定插件集合 |
+| Composition Generation 与热更新基础 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()`、`PluginActivationSet`、`PluginGenerationBuilder` | Stage A 的 Publish/Retire/Lease/Drain 与 Stage B 的 Generation-owned ActivationSet 已进入默认主线；启动插件和内部替换都走候选事务，但仍没有用户热更新命令 |
 | isolated 插件 | `PluginManifest.trust_mode` | 可声明，激活**明确拒绝**；无进程边界、无序列化契约、无崩溃子进程失败模型 |
 | 多 Agent | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、Inbox、子 Agent Tools、冷恢复均缺失 |
 | Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
@@ -1153,7 +1153,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前测试套件收集 960 项。本轮新增 Generation 契约和默认 Runtime 主线测试覆盖：初始 Lease、Publish 后新旧代隔离、固定 SessionService 身份、拒绝当前 Generation 自重发布、已发布/已清理 Generation 的一次性发布所有权、显式 CompositionResourceOwner 与裸 cleanup 拒绝、Policy alias binding、自定义 `__setattr__` 不能吞掉 binding、binding 中途提交失败精确恢复字段存在性与 `None` 值、slotted Provider/Tool/Policy 无法承载 binding 时拒绝 cleanup ownership、禁止 cleanup binding 多跳派生、冻结 cleanup binding 不能作为 Runtime 初始输入、同一 raw capability 不能被两个 cleanup owner 接受、冻结 Tool/Provider/Policy/Middleware 重新包装不能洗掉 binding、首次 cleanup 后仍拒绝同一 binding、错误 Provider 构造不污染 Owner 且可用同一资源重试、Runtime 从冻结初始代构造兼容性视图且不二次读取 raw Prompt、禁止从带 cleanup 的已发布代共享资源、禁止从 active Lease 的 cleanup-free Generation 增加 cleanup、旧 Lease 在新 raw Generation cleanup 后仍可执行、连续 1100 次候选替换后真实 Tool 执行、最后 Lease cleanup、并发引用计数、正常/异常/取消释放、进入/退出取消、`__aenter__` 取消不泄漏、不可变来源捕获、Tool 执行 Schema 适配器、真正不可写且不可删除的 Tool 元数据与嵌套 Schema、Policy/Middleware 名称捕获、兼容性投影隔离、cleanup poison 有界性、记录释放、插件身份保护、Lease 单次使用、终端安全错误类型、Drain 对 Lease 与 cleanup Gate 的等待、重复取消、结构化 cleanup 失败、多代继续清理、幂等 dispose、锁竞争线性化、同步/异步默认工厂、真实 Turn 的 snapshot/request 重建与 `verify_request_snapshots()==()`，以及 Generation cleanup 先于 PluginManager cleanup 和无未取回任务结果。取消聊天测试的 Provider 夹具现在等待第一模型调用实际收到取消后才放开门闩，完整运行结果为 959 passed、1 skipped。
+当前测试套件收集 `980` 项，完整门禁为 `979 passed, 1 skipped`。Stage B 新增 [`tests/test_plugin_activation_sets.py`](../../tests/test_plugin_activation_sets.py)，覆盖私有候选注册表、setup/health/构造/publish 失败回滚、候选取消收敛、ActivationSet 一次性所有权、旧 Lease 的 Service/Tool/Owned Task 存活、逆序 cleanup、cleanup failure 结构化报告、默认 Runtime 主线、Runtime dispose 对在途替换候选的收敛、取消在途候选时 rollback cleanup 失败不能被 `CancelledError` 遮蔽、替换不自动迁移旧 Session、新 Session 的最新 durable Composition、无 Step publish 不形成 Session 事实，以及无未取回任务。既有 Generation 测试继续覆盖 Lease、Drain、重复取消、冻结内容、资源所有权、请求重建和 `verify_request_snapshots()==()`；插件与 Runtime 回归也保持通过。取消聊天测试的 Provider 夹具现在等待第一模型调用实际收到取消后才放开门闩。
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
@@ -1197,7 +1197,7 @@ python -m ruff check src tests
 - **显式启用**（`test_plugin_selection.py`、`test_cli_plugin_selection.py`）：默认不启用任何插件；`TRACEH_PLUGINS` 逗号分隔并去空白；任一 `--plugin` 整体替换环境变量；空、非法（含大写、空格、控制字符、ESC、双向覆写、超长）、重复 id 全部拒绝；被拒绝的假凭据取值零回显且不泄漏长度/前后缀；错误消息单行无控制字符；`run`/`chat`/`resume` 解析结果一致；`plugins` 与只读命令不暴露该参数；CLI 报使用错误而非 traceback；
 - **Manifest 校验**（`test_plugin_manifest.py`）：非 Manifest 值、非法/不匹配/保留 `plugin_id`、非 PEP 440 版本、非法或不兼容 `requires_traceh`、非法依赖项与依赖版本、重复依赖、required 与 optional 冲突、非 tuple 依赖列表、空/未知/重复 scope、缺少 application scope、非法 trust mode、`isolated` 明确拒绝、非法与重复 `provides`；并断言**一次返回全部失败**而不是第一条；
 - **激活事务**（`test_plugin_manager.py`，58 项）：只 import 已启用插件、空选择完全不碰 discovery、未安装/元数据有问题的插件不被 import；import 失败与 setup 失败都不泄漏插件异常文本；类与工厂两种 Entry Point 目标；缺 `setup` 被拒；依赖先于依赖者 setup、未启用的必需依赖失败、依赖版本不兼容失败、核心依赖按唯一版本判定、缺失可选依赖只是 notice 而已启用但不兼容是失败、依赖环在任何 setup 之前被发现、`provides` 冲突、独立插件顺序确定；Tool/Prompt/Service 真正进入既有主线且 setup 期间核心注册表看不到 staged 内容；dispose 按反向依赖顺序移除全部贡献、单个 cleanup 失败不阻止其余；setup 失败逆序回滚且什么都不发布、Owned Task 被取消；与核心 Tool/Prompt/Service 冲突各自报对应码并完整回滚；**冲突插件的 `health_check` 从未被调用**；health 返回 `False`、抛异常、零参数签名、缺省四种情况；health 在全部 setup 之后运行；配置深拷贝隔离、缺键无默认报错、依赖提供的 Service 可被 `require()`；`spawn_owned` 拒绝非协程且任务名不使用插件提供的文本；非法 Tool 名与 Prompt section id 被拒；激活只能一次、状态表正确、身份含真实版本、重复 dispose 安全；
-- **取消语义**（`test_plugin_cancellation.py`，10 项，全部用显式 Event 门控而非 sleep）：setup 阻塞期间取消抛 `CancelledError` 而**不是** `PluginActivationError`；取消后 Tool/Prompt/Service 全部回滚、cleanup 全部执行、Owned Task 已收敛；health check 阻塞期间取消同理；回滚期间连续取消 3–4 次都不能让调用方提前返回（每次都真正让事件循环运行并断言仍未结束）；dispose 期间重复取消同样收敛；不产生任何 never-retrieved task exception（用事件循环异常处理器捕获断言为空）；取消**不**被记入插件失败状态；真实 setup 失败仍报 `plugin-setup-failed`；
+- **取消语义**（`test_plugin_cancellation.py`，11 项，全部用显式 Event 门控而非 sleep）：setup 阻塞期间的**纯取消**抛原始 `CancelledError` 而**不是** `PluginActivationError`；取消后 Tool/Prompt/Service 全部回滚、cleanup 全部执行、Owned Task 已收敛；health check 阻塞期间取消同理；回滚期间连续取消 3–4 次都不能让调用方提前返回（每次都真正让事件循环运行并断言仍未结束）；dispose 期间重复取消同样收敛；若收敛后的 cleanup 真失败，则以脱敏 `PluginDisposeError` 报告而不是让取消遮蔽失败，且其余 Activation 继续回滚；不产生任何 never-retrieved task exception（用事件循环异常处理器捕获断言为空）；纯取消**不**被记入插件失败状态；真实 setup 失败仍报 `plugin-setup-failed`；
 - **插件与 Runtime 主线**（`test_plugin_runtime.py`）：无插件时 Prompt 与 Tool 集合同步于同步装配入口；插件**已安装但未启用**时默认 Runtime 完全不变且 `setup` 从未被调用；启用后 Tool Schema 与 Prompt Section 确实进入模型可见面；模型真正调用插件 Tool，`tool/call` 与 `tool/result` 数量相等、`effect/intent` 与 `effect/outcome` 数量相等、不变量 0 项、Request 重建违规 0 项；Composition Snapshot 含真实插件身份且 `composition_from_event()` 能重建它；Session 记录外部插件身份、无插件时为空列表；插件集合相同可继续、丢插件/加插件/改版本三种情况都拒绝；v0.4 之前无该键的 Session 视为无插件可继续；畸形 metadata 被拒；保留键不可由调用方提供；Runtime dispose Drain 后才卸载插件、幂等、且先收敛 Turn 再进入 Composition cleanup；
 - **插件 CLI**（`test_cli_plugins.py`，36 项）：`list`/`inspect` 的 human 与 JSON 输出、排序、空集合、退出码；10 种恶意元数据值（换行、回车、清屏与颜色 ESC、退格、响铃、双向覆写、行/段分隔符、超长）断言输出严格单行、无 ESC、无 `Cf` 残留、长度有界；`list`/`inspect` 绝不 import 插件；`doctor` 完成 setup 与 health 后立即 dispose、默认覆盖全部已发现插件、失败时退出码 7 且不泄漏插件异常文本、报告未安装插件、报告可选依赖 notice、human 输出同样安全、使用一次性注册表因此不污染真实 Runtime；断言 `llm_used` 与 `session_created` 均为 false；
 - **只读 CLI 命令**（`test_cli_read_only_commands.py`）：`sessions`/`inspect`/`inspect --html`/`replay`/`recover`/`compact` 经 `main()` 真实执行并断言不变量与重建违规为 0；同时钉住它们不接受 `--plugin`。这组用例是本轮补上的覆盖缺口——一个被漏掉的 import 让这些命令全部无法运行，而当时没有任何测试会发现；
@@ -1238,7 +1238,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；本轮新增 Generation 契约、默认 Runtime 主线、真实 Turn 发布竞争、清理顺序、binding 真实落位/精确回滚、冻结兼容性视图、slotted alias 拒绝和失败构造可重试测试后，当前收集 960 项，完整门禁为 959 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后的中间基线为 960 项（959 通过、1 项跳过）；Stage B 新增 ActivationSet 候选事务、Service/Owned Task 生命周期、在途替换收敛、取消时 rollback cleanup 失败传播和 Session durable Snapshot 恢复测试后，当前收集 980 项，完整门禁为 979 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1273,7 +1273,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Patch 能力 | 精确文本替换，不解析 unified diff | 增加独立工具实现，不改变 Tool Runtime |
 | Benchmark | 仅一个确定性简单案例 | 增加真实 Provider、失败恢复、复杂仓库案例 |
 | 自动压缩 | 只有手动 Replacement | 未来 Context/Compaction Plugin |
-| 插件无热更新命令 | Stage A 已有 Generation 发布、Lease 引用计数和 Drain，但用户仍没有热更新 CLI；启动期 PluginManager 仍拥有并管理当前插件 Activation | 后续增加用户触发的候选 Generation 构建/校验与发布入口；不能把 CLI、动态 Wheel 安装或卸载混入本阶段 |
+| 插件无热更新命令 | Stage B 已有私有候选、Generation-owned ActivationSet 和装配层内部替换 API，但用户仍没有热更新 CLI；默认启动插件 cleanup 已由初始 Generation 唯一拥有 | 后续增加用户触发的候选 Generation 构建/校验与发布入口；不能把 CLI、动态 Wheel 安装或卸载混入本阶段 |
 | 插件不是沙箱 | v0.4 只有 trusted、进程内插件。`isolated` 可声明但被明确拒绝。一个被启用的插件与 Harness 同进程、同权限运行，能做任何 Python 能做的事 | 真正的隔离需要进程边界、每次 context 调用的序列化契约与子进程崩溃失败模型；在此之前，“启用插件”等于“信任其作者” |
 | 插件贡献面很窄 | 当前仍只能提供 Tool、Prompt Section 与 Service，不能提供 Provider、Policy、Middleware、EventStore 或 Verifier | 后续按 ROADMAP 扩展 `PluginContext`，但每扩一项都要同步 Composition Snapshot 的可重建性 |
 | Session 插件身份是保护而非迁移 | 插件集合改变后拒绝继续旧 Session。这防止用不同工具集续跑，但**没有**提供任何迁移路径。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化，但任何真实版本差异都会拒绝 | 需要有意变更时应新建 Session；跨组合迁移属于未设计的能力 |
@@ -1332,9 +1332,9 @@ flowchart LR
 - 示例只作为示例，秘密未进入 Git；
 - 最终交付说明变更、验证、文档同步和剩余边界。
 
-## 19. 插件系统（v0.4）
+## 19. 插件系统（v0.4 / Stage B）
 
-作者与运维契约见 [`docs/plugins.md`](../plugins.md)，设计原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)。本节记录工程事实。
+作者与运维契约见 [`docs/plugins.md`](../plugins.md)，v0.4 事务原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)，Stage B 所有权决定见 [ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)。本节记录工程事实。
 
 ### 19.1 模块职责
 
@@ -1343,7 +1343,7 @@ flowchart LR
 | [`plugins/discovery.py`](../../src/traceh/plugins/discovery.py) | 读取 `traceh.plugins` Entry Point 组的 Distribution 元数据，**不 import 插件** |
 | [`plugins/selection.py`](../../src/traceh/plugins/selection.py) | 解析并校验显式启用列表，发生在发现与 import 之前 |
 | [`plugins/errors.py`](../../src/traceh/plugins/errors.py) | 结构化 `PluginFailure` 与异常层次 |
-| [`plugins/manager.py`](../../src/traceh/plugins/manager.py) | Manifest 校验、依赖解析、事务式激活、发布与卸载 |
+| [`plugins/manager.py`](../../src/traceh/plugins/manager.py) | Manifest 校验、依赖解析、事务式激活，以及 `PluginActivationSet` / `PluginGenerationBuilder` 的候选所有权转交 |
 | [`cli/plugins.py`](../../src/traceh/cli/plugins.py) | `list`/`inspect`/`doctor` 的安全投影 |
 | [`api/plugins.py`](../../src/traceh/api/plugins.py) | `PluginManifest`、`PluginContext`、`Plugin`、`CORE_PLUGIN_IDENTITY` |
 | [`api/prompts.py`](../../src/traceh/api/prompts.py) | `PromptSection`，从 `runtime/prompt.py` 移出，使 SDK 不必导入装配层 |
@@ -1385,7 +1385,7 @@ flowchart TD
     P2 -. "冲突" .-> RB
     P3 -. "失败或取消" .-> RB
     P4 -. "失败" .-> RB
-    RB --> ERR["PluginActivationError 或原始 CancelledError"]
+    RB --> ERR["PluginActivationError / PluginDisposeError / 原始 CancelledError"]
 ```
 
 **为什么冲突检查必须早于 health check。** 一个 Tool 与内置 Tool 同名的插件无论 health check 说什么都会被拒绝。先跑 health check 只是给一段已知注定失败的第三方代码额外一次执行、占用时间或访问网络的机会；而冲突完全由 Manager 已经持有的数据判定，先问插件不会得到任何新信息。候选实现的顺序是反的，本轮已修正，并由 `test_conflicting_plugin_health_check_is_never_called` 钉住（反向验证：把顺序换回去，该用例立即失败）。
@@ -1407,9 +1407,9 @@ flowchart TD
 | publish 期间 | 同上 |
 | 回滚期间重复取消 | 被吸收；`Activation.dispose()` 已在重新抛出前收敛，因此记录取消意图并**继续展开其余 Activation** |
 
-调用方拿到 `CancelledError` 时，保证：全部 staged 注册已撤销、全部 Owned Task 已取消并等待完成、全部 cleanup 已执行、状态表中**没有**把取消记成插件失败。收敛复用既有的 [`await_worker_convergence()`](../../src/traceh/concurrency.py)（见 6.6、8.3、13.8）：重复取消是意愿声明，不是逃生出口。
+当 rollback 全部成功时，调用方拿到原始 `CancelledError`，并且保证：全部 staged 注册已撤销、全部 Owned Task 已取消并等待完成、全部 cleanup 已执行、状态表中**没有**把纯取消记成插件失败。若 rollback cleanup 真失败，取消不能把失败改写成成功收尾：其余 Activation 仍继续逆序回滚，最终以只含仓库固定文案的 `PluginDisposeError` 报告；原始插件异常正文与 traceback 不保留、不显示。收敛复用既有的 [`await_worker_convergence()`](../../src/traceh/concurrency.py)（见 6.6、8.3、13.8）：重复取消是意愿声明，不是逃生出口，也不是遮蔽 cleanup 失败的理由。
 
-真实失败仍然是失败：`test_a_genuine_setup_failure_is_still_reported_as_a_failure` 防止这条修复把真错误变成静默取消。反向验证：去掉专门的 `CancelledError` 分支后，10 项取消测试中有 6 项立即变红，且报出的正是 `PluginActivationError: Plugin setup failed`。
+真实失败仍然是失败：`test_a_genuine_setup_failure_is_still_reported_as_a_failure` 防止这条修复把真错误变成静默取消。反向验证：去掉专门的 `CancelledError` 分支后，原有 10 项取消测试中有 6 项立即变红，且报出的正是 `PluginActivationError: Plugin setup failed`；本轮新增的第 11 项又证明，恢复“忽略 rollback failure”的旧逻辑时会错误地只抛 `CancelledError`。
 
 ### 19.6 依赖与 Manifest
 
@@ -1421,23 +1421,25 @@ flowchart TD
 - `traceh.core` 是保留 id，任何外部插件声明它都报 `plugin-id-reserved`；
 - Manifest 校验**一次返回全部失败**而不是第一条，作者修一次就能看到全部问题。
 
-### 19.7 Stage A 的 Generation 主线与仍未实现的热更新
+### 19.7 Generation 主线、ActivationSet 与仍未实现的用户热更新
 
-Stage A 已把 Generation-backed Composition Runtime 接入两个默认工厂。无插件和插件启动路径都创建同一个 `GenerationCompositionRuntime`；插件激活完成后，已有 Tool、Prompt 和 Plugin Identity 作为初始 Generation 的来源。Service 仍由 application-level 的 PluginManager/AgentRuntime 持有，尚未 Generation 化。Runtime 还固定初始 `ToolRuntime.sessions` 的对象身份，任何候选 Generation 若绑定另一份 `SessionService` 都会被拒绝；这保证 Session Event Log 仍是唯一事实源。`AgentLoop` 继续只依赖 `CompositionRuntime.lease()`，因此它不知道 PluginManager、Generation Manager 或任何热更新命令。
+Stage A 已把 Generation-backed Composition Runtime 接入两个默认工厂；Stage B 又把 Generation-owned `PluginActivationSet` 接入无插件、启动插件和内部候选替换路径。`PluginGenerationBuilder` 为每次候选创建独立的 Tool、Prompt、Service 注册表视图，`PluginManager` 在这些私有注册表中完成 discovery、依赖排序、Manifest 校验、setup、冲突检查和 health check；成功后只把一次性 Activation 所有权转交给 ActivationSet。候选构造或 publish 失败会立即逆序 rollback，current Generation 不变。`AgentLoop` 继续只依赖 `CompositionRuntime.lease()`，不导入 PluginManager、Builder 或 reload service。
 
-一个 Generation 是一组在构造时捕获的不可变运行能力引用：LLM Registry/Provider、Provider 名称、Model、Prompt sections、Tool schemas/ToolRuntime、Plugin Identity、Policy/Middleware 和模型参数一起绑定。Tool 的 name、description、input_schema、effect_kind 会进入真正只读、扁平且幂等的适配器，公开属性没有赋值或删除入口，嵌套 Schema 也被冻结，执行仍委托给捕获的 Tool；Provider、Policy 和 Middleware 的模型可见名称也由冻结适配器捕获，因此 Snapshot 不会重新读取活对象。Generation identity 的一次性发布状态与资源 cleanup ownership 是两件独立的事：前者只认领 Generation 对象，后者只由显式一次性 `CompositionResourceOwner` handle 认领。装配层把 handle 绑定到这代的资源组件；冻结 wrapper 和兼容性投影只传播 binding，不扫描对象图、不使用全局 identity catalog，所以 owner 不能被 `replace()`、冻结重包装或构造新 Runtime 洗掉。无法动态承载 binding 的裸 slotted Provider、Tool、Policy 或 Middleware 会在 cleanup-bearing Generation 构造时被明确拒绝；它们必须先经过可绑定的受控装配，不能依靠“调用方保证这是新资源”。构造过程先完成 Provider lookup、快照来源和冻结投影，再提交 binding/owner；如果 Provider 名称错误，Owner 和 raw capability 不会被标记为 used，同一 Owner 和修正后的资源可以重试。带 cleanup 的公共 Generation 必须通过显式 owner handle 构造，裸 cleanup callback 会被拒绝；同一 handle 第二次认领也会被拒绝。Runtime 初始化和 `publish()` 使用同一个校验/认领入口；输入 cleanup owner 的冻结能力、已经使用过的 capability binding 或跨 owner raw alias 都在改变 current 前拒绝。Stage A 没有资源级引用计数，所以 cleanup-bearing Generation 必须使用尚未被其他 Generation 认领的独占资源，不能和旧 Lease 或旧代共享会被 cleanup 关闭的资源。发布在内部 `asyncio.Lock` 的线性化点完成；旧记录进入 retired，新 Lease 只能取得新记录，已有 Lease 保存旧记录。候选必须使用 Runtime 固定的 `SessionService`，且插件身份必须保持启动集合；所有这些失败都发生在改变 current 前。旧代只有在 Lease 归零后才启动一次 cleanup；完成后的 Generation 记录会从运行时表移除，失败只保留一个有界的脱敏结构化摘要并将 Runtime 标记为 poisoned，后续 `publish()` 被拒绝。`drain()` 等待所有 retired 记录的引用与 cleanup 都收敛；一个 cleanup 失败不阻止其他代继续。Session 迁移留待后续阶段有意设计。
+一个 Generation 是一组在构造时捕获的不可变运行能力引用：LLM Registry/Provider、Provider 名称、Model、Prompt sections、Tool schemas/ToolRuntime、Plugin Identity、Policy/Middleware 和模型参数一起绑定。Tool 的 name、description、input_schema、effect_kind 会进入真正只读、扁平且幂等的适配器，公开属性没有赋值或删除入口，嵌套 Schema 也被冻结，执行仍委托给捕获的 Tool；Provider、Policy 和 Middleware 的模型可见名称也由冻结适配器捕获，因此 Snapshot 不会重新读取活对象。Generation identity 的一次性发布状态与资源 cleanup ownership 是两件独立的事：Stage A 的 capability-wide `CompositionResourceOwner` 仍由显式装配使用；Stage B 的插件 cleanup 绑定到一次性 ActivationSet，而不是绑定到共享 core 能力。SessionService、EventStore、核心 Provider、内置 Tool 和基础配置是 borrowed core；插件 Activation、插件 Tool、Prompt Section、Service、Owned Task 和 cleanup callback 是 generation-owned。插件 ActivationSet 不能被两个 Generation 或两个 Runtime 接收，也不能被 PluginManager 留作第二个 cleanup owner。
+
+候选插件身份可以随 Generation 变化，但 Generation 的 ToolRuntime 必须使用 Runtime 固定的 `SessionService`；这保证 Session Event Log 仍是唯一事实源。Stage A 没有资源级引用计数，因此能力-wide cleanup-bearing Generation 仍必须使用尚未被其他 Generation 认领的独占 raw 能力。发布在内部 `asyncio.Lock` 的线性化点完成；旧记录进入 retired，新 Lease 只能取得新记录，已有 Lease 保存旧代完整的 Provider、Prompt、ToolRuntime、Policy/Middleware、Service 和 Snapshot。旧代只有在 Lease 归零后才启动一次 ActivationSet cleanup；cleanup 先取消并等待 Owned Task，再按依赖逆序撤销 Service、Tool 和 Prompt 注册。ActivationSet 的 cleanup 失败会以有界、终端安全的结构化摘要报告，但不会跳过其他插件或其他 Generation；Runtime 标记为 poisoned 并拒绝后续 publish。`drain()` 等待所有 retired 记录的 Lease 与 cleanup 都收敛，重复取消只能在同一内部收敛任务完成后重新抛出最初的 `CancelledError`。
 
 binding 的事务边界不是普通 `setattr()`：实现直接操作真实实例字典或类声明的 slot，并在提交后验证读取到的是同一个 binding。这样即使能力对象自定义 `__setattr__` 且静默忽略字段，也不能绕过资源所有权。提交过程保存每个组件的原始属性状态；后续组件失败时，已写入组件会精确恢复为“原本不存在”或“原本存在且值为 `None`”，不会把内部 Registry 破坏成缺少属性的半初始化对象。Runtime 构造同样先从冻结后的初始 Generation 建好兼容性 LLM/Tool/Prompt 视图，再认领 Owner；认领之后没有第二次调用 raw Prompt/Registry 的失败窗口。
 
-Generation identity 只服务内部生命周期，`CompositionSnapshot.revision` 仍是模型可见内容 fingerprint；同内容的不同 Generation 因此可以复用相同 revision，不会把内部编号塞进 Request Fingerprint。默认 Generation 不设置插件 cleanup callback：PluginManager 仍是 v0.4 Activation 的唯一所有者，Runtime dispose 的顺序是活跃 Turn → Composition Drain → PluginManager 逆序卸载。
+Generation identity 只服务内部生命周期，`CompositionSnapshot.revision` 仍是模型可见内容 fingerprint；同内容的不同 Generation 因此可以复用相同 revision，不会把内部编号塞进 Request Fingerprint。`AgentRuntime.dispose()` 的默认顺序是活跃 Turn → Composition Drain（由各代 ActivationSet 负责插件 cleanup）→ 仍属 application-level 的构建器/发现器资源；默认路径没有 PluginManager 的第二个插件 cleanup owner，旧 v0.4 自定义装配才会在 Drain 后清理可选的 legacy PluginManager。
 
-Stage A 仍没有面向用户的热更新命令。插件集合仍由启动期显式激活；本轮也没有实现运行中 pip install/uninstall、Workspace/Preset/Agent Scope Overlay 或任何新的插件贡献面。
+Stage B 提供 `AgentRuntime.replace_plugin_composition()` 这一装配层内部 API，但没有面向用户的热更新命令。插件 id 必须显式提供；本轮也没有实现运行中 pip install/uninstall、Workspace/Preset/Agent Scope Overlay、Provider/Policy/Middleware/EventStore/Verifier 插件贡献、isolated 插件、多 Agent 或 Workflow。
 
 `trust_mode="isolated"` 被**明确拒绝**而不是降级成 trusted：把“请求隔离”当成“允许进程内运行”的许可，等于给了插件比它申请的更高权限。真正的隔离需要进程边界、每次 context 调用的序列化契约和子进程崩溃的失败模型，这些都还不存在。
 
 ### 19.8 dispose 顺序
 
-`AgentRuntime.dispose()` 先取消并 `gather` 全部活跃 Turn，随后调用 Composition Runtime 的 `dispose()` 以退休 current Generation 并 Drain 所有旧代，最后才调用 `PluginManager.dispose()` 按**激活的逆序**卸载。顺序相反会把某个仍在运行的 Turn 或仍有 Lease 的 Generation 正在使用的 Tool 抽走。Service 和插件 Activation 仍由 PluginManager/AgentRuntime 的 application-level 所有权管理，不是 Generation cleanup 的对象。默认 Generation 不拥有插件 Activation cleanup，因此不会和 PluginManager 双重清理。
+`AgentRuntime.dispose()` 先取消并 `gather` 全部活跃 Turn，随后取消并等待所有在途候选替换及其 rollback，再调用 Composition Runtime 的 `dispose()` 以退休 current Generation 并 Drain 所有 Generation-owned ActivationSet，最后才清理仍属 application-level 的构建器/发现器资源。Runtime 会取回每个候选 Task 的终态：正常取消不算关闭失败，但候选 rollback 产生的 `PluginDisposeError` 会进入关闭错误集合，因此 `dispose()` 不能在插件资源可能未清干净时报告成功，后续调用也会重放同一关闭失败。默认 Stage B 路径没有 PluginManager 的插件 cleanup owner；只有保留 v0.4 兼容性的自定义 legacy 装配才会在 Drain 后调用可选的 `PluginManager.dispose()`。顺序相反会把某个仍在运行的 Turn 或仍有 Lease 的 Generation 正在使用的 Tool、Service 或 Owned Task 抽走，也会造成双重 cleanup。
 
 整个关闭过程位于唯一的内部 Task 中，因此重复调用复用同一结果、重复取消无法提前放行、关闭失败不会被后续调用伪装成成功；完整语义与它修复的缺陷见 5.5。
 
@@ -1445,11 +1447,11 @@ Stage A 仍没有面向用户的热更新命令。插件集合仍由启动期显
 
 ### 19.9 Session 插件身份
 
-`AgentRuntime.create_session()` 把外部插件身份写进 `session/created` 的 metadata 保留键 `traceh_plugins`。
+`AgentRuntime.create_session()` 把初始外部插件身份写进 `session/created` 的 metadata 保留键 `traceh_plugins`。每个实际 Step 的 `composition/snapshot` 也记录完整 PluginIdentity。
 
 **保留键按“是否出现”判定，不看取值。** 只要调用方的 metadata 里出现 `traceh_plugins` 就抛 `ValueError`，无论它是 `[]`、`None`，还是与当前插件身份**完全相同**的列表。早期实现只在取值与预期不同时才拒绝，于是这三种写法都能通过——而这个键记录的是运行时**自己观测到什么**，任何调用方能写进去的值都是一个 Runtime 无法背书的断言。调用方提供的其余 metadata 键照常原样保存。
 
-`verify_session_plugins()` 在 `run_existing()`、`resume()` 和 `chat` 继续旧 Session 时执行，且**早于 recovery**——recovery 会追加事件，向一个用不同 Composition 创建的 Session 追加事件正是要防的事。不匹配抛 `SessionPluginMismatchError`，消息同时列出 Session 要求的与当前运行的两组身份，且**保留 Session 当时记录的原始版本文本**而不是改写过的形式。
+`verify_session_plugins()` 在 `run_existing()`、`resume()` 和 `chat` 继续旧 Session 时执行，且**早于 recovery**——recovery 会追加事件，向一个用不同 Composition 创建的 Session 追加事件正是要防的事。如果 Session 已有最新合法 `composition/snapshot` 的 `plugins` 字段，校验优先使用那份最近实际使用的组合；没有 Snapshot，或是 v0.3 缺少该字段的旧数据，才回退到 `session/created`。不匹配抛 `SessionPluginMismatchError`，消息同时列出 Session 要求的与当前运行的两组身份，且**保留 Session 当时记录的原始版本文本**而不是改写过的形式。Stage B 的内部替换只改变当前 Generation，不会自动授权已有 Session 跨插件组合继续；需要新组合时应创建新 Session，按 Session 生效的迁移授权留到 Stage C。内部 publish 本身不追加事件；如果进程在新 Generation 尚未执行 Step 前崩溃，恢复允许回到最后一条 durable Snapshot。
 
 **缺键与显式 `null` 必须区分，读取端用缺失 sentinel 而不是 `get()`。** `dict.get()` 对“键不存在”和“键被显式记为 `null`”返回同一个 `None`，这是两个不同的事实：键真正缺席的是 v0.4 之前写下的无插件 Session；显式记录的 `null` 不是本 Runtime 任何版本会写下的值，属于损坏数据，必须报 `malformed` 而不是当“无插件”放行。`verify_session_plugins` 因此以 `_PLUGIN_METADATA_MISSING` 哨兵作为 `get()` 的默认值，只有哨兵本身代表“缺席”。
 

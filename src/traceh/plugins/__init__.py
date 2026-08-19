@@ -33,6 +33,8 @@ from traceh.plugins.errors import (
 )
 from traceh.plugins.manager import (
     TRACEH_PLUGIN_API_VERSION,
+    PluginActivationSet,
+    PluginGenerationBuilder,
     PluginManager,
     PluginNotice,
     PluginStatus,
@@ -49,6 +51,7 @@ __all__ = [
     "EffectKind",
     "Plugin",
     "PluginActivationError",
+    "PluginActivationSet",
     "PluginContext",
     "PluginDependency",
     "PluginDiscovery",
@@ -56,6 +59,7 @@ __all__ = [
     "PluginDisposeError",
     "PluginError",
     "PluginFailure",
+    "PluginGenerationBuilder",
     "PluginIdentity",
     "PluginManager",
     "PluginManifest",

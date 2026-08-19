@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### v0.5 Stage B infrastructure
+
+- Added Generation-owned `PluginActivationSet` and `PluginGenerationBuilder`. Each
+  explicit candidate uses private Tool, Prompt and Service registry views; setup,
+  dependency/conflict validation and health checks complete before publication.
+- Startup plugins and the internal `AgentRuntime.replace_plugin_composition()` path now
+  transfer Activation ownership to the Composition Generation. Old Leases keep old
+  plugin Service, Tool, Prompt and Owned Task resources alive until reverse cleanup after
+  the last Lease; the default Runtime has no duplicate PluginManager cleanup owner.
+- Added deterministic candidate rollback, repeated-cancellation convergence, owned-task
+  joining, bounded cleanup failure reporting, Session latest durable Composition recovery,
+  and real default-mainline replacement tests. Runtime disposal now also converges
+  in-flight replacement candidates, and replacement never acts as a process-wide Session
+  migration authorization. Stage B adds no user-facing reload command.
+- Fixed candidate cancellation so a genuine rollback cleanup failure is not discarded in
+  favour of `CancelledError`. Remaining activations still unwind, only bounded structured
+  diagnostics escape, and Runtime shutdown records and repeats the failed terminal result.
+
 ### v0.5 Stage A infrastructure
 
 - Added Generation-backed Composition Runtime with Step Lease, Publish/Retire, last-Lease
@@ -10,8 +28,9 @@
 - Routed both default runtime factories and real AgentLoop Steps through the same
   Generation/Lease path; request reconstruction and Composition revision fingerprints do
   not include internal Generation identity.
-- Runtime shutdown now converges active Turns, Composition Drain and then the uniquely
-  owning PluginManager in that order.
+- Runtime shutdown now converges active Turns, Composition Drain and then only optional
+  legacy application-level cleanup in that order; Stage B's default ActivationSet cleanup
+  is performed by its owning Generation during Drain.
 - Added deterministic Generation contract tests and reverse validation of the lease,
   cleanup-order and repeated-cancellation boundaries.
 - Corrected the Stage A contracts found in follow-up review: Generation captures immutable
@@ -52,8 +71,8 @@
 
 This does not add a user-facing hot-reload command, running Wheel install/uninstall, Scope
 Overlay, new plugin contribution categories, isolated plugins, multi-agent, Workflow, MCP,
-TUI or streaming output. The package version remains `0.4.0`; Stage A is not the v0.5
-release.
+TUI or streaming output. The package version remains `0.4.0`; Stage A and Stage B are not
+the v0.5 release.
 
 ## 0.4.0
 

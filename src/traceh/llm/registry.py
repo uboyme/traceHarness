@@ -35,3 +35,11 @@ class LlmRegistry:
 
     def names(self) -> tuple[str, ...]:
         return tuple(sorted(self._providers))
+
+    def fork(self) -> LlmRegistry:
+        """Return an independent provider registry with borrowed providers."""
+
+        forked = LlmRegistry()
+        forked._providers = dict(self._providers)
+        forked._composition_resource_binding = self._composition_resource_binding
+        return forked

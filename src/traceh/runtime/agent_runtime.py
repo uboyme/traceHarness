@@ -20,8 +20,12 @@ from traceh.kernel.registry import ServiceRegistry
 from traceh.llm.registry import LlmRegistry
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
+from traceh.plugins.errors import PluginDisposeError
 from traceh.runtime.agent_loop import AgentLoop, TurnResult
-from traceh.runtime.composition_runtime import GenerationCompositionRuntime
+from traceh.runtime.composition_runtime import (
+    CompositionGeneration,
+    GenerationCompositionRuntime,
+)
 from traceh.runtime.continuation import ContinuationRuntime
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
@@ -48,7 +52,11 @@ from traceh.tools.runtime import ToolRuntime
 
 if TYPE_CHECKING:
     from traceh.plugins.discovery import PluginDiscovery
-    from traceh.plugins.manager import PluginManager
+    from traceh.plugins.manager import (
+        PluginActivationSet,
+        PluginGenerationBuilder,
+        PluginManager,
+    )
 
 #: Session metadata key holding the external plugin identities a session was
 #: created under. Reserved: callers may not set it themselves.
@@ -102,6 +110,22 @@ class SessionPluginMismatchError(RuntimeError):
     """
 
 
+@dataclass(frozen=True, slots=True)
+class PluginCompositionReplacement:
+    """Non-secret result of an internal plugin composition replacement."""
+
+    generation_id: int
+    plugins: tuple[PluginIdentity, ...]
+
+    @property
+    def enabled_plugin_ids(self) -> tuple[str, ...]:
+        return tuple(
+            identity.plugin_id
+            for identity in self.plugins
+            if identity.plugin_id != CORE_PLUGIN_IDENTITY.plugin_id
+        )
+
+
 class AgentRuntime:
     def __init__(
         self,
@@ -118,6 +142,10 @@ class AgentRuntime:
         plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
         plugin_manager: PluginManager | None = None,
         services: ServiceRegistry | None = None,
+        plugin_builder: object | None = None,
+        assembly_llms: LlmRegistry | None = None,
+        assembly_policies: tuple[ToolPolicy, ...] = (),
+        assembly_middlewares: tuple[ToolMiddleware, ...] = (),
     ) -> None:
         self.config = config
         self.sessions = sessions
@@ -139,16 +167,43 @@ class AgentRuntime:
         #: assemblies must therefore pair the two explicitly, as
         #: `build_default_runtime()` does.
         self.events = events
-        #: Full composition identity for this runtime: the core plus whichever
-        #: external plugins were activated. Stamped into every Composition
-        #: Snapshot by the generation-backed CompositionRuntime.
-        self.plugins = plugins
-        self.services = services or ServiceRegistry()
+        #: The initial tuple is only a fallback for custom legacy assemblies.
+        #: The normal source of current plugin identity is the current
+        #: Composition Generation, so AgentRuntime does not keep a second
+        #: mutable plugin-composition fact.
+        self._initial_plugins = tuple(plugins)
+        self._services_base = services or ServiceRegistry()
         self._plugin_manager = plugin_manager
+        self._plugin_builder = plugin_builder
+        self._assembly_llms = assembly_llms
+        self._assembly_policies = tuple(assembly_policies)
+        self._assembly_middlewares = tuple(assembly_middlewares)
         self._active: dict[str, asyncio.Task[TurnResult]] = {}
         self._lock = asyncio.Lock()
+        self._composition_replacement_lock = asyncio.Lock()
+        # Replacement workers own candidate setup and rollback.  Keeping the
+        # workers here makes them part of Runtime shutdown rather than leaving
+        # them attached only to whichever caller requested a replacement.
+        self._replacement_task_lock = asyncio.Lock()
+        self._replacement_tasks: set[asyncio.Task[PluginCompositionReplacement]] = set()
         self._disposed = False
         self._dispose_task: asyncio.Task[None] | None = None
+
+    @property
+    def plugins(self) -> tuple[PluginIdentity, ...]:
+        composition_plugins = getattr(self.loop.compositions, "plugins", None)
+        if composition_plugins is None:
+            return self._initial_plugins
+        return tuple(composition_plugins)
+
+    @property
+    def services(self) -> ServiceRegistry:
+        activation_set = getattr(self.loop.compositions, "current_activation_set", None)
+        if activation_set is not None:
+            candidate_services = getattr(activation_set, "services", None)
+            if isinstance(candidate_services, ServiceRegistry):
+                return candidate_services
+        return self._services_base
 
     @property
     def external_plugin_identities(self) -> tuple[PluginIdentity, ...]:
@@ -263,7 +318,34 @@ class AgentRuntime:
         persisted = self._identities_from_metadata(
             metadata.get(_PLUGIN_METADATA_KEY, _PLUGIN_METADATA_MISSING)
         )
+        # A durable composition snapshot is the latest actual composition a
+        # Step used.  The session-created value remains the initial composition
+        # and is only the fallback for pre-snapshot sessions (including v0.3
+        # snapshots that did not yet have a ``plugins`` field).
+        for event in reversed(events[1:]):
+            if event.type != "composition/snapshot":
+                continue
+            snapshot_data = event.data
+            if not isinstance(snapshot_data, dict):
+                raise SessionPluginMismatchError("composition snapshot is malformed")
+            raw_snapshot_plugins = snapshot_data.get(
+                "plugins", _PLUGIN_METADATA_MISSING
+            )
+            if raw_snapshot_plugins is not _PLUGIN_METADATA_MISSING:
+                snapshot_identities = self._identities_from_metadata(raw_snapshot_plugins)
+                persisted = tuple(
+                    identity
+                    for identity in snapshot_identities
+                    if identity.plugin_id != CORE_PLUGIN_IDENTITY.plugin_id
+                )
+            break
         active = self.external_plugin_identities
+        # A replacement changes the current in-memory Generation, but it is
+        # not a Session migration authorization.  Existing Sessions must
+        # still match their latest durable composition (or their creation
+        # metadata when no Snapshot exists).  A caller that needs the new
+        # composition can create a new Session; Stage C owns any explicit,
+        # per-Session migration protocol.
         if self._comparable(persisted) != self._comparable(active):
             required = (
                 ", ".join(f"{item.plugin_id}=={item.version}" for item in persisted) or "none"
@@ -273,6 +355,120 @@ class AgentRuntime:
                 "session plugin composition does not match the active runtime; "
                 f"session requires [{required}], current runtime has [{current}]"
             )
+
+    async def _replace_plugin_composition(
+        self,
+        enabled_plugin_ids: Sequence[str],
+        *,
+        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+        plugin_discovery: PluginDiscovery | None = None,
+    ) -> PluginCompositionReplacement:
+        """Prepare and publish one plugin candidate through the real runtime.
+
+        This is an internal assembly API for Stage B.  No CLI calls it yet:
+        Stage C owns the user-facing command.  Candidate setup happens in
+        private registries, while publication is still delegated to the
+        Generation runtime's lock-protected ``publish`` boundary.
+        """
+
+        async with self._composition_replacement_lock:
+            if self._disposed:
+                raise RuntimeError("runtime is disposed")
+            builder = self._plugin_builder
+            if builder is None or not callable(getattr(builder, "prepare", None)):
+                raise RuntimeError("this runtime has no plugin composition builder")
+            if self._assembly_llms is None:
+                raise RuntimeError("this runtime has no core LLM registry for replacement")
+            activation_set: PluginActivationSet | None = None
+            try:
+                activation_set = await builder.prepare(
+                    tuple(enabled_plugin_ids),
+                    discovery=plugin_discovery,
+                    plugin_configs=plugin_configs,
+                )
+                if self._disposed:
+                    raise RuntimeError("runtime is disposed")
+                composition_runtime = self.loop.compositions
+                current = composition_runtime.current_generation
+                candidate_tools = ToolRuntime(
+                    activation_set.tools,
+                    self.sessions,
+                    policies=self._assembly_policies,
+                    middlewares=self._assembly_middlewares,
+                    timeout_seconds=self.config.tool_timeout_seconds,
+                    max_output_chars=self.config.max_tool_output_chars,
+                )
+                generation = CompositionGeneration(
+                    llms=self._assembly_llms,
+                    tools=candidate_tools,
+                    prompt=activation_set.prompt,
+                    provider=current.provider,
+                    model=current.model,
+                    temperature=current.temperature,
+                    max_output_tokens=current.max_output_tokens,
+                    plugins=activation_set.identities,
+                    activation_set=activation_set,
+                )
+                generation_id = await composition_runtime.publish(generation)
+            except BaseException as error:
+                if activation_set is not None:
+                    try:
+                        await activation_set.dispose()
+                    except asyncio.CancelledError:
+                        # Candidate cleanup converged before this cancellation
+                        # is allowed to escape.  This branch therefore means
+                        # cleanup itself succeeded and cancellation stays the
+                        # caller's result, as PluginManager.activate does.
+                        raise
+                    except BaseException as cleanup_error:
+                        if isinstance(error, asyncio.CancelledError):
+                            # Cancellation initiated the rollback; it does not
+                            # make a real cleanup failure disappear.
+                            raise cleanup_error from None
+                        raise ExceptionGroup(
+                            "plugin composition candidate cleanup failed",
+                            (error, cleanup_error),
+                        ) from None
+                raise
+
+            return PluginCompositionReplacement(
+                generation_id=generation_id,
+                plugins=tuple(activation_set.identities),
+            )
+
+    async def replace_plugin_composition(
+        self,
+        enabled_plugin_ids: Sequence[str],
+        *,
+        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+        plugin_discovery: PluginDiscovery | None = None,
+    ) -> PluginCompositionReplacement:
+        """Prepare and publish one replacement owned by this Runtime.
+
+        The current Task is registered as Runtime-owned work before candidate
+        setup starts.  Cancellation therefore enters the same rollback path,
+        and Runtime disposal can cancel and wait for every in-flight
+        replacement before Composition Drain begins.
+        """
+
+        if self._disposed:
+            raise RuntimeError("runtime is disposed")
+        replacement_task = asyncio.current_task()
+        if replacement_task is None:
+            raise RuntimeError("plugin replacement requires an asyncio Task")
+        async with self._replacement_task_lock:
+            if self._disposed:
+                raise RuntimeError("runtime is disposed")
+            self._replacement_tasks.add(replacement_task)
+        try:
+            return await self._replace_plugin_composition(
+                enabled_plugin_ids,
+                plugin_configs=plugin_configs,
+                plugin_discovery=plugin_discovery,
+            )
+        finally:
+            async with self._replacement_task_lock:
+                self._replacement_tasks.discard(replacement_task)
 
     async def run(self, workspace: Path, task: str) -> TurnResult:
         session_id = await self.create_session(workspace)
@@ -335,6 +531,7 @@ class AgentRuntime:
     async def _shutdown(self) -> None:
         """The whole shutdown, as one unit of work owned by a single task."""
 
+        shutdown_errors: list[BaseException] = []
         async with self._lock:
             tasks = tuple(self._active.values())
             self._active.clear()
@@ -342,15 +539,37 @@ class AgentRuntime:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-        # Turns converge first, then retired/current generations converge, then
-        # the PluginManager unloads the startup activation it uniquely owns.
-        # Unloading first would pull a tool or service out from under a turn or
-        # a still-live generation.  The default generation has no cleanup
-        # callback: its plugin resources remain owned by PluginManager, so this
-        # does not create a second cleanup owner.  If a generation cleanup
-        # fails, still give PluginManager its cleanup opportunity before
-        # reporting the shutdown failure.
-        shutdown_errors: list[BaseException] = []
+        # Candidate setup/health/publish is Runtime-owned work too.  It must
+        # converge (including candidate rollback) before any Generation can be
+        # drained, otherwise dispose could return while plugin setup still owns
+        # tasks or registrations.
+        async with self._replacement_task_lock:
+            replacement_tasks = tuple(self._replacement_tasks)
+        for replacement_task in replacement_tasks:
+            replacement_task.cancel()
+        for replacement_task in replacement_tasks:
+            await await_worker_convergence(replacement_task)
+            if not replacement_task.cancelled():
+                replacement_error = replacement_task.exception()
+                # Replacement setup/validation errors belong to that API's
+                # caller.  A rollback cleanup failure also belongs to Runtime
+                # shutdown because shutdown initiated the cancellation and
+                # must not report success while plugin resources may remain.
+                if isinstance(replacement_error, PluginDisposeError):
+                    shutdown_errors.append(replacement_error)
+        # Disposal has already closed the admission boundary, so no new task
+        # can enter this set.  Clear completed entries even if cancellation
+        # interrupted a caller's bookkeeping ``finally`` block.
+        async with self._replacement_task_lock:
+            for replacement_task in replacement_tasks:
+                self._replacement_tasks.discard(replacement_task)
+        # Turns converge first.  Composition Drain then retires and unloads
+        # every Generation-owned ActivationSet only after its leases end.  The
+        # default Stage B path has no PluginManager cleanup owner; the optional
+        # manager below exists only for custom legacy assemblies and is cleaned
+        # after Drain so it cannot pull resources from a live Generation.
+        # Cleanup errors are accumulated so a legacy owner still gets its one
+        # cleanup opportunity before shutdown reports failure.
         composition_dispose = getattr(self.loop.compositions, "dispose", None)
         if composition_dispose is not None:
             try:
@@ -381,7 +600,7 @@ class AgentRuntime:
         the body ran inline, a caller cancelled while active turns were still
         converging escaped *before* reaching ``PluginManager.dispose()``, yet the
         disposed flag was already set - so every later ``dispose()`` returned
-        immediately and the plugins were never unloaded at all.
+        immediately and Generation-owned cleanup was never reached.
 
         Now the work belongs to the task, not to whoever is waiting on it:
 
@@ -391,6 +610,8 @@ class AgentRuntime:
           second and third Ctrl+C cannot release the caller early;
         * the original ``CancelledError`` is re-raised only after shutdown has
           fully converged;
+        * in-flight plugin replacement Tasks are canceled and their candidate
+          rollback is awaited before Composition Drain starts;
         * a later ``dispose()`` awaits the *same* task, so it reuses the one real
           outcome. If shutdown failed, that failure is raised again rather than
           being silently reported as success.
@@ -436,6 +657,7 @@ class _PreparedRuntime:
     llms: LlmRegistry
     tool_registry: ToolRegistry
     prompt: PromptAssembler
+    services: ServiceRegistry
     policies: tuple[ToolPolicy, ...]
     tool_middlewares: tuple[ToolMiddleware, ...]
     verifier: CompletionVerifier | None
@@ -485,6 +707,7 @@ def _prepare_default_runtime(
         )
 
     tool_registry = ToolRegistry()
+    services = ServiceRegistry()
     default_tools: tuple[Tool, ...] = (
         ListFilesTool(),
         ReadFileTool(),
@@ -512,6 +735,7 @@ def _prepare_default_runtime(
         llms=llms,
         tool_registry=tool_registry,
         prompt=prompt or default_coding_prompt(),
+        services=services,
         policies=effective_policies,
         tool_middlewares=tool_middlewares,
         verifier=effective_verifier,
@@ -522,13 +746,21 @@ def _prepare_default_runtime(
 def _finish_default_runtime(
     prepared: _PreparedRuntime,
     *,
-    plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,),
+    activation_set: PluginActivationSet,
+    plugin_builder: PluginGenerationBuilder,
     plugin_manager: PluginManager | None = None,
-    services: ServiceRegistry | None = None,
 ) -> AgentRuntime:
     config = prepared.config
-    tool_runtime = ToolRuntime(
+    core_tool_runtime = ToolRuntime(
         prepared.tool_registry,
+        prepared.sessions,
+        policies=prepared.policies,
+        middlewares=prepared.tool_middlewares,
+        timeout_seconds=config.tool_timeout_seconds,
+        max_output_chars=config.max_tool_output_chars,
+    )
+    tool_runtime = ToolRuntime(
+        activation_set.tools,
         prepared.sessions,
         policies=prepared.policies,
         middlewares=prepared.tool_middlewares,
@@ -540,12 +772,15 @@ def _finish_default_runtime(
     composition_runtime = GenerationCompositionRuntime(
         llms=prepared.llms,
         tools=tool_runtime,
-        prompt=prepared.prompt,
+        prompt=activation_set.prompt,
         provider=config.provider,
         model=config.model,
         temperature=config.temperature,
         max_output_tokens=config.max_output_tokens,
-        plugins=plugins,
+        plugins=activation_set.identities,
+        activation_set=activation_set,
+        compatibility_tools_source=core_tool_runtime,
+        compatibility_prompt_source=prepared.prompt,
         defer_external_cleanup=plugin_manager is not None,
     )
     loop = AgentLoop(
@@ -570,9 +805,13 @@ def _finish_default_runtime(
         hooks=hooks,
         compaction=CompactionService(prepared.sessions),
         events=prepared.event_feed,
-        plugins=plugins,
+        plugins=activation_set.identities,
         plugin_manager=plugin_manager,
-        services=services,
+        services=prepared.services,
+        plugin_builder=plugin_builder,
+        assembly_llms=prepared.llms,
+        assembly_policies=prepared.policies,
+        assembly_middlewares=prepared.tool_middlewares,
     )
 
 
@@ -603,7 +842,18 @@ def build_default_runtime(
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
     )
-    return _finish_default_runtime(prepared)
+    from traceh.plugins.manager import PluginGenerationBuilder
+
+    builder = PluginGenerationBuilder(
+        tools=prepared.tool_registry,
+        prompt=prepared.prompt,
+        services=prepared.services,
+    )
+    return _finish_default_runtime(
+        prepared,
+        activation_set=builder.empty(),
+        plugin_builder=builder,
+    )
 
 
 async def build_default_runtime_async(
@@ -641,31 +891,39 @@ async def build_default_runtime_async(
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
     )
-    if not enabled_plugins:
-        return _finish_default_runtime(prepared)
+    from traceh.plugins.manager import PluginGenerationBuilder
 
-    # Imported here so the stable runtime surface does not depend on discovery
-    # internals, and so `AgentLoop` never acquires a path to `PluginManager`.
-    from traceh.plugins.manager import PluginManager
-
-    services = ServiceRegistry()
-    manager = PluginManager(
+    builder = PluginGenerationBuilder(
         tools=prepared.tool_registry,
         prompt=prepared.prompt,
-        services=services,
+        services=prepared.services,
         discovery=plugin_discovery,
         plugin_configs=plugin_configs,
     )
-    await manager.activate(tuple(enabled_plugins))
+    activation_set: PluginActivationSet | None = None
     try:
+        if enabled_plugins:
+            activation_set = await builder.prepare(tuple(enabled_plugins))
+        else:
+            activation_set = builder.empty()
         return _finish_default_runtime(
             prepared,
-            plugins=manager.identities,
-            plugin_manager=manager,
-            services=services,
+            activation_set=activation_set,
+            plugin_builder=builder,
         )
-    except BaseException:
-        # Activation succeeded but assembly did not: the plugins are live and
-        # nobody owns them, so unload before the exception leaves.
-        await manager.dispose()
+    except BaseException as error:
+        # Activation succeeded but assembly did not: the candidate is live and
+        # the Composition Generation did not receive it, so roll it back now.
+        if activation_set is not None:
+            try:
+                await activation_set.dispose()
+            except asyncio.CancelledError:
+                raise
+            except BaseException as cleanup_error:
+                if isinstance(error, asyncio.CancelledError):
+                    raise cleanup_error from None
+                raise ExceptionGroup(
+                    "plugin composition candidate cleanup failed",
+                    (error, cleanup_error),
+                ) from None
         raise

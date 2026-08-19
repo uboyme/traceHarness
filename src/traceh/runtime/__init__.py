@@ -2,6 +2,7 @@
 
 from traceh.runtime.agent_runtime import (
     AgentRuntime,
+    PluginCompositionReplacement,
     RuntimeConfig,
     SessionPluginMismatchError,
     build_default_runtime,
@@ -10,6 +11,7 @@ from traceh.runtime.agent_runtime import (
 
 __all__ = [
     "AgentRuntime",
+    "PluginCompositionReplacement",
     "RuntimeConfig",
     "SessionPluginMismatchError",
     "build_default_runtime",

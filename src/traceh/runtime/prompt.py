@@ -34,7 +34,8 @@ class PromptAssembler:
     def assemble(self, *, workspace: str) -> str:
         runtime_section = PromptSection(
             "traceh.runtime.workspace",
-            f"Workspace root: {workspace}\nAll file and process operations must stay in this workspace.",
+            f"Workspace root: {workspace}\n"
+            "All file and process operations must stay in this workspace.",
             50,
         )
         sections = sorted(
@@ -45,25 +46,33 @@ class PromptAssembler:
             f"## {section.section_id}\n{section.content.strip()}" for section in sections
         )
 
+    def fork(self) -> PromptAssembler:
+        """Return an independent registration surface with borrowed sections."""
+
+        return PromptAssembler(self.sections())
+
 
 def default_coding_prompt() -> PromptAssembler:
     return PromptAssembler(
         (
             PromptSection(
                 "traceh.identity",
-                "You are a coding agent running inside TraceHarness. Work incrementally and use tools "
+                "You are a coding agent running inside TraceHarness. Work incrementally "
+                "and use tools "
                 "to inspect the repository before changing it.",
                 10,
             ),
             PromptSection(
                 "traceh.execution",
-                "Do not claim success from intuition. Run the relevant tests or checks. When a tool "
+                "Do not claim success from intuition. Run the relevant tests or checks. "
+                "When a tool "
                 "fails, inspect its structured output and choose the next action.",
                 20,
             ),
             PromptSection(
                 "traceh.tools",
-                "Use apply_patch for exact, reviewable file edits. The shell tool does not invoke a "
+                "Use apply_patch for exact, reviewable file edits. The shell tool does not "
+                "invoke a "
                 "system shell; pass a normal command string that can be split into argv.",
                 30,
             ),

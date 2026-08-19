@@ -68,3 +68,17 @@ class ToolRegistry:
 
     def names(self) -> tuple[str, ...]:
         return tuple(sorted(self._tools))
+
+    def fork(self) -> ToolRegistry:
+        """Return an independent registry view of the current tools.
+
+        The registered Tool objects are intentionally borrowed.  Registry
+        membership is the mutable boundary owned by the caller, while the
+        tools themselves remain application/core resources unless a plugin
+        Activation explicitly owns their cleanup.
+        """
+
+        forked = ToolRegistry()
+        forked._tools = dict(self._tools)
+        forked._composition_resource_binding = self._composition_resource_binding
+        return forked

@@ -27,6 +27,7 @@ from traceh.api.prompts import PromptSection
 from traceh.api.services import ServiceKey
 from traceh.kernel.registry import ServiceRegistry
 from traceh.plugins.discovery import PluginDiscovery
+from traceh.plugins.errors import PluginDisposeError
 from traceh.plugins.manager import PluginManager
 from traceh.runtime.prompt import PromptAssembler
 from traceh.tools.registry import ToolRegistry
@@ -281,6 +282,46 @@ async def test_cancellation_is_not_recorded_as_a_plugin_failure() -> None:
     for status in manager.statuses:
         assert status.failure is None, "cancellation was recorded as a plugin failure"
         assert status.state != "failed"
+
+
+async def test_cancelled_setup_reports_rollback_cleanup_failure() -> None:
+    """A real cleanup failure must not be hidden by the initiating cancellation."""
+
+    setup_entered = asyncio.Event()
+    cleanup_entered = asyncio.Event()
+    cleanup_gate = asyncio.Event()
+    record: list[str] = []
+    healthy = ScriptedPlugin(manifest("a.healthy"), record=record)
+    broken = ScriptedPlugin(
+        manifest("b.broken"),
+        setup_gate=asyncio.Event(),
+        setup_entered=setup_entered,
+        cleanup_gate=cleanup_gate,
+        cleanup_entered=cleanup_entered,
+        cleanup_error=RuntimeError("FAKE-FIXTURE cleanup secret"),
+        record=record,
+    )
+    manager = build_manager(entry_point_for(healthy), entry_point_for(broken))
+
+    activating = asyncio.create_task(manager.activate(["a.healthy", "b.broken"]))
+    await setup_entered.wait()
+    activating.cancel()
+    await cleanup_entered.wait()
+    # A second cancellation lands while cleanup is in flight.  Its only effect
+    # may be to defer the caller; it must not overwrite cleanup's real outcome.
+    activating.cancel()
+    cleanup_gate.set()
+
+    with pytest.raises(PluginDisposeError) as caught:
+        await activating
+
+    assert [(item.code, item.plugin_id) for item in caught.value.failures] == [
+        ("plugin-rollback-failed", "b.broken")
+    ]
+    assert "FAKE-FIXTURE cleanup secret" not in str(caught.value)
+    assert broken.cleanup_calls == 1
+    assert healthy.cleanup_calls == 1
+    assert record[-2:] == ["cleanup:b.broken", "cleanup:a.healthy"]
 
 
 async def test_cancelling_dispose_still_converges() -> None:

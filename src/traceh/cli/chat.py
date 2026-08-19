@@ -10,6 +10,7 @@ internal commands, rendering a turn result and converging on exit.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -63,6 +64,10 @@ _SEQ_NOTE_LINES = (
 _HELP_LINES = (
     "/help     show these commands",
     "/session  show the session id, workspace, provider, model and resume command",
+    "/plugins                 show active plugins",
+    "/plugins reload          rebuild the active plugin composition",
+    "/plugins use ID [ID ...] switch this session to installed plugins",
+    "/plugins use --none      switch this session to no external plugins",
     "/exit     leave the chat",
     "/quit     leave the chat",
     "",
@@ -236,7 +241,7 @@ async def _open_session(
             raise CliConfigurationError(f"workspace is not a directory: {error}") from error
         # Read it back so the banner shows the workspace exactly as persisted.
         session = ChatSession(created, await runtime.sessions.workspace_for(created))
-        _write_session_banner(runtime, console, session, resume_environment)
+        await _write_session_banner(runtime, console, session, resume_environment)
         _write_seq_note(console, timeline=timeline)
         return session
 
@@ -254,7 +259,7 @@ async def _open_session(
     # under a different plugin set must be refused, not repaired and continued.
     await runtime.verify_session_plugins(session_id)
     report = await runtime.recovery.recover(session_id)
-    _write_session_banner(runtime, console, session, resume_environment)
+    await _write_session_banner(runtime, console, session, resume_environment)
     # Continuing a session needs this note more, not less: the first new event
     # can be seq 40 or 400 with nothing before it on screen.
     _write_seq_note(console, timeline=timeline)
@@ -284,14 +289,14 @@ async def _chat_loop(
             line = console.read_line(PROMPT)
         except EOFError:
             console.write("")
-            _write_resume_block(runtime, console, session, resume_environment)
+            await _write_resume_block_for_session(runtime, console, session, resume_environment)
             return 0
         except (KeyboardInterrupt, asyncio.CancelledError):
             # Idle interrupt: there is no turn to converge, so leaving is the
             # honest response. The resume block is reprinted because this is the
             # moment the user most needs it.
             console.write("")
-            _write_resume_block(runtime, console, session, resume_environment)
+            await _write_resume_block_for_session(runtime, console, session, resume_environment)
             return INTERRUPTED_EXIT_CODE
 
         text = normalize_input(line)
@@ -304,8 +309,10 @@ async def _chat_loop(
             )
             continue
         if text.startswith("/"):
-            if _handle_command(runtime, console, session, text, resume_environment):
-                _write_resume_block(runtime, console, session, resume_environment)
+            if await _handle_command(runtime, console, session, text, resume_environment):
+                await _write_resume_block_for_session(
+                    runtime, console, session, resume_environment
+                )
                 return 0
             continue
         interrupted_twice = await _run_turn(
@@ -320,11 +327,21 @@ async def _chat_loop(
         if interrupted_twice:
             # The user asked again while the first interrupt was still
             # converging. Convergence finished first; now honour the second ask.
-            _write_resume_block(runtime, console, session, resume_environment)
+            await _write_resume_block_for_session(runtime, console, session, resume_environment)
             return INTERRUPTED_EXIT_CODE
 
 
-def _handle_command(
+def _active_plugins_line(runtime: AgentRuntime) -> str:
+    identities = runtime.external_plugin_identities
+    if not identities:
+        return "active plugins: none"
+    rendered = ", ".join(
+        f"{identity.plugin_id}=={identity.version}" for identity in identities
+    )
+    return f"active plugins: {rendered}"
+
+
+async def _handle_command(
     runtime: AgentRuntime,
     console: Console,
     session: ChatSession,
@@ -340,9 +357,48 @@ def _handle_command(
             console.write(entry)
         return False
     if text == "/session":
-        _write_session_banner(runtime, console, session, resume_environment)
+        await _write_session_banner(runtime, console, session, resume_environment)
         return False
-    console.write(f"unknown command: {text} (try /help)")
+    if text == "/plugins":
+        console.write(_active_plugins_line(runtime))
+        return False
+    if text == "/plugins reload":
+        try:
+            await runtime.reload_plugin_composition(session.session_id)
+        except Exception:
+            console.write("plugin composition change failed")
+        else:
+            console.write("plugin composition reloaded")
+            console.write(_active_plugins_line(runtime))
+        return False
+    if text == "/plugins use" or text.startswith("/plugins use "):
+        parts = text.split()
+        if parts == ["/plugins", "use", "--none"]:
+            enabled_plugin_ids: tuple[str, ...] = ()
+        elif len(parts) >= 3 and "--none" not in parts[2:]:
+            enabled_plugin_ids = tuple(parts[2:])
+        else:
+            console.write("usage: /plugins use ID [ID ...] or /plugins use --none")
+            return False
+        try:
+            await runtime.migrate_session_plugin_composition(
+                session.session_id,
+                enabled_plugin_ids,
+            )
+        except Exception:
+            # Selection and third-party activation failures are deliberately
+            # not rendered here.  Their details may contain paths, plugin text
+            # or configuration secrets; the runtime already retains only
+            # bounded structured diagnostics for programmatic callers.
+            console.write("plugin composition change failed")
+        else:
+            console.write("plugin composition switched")
+            console.write(_active_plugins_line(runtime))
+        return False
+    if text.startswith("/plugins "):
+        console.write("unknown plugin command (try /help)")
+        return False
+    console.write("unknown command (try /help)")
     return False
 
 
@@ -596,10 +652,10 @@ async def _converge_interrupted(
 ) -> None:
     console.write("")
     await runtime.cancel(session.session_id, reason="interrupted from the chat console")
-    _write_resume_block(runtime, console, session, resume_environment)
+    await _write_resume_block_for_session(runtime, console, session, resume_environment)
 
 
-def _write_session_banner(
+async def _write_session_banner(
     runtime: AgentRuntime,
     console: Console,
     session: ChatSession,
@@ -609,7 +665,40 @@ def _write_session_banner(
         f"session_id={session.session_id} workspace={session.workspace} "
         f"provider={runtime.config.provider} model={runtime.config.model}"
     )
-    _write_resume_block(runtime, console, session, resume_environment)
+    await _write_resume_block_for_session(runtime, console, session, resume_environment)
+
+
+async def _write_resume_block_for_session(
+    runtime: AgentRuntime,
+    console: Console,
+    session: ChatSession,
+    resume_environment: ResumeEnvironment | None = None,
+) -> None:
+    """Print a resume hint from the Session's durable plugin identity."""
+
+    try:
+        plugin_ids = await runtime.persisted_external_plugin_ids(session.session_id)
+    except Exception:
+        # A failed or malformed identity read must not turn the current
+        # Generation into a false recovery instruction.  Keep only inert,
+        # escaped locator data and omit the command until the Session can be
+        # inspected safely.
+        _write_resume_block(
+            runtime,
+            console,
+            session,
+            resume_environment,
+            plugin_ids=(),
+            omit_command=True,
+        )
+        return
+    _write_resume_block(
+        runtime,
+        console,
+        session,
+        resume_environment,
+        plugin_ids=plugin_ids,
+    )
 
 
 def _write_resume_block(
@@ -619,6 +708,8 @@ def _write_resume_block(
     resume_environment: ResumeEnvironment | None = None,
     *,
     shell: str | None = None,
+    plugin_ids: Sequence[str],
+    omit_command: bool = False,
 ) -> None:
     """Print a copy-pasteable way back into this session.
 
@@ -658,6 +749,16 @@ def _write_resume_block(
     data_dir = Path(config.data_dir).resolve()
     shell_name = shell or default_shell()
 
+    if omit_command:
+        console.write("resume later:")
+        console.write(f"  session_id: {escape_for_display(session.session_id)}")
+        console.write(f"  data dir:   {escape_for_display(str(data_dir))}")
+        console.write(
+            "  note: the Session's durable plugin identity could not be read safely; "
+            "no resume command was printed."
+        )
+        return
+
     # Fixed literals stay bare so the command is runnable and readable; every
     # derived value goes through the renderer's quoting rule.
     locate: list[str] = [
@@ -681,7 +782,7 @@ def _write_resume_block(
 
     # Without these the resumed session would be refused by the plugin identity
     # check - correctly, but with no hint about what to re-enable.
-    for plugin_id in runtime.enabled_plugin_ids:
+    for plugin_id in plugin_ids:
         restore += [Literal("--plugin"), plugin_id]
 
     if environment.script is not None:

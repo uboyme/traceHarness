@@ -1,8 +1,11 @@
 # Writing and running TraceHarness plugins (v0.4)
 
 The design rationale lives in
-[ADR-0007](adr/0007-transactional-plugin-activation.md). This page is the author- and
-operator-facing contract.
+[ADR-0007](adr/0007-transactional-plugin-activation.md),
+[ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
+[ADR-0010](adr/0010-session-plugin-composition-migration.md). This page is the author- and
+operator-facing contract. The package version remains `0.4.0`; Stage C adds a user control
+surface without claiming a v0.5 release.
 
 A working, buildable example is at
 [`../examples/plugins/traceh-example-skill-plugin/`](../examples/plugins/traceh-example-skill-plugin/).
@@ -107,6 +110,22 @@ so a command line always fully determines what runs. `run`, `chat` and `resume` 
 one rule. The read-only commands (`inspect`, `replay`, `recover`, `compact`, `sessions`)
 never activate plugins and take no `--plugin`.
 
+When `traceh chat` is idle, Stage C also permits composition control for plugins that the
+current process can already discover:
+
+```text
+/plugins                 # show active external plugin ids and versions
+/plugins reload          # rebuild the current enabled set
+/plugins use ID [ID ...] # explicitly select an enabled set
+/plugins use --none      # select no external plugins
+```
+
+These commands call the same `PluginGenerationBuilder` → private registries →
+`PluginActivationSet` → `CompositionGeneration` → `publish()` path as the runtime assembly
+layer. They do not create a Turn, append a user message, call a model, install or uninstall
+a Wheel, reload a Python module, or watch files. A changed set requires an explicit
+per-Session `composition/migration-authorized` event; a same-identity reload does not.
+
 ## 5. The CLI
 
 | Command | Imports plugins? | Runs setup? | Calls a model? |
@@ -135,8 +154,8 @@ flowchart TD
     DEP --> SETUP["Phase 1: setup() against private staged registries"]
     SETUP --> CONF["Phase 2: full conflict check vs core registries"]
     CONF --> HEALTH["Phase 3: health_check()"]
-    HEALTH --> PUB["Phase 4: atomic publish into the real mainlines"]
-    PUB --> RUN["Runtime assembled; Composition records plugin identities"]
+    HEALTH --> PUB["Phase 4: atomic publish into a new Composition Generation"]
+    PUB --> RUN["New Steps use the new Generation; old Leases retain the old set"]
     SETUP -. "failure or cancellation" .-> RB["Reverse-order rollback of every activation"]
     CONF -. "conflict" .-> RB
     HEALTH -. "failure or cancellation" .-> RB
@@ -160,9 +179,20 @@ An activated plugin appears in two persisted places:
 - `session/created` metadata records the external plugin identities under the reserved key
   `traceh_plugins`.
 
-Continuing a session whose recorded set differs from the active one raises
-`SessionPluginMismatchError` rather than proceeding. Sessions written before v0.4 have no
-such key, which reads as "no plugins" and continues normally.
+Continuing a session whose latest durable identity differs from the active one raises
+`SessionPluginMismatchError` rather than proceeding. The shared identity projection starts
+from `session/created.metadata.traceh_plugins`, updates from valid `composition/snapshot`
+events, and accepts a changed identity only after a valid
+`composition/migration-authorized` event. That event is append-only and contains only
+external identities plus `migration_id`, `source_seq`, `from_plugins` and `to_plugins`;
+`source_seq` must point to the identity fact that `from_plugins` describes. Sessions written
+before v0.4 have no such key, which reads as "no plugins" and continues normally.
+
+The authorization is not proof that the new Generation has run a Step. A later
+`composition/snapshot` remains the evidence of what the model actually saw. If authorization
+is durable but publish cannot complete, the Session is fail-closed rather than silently
+continuing with the old composition. A cancelled append is reconciled by `migration_id` so
+that a may-have-committed write is never treated as definitely absent.
 
 `traceh chat` includes the necessary `--plugin` flags in the resume command it prints.
 
@@ -182,11 +212,16 @@ messages are written by this repository.
 | `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict` |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.4
+## 9. Limits of v0.4 and Stage C
 
 - Application scope, trusted, in-process only.
-- No hot reload and no Composition generation drain: the plugin set is fixed between
-  startup and `dispose()`.
+- Chat composition switching is available only while the prompt is idle and only for
+  already-installed, already-discoverable Entry Point plugins. It is a rebuild and publish,
+  not source-code hot reload: there is no running `pip install/uninstall`, Wheel replacement,
+  `importlib.reload()`, file watcher, or automatic Session migration.
+- Runtime-wide Composition is still application-scoped. A migration requires no active Turn
+  in the Runtime and an explicit authorization for the current Session; other Sessions are
+  not migrated automatically.
 - `isolated` is rejected, not implemented.
 - No plugin-supplied `LlmProvider`, `ToolPolicy`, `ToolMiddleware`, `EventStore` or
   `CompletionVerifier` yet - the context exposes tools, prompts and services only.

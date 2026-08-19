@@ -100,6 +100,7 @@ def resume_lines(runtime, session_id="s1", *, environment=None, shell="powershel
         ChatSession(session_id, workspace or Path(".")),
         environment or ResumeEnvironment(),
         shell=shell,
+        plugin_ids=runtime.enabled_plugin_ids,
     )
     return console
 

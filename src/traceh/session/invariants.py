@@ -8,6 +8,7 @@ from uuid import UUID
 
 from traceh.api.events import EventEnvelope, attempt_identity
 from traceh.api.json_types import JsonValue
+from traceh.session.plugin_identity import validate_plugin_identity_events
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +33,14 @@ class CoreInvariantChecker:
         effect_events: tuple[EventEnvelope, ...] = (),
     ) -> tuple[InvariantViolation, ...]:
         violations: list[InvariantViolation] = []
+        for issue in validate_plugin_identity_events(session_events):
+            violations.append(
+                InvariantViolation(
+                    issue.code,
+                    "session plugin identity protocol is invalid",
+                    issue.seq,
+                )
+            )
         expected_seq = 1
         open_turn: str | None = None
         open_step: str | None = None

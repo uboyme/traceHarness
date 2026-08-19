@@ -1452,6 +1452,12 @@ class GenerationCompositionRuntime:
     def cleanup_failures(self) -> tuple[GenerationCleanupFailure, ...]:
         return (self._cleanup_failure,) if self._cleanup_failure is not None else ()
 
+    @property
+    def poisoned(self) -> bool:
+        """Whether a generation cleanup failure closed publication admission."""
+
+        return self._poisoned
+
     def lease(
         self,
         *,

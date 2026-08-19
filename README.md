@@ -1,6 +1,6 @@
 # TraceHarness Py v0.4
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为运行中的 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。分层 Composition Generation、子 Agent 和 Workflow 仍然只是保留的扩展边界。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。当前的 Stage C 还允许用户在空闲的 `traceh chat` 中切换已经能被当前进程发现的插件组合，并为当前 Session 追加显式迁移授权；这不是运行中安装 Wheel 或重新加载 Python module。分层 Composition Generation、子 Agent 和 Workflow 仍然只是保留的扩展边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -267,6 +267,19 @@ $env:TRACEH_PLUGINS = "traceh.example.skill"   # 等价写法
 
 命令行上任何一次 `--plugin` 都会**整体替换** `TRACEH_PLUGINS`，而不是追加；`run`、`chat`、`resume` 使用同一套选择规则。完整作者契约见[插件说明](docs/plugins.md)。
 
+### 在运行中的 Chat 切换组合
+
+插件必须已经安装并能被当前进程的 Entry Point discovery 发现。`traceh chat` 回到空闲提示符后，可以使用：
+
+```text
+/plugins                 # 显示当前外部插件 id/version
+/plugins reload          # 重建并发布当前组合
+/plugins use ID [ID ...] # 切换到明确指定的插件
+/plugins use --none      # 只保留 traceh.core
+```
+
+这些命令不创建 Turn、消息或模型请求。身份发生变化时，Runtime 会先完成候选 ActivationSet 的 setup、冲突检查和 health check，再以 append-only 的 `composition/migration-authorized` 事件授权**当前 Session**；同身份 reload 不追加迁移事件。持久化账本仍有未闭合 Turn/Step 时会在候选构建前拒绝迁移；`/session` 和退出时的恢复命令按 Session 最新 durable 插件身份生成，因此 fail-closed 窗口也不会提示已失效的旧组合。未知命令只显示固定帮助提示，不回显整条输入。它不会执行 `pip install/uninstall`、`importlib.reload()`、文件监听或 Wheel 替换。失败窗口按 may-have-committed 规则对账；授权已落盘但新 Generation 无法发布时，Session 会 fail-closed，而不是偷偷继续旧组合。
+
 ## 运行内置 Benchmark
 
 ```bash
@@ -400,12 +413,12 @@ Projectors / Recovery / Inspector / Invariants
 | 自定义验证 | `CompletionVerifier` |
 | 新持久化后端 | `EventStore` |
 | 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
-| Step 安全的多代 Generation 与热更新 | `CompositionRuntime.lease()`（尚无 Generation 引用计数与 Drain） |
+| Step 安全的多代 Generation 与组合切换 | `CompositionRuntime.lease()`、Generation/Lease/Drain、`traceh chat /plugins` 控制面；仍没有 Wheel/module 级热替换 |
 | Agent 专属能力 | 层级 `Scope`（v0.4 只装配 application scope） |
 | 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
 | 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
 
-延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
+延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
 
 ## 重要设计选择
 
@@ -474,10 +487,10 @@ traceh doctor
 ## v0.4 已知边界
 
 - 插件只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝，不会被降级成 trusted；
-- **没有热更新**：插件集合在启动到 `dispose()` 之间是固定的。Composition 多代发布、引用计数和 Drain 仍未实现（见 ROADMAP v0.5）；
+- **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
 - 插件目前只能提供 Tool、Prompt Section 和 Service；**不能**提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`；
 - 没有 MCP、多 Agent 和 Workflow 接入面；
-- Session 记录创建时的插件身份，插件集合改变后拒绝继续该 Session；这是保护，不是迁移工具——目前没有改变插件集合后继续旧 Session 的办法。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；
+- Session 记录创建时的插件身份和后续真正使用过的 Composition；插件集合改变后，只有用户在当前空闲 Session 执行 `/plugins use ...` 才会追加 `composition/migration-authorized`，没有授权的旧 Session 仍拒绝继续，其他 Session 不会自动迁移。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；授权已落盘但 publish 失败时 Session fail-closed；
 - 插件的 Owned Task 只有**生命周期所有权**，没有监督器：它们的异常会被取回（因此不会冒 `Task exception was never retrieved`），取回之后**立刻丢弃、不留存**，也不会被重启，更**不会**把后台任务失败升级成 Runtime 故障；
 - 每个进程只有一个活跃 Agent Runtime，尚无 `AgentSupervisor`；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat 和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
@@ -499,7 +512,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前共有 910 项自动化测试（909 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、Scope、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、取消语义和 CLI 输出清洗。
+当前共有 999 项自动化测试（998 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、Scope、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

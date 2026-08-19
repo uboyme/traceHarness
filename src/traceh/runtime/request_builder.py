@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, fingerprint
 from traceh.api.llm import ModelRequest, ToolSchema
-from traceh.api.plugins import PluginIdentity
 from traceh.kernel.composition import CompositionSnapshot
+from traceh.session.plugin_identity import parse_plugin_identities
 from traceh.session.service import SessionService
 from traceh.session.surface import SurfaceProjector
 
@@ -64,12 +64,11 @@ def composition_from_event(event: EventEnvelope) -> CompositionSnapshot:
     # rebuild them rather than assume none. Dropping them made every reconstructed
     # composition claim a plugin-free runtime.
     raw_plugins = data.get("plugins", [])
-    if not isinstance(raw_plugins, list):
-        raise ValueError("composition plugins must be a list")
-    plugins = tuple(
-        PluginIdentity(str(item["plugin_id"]), str(item["version"]))
-        for item in raw_plugins
-        if isinstance(item, dict) and "plugin_id" in item and "version" in item
+    plugins = parse_plugin_identities(
+        raw_plugins,
+        allow_core=True,
+        error_code="composition-plugins-valid",
+        seq=event.seq,
     )
     return CompositionSnapshot(
         revision=str(data["revision"]),

@@ -37,6 +37,7 @@ class SessionService:
         event_type: str,
         data: dict[str, JsonValue],
         *,
+        expected_seq: int | None = None,
         durability: Durability = Durability.SYNC,
         actor_id: str | None = None,
         correlation_id: UUID | None = None,
@@ -44,10 +45,14 @@ class SessionService:
         composition_revision: str | None = None,
     ) -> EventEnvelope:
         async with self._lock(stream_id):
-            expected_seq = await self.store.head(stream_id)
+            actual_expected_seq = (
+                await self.store.head(stream_id)
+                if expected_seq is None
+                else expected_seq
+            )
             appended = await self.store.append(
                 stream_id,
-                expected_seq=expected_seq,
+                expected_seq=actual_expected_seq,
                 events=(
                     PendingEvent(
                         type=event_type,
@@ -96,6 +101,7 @@ class SessionService:
         event_type: str,
         data: dict[str, JsonValue],
         *,
+        expected_seq: int | None = None,
         durability: Durability = Durability.SYNC,
         actor_id: str | None = None,
         correlation_id: UUID | None = None,
@@ -106,6 +112,7 @@ class SessionService:
             self.session_stream(session_id),
             event_type,
             data,
+            expected_seq=expected_seq,
             durability=durability,
             actor_id=actor_id,
             correlation_id=correlation_id,

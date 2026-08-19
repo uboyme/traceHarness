@@ -440,7 +440,7 @@ async def test_internal_commands_produce_no_timeline_lines(tmp_path: Path) -> No
 
     assert not any(line.startswith("[event ") for line in console.lines)
     assert console.has("--no-timeline")
-    assert console.has("unknown command: /nope")
+    assert console.has("unknown command (try /help)")
 
 
 async def test_no_subscription_survives_a_finished_chat(tmp_path: Path) -> None:

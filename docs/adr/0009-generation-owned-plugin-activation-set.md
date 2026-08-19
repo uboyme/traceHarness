@@ -150,8 +150,10 @@ and every later `dispose()` report failure instead of success.
 
 ## Not implemented in Stage B
 
-There is no user-facing `/reload` or plugin reload CLI, running Wheel installation or
-uninstallation, file watcher, forced module re-import, Scope Overlay, Provider/Policy/
-Middleware/EventStore/Verifier contribution surface, isolated process plugin host,
-Session automatic migration, multi-Agent, Workflow, MCP, TUI or model streaming. The
-package version remains `0.4.0`; Stage B is not a v0.5 release.
+Stage B itself provided no user-facing reload command. Stage C later added only the idle
+Chat commands `/plugins reload`, `/plugins use` and `/plugins use --none`; it does not add a
+generic `/reload`, running Wheel installation or uninstallation, file watcher, forced module
+re-import, Scope Overlay, Provider/Policy/Middleware/EventStore/Verifier contribution surface,
+isolated process plugin host, Session automatic migration, multi-Agent, Workflow, MCP, TUI or
+model streaming. The package version remains `0.4.0`; neither Stage B nor Stage C is a v0.5
+release.

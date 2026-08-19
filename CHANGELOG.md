@@ -15,10 +15,30 @@
   joining, bounded cleanup failure reporting, Session latest durable Composition recovery,
   and real default-mainline replacement tests. Runtime disposal now also converges
   in-flight replacement candidates, and replacement never acts as a process-wide Session
-  migration authorization. Stage B adds no user-facing reload command.
+  migration authorization.
 - Fixed candidate cancellation so a genuine rollback cleanup failure is not discarded in
   favour of `CancelledError`. Remaining activations still unwind, only bounded structured
   diagnostics escape, and Runtime shutdown records and repeats the failed terminal result.
+
+### v0.5 Stage C control plane
+
+- Added idle `traceh chat` commands `/plugins`, `/plugins reload`, `/plugins use ID [ID ...]`
+  and `/plugins use --none`. They use the Stage B Builder, private candidate registries,
+  `PluginActivationSet`, Composition Generation publish and Lease/Drain cleanup path; they
+  do not create a Turn or model request.
+- Added the append-only `composition/migration-authorized` Session event and a shared strict
+  plugin-identity projection. Identity changes use `migration_id`, `source_seq`,
+  `from_plugins` and `to_plugins`, while same-identity reloads remain event-free. Session
+  head CAS, a Runtime-wide idle Gate and per-Session verification prevent an internal
+  Generation replacement from becoming an automatic migration.
+- Added may-have-committed reconciliation by `migration_id` and fail-closed behavior when
+  authorization is durable but publish cannot complete. Candidate rollback and Runtime
+  dispose converge repeated cancellation before exposing the original cancellation or a
+  bounded cleanup error.
+- Hardened Stage C admission and recovery boundaries: `dispose()` and Turn creation now
+  linearize on the same lock; migration rejects Sessions whose durable Turn/Step projection
+  is still open; resume hints use the Session's latest durable plugin identity even during a
+  fail-closed publish window; and unknown Chat commands no longer echo untrusted input.
 
 ### v0.5 Stage A infrastructure
 
@@ -69,10 +89,10 @@
   the frozen initial Generation before the one-shot owner claim, closing the remaining
   post-claim failure window.
 
-This does not add a user-facing hot-reload command, running Wheel install/uninstall, Scope
-Overlay, new plugin contribution categories, isolated plugins, multi-agent, Workflow, MCP,
-TUI or streaming output. The package version remains `0.4.0`; Stage A and Stage B are not
-the v0.5 release.
+This still does not add running Wheel install/uninstall, forced Python module reload, file
+watching, Scope Overlay, new plugin contribution categories, isolated plugins, multi-agent,
+Workflow, MCP, TUI or streaming output. The package version remains `0.4.0`; Stage A, Stage B
+and Stage C are not the v0.5 release.
 
 ## 0.4.0
 

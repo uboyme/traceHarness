@@ -48,20 +48,28 @@ or verifiers.
   AgentLoop Steps and `AgentRuntime.dispose()` use the same ActivationSet/Generation/Lease/
   Drain path. SessionService, EventStore, core Provider and built-in Tools are borrowed
   core resources; plugin Activation, Tool, Prompt, Service, Owned Task and cleanup are
-  generation-owned. The internal `AgentRuntime.replace_plugin_composition()` API exists
-  for assembly tests and future control-plane work, but no user-facing reload command is
-  provided. Runtime disposal first cancels and waits for in-flight replacement Tasks;
-  replacement does not authorize an existing Session to migrate across plugin identities.
+  generation-owned. Runtime disposal first cancels and waits for in-flight replacement Tasks;
+  internal replacement does not authorize an existing Session to migrate across plugin
+  identities.
+- **Stage C — completed in the current worktree:** idle `traceh chat` exposes `/plugins`,
+  `/plugins reload`, `/plugins use ID [ID ...]` and `/plugins use --none`. All four commands
+  use the Stage B Builder → private registries → ActivationSet → Composition Generation →
+  publish/Drain path. Same-identity reloads do not append a migration event; identity changes
+  append `composition/migration-authorized` with `migration_id`, `source_seq`, `from_plugins`
+  and `to_plugins` after candidate validation and Session-head CAS. A shared Runtime Gate
+  blocks Turn admission while a migration confirms global quiescence and publishes. Append
+  cancellation is reconciled by migration id; durable authorization followed by publish
+  failure is fail-closed. The version remains `0.4.0` and Stage C is not a v0.5 release.
 - Add Application, Workspace, Preset and Agent Scope layers (v0.4 activates application
   scope only).
-- Add a user-facing hot-reload command; Stage B deliberately exposes no CLI for it.
 - Add explicit override conflict diagnostics.
 - Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
 
-Still deferred: running `pip install`/`uninstall` for Wheels, Workspace/Preset/Agent Scope
-Overlay, Provider/Policy/Middleware/EventStore/Verifier plugin contributions, isolated
-plugins, multi-agent, Workflow, MCP, TUI and model streaming. The version remains `0.4.0`;
-completing Stage A or Stage B does not mean v0.5 is released.
+Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
+file watching, Workspace/Preset/Agent Scope Overlay, Provider/Policy/Middleware/EventStore/
+Verifier plugin contributions, isolated plugins, multi-agent, Workflow, MCP, TUI and model
+streaming. The version remains `0.4.0`; completing Stage A, Stage B or Stage C does not mean
+v0.5 is released.
 
 Definition of done for the later v0.5 product remains: two Agents can see different
 tool/policy compositions, and updating a plugin cannot change a Step already in progress.

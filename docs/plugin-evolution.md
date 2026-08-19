@@ -2,8 +2,10 @@
 
 This page tracks what is **shipped** versus what remains planned. For the author-facing
 contract see [`plugins.md`](plugins.md); for the v0.4 transaction reasoning see
-[ADR-0007](adr/0007-transactional-plugin-activation.md), and for the Generation-owned
-ActivationSet decision see [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md).
+[ADR-0007](adr/0007-transactional-plugin-activation.md), for the Generation-owned
+ActivationSet decision see [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md),
+and for the Session migration protocol see
+[ADR-0010](adr/0010-session-plugin-composition-migration.md).
 
 ## v0.4 plugin manager — shipped
 
@@ -81,8 +83,9 @@ Activations, plugin Tools, Prompt sections, Services, Owned Tasks and cleanup ca
 The same ActivationSet cannot be accepted by two Generations or Runtimes, and the
 temporary PluginManager cannot retain a second cleanup owner. Plugin identity may change
 between generations only through this ActivationSet path; an internal replacement does
-not authorize an existing Session to cross that composition boundary. Session migration
-is still intentionally deferred.
+not authorize an existing Session to cross that composition boundary. Stage C adds an
+explicit per-Session append-only authorization for that boundary; it does not make the
+internal replacement API an automatic migration.
 
 ## Stage B: Generation-owned Plugin ActivationSet — shipped as internal infrastructure
 
@@ -111,22 +114,31 @@ report it again.
 
 The internal replacement API changes only the current Generation. It does not set a
 process-wide Session migration bypass: an existing Session must still match its latest
-durable Composition Snapshot, or its `session/created` identity when no Snapshot exists.
-Callers that need the new plugin combination create a new Session until Stage C defines
-an explicit per-Session migration protocol.
+durable identity. Stage C exposes the same assembly path through idle `traceh chat`
+commands:
 
-This Stage B API is internal to the assembly layer. It is not called by a user-facing
-reload command. The following capabilities remain future work, because they change the
-meaning of a Step rather than only the loader:
+```text
+/plugins                 show current external plugin ids and versions
+/plugins reload          rebuild the current enabled set
+/plugins use ID [ID ...] select an explicit enabled set
+/plugins use --none      select no external plugins
+```
 
-- a user-facing **hot-reload command** that builds, validates and publishes a candidate
-  Generation;
-- dynamically installing or uninstalling a Wheel while the process is running.
+`/plugins reload` is a same-identity rebuild and does not append an authorization event.
+`/plugins use` with a changed identity prepares the candidate first, then appends
+`composition/migration-authorized` using a Session-head CAS, and publishes only after the
+authorization is durable. A shared Runtime Gate requires no active Turn and prevents a
+new Turn from passing identity verification during the migration. The identity helper
+rebuilds state from `session/created`, valid `composition/snapshot` and migration events;
+`migration_id`, `source_seq`, `from_plugins` and `to_plugins` are checked strictly. If an
+append may have committed, the Runtime rereads by `migration_id`; if authorization is
+durable but publish fails, the Session is fail-closed.
 
-There is still no user-facing reload command or running Wheel installation/uninstallation.
-Also absent: Workspace/Preset/Agent Scope Overlay, isolated
+This is a user-operable composition switch, not source-code hot reload. The process still
+does not install or uninstall Wheels, call `importlib.reload()`, watch files, or migrate
+other Sessions automatically. Also absent: Workspace/Preset/Agent Scope Overlay, isolated
 (out-of-process) plugins, and any new Provider, Policy, Middleware, EventStore or Verifier
-plugin contribution. The version remains `0.4.0`; Stage B is not a v0.5 release.
+plugin contribution. The version remains `0.4.0`; Stage C is not a v0.5 release.
 
 ## Extension categories
 

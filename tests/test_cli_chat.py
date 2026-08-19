@@ -348,7 +348,7 @@ async def test_internal_commands_and_blank_input_never_create_turns(tmp_path: Pa
     assert user_messages(events) == []
     assert provider.requests == []
     assert "/help" in console.output
-    assert "unknown command: /bogus" in console.output
+    assert "unknown command (try /help)" in console.output
     assert console.output.count(f"session_id={session_id}") == 2  # banner plus /session
 
 

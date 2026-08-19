@@ -5,7 +5,9 @@ contract see [`plugins.md`](plugins.md); for the v0.4 transaction reasoning see
 [ADR-0007](adr/0007-transactional-plugin-activation.md), for the Generation-owned
 ActivationSet decision see [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md),
 and for the Session migration protocol see
-[ADR-0010](adr/0010-session-plugin-composition-migration.md).
+[ADR-0010](adr/0010-session-plugin-composition-migration.md). The control-plane ownership
+split is recorded in
+[ADR-0011](adr/0011-plugin-composition-control-plane-coordinator.md).
 
 ## v0.4 plugin manager — shipped
 
@@ -139,6 +141,30 @@ does not install or uninstall Wheels, call `importlib.reload()`, watch files, or
 other Sessions automatically. Also absent: Workspace/Preset/Agent Scope Overlay, isolated
 (out-of-process) plugins, and any new Provider, Policy, Middleware, EventStore or Verifier
 plugin contribution. The version remains `0.4.0`; Stage C is not a v0.5 release.
+
+## Stage D0: plugin composition control-plane extraction — shipped as structure
+
+Stage A through C introduced three independent concerns that previously accumulated in
+`AgentRuntime`: active Turn admission, plugin candidate replacement, and durable Session
+composition migration. D0 moves the latter two concerns, their shared Gate and their
+in-flight task convergence into `PluginCompositionCoordinator`.
+
+The split is by ownership rather than by line count. `AgentRuntime` remains the public
+facade, owns the active-Turn table, performs the final disposed/duplicate-Turn check under
+its own lock and owns the overall shutdown task. The coordinator owns candidate
+setup/publish/rollback, migration CAS and may-have-committed reconciliation, durable plugin
+identity verification, and convergence of replacement/admission tasks before Composition
+Drain. `AgentLoop` is unchanged and continues to depend only on
+`CompositionRuntime.lease()`.
+
+Public facade dispatch remains part of the behavior-preserving boundary:
+`reload_plugin_composition()` reads the facade's current `enabled_plugin_ids` and calls the
+facade's public `migrate_session_plugin_composition()`. The coordinator has no parallel
+reload shortcut that could bypass a subclass, instrumentation or audit seam.
+
+No Event Log fact, Session protocol, public Chat command or plugin capability was added.
+D0 is the boundary needed before Scope Overlay work; it is not Scope Overlay itself and is
+not a v0.5 release.
 
 ## Extension categories
 

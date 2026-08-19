@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本仍是 **`0.4.0`**。插件系统真的能用了；Stage A 把 Generation-backed Composition Runtime、Step Lease 和 Drain 接入默认主线，Stage B 又把 Generation-owned ActivationSet 接入启动插件和内部替换路径，Stage C 再把 `traceh chat` 的 `/plugins` 组合切换和 Session 显式迁移授权接入同一条主线，但这不等于 v0.5 已发布完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本仍是 **`0.4.0`**。插件系统真的能用了；Stage A 把 Generation-backed Composition Runtime、Step Lease 和 Drain 接入默认主线，Stage B 又把 Generation-owned ActivationSet 接入启动插件和内部替换路径，Stage C 再把 `traceh chat` 的 `/plugins` 组合切换和 Session 显式迁移授权接入同一条主线。D0 没有增加新功能，而是把候选替换、会话迁移、共享 Gate 和在途任务收尾从 `AgentRuntime` 拆给专门的 `PluginCompositionCoordinator`，为后面的 Scope 工作清出边界。这些都不等于 v0.5 已发布完成。
 
 ### 版本为什么只准写在一个地方
 
@@ -61,7 +61,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有多 Agent 吗 | 只有 DTO/Protocol，没有可以工作的 Supervisor |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
-| 当前测试数 | 收集 999 项；完整门禁 998 通过、1 项跳过 |
+| 当前测试数 | 收集 1003 项；完整门禁 1002 通过、1 项跳过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -122,7 +122,7 @@ flowchart LR
 |---|---|---|
 | `api/` | 各模块共同认可的合同和数据表格 | Event、ModelRequest、Tool、Plugin/Agent/Workspace Protocol |
 | `cli/` | 把终端命令和 `.env` 翻译成 Runtime 配置，提供交互式聊天，把事件翻成屏幕上的时间线，在长时间等待时报告进度，并把恢复命令按目标 Shell 安全地渲染出来 | `main.py`、`chat.py`、`console.py`、`timeline.py`、`activity.py`、`command_line.py`、`env_file.py` |
-| `runtime/` | 真正安排“一轮任务怎样跑”的业务中枢 | `AgentRuntime`、`AgentLoop` |
+| `runtime/` | 运行时中枢：对外门面、插件组合控制面和真正的一轮执行各有自己的负责人 | `AgentRuntime`、`PluginCompositionCoordinator`、`AgentLoop` |
 | `session/` | 账本、账本的跨进程文件锁、事件广播喇叭、从账本算状态、恢复和检查 | `JsonlEventStore`、`file_lock.py`、`event_feed.py`、Projector、Recovery |
 | `concurrency.py` | 杀不掉的后台活儿（线程）取消后怎么等它收尾 | `await_worker_convergence()` |
 | `tools/process_control.py` | 子进程取消/超时后怎么确保它真的死了、输出怎么不丢 | `capture_output()`、`converge_process()` |
@@ -155,7 +155,9 @@ flowchart LR
 ```mermaid
 flowchart TD
     ENTRY["终端、Python SDK 或 Benchmark"] --> FACADE["AgentRuntime：对外门面"]
+    FACADE --> CONTROL["PluginCompositionCoordinator：插件候选与会话迁移"]
     FACADE --> LOOP["AgentLoop：安排每一步"]
+    CONTROL --> COMP
     LOOP --> COMP["Generation Lease：冻结本步能力"]
     LOOP --> REQUEST["RequestBuilder：重建模型请求"]
     LOOP --> LLM["LlmRuntime：调用模型"]
@@ -179,9 +181,10 @@ flowchart TD
 
 还有一条边界要记牢：**主循环压根不知道 PluginManager、Builder 或 Generation replacement service 存在**。它只调用 `CompositionRuntime.lease()`。插件的工具、Prompt、Service 仍走原来的 Tool/Prompt/Service 主线，但每个候选拥有自己的注册表视图；插件 Activation、插件 Tool、Prompt、Service、Owned Task 和 cleanup 由对应 Generation 的 ActivationSet 持有。SessionService、EventStore、核心 Provider 和内置 Tool 是可以跨 Generation 借用的 core，不属于插件 cleanup。所以没有“插件版工具运行器”，也没有“插件版主循环”——在事件日志里，插件工具和内置工具长得一模一样，这正是目的。
 
-`AgentRuntime` 与 `AgentLoop` 的区别：
+`AgentRuntime`、插件组合协调器与 `AgentLoop` 的区别：
 
-- `AgentRuntime` 面向外部调用者，负责创建 Session、阻止同一 Session 重复运行、resume、cancel、dispose；
+- `AgentRuntime` 面向外部调用者，负责创建 Session、保存活跃 Turn 表、阻止同一 Session 重复运行、resume、cancel，并掌握整个 dispose 的先后顺序；
+- `PluginCompositionCoordinator` 负责插件候选的 setup/publish/rollback、会话插件身份校验与迁移、共享 Gate，以及关闭时等待这些在途工作收干净；它不执行 Turn，也不另存一份会话事实；
 - `AgentLoop` 面向一次 Turn，负责不断创建 Step，直到完成、失败或用完预算。
 
 ## 5. Session、Turn、Step 是怎样一层层工作的
@@ -933,7 +936,9 @@ Stage B 把插件生命周期单独放进 `PluginActivationSet`：每次候选�
 
 装配层把同一个 `CompositionResourceOwner` 或 ActivationSet 明确交给对应的所有者；不使用全局 identity catalog，也不靠扫描对象图推断所有权。无法动态保存 binding 的裸 slotted Provider、Tool、Policy、Middleware 会在 Stage A cleanup-bearing Generation 构造时拒绝，必须先经过可绑定的受控装配。Generation 会先完成 Provider 查找和冻结投影，最后才提交 owner/binding；Provider 名字写错不会污染资源，同一 Owner 和修正后的资源可以重试。`drain()` 会等待所有旧代的 Lease 和 ActivationSet cleanup，重复取消也不能打穿等待；失败会在其他插件和代继续清理后，以有界的结构化结果报告，并把 Runtime 标为 poisoned，后续 publish 被拒绝。内部 identity 和模型可见的 revision 是两件事：前者只管生命周期，后者是内容 fingerprint，同内容可以同 revision。
 
-Stage C 已把用户控制面接到这条主线：`/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none` 都调用同一个装配层 Builder、私有注册表、ActivationSet、Generation、publish 和 Drain。它仍不是“从磁盘重新加载 Python 源码”：没有运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher。AgentLoop 仍只依赖 `CompositionRuntime.lease()`；插件集合的当前身份来自 current Generation，而不是 AgentRuntime 另存一份可变事实。Runtime 关闭时会先取消并等待在途迁移、候选 setup/rollback 和 Turn admission，再 Drain Generation。
+Stage C 已把用户控制面接到这条主线：`/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none` 都调用同一个装配层 Builder、私有注册表、ActivationSet、Generation、publish 和 Drain。它仍不是“从磁盘重新加载 Python 源码”：没有运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher。AgentLoop 仍只依赖 `CompositionRuntime.lease()`；插件集合的当前身份来自 current Generation，不是门面类另存的一份可变事实。
+
+D0 又把职责分清了一层：`AgentRuntime` 像总服务台，保留公开方法、活跃 Turn 名单和整机关闭顺序；`PluginCompositionCoordinator` 像插件变更柜台，独占候选替换、会话身份迁移、共享 Gate 和在途 replacement/admission 的收尾。总服务台原来允许人替换或审计公开迁移方法，这个入口不能因为拆分就失效，所以 reload 仍先读取总服务台公开的插件 id，再调用总服务台公开的迁移方法；协调器不保留一个能绕开它的 reload 快捷入口。一个 Turn 真正注册进活跃名单前，Gate 仍不能松；关闭时必须先收敛活跃 Turn，再让协调器收干净候选和准入，之后才 Drain Generation。这个拆分没有新事件、没有新命令，也没有实现 Scope Overlay，它只是防止后续把所有复杂度继续堆进 `AgentRuntime`。
 
 ### AgentSupervisor / Budget
 
@@ -959,7 +964,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980 项、979 通过、1 项跳过；Stage C 后当前真实总数收集 999 项，完整 pytest 结果是 998 通过、1 项跳过。本轮新增 Chat 命令、migration-authorized、共享身份解析、Session head CAS、may-have-committed 对账、全局空闲 Gate、fail-closed、重启恢复、dispose 后 Turn admission、持久化开放 Turn/Step 拒绝、durable resume 插件身份和安全未知命令输出测试；既有 Generation/ActivationSet 测试继续覆盖私有候选注册表、失败回滚、ActivationSet 一次性所有权、旧 Lease 的 Service/Tool/Owned Task 存活、逆序 cleanup、Runtime dispose 和取消收敛。取消聊天测试的 Provider 夹具会先等第一模型调用实际收到取消，再放开门闩，避免 `chat.cancel()` 和 `release.set()` 竞态。
+Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980 项、979 通过、1 项跳过；Stage C 后为 999 项、998 通过、1 项跳过；D0 增加四项契约后，当前真实总数收集 1003 项，完整 pytest 结果是 1002 通过、1 项跳过。新测试直接检查 `AgentRuntime` 不再持有插件控制面的锁、任务集合和 Builder 装配状态，检查关闭顺序一定是“控制面的候选和准入任务先收敛，Composition 后 Drain”，还用一个故意没有 `poisoned` 属性的自定义 Publisher 证明纯重构没有偷偷缩窄原来的可替换接口；第四项则证明 `/plugins reload` 仍先经过 `AgentRuntime` 的公开迁移方法和公开插件 id 视图，继承、替换或审计这个入口不会被私有协调器绕过去。三条保护都反着试过：故意先 Drain 会稳定失败；故意强制读取 `poisoned` 会稳定报 `AttributeError`；故意让 reload 直接调用协调器会稳定跳过公开方法并让测试失败；恢复后都通过。Stage C 的 Chat 命令、migration-authorized、共享身份解析、Session head CAS、may-have-committed、全局空闲 Gate、fail-closed、重启恢复和安全输出测试全部继续通过；既有 Generation/ActivationSet 测试也继续覆盖资源所有权、旧 Lease、逆序 cleanup 和取消收敛。
 
 当前测试大致分成：
 
@@ -1053,7 +1058,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 当前真实状态是 999 项收集、998 通过、1 项按平台跳过。本轮新增的 Chat 插件命令、migration-authorized、Session 身份解析、CAS/may-have-committed、共享 Gate、fail-closed、重启恢复、dispose 后 Turn admission、持久化开放生命周期、durable resume 插件身份和安全未知命令规则测试都在这份数字里。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 基线是 999 项收集、998 通过、1 项按平台跳过；D0 当前真实状态是 1003 项收集、1002 通过、1 项按平台跳过。D0 新增控制面所有权、关闭顺序、自定义 Publisher 兼容和公开迁移分派四项契约，Stage C 的行为测试仍包含在当前全量结果里。一个是历史发布快照，一个是当前代码状态，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1109,7 +1114,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 | Runtime 怎么关机 | `runtime/agent_runtime.py` 的 `_shutdown`/`dispose`、插件卸载、关机测试 | 顺序或收敛写错，插件会被悄悄落下而且没人报错 |
 | Generation / Lease / Drain | `composition_runtime.py`、默认 Runtime 工厂、AgentLoop 的 lease 调用、Generation 契约测试、插件 Runtime 顺序测试 | 每一步必须只看一代；旧代要等 Lease 和 cleanup 都收敛，不能和 PluginManager 重复清理 |
 | 后台任务的所有权 | `kernel/tasks.py`、`kernel/activation.py`、后台任务测试 | 少取回一次异常，就会在无关的时刻冒出 GC 告警 |
-| 会话插件身份怎么比 | `runtime/agent_runtime.py` 的 `_comparable`/`create_session`、身份测试 | 比错了要么误拒合法会话，要么放过真正的组合变化 |
+| 会话插件身份怎么比 | `session/plugin_identity.py` 负责从账本重建和按 PEP 440 比较，`runtime/plugin_composition.py` 负责校验/迁移/CAS，`AgentRuntime.create_session()` 与公开门面负责接入，身份及 Stage C/D0 控制面测试负责验证 | 比错了要么误拒合法会话，要么放过真正的组合变化；职责索引也必须指向真实存在的实现 |
 | CLI 某个命令的资源清理 | 对应 handler 的 `try/finally`、CLI 测试 | 建会话/建 Runtime 之后的任何失败都必须仍然 dispose |
 | 插件 CLI | `cli/plugins.py`、`cli/main.py`、插件 CLI 测试、README、`docs/plugins.md` | 它把第三方元数据打到屏幕上，是一道泄漏面 |
 | 版本号 | `version.py`、`pyproject.toml`、版本契约测试、CHANGELOG | 核心版本会进快照，散着写就会自相矛盾 |
@@ -1152,7 +1157,7 @@ Codex 会直接读根目录 `AGENTS.md`。Claude Code 默认读 `CLAUDE.md`，�
 
 ## 19. 插件系统到底是怎么工作的
 
-正式版第 19 节是工程事实，这里讲清楚“为什么这么设计”。作者要写插件请看 [`docs/plugins.md`](../plugins.md)，设计原因的正式记录在 [ADR-0007](../adr/0007-transactional-plugin-activation.md)、[ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md) 和 [ADR-0010](../adr/0010-session-plugin-composition-migration.md)。
+正式版第 19 节是工程事实，这里讲清楚“为什么这么设计”。作者要写插件请看 [`docs/plugins.md`](../plugins.md)，设计原因的正式记录在 [ADR-0007](../adr/0007-transactional-plugin-activation.md)、[ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](../adr/0010-session-plugin-composition-migration.md) 和 [ADR-0011](../adr/0011-plugin-composition-control-plane-coordinator.md)。
 
 ### 19.1 一句话版本
 
@@ -1233,7 +1238,9 @@ Stage A 的 raw capability binding 仍不使用全局 `id()` catalog、对象图
 
 资源绑定现在有两层“不能糊弄”：第一，标记直接写进对象真正的存储位置并回读确认，自定义 setter 假装成功也没用；第二，一批对象绑定到一半失败时，每个对象都会退回精确的原状态，不会留下丢字段的半成品。Runtime 自己也先从已经冻结的初始 Generation 建好兼容视图，再让 Owner 正式归它所有；因此不会出现“Owner 已签字，第二次读取 Prompt 却失败，最后没人负责 cleanup”的窗口。
 
-关机顺序不能反：`dispose()` 先在和 Turn admission 共用的 `_lock` 线性化点标记“停止接收新 Turn”，再把**还在跑的那一轮**取消并等它结束，再取消并等待在途候选/迁移及其回滚，然后 Drain Composition，让 current 和所有 retired Generation 的 ActivationSet 各自收敛，**最后**才清理仍属 application-level 的构建器/发现器。关机会读取候选任务的真实终态：正常取消可以继续，但候选回滚的 `PluginDisposeError` 会让本次关机失败，后面再次关机还会看到同一个结果，不能在资源可能没清干净时假装成功。默认 Stage B/C 路径没有第二个 PluginManager cleanup owner；只有旧 v0.4 自定义装配才会在 Drain 后清理可选的 legacy PluginManager。这样 Service、Owned Task 和插件 Activation 不会在旧 Lease 仍活着时被抽走，也不会被两套系统清理。
+关机顺序不能反：`dispose()` 先在和 Turn admission 最终检查共用的 `_lock` 线性化点标记“停止接收新 Turn”，再把**还在跑的那一轮**取消并等它结束；接着让 `PluginCompositionCoordinator` 取消并等待在途候选/迁移及其回滚，也等待已经进了 Gate、但尚未注册成活跃 Turn 的准入任务；然后才 Drain Composition，让 current 和所有 retired Generation 的 ActivationSet 各自收敛，**最后**清理 application-level legacy 资源。关机会读取候选任务的真实终态：正常取消可以继续，但候选回滚的 `PluginDisposeError` 会让本次关机失败，后面再次关机还会看到同一个结果，不能在资源可能没清干净时假装成功。默认 Stage B/C 路径没有第二个 PluginManager cleanup owner；只有旧 v0.4 自定义装配才会在 Drain 后清理可选的 legacy PluginManager。这样 Service、Owned Task 和插件 Activation 不会在旧 Lease 仍活着时被抽走，也不会被两套系统清理。
+
+D0 做的就是把这段控制面从“总服务台”拆成一个明确负责人。过去 `AgentRuntime` 同时管公开 API、活跃 Turn、插件候选、Session 迁移、Gate 和在途任务，任何后续 Scope 功能都很容易继续往同一类里堆锁和分支。现在 `AgentRuntime` 只保留门面、活跃 Turn 和总关闭任务；协调器负责插件候选与会话迁移，但不能自己执行 Turn，也不能另存一份插件身份或会话状态。它查询的会话身份仍来自 Event Log，current 插件身份仍来自 Generation。这个拆分没有增加用户命令，不是 Scope Overlay，也不是为了把大文件机械切成两个小文件，而是让每套状态机只有一个主人。
 
 Stage C 已有面向用户的 `/plugins`、`/plugins reload`、`/plugins use` 和 `--none`，但仍没有运行中 pip install/uninstall、Wheel 替换、强制 module reload、文件 watcher、Workspace/Preset/Agent Scope Overlay，也没有扩展 Provider、Policy、Middleware、EventStore 或 Verifier 插件贡献面。
 

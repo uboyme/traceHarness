@@ -18,7 +18,7 @@ Applications
   CLI, SDK, evaluation, inspector
 
 Control
-  AgentRuntime, AgentLoop, ContinuationRuntime
+  AgentRuntime, PluginCompositionCoordinator, AgentLoop, ContinuationRuntime
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
@@ -100,10 +100,18 @@ canonical SHA-256 revision.
 plus each activated external plugin's true id and version. Replay rebuilds them from the
 event, so a plugin-affected request stays reconstructable.
 
-The lease retains the exact provider and Tool Runtime objects while the model/tool cycle runs. Step-local freezing prevents a future plugin update from changing tools halfway through
-one model/tool cycle. v0.4 creates a new immutable snapshot directly and keeps the plugin
-set fixed for the process lifetime; v0.5 can replace that operation with a generation lease
-— the prerequisite for hot reload — without changing the request or event schema.
+The lease retains the exact provider and Tool Runtime objects while the model/tool cycle
+runs. Step-local freezing prevents a plugin composition change from changing tools halfway
+through one model/tool cycle. The current runtime publishes immutable Generations; old
+Leases retain the old Generation until their last release, after which Drain owns cleanup.
+Generation identity stays internal and does not change the request or event schema.
+
+`AgentRuntime` is the public facade and owns the active-Turn table plus overall shutdown.
+`PluginCompositionCoordinator` owns the plugin candidate transaction, the shared
+Turn-admission/migration gate, durable Session plugin-identity checks and in-flight
+replacement and pre-registration admission convergence. It does not execute a Turn and it
+does not create a second Session fact source. `AgentLoop` still sees only
+`CompositionRuntime.lease()`.
 
 ## Extension rule
 

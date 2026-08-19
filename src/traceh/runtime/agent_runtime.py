@@ -7,9 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
-from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
@@ -20,33 +18,25 @@ from traceh.kernel.registry import ServiceRegistry
 from traceh.llm.registry import LlmRegistry
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
-from traceh.plugins.errors import PluginDisposeError
 from traceh.runtime.agent_loop import AgentLoop, TurnResult
-from traceh.runtime.composition_runtime import (
-    CompositionGeneration,
-    GenerationCompositionRuntime,
-)
+from traceh.runtime.composition_runtime import GenerationCompositionRuntime
 from traceh.runtime.continuation import ContinuationRuntime
+from traceh.runtime.plugin_composition import (
+    AgentAlreadyRunningError,
+    PluginCompositionCoordinator,
+    PluginCompositionReplacement,
+    SessionPluginMigrationError,
+    SessionPluginMismatchError,
+)
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CommandVerifier, CompletionVerifier
 from traceh.session.compaction import CompactionService
 from traceh.session.event_feed import EventFeed, PublishingEventStore, SessionEventFeed
-from traceh.session.event_store import ConcurrencyConflict, EventStore
+from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.jsonl import JsonlEventStore
-from traceh.session.plugin_identity import (
-    MIGRATION_EVENT_TYPE,
-    PLUGIN_METADATA_KEY,
-    PersistedPluginComposition,
-    PluginIdentityProtocolError,
-    comparable_plugin_identities,
-    external_plugin_identities,
-    find_migration_event,
-    migration_event_data,
-    rebuild_plugin_identity,
-)
-from traceh.session.projections import StateProjector
+from traceh.session.plugin_identity import PLUGIN_METADATA_KEY
 from traceh.session.recovery import RecoveryReport, RecoveryService
 from traceh.session.service import SessionService
 from traceh.session.surface import SurfaceProjector
@@ -69,6 +59,17 @@ if TYPE_CHECKING:
         PluginGenerationBuilder,
         PluginManager,
     )
+
+__all__ = [
+    "AgentAlreadyRunningError",
+    "AgentRuntime",
+    "PluginCompositionReplacement",
+    "RuntimeConfig",
+    "SessionPluginMigrationError",
+    "SessionPluginMismatchError",
+    "build_default_runtime",
+    "build_default_runtime_async",
+]
 
 #: Session metadata key holding the external plugin identities a session was
 #: created under. Reserved: callers may not set it themselves.
@@ -104,40 +105,6 @@ class RuntimeConfig:
             raise ValueError("verification_timeout_seconds must be positive")
         if self.max_verification_retries < 0:
             raise ValueError("max_verification_retries cannot be negative")
-
-
-class AgentAlreadyRunningError(RuntimeError):
-    pass
-
-
-class SessionPluginMismatchError(RuntimeError):
-    """A persisted session was created under a different plugin composition.
-
-    Continuing anyway would let a turn run against tools and prompt sections the
-    earlier turns never had - or, worse, silently drop a plugin whose tool results
-    are already part of the session's history.
-    """
-
-
-class SessionPluginMigrationError(RuntimeError):
-    """A user-requested Session migration could not reach a safe outcome."""
-
-
-@dataclass(frozen=True, slots=True)
-class PluginCompositionReplacement:
-    """Non-secret result of an internal plugin composition replacement."""
-
-    generation_id: int
-    plugins: tuple[PluginIdentity, ...]
-    migration_id: str | None = None
-
-    @property
-    def enabled_plugin_ids(self) -> tuple[str, ...]:
-        return tuple(
-            identity.plugin_id
-            for identity in self.plugins
-            if identity.plugin_id != CORE_PLUGIN_IDENTITY.plugin_id
-        )
 
 
 class AgentRuntime:
@@ -188,28 +155,24 @@ class AgentRuntime:
         self._initial_plugins = tuple(plugins)
         self._services_base = services or ServiceRegistry()
         self._plugin_manager = plugin_manager
-        self._plugin_builder = plugin_builder
-        self._assembly_llms = assembly_llms
-        self._assembly_policies = tuple(assembly_policies)
-        self._assembly_middlewares = tuple(assembly_middlewares)
         self._active: dict[str, asyncio.Task[TurnResult]] = {}
         self._lock = asyncio.Lock()
-        # Turn admission and Session migration share this gate.  A migration
-        # holds it across candidate preparation, the authorization CAS and
-        # Generation publication; a Turn holds it through identity verification
-        # and active-turn registration.
-        self._composition_gate = asyncio.Lock()
-        self._composition_replacement_lock = asyncio.Lock()
-        self._turn_admission_task_lock = asyncio.Lock()
-        self._turn_admission_tasks: set[asyncio.Task[object]] = set()
-        # Replacement workers own candidate setup and rollback.  Keeping the
-        # workers here makes them part of Runtime shutdown rather than leaving
-        # them attached only to whichever caller requested a replacement.
-        self._replacement_task_lock = asyncio.Lock()
-        self._replacement_tasks: set[asyncio.Task[PluginCompositionReplacement]] = set()
         self._disposed = False
         self._dispose_started = asyncio.Event()
         self._dispose_task: asyncio.Task[None] | None = None
+        self._plugin_compositions = PluginCompositionCoordinator(
+            sessions=sessions,
+            compositions=loop.compositions,
+            plugin_builder=plugin_builder,
+            llms=assembly_llms,
+            policies=tuple(assembly_policies),
+            middlewares=tuple(assembly_middlewares),
+            tool_timeout_seconds=config.tool_timeout_seconds,
+            max_tool_output_chars=config.max_tool_output_chars,
+            current_external_plugins=lambda: self.external_plugin_identities,
+            runtime_is_disposed=lambda: self._disposed,
+            runtime_has_active_turn=self._has_active_turn,
+        )
 
     @property
     def plugins(self) -> tuple[PluginIdentity, ...]:
@@ -242,6 +205,10 @@ class AgentRuntime:
     def _plugin_metadata(self) -> list[dict[str, str]]:
         return [identity.to_dict() for identity in self.external_plugin_identities]
 
+    async def _has_active_turn(self) -> bool:
+        async with self._lock:
+            return any(not task.done() for task in self._active.values())
+
     async def create_session(
         self,
         workspace: Path,
@@ -263,173 +230,15 @@ class AgentRuntime:
         actual_metadata[_PLUGIN_METADATA_KEY] = expected
         return await self.sessions.create_session(workspace, metadata=actual_metadata)
 
-    async def _persisted_plugin_composition(
-        self,
-        session_id: str,
-    ) -> tuple[tuple[EventEnvelope, ...], PersistedPluginComposition]:
-        events = await self.sessions.read_session(session_id)
-        if not events or events[0].type != "session/created":
-            await self.sessions.ensure_session(session_id)
-            return events, PersistedPluginComposition((), 0)
-        try:
-            facts = rebuild_plugin_identity(events)
-        except PluginIdentityProtocolError as error:
-            raise SessionPluginMismatchError(str(error)) from None
-        return events, facts
-
-    @staticmethod
-    def _assert_persisted_session_idle(events: tuple[EventEnvelope, ...]) -> None:
-        """Reject migration while durable Turn/Step lifecycle is still open."""
-
-        projection = StateProjector().project(events)
-        if projection.open_turn_id is not None or projection.open_step_id is not None:
-            raise AgentAlreadyRunningError("session has an open durable Turn or Step")
-
-    def _assert_session_plugin_composition(
-        self,
-        persisted: PersistedPluginComposition,
-    ) -> None:
-        active = self.external_plugin_identities
-        if comparable_plugin_identities(persisted.plugins) != comparable_plugin_identities(
-            active
-        ):
-            required = (
-                ", ".join(f"{item.plugin_id}=={item.version}" for item in persisted.plugins)
-                or "none"
-            )
-            current = ", ".join(f"{item.plugin_id}=={item.version}" for item in active) or "none"
-            raise SessionPluginMismatchError(
-                "session plugin composition does not match the active runtime; "
-                f"session requires [{required}], current runtime has [{current}]"
-            )
-
     async def persisted_external_plugin_ids(self, session_id: str) -> tuple[str, ...]:
         """Return the Session's durable plugin identity for safe resume output."""
 
-        _, persisted = await self._persisted_plugin_composition(session_id)
-        return tuple(identity.plugin_id for identity in persisted.plugins)
-
-    async def _reread_session_after_cancellation(
-        self,
-        session_id: str,
-    ) -> tuple[EventEnvelope, ...]:
-        """Read a may-have-committed append without a second cancel escape."""
-
-        read_task = asyncio.create_task(self.sessions.read_session(session_id))
-        try:
-            return await asyncio.shield(read_task)
-        except asyncio.CancelledError:
-            await await_worker_convergence(read_task)
-            if read_task.cancelled():
-                raise
-            return read_task.result()
+        return await self._plugin_compositions.persisted_external_plugin_ids(session_id)
 
     async def verify_session_plugins(self, session_id: str) -> None:
         """Refuse a Session whose durable identity differs from the current Generation."""
 
-        _, persisted = await self._persisted_plugin_composition(session_id)
-        self._assert_session_plugin_composition(persisted)
-
-    async def _prepare_plugin_generation(
-        self,
-        enabled_plugin_ids: Sequence[str],
-        *,
-        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
-        plugin_discovery: PluginDiscovery | None = None,
-    ) -> tuple[PluginActivationSet, CompositionGeneration]:
-        """Prepare a complete candidate while the caller owns its rollback."""
-
-        if self._disposed:
-            raise RuntimeError("runtime is disposed")
-        builder = self._plugin_builder
-        if builder is None or not callable(getattr(builder, "prepare", None)):
-            raise RuntimeError("this runtime has no plugin composition builder")
-        if self._assembly_llms is None:
-            raise RuntimeError("this runtime has no core LLM registry for replacement")
-        activation_set = await builder.prepare(
-            tuple(enabled_plugin_ids),
-            discovery=plugin_discovery,
-            plugin_configs=plugin_configs,
-        )
-        try:
-            if self._disposed:
-                raise RuntimeError("runtime is disposed")
-            current = self.loop.compositions.current_generation
-            candidate_tools = ToolRuntime(
-                activation_set.tools,
-                self.sessions,
-                policies=self._assembly_policies,
-                middlewares=self._assembly_middlewares,
-                timeout_seconds=self.config.tool_timeout_seconds,
-                max_output_chars=self.config.max_tool_output_chars,
-            )
-            generation = CompositionGeneration(
-                llms=self._assembly_llms,
-                tools=candidate_tools,
-                prompt=activation_set.prompt,
-                provider=current.provider,
-                model=current.model,
-                temperature=current.temperature,
-                max_output_tokens=current.max_output_tokens,
-                plugins=activation_set.identities,
-                activation_set=activation_set,
-            )
-        except BaseException as error:
-            try:
-                await activation_set.dispose()
-            except asyncio.CancelledError:
-                raise
-            except BaseException as cleanup_error:
-                if isinstance(error, asyncio.CancelledError):
-                    raise cleanup_error from None
-                raise ExceptionGroup(
-                    "plugin composition candidate cleanup failed",
-                    (error, cleanup_error),
-                ) from None
-            raise
-        return activation_set, generation
-
-    @staticmethod
-    def _candidate_ownership_transferred(activation_set: PluginActivationSet) -> bool:
-        """Return whether publish already handed cleanup to a Generation."""
-
-        return getattr(activation_set, "claimed_by", None) is not None
-
-    async def _replace_plugin_composition(
-        self,
-        enabled_plugin_ids: Sequence[str],
-        *,
-        plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
-        plugin_discovery: PluginDiscovery | None = None,
-    ) -> PluginCompositionReplacement:
-        """Prepare and publish one plugin candidate through the Stage B path."""
-
-        async with self._composition_replacement_lock:
-            activation_set, generation = await self._prepare_plugin_generation(
-                enabled_plugin_ids,
-                plugin_configs=plugin_configs,
-                plugin_discovery=plugin_discovery,
-            )
-            try:
-                generation_id = await self.loop.compositions.publish(generation)
-            except BaseException as error:
-                if not self._candidate_ownership_transferred(activation_set):
-                    try:
-                        await activation_set.dispose()
-                    except asyncio.CancelledError:
-                        raise
-                    except BaseException as cleanup_error:
-                        if isinstance(error, asyncio.CancelledError):
-                            raise cleanup_error from None
-                        raise ExceptionGroup(
-                            "plugin composition candidate cleanup failed",
-                            (error, cleanup_error),
-                        ) from None
-                raise
-            return PluginCompositionReplacement(
-                generation_id=generation_id,
-                plugins=tuple(activation_set.identities),
-            )
+        await self._plugin_compositions.verify_session_plugins(session_id)
 
     async def replace_plugin_composition(
         self,
@@ -438,45 +247,12 @@ class AgentRuntime:
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
         plugin_discovery: PluginDiscovery | None = None,
     ) -> PluginCompositionReplacement:
-        """Prepare and publish one replacement owned by this Runtime.
+        """Delegate one internal replacement to the composition control plane."""
 
-        The current Task is registered as Runtime-owned work before candidate
-        setup starts.  Cancellation therefore enters the same rollback path,
-        and Runtime disposal can cancel and wait for every in-flight
-        replacement before Composition Drain begins.
-        """
-
-        if self._disposed:
-            raise RuntimeError("runtime is disposed")
-        replacement_task = asyncio.current_task()
-        if replacement_task is None:
-            raise RuntimeError("plugin replacement requires an asyncio Task")
-        async with self._replacement_task_lock:
-            if self._disposed:
-                raise RuntimeError("runtime is disposed")
-            self._replacement_tasks.add(replacement_task)
-        try:
-            async with self._composition_gate:
-                return await self._replace_plugin_composition(
-                    enabled_plugin_ids,
-                    plugin_configs=plugin_configs,
-                    plugin_discovery=plugin_discovery,
-                )
-        finally:
-            async with self._replacement_task_lock:
-                self._replacement_tasks.discard(replacement_task)
-
-    async def _publish_migration_candidate(
-        self,
-        activation_set: PluginActivationSet,
-        generation: CompositionGeneration,
-    ) -> PluginCompositionReplacement:
-        """Publish a prepared candidate while the caller retains rollback ownership."""
-
-        generation_id = await self.loop.compositions.publish(generation)
-        return PluginCompositionReplacement(
-            generation_id=generation_id,
-            plugins=tuple(activation_set.identities),
+        return await self._plugin_compositions.replace_plugin_composition(
+            enabled_plugin_ids,
+            plugin_configs=plugin_configs,
+            plugin_discovery=plugin_discovery,
         )
 
     async def migrate_session_plugin_composition(
@@ -487,147 +263,14 @@ class AgentRuntime:
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
         plugin_discovery: PluginDiscovery | None = None,
     ) -> PluginCompositionReplacement:
-        """Authorize and publish one explicit Session plugin composition.
+        """Delegate one explicit Session migration to the control plane."""
 
-        The composition gate makes Session admission and migration one
-        application-wide linearization domain.  The authorization is appended
-        with the latest stream head as a CAS value only after the candidate is
-        fully healthy.  If an append cancellation may have committed, the
-        Session is reread by the stable migration id before rollback or publish
-        is chosen.
-        """
-
-        migration_task = asyncio.current_task()
-        if migration_task is None:
-            raise RuntimeError("plugin migration requires an asyncio Task")
-        async with self._replacement_task_lock:
-            if self._disposed:
-                raise RuntimeError("runtime is disposed")
-            self._replacement_tasks.add(migration_task)
-        try:
-            async with self._composition_gate:
-                if self._disposed:
-                    raise RuntimeError("runtime is disposed")
-                if getattr(self.loop.compositions, "poisoned", False):
-                    raise RuntimeError(
-                        "composition runtime is poisoned by generation cleanup failure"
-                    )
-                events, persisted = await self._persisted_plugin_composition(session_id)
-                self._assert_persisted_session_idle(events)
-                self._assert_session_plugin_composition(persisted)
-                async with self._lock:
-                    if any(not task.done() for task in self._active.values()):
-                        raise AgentAlreadyRunningError("runtime has an active Turn")
-
-                activation_set, generation = await self._prepare_plugin_generation(
-                    tuple(enabled_plugin_ids),
-                    plugin_configs=plugin_configs,
-                    plugin_discovery=plugin_discovery,
-                )
-                candidate_owned = True
-                migration_id = str(uuid4())
-                try:
-                    events, persisted = await self._persisted_plugin_composition(session_id)
-                    self._assert_persisted_session_idle(events)
-                    if comparable_plugin_identities(persisted.plugins) != (
-                        comparable_plugin_identities(self.external_plugin_identities)
-                    ):
-                        raise SessionPluginMigrationError(
-                            "session identity changed while plugin composition was preparing"
-                        )
-                    target = external_plugin_identities(tuple(activation_set.identities))
-                    same_identity = comparable_plugin_identities(persisted.plugins) == (
-                        comparable_plugin_identities(target)
-                    )
-                    if same_identity:
-                        result = await self._publish_migration_candidate(
-                            activation_set, generation
-                        )
-                        candidate_owned = False
-                        return result
-
-                    if not events:
-                        raise SessionPluginMigrationError("session has no durable head")
-                    expected_head_seq = events[-1].seq
-                    payload = migration_event_data(
-                        migration_id=migration_id,
-                        source_seq=persisted.source_seq,
-                        from_plugins=persisted.plugins,
-                        to_plugins=target,
-                    )
-                    append_error: BaseException | None = None
-                    try:
-                        await self.sessions.append_session(
-                            session_id,
-                            MIGRATION_EVENT_TYPE,
-                            payload,
-                            expected_seq=expected_head_seq,
-                        )
-                    except BaseException as error:
-                        append_error = error
-
-                    if append_error is not None:
-                        latest = await self._reread_session_after_cancellation(session_id)
-                        committed = find_migration_event(latest, migration_id) is not None
-                        if not committed:
-                            if isinstance(append_error, asyncio.CancelledError):
-                                raise append_error
-                            if isinstance(append_error, ConcurrencyConflict):
-                                raise SessionPluginMigrationError(
-                                    "session changed before migration authorization "
-                                    "could be recorded"
-                                ) from append_error
-                            raise SessionPluginMigrationError(
-                                "migration authorization could not be recorded"
-                            ) from append_error
-                        # The append may have crossed the durability boundary.
-                        # It is now a fact, so converge to the authorized target
-                        # instead of pretending the operation never happened.
-                        try:
-                            result = await self._publish_migration_candidate(
-                                activation_set, generation
-                            )
-                        except BaseException as publish_error:
-                            raise SessionPluginMigrationError(
-                                "migration authorization was recorded but composition "
-                                "publish failed"
-                            ) from publish_error
-                        candidate_owned = False
-                        if isinstance(append_error, asyncio.CancelledError):
-                            raise append_error
-                        raise SessionPluginMigrationError(
-                            "migration authorization was recorded after an append failure"
-                        ) from append_error
-
-                    try:
-                        result = await self._publish_migration_candidate(
-                            activation_set, generation
-                        )
-                    except BaseException as publish_error:
-                        # The durable Session now requires the target.  The old
-                        # Generation remains in memory but verify_session_plugins
-                        # will fail closed until a matching target is published.
-                        raise SessionPluginMigrationError(
-                            "migration authorization was recorded but composition publish failed"
-                        ) from publish_error
-                    candidate_owned = False
-                    return PluginCompositionReplacement(
-                        generation_id=result.generation_id,
-                        plugins=result.plugins,
-                        migration_id=migration_id,
-                    )
-                finally:
-                    if candidate_owned and not self._candidate_ownership_transferred(
-                        activation_set
-                    ):
-                        await activation_set.dispose()
-        except ConcurrencyConflict as error:
-            raise SessionPluginMigrationError(
-                "session changed before migration authorization could be recorded"
-            ) from error
-        finally:
-            async with self._replacement_task_lock:
-                self._replacement_tasks.discard(migration_task)
+        return await self._plugin_compositions.migrate_session_plugin_composition(
+            session_id,
+            enabled_plugin_ids,
+            plugin_configs=plugin_configs,
+            plugin_discovery=plugin_discovery,
+        )
 
     async def reload_plugin_composition(
         self,
@@ -645,18 +288,9 @@ class AgentRuntime:
         return await self.run_existing(session_id, task)
 
     async def run_existing(self, session_id: str, task: str) -> TurnResult:
-        admission_task = asyncio.current_task()
-        if admission_task is None:
-            raise RuntimeError("turn admission requires an asyncio Task")
-        async with self._turn_admission_task_lock:
-            if self._disposed:
-                raise RuntimeError("runtime is disposed")
-            self._turn_admission_tasks.add(admission_task)
         task_handle: asyncio.Task[TurnResult] | None = None
         try:
-            async with self._composition_gate:
-                if self._disposed:
-                    raise RuntimeError("runtime is disposed")
+            async with self._plugin_compositions.turn_admission():
                 await self.verify_session_plugins(session_id)
                 async with self._lock:
                     # This is the admission linearization point.  dispose()
@@ -679,8 +313,6 @@ class AgentRuntime:
                 async with self._lock:
                     if self._active.get(session_id) is task_handle:
                         self._active.pop(session_id, None)
-            async with self._turn_admission_task_lock:
-                self._turn_admission_tasks.discard(admission_task)
 
     async def resume(
         self,
@@ -727,38 +359,10 @@ class AgentRuntime:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-        # Candidate setup/health/publish is Runtime-owned work too.  It must
-        # converge (including candidate rollback) before any Generation can be
-        # drained, otherwise dispose could return while plugin setup still owns
-        # tasks or registrations.
-        async with self._replacement_task_lock:
-            replacement_tasks = tuple(self._replacement_tasks)
-        for replacement_task in replacement_tasks:
-            replacement_task.cancel()
-        for replacement_task in replacement_tasks:
-            await await_worker_convergence(replacement_task)
-            if not replacement_task.cancelled():
-                replacement_error = replacement_task.exception()
-                # Replacement setup/validation errors belong to that API's
-                # caller.  A rollback cleanup failure also belongs to Runtime
-                # shutdown because shutdown initiated the cancellation and
-                # must not report success while plugin resources may remain.
-                if isinstance(replacement_error, PluginDisposeError):
-                    shutdown_errors.append(replacement_error)
-        # Disposal has already closed the admission boundary, so no new task
-        # can enter this set.  Clear completed entries even if cancellation
-        # interrupted a caller's bookkeeping ``finally`` block.
-        async with self._replacement_task_lock:
-            for replacement_task in replacement_tasks:
-                self._replacement_tasks.discard(replacement_task)
-        # A caller may have started Turn admission before dispose closed the
-        # boundary but still be waiting for the composition gate.  It is not in
-        # ``_active`` until identity verification and registration finish, so
-        # wait for these admission tasks explicitly before Drain as well.
-        async with self._turn_admission_task_lock:
-            admission_tasks = tuple(self._turn_admission_tasks)
-        for admission_task in admission_tasks:
-            await await_worker_convergence(admission_task)
+        # Candidate setup/health/publish and pre-registration Turn admission
+        # belong to the plugin composition control plane.  It converges both
+        # sets before any Generation can be drained.
+        shutdown_errors.extend(await self._plugin_compositions.shutdown_inflight())
         # Turns converge first.  Composition Drain then retires and unloads
         # every Generation-owned ActivationSet only after its leases end.  The
         # default Stage B path has no PluginManager cleanup owner; the optional
@@ -836,7 +440,6 @@ class AgentRuntime:
             await self.sessions.read_session(session_id),
             await self.sessions.read_effects(session_id),
         )
-
 
 
 @dataclass(slots=True)

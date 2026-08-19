@@ -359,19 +359,19 @@ async def test_generation_construction_failure_cleans_candidate_once_and_is_retr
         tools=(RecordingTool("candidate_tool"),),
     )
     try:
-        builder = runtime._plugin_builder
+        builder = runtime._plugin_compositions._plugin_builder
         candidate = await builder.prepare(
             ("a.example",), discovery=discovery_for(plugin)
         )
         candidate_tools = ToolRuntime(
             candidate.tools,
             runtime.sessions,
-            policies=runtime._assembly_policies,
-            middlewares=runtime._assembly_middlewares,
+            policies=runtime._plugin_compositions._policies,
+            middlewares=runtime._plugin_compositions._middlewares,
         )
         with pytest.raises(LookupError):
             CompositionGeneration(
-                llms=runtime._assembly_llms,
+                llms=runtime._plugin_compositions._llms,
                 tools=candidate_tools,
                 prompt=candidate.prompt,
                 provider="missing-provider",
@@ -409,18 +409,18 @@ async def test_publish_rejection_rolls_back_candidate_without_changing_current(
     )
     candidate = None
     try:
-        candidate = await runtime._plugin_builder.prepare(
+        candidate = await runtime._plugin_compositions._plugin_builder.prepare(
             ("a.example",), discovery=discovery_for(plugin)
         )
         other_sessions = SessionService(InMemoryEventStore())
         candidate_tools = ToolRuntime(
             candidate.tools,
             other_sessions,
-            policies=runtime._assembly_policies,
-            middlewares=runtime._assembly_middlewares,
+            policies=runtime._plugin_compositions._policies,
+            middlewares=runtime._plugin_compositions._middlewares,
         )
         generation = CompositionGeneration(
-            llms=runtime._assembly_llms,
+            llms=runtime._plugin_compositions._llms,
             tools=candidate_tools,
             prompt=candidate.prompt,
             provider="scripted",
@@ -448,18 +448,18 @@ async def test_one_activation_set_cannot_be_published_to_two_runtimes(
         manifest("a.example"),
         tools=(RecordingTool("shared_candidate_tool"),),
     )
-    candidate = await first._plugin_builder.prepare(
+    candidate = await first._plugin_compositions._plugin_builder.prepare(
         ("a.example",), discovery=discovery_for(plugin)
     )
     try:
         first_tools = ToolRuntime(
             candidate.tools,
             first.sessions,
-            policies=first._assembly_policies,
-            middlewares=first._assembly_middlewares,
+            policies=first._plugin_compositions._policies,
+            middlewares=first._plugin_compositions._middlewares,
         )
         first_generation = CompositionGeneration(
-            llms=first._assembly_llms,
+            llms=first._plugin_compositions._llms,
             tools=first_tools,
             prompt=candidate.prompt,
             provider="scripted",
@@ -472,11 +472,11 @@ async def test_one_activation_set_cannot_be_published_to_two_runtimes(
         second_tools = ToolRuntime(
             candidate.tools,
             second.sessions,
-            policies=second._assembly_policies,
-            middlewares=second._assembly_middlewares,
+            policies=second._plugin_compositions._policies,
+            middlewares=second._plugin_compositions._middlewares,
         )
         second_generation = CompositionGeneration(
-            llms=second._assembly_llms,
+            llms=second._plugin_compositions._llms,
             tools=second_tools,
             prompt=candidate.prompt,
             provider="scripted",
@@ -803,7 +803,7 @@ async def test_activation_set_dispose_absorbs_repeated_cancellation(
         cleanup_entered=entered,
     )
     runtime = await build_plain(tmp_path)
-    candidate = await runtime._plugin_builder.prepare(
+    candidate = await runtime._plugin_compositions._plugin_builder.prepare(
         ("a.example",), discovery=discovery_for(plugin)
     )
     try:

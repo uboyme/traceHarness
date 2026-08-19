@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### v0.5 Stage D0 control-plane structure
+
+- Extracted plugin candidate replacement, Session plugin-identity migration, the shared
+  admission Gate and in-flight control-plane convergence from `AgentRuntime` into
+  `PluginCompositionCoordinator`. `AgentRuntime` remains the public facade, active-Turn
+  owner and overall shutdown owner; `AgentLoop` is unchanged.
+- Preserved the existing candidate rollback, Session-head CAS, may-have-committed,
+  fail-closed and repeated-cancellation semantics. Runtime shutdown still converges active
+  Turns, then control-plane work, then Composition Drain and optional legacy cleanup.
+  Custom Generation publishers retain the previous contract: the `poisoned` diagnostic is
+  optional and absence means not poisoned.
+- Added structural and shutdown-order contract tests. This is a behavior-preserving D0
+  extraction only; it does not add Scope Overlay, a new command or a new persistent fact.
+- Preserved the public migration dispatch seam: `reload_plugin_composition()` continues to
+  call the facade's `migrate_session_plugin_composition()` with the facade's current
+  `enabled_plugin_ids`, so subclassing or instrumentation is not bypassed by the extraction.
+
 ### v0.5 Stage B infrastructure
 
 - Added Generation-owned `PluginActivationSet` and `PluginGenerationBuilder`. Each

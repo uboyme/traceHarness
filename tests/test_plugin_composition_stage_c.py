@@ -572,8 +572,8 @@ async def test_migration_gate_blocks_turn_admission_until_candidate_publishes(
     first_session = await runtime.create_session(tmp_path)
     second_session = await runtime.create_session(tmp_path)
     turn_gate_attempted = asyncio.Event()
-    runtime._composition_gate = _ObservedGate(  # type: ignore[assignment]
-        runtime._composition_gate,
+    runtime._plugin_compositions._gate = _ObservedGate(  # type: ignore[assignment]
+        runtime._plugin_compositions._gate,
         turn_gate_attempted,
     )
     migration = asyncio.create_task(

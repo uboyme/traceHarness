@@ -35,7 +35,7 @@ or verifiers.
   Policy/Middleware names and Plugin Identity inputs are frozen per Generation. Generation
   identity remains internal and is not part of Snapshot revision or Request Fingerprint.
   Stage A remains lifecycle infrastructure, not a v0.5 release.
-- **Stage B — completed in the current worktree:** `PluginGenerationBuilder` constructs
+- **Stage B — completed:** `PluginGenerationBuilder` constructs
   each explicit candidate in private Tool, Prompt and Service registry views. Discovery,
   dependency ordering, Manifest validation, setup, conflict checking and health checks
   complete before a `PluginActivationSet` can be published. Successful Activation
@@ -51,7 +51,7 @@ or verifiers.
   generation-owned. Runtime disposal first cancels and waits for in-flight replacement Tasks;
   internal replacement does not authorize an existing Session to migrate across plugin
   identities.
-- **Stage C — completed in the current worktree:** idle `traceh chat` exposes `/plugins`,
+- **Stage C — completed:** idle `traceh chat` exposes `/plugins`,
   `/plugins reload`, `/plugins use ID [ID ...]` and `/plugins use --none`. All four commands
   use the Stage B Builder → private registries → ActivationSet → Composition Generation →
   publish/Drain path. Same-identity reloads do not append a migration event; identity changes
@@ -60,6 +60,11 @@ or verifiers.
   blocks Turn admission while a migration confirms global quiescence and publishes. Append
   cancellation is reconciled by migration id; durable authorization followed by publish
   failure is fail-closed. The version remains `0.4.0` and Stage C is not a v0.5 release.
+- **Stage D0 — completed as a structural checkpoint:** plugin candidate replacement,
+  Session identity verification/migration, the shared admission Gate and in-flight
+  replacement/admission convergence live in `PluginCompositionCoordinator`.
+  `AgentRuntime` remains the public facade, active-Turn owner and overall shutdown owner;
+  `AgentLoop` is unchanged. D0 adds no Scope Overlay and no new user command.
 - Add Application, Workspace, Preset and Agent Scope layers (v0.4 activates application
   scope only).
 - Add explicit override conflict diagnostics.
@@ -68,8 +73,8 @@ or verifiers.
 Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
 file watching, Workspace/Preset/Agent Scope Overlay, Provider/Policy/Middleware/EventStore/
 Verifier plugin contributions, isolated plugins, multi-agent, Workflow, MCP, TUI and model
-streaming. The version remains `0.4.0`; completing Stage A, Stage B or Stage C does not mean
-v0.5 is released.
+streaming. The version remains `0.4.0`; completing Stage A, Stage B, Stage C or the D0
+structural checkpoint does not mean v0.5 is released.
 
 Definition of done for the later v0.5 product remains: two Agents can see different
 tool/policy compositions, and updating a plugin cannot change a Step already in progress.

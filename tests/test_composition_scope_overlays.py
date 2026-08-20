@@ -4,14 +4,14 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from tests.plugin_fixtures import (
+from plugin_fixtures import (
     RecordingTool,
     ScriptedPlugin,
     entry_point_for,
     manifest,
     provider_for,
 )
+
 from traceh.api.json_types import JsonValue
 from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.prompts import PromptSection

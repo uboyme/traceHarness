@@ -6,6 +6,7 @@ names re-exported here are the supported surface; reaching into
 break without notice.
 """
 
+from traceh.api.llm import ToolCall
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
     Plugin,
@@ -41,9 +42,19 @@ from traceh.plugins.manager import (
     validate_manifest,
 )
 from traceh.plugins.selection import is_plugin_id, resolve_enabled_plugins
+from traceh.runtime.verification import (
+    CommandVerifier,
+    CompletionVerifier,
+    VerificationResult,
+)
+from traceh.tools.middleware import ToolCallNext, ToolInvocation, ToolMiddleware
+from traceh.tools.policy import DecisionKind, ToolDecision, ToolPolicy
 
 __all__ = [
     "CORE_PLUGIN_IDENTITY",
+    "CommandVerifier",
+    "CompletionVerifier",
+    "DecisionKind",
     "ENTRY_POINT_GROUP",
     "TRACEH_PLUGIN_API_VERSION",
     "DiscoveredPlugin",
@@ -70,8 +81,15 @@ __all__ = [
     "Registration",
     "ServiceKey",
     "Tool",
+    "ToolCall",
+    "ToolCallNext",
+    "ToolDecision",
     "ToolExecutionContext",
+    "ToolInvocation",
+    "ToolMiddleware",
     "ToolOutput",
+    "ToolPolicy",
+    "VerificationResult",
     "is_plugin_id",
     "resolve_enabled_plugins",
     "validate_manifest",

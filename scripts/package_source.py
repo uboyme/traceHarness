@@ -19,6 +19,7 @@ Usage:
 
 from __future__ import annotations
 
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -64,9 +65,28 @@ def is_excluded(path: Path) -> bool:
 
 
 def collect() -> list[Path]:
+    """Collect committed source only.
+
+    A filesystem walk cannot tell a release source file from an unrelated
+    untracked note in the checkout.  Release archives therefore take their file
+    set from Git's index and still apply the explicit artifact exclusions above.
+    The command fails closed outside a real checkout instead of guessing.
+    """
+
+    listed = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if listed.returncode != 0:
+        raise SystemExit("cannot enumerate committed source with git ls-files")
+    names = listed.stdout.decode("utf-8").split("\0")
     return sorted(
         path
-        for path in ROOT.rglob("*")
+        for name in names
+        if name
+        for path in (ROOT / name,)
         if path.is_file() and not is_excluded(path)
     )
 
@@ -94,7 +114,11 @@ def verify(archive: Path, expected: list[Path]) -> None:
 
 
 def main() -> int:
-    target = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT.parent / "traceharness-py-v0.4-source.zip"
+    target = (
+        Path(sys.argv[1])
+        if len(sys.argv) > 1
+        else ROOT.parent / "traceharness-py-v0.5-source.zip"
+    )
     target = target.resolve()
     files = collect()
 
@@ -109,9 +133,7 @@ def main() -> int:
 
     verify(target, files)
 
-    non_ascii = [
-        str(path.relative_to(ROOT)) for path in files if not str(path).isascii()
-    ]
+    non_ascii = [str(path.relative_to(ROOT)) for path in files if not str(path).isascii()]
     print(f"archive: {target}")
     print(f"files:   {len(files)}")
     print(f"size:    {target.stat().st_size:,} bytes")

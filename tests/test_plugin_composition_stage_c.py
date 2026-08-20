@@ -105,7 +105,10 @@ async def test_plugins_help_and_idle_commands_do_not_create_turn_or_model_call(
         events = await runtime.sessions.read_session((await runtime.sessions.list_sessions())[0])
         assert all(event.type not in {"turn/start", "user/message"} for event in events)
         assert provider.requests == []
-        assert "/plugins reload" in "\n".join(console.lines)
+        help_text = "\n".join(console.lines)
+        assert "/plugins reload" in help_text
+        assert "python -m pip install <plugin-wheel-or-package>" in help_text
+        assert "traceh plugins doctor ID" in help_text
         assert "active plugins: a.example==1.0.0" in console.lines
     finally:
         # run_chat owns and disposes this runtime; the second call verifies

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## 0.5.0 - 2026-08-20
+
+### Release candidate and external Python Quality plugin
+
+- Promoted the Stage A-D3 Generation, scoped overlay and execution-capability work to the
+  released `0.5.0` version contract.
+- Expanded the author-facing `traceh.plugins` SDK with Tool call, Policy, Middleware and
+  Verifier contracts needed by independent distributions; added contract tests that pin the
+  public import surface.
+- Added `traceh-python-quality-plugin` as an independently buildable release-acceptance
+  distribution. It contributes the read-only `python_project_info` Tool, Python quality
+  guidance, the monotonic `python-environment-safety` Policy and the explicitly selected
+  `python-tests` Verifier. Test execution is resolved from explicit project evidence and
+  fails closed instead of guessing a runner.
+- Extended the clean-venv Wheel acceptance to build the core, Skill example and Python Quality
+  plugin as separate Wheels, install them offline, and prove Entry Point discovery, doctor,
+  Policy denial, Tool execution, Verifier evidence, Composition Snapshot, invariants and
+  request reconstruction through the existing runtime mainline.
+- Added plugin installation/discovery guidance to Chat `/help` and the operator docs. Source
+  archives now enumerate committed files through `git ls-files`, then byte-verify every ZIP
+  member, so unrelated untracked notes and local artifacts cannot enter a release archive.
+
 ### v0.5 Stage D3 plugin execution capabilities
 
 - Added reversible `PluginContext` registrations for Provider, Policy, Middleware and named
@@ -21,7 +43,7 @@
   process-lifetime fact source and cannot safely be owned by a retireable Step Generation.
   A future plugin boundary requires a separately pinned owner and Store lifecycle contract.
 - Added real AgentLoop, tool admission, verifier event, replacement isolation, rollback,
-  conflict and CLI selection tests. The version remains `0.4.0`; D3 is not a v0.5 release.
+  conflict and CLI selection tests.
 - Closed the candidate contribution surface after setup, before conflict checks and health,
   so health code cannot add a late Policy, Middleware or other Composition capability. Policy
   overlay failures now retain the responsible plugin id.
@@ -190,10 +212,8 @@
   post-claim failure window.
 
 This still does not add running Wheel install/uninstall, forced Python module reload, file
-watching, scoped plugin Tool/Prompt/Policy composition, new plugin contribution categories,
-isolated plugins, multi-agent,
-Workflow, MCP, TUI or streaming output. The package version remains `0.4.0`; Stage A, Stage B
-and Stage C are not the v0.5 release.
+watching, scoped plugin setup, EventStore contribution, isolated plugins, multi-agent,
+Workflow, MCP, TUI or streaming output.
 
 ## 0.4.0
 
@@ -366,7 +386,7 @@ reusing the project's existing `await_worker_convergence` rule.
   wheelhouse containing `packaging`, installs into a fresh virtual environment with
   `--no-index`, and drives the whole mainline through the real entry point.
 
-## Unreleased
+### Additional v0.4 hardening
 
 - Treat `U+2028` and `U+2029` as line breaks everywhere a value reaches one terminal line.
   The shell renderer, `escape_for_display`, the base URL check and the timeline each tested

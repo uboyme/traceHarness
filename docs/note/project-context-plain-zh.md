@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本仍是 **`0.4.0`**。插件系统真的能用了；Stage A 把 Generation-backed Composition Runtime、Step Lease 和 Drain 接入默认主线，Stage B 又把 Generation-owned ActivationSet 接入启动插件和内部替换路径，Stage C 再把 `traceh chat` 的 `/plugins` 组合切换和 Session 显式迁移授权接入同一条主线。D0 把候选替换、会话迁移、共享 Gate 和在途任务收尾从 `AgentRuntime` 拆给专门的 `PluginCompositionCoordinator`。D1 做了四层 Service，D2 又让宿主程序能把 Tool、Prompt、Policy 明确放进 Application、Workspace、Preset、Agent 四层。D3 让 application 插件能提供 Provider、Policy、Middleware 和命名 Verifier，但 Provider/Verifier 必须由宿主明确点名；Verifier 也和模型、工具一起锁在同一个 Step Lease 里。插件仍不能自己选择子层，EventStore 仍固定在 Runtime/Session 生命周期。这些都不等于 v0.5 已发布完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.5.0`**。Stage A–D3 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力已经一起作为 v0.5 发布；Provider/Verifier 仍必须由宿主明确点名，Verifier 也和模型、工具锁在同一个 Step Lease 里。发布还带了一个真正独立的 Python Quality 插件 Wheel：它能看 Python 项目事实、给模型质量提示、拦住几类会破坏 Python 环境的 pip 命令，并在你明确选择时运行项目声明的测试。插件仍不能自己选择子层，EventStore 仍固定在 Runtime/Session 生命周期，也还没有运行中安装 Wheel、隔离插件、多 Agent 或 Workflow。
 
 ### 版本为什么只准写在一个地方
 
@@ -62,7 +62,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有多 Agent 吗 | 只有 DTO/Protocol，没有可以工作的 Supervisor |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
-| 当前测试数 | 收集 1088 项；完整门禁 1087 通过、1 项跳过 |
+| 当前测试数 | 核心收集 1090 项；完整门禁 1089 通过、1 项跳过；独立 Python Quality 插件另有 17 项通过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -137,7 +137,7 @@ flowchart LR
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节）；但 AgentSupervisor、WorkspaceProvider 仍然只是图纸上预留的接口尺寸，施工队和完整房间要到后续版本才有。看到 `api/` 里有个类型，不等于它背后有实现——判断标准永远是：有没有测试真的把它跑起来。
 
-`examples/plugins/` 下面放的是一个**能独立打包安装**的示例插件，不是仓库内的测试夹具。它存在的意义是：插件这条路必须按外部作者真正会遇到的方式走一遍（打 Wheel → 装进干净环境 → 被发现 → 显式启用），而不是靠内部假接口自说自话。
+`examples/plugins/` 下面放的是两个**能独立打包安装**的插件，不是仓库内的测试夹具：一个最小 Skill 示例，一个真正有用途的 Python Quality 插件。它们存在的意义是：插件这条路必须按外部作者真正会遇到的方式走一遍（打 Wheel → 装进干净环境 → 被发现 → 显式启用 → 进入真实 Tool/Policy/Verifier 主线），而不是靠内部假接口自说自话。
 
 `docs/adr/` 不应随意重写，因为它解释当时为什么选择 Event Log、Effect Ledger、Composition Freeze 等设计。现在的状态变化写进两份上下文文档，版本变化写进 CHANGELOG。
 
@@ -973,7 +973,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980/979/1；Stage C 为 999/998/1；D0 为 1003/1002/1；D1 为 1029/1028/1；D2 为 1053/1052/1；D3 当前真实总数是 1088 项，完整 pytest 结果为 1087 通过、1 项跳过。D1/D2 的四层、事务装配、Policy 对象身份、真实 Tool admission 和 Request 重建测试继续通过。D3 新测试则真正让 AgentLoop 使用插件 Provider、Policy/Middleware 和命名 Verifier；检查缺失目标与冲突必须在 health 前失败并完整回滚；证明 setup 结束后 health 不能再补注册 Policy/Middleware，也不能通过改写已注册 Tool、Provider、Policy、Middleware 的名字绕过检查；这种漂移会报固定的 `plugin-contribution-identity-changed` 并回滚，Tool/LLM 撤销也只认注册时名字；公开候选返回后即使后台 Owned Task 才改名，Generation 交接复核也会在 claim 前拒绝，不能让 Snapshot 和 Tool 执行表各认一个名字；如果收据在 ActivationSet 构造时就发现问题，说明钥匙还没交到调用方手里，临时 Manager 仍是唯一负责人，必须收干净 Owned Task 和 cleanup 后才能返回。测试还覆盖清理期间连续取消不能提前逃走，以及交接错误和 cleanup 错误不能互相遮住；普通异常组合仍是 `ExceptionGroup`，直接 `BaseException` 与 cleanup 失败则保存在 `BaseExceptionGroup`，不会再退化成遮蔽证据的 `TypeError`；Policy Overlay 冲突会带上责任插件，ActivationSet 的 Provider 缺失也不能从外部 Registry 偷借；验证没有明确选择时插件 Verifier 不会自动运行；还把旧 Verifier 卡在 Lease 内再发布新代，证明旧 Step 不会混用新验证规则；恢复命令也会把命名 Verifier 与插件 id 一起保真。旧式自定义 ActivationSet 没有 D3 `llms` 字段时，替换仍能借用 Runtime 原有的核心 Registry。CLI 测试钉住自定义 Provider 必须同时明确插件和 Model，命名 Verifier 必须明确插件且不能与命令 Verifier 并用；如果命令行明确选择其中一种，它会压过环境变量中的另一种，只有两种选择都来自同一优先级时才报冲突。原有三项反向验证继续保留；公开候选交接测试也做过反向验证：临时去掉 Generation 复核时会稳定失败；临时恢复 activate 后直接 transfer 的旧路径时，交接失败与 cleanup 失败测试只收到裸 `ValueError`，恢复两道保护后才继续完整门禁；把正确的 `BaseExceptionGroup` 临时换回 `ExceptionGroup` 时，新反例会稳定复现 `Cannot nest BaseExceptions`，恢复后交接四项与全量测试再次通过。
+Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980/979/1；Stage C 为 999/998/1；D0 为 1003/1002/1；D1 为 1029/1028/1；D2 为 1053/1052/1；D3 结束时为 1088/1087/1。v0.5.0 当前核心套件是 1090 项、1089 通过、1 项跳过，独立 Python Quality 插件还有 17 项通过。D1/D2 的四层、事务装配、Policy 对象身份、真实 Tool admission 和 Request 重建测试继续通过。D3 新测试则真正让 AgentLoop 使用插件 Provider、Policy/Middleware 和命名 Verifier；检查缺失目标与冲突必须在 health 前失败并完整回滚；证明 setup 结束后 health 不能再补注册 Policy/Middleware，也不能通过改写已注册 Tool、Provider、Policy、Middleware 的名字绕过检查；这种漂移会报固定的 `plugin-contribution-identity-changed` 并回滚，Tool/LLM 撤销也只认注册时名字；公开候选返回后即使后台 Owned Task 才改名，Generation 交接复核也会在 claim 前拒绝，不能让 Snapshot 和 Tool 执行表各认一个名字；如果收据在 ActivationSet 构造时就发现问题，说明钥匙还没交到调用方手里，临时 Manager 仍是唯一负责人，必须收干净 Owned Task 和 cleanup 后才能返回。测试还覆盖清理期间连续取消不能提前逃走，以及交接错误和 cleanup 错误不能互相遮住；普通异常组合仍是 `ExceptionGroup`，直接 `BaseException` 与 cleanup 失败则保存在 `BaseExceptionGroup`，不会再退化成遮蔽证据的 `TypeError`；Policy Overlay 冲突会带上责任插件，ActivationSet 的 Provider 缺失也不能从外部 Registry 偷借；验证没有明确选择时插件 Verifier 不会自动运行；还把旧 Verifier 卡在 Lease 内再发布新代，证明旧 Step 不会混用新验证规则；恢复命令也会把命名 Verifier 与插件 id 一起保真。旧式自定义 ActivationSet 没有 D3 `llms` 字段时，替换仍能借用 Runtime 原有的核心 Registry。CLI 测试钉住自定义 Provider 必须同时明确插件和 Model，命名 Verifier 必须明确插件且不能与命令 Verifier 并用；如果命令行明确选择其中一种，它会压过环境变量中的另一种，只有两种选择都来自同一优先级时才报冲突。原有三项反向验证继续保留；公开候选交接测试也做过反向验证：临时去掉 Generation 复核时会稳定失败；临时恢复 activate 后直接 transfer 的旧路径时，交接失败与 cleanup 失败测试只收到裸 `ValueError`，恢复两道保护后才继续完整门禁；把正确的 `BaseExceptionGroup` 临时换回 `ExceptionGroup` 时，新反例会稳定复现 `Cannot nest BaseExceptions`，恢复后交接四项与全量测试再次通过。
 
 当前测试大致分成：
 
@@ -1051,25 +1051,27 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 ### 插件这条路，怎么证明它不是自说自话
 
-这是本轮最容易糊弄过去的地方。插件测试里绝大多数都注入了一个**假的** entry point 提供者——这对确定性地驱动加载器很好用，但它**证明不了打包**：证明不了一个声明 `traceharness-py>=0.4,<1.0` 的独立发布包真的能和这次构建装在一起，也证明不了 Python 自己的 `importlib.metadata` 找得到它。
+这是本轮最容易糊弄过去的地方。插件测试里绝大多数都注入了一个**假的** entry point 提供者——这对确定性地驱动加载器很好用，但它**证明不了打包**：证明不了两个独立插件发布包真的能和 v0.5.0 装在一起，也证明不了 Python 自己的 `importlib.metadata` 找得到它们。
 
 所以另有一条真验收，它做的是这些事：
 
-1. 真的打两个 Wheel：TraceHarness 一个，示例插件一个；
+1. 真的打三个 Wheel：TraceHarness、示例 Skill 插件、Python Quality 插件各一个；
 2. 把 `packaging` 也下载进同一个 wheelhouse——它现在是真依赖，离线装必须找得到；
 3. 真的建一个全新的虚拟环境；
-4. 用 `--no-index` **离线**把三个包装进去；
+4. 用 `--no-index` **离线**把核心、两个插件和 `packaging` 装进去；
 5. 用那个新环境的 Python 去跑一个驱动脚本——它只能 import 这些 Wheel 装出来的东西。
 
-驱动脚本要证明的事（全程不需要 API Key、不调真实模型，用的是脚本化 Provider）：真实 entry point 被发现且值正确；三个 `plugins` 命令都返回 0；**没启用插件时默认 Runtime 一点没变**；启用后模型看得到工具和 Prompt；模型真的调了插件工具；工具调用和结果、Effect 意图和结果都严格配对；Composition 快照里有真实插件身份；会话里记了插件身份；不变量违规 0 项；请求重建违规 0 项；卸载之后插件工具消失。
+驱动脚本要证明的事（全程不需要 API Key、不调真实模型，用的是脚本化 Provider）：两个真实 entry point 都能被发现和 doctor；**没启用插件时默认 Runtime 一点没变**；示例 Skill 的工具和 Prompt 继续走原主线；Python Quality 的安全 Policy 真实拒绝环境破坏命令，`python_project_info` 真实产生 Tool Result，明确选择的 `python-tests` 真实运行项目声明的 unittest 并写下通过的验证事件；Composition 身份、工具/Effect 配对、不变量和请求重建都干净。
 
 （第 2 步下载可能需要网络或已经缓存过；拿不到时这条测试会明确跳过并说明原因。但**安装那一步**永远是离线的。）
+
+源码 ZIP 也不再遍历“这个目录里碰巧有什么”，而是只收 `git ls-files` 列出的已提交文件。这样你自己没跟踪的笔记、测试缓存或临时文件即使摆在项目目录里，也不会被源码包顺手带走；脚本还会继续检查中文文件名和每个文件的字节内容。
 
 ### 这一轮 ruff 抓到了一个测试没抓到的真 bug
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 当前真实状态是 1088 项收集、1087 通过、1 项按平台跳过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 当前核心套件是 1090/1089/1，独立 Python Quality 插件另有 17 项通过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1345,7 +1347,17 @@ v0.4 之前建的老会话根本没有这个字段，等于"没有插件"，照�
 
 插件自己抛的异常文字**从来不会**被打出来：所有错误消息都是这个仓库自己写的，只用固定的错误码区分是哪一类问题。原因和运行时错误只显示类型是一样的——异常消息是任意文本，可能带着配置、路径，甚至它刚试过的凭据。
 
-### 19.10 和 DeepSeek Harness 的关系
+### 19.10 v0.5 为什么要带一个真的 Python Quality 插件
+
+只有“最小示例插件”还不够证明这套平台能解决真实问题，所以 v0.5.0 同时发布一个独立的 `traceh-python-quality-plugin`。它不是核心包里的隐藏默认，也不是测试专用分支：安装后只会变成“可发现”，你仍要明确写 `--plugin traceh.python.quality`；要让它负责完成验证，还得再明确写 `--plugin-verifier python-tests`。
+
+它提供四件彼此配合的东西：`python_project_info` 只读项目根目录的固定 Python 元数据；Prompt 要求模型先取证、不要只靠嘴说测试通过；`python-environment-safety` 只做单调拒绝，挡住 `pip uninstall` 和把包安装到用户目录、自定义前缀/根目录/目标目录这几类操作；`python-tests` 运行项目明确声明的测试命令。Policy 仍不是沙箱，插件也仍与 Harness 同进程同权限。
+
+测试命令绝不能靠“看见 tests 目录就猜 pytest”这种办法决定。顺序只有三步：项目在 `pyproject.toml` 的 `[tool.traceh-python-quality]` 明确给出参数数组；否则项目本身已经有 pytest 配置；两种证据都没有就明确失败，叫用户补配置。工具只报告“有没有配置、证据来自哪里”，不会把可能含敏感参数的完整命令再送进模型。固定根文件在读取前还要 resolve 回 Workspace 内，不会沿符号链接跑到工作区外。
+
+真实验收会把核心和两个插件都打成 Wheel，装进一套全新的虚拟环境，再让脚本化模型真实触发 Policy、Tool 和 Verifier。这样 Python Quality 不是一座“只有插件自己测试能跑”的能力岛，而是通过原有 AgentLoop、ToolRuntime、Effect/Event、Generation Lease 和 Verification 主线工作。
+
+### 19.11 和 DeepSeek Harness 的关系
 
 对照是照着官方仓库 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness) 固定 Commit `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca` 的 `docs/architecture.md` 做的。
 

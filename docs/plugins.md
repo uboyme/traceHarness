@@ -1,15 +1,19 @@
-# Writing and running TraceHarness plugins (v0.4 / v0.5 Stage D3)
+# Writing and running TraceHarness plugins (v0.5.0)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
 [ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
 ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
-page is the author- and operator-facing contract. The package version remains `0.4.0`; Stage
-D3 expands the contribution surface without claiming a v0.5 release.
+page is the author- and operator-facing contract for the released `0.5.0` SDK.
 
-A working, buildable example is at
-[`../examples/plugins/traceh-example-skill-plugin/`](../examples/plugins/traceh-example-skill-plugin/).
+Two working, independently buildable distributions live under `examples/plugins/`:
+
+- [`traceh-example-skill-plugin`](../examples/plugins/traceh-example-skill-plugin/) is the
+  smallest Tool-and-Prompt example;
+- [`traceh-python-quality-plugin`](../examples/plugins/traceh-python-quality-plugin/) is the
+  v0.5 release acceptance plugin and contributes a real Tool, Prompt, Policy and named
+  Verifier through the public SDK.
 
 ## 1. What a plugin can contribute
 
@@ -42,7 +46,7 @@ Declare an entry point in the `traceh.plugins` group and depend on `traceharness
 [project]
 name = "my-traceh-plugin"
 version = "0.1.0"
-dependencies = ["traceharness-py>=0.4,<1.0"]
+dependencies = ["traceharness-py>=0.5,<0.6"]
 
 [project.entry-points."traceh.plugins"]
 "my.plugin.id" = "my_traceh_plugin:MyPlugin"
@@ -64,7 +68,7 @@ class MyPlugin:
     manifest = PluginManifest(
         plugin_id="my.plugin.id",
         version="0.1.0",
-        requires_traceh=">=0.4,<1.0",
+        requires_traceh=">=0.5,<0.6",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=("my.capability",),
@@ -80,6 +84,13 @@ class MyPlugin:
 
 The entry point may resolve to an instance, a class (it is instantiated with no arguments),
 or a zero-argument factory.
+
+Plugin distributions should import author-facing contracts from `traceh.plugins`, not from
+Runtime implementation modules. In v0.5 that public surface includes `PluginContext`,
+`PluginManifest`, `PromptSection`, Tool contracts, `ToolCall`, `ToolPolicy`, `ToolMiddleware`,
+`DecisionKind`, `ToolDecision`, `CompletionVerifier`, `CommandVerifier` and
+`VerificationResult`. The Python Quality plugin is the executable contract test for those
+exports.
 
 `health_check` is optional. It may be sync or async, and may take the context or nothing.
 Returning `False` fails activation exactly as raising does.
@@ -108,6 +119,7 @@ fails health and rolls the candidate back.
 ```powershell
 python -m pip install my-traceh-plugin   # discoverable
 traceh plugins list                      # confirms discovery, imports nothing
+traceh plugins doctor my.plugin.id       # imports, activates, checks, then disposes
 ```
 
 Enabling is a separate, explicit act:
@@ -241,7 +253,7 @@ messages are written by this repository.
 | `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.4 and Stage D3
+## 9. Limits of v0.5.0
 
 - Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
   Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to

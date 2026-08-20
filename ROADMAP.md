@@ -26,7 +26,7 @@ Explicitly deferred out of v0.4: user-facing hot reload, isolated
 (out-of-process) plugins, and plugin-supplied providers, policies, middleware, event stores
 or verifiers.
 
-## v0.5: Composition generations and scoped overlays
+## v0.5: Composition generations, scoped overlays and execution plugins — released
 
 - **Stage A — completed:** Generation-backed Composition Runtime is used by both default
   factories and the no-plugin path. Each Step acquires a generation-bound Lease;
@@ -34,7 +34,6 @@ or verifiers.
   cancellation convergence are implemented. Model-visible Tool, Prompt, Provider,
   Policy/Middleware names and Plugin Identity inputs are frozen per Generation. Generation
   identity remains internal and is not part of Snapshot revision or Request Fingerprint.
-  Stage A remains lifecycle infrastructure, not a v0.5 release.
 - **Stage B — completed:** `PluginGenerationBuilder` constructs
   each explicit candidate in private Tool, Prompt and Service registry views. Discovery,
   dependency ordering, Manifest validation, setup, conflict checking and health checks
@@ -59,7 +58,7 @@ or verifiers.
   and `to_plugins` after candidate validation and Session-head CAS. A shared Runtime Gate
   blocks Turn admission while a migration confirms global quiescence and publishes. Append
   cancellation is reconciled by migration id; durable authorization followed by publish
-  failure is fail-closed. The version remains `0.4.0` and Stage C is not a v0.5 release.
+  failure is fail-closed.
 - **Stage D0 — completed as a structural checkpoint:** plugin candidate replacement,
   Session identity verification/migration, the shared admission Gate and in-flight
   replacement/admission convergence live in `PluginCompositionCoordinator`.
@@ -95,15 +94,22 @@ or verifiers.
   transferred through the existing ActivationSet → Generation → Step Lease
   path; provider identity is checked against the candidate registry, while legacy custom
   ActivationSets without a D3 registry retain their D0 replacement fallback. Provider and
-  Verifier selection is explicit; merely enabling a plugin cannot replace either default. Verifier execution now
-  remains inside the same Step Lease as model and tools. EventStore is deliberately not a
+  Verifier selection is explicit; merely enabling a plugin cannot replace either default.
+  Verifier execution remains inside the same Step Lease as model and tools. EventStore is deliberately not a
   hot-reloadable contribution: it is the Runtime/Session process-lifetime fact source and
   first needs a separately pinned ownership design.
+- **Release candidate and `0.5.0` release — completed:** the author-facing Tool, Policy,
+  Middleware and Verifier contracts are exported from `traceh.plugins`; the independently
+  packaged `traceh-python-quality-plugin` contributes a read-only project Tool, guidance,
+  environment Policy and explicit named test Verifier. Clean-venv Wheel E2E builds the core,
+  the Skill example and Python Quality as separate distributions, installs them offline, and
+  verifies discovery, diagnosis, Policy denial, Tool execution, Verifier evidence, Snapshot,
+  invariants and request reconstruction. Chat `/help` now points operators from installation
+  through discovery and doctor.
 
-Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
-file watching, scoped plugin setup, EventStore plugin contribution, isolated plugins,
-multi-agent, Workflow, MCP, TUI and model streaming. The version remains `0.4.0`;
-completing Stage A through D3 does not mean v0.5 is released.
+Still deferred after v0.5.0: running `pip install`/`uninstall` for Wheels, forced Python module
+reload, file watching, scoped plugin setup, EventStore plugin contribution, isolated plugins,
+multi-agent, Workflow, MCP, TUI and model streaming.
 
 The D2/D3 assembly contract now proves that two independently built Runtime/Agent scopes can
 see different Tool/Prompt/Policy compositions, and the existing Lease contract prevents a

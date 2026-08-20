@@ -9,6 +9,11 @@ and for the Session migration protocol see
 split is recorded in
 [ADR-0011](adr/0011-plugin-composition-control-plane-coordinator.md).
 
+TraceHarness `0.5.0` ships the Stage A-D3 path described below. Its release gate includes the
+independently packaged
+[`traceh-python-quality-plugin`](../examples/plugins/traceh-python-quality-plugin/), built and
+installed as a real Wheel through the public SDK rather than compiled into the core Runtime.
+
 ## v0.4 plugin manager — shipped
 
 `PluginManager` discovers Python entry points in the `traceh.plugins` group, imports only
@@ -142,9 +147,8 @@ This is a user-operable composition switch, not source-code hot reload. The proc
 does not install or uninstall Wheels, call `importlib.reload()`, watch files, or migrate
 other Sessions automatically. At the Stage C checkpoint, Workspace/Preset/Agent Scope
 Overlay was still absent; D1 below adds only the Service foundation. Isolated
-(out-of-process) plugins and new execution-capability contributions were still absent; D3
-below adds Provider, Policy, Middleware and Verifier without adding EventStore replacement.
-The version remains `0.4.0`; Stage C is not a v0.5 release.
+(out-of-process) plugins remain absent; D3 below adds Provider, Policy, Middleware and
+Verifier without adding EventStore replacement.
 
 ## Stage D0: plugin composition control-plane extraction — shipped as structure
 
@@ -167,8 +171,8 @@ facade's public `migrate_session_plugin_composition()`. The coordinator has no p
 reload shortcut that could bypass a subclass, instrumentation or audit seam.
 
 No Event Log fact, Session protocol, public Chat command or plugin capability was added.
-D0 is the boundary needed before Scope Overlay work; it is not Scope Overlay itself and is
-not a v0.5 release.
+D0 is the structural boundary needed before Scope Overlay work; it is not Scope Overlay
+itself.
 
 ## Stage D1: four-layer Service Scope — shipped as foundation
 
@@ -297,9 +301,27 @@ or split one Runtime across two ledgers. A future EventStore plugin boundary fir
 separate pinned owner, construction/disposal order, Session compatibility rules and Store
 contract tests. See [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md).
 
+### v0.5.0 release acceptance
+
+The release does not rely only on in-repository fixture objects. The public `traceh.plugins`
+surface exports the author contracts needed by a separate distribution, and the Python
+Quality plugin consumes only that surface. It contributes:
+
+- `python_project_info`, a bounded read-only Tool over fixed workspace-root evidence;
+- deterministic Python quality guidance;
+- `python-environment-safety`, a monotonic deny Policy for direct environment removal and
+  external pip installation targets (a guardrail, not a sandbox);
+- `python-tests`, a named Verifier that runs only a project-declared test command or explicit
+  pytest configuration and otherwise fails closed.
+
+The clean-environment acceptance builds core, Skill example and Python Quality Wheels,
+installs them offline with `packaging`, discovers both Entry Points, runs plugin doctor, and
+drives Python Quality's Tool, Policy and Verifier through one real Session. The resulting
+Composition Snapshot, event invariants and request reconstruction must all remain clean.
+
 ## Extension categories
 
-Shipped through v0.5 Stage D3 — a plugin may register:
+Shipped in v0.5.0 — a plugin may register:
 
 - **Tool**: register `Tool` objects; they join the normal admission, policy, middleware and
   effect-ledger pipeline.

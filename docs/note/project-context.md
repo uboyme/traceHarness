@@ -34,7 +34,7 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `0.4.0`。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata 与被导入的包不可能不一致 |
+| 当前版本 | `0.5.0`。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata 与被导入的包不可能不一致 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
@@ -43,14 +43,14 @@
 | 持久化 | 本地 Append-only JSONL Session Stream 与 Effect Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
-| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，以及 Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权（见 19 节）。D1/D2 已把四层 Service 与程序化 Tool/Prompt/Policy 装配接入主线；D3 又让 application 插件通过 `PluginContext` 提供 Provider、Policy、Middleware 和命名 Verifier。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
+| 插件系统 | **v0.5.0 已发布**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权，以及 D1–D3 的四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 插件贡献（见 19 节）。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。新增 `traceh plugins list/inspect/doctor` |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | `1088` collected；全量门禁 `1087 passed, 1 skipped`；D1/D2 覆盖四层装配，D3 覆盖插件 Provider/Policy/Middleware/Verifier 的显式选择、注册时贡献身份冻结、公开 ActivationSet 交接复核及交接失败回滚、普通异常与直接 `BaseException` 的失败保真、跨 CLI/env 优先级、事务冲突/回滚、ActivationSet 身份守卫、旧式 ActivationSet 替换兼容、真实模型/工具/验证主线、旧 Lease 隔离和恢复命令保真；Stage C/D0 控制面与恢复契约继续全绿 |
+| 当前自动化测试 | 核心套件 `1090` collected；全量门禁 `1089 passed, 1 skipped`；独立 Python Quality 插件另有 `17 passed`。除 D0–D3 原有契约外，发行门禁还覆盖公共插件 SDK 导出、项目证据解析、Policy 反例、命名 Verifier，以及核心 Wheel + 两个外部插件 Wheel 在全新虚拟环境中的离线安装与真实主线执行 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
-当前版本仍为 0.4.0。Stage C 已在 Stage B 基础上把用户控制面接入默认 Runtime 主线；D0 把候选替换、Session 身份迁移、共享 Gate 和在途控制面收敛归 [`PluginCompositionCoordinator`](../../src/traceh/runtime/plugin_composition.py)。D1/D2 把四层 Service 与 Tool/Prompt/Policy 宿主装配交给既有 ActivationSet→Generation→Lease→Snapshot 路径。D3 继续沿用同一事务和所有权边界：插件 Provider、Policy、Middleware 与命名 Verifier 会先在私有候选中校验，再作为一个 ActivationSet 进入 Generation；Provider/Verifier 必须由宿主显式选择，不能因“插件已安装/启用”而偷偷替换。Verifier 现在也处在 Step Lease 内，保证模型、工具和验证来自同一代。它仍不是完整 scoped plugin activation，EventStore 也仍由 Runtime/Session 固定持有。没有运行中 pip install/uninstall、强制 module reload、文件 watcher、isolated、多 Agent、Workflow、MCP、TUI 或流式输出；D3 完成也不等于 v0.5 发布。
+当前版本为 0.5.0。Stage A–D3 的 Generation、ActivationSet、用户控制面、四层宿主装配和 application 执行能力贡献已经作为一个完整 Minor Release 进入默认 Runtime 主线。RC 同时交付独立 Distribution [`traceh-python-quality-plugin`](../../examples/plugins/traceh-python-quality-plugin/)：它只使用公共 `traceh.plugins` SDK，贡献 `python_project_info` Tool、Prompt、单调 Deny Policy 和显式选择的 `python-tests` Verifier，并由真实 Wheel/Entry Point/干净虚拟环境 E2E 证明不是能力岛。Provider/Verifier 仍必须由宿主显式选择；Verifier 处在同一个 Step Lease 内。当前仍不是完整 scoped plugin activation，EventStore 仍由 Runtime/Session 固定持有，也没有运行中 pip install/uninstall、强制 module reload、文件 watcher、isolated、多 Agent、Workflow、MCP、TUI 或流式输出。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -530,7 +530,7 @@ Generation identity 是内部生命周期编号，只用于引用计数、retire
 
 Stage B 的插件 cleanup 不再使用上述 capability-wide owner 推断插件所有权：`PluginActivationSet` 显式持有插件 Activation、插件 Tool/Prompt/Service、Owned Task 与 cleanup，SessionService、EventStore、核心 Provider 和内置 Tool 只是 borrowed core。候选只在私有注册表中 setup，成功 publish 后由 Generation 接管；旧 Lease 结束前旧 set 不会被卸载。
 
-Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1/D2 把四层 Service 与程序化 Tool/Prompt/Policy 装配压成有效 Composition；D3 再把插件 Provider、Policy、Middleware、Verifier 接入同一候选和 Step Lease。`AgentLoop` 仍不导入 PluginManager、Builder、Scope resolver 或 reload service；它只从 Lease 取得本 Step 的 Provider、ToolRuntime 与 Verifier。用户命令只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload；因此 v0.4.0 仍不是 v0.5 完成版，插件自行选择子层与 EventStore 插件化仍未开放。
+Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1/D2 把四层 Service 与程序化 Tool/Prompt/Policy 装配压成有效 Composition；D3 再把插件 Provider、Policy、Middleware、Verifier 接入同一候选和 Step Lease。`AgentLoop` 仍不导入 PluginManager、Builder、Scope resolver 或 reload service；它只从 Lease 取得本 Step 的 Provider、ToolRuntime 与 Verifier。v0.5.0 由独立 Python Quality Wheel 对这条公开主线做发行验收；用户命令仍只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload，插件自行选择子层与 EventStore 插件化仍未开放。
 
 ### 7.2 Surface
 
@@ -1178,7 +1178,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前测试套件收集 `1088` 项，完整门禁为 `1087 passed, 1 skipped`。D1/D2 原有 Scope/Overlay、Policy 身份、Request 重建与跨 Runtime 隔离契约继续全绿。D3 新增 [`tests/test_plugin_extended_contributions.py`](../../tests/test_plugin_extended_contributions.py)：真实 AgentLoop 使用显式选中的插件 Provider；缺失 Provider/Verifier 和 Provider/Policy/Middleware 冲突在 health 前以固定 code 失败并完整 rollback；setup 结束后贡献入口关闭，health 不能再补注册 Policy/Middleware 绕过冲突检查；Tool、Provider、Policy、Middleware 的注册时名称会被单独保存，health 改写原对象名称会以 `plugin-contribution-identity-changed` 拒绝并回滚，Registry 撤销也只认注册时键；公开 `prepare_activation_set()` 返回后即使调用方让出事件循环，Generation 交接仍会按 transfer receipt 复核 Registry 成员、对象身份与固定名称，后台 Owned Task 的晚到改名会在 claim 前拒绝，Snapshot schema 与 ToolRuntime 查找键不能在同一代分裂；若 receipt 或 Scope 校验在 ActivationSet 构造时失败，Builder 会在所有权尚未交给调用方时 dispose 临时 Manager，取消并等待 Owned Task、恰好一次执行 cleanup，重复取消不能打穿收敛等待，同时保留原始交接错误与 cleanup 失败；两者都是普通 `Exception` 时对外仍是 `ExceptionGroup`，原始失败是 `KeyboardInterrupt`、`SystemExit` 或其他直接 `BaseException` 时则由 `BaseExceptionGroup` 保真，不能再被“分组类型不支持”产生的新 `TypeError` 遮蔽；Policy Overlay 冲突保留责任 `plugin_id`；ActivationSet 提供 LLM Registry 时，缺失所选 Provider 与对象身份不一致同样拒绝；插件 Policy/Middleware 真实经过 ToolRuntime 且名称进入 Composition Snapshot；命名 Verifier 只有显式选择才运行并追加 `verification/result`；Verifier 被 Gate 卡住时发布新 Generation，旧 Step 仍使用旧 Verifier，旧 Activation 直到 Lease 释放才 cleanup；取消 setup 会反向 dispose 四类新 Registration。旧式自定义 ActivationSet 没有 D3 `llms` 属性时，替换路径仍借用协调器已有核心 Registry；一旦候选显式提供 LLM Registry，就不能回退绕过身份守卫。CLI 测试还钉住自定义 Provider 必须同时显式启用插件和提供 Model、`--plugin-verifier`/`TRACEH_PLUGIN_VERIFIER` 必须显式启用插件、与 `--verify-command` 互斥，并在恢复命令中和插件 id 一起保真。若命令行显式选择一种 Verifier，它会覆盖较低优先级环境变量中的另一种；两种选择都来自命令行或都来自环境变量时仍明确报冲突。D3 原有三项反向验证继续保留；公开候选交接复核也做过反向验证：临时移除守卫时确定性测试稳定出现 `DID NOT RAISE`，恢复后才继续完整门禁；临时恢复“activate 后直接 transfer”的旧路径时，交接失败与 cleanup 失败测试会收到裸 `ValueError`，证明临时 Manager 的回滚保护不可省略；临时把 `BaseExceptionGroup` 换回 `ExceptionGroup` 时，直接 `BaseException` 反例稳定失败于 `TypeError: Cannot nest BaseExceptions in an ExceptionGroup`，恢复正确容器后交接四项契约与全量门禁重新通过。
+当前核心测试套件收集 `1090` 项，完整门禁为 `1089 passed, 1 skipped`；独立 Python Quality 插件自身测试为 `17 passed`。D1/D2 原有 Scope/Overlay、Policy 身份、Request 重建与跨 Runtime 隔离契约继续全绿。v0.5 RC 新增 [`tests/test_plugin_sdk.py`](../../tests/test_plugin_sdk.py) 固定外部作者需要的 Policy/Middleware/Verifier 公共导出；独立插件测试覆盖项目证据解析、缺失配置不得猜测、无效配置 fail-closed、Policy 反例和命名 Verifier；真实 Wheel E2E 又证明这些能力从独立 Distribution 进入现有 AgentLoop/ToolRuntime/Step Lease 主线。D3 新增 [`tests/test_plugin_extended_contributions.py`](../../tests/test_plugin_extended_contributions.py)：真实 AgentLoop 使用显式选中的插件 Provider；缺失 Provider/Verifier 和 Provider/Policy/Middleware 冲突在 health 前以固定 code 失败并完整 rollback；setup 结束后贡献入口关闭，health 不能再补注册 Policy/Middleware 绕过冲突检查；Tool、Provider、Policy、Middleware 的注册时名称会被单独保存，health 改写原对象名称会以 `plugin-contribution-identity-changed` 拒绝并回滚，Registry 撤销也只认注册时键；公开 `prepare_activation_set()` 返回后即使调用方让出事件循环，Generation 交接仍会按 transfer receipt 复核 Registry 成员、对象身份与固定名称，后台 Owned Task 的晚到改名会在 claim 前拒绝，Snapshot schema 与 ToolRuntime 查找键不能在同一代分裂；若 receipt 或 Scope 校验在 ActivationSet 构造时失败，Builder 会在所有权尚未交给调用方时 dispose 临时 Manager，取消并等待 Owned Task、恰好一次执行 cleanup，重复取消不能打穿收敛等待，同时保留原始交接错误与 cleanup 失败；两者都是普通 `Exception` 时对外仍是 `ExceptionGroup`，原始失败是 `KeyboardInterrupt`、`SystemExit` 或其他直接 `BaseException` 时则由 `BaseExceptionGroup` 保真，不能再被“分组类型不支持”产生的新 `TypeError` 遮蔽；Policy Overlay 冲突保留责任 `plugin_id`；ActivationSet 提供 LLM Registry 时，缺失所选 Provider 与对象身份不一致同样拒绝；插件 Policy/Middleware 真实经过 ToolRuntime 且名称进入 Composition Snapshot；命名 Verifier 只有显式选择才运行并追加 `verification/result`；Verifier 被 Gate 卡住时发布新 Generation，旧 Step 仍使用旧 Verifier，旧 Activation 直到 Lease 释放才 cleanup；取消 setup 会反向 dispose 四类新 Registration。旧式自定义 ActivationSet 没有 D3 `llms` 属性时，替换路径仍借用协调器已有核心 Registry；一旦候选显式提供 LLM Registry，就不能回退绕过身份守卫。CLI 测试还钉住自定义 Provider 必须同时显式启用插件和提供 Model、`--plugin-verifier`/`TRACEH_PLUGIN_VERIFIER` 必须显式启用插件、与 `--verify-command` 互斥，并在恢复命令中和插件 id 一起保真。若命令行显式选择一种 Verifier，它会覆盖较低优先级环境变量中的另一种；两种选择都来自命令行或都来自环境变量时仍明确报冲突。D3 原有三项反向验证继续保留；公开候选交接复核也做过反向验证：临时移除守卫时确定性测试稳定出现 `DID NOT RAISE`，恢复后才继续完整门禁；临时恢复“activate 后直接 transfer”的旧路径时，交接失败与 cleanup 失败测试会收到裸 `ValueError`，证明临时 Manager 的回滚保护不可省略；临时把 `BaseExceptionGroup` 换回 `ExceptionGroup` 时，直接 `BaseException` 反例稳定失败于 `TypeError: Cannot nest BaseExceptions in an ExceptionGroup`，恢复正确容器后交接四项契约与全量门禁重新通过。
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
@@ -1240,15 +1240,17 @@ python -m ruff check src tests
 
 因此 [`tests/test_plugin_wheel_e2e.py`](../../tests/test_plugin_wheel_e2e.py) 做真实验收：
 
-1. 用 `pip wheel --no-deps` 构建 TraceHarness Wheel 与示例插件 Wheel；
+1. 用 `pip wheel --no-deps` 构建 TraceHarness Wheel、示例 Skill 插件 Wheel 与 Python Quality 插件 Wheel；
 2. 用 `pip download` 把 `packaging` 放进同一个 wheelhouse——它现在是真实运行时依赖，离线安装必须能找到它；
 3. `python -m venv` 创建全新虚拟环境；
-4. `pip install --no-index --find-links <wheelhouse>` **离线**安装三者；
+4. `pip install --no-index --find-links <wheelhouse>` **离线**安装核心、两个插件与 `packaging`；
 5. 用该 venv 的解释器运行 [`tests/plugin_e2e_driver.py`](../../tests/plugin_e2e_driver.py)，它只能 import 这些 Wheel 装出来的东西。
 
-Driver 断言的事实（不需要任何 API Key，不调用真实模型，由 Scripted Provider 驱动）：真实 `importlib.metadata` Entry Point 被发现且值正确；discovery 无问题码；`plugins list/inspect/doctor` 全部返回 0；未启用插件时默认 Runtime 的 Tool 集合与 Prompt 完全不变；启用后模型可见 Tool Schema 与 Prompt Section；模型真正调用插件 Tool；`tool/call`↔`tool/result` 与 `effect/intent`↔`effect/outcome` 严格配对；Composition Snapshot 含 `traceh.core` 与插件真实身份；Session metadata 记录插件身份；不变量违规 0 项；Request 重建违规 0 项；dispose 后插件 Tool 消失。
+Driver 断言的事实（不需要任何 API Key，不调用真实模型，由 Scripted Provider 驱动）：两个真实 `importlib.metadata` Entry Point 被发现且值正确；discovery 无问题码；两者的 `plugins list/inspect/doctor` 全部返回 0；未启用插件时默认 Runtime 的 Tool 集合与 Prompt 完全不变；Skill 插件仍证明 Tool/Prompt/Effect/Session identity 主线；Python Quality 插件则让模型先请求会被 `python-environment-safety` 拒绝的 `pip uninstall`，再真实执行 `python_project_info`，最后由显式选择的 `python-tests` 运行标准库 unittest。两条路径的 Composition Snapshot、事件配对、不变量和 Request 重建都必须干净。
 
 获取 `packaging` Wheel 这一步可能需要网络或已预热的 pip 缓存；不可用时该用例明确 skip 并说明原因，**安装本身**始终是 `--no-index` 的离线安装。
+
+发布源码 ZIP 由 [`scripts/package_source.py`](../../scripts/package_source.py) 生成。文件集合来自 `git ls-files`，而不是工作区文件系统遍历；因此未跟踪笔记、测试缓存和其他本地产物即使存在于 checkout 中，也不能进入发行包。脚本仍应用 `.env`、构建目录、Wheel/ZIP 等显式排除，并逐文件验证 UTF-8 文件名与字节内容。
 
 ### 15.2 CI
 
@@ -1265,7 +1267,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后为 960/959/1，Stage B 为 980/979/1，Stage C 为 999/998/1，D0 为 1003/1002/1，D1 为 1029/1028/1，D2 为 1053/1052/1；D3 当前真实收集 1088 项，完整门禁为 1087 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后为 960/959/1，Stage B 为 980/979/1，Stage C 为 999/998/1，D0 为 1003/1002/1，D1 为 1029/1028/1，D2 为 1053/1052/1，D3 结束基线为 1088/1087/1；v0.5.0 当前核心套件为 1090/1089/1，独立 Python Quality 插件另有 17 项通过。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1470,7 +1472,7 @@ D0 不改变上述协议，只重新划清控制面所有权。[`runtime/plugin_
 
 当前身份事实由 [`session/plugin_identity.py`](../../src/traceh/session/plugin_identity.py) 共享计算：初始值来自 `session/created.metadata.traceh_plugins`，合法 `composition/snapshot` 更新到实际 Step 身份，合法 `composition/migration-authorized` 要求 `from_plugins` 等于此前身份且 `source_seq` 等于此前身份事实序号，然后更新到 `to_plugins`。迁移事件只记录外部插件，不写 `traceh.core`、Generation identity 或 Request Fingerprint。候选通过 setup/conflict/health 后才追加授权；append 取消会按稳定 `migration_id` 重读判断是否已落盘。若授权已落盘但 publish 失败，Runtime 不伪造成功，也不继续接受旧 Composition，Session 保持 fail-closed。
 
-本阶段仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup、EventStore 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D2 的 Tool/Prompt/Policy 是宿主程序显式装配；D3 新增的 Provider/Policy/Middleware/Verifier 也仍属于 application setup。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。版本仍为 `0.4.0`，Stage D3 不是 v0.5 发布。
+v0.5.0 仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup、EventStore 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D2 的 Tool/Prompt/Policy 是宿主程序显式装配；D3 新增的 Provider/Policy/Middleware/Verifier 也仍属于 application setup。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。
 
 `trust_mode="isolated"` 被**明确拒绝**而不是降级成 trusted：把“请求隔离”当成“允许进程内运行”的许可，等于给了插件比它申请的更高权限。真正的隔离需要进程边界、每次 context 调用的序列化契约和子进程崩溃的失败模型，这些都还不存在。
 
@@ -1504,11 +1506,15 @@ v0.4 之前写下的 Session 没有这个键，等价于“无插件”，可以
 
 `doctor` 使用一次性 `ToolRegistry` 与 `PromptAssembler`，因此它激活的任何东西都到不了真实 Runtime；无论激活成功与否都在 `finally` 中 dispose。插件自身的异常文本从不外泄——所有 message 都由本仓库编写，失败只用固定 `code` 区分。
 
-### 19.11 示例插件
+### 19.11 外部插件发行验收
 
 [`examples/plugins/traceh-example-skill-plugin/`](../../examples/plugins/traceh-example-skill-plugin/) 是一个**可独立构建安装**的 Distribution，不是仓库内的测试夹具。它有自己的 `pyproject.toml`、`traceh.plugins` Entry Point、`PluginManifest`、一个 `PromptSection`、一个 `PURE_READ` 无副作用 Tool，以及一份打包进 Wheel 的 `SKILL.md` 资源（通过 `importlib.resources` 读取）。
 
 它明确**不**扫描用户的 Codex/Claude 目录、不读环境变量、不访问网络，也**不**因为被安装就成为默认能力。
+
+[`examples/plugins/traceh-python-quality-plugin/`](../../examples/plugins/traceh-python-quality-plugin/) 是 v0.5.0 的真实用途插件，同样拥有独立 `pyproject.toml`、Distribution 与 Entry Point。它只从公共 `traceh.plugins` SDK 导入能力：`python_project_info` 读取固定 Workspace 根文件并输出结构化项目事实；Prompt 要求先取证再修改；`python-environment-safety` 只做单调 Deny，拒绝 `pip uninstall` 及 `--user`/`--prefix`/`--root`/`--target` 这类逃离当前环境的安装；命名 Verifier `python-tests` 只有操作员显式选择才运行。
+
+Verifier 的解析顺序是“项目明确的 `[tool.traceh-python-quality].test-command` 数组 → 已声明的 pytest 配置 → 明确失败”，不从目录名、测试文件名或某个 Demo 猜框架。命令数组经现有 `CommandVerifier` 的 `create_subprocess_exec`、超时和取消收敛主线执行，不开 `shell=True`；工具不回显显式命令。插件不读用户目录、环境变量或网络，固定根文件也必须 resolve 后仍位于 Workspace 内。Policy 仍只是 Guardrail，不是沙箱。
 
 ### 19.12 `OwnedTaskSet` 是生命周期所有权，不是监督器
 

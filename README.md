@@ -1,6 +1,6 @@
-# TraceHarness Py v0.4
+# TraceHarness Py v0.5
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 的 Stage A–D3 又依次补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。这仍不是运行中安装 Wheel、重新加载 Python module、完整 scoped plugin activation、子 Agent 或 Workflow；版本也仍为 `0.4.0`。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 又补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。v0.5.0 还随源码交付一个独立构建、独立安装的 Python Quality 插件，作为公共插件 SDK 和真实 Wheel 主线的发行验收。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -25,7 +25,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 通过可选外部命令 Verifier 实现 Evidence-Driven Completion；
 - Request 重建检查、协议不变量、Replay、手动 Surface 压缩和静态 HTML Inspector；
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
-- **插件系统（v0.4 新增，Stage D3 扩展）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section、Service、Provider、Policy、Middleware 和命名 Verifier 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
+- **插件系统（v0.4 新增、v0.5 完成 Generation 化）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section、Service、Provider、Policy、Middleware 和命名 Verifier 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
 - 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
 
@@ -34,7 +34,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 需要 Python 3.12 或更高版本。
 
 ```bash
-cd traceharness-py-v0.3
+cd traceharness-py-v0.5
 export PYTHONPATH="$PWD/src"
 python -m traceh.cli.main doctor
 pytest
@@ -266,6 +266,24 @@ $env:TRACEH_PLUGINS = "traceh.example.skill"   # 等价写法
 ```
 
 命令行上任何一次 `--plugin` 都会**整体替换** `TRACEH_PLUGINS`，而不是追加；`run`、`chat`、`resume` 使用同一套选择规则。完整作者契约见[插件说明](docs/plugins.md)。
+
+仓库还包含一个真正独立发行的 Python Quality 插件。它贡献只读项目检查 Tool、Python 开发提示、环境保护 Policy 和命名 Verifier：
+
+```powershell
+python -m pip install .\examples\plugins\traceh-python-quality-plugin
+traceh plugins doctor traceh.python.quality
+traceh chat <workspace> --plugin traceh.python.quality --plugin-verifier python-tests
+```
+
+Verifier 不会猜测试框架。项目需要在根目录 `pyproject.toml` 明确声明测试命令：
+
+```toml
+[tool.traceh-python-quality]
+test-command = ["python", "-m", "pytest", "-q"]
+timeout-seconds = 120
+```
+
+如果项目已经存在 `[tool.pytest.ini_options]` 或根目录 `pytest.ini`，插件也可以据此使用当前解释器运行 pytest。完整配置与边界见[插件自己的 README](examples/plugins/traceh-python-quality-plugin/README.md)。
 
 插件 Provider 与 Verifier 不会因为插件被启用就自动接管。必须显式选择：
 
@@ -518,7 +536,7 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.4 / v0.5 Stage D3 已知边界
+## v0.5.0 已知边界
 
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
@@ -546,11 +564,11 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前共有 1088 项自动化测试（1087 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、Policy 对象身份守卫、插件冲突归因以及插件晚发布后的覆盖复检、setup 后注册入口与能力名称冻结、公开 ActivationSet 交接复核、交接构造失败回滚与直接 `BaseException` 保真、ActivationSet Provider 身份和旧式替换兼容、真实 Tool/Policy admission、插件 Provider/Policy/Middleware/Verifier 的显式选择、跨命令行与环境变量的 Verifier 优先级、事务回滚与旧 Lease 隔离、命名 Verifier 恢复命令保真、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
+核心仓库当前收集 1090 项自动化测试（1089 通过，1 项在无法承载 NUL 的路径上跳过）。独立 Python Quality 插件另有 17 项契约测试，覆盖显式测试证据解析、只读项目检查、环境 Policy、命名 Verifier 以及缺失/损坏配置的 fail-closed 行为。核心测试继续覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层装配、Generation/ActivationSet 生命周期、插件身份与冲突、真实 Tool/Policy/Verifier 主线、Session 迁移、Request 重建、取消收敛、崩溃恢复和 Benchmark。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 
-其中带 `slow` 标记的一项是真实打包验收：它构建 TraceHarness 与示例插件两个 Wheel，把 `packaging` 一并放进离线 wheelhouse，用 `--no-index` 装进全新虚拟环境，再通过真实 Entry Point 跑完整条主线。跳过它用：
+其中带 `slow` 标记的一组是真实打包验收：它构建 TraceHarness、示例 Skill 插件和 Python Quality 插件三个 Wheel，把 `packaging` 一并放进离线 wheelhouse，用 `--no-index` 装进全新虚拟环境，再通过真实 Entry Point 验证发现、诊断以及 Python Quality 的 Tool、Policy、Verifier、Snapshot 和请求重建主线。跳过它用：
 
 ```powershell
 python -m pytest -o addopts='' -q -m "not slow"

@@ -3,12 +3,14 @@
 Everything else in the plugin suite substitutes a fake ``entry_points`` provider.
 That is fine for driving the manager deterministically, but it proves nothing
 about packaging: it cannot show that a separately built distribution declaring
-``traceharness-py>=0.4,<1.0`` actually installs alongside this build, or that
+``traceharness-py>=0.5,<0.6`` actually installs alongside this build, or that
 ``importlib.metadata`` finds it.
 
-So this module builds both wheels, populates an offline wheelhouse (including
-``packaging``, v0.4's first runtime dependency), creates a fresh venv, installs
-with ``--no-index``, and runs the whole mainline inside it.
+So this module builds the harness plus two independent plugin wheels, populates
+an offline wheelhouse (including ``packaging``), creates a fresh venv, installs
+with ``--no-index``, and runs both plugin mainlines inside it.  The Python
+Quality distribution is the v0.5 release acceptance plugin: it proves
+Tool, Prompt, Policy and named Verifier contributions from a real wheel.
 
 It is slow by nature - one venv and three wheel builds - so it is marked
 ``slow``. Deselect with ``-m "not slow"``.
@@ -26,6 +28,9 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_PLUGIN = PROJECT_ROOT / "examples" / "plugins" / "traceh-example-skill-plugin"
+PYTHON_QUALITY_PLUGIN = (
+    PROJECT_ROOT / "examples" / "plugins" / "traceh-python-quality-plugin"
+)
 DRIVER = Path(__file__).resolve().parent / "plugin_e2e_driver.py"
 
 pytestmark = pytest.mark.slow
@@ -54,7 +59,7 @@ def wheelhouse(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     house = tmp_path_factory.mktemp("wheelhouse")
 
-    for project in (PROJECT_ROOT, EXAMPLE_PLUGIN):
+    for project in (PROJECT_ROOT, EXAMPLE_PLUGIN, PYTHON_QUALITY_PLUGIN):
         built = run(
             [sys.executable, "-m", "pip", "wheel", "--no-deps", "--wheel-dir", str(house),
              str(project)]
@@ -84,7 +89,9 @@ def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory
         [
             str(python), "-m", "pip", "install",
             "--no-index", "--find-links", str(wheelhouse),
-            "traceharness-py", "traceh-example-skill-plugin",
+            "traceharness-py",
+            "traceh-example-skill-plugin",
+            "traceh-python-quality-plugin",
         ]
     )
     assert installed.returncode == 0, (
@@ -114,13 +121,14 @@ def e2e_report(clean_environment: Path, tmp_path_factory: pytest.TempPathFactory
 
 
 def test_wheels_install_together_in_a_clean_environment(e2e_report: dict) -> None:
-    """The blocking acceptance: a plugin declaring >=0.4,<1.0 installs with this build."""
+    """Both independent plugins install beside the release candidate."""
 
     from traceh.version import __version__
 
     versions = e2e_report["installed_versions"]
     assert versions["traceharness-py"] == __version__
     assert versions["traceh-example-skill-plugin"] == "0.1.0"
+    assert versions["traceh-python-quality-plugin"] == "0.1.0"
     assert versions["packaging"], "packaging must be installed from the offline wheelhouse"
 
 
@@ -138,6 +146,11 @@ def test_real_entry_point_is_discovered(e2e_report: dict) -> None:
         p["value"] for p in e2e_report["entry_points"] if p["name"] == "traceh.example.skill"
     )
     assert value == "traceh_example_skill_plugin:ExampleSkillPlugin"
+    quality_value = next(
+        p["value"] for p in e2e_report["entry_points"]
+        if p["name"] == "traceh.python.quality"
+    )
+    assert quality_value == "traceh_python_quality_plugin:PythonQualityPlugin"
 
 
 def test_discovery_reports_the_plugin_without_issues(e2e_report: dict) -> None:
@@ -155,7 +168,32 @@ def test_discovery_reports_the_plugin_without_issues(e2e_report: dict) -> None:
 
 
 def test_cli_list_inspect_and_doctor_all_succeed(e2e_report: dict) -> None:
-    assert e2e_report["cli"] == {"list": 0, "inspect": 0, "doctor": 0}
+    assert e2e_report["cli"] == {
+        "list": 0,
+        "inspect-example": 0,
+        "doctor-example": 0,
+        "inspect-python-quality": 0,
+        "doctor-python-quality": 0,
+    }
+
+
+def test_python_quality_plugin_runs_tool_policy_and_named_verifier(
+    e2e_report: dict,
+) -> None:
+    quality = e2e_report["python_quality"]
+    assert quality["turn"]["reason"] == "completed"
+    assert quality["tool_results"] == [
+        {"tool_name": "shell", "status": "denied", "policy": "python-environment-safety"},
+        {"tool_name": "python_project_info", "status": "succeeded", "policy": None},
+    ]
+    assert quality["verification"] == {"passed": True, "exit_code": 0}
+    assert quality["prompt_contains_section"] is True
+    assert quality["snapshot_plugins"] == [
+        {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
+        {"plugin_id": "traceh.python.quality", "version": "0.1.0"},
+    ]
+    assert quality["invariant_violations"] == []
+    assert quality["reconstruction_violations"] == []
 
 
 # --------------------------------------------------------------------------

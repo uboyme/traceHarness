@@ -43,6 +43,7 @@ async def main(scratch: Path) -> dict:
     report["installed_versions"] = {
         "traceharness-py": metadata.version("traceharness-py"),
         "traceh-example-skill-plugin": metadata.version("traceh-example-skill-plugin"),
+        "traceh-python-quality-plugin": metadata.version("traceh-python-quality-plugin"),
         "packaging": metadata.version("packaging"),
     }
 
@@ -61,8 +62,14 @@ async def main(scratch: Path) -> dict:
     # 3. The three CLI surfaces.
     report["cli"] = {
         "list": list_plugins(json_output=False),
-        "inspect": inspect_plugin("traceh.example.skill", json_output=False),
-        "doctor": await doctor_plugins(["traceh.example.skill"], json_output=False),
+        "inspect-example": inspect_plugin("traceh.example.skill", json_output=False),
+        "doctor-example": await doctor_plugins(["traceh.example.skill"], json_output=False),
+        "inspect-python-quality": inspect_plugin(
+            "traceh.python.quality", json_output=False
+        ),
+        "doctor-python-quality": await doctor_plugins(
+            ["traceh.python.quality"], json_output=False
+        ),
     }
 
     # 4. A default runtime with no plugins must be unchanged.
@@ -140,6 +147,118 @@ async def main(scratch: Path) -> dict:
         await runtime.dispose()
 
     report["after_dispose_tools"] = list(runtime.loop.compositions.tools.registry.names())
+
+    # 6. The v0.5 acceptance plugin contributes four capability types from a
+    # separate wheel.  Its Policy must deny before a process effect is created,
+    # its read-only Tool must execute through the normal ToolRuntime, and its
+    # named Verifier must run through the Step's Generation Lease.
+    quality_workspace = scratch / "quality-ws"
+    quality_workspace.mkdir(parents=True, exist_ok=True)
+    command = json.dumps([sys.executable, "-m", "unittest", "-v"])
+    (quality_workspace / "pyproject.toml").write_text(
+        "[project]\n"
+        "name = 'quality-e2e'\n"
+        "requires-python = '>=3.12'\n\n"
+        "[tool.traceh-python-quality]\n"
+        f"test-command = {command}\n",
+        encoding="utf-8",
+    )
+    (quality_workspace / "test_quality.py").write_text(
+        "import unittest\n\n"
+        "class QualityE2E(unittest.TestCase):\n"
+        "    def test_plugin_verifier(self):\n"
+        "        self.assertEqual(2 + 3, 5)\n",
+        encoding="utf-8",
+    )
+    quality_provider = ScriptedLlmProvider(
+        (
+            ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        id="blocked-shell",
+                        name="shell",
+                        arguments={
+                            "command": "python -m pip uninstall quality-e2e -y"
+                        },
+                    ),
+                ),
+            ),
+            ModelResponse(
+                tool_calls=(
+                    ToolCall(id="project-info", name="python_project_info", arguments={}),
+                ),
+            ),
+            ModelResponse(content="Python project evidence and tests are complete."),
+        )
+    )
+    quality_runtime = await build_default_runtime_async(
+        RuntimeConfig(
+            data_dir=scratch / "quality-data",
+            verifier_name="python-tests",
+        ),
+        provider=quality_provider,
+        enabled_plugins=("traceh.python.quality",),
+    )
+    try:
+        quality_result = await quality_runtime.run(
+            quality_workspace,
+            "inspect this Python project and verify it",
+        )
+        quality_session = (await quality_runtime.sessions.list_sessions())[0]
+        quality_events = await quality_runtime.sessions.read_session(quality_session)
+        quality_effects = await quality_runtime.sessions.read_effects(quality_session)
+        quality_tool_results = [
+            event for event in quality_events if event.type == "tool/result"
+        ]
+        quality_verifications = [
+            event for event in quality_events if event.type == "verification/result"
+        ]
+        quality_snapshots = [
+            event for event in quality_events if event.type == "composition/snapshot"
+        ]
+        report["python_quality"] = {
+            "turn": {"reason": quality_result.reason, "steps": quality_result.steps},
+            "tool_results": [
+                {
+                    "tool_name": event.data.get("tool_name"),
+                    "status": event.data.get("status"),
+                    "policy": (
+                        event.data.get("data", {}).get("policy")
+                        if isinstance(event.data.get("data"), dict)
+                        else None
+                    ),
+                }
+                for event in quality_tool_results
+            ],
+            "verification": {
+                "passed": quality_verifications[-1].data.get("passed"),
+                "exit_code": quality_verifications[-1].data.get("exit_code"),
+            },
+            "prompt_contains_section": (
+                "python_project_info"
+                in quality_runtime.loop.compositions.prompt.assemble(
+                    workspace=str(quality_workspace)
+                )
+            ),
+            "snapshot_plugins": quality_snapshots[-1].data.get("plugins"),
+            "invariant_violations": [
+                violation.rule
+                for violation in quality_runtime.invariants.check(
+                    quality_events,
+                    quality_effects,
+                )
+            ],
+            "reconstruction_violations": [
+                str(item)
+                for item in await verify_request_snapshots(
+                    quality_runtime.sessions,
+                    quality_runtime.surface,
+                    quality_session,
+                )
+            ],
+        }
+    finally:
+        await quality_runtime.dispose()
     return report
 
 

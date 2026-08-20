@@ -26,6 +26,7 @@ from traceh.kernel.scope import Scope
 from traceh.llm.registry import LlmRegistry
 from traceh.plugins.errors import PluginDisposeError
 from traceh.runtime.prompt import PromptAssembler
+from traceh.runtime.verification import CompletionVerifier
 from traceh.session.service import SessionService
 from traceh.tools.registry import ToolRegistry
 from traceh.tools.runtime import ToolRuntime
@@ -225,6 +226,7 @@ def _composition_components(
     llms: object,
     tools: object,
     prompt: object,
+    verifier: object | None = None,
 ) -> tuple[object, ...]:
     """Return the explicitly assembled capability components.
 
@@ -246,6 +248,8 @@ def _composition_components(
         components.append(middleware)
     for name in llms.names():
         components.append(llms.require(name))
+    if verifier is not None:
+        components.append(verifier)
     return tuple(components)
 
 
@@ -462,7 +466,9 @@ class _FrozenLlmRegistry:
         return cls(
             {
                 name: _FrozenProvider.freeze(
-                    registry.require(name), resource_binding=resource_binding
+                    registry.require(name),
+                    name=name,
+                    resource_binding=resource_binding,
                 )
                 for name in registry.names()
             },
@@ -492,10 +498,11 @@ class _FrozenProvider:
         self,
         provider: LlmProvider,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
         object.__setattr__(self, "_delegate", provider)
-        object.__setattr__(self, "_name", provider.name)
+        object.__setattr__(self, "_name", provider.name if name is None else name)
         object.__setattr__(self, "_composition_resource_binding", resource_binding)
 
     @classmethod
@@ -503,11 +510,14 @@ class _FrozenProvider:
         cls,
         provider: LlmProvider,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> _FrozenProvider:
         if isinstance(provider, _FrozenProvider):
+            if name is not None and provider.name != name:
+                raise ValueError("frozen provider identity does not match registry key")
             return provider
-        return cls(provider, resource_binding=resource_binding)
+        return cls(provider, name=name, resource_binding=resource_binding)
 
     @property
     def name(self) -> str:
@@ -534,10 +544,11 @@ class _FrozenPolicy:
         self,
         policy: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
         object.__setattr__(self, "_delegate", policy)
-        object.__setattr__(self, "_name", policy.name)
+        object.__setattr__(self, "_name", policy.name if name is None else name)
         object.__setattr__(self, "_composition_resource_binding", resource_binding)
 
     @classmethod
@@ -545,11 +556,14 @@ class _FrozenPolicy:
         cls,
         policy: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> _FrozenPolicy:
         if isinstance(policy, _FrozenPolicy):
+            if name is not None and policy.name != name:
+                raise ValueError("frozen policy identity does not match candidate")
             return policy
-        return cls(policy, resource_binding=resource_binding)
+        return cls(policy, name=name, resource_binding=resource_binding)
 
     @property
     def name(self) -> str:
@@ -576,10 +590,15 @@ class _FrozenMiddleware:
         self,
         middleware: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
         object.__setattr__(self, "_delegate", middleware)
-        object.__setattr__(self, "_name", middleware.name)
+        object.__setattr__(
+            self,
+            "_name",
+            middleware.name if name is None else name,
+        )
         object.__setattr__(self, "_composition_resource_binding", resource_binding)
 
     @classmethod
@@ -587,11 +606,14 @@ class _FrozenMiddleware:
         cls,
         middleware: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> _FrozenMiddleware:
         if isinstance(middleware, _FrozenMiddleware):
+            if name is not None and middleware.name != name:
+                raise ValueError("frozen middleware identity does not match candidate")
             return middleware
-        return cls(middleware, resource_binding=resource_binding)
+        return cls(middleware, name=name, resource_binding=resource_binding)
 
     @property
     def name(self) -> str:
@@ -783,10 +805,11 @@ class _FrozenTool:
         self,
         tool: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
         object.__setattr__(self, "_delegate", tool)
-        object.__setattr__(self, "_name", tool.name)
+        object.__setattr__(self, "_name", tool.name if name is None else name)
         object.__setattr__(self, "_description", tool.description)
         object.__setattr__(self, "_input_schema", _freeze_json(tool.input_schema))
         object.__setattr__(self, "_effect_kind", tool.effect_kind)
@@ -821,14 +844,18 @@ class _FrozenTool:
         cls,
         tool: object,
         *,
+        name: str | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> _FrozenTool:
         """Return one flat adapter even when a source is already frozen."""
 
         if isinstance(tool, _FrozenTool):
+            if name is not None and tool.name != name:
+                raise ValueError("frozen tool identity does not match registry key")
             return tool
         return cls(
             tool,
+            name=name,
             resource_binding=resource_binding,
         )
 
@@ -862,13 +889,14 @@ class _FrozenToolRegistry:
         tools = {
             name: _FrozenTool.freeze(
                 registry.require(name),
+                name=name,
                 resource_binding=resource_binding,
             )
             for name in registry.names()
         }
         schemas = tuple(
-            ToolSchema(tool.name, tool.description, tool.input_schema)
-            for tool in sorted(tools.values(), key=lambda item: item.name)
+            ToolSchema(name, tools[name].description, tools[name].input_schema)
+            for name in sorted(tools)
         )
         return cls(
             tools,
@@ -907,6 +935,8 @@ class _FrozenToolRuntime:
         source: ToolRuntime,
         *,
         registry_type: type[_FrozenToolRegistry] = _FrozenToolRegistry,
+        policy_names: tuple[str, ...] | None = None,
+        middleware_names: tuple[str, ...] | None = None,
         publication_state: _GenerationPublicationState | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
@@ -917,13 +947,35 @@ class _FrozenToolRuntime:
         self._registry = registry
         self._publication_state = publication_state
         self._composition_resource_binding = resource_binding
+        if policy_names is None:
+            policy_names = tuple(policy.name for policy in source.policies)
+        if middleware_names is None:
+            middleware_names = tuple(
+                middleware.name for middleware in source.middlewares
+            )
+        if len(policy_names) != len(source.policies):
+            raise ValueError("frozen policy identity count does not match candidate")
+        if len(middleware_names) != len(source.middlewares):
+            raise ValueError("frozen middleware identity count does not match candidate")
         frozen_policies = tuple(
-            _FrozenPolicy.freeze(policy, resource_binding=resource_binding)
-            for policy in source.policies
+            _FrozenPolicy.freeze(
+                policy,
+                name=name,
+                resource_binding=resource_binding,
+            )
+            for policy, name in zip(source.policies, policy_names, strict=True)
         )
         frozen_middlewares = tuple(
-            _FrozenMiddleware.freeze(middleware, resource_binding=resource_binding)
-            for middleware in source.middlewares
+            _FrozenMiddleware.freeze(
+                middleware,
+                name=name,
+                resource_binding=resource_binding,
+            )
+            for middleware, name in zip(
+                source.middlewares,
+                middleware_names,
+                strict=True,
+            )
         )
         self._delegate = ToolRuntime(
             registry,
@@ -1022,6 +1074,7 @@ class CompositionGeneration:
     temperature: float | None = None
     max_output_tokens: int | None = None
     plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,)
+    verifier: CompletionVerifier | None = field(default=None, compare=False, repr=False)
     resource_owner: CompositionResourceOwner | None = field(
         default=None, compare=False, repr=False
     )
@@ -1052,6 +1105,8 @@ class CompositionGeneration:
     )
 
     def __post_init__(self, cleanup: CleanupCallback | None) -> None:
+        activation_policy_names: tuple[str, ...] | None = None
+        activation_middleware_names: tuple[str, ...] | None = None
         if cleanup is not None:
             if self.resource_owner is None:
                 raise ValueError(
@@ -1119,6 +1174,55 @@ class CompositionGeneration:
                     raise ValueError(
                         "generation ToolRuntime must use its ActivationSet policies"
                     )
+            activation_middlewares = getattr(
+                self.activation_set,
+                "middlewares",
+                _RESOURCE_BINDING_MISSING,
+            )
+            if activation_middlewares is not _RESOURCE_BINDING_MISSING:
+                runtime_middlewares = tuple(self.tools.middlewares)
+                candidate_middlewares = tuple(activation_middlewares)
+                if len(runtime_middlewares) != len(candidate_middlewares) or any(
+                    runtime_middleware is not candidate_middleware
+                    for runtime_middleware, candidate_middleware in zip(
+                        runtime_middlewares,
+                        candidate_middlewares,
+                        strict=True,
+                    )
+                ):
+                    raise ValueError(
+                        "generation ToolRuntime must use its ActivationSet middleware"
+                    )
+            activation_verifier = getattr(
+                self.activation_set,
+                "verifier",
+                _RESOURCE_BINDING_MISSING,
+            )
+            if (
+                activation_verifier is not _RESOURCE_BINDING_MISSING
+                and self.verifier is not activation_verifier
+            ):
+                raise ValueError(
+                    "generation verifier must use its ActivationSet verifier"
+                )
+            activation_llms = getattr(
+                self.activation_set,
+                "llms",
+                _RESOURCE_BINDING_MISSING,
+            )
+            if (
+                activation_llms is not _RESOURCE_BINDING_MISSING
+                and activation_llms is not None
+            ):
+                activation_provider = activation_llms.get(self.provider)
+                runtime_provider = self.llms.get(self.provider)
+                if (
+                    activation_provider is None
+                    or runtime_provider is not activation_provider
+                ):
+                    raise ValueError(
+                        "generation provider must use its ActivationSet provider"
+                    )
             activation_scope = getattr(
                 self.activation_set, "scope", _RESOURCE_BINDING_MISSING
             )
@@ -1144,6 +1248,22 @@ class CompositionGeneration:
                 raise ValueError(
                     "generation ActivationSet service view must belong to its scope"
                 )
+            verify_capabilities = getattr(
+                self.activation_set,
+                "_verify_generation_capabilities",
+                None,
+            )
+            if callable(verify_capabilities):
+                (
+                    activation_policy_names,
+                    activation_middleware_names,
+                ) = verify_capabilities(
+                    tools=self.tools.registry,
+                    prompt=self.prompt,
+                    policies=tuple(self.tools.policies),
+                    middlewares=tuple(self.tools.middlewares),
+                    verifier=self.verifier,
+                )
         else:
             activation_scope = None
             activation_services = None
@@ -1157,7 +1277,12 @@ class CompositionGeneration:
             components: tuple[object, ...] = ()
             resource_binding: _CompositionResourceBinding | None = None
         else:
-            components = _composition_components(self.llms, self.tools, self.prompt)
+            components = _composition_components(
+                self.llms,
+                self.tools,
+                self.prompt,
+                self.verifier,
+            )
             resource_binding = _binding_for_components(components)
             if resource_binding is None:
                 resource_binding = _CompositionResourceBinding()
@@ -1183,6 +1308,8 @@ class CompositionGeneration:
         )
         frozen_tools = _FrozenToolRuntime(
             self.tools,
+            policy_names=activation_policy_names,
+            middleware_names=activation_middleware_names,
             publication_state=publication_state,
             resource_binding=resource_binding,
         )
@@ -1297,6 +1424,7 @@ class ActiveComposition:
     generation_id: int = 0
     scope: Scope | None = None
     services: ServiceView | None = None
+    verifier: CompletionVerifier | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1374,6 +1502,7 @@ class GenerationCompositionRuntime:
         cleanup: CleanupCallback | None = None,
         resource_owner: CompositionResourceOwner | None = None,
         activation_set: Any | None = None,
+        verifier: CompletionVerifier | None = None,
         compatibility_tools_source: ToolRuntime | None = None,
         compatibility_prompt_source: PromptAssembler | None = None,
         defer_external_cleanup: bool = False,
@@ -1405,6 +1534,7 @@ class GenerationCompositionRuntime:
             plugins=plugins,
             resource_owner=resource_owner,
             activation_set=activation_set,
+            verifier=verifier,
             cleanup=cleanup,
         )
         compatibility_llms = _CompatibilityLlmRegistry.from_frozen_registry(
@@ -1807,6 +1937,7 @@ class _GenerationLease:
             generation_id=record.generation_id,
             scope=record.generation.scope,
             services=record.generation.services,
+            verifier=record.generation.verifier,
         )
 
     async def _release_once(self, *, suppress_cancellation: bool = False) -> None:

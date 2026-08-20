@@ -34,20 +34,21 @@ class ToolRegistry:
         if self._composition_resource_binding is None and tool_binding is not None:
             self._composition_resource_binding = tool_binding
 
-        previous = self._tools.get(tool.name)
+        name = tool.name
+        previous = self._tools.get(name)
         if previous is not None and not replace:
-            raise ToolConflictError(f"tool already registered: {tool.name}")
-        self._tools[tool.name] = tool
+            raise ToolConflictError(f"tool already registered: {name}")
+        self._tools[name] = tool
 
         async def cleanup() -> None:
             # Only undo our own entry: if something later replaced this tool, the
             # newer registration owns the slot and reversing it is its job.
-            current = self._tools.get(tool.name)
+            current = self._tools.get(name)
             if current is tool:
                 if previous is None:
-                    self._tools.pop(tool.name, None)
+                    self._tools.pop(name, None)
                 else:
-                    self._tools[tool.name] = previous
+                    self._tools[name] = previous
 
         return CallbackRegistration(cleanup)
 
@@ -62,8 +63,8 @@ class ToolRegistry:
 
     def schemas(self) -> tuple[ToolSchema, ...]:
         return tuple(
-            ToolSchema(tool.name, tool.description, tool.input_schema)
-            for tool in sorted(self._tools.values(), key=lambda item: item.name)
+            ToolSchema(name, self._tools[name].description, self._tools[name].input_schema)
+            for name in sorted(self._tools)
         )
 
     def names(self) -> tuple[str, ...]:

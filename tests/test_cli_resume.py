@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import shlex
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -92,7 +93,15 @@ def build_runtime(
     )
 
 
-def resume_lines(runtime, session_id="s1", *, environment=None, shell="powershell", workspace=None):
+def resume_lines(
+    runtime,
+    session_id="s1",
+    *,
+    environment=None,
+    shell="powershell",
+    workspace=None,
+    plugin_ids=None,
+):
     console = FakeConsole()
     _write_resume_block(
         runtime,
@@ -100,7 +109,7 @@ def resume_lines(runtime, session_id="s1", *, environment=None, shell="powershel
         ChatSession(session_id, workspace or Path(".")),
         environment or ResumeEnvironment(),
         shell=shell,
-        plugin_ids=runtime.enabled_plugin_ids,
+        plugin_ids=(runtime.enabled_plugin_ids if plugin_ids is None else plugin_ids),
     )
     return console
 
@@ -448,6 +457,32 @@ def test_the_command_says_it_is_not_a_full_snapshot(tmp_path: Path) -> None:
     console = resume_lines(build_runtime(tmp_path))
 
     assert console.has("not a complete configuration snapshot")
+
+
+def test_a_named_plugin_verifier_is_preserved_in_the_resume_command(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        os,
+        "environ",
+        {key: value for key, value in os.environ.items() if not key.startswith("TRACEH_")},
+    )
+    runtime = build_runtime(tmp_path)
+    runtime.config = replace(runtime.config, verifier_name="workspace-check")
+    console = resume_lines(
+        runtime,
+        shell="posix",
+        plugin_ids=("verification.extension",),
+    )
+
+    argv = shlex.split(console.command_line())
+    resumed = build_parser().parse_args(argv[1:])
+    _configure_from_environment(resumed)
+
+    assert resumed.verifier_name == "workspace-check"
+    assert resumed.plugins == ("verification.extension",)
 
 
 def test_a_scripted_session_is_not_told_about_an_api_key(tmp_path: Path) -> None:

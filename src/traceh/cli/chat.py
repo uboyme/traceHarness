@@ -780,6 +780,9 @@ def _write_resume_block(
     if config.max_steps:
         restore += [Literal("--max-steps"), str(config.max_steps)]
 
+    if config.verifier_name is not None:
+        restore += [Literal("--plugin-verifier"), config.verifier_name]
+
     # Without these the resumed session would be refused by the plugin identity
     # check - correctly, but with no hint about what to re-enable.
     for plugin_id in plugin_ids:

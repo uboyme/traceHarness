@@ -83,18 +83,33 @@ or verifiers.
   existing ActivationSet → Generation → Lease → Snapshot path. There is no parallel scoped
   runtime, no new persistent fact and no `AgentLoop` change. These are host assembly bindings,
   not child-scope plugin setup or a new Policy contribution method on `PluginContext`.
-- Widen `PluginContext` to providers, policies, middleware, event stores and verifiers.
+- **Stage D3 — completed as the execution-capability contribution layer:** application
+  plugins may register Provider, Policy, Middleware and named Verifier contributions. They
+  are staged during setup, then the contribution surface is frozen before conflict and health
+  phases; mutable capability objects cannot change their captured registration names during
+  health or after a public candidate hand-off. ActivationSet retains a capability receipt and
+  Generation revalidates it before claim. Activation and hand-off construction are one
+  transaction: a receipt/Scope failure before ownership transfer disposes the temporary
+  Manager and all Owned Tasks before returning; simultaneous hand-off/cleanup failures use
+  `BaseExceptionGroup` so direct `BaseException` interruptions remain visible. They are
+  transferred through the existing ActivationSet → Generation → Step Lease
+  path; provider identity is checked against the candidate registry, while legacy custom
+  ActivationSets without a D3 registry retain their D0 replacement fallback. Provider and
+  Verifier selection is explicit; merely enabling a plugin cannot replace either default. Verifier execution now
+  remains inside the same Step Lease as model and tools. EventStore is deliberately not a
+  hot-reloadable contribution: it is the Runtime/Session process-lifetime fact source and
+  first needs a separately pinned ownership design.
 
 Still deferred: running `pip install`/`uninstall` for Wheels, forced Python module reload,
-file watching, scoped plugin setup, Provider/Policy/
-Middleware/EventStore/Verifier plugin contributions, isolated plugins, multi-agent,
-Workflow, MCP, TUI and model streaming. The version remains `0.4.0`; completing Stage A
-through D2 does not mean v0.5 is released.
+file watching, scoped plugin setup, EventStore plugin contribution, isolated plugins,
+multi-agent, Workflow, MCP, TUI and model streaming. The version remains `0.4.0`;
+completing Stage A through D3 does not mean v0.5 is released.
 
-The D2 assembly contract now proves that two independently built Runtime/Agent scopes can
+The D2/D3 assembly contract now proves that two independently built Runtime/Agent scopes can
 see different Tool/Prompt/Policy compositions, and the existing Lease contract prevents a
-published Generation from changing an in-progress Step. A product-level two-Agent demo still
-depends on the v0.6 `AgentSupervisor`; D2 does not claim that capability.
+published Generation from changing an in-progress Step's Provider, tools or Verifier. A
+product-level two-Agent demo still depends on the v0.6 `AgentSupervisor`; D3 does not claim
+that capability.
 
 ## v0.6: AgentSupervisor and subagents
 

@@ -19,9 +19,10 @@ the plugins the operator explicitly enabled, and activates them as one transacti
 3. import the enabled plugins and validate every manifest field;
 4. resolve dependencies into a deterministic topological order;
 5. run each `setup()` against **private staged registries**;
-6. check every conflict against the core registries;
-7. run `health_check()`;
-8. atomically publish tools, prompts and services into the existing mainlines.
+6. close every Composition contribution method;
+7. check every conflict against the core registries;
+8. run `health_check()`;
+9. atomically publish the staged capabilities into the existing mainlines.
 
 Any failure unwinds every activation in reverse order. Cancellation unwinds identically;
 when rollback succeeds it re-raises the original `CancelledError`. A real rollback cleanup
@@ -93,8 +94,9 @@ internal replacement API an automatic migration.
 
 `PluginGenerationBuilder` accepts an explicit enabled-plugin id tuple and creates a fresh
 candidate ToolRegistry, PromptAssembler and ServiceRegistry view. Discovery, dependency
-ordering, manifest validation, setup, conflict checking and health checks all happen
-before publication. A failed setup, health check, Generation construction or publish
+ordering, manifest validation and setup all happen privately; setup then freezes the
+contribution surface before conflict checking and health. A failed setup, health check,
+Generation construction or publish
 rolls the candidate back in reverse order immediately; current Generation and its
 registries do not change. Repeated cancellation is converged before the original
 `CancelledError` is re-raised when rollback succeeds. If rollback cleanup fails, the
@@ -140,8 +142,9 @@ This is a user-operable composition switch, not source-code hot reload. The proc
 does not install or uninstall Wheels, call `importlib.reload()`, watch files, or migrate
 other Sessions automatically. At the Stage C checkpoint, Workspace/Preset/Agent Scope
 Overlay was still absent; D1 below adds only the Service foundation. Isolated
-(out-of-process) plugins and new Provider, Policy, Middleware, EventStore or Verifier plugin
-contributions remain absent. The version remains `0.4.0`; Stage C is not a v0.5 release.
+(out-of-process) plugins and new execution-capability contributions were still absent; D3
+below adds Provider, Policy, Middleware and Verifier without adding EventStore replacement.
+The version remains `0.4.0`; Stage C is not a v0.5 release.
 
 ## Stage D0: plugin composition control-plane extraction — shipped as structure
 
@@ -225,26 +228,91 @@ ordered Policy objects by identity, not `__eq__`: Policy is executable admission
 so two behaviorally different objects cannot claim to be the same candidate capability by
 overloading value equality.
 
-D2 does not widen plugin authority. Plugin setup remains application-only, `PluginContext`
-still cannot provide Policy, and host-provided child bindings are borrowed rather than owned
+D2 by itself did not widen plugin authority. Plugin setup remained application-only and
+host-provided child bindings remained borrowed rather than owned
 by plugin cleanup. Two independently assembled Runtimes may now have different Agent-level
 Tool/Prompt/Policy compositions, but creating and supervising two Agents remains v0.6 work.
 
+## Stage D3: Provider, Policy, Middleware and Verifier contributions — shipped
+
+`PluginContext` now exposes reversible registrations for `LlmProvider`, `ToolPolicy`,
+`ToolMiddleware` and named `CompletionVerifier` values. Setup remains trusted,
+application-scope and in-process. The manager stages all four categories privately, checks
+Provider/Policy/Middleware conflicts and selected Provider/Verifier existence before health
+checks, then publishes them into the same candidate `LlmRegistry`, Policy/Middleware tuple
+and `PluginActivationSet`. Failure or cancellation unwinds their registrations with every
+other Activation resource.
+
+Setup is the only phase allowed to change the candidate Composition. After every setup has
+returned, the manager closes all Tool/Prompt/Service/Provider/Policy/Middleware/Verifier
+registration methods before conflict checks and health. Health may inspect configuration and
+Services and retain lifecycle cleanup/Owned Tasks, but a late registration fails health and
+rolls the candidate back. Tool, Provider, Policy and Middleware names are captured when they
+are registered; setup completion, every health return and the final awaited publication
+boundary verify that the original object still has that identity. Drift fails with
+`plugin-contribution-identity-changed`. Conflict checks and attribution use the captured name,
+and Tool/LLM reversal handles use their original registry key. Policy child-overlay failures
+retain the responsible plugin id.
+
+`prepare_activation_set()` is also a public asynchronous ownership boundary. The transferred
+set keeps an immutable receipt of its Registry containers, member objects, registered names,
+Prompt, ordered Policy/Middleware values, Verifier and plugin identities. Generation
+construction revalidates that receipt before claim, while frozen schemas and runtime lookup
+both use the registered Registry key. A caller may therefore await after preparation without
+letting an Owned Task make one Generation advertise a Tool name it cannot execute.
+Activation and receipt construction remain one transaction: until `PluginActivationSet`
+construction succeeds, the temporary Manager is the only cleanup owner. A receipt or Scope
+failure therefore cancels and waits for Owned Tasks, performs reverse cleanup exactly once and
+only then returns the original hand-off error. Repeated cancellation cannot cut convergence
+short; a concurrent cleanup failure is reported alongside the transfer failure through
+`BaseExceptionGroup`. When both members are ordinary `Exception` values Python derives the
+existing `ExceptionGroup`; direct `BaseException` interruptions remain representable instead
+of being masked by a new grouping `TypeError`.
+
+Provider and Verifier selection is deliberately explicit. A custom Provider name is accepted
+only alongside an explicitly enabled plugin and an explicit Model; a named Verifier is
+selected by `verifier_name`, `--plugin-verifier` or `TRACEH_PLUGIN_VERIFIER`. Enabling a
+plugin never silently takes over either role, and a named plugin Verifier is mutually
+exclusive with a direct/command Verifier. Stable pre-health failures include
+`provider-not-provided`, `verifier-not-provided`, `provider-publish-conflict`,
+`policy-publish-conflict` and `middleware-publish-conflict`.
+
+The selected Provider, ordered Policy and Middleware objects, and Verifier are transferred by
+identity with the ActivationSet and captured by one `CompositionGeneration`. AgentLoop reads
+the Verifier from the same Step Lease as Provider and ToolRuntime, so a replacement cannot
+make one in-progress Step verify with a newer generation. Existing Snapshot fields continue
+to record Provider, policies and middleware; Verifier remains execution evidence through the
+existing `verification/result` event rather than a second configuration fact.
+
+When an ActivationSet exposes an LLM registry, the selected Provider must both exist there and
+be the exact object used by the Generation; a same-named object from another registry is not a
+fallback. The D0 replacement contract remains compatible only for custom ActivationSets that
+do not expose D3 `llms` (or expose `None`): those borrow the coordinator's existing core
+registry rather than being forced to implement a new optional field.
+
+EventStore is intentionally excluded. SessionService, recovery, inspection and every event
+append share it as a process-lifetime fact source, while a D3 ActivationSet may retire after a
+Step Lease. Making it hot-reloadable would allow an old Session to retain a cleaned-up Store
+or split one Runtime across two ledgers. A future EventStore plugin boundary first needs a
+separate pinned owner, construction/disposal order, Session compatibility rules and Store
+contract tests. See [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md).
+
 ## Extension categories
 
-Shipped in v0.4 — a plugin may register:
+Shipped through v0.5 Stage D3 — a plugin may register:
 
 - **Tool**: register `Tool` objects; they join the normal admission, policy, middleware and
   effect-ledger pipeline.
 - **Prompt**: register deterministic `PromptSection` values.
 - **Service**: provide typed `ServiceKey` values other plugins can `require()`.
+- **LLM provider**: register `LlmProvider`; the host must select its name explicitly.
+- **Policy / middleware**: register `ToolPolicy` and `ToolMiddleware`; they join the existing
+  ToolRuntime admission and execution chain.
+- **Verification**: register a named `CompletionVerifier`; the host must select it explicitly.
 
 Still planned, not reachable from `PluginContext` today:
 
-- LLM provider: register `LlmProvider`.
-- Policy: register `ToolPolicy`; middleware: register `ToolMiddleware`.
 - Persistence: implement `EventStore` and pass the contract tests.
-- Verification: implement `CompletionVerifier`.
 - Observability: subscribe to typed NOTIFY hooks.
 
 Behavior that changes a model request must be represented in the Composition Snapshot,

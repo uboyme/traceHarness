@@ -23,6 +23,8 @@ _TRACEH_VARIABLES = (
     "TRACEH_DATA_DIR",
     "TRACEH_MAX_STEPS",
     "TRACEH_VERIFY_COMMAND",
+    "TRACEH_PLUGIN_VERIFIER",
+    "TRACEH_PLUGINS",
 )
 
 
@@ -140,6 +142,164 @@ def test_openai_provider_requires_explicit_endpoint_and_model(tmp_path, monkeypa
 
     with pytest.raises(CliConfigurationError, match="requires --base-url"):
         _provider_and_model(args)
+
+
+def test_cli_accepts_an_explicit_plugin_provider_without_inventing_an_adapter(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--plugin",
+            "provider.extension",
+            "--provider",
+            "tenant-provider",
+            "--model",
+            "tenant-model",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+    _configure_from_environment(args)
+
+    provider, model = _provider_and_model(args)
+
+    assert provider is None
+    assert model == "tenant-model"
+    assert args.plugins == ("provider.extension",)
+
+
+def test_cli_rejects_plugin_capabilities_without_an_explicit_plugin(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--provider",
+            "tenant-provider",
+            "--model",
+            "tenant-model",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+    with pytest.raises(CliConfigurationError, match="requires at least one explicit"):
+        _configure_from_environment(args)
+
+
+def test_cli_selects_one_named_plugin_verifier(tmp_path, monkeypatch) -> None:
+    _clear_traceh_environment(monkeypatch)
+    args = build_parser().parse_args(
+        [
+            "chat",
+            str(tmp_path),
+            "--plugin",
+            "verification.extension",
+            "--plugin-verifier",
+            "workspace-check",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+    _configure_from_environment(args)
+
+    assert args.verifier_name == "workspace-check"
+
+
+def test_cli_rejects_two_verifier_owners(tmp_path, monkeypatch) -> None:
+    _clear_traceh_environment(monkeypatch)
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--plugin",
+            "verification.extension",
+            "--plugin-verifier",
+            "workspace-check",
+            "--verify-command",
+            "python -m unittest",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+    with pytest.raises(CliConfigurationError, match="mutually exclusive"):
+        _configure_from_environment(args)
+
+
+def test_explicit_plugin_verifier_overrides_an_environment_command(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    monkeypatch.setenv("TRACEH_VERIFY_COMMAND", "lower-priority-command")
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--plugin",
+            "verification.extension",
+            "--plugin-verifier",
+            "workspace-check",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+
+    _configure_from_environment(args)
+
+    assert args.verifier_name == "workspace-check"
+    assert args.verify_command is None
+
+
+def test_explicit_command_verifier_overrides_an_environment_plugin_verifier(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    monkeypatch.setenv("TRACEH_PLUGIN_VERIFIER", "lower-priority-verifier")
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--verify-command",
+            "python -m unittest",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+
+    _configure_from_environment(args)
+
+    assert args.verify_command == "python -m unittest"
+    assert args.verifier_name is None
+
+
+def test_two_environment_verifier_owners_are_still_rejected(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    monkeypatch.setenv("TRACEH_PLUGINS", "verification.extension")
+    monkeypatch.setenv("TRACEH_VERIFY_COMMAND", "python -m unittest")
+    monkeypatch.setenv("TRACEH_PLUGIN_VERIFIER", "workspace-check")
+    args = build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "test task",
+            "--env-file",
+            str(tmp_path / "missing.env"),
+        ]
+    )
+
+    with pytest.raises(CliConfigurationError, match="mutually exclusive"):
+        _configure_from_environment(args)
 
 
 def test_doctor_reports_key_presence_without_printing_secret(tmp_path, monkeypatch, capsys) -> None:

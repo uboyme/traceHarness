@@ -12,12 +12,18 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
+from traceh.api.llm import LlmProvider
 from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
 from traceh.api.tools import Tool
 from traceh.version import CORE_PLUGIN_ID, DEFAULT_REQUIRES_TRACEH, __version__
+
+if TYPE_CHECKING:
+    from traceh.runtime.verification import CompletionVerifier
+    from traceh.tools.middleware import ToolMiddleware
+    from traceh.tools.policy import ToolPolicy
 
 T = TypeVar("T")
 _MISSING = object()
@@ -76,16 +82,37 @@ class PluginContext(Protocol):
 
     The context deliberately exposes no ``AgentRuntime``, ``AgentLoop``,
     ``EventStore``, ``ToolRegistry`` or ``PromptAssembler`` object. A plugin can
-    contribute tools, prompt sections and services, read configuration, register
-    cleanup and spawn owned background tasks - and nothing else. Every one of
-    those is reversible and owned by the plugin's Activation, so a failure at any
-    point can unwind the whole set.
+    contribute Generation-scoped providers, tools, prompt sections, policies,
+    middleware and named verifiers, plus application services, configuration,
+    cleanup and owned background tasks. Every contribution is reversible and
+    owned by the plugin's Activation.
+
+    ``EventStore`` is deliberately absent. It owns the durable Session fact
+    source for the whole Runtime and cannot safely follow Step-generation hot
+    replacement. A future process-lifetime plugin boundary must own that
+    capability before it can enter this surface.
     """
 
     def register_tool(self, tool: Tool) -> Registration:
         ...
 
     def register_prompt(self, section: PromptSection) -> Registration:
+        ...
+
+    def register_provider(self, provider: LlmProvider) -> Registration:
+        ...
+
+    def register_policy(self, policy: ToolPolicy) -> Registration:
+        ...
+
+    def register_middleware(self, middleware: ToolMiddleware) -> Registration:
+        ...
+
+    def register_verifier(
+        self,
+        name: str,
+        verifier: CompletionVerifier,
+    ) -> Registration:
         ...
 
     def require(self, key: ServiceKey[T]) -> T:

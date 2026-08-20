@@ -2,6 +2,48 @@
 
 ## Unreleased
 
+### v0.5 Stage D3 plugin execution capabilities
+
+- Added reversible `PluginContext` registrations for Provider, Policy, Middleware and named
+  Verifier capabilities. They use the existing private setup/conflict/health/publish
+  transaction and transfer through `PluginActivationSet` into one Composition Generation;
+  cancellation and failure use the same reverse rollback and Drain ownership as other plugin
+  resources.
+- Kept authority explicit: enabling a plugin does not select its Provider or Verifier. Custom
+  Provider selection requires an explicit plugin and Model; named Verifiers use
+  `verifier_name`, `--plugin-verifier` or `TRACEH_PLUGIN_VERIFIER` and remain mutually
+  exclusive with direct/command verification. Missing selections and Provider/Policy/
+  Middleware conflicts fail before health checks with stable structured codes.
+- Moved Verifier execution inside the Step Composition Lease. Provider, ToolRuntime and
+  Verifier now come from one Generation, so an in-flight Step cannot switch to a newer
+  Verifier after plugin replacement.
+- Deliberately kept EventStore outside `PluginContext`: it is the Runtime/Session
+  process-lifetime fact source and cannot safely be owned by a retireable Step Generation.
+  A future plugin boundary requires a separately pinned owner and Store lifecycle contract.
+- Added real AgentLoop, tool admission, verifier event, replacement isolation, rollback,
+  conflict and CLI selection tests. The version remains `0.4.0`; D3 is not a v0.5 release.
+- Closed the candidate contribution surface after setup, before conflict checks and health,
+  so health code cannot add a late Policy, Middleware or other Composition capability. Policy
+  overlay failures now retain the responsible plugin id.
+- Captured Tool, Provider, Policy and Middleware names at registration and reject any later
+  identity drift with `plugin-contribution-identity-changed`. Conflict checks and attribution
+  use the captured transaction identity, while Tool/LLM reversal handles retain the original
+  registry key so a mutable capability cannot bypass validation or strand cleanup by renaming
+  itself during health.
+- Added an immutable capability receipt at the public `PluginActivationSet` transfer boundary.
+  `CompositionGeneration` revalidates the candidate before claiming it, so an Owned Task that
+  mutates a Tool after `prepare_activation_set()` returns cannot split model-visible schemas
+  from ToolRuntime lookup keys; frozen Tool/Provider names use registered Registry keys.
+- Made activation and `PluginActivationSet` construction one transaction. If receipt or Scope
+  validation rejects the hand-off before the caller receives a candidate, the temporary
+  `PluginManager` converges Owned Tasks and reverse cleanup before returning. Repeated
+  cancellation cannot escape that cleanup. Simultaneous transfer/cleanup failures are grouped
+  with `BaseExceptionGroup`: ordinary `Exception` members still derive `ExceptionGroup`, while
+  a direct `BaseException` cannot be replaced by a secondary grouping `TypeError`.
+- Strengthened Generation identity validation: an ActivationSet-provided LLM registry must
+  contain the selected Provider object. Legacy custom ActivationSets that do not expose a D3
+  LLM registry continue to borrow the coordinator's core registry during replacement.
+
 ### v0.5 Stage D2 Tool, Prompt and Policy overlays
 
 - Added explicit Application, Workspace, Preset and Agent bindings for Tool, Prompt and

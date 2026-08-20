@@ -27,9 +27,11 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime_async,
 )
 from traceh.runtime.composition_runtime import CompositionDrainError, CompositionGeneration
+from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.service import SessionService
+from traceh.tools.registry import ToolRegistry
 from traceh.tools.runtime import ToolRuntime
 
 
@@ -56,6 +58,65 @@ async def build_with_plugin(tmp_path: Path, plugin: object, plugin_id: str = "a.
         enabled_plugins=(plugin_id,),
         plugin_discovery=discovery_for(plugin),
     )
+
+
+class _LegacyReplacementActivationSet:
+    """D0 replacement contract without D3's candidate LLM registry field."""
+
+    def __init__(self, *, tools, prompt, identities) -> None:
+        self.tools = tools
+        self.prompt = prompt
+        self.identities = identities
+        self.claimed_by: object | None = None
+        self.dispose_calls = 0
+
+    def _ensure_claimable(self, owner: object) -> None:
+        del owner
+        if self.claimed_by is not None:
+            raise ValueError("already claimed")
+
+    def _claim_for_generation(self, owner: object) -> None:
+        self._ensure_claimable(owner)
+        self.claimed_by = owner
+
+    def _unclaim_for_generation(self, owner: object) -> None:
+        if self.claimed_by is owner:
+            self.claimed_by = None
+
+    async def dispose(self) -> None:
+        self.dispose_calls += 1
+
+
+class _LegacyReplacementBuilder:
+    def __init__(self, activation_set: _LegacyReplacementActivationSet) -> None:
+        self.activation_set = activation_set
+
+    async def prepare(self, enabled_plugin_ids, **kwargs):
+        del enabled_plugin_ids, kwargs
+        return self.activation_set
+
+
+async def test_legacy_replacement_activation_set_borrows_the_runtime_llm_registry(
+    tmp_path: Path,
+) -> None:
+    runtime = await build_plain(tmp_path)
+    current = runtime.loop.compositions.current_generation
+    activation_set = _LegacyReplacementActivationSet(
+        tools=ToolRegistry(),
+        prompt=PromptAssembler(),
+        identities=current.plugins,
+    )
+    runtime._plugin_compositions._plugin_builder = _LegacyReplacementBuilder(
+        activation_set
+    )
+    try:
+        replacement = await runtime.replace_plugin_composition(())
+        assert replacement.plugins == current.plugins
+        assert runtime.loop.compositions.current_generation.provider == current.provider
+    finally:
+        await runtime.dispose()
+
+    assert activation_set.dispose_calls == 1
 
 
 async def test_default_runtime_and_startup_plugin_use_one_owned_activation_set(
@@ -369,9 +430,9 @@ async def test_generation_construction_failure_cleans_candidate_once_and_is_retr
             policies=runtime._plugin_compositions._policies,
             middlewares=runtime._plugin_compositions._middlewares,
         )
-        with pytest.raises(LookupError):
+        with pytest.raises(ValueError, match="ActivationSet provider"):
             CompositionGeneration(
-                llms=runtime._plugin_compositions._llms,
+                llms=candidate.llms,
                 tools=candidate_tools,
                 prompt=candidate.prompt,
                 provider="missing-provider",
@@ -459,7 +520,7 @@ async def test_one_activation_set_cannot_be_published_to_two_runtimes(
             middlewares=first._plugin_compositions._middlewares,
         )
         first_generation = CompositionGeneration(
-            llms=first._plugin_compositions._llms,
+            llms=candidate.llms,
             tools=first_tools,
             prompt=candidate.prompt,
             provider="scripted",
@@ -480,7 +541,7 @@ async def test_one_activation_set_cannot_be_published_to_two_runtimes(
             middlewares=second._plugin_compositions._middlewares,
         )
         second_generation = CompositionGeneration(
-            llms=second._plugin_compositions._llms,
+            llms=candidate.llms,
             tools=second_tools,
             prompt=candidate.prompt,
             provider="scripted",

@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-from traceh.api.llm import ModelResponse, Usage
+from traceh.api.llm import Usage
 from traceh.api.tools import ToolExecutionContext
-from traceh.kernel.hooks import HookDispatcher, STEP_FINISHED, TURN_FINISHED, TURN_STARTED
+from traceh.kernel.hooks import STEP_FINISHED, TURN_FINISHED, TURN_STARTED, HookDispatcher
 from traceh.llm.runtime import LlmRuntime
 from traceh.runtime.composition_runtime import CompositionRuntime
 from traceh.runtime.continuation import (
-    Continue,
     ContinuationRuntime,
+    Continue,
     DefaultContinuationRuntime,
     VerificationFeedback,
 )
@@ -187,19 +187,25 @@ class AgentLoop:
                         correlation_id=correlation_id,
                         composition_revision=composition.revision,
                     )
-                    async def record_text_delta(delta: str) -> None:
+                    async def record_text_delta(
+                        delta: str,
+                        *,
+                        step_id: str = current_step_id,
+                        model_attempt_id: str = attempt_id,
+                        revision: str = composition.revision,
+                    ) -> None:
                         await self.sessions.append_session(
                             session_id,
                             "assistant/chunk",
                             {
                                 "turn_id": turn_id,
-                                "step_id": current_step_id,
-                                "attempt_id": attempt_id,
+                                "step_id": step_id,
+                                "attempt_id": model_attempt_id,
                                 "content": delta,
                             },
                             durability=Durability.BATCHED,
                             correlation_id=correlation_id,
-                            composition_revision=composition.revision,
+                            composition_revision=revision,
                         )
 
                     try:
@@ -288,31 +294,36 @@ class AgentLoop:
                             composition_revision=composition.revision,
                         )
 
-                verification_feedback: VerificationFeedback | None = None
-                if not response.tool_calls and self.verifier is not None:
-                    verification = await self.verifier.verify(workspace)
-                    verification_passed = verification.passed
-                    await self.sessions.append_session(
-                        session_id,
-                        "verification/result",
-                        {
-                            "turn_id": turn_id,
-                            "step_id": current_step_id,
-                            "passed": verification.passed,
-                            "summary": verification.summary,
-                            "exit_code": verification.exit_code,
-                            "stdout": verification.stdout[-8000:],
-                            "stderr": verification.stderr[-8000:],
-                        },
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
+                    verification_feedback: VerificationFeedback | None = None
+                    effective_verifier = (
+                        active_composition.verifier
+                        if active_composition.verifier is not None
+                        else self.verifier
                     )
-                    verification_feedback = VerificationFeedback(
-                        verification.passed,
-                        verification.summary,
-                    )
-                    if not verification.passed:
-                        verification_failures += 1
+                    if not response.tool_calls and effective_verifier is not None:
+                        verification = await effective_verifier.verify(workspace)
+                        verification_passed = verification.passed
+                        await self.sessions.append_session(
+                            session_id,
+                            "verification/result",
+                            {
+                                "turn_id": turn_id,
+                                "step_id": current_step_id,
+                                "passed": verification.passed,
+                                "summary": verification.summary,
+                                "exit_code": verification.exit_code,
+                                "stdout": verification.stdout[-8000:],
+                                "stderr": verification.stderr[-8000:],
+                            },
+                            correlation_id=correlation_id,
+                            composition_revision=composition.revision,
+                        )
+                        verification_feedback = VerificationFeedback(
+                            verification.passed,
+                            verification.summary,
+                        )
+                        if not verification.passed:
+                            verification_failures += 1
 
                 await self.sessions.append_session(
                     session_id,

@@ -97,6 +97,7 @@ class RuntimeConfig:
     temperature: float | None = None
     max_output_tokens: int | None = None
     verification_command: str | None = None
+    verifier_name: str | None = None
     verification_timeout_seconds: float = 60.0
     max_verification_retries: int = 1
 
@@ -486,6 +487,7 @@ class _PreparedRuntime:
     policies: tuple[ToolPolicy, ...]
     tool_middlewares: tuple[ToolMiddleware, ...]
     verifier: CompletionVerifier | None
+    verifier_name: str | None
     continuation: ContinuationRuntime | None
 
 
@@ -497,6 +499,7 @@ def _prepare_default_runtime(
     policies: tuple[ToolPolicy, ...] | None = None,
     tool_middlewares: tuple[ToolMiddleware, ...] = (),
     verifier: CompletionVerifier | None = None,
+    verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -505,8 +508,16 @@ def _prepare_default_runtime(
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
     policy_bindings: Sequence[ScopedPolicyBinding] = (),
+    allow_plugin_provider: bool = False,
 ) -> _PreparedRuntime:
     config = config or RuntimeConfig()
+    if (
+        verifier_name is not None
+        and config.verifier_name is not None
+        and verifier_name != config.verifier_name
+    ):
+        raise ValueError("runtime verifier selections disagree")
+    selected_verifier_name = verifier_name or config.verifier_name
     data_dir = config.data_dir.resolve()
     actual_event_store = event_store or JsonlEventStore(data_dir / "events")
     # Wrapping is unconditional so that every writer - the loop, the tool
@@ -529,7 +540,9 @@ def _prepare_default_runtime(
         repeat_last=True,
     )
     llms.register(actual_provider)
-    if actual_provider.name != config.provider:
+    if actual_provider.name != config.provider and not (
+        allow_plugin_provider and provider is None
+    ):
         raise ValueError(
             f"configured provider {config.provider!r} does not match provider object "
             f"{actual_provider.name!r}"
@@ -550,6 +563,14 @@ def _prepare_default_runtime(
 
     effective_policies = policies or (DangerousShellPolicy(), AllowByDefaultPolicy())
     effective_verifier = verifier
+    if verifier is not None and selected_verifier_name is not None:
+        raise ValueError(
+            "a direct verifier and a named plugin verifier are mutually exclusive"
+        )
+    if selected_verifier_name is not None and config.verification_command:
+        raise ValueError(
+            "a verifier command and a named plugin verifier are mutually exclusive"
+        )
     if effective_verifier is None and config.verification_command:
         effective_verifier = CommandVerifier(
             config.verification_command,
@@ -572,6 +593,7 @@ def _prepare_default_runtime(
         policies=effective_policies,
         tool_middlewares=tool_middlewares,
         verifier=effective_verifier,
+        verifier_name=selected_verifier_name,
         continuation=continuation,
     )
 
@@ -596,14 +618,14 @@ def _finish_default_runtime(
         activation_set.tools,
         prepared.sessions,
         policies=activation_set.policies,
-        middlewares=prepared.tool_middlewares,
+        middlewares=activation_set.middlewares,
         timeout_seconds=config.tool_timeout_seconds,
         max_output_chars=config.max_tool_output_chars,
     )
     request_builder = RequestBuilder(prepared.sessions, prepared.surface)
     hooks = HookDispatcher()
     composition_runtime = GenerationCompositionRuntime(
-        llms=prepared.llms,
+        llms=activation_set.llms or prepared.llms,
         tools=tool_runtime,
         prompt=activation_set.prompt,
         provider=config.provider,
@@ -612,6 +634,7 @@ def _finish_default_runtime(
         max_output_tokens=config.max_output_tokens,
         plugins=activation_set.identities,
         activation_set=activation_set,
+        verifier=activation_set.verifier,
         compatibility_tools_source=core_tool_runtime,
         compatibility_prompt_source=prepared.prompt,
         defer_external_cleanup=plugin_manager is not None,
@@ -656,6 +679,7 @@ def build_default_runtime(
     policies: tuple[ToolPolicy, ...] | None = None,
     tool_middlewares: tuple[ToolMiddleware, ...] = (),
     verifier: CompletionVerifier | None = None,
+    verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -674,6 +698,7 @@ def build_default_runtime(
         policies=policies,
         tool_middlewares=tool_middlewares,
         verifier=verifier,
+        verifier_name=verifier_name,
         continuation=continuation,
         event_store=event_store,
         additional_tools=additional_tools,
@@ -689,8 +714,13 @@ def build_default_runtime(
         tools=prepared.tool_registry,
         prompt=prepared.prompt,
         services=prepared.services,
+        llms=prepared.llms,
         service_bindings=prepared.service_bindings,
         policies=prepared.policies,
+        middlewares=prepared.tool_middlewares,
+        verifier=prepared.verifier,
+        verifier_name=prepared.verifier_name,
+        provider_name=prepared.config.provider,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,
@@ -710,6 +740,7 @@ async def build_default_runtime_async(
     policies: tuple[ToolPolicy, ...] | None = None,
     tool_middlewares: tuple[ToolMiddleware, ...] = (),
     verifier: CompletionVerifier | None = None,
+    verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -736,6 +767,7 @@ async def build_default_runtime_async(
         policies=policies,
         tool_middlewares=tool_middlewares,
         verifier=verifier,
+        verifier_name=verifier_name,
         continuation=continuation,
         event_store=event_store,
         additional_tools=additional_tools,
@@ -744,6 +776,7 @@ async def build_default_runtime_async(
         tool_bindings=tool_bindings,
         prompt_bindings=prompt_bindings,
         policy_bindings=policy_bindings,
+        allow_plugin_provider=bool(enabled_plugins),
     )
     from traceh.plugins.manager import PluginGenerationBuilder
 
@@ -751,8 +784,13 @@ async def build_default_runtime_async(
         tools=prepared.tool_registry,
         prompt=prepared.prompt,
         services=prepared.services,
+        llms=prepared.llms,
         service_bindings=prepared.service_bindings,
         policies=prepared.policies,
+        middlewares=prepared.tool_middlewares,
+        verifier=prepared.verifier,
+        verifier_name=prepared.verifier_name,
+        provider_name=prepared.config.provider,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,

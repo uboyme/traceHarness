@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 import platform
+import re
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -43,6 +44,7 @@ from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.version import __version__
 
 _PROVIDERS = ("scripted", "openai-compatible")
+_PLUGIN_CAPABILITY = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,127}\Z")
 
 __all__ = ["CliConfigurationError", "build_parser", "main"]
 
@@ -65,8 +67,10 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     _add_storage_arguments(parser)
     parser.add_argument(
         "--provider",
-        choices=_PROVIDERS,
         default=None,
+        help=(
+            "Built-in provider name, or an explicitly enabled plugin provider name"
+        ),
     )
     parser.add_argument("--model", default=None)
     parser.add_argument("--script", type=Path)
@@ -74,6 +78,13 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--verify-command")
+    parser.add_argument(
+        "--plugin-verifier",
+        dest="verifier_name",
+        default=None,
+        metavar="NAME",
+        help="Select a named verifier contributed by an explicitly enabled plugin",
+    )
     parser.add_argument(
         "--plugin",
         dest="plugins",
@@ -119,13 +130,25 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
         return report
 
     args.provider = _from_environment(args, "provider", "TRACEH_PROVIDER", "scripted")
-    if args.provider not in _PROVIDERS:
+    if (
+        not isinstance(args.provider, str)
+        or not _PLUGIN_CAPABILITY.fullmatch(args.provider)
+    ):
         raise CliConfigurationError(
-            f"TRACEH_PROVIDER must be one of {', '.join(_PROVIDERS)}; got {args.provider!r}"
+            "TRACEH_PROVIDER / --provider must be a valid capability name"
+        )
+    if args.provider not in _PROVIDERS and not getattr(args, "plugins", ()):
+        raise CliConfigurationError(
+            "a plugin provider requires at least one explicit --plugin / TRACEH_PLUGINS id"
         )
     args.model = _from_environment(args, "model", "TRACEH_MODEL")
     args.base_url = _from_environment(args, "base_url", "TRACEH_BASE_URL")
     explicit_verify_command = getattr(args, "verify_command", None) is not None
+    explicit_verifier_name = getattr(args, "verifier_name", None) is not None
+    if explicit_verify_command and explicit_verifier_name:
+        raise CliConfigurationError(
+            "--plugin-verifier and --verify-command are mutually exclusive"
+        )
     args.api_key_env = _from_environment(
         args,
         "api_key_env",
@@ -145,11 +168,43 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
         raw_max_steps = _from_environment(args, "max_steps", "TRACEH_MAX_STEPS", 20)
         args.max_steps = _positive_integer(raw_max_steps, variable="TRACEH_MAX_STEPS")
     if hasattr(args, "verify_command"):
-        args.verify_command = _from_environment(
-            args,
-            "verify_command",
-            "TRACEH_VERIFY_COMMAND",
+        # The two verifier selectors are mutually exclusive, but a selector
+        # explicitly written on the command line still outranks the other
+        # selector's environment/default value.
+        args.verify_command = (
+            None
+            if explicit_verifier_name
+            else _from_environment(
+                args,
+                "verify_command",
+                "TRACEH_VERIFY_COMMAND",
+            )
         )
+    if hasattr(args, "verifier_name"):
+        args.verifier_name = (
+            None
+            if explicit_verify_command
+            else _from_environment(
+                args,
+                "verifier_name",
+                "TRACEH_PLUGIN_VERIFIER",
+            )
+        )
+        if args.verifier_name is not None and (
+            not isinstance(args.verifier_name, str)
+            or not _PLUGIN_CAPABILITY.fullmatch(args.verifier_name)
+        ):
+            raise CliConfigurationError(
+                "TRACEH_PLUGIN_VERIFIER / --plugin-verifier must be a valid capability name"
+            )
+        if args.verifier_name is not None and not getattr(args, "plugins", ()):
+            raise CliConfigurationError(
+                "a plugin verifier requires at least one explicit --plugin / TRACEH_PLUGINS id"
+            )
+        if args.verifier_name is not None and args.verify_command is not None:
+            raise CliConfigurationError(
+                "--plugin-verifier and --verify-command are mutually exclusive"
+            )
     # Whether the *effective* verifier came from this env file, which is not the
     # same as the file containing the key: an explicit --verify-command wins, so
     # the file would not restore what is actually running.
@@ -177,6 +232,12 @@ def _provider_and_model(args: argparse.Namespace):
             )
         )
         return provider, args.model or "scripted-model"
+    if args.provider not in _PROVIDERS:
+        if not args.model:
+            raise CliConfigurationError(
+                "a plugin provider requires --model or TRACEH_MODEL"
+            )
+        return None, args.model
     if not args.base_url:
         raise CliConfigurationError(
             "openai-compatible requires --base-url or TRACEH_BASE_URL in the environment file"
@@ -196,14 +257,16 @@ async def _runtime(args: argparse.Namespace):
     provider, model = _provider_and_model(args)
     config = RuntimeConfig(
         data_dir=args.data_dir,
-        provider=provider.name,
+        provider=args.provider,
         model=model,
         max_steps=args.max_steps,
         verification_command=args.verify_command,
+        verifier_name=args.verifier_name,
     )
     return await build_default_runtime_async(
         config,
         provider=provider,
+        verifier_name=args.verifier_name,
         enabled_plugins=getattr(args, "plugins", ()),
     )
 

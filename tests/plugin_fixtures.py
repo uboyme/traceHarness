@@ -118,6 +118,10 @@ class ScriptedPlugin:
         tools: tuple[RecordingTool, ...] = (),
         prompts: tuple[PromptSection, ...] = (),
         services: tuple[tuple[Any, Any], ...] = (),
+        providers: tuple[Any, ...] = (),
+        policies: tuple[Any, ...] = (),
+        middlewares: tuple[Any, ...] = (),
+        verifiers: tuple[tuple[str, Any], ...] = (),
         setup_error: BaseException | None = None,
         setup_gate: asyncio.Event | None = None,
         setup_entered: asyncio.Event | None = None,
@@ -136,6 +140,10 @@ class ScriptedPlugin:
         self._tools = tools
         self._prompts = prompts
         self._services = services
+        self._providers = providers
+        self._policies = policies
+        self._middlewares = middlewares
+        self._verifiers = verifiers
         self._setup_error = setup_error
         self._setup_gate = setup_gate
         self._setup_entered = setup_entered
@@ -175,6 +183,14 @@ class ScriptedPlugin:
             context.register_prompt(section)
         for key, value in self._services:
             await context.provide(key, value)
+        for provider in self._providers:
+            context.register_provider(provider)
+        for policy in self._policies:
+            context.register_policy(policy)
+        for middleware in self._middlewares:
+            context.register_middleware(middleware)
+        for name, verifier in self._verifiers:
+            context.register_verifier(name, verifier)
         if self._spawn_forever:
             self.owned_task = context.spawn_owned(self._forever(), name="forever")
 

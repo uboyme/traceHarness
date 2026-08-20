@@ -237,15 +237,19 @@ class PluginCompositionCoordinator:
         prepare = getattr(builder, "prepare", None)
         if not callable(prepare):
             raise RuntimeError("this runtime has no plugin composition builder")
-        llms = self._llms
-        if llms is None:
-            raise RuntimeError("this runtime has no core LLM registry for replacement")
         activation_set = await prepare(
             tuple(enabled_plugin_ids),
             discovery=plugin_discovery,
             plugin_configs=plugin_configs,
         )
         try:
+            llms = getattr(activation_set, "llms", None)
+            if llms is None:
+                llms = self._llms
+            if llms is None:
+                raise RuntimeError(
+                    "this runtime has no candidate LLM registry for replacement"
+                )
             if self._runtime_is_disposed():
                 raise RuntimeError("runtime is disposed")
             current = self._compositions.current_generation
@@ -255,7 +259,9 @@ class PluginCompositionCoordinator:
                 policies=tuple(
                     getattr(activation_set, "policies", self._policies)
                 ),
-                middlewares=self._middlewares,
+                middlewares=tuple(
+                    getattr(activation_set, "middlewares", self._middlewares)
+                ),
                 timeout_seconds=self._tool_timeout_seconds,
                 max_output_chars=self._max_tool_output_chars,
             )
@@ -269,6 +275,7 @@ class PluginCompositionCoordinator:
                 max_output_tokens=current.max_output_tokens,
                 plugins=activation_set.identities,
                 activation_set=activation_set,
+                verifier=getattr(activation_set, "verifier", None),
             )
         except BaseException as error:
             try:

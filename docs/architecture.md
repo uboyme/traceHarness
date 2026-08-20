@@ -33,9 +33,10 @@ Kernel
 
 Dependencies point downward. `traceh.api` contains structural protocols and frozen value
 types that third-party packages import, re-exported for plugin authors through
-`traceh.plugins`. Runtime internals are not plugin API: `PluginContext` exposes tools,
-prompt sections, services, cleanups, owned tasks and configuration, and no `AgentRuntime`,
-`AgentLoop`, `EventStore`, `ToolRegistry` or `PromptAssembler` object.
+`traceh.plugins`. Runtime internals are not plugin API: `PluginContext` exposes reversible
+Tool, Prompt, Service, Provider, Policy, Middleware and named Verifier registrations plus
+cleanups, owned tasks and configuration, and no `AgentRuntime`, `AgentLoop`, `EventStore`,
+`ToolRegistry` or `PromptAssembler` object.
 
 Default Runtime assembly builds one Application → Workspace → Preset → Agent Service chain
 for every plugin composition candidate. The effective read-only Service view is captured by
@@ -51,6 +52,18 @@ PromptAssembler and Policy tuple through the existing ActivationSet → Generati
 Snapshot path. Application plugin Tool/Prompt contributions are revalidated against child
 overlays before health checks. This is host assembly, not child-scope plugin setup, and it
 does not add a second scoped runtime or an `AgentLoop` dependency.
+
+D3 stages application-plugin Provider, Policy, Middleware and named Verifier contributions
+in the same candidate transaction. Provider and Verifier selection is explicit. The selected
+Verifier is carried by the Composition Generation and remains under the same Step Lease as
+Provider and ToolRuntime. Public candidate preparation also transfers an immutable capability
+receipt; Generation construction revalidates it so an await between preparation and claim
+cannot split Snapshot names from executable Registry keys. Activation and receipt construction
+are one transaction: if the hand-off cannot produce an ActivationSet, the temporary Manager
+retains ownership and converges reverse cleanup before returning. A simultaneous cleanup
+failure is grouped through `BaseExceptionGroup`, retaining direct `BaseException` interrupts
+without changing the ordinary `ExceptionGroup` result. EventStore remains a process-
+lifetime Runtime dependency rather than a retireable Generation-owned plugin contribution.
 
 "Frozen" is the dataclass guarantee - fields cannot be rebound - not deep immutability. An
 `EventEnvelope.data` graph stays a mutable JSON structure, so an `EventStore` must hand out
@@ -116,9 +129,9 @@ canonical SHA-256 revision.
 plus each activated external plugin's true id and version. Replay rebuilds them from the
 event, so a plugin-affected request stays reconstructable.
 
-The lease retains the exact provider and Tool Runtime objects while the model/tool cycle
-runs. Step-local freezing prevents a plugin composition change from changing tools halfway
-through one model/tool cycle. The current runtime publishes immutable Generations; old
+The lease retains the exact Provider, Tool Runtime and Verifier objects while the Step runs.
+Step-local freezing prevents a plugin composition change from changing model, tools or
+completion evidence halfway through one Step. The current runtime publishes immutable Generations; old
 Leases retain the old Generation until their last release, after which Drain owns cleanup.
 Generation identity stays internal and does not change the request or event schema.
 

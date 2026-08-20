@@ -4,11 +4,13 @@ Activation is a transaction with four ordered phases:
 
 1. **private staged setup** - each enabled plugin runs ``setup`` against private
    staged registries that no runtime, turn or step can observe;
-2. **full conflict check** - every staged tool, prompt section and service is
-   compared against what the core already registered;
+2. **full conflict check** - every staged tool, prompt section, service,
+   provider, policy and middleware is compared against what the host already
+   registered, and explicitly selected providers/verifiers must exist;
 3. **health check** - only now may a plugin's ``health_check`` run;
-4. **atomic publish** - contributions enter the real tool, prompt and service
-   mainlines, and every activation is marked published.
+4. **atomic publish** - contributions enter the candidate's existing registries,
+   the complete activation set transfers to one Composition Generation, and every
+   activation is marked published.
 
 The ordering of 2 before 3 is deliberate. A plugin whose tool collides with a
 built-in is going to be rejected no matter what its health check says, so running
@@ -37,6 +39,7 @@ from typing import Any, cast
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
+from traceh.api.llm import LlmProvider
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
     Plugin,
@@ -60,6 +63,7 @@ from traceh.kernel.composition_overlays import (
 from traceh.kernel.lifespan import CallbackRegistration
 from traceh.kernel.registry import ServiceConflictError, ServiceRegistry, ServiceView
 from traceh.kernel.scope import Scope, ScopeChain, ScopedServiceBinding
+from traceh.llm.registry import LlmRegistry
 from traceh.plugins.discovery import DiscoveredPlugin, PluginDiscovery
 from traceh.plugins.errors import (
     PluginActivationError,
@@ -69,6 +73,8 @@ from traceh.plugins.errors import (
 )
 from traceh.plugins.selection import is_plugin_id
 from traceh.runtime.prompt import PromptAssembler
+from traceh.runtime.verification import CompletionVerifier
+from traceh.tools.middleware import ToolMiddleware
 from traceh.tools.policy import ToolPolicy
 from traceh.tools.registry import ToolRegistry
 from traceh.version import __version__
@@ -164,6 +170,7 @@ class _LoadedPlugin:
 
 @dataclass(slots=True)
 class _ToolContribution:
+    name: str
     tool: Tool
 
 
@@ -177,6 +184,30 @@ class _ServiceContribution:
     key: ServiceKey[Any]
     value: Any
     replace: bool
+
+
+@dataclass(slots=True)
+class _ProviderContribution:
+    name: str
+    provider: LlmProvider
+
+
+@dataclass(slots=True)
+class _PolicyContribution:
+    name: str
+    policy: ToolPolicy
+
+
+@dataclass(slots=True)
+class _MiddlewareContribution:
+    name: str
+    middleware: ToolMiddleware
+
+
+@dataclass(slots=True)
+class _VerifierContribution:
+    name: str
+    verifier: CompletionVerifier
 
 
 class PluginActivationSet:
@@ -196,8 +227,11 @@ class PluginActivationSet:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        llms: LlmRegistry | None = None,
         scope_chain: ScopeChain | None = None,
         policies: tuple[ToolPolicy, ...] = (),
+        middlewares: tuple[ToolMiddleware, ...] = (),
+        verifier: CompletionVerifier | None = None,
         identities: tuple[PluginIdentity, ...],
         activation_order: tuple[str, ...],
         activations: tuple[Activation, ...],
@@ -206,7 +240,28 @@ class PluginActivationSet:
     ) -> None:
         self.tools = tools
         self.prompt = prompt
+        self.llms = llms
         self.policies = tuple(policies)
+        self.middlewares = tuple(middlewares)
+        self.verifier = verifier
+        self.identities = tuple(identities)
+        # The manager's contribution records are intentionally discarded when
+        # ownership transfers to this set.  Preserve an immutable receipt of
+        # the candidate at that exact boundary so a public caller may await
+        # before constructing a Generation without turning live capability
+        # objects into a second source of identity truth.
+        self._tools_identity = tools
+        self._prompt_identity = prompt
+        self._llms_identity = llms
+        self._plugin_identities = self.identities
+        self._tool_identities = self._capture_registry_identities(tools)
+        self._provider_identities = (
+            self._capture_registry_identities(llms) if llms is not None else None
+        )
+        self._prompt_sections = prompt.sections()
+        self._policy_identities = self._capture_named_identities(self.policies)
+        self._middleware_identities = self._capture_named_identities(self.middlewares)
+        self._verifier_identity = verifier
         self._application_services = services.view()
         self._scope_chain = scope_chain or ScopeChain.build(services)
         if not self._scope_chain.has_application_registry(services):
@@ -215,7 +270,6 @@ class PluginActivationSet:
             )
         self._scope = self._scope_chain.effective
         self._services = self._scope.services
-        self.identities = tuple(identities)
         self.activation_order = tuple(activation_order)
         self.statuses = tuple(statuses)
         self.notices = tuple(notices)
@@ -225,6 +279,107 @@ class PluginActivationSet:
         self._state = "candidate"
         self._dispose_task: asyncio.Task[None] | None = None
 
+    @staticmethod
+    def _capture_registry_identities(
+        registry: ToolRegistry | LlmRegistry,
+    ) -> tuple[tuple[str, object], ...]:
+        identities = tuple((name, registry.require(name)) for name in registry.names())
+        if any(getattr(value, "name", None) != name for name, value in identities):
+            raise ValueError(
+                "plugin ActivationSet capability identity changed before transfer"
+            )
+        return identities
+
+    @staticmethod
+    def _capture_named_identities(
+        values: Sequence[object],
+    ) -> tuple[tuple[str, object], ...]:
+        identities = tuple((getattr(value, "name", None), value) for value in values)
+        if any(not isinstance(name, str) for name, _ in identities):
+            raise ValueError(
+                "plugin ActivationSet capability identity changed before transfer"
+            )
+        return cast(tuple[tuple[str, object], ...], identities)
+
+    @staticmethod
+    def _same_objects(
+        current: Sequence[object],
+        expected: tuple[tuple[str, object], ...],
+    ) -> bool:
+        return len(current) == len(expected) and all(
+            value is expected_value and getattr(value, "name", None) == expected_name
+            for value, (expected_name, expected_value) in zip(
+                current,
+                expected,
+                strict=True,
+            )
+        )
+
+    @staticmethod
+    def _same_registry(
+        registry: ToolRegistry | LlmRegistry,
+        expected: tuple[tuple[str, object], ...],
+    ) -> bool:
+        expected_names = tuple(name for name, _ in expected)
+        if registry.names() != expected_names:
+            return False
+        return all(
+            registry.get(name) is value and getattr(value, "name", None) == name
+            for name, value in expected
+        )
+
+    def _verify_generation_capabilities(
+        self,
+        *,
+        tools: ToolRegistry,
+        prompt: PromptAssembler,
+        policies: Sequence[ToolPolicy],
+        middlewares: Sequence[ToolMiddleware],
+        verifier: CompletionVerifier | None,
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """Validate the public candidate again at the Generation hand-off.
+
+        ``prepare_activation_set()`` is public and returning from it is an
+        asynchronous ownership boundary.  An owned task may run before the
+        caller constructs a Generation, so the candidate must prove that its
+        registries and executable identities still equal the receipt captured
+        above.  The returned names are the authoritative metadata used by the
+        frozen Generation projection.
+        """
+
+        valid = (
+            self.tools is self._tools_identity
+            and tools is self._tools_identity
+            and self.prompt is self._prompt_identity
+            and prompt is self._prompt_identity
+            and prompt.sections() == self._prompt_sections
+            and self.llms is self._llms_identity
+            and tuple(self.identities) == self._plugin_identities
+            and self._same_registry(tools, self._tool_identities)
+            and self._same_objects(tuple(self.policies), self._policy_identities)
+            and self._same_objects(tuple(policies), self._policy_identities)
+            and self._same_objects(
+                tuple(self.middlewares), self._middleware_identities
+            )
+            and self._same_objects(tuple(middlewares), self._middleware_identities)
+            and self.verifier is self._verifier_identity
+            and verifier is self._verifier_identity
+        )
+        if self._provider_identities is not None:
+            valid = (
+                valid
+                and self.llms is not None
+                and self._same_registry(self.llms, self._provider_identities)
+            )
+        if not valid:
+            raise ValueError(
+                "plugin ActivationSet capability identity changed after preparation"
+            )
+        return (
+            tuple(name for name, _ in self._policy_identities),
+            tuple(name for name, _ in self._middleware_identities),
+        )
+
     @classmethod
     def empty(
         cls,
@@ -232,15 +387,21 @@ class PluginActivationSet:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        llms: LlmRegistry | None = None,
         scope_chain: ScopeChain | None = None,
         policies: tuple[ToolPolicy, ...] = (),
+        middlewares: tuple[ToolMiddleware, ...] = (),
+        verifier: CompletionVerifier | None = None,
     ) -> PluginActivationSet:
         return cls(
             tools=tools,
             prompt=prompt,
             services=services,
+            llms=llms,
             scope_chain=scope_chain,
             policies=policies,
+            middlewares=middlewares,
+            verifier=verifier,
             identities=(CORE_PLUGIN_IDENTITY,),
             activation_order=(),
             activations=(),
@@ -391,8 +552,13 @@ class PluginGenerationBuilder:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry,
+        llms: LlmRegistry | None = None,
         service_bindings: Sequence[ScopedServiceBinding] = (),
         policies: Sequence[ToolPolicy] = (),
+        middlewares: Sequence[ToolMiddleware] = (),
+        verifier: CompletionVerifier | None = None,
+        verifier_name: str | None = None,
+        provider_name: str | None = None,
         tool_bindings: Sequence[ScopedToolBinding] = (),
         prompt_bindings: Sequence[ScopedPromptBinding] = (),
         policy_bindings: Sequence[ScopedPolicyBinding] = (),
@@ -402,8 +568,17 @@ class PluginGenerationBuilder:
         self.tools = tools
         self.prompt = prompt
         self.services = services
+        self.llms = llms
         self.service_bindings = tuple(service_bindings)
         self.policies = tuple(policies)
+        self.middlewares = tuple(middlewares)
+        self.verifier = verifier
+        self.verifier_name = verifier_name
+        self.provider_name = provider_name
+        if verifier is not None and verifier_name is not None:
+            raise ValueError(
+                "a direct verifier and a named plugin verifier are mutually exclusive"
+            )
         self.composition_overlays = CompositionOverlayPlan(
             tuple(tool_bindings),
             tuple(prompt_bindings),
@@ -445,9 +620,25 @@ class PluginGenerationBuilder:
             tools=effective.tools,
             prompt=effective.prompt,
             services=services,
+            llms=self.llms,
             scope_chain=scope_chain,
             policies=effective.policies,
+            middlewares=self.middlewares,
+            verifier=self._empty_verifier(),
         )
+
+    def _empty_verifier(self) -> CompletionVerifier | None:
+        if self.verifier_name is not None:
+            raise PluginValidationError(
+                (
+                    PluginFailure(
+                        "verifier-not-provided",
+                        "conflict",
+                        "The explicitly selected verifier is not provided",
+                    ),
+                )
+            )
+        return self.verifier
 
     async def prepare(
         self,
@@ -461,8 +652,13 @@ class PluginGenerationBuilder:
             tools=application.tools,
             prompt=application.prompt,
             services=services,
+            llms=self.llms.fork() if self.llms is not None else None,
             scope_chain=scope_chain,
             policies=application.policies,
+            middlewares=self.middlewares,
+            verifier=self.verifier,
+            verifier_name=self.verifier_name,
+            provider_name=self.provider_name,
             composition_overlays=children,
             discovery=discovery if discovery is not None else self.discovery,
             plugin_configs=(
@@ -470,7 +666,31 @@ class PluginGenerationBuilder:
             ),
         )
         await manager.activate(tuple(enabled_plugin_ids))
-        return manager._transfer_activation_set()
+        try:
+            return manager._transfer_activation_set()
+        except BaseException as error:
+            # Activation ownership has not transferred until construction of
+            # PluginActivationSet succeeds.  A receipt or scope validation
+            # failure therefore remains this temporary manager's rollback
+            # responsibility; the caller has no candidate it could dispose.
+            try:
+                await manager.dispose()
+            except asyncio.CancelledError:
+                # dispose() has already converged its shared cleanup Task before
+                # re-raising cancellation.  Cancellation of the caller outranks
+                # the synchronous transfer failure once cleanup is complete.
+                raise
+            except BaseException as cleanup_error:
+                if isinstance(error, asyncio.CancelledError):
+                    raise cleanup_error from None
+                # The built-in derives ExceptionGroup when every child is an
+                # Exception, while still preserving synchronous BaseException
+                # interruptions such as KeyboardInterrupt or SystemExit.
+                raise BaseExceptionGroup(
+                    "plugin activation transfer cleanup failed",
+                    (error, cleanup_error),
+                ) from None
+            raise
 
 
 class _PluginContext:
@@ -490,6 +710,10 @@ class _PluginContext:
         staged_tools: ToolRegistry,
         staged_prompt: PromptAssembler,
         staged_services: ServiceRegistry,
+        staged_llms: LlmRegistry,
+        staged_policies: dict[str, ToolPolicy],
+        staged_middlewares: dict[str, ToolMiddleware],
+        staged_verifiers: dict[str, CompletionVerifier],
         base_services: ServiceRegistry,
         config: Mapping[str, object],
     ) -> None:
@@ -498,14 +722,118 @@ class _PluginContext:
         self._staged_tools = staged_tools
         self._staged_prompt = staged_prompt
         self._staged_services = staged_services
+        self._staged_llms = staged_llms
+        self._staged_policies = staged_policies
+        self._staged_middlewares = staged_middlewares
+        self._staged_verifiers = staged_verifiers
         self._base_services = base_services
         self._config = MappingProxyType(copy.deepcopy(dict(config)))
         self._task_index = 0
         self.tools: list[_ToolContribution] = []
         self.prompts: list[_PromptContribution] = []
         self.services: list[_ServiceContribution] = []
+        self.providers: list[_ProviderContribution] = []
+        self.policies: list[_PolicyContribution] = []
+        self.middlewares: list[_MiddlewareContribution] = []
+        self.verifiers: list[_VerifierContribution] = []
+        self._contributions_open = True
+
+    def _ensure_contributions_open(self) -> None:
+        if not self._contributions_open:
+            raise RuntimeError("plugin contributions are closed after setup")
+
+    def _close_contributions(self) -> None:
+        """Freeze the staged Composition before conflict and health phases."""
+
+        self._contributions_open = False
+
+    @staticmethod
+    def _capability_name(value: object, *, kind: str) -> str:
+        name = getattr(value, "name", None)
+        if not isinstance(name, str) or not _CONTRIBUTION_PATTERN.fullmatch(name):
+            raise ValueError(f"plugin {kind} name is invalid")
+        return name
+
+    def register_provider(self, provider: LlmProvider) -> Registration:
+        self._ensure_contributions_open()
+        name = self._capability_name(provider, kind="provider")
+        if not callable(getattr(provider, "complete", None)):
+            raise TypeError("plugin provider complete must be callable")
+        contribution = _ProviderContribution(name, provider)
+        staged = self._staged_llms.register(provider)
+        self.providers.append(contribution)
+
+        async def cleanup() -> None:
+            await staged.dispose()
+            if contribution in self.providers:
+                self.providers.remove(contribution)
+
+        return self.activation.own(CallbackRegistration(cleanup))
+
+    def register_policy(self, policy: ToolPolicy) -> Registration:
+        self._ensure_contributions_open()
+        name = self._capability_name(policy, kind="policy")
+        if not callable(getattr(policy, "check", None)):
+            raise TypeError("plugin policy check must be callable")
+        if name in self._staged_policies:
+            raise RuntimeError(f"plugin policy already registered: {name}")
+        contribution = _PolicyContribution(name, policy)
+        self._staged_policies[name] = policy
+        self.policies.append(contribution)
+
+        async def cleanup() -> None:
+            if self._staged_policies.get(name) is policy:
+                self._staged_policies.pop(name, None)
+            if contribution in self.policies:
+                self.policies.remove(contribution)
+
+        return self.activation.own(CallbackRegistration(cleanup))
+
+    def register_middleware(self, middleware: ToolMiddleware) -> Registration:
+        self._ensure_contributions_open()
+        name = self._capability_name(middleware, kind="middleware")
+        if not callable(getattr(middleware, "invoke", None)):
+            raise TypeError("plugin middleware invoke must be callable")
+        if name in self._staged_middlewares:
+            raise RuntimeError(f"plugin middleware already registered: {name}")
+        contribution = _MiddlewareContribution(name, middleware)
+        self._staged_middlewares[name] = middleware
+        self.middlewares.append(contribution)
+
+        async def cleanup() -> None:
+            if self._staged_middlewares.get(name) is middleware:
+                self._staged_middlewares.pop(name, None)
+            if contribution in self.middlewares:
+                self.middlewares.remove(contribution)
+
+        return self.activation.own(CallbackRegistration(cleanup))
+
+    def register_verifier(
+        self,
+        name: str,
+        verifier: CompletionVerifier,
+    ) -> Registration:
+        self._ensure_contributions_open()
+        if not isinstance(name, str) or not _CONTRIBUTION_PATTERN.fullmatch(name):
+            raise ValueError("plugin verifier name is invalid")
+        if not callable(getattr(verifier, "verify", None)):
+            raise TypeError("plugin verifier verify must be callable")
+        if name in self._staged_verifiers:
+            raise RuntimeError(f"plugin verifier already registered: {name}")
+        contribution = _VerifierContribution(name, verifier)
+        self._staged_verifiers[name] = verifier
+        self.verifiers.append(contribution)
+
+        async def cleanup() -> None:
+            if self._staged_verifiers.get(name) is verifier:
+                self._staged_verifiers.pop(name, None)
+            if contribution in self.verifiers:
+                self.verifiers.remove(contribution)
+
+        return self.activation.own(CallbackRegistration(cleanup))
 
     def register_tool(self, tool: Tool) -> Registration:
+        self._ensure_contributions_open()
         name = getattr(tool, "name", None)
         if not isinstance(name, str) or not _CONTRIBUTION_PATTERN.fullmatch(name):
             raise ValueError("plugin tool name is invalid")
@@ -515,7 +843,7 @@ class _PluginContext:
             raise TypeError("plugin tool input_schema must be an object")
         if not callable(getattr(tool, "execute", None)):
             raise TypeError("plugin tool execute must be callable")
-        contribution = _ToolContribution(tool)
+        contribution = _ToolContribution(name, tool)
         staged = self._staged_tools.register(tool)
         self.tools.append(contribution)
 
@@ -527,6 +855,7 @@ class _PluginContext:
         return self.activation.own(CallbackRegistration(cleanup))
 
     def register_prompt(self, section: PromptSection) -> Registration:
+        self._ensure_contributions_open()
         if not isinstance(section, PromptSection):
             raise TypeError("plugin prompt must be a PromptSection")
         if not _CONTRIBUTION_PATTERN.fullmatch(section.section_id):
@@ -559,6 +888,7 @@ class _PluginContext:
         *,
         replace: bool = False,
     ) -> Registration:
+        self._ensure_contributions_open()
         if not isinstance(key, ServiceKey):
             raise TypeError("plugin service key must be a ServiceKey")
         if not isinstance(key.name, str) or not _CAPABILITY_PATTERN.fullmatch(key.name):
@@ -872,8 +1202,13 @@ class PluginManager:
         tools: ToolRegistry,
         prompt: PromptAssembler,
         services: ServiceRegistry | None = None,
+        llms: LlmRegistry | None = None,
         scope_chain: ScopeChain | None = None,
         policies: Sequence[ToolPolicy] = (),
+        middlewares: Sequence[ToolMiddleware] = (),
+        verifier: CompletionVerifier | None = None,
+        verifier_name: str | None = None,
+        provider_name: str | None = None,
         composition_overlays: CompositionOverlayPlan | None = None,
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
@@ -881,8 +1216,17 @@ class PluginManager:
         self.tools = tools
         self.prompt = prompt
         self.services = services or ServiceRegistry()
+        self.llms = llms or LlmRegistry()
         self._scope_chain = scope_chain
         self._application_policies = tuple(policies)
+        self._application_middlewares = tuple(middlewares)
+        self._application_verifier = verifier
+        self._selected_verifier_name = verifier_name
+        self._selected_provider_name = provider_name
+        if verifier is not None and verifier_name is not None:
+            raise ValueError(
+                "a direct verifier and a named plugin verifier are mutually exclusive"
+            )
         self._composition_overlays = composition_overlays or CompositionOverlayPlan()
         self.discovery = discovery or PluginDiscovery()
         self._configs = {
@@ -1182,11 +1526,16 @@ class PluginManager:
 
         base_tool_names = set(self.tools.names())
         base_prompt_ids = set(self.prompt.section_ids())
+        base_provider_names = set(self.llms.names())
+        base_policy_names = {policy.name for policy in self._application_policies}
+        base_middleware_names = {
+            middleware.name for middleware in self._application_middlewares
+        }
         conflicts: list[PluginFailure] = []
         for plugin_id in order:
             context = self._contexts[plugin_id]
             for tool_contribution in context.tools:
-                if tool_contribution.tool.name in base_tool_names:
+                if tool_contribution.name in base_tool_names:
                     conflicts.append(
                         PluginFailure(
                             "tool-publish-conflict",
@@ -1202,6 +1551,36 @@ class PluginManager:
                             "prompt-publish-conflict",
                             "conflict",
                             "Plugin prompt conflicts with an existing prompt section",
+                            plugin_id,
+                        )
+                    )
+            for provider_contribution in context.providers:
+                if provider_contribution.name in base_provider_names:
+                    conflicts.append(
+                        PluginFailure(
+                            "provider-publish-conflict",
+                            "conflict",
+                            "Plugin provider conflicts with an existing provider",
+                            plugin_id,
+                        )
+                    )
+            for policy_contribution in context.policies:
+                if policy_contribution.name in base_policy_names:
+                    conflicts.append(
+                        PluginFailure(
+                            "policy-publish-conflict",
+                            "conflict",
+                            "Plugin policy conflicts with an existing policy",
+                            plugin_id,
+                        )
+                    )
+            for middleware_contribution in context.middlewares:
+                if middleware_contribution.name in base_middleware_names:
+                    conflicts.append(
+                        PluginFailure(
+                            "middleware-publish-conflict",
+                            "conflict",
+                            "Plugin middleware conflicts with an existing middleware",
                             plugin_id,
                         )
                     )
@@ -1232,6 +1611,113 @@ class PluginManager:
                         )
         return tuple(sorted(conflicts, key=lambda item: (item.plugin_id or "", item.code)))
 
+    def _contribution_identity_failures(
+        self,
+        order: Sequence[str],
+    ) -> tuple[PluginFailure, ...]:
+        """Reject capability identity drift after its setup registration.
+
+        Plugin capability objects remain executable delegates, but their
+        registration names are transaction facts. Conflict checks, overlay
+        attribution and publication must therefore never re-read a mutable
+        ``name`` after registration. The repeated checks also close every
+        await boundary between setup and final candidate publication.
+        """
+
+        failures: list[PluginFailure] = []
+        for plugin_id in order:
+            context = self._contexts[plugin_id]
+            contributions = (
+                *((item.name, item.tool) for item in context.tools),
+                *((item.name, item.provider) for item in context.providers),
+                *((item.name, item.policy) for item in context.policies),
+                *((item.name, item.middleware) for item in context.middlewares),
+            )
+            if any(
+                getattr(capability, "name", None) != name
+                for name, capability in contributions
+            ):
+                failures.append(
+                    PluginFailure(
+                        "plugin-contribution-identity-changed",
+                        "conflict",
+                        "Plugin contribution identity changed after registration",
+                        plugin_id,
+                    )
+                )
+        return tuple(failures)
+
+    def _require_stable_contribution_identities(
+        self,
+        order: Sequence[str],
+    ) -> None:
+        failures = self._contribution_identity_failures(order)
+        if failures:
+            raise PluginValidationError(failures)
+
+    def _candidate_policies(self, order: Sequence[str]) -> tuple[ToolPolicy, ...]:
+        return (
+            *self._application_policies,
+            *(
+                contribution.policy
+                for plugin_id in order
+                for contribution in self._contexts[plugin_id].policies
+            ),
+        )
+
+    def _candidate_middlewares(
+        self,
+        order: Sequence[str],
+    ) -> tuple[ToolMiddleware, ...]:
+        return (
+            *self._application_middlewares,
+            *(
+                contribution.middleware
+                for plugin_id in order
+                for contribution in self._contexts[plugin_id].middlewares
+            ),
+        )
+
+    def _candidate_verifier(
+        self,
+        order: Sequence[str],
+    ) -> CompletionVerifier | None:
+        if self._selected_verifier_name is None:
+            return self._application_verifier
+        for plugin_id in order:
+            for contribution in self._contexts[plugin_id].verifiers:
+                if contribution.name == self._selected_verifier_name:
+                    return contribution.verifier
+        raise PluginValidationError(
+            (
+                PluginFailure(
+                    "verifier-not-provided",
+                    "conflict",
+                    "The explicitly selected verifier is not provided",
+                ),
+            )
+        )
+
+    def _validate_selected_provider(self, order: Sequence[str]) -> None:
+        selected = self._selected_provider_name
+        if selected is None or self.llms.get(selected) is not None:
+            return
+        if any(
+            contribution.name == selected
+            for plugin_id in order
+            for contribution in self._contexts[plugin_id].providers
+        ):
+            return
+        raise PluginValidationError(
+            (
+                PluginFailure(
+                    "provider-not-provided",
+                    "conflict",
+                    "The explicitly selected provider is not provided",
+                ),
+            )
+        )
+
     def _resolve_effective_composition(
         self,
         order: Sequence[str],
@@ -1258,7 +1744,7 @@ class PluginManager:
         return self._composition_overlays.resolve(
             tools,
             prompt,
-            self._application_policies,
+            self._candidate_policies(order),
         )
 
     def _overlay_failure(
@@ -1271,12 +1757,17 @@ class PluginManager:
             for plugin_id in order:
                 context = self._contexts[plugin_id]
                 if error.capability == "tool" and any(
-                    item.tool.name == error.name for item in context.tools
+                    item.name == error.name for item in context.tools
                 ):
                     responsible = plugin_id
                     break
                 if error.capability == "prompt" and any(
                     item.section.section_id == error.name for item in context.prompts
+                ):
+                    responsible = plugin_id
+                    break
+                if error.capability == "policy" and any(
+                    item.name == error.name for item in context.policies
                 ):
                     responsible = plugin_id
                     break
@@ -1298,8 +1789,11 @@ class PluginManager:
             tools=self._effective_composition.tools,
             prompt=self._effective_composition.prompt,
             services=self.services,
+            llms=self.llms,
             scope_chain=self._scope_chain,
             policies=self._effective_composition.policies,
+            middlewares=self._candidate_middlewares(self._order),
+            verifier=self._candidate_verifier(self._order),
             identities=self._identities,
             activation_order=self._order,
             activations=tuple(self._activations),
@@ -1323,7 +1817,12 @@ class PluginManager:
             tools=self.tools,
             prompt=self.prompt,
             services=self.services,
+            llms=self.llms,
             policies=self._application_policies,
+            middlewares=self._application_middlewares,
+            verifier=self._application_verifier,
+            verifier_name=self._selected_verifier_name,
+            provider_name=self._selected_provider_name,
             service_bindings=(
                 self._scope_chain.child_bindings
                 if self._scope_chain is not None
@@ -1399,6 +1898,8 @@ class PluginManager:
                 )
             )
         if not enabled:
+            self._validate_selected_provider(())
+            self._candidate_verifier(())
             self._effective_composition = self._resolve_effective_composition(
                 (),
                 include_staged=False,
@@ -1417,6 +1918,10 @@ class PluginManager:
         staged_tools = ToolRegistry()
         staged_prompt = PromptAssembler()
         staged_services = ServiceRegistry()
+        staged_llms = LlmRegistry()
+        staged_policies: dict[str, ToolPolicy] = {}
+        staged_middlewares: dict[str, ToolMiddleware] = {}
+        staged_verifiers: dict[str, CompletionVerifier] = {}
         setup_failure: PluginFailure | None = None
         try:
             # Phase 1: private staged setup.
@@ -1429,6 +1934,10 @@ class PluginManager:
                     staged_tools=staged_tools,
                     staged_prompt=staged_prompt,
                     staged_services=staged_services,
+                    staged_llms=staged_llms,
+                    staged_policies=staged_policies,
+                    staged_middlewares=staged_middlewares,
+                    staged_verifiers=staged_verifiers,
                     base_services=self.services,
                     config=self._configs.get(plugin_id, {}),
                 )
@@ -1454,11 +1963,21 @@ class PluginManager:
                     )
                     raise
 
+            # setup() is the only contribution phase. Freeze every context
+            # before conflict checks and health so third-party health code
+            # cannot mutate the candidate after it has been validated.
+            for plugin_id in order:
+                self._contexts[plugin_id]._close_contributions()
+
+            self._require_stable_contribution_identities(order)
+
             # Phase 2: full conflict check, before any health check runs.
             conflicts = self._publish_conflicts(order)
             if conflicts:
                 self._fail(conflicts)
                 raise PluginValidationError(conflicts)
+            self._validate_selected_provider(order)
+            self._candidate_verifier(order)
             try:
                 self._resolve_effective_composition(order, include_staged=True)
             except CompositionOverlayConflictError as error:
@@ -1490,6 +2009,7 @@ class PluginManager:
                         plugin_id,
                     )
                     raise
+                self._require_stable_contribution_identities(order)
 
             # Phase 4: atomic publish. No runtime or turn can observe these
             # registries until this method returns.
@@ -1502,6 +2022,8 @@ class PluginManager:
                     activation.own(self.tools.register(tool_contribution.tool))
                 for prompt_contribution in context.prompts:
                     activation.own(self.prompt.register(prompt_contribution.section))
+                for provider_contribution in context.providers:
+                    activation.own(self.llms.register(provider_contribution.provider))
                 for service_contribution in context.services:
                     try:
                         registration = await self.services.provide(
@@ -1527,6 +2049,10 @@ class PluginManager:
                             )
                         ) from None
                     activation.own(registration)
+            # Service publication awaits. An owned plugin task may run at any
+            # such boundary, so validate capability identities once more before
+            # the synchronous final composition resolution and ownership handoff.
+            self._require_stable_contribution_identities(order)
             if self._scope_chain is not None:
                 try:
                     self._scope_chain.validate_overrides()

@@ -1,6 +1,6 @@
 # TraceHarness Py v0.4
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统：一个独立发布的 Wheel 可以为 Harness 增加 Tool 和 Prompt Section，而不需要修改本仓库或 `AgentLoop`。当前的 Stage C 允许用户在空闲的 `traceh chat` 中切换已经能被当前进程发现的插件组合，并为当前 Session 追加显式迁移授权；D1 又把 Application → Workspace → Preset → Agent 四层 Service 解析接入 Generation 和 Step Lease。这仍不是运行中安装 Wheel、重新加载 Python module、完整 scoped plugin activation、子 Agent 或 Workflow。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 的 Stage A–D3 又依次补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。这仍不是运行中安装 Wheel、重新加载 Python module、完整 scoped plugin activation、子 Agent 或 Workflow；版本也仍为 `0.4.0`。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -25,7 +25,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 通过可选外部命令 Verifier 实现 Evidence-Driven Completion；
 - Request 重建检查、协议不变量、Replay、手动 Surface 压缩和静态 HTML Inspector；
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
-- **插件系统（v0.4 新增）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section 和 Service 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
+- **插件系统（v0.4 新增，Stage D3 扩展）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section、Service、Provider、Policy、Middleware 和命名 Verifier 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
 - 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
 
@@ -267,6 +267,15 @@ $env:TRACEH_PLUGINS = "traceh.example.skill"   # 等价写法
 
 命令行上任何一次 `--plugin` 都会**整体替换** `TRACEH_PLUGINS`，而不是追加；`run`、`chat`、`resume` 使用同一套选择规则。完整作者契约见[插件说明](docs/plugins.md)。
 
+插件 Provider 与 Verifier 不会因为插件被启用就自动接管。必须显式选择：
+
+```powershell
+traceh run <workspace> "任务" --plugin my.plugin.id --provider my.provider --model my-model
+traceh run <workspace> "任务" --plugin my.plugin.id --plugin-verifier my.verifier
+```
+
+自定义 Provider 必须同时显式启用插件并指定 Model；命名 Verifier 也必须显式启用插件，并与 `--verify-command` 互斥。
+
 ### 在运行中的 Chat 切换组合
 
 插件必须已经安装并能被当前进程的 Entry Point discovery 发现。`traceh chat` 回到空闲提示符后，可以使用：
@@ -319,7 +328,7 @@ traceh doctor
 traceh run . "Inspect the project and report what should be improved"
 ```
 
-使用 `--env-file path/to/file.env` 可以选择其他配置文件。支持的 Runtime 配置包括 `TRACEH_PROVIDER`、`TRACEH_BASE_URL`、`TRACEH_MODEL`、`TRACEH_API_KEY_ENV`、`TRACEH_DATA_DIR`、`TRACEH_MAX_STEPS` 和 `TRACEH_VERIFY_COMMAND`。`openai-compatible` Provider 必须显式配置 Base URL 和 Model；TraceHarness 不会静默选择某个厂商地址或模型。
+使用 `--env-file path/to/file.env` 可以选择其他配置文件。支持的 Runtime 配置包括 `TRACEH_PROVIDER`、`TRACEH_BASE_URL`、`TRACEH_MODEL`、`TRACEH_API_KEY_ENV`、`TRACEH_DATA_DIR`、`TRACEH_MAX_STEPS`、`TRACEH_VERIFY_COMMAND` 和 `TRACEH_PLUGIN_VERIFIER`。`openai-compatible` Provider 必须显式配置 Base URL 和 Model；TraceHarness 不会静默选择某个厂商地址、模型或插件能力。
 
 仍然支持等价的进程环境变量配置：
 
@@ -424,6 +433,10 @@ Projectors / Recovery / Inspector / Invariants
 | 新 Tool | `context.register_tool()` | 既有 `ToolRegistry` 与 Tool Runtime |
 | Prompt 扩展 | `context.register_prompt()` | 既有 `PromptAssembler` |
 | 服务 | `await context.provide()` | 既有 `ServiceRegistry` |
+| Model Provider | `context.register_provider()` | 候选 `LlmRegistry`；必须显式选择 |
+| Tool Policy | `context.register_policy()` | 既有 Tool Runtime admission 链 |
+| Tool Middleware | `context.register_middleware()` | 既有 Tool Runtime 执行链 |
+| 命名 Verifier | `context.register_verifier()` | 同一 Step Generation Lease；必须显式选择 |
 | 可逆清理 | `context.add_cleanup()` | 该插件的 `Activation` |
 | 后台任务 | `context.spawn_owned()` | 该插件的 `OwnedTaskSet` |
 
@@ -431,18 +444,15 @@ Projectors / Recovery / Inspector / Invariants
 
 | 未来能力 | 当前已有边界 |
 |---|---|
-| 新 Model Provider | `LlmProvider` + `LlmRegistry` |
-| Tool 授权 / 中间件 | `ToolPolicy`、`ToolMiddleware` |
 | 自定义完成行为 | `ContinuationRuntime` |
-| 自定义验证 | `CompletionVerifier` |
-| 新持久化后端 | `EventStore` |
+| 新持久化后端 | `EventStore`；仍是进程级固定事实源，不能跟随 Step Generation 切换 |
 | 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
 | Step 安全的多代 Generation 与组合切换 | `CompositionRuntime.lease()`、Generation/Lease/Drain、`traceh chat /plugins` 控制面；仍没有 Wheel/module 级热替换 |
-| Agent 专属装配 | 四层 `ScopeChain` 与程序化 Tool/Prompt/Policy Overlay 已接入默认 Runtime；插件仍不能在子层 setup 或提供 Policy |
+| Agent 专属装配 | 四层 `ScopeChain` 与程序化 Tool/Prompt/Policy Overlay 已接入默认 Runtime；插件仍不能在子层 setup |
 | 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
 | 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
 
-延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[ADR-0012](docs/adr/0012-four-layer-service-scope.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
+延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[ADR-0012](docs/adr/0012-four-layer-service-scope.md)、[ADR-0014](docs/adr/0014-generation-scoped-plugin-execution-capabilities.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
 
 ## 重要设计选择
 
@@ -508,11 +518,11 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.4 已知边界
+## v0.4 / v0.5 Stage D3 已知边界
 
-- 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup，也不能提供 Policy；
+- 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
-- 插件目前只能提供 Tool、Prompt Section 和 Service；**不能**提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`；
+- 插件现在可以提供 Tool、Prompt Section、Service、`LlmProvider`、`ToolPolicy`、`ToolMiddleware` 和命名 `CompletionVerifier`；Provider/Verifier 必须显式选择。插件仍**不能**提供 `EventStore`，因为账本是 Runtime/Session 的进程级事实源，尚无独立于 Step Generation 的固定所有权；
 - 没有 MCP、多 Agent 和 Workflow 接入面；
 - Session 记录创建时的插件身份和后续真正使用过的 Composition；插件集合改变后，只有用户在当前空闲 Session 执行 `/plugins use ...` 才会追加 `composition/migration-authorized`，没有授权的旧 Session 仍拒绝继续，其他 Session 不会自动迁移。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；授权已落盘但 publish 失败时 Session fail-closed；
 - 插件的 Owned Task 只有**生命周期所有权**，没有监督器：它们的异常会被取回（因此不会冒 `Task exception was never retrieved`），取回之后**立刻丢弃、不留存**，也不会被重启，更**不会**把后台任务失败升级成 Runtime 故障；
@@ -536,7 +546,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前共有 1053 项自动化测试（1052 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、Policy 对象身份守卫、插件冲突归因以及插件晚发布后的覆盖复检、真实 Tool/Policy admission、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、事务回滚、冲突检测、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
+当前共有 1088 项自动化测试（1087 通过，1 项在无法承载 NUL 的路径上跳过），覆盖 JSONL 恢复、expected-seq 冲突、跨进程锁、EventStore 所有权、四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、Policy 对象身份守卫、插件冲突归因以及插件晚发布后的覆盖复检、setup 后注册入口与能力名称冻结、公开 ActivationSet 交接复核、交接构造失败回滚与直接 `BaseException` 保真、ActivationSet Provider 身份和旧式替换兼容、真实 Tool/Policy admission、插件 Provider/Policy/Middleware/Verifier 的显式选择、跨命令行与环境变量的 Verifier 优先级、事务回滚与旧 Lease 隔离、命名 Verifier 恢复命令保真、可逆 Activation、Hook 语义、Surface Replacement、Workspace 边界、精确 Patch、Request 重建、端到端 Coding、取消收敛、崩溃恢复、Benchmark 报告，以及插件的发现、显式启用、Manifest 校验、依赖解析、Generation/ActivationSet 生命周期、Chat 组合切换、Session 迁移授权和 CLI 输出清洗。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

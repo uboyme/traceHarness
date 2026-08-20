@@ -43,14 +43,14 @@
 | 持久化 | 本地 Append-only JSONL Session Stream 与 Effect Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
-| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，以及 Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权（见 19 节）。插件 setup 仍只在 application scope、trusted、进程内运行；D1/D2 已把 Service 与程序化 Tool/Prompt/Policy 的 Application → Workspace → Preset → Agent 装配接入同一 Generation/Step Lease 主线，但插件不能自行选择子层，也不能通过 `PluginContext` 提供 Policy |
+| 插件系统 | **已实现**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，以及 Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权（见 19 节）。D1/D2 已把四层 Service 与程序化 Tool/Prompt/Policy 装配接入主线；D3 又让 application 插件通过 `PluginContext` 提供 Provider、Policy、Middleware 和命名 Verifier。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。新增 `traceh plugins list/inspect/doctor` |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | `1053` collected；全量门禁 `1052 passed, 1 skipped`；D1/D2 覆盖四层 Service 与 Tool/Prompt/Policy 装配、严格布尔覆盖意图、事务式解析、插件晚贡献复检、Policy 对象身份守卫、真实 Tool/Policy 执行、候选蓝图保真、Generation/Snapshot/Lease 冻结和跨 Runtime 隔离契约，Stage C/D0 控制面与恢复契约继续全绿 |
+| 当前自动化测试 | `1088` collected；全量门禁 `1087 passed, 1 skipped`；D1/D2 覆盖四层装配，D3 覆盖插件 Provider/Policy/Middleware/Verifier 的显式选择、注册时贡献身份冻结、公开 ActivationSet 交接复核及交接失败回滚、普通异常与直接 `BaseException` 的失败保真、跨 CLI/env 优先级、事务冲突/回滚、ActivationSet 身份守卫、旧式 ActivationSet 替换兼容、真实模型/工具/验证主线、旧 Lease 隔离和恢复命令保真；Stage C/D0 控制面与恢复契约继续全绿 |
 | 内置 Benchmark | 1 个确定性修复案例 |
 
-当前版本仍为 0.4.0。Stage C 已在 Stage B 基础上把用户控制面接入默认 Runtime 主线；D0 随后把候选替换、Session 身份迁移、共享 Gate 和在途控制面收敛归 [`PluginCompositionCoordinator`](../../src/traceh/runtime/plugin_composition.py)，`AgentRuntime` 保留公开门面、活跃 Turn 表和总关闭顺序，`AgentLoop` 未修改。D1 把 Service Scope 接入同一条 Generation 主线；D2 又让默认工厂接受显式 `ScopedToolBinding`、`ScopedPromptBinding` 与 `ScopedPolicyBinding`，按 Application → Workspace → Preset → Agent 解析出一份有效 Tool Registry、Prompt 与 Policy tuple，再交给既有 ActivationSet→Generation→Lease→Snapshot 路径。它仍不是完整的 scoped plugin activation：插件 setup 只发生在 application 层，插件不能自行选择 Workspace/Preset/Agent，也不能通过 `PluginContext` 提供 Policy。仍没有运行中 pip install/uninstall、强制 module reload、文件 watcher或其他未开放插件贡献面；D2 完成也不等于 v0.5 发布完成。多 Agent、Workflow、MCP、TUI、流式输出和 isolated 插件仍未实现。
+当前版本仍为 0.4.0。Stage C 已在 Stage B 基础上把用户控制面接入默认 Runtime 主线；D0 把候选替换、Session 身份迁移、共享 Gate 和在途控制面收敛归 [`PluginCompositionCoordinator`](../../src/traceh/runtime/plugin_composition.py)。D1/D2 把四层 Service 与 Tool/Prompt/Policy 宿主装配交给既有 ActivationSet→Generation→Lease→Snapshot 路径。D3 继续沿用同一事务和所有权边界：插件 Provider、Policy、Middleware 与命名 Verifier 会先在私有候选中校验，再作为一个 ActivationSet 进入 Generation；Provider/Verifier 必须由宿主显式选择，不能因“插件已安装/启用”而偷偷替换。Verifier 现在也处在 Step Lease 内，保证模型、工具和验证来自同一代。它仍不是完整 scoped plugin activation，EventStore 也仍由 Runtime/Session 固定持有。没有运行中 pip install/uninstall、强制 module reload、文件 watcher、isolated、多 Agent、Workflow、MCP、TUI 或流式输出；D3 完成也不等于 v0.5 发布。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -84,8 +84,8 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 
 - 面向用户的插件**组合切换**：`traceh chat` 空闲提示符提供 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重新发现当前进程可见的 Entry Point 并重做 setup/conflict/health，不安装或卸载 Wheel，不强制 `importlib.reload()`，也不承诺从磁盘重新导入 Python 源码；
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
-- 插件提供 `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore` 或 `CompletionVerifier`：`PluginContext` 目前只暴露 Tool、Prompt、Service、Cleanup 与 Owned Task；Provider、Policy、Middleware、EventStore、Verifier 贡献面仍未开放；
-- 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 `ScopedToolBinding`、`ScopedPromptBinding` 与 `ScopedPolicyBinding`，不把 `allowed_scopes` 变成新的激活入口，也不扩宽 `PluginContext`；
+- 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
+- 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
 - 活跃的 AgentSupervisor、子 Agent Tool 和 Workflow Engine；
 - MCP 接入；
 - Git Worktree/Overlay Workspace 分支与合并；
@@ -530,7 +530,7 @@ Generation identity 是内部生命周期编号，只用于引用计数、retire
 
 Stage B 的插件 cleanup 不再使用上述 capability-wide owner 推断插件所有权：`PluginActivationSet` 显式持有插件 Activation、插件 Tool/Prompt/Service、Owned Task 与 cleanup，SessionService、EventStore、核心 Provider 和内置 Tool 只是 borrowed core。候选只在私有注册表中 setup，成功 publish 后由 Generation 接管；旧 Lease 结束前旧 set 不会被卸载。
 
-Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1 把四层 Service Scope 绑定到 ActivationSet/Generation/Step Lease；D2 再把程序化 Tool/Prompt/Policy binding 在候选阶段压平成一份有效 Composition。`AgentLoop` 仍只调用 `CompositionRuntime.lease()`，不导入 Generation Manager、PluginManager、Builder、Scope resolver 或 reload service。用户命令只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload；因此 v0.4.0 仍不是 v0.5 完成版，插件自行选择子层、Provider/Middleware/EventStore/Verifier 等贡献面仍未开放。
+Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-owned `PluginActivationSet` 接入启动插件和内部候选替换路径；Stage C 让 `traceh chat` 的 `/plugins` 控制面调用同一套 Builder→ActivationSet→Generation→publish→Drain；D1/D2 把四层 Service 与程序化 Tool/Prompt/Policy 装配压成有效 Composition；D3 再把插件 Provider、Policy、Middleware、Verifier 接入同一候选和 Step Lease。`AgentLoop` 仍不导入 PluginManager、Builder、Scope resolver 或 reload service；它只从 Lease 取得本 Step 的 Provider、ToolRuntime 与 Verifier。用户命令只重新构造当前进程可发现的已安装 Entry Point，不安装/卸载 Wheel、不强制 module reload；因此 v0.4.0 仍不是 v0.5 完成版，插件自行选择子层与 EventStore 插件化仍未开放。
 
 ### 7.2 Surface
 
@@ -839,7 +839,8 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 - `TRACEH_API_KEY_ENV`；
 - `TRACEH_DATA_DIR`；
 - `TRACEH_MAX_STEPS`；
-- `TRACEH_VERIFY_COMMAND`。
+- `TRACEH_VERIFY_COMMAND`；
+- `TRACEH_PLUGIN_VERIFIER`（必须同时显式启用插件，且与命令 Verifier 互斥）。
 
 `.env` 不覆盖已有进程环境变量；OpenAI-Compatible 模式必须显式提供 Base URL 和 Model，不内置某个厂商作为隐藏默认。真实 `.env` 被 Git 忽略，`.env.example` 只包含占位值。
 
@@ -1091,7 +1092,7 @@ is_renderable("x<U+2028>note: forged")                    ->  True
 
 | 值 | 处理 |
 |---|---|
-| `--verify-command` | 任意 Shell 文本，无法既展示又证明其中没有凭据，因此一律省略。**只有当本次生效的 Verifier 确实来自这次加载的 env-file 时**才提示由该文件恢复；否则打印 `Verifier command omitted from the displayed resume command; re-supply it manually.` |
+| `--verify-command` | 任意 Shell 文本，无法既展示又证明其中没有凭据，因此一律省略。**只有当本次生效的 Verifier 确实来自这次加载的 env-file 时**才提示由该文件恢复；否则打印 `Verifier command omitted from the displayed resume command; re-supply it manually.`。命名插件 Verifier 不含 Shell 文本，因此按普通安全 token 直接写为 `--plugin-verifier`，并同时保留对应 `--plugin` |
 | Base URL | 用 `urllib.parse` 做**结构检查**：内嵌 username/password，或带 query/fragment 时不显示并说明原因。对任意 query 一律 withhold，是为了不必判断哪个参数名敏感。解析本身也可能抛 `ValueError`（`https://[bad` 只在检查 userinfo 时才报 `Invalid IPv6 URL`），因此解析与 userinfo 访问都在 `try` 内：解析失败同样是**不显示 + 说明原因**，绝不把原值或 traceback 摆到用户面前 |
 
 ##### Verifier 的来源必须按"哪个值真正生效"判断
@@ -1151,12 +1152,13 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 | 方向 | 已有协议/原语 | 当前状态 |
 |---|---|---|
-| 插件（Tool / Prompt / Service） | `PluginManifest`、`Plugin`、`PluginContext`、`PluginManager` | **已实现**，见 19 节 |
+| 插件（Provider / Tool / Prompt / Policy / Middleware / Verifier / Service） | `PluginManifest`、`Plugin`、`PluginContext`、`PluginManager` | **已实现 application-scope、trusted、进程内贡献**，见 19 节；Provider/Verifier 必须由宿主显式选择 |
 | 可逆生命周期 | `Activation`、`Lifespan`、`OwnedTaskSet` | **已实现**并被 PluginManager 真正使用，含取消收敛。`OwnedTaskSet` 是**生命周期所有权，不是后台任务监督器**，见 19.12 |
-| 插件提供 Provider / Policy / Middleware / Store / Verifier | `LlmProvider`、`ToolPolicy`、`ToolMiddleware`、`EventStore`、`CompletionVerifier` | 协议存在，但 `PluginContext` 不暴露，只能直接装配 Runtime |
+| 插件提供 Provider / Policy / Middleware / Verifier | `register_provider()`、`register_policy()`、`register_middleware()`、`register_verifier()` | D3 已接入私有候选 → ActivationSet → Generation → Step Lease 主线；setup 后冻结贡献入口和注册时名称，冲突在 health 前失败并保留归因，ActivationSet 与 Generation 做对象身份守卫，Provider/Verifier 无显式选择时不改变行为 |
+| EventStore 替换 | `EventStore` | 仍只能在 Runtime 构造时直接注入；不能由可热替换的 `PluginContext` 提供，因为 SessionService/Event Log 是进程级持久化事实源 |
 | 服务与 Scope | `ServiceKey`、`ServiceRegistry`、`ServiceView`、`ScopeKind`、`ScopedServiceBinding`、`ScopeChain` | D1 已实现四层 Service 解析并接入默认 Runtime、插件候选 Generation 与 Step Lease；同层再次绑定必须显式 `replace=True`，跨层覆盖同样要求严格布尔值 `True` 且 API Major 相同，失败装配不污染调用方 Registry，发布后的公开视图只读 |
 | Tool / Prompt / Policy Overlay | `ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`、`CompositionOverlayPlan` | D2 已按固定四层顺序解析同名能力；同层重复与跨层覆盖都要求严格布尔 `replace=True`，失败只发生在私有 fork；插件 application Tool/Prompt 晚贡献会在 health 前重新校验。解析结果进入已有 ToolRegistry、PromptAssembler、ToolRuntime Policy tuple 与 Composition Snapshot，不产生第二套 Runtime |
-| Composition Generation 与用户切换 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()`、`PluginActivationSet`、`PluginGenerationBuilder`、`composition/migration-authorized` | Stage A/B 生命周期、Stage C Chat `/plugins` 控制面和 D1/D2 Scope 装配均进入默认主线；用户只能切换当前进程可发现的已安装组合，仍没有 Wheel/module 级热替换或子层插件 setup |
+| Composition Generation 与用户切换 | `CompositionGeneration`、`GenerationCompositionRuntime`、`CompositionRuntime.lease()`、`PluginActivationSet`、`PluginGenerationBuilder`、`composition/migration-authorized` | Stage A/B 生命周期、Stage C Chat `/plugins` 控制面、D1/D2 Scope 装配和 D3 执行能力贡献均进入默认主线；用户只能切换当前进程可发现的已安装组合，仍没有 Wheel/module 级热替换或子层插件 setup |
 | isolated 插件 | `PluginManifest.trust_mode` | 可声明，激活**明确拒绝**；无进程边界、无序列化契约、无崩溃子进程失败模型 |
 | 多 Agent | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、Inbox、子 Agent Tools、冷恢复均缺失 |
 | Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
@@ -1176,7 +1178,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前测试套件收集 `1053` 项，完整门禁为 `1052 passed, 1 skipped`。D1 的 [`tests/test_scope_overlays.py`](../../tests/test_scope_overlays.py) 继续覆盖四层 Service；D2 的 [`tests/test_composition_scope_overlays.py`](../../tests/test_composition_scope_overlays.py) 覆盖 Tool/Prompt/Policy 的非空身份、固定层级顺序、严格布尔 `replace`、同层与跨层稳定冲突 code、解析失败不污染来源 Registry/Prompt、Prompt replacement 的可逆清理、两个 Runtime 的 Agent composition 隔离、真实 AgentLoop Tool 与 Policy admission、Request Snapshot 重建、公开 Manager 候选保留 child composition blueprint，以及插件 application Tool 晚贡献在 health 前被复检并保留责任插件。它还用两个名称相同、行为相反且恶意 `__eq__` 总返回真的 Policy，证明 Generation 按逐项对象身份拒绝候选错配，不把值相等当成可执行能力身份。插件组合替换后程序化 child Overlay 继续存在，ActivationSet 的 Policy tuple 与 Tool/Prompt 一样成为 Generation 候选的一部分。[`tests/test_composition_generations.py`](../../tests/test_composition_generations.py) 仍钉住 D0 自定义 ActivationSet 兼容；[`tests/test_plugin_activation_sets.py`](../../tests/test_plugin_activation_sets.py) 继续验证 ActivationSet 所有权和旧 Lease 隔离。D2 关键保护也做了反向验证：临时移除严格布尔门槛时 3 个反例失败；移除插件晚贡献预检时 health 被错误执行；让替换候选退回 Runtime 基础 Policy 时候选在一致性检查处失败；原值相等实现会接受不同 Policy 对象，新身份反例在修复前稳定失败。恢复后全量门禁通过。
+当前测试套件收集 `1088` 项，完整门禁为 `1087 passed, 1 skipped`。D1/D2 原有 Scope/Overlay、Policy 身份、Request 重建与跨 Runtime 隔离契约继续全绿。D3 新增 [`tests/test_plugin_extended_contributions.py`](../../tests/test_plugin_extended_contributions.py)：真实 AgentLoop 使用显式选中的插件 Provider；缺失 Provider/Verifier 和 Provider/Policy/Middleware 冲突在 health 前以固定 code 失败并完整 rollback；setup 结束后贡献入口关闭，health 不能再补注册 Policy/Middleware 绕过冲突检查；Tool、Provider、Policy、Middleware 的注册时名称会被单独保存，health 改写原对象名称会以 `plugin-contribution-identity-changed` 拒绝并回滚，Registry 撤销也只认注册时键；公开 `prepare_activation_set()` 返回后即使调用方让出事件循环，Generation 交接仍会按 transfer receipt 复核 Registry 成员、对象身份与固定名称，后台 Owned Task 的晚到改名会在 claim 前拒绝，Snapshot schema 与 ToolRuntime 查找键不能在同一代分裂；若 receipt 或 Scope 校验在 ActivationSet 构造时失败，Builder 会在所有权尚未交给调用方时 dispose 临时 Manager，取消并等待 Owned Task、恰好一次执行 cleanup，重复取消不能打穿收敛等待，同时保留原始交接错误与 cleanup 失败；两者都是普通 `Exception` 时对外仍是 `ExceptionGroup`，原始失败是 `KeyboardInterrupt`、`SystemExit` 或其他直接 `BaseException` 时则由 `BaseExceptionGroup` 保真，不能再被“分组类型不支持”产生的新 `TypeError` 遮蔽；Policy Overlay 冲突保留责任 `plugin_id`；ActivationSet 提供 LLM Registry 时，缺失所选 Provider 与对象身份不一致同样拒绝；插件 Policy/Middleware 真实经过 ToolRuntime 且名称进入 Composition Snapshot；命名 Verifier 只有显式选择才运行并追加 `verification/result`；Verifier 被 Gate 卡住时发布新 Generation，旧 Step 仍使用旧 Verifier，旧 Activation 直到 Lease 释放才 cleanup；取消 setup 会反向 dispose 四类新 Registration。旧式自定义 ActivationSet 没有 D3 `llms` 属性时，替换路径仍借用协调器已有核心 Registry；一旦候选显式提供 LLM Registry，就不能回退绕过身份守卫。CLI 测试还钉住自定义 Provider 必须同时显式启用插件和提供 Model、`--plugin-verifier`/`TRACEH_PLUGIN_VERIFIER` 必须显式启用插件、与 `--verify-command` 互斥，并在恢复命令中和插件 id 一起保真。若命令行显式选择一种 Verifier，它会覆盖较低优先级环境变量中的另一种；两种选择都来自命令行或都来自环境变量时仍明确报冲突。D3 原有三项反向验证继续保留；公开候选交接复核也做过反向验证：临时移除守卫时确定性测试稳定出现 `DID NOT RAISE`，恢复后才继续完整门禁；临时恢复“activate 后直接 transfer”的旧路径时，交接失败与 cleanup 失败测试会收到裸 `ValueError`，证明临时 Manager 的回滚保护不可省略；临时把 `BaseExceptionGroup` 换回 `ExceptionGroup` 时，直接 `BaseException` 反例稳定失败于 `TypeError: Cannot nest BaseExceptions in an ExceptionGroup`，恢复正确容器后交接四项契约与全量门禁重新通过。
 
 - EventStore expected-seq、尾部恢复和读取；
 - EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
@@ -1261,7 +1263,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后的中间基线为 960 项（959 通过、1 项跳过）；Stage B 后为 980 项（979 通过、1 项跳过）；Stage C 后为 999 项（998 通过、1 项跳过）；D0 后为 1003 项（1002 通过、1 项跳过）；D1 后为 1029 项（1028 通过、1 项跳过）；D2 程序化 Tool/Prompt/Policy Overlay 与 Policy 身份守卫加入后，当前真实收集 1053 项，完整门禁为 1052 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后为 960/959/1，Stage B 为 980/979/1，Stage C 为 999/998/1，D0 为 1003/1002/1，D1 为 1029/1028/1，D2 为 1053/1052/1；D3 当前真实收集 1088 项，完整门禁为 1087 passed、1 skipped。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1278,7 +1280,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | CLI 体验 | `chat` 已支持会话内连续输入、实时 Timeline（13.6）、Activity Heartbeat（13.7）与可收敛的 Ctrl+C（13.8），但仍无 token 流式输出、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`run`/`resume` 尚未接 Timeline | 在不破坏 Runtime 边界下扩展 Surface/UI 层，复用同一 Feed 与 Formatter |
 | 变量名校验只看形状 | `--api-key-env` 校验的是"是不是可用的变量名"，无法识别一个恰好合法的标识符其实是被粘错位置的 Key（`ghp_...`、`AKIA...` 会被接受，并出现在恢复命令里）。拒绝所有形似凭据的标识符会误伤 `GH_TOKEN` 这类正常名字 | 这是形状校验而非意图识别；错误路径已做到零回显，合法路径无法再进一步 |
 | Base URL 检查的能力边界 | 只做结构检查（userinfo/query/fragment）与解析失败保护，不是通用秘密探测器：无法判断一个普通路径段本身是不是凭据 | 需要更强保证时应由用户自己保管配置，而不是让显示层猜 |
-| 恢复命令不是配置快照 | `--verify-command` 一律不回显（任意 Shell 文本，无法证明其中没有凭据）；Base URL 仅按结构规则（userinfo/query/fragment）withhold，不是通用秘密探测器，无法判断普通路径段是否本身就是凭据 | 需要完整重建时由用户自己保管原始配置或 env-file；不要把"秘密永不打印"写成绝对承诺 |
+| 恢复命令不是配置快照 | `--verify-command` 一律不回显（任意 Shell 文本，无法证明其中没有凭据）；命名插件 Verifier 会作为安全 token 保留，但 Event Log 只持久化验证结果、不把其选择名当作 Session 兼容身份；Base URL 也只按结构规则（userinfo/query/fragment）withhold，不是通用秘密探测器 | 需要完整重建时由用户自己保管原始配置或 env-file，不要手工删改恢复命令中的 `--plugin-verifier`；不要把"秘密永不打印"写成绝对承诺 |
 | Scripted 游标不持久化 | 恢复命令携带 `--script` 绝对路径，但 Scripted Provider 的响应游标不跨进程保存，重新加载会从第一条响应开始 | 需要精确续跑脚本时应把游标也落盘，属于 Provider 层设计 |
 | Verifier 无等待提示 | Heartbeat 只覆盖 Model Attempt 与已准入 Tool；`CommandVerifier` 没有“开始”事件（协议只有结束时的 `verification/result`），因此慢验证命令在屏幕上仍然完全安静 | 需要覆盖就要新增 `verification/start` 一类协议事件，属于事件协议变更，另行设计；本轮明确拒绝用 UI 侧推测去猜它是否启动 |
 | 并发 Tool 完成时刻不可观察 | `ToolRuntime` 对 parallel-safe 组用 `gather`，整组完成才追加各条 `tool/result`。因此等待提示只能说“尚未报告完成”，完成耗时也是 `tool/admitted` → 持久化 `tool/result`，对组内工具会长于其自身执行时间 | 若要精确到单个工具，需要改 `ToolRuntime` 的事件排序；本轮不做，因为那会动到工具执行的持久化语义 |
@@ -1298,8 +1300,8 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | 自动压缩 | 只有手动 Replacement | 未来 Context/Compaction Plugin |
 | 插件切换的代码边界 | Stage C 的 `traceh chat` 已有 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none`；它只重做当前进程可发现的 Entry Point 激活，不重新导入已在 `sys.modules` 中的模块，也不安装/卸载 Wheel | 后续若需要动态安装、module reload 或文件监听，必须另设安全与所有权设计 |
 | 插件不是沙箱 | v0.4 只有 trusted、进程内插件。`isolated` 可声明但被明确拒绝。一个被启用的插件与 Harness 同进程、同权限运行，能做任何 Python 能做的事 | 真正的隔离需要进程边界、每次 context 调用的序列化契约与子进程崩溃失败模型；在此之前，“启用插件”等于“信任其作者” |
-| 插件贡献面很窄 | 当前仍只能提供 Tool、Prompt Section 与 Service，不能提供 Provider、Policy、Middleware、EventStore 或 Verifier | 后续按 ROADMAP 扩展 `PluginContext`，但每扩一项都要同步 Composition Snapshot 的可重建性 |
-| Scope Overlay 仍不是 scoped plugin activation | D1/D2 已解析程序化 Service、Tool、Prompt、Policy binding，并把模型可见结果纳入既有 Generation/Snapshot；但插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup，插件也不能通过 `PluginContext` 提供 Policy。当前单 Runtime 只有一条 Agent 层装配，不等于已有 AgentSupervisor | 子层插件生命周期与多 Agent Scope 所有权留给后续明确设计；不得把程序化 binding 误称为插件已能自行选择 scope |
+| 插件贡献面仍有生命周期边界 | D3 已能提供 Provider、Policy、Middleware 和命名 Verifier，但全部是 application setup、trusted、进程内且 Generation-owned；EventStore 仍不能由插件提供 | EventStore 必须先有独立于 Step Generation 的进程级固定插件所有权，不能把账本跟着 `/plugins` 切换 |
+| Scope Overlay 仍不是 scoped plugin activation | D1/D2 已解析程序化 Service、Tool、Prompt、Policy binding，并把模型可见结果纳入既有 Generation/Snapshot；D3 的插件 Policy 仍来自 application setup。插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup。当前单 Runtime 只有一条 Agent 层装配，不等于已有 AgentSupervisor | 子层插件生命周期与多 Agent Scope 所有权留给后续明确设计；不得把程序化 binding 或 application 插件贡献误称为插件已能自行选择 scope |
 | Session 插件身份与迁移 | 当前身份由共享事件解析器按 `session/created`、合法 `composition/snapshot` 和 `composition/migration-authorized` 顺序重建；身份变化必须在全局 Gate 内以 `source_seq`/Session head CAS 追加授权。授权已落盘而 publish 失败时 fail-closed；不会自动迁移所有 Session。版本按 PEP 440 等价判定 | 仍没有 Session 自动迁移、批量迁移或跨进程迁移协调；每次授权仍由用户命令显式触发，Generation identity 不持久化 |
 | 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
 | 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
@@ -1359,7 +1361,7 @@ flowchart LR
 - 示例只作为示例，秘密未进入 Git；
 - 最终交付说明变更、验证、文档同步和剩余边界。
 
-## 19. 插件系统（v0.4 / Stage A–D2）
+## 19. 插件系统（v0.4 / Stage A–D3）
 
 作者与运维契约见 [`docs/plugins.md`](../plugins.md)，v0.4 事务原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)，Stage B 所有权决定见 [ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)，Stage C Session 迁移决定见 [ADR-0010](../adr/0010-session-plugin-composition-migration.md)，D0 控制面所有权拆分见 [ADR-0011](../adr/0011-plugin-composition-control-plane-coordinator.md)。本节记录工程事实。
 
@@ -1450,7 +1452,7 @@ flowchart TD
 
 ### 19.7 Generation 主线、ActivationSet 与仍未实现的用户热更新
 
-Stage A 已把 Generation-backed Composition Runtime 接入两个默认工厂；Stage B 又把 Generation-owned `PluginActivationSet` 接入无插件、启动插件和内部候选替换路径。`PluginGenerationBuilder` 为每次候选创建独立的 Tool、Prompt、Service 注册表视图，`PluginManager` 在这些私有注册表中完成 discovery、依赖排序、Manifest 校验、setup、冲突检查和 health check；成功后只把一次性 Activation 所有权转交给 ActivationSet。候选构造或 publish 失败会立即逆序 rollback，current Generation 不变。`AgentLoop` 继续只依赖 `CompositionRuntime.lease()`，不导入 PluginManager、Builder 或 reload service。
+Stage A 已把 Generation-backed Composition Runtime 接入两个默认工厂；Stage B 又把 Generation-owned `PluginActivationSet` 接入无插件、启动插件和内部候选替换路径。`PluginGenerationBuilder` 为每次候选创建独立的 Tool、Prompt、Service 注册表视图，`PluginManager` 在这些私有注册表中完成 discovery、依赖排序、Manifest 校验、setup、冲突检查和 health check；成功后只把一次性 Activation 所有权转交给 ActivationSet。`activate()` 成功到 `PluginActivationSet` 构造成功属于同一个事务：receipt 或 Scope 校验在交接构造中失败时，调用方尚未拿到候选，临时 Manager 仍是唯一 cleanup owner，Builder 必须先完整 dispose 它再返回错误。候选构造或 publish 失败都会立即逆序 rollback，current Generation 不变。`AgentLoop` 继续只依赖 `CompositionRuntime.lease()`，不导入 PluginManager、Builder 或 reload service。
 
 一个 Generation 是一组在构造时捕获的不可变运行能力引用：LLM Registry/Provider、Provider 名称、Model、Prompt sections、Tool schemas/ToolRuntime、Plugin Identity、Policy/Middleware 和模型参数一起绑定。Tool 的 name、description、input_schema、effect_kind 会进入真正只读、扁平且幂等的适配器，公开属性没有赋值或删除入口，嵌套 Schema 也被冻结，执行仍委托给捕获的 Tool；Provider、Policy 和 Middleware 的模型可见名称也由冻结适配器捕获，因此 Snapshot 不会重新读取活对象。Generation identity 的一次性发布状态与资源 cleanup ownership 是两件独立的事：Stage A 的 capability-wide `CompositionResourceOwner` 仍由显式装配使用；Stage B 的插件 cleanup 绑定到一次性 ActivationSet，而不是绑定到共享 core 能力。SessionService、EventStore、核心 Provider、内置 Tool 和基础配置是 borrowed core；插件 Activation、插件 Tool、Prompt Section、Service、Owned Task 和 cleanup callback 是 generation-owned。插件 ActivationSet 不能被两个 Generation 或两个 Runtime 接收，也不能被 PluginManager 留作第二个 cleanup owner。
 
@@ -1466,7 +1468,7 @@ D0 不改变上述协议，只重新划清控制面所有权。[`runtime/plugin_
 
 当前身份事实由 [`session/plugin_identity.py`](../../src/traceh/session/plugin_identity.py) 共享计算：初始值来自 `session/created.metadata.traceh_plugins`，合法 `composition/snapshot` 更新到实际 Step 身份，合法 `composition/migration-authorized` 要求 `from_plugins` 等于此前身份且 `source_seq` 等于此前身份事实序号，然后更新到 `to_plugins`。迁移事件只记录外部插件，不写 `traceh.core`、Generation identity 或 Request Fingerprint。候选通过 setup/conflict/health 后才追加授权；append 取消会按稳定 `migration_id` 重读判断是否已落盘。若授权已落盘但 publish 失败，Runtime 不伪造成功，也不继续接受旧 Composition，Session 保持 fail-closed。
 
-本阶段仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup、Provider/Policy/Middleware/EventStore/Verifier 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D2 的 Tool/Prompt/Policy 是宿主程序显式装配的 binding，不是插件新增了子层 setup 权限。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。版本仍为 `0.4.0`，Stage D2 不是 v0.5 发布。
+本阶段仍没有运行中 pip install/uninstall、强制 `importlib.reload()`、文件 watcher、Workspace/Preset/Agent 层的插件 setup、EventStore 插件贡献、isolated 插件、多 Agent、Workflow、MCP、TUI 或模型流式输出。D2 的 Tool/Prompt/Policy 是宿主程序显式装配；D3 新增的 Provider/Policy/Middleware/Verifier 也仍属于 application setup。Python module 可能仍在 `sys.modules` 中，`/plugins reload` 不是从磁盘重新加载修改后的源码。版本仍为 `0.4.0`，Stage D3 不是 v0.5 发布。
 
 `trust_mode="isolated"` 被**明确拒绝**而不是降级成 trusted：把“请求隔离”当成“允许进程内运行”的许可，等于给了插件比它申请的更高权限。真正的隔离需要进程边界、每次 context 调用的序列化契约和子进程崩溃的失败模型，这些都还不存在。
 
@@ -1542,4 +1544,14 @@ Tool、Prompt、Policy 都以稳定名字作为覆盖身份。相同 scope 的�
 
 插件 Tool/Prompt 仍由 application setup 贡献，因此有一个晚到祖先问题：初次解析 child Overlay 时插件内容尚不存在。Manager 会把 staged application Tool/Prompt 投影到私有候选，**在 health check 之前**再次解析 child Overlay；隐式覆盖因此以稳定 code 和责任 `plugin_id` 失败并回滚，第三方 health 不会获得一次本来就不该发生的执行机会。全部插件真实发布后再解析一次，最终 Tool/Prompt/Policy 三者一起转移到 ActivationSet。后续插件组合替换继续使用 Builder 保存的 child blueprint；协调器构造候选 ToolRuntime 时必须使用 ActivationSet 的 Policy tuple，CompositionGeneration 按长度、顺序和逐项 `is` 对象身份校验二者一致，绝不调用可由第三方重载的 `__eq__`。因此名称相同但 admission 行为不同的 Policy 不能伪装成同一候选能力。
 
-D2 只增加宿主装配能力：`PluginContext` 仍只有 Tool、Prompt、Service、cleanup 和 owned task；插件不能提供 Policy，也不能选择 Workspace/Preset/Agent 执行 setup。Binding 中的程序化 Tool/Policy 是借用能力，其生命周期仍由装配调用者持有；application 插件资源仍由对应 ActivationSet 清理。两个 Runtime 可以装配不同的 Agent Tool/Prompt/Policy，真实 Tool admission 与 Request Snapshot 会反映各自结果，但当前还没有 `AgentSupervisor` 去创建和管理两个 Agent。
+D2 只增加宿主装配能力；D3 才在下一层正式扩宽 `PluginContext`，见下一节。Binding 中的程序化 Tool/Policy 是借用能力，其生命周期仍由装配调用者持有；application 插件资源由对应 ActivationSet 清理。两个 Runtime 可以装配不同的 Agent Tool/Prompt/Policy，真实 Tool admission 与 Request Snapshot 会反映各自结果，但当前还没有 `AgentSupervisor` 去创建和管理两个 Agent。
+
+### 19.15 D3：Provider、Policy、Middleware 与 Verifier 插件贡献
+
+D3 没有给四类能力另建“插件 Runtime”。`PluginContext.register_provider()` 写入候选 `LlmRegistry`，`register_policy()` 与 `register_middleware()` 进入候选 ToolRuntime，`register_verifier(name, verifier)` 写入命名候选；这些 Registration 都归当前 Activation，setup、conflict、health、publish、rollback、最后 Lease cleanup 继续使用同一事务。**setup 是唯一允许改变候选 Composition 的阶段**：全部插件 setup 完成后，Manager 会先关闭每个 Context 的 Provider/Policy/Middleware/Verifier/Tool/Prompt/Service 注册入口，再做冲突检查和 health。health 仍可读取配置与 Service，并可登记 cleanup/Owned Task，但不能补注册执行能力；尝试晚注册会成为有界的 `plugin-health-check-failed` 并走同一回滚，不可能绕过 pre-health 检查。关掉方法本身还不够：Tool、Provider、Policy、Middleware 的名称会在注册时单独捕获，冲突检查、Overlay 归因和选择判断只读这份事务事实；setup 后、每次 health 返回后及带 `await` 的 Service 发布结束后都会校验原对象名称仍一致。任何漂移都以 `plugin-contribution-identity-changed` 拒绝并逆序回滚；Tool/LLM Registration 撤销同样使用注册时键，不会因对象改名清错槽位。`prepare_activation_set()` 是公开的异步交接边界，返回后调用方可能在构造 Generation 前再次 `await`；因此 ActivationSet 在 transfer 时保存不可变 capability receipt，Generation claim 前重新核对候选 Registry 容器、成员对象、固定名称、Prompt、Policy/Middleware、Verifier 与插件身份。交接不是在 `activate()` 返回时完成，而是在 ActivationSet 构造成功后才完成；如果 receipt 自身发现 Registry key 与活对象身份已经分裂，Builder 会 dispose 尚未转移所有权的临时 Manager，取消并等待 Owned Task、逆序 cleanup 每个 Activation，然后重新抛出原始交接错误。清理期间的重复取消不会让调用方提前返回；清理也失败时，两份错误通过 `BaseExceptionGroup` 构造器一起保留：成员全是普通 `Exception` 时 Python 自动派生为 `ExceptionGroup`，而 `KeyboardInterrupt`、`SystemExit` 等直接 `BaseException` 仍能留在 `BaseExceptionGroup` 中，不会被新的分组 `TypeError` 遮蔽。Generation 复核失败则由已经拿到 ActivationSet 的调用方按既有候选 cleanup 协议负责。Tool schema 与 ToolRuntime 查找键都以已经登记的 Registry key 为准，不能出现 Snapshot 宣称新名字而执行表仍只认旧名字。Provider/Policy/Middleware 名字必须满足通用能力名规则，实现必须提供相应的 `complete()`、`check()`、`invoke()`；Verifier 由注册时的显式名字标识并要求 `verify()`。它们不能隐式覆盖宿主同名能力：Provider、Policy、Middleware 分别用 `provider-publish-conflict`、`policy-publish-conflict`、`middleware-publish-conflict` 在 health 前拒绝；同一候选内部的重复注册则在 setup 阶段按既有事务失败并回滚。插件 Policy 与 child Overlay 冲突时也保留稳定 code 和责任 `plugin_id`。
+
+“注册了”不等于“自动接管”。有效 Provider 仍由 `RuntimeConfig.provider` / CLI `--provider` 明确选择；自定义名字只有在同时显式启用至少一个插件时才被 CLI 接受，并且必须明确提供 Model。Verifier 同样由 `verifier_name` / `--plugin-verifier` / `TRACEH_PLUGIN_VERIFIER` 选择；没有选择时，插件 Verifier 不运行，现有直接 Verifier 或 `--verify-command` 语义不变。命名插件 Verifier 与命令 Verifier 互斥，缺失显式目标分别得到 `provider-not-provided` 或 `verifier-not-provided`，并在 health 前回滚，而不是从“唯一看起来像候选”的对象猜默认值。
+
+`PluginActivationSet` 现在随 Tool/Prompt/Service/Policy 一起持有候选 LLM Registry、Middleware tuple 与有效 Verifier。`CompositionGeneration` 对选中 Provider、Policy、Middleware 和 Verifier 都做对象身份守卫；ToolRuntime 不能换成名称相同、行为不同的对象。若 ActivationSet 显式提供 LLM Registry，所选 Provider 必须存在于该 Registry，且必须与 Runtime 使用的对象逐项 `is` 相同；“候选里没有，但另一个 Registry 里恰好有同名 Provider”不是回退条件。为保持 D0 的自定义 ActivationSet 替换合同，只有完全没有 `llms` 属性（或明确为 `None`）的旧式对象，协调器才借用自身已有核心 Registry；显式提供 D3 Registry 的候选绝不会走这个兼容分支。`ActiveComposition` 把 Verifier 带进 Step Lease，AgentLoop 的验证阶段已移动到 `async with compositions.lease(...)` 内：模型响应、ToolRuntime 和验证器由同一个 Generation 冻结。发布新 Generation 时，正在验证的旧 Step 仍用旧 Verifier，旧插件 Activation 要等该 Lease 退出后才 cleanup。Snapshot 已记录 Provider、Policy/Middleware 名称和插件身份；Verifier 不影响发给模型的 Request，因此不新增 Request Fingerprint 字段，其真实结果仍由 `verification/result` 持久化。
+
+EventStore 刻意没有加入 `PluginContext`。它是 SessionService、Recovery、Inspector 和所有事件写入共同借用的**进程级事实源**，而当前插件 ActivationSet 会随 Step Generation retire。若让 `/plugins` 切换卸载 Store 插件，旧 Session 会继续握着已经被 cleanup 的账本实现，或者同一 Runtime 出现两本账。真正开放前必须先设计独立于 Generation 的 process-lifetime/pinned Activation 所有权、Store 构造与关闭顺序、旧 Session 兼容和合同测试；当前仍只能在 Runtime 构造时直接注入 EventStore。这个收窄记录在 [ADR-0014](../adr/0014-generation-scoped-plugin-execution-capabilities.md)。

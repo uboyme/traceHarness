@@ -1,11 +1,12 @@
-# Writing and running TraceHarness plugins (v0.4)
+# Writing and running TraceHarness plugins (v0.4 / v0.5 Stage D3)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
-[ADR-0010](adr/0010-session-plugin-composition-migration.md). This page is the author- and
-operator-facing contract. The package version remains `0.4.0`; Stage C adds a user control
-surface without claiming a v0.5 release.
+[ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
+ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
+page is the author- and operator-facing contract. The package version remains `0.4.0`; Stage
+D3 expands the contribution surface without claiming a v0.5 release.
 
 A working, buildable example is at
 [`../examples/plugins/traceh-example-skill-plugin/`](../examples/plugins/traceh-example-skill-plugin/).
@@ -17,6 +18,10 @@ A working, buildable example is at
 | Tool | `context.register_tool(tool)` | the existing `ToolRegistry` |
 | Prompt section | `context.register_prompt(section)` | the existing `PromptAssembler` |
 | Service | `await context.provide(key, value)` | the existing `ServiceRegistry` |
+| LLM provider | `context.register_provider(provider)` | the candidate `LlmRegistry`; explicit selection required |
+| Tool policy | `context.register_policy(policy)` | the existing ToolRuntime admission chain |
+| Tool middleware | `context.register_middleware(middleware)` | the existing ToolRuntime execution chain |
+| Named verifier | `context.register_verifier(name, verifier)` | the Step's Generation Lease; explicit selection required |
 | Cleanup | `context.add_cleanup(callback)` | the plugin's `Activation` |
 | Background task | `context.spawn_owned(coro, name=...)` | the plugin's `OwnedTaskSet` |
 
@@ -26,7 +31,8 @@ is admitted, scheduled, wrapped by middleware, and recorded as `tool/call`, `too
 
 `PluginContext` deliberately exposes no `AgentRuntime`, `AgentLoop`, `EventStore`,
 `ToolRegistry` or `PromptAssembler` object. Everything a plugin registers is reversible and
-owned by its activation.
+owned by its activation. EventStore is excluded because it is the process-lifetime Session
+fact source, not a Step Generation capability.
 
 ## 2. Packaging
 
@@ -78,6 +84,12 @@ or a zero-argument factory.
 `health_check` is optional. It may be sync or async, and may take the context or nothing.
 Returning `False` fails activation exactly as raising does.
 
+All Composition contributions must be registered during `setup()`. After every setup returns,
+the manager closes `register_*()` and `provide()` before conflict checks and health. A health
+check may inspect configuration and Services and may attach lifecycle cleanup or Owned Tasks,
+but attempting to add a late Tool, Prompt, Service, Provider, Policy, Middleware or Verifier
+fails health and rolls the candidate back.
+
 ### Manifest fields
 
 | Field | Meaning |
@@ -109,6 +121,18 @@ Any `--plugin` occurrence **replaces** `TRACEH_PLUGINS` entirely rather than add
 so a command line always fully determines what runs. `run`, `chat` and `resume` share this
 one rule. The read-only commands (`inspect`, `replay`, `recover`, `compact`, `sessions`)
 never activate plugins and take no `--plugin`.
+
+Registering a Provider or Verifier still does not select it. The operator must name it:
+
+```powershell
+traceh run <workspace> "task" --plugin my.plugin.id --provider my.provider --model my-model
+traceh run <workspace> "task" --plugin my.plugin.id --plugin-verifier my.verifier
+```
+
+A custom Provider requires an explicit plugin and Model. `--plugin-verifier` (or
+`TRACEH_PLUGIN_VERIFIER`) requires an explicit plugin and is mutually exclusive with
+`--verify-command`. If no plugin Provider/Verifier is selected, merely enabling the plugin
+does not replace the existing model or completion behavior.
 
 When `traceh chat` is idle, Stage C also permits composition control for plugins that the
 current process can already discover:
@@ -152,7 +176,8 @@ flowchart TD
     LOAD --> MAN["Validate every manifest field"]
     MAN --> DEP["Resolve dependencies; deterministic topological order"]
     DEP --> SETUP["Phase 1: setup() against private staged registries"]
-    SETUP --> CONF["Phase 2: full conflict check vs core registries"]
+    SETUP --> FREEZE["Close every Composition contribution method"]
+    FREEZE --> CONF["Phase 2: full conflict check vs core registries"]
     CONF --> HEALTH["Phase 3: health_check()"]
     HEALTH --> PUB["Phase 4: atomic publish into a new Composition Generation"]
     PUB --> RUN["New Steps use the new Generation; old Leases retain the old set"]
@@ -165,6 +190,9 @@ flowchart TD
 
 Conflicts are checked **before** health checks: a plugin already known to collide never
 gets to run its health check.
+
+The staged contribution set is also frozen before that check. Health cannot add a capability
+after the manager has declared the candidate conflict-free.
 
 Cancellation is not a failure. Interrupting activation unwinds everything and re-raises the
 original `CancelledError`; a second or third Ctrl+C is absorbed and does not release the
@@ -209,20 +237,21 @@ messages are written by this repository.
 | `manifest` | `plugin-id-mismatch`, `plugin-id-reserved`, `traceh-api-incompatible`, `application-scope-not-allowed`, `isolated-mode-unsupported`, `provides-duplicate` |
 | `dependency` | `required-plugin-missing`, `plugin-version-incompatible`, `plugin-dependency-cycle`, `provides-conflict` |
 | `setup` / `health` | `plugin-setup-failed`, `plugin-health-check-failed` |
-| `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict`, `service-override-api-major-mismatch`, or a host-overlay `tool-*` / `prompt-*` replacement code |
+| `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict`, `provider-publish-conflict`, `policy-publish-conflict`, `middleware-publish-conflict`, `service-override-api-major-mismatch`, `plugin-contribution-identity-changed` (a registered Tool/Provider/Policy/Middleware changed its name), or a host-overlay `tool-*` / `prompt-*` / `policy-*` replacement code; overlay failures retain the responsible plugin id. A public prepared candidate is revalidated again at Generation claim, so post-prepare identity drift is rejected before publication. |
+| `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.4 and Stage D2
+## 9. Limits of v0.4 and Stage D3
 
 - Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
   Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to
-  Runtime assembly, but a plugin is not activated independently at those nearer layers and
-  cannot provide Policy through `PluginContext`.
+  Runtime assembly, but a plugin is not activated independently at those nearer layers.
 - Chat composition switching is available only while the prompt is idle and only for
   already-installed, already-discoverable Entry Point plugins. It is a rebuild and publish,
   not source-code hot reload: there is no running `pip install/uninstall`, Wheel replacement,
   `importlib.reload()`, file watcher, or automatic Session migration.
-- Service resolution and the effective Tool/Prompt/Policy composition are captured per
+- Service resolution and the effective Provider/Tool/Prompt/Policy/Middleware/Verifier
+  composition are captured per
   Generation and Step Lease. A migration still requires no active Turn in the Runtime and an
   explicit authorization for the current Session; other Sessions are not migrated
   automatically.
@@ -231,8 +260,10 @@ messages are written by this repository.
   conflicts retain the responsible plugin id. The Tool/Prompt/Policy bindings belong to host
   assembly; they are not a new plugin registration API.
 - `isolated` is rejected, not implemented.
-- No plugin-supplied `LlmProvider`, `ToolPolicy`, `ToolMiddleware`, `EventStore` or
-  `CompletionVerifier` yet - the context exposes tools, prompts and services only.
+- Plugins may now supply `LlmProvider`, `ToolPolicy`, `ToolMiddleware` and named
+  `CompletionVerifier` values at application setup. They still cannot supply `EventStore`;
+  replacing the ledger needs a separate process-lifetime pinned owner rather than a
+  Generation-owned ActivationSet.
 - No MCP, multi-agent or workflow surface.
 
 ## 10. Relationship to DeepSeek Harness

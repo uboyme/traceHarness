@@ -43,6 +43,9 @@ async def main(scratch: Path) -> dict:
     report["installed_versions"] = {
         "traceharness-py": metadata.version("traceharness-py"),
         "traceh-example-skill-plugin": metadata.version("traceh-example-skill-plugin"),
+        "traceh-plugin-creator-skill-plugin": metadata.version(
+            "traceh-plugin-creator-skill-plugin"
+        ),
         "traceh-python-quality-plugin": metadata.version("traceh-python-quality-plugin"),
         "packaging": metadata.version("packaging"),
     }
@@ -70,6 +73,12 @@ async def main(scratch: Path) -> dict:
         "doctor-python-quality": await doctor_plugins(
             ["traceh.python.quality"], json_output=False
         ),
+        "inspect-plugin-creator": inspect_plugin(
+            "traceh.plugin.creator", json_output=False
+        ),
+        "doctor-plugin-creator": await doctor_plugins(
+            ["traceh.plugin.creator"], json_output=False
+        ),
     }
 
     # 4. A default runtime with no plugins must be unchanged.
@@ -78,6 +87,8 @@ async def main(scratch: Path) -> dict:
         "tools": list(plain.loop.compositions.tools.registry.names()),
         "plugins": [identity.to_dict() for identity in plain.plugins],
         "prompt_has_plugin_section": "traceh.example.skill"
+        in plain.loop.compositions.prompt.section_ids(),
+        "prompt_has_creator_section": "traceh.plugin.creator"
         in plain.loop.compositions.prompt.section_ids(),
     }
 
@@ -148,7 +159,87 @@ async def main(scratch: Path) -> dict:
 
     report["after_dispose_tools"] = list(runtime.loop.compositions.tools.registry.names())
 
-    # 6. The v0.5 acceptance plugin contributes four capability types from a
+    # 6. The L1 Plugin Creator is an independent, source-only skill Wheel.  It
+    # reaches the model through the existing Prompt/Tool path and its guide
+    # performs no workspace write while the normal Event/Effect evidence closes.
+    creator_workspace = scratch / "creator-ws"
+    creator_workspace.mkdir(parents=True, exist_ok=True)
+    creator_provider = ScriptedLlmProvider(
+        (
+            ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        id="creator-guide",
+                        name="traceh_plugin_creator_guide",
+                        arguments={"topic": "workflow"},
+                    ),
+                ),
+            ),
+            ModelResponse(content="The source-only candidate workflow is ready."),
+        )
+    )
+    creator_runtime = await build_default_runtime_async(
+        RuntimeConfig(data_dir=scratch / "creator-data"),
+        provider=creator_provider,
+        enabled_plugins=("traceh.plugin.creator",),
+    )
+    try:
+        creator_result = await creator_runtime.run(
+            creator_workspace,
+            "read the plugin-candidate workflow",
+        )
+        creator_session = (await creator_runtime.sessions.list_sessions())[0]
+        creator_events = await creator_runtime.sessions.read_session(creator_session)
+        creator_effects = await creator_runtime.sessions.read_effects(creator_session)
+        creator_calls = [event for event in creator_events if event.type == "tool/call"]
+        creator_results = [event for event in creator_events if event.type == "tool/result"]
+        creator_intents = [event for event in creator_effects if event.type == "effect/intent"]
+        creator_outcomes = [
+            event for event in creator_effects if event.type == "effect/outcome"
+        ]
+        creator_snapshots = [
+            event for event in creator_events if event.type == "composition/snapshot"
+        ]
+        report["plugin_creator"] = {
+            "turn": {"reason": creator_result.reason, "steps": creator_result.steps},
+            "called_tool_names": [event.data.get("tool_name") for event in creator_calls],
+            "pairing": {
+                "tool_calls": len(creator_calls),
+                "tool_results": len(creator_results),
+                "effect_intents": len(creator_intents),
+                "effect_outcomes": len(creator_outcomes),
+            },
+            "result_mentions_candidate_workspace": any(
+                "Candidate Workspace" in str(event.data) for event in creator_results
+            ),
+            "prompt_contains_section": (
+                "Plugin Creator Skill"
+                in creator_runtime.loop.compositions.prompt.assemble(
+                    workspace=str(creator_workspace)
+                )
+            ),
+            "workspace_entries": sorted(path.name for path in creator_workspace.iterdir()),
+            "snapshot_plugins": creator_snapshots[-1].data.get("plugins"),
+            "invariant_violations": [
+                violation.rule
+                for violation in creator_runtime.invariants.check(
+                    creator_events,
+                    creator_effects,
+                )
+            ],
+            "reconstruction_violations": [
+                str(item)
+                for item in await verify_request_snapshots(
+                    creator_runtime.sessions,
+                    creator_runtime.surface,
+                    creator_session,
+                )
+            ],
+        }
+    finally:
+        await creator_runtime.dispose()
+
+    # 7. The v0.5 acceptance plugin contributes four capability types from a
     # separate wheel.  Its Policy must deny before a process effect is created,
     # its read-only Tool must execute through the normal ToolRuntime, and its
     # named Verifier must run through the Step's Generation Lease.

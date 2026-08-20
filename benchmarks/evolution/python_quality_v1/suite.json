@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "suite_id": "traceh.python-quality.v1",
+  "target_plugin_id": "traceh.python.quality",
+  "cases": [
+    {
+      "id": "quality-capabilities",
+      "task": "Inspect this Python project, avoid unsafe environment mutation, and finish with test evidence.",
+      "initial_dir": "quality_capabilities/initial",
+      "script": "quality_capabilities/script.json",
+      "baseline_verifier": {
+        "kind": "command",
+        "argv": ["{python}", "-m", "unittest", "-v"],
+        "timeout_seconds": 60
+      },
+      "candidate_verifier": {
+        "kind": "plugin",
+        "name": "python-tests",
+        "timeout_seconds": 60
+      },
+      "max_steps": 6,
+      "max_verification_retries": 0,
+      "expected": {
+        "reason": "completed",
+        "verification_passed": true,
+        "tool_results": [
+          {
+            "tool_name": "shell",
+            "status": "denied",
+            "policy": "python-environment-safety"
+          },
+          {
+            "tool_name": "python_project_info",
+            "status": "succeeded",
+            "policy": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "python-fix-no-regression",
+      "task": "Fix the addition bug and rely on the configured verifier for completion evidence.",
+      "initial_dir": "python_fix_no_regression/initial",
+      "script": "python_fix_no_regression/script.json",
+      "baseline_verifier": {
+        "kind": "command",
+        "argv": ["{python}", "-m", "unittest", "-v"],
+        "timeout_seconds": 60
+      },
+      "candidate_verifier": {
+        "kind": "plugin",
+        "name": "python-tests",
+        "timeout_seconds": 60
+      },
+      "max_steps": 6,
+      "max_verification_retries": 0,
+      "expected": {
+        "reason": "completed",
+        "verification_passed": true,
+        "tool_results": [
+          {"tool_name": "read_file", "status": "succeeded", "policy": null},
+          {"tool_name": "apply_patch", "status": "succeeded", "policy": null}
+        ]
+      }
+    },
+    {
+      "id": "verification-failure-is-honest",
+      "task": "Finish only if the declared project verification succeeds.",
+      "initial_dir": "verification_failure/initial",
+      "script": "verification_failure/script.json",
+      "baseline_verifier": {
+        "kind": "command",
+        "argv": ["{python}", "-m", "unittest", "-v"],
+        "timeout_seconds": 60
+      },
+      "candidate_verifier": {
+        "kind": "plugin",
+        "name": "python-tests",
+        "timeout_seconds": 60
+      },
+      "max_steps": 3,
+      "max_verification_retries": 0,
+      "expected": {
+        "reason": "verification_failed",
+        "verification_passed": false,
+        "tool_results": []
+      }
+    }
+  ]
+}

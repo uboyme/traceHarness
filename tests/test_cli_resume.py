@@ -300,7 +300,11 @@ def test_an_overridden_verifier_is_not_claimed_to_come_from_the_env_file(
 
     assert console.has("re-supply it manually")
     assert not console.has("restored by the env file")
-    for fragment in ("sk-proj", "FAKE0000FIXTURE", "--token", "-q"):
+    # ``-q`` alone is not a credential-bearing verifier identity: it can also
+    # occur inside an unrelated temporary directory name.  The distinctive
+    # token-shaped and option fragments prove the verifier was withheld
+    # without making the assertion depend on random parent paths.
+    for fragment in ("sk-proj", "FAKE0000FIXTURE", "--token"):
         assert fragment not in console.output
 
 

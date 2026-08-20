@@ -20,6 +20,7 @@ from traceh.cli.chat import (
     chat_target,
     run_chat,
 )
+from traceh.cli.command_line import escape_for_display
 from traceh.cli.console import configure_stdio, default_console
 from traceh.cli.env_file import (
     EnvFileError,
@@ -30,6 +31,20 @@ from traceh.cli.env_file import (
 from traceh.cli.errors import CliConfigurationError
 from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
 from traceh.evaluation.runner import BenchmarkRunner
+from traceh.evolution.artifacts import ArtifactContractError
+from traceh.evolution.candidate_comparison import (
+    COMPARISON_EXIT_CODE,
+    CandidateComparator,
+    CandidateComparisonConfig,
+    CandidateComparisonConfigurationError,
+    CandidateComparisonEvidenceError,
+)
+from traceh.evolution.candidate_validation import (
+    VALIDATION_EXIT_CODE,
+    CandidateValidationConfig,
+    CandidateValidationConfigurationError,
+    CandidateValidator,
+)
 from traceh.inspector import SessionInspector
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
 from traceh.llm.scripted import ScriptedLlmProvider
@@ -420,6 +435,122 @@ async def _plugins_doctor(args: argparse.Namespace) -> int:
     return await doctor_plugins(args.plugin_ids, json_output=args.json)
 
 
+async def _plugins_validate(args: argparse.Namespace) -> int:
+    try:
+        report = await CandidateValidator(
+            CandidateValidationConfig(
+                candidate=args.candidate,
+                core_project=args.core_project,
+                output=args.output,
+                plugin_id=args.plugin_id,
+                distribution=args.distribution,
+                wheelhouse=args.wheelhouse,
+                allow_index=args.allow_index,
+                test_requirements=tuple(args.test_requirement),
+                command_timeout_seconds=args.command_timeout_seconds,
+                core_timeout_seconds=args.core_timeout_seconds,
+            )
+        ).run()
+    except CandidateValidationConfigurationError:
+        _print_validation_configuration_failure(args, "candidate-validation-configuration-invalid")
+        return VALIDATION_EXIT_CODE
+    except (ArtifactContractError, OSError):
+        _print_validation_configuration_failure(args, "candidate-validation-io-failed")
+        return VALIDATION_EXIT_CODE
+    result = {
+        "command": "validate",
+        "ok": report.ok,
+        "report_json": str(args.output.resolve() / "report.json"),
+        "report_markdown": str(args.output.resolve() / "report.md"),
+        "artifact": report.artifact.filename if report.artifact is not None else None,
+    }
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print("traceh plugins validate")
+        print(f"  ok={str(report.ok).lower()}")
+        report_path = escape_for_display(str(args.output.resolve() / "report.md"), limit=500)
+        print(f"  report={report_path}")
+        if report.artifact is not None:
+            artifact_path = escape_for_display(
+                str(args.output.resolve() / report.artifact.filename),
+                limit=500,
+            )
+            print(f"  artifact={artifact_path}")
+    return 0 if report.ok else VALIDATION_EXIT_CODE
+
+
+async def _plugins_compare(args: argparse.Namespace) -> int:
+    try:
+        report = await CandidateComparator(
+            CandidateComparisonConfig(
+                validation_evidence=args.validation_evidence,
+                core_project=args.core_project,
+                suite=args.suite,
+                output=args.output,
+                wheelhouse=args.wheelhouse,
+                allow_index=args.allow_index,
+                test_requirements=tuple(args.test_requirement),
+                command_timeout_seconds=args.command_timeout_seconds,
+            )
+        ).run()
+    except (
+        ArtifactContractError,
+        CandidateComparisonConfigurationError,
+        CandidateComparisonEvidenceError,
+        OSError,
+    ):
+        if args.json:
+            print(
+                json.dumps(
+                    {
+                        "command": "compare",
+                        "ok": False,
+                        "code": "candidate-comparison-failed",
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        else:
+            print("candidate comparison configuration or evidence is invalid")
+        return COMPARISON_EXIT_CODE
+    result = {
+        "command": "compare",
+        "ok": report.ok,
+        "classification": report.classification,
+        "improvements": list(report.improvements),
+        "regressions": list(report.regressions),
+        "report_json": str(args.output.resolve() / "report.json"),
+        "report_markdown": str(args.output.resolve() / "report.md"),
+    }
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print("traceh plugins compare")
+        print(f"  classification={report.classification}")
+        print(f"  improvements={len(report.improvements)}")
+        print(f"  regressions={len(report.regressions)}")
+        report_path = escape_for_display(str(args.output.resolve() / "report.md"), limit=500)
+        print(f"  report={report_path}")
+    return 0
+
+
+def _print_validation_configuration_failure(args: argparse.Namespace, code: str) -> None:
+    if args.json:
+        print(
+            json.dumps(
+                {"command": "validate", "ok": False, "code": code},
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return
+    print("candidate validation configuration is invalid")
+
+
 def _doctor(args: argparse.Namespace) -> int:
     data_dir = args.data_dir.resolve()
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -556,6 +687,53 @@ def build_parser() -> argparse.ArgumentParser:
     plugin_doctor.add_argument("plugin_ids", nargs="*")
     plugin_doctor.add_argument("--json", action="store_true")
     plugin_doctor.set_defaults(handler=_plugins_doctor)
+
+    plugin_validate = plugin_sub.add_parser(
+        "validate",
+        help="Build and independently validate one source-only plugin candidate",
+    )
+    plugin_validate.add_argument("candidate", type=Path)
+    plugin_validate.add_argument("--core-project", type=Path, required=True)
+    plugin_validate.add_argument("--output", type=Path, required=True)
+    plugin_validate.add_argument("--plugin-id")
+    plugin_validate.add_argument("--distribution")
+    dependency_source = plugin_validate.add_mutually_exclusive_group(required=True)
+    dependency_source.add_argument("--wheelhouse", type=Path)
+    dependency_source.add_argument(
+        "--allow-index",
+        action="store_true",
+        help="Allow pip to resolve build, runtime and test dependencies from its index",
+    )
+    plugin_validate.add_argument("--test-requirement", action="append", default=[])
+    plugin_validate.add_argument("--command-timeout-seconds", type=float, default=600.0)
+    plugin_validate.add_argument("--core-timeout-seconds", type=float, default=1800.0)
+    plugin_validate.add_argument("--json", action="store_true")
+    plugin_validate.set_defaults(handler=_plugins_validate)
+
+    plugin_compare = plugin_sub.add_parser(
+        "compare",
+        help="Compare one exact L2 artifact with its disabled baseline",
+    )
+    plugin_compare.add_argument("validation_evidence", type=Path)
+    plugin_compare.add_argument("--core-project", type=Path, required=True)
+    plugin_compare.add_argument(
+        "--suite",
+        type=Path,
+        required=True,
+        help="Relative path of a fixed task suite inside the trusted core commit",
+    )
+    plugin_compare.add_argument("--output", type=Path, required=True)
+    comparison_source = plugin_compare.add_mutually_exclusive_group(required=True)
+    comparison_source.add_argument("--wheelhouse", type=Path)
+    comparison_source.add_argument(
+        "--allow-index",
+        action="store_true",
+        help="Allow pip to resolve comparison-environment dependencies from its index",
+    )
+    plugin_compare.add_argument("--test-requirement", action="append", default=[])
+    plugin_compare.add_argument("--command-timeout-seconds", type=float, default=600.0)
+    plugin_compare.add_argument("--json", action="store_true")
+    plugin_compare.set_defaults(handler=_plugins_compare)
 
     doctor = sub.add_parser("doctor", help="Check the local runtime environment")
     _add_storage_arguments(doctor)

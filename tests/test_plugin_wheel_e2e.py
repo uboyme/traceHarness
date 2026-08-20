@@ -6,13 +6,13 @@ about packaging: it cannot show that a separately built distribution declaring
 ``traceharness-py>=0.5,<0.6`` actually installs alongside this build, or that
 ``importlib.metadata`` finds it.
 
-So this module builds the harness plus two independent plugin wheels, populates
+So this module builds the harness plus three independent plugin wheels, populates
 an offline wheelhouse (including ``packaging``), creates a fresh venv, installs
-with ``--no-index``, and runs both plugin mainlines inside it.  The Python
+with ``--no-index``, and runs their plugin mainlines inside it.  The Python
 Quality distribution is the v0.5 release acceptance plugin: it proves
 Tool, Prompt, Policy and named Verifier contributions from a real wheel.
 
-It is slow by nature - one venv and three wheel builds - so it is marked
+It is slow by nature - one venv and four wheel builds - so it is marked
 ``slow``. Deselect with ``-m "not slow"``.
 """
 
@@ -26,8 +26,16 @@ from pathlib import Path
 
 import pytest
 
+from traceh.evolution.artifacts import (
+    copy_declared_build_input as copy_clean_build_input,
+)
+from traceh.evolution.artifacts import transient_wheel_members
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_PLUGIN = PROJECT_ROOT / "examples" / "plugins" / "traceh-example-skill-plugin"
+PLUGIN_CREATOR = (
+    PROJECT_ROOT / "examples" / "plugins" / "traceh-plugin-creator-skill-plugin"
+)
 PYTHON_QUALITY_PLUGIN = (
     PROJECT_ROOT / "examples" / "plugins" / "traceh-python-quality-plugin"
 )
@@ -53,18 +61,53 @@ def venv_python(venv: Path) -> Path:
     return venv / "bin" / "python"
 
 
+def test_clean_build_input_excludes_transient_artifacts(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    package = project / "src" / "candidate_package"
+    package.mkdir(parents=True)
+    (project / "pyproject.toml").write_text("[build-system]\n", encoding="utf-8")
+    (project / "README.md").write_text("candidate\n", encoding="utf-8")
+    (package / "__init__.py").write_text("VALUE = 1\n", encoding="utf-8")
+    cache = package / "__pycache__"
+    cache.mkdir()
+    (cache / "__init__.cpython-312.pyc").write_bytes(b"stale bytecode")
+    egg_info = project / "src" / "candidate_package.egg-info"
+    egg_info.mkdir()
+    (egg_info / "PKG-INFO").write_text("stale metadata\n", encoding="utf-8")
+
+    copied = copy_clean_build_input(project, tmp_path / "clean")
+
+    assert (copied / "src" / "candidate_package" / "__init__.py").is_file()
+    assert not (copied / "src" / "candidate_package" / "__pycache__").exists()
+    assert not (copied / "src" / "candidate_package.egg-info").exists()
+
+
 @pytest.fixture(scope="module")
 def wheelhouse(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Build both wheels and fetch packaging into one offline install source."""
+    """Build the core and plugin wheels into one offline install source."""
 
     house = tmp_path_factory.mktemp("wheelhouse")
+    build_inputs = tmp_path_factory.mktemp("wheel-build-inputs")
 
-    for project in (PROJECT_ROOT, EXAMPLE_PLUGIN, PYTHON_QUALITY_PLUGIN):
+    for project in (PROJECT_ROOT, EXAMPLE_PLUGIN, PLUGIN_CREATOR, PYTHON_QUALITY_PLUGIN):
+        clean_project = copy_clean_build_input(project, build_inputs / project.name)
+        before = set(house.glob("*.whl"))
         built = run(
             [sys.executable, "-m", "pip", "wheel", "--no-deps", "--wheel-dir", str(house),
-             str(project)]
+             str(clean_project)]
         )
         assert built.returncode == 0, f"building {project.name} failed:\n{built.stderr}"
+        created = set(house.glob("*.whl")) - before
+        assert len(created) == 1, (
+            f"building {project.name} produced unexpected wheels: "
+            f"{sorted(path.name for path in created)}"
+        )
+        wheel = created.pop()
+        transient_members = transient_wheel_members(wheel)
+        assert transient_members == (), (
+            f"{wheel.name} contains transient build artifacts: "
+            f"{transient_members}"
+        )
 
     # packaging is a real runtime dependency now, so an offline install of
     # TraceHarness needs its wheel present too. Acquiring it may need the network
@@ -91,6 +134,7 @@ def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory
             "--no-index", "--find-links", str(wheelhouse),
             "traceharness-py",
             "traceh-example-skill-plugin",
+            "traceh-plugin-creator-skill-plugin",
             "traceh-python-quality-plugin",
         ]
     )
@@ -121,13 +165,14 @@ def e2e_report(clean_environment: Path, tmp_path_factory: pytest.TempPathFactory
 
 
 def test_wheels_install_together_in_a_clean_environment(e2e_report: dict) -> None:
-    """Both independent plugins install beside the release candidate."""
+    """All independent plugins install beside the released core."""
 
     from traceh.version import __version__
 
     versions = e2e_report["installed_versions"]
     assert versions["traceharness-py"] == __version__
     assert versions["traceh-example-skill-plugin"] == "0.1.0"
+    assert versions["traceh-plugin-creator-skill-plugin"] == "0.1.0"
     assert versions["traceh-python-quality-plugin"] == "0.1.0"
     assert versions["packaging"], "packaging must be installed from the offline wheelhouse"
 
@@ -151,6 +196,11 @@ def test_real_entry_point_is_discovered(e2e_report: dict) -> None:
         if p["name"] == "traceh.python.quality"
     )
     assert quality_value == "traceh_python_quality_plugin:PythonQualityPlugin"
+    creator_value = next(
+        p["value"] for p in e2e_report["entry_points"]
+        if p["name"] == "traceh.plugin.creator"
+    )
+    assert creator_value == "traceh_plugin_creator_skill:PluginCreatorSkillPlugin"
 
 
 def test_discovery_reports_the_plugin_without_issues(e2e_report: dict) -> None:
@@ -174,6 +224,8 @@ def test_cli_list_inspect_and_doctor_all_succeed(e2e_report: dict) -> None:
         "doctor-example": 0,
         "inspect-python-quality": 0,
         "doctor-python-quality": 0,
+        "inspect-plugin-creator": 0,
+        "doctor-plugin-creator": 0,
     }
 
 
@@ -194,6 +246,27 @@ def test_python_quality_plugin_runs_tool_policy_and_named_verifier(
     ]
     assert quality["invariant_violations"] == []
     assert quality["reconstruction_violations"] == []
+
+
+def test_plugin_creator_skill_runs_through_the_existing_mainline(e2e_report: dict) -> None:
+    creator = e2e_report["plugin_creator"]
+    assert creator["turn"]["reason"] == "completed"
+    assert creator["called_tool_names"] == ["traceh_plugin_creator_guide"]
+    assert creator["pairing"] == {
+        "tool_calls": 1,
+        "tool_results": 1,
+        "effect_intents": 1,
+        "effect_outcomes": 1,
+    }
+    assert creator["result_mentions_candidate_workspace"] is True
+    assert creator["prompt_contains_section"] is True
+    assert creator["workspace_entries"] == []
+    assert creator["snapshot_plugins"] == [
+        {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
+        {"plugin_id": "traceh.plugin.creator", "version": "0.1.0"},
+    ]
+    assert creator["invariant_violations"] == []
+    assert creator["reconstruction_violations"] == []
 
 
 # --------------------------------------------------------------------------
@@ -267,6 +340,7 @@ def test_default_runtime_is_untouched_even_though_the_plugin_is_installed(
     ]
     assert plain["plugins"] == [{"plugin_id": "traceh.core", "version": __version__}]
     assert plain["prompt_has_plugin_section"] is False
+    assert plain["prompt_has_creator_section"] is False
 
 
 def test_dispose_removes_the_plugin_tool(e2e_report: dict) -> None:

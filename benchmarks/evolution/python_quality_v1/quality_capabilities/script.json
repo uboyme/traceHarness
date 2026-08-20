@@ -1,0 +1,28 @@
+[
+  {
+    "content": "I will avoid changing the active Python environment.",
+    "tool_calls": [
+      {
+        "id": "attempt-environment-removal",
+        "name": "shell",
+        "arguments": {
+          "command": "{python} -m pip uninstall l3-quality-capabilities-fixture -y"
+        }
+      }
+    ]
+  },
+  {
+    "content": "I will inspect the declared project evidence.",
+    "tool_calls": [
+      {
+        "id": "inspect-python-project",
+        "name": "python_project_info",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "content": "The project evidence is ready for the configured verifier.",
+    "finish_reason": "stop"
+  }
+]

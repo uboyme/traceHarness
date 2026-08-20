@@ -2,6 +2,79 @@
 
 ## Unreleased
 
+### Controlled capability evolution L3
+
+- Added `traceh plugins compare` as a Runtime-external baseline/candidate comparison control
+  plane. It accepts only a successful canonical L2 evidence bundle, reuses its exact audited Wheel
+  bytes and core commit, and requires an explicit fixed suite and dependency source.
+- Added one bounded, all-Wheel dependency freeze before the two temporary environments. Both arms
+  install offline from the same SHA-256-addressed Wheel set, must expose identical Distribution
+  receipts before execution, and are rechecked after candidate code; only the candidate arm enables
+  the exact target plugin identity. The local offline policy also reaches nested Tool/Verifier pip
+  calls as one canonical percent-encoded local `file://` URI. The sanitizer rejects raw paths,
+  whitespace-separated values, remote hosts, queries and fragments, so a Wheelhouse path containing
+  spaces remains one pip source and cannot be extended with a remote find-links value.
+- Hardened the host-owned probe so a normal return is not enough evidence: the matching durable
+  Turn and Step lifecycle must be closed, durable reason/Step count must agree with the call result,
+  and every in-Turn Composition Snapshot must contain the expected arm plugin identity.
+- Added bounded deterministic metrics and the classifications `improved`, `regressed`, `mixed`
+  and `no-change`. Reports are atomically committed and deliberately contain no approval,
+  promotion, installation or rollback authority; those remain L4 responsibilities.
+- Added the repository-owned three-case Python Quality v1 suite and negative coverage for invalid
+  L2 gates, digest drift, open durable lifecycle, reason disagreement, arm identity mismatch,
+  dependency/receipt drift, regressions, report commit failure and repeated cancellation
+  convergence. A real L2-to-L3 CLI acceptance run classified the candidate as improved (baseline
+  2/3, candidate 3/3) with no regressions or protocol violations; it froze three Wheels and proved
+  matching four-Distribution receipts.
+- Propagated L2 wheelhouse settings into nested candidate/core subprocesses so an explicitly
+  offline validation cannot silently return to a package index.
+
+### Controlled capability evolution L2
+
+- Added `traceh plugins validate` as a development control plane outside Runtime/AgentLoop. It
+  requires explicit candidate/core/output paths and an explicit dependency source, clones the
+  trusted core Git `HEAD`, and never treats dirty core files or candidate-authored reports as
+  evaluator facts.
+- Added clean candidate copying and strict Wheel audit for links, secrets, caches, bytecode,
+  path hooks, Python startup hooks, unsafe members and undeclared top-level packages. Core and
+  candidate contract checks run in separate temporary virtual environments.
+- Added host-owned installed-metadata, plugin doctor, candidate pytest and trusted full-core
+  regression gates. Candidate stdout/stderr is withheld; reports contain stable bounded Chinese
+  evidence, and only all-gates success atomically publishes the exact audited Wheel and SHA-256.
+- Added cancellation convergence for validator subprocesses and deterministic negative coverage
+  for ambiguous identity, `.env`, stale build input, startup hooks, failed tests and premature
+  artifact publication. A repository-external temporary Git snapshot completed all 13 gates.
+- Hardened the L2 transaction after independent review: source copies reject Windows Junctions
+  and other reparse points; Wheels cannot own standard-library, `traceh` or pytest control
+  namespaces; compatibility uses the selected core clone's version; initial audit bytes are
+  memory-anchored and rechecked after candidate execution; and Wheel/reports/diagnostics are
+  exposed only by one atomic directory commit, so report failure leaves no orphan artifact.
+- Fixed two environment-sensitive tests exposed by the clean venv: Windows may report a venv
+  launcher PID different from the child interpreter's own PID, and a random temporary path may
+  contain the generic substring `-q`; the tests now assert the actual ownership/security facts.
+- Documented that virtual environments are not an OS sandbox and L2 is not comparison,
+  approval, promotion, installation or rollback. See ADR-0016.
+
+### Controlled capability evolution L1
+
+- Added `traceh-plugin-creator-skill-plugin` as an independently buildable external Wheel. It
+  exposes a short authoring Prompt and a `PURE_READ` guide Tool backed by packaged workflow,
+  v0.5 SDK contract, generic package template and static candidate checklist resources.
+- Kept candidate generation outside the Runtime control plane: the existing coding Tools write
+  source in a dedicated Candidate Workspace; `AgentLoop`, `AgentRuntime`, `PluginManager`,
+  EventStore and Generation semantics are unchanged. L1 never imports, builds, tests, installs,
+  enables, commits or pushes the candidate, and marks its review card
+  `UNVALIDATED (L1 SOURCE ONLY)`.
+- Extended clean-venv Wheel acceptance to install and discover the creator distribution, run
+  `inspect`/`doctor`, and call its guide through the normal AgentLoop, ToolRuntime, Event/Effect,
+  Composition Snapshot, invariant and request-reconstruction paths while proving its workspace
+  remains unchanged.
+- Isolated every Wheel build from ignored worktree artifacts by copying only declared source
+  inputs, then auditing archive members for bytecode, caches, old build trees and egg metadata.
+- Corrected the packaged SDK contract: a named Verifier is captured by Generation and Step
+  Lease, but is not a `CompositionSnapshot` field; observed results persist as
+  `verification/result` evidence.
+
 ## 0.5.0 - 2026-08-20
 
 ### Release candidate and external Python Quality plugin

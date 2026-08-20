@@ -4,6 +4,9 @@ import asyncio
 import os
 import shlex
 from dataclasses import dataclass, field
+from pathlib import Path
+from urllib.parse import urlsplit
+from urllib.request import url2pathname
 
 from traceh.api.json_types import JsonValue
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
@@ -19,6 +22,34 @@ _SENSITIVE_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "AUTH"
 _WINDOWS_ESSENTIALS = frozenset(
     {"SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "SYSTEMDRIVE", "PROCESSOR_ARCHITECTURE"}
 )
+
+
+def _canonical_local_directory_uri(value: str) -> str | None:
+    """Accept exactly one canonical local ``file://`` directory URI."""
+
+    if any(character.isspace() for character in value):
+        return None
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "file"
+        or parsed.netloc
+        or parsed.query
+        or parsed.fragment
+    ):
+        return None
+    try:
+        path = Path(url2pathname(parsed.path))
+    except (TypeError, ValueError):
+        return None
+    if not path.is_absolute() or not path.is_dir():
+        return None
+    canonical = path.resolve().as_uri()
+    if value != canonical:
+        return None
+    return canonical
 
 
 def sanitized_environment() -> dict[str, str]:
@@ -40,6 +71,18 @@ def sanitized_environment() -> dict[str, str]:
             continue
         if key in allowed_exact or key.startswith("LC_"):
             safe[key] = value
+    # Candidate validation/comparison may deliberately confine every nested
+    # pip invocation to one local Wheel directory. pip splits PIP_FIND_LINKS on
+    # whitespace, so only the canonical, percent-encoded file URI produced by
+    # the host is safe to preserve as a single source. Raw paths, remote hosts,
+    # multiple values and arbitrary pip configuration remain excluded.
+    wheelhouse = os.environ.get("PIP_FIND_LINKS")
+    canonical_wheelhouse = (
+        _canonical_local_directory_uri(wheelhouse) if wheelhouse else None
+    )
+    if os.environ.get("PIP_NO_INDEX") == "1" and canonical_wheelhouse:
+        safe["PIP_NO_INDEX"] = "1"
+        safe["PIP_FIND_LINKS"] = canonical_wheelhouse
     safe["TRACEH_CHILD_PROCESS"] = "1"
     # Output is captured as bytes and decoded as UTF-8. A Windows Python child
     # would otherwise encode its stdout with the system code page (CP936 on a

@@ -19,6 +19,12 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m compileall -q src
       - run: pytest
+      - name: Test Python Quality plugin distribution
+        run: python -m pytest -q
+        working-directory: examples/plugins/traceh-python-quality-plugin
+      - name: Test Plugin Creator Skill distribution
+        run: python -m pytest -q
+        working-directory: examples/plugins/traceh-plugin-creator-skill-plugin
       - run: traceh doctor --data-dir /tmp/traceh-ci
 
   # Minimal Windows coverage: the JSONL event store uses a different OS locking
@@ -34,4 +40,10 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m compileall -q src
       - run: pytest
+      - name: Test Python Quality plugin distribution
+        run: python -m pytest -q
+        working-directory: examples/plugins/traceh-python-quality-plugin
+      - name: Test Plugin Creator Skill distribution
+        run: python -m pytest -q
+        working-directory: examples/plugins/traceh-plugin-creator-skill-plugin
       - run: traceh doctor --data-dir ${{ runner.temp }}/traceh-ci

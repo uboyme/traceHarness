@@ -314,10 +314,81 @@ Quality plugin consumes only that surface. It contributes:
 - `python-tests`, a named Verifier that runs only a project-declared test command or explicit
   pytest configuration and otherwise fails closed.
 
-The clean-environment acceptance builds core, Skill example and Python Quality Wheels,
-installs them offline with `packaging`, discovers both Entry Points, runs plugin doctor, and
-drives Python Quality's Tool, Policy and Verifier through one real Session. The resulting
-Composition Snapshot, event invariants and request reconstruction must all remain clean.
+The clean-environment acceptance copies only each project's declared build inputs, builds core,
+Skill example, Python Quality and Plugin Creator Wheels, audits every archive for bytecode,
+caches, old build trees and egg metadata, then installs them offline with `packaging`. It
+discovers all three Entry Points, runs plugin doctor, and drives Python Quality's Tool, Policy
+and Verifier through one real Session. The resulting Composition Snapshot, event invariants and
+request reconstruction must all remain clean.
+
+### Post-v0.5 L1: source-only Plugin Creator Skill
+
+The first controlled capability-evolution step remains outside the runtime control plane.
+`traceh-plugin-creator-skill-plugin` is an independent Entry Point distribution that adds one
+short Prompt and one `PURE_READ` Tool over packaged workflow, SDK contract, package template
+and static checklist resources. It relies on the existing coding Tools to write a candidate
+inside a dedicated Workspace, so it adds no writer, installer, loader, registry, event or
+Generation path.
+
+L1 stops at source. The candidate includes package metadata, Entry Point, Manifest,
+implementation, tests, README and a human-readable card marked
+`UNVALIDATED (L1 SOURCE ONLY)`, but is not imported, built, tested, installed, enabled or
+promoted. This is a workflow boundary rather than a sandbox. See
+[ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md).
+
+The packaged SDK contract distinguishes lifecycle from persistence: a named Verifier is fixed
+by the Generation and Step Lease, but is not a `CompositionSnapshot` field. Its observed result
+is durable only through `verification/result`.
+
+### Post-v0.5 L2: independent candidate validation
+
+`traceh plugins validate` is a separate development control plane under `traceh.evolution`; it
+does not add work to `AgentLoop`, `AgentRuntime`, `PluginManager` or the Event Log. The caller
+must provide a source-only candidate, a trusted TraceHarness Git repository, a new output
+directory and an explicit dependency source (`--allow-index` or `--wheelhouse`).
+
+The validator clones the trusted repository's `HEAD`, builds core and candidate Wheels, audits
+the candidate archive, and creates separate candidate-contract and core-regression virtual
+environments. Host-owned metadata checks and pytest configuration prevent the candidate from
+redefining the evaluator. The candidate's own tests are one gate; the trusted core suite is a
+different gate with the candidate installed but not enabled. Candidate stdout/stderr never
+becomes report evidence.
+
+The selected core clone, not the running CLI, supplies the compatibility version. Source reparse
+points and host-control import roots are rejected. The host anchors audited Wheel bytes before
+candidate execution, rechecks disk identity afterward, and publishes Wheel/reports/diagnostics as
+one directory transaction. Ordinary gate failure yields a complete report-only bundle; report or
+commit failure leaves no output path. Virtual environments are not an OS sandbox and candidate
+code retains current-user authority; downstream consumers must recheck the SHA-256 before use.
+L2 still makes no quality or approval claim. See
+[ADR-0016](adr/0016-independent-plugin-candidate-validation.md).
+
+### Post-v0.5 L3: host-owned baseline/candidate comparison
+
+`traceh plugins compare` is the next development-control-plane step. It accepts only the exact
+successful L2 evidence bundle, checks the canonical 13 gates and artifact digest again, clones the
+core commit named by that report, and loads a fixed suite from a relative path inside that trusted
+commit. It never rebuilds the candidate.
+
+Dependencies are resolved once into a bounded all-Wheel set whose members are fixed by filename,
+size and SHA-256. Baseline and candidate receive separate venvs installed offline from that same
+set, and their Distribution receipts must match before execution and remain unchanged afterwards.
+Nested Tool and Verifier pip processes receive that set as one canonical percent-encoded local
+`file://` URI; raw paths, multiple values, remote hosts, queries and fragments are not propagated.
+The baseline keeps the target plugin disabled; the candidate enables the exact L2 plugin identity.
+A host-owned probe drives the public Runtime and persisted Session/Verifier paths. It requires the
+matching durable Turn/Step lifecycle to be closed, durable reason and Step count to agree with the
+method return, and every in-Turn Composition Snapshot to contain the expected arm identity before
+recording success, failure codes, Step/model/tool counts, verification, invariants, request
+reconstruction and duration. Candidate code cannot replace the tasks or evaluator, and the report,
+Wheel, dependency, receipt and suite digests are rechecked after candidate execution.
+
+The output classification is only `improved`, `regressed`, `mixed` or `no-change`. It carries no
+approval or promotion bit. The first fixed suite under `benchmarks/evolution/python_quality_v1`
+contains one capability-difference case, one ordinary repair that must not regress and one honest
+verification-failure case. This is a deterministic capability contract, not a general coding or
+real-model benchmark. The venvs are not an OS sandbox. See
+[ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
 
 ## Extension categories
 

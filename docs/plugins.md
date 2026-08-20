@@ -5,15 +5,22 @@ The design rationale lives in
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
 [ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
 ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
-page is the author- and operator-facing contract for the released `0.5.0` SDK.
+page is the author- and operator-facing contract for the released `0.5.0` SDK. The post-release
+authoring, validation and comparison control planes are recorded in
+[ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md),
+[ADR-0016](adr/0016-independent-plugin-candidate-validation.md) and
+[ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
 
-Two working, independently buildable distributions live under `examples/plugins/`:
+Three working, independently buildable distributions live under `examples/plugins/`:
 
 - [`traceh-example-skill-plugin`](../examples/plugins/traceh-example-skill-plugin/) is the
   smallest Tool-and-Prompt example;
 - [`traceh-python-quality-plugin`](../examples/plugins/traceh-python-quality-plugin/) is the
   v0.5 release acceptance plugin and contributes a real Tool, Prompt, Policy and named
   Verifier through the public SDK.
+- [`traceh-plugin-creator-skill-plugin`](../examples/plugins/traceh-plugin-creator-skill-plugin/)
+  is the Unreleased L1 source-authoring skill. It contributes a Prompt and a `PURE_READ`
+  guide Tool; it never installs or executes the candidate it describes.
 
 ## 1. What a plugin can contribute
 
@@ -162,6 +169,87 @@ layer. They do not create a Turn, append a user message, call a model, install o
 a Wheel, reload a Python module, or watch files. A changed set requires an explicit
 per-Session `composition/migration-authorized` event; a same-identity reload does not.
 
+### Source-only candidate authoring (L1)
+
+Install and explicitly enable the independent Plugin Creator Skill only when the Workspace is
+a dedicated candidate directory outside the TraceHarness repository:
+
+```powershell
+python -m pip install .\examples\plugins\traceh-plugin-creator-skill-plugin
+traceh plugins doctor traceh.plugin.creator
+traceh chat <candidate-workspace> --plugin traceh.plugin.creator
+```
+
+The skill exposes `traceh_plugin_creator_guide` topics for workflow, the v0.5 SDK contract,
+package structure and a static checklist. It tells the model to collect explicit identity,
+authority and acceptance criteria, then write package metadata, Entry Point, Manifest,
+implementation, tests, README and a plain-language `CANDIDATE.md` through the existing coding
+Tools. It deliberately performs no build, import, test, install, enable, Git or network step,
+and marks the result `UNVALIDATED (L1 SOURCE ONLY)`.
+
+This is workflow separation, not process isolation. L2 executes the candidate through an
+independent host-owned gate and does not trust its own tests or report. See
+[ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md).
+
+### Independent candidate validation (L2)
+
+Run L2 from the trusted TraceHarness installation, not from candidate code:
+
+```powershell
+traceh plugins validate <candidate-workspace> `
+  --core-project <trusted-traceh-git-repository> `
+  --output <new-evidence-directory> `
+  --allow-index
+```
+
+Use `--wheelhouse <directory>` instead of `--allow-index` for explicit offline dependency
+resolution. Candidate, core and output paths must be disjoint, the output must not already
+exist, and an ambiguous Entry Point set requires `--plugin-id`. Candidate build/runtime and
+explicit test requirements cannot use direct URL/file references to bypass the selected source.
+The validator clones the core
+repository's committed `HEAD`; it never treats dirty core files as evaluator input.
+
+The ordered gates cover source identity against the selected core clone's version, both Wheel
+builds, candidate archive/host-namespace audit, installed metadata, doctor, host-configured
+candidate test collection/execution, full trusted core regression, and final artifact
+publication. Source Junctions/reparse points are rejected. The audited bytes are anchored before
+candidate execution and rechecked afterward. A complete report-only bundle represents an
+ordinary failure; a report/commit failure leaves the output absent. Success atomically exposes
+the report plus exact audited Wheel under `artifacts/`, with its SHA-256 in both reports.
+Candidate stdout/stderr is never report evidence.
+
+This uses temporary source copies and virtual environments, **not an OS sandbox**. Candidate
+build/import/test code still has the current user's permissions, so use local L2 only for
+trusted in-house candidates. L2 does not compare quality, approve, install or enable a plugin.
+See [ADR-0016](adr/0016-independent-plugin-candidate-validation.md).
+
+### Host-owned baseline/candidate comparison (L3)
+
+Run L3 only with a successful L2 evidence directory and the same trusted core repository:
+
+```powershell
+traceh plugins compare <l2-evidence-directory> `
+  --core-project <trusted-traceh-git-repository> `
+  --suite benchmarks/evolution/python_quality_v1 `
+  --output <new-comparison-evidence-directory> `
+  --allow-index
+```
+
+Use `--wheelhouse <directory>` instead of `--allow-index` for an explicit offline run. The suite
+path is relative to the exact core commit recorded by L2; dirty core files and external candidate
+task directories are not evaluator input. L3 reuses the exact L2 Wheel, resolves the complete
+dependency set once into SHA-256-addressed Wheels, installs both arms offline from that set, and
+requires identical Distribution receipts. It enables the exact target plugin identity only for the
+candidate arm.
+
+The host-owned probe records real Session/Verifier facts. A matching durable `turn/end`, closed
+Turn/Step state, an agreeing reason and Step count, and the expected plugin identity in every
+in-Turn Composition Snapshot are required before an arm can pass. The report classifies the result
+as `improved`, `regressed`, `mixed` or `no-change`; it does not approve, install, enable or promote
+the plugin.
+Virtual environments are still not an OS sandbox. See
+[ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
+
 ## 5. The CLI
 
 | Command | Imports plugins? | Runs setup? | Calls a model? |
@@ -169,11 +257,14 @@ per-Session `composition/migration-authorized` event; a same-identity reload doe
 | `traceh plugins list` | no | no | no |
 | `traceh plugins inspect <id>` | no | no | no |
 | `traceh plugins doctor [ids...]` | yes | yes, then disposes immediately | no |
+| `traceh plugins validate <candidate>` | candidate only, in a temporary venv | doctor + tests in temporary venvs | no |
+| `traceh plugins compare <l2-evidence>` | candidate only, in one comparison arm | fixed host suite in two temporary venvs | no |
 
-All three take `--json`. Every string they print - entry-point values, distribution names,
+All five take `--json`. Every string they print - entry-point values, distribution names,
 requirement strings - is escaped to one printable line, because it all originates in
 third-party metadata. Exit codes: `6` for `inspect` on an unknown or problematic plugin,
-`7` for `doctor` failures.
+`7` for `doctor` failures, `8` for candidate validation/configuration failure, and `9` for
+comparison/configuration failure.
 
 `doctor` activates against throwaway registries, so nothing it loads can reach a real
 runtime, and it disposes whether or not activation succeeded.

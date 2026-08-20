@@ -117,6 +117,46 @@ published Generation from changing an in-progress Step's Provider, tools or Veri
 product-level two-Agent demo still depends on the v0.6 `AgentSupervisor`; D3 does not claim
 that capability.
 
+## Controlled capability evolution — L1-L3 implemented, L4-L5 planned
+
+- **L1 — implemented in Unreleased:** `traceh-plugin-creator-skill-plugin` is a real external
+  Wheel that supplies a short Prompt and packaged workflow/contract/template/checklist through
+  one `PURE_READ` Tool. The Agent writes source only in a dedicated Candidate Workspace using
+  existing coding Tools. It does not build, test, install, enable or approve its own output,
+  and the core Runtime/AgentLoop/PluginManager are unchanged. Wheel acceptance builds every
+  project from an isolated declared-source copy and audits archive members before installation;
+  the packaged contract also states that Verifier uses Generation/Step Lease but not
+  `CompositionSnapshot`, with results recorded as `verification/result`.
+- **L2 — implemented in Unreleased:** `traceh plugins validate` takes an explicit source-only
+  candidate, trusted core Git repository, new evidence directory and dependency source. It
+  clones the trusted `HEAD`, reads that clone's compatibility version, rejects source reparse
+  points and host-control namespaces, builds and anchors exact audited Wheel bytes, uses separate
+  candidate/regression venvs, runs host-owned metadata/doctor/test/core gates, then rechecks the
+  Wheel and atomically commits the complete evidence directory after all 13 gates pass. This is
+  filesystem/Python environment isolation, not an OS sandbox; see ADR-0016.
+- **L3 — implemented in Unreleased:** `traceh plugins compare` consumes the exact successful L2
+  evidence bundle, clones the core commit named by that evidence and runs a fixed suite from that
+  trusted commit in two otherwise identical venvs. Dependencies resolve once into a frozen
+  SHA-256-addressed Wheel set; both arms install offline from it and must retain identical
+  Distribution receipts. Only the candidate arm enables the exact target plugin identity. A
+  host-owned probe requires a closed durable Turn/Step lifecycle, agreeing reason/Step count and
+  matching Composition Snapshot plugin identity before it reads Verifier/request-reconstruction
+  evidence and reports `improved`, `regressed`, `mixed` or `no-change` without approving or
+  installing anything. The first three-case Python Quality
+  suite checks one capability gain, one ordinary repair with no regression and one honest
+  verification failure; see ADR-0017.
+- **L4:** present a plain-language capability/risk/evidence card, require explicit human
+  approval, promote the exact validated artifact, and retain a deterministic rollback target.
+- **L5:** derive repeated weakness evidence from existing Sessions/Evaluation and propose a
+  candidate; the Agent may propose and implement, but cannot approve or promote itself.
+
+All five levels are a development control plane outside the execution plane. They must reuse
+the public Plugin SDK, Verifier/Evaluation, Generation/Lease/Drain and Session evidence rather
+than adding build/test/approval logic to `AgentRuntime` or a second plugin loader. L1 is
+recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skill.md), L2 in
+[ADR-0016](docs/adr/0016-independent-plugin-candidate-validation.md), and L3 in
+[ADR-0017](docs/adr/0017-host-owned-baseline-candidate-comparison.md).
+
 ## v0.6: AgentSupervisor and subagents
 
 - Separate durable Agent identity from live Activation.

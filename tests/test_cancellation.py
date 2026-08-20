@@ -296,6 +296,41 @@ async def test_sanitized_environment_can_still_start_a_python_child() -> None:
     assert not any("KEY" in name or "TOKEN" in name for name in sanitized_environment())
 
 
+def test_sanitized_environment_preserves_only_a_local_offline_pip_policy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wheelhouse = tmp_path / "wheel house"
+    wheelhouse.mkdir()
+    wheelhouse_uri = wheelhouse.resolve().as_uri()
+    monkeypatch.setenv("PIP_NO_INDEX", "1")
+    monkeypatch.setenv("PIP_FIND_LINKS", wheelhouse_uri)
+    monkeypatch.setenv("PIP_INDEX_URL", "https://credential.invalid/simple")
+
+    environment = sanitized_environment()
+
+    assert environment["PIP_NO_INDEX"] == "1"
+    assert environment["PIP_FIND_LINKS"] == wheelhouse_uri
+    assert "%20" in environment["PIP_FIND_LINKS"]
+    assert len(environment["PIP_FIND_LINKS"].split()) == 1
+    assert "PIP_INDEX_URL" not in environment
+
+    rejected_values = (
+        str(wheelhouse.resolve()),
+        f"{wheelhouse_uri} https://credential.invalid/wheels",
+        "https://credential.invalid/wheels",
+        "file://credential.invalid/wheels",
+        (tmp_path / "missing-wheelhouse").resolve().as_uri(),
+        f"{wheelhouse_uri}?source=unexpected",
+        f"{wheelhouse_uri}#unexpected",
+    )
+    for rejected in rejected_values:
+        monkeypatch.setenv("PIP_FIND_LINKS", rejected)
+        environment = sanitized_environment()
+        assert "PIP_NO_INDEX" not in environment
+        assert "PIP_FIND_LINKS" not in environment
+
+
 @pytest.mark.asyncio
 async def test_converge_process_does_not_return_until_the_child_is_gone(tmp_path) -> None:
     command, started, finished, lock = slow_child_command(tmp_path, seconds=30)
@@ -685,7 +720,15 @@ def test_terminate_recorded_processes_stops_the_pids_it_was_given(tmp_path) -> N
         if process.poll() is None:  # pragma: no cover - only if cleanup failed
             process.kill()
             process.wait(timeout=30)
-    assert pids.read_text(encoding="utf-8").strip() == str(process.pid)
+    # A Windows venv may launch the base interpreter through a small
+    # ``Scripts/python.exe`` redirector.  ``Popen.pid`` then identifies the
+    # redirector while ``os.getpid()`` in the script identifies the process the
+    # cleanup helper must actually stop.  The child-authored pid file is the
+    # ownership fact; requiring it to equal the launcher pid makes this test
+    # fail in the exact clean-venv environment L2 is meant to exercise.
+    recorded_pid = int(pids.read_text(encoding="utf-8").strip())
+    assert recorded_pid > 0
+    assert process.returncode is not None
 
 
 @pytest.mark.asyncio

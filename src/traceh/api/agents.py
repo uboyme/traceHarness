@@ -111,6 +111,39 @@ class MessageReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class AcceptedMessage:
+    """One message durably accepted into an Agent's Inbox.
+
+    **Accepted is not processed.** This records that the message was received
+    and where it sits in that Agent's FIFO order. It does not mean the message
+    was delivered to an Activation, claimed, executed, completed, failed or
+    retried - v0.6 Stage B has no Supervisor to do any of those, and no field
+    here should ever be read as one of them.
+
+    Every field is an immutable scalar, so a projector may hand the same object
+    to two callers without either being able to write through it. That is a
+    property of the current message shape, not a permanent guarantee: adding a
+    mutable content block or attachment list would reintroduce shared state and
+    this boundary would then owe each caller its own copy.
+    """
+
+    agent_id: str
+    message: AgentMessage
+    target: MessageTarget
+    wakeup: bool
+    accepted_seq: int
+
+    def receipt(self) -> MessageReceipt:
+        """The receipt replay reconstructs for this acceptance."""
+
+        return MessageReceipt(
+            message_id=self.message.message_id,
+            agent_id=self.agent_id,
+            accepted_seq=self.accepted_seq,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class AgentRunReport:
     agent_id: str
     session_id: str

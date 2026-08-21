@@ -20,6 +20,7 @@ Applications
 Control
   AgentRuntime, PluginCompositionCoordinator, AgentLoop, ContinuationRuntime
   AgentRegistrar, AgentDirectory (durable Agent identity; no live Supervisor)
+  AgentInboxService, AgentInbox (durable accepted-message facts; no delivery)
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
@@ -129,6 +130,25 @@ it; the dependency never points back. `AgentRecord` is durable identity, `AgentH
 Activation, and stopping or rebuilding the latter cannot change the former. See
 [ADR-0019](adr/0019-durable-agent-identity-and-activation-boundary.md); there is still no
 Supervisor, Inbox, message delivery or subagent tool.
+
+### Agent Inbox Streams
+
+`agent-inbox:<agent_id>` is one stream per Agent, holding the append-only order in which that
+Agent's messages were **accepted**. One stream per Agent rather than a shared one, because
+FIFO order is a property of an Agent's Inbox: a shared stream would make one Agent's traffic
+advance another's `expected_seq`. Stream ids come from one constructor and are never parsed
+back into an `agent_id`.
+
+**Accepted is not processed.** These events record that a message was durably received and
+where it sits in that Agent's order. Delivery, claiming, execution, completion, failure and
+retry are Activation facts with no representation here, and `wakeup` stores the sender's
+request rather than an action taken. Like the directory stream, none of this enters the model
+Surface, recovery, invariants or the request fingerprint.
+
+Both control-plane transactions share `commit_reconciliation.py` for the `EventStore`
+commit-point question - did our event land, and can we even tell - while each keeps its own
+error mapping. See [ADR-0020](adr/0020-durable-agent-inbox-acceptance.md); there is still no
+Supervisor, no Activation and no Turn scheduling.
 
 ### Telemetry
 

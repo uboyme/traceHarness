@@ -151,6 +151,17 @@ untrusted work: a `dict` subclass overriding only `values()` or `__iter__` break
 while remaining perfectly encodable through `items()`. A pre-check placed outside the
 boundary leaked that as a bare exception and bypassed the single outcome, on both entrances.
 
+The same boundary covers the whole **event**, not only the payload and not only the metadata
+walk. `EventEnvelope` is a public DTO that anything may construct, so `event.type`,
+`event.stream_id` and `event.schema_version` are exactly as untrusted as `event.data`: a `str`
+subclass with a raising `__ne__` breaks the first comparison the parser makes. `_scan()`
+therefore does not pre-check the event type either, since that read would sit outside the
+parser's boundary. Only `event.seq` is read outside, and plain attribute access executes
+nothing. `set(data)`,
+`data.get()` and `data[key]` all run against a container the store handed back, and a `dict`
+subclass raising from any of them leaked a bare exception out of both `rebuild()` and
+`validate_agent_directory_events()` - whose contract is to return issues rather than raise.
+
 The boundary catches `Exception`, deliberately **not** `BaseException`. `KeyboardInterrupt`,
 `SystemExit` and `CancelledError` are not verdicts about the metadata and must reach the
 caller unchanged - the same rule the creation transaction follows around its append.
@@ -198,6 +209,23 @@ Order: validate input, read the directory, check conflicts, append with
   re-raised unchanged. The re-read runs in its own Task converged through
   `await_worker_convergence()`, so repeated cancellation cannot release the caller early and
   no reconciliation Task outlives the call.
+- **Reconciliation matches the complete frozen fact, not the id.** The question is "did
+  *this* event land". A writer racing us on the same `request_id` may have committed a
+  *different* Agent, and matching on the id alone reported `committed=True` for a creation
+  that never happened - handing the caller somebody else's fact as its own. The match parses
+  the candidate through the projector (which re-checks stream, schema and key set) and
+  compares the two payloads as **canonical JSON**, deliberately not with `==`: Python equality
+  is not JSON identity, so `True == 1`, `1 == 1.0` and `[True] == [1]` all hold in Python while
+  being different facts in a log, and a plain comparison let `{"flag": 1}` match a racing
+  writer's `{"flag": True}`. The canonical encoder is the one request fingerprints already use,
+  so "are these the same JSON" has a single definition.
+
+  Only a `AgentDirectoryProtocolError` justifies answering "not ours": that proves the candidate is not a
+  well-formed fact at all. A *canonical-encoding* failure is not a negative answer - it means
+  the comparison could not be made - so it propagates and the shared reconciler reports
+  `None`. Collapsing it into `False` claimed "provably not committed" about an event that was
+  sitting in the stream. A malformed unrelated event is skipped
+  rather than making the answer unknown: it cannot be ours either way.
 - **The commit answer has three states.** `AgentCreationError.committed` is `True`, `False`
   or `None`, where `None` means the reconciling read could not answer. Collapsing unknown
   into `False` would make the strongest claim from the weakest evidence, at the exact moment

@@ -2,6 +2,61 @@
 
 ## Unreleased
 
+### v0.6 Stage B: durable Agent Inbox acceptance
+
+- Added a durable, append-only FIFO acceptance history per Agent. `AgentInboxService.accept()`
+  appends `agent/message-accepted` to that Agent's own `agent-inbox:<agent_id>` stream in the
+  existing `EventStore`, and `AgentInbox` rebuilds the same order from the log alone. No
+  in-memory queue, no second fact source. See
+  [ADR-0020](docs/adr/0020-durable-agent-inbox-acceptance.md).
+- **Accepted is not processed.** The protocol deliberately cannot express delivery, claiming,
+  execution, completion, failure or retry; `wakeup` records the sender's request rather than
+  waking anything. There is still no `AgentSupervisor`, Activation, Turn scheduling or cold
+  recovery, and `AgentLoop`, `AgentRuntime` and `PluginManager` hold no Inbox state.
+- Gave writer and replay one rule set in `inbox_identity.py`: an exact eight-key payload,
+  `schema_version == 1`, and a stream id built forward from the payload's `agent_id` by the
+  single constructor rather than parsed back out of the stream name.
+- Treated `content` as prose, not an identifier: multi-line text is legal, but it is bounded by
+  `MAX_MESSAGE_CONTENT_CHARS` and must be UTF-8 encodable, because a lone surrogate survives
+  `json.dumps` and then raises `UnicodeEncodeError` inside `JsonlEventStore.append()`.
+- Required `target` to be a real `MessageTarget` value and `wakeup` to be strictly `bool`.
+  Truthiness would read `1`, `"false"` or `[]` as a decision that will later start an
+  Activation.
+- Made acceptance idempotent by caller-supplied `message_id`, comparing every field against the
+  frozen payload; the same id with a different message is rejected rather than treated as an
+  update. The target Agent must already exist in the Stage A directory.
+- Used one lock per Agent rather than one per service, since each Agent has its own stream and
+  therefore its own compare-and-swap; the append carries `expected_seq` from the Inbox read.
+- Extracted `commit_reconciliation.py` so both control-plane transactions share one answer to
+  the `EventStore` commit-point question, with `True`/`False`/unknown preserved. Each keeps its
+  own error mapping. `AgentRegistrar` moved onto it with no behaviour change and its full
+  contract suite unchanged.
+- Matched commit reconciliation against the complete frozen fact rather than the id alone, in
+  both control-plane transactions. Two writers racing on one `message_id`/`request_id` write
+  different facts, and matching on the id told the loser its own event had been recorded when
+  what landed was the winner's. The candidate is now parsed through the projector - which also
+  re-checks stream, schema version and key set - and compared field by field; a malformed
+  unrelated event is skipped rather than making the answer unknown.
+- Compared reconciliation candidates as canonical JSON rather than with `==`. Python equality is
+  not JSON identity - `True == 1`, `1 == 1.0` and `[True] == [1]` all hold - so `{"flag": 1}`
+  matched a racing writer's `{"flag": True}` and was reported as our own committed fact.
+- Kept the third commit state reachable through the comparison itself. Only a protocol error
+  justifies "not ours"; a canonical-encoding failure means the comparison could not be made, so
+  it now propagates and the shared reconciler reports `None` instead of being swallowed into
+  `False` - which had claimed "provably not committed" about an event already in the stream.
+- Extended the protocol-error boundary to the whole event, not only its payload. `EventEnvelope`
+  is a public DTO, so `event.type`, `event.stream_id` and `event.schema_version` are as
+  untrusted as `event.data`; a `str` subclass with a raising `__ne__` leaked a bare exception out
+  of all four public replay entry points. Neither `_scan()` pre-checks the event type any more,
+  since that read would sit outside the parser's boundary.
+- Put the whole persisted-payload read inside one protocol-error boundary in both projectors.
+  `set(data)`, `data.get()` and `data[key]` run against a container the store handed back, so a
+  `dict` subclass raising from any of them leaked a bare exception out of `rebuild()` and out of
+  `validate_agent_inbox_events()`/`validate_agent_directory_events()`, whose contract is to
+  return issues rather than raise. `SystemExit` and `KeyboardInterrupt` stay uncaught.
+- Added `AcceptedMessage` to `traceh.api.agents`; `AgentMessage`, `MessageTarget` and
+  `MessageReceipt` already expressed the contract and were not modified.
+
 ### v0.6 Stage A: durable Agent identity and the Activation boundary
 
 - Added `traceh.agents`, a multi-agent control-plane fact layer that records and rebuilds

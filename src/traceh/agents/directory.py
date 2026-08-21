@@ -19,8 +19,10 @@ Three properties are load-bearing and are not conveniences:
 
 What is *not* here, by decision: no Inbox, no message delivery, no wakeup, no
 Activation state, no parent/child disposal. Communication is a different
-relation on different streams; `owner_agent_id` records lifecycle
-responsibility only. See ADR-0019.
+relation on different streams - Stage B added a durable **acceptance** history
+per Agent in :mod:`traceh.agents.inbox`, which is still not delivery and still
+has no Supervisor behind it. `owner_agent_id` records lifecycle responsibility
+only, and is not a message route. See ADR-0019 and ADR-0020.
 """
 
 from __future__ import annotations
@@ -30,7 +32,6 @@ from dataclasses import dataclass
 
 from traceh.agents.errors import AgentDirectoryProtocolError
 from traceh.agents.identity import (
-    AGENT_CREATED,
     AGENT_DIRECTORY_STREAM,
     detach_record,
     parse_agent_created,
@@ -64,17 +65,20 @@ def _scan(
 
     for event in events:
         head_seq = event.seq
-        if event.type != AGENT_CREATED:
-            # Unknown types are not skipped. This stream carries identity facts
-            # only; anything else means the reader and the writer disagree
-            # about what the stream is, and guessing would produce a directory
-            # that describes neither.
-            issues.append(AgentDirectoryIssue("agent-event-type-unknown", event.seq))
-            continue
+        # The event type is checked *inside* the parser, not here. Reading it
+        # twice would put one of those reads outside the parser's exception
+        # boundary, and `EventEnvelope` is a public DTO whose fields are as
+        # untrusted as its payload. Unknown types are still not skipped: the
+        # parser reports ``agent-event-type-unknown`` for them, because this
+        # stream carries identity facts only and guessing would produce a
+        # directory that describes neither.
         try:
             record = parse_agent_created(event)
         except AgentDirectoryProtocolError as error:
             issues.append(AgentDirectoryIssue(error.code, error.seq))
+            continue
+        except Exception:
+            issues.append(AgentDirectoryIssue("agent-payload-invalid", event.seq))
             continue
 
         conflicts: list[AgentDirectoryIssue] = []

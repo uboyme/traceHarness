@@ -37,6 +37,21 @@ class AgentIdentityError(AgentControlPlaneError, ValueError):
         super().__init__(f"agent {field} is not a usable identity")
 
 
+class AgentMessageError(AgentControlPlaneError, ValueError):
+    """A caller-supplied Inbox message field is not usable.
+
+    Raised before anything is read or appended, so a rejected message cannot
+    reach the event log. The offending value is never echoed - message content
+    is the most likely place for a caller to have pasted something private, and
+    ``source``/``message_id`` are equally caller-controlled.
+    """
+
+    def __init__(self, code: str, field: str) -> None:
+        self.code = code
+        self.field = field
+        super().__init__(f"agent message {field} is not usable")
+
+
 class AgentDirectoryProtocolError(AgentControlPlaneError, ValueError):
     """A persisted Agent fact is malformed, duplicated or contradictory.
 
@@ -71,6 +86,100 @@ def _directory_message(code: str) -> str:
         "agent-owner-self": "an agent creation fact names itself as its owner",
     }
     return messages.get(code, "the agent directory protocol is invalid")
+
+
+class AgentInboxProtocolError(AgentControlPlaneError, ValueError):
+    """A persisted Inbox fact is malformed, duplicated or contradictory.
+
+    Replay fails closed rather than repairing: an Inbox that skipped a broken
+    record would report a FIFO order that never happened, and order is the
+    whole point of the stream.
+    """
+
+    def __init__(self, code: str, seq: int) -> None:
+        self.code = code
+        self.seq = seq
+        super().__init__(_inbox_message(code))
+
+
+def _inbox_message(code: str) -> str:
+    messages = {
+        "inbox-event-type-unknown": "an agent inbox stream contains an unknown event",
+        "inbox-stream-unexpected": "an accepted message is on the wrong inbox stream",
+        "inbox-schema-version-unsupported": (
+            "an accepted message uses an unsupported schema version"
+        ),
+        "inbox-payload-keys-unexpected": "an accepted message has unexpected payload keys",
+        "inbox-payload-invalid": "an accepted message is malformed",
+        "inbox-identity-invalid": "an accepted message has an unusable identifier",
+        "inbox-content-invalid": "an accepted message has unusable content",
+        "inbox-target-invalid": "an accepted message has an unknown delivery target",
+        "inbox-wakeup-invalid": "an accepted message has a malformed wakeup flag",
+        "inbox-message-id-duplicate": "two accepted messages share one message id",
+    }
+    return messages.get(code, "the agent inbox protocol is invalid")
+
+
+class AgentUnknownError(AgentControlPlaneError):
+    """The target Agent is not a durable identity.
+
+    A message may only be accepted for an Agent the directory already records.
+    Accepting one for an unknown id would create an Inbox history that no Agent
+    owns, and nothing would ever be able to claim it.
+    """
+
+    code = "agent-unknown"
+
+    def __init__(self) -> None:
+        super().__init__("agent_id does not name a registered agent")
+
+
+class AgentMessageConflictError(AgentControlPlaneError):
+    """A ``message_id`` was reused for a different message.
+
+    Retrying with the same ``message_id`` is how a caller makes acceptance
+    idempotent, so reusing it to mean something else must fail rather than
+    quietly return a receipt for a message that was never written.
+    """
+
+    code = "inbox-message-reused"
+
+    def __init__(self) -> None:
+        super().__init__("message_id was already accepted with different content")
+
+
+class AgentInboxConflictError(AgentControlPlaneError):
+    """The Inbox advanced between the read and the append.
+
+    Nothing was written. Retrying with the same ``message_id`` is safe.
+    """
+
+    code = "inbox-changed"
+
+    def __init__(self) -> None:
+        super().__init__("the agent inbox changed before this message could be accepted")
+
+
+class AgentMessageAcceptError(AgentControlPlaneError):
+    """The acceptance append failed.
+
+    ``committed`` carries the same three states as `AgentCreationError`:
+    ``True``, ``False`` or ``None`` for unknown. It is always a failure, never
+    a disguised success; a caller that still wants the message reconciles it by
+    ``message_id`` through the Inbox.
+    """
+
+    code = "inbox-accept-failed"
+
+    def __init__(self, *, committed: bool | None) -> None:
+        self.committed = committed
+        if committed is None:
+            message = "message acceptance failed and whether it was recorded is unknown"
+        elif committed:
+            message = "message acceptance was recorded but the call failed"
+        else:
+            message = "message acceptance could not be recorded"
+        super().__init__(message)
 
 
 class AgentIdentityConflictError(AgentControlPlaneError):
@@ -166,6 +275,12 @@ class AgentCreationError(AgentControlPlaneError):
 __all__ = [
     "AgentControlPlaneError",
     "AgentCreationError",
+    "AgentInboxConflictError",
+    "AgentInboxProtocolError",
+    "AgentMessageAcceptError",
+    "AgentMessageConflictError",
+    "AgentMessageError",
+    "AgentUnknownError",
     "AgentDirectoryConflictError",
     "AgentDirectoryProtocolError",
     "AgentIdentityConflictError",

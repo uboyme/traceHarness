@@ -16,7 +16,7 @@ from dataclasses import replace
 from traceh.agents.errors import AgentDirectoryProtocolError, AgentIdentityError
 from traceh.api.agents import AgentRecord, AgentSpec, Budget
 from traceh.api.events import EventEnvelope
-from traceh.api.json_types import JsonValue, to_json_value
+from traceh.api.json_types import JsonValue, canonical_json, to_json_value
 from traceh.cli.text_safety import is_single_line_safe
 
 AGENT_DIRECTORY_STREAM = "agents:directory"
@@ -435,6 +435,44 @@ def creation_matches(record: AgentRecord, data: dict[str, JsonValue]) -> bool:
     )
 
 
+def is_creation_fact(event: EventEnvelope, data: dict[str, JsonValue]) -> bool:
+    """Whether ``event`` is exactly the creation fact ``data`` would have written.
+
+    This answers a different question from `creation_matches`, and the two must
+    not be swapped. `creation_matches` asks *"is this the same request"* and so
+    deliberately ignores generated ids. This asks *"is this **our** event"*, for
+    commit reconciliation, where everything participates.
+
+    Matching on ``request_id`` alone is not enough: another writer racing on the
+    same id may have committed a **different** Agent, and reporting that as
+    ``committed=True`` would tell a caller its own creation landed when what
+    landed was somebody else's.
+
+    Two steps, and both are needed. Parsing proves the candidate is a
+    well-formed creation fact on the right stream at the right schema version.
+    Comparing ``canonical_json`` then proves it is *ours*, exactly - and it is
+    deliberately not ``==`` on the payloads, because Python equality is not JSON
+    identity: ``True == 1``, ``1 == 1.0`` and ``[True] == [1]`` are all true in
+    Python while being different facts in a log. The canonical encoder is the
+    same one request fingerprints use, so "are these the same JSON" has one
+    definition.
+    """
+
+    try:
+        parse_agent_created(event)
+    except AgentDirectoryProtocolError:
+        # Definitively not a well-formed creation fact, so definitively not
+        # ours. This is the *only* thing that justifies ``False``.
+        return False
+    # Anything else propagates on purpose. A canonical-encoding failure means
+    # the comparison could not be made, not that the answer is no - and
+    # `committed_after_failure` turns that into ``None`` (unknown). Returning
+    # ``False`` here would state "provably not committed" at the exact moment
+    # the event may well be sitting in the stream, which is the strongest claim
+    # from the weakest evidence.
+    return canonical_json(event.data) == canonical_json(data)
+
+
 def parse_agent_created(event: EventEnvelope) -> AgentRecord:
     """Rebuild one durable Agent identity from its creation event.
 
@@ -443,6 +481,26 @@ def parse_agent_created(event: EventEnvelope) -> AgentRecord:
     replay produces. There is no second, more forgiving in-memory reading.
     """
 
+    try:
+        return _read_agent_created(event)
+    except AgentDirectoryProtocolError:
+        raise
+    except Exception:
+        # The boundary covers the **whole** event, not only ``event.data``.
+        # `EventEnvelope` is a public DTO that anything may construct, so its
+        # protocol fields are as untrusted as its payload: a ``str`` subclass
+        # with a raising ``__ne__`` as ``event.type`` breaks the very first
+        # comparison. Leaking that would bypass the one stable outcome and
+        # break `validate_agent_directory_events`, whose contract is not to
+        # raise. Only ``event.seq`` is read out here, and plain attribute
+        # access cannot execute anything.
+        #
+        # ``Exception``, deliberately not ``BaseException``: `SystemExit` and
+        # `KeyboardInterrupt` are not verdicts about the event.
+        raise AgentDirectoryProtocolError("agent-payload-invalid", event.seq) from None
+
+
+def _read_agent_created(event: EventEnvelope) -> AgentRecord:
     if event.type != AGENT_CREATED:
         raise AgentDirectoryProtocolError("agent-event-type-unknown", event.seq)
     if event.stream_id != AGENT_DIRECTORY_STREAM:
@@ -490,6 +548,7 @@ __all__ = [
     "creation_matches",
     "detach_record",
     "is_agent_identifier",
+    "is_creation_fact",
     "parse_agent_created",
     "require_identifier",
     "validate_spec",

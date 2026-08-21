@@ -22,7 +22,7 @@ from uuid import uuid4
 
 import pytest
 
-from traceh.agents import (
+from traceh.agents import (  # noqa: F401
     AGENT_CREATED,
     AGENT_DIRECTORY_STREAM,
     AgentCreationError,
@@ -38,6 +38,7 @@ from traceh.agents import (
     AgentSessionConflictError,
     agent_created_data,
     is_agent_identifier,
+    parse_agent_created,  # noqa: F811
     validate_agent_directory_events,
 )
 from traceh.agents.identity import (
@@ -1804,3 +1805,566 @@ async def test_an_ordinary_mapping_subclass_is_still_accepted():
 
     assert record.metadata == {"nested": {"value": "kept"}}
     assert (await read_directory(store)).get("a1").metadata == {"nested": {"value": "kept"}}
+
+
+# 15. Review findings, round five: reconciliation must recognise *our* event,
+# and reading untrusted payload is itself untrusted work.
+
+
+class LosingRaceStore:
+    """Lets another writer commit under the same id, then fails our append."""
+
+    def __init__(self, inner: EventStore, other_writer) -> None:
+        self.inner = inner
+        self.other_writer = other_writer
+        self.raced = False
+
+    async def append(self, stream_id, *, expected_seq, events, durability=Durability.SYNC):
+        if not self.raced:
+            self.raced = True
+            await self.other_writer()
+            raise RuntimeError("our append failed after the other writer won")
+        return await self.inner.append(
+            stream_id, expected_seq=expected_seq, events=events, durability=durability
+        )
+
+    async def read(self, stream_id, *, from_seq=1):
+        return await self.inner.read(stream_id, from_seq=from_seq)
+
+    async def head(self, stream_id):
+        return await self.inner.head(stream_id)
+
+    async def list_streams(self, *, prefix=None):
+        return await self.inner.list_streams(prefix=prefix)
+
+
+class CommitThenFailStore:
+    """Commits our append, then fails - a genuine may-have-committed."""
+
+    def __init__(self, inner: EventStore) -> None:
+        self.inner = inner
+
+    async def append(self, stream_id, *, expected_seq, events, durability=Durability.SYNC):
+        await self.inner.append(
+            stream_id, expected_seq=expected_seq, events=events, durability=durability
+        )
+        raise RuntimeError("failed after committing")
+
+    async def read(self, stream_id, *, from_seq=1):
+        return await self.inner.read(stream_id, from_seq=from_seq)
+
+    async def head(self, stream_id):
+        return await self.inner.head(stream_id)
+
+    async def list_streams(self, *, prefix=None):
+        return await self.inner.list_streams(prefix=prefix)
+
+
+@pytest.mark.parametrize(
+    ("agent_id", "session_id", "overrides"),
+    [
+        ("agent-b", "session-b", {}),
+        ("agent-a", "session-b", {}),
+        ("agent-b", "session-a", {}),
+        ("agent-b", "session-b", {"preset": "reviewer"}),
+        ("agent-b", "session-b", {"capability_grants": ("write",)}),
+    ],
+)
+async def test_another_writers_agent_is_never_reported_as_ours(agent_id, session_id, overrides):
+    """``committed`` answers "did *our* event land", not "is that id present".
+
+    Two independent registrars racing on one ``request_id`` create different
+    Agents. Matching on the id alone told the loser its Agent was recorded when
+    what actually landed was somebody else's.
+    """
+
+    inner = InMemoryEventStore()
+
+    async def other_writer():
+        await AgentRegistrar(inner).create_agent(
+            spec(**overrides), request_id="shared", agent_id=agent_id, session_id=session_id
+        )
+
+    store = LosingRaceStore(inner, other_writer)
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(store).create_agent(
+            SPEC, request_id="shared", agent_id="agent-a", session_id="session-a"
+        )
+
+    assert error.value.committed is False
+    durable = AgentDirectory.rebuild(await inner.read(AGENT_DIRECTORY_STREAM))
+    assert durable.get(agent_id) is not None
+    assert len(durable) == 1
+
+
+async def test_our_own_committed_agent_is_still_reported_as_committed():
+    """The stricter match must not turn every may-have-committed into False."""
+
+    inner = InMemoryEventStore()
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(CommitThenFailStore(inner)).create_agent(
+            spec(metadata={"note": "mine"}),
+            request_id="r1",
+            agent_id="a1",
+            session_id="s1",
+        )
+
+    assert error.value.committed is True
+    assert (await read_directory(inner)).get("a1") is not None
+
+
+async def test_a_malformed_unrelated_event_does_not_make_the_answer_unknown():
+    class CommitThenPoisonStore:
+        def __init__(self, inner: EventStore) -> None:
+            self.inner = inner
+            self.poisoned = False
+
+        async def append(self, stream_id, *, expected_seq, events, durability=Durability.SYNC):
+            await self.inner.append(
+                stream_id, expected_seq=expected_seq, events=events, durability=durability
+            )
+            if not self.poisoned:
+                self.poisoned = True
+                broken = agent_created_data(
+                    agent_id="a2", session_id="s2", request_id="r2", spec=spec()
+                )
+                broken["budget"] = "unlimited"
+                await raw_append(self.inner, broken)
+            raise RuntimeError("failed after committing")
+
+        async def read(self, stream_id, *, from_seq=1):
+            return await self.inner.read(stream_id, from_seq=from_seq)
+
+        async def head(self, stream_id):
+            return await self.inner.head(stream_id)
+
+        async def list_streams(self, *, prefix=None):
+            return await self.inner.list_streams(prefix=prefix)
+
+    inner = InMemoryEventStore()
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(CommitThenPoisonStore(inner)).create_agent(
+            SPEC, request_id="r1", agent_id="a1", session_id="s1"
+        )
+    assert error.value.committed is True
+
+
+class RaisingIteration(dict):
+    """Encodable, but ``set(data)`` cannot walk it."""
+
+    def __iter__(self):
+        raise ValueError("__iter__ is hostile")
+
+
+class RaisingGet(dict):
+    def get(self, *args, **kwargs):
+        raise RuntimeError("get() is hostile")
+
+
+class RaisingGetItem(dict):
+    def __getitem__(self, key):
+        raise ArithmeticError("__getitem__ is hostile")
+
+
+class InterruptingIteration(dict):
+    def __iter__(self):
+        raise KeyboardInterrupt()
+
+
+class ExitingIteration(dict):
+    def __iter__(self):
+        raise SystemExit(7)
+
+
+# Only the access paths ``parse_agent_created`` actually uses.
+HOSTILE_DIRECTORY_PAYLOADS = [RaisingIteration, RaisingGet, RaisingGetItem]
+
+
+def poisoned_directory_event(container) -> EventEnvelope:
+    data = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
+    return EventEnvelope(
+        event_id=uuid4(),
+        stream_id=AGENT_DIRECTORY_STREAM,
+        seq=1,
+        type=AGENT_CREATED,
+        schema_version=1,
+        data=container(data),
+        occurred_at=datetime.now(UTC),
+    )
+
+
+@pytest.mark.parametrize("container", HOSTILE_DIRECTORY_PAYLOADS)
+def test_a_directory_payload_that_raises_while_being_read_is_a_protocol_error(container):
+    """`parse_agent_created` calls ``set(data)``, ``data.get()`` and
+    ``data[key]`` on a container the store handed back, all of which a hostile
+    subclass can break - outside the protocol error boundary that used to end at
+    the metadata walk."""
+
+    with pytest.raises(AgentDirectoryProtocolError) as error:
+        AgentDirectory.rebuild((poisoned_directory_event(container),))
+    assert error.value.code == "agent-payload-invalid"
+
+
+@pytest.mark.parametrize("container", HOSTILE_DIRECTORY_PAYLOADS)
+def test_the_directory_validator_still_returns_issues_for_a_hostile_payload(container):
+    issues = validate_agent_directory_events((poisoned_directory_event(container),))
+    assert [issue.code for issue in issues] == ["agent-payload-invalid"]
+
+
+@pytest.mark.parametrize(
+    ("container", "interrupt"),
+    [(InterruptingIteration, KeyboardInterrupt), (ExitingIteration, SystemExit)],
+)
+def test_an_interrupt_while_reading_a_directory_payload_is_not_a_protocol_error(
+    container, interrupt
+):
+    with pytest.raises(interrupt):
+        AgentDirectory.rebuild((poisoned_directory_event(container),))
+    with pytest.raises(interrupt):
+        validate_agent_directory_events((poisoned_directory_event(container),))
+
+
+# ROUND SIX: Python equality is not JSON identity, and envelope protocol fields
+# are as untrusted as the payload.
+
+
+class HostileComparison(str):
+    """A legal ``str`` whose comparison raises.
+
+    `EventEnvelope` is a public DTO that anything may construct - these tests
+    construct it directly - so ``event.type``, ``event.stream_id`` and
+    ``event.schema_version`` are no more trusted than ``event.data``.
+    """
+
+    def __eq__(self, other):
+        raise ValueError("hostile __eq__")
+
+    def __ne__(self, other):
+        raise ValueError("hostile __ne__")
+
+    def __hash__(self):
+        return str.__hash__(self)
+
+
+class InterruptingComparison(str):
+    def __ne__(self, other):
+        raise KeyboardInterrupt()
+
+    def __eq__(self, other):
+        raise KeyboardInterrupt()
+
+    def __hash__(self):
+        return str.__hash__(self)
+
+
+class ExitingComparison(str):
+    def __ne__(self, other):
+        raise SystemExit(7)
+
+    def __eq__(self, other):
+        raise SystemExit(7)
+
+    def __hash__(self):
+        return str.__hash__(self)
+
+
+def replace_envelope_field(event: EventEnvelope, field: str, value) -> EventEnvelope:
+    fields = {name: getattr(event, name) for name in event.__slots__}
+    fields[field] = value
+    return EventEnvelope(**fields)
+
+
+@pytest.mark.parametrize(
+    ("mine", "theirs"),
+    [
+        ({"flag": 1}, {"flag": True}),
+        ({"flag": 0}, {"flag": False}),
+        ({"n": 1}, {"n": 1.0}),
+        ({"l": [1]}, {"l": [True]}),
+        ({"d": {"x": 0}}, {"d": {"x": False}}),
+        ({"deep": {"a": [{"b": 1}]}}, {"deep": {"a": [{"b": True}]}}),
+    ],
+)
+async def test_metadata_that_is_only_python_equal_is_not_our_fact(mine, theirs):
+    """Python equality is not JSON identity.
+
+    ``True == 1``, ``1 == 1.0`` and ``[True] == [1]`` are all true in Python
+    while being different facts in a log, so a plain ``==`` on metadata let a
+    racing writer's Agent be reported as ours.
+    """
+
+    inner = InMemoryEventStore()
+
+    async def other_writer():
+        await AgentRegistrar(inner).create_agent(
+            spec(metadata=theirs), request_id="shared", agent_id="a1", session_id="s1"
+        )
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(LosingRaceStore(inner, other_writer)).create_agent(
+            spec(metadata=mine), request_id="shared", agent_id="a1", session_id="s1"
+        )
+
+    assert error.value.committed is False
+    assert (await read_directory(inner)).get("a1").metadata == theirs
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [{"flag": 1}, {"flag": True}, {"n": 1.0}, {"l": [1, True, 1.0]}, {"deep": {"a": [{"b": 0}]}}],
+)
+async def test_our_own_metadata_still_matches_exactly(metadata):
+    """The stricter comparison must not reject our own committed fact."""
+
+    inner = InMemoryEventStore()
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(CommitThenFailStore(inner)).create_agent(
+            spec(metadata=metadata), request_id="r1", agent_id="a1", session_id="s1"
+        )
+
+    assert error.value.committed is True
+
+
+@pytest.mark.parametrize("field", ["type", "stream_id", "schema_version"])
+def test_a_hostile_envelope_protocol_field_is_a_directory_protocol_error(field):
+    """The exception boundary must cover the whole event, not only its payload."""
+
+    data = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
+    event = replace_envelope_field(
+        EventEnvelope(
+            event_id=uuid4(),
+            stream_id=AGENT_DIRECTORY_STREAM,
+            seq=1,
+            type=AGENT_CREATED,
+            schema_version=1,
+            data=data,
+            occurred_at=datetime.now(UTC),
+        ),
+        field,
+        HostileComparison("whatever"),
+    )
+
+    with pytest.raises(AgentDirectoryProtocolError) as error:
+        AgentDirectory.rebuild((event,))
+    assert error.value.code == "agent-payload-invalid"
+
+    issues = validate_agent_directory_events((event,))
+    assert [issue.code for issue in issues] == ["agent-payload-invalid"]
+
+
+@pytest.mark.parametrize(
+    ("container", "interrupt"),
+    [(InterruptingComparison, KeyboardInterrupt), (ExitingComparison, SystemExit)],
+)
+@pytest.mark.parametrize("field", ["type", "stream_id", "schema_version"])
+def test_an_interrupt_from_a_directory_envelope_field_is_not_a_protocol_error(
+    field, container, interrupt
+):
+    data = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
+    event = replace_envelope_field(
+        EventEnvelope(
+            event_id=uuid4(),
+            stream_id=AGENT_DIRECTORY_STREAM,
+            seq=1,
+            type=AGENT_CREATED,
+            schema_version=1,
+            data=data,
+            occurred_at=datetime.now(UTC),
+        ),
+        field,
+        container("whatever"),
+    )
+
+    with pytest.raises(interrupt):
+        AgentDirectory.rebuild((event,))
+    with pytest.raises(interrupt):
+        validate_agent_directory_events((event,))
+
+
+def _directory_envelope(**overrides) -> EventEnvelope:
+    data = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
+    fields = {
+        "event_id": uuid4(),
+        "stream_id": AGENT_DIRECTORY_STREAM,
+        "seq": 1,
+        "type": AGENT_CREATED,
+        "schema_version": 1,
+        "data": data,
+        "occurred_at": datetime.now(UTC),
+    }
+    fields.update(overrides)
+    return EventEnvelope(**fields)
+
+
+@pytest.mark.parametrize("field", ["type", "stream_id", "schema_version"])
+def test_the_directory_parser_itself_converts_a_hostile_envelope_field(field):
+    """Pinned directly on the parser, not only through ``rebuild``.
+
+    ``_scan`` has its own net, so a leak inside the parser is invisible from
+    the projector - but `parse_agent_created` is public and is also what commit
+    reconciliation calls, so its boundary has to hold on its own.
+    """
+
+    event = replace_envelope_field(_directory_envelope(), field, HostileComparison("whatever"))
+    with pytest.raises(AgentDirectoryProtocolError) as error:
+        parse_agent_created(event)
+    assert error.value.code == "agent-payload-invalid"
+
+
+@pytest.mark.parametrize(
+    ("container", "interrupt"),
+    [(InterruptingComparison, KeyboardInterrupt), (ExitingComparison, SystemExit)],
+)
+def test_the_directory_parser_still_propagates_an_interrupt(container, interrupt):
+    event = replace_envelope_field(_directory_envelope(), "type", container("whatever"))
+    with pytest.raises(interrupt):
+        parse_agent_created(event)
+
+
+@pytest.mark.parametrize("field", ["type", "stream_id", "schema_version"])
+async def test_directory_reconciliation_survives_a_hostile_neighbouring_event(field):
+    """A hostile event next to ours must not make our own answer unknown."""
+
+    inner = InMemoryEventStore()
+
+    class CommitThenPoisonEnvelope:
+        def __init__(self, inner: EventStore) -> None:
+            self.inner = inner
+            self.committed = False
+
+        async def append(self, stream_id, *, expected_seq, events, durability=Durability.SYNC):
+            await self.inner.append(
+                stream_id, expected_seq=expected_seq, events=events, durability=durability
+            )
+            self.committed = True
+            raise RuntimeError("failed after committing")
+
+        async def read(self, stream_id, *, from_seq=1):
+            real = await self.inner.read(stream_id, from_seq=from_seq)
+            # Injected only into the *reconciliation* read; injecting into the
+            # initial rebuild would fail the transaction closed before the
+            # append, which tests a different thing.
+            if not self.committed:
+                return real
+            hostile = replace_envelope_field(
+                _directory_envelope(seq=99), field, HostileComparison("whatever")
+            )
+            return (hostile, *real)
+
+        async def head(self, stream_id):
+            return await self.inner.head(stream_id)
+
+        async def list_streams(self, *, prefix=None):
+            return await self.inner.list_streams(prefix=prefix)
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(CommitThenPoisonEnvelope(inner)).create_agent(
+            SPEC, request_id="r1", agent_id="a1", session_id="s1"
+        )
+    assert error.value.committed is True
+
+
+# ROUND SEVEN: a comparison that could not be made is not a negative answer.
+
+
+class UnreadableAfterCommit:
+    """Commits our event, then hands back a payload canonical encoding cannot read.
+
+    The container parses fine - ``__iter__``, ``get`` and ``__getitem__`` all
+    work - so the event passes the protocol gate. Only ``items()``, which
+    ``to_json_value()`` needs, raises. That separates "this is not a valid fact"
+    from "this could not be compared", and only the first justifies ``False``.
+    """
+
+    def __init__(self, inner: EventStore, container) -> None:
+        self.inner = inner
+        self.container = container
+        self.committed = False
+
+    async def append(self, stream_id, *, expected_seq, events, durability=Durability.SYNC):
+        await self.inner.append(
+            stream_id, expected_seq=expected_seq, events=events, durability=durability
+        )
+        self.committed = True
+        raise RuntimeError("failed after committing")
+
+    async def read(self, stream_id, *, from_seq=1):
+        real = await self.inner.read(stream_id, from_seq=from_seq)
+        if not self.committed:
+            return real
+        return tuple(
+            replace_envelope_field(event, "data", self.container(event.data)) for event in real
+        )
+
+    async def head(self, stream_id):
+        return await self.inner.head(stream_id)
+
+    async def list_streams(self, *, prefix=None):
+        return await self.inner.list_streams(prefix=prefix)
+
+
+class UnreadableItems(dict):
+    def items(self):
+        raise ValueError("items() is hostile")
+
+
+class InterruptingItems(dict):
+    def items(self):
+        raise KeyboardInterrupt()
+
+
+class ExitingItems(dict):
+    def items(self):
+        raise SystemExit(7)
+
+
+async def test_a_committed_agent_that_cannot_be_compared_is_unknown_not_uncommitted():
+    """Through the real registrar, not the helper."""
+
+    inner = InMemoryEventStore()
+
+    with pytest.raises(AgentCreationError) as error:
+        await AgentRegistrar(UnreadableAfterCommit(inner, UnreadableItems)).create_agent(
+            SPEC, request_id="r1", agent_id="a1", session_id="s1"
+        )
+
+    assert error.value.committed is None
+    assert "unknown" in str(error.value)
+    assert len(await inner.read(AGENT_DIRECTORY_STREAM)) == 1
+
+
+@pytest.mark.parametrize(
+    ("container", "interrupt"),
+    [(InterruptingItems, KeyboardInterrupt), (ExitingItems, SystemExit)],
+)
+async def test_an_interrupt_during_directory_comparison_still_propagates(container, interrupt):
+    inner = InMemoryEventStore()
+
+    with pytest.raises(interrupt):
+        await AgentRegistrar(UnreadableAfterCommit(inner, container)).create_agent(
+            SPEC, request_id="r1", agent_id="a1", session_id="s1"
+        )
+
+
+async def test_a_readable_directory_still_answers_true_and_false_definitively():
+    """The unknown state must not swallow the two knowable ones."""
+
+    inner = InMemoryEventStore()
+
+    with pytest.raises(AgentCreationError) as committed:
+        await AgentRegistrar(CommitThenFailStore(inner)).create_agent(
+            SPEC, request_id="r1", agent_id="a1", session_id="s1"
+        )
+    assert committed.value.committed is True
+
+    gated = GatedStore(InMemoryEventStore())
+    gated.append_failure = RuntimeError("never committed")
+    gated.append_release.set()
+    with pytest.raises(AgentCreationError) as missing:
+        await AgentRegistrar(gated).create_agent(
+            SPEC, request_id="r2", agent_id="a2", session_id="s2"
+        )
+    assert missing.value.committed is False

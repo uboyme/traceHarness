@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from uuid import uuid4
 
+from traceh.agents.commit_reconciliation import committed_after_failure
 from traceh.agents.directory import AgentDirectory, AgentDirectoryReader
 from traceh.agents.errors import (
     AgentCreationError,
@@ -34,6 +35,7 @@ from traceh.agents.identity import (
     AGENT_DIRECTORY_STREAM,
     agent_created_data,
     creation_matches,
+    is_creation_fact,
     parse_agent_created,
     require_identifier,
     validate_spec,
@@ -41,7 +43,6 @@ from traceh.agents.identity import (
 from traceh.api.agents import AgentRecord, AgentSpec
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.json_types import JsonValue
-from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import ConcurrencyConflict, Durability, EventStore
 
 
@@ -147,7 +148,6 @@ class AgentRegistrar:
 
             appended = await self._append(
                 expected_seq=directory.head_seq,
-                request_id=request_id,
                 data=data,
             )
             # Parsed back through the projector's own reader so the returned
@@ -182,7 +182,6 @@ class AgentRegistrar:
         self,
         *,
         expected_seq: int,
-        request_id: str,
         data: dict[str, JsonValue],
     ) -> EventEnvelope:
         try:
@@ -193,9 +192,9 @@ class AgentRegistrar:
                 durability=Durability.SYNC,
             )
         except asyncio.CancelledError as error:
-            raise await self._explain_failed_append(error, request_id) from None
+            raise await self._explain_failed_append(error, data) from None
         except Exception as error:
-            raise await self._explain_failed_append(error, request_id) from None
+            raise await self._explain_failed_append(error, data) from None
         # Any other ``BaseException`` - `SystemExit`, `KeyboardInterrupt`, or a
         # future one - propagates untouched, deliberately without a handler.
         # Only `CancelledError` needs the convergence treatment; rewriting an
@@ -206,7 +205,7 @@ class AgentRegistrar:
     async def _explain_failed_append(
         self,
         error: BaseException,
-        request_id: str,
+        data: dict[str, JsonValue],
     ) -> BaseException:
         """Decide what a failed or cancelled append actually did.
 
@@ -225,7 +224,7 @@ class AgentRegistrar:
         cancellation cannot release the caller early.
         """
 
-        committed = await self._request_committed(request_id)
+        committed = await self._request_committed(data)
         if isinstance(error, asyncio.CancelledError):
             # Cancellation is never swallowed, whichever way the append went.
             # The caller asked to stop, so it is told it stopped; if it still
@@ -240,34 +239,31 @@ class AgentRegistrar:
             return AgentDirectoryConflictError()
         return AgentCreationError(committed=committed)
 
-    async def _request_committed(self, request_id: str) -> bool | None:
-        """Whether this request's event is in the stream.
+    async def _request_committed(self, data: dict[str, JsonValue]) -> bool | None:
+        """Whether **our** creation event is in the stream.
 
-        Returns ``None`` when the re-read could not answer. "I could not find
-        out" and "it is not there" are different facts, and collapsing them
-        into ``False`` would make the strongest claim from the weakest
-        evidence - precisely when the store is already misbehaving.
+        The question is "did *this* event land", so the match is against the
+        complete frozen fact, not just ``request_id``. A writer racing us on the
+        same id may have committed a different Agent; matching on the id alone
+        would report ``committed=True`` for a creation that never happened and
+        hand the caller somebody else's fact as its own.
+
+        Parsing through the projector also re-checks stream, schema version and
+        key set, so nothing that is not a well-formed creation fact can be
+        mistaken for ours. A malformed unrelated event is skipped rather than
+        making the answer unknown: it cannot be ours either way.
+
+        Delegates to the shared reconciler so Agent creation and Inbox
+        acceptance cannot drift into two different answers about when a caller
+        may be released and what "not committed" is allowed to claim. The three
+        states are unchanged: ``True``, ``False``, and ``None`` for "the re-read
+        could not answer".
         """
 
-        read_task = asyncio.create_task(self._reader.read_events())
-        try:
-            events = await asyncio.shield(read_task)
-        except asyncio.CancelledError:
-            await await_worker_convergence(read_task)
-            if read_task.cancelled():
-                return None
-            try:
-                events = read_task.result()
-            except Exception:
-                return None
-        except Exception:
-            return None
-        for event in events:
-            if event.type != AGENT_CREATED:
-                continue
-            if event.data.get("request_id") == request_id:
-                return True
-        return False
+        def matches(event: EventEnvelope) -> bool:
+            return is_creation_fact(event, data)
+
+        return await committed_after_failure(self._reader.read_events, matches)
 
 
 __all__ = ["AgentRegistrar"]

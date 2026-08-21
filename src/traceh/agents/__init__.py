@@ -11,10 +11,19 @@ separate from `traceh.runtime`:
 * a future `AgentSupervisor` will hold Activations through a narrow interface
   and use this package for identity. The dependency only points that way.
 
-Stage A of v0.6 implements identity and the creation transaction. There is no
-Supervisor, no Inbox, no message delivery, no subagent tool and no parent/child
-disposal here; `owner_agent_id` records lifecycle responsibility only. See
-[ADR-0019](../../../docs/adr/0019-durable-agent-identity-and-activation-boundary.md).
+Two fact layers exist so far, and both are only facts:
+
+* **Stage A** - identity and the creation transaction: which Agents exist and
+  which Session each one owns
+  ([ADR-0019](../../../docs/adr/0019-durable-agent-identity-and-activation-boundary.md));
+* **Stage B** - a durable per-Agent FIFO Inbox of **accepted** messages
+  ([ADR-0020](../../../docs/adr/0020-durable-agent-inbox-acceptance.md)).
+
+**Accepted is not processed.** There is a persistent acceptance history, but no
+Supervisor, no delivery, no claim/ack/complete/retry, no Turn execution, no cold
+recovery, no subagent tool and no parent/child disposal; `owner_agent_id`
+records lifecycle responsibility only and `wakeup` records a sender request
+rather than waking anything.
 """
 
 from __future__ import annotations
@@ -32,9 +41,15 @@ from traceh.agents.errors import (
     AgentDirectoryProtocolError,
     AgentIdentityConflictError,
     AgentIdentityError,
+    AgentInboxConflictError,
+    AgentInboxProtocolError,
+    AgentMessageAcceptError,
+    AgentMessageConflictError,
+    AgentMessageError,
     AgentOwnerNotFoundError,
     AgentRequestConflictError,
     AgentSessionConflictError,
+    AgentUnknownError,
 )
 from traceh.agents.identity import (
     AGENT_CREATED,
@@ -43,11 +58,30 @@ from traceh.agents.identity import (
     is_agent_identifier,
     parse_agent_created,
 )
+from traceh.agents.inbox import (
+    AgentInbox,
+    AgentInboxIssue,
+    AgentInboxReader,
+    validate_agent_inbox_events,
+)
+from traceh.agents.inbox_identity import (
+    AGENT_INBOX_SCHEMA_VERSION,
+    AGENT_INBOX_STREAM_PREFIX,
+    AGENT_MESSAGE_ACCEPTED,
+    agent_inbox_stream,
+    is_message_content,
+    message_accepted_data,
+    parse_message_accepted,
+)
+from traceh.agents.inbox_service import AgentInboxService
 from traceh.agents.registrar import AgentRegistrar
 
 __all__ = [
     "AGENT_CREATED",
     "AGENT_DIRECTORY_STREAM",
+    "AGENT_INBOX_SCHEMA_VERSION",
+    "AGENT_INBOX_STREAM_PREFIX",
+    "AGENT_MESSAGE_ACCEPTED",
     "AgentControlPlaneError",
     "AgentCreationError",
     "AgentDirectory",
@@ -57,12 +91,27 @@ __all__ = [
     "AgentDirectoryReader",
     "AgentIdentityConflictError",
     "AgentIdentityError",
+    "AgentInbox",
+    "AgentInboxConflictError",
+    "AgentInboxIssue",
+    "AgentInboxProtocolError",
+    "AgentInboxReader",
+    "AgentInboxService",
+    "AgentMessageAcceptError",
+    "AgentMessageConflictError",
+    "AgentMessageError",
     "AgentOwnerNotFoundError",
     "AgentRegistrar",
     "AgentRequestConflictError",
     "AgentSessionConflictError",
+    "AgentUnknownError",
     "agent_created_data",
+    "agent_inbox_stream",
     "is_agent_identifier",
+    "is_message_content",
+    "message_accepted_data",
     "parse_agent_created",
+    "parse_message_accepted",
     "validate_agent_directory_events",
+    "validate_agent_inbox_events",
 ]

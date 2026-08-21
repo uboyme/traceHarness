@@ -195,7 +195,24 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
   `AgentSupervisor`, single-activation enforcement, Inbox, message delivery or wakeup,
   subagent tools, parent/child disposal, and Agent cold recovery. `AgentSupervisor`'s methods
   still have no implementation behind them.
-- Add one FIFO Inbox per Agent and single-activation enforcement.
+- **Stage B — completed as the durable Inbox fact layer:** one append-only FIFO acceptance
+  history per Agent, on its own `agent-inbox:<agent_id>` stream in the existing `EventStore`.
+  `AgentInboxService.accept()` freezes the request before its first `await`, requires the
+  target Agent to exist in the Stage A directory, and appends `agent/message-accepted` with
+  `expected_seq` carried from the Inbox read; a caller-supplied `message_id` makes retries
+  idempotent and reusing one for a different message is rejected. `AgentInbox` rebuilds the
+  same order from the log alone and fails closed on duplicate ids, unknown event types,
+  unsupported schema versions, inexact payload key sets, wrong-stream events and malformed
+  fields. `content` is prose rather than an identifier - multi-line is legal, but it is
+  bounded and must be UTF-8 encodable; `target` is checked against `MessageTarget` and
+  `wakeup` is strictly `bool`. Both control-plane transactions now share one commit
+  reconciliation with `True`/`False`/unknown, and `AgentRegistrar`'s contract is unchanged.
+  See [ADR-0020](docs/adr/0020-durable-agent-inbox-acceptance.md).
+- **Stage B explicitly excludes**, and no part of it may be described as delivering:
+  **accepted is not processed.** There is no delivery, claim, ack, completion, failure or
+  retry, `wakeup` records the sender's request rather than waking anything, and there is still
+  no Supervisor, Activation, Turn scheduling or cold recovery.
+- Add single-activation enforcement and Inbox claim/Turn execution.
 - Add lifecycle ownership graph and child-first quiescent disposal.
 - Implement `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
   `collect_agent_artifact` as tools backed by the Supervisor.

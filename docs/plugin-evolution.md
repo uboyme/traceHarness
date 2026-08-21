@@ -390,6 +390,43 @@ verification-failure case. This is a deterministic capability contract, not a ge
 real-model benchmark. The venvs are not an OS sandbox. See
 [ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
 
+### Post-v0.5 L4: human-approved exact promotion and rollback
+
+`traceh plugins promote` consumes the successful L2 and L3 bundles without rebuilding either.
+It reconstructs the canonical L3 arm results, summaries, fixed gate sequence, classification and
+non-empty frozen dependency set; a report-shaped JSON skeleton cannot become approval evidence.
+Review mode inspects an explicit target Python and emits a bounded Chinese capability/risk/evidence
+card. It has no package-management side effect. The card's SHA-256 approval digest binds both
+report byte strings, the audited Wheel, selected Registry, interpreter identity, target
+Distribution receipt, installed-package content digest, canonical package owner and current managed promotion. Apply mode requires that same digest and
+rechecks all inputs under a cross-process Registry mutation lock.
+
+Only `improved` with at least one improvement and no regression is eligible. The target's core
+version and all non-candidate Distribution versions must match L3. L4 installs only the exact
+SHA-256-addressed candidate Wheel with index and dependency resolution disabled, then requires the
+complete installed receipt and plugin doctor to match. A bounded digest over every file in the
+target package roots is checked around doctor, so same-version edits and candidate files absent
+from `RECORD` are also rejected before the Registry can record `stable`. Isolated inspection
+keeps the selected venv executable path and derives site-packages from its adjacent `pyvenv.cfg`,
+instead of falling through to the base Python under `-S`. An existing unmanaged candidate, target
+drift, duplicate current artifact or stale approval is rejected.
+
+Review output and Registry paths must remain outside the target prefix. A fixed host-owned
+coordination namespace beside the canonical target environment, independent of `TEMP`, owns and
+locks the target environment itself, independent of interpreter aliases, caller Registry choices,
+plugin ids and Distributions. Because every package state records the complete environment, L4 v1
+allows one active managed Distribution chain per target; complete rollback to an absent first
+version releases the owner for a later handoff. The selected Registry stores immutable Wheels,
+promotion records and content receipts for that active chain beside a small
+`stable / installing / rollbacking` state machine. Failure or cancellation after mutation restores
+the previous exact Wheel, or uninstalls a first promotion, before returning. The explicit rollback
+command requires the current promotion id and can also finish recovery from an unfinished install
+or rollback after a hard crash. The first owner/record-before-state crash window is recoverable
+only when the exact record and an absent target prove pip never started; contradictory evidence
+fails closed. This state is development-control evidence, not Session or model
+state; no change was made to AgentRuntime, AgentLoop, PluginManager or EventStore. See
+[ADR-0018](adr/0018-human-approved-exact-plugin-promotion.md).
+
 ## Extension categories
 
 Shipped in v0.5.0 — a plugin may register:

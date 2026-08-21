@@ -39,6 +39,17 @@ from traceh.evolution.candidate_comparison import (
     CandidateComparisonConfigurationError,
     CandidateComparisonEvidenceError,
 )
+from traceh.evolution.candidate_promotion import (
+    PROMOTION_EXIT_CODE,
+    CandidatePromoter,
+    CandidatePromotionConfig,
+    CandidatePromotionConfigurationError,
+    CandidatePromotionEvidenceError,
+    CandidatePromotionExecutionError,
+    CandidatePromotionRollbackError,
+    CandidateRollbackConfig,
+    CandidateRollbacker,
+)
 from traceh.evolution.candidate_validation import (
     VALIDATION_EXIT_CODE,
     CandidateValidationConfig,
@@ -537,6 +548,106 @@ async def _plugins_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+async def _plugins_promote(args: argparse.Namespace) -> int:
+    try:
+        report = await CandidatePromoter(
+            CandidatePromotionConfig(
+                validation_evidence=args.validation_evidence,
+                comparison_evidence=args.comparison_evidence,
+                target_python=args.target_python,
+                registry=args.registry,
+                output=args.output,
+                approval_digest=args.approve,
+                command_timeout_seconds=args.command_timeout_seconds,
+            )
+        ).run()
+    except (
+        CandidatePromotionConfigurationError,
+        CandidatePromotionEvidenceError,
+        CandidatePromotionExecutionError,
+        CandidatePromotionRollbackError,
+        OSError,
+    ):
+        return _print_promotion_failure(args, "candidate-promotion-failed")
+    result = {
+        "command": "promote",
+        "ok": report.ok,
+        "action": report.action,
+        "code": report.code,
+        "approval_digest": report.approval_digest,
+        "promotion_id": report.promotion_id,
+        "report_json": str(args.output.resolve() / "report.json"),
+        "report_markdown": str(args.output.resolve() / "report.md"),
+    }
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print("traceh plugins promote")
+        print(f"  action={report.action}")
+        print(f"  code={report.code}")
+        print(f"  approval_digest={report.approval_digest}")
+        print(f"  promotion_id={report.promotion_id or 'none'}")
+        report_path = escape_for_display(str(args.output.resolve() / "report.md"), limit=500)
+        print(f"  report={report_path}")
+    return 0
+
+
+async def _plugins_rollback(args: argparse.Namespace) -> int:
+    try:
+        report = await CandidateRollbacker(
+            CandidateRollbackConfig(
+                target_python=args.target_python,
+                registry=args.registry,
+                output=args.output,
+                plugin_id=args.plugin_id,
+                distribution=args.distribution,
+                current_promotion_id=args.current_promotion_id,
+                command_timeout_seconds=args.command_timeout_seconds,
+            )
+        ).run()
+    except (
+        CandidatePromotionConfigurationError,
+        CandidatePromotionEvidenceError,
+        CandidatePromotionExecutionError,
+        CandidatePromotionRollbackError,
+        OSError,
+    ):
+        return _print_promotion_failure(args, "candidate-rollback-failed")
+    result = {
+        "command": "rollback",
+        "ok": report.ok,
+        "code": report.code,
+        "promotion_id": report.promotion_id,
+        "report_json": str(args.output.resolve() / "report.json"),
+        "report_markdown": str(args.output.resolve() / "report.md"),
+    }
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print("traceh plugins rollback")
+        print(f"  code={report.code}")
+        print(f"  promotion_id={report.promotion_id or 'absent'}")
+        report_path = escape_for_display(str(args.output.resolve() / "report.md"), limit=500)
+        print(f"  report={report_path}")
+    return 0
+
+
+def _print_promotion_failure(args: argparse.Namespace, code: str) -> int:
+    command = getattr(args, "plugin_command", "promote")
+    if args.json:
+        print(
+            json.dumps(
+                {"command": command, "ok": False, "code": code},
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
+    else:
+        print("candidate promotion or rollback evidence is invalid")
+    return PROMOTION_EXIT_CODE
+
+
 def _print_validation_configuration_failure(args: argparse.Namespace, code: str) -> None:
     if args.json:
         print(
@@ -734,6 +845,38 @@ def build_parser() -> argparse.ArgumentParser:
     plugin_compare.add_argument("--command-timeout-seconds", type=float, default=600.0)
     plugin_compare.add_argument("--json", action="store_true")
     plugin_compare.set_defaults(handler=_plugins_compare)
+
+    plugin_promote = plugin_sub.add_parser(
+        "promote",
+        help="Review or explicitly approve one exact L2/L3 candidate artifact",
+    )
+    plugin_promote.add_argument("validation_evidence", type=Path)
+    plugin_promote.add_argument("comparison_evidence", type=Path)
+    plugin_promote.add_argument("--target-python", type=Path, required=True)
+    plugin_promote.add_argument("--registry", type=Path, required=True)
+    plugin_promote.add_argument("--output", type=Path, required=True)
+    plugin_promote.add_argument(
+        "--approve",
+        metavar="SHA256",
+        help="Exact approval digest emitted by a prior review-only invocation",
+    )
+    plugin_promote.add_argument("--command-timeout-seconds", type=float, default=600.0)
+    plugin_promote.add_argument("--json", action="store_true")
+    plugin_promote.set_defaults(handler=_plugins_promote)
+
+    plugin_rollback = plugin_sub.add_parser(
+        "rollback",
+        help="Restore the exact previous managed plugin state",
+    )
+    plugin_rollback.add_argument("--target-python", type=Path, required=True)
+    plugin_rollback.add_argument("--registry", type=Path, required=True)
+    plugin_rollback.add_argument("--output", type=Path, required=True)
+    plugin_rollback.add_argument("--plugin-id", required=True)
+    plugin_rollback.add_argument("--distribution", required=True)
+    plugin_rollback.add_argument("--current-promotion-id", required=True)
+    plugin_rollback.add_argument("--command-timeout-seconds", type=float, default=600.0)
+    plugin_rollback.add_argument("--json", action="store_true")
+    plugin_rollback.set_defaults(handler=_plugins_rollback)
 
     doctor = sub.add_parser("doctor", help="Check the local runtime environment")
     _add_storage_arguments(doctor)

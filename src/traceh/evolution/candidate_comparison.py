@@ -47,6 +47,19 @@ from traceh.tools.builtins.shell import sanitized_environment
 
 COMPARISON_SCHEMA_VERSION = 1
 COMPARISON_EXIT_CODE = 9
+COMPARISON_CHECKS = (
+    ("l2-evidence", "l2-evidence-passed"),
+    ("trusted-core-snapshot", "trusted-core-snapshot-passed"),
+    ("host-suite-contract", "host-suite-contract-passed"),
+    ("core-wheel-build", "core-wheel-build-passed"),
+    ("dependency-freeze", "comparison-dependency-freeze-passed"),
+    ("baseline-environment", "baseline-environment-passed"),
+    ("candidate-environment", "candidate-environment-passed"),
+    ("environment-receipt", "comparison-environment-receipt-passed"),
+    ("baseline-comparison", "baseline-comparison-passed"),
+    ("candidate-comparison", "candidate-comparison-passed"),
+    ("input-recheck", "comparison-input-recheck-passed"),
+)
 MAX_REPORT_BYTES = 1_000_000
 MAX_RESULT_BYTES = 1_000_000
 MAX_CASES = 20
@@ -219,7 +232,7 @@ class CandidateComparisonReport:
 
 
 @dataclass(frozen=True, slots=True)
-class _ValidationEvidence:
+class ValidationEvidence:
     report_content: bytes
     report_sha256: str
     core_commit: str
@@ -227,6 +240,55 @@ class _ValidationEvidence:
     artifact: ComparisonArtifact
     artifact_source: Path
     artifact_content: bytes
+
+
+@dataclass(frozen=True, slots=True)
+class ComparisonEvidence:
+    """One canonical, internally consistent L3 report and its exact bytes."""
+
+    content: bytes
+    sha256: str
+    report: CandidateComparisonReport
+
+    @property
+    def validation_report_sha256(self) -> str:
+        return self.report.validation_report_sha256
+
+    @property
+    def core_commit(self) -> str:
+        return self.report.core_commit
+
+    @property
+    def suite_id(self) -> str:
+        return self.report.suite_id
+
+    @property
+    def suite_digest(self) -> str:
+        return self.report.suite_digest
+
+    @property
+    def candidate(self) -> ComparisonCandidate:
+        return self.report.candidate
+
+    @property
+    def artifact(self) -> ComparisonArtifact:
+        return self.report.artifact
+
+    @property
+    def environment_receipt(self) -> tuple[InstalledDistribution, ...]:
+        return self.report.environment_receipt
+
+    @property
+    def classification(self) -> str:
+        return self.report.classification
+
+    @property
+    def improvements(self) -> tuple[str, ...]:
+        return self.report.improvements
+
+    @property
+    def regressions(self) -> tuple[str, ...]:
+        return self.report.regressions
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,7 +329,7 @@ class CandidateComparator:
     async def run(self) -> CandidateComparisonReport:
         config = self._validated_config()
         evidence_started = time.perf_counter()
-        evidence = _load_validation_evidence(config.validation_evidence)
+        evidence = load_validation_evidence(config.validation_evidence)
         self._record("l2-evidence", "l2-evidence-passed", evidence_started)
 
         with tempfile.TemporaryDirectory(prefix="thc-", ignore_cleanup_errors=True) as raw:
@@ -292,7 +354,7 @@ class CandidateComparator:
 
             artifact_copy = root / PurePosixPath(evidence.artifact.filename).name
             artifact_copy.write_bytes(evidence.artifact_content)
-            _verify_artifact(artifact_copy, evidence)
+            verify_validation_artifact(artifact_copy, evidence)
 
             core_dist = root / "core-dist"
             core_started = time.perf_counter()
@@ -382,8 +444,8 @@ class CandidateComparator:
 
             # Candidate code has run with current-user authority. Re-prove every
             # immutable input before interpreting or publishing the comparison.
-            _verify_evidence_unchanged(config.validation_evidence, evidence)
-            _verify_artifact(artifact_copy, evidence)
+            verify_validation_evidence_unchanged(config.validation_evidence, evidence)
+            verify_validation_artifact(artifact_copy, evidence)
             _verify_dependency_artifacts(
                 root / "dependency-wheelhouse",
                 dependency_artifacts,
@@ -770,7 +832,391 @@ class CandidateComparator:
         )
 
 
-def _load_validation_evidence(root: Path) -> _ValidationEvidence:
+def load_comparison_evidence(root: Path) -> ComparisonEvidence:
+    """Load a complete L3 report and re-prove all derivable relationships."""
+
+    path = root / "report.json"
+    try:
+        content = path.read_bytes()
+        raw = json.loads(content.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise CandidateComparisonEvidenceError(
+            "l3-report-invalid", "L3 report is not readable UTF-8 JSON"
+        ) from error
+    if len(content) > MAX_REPORT_BYTES or not isinstance(raw, dict):
+        raise CandidateComparisonEvidenceError("l3-report-invalid", "L3 report is invalid")
+    expected_keys = {
+        "schema_version",
+        "ok",
+        "created_at",
+        "validation_report_sha256",
+        "core_commit",
+        "suite_id",
+        "suite_digest",
+        "candidate",
+        "artifact",
+        "dependency_artifacts",
+        "environment_receipt",
+        "classification",
+        "improvements",
+        "regressions",
+        "cases",
+        "baseline",
+        "candidate_summary",
+        "checks",
+        "boundaries_zh",
+    }
+    if set(raw) != expected_keys or raw.get("schema_version") != 1 or raw.get("ok") is not True:
+        raise CandidateComparisonEvidenceError(
+            "l3-report-not-passed", "L3 evidence is not one complete successful schema-v1 report"
+        )
+    created_at = raw.get("created_at")
+    validation_digest = raw.get("validation_report_sha256")
+    core_commit = raw.get("core_commit")
+    suite_id = raw.get("suite_id")
+    suite_digest = raw.get("suite_digest")
+    boundaries = raw.get("boundaries_zh")
+    if (
+        not isinstance(created_at, str)
+        or not created_at
+        or not isinstance(validation_digest, str)
+        or not _HEX_SHA256.fullmatch(validation_digest)
+        or not isinstance(core_commit, str)
+        or not _HEX_COMMIT.fullmatch(core_commit)
+        or not isinstance(suite_id, str)
+        or not _SUITE_ID.fullmatch(suite_id)
+        or not isinstance(suite_digest, str)
+        or not _HEX_SHA256.fullmatch(suite_digest)
+        or not isinstance(boundaries, list)
+        or not boundaries
+        or any(not isinstance(item, str) or not item for item in boundaries)
+    ):
+        raise CandidateComparisonEvidenceError("l3-report-invalid", "L3 identity is invalid")
+
+    candidate = _report_candidate(raw.get("candidate"))
+    artifact = _report_artifact(raw.get("artifact"))
+    dependencies = _report_dependency_artifacts(raw.get("dependency_artifacts"))
+    receipt = _report_environment_receipt(raw.get("environment_receipt"))
+    dependency_receipt = {(item.distribution, item.version) for item in dependencies}
+    installed_receipt = {(item.name, item.version) for item in receipt}
+    if dependency_receipt - installed_receipt:
+        raise CandidateComparisonEvidenceError(
+            "l3-dependency-receipt-mismatch",
+            "L3 frozen dependency Wheels are not represented by its installed receipt",
+        )
+    candidate_distribution = canonicalize_name(candidate.distribution)
+    if not any(
+        item.filename == PurePosixPath(artifact.filename).name
+        and item.distribution == candidate_distribution
+        and item.version == candidate.version
+        and item.sha256 == artifact.sha256
+        and item.size_bytes == artifact.size_bytes
+        for item in dependencies
+    ) or not any(item.distribution == "traceharness-py" for item in dependencies):
+        raise CandidateComparisonEvidenceError(
+            "l3-dependency-root-mismatch",
+            "L3 dependency set does not bind the exact candidate and trusted core Wheels",
+        )
+
+    raw_cases = raw.get("cases")
+    if not isinstance(raw_cases, list) or not 1 <= len(raw_cases) <= MAX_CASES:
+        raise CandidateComparisonEvidenceError("l3-cases-invalid", "L3 case evidence is invalid")
+    cases: list[CaseComparison] = []
+    seen: set[str] = set()
+    for item in raw_cases:
+        if not isinstance(item, dict) or set(item) != {
+            "case_id", "outcome", "baseline", "candidate"
+        }:
+            raise CandidateComparisonEvidenceError("l3-cases-invalid", "L3 case is invalid")
+        case_id = item.get("case_id")
+        if (
+            not isinstance(case_id, str)
+            or not _CASE_ID.fullmatch(case_id)
+            or case_id in seen
+        ):
+            raise CandidateComparisonEvidenceError("l3-cases-invalid", "L3 case is invalid")
+        seen.add(case_id)
+        baseline = _report_arm_result(item.get("baseline"), case_id)
+        candidate_result = _report_arm_result(item.get("candidate"), case_id)
+        expected_outcome = (
+            "improved"
+            if not baseline.success and candidate_result.success
+            else "regressed"
+            if baseline.success and not candidate_result.success
+            else "unchanged-pass"
+            if baseline.success
+            else "unchanged-fail"
+        )
+        if item.get("outcome") != expected_outcome:
+            raise CandidateComparisonEvidenceError(
+                "l3-case-classification-mismatch",
+                "L3 case outcome does not match its two arm results",
+            )
+        cases.append(CaseComparison(case_id, expected_outcome, baseline, candidate_result))
+    case_tuple = tuple(cases)
+    improvements = tuple(item.case_id for item in case_tuple if item.outcome == "improved")
+    regressions = tuple(item.case_id for item in case_tuple if item.outcome == "regressed")
+    if _report_id_list(raw.get("improvements")) != improvements or _report_id_list(
+        raw.get("regressions")
+    ) != regressions:
+        raise CandidateComparisonEvidenceError(
+            "l3-case-classification-mismatch",
+            "L3 classification lists do not match its case evidence",
+        )
+    classification = _classification(improvements, regressions)
+    if raw.get("classification") != classification:
+        raise CandidateComparisonEvidenceError(
+            "l3-classification-inconsistent", "L3 classification is inconsistent"
+        )
+    baseline_summary = _report_summary(raw.get("baseline"))
+    candidate_summary = _report_summary(raw.get("candidate_summary"))
+    if baseline_summary != _summarize(tuple(item.baseline for item in case_tuple)) or (
+        candidate_summary != _summarize(tuple(item.candidate for item in case_tuple))
+    ):
+        raise CandidateComparisonEvidenceError(
+            "l3-summary-inconsistent", "L3 summaries do not match its case evidence"
+        )
+    checks = _report_checks(raw.get("checks"))
+    report = CandidateComparisonReport(
+        1,
+        True,
+        created_at,
+        validation_digest.lower(),
+        core_commit.lower(),
+        suite_id,
+        suite_digest.lower(),
+        candidate,
+        artifact,
+        dependencies,
+        receipt,
+        classification,
+        improvements,
+        regressions,
+        case_tuple,
+        baseline_summary,
+        candidate_summary,
+        checks,
+        tuple(boundaries),
+    )
+    return ComparisonEvidence(content, hashlib.sha256(content).hexdigest(), report)
+
+
+def _report_candidate(raw: object) -> ComparisonCandidate:
+    keys = ("distribution", "version", "plugin_id", "entry_value", "entry_module")
+    if not isinstance(raw, dict) or set(raw) != set(keys):
+        raise CandidateComparisonEvidenceError("l3-candidate-invalid", "L3 candidate is invalid")
+    values = tuple(raw.get(key) for key in keys)
+    if any(not isinstance(value, str) or not value or len(value) > 512 for value in values):
+        raise CandidateComparisonEvidenceError("l3-candidate-invalid", "L3 candidate is invalid")
+    candidate = ComparisonCandidate(*values)  # type: ignore[arg-type]
+    if canonicalize_name(candidate.distribution) != candidate.distribution or not is_plugin_id(
+        candidate.plugin_id
+    ):
+        raise CandidateComparisonEvidenceError("l3-candidate-invalid", "L3 candidate is invalid")
+    return candidate
+
+
+def _report_artifact(raw: object) -> ComparisonArtifact:
+    if not isinstance(raw, dict) or set(raw) != {"filename", "sha256", "size_bytes"}:
+        raise CandidateComparisonEvidenceError("l3-artifact-invalid", "L3 artifact is invalid")
+    filename, digest, size = (raw.get(key) for key in ("filename", "sha256", "size_bytes"))
+    relative = PurePosixPath(filename) if isinstance(filename, str) else None
+    if (
+        not isinstance(filename, str)
+        or relative is None
+        or relative.is_absolute()
+        or ".." in relative.parts
+        or "\\" in filename
+        or not filename.endswith(".whl")
+        or not isinstance(digest, str)
+        or not _HEX_SHA256.fullmatch(digest)
+        or isinstance(size, bool)
+        or not isinstance(size, int)
+        or not 1 <= size <= MAX_DEPENDENCY_BYTES
+    ):
+        raise CandidateComparisonEvidenceError("l3-artifact-invalid", "L3 artifact is invalid")
+    return ComparisonArtifact(filename, digest.lower(), size)
+
+
+def _report_dependency_artifacts(raw: object) -> tuple[DependencyArtifact, ...]:
+    if not isinstance(raw, list) or not 1 <= len(raw) <= MAX_DEPENDENCY_WHEELS:
+        raise CandidateComparisonEvidenceError(
+            "l3-dependency-set-invalid", "L3 frozen dependency set is invalid"
+        )
+    result: list[DependencyArtifact] = []
+    filenames: set[str] = set()
+    distributions: set[str] = set()
+    total = 0
+    for item in raw:
+        if not isinstance(item, dict) or set(item) != {
+            "filename", "distribution", "version", "sha256", "size_bytes"
+        }:
+            raise CandidateComparisonEvidenceError(
+                "l3-dependency-set-invalid", "L3 frozen dependency set is invalid"
+            )
+        filename = item.get("filename")
+        distribution = item.get("distribution")
+        version = item.get("version")
+        digest = item.get("sha256")
+        size = item.get("size_bytes")
+        try:
+            wheel_name, wheel_version, _build, _tags = parse_wheel_filename(filename)
+        except (InvalidWheelFilename, TypeError) as error:
+            raise CandidateComparisonEvidenceError(
+                "l3-dependency-set-invalid", "L3 frozen dependency set is invalid"
+            ) from error
+        normalized = canonicalize_name(wheel_name)
+        if (
+            not isinstance(distribution, str)
+            or distribution != normalized
+            or not isinstance(version, str)
+            or version != str(wheel_version)
+            or not isinstance(digest, str)
+            or not _HEX_SHA256.fullmatch(digest)
+            or isinstance(size, bool)
+            or not isinstance(size, int)
+            or size < 1
+            or filename in filenames
+            or distribution in distributions
+        ):
+            raise CandidateComparisonEvidenceError(
+                "l3-dependency-set-invalid", "L3 frozen dependency set is invalid"
+            )
+        total += size
+        if total > MAX_DEPENDENCY_BYTES:
+            raise CandidateComparisonEvidenceError(
+                "l3-dependency-set-invalid", "L3 frozen dependency set is invalid"
+            )
+        filenames.add(filename)
+        distributions.add(distribution)
+        result.append(DependencyArtifact(filename, distribution, version, digest.lower(), size))
+    if tuple(sorted(filenames, key=str.casefold)) != tuple(item.filename for item in result):
+        raise CandidateComparisonEvidenceError(
+            "l3-dependency-set-invalid", "L3 frozen dependency set is not canonical"
+        )
+    return tuple(result)
+
+
+def _report_environment_receipt(raw: object) -> tuple[InstalledDistribution, ...]:
+    if not isinstance(raw, list) or not 1 <= len(raw) <= MAX_INSTALLED_DISTRIBUTIONS:
+        raise CandidateComparisonEvidenceError("l3-receipt-invalid", "L3 receipt is invalid")
+    result: list[InstalledDistribution] = []
+    seen: set[str] = set()
+    for item in raw:
+        if not isinstance(item, dict) or set(item) != {"name", "version"}:
+            raise CandidateComparisonEvidenceError("l3-receipt-invalid", "L3 receipt is invalid")
+        name, version = item.get("name"), item.get("version")
+        if (
+            not isinstance(name, str)
+            or canonicalize_name(name) != name
+            or not isinstance(version, str)
+            or not version
+            or name in seen
+        ):
+            raise CandidateComparisonEvidenceError("l3-receipt-invalid", "L3 receipt is invalid")
+        seen.add(name)
+        result.append(InstalledDistribution(name, version))
+    if tuple(sorted(seen)) != tuple(item.name for item in result):
+        raise CandidateComparisonEvidenceError("l3-receipt-invalid", "L3 receipt is not canonical")
+    return tuple(result)
+
+
+def _report_arm_result(raw: object, case_id: str) -> ArmCaseResult:
+    fields = {
+        "case_id", "success", "failure_codes", "steps", "model_attempts", "tool_calls",
+        "tool_non_successes", "verification_passed", "invariant_violations",
+        "reconstruction_violations", "duration_seconds",
+    }
+    if not isinstance(raw, dict) or set(raw) != fields or raw.get("case_id") != case_id:
+        raise CandidateComparisonEvidenceError("l3-case-arm-invalid", "L3 arm evidence is invalid")
+    success = raw.get("success")
+    failure_codes = raw.get("failure_codes")
+    allowed_failures = {
+        "runtime-not-completed", "event-evidence-incomplete", "arm-plugin-identity-mismatch",
+        "turn-reason-mismatch", "verification-result-mismatch", "tool-results-mismatch",
+        "invariant-violation", "request-reconstruction-violation",
+    }
+    if not isinstance(failure_codes, list) or any(
+        not isinstance(item, str) or item not in allowed_failures for item in failure_codes
+    ):
+        raise CandidateComparisonEvidenceError("l3-case-arm-invalid", "L3 arm evidence is invalid")
+    if (
+        not isinstance(success, bool)
+        or len(set(failure_codes)) != len(failure_codes)
+        or success == bool(failure_codes)
+    ):
+        raise CandidateComparisonEvidenceError("l3-case-arm-invalid", "L3 arm evidence is invalid")
+    numbers = {}
+    for name in (
+        "steps", "model_attempts", "tool_calls", "tool_non_successes",
+        "invariant_violations", "reconstruction_violations",
+    ):
+        numbers[name] = _bounded_int(raw.get(name))
+    verification = raw.get("verification_passed")
+    if verification is not None and not isinstance(verification, bool):
+        raise CandidateComparisonEvidenceError("l3-case-arm-invalid", "L3 arm evidence is invalid")
+    if numbers["tool_non_successes"] > numbers["tool_calls"] or (
+        success and (numbers["invariant_violations"] or numbers["reconstruction_violations"])
+    ):
+        raise CandidateComparisonEvidenceError("l3-case-arm-invalid", "L3 arm evidence is invalid")
+    return ArmCaseResult(
+        case_id, success, tuple(failure_codes), numbers["steps"], numbers["model_attempts"],
+        numbers["tool_calls"], numbers["tool_non_successes"], verification,
+        numbers["invariant_violations"], numbers["reconstruction_violations"],
+        _bounded_float(raw.get("duration_seconds")),
+    )
+
+
+def _report_summary(raw: object) -> ArmSummary:
+    fields = (
+        "successful_cases", "total_cases", "total_steps", "total_model_attempts",
+        "total_tool_calls", "total_tool_non_successes", "invariant_violations",
+        "reconstruction_violations", "duration_seconds",
+    )
+    if not isinstance(raw, dict) or set(raw) != set(fields):
+        raise CandidateComparisonEvidenceError("l3-summary-invalid", "L3 summary is invalid")
+    integer_fields = fields[:-1]
+    by_name = {name: _bounded_int(raw.get(name)) for name in integer_fields}
+    return ArmSummary(
+        by_name["successful_cases"], by_name["total_cases"], by_name["total_steps"],
+        by_name["total_model_attempts"], by_name["total_tool_calls"],
+        by_name["total_tool_non_successes"], by_name["invariant_violations"],
+        by_name["reconstruction_violations"], _bounded_float(raw.get("duration_seconds")),
+    )
+
+
+def _report_checks(raw: object) -> tuple[ComparisonCheck, ...]:
+    if not isinstance(raw, list) or len(raw) != len(COMPARISON_CHECKS):
+        raise CandidateComparisonEvidenceError("l3-gates-not-passed", "L3 gate set is incomplete")
+    result = []
+    for item, expected in zip(raw, COMPARISON_CHECKS, strict=True):
+        if not isinstance(item, dict) or set(item) != {"name", "code", "duration_seconds"}:
+            raise CandidateComparisonEvidenceError("l3-gates-not-passed", "L3 gate set is invalid")
+        if (item.get("name"), item.get("code")) != expected:
+            raise CandidateComparisonEvidenceError("l3-gates-not-passed", "L3 gate set is invalid")
+        result.append(
+            ComparisonCheck(
+                expected[0], expected[1], _bounded_float(item.get("duration_seconds"))
+            )
+        )
+    return tuple(result)
+
+
+def _report_id_list(raw: object) -> tuple[str, ...]:
+    if not isinstance(raw, list) or len(raw) > MAX_CASES or any(
+        not isinstance(item, str) or not _CASE_ID.fullmatch(item) for item in raw
+    ):
+        raise CandidateComparisonEvidenceError(
+            "l3-case-classification-mismatch", "L3 case ids are invalid"
+        )
+    if len(set(raw)) != len(raw):
+        raise CandidateComparisonEvidenceError(
+            "l3-case-classification-mismatch", "L3 case ids are invalid"
+        )
+    return tuple(raw)
+
+
+def load_validation_evidence(root: Path) -> ValidationEvidence:
     report_path = root / "report.json"
     try:
         report_content = report_path.read_bytes()
@@ -872,7 +1318,7 @@ def _load_validation_evidence(root: Path) -> _ValidationEvidence:
         entry_module=entry_module,
     )
     artifact = ComparisonArtifact(filename=filename, sha256=digest.lower(), size_bytes=size)
-    evidence = _ValidationEvidence(
+    evidence = ValidationEvidence(
         report_content=report_content,
         report_sha256=hashlib.sha256(report_content).hexdigest(),
         core_commit=commit.lower(),
@@ -881,11 +1327,11 @@ def _load_validation_evidence(root: Path) -> _ValidationEvidence:
         artifact_source=resolved,
         artifact_content=content,
     )
-    _verify_artifact(resolved, evidence)
+    verify_validation_artifact(resolved, evidence)
     return evidence
 
 
-def _verify_artifact(path: Path, evidence: _ValidationEvidence) -> None:
+def verify_validation_artifact(path: Path, evidence: ValidationEvidence) -> None:
     if path.stat().st_size != evidence.artifact.size_bytes:
         raise CandidateComparisonEvidenceError(
             "l2-artifact-size-mismatch", "L2 artifact size does not match its report"
@@ -901,7 +1347,10 @@ def _verify_artifact(path: Path, evidence: _ValidationEvidence) -> None:
         )
 
 
-def _verify_evidence_unchanged(root: Path, evidence: _ValidationEvidence) -> None:
+def verify_validation_evidence_unchanged(
+    root: Path,
+    evidence: ValidationEvidence,
+) -> None:
     if (root / "report.json").read_bytes() != evidence.report_content:
         raise CandidateComparisonEvidenceError(
             "l2-report-identity-changed", "L2 report changed during comparison"
@@ -1617,6 +2066,7 @@ def _atomic_text(path: Path, content: str) -> None:
 __all__ = [
     "ArmCaseResult",
     "ArmSummary",
+    "COMPARISON_CHECKS",
     "COMPARISON_EXIT_CODE",
     "CandidateComparator",
     "CandidateComparisonConfig",
@@ -1626,6 +2076,12 @@ __all__ = [
     "CaseComparison",
     "ComparisonArtifact",
     "ComparisonCandidate",
+    "ComparisonEvidence",
     "DependencyArtifact",
     "InstalledDistribution",
+    "ValidationEvidence",
+    "load_comparison_evidence",
+    "load_validation_evidence",
+    "verify_validation_artifact",
+    "verify_validation_evidence_unchanged",
 ]

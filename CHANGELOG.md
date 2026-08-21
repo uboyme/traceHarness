@@ -2,6 +2,46 @@
 
 ## Unreleased
 
+### Controlled capability evolution L4
+
+- Added Runtime-external `traceh plugins promote` review/apply control. Review mode writes a
+  Chinese capability/risk/evidence card and approval SHA-256 without changing the Registry or
+  target. Apply mode requires that exact digest and rechecks the L2/L3 report bytes, audited Wheel,
+  selected Registry, target Python identity, Distribution receipt and current managed state.
+- Restricted promotion to internally consistent `improved` evidence with at least one improvement
+  and zero regressions. The target must match L3's core and non-candidate Distribution receipt;
+  apply installs only the exact SHA-256-addressed Wheel with index/dependency resolution disabled,
+  rechecks the complete receipt, runs plugin doctor, and rechecks the receipt again so plugin
+  import/health code cannot mutate the target before L4 records it as stable.
+- Hardened isolated target inspection for virtual environments. The probe keeps the explicitly
+  selected venv executable path (including POSIX `bin/python` symlinks), derives its prefix from
+  adjacent `pyvenv.cfg`, and supplies that prefix to `sysconfig` under `-I -S`; it therefore reads
+  the selected environment without running candidate startup hooks or leaking into the base Python.
+- Added a shallow cross-process-locked promotion Registry with fsync/atomic state updates,
+  immutable Wheel/record/receipt storage and `stable / installing / rollbacking` transitions.
+  Unmanaged installs, stale approval, target drift, duplicate current artifacts and corrupted
+  records fail closed.
+- Added explicit `traceh plugins rollback`. It restores the previous exact managed Wheel or
+  uninstalls a first promotion, requires the exact current/unfinished promotion id, and can
+  converge hard-crash states. Ordinary failure, report failure and cancellation during apply
+  restore the previous state before the caller returns; repeated cancellation cannot abandon the
+  rollback task.
+- Hardened L4 evidence and target ownership: promotion reconstructs the complete canonical L3
+  Case/gate/dependency report, uses one canonical target-environment lock and Owner across
+  Registry paths, interpreter aliases, plugin ids and Distributions, rejects control paths inside
+  the target, and hashes all installed-package files around doctor so same-version or unrecorded
+  file drift rolls back. Because each package state stores the full environment receipt, L4 v1
+  admits one active managed Distribution chain per target until complete rollback releases it.
+- Validate L3 `failure_codes`, `improvements` and `regressions` member types before duplicate
+  detection, so malformed but valid JSON produces stable evidence errors instead of leaking an
+  unhandled `TypeError` from `set(...)`.
+- Made the package coordination lane independent of `TEMP` by placing its owner/lock namespace
+  beside the canonical target environment. Explicit rollback can also converge the first-install
+  crash window after owner/record persistence but before the initial `installing` state.
+- Kept all package-management and approval logic under `traceh.evolution`; AgentRuntime,
+  AgentLoop, PluginManager, Session/Event facts and the running plugin-composition path are
+  unchanged. See ADR-0018.
+
 ### Controlled capability evolution L3
 
 - Added `traceh plugins compare` as a Runtime-external baseline/candidate comparison control

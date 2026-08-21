@@ -1,6 +1,6 @@
 # TraceHarness Py v0.5
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 又补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。v0.5.0 还随源码交付一个独立构建、独立安装的 Python Quality 插件，作为公共插件 SDK 和真实 Wheel 主线的发行验收；Unreleased L1–L3 则把“生成源码候选”“独立验证候选”和“固定任务对比精确产物”拆成 Runtime 外的三级开发控制面，仍不把生成、构建、测试、比较或审批逻辑塞进 AgentRuntime。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 又补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。v0.5.0 还随源码交付一个独立构建、独立安装的 Python Quality 插件，作为公共插件 SDK 和真实 Wheel 主线的发行验收；Unreleased L1–L4 则把“生成源码候选”“独立验证候选”“固定任务对比精确产物”和“人工批准后推广/回滚”拆成 Runtime 外的四级开发控制面，仍不把生成、构建、测试、比较或包管理逻辑塞进 AgentRuntime。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -29,6 +29,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - **Plugin Creator Skill（Unreleased L1）**：以独立 Wheel 提供候选编写 Prompt 和 `PURE_READ` 指南；只在专用 Workspace 生成未验证源码，不自动 build/test/install/enable；
 - **候选验证（Unreleased L2）**：`traceh plugins validate` 用显式可信核心 `HEAD` 的版本、两套 venv 和 13 道宿主管控门禁验证 L1 候选；执行后复核审计字节，报告与 Wheel 按目录事务提交，失败不发布 Wheel，通过才给出精确产物与 SHA-256；
 - **能力对比（Unreleased L3）**：`traceh plugins compare` 复用精确 L2 产物和其记录的核心提交，在两套同构环境运行宿主固定任务；只给出 `improved/regressed/mixed/no-change`，不批准、不安装、不晋升；
+- **人工批准与回滚（Unreleased L4）**：`traceh plugins promote` 先生成不改环境的中文证据/风险卡和一次性摘要，只有带回同一摘要的第二次调用才能把精确 Wheel 安装到显式目标 Python；`rollback` 按推广 ID 恢复上一份精确 Wheel 或卸载首版；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
 - 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
 
@@ -321,6 +322,39 @@ traceh plugins compare <l2-evidence-directory> `
 
 离线时同样改用 `--wheelhouse <directory>`。Suite 必须位于 L2 报告记录的可信核心提交内；L3 先把核心、候选与全部传递依赖一次性冻结为带 SHA-256 的 Wheel 集，再让 baseline 与 candidate 从同一 Wheel 集离线安装并核对 Distribution receipt，只有 candidate 启用目标插件。传给嵌套 Tool/Verifier pip 的 Wheelhouse 会编码成单个本地 `file://` URI，含空格目录不会被拆开，原始路径、复合值和远端位置不会穿过环境清洗。宿主 Probe 通过真实 Runtime、Session Event Log、Verifier、不变量和请求重建收集证据；正常返回还必须有匹配且闭合的 durable `turn/end`，每个 `composition/snapshot` 也必须记录该臂预期的插件身份。最后只分类，不产生批准或安装权限。内置 Python Quality v1 是三个确定性合同案例，不代表通用 Coding Benchmark 或真实模型效果。完整决策见 [ADR-0017](docs/adr/0017-host-owned-baseline-candidate-comparison.md)。
 
+L3 得到 `improved` 且没有回归后，L4 仍不会自动安装。先对显式目标 Python 生成审阅卡：
+
+```powershell
+traceh plugins promote <l2-evidence-directory> <l3-evidence-directory> `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-review-directory>
+```
+
+审阅 `report.md` 后，若接受其中的能力、目标和风险，用新的输出目录交回完整摘要：
+
+```powershell
+traceh plugins promote <l2-evidence-directory> <l3-evidence-directory> `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-promotion-directory> `
+  --approve <full-approval-sha256>
+```
+
+L4 会把 L3 重建为完整 Case/两臂/汇总/固定 Gate/冻结 Wheel 证据，只有外形的骨架 JSON 不能生成审批。摘要绑定 L2/L3 原始字节、Wheel SHA、Registry、目标解释器身份、完整 Distribution receipt、`site-packages` 内容摘要、规范包所有者和当前托管状态；任何变化都要重新审批。目标的非候选依赖必须与 L3 一致，L4 只用 `--no-index --no-deps` 安装已审计 Wheel，不在批准之后另解一套依赖；`plugins doctor` 返回后还会重新读取包清单并逐字节摘要安装包目录（排除可再生 `__pycache__`），插件 import/health 即使只改文件、不改版本，也会失败并回滚。Review 输出与 Registry 必须在目标 Python 环境之外。推广报告会给出 `promotion_id`，回滚时必须显式写回 Distribution 和该 ID：
+
+```powershell
+traceh plugins rollback `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-rollback-directory> `
+  --plugin-id <plugin-id> `
+  --distribution <canonical-distribution-name> `
+  --current-promotion-id <promotion-id>
+```
+
+目标环境旁的固定宿主协调目录只按规范目标环境持有一份跨进程锁和 Owner，不依赖调用进程的 `TEMP`、解释器别名、Registry、plugin id 或 Distribution。因为每条推广状态都保存整份环境 receipt，L4 v1 同一目标环境只允许一条受管 Distribution 链；另一 Distribution 要等当前链完整回滚为未安装、释放 Owner 后才能接手，不能各写一份互相矛盾的完整环境事实。Registry 仍按“目标 + Distribution”用 `stable/installing/rollbacking` 保存当前链的精确产物、收据与回滚目标；硬崩溃留下的未完成状态也只能通过显式回滚收敛。若首次推广恰好死在 Owner/记录已写而首个 `installing` 尚未写入的窗口，rollback 只会在精确记录与目标仍未安装相互印证时重建该前状态，否则 fail-closed。它仍是同一用户权限下的包管理，不是 OS 沙箱，也不会替运行中的 Runtime 自动启用插件。完整决策见 [ADR-0018](docs/adr/0018-human-approved-exact-plugin-promotion.md)。
+
 插件 Provider 与 Verifier 不会因为插件被启用就自动接管。必须显式选择：
 
 ```powershell
@@ -546,7 +580,7 @@ src/traceh/llm          Provider Registry 和 Adapter
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
 src/traceh/evaluation   确定性 Benchmark Runner
-src/traceh/evolution    L2 候选验证与 L3 宿主固定 baseline/candidate 对比
+src/traceh/evolution    L2 验证、L3 对比与 L4 人工批准/推广/回滚控制面
 examples/plugins        可独立构建的示例、Python Quality 与 Plugin Creator Distribution
 tests                   契约、恢复、取消、插件和端到端测试
 ```
@@ -568,6 +602,8 @@ traceh plugins inspect  # 同上，针对单个插件
 traceh plugins doctor   # 会 import、setup、health check，随后立即 dispose
 traceh plugins validate # Runtime 外构建/审计/测试 L1 候选，失败退出码 8
 traceh plugins compare  # 复用精确 L2 产物跑固定宿主对比，失败退出码 9
+traceh plugins promote  # 先审阅摘要，再按同一摘要推广精确 Wheel，失败退出码 10
+traceh plugins rollback # 按当前推广 ID 恢复上一份精确托管状态，失败退出码 10
 traceh doctor
 ```
 
@@ -586,6 +622,7 @@ traceh doctor
 - L1 Plugin Creator 的“专用 Candidate Workspace”和“不执行候选”是流程合同，不是沙箱；它只产出未验证源码；
 - L2 可以独立 build/audit/doctor/test 并跑可信核心回归，但两套 venv 仍不是 OS 沙箱，候选代码拥有当前用户权限且只保证直接子进程收敛；L2 也不比较能力好坏、不做人工批准、正式安装或回滚；
 - L3 使用精确 L2 Wheel 和可信核心中的固定任务做确定性 baseline/candidate 对比；它仍不是 OS 沙箱或真实模型 Benchmark，也不批准、安装、晋升或回滚插件；
+- L4 只接受 `improved` 且零回归的精确 L2/L3 证据，但它仍不是 OS 沙箱或包签名系统；目标依赖必须已经与 L3 receipt 一致，L4 v1 不解析或升级依赖、也不同时管理同一环境中的多条 Distribution 链，不会把推广自动应用到正在运行的 Runtime；
 - 每个进程只有一个活跃 Agent Runtime，尚无 `AgentSupervisor`；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat 和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
@@ -606,7 +643,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-核心仓库当前收集 1133 项自动化测试；未提交工作区完整门禁为 1131 通过、2 项跳过（Windows NUL 路径边界，以及真实 L2 递归验收需要验证器先存在于可信 HEAD）。仓库外临时 Git 快照已另行跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；该次真实对照冻结 3 个依赖 Wheel，两臂 receipt 均为同一组 4 个 Distribution。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。核心测试继续覆盖 JSONL、Generation/ActivationSet、插件与 Session 主线；L1/L2/L3 测试覆盖候选源码合同、干净复制、Wheel/metadata/doctor/测试/核心回归、精确产物锚定、固定 Suite、durable 生命周期与插件身份、冻结依赖、分类、原子报告和取消收敛。
+核心仓库当前收集 1162 项自动化测试；未提交工作区完整门禁为 1161 通过、1 项按平台跳过（Windows NUL 路径边界）。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback，回滚后候选 Distribution 确认不存在。该次真实对照冻结 3 个依赖 Wheel，两臂 receipt 均为同一组 4 个 Distribution。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。核心测试继续覆盖 JSONL、Generation/ActivationSet、插件与 Session 主线；L1–L4 测试覆盖候选源码合同、干净复制、Wheel/metadata/doctor/测试/核心回归、精确产物锚定、固定 Suite、durable 生命周期与插件身份、冻结依赖、分类、人工批准摘要、目标环境收据、doctor 后重验、原子报告、失败回滚和取消收敛。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

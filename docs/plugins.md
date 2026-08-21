@@ -250,6 +250,71 @@ the plugin.
 Virtual environments are still not an OS sandbox. See
 [ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
 
+### Human-approved exact promotion and rollback (L4)
+
+L4 requires a dedicated target Python environment whose non-candidate Distribution receipt
+matches the L3 comparison environment. First generate a review card; this invocation does not
+create the Registry or change the target:
+
+```powershell
+traceh plugins promote <l2-evidence-directory> <l3-evidence-directory> `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-review-directory>
+```
+
+Read `report.md`. Promotion is allowed only for `improved` with at least one improvement and no
+regression. If you accept the named capability, target and stated risks, run a second invocation
+with a **new** output directory and the exact digest printed by the review:
+
+```powershell
+traceh plugins promote <l2-evidence-directory> <l3-evidence-directory> `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-promotion-directory> `
+  --approve <full-approval-sha256>
+```
+
+L4 first reconstructs the canonical L3 Case arms, summaries, fixed gates, classification and
+non-empty frozen Wheel set; a hand-written report skeleton is rejected. The digest binds both
+evidence files, the exact audited Wheel, Registry, target Python identity, Distribution receipt,
+installed-package content digest, canonical package owner and current managed state. A stale digest, an unmanaged installed copy,
+dependency drift or known regression is rejected. L4 never rebuilds or resolves dependencies: it
+installs the SHA-256-addressed Wheel with `--no-index --no-deps`, checks the complete L3 receipt,
+then runs plugin doctor and checks the receipt plus every non-cache file below the target package roots
+again. Same-version edits and files missing from a Distribution `RECORD` are therefore visible. Target inspection preserves the
+selected venv executable and reconstructs its site-packages from adjacent `pyvenv.cfg` under
+isolated `-I -S` startup, so it neither executes candidate startup hooks nor falls through to the
+base Python environment.
+
+The promotion report returns a `promotion_id`. Roll back only by naming the exact current id:
+
+```powershell
+traceh plugins rollback `
+  --target-python <target-venv-python> `
+  --registry <promotion-registry> `
+  --output <new-rollback-directory> `
+  --plugin-id <plugin-id> `
+  --distribution <canonical-distribution-name> `
+  --current-promotion-id <promotion-id>
+```
+
+Review output and Registry paths must be outside the target environment. A fixed host-owned
+coordination namespace beside the canonical target environment, independent of `TEMP`, assigns one
+lock and Owner to the target environment itself. Interpreter aliases, another Registry, another
+plugin id or another Distribution cannot mutate it through an independent L4 lane. Because each
+package state records the complete environment, L4 v1 permits one active managed Distribution
+chain per target; a complete rollback of its first version releases the environment for a later
+handoff. The locked Registry retains the previous exact Wheel, or records that the plugin was previously
+absent. It also exposes unfinished `installing` / `rollbacking` state after a hard process crash;
+the same explicit rollback command can converge that state. If a first promotion dies after its
+owner/record write but before the initial `installing` state, rollback reconstructs that pre-pip
+state only when the exact first record and an absent target agree; contradictory evidence fails
+closed. This is same-user package management,
+not an OS sandbox or cryptographic package signature. It does not enable a plugin inside an
+already running Runtime. See
+[ADR-0018](adr/0018-human-approved-exact-plugin-promotion.md).
+
 ## 5. The CLI
 
 | Command | Imports plugins? | Runs setup? | Calls a model? |
@@ -259,12 +324,15 @@ Virtual environments are still not an OS sandbox. See
 | `traceh plugins doctor [ids...]` | yes | yes, then disposes immediately | no |
 | `traceh plugins validate <candidate>` | candidate only, in a temporary venv | doctor + tests in temporary venvs | no |
 | `traceh plugins compare <l2-evidence>` | candidate only, in one comparison arm | fixed host suite in two temporary venvs | no |
+| `traceh plugins promote <l2> <l3>` | only on approved apply | doctor after exact install | no |
+| `traceh plugins rollback` | previous managed plugin during doctor | doctor after exact restore | no |
 
-All five take `--json`. Every string they print - entry-point values, distribution names,
+All seven take `--json`. Every string they print - entry-point values, distribution names,
 requirement strings - is escaped to one printable line, because it all originates in
 third-party metadata. Exit codes: `6` for `inspect` on an unknown or problematic plugin,
 `7` for `doctor` failures, `8` for candidate validation/configuration failure, and `9` for
-comparison/configuration failure.
+comparison/configuration failure. Promotion and rollback use `10` for invalid evidence,
+configuration, target drift or a failed target transaction.
 
 `doctor` activates against throwaway registries, so nothing it loads can reach a real
 runtime, and it disposes whether or not activation succeeded.

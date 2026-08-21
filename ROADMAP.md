@@ -117,7 +117,7 @@ published Generation from changing an in-progress Step's Provider, tools or Veri
 product-level two-Agent demo still depends on the v0.6 `AgentSupervisor`; D3 does not claim
 that capability.
 
-## Controlled capability evolution — L1-L3 implemented, L4-L5 planned
+## Controlled capability evolution — L1-L4 implemented, L5 planned
 
 - **L1 — implemented in Unreleased:** `traceh-plugin-creator-skill-plugin` is a real external
   Wheel that supplies a short Prompt and packaged workflow/contract/template/checklist through
@@ -145,8 +145,19 @@ that capability.
   installing anything. The first three-case Python Quality
   suite checks one capability gain, one ordinary repair with no regression and one honest
   verification failure; see ADR-0017.
-- **L4:** present a plain-language capability/risk/evidence card, require explicit human
-  approval, promote the exact validated artifact, and retain a deterministic rollback target.
+- **L4 — implemented in Unreleased:** `traceh plugins promote` revalidates the exact L2/L3
+  evidence and explicitly selected target environment. Its first invocation writes a Chinese
+  capability/risk/evidence card and SHA-256 approval digest without changing the Registry or
+  target. Only a second invocation carrying that exact digest can install the audited Wheel. The
+  digest binds canonical L3 Case/Gate/Wheel evidence, artifact, Registry, interpreter, complete
+  installed-package content and current receipts; known regressions,
+  unmanaged installs, dependency drift and stale approval fail closed. A shallow locked Registry
+  records `stable / installing / rollbacking` state, immutable artifacts and content receipts;
+  one target-environment owner/lock prevents Registry, interpreter-alias, plugin-id and
+  Distribution split ownership; L4 v1 permits one active managed Distribution chain per target
+  until a complete first-version rollback releases the environment for handoff;
+  `traceh plugins rollback` restores the previous exact Wheel or uninstalls a first promotion,
+  including recovery from an interrupted transition. See ADR-0018.
 - **L5:** derive repeated weakness evidence from existing Sessions/Evaluation and propose a
   candidate; the Agent may propose and implement, but cannot approve or promote itself.
 
@@ -154,8 +165,9 @@ All five levels are a development control plane outside the execution plane. The
 the public Plugin SDK, Verifier/Evaluation, Generation/Lease/Drain and Session evidence rather
 than adding build/test/approval logic to `AgentRuntime` or a second plugin loader. L1 is
 recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skill.md), L2 in
-[ADR-0016](docs/adr/0016-independent-plugin-candidate-validation.md), and L3 in
-[ADR-0017](docs/adr/0017-host-owned-baseline-candidate-comparison.md).
+[ADR-0016](docs/adr/0016-independent-plugin-candidate-validation.md), L3 in
+[ADR-0017](docs/adr/0017-host-owned-baseline-candidate-comparison.md), and L4 in
+[ADR-0018](docs/adr/0018-human-approved-exact-plugin-promotion.md).
 
 ## v0.6: AgentSupervisor and subagents
 

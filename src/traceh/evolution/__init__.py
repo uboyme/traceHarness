@@ -10,6 +10,14 @@ from traceh.evolution.candidate_comparison import (
     CandidateComparisonConfig,
     CandidateComparisonReport,
 )
+from traceh.evolution.candidate_promotion import (
+    CandidatePromoter,
+    CandidatePromotionConfig,
+    CandidatePromotionRollbackError,
+    CandidateRollbackConfig,
+    CandidateRollbacker,
+    PromotionReport,
+)
 from traceh.evolution.candidate_validation import (
     CandidateValidationConfig,
     CandidateValidationReport,
@@ -23,4 +31,10 @@ __all__ = [
     "CandidateValidationConfig",
     "CandidateValidationReport",
     "CandidateValidator",
+    "CandidatePromoter",
+    "CandidatePromotionConfig",
+    "CandidatePromotionRollbackError",
+    "CandidateRollbackConfig",
+    "CandidateRollbacker",
+    "PromotionReport",
 ]

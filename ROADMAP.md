@@ -171,7 +171,30 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
 
 ## v0.6: AgentSupervisor and subagents
 
-- Separate durable Agent identity from live Activation.
+- **Stage A — completed:** durable Agent identity is separated from live Activation.
+  `traceh.agents` records `agent/created` on its own `agents:directory` control-plane stream
+  in the existing `EventStore`, and rebuilds `AgentRecord` from that stream alone. A fresh
+  process holding only a store recovers every identity; an `AgentRuntime`, Task or
+  `AgentHandle` is an Activation that may stop and restart without changing it. Lookup by
+  `agent_id` and by `session_id` is supported, two Agents cannot own one Session, and replay
+  fails closed on duplicate, malformed or contradictory facts rather than repairing them —
+  there is no last-write-wins registry semantics. Creation is a transaction whose
+  linearization point is the append's `expected_seq`, carried from the directory read; a
+  caller-supplied `request_id` makes retries idempotent; and a failed or cancelled append is
+  reconciled by re-reading the stream rather than assumed to have written nothing, reporting
+  committed/not-committed/unknown rather than collapsing the third case into the second.
+  Write-side and replay-side validation share one definition, so the writer cannot append a
+  fact replay would reject; payloads are gated on stream, schema version and an exact key
+  set; direct `BaseException` interrupts propagate unrewritten; and every directory lookup
+  returns a detached record so a caller cannot write through the shared projector.
+  History lineage (`forked_from_session_id`), lifecycle ownership (`owner_agent_id`) and
+  communication stay separate relations, and communication has no field in the creation fact
+  at all. `AgentLoop`, `AgentRuntime` and `PluginManager` are unchanged. See
+  [ADR-0019](docs/adr/0019-durable-agent-identity-and-activation-boundary.md).
+- **Stage A explicitly excludes**, and no part of it may be described as delivering: a live
+  `AgentSupervisor`, single-activation enforcement, Inbox, message delivery or wakeup,
+  subagent tools, parent/child disposal, and Agent cold recovery. `AgentSupervisor`'s methods
+  still have no implementation behind them.
 - Add one FIFO Inbox per Agent and single-activation enforcement.
 - Add lifecycle ownership graph and child-first quiescent disposal.
 - Implement `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
@@ -179,7 +202,8 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
 - Keep history lineage, communication and ownership as separate relations.
 
 Definition of done: a parent can create a reviewer child with its own Session and Scope;
-parent cancellation leaves no orphan tasks.
+parent cancellation leaves no orphan tasks. **Not met by Stage A**, which supplies the
+identity those need without implying any of them exists.
 
 ## v0.7: Budgets, workspaces and workflows
 

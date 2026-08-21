@@ -1,8 +1,22 @@
-"""Forward-compatible multi-agent control-plane protocols.
+"""Multi-agent control-plane values and protocols.
 
-v0.3 does not ship an AgentSupervisor implementation. These immutable values define the
-boundary that later subagent tools and workflow engines can target without importing the
-single-Agent loop internals.
+Two different things live here and must not be confused.
+
+**Durable identity.** `AgentRecord` is a fact rebuilt from the event log by
+:mod:`traceh.agents`: this Agent exists and owns this Session. v0.6 Stage A
+implements it, so it is no longer forward-looking.
+
+**Activation.** `AgentHandle` and `AgentSupervisor` describe a *live*, in-process
+Agent - something that can be created, stopped and created again. There is still
+no `AgentSupervisor` implementation, and none of these methods is backed by
+running code; `send`, `interrupt` and `dispose` in particular have no Inbox,
+delivery or disposal behind them. They define the boundary that later subagent
+tools and workflow engines can target without importing single-Agent loop
+internals.
+
+An `AgentHandle` is therefore never an identity. Stopping or rebuilding one
+cannot change an `AgentRecord`, and losing every handle in a process does not
+remove an Agent from the durable directory.
 """
 
 from __future__ import annotations
@@ -48,6 +62,45 @@ class AgentSpec:
     capability_grants: tuple[str, ...] = ()
     budget: Budget = field(default_factory=Budget)
     metadata: dict[str, JsonValue] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class AgentRecord:
+    """One durable Agent identity, as rebuilt from ``agent/created``.
+
+    This is what a fresh process reading only an `EventStore` recovers. It
+    holds no Runtime, Task or Handle, which is precisely why an Activation can
+    stop and restart without changing it.
+
+    Three relations are recorded separately and mean different things:
+
+    * ``session_id`` - the Session this Agent owns. Exactly one Agent owns a
+      Session;
+    * ``forked_from_session_id`` - *history lineage*: which Session this
+      Agent's starting context came from. It confers no authority;
+    * ``owner_agent_id`` - *lifecycle ownership*: which Agent is responsible
+      for disposing this one. It is not a lineage claim and not a message
+      route.
+
+    Communication has no field here at all: a message's source is a per-message
+    fact, so it cannot be inferred from a creation record.
+
+    ``budget`` is recorded as part of the creation fact. Nothing reserves or
+    enforces it yet - hierarchical budget reservation is v0.7 work - so it must
+    not be read as an active limit.
+    """
+
+    agent_id: str
+    session_id: str
+    request_id: str
+    preset: str
+    workspace_id: str
+    owner_agent_id: str | None
+    forked_from_session_id: str | None
+    capability_grants: tuple[str, ...]
+    budget: Budget
+    metadata: dict[str, JsonValue]
+    created_seq: int
 
 
 @dataclass(frozen=True, slots=True)

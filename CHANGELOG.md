@@ -2,6 +2,82 @@
 
 ## Unreleased
 
+### v0.6 Stage A: durable Agent identity and the Activation boundary
+
+- Added `traceh.agents`, a multi-agent control-plane fact layer that records and rebuilds
+  durable Agent identity from the existing `EventStore`. `agent/created` is appended to one
+  `agents:directory` control-plane stream, separate from every Session Stream; no JSON file,
+  SQLite table or process-global registry is introduced. See
+  [ADR-0019](docs/adr/0019-durable-agent-identity-and-activation-boundary.md).
+- Added `AgentRecord` to `traceh.api.agents` as the durable identity DTO, and corrected the
+  stale "v0.3 does not ship an AgentSupervisor" module docstring. `AgentHandle` and
+  `AgentSupervisor` are now documented as the Activation-side protocols they are, still with
+  no implementation behind any method.
+- Added `AgentDirectory`, a read-only projector supporting lookup by `agent_id`, by
+  `session_id` and by `request_id`, plus an ownership-only `children_of()`. Duplicate
+  `agent_id`/`session_id`/`request_id`, malformed payloads, unknown event types on this
+  stream, self-ownership and dangling `owner_agent_id` all fail closed with stable codes;
+  broken records are never silently skipped and there is no last-write-wins semantics. Error
+  messages are fixed repository text and never echo a rejected value.
+- Added `AgentRegistrar`, the creation transaction. Its linearization point is the append's
+  `expected_seq`, carried from the directory read rather than re-read at append time; a
+  registrar-local lock only closes the read-then-append window and never decides whether a
+  write succeeded. A required caller-supplied `request_id` makes retries idempotent, and
+  reusing one for a different identity is rejected.
+- Made the uncertain-append outcome explicit rather than assumed. A failed or cancelled
+  append re-reads the stream by `request_id` instead of presuming nothing was written;
+  cancellation is always re-raised unchanged, `AgentCreationError` reports whether the append
+  committed, and `AgentDirectoryConflictError` promises nothing was. The reconciliation read
+  converges through `await_worker_convergence()`, so repeated cancellation cannot release the
+  caller early and no Task outlives the call.
+- Kept history lineage (`forked_from_session_id`), lifecycle ownership (`owner_agent_id`) and
+  communication as separate relations. Communication has no field in the creation fact at all.
+- Gave the write path exactly the rules replay applies. `validate_spec()` validates the budget
+  mapping that would be persisted, not merely that the value is a `Budget`, and rejects
+  booleans, negatives and NaN/±Infinity. A looser writer is not a weaker check but a way to
+  append a fact that can never be read back: one bad budget previously committed and then
+  failed every later rebuild *and* every later creation for that store.
+- Gated `agent/created` on `stream_id`, `schema_version == 1` and an exact payload key set, so
+  an event from a newer writer, or an identity fact read out of a Session Stream, fails closed
+  instead of being read as a complete v1 identity.
+- Made `AgentCreationError.committed` three-state (`True`/`False`/`None`). A reconciling read
+  that cannot answer now reports unknown instead of asserting nothing was written, and
+  `AgentDirectoryConflictError` is used only when the re-read proved that.
+- Stopped rewriting direct `BaseException` interrupts into domain errors. Only `CancelledError`
+  gets convergence handling; `SystemExit` and `KeyboardInterrupt` propagate untouched.
+- Made every `AgentDirectory` lookup return a detached record. `frozen=True` is shallow, so
+  returning the retained object let a caller write through `metadata` and change what every
+  later query on that directory answered.
+- Closed the other entrance to the same boundary: parsing `agent/created` now deep-copies and
+  normalizes the metadata graph, so a directory owns its graph from the input events onward.
+  Copying on the way out cannot repair a reference kept on the way in.
+- Froze the complete creation payload before `create_agent()`'s first suspension point.
+  `AgentSpec` is frozen but its `metadata` is not, so a caller mutating it while the
+  transaction awaited the directory read previously decided what got persisted; conflict
+  checks, the append and `request_id` reconciliation now read only that snapshot.
+- Validated the whole metadata graph before the append. A `set` nested inside metadata used to
+  pass validation and fail later inside the store, surfacing as `AgentCreationError` instead of
+  a pre-write `AgentIdentityError`.
+- Bounded metadata graphs. `to_json_value()` recurses, so cyclic or extremely deep metadata
+  raised a bare `RecursionError` out of both `create_agent()` and `AgentDirectory.rebuild()`,
+  at a depth decided by `sys.getrecursionlimit()`. Normalization now walks the graph within
+  `MAX_METADATA_DEPTH`, rejects containers that reappear among their own ancestors, and also
+  encodes, with the key scan, the bounded walk and the encode all inside one boundary that
+  catches `Exception`. Traversal is itself untrusted work - a `dict` subclass overriding only
+  `values()` or `__iter__` breaks the walk while remaining encodable through `items()` - so a
+  guard outside that boundary leaked a bare exception on both entrances. `KeyboardInterrupt`,
+  `SystemExit` and `CancelledError` are deliberately not caught.
+- Made the exported `agent_created_data()` raise on metadata it cannot carry. Its `or {}`
+  fallback conflated "rejected" with "legitimately empty" and silently dropped the caller's
+  data; an empty mapping still passes through unchanged.
+- Bounded budget numbers to `2**53 - 1`. `10**10000` is a valid non-negative `int` that raised
+  a bare `OverflowError` out of `float()`/`math.isfinite()` on both the write and replay paths,
+  escaping the stable `agent-budget-invalid` outcome.
+- Not included, and not to be described as delivered: a live `AgentSupervisor`,
+  single-activation enforcement, Inbox, `send`/wakeup, subagent tools, parent/child disposal,
+  workspace providers, Workflow, budget reservation and Agent cold recovery. `AgentLoop`,
+  `AgentRuntime`, `PluginManager` and every Composition path are unchanged.
+
 ### Controlled capability evolution L4
 
 - Added Runtime-external `traceh plugins promote` review/apply control. Review mode writes a

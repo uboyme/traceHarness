@@ -19,6 +19,7 @@ Applications
 
 Control
   AgentRuntime, PluginCompositionCoordinator, AgentLoop, ContinuationRuntime
+  AgentRegistrar, AgentDirectory (durable Agent identity; no live Supervisor)
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
@@ -111,6 +112,23 @@ state, replay and model Surface.
 The Effect Stream records side-effect intent, dispatch and outcome. It closes the
 otherwise invisible crash window between performing an operation and saving its model-
 visible result.
+
+### Agent Directory Stream
+
+`agents:directory` is one control-plane stream per `EventStore`, not a per-session stream.
+It records which Agents exist and which Session each owns. A Session Stream is one Agent's
+execution history; this stream is the identity plane above it. They are kept apart so that
+enumerating Agents does not require reading every Session and so that one Agent's history
+cannot assert facts about another. It adds no model-visible content: it never enters the
+Surface, recovery, invariants or the request fingerprint.
+
+`traceh.agents` depends only on `traceh.api`, the `EventStore` and the shared convergence and
+text-safety helpers. It does not import `AgentRuntime`, `AgentLoop` or `PluginManager`, and
+nothing imports it. A future `AgentSupervisor` will hold Activations and read identity from
+it; the dependency never points back. `AgentRecord` is durable identity, `AgentHandle` is an
+Activation, and stopping or rebuilding the latter cannot change the former. See
+[ADR-0019](adr/0019-durable-agent-identity-and-activation-boundary.md); there is still no
+Supervisor, Inbox, message delivery or subagent tool.
 
 ### Telemetry
 

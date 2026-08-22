@@ -117,9 +117,9 @@ published Generation from changing an in-progress Step's Provider, tools or Veri
 product-level two-Agent demo still depends on the v0.6 `AgentSupervisor`; D3 does not claim
 that capability.
 
-## Controlled capability evolution — L1-L4 implemented, L5 planned
+## Controlled capability evolution — L1-L4 released in v0.6, L5 planned
 
-- **L1 — implemented in Unreleased:** `traceh-plugin-creator-skill-plugin` is a real external
+- **L1 — released in v0.6:** `traceh-plugin-creator-skill-plugin` is a real external
   Wheel that supplies a short Prompt and packaged workflow/contract/template/checklist through
   one `PURE_READ` Tool. The Agent writes source only in a dedicated Candidate Workspace using
   existing coding Tools. It does not build, test, install, enable or approve its own output,
@@ -127,14 +127,14 @@ that capability.
   project from an isolated declared-source copy and audits archive members before installation;
   the packaged contract also states that Verifier uses Generation/Step Lease but not
   `CompositionSnapshot`, with results recorded as `verification/result`.
-- **L2 — implemented in Unreleased:** `traceh plugins validate` takes an explicit source-only
+- **L2 — released in v0.6:** `traceh plugins validate` takes an explicit source-only
   candidate, trusted core Git repository, new evidence directory and dependency source. It
   clones the trusted `HEAD`, reads that clone's compatibility version, rejects source reparse
   points and host-control namespaces, builds and anchors exact audited Wheel bytes, uses separate
   candidate/regression venvs, runs host-owned metadata/doctor/test/core gates, then rechecks the
   Wheel and atomically commits the complete evidence directory after all 13 gates pass. This is
   filesystem/Python environment isolation, not an OS sandbox; see ADR-0016.
-- **L3 — implemented in Unreleased:** `traceh plugins compare` consumes the exact successful L2
+- **L3 — released in v0.6:** `traceh plugins compare` consumes the exact successful L2
   evidence bundle, clones the core commit named by that evidence and runs a fixed suite from that
   trusted commit in two otherwise identical venvs. Dependencies resolve once into a frozen
   SHA-256-addressed Wheel set; both arms install offline from it and must retain identical
@@ -145,7 +145,7 @@ that capability.
   installing anything. The first three-case Python Quality
   suite checks one capability gain, one ordinary repair with no regression and one honest
   verification failure; see ADR-0017.
-- **L4 — implemented in Unreleased:** `traceh plugins promote` revalidates the exact L2/L3
+- **L4 — released in v0.6:** `traceh plugins promote` revalidates the exact L2/L3
   evidence and explicitly selected target environment. Its first invocation writes a Chinese
   capability/risk/evidence card and SHA-256 approval digest without changing the Registry or
   target. Only a second invocation carrying that exact digest can install the audited Wheel. The
@@ -169,7 +169,7 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
 [ADR-0017](docs/adr/0017-host-owned-baseline-candidate-comparison.md), and L4 in
 [ADR-0018](docs/adr/0018-human-approved-exact-plugin-promotion.md).
 
-## v0.6: AgentSupervisor and subagents
+## v0.6: AgentSupervisor and subagents — released
 
 - **Stage A — completed:** durable Agent identity is separated from live Activation.
   `traceh.agents` records `agent/created` on its own `agents:directory` control-plane stream
@@ -286,8 +286,11 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
 
 Definition of done: a suitably assembled parent can create a child with its own Session and
 host-resolved Agent Scope, send and collect one durable run, and dispose its subtree without
-orphaned process-local work. **Met by Stage E**. Version remains `0.5.0`; release packaging,
-final review and any additional v0.6 acceptance work are separate.
+orphaned process-local work. **Met and released as `0.6.0`.** The release candidate also ran
+this complete sequence against a real OpenAI-compatible model, then explicitly resumed the
+same durable child identity for a second real Turn and proved a separately gated cancellation
+converged to durable `cancelled` evidence. Both Sessions had closed lifecycle state, zero core
+invariant violations and zero request-reconstruction violations.
 
 ## v0.7: Budgets, workspaces and workflows
 

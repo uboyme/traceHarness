@@ -1,25 +1,26 @@
-# Writing and running TraceHarness plugins (v0.5.0)
+# Writing and running TraceHarness plugins (v0.6.0)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
 [ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
 ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
-page is the author- and operator-facing contract for the released `0.5.0` SDK. The post-release
-authoring, validation and comparison control planes are recorded in
+page is the author- and operator-facing contract for the released `0.6.0` SDK. The
+source-authoring, validation, comparison and promotion control planes are recorded in
 [ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md),
 [ADR-0016](adr/0016-independent-plugin-candidate-validation.md) and
-[ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
+[ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md) and
+[ADR-0018](adr/0018-human-approved-exact-plugin-promotion.md).
 
 Three working, independently buildable distributions live under `examples/plugins/`:
 
 - [`traceh-example-skill-plugin`](../examples/plugins/traceh-example-skill-plugin/) is the
   smallest Tool-and-Prompt example;
 - [`traceh-python-quality-plugin`](../examples/plugins/traceh-python-quality-plugin/) is the
-  v0.5 release acceptance plugin and contributes a real Tool, Prompt, Policy and named
+  v0.6 release acceptance plugin and contributes a real Tool, Prompt, Policy and named
   Verifier through the public SDK.
 - [`traceh-plugin-creator-skill-plugin`](../examples/plugins/traceh-plugin-creator-skill-plugin/)
-  is the Unreleased L1 source-authoring skill. It contributes a Prompt and a `PURE_READ`
+  is the source-authoring skill. It contributes a Prompt and a `PURE_READ`
   guide Tool; it never installs or executes the candidate it describes.
 
 ## 1. What a plugin can contribute
@@ -53,7 +54,7 @@ Declare an entry point in the `traceh.plugins` group and depend on `traceharness
 [project]
 name = "my-traceh-plugin"
 version = "0.1.0"
-dependencies = ["traceharness-py>=0.5,<0.6"]
+dependencies = ["traceharness-py>=0.6,<0.7"]
 
 [project.entry-points."traceh.plugins"]
 "my.plugin.id" = "my_traceh_plugin:MyPlugin"
@@ -75,7 +76,7 @@ class MyPlugin:
     manifest = PluginManifest(
         plugin_id="my.plugin.id",
         version="0.1.0",
-        requires_traceh=">=0.5,<0.6",
+        requires_traceh=">=0.6,<0.7",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=("my.capability",),
@@ -93,7 +94,7 @@ The entry point may resolve to an instance, a class (it is instantiated with no 
 or a zero-argument factory.
 
 Plugin distributions should import author-facing contracts from `traceh.plugins`, not from
-Runtime implementation modules. In v0.5 that public surface includes `PluginContext`,
+Runtime implementation modules. In v0.6 that public surface includes `PluginContext`,
 `PluginManifest`, `PromptSection`, Tool contracts, `ToolCall`, `ToolPolicy`, `ToolMiddleware`,
 `DecisionKind`, `ToolDecision`, `CompletionVerifier`, `CommandVerifier` and
 `VerificationResult`. The Python Quality plugin is the executable contract test for those
@@ -180,7 +181,7 @@ traceh plugins doctor traceh.plugin.creator
 traceh chat <candidate-workspace> --plugin traceh.plugin.creator
 ```
 
-The skill exposes `traceh_plugin_creator_guide` topics for workflow, the v0.5 SDK contract,
+The skill exposes `traceh_plugin_creator_guide` topics for workflow, the v0.6 SDK contract,
 package structure and a static checklist. It tells the model to collect explicit identity,
 authority and acceptance criteria, then write package metadata, Entry Point, Manifest,
 implementation, tests, README and a plain-language `CANDIDATE.md` through the existing coding
@@ -412,7 +413,7 @@ messages are written by this repository.
 | `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.5.0
+## 9. Limits of v0.6.0
 
 - Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
   Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to
@@ -435,7 +436,11 @@ messages are written by this repository.
   `CompletionVerifier` values at application setup. They still cannot supply `EventStore`;
   replacing the ledger needs a separate process-lifetime pinned owner rather than a
   Generation-owned ActivationSet.
-- No MCP, multi-agent or workflow surface.
+- v0.6 has a host-bound, process-local `AgentSupervisor` and five ordinary subagent Tools,
+  but `PluginContext` does not expose the Supervisor and plugins cannot replace its durable
+  Directory, Inbox, delivery ledger, ownership graph or scheduler. There is still no cold
+  recovery, cross-process Activation lease, managed child Workspace/Patch Artifact,
+  hierarchical Budget enforcement, MCP or Workflow surface.
 
 ## 10. Relationship to DeepSeek Harness
 

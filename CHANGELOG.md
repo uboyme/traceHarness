@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-08-23
+
+### Release candidate acceptance
+
+- Released the complete v0.6 Stage A-E Agent control plane: durable identity, FIFO Inbox,
+  process-local Supervisor and delivery lifecycle, child-first ownership disposal, durable
+  run reports and five host-bound model Tools. The implementation stays above the existing
+  `AgentRuntime`/`AgentLoop` mainline and adds no parallel scheduler or mutable fact source.
+- Ran a real OpenAI-compatible model through parent `spawn_agent` → `send_agent_message` →
+  `wait_agent` → `collect_agent_artifact` → `stop_agent`. The child owned a distinct Session;
+  the same durable identity was then explicitly resumed for another real model Turn, and a
+  separately gated model wait converged through `interrupt()` to durable `cancelled` evidence.
+  Directory, Inbox and Delivery protocol validation passed; both Sessions had closed
+  Turn/Step lifecycles, zero invariant violations and zero request-reconstruction violations.
+- Promoted the post-v0.5 L1-L4 controlled capability-evolution pipeline into the released
+  surface. The Plugin Creator and Python Quality distributions are now `0.2.0`; the creator
+  contract targets `traceharness-py>=0.6,<0.7`, while Python Quality declares its verified
+  backwards-compatible `>=0.5,<0.7` window.
+- The repository collects 1707 tests; the complete release gate is 1706 passed with the one
+  documented Windows NUL-path skip, including recursive L2 validation and clean Wheel E2E.
+
 ### v0.6 Stage E: supervisor-backed subagent tools
 
 - Added a host-wired `SupervisorToolset` with exactly five ordinary Tool Runtime
@@ -56,9 +77,9 @@
   must not cancel later caller work. The repository now collects 1707 tests; Stage E is 30/30,
   the Stage A-E control-plane set is 545/545, and the complete suite is 1706 passed with 1
   platform skip, including the real recursive L2 validation and Wheel E2E gates.
-- Version remains `0.5.0`. Stage E is not a v0.6 release. Cold recovery, stale-claim takeover,
-  hierarchical budget enforcement, managed Workspace isolation, retry policy, Workflow and
-  a default product-level subagent configuration remain outside this stage.
+- Released with `0.6.0`. Cold recovery, stale-claim takeover, hierarchical budget enforcement,
+  managed Workspace isolation, retry policy, Workflow and a default product-level subagent
+  configuration remain outside this release.
 
 ### v0.6 Stage D: lifecycle ownership and quiescent subtree disposal
 

@@ -23,8 +23,10 @@ import subprocess
 import sys
 import zipfile
 from pathlib import Path
+from runpy import run_path
 
 ROOT = Path(__file__).resolve().parent.parent
+VERSION = str(run_path(ROOT / "src" / "traceh" / "version.py")["__version__"])
 
 EXCLUDED_DIRS = {
     ".git",
@@ -117,7 +119,7 @@ def main() -> int:
     target = (
         Path(sys.argv[1])
         if len(sys.argv) > 1
-        else ROOT.parent / "traceharness-py-v0.5-source.zip"
+        else ROOT.parent / f"traceharness-py-v{VERSION}-source.zip"
     )
     target = target.resolve()
     files = collect()

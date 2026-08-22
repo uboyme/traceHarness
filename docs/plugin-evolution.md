@@ -9,8 +9,9 @@ and for the Session migration protocol see
 split is recorded in
 [ADR-0011](adr/0011-plugin-composition-control-plane-coordinator.md).
 
-TraceHarness `0.5.0` ships the Stage A-D3 path described below. Its release gate includes the
-independently packaged
+TraceHarness `0.6.0` retains the Stage A-D3 plugin path described below and now also ships the
+L1-L4 development control plane plus the process-local AgentSupervisor path. Its release gate
+includes the independently packaged
 [`traceh-python-quality-plugin`](../examples/plugins/traceh-python-quality-plugin/), built and
 installed as a real Wheel through the public SDK rather than compiled into the core Runtime.
 
@@ -321,7 +322,7 @@ discovers all three Entry Points, runs plugin doctor, and drives Python Quality'
 and Verifier through one real Session. The resulting Composition Snapshot, event invariants and
 request reconstruction must all remain clean.
 
-### Post-v0.5 L1: source-only Plugin Creator Skill
+### v0.6 L1: source-only Plugin Creator Skill
 
 The first controlled capability-evolution step remains outside the runtime control plane.
 `traceh-plugin-creator-skill-plugin` is an independent Entry Point distribution that adds one
@@ -340,7 +341,7 @@ The packaged SDK contract distinguishes lifecycle from persistence: a named Veri
 by the Generation and Step Lease, but is not a `CompositionSnapshot` field. Its observed result
 is durable only through `verification/result`.
 
-### Post-v0.5 L2: independent candidate validation
+### v0.6 L2: independent candidate validation
 
 `traceh plugins validate` is a separate development control plane under `traceh.evolution`; it
 does not add work to `AgentLoop`, `AgentRuntime`, `PluginManager` or the Event Log. The caller
@@ -363,7 +364,7 @@ code retains current-user authority; downstream consumers must recheck the SHA-2
 L2 still makes no quality or approval claim. See
 [ADR-0016](adr/0016-independent-plugin-candidate-validation.md).
 
-### Post-v0.5 L3: host-owned baseline/candidate comparison
+### v0.6 L3: host-owned baseline/candidate comparison
 
 `traceh plugins compare` is the next development-control-plane step. It accepts only the exact
 successful L2 evidence bundle, checks the canonical 13 gates and artifact digest again, clones the
@@ -390,7 +391,7 @@ verification-failure case. This is a deterministic capability contract, not a ge
 real-model benchmark. The venvs are not an OS sandbox. See
 [ADR-0017](adr/0017-host-owned-baseline-candidate-comparison.md).
 
-### Post-v0.5 L4: human-approved exact promotion and rollback
+### v0.6 L4: human-approved exact promotion and rollback
 
 `traceh plugins promote` consumes the successful L2 and L3 bundles without rebuilding either.
 It reconstructs the canonical L3 arm results, summaries, fixed gate sequence, classification and
@@ -449,7 +450,7 @@ Behavior that changes a model request must be represented in the Composition Sna
 otherwise request reconstruction will correctly report a mismatch. This is why activated
 plugin identities are persisted into every snapshot, and why replay rebuilds them.
 
-## v0.6 AgentSupervisor
+## v0.6 AgentSupervisor — shipped
 
 Multi-agent support should be built above `AgentLoop` with:
 
@@ -483,7 +484,7 @@ execution control signal. The loop remains
 unaware that a tool creates another Agent. Workspace patch artifacts and Workflow remain v0.7
 work.
 
-Status: Stages A-C have delivered durable identity, a durable per-Agent FIFO Inbox of
+Status: Stages A-C delivered durable identity, a durable per-Agent FIFO Inbox of
 accepted messages, a durable delivery lifecycle and a process-local
 `ProcessAgentSupervisor` that claims a message and runs exactly one Turn for it, with at
 most one live Activation per Agent and per Session. Its strict FIFO treats an open claim as a
@@ -491,8 +492,11 @@ blocker, claim/terminal writes prove authoritative DTO provenance before append,
 create requests share one single-flight only when their identity semantics match, and shutdown
 converges pending candidates as well as installed Activations. See ADR-0019, ADR-0020 and
 ADR-0021.
-Lifecycle ownership, child-first disposal and the five host-bound subagent tools are now
-implemented through Stages D–E. Remaining items include hierarchical budget allocation,
+Lifecycle ownership, child-first disposal and the five host-bound subagent tools shipped
+through Stages D–E in `0.6.0`. The release gate exercised a real model through parent spawn,
+send, message-scoped wait, durable collection and stop, then resumed the same child Session
+for another real Turn and checked cancellation convergence. Remaining items include
+hierarchical budget allocation,
 default product/CLI wiring, cold recovery, cross-process ownership and workspace isolation;
 the tool layer itself does not claim those capabilities.
 

@@ -1,6 +1,6 @@
 # traceh-python-quality-plugin
 
-TraceHarness v0.5 的独立 Python Quality 插件。它不是核心包里的隐藏默认能力，安装后仍需显式启用。
+TraceHarness v0.6 继续发布的独立 Python Quality 插件。它兼容 `traceharness-py>=0.5,<0.7`，不是核心包里的隐藏默认能力，安装后仍需显式启用。
 
 ## 能力
 

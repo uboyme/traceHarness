@@ -11,7 +11,7 @@ TraceHarness 的“插件创建技能”L1 实现。它本身是一个独立 Whe
 | Topic | 内容 |
 |---|---|
 | `workflow` | Candidate Workspace、安全边界和源码生成步骤 |
-| `contract` | v0.5 公开 SDK、生命周期和禁止越界事项 |
+| `contract` | v0.6 公开 SDK、生命周期和禁止越界事项 |
 | `template` | 独立 Distribution 的标准目录与结构模板 |
 | `checklist` | 交付前的静态核对清单 |
 
@@ -59,7 +59,7 @@ import package、entry class、version、贡献类型、权限和验收条件，
 - 指南工具只读取 Wheel 内资源，不读取 Workspace、用户目录、环境变量或网络。
 - Workspace 隔离和“不执行候选”是 L1 合同；本插件不会偷偷调用 pip、pytest 或
   `traceh plugins`。
-- L2 验证由宿主命令负责；L3 比较、L4 人工批准/晋升和回滚仍未由本技能实现。
+- L2 验证、L3 比较和 L4 人工批准、晋升与回滚都由宿主控制面负责；本技能不拥有这些权限。
 - Python Quality 插件只是已验证的真实插件参考，不会成为候选的隐藏默认能力。
 
 完整插件作者合同见 [`../../../docs/plugins.md`](../../../docs/plugins.md)。

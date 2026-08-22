@@ -239,7 +239,7 @@ async def main(scratch: Path) -> dict:
     finally:
         await creator_runtime.dispose()
 
-    # 7. The v0.5 acceptance plugin contributes four capability types from a
+    # 7. The v0.6 acceptance plugin contributes four capability types from a
     # separate wheel.  Its Policy must deny before a process effect is created,
     # its read-only Tool must execute through the normal ToolRuntime, and its
     # named Verifier must run through the Step's Generation Lease.

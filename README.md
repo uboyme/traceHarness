@@ -1,6 +1,6 @@
-# TraceHarness Py v0.5
+# TraceHarness Py v0.6
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 在 v0.3 的可重建内核之上增加了真正的插件系统；v0.5 又补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 Provider、Policy、Middleware、命名 Verifier 的插件贡献。所有能力都进入既有 `AgentLoop` 主线，Provider 与 Verifier 必须显式选择。v0.5.0 还随源码交付一个独立构建、独立安装的 Python Quality 插件，作为公共插件 SDK 和真实 Wheel 主线的发行验收；Unreleased L1–L4 则把“生成源码候选”“独立验证候选”“固定任务对比精确产物”和“人工批准后推广/回滚”拆成 Runtime 外的四级开发控制面，仍不把生成、构建、测试、比较或包管理逻辑塞进 AgentRuntime。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 则发布 L1–L4 受控能力演进控制面，以及建立在 durable Directory、Inbox、Delivery 和独立 Session 之上的进程内 `AgentSupervisor`。宿主可以把五个普通子 Agent Tool 显式绑定给 parent，使真实模型创建 child、发送消息、按 message identity 等待、收集 durable report 并 child-first 停止，而 `AgentLoop`、`AgentRuntime` 和 `PluginManager` 仍保持原有职责边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -26,10 +26,11 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - Request 重建检查、协议不变量、Replay、手动 Surface 压缩和静态 HTML Inspector；
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
 - **插件系统（v0.4 新增、v0.5 完成 Generation 化）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section、Service、Provider、Policy、Middleware 和命名 Verifier 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
-- **Plugin Creator Skill（Unreleased L1）**：以独立 Wheel 提供候选编写 Prompt 和 `PURE_READ` 指南；只在专用 Workspace 生成未验证源码，不自动 build/test/install/enable；
-- **候选验证（Unreleased L2）**：`traceh plugins validate` 用显式可信核心 `HEAD` 的版本、两套 venv 和 13 道宿主管控门禁验证 L1 候选；执行后复核审计字节，报告与 Wheel 按目录事务提交，失败不发布 Wheel，通过才给出精确产物与 SHA-256；
-- **能力对比（Unreleased L3）**：`traceh plugins compare` 复用精确 L2 产物和其记录的核心提交，在两套同构环境运行宿主固定任务；只给出 `improved/regressed/mixed/no-change`，不批准、不安装、不晋升；
-- **人工批准与回滚（Unreleased L4）**：`traceh plugins promote` 先生成不改环境的中文证据/风险卡和一次性摘要，只有带回同一摘要的第二次调用才能把精确 Wheel 安装到显式目标 Python；`rollback` 按推广 ID 恢复上一份精确 Wheel 或卸载首版；
+- **Plugin Creator Skill（v0.6 L1）**：以独立 Wheel 提供候选编写 Prompt 和 `PURE_READ` 指南；只在专用 Workspace 生成未验证源码，不自动 build/test/install/enable；
+- **候选验证（v0.6 L2）**：`traceh plugins validate` 用显式可信核心 `HEAD` 的版本、两套 venv 和 13 道宿主管控门禁验证 L1 候选；执行后复核审计字节，报告与 Wheel 按目录事务提交，失败不发布 Wheel，通过才给出精确产物与 SHA-256；
+- **能力对比（v0.6 L3）**：`traceh plugins compare` 复用精确 L2 产物和其记录的核心提交，在两套同构环境运行宿主固定任务；只给出 `improved/regressed/mixed/no-change`，不批准、不安装、不晋升；
+- **人工批准与回滚（v0.6 L4）**：`traceh plugins promote` 先生成不改环境的中文证据/风险卡和一次性摘要，只有带回同一摘要的第二次调用才能把精确 Wheel 安装到显式目标 Python；`rollback` 按推广 ID 恢复上一份精确 Wheel 或卸载首版；
+- **多 Agent 控制面（v0.6）**：`traceh.agents` 从同一 EventStore 重建 identity 与 FIFO acceptance，`traceh.supervision` 记录 claim/terminal、维持每 Agent/Session 至多一个进程内 Activation，并按 durable `owner_agent_id` child-first 收敛子树；`SupervisorToolset` 提供 `spawn_agent`、`send_agent_message`、`wait_agent`、`collect_agent_artifact`、`stop_agent`，但只有宿主显式装配后模型才能看见；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
 - 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
 
@@ -38,7 +39,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 需要 Python 3.12 或更高版本。
 
 ```bash
-cd traceharness-py-v0.5
+cd traceharness-py-v0.6
 export PYTHONPATH="$PWD/src"
 python -m traceh.cli.main doctor
 pytest
@@ -297,7 +298,7 @@ traceh plugins doctor traceh.plugin.creator
 traceh chat <candidate-workspace> --plugin traceh.plugin.creator
 ```
 
-技能要求先明确并确认插件身份、贡献类型、权限和验收条件，然后才写 package metadata、Entry Point、Manifest、实现、测试、README 与标为 `UNVALIDATED (L1 SOURCE ONLY)` 的 `CANDIDATE.md`。完整边界见[技能插件 README](examples/plugins/traceh-plugin-creator-skill-plugin/README.md)和 [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skill.md)。
+技能要求先明确并确认插件身份、贡献类型、权限和验收条件，然后才写 package metadata、Entry Point、Manifest、实现、测试、README 与标为 `UNVALIDATED (L1 SOURCE ONLY)` 的 `CANDIDATE.md`。完整边界见 [技能插件 README](examples/plugins/traceh-plugin-creator-skill-plugin/README.md) 和 [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skill.md)。
 
 L1 结束后，由宿主的 L2 命令独立验证候选。它不会创建 Session、调用模型或把候选装进宿主 Python：
 
@@ -612,7 +613,7 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.5.0 已知边界
+## v0.6.0 已知边界
 
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
@@ -644,7 +645,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-核心仓库当前收集 1162 项自动化测试；未提交工作区完整门禁为 1161 通过、1 项按平台跳过（Windows NUL 路径边界）。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback，回滚后候选 Distribution 确认不存在。该次真实对照冻结 3 个依赖 Wheel，两臂 receipt 均为同一组 4 个 Distribution。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。核心测试继续覆盖 JSONL、Generation/ActivationSet、插件与 Session 主线；L1–L4 测试覆盖候选源码合同、干净复制、Wheel/metadata/doctor/测试/核心回归、精确产物锚定、固定 Suite、durable 生命周期与插件身份、冻结依赖、分类、人工批准摘要、目标环境收据、doctor 后重验、原子报告、失败回滚和取消收敛。
+核心仓库当前收集 1707 项自动化测试，完整门禁为 1706 通过、1 项按平台跳过（Windows NUL 路径边界），其中 Stage A–E 控制面定向集合 545 项、Stage E 30 项全部通过。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback。v0.6 RC 又使用真实 OpenAI-compatible 模型完成 parent → spawn → send → wait → collect → stop；同一 child Session 随后显式恢复并完成第二个真实 Turn，独立取消路径收敛为 durable `cancelled`。两份 Session 都没有开放 Turn/Step，不变量和请求重建违规均为 0。详见 [v0.6.0 验证记录](docs/validation-v0.6.0.md)。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 
@@ -665,6 +666,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [插件说明（作者与运维契约）](docs/plugins.md)
 - [插件与多 Agent 演进](docs/plugin-evolution.md)
 - [测试策略](docs/testing.md)
+- [v0.6.0 验证记录](docs/validation-v0.6.0.md)
 - [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明

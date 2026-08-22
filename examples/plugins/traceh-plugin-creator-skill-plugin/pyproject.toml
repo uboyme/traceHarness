@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traceh-plugin-creator-skill-plugin"
-version = "0.1.0"
+version = "0.2.0"
 description = "A source-only TraceHarness plugin-authoring skill for candidate workspaces."
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "TraceHarness contributors" }]
 dependencies = [
-  "traceharness-py>=0.5,<0.6",
+  "traceharness-py>=0.6,<0.7",
 ]
 
 [project.entry-points."traceh.plugins"]

@@ -1,13 +1,13 @@
-# TraceHarness v0.5 Plugin Contract
+# TraceHarness v0.6 Plugin Contract
 
-This guide is pinned to `traceharness-py>=0.5,<0.6`. Import author-facing values
+This guide is pinned to `traceharness-py>=0.6,<0.7`. Import author-facing values
 only from `traceh.plugins`; do not reach into `traceh.runtime`, `traceh.session`,
 `traceh.kernel` or manager implementation modules.
 
 ## Packaging identity
 
 - The Python distribution declares a dependency on
-  `traceharness-py>=0.5,<0.6`.
+  `traceharness-py>=0.6,<0.7`.
 - The Entry Point group is exactly `traceh.plugins`.
 - The Entry Point name is the plugin id and exactly matches
   `PluginManifest.plugin_id`.
@@ -16,7 +16,7 @@ only from `traceh.plugins`; do not reach into `traceh.runtime`, `traceh.session`
 
 ## Supported contribution surface
 
-During `setup(context, config)`, a v0.5 application-scoped trusted plugin may
+During `setup(context, config)`, a v0.6 application-scoped trusted plugin may
 use:
 
 - `context.register_tool(tool)`;
@@ -40,7 +40,7 @@ Every manifest for this skill uses the currently supported boundary:
 PluginManifest(
     plugin_id=PLUGIN_ID,
     version=PLUGIN_VERSION,
-    requires_traceh=">=0.5,<0.6",
+    requires_traceh=">=0.6,<0.7",
     allowed_scopes=("application",),
     trust_mode="trusted",
     provides=(...),
@@ -69,12 +69,15 @@ or background task merely to make a candidate look substantial.
 - Do not create `runtime.state`, a mutable message history, a second EventStore,
   or any other fact source beside the existing Session/Event protocol.
 
-## Explicitly unavailable in v0.5
+## Explicitly unavailable through the v0.6 plugin API
 
 Plugins cannot replace `AgentLoop` or provide EventStore. There is no isolated
 process host, untrusted sandbox, running Wheel install/uninstall, forced module
-reload, file watcher, multi-agent surface, Workflow surface, MCP bridge, TUI or
-model streaming. Do not claim or emulate those features inside a candidate.
+reload, file watcher, Workflow surface, MCP bridge, TUI or model streaming.
+The host may explicitly bind v0.6's `SupervisorToolset` to an Agent, but
+`PluginContext` does not expose a Supervisor and a plugin must not create a
+parallel scheduler or ownership graph. Do not claim or emulate unsupported
+features inside a candidate.
 
 The complete released author contract is `docs/plugins.md` in the TraceHarness
 source repository. The Python Quality plugin is a useful real-world reference,

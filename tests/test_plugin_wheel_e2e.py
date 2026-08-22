@@ -2,14 +2,14 @@
 
 Everything else in the plugin suite substitutes a fake ``entry_points`` provider.
 That is fine for driving the manager deterministically, but it proves nothing
-about packaging: it cannot show that a separately built distribution declaring
-``traceharness-py>=0.5,<0.6`` actually installs alongside this build, or that
+about packaging: it cannot show that separately built distributions declaring
+their released compatibility ranges actually install alongside this build, or that
 ``importlib.metadata`` finds it.
 
 So this module builds the harness plus three independent plugin wheels, populates
 an offline wheelhouse (including ``packaging``), creates a fresh venv, installs
 with ``--no-index``, and runs their plugin mainlines inside it.  The Python
-Quality distribution is the v0.5 release acceptance plugin: it proves
+Quality distribution is the v0.6 release acceptance plugin: it proves
 Tool, Prompt, Policy and named Verifier contributions from a real wheel.
 
 It is slow by nature - one venv and four wheel builds - so it is marked
@@ -172,8 +172,8 @@ def test_wheels_install_together_in_a_clean_environment(e2e_report: dict) -> Non
     versions = e2e_report["installed_versions"]
     assert versions["traceharness-py"] == __version__
     assert versions["traceh-example-skill-plugin"] == "0.1.0"
-    assert versions["traceh-plugin-creator-skill-plugin"] == "0.1.0"
-    assert versions["traceh-python-quality-plugin"] == "0.1.0"
+    assert versions["traceh-plugin-creator-skill-plugin"] == "0.2.0"
+    assert versions["traceh-python-quality-plugin"] == "0.2.0"
     assert versions["packaging"], "packaging must be installed from the offline wheelhouse"
 
 
@@ -242,7 +242,7 @@ def test_python_quality_plugin_runs_tool_policy_and_named_verifier(
     assert quality["prompt_contains_section"] is True
     assert quality["snapshot_plugins"] == [
         {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
-        {"plugin_id": "traceh.python.quality", "version": "0.1.0"},
+        {"plugin_id": "traceh.python.quality", "version": "0.2.0"},
     ]
     assert quality["invariant_violations"] == []
     assert quality["reconstruction_violations"] == []
@@ -263,7 +263,7 @@ def test_plugin_creator_skill_runs_through_the_existing_mainline(e2e_report: dic
     assert creator["workspace_entries"] == []
     assert creator["snapshot_plugins"] == [
         {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
-        {"plugin_id": "traceh.plugin.creator", "version": "0.1.0"},
+        {"plugin_id": "traceh.plugin.creator", "version": "0.2.0"},
     ]
     assert creator["invariant_violations"] == []
     assert creator["reconstruction_violations"] == []

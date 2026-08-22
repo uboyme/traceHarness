@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.5.0`**。Stage A–D3 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力已经一起作为 v0.5 发布；Provider/Verifier 仍必须由宿主明确点名，Verifier 也和模型、工具锁在同一个 Step Lease 里。发布还带了一个真正独立的 Python Quality 插件 Wheel。Unreleased L1 让 Plugin Creator Skill 在单独目录写待审源码；L2 用 Runtime 外的 `traceh plugins validate` 独立构建、审计、测试并给出精确哈希 Wheel；L3 又用 `traceh plugins compare` 在同一个可信核心和同一份候选 Wheel 上跑宿主固定任务，只比较“不开插件”和“开插件”；L4 再把“给人看证据”“明确批准”“装同一个 Wheel”“出错退回上一版”串起来。四层都没有塞进 AgentRuntime。插件仍不能自己选择子层，EventStore 仍固定在 Runtime/Session 生命周期，也还没有 L5 自动归纳弱点/提出候选、自动升级依赖、操作系统沙箱、隔离插件、多 Agent 或 Workflow。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。两条线都没有塞进 `AgentRuntime`，`AgentLoop` 也没有变成多 Agent 调度器。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel，并在本次发布升级到 `0.2.0`；插件仍不能自己选择子层或替换 EventStore。当前也还没有 L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent 接管、独立工作区/Patch、层级预算或 Workflow。
 
 ### 版本为什么只准写在一个地方
 
@@ -36,7 +36,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 
 为什么这么较真？因为 `traceh.core` 的版本会被写进**每一条 Composition 快照**（就是“这一步用的是哪套能力”的存档）。之前的候选实现把版本分散写在四个地方，其中两处对不上：不带插件启动的 Runtime 和走 PluginManager 启动的 Runtime，会给同一种步骤写下**不同的**核心版本。而快照存在的意义，恰恰就是排除这种“同一次构建说两套话”的情况。
 
-现在这些全部派生自那一个属性：Wheel 元数据、`traceh.__version__`、核心插件身份、插件 API 版本、Manifest 的默认兼容范围、Composition 快照、CLI 标题。而且有测试直接断言“装出来的包的版本 == import 进来的版本”。
+现在这些全部派生自那一个属性：Wheel 元数据、`traceh.__version__`、核心插件身份、插件 API 版本、Manifest 的默认兼容范围、Composition 快照、CLI 标题，连源码 ZIP 的默认文件名也不再单独写死版本。而且有测试直接断言“装出来的包的版本 == import 进来的版本”。
 
 “Educational alpha”可以理解为：
 
@@ -67,7 +67,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | 核心收集 1707 项；完整门禁 1706 通过、1 项跳过（唯一 skip 是 Windows NUL 路径边界），包含真实 L2 递归验证和 Wheel E2E；Stage E 30 项、Stage A–E 定向 545 项全部通过。其中 v0.6 Stage A 新增 214 项、Stage B 新增 147 项、Stage C 新增 134 项、Stage D 新增 20 项、Stage E 新增 30 项；仓库外干净 HEAD 克隆曾真实跑通 L2 的 13/13 门禁和 L3 的 Python Quality v1 对比（baseline 2/3、candidate 3/3、improved、无回归/协议违规，冻结 3 个依赖 Wheel，两臂 receipt 同为 4 个 Distribution），随后又完成 L4 只审阅、精确安装、目标 doctor 和显式回滚，回滚后目标里没有候选插件；独立 Python Quality 插件另有 17 项通过，独立 Plugin Creator Skill 另有 10 项通过 |
+| 当前测试数 | 核心收集 1707 项；完整门禁 1706 通过、1 项跳过（唯一 skip 是 Windows NUL 路径边界），包含真实 L2 递归验证和 Wheel E2E；Stage E 30 项、Stage A–E 定向 545 项全部通过。仓库外干净 HEAD 克隆曾真实跑通 L2/L3/L4 完整链路；v0.6 RC 又让真实模型完成 parent spawn→send→wait→collect→stop，让同一 child identity/Session 恢复并完成第二轮真实对话，再把独立取消收敛成持久化 `cancelled`。两份 Session 的 Turn/Step 全闭合，不变量和请求重建违规都是 0；独立 Python Quality 插件另有 17 项通过，独立 Plugin Creator Skill 另有 10 项通过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -1055,7 +1055,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-当前核心套件收集 1707 项，完整门禁为 1706 通过、1 项跳过；唯一 skip 是 Windows 的 NUL 路径边界，真实 L2 递归入口和 18 项 Wheel E2E 都已完成。Stage E 的 `test_agent_tools.py` 30 项、Stage A–E 定向集合 545 项全部通过。v0.6 Stage A 前基线是 1162/1161/1，随后 Stage A、B、C、D、E 分别新增 214、147、134、20、30 项。Python Quality 与 Plugin Creator Skill 自身另有 17、10 项通过。原有 D1–D3 的四层 Scope、事务装配、Policy/能力身份、Request 重建、跨 Runtime 隔离、命名 Verifier 和 cleanup 失败保真仍由各自专门测试固定。
+v0.6.0 核心发布基线收集 1707 项，完整门禁为 1706 通过、1 项跳过；唯一 skip 是 Windows 的 NUL 路径边界，真实 L2 递归入口和 18 项 Wheel E2E 都已完成。Stage E 的 `test_agent_tools.py` 30 项、Stage A–E 定向集合 545 项全部通过。v0.6 Stage A 前基线是 1162/1161/1，随后 Stage A、B、C、D、E 分别新增 214、147、134、20、30 项。Python Quality 与 Plugin Creator Skill 自身另有 17、10 项通过。原有 D1–D3 的四层 Scope、事务装配、Policy/能力身份、Request 重建、跨 Runtime 隔离、命名 Verifier 和 cleanup 失败保真仍由各自专门测试固定。
 
 Stage C 的 134 项（投递协议 73 项、Supervisor 61 项）问的是「事实归属、执行和收尾是不是真的都对」：已接受消息走认领→真实 Turn→结果，控制面的 `message_id`、来源和多行内容与真实 `turn_id` 都能在 Session 与投递账本互相对应；FIFO 不只保证先来先到，最早消息已有 open claim 时还会挡住全部后续消息，直到它出现完成/失败/取消；重放会拒绝跳头和并行 open claim。写 claim 前会重新读取权威 Inbox/Delivery，伪造 Acceptance、跨 Agent/过期视图和 foreign terminal claim 都零写入失败。两个 Supervisor 竞争时每条消息恰好执行一次，claim 未落盘或结果 unknown 时 Provider 调用数为 0；`wakeup=False` 不写投递也不启动 Runtime，显式 resume 才排空；`NEXT_STEP` 在接受前拒绝，绕过后则记稳定失败而不打乱 FIFO。create 的 durable 与在途重试都按完整请求核对，同一 `request_id` 不同 preset/身份字段会冲突；Factory 不能改写已冻结请求。worker 的普通异常进入稳定 fault，不会被报告成 idle。dispose/`aclose()` 会收敛在途 create/resume、候选回滚、Turn、terminal append 与 Runtime cleanup，重复取消不能提前返回，cleanup 失败会重放并与主错误一起保留；公开 `AgentSupervisor` Protocol 与真实实现签名一致，Runtime adapter 也只执行一次 cleanup。另有结构检查证明 `AgentRuntime` 没长出 Supervisor 状态、主循环不导入控制面、生产代码没有示例名字或本机路径；并发测试用 Event、Gate 和真实 append latch，唯一的 `sleep(0)` 只负责投递已提出的取消。
 
@@ -1157,13 +1157,13 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 （第 2 步下载可能需要网络或已经缓存过；拿不到时这条测试会明确跳过并说明原因。但**安装那一步**永远是离线的。）
 
-源码 ZIP 也不再遍历“这个目录里碰巧有什么”，而是只收 `git ls-files` 列出的已提交文件。这样你自己没跟踪的笔记、测试缓存或临时文件即使摆在项目目录里，也不会被源码包顺手带走；脚本还会继续检查中文文件名和每个文件的字节内容。
+源码 ZIP 也不再遍历“这个目录里碰巧有什么”，而是只收 `git ls-files` 列出的已提交文件。这样你自己没跟踪的笔记、测试缓存或临时文件即使摆在项目目录里，也不会被源码包顺手带走；脚本还会继续检查中文文件名和每个文件的字节内容，而且默认文件名直接读取唯一版本源，不会发 v0.6 时还悄悄写成 v0.5。
 
 ### 这一轮 ruff 抓到了一个测试没抓到的真 bug
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；Unreleased L1 时点是 1092/1091/1；Unreleased L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**当前 Stage E 是 1707/1706/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；L1 时点是 1092/1091/1；L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**v0.6.0 发布基线是 1707/1706/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。发布快照记录当时证据，未来代码状态则要按新的真实门禁更新，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1472,7 +1472,7 @@ v0.4 之前建的老会话根本没有这个字段，等于"没有插件"，照�
 
 ### 19.10.1 L1 的 Plugin Creator 为什么只教、不代替主线写文件
 
-[`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 本身就是一个外部 Wheel。你必须明确启用 `traceh.plugin.creator`；它只注册一段短提示和一个叫 `traceh_plugin_creator_guide` 的纯读取工具。工具按需返回四份 Wheel 内文档：怎么做、v0.5 插件合同、标准目录模板、最后检查清单。它不读工作区、不读 `.env`、不联网，也没有自己的写文件工具。
+[`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 本身就是一个外部 Wheel。你必须明确启用 `traceh.plugin.creator`；它只注册一段短提示和一个叫 `traceh_plugin_creator_guide` 的纯读取工具。工具按需返回四份 Wheel 内文档：怎么做、v0.6 插件合同、标准目录模板、最后检查清单。它不读工作区、不读 `.env`、不联网，也没有自己的写文件工具。
 
 真正写候选时，Agent 还是调用原来的 `apply_patch` 等 Coding Tool，所以写入的 Effect、工作区边界和事件证据都没有第二条路。更重要的是，使用者要把 TraceHarness 核心和 Candidate Workspace 分开；如果模型发现自己正站在 `traceharness-py` 核心仓库里，技能要求它停下来。开始写之前，能力目标、plugin id、Distribution、import package、entry class、版本、贡献类型和权限都要显式确认，不能拿 Python Quality 或 Memory 这些例子当默认。
 
@@ -1962,4 +1962,6 @@ send 为什么不直接等到最终答案？因为“消息落账”和“任务
 
 #### Stage E 仍然不是什么
 
-它不是 OS 沙箱，也没有跨进程唯一 Activation、冷恢复、stale claim 接管、自动重试、层级 Budget 强制、独立 Git worktree/Patch merge、Workflow、`NEXT_STEP`、MCP、TUI 或流式输出。宿主还要明确装配 Toolset，并提供 preset/workspace 的真实解析策略。版本仍是 `0.5.0`，Stage E 完成不等于 v0.6 已发布。
+发版前还做了一次不靠 Scripted Provider 的真实验收。parent 模型必须一项一项调用 spawn、send、wait、collect、stop，并且只能拿上一项 Tool Result 里的真实 id 做下一项；child 在自己的 Session 完成回答。停掉 child 后，宿主用同一个 durable Agent/Session identity 显式恢复它，让它再完成一轮真实模型对话；最后又把另一轮卡在确定性模型 Gate 上发出取消，账本最终明确记录 cancelled。整个过程只有 2 个 Agent、1 条 owner 边、4 条收件和 8 条投递生命周期事件；parent 1 个 Turn、child 3 个 Turn 都闭合，两份 Session 的不变量和请求重建错误都是 0。这说明“模型真的能沿这五个 Tool 用同一套 Supervisor 管 child”，不是只靠单元测试猜出来的。完整的自动化、真实模型、打包和安全门禁见 [`validation-v0.6.0.md`](../validation-v0.6.0.md)。
+
+v0.6.0 仍然不是 OS 沙箱，也没有跨进程唯一 Activation、冷恢复、stale claim 接管、自动重试、层级 Budget 强制、独立 Git worktree/Patch merge、Workflow、`NEXT_STEP`、MCP、TUI 或流式输出。宿主还要明确装配 Toolset，并提供 preset/workspace 的真实解析策略；默认 CLI 不会偷偷打开多 Agent。Stage E 已随 `0.6.0` 正式发布，但这些边界没有因为发版而消失。

@@ -63,11 +63,11 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能在运行中换插件吗 | 可以在空闲的 `traceh chat` 中用 `/plugins`、`/plugins reload`、`/plugins use ID...` 或 `--none` 切换当前进程已经能发现的已安装插件；这会重做 setup/conflict/health 并走 Generation/Lease/Drain，但不是 pip 安装、Wheel 替换或 Python module reload |
 | 有四层 Scope 吗 | 有程序化装配：Service、Tool、Prompt、Policy 都能由宿主 Python 代码明确放进 Application、Workspace、Preset 或 Agent 层，越靠近 Agent 越优先，而且 Step 开始后不会被新 Generation 原地换掉。插件本身仍只在 application 层 setup，不能自行选择子层；它提供的 Policy 属 application 候选 |
 | 插件是被沙箱隔开的吗 | 不是。v0.4 的插件和 Harness 同进程同权限；`isolated` 可以写在 Manifest 里，但会被**明确拒绝** |
-| 有多 Agent 吗 | **模型仍然不能自己创建子 Agent。** v0.6 现在有三层：Stage A 把「哪些 Agent 存在、各自拥有哪个 Session」变成账本事实；Stage B 把「已经收到哪些消息、什么顺序」也变成账本事实；Stage C 加了一个**进程内** Supervisor，会认领消息并在这个 Agent 自己的会话上跑出真实 Turn，再把结果记进账（第 20 节）。但仍然没有 `spawn_agent` 这类模型工具、没有冷恢复、没有父子销毁 |
+| 有多 Agent 吗 | **模型仍然不能自己创建子 Agent。** v0.6 现在有四层：Stage A 记录 Agent/Session 身份，Stage B 记录 FIFO 收件，Stage C 用**进程内** Supervisor 认领并跑真实 Turn，Stage D 再按 `owner_agent_id` 管住父子生命周期：停 owner 时先封住新准入，再从最深的 child 往上收干净（第 20 节）。但仍然没有 `spawn_agent` 这类模型工具、没有冷恢复、跨进程唯一性、独立工作区或层级预算 |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | 核心收集 1657 项；未提交工作区完整门禁 1656 通过、1 项跳过（Windows NUL 路径边界），其中 v0.6 Stage A 新增 214 项、Stage B 新增 147 项、Stage C 新增 134 项；仓库外干净 HEAD 克隆真实跑通 L2 的 13/13 门禁和 L3 的 Python Quality v1 对比（baseline 2/3、candidate 3/3、improved、无回归/协议违规，冻结 3 个依赖 Wheel，两臂 receipt 同为 4 个 Distribution），随后又完成 L4 只审阅、精确安装、目标 doctor 和显式回滚，回滚后目标里没有候选插件；独立 Python Quality 插件另有 17 项通过，独立 Plugin Creator Skill 另有 10 项通过 |
+| 当前测试数 | 核心收集 1677 项；未提交工作区完整门禁 1676 通过、1 项跳过（Windows NUL 路径边界），其中 v0.6 Stage A 新增 214 项、Stage B 新增 147 项、Stage C 新增 134 项、Stage D 新增 20 项；仓库外干净 HEAD 克隆真实跑通 L2 的 13/13 门禁和 L3 的 Python Quality v1 对比（baseline 2/3、candidate 3/3、improved、无回归/协议违规，冻结 3 个依赖 Wheel，两臂 receipt 同为 4 个 Distribution），随后又完成 L4 只审阅、精确安装、目标 doctor 和显式回滚，回滚后目标里没有候选插件；独立 Python Quality 插件另有 17 项通过，独立 Plugin Creator Skill 另有 10 项通过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -111,7 +111,7 @@ flowchart LR
 6. 崩溃后不确定的写操作不能因为“可能没执行”就自动再执行；
 7. 模型的自我评价不能代替真实测试。
 
-当前不做的事情也同样重要。v0.4 有了插件系统，Stage A–D3 补上 Generation 生命周期、ActivationSet、用户可操作的 Session 级组合切换、四层宿主装配和 application 插件的 Provider/Policy/Middleware/Verifier，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，不能自己在 Workspace/Preset/Agent 层注册能力，也不能替换 EventStore。它也不是多 Agent 编排器、Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。v0.6 到目前补了多 Agent 的**地基和第一台发动机**：一本记录「存在哪些 Agent」的账、每个 Agent 一本「收到过哪些消息」的账，再加上一个**进程内**的 Supervisor，它会认领消息并在这个 Agent 自己的会话上跑出真实的 Turn（第 20 节）。但它仍然只在一个进程里：崩溃后不会自己恢复，没有自动重试，也**没有** `spawn_agent` 这类给模型用的工具、没有父子销毁、没有层级预算和工作区隔离——模型自己开不出子 Agent。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
+当前不做的事情也同样重要。v0.4 有了插件系统，Stage A–D3 补上 Generation 生命周期、ActivationSet、用户可操作的 Session 级组合切换、四层宿主装配和 application 插件的 Provider/Policy/Middleware/Verifier，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，不能自己在 Workspace/Preset/Agent 层注册能力，也不能替换 EventStore。它也不是多 Agent 编排器、Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。v0.6 到目前补了多 Agent 的**地基、发动机和进程内生命周期保险**：身份账、FIFO 收件账、会认领并跑真实 Turn 的 Supervisor，以及从 durable owner 关系投影出来的 child-first dispose（第 20 节）。但它仍然只在一个进程里：崩溃后不会自己恢复，没有自动重试，也**没有** `spawn_agent` 这类给模型用的工具、没有层级预算和工作区隔离——模型自己开不出子 Agent。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
 
 ## 3. 从目录看懂整个项目
 
@@ -141,7 +141,7 @@ flowchart LR
 | `evaluation/` | 复制独立工作区、跑任务、出报告 | `BenchmarkRunner` |
 | `evolution/` | 在 Runtime 外跑 L2 验证、L3 对比和 L4 人工批准/推广/回滚 | `CandidateValidator`、`CandidateComparator`、`CandidatePromoter`、宿主 Probe、`artifacts.py` |
 | `agents/` | 记录「存在哪些 Agent、各自拥有哪个 Session」和「每个 Agent 已接受哪些消息、什么顺序」，并且只从账本回答 | `AgentRegistrar`/`AgentInboxService`（写）、`AgentDirectory`/`AgentInbox`（读）、`identity.py`/`inbox_identity.py`（读写共用的规则）、`commit_reconciliation.py`（三个事务共用的提交点判断） |
-| `supervision/` | 把已接受的消息真的跑起来：认领、在这个 Agent 自己的会话上跑一个 Turn、记下结果，并管住「一个 Agent 最多一个活实例」 | `ProcessAgentSupervisor`（活实例与调度）、`AgentDeliveryService`（写认领与结果）、`AgentDeliveryLog`（读）、`delivery_identity.py`（读写共用的规则）、`execution.py`（只有四个方法的窄执行接口） |
+| `supervision/` | 把已接受的消息真的跑起来，并按 durable owner 关系管生命周期：认领、真实 Turn、结果、单活 Activation、lineage admission 与 child-first dispose | `ProcessAgentSupervisor`（活实例与调度）、`AgentDeliveryService`/`AgentDeliveryLog`（投递账）、`lifecycle.py`（ownership 图与进程内准入/收敛）、`execution.py`（窄执行接口） |
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；但 `AgentSupervisor` Protocol、`WorkspaceProvider` 仍然只是图纸上预留的接口尺寸——注意区分：`traceh.supervision` 里的 `ProcessAgentSupervisor` 是真实实现，`api/agents.py` 里那个同名的 Protocol 只是形状。看到 `api/` 里有个类型，不等于它背后有实现——判断标准永远是：有没有测试真的把它跑起来。
 
@@ -1027,7 +1027,7 @@ D0 又把职责分清了一层：`AgentRuntime` 像总服务台，保留公开�
 
 `traceh.supervision` 里的 `ProcessAgentSupervisor` 有真实实现：`create`、`resume`、`send`、`interrupt`、`wait_idle`、`dispose` 都有行为，一条已接受的 `NEW_TURN` 消息会被认领、在这个 Agent 自己的会话上跑成一个真实的 Turn，再记下完成/失败/取消。
 
-但它是**进程内**的：活实例不会在崩溃后自动恢复，别的进程留下的认领不会被接管，没有自动重试，`NEXT_STEP` 直接拒绝，给模型用的 `spawn_agent` 一类工具**一个都没有**——也就是说，模型仍然不能自己开子 Agent。`api/agents.py` 里的 `AgentSupervisor` Protocol 已与当前 `ProcessAgentSupervisor` 的公开方法对齐：创建必须显式提供稳定 `request_id`，`interrupt()` 会回答是否真的取消了在途 Turn，并包含 `aclose()` 的整体关闭入口；它现在可以作为调用方的真实结构合同，而不是另一份分叉草图。
+Stage D 又让 `dispose(owner)` 真正按 durable `owner_agent_id` 管整棵子树：先挡住相交的新 create/resume/wakeup，等旧操作收敛，再从最深 child 往 owner 清理；一个 child 清理失败也不能把兄弟和 parent 留下。它仍是**进程内**的：活实例不会在崩溃后自动恢复，别的进程留下的认领不会被接管，没有自动重试，`NEXT_STEP` 直接拒绝，给模型用的 `spawn_agent` 一类工具**一个都没有**——也就是说，模型仍然不能自己开子 Agent。`api/agents.py` 里的 `AgentSupervisor` Protocol 已与当前 `ProcessAgentSupervisor` 的公开方法对齐：创建必须显式提供稳定 `request_id`，`interrupt()` 会回答是否真的取消了在途 Turn，并包含 `aclose()` 的整体关闭入口；它现在可以作为调用方的真实结构合同，而不是另一份分叉草图。
 
 ### Budget —— 记了但不管
 
@@ -1055,7 +1055,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980/979/1；Stage C 为 999/998/1；D0 为 1003/1002/1；D1 为 1029/1028/1；D2 为 1053/1052/1；D3 结束时为 1088/1087/1。v0.5.0 发布基线是 1090/1089/1；Unreleased L2 初版是 1110/1108/2，L2 加固后是 1116/1114/2，L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 时点是 1162 项收集、1161 通过、1 项跳过；**当前 v0.6 Stage C 是 1657 项收集、1656 通过、1 项跳过**，其中 Stage A 的 214 项、Stage B 的 147 项、Stage C 的 134 项都来自多 Agent 控制面那一套（见第 20 节）。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。L1 新测试确认四份指南真的打进 Wheel、Entry Point/Manifest 身份一致、只注册 Prompt 与纯读取 Tool、错误 Topic 明确失败，而且 clean-venv 的真实 AgentLoop 调用后 Candidate Workspace 仍为空；contract 指南还明确写清：Verifier 会被 Generation 和 Step Lease 固定，但不属于 `CompositionSnapshot`，实际结果由 `verification/result` 记账。Wheel 构建会先复制声明的源码输入并过滤缓存/旧构建目录，再审计成品成员，不能让工作区里的 `.pyc` 或 `.egg-info` 混进发行物。D1/D2 的四层、事务装配、Policy 对象身份、真实 Tool admission 和 Request 重建测试继续通过。D3 新测试则真正让 AgentLoop 使用插件 Provider、Policy/Middleware 和命名 Verifier；检查缺失目标与冲突必须在 health 前失败并完整回滚；证明 setup 结束后 health 不能再补注册 Policy/Middleware，也不能通过改写已注册 Tool、Provider、Policy、Middleware 的名字绕过检查；这种漂移会报固定的 `plugin-contribution-identity-changed` 并回滚，Tool/LLM 撤销也只认注册时名字；公开候选返回后即使后台 Owned Task 才改名，Generation 交接复核也会在 claim 前拒绝，不能让 Snapshot 和 Tool 执行表各认一个名字；如果收据在 ActivationSet 构造时就发现问题，说明钥匙还没交到调用方手里，临时 Manager 仍是唯一负责人，必须收干净 Owned Task 和 cleanup 后才能返回。测试还覆盖清理期间连续取消不能提前逃走，以及交接错误和 cleanup 错误不能互相遮住；普通异常组合仍是 `ExceptionGroup`，直接 `BaseException` 与 cleanup 失败则保存在 `BaseExceptionGroup`，不会再退化成遮蔽证据的 `TypeError`；Policy Overlay 冲突会带上责任插件，ActivationSet 的 Provider 缺失也不能从外部 Registry 偷借；验证没有明确选择时插件 Verifier 不会自动运行；还把旧 Verifier 卡在 Lease 内再发布新代，证明旧 Step 不会混用新验证规则；恢复命令也会把命名 Verifier 与插件 id 一起保真。旧式自定义 ActivationSet 没有 D3 `llms` 字段时，替换仍能借用 Runtime 原有的核心 Registry。CLI 测试钉住自定义 Provider 必须同时明确插件和 Model，命名 Verifier 必须明确插件且不能与命令 Verifier 并用；如果命令行明确选择其中一种，它会压过环境变量中的另一种，只有两种选择都来自同一优先级时才报冲突。原有三项反向验证继续保留；公开候选交接测试也做过反向验证：临时去掉 Generation 复核时会稳定失败；临时恢复 activate 后直接 transfer 的旧路径时，交接失败与 cleanup 失败测试只收到裸 `ValueError`，恢复两道保护后才继续完整门禁；把正确的 `BaseExceptionGroup` 临时换回 `ExceptionGroup` 时，新反例会稳定复现 `Cannot nest BaseExceptions`，恢复后交接四项与全量测试再次通过。
+Stage A 中间基线是收集 960 项、959 通过、1 项跳过；Stage B 后为 980/979/1；Stage C 为 999/998/1；D0 为 1003/1002/1；D1 为 1029/1028/1；D2 为 1053/1052/1；D3 结束时为 1088/1087/1。v0.5.0 发布基线是 1090/1089/1；Unreleased L2 初版是 1110/1108/2，L2 加固后是 1116/1114/2，L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 时点是 1162 项收集、1161 通过、1 项跳过；v0.6 Stage C 检查点是 1657/1656/1；**当前 Stage D 是 1677 项收集、1676 通过、1 项跳过**，其中 Stage A 的 214 项、Stage B 的 147 项、Stage C 的 134 项、Stage D 的 20 项都来自多 Agent 控制面那一套（见第 20 节）。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。L1 新测试确认四份指南真的打进 Wheel、Entry Point/Manifest 身份一致、只注册 Prompt 与纯读取 Tool、错误 Topic 明确失败，而且 clean-venv 的真实 AgentLoop 调用后 Candidate Workspace 仍为空；contract 指南还明确写清：Verifier 会被 Generation 和 Step Lease 固定，但不属于 `CompositionSnapshot`，实际结果由 `verification/result` 记账。Wheel 构建会先复制声明的源码输入并过滤缓存/旧构建目录，再审计成品成员，不能让工作区里的 `.pyc` 或 `.egg-info` 混进发行物。D1/D2 的四层、事务装配、Policy 对象身份、真实 Tool admission 和 Request 重建测试继续通过。D3 新测试则真正让 AgentLoop 使用插件 Provider、Policy/Middleware 和命名 Verifier；检查缺失目标与冲突必须在 health 前失败并完整回滚；证明 setup 结束后 health 不能再补注册 Policy/Middleware，也不能通过改写已注册 Tool、Provider、Policy、Middleware 的名字绕过检查；这种漂移会报固定的 `plugin-contribution-identity-changed` 并回滚，Tool/LLM 撤销也只认注册时名字；公开候选返回后即使后台 Owned Task 才改名，Generation 交接复核也会在 claim 前拒绝，不能让 Snapshot 和 Tool 执行表各认一个名字；如果收据在 ActivationSet 构造时就发现问题，说明钥匙还没交到调用方手里，临时 Manager 仍是唯一负责人，必须收干净 Owned Task 和 cleanup 后才能返回。测试还覆盖清理期间连续取消不能提前逃走，以及交接错误和 cleanup 错误不能互相遮住；普通异常组合仍是 `ExceptionGroup`，直接 `BaseException` 与 cleanup 失败则保存在 `BaseExceptionGroup`，不会再退化成遮蔽证据的 `TypeError`；Policy Overlay 冲突会带上责任插件，ActivationSet 的 Provider 缺失也不能从外部 Registry 偷借；验证没有明确选择时插件 Verifier 不会自动运行；还把旧 Verifier 卡在 Lease 内再发布新代，证明旧 Step 不会混用新验证规则；恢复命令也会把命名 Verifier 与插件 id 一起保真。旧式自定义 ActivationSet 没有 D3 `llms` 字段时，替换仍能借用 Runtime 原有的核心 Registry。CLI 测试钉住自定义 Provider 必须同时明确插件和 Model，命名 Verifier 必须明确插件且不能与命令 Verifier 并用；如果命令行明确选择其中一种，它会压过较低优先级环境变量中的另一种，只有两种选择都来自同一优先级时才报冲突。原有三项反向验证继续保留；公开候选交接测试也做过反向验证：临时去掉 Generation 复核时会稳定失败；临时恢复 activate 后直接 transfer 的旧路径时，交接失败与 cleanup 失败测试只收到裸 `ValueError`，恢复两道保护后才继续完整门禁；把正确的 `BaseExceptionGroup` 临时换回 `ExceptionGroup` 时，新反例会稳定复现 `Cannot nest BaseExceptions`，恢复后交接四项与全量测试再次通过。
 
 Stage C 的 134 项（投递协议 73 项、Supervisor 61 项）问的是「事实归属、执行和收尾是不是真的都对」：已接受消息走认领→真实 Turn→结果，控制面的 `message_id`、来源和多行内容与真实 `turn_id` 都能在 Session 与投递账本互相对应；FIFO 不只保证先来先到，最早消息已有 open claim 时还会挡住全部后续消息，直到它出现完成/失败/取消；重放会拒绝跳头和并行 open claim。写 claim 前会重新读取权威 Inbox/Delivery，伪造 Acceptance、跨 Agent/过期视图和 foreign terminal claim 都零写入失败。两个 Supervisor 竞争时每条消息恰好执行一次，claim 未落盘或结果 unknown 时 Provider 调用数为 0；`wakeup=False` 不写投递也不启动 Runtime，显式 resume 才排空；`NEXT_STEP` 在接受前拒绝，绕过后则记稳定失败而不打乱 FIFO。create 的 durable 与在途重试都按完整请求核对，同一 `request_id` 不同 preset/身份字段会冲突；Factory 不能改写已冻结请求。worker 的普通异常进入稳定 fault，不会被报告成 idle。dispose/`aclose()` 会收敛在途 create/resume、候选回滚、Turn、terminal append 与 Runtime cleanup，重复取消不能提前返回，cleanup 失败会重放并与主错误一起保留；公开 `AgentSupervisor` Protocol 与真实实现签名一致，Runtime adapter 也只执行一次 cleanup。另有结构检查证明 `AgentRuntime` 没长出 Supervisor 状态、主循环不导入控制面、生产代码没有示例名字或本机路径；并发测试用 Event、Gate 和真实 append latch，唯一的 `sleep(0)` 只负责投递已提出的取消。
 
@@ -1163,7 +1163,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；Unreleased L1 时点是 1092/1091/1；Unreleased L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1；**当前 Stage C 是 1657/1656/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；Unreleased L1 时点是 1092/1091/1；Unreleased L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；**当前 Stage D 是 1677/1676/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。一个是历史发布快照，一个是当前代码状态，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1528,9 +1528,9 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 - **那一大张扩展点清单**：dsh 给 shell、终端、命令、后台任务、文件系统、沙箱、目标、会话 fork、UI 节点等都留了扩展点。TraceHarness 到 D3 只开放 Tool、Prompt、Service、Provider、Policy、Middleware、Verifier 这些明确主线，其他并没有跟着照搬；
 - **让插件替换事件日志**：两本账仍然是 Harness 自己的事实边界，插件不能提供 EventStore。
 
-## 20. 多 Agent 是怎么起步的（Stage A 身份 + Stage B 收件箱 + Stage C 真正开跑）
+## 20. 多 Agent 是怎么起步的（身份 + 收件箱 + 执行 + 生命周期）
 
-正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14）。
+正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（父子生命周期收敛）在 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14），20.11 讲 Stage D（对应正式版 20.15–20.16）。
 
 ### 20.1 先说清楚 Stage A 当时**没有**做什么
 
@@ -1540,7 +1540,7 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 - **没有** 收件箱、发消息、唤醒；（Stage B 有了收件箱，Stage C 有了唤醒）
 - **没有** `spawn_agent` 这类给模型用的工具；（**至今仍然没有**）
 - **没有** “同一个 Agent 同时只能活一份”的强制；（Stage C 在单个进程内有了）
-- **没有** 父子销毁、工作区分支、Workflow、层级预算。（**至今仍然没有**）
+- **没有** 父子销毁、工作区分支、Workflow、层级预算。（父子销毁由 Stage D 补上，其余仍没有）
 
 Stage A 做的**只有一件事**：回答“存在哪些 Agent、各自拥有哪个 Session”，并且把这个答案变成账本里的持久事实。
 
@@ -1698,7 +1698,7 @@ Agent 的身份写进 `agents:directory` 这条流，用的还是原来那个 `E
 - **没有** 投递：消息写进账本，但不会被送到谁手上；（Stage C 已有）
 - **没有** claim / 完成 / 失败：账本里根本没有能表达这些的字段；（Stage C 另开了一条投递流来表达）
 - **没有** 真正的唤醒：`wakeup` 只是发送方**说他想唤醒**，Stage B 没有可唤醒的对象；（Stage C 有了活实例，唤醒才真的生效）
-- **没有** 重试、冷恢复、子 Agent 工具、父子销毁、预算。（**至今仍然没有**）
+- **没有** 重试、冷恢复、子 Agent 工具、父子销毁、预算。（父子销毁由 Stage D 补上，其余仍没有）
 
 Stage B 只回答四件事：哪些消息已经被**接受**、每条属于哪个 Agent、接受的先后顺序、同一条消息是不是已经写过了。
 
@@ -1784,7 +1784,7 @@ Stage A 的创建事务改成用这个共用模块之后**行为一个字没变*
 
 #### Stage B 之后还差什么
 
-Stage B 之后仍然缺的是：进程内的 Supervisor、「同一个 Agent 只能活一份」、从收件箱取消息并真的跑一个 Turn、真正的唤醒、冷恢复，再往后是子 Agent 工具、父子销毁、预算、工作区隔离和 Workflow。**其中前四项由 Stage C 做完了**（见 20.10），冷恢复和后面那一串仍然没有。
+Stage B 之后仍然缺的是：进程内的 Supervisor、「同一个 Agent 只能活一份」、从收件箱取消息并真的跑一个 Turn、真正的唤醒、冷恢复，再往后是子 Agent 工具、父子销毁、预算、工作区隔离和 Workflow。**其中执行相关前四项由 Stage C 做完，父子销毁由 Stage D 做完**（见 20.10、20.11），其余仍然没有。
 
 版本仍然是 `0.5.0`。**Stage B 不等于 v0.6 发布。**
 
@@ -1867,7 +1867,7 @@ Stage B 之后仍然缺的是：进程内的 Supervisor、「同一个 Agent 只
 - 如果消息已经接受成功、但唤醒失败，抛出的错误里**带着回执**——报一个笼统的失败会诱使调用方重试，把同一条消息用新 id 再写一遍。
 - **`NEXT_STEP` 直接拒绝，不改写**。它的意思是「插进正在跑的那个 Turn」，而一个 Step 有冻结的能力清单和在途的模型调用，没有安全的插入点。所以在**接受之前**就拒绝，一个事件都不写。要是有人绕过 Supervisor 直接写进收件箱，worker 会认领它然后记成「失败：不支持的目标」——既不跳过（会打乱先来后到），也不因此停摆。
 - **`interrupt`** 只取消当前那个 Turn，走 Runtime 原有的取消主线并等模型、工具、子进程都收敛；活实例继续活着接着干。**`wait_idle`** 等的是**已经排上队的**事情；用 `wakeup=False` 接受的消息从来没排过队，所以不等它，也不假称它处理完了。
-- **`dispose(agent_id)`** 先挡住这个 Agent 的新准入，再取消并等完对应的在途 create/resume、候选回滚、worker、terminal append 和 Runtime cleanup，最后才从 live registry 移除。**`aclose()`** 则在锁里永久关闭整个 Supervisor 的新准入，并收敛所有在途候选与已安装 Activation。二者都复用内部共享 Task，连续取消只能中断外层等待，不能把内部收尾打穿；cleanup 失败会在后续调用中重放，多个失败会在所有资源都尝试清理后一起报告。它们都**不删除任何账本事实**，这才使以后 resume/冷恢复仍有证据。
+- **`dispose(agent_id)`** 从 Stage D 起不是只停一个点，而是管这个 Agent 负责的整棵生命周期子树：先挡住相交的新准入，取消并等完对应的在途 create/resume，再重读名册，从最深 child 往 owner 收敛 worker、terminal append 和 Runtime cleanup。**`aclose()`** 永久关闭整个 Supervisor 的新准入，再按所有 ownership tree 的相同顺序释放。二者都复用内部共享 Task，连续取消只能中断外层等待，不能把内部收尾打穿；一个 cleanup 失败也不能跳过其余节点。它们都**不删除任何账本事实**，这才使以后按 owner→child 顺序 resume 仍有证据。
 - **worker 普通异常不是空闲。** 收件箱或 EventStore 重读失败会把 Activation 标成固定的 `worker-failed`；`wait_idle()` 与后续 wake 都明确失败，异常正文不会泄漏到日志或终端。`AgentRuntimeExecution.dispose()` 也共享同一次 cleanup 结果：第一次失败不会被第二次调用悄悄改成成功。
 
 #### 反向验证
@@ -1888,6 +1888,54 @@ Stage B 之后仍然缺的是：进程内的 Supervisor、「同一个 Agent 只
 
 #### 还差什么
 
-Stage D 及以后才有：自动冷恢复和接管别人留下的认领、自动重试、给模型用的子 Agent 工具、父子销毁、工作区隔离、层级预算、Workflow、`NEXT_STEP` 投递。
+Stage D 已补上进程内父子生命周期收敛；还没有的是：自动冷恢复和接管别人留下的认领、自动重试、给模型用的子 Agent 工具、工作区隔离、层级预算、Workflow、`NEXT_STEP` 投递。
 
 版本仍然是 `0.5.0`。**Stage C 不等于 v0.6 发布。**
+
+### 20.11 Stage D：停 parent 时，child 不能留在后面偷偷跑
+
+正式工程合同见正式版 20.15–20.16 和 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)。这一轮解决的问题很具体：名册早就写了 `owner_agent_id`，但以前 `dispose(parent)` 根本不看它，所以 parent 停了，child 的 worker 和 Runtime 仍可能活着。
+
+#### 先说清楚：谁是谁的 child，只认名册里的 owner
+
+系统每次需要处理生命周期时，都从 durable `AgentDirectory` 重新画一棵 `AgentOwnershipGraph`。它只看 `owner_agent_id`：
+
+- `forked_from_session_id` 只说明历史从哪份 Session 来，不给销毁权；
+- 消息是谁发的只说明通信关系，也不给销毁权；
+- Agent 名字、preset、workspace 更不能靠猜。
+
+所以这张图不是第二本账，也不是一张可以随手改的内存 children 表。它只是对同一本名册的只读投影；停掉 Activation 不会删除身份、收件箱或投递记录。
+
+#### 为什么不能“读一遍 children，然后挨个停”
+
+因为读完以后，可能正好有一个 child creation 已经进场：它在你第一次看名册时还没写下身份，等你开始清理时却已经安装了 Runtime。只读一次，这个 child 就逃掉了。
+
+Stage D 因此加了 lineage admission：create、resume 和要求 wakeup 的 send，会拿住“从 root 到自己”的生命周期通行证。`dispose(root)` 先登记“这棵子树要关门”，后来的相交通行证进不来；已经进来的 create/resume 会被取消并等到真正收敛。等现场安静后，Supervisor **再读一次名册**，把取消到达前已经写成功的 child 也找出来，然后才开始 cleanup。
+
+这里还有一个不直观的细节：不指定 Agent id 的幂等重试每次都可能先生成一个新 UUID，但它真正对应的是名册里已有的 `request_id`。所以 dispose 匹配在途任务时会同时看 durable request identity，不能只看那次尝试临时生成的 UUID；否则单独停 child 时会找不到这条重试，只能永远等它自己返回。
+
+这不是一把卡住全世界的总锁。两棵毫无关系的 ownership tree 可以各自 admission 和 dispose；只有 parent/child 这种相交范围需要排队。
+
+#### child 不能在 owner 不活时自己复活
+
+创建 child 要同时满足两件事：owner 的 durable 身份存在，而且 owner 在当前 Supervisor 里有一份非 stopping、非 faulted 的 live Activation。前者不存在继续报 Stage A 的 owner-not-found；后者不存在则在 provision 任何候选 Runtime **之前**报固定的 `agent-owner-not-active`，安装时还会在 Supervisor 锁里再查一次。
+
+dispose 不删身份，所以之后不是永远不能恢复；正确顺序是先显式 resume root，再 resume child。反过来先恢复 child 会被拒绝，这正是避免“有身份但没人负责”的孤儿。
+
+#### 清理规矩：叶子先走，而且一个失败不能拖累全家
+
+遍历顺序是 post-order：孙节点 → child → owner；兄弟之间按 durable 创建顺序稳定排列。并发调用 `dispose(parent)` 和 `dispose(child)` 时，每个 Agent 都只归一个共享 cleanup Task，绝不会释放两次。某个 child 的第三方 cleanup 抛错时，系统会先把兄弟和 owner 都尝试收干净，最后再把错误一起报告，而不是在第一个错误处停住留下一片孤儿。
+
+连续取消也打不穿收尾：调用方收到最初的 `CancelledError` 之前，内部 tree Task 必须已经收敛。`aclose()` 在 Supervisor 锁里创建共享 close Task 的那一刻，就把登记表里仍在途的 tree task 接管了。此后公开 `dispose()` 的等待者即使被取消，也只能等同一个内部 task 收敛，不能赶在 close 快照前把登记和失败证据删掉；close 亲自观察结果以后才清登记。然后 `aclose()` 再按完整 ownership forest 做同一套收敛。`interrupt()` 没有被偷换语义——它仍只取消当前 Turn，Activation 和 child 都继续存在；真正的生命周期关闭必须显式调用 dispose。
+
+如果关闭时 durable Directory 已损坏，系统当然不能假装 ownership graph 正常；它会保留并报告这个协议错误。但“账本读坏了”和“可以把当前进程里的 Runtime 留着不关”不是一回事：`aclose()` 仍会释放所有已知 Activation 和已有 cleanup Task，只把反向安装顺序当作确定性的兜底回收顺序，不宣称它是可靠的父子关系。去重也认 Task 来源：同一个 cleanup Task 先被 tree 等、又被 close 等，算同一场；两个不同 Task 即使碰巧抛出同一个异常对象，也必须算两场，不能因为 Python 对象相同就吞掉真实失败。
+
+#### 怎么证明不是针对 Demo 写死
+
+新增 20 项通用测试，不含生产默认 Agent 名：检查 owner/lineage 分离、父子孙顺序、只停一个 child 不影响兄弟、在途 child create 不逃逸、unpinned 重试按 durable request 被主动取消、连续三次取消、清理失败后仍穷尽、父子并发 dispose 恰好一次、损坏 Directory 时仍释放 Live Activation、同一个 Task 的失败只报告一次、两个独立 Task 复用同一异常对象时仍报告两次、close 已开始但还没快照时取消公开 disposer 仍会由 close 报出 tree failure、owner 先恢复，以及多棵树的 `aclose()` 顺序。Stage A–D 定向集合 `515` 项通过，Stage C + D Supervisor 集合 `81` 项通过；全仓现在 `1677` 项收集、`1676` 通过、`1` 跳过。
+
+还故意做了八次反向验证：把顺序倒成 owner-first，顺序测试立刻红；删掉 provision 前的 owner-live 检查，测试看到候选 Runtime 已经错误创建；首个 cleanup 报错就停止时，兄弟和 owner 没被清掉；删掉损坏 Directory 的兜底回收时，Live Activation 泄漏；不按 durable request 匹配时，unpinned 重试逃过主动取消；不按 Task 来源剔除 tree 重复观察时，同一失败出现两次；改回按异常对象身份全局去重时，两个独立 Task 的第二次失败消失；让取消的公开 disposer 在 close 开始后照旧删 tree 登记时，`aclose()` 错误地成功返回。八处都恢复后才重新跑绿。
+
+#### Stage D 仍然不是什么
+
+它没有给模型 `spawn_agent`/send/wait/stop/collect 工具，所以模型仍不能自己开 child；没有跨进程 Activation lease、崩溃后 cleanup、冷恢复、stale claim 接管、自动重试、独立工作区、层级预算或 Workflow。它是下一阶段 Tool 可以放心复用的进程内生命周期地基，不是 v0.6 发布完成。版本仍是 `0.5.0`。

@@ -14,11 +14,14 @@ Four things are kept apart:
   execution runtime, which can be disposed and rebuilt without changing any of
   the three above.
 
-v0.6 Stage C implements exactly that. There is **no** cold recovery, no stale
-claim takeover, no automatic retry, no subagent tool, no parent/child disposal
-and no budget enforcement; `MessageTarget.NEXT_STEP` is refused rather than
-reinterpreted. See
-[ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md).
+v0.6 Stage D also projects lifecycle ownership from the durable Agent
+Directory. Subtree disposal closes admission, waits admitted work to quiesce,
+then releases descendants before owners. There is still **no** cold recovery,
+stale-claim takeover, automatic retry, subagent model tool or budget
+enforcement; `MessageTarget.NEXT_STEP` is refused rather than reinterpreted. See
+[ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)
+and
+[ADR-0022](../../../docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md).
 """
 
 from __future__ import annotations
@@ -50,6 +53,7 @@ from traceh.supervision.errors import (
     ActivationConflictError,
     ActivationFaultedError,
     AgentNotActiveError,
+    AgentOwnerNotActiveError,
     DeliveryAppendError,
     DeliveryConflictError,
     DeliveryInputError,
@@ -65,6 +69,11 @@ from traceh.supervision.execution import (
     AgentActivationFactory,
     AgentExecution,
     AgentRuntimeExecution,
+)
+from traceh.supervision.lifecycle import (
+    AgentLifecycleCoordinator,
+    AgentOwnershipGraph,
+    AgentOwnershipGraphError,
 )
 from traceh.supervision.supervisor import (
     AgentNotFoundError,
@@ -87,6 +96,10 @@ __all__ = [
     "AgentDeliveryService",
     "AgentExecution",
     "AgentNotActiveError",
+    "AgentOwnerNotActiveError",
+    "AgentLifecycleCoordinator",
+    "AgentOwnershipGraph",
+    "AgentOwnershipGraphError",
     "AgentNotFoundError",
     "AgentRuntimeExecution",
     "DeliveryAppendError",

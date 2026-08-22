@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### v0.6 Stage D: lifecycle ownership and quiescent subtree disposal
+
+- Added `AgentOwnershipGraph`, projected from the durable Agent Directory rather than kept as
+  another mutable parent/child registry. It uses `owner_agent_id` only: message source and
+  `forked_from_session_id` remain communication and history lineage, not cleanup authority.
+  Deterministic post-order visits descendants before owners. See
+  [ADR-0022](docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md).
+- Added process-local lineage admission. Child create, resume and wake cannot race through an
+  intersecting subtree disposal; a new child requires a durable and live owner before any
+  candidate Runtime is provisioned, and installation rechecks under the Supervisor lock.
+- Changed `dispose(agent_id)` to own the complete lifecycle subtree. It registers the disposal
+  scope first, cancels and joins matching in-flight create/resume candidates, waits older
+  admissions to leave, re-reads the Directory to catch an identity that committed during
+  convergence, then cleans the subtree child-first. Durable identity, Inbox and delivery facts
+  remain untouched.
+- Made overlapping parent/child disposal join one per-Agent cleanup Task, so cleanup happens
+  once. One failed child cleanup does not skip siblings or the owner; failures are reported
+  after every node has been attempted. Repeated cancellation still waits for convergence and
+  then re-raises the original cancellation.
+- Made `aclose()` permanently close admission, converge candidates and in-flight subtree
+  disposal, and then release the complete durable ownership forest child-first. `interrupt()`
+  remains Turn-only and does not silently become subtree shutdown.
+- Hardened failure and retry edges found in independent review: an unpinned idempotent create
+  retry is matched to subtree disposal by its durable `request_id`; malformed final Directory
+  projection is reported only after every known process-local Activation/cleanup Task has been
+  released; and close deduplicates repeated observations by cleanup Task source rather than by
+  exception-object identity. The same Task is reported once, while two independent Tasks that
+  raise the same object remain two failures. Creating the close Task now also atomically claims
+  every registered tree disposal: a cancelled public disposer cannot remove that registration
+  before close observes its result and therefore cannot make a real shutdown failure disappear.
+- Kept the lifecycle control plane in `traceh.supervision`; `AgentRuntime`, `AgentLoop` and
+  `PluginManager` have no Stage D changes or ownership state. Added
+  `tests/test_agent_lifecycle.py` (20); the repository now collects 1677 tests, with 1676 passed
+  and 1 platform skip. Reverse checks prove owner-first cleanup, late owner validation,
+  fail-fast cleanup, malformed-directory leakage, unpinned retry escape and duplicate failure
+  reporting, over-broad exception-object deduplication and close-period tree deregistration are
+  each caught by the new tests.
+- Version remains `0.5.0`. Stage D is not a v0.6 release: there is still no model-visible
+  subagent tool, cold recovery, cross-process Activation lease, retry policy, Workspace,
+  hierarchical budget or Workflow.
+
 ### v0.6 Stage C: process-local Agent Supervisor and delivery lifecycle
 
 - Added `traceh.supervision`: a durably accepted `NEW_TURN` message now becomes exactly one

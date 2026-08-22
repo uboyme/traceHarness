@@ -237,15 +237,33 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
   (it is refused before acceptance), cross-process activation uniqueness, subagent tools,
   parent/child disposal, workspaces, hierarchical budgets and Workflow. Version remains
   `0.5.0`; Stage C is not a v0.6 release.
-- Add lifecycle ownership graph and child-first quiescent disposal.
+- **Stage D — completed as lifecycle ownership and quiescent subtree disposal:**
+  `AgentOwnershipGraph` is projected from the durable Directory rather than maintained as a
+  second registry. Create, resume and wakeup take a lineage admission lease; subtree disposal
+  closes intersecting admission, converges matching candidate builds, re-reads the Directory,
+  and releases descendants before their owner. Unknown or inactive owners are rejected before
+  child provisioning; concurrent parent/child disposal joins one cleanup Task per Agent; one
+  cleanup failure does not skip the rest of the tree; repeated cancellation cannot escape the
+  shared disposal Task. Existing unpinned retries are matched by durable request identity;
+  `aclose()` still releases known process-local resources when the Directory is malformed and
+  reports each independent cleanup failure once. Starting close atomically retains every
+  registered tree-disposal Task until shutdown has observed its result, so cancellation of a
+  public disposer cannot erase an in-flight failure. Close otherwise applies the same
+  post-order to the durable forest. History
+  lineage and communication do not participate. See
+  [ADR-0022](docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md).
+- **Stage D explicitly excludes:** model-visible subagent tools, cold recovery, cross-process
+  Activation leases, stale-claim takeover, retry policy, Workspace and hierarchical budgets.
+  It is a process-local explicit lifecycle guarantee and does not run after a hard process
+  crash. Version remains `0.5.0`; Stage D is not a v0.6 release.
 - Implement `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
   `collect_agent_artifact` as tools backed by the Supervisor.
 - Keep history lineage, communication and ownership as separate relations.
 
 Definition of done: a parent can create a reviewer child with its own Session and Scope;
-parent cancellation leaves no orphan tasks. **Not met by Stages A-C**, which supply durable
-identity, durable acceptance and single-process claim/execution - none of which is a parent
-creating a child.
+parent cancellation leaves no orphan tasks. **Not yet met by Stages A-D**: Stage D supplies
+the lifecycle guarantee once a host has created the ownership tree, but the model still has no
+tool that can create a reviewer child with its own Session and Scope.
 
 ## v0.7: Budgets, workspaces and workflows
 

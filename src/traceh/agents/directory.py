@@ -17,13 +17,15 @@ Three properties are load-bearing and are not conveniences:
 * **Malformed history is reported, never repaired.** A directory that skipped a
   broken record would confidently describe an Agent set that never existed.
 
-What is *not* here, by decision: no Inbox, no message delivery, no wakeup, no
-Activation state, no parent/child disposal. Communication is a different
-relation on different streams - acceptance lives per Agent in
+What is *not* here, by decision: no Inbox, no message delivery, no wakeup and
+no Activation state. Communication is a different relation on different
+streams - acceptance lives per Agent in
 :mod:`traceh.agents.inbox`, and claim/execution/outcome live on a separate
 delivery stream owned by :mod:`traceh.supervision`. `owner_agent_id` records
-lifecycle responsibility only, and is not a message route. See ADR-0019,
-ADR-0020 and ADR-0021.
+lifecycle responsibility only, and is not a message route. Stage D projects
+that immutable relation into a process-local child-first disposal graph in
+:mod:`traceh.supervision.lifecycle`; this fact layer still performs no cleanup
+itself. See ADR-0019 through ADR-0022.
 """
 
 from __future__ import annotations

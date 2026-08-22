@@ -26,8 +26,10 @@ execution and outcome are `traceh.supervision`'s facts on a separate delivery
 stream
 ([ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md));
 here `wakeup` is still only a sender's request and `owner_agent_id` still records
-lifecycle responsibility alone. There is no cold recovery, retry policy, subagent
-tool or parent/child disposal anywhere yet.
+lifecycle responsibility alone. Stage D's `traceh.supervision.lifecycle`
+projects that field for process-local child-first disposal without moving the
+fact or cleanup work into this package. There is still no cold recovery, retry
+policy or model-visible subagent tool.
 """
 
 from __future__ import annotations

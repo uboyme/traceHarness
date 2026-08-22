@@ -31,7 +31,11 @@ import asyncio
 from dataclasses import dataclass
 from uuid import uuid4
 
-from traceh.agents.errors import AgentRequestConflictError
+from traceh.agents.errors import (
+    AgentOwnerNotFoundError,
+    AgentRequestConflictError,
+    AgentUnknownError,
+)
 from traceh.agents.identity import agent_spec_request_fingerprint, freeze_agent_spec
 from traceh.agents.inbox import AgentInboxReader
 from traceh.agents.inbox_service import AgentInboxService
@@ -58,6 +62,7 @@ from traceh.supervision.errors import (
     ActivationConflictError,
     ActivationFaultedError,
     AgentNotActiveError,
+    AgentOwnerNotActiveError,
     DeliveryAppendError,
     DeliveryConflictError,
     ExecutionSessionMismatchError,
@@ -71,6 +76,12 @@ from traceh.supervision.execution import (
     AgentActivationFactory,
     AgentExecution,
     durable_log_identity,
+)
+from traceh.supervision.lifecycle import (
+    AgentLifecycleCoordinator,
+    AgentOwnershipGraph,
+    AgentOwnershipGraphError,
+    LifecycleAdmissionClosed,
 )
 
 
@@ -119,6 +130,56 @@ class _CreateRequest:
 class _PendingCreate:
     request: _CreateRequest
     task: asyncio.Task[_Activation]
+
+
+def _failure_leaves(error: BaseException) -> tuple[BaseException, ...]:
+    if isinstance(error, BaseExceptionGroup):
+        return tuple(
+            leaf
+            for nested in error.exceptions
+            for leaf in _failure_leaves(nested)
+        )
+    return (error,)
+
+
+def _collect_tree_residual_failures(
+    failures: list[BaseException],
+    error: BaseException,
+    cleanup_tasks: set[asyncio.Task[None]],
+) -> None:
+    """Keep tree-only failures while removing repeated Task observations.
+
+    One subtree Task aggregates the errors of the per-Agent cleanup Tasks it
+    joined. Final close joins those Tasks again to prove convergence. The
+    duplicate is the *observation of that Task*, not the exception object: two
+    independent cleanup Tasks are allowed to raise the very same object and
+    both failures must remain visible.
+    """
+
+    repeated_by_identity: dict[int, int] = {}
+    repeated_cancellations = 0
+    for task in cleanup_tasks:
+        if not task.done():
+            continue
+        if task.cancelled():
+            repeated_cancellations += 1
+            continue
+        task_error = task.exception()
+        if task_error is None:
+            continue
+        for leaf in _failure_leaves(task_error):
+            identity = id(leaf)
+            repeated_by_identity[identity] = repeated_by_identity.get(identity, 0) + 1
+
+    for leaf in _failure_leaves(error):
+        identity = id(leaf)
+        remaining = repeated_by_identity.get(identity, 0)
+        if remaining:
+            repeated_by_identity[identity] = remaining - 1
+        elif isinstance(leaf, asyncio.CancelledError) and repeated_cancellations:
+            repeated_cancellations -= 1
+        else:
+            failures.append(leaf)
 
 
 class _Activation:
@@ -440,6 +501,7 @@ class ProcessAgentSupervisor:
         "_factory",
         "_inbox_service",
         "_inboxes",
+        "_lifecycle",
         "_lock",
         "_pending_activations",
         "_pending_creates",
@@ -447,6 +509,8 @@ class ProcessAgentSupervisor:
         "_sessions",
         "_session_owner",
         "_store",
+        "_tree_cleanup_tasks",
+        "_tree_disposals",
     )
 
     def __init__(self, *, store: EventStore, factory: AgentActivationFactory) -> None:
@@ -462,7 +526,12 @@ class ProcessAgentSupervisor:
         self._pending_activations: dict[str, asyncio.Task[_Activation]] = {}
         self._pending_creates: dict[str, _PendingCreate] = {}
         self._agent_disposals: dict[str, asyncio.Task[None]] = {}
+        self._tree_cleanup_tasks: dict[
+            asyncio.Task[None], set[asyncio.Task[None]]
+        ] = {}
+        self._tree_disposals: dict[str, asyncio.Task[None]] = {}
         self._close_task: asyncio.Task[None] | None = None
+        self._lifecycle = AgentLifecycleCoordinator()
         self._lock = asyncio.Lock()
         self._disposed = False
 
@@ -527,6 +596,32 @@ class ProcessAgentSupervisor:
             assigned_agent_id=requested_agent_id or str(uuid4()),
             requested_session_id=requested_session_id,
         )
+        directory = await self._registrar.directory()
+        graph = AgentOwnershipGraph(directory)
+        existing = directory.for_request(request_id)
+        try:
+            lineage = (
+                graph.lineage(existing.agent_id)
+                if existing is not None
+                else graph.lineage_for_new(
+                    request.assigned_agent_id, frozen_spec.owner_agent_id
+                )
+            )
+        except AgentOwnershipGraphError as error:
+            if error.code == "agent-owner-unknown":
+                raise AgentOwnerNotFoundError() from error
+            raise
+        try:
+            async with self._lifecycle.admission(lineage):
+                return await self._create_admitted(request, request_id)
+        except LifecycleAdmissionClosed as error:
+            raise SupervisorDisposedError() from error
+
+    async def _create_admitted(
+        self, request: _CreateRequest, request_id: str
+    ) -> SupervisedAgentHandle:
+        """Join or start one create while its ownership lineage is admitted."""
+
         async with self._lock:
             self._require_open()
             pending = self._pending_creates.get(request_id)
@@ -562,6 +657,8 @@ class ProcessAgentSupervisor:
                     session_id=request.requested_session_id,
                 )
                 return await self._activate(record)
+
+            await self._require_live_owner(request.spec.owner_agent_id)
 
             execution = await self._factory.provision(
                 freeze_agent_spec(request.spec),
@@ -612,9 +709,14 @@ class ProcessAgentSupervisor:
 
         session_id = require_delivery_identifier(session_id, field="session_id")
         record = await self._record_for_session(session_id)
-        activation = await self._activate(record)
-        await activation.request_wake()
-        return activation.handle()
+        lineage = await self._record_lineage(record)
+        try:
+            async with self._lifecycle.admission(lineage):
+                activation = await self._activate(record)
+                await activation.request_wake()
+                return activation.handle()
+        except LifecycleAdmissionClosed as error:
+            raise SupervisorDisposedError() from error
 
     async def send(
         self,
@@ -634,24 +736,38 @@ class ProcessAgentSupervisor:
 
         if isinstance(target, MessageTarget) and target is not MessageTarget.NEW_TURN:
             raise UnsupportedMessageTargetError()
-        receipt = await self._inbox_service.accept(
-            agent_id, message, target=target, wakeup=wakeup
-        )
         if not wakeup:
             # Durably accepted and deliberately not started. Nothing is
             # created, resumed or woken.
-            return receipt
+            return await self._inbox_service.accept(
+                agent_id, message, target=target, wakeup=False
+            )
         try:
             record = await self._record_for_agent(agent_id)
-            activation = await self._activate(record)
-            await activation.request_wake()
+        except AgentNotFoundError:
+            # Preserve Stage B's public error contract and its proof that an
+            # unknown Agent writes nothing. This Directory read is also the
+            # operation's linearization point; a later external creation must
+            # be retried explicitly rather than returning a receipt that was
+            # never woken by this Supervisor.
+            raise AgentUnknownError() from None
+        lineage = await self._record_lineage(record)
+        try:
+            async with self._lifecycle.admission(lineage):
+                receipt = await self._inbox_service.accept(
+                    agent_id, message, target=target, wakeup=True
+                )
+                try:
+                    activation = await self._activate(record)
+                    await activation.request_wake()
+                except asyncio.CancelledError:
+                    raise
+                except BaseException as error:
+                    raise MessageWakeError(receipt) from error
+        except LifecycleAdmissionClosed as error:
+            raise SupervisorDisposedError() from error
         except asyncio.CancelledError:
             raise
-        except BaseException as error:
-            # The acceptance is durable. Reporting a bare failure would invite
-            # a retry that appends the same message under a new id, so the
-            # receipt travels with the error.
-            raise MessageWakeError(receipt) from error
         return receipt
 
     async def interrupt(self, agent_id: str, reason: str = "interrupted") -> bool:
@@ -679,11 +795,12 @@ class ProcessAgentSupervisor:
         await self._require_activation(agent_id).wait_idle()
 
     async def dispose(self, agent_id: str) -> None:
-        """Stop this Agent's Activation and release its runtime.
+        """Stop this Agent's owned subtree, descendants before their owner.
 
         Idempotent, and it does not delete anything durable: the `AgentRecord`,
         the Inbox and the delivery history all survive, which is what makes a
-        later `resume()` meaningful.
+        later explicit `resume()` meaningful. Communication and fork lineage
+        do not participate in this traversal; only ``owner_agent_id`` does.
         """
 
         agent_id = require_delivery_identifier(agent_id, field="agent_id")
@@ -693,18 +810,33 @@ class ProcessAgentSupervisor:
                 task = None
             else:
                 close_task = None
-                task = self._agent_disposals.get(agent_id)
+                task = self._tree_disposals.get(agent_id)
                 if task is None:
                     task = asyncio.create_task(
-                        self._dispose_agent(agent_id),
-                        name=f"traceh-supervisor-dispose-{agent_id}",
+                        self._dispose_subtree(agent_id),
+                        name=f"traceh-supervisor-dispose-tree-{agent_id}",
                     )
-                    self._agent_disposals[agent_id] = task
+                    self._tree_cleanup_tasks[task] = set()
+                    self._tree_disposals[agent_id] = task
         if close_task is not None:
             await self._await_task(close_task)
             return
         assert task is not None
-        await self._await_task(task)
+        try:
+            await self._await_task(task)
+        finally:
+            async with self._lock:
+                # Creating the close Task is the linearization point where
+                # shutdown takes ownership of every tree disposal still in
+                # this registry.  A cancelled public waiter must not remove a
+                # Task (and its failure evidence) before `_close()` has joined
+                # it.  `_close()` removes the exact entries after observation.
+                if (
+                    self._close_task is None
+                    and self._tree_disposals.get(agent_id) is task
+                ):
+                    del self._tree_disposals[agent_id]
+                    self._tree_cleanup_tasks.pop(task, None)
 
     async def aclose(self) -> None:
         """Dispose every Activation this Supervisor owns."""
@@ -758,6 +890,21 @@ class ProcessAgentSupervisor:
             raise AgentNotFoundError() from error
         return record
 
+    async def _record_lineage(self, record: AgentRecord) -> tuple[str, ...]:
+        directory = await self._registrar.directory()
+        lineage = AgentOwnershipGraph(directory).lineage(record.agent_id)
+        if not lineage:
+            raise AgentNotFoundError()
+        return lineage
+
+    async def _require_live_owner(self, owner_agent_id: str | None) -> None:
+        if owner_agent_id is None:
+            return
+        async with self._lock:
+            owner = self._activations.get(owner_agent_id)
+            if owner is None or owner.stopping or owner.fault is not None:
+                raise AgentOwnerNotActiveError()
+
     async def _activate(self, record: AgentRecord) -> _Activation:
         """Return this Agent's Activation, building exactly one if needed.
 
@@ -770,6 +917,14 @@ class ProcessAgentSupervisor:
         while True:
             async with self._lock:
                 self._require_open()
+                if record.owner_agent_id is not None:
+                    owner_activation = self._activations.get(record.owner_agent_id)
+                    if (
+                        owner_activation is None
+                        or owner_activation.stopping
+                        or owner_activation.fault is not None
+                    ):
+                        raise AgentOwnerNotActiveError()
                 disposal = self._agent_disposals.get(record.agent_id)
                 if disposal is not None:
                     if not disposal.done():
@@ -824,22 +979,30 @@ class ProcessAgentSupervisor:
             try:
                 if self._disposed or record.agent_id in self._agent_disposals:
                     rejection = SupervisorDisposedError()
-                else:
+                elif record.owner_agent_id is not None:
+                    owner_activation = self._activations.get(record.owner_agent_id)
+                    if (
+                        owner_activation is None
+                        or owner_activation.stopping
+                        or owner_activation.fault is not None
+                    ):
+                        rejection = AgentOwnerNotActiveError()
+                if rejection is None:
                     owner = self._session_owner.get(record.session_id)
                     if owner is not None and owner != record.agent_id:
                         rejection = ActivationConflictError()
-                    else:
-                        installed = self._activations.get(record.agent_id)
-                        if installed is None or installed.stopping:
-                            activation = _Activation(
-                                agent_id=record.agent_id,
-                                session_id=record.session_id,
-                                activation_id=str(uuid4()),
-                                execution=execution,
-                                supervisor=self,
-                            )
-                            self._activations[record.agent_id] = activation
-                            self._session_owner[record.session_id] = record.agent_id
+                if rejection is None:
+                    installed = self._activations.get(record.agent_id)
+                    if installed is None or installed.stopping:
+                        activation = _Activation(
+                            agent_id=record.agent_id,
+                            session_id=record.session_id,
+                            activation_id=str(uuid4()),
+                            execution=execution,
+                            supervisor=self,
+                        )
+                        self._activations[record.agent_id] = activation
+                        self._session_owner[record.session_id] = record.agent_id
             finally:
                 self._lock.release()
         except BaseException as error:
@@ -946,8 +1109,77 @@ class ProcessAgentSupervisor:
         if failures:
             raise BaseExceptionGroup("agent disposal failed", failures)
 
+    async def _dispose_subtree(self, agent_id: str) -> None:
+        """Quiesce one durable ownership subtree and release it child-first."""
+
+        directory = await self._registrar.directory()
+        initial = AgentOwnershipGraph(directory)
+        affected = initial.subtree_postorder(agent_id) or (agent_id,)
+        affected_set = frozenset(affected)
+        affected_requests = frozenset(
+            record.request_id
+            for record in directory.records
+            if record.agent_id in affected_set
+        )
+        failures: list[BaseException] = []
+        async with self._lifecycle.disposal(affected) as barrier:
+            # Stage C already guarantees that disposing an Agent converges its
+            # in-flight create/resume candidate.  Registering the subtree first
+            # prevents a replacement from entering while these candidates are
+            # cancelled. A pending child is selected by its declared owner even
+            # though its identity is not durable yet.
+            async with self._lock:
+                pending = [
+                    item.task
+                    for request_id, item in self._pending_creates.items()
+                    if request_id in affected_requests
+                    or item.request.assigned_agent_id in affected_set
+                    or item.request.spec.owner_agent_id in affected_set
+                ]
+                pending.extend(
+                    task
+                    for pending_id, task in self._pending_activations.items()
+                    if pending_id in affected_set
+                )
+            for task in dict.fromkeys(pending):
+                error = await self._cancel_and_join(task)
+                if error is not None and not isinstance(error, SupervisorDisposedError):
+                    failures.append(error)
+            await barrier.wait_quiescent()
+            # A child creation admitted before the disposal scope may have
+            # committed before cancellation reached it. Reloading after
+            # quiescence is what prevents that durable child escaping.
+            current = AgentOwnershipGraph(await self._registrar.directory())
+            order = current.subtree_postorder(agent_id) or (agent_id,)
+            for owned_id in order:
+                task = await self._agent_disposal_task(owned_id)
+                tree_task = asyncio.current_task()
+                assert tree_task is not None
+                async with self._lock:
+                    self._tree_cleanup_tasks.setdefault(tree_task, set()).add(task)
+                try:
+                    await asyncio.shield(task)
+                except BaseException as error:
+                    failures.append(error)
+        if failures:
+            raise BaseExceptionGroup("agent subtree disposal failed", failures)
+
+    async def _agent_disposal_task(self, agent_id: str) -> asyncio.Task[None]:
+        """Return the one cleanup Task that owns an Agent's current activation."""
+
+        async with self._lock:
+            task = self._agent_disposals.get(agent_id)
+            if task is None:
+                task = asyncio.create_task(
+                    self._dispose_agent(agent_id),
+                    name=f"traceh-supervisor-dispose-agent-{agent_id}",
+                )
+                self._agent_disposals[agent_id] = task
+            return task
+
     async def _close(self) -> None:
         failures: list[BaseException] = []
+        await self._lifecycle.begin_close()
         async with self._lock:
             pending = [item.task for item in self._pending_creates.values()]
             pending.extend(self._pending_activations.values())
@@ -956,18 +1188,63 @@ class ProcessAgentSupervisor:
             if error is not None and not isinstance(error, SupervisorDisposedError):
                 failures.append(error)
 
+        # Public create/resume/send calls keep their admission through the
+        # shared candidate work. Cancelling the candidates above lets those
+        # calls leave; only then is it safe to take the final Directory view.
+        await self._lifecycle.wait_quiescent()
+
         async with self._lock:
-            agent_ids = tuple(self._activations)
-            disposals = dict(self._agent_disposals)
-            for agent_id in agent_ids:
-                if agent_id not in disposals:
-                    task = asyncio.create_task(
-                        self._dispose_agent(agent_id),
-                        name=f"traceh-supervisor-close-agent-{agent_id}",
-                    )
-                    self._agent_disposals[agent_id] = task
-                    disposals[agent_id] = task
-        for task in dict.fromkeys(disposals.values()):
+            tree_disposals = tuple(
+                (task, self._tree_cleanup_tasks.setdefault(task, set()))
+                for task in dict.fromkeys(self._tree_disposals.values())
+            )
+        for task, cleanup_tasks in tree_disposals:
+            try:
+                await asyncio.shield(task)
+            except BaseException as error:
+                _collect_tree_residual_failures(failures, error, cleanup_tasks)
+        async with self._lock:
+            # Shutdown has now observed every tree Task it claimed.  Remove
+            # only those exact registrations: the identity check makes the
+            # ownership transfer explicit even though close admission already
+            # prevents a replacement Task from being installed.
+            for task, _ in tree_disposals:
+                for agent_id, registered in tuple(self._tree_disposals.items()):
+                    if registered is task:
+                        del self._tree_disposals[agent_id]
+                self._tree_cleanup_tasks.pop(task, None)
+
+        graph: AgentOwnershipGraph | None
+        try:
+            graph = AgentOwnershipGraph(await self._registrar.directory())
+        except BaseException as error:
+            # The durable protocol error remains observable, but it cannot be
+            # allowed to strand process-local workers or runtimes. Without a
+            # trustworthy graph no ownership order may be inferred, so close
+            # falls back to releasing every known resource and reports the
+            # projection failure after convergence.
+            graph = None
+            failures.append(error)
+        async with self._lock:
+            active_ids = tuple(self._activations)
+            disposal_ids = tuple(self._agent_disposals)
+        if graph is None:
+            # Reverse installation order is deterministic and usually retains
+            # descendant-first cleanup, but is deliberately not presented as
+            # ownership evidence: the durable graph was unreadable.
+            order = list(reversed(active_ids))
+        else:
+            order = list(graph.forest_postorder())
+            for active_id in active_ids:
+                if active_id not in graph:
+                    order.append(active_id)
+        scheduled = set(order)
+        for disposal_id in disposal_ids:
+            if disposal_id not in scheduled:
+                scheduled.add(disposal_id)
+                order.append(disposal_id)
+        for owned_id in order:
+            task = await self._agent_disposal_task(owned_id)
             try:
                 await asyncio.shield(task)
             except BaseException as error:

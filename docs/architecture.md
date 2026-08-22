@@ -130,8 +130,19 @@ text-safety helpers. It does not import `AgentRuntime`, `AgentLoop` or `PluginMa
 only `traceh.supervision` imports it. The Supervisor holds Activations and reads identity from
 it; the dependency never points back. `AgentRecord` is durable identity, `AgentHandle` is an
 Activation, and stopping or rebuilding the latter cannot change the former. See
-[ADR-0019](adr/0019-durable-agent-identity-and-activation-boundary.md); there is still no
-subagent tool, parent/child ownership or cold recovery.
+[ADR-0019](adr/0019-durable-agent-identity-and-activation-boundary.md).
+
+Stage D projects `owner_agent_id` into a process-local `AgentOwnershipGraph`. Create/resume/wake
+take lineage admission leases; subtree disposal closes that admission, re-reads the Directory
+after candidate convergence, and cleans descendants before owners. Unpinned retries are matched
+through their durable request identity rather than a fresh provisional UUID. The graph is not persisted
+or mutable identity, and it ignores message source and `forked_from_session_id`. This logic
+stays in `traceh.supervision`, so `AgentRuntime` and `AgentLoop` remain unaware. See
+[ADR-0022](adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md). A malformed final
+Directory is reported but cannot prevent release of known process-local Activations. Starting
+`aclose()` atomically retains every registered tree Task until close has observed its result, so a
+cancelled public disposer cannot erase shutdown failure evidence. There is still no
+model-visible subagent tool, cross-process lifecycle lease or cold recovery.
 
 ### Agent Inbox Streams
 

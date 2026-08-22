@@ -136,6 +136,15 @@ class AgentNotActiveError(SupervisionError):
         super().__init__("this supervisor has no activation for that agent")
 
 
+class AgentOwnerNotActiveError(SupervisionError):
+    """A child cannot become live while its lifecycle owner is inactive."""
+
+    code = "agent-owner-not-active"
+
+    def __init__(self) -> None:
+        super().__init__("the agent lifecycle owner is not active")
+
+
 class ActivationConflictError(SupervisionError):
     """Another Agent already owns the Session an Activation asked for."""
 
@@ -213,6 +222,7 @@ __all__ = [
     "ActivationConflictError",
     "ActivationFaultedError",
     "AgentNotActiveError",
+    "AgentOwnerNotActiveError",
     "DeliveryAppendError",
     "DeliveryConflictError",
     "DeliveryInputError",

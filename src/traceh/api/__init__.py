@@ -22,9 +22,11 @@ from traceh.api.plugins import (
 from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
 from traceh.api.tools import EffectKind, Tool, ToolOutput
+from traceh.api.turns import DEFAULT_TURN_SOURCE, TurnInput
 
 __all__ = [
     "CORE_PLUGIN_IDENTITY",
+    "DEFAULT_TURN_SOURCE",
     "AgentSpec",
     "AgentSupervisor",
     "Budget",
@@ -47,5 +49,6 @@ __all__ = [
     "ToolCall",
     "ToolOutput",
     "ToolSchema",
+    "TurnInput",
     "Usage",
 ]

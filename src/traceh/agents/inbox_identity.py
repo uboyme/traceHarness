@@ -11,8 +11,9 @@ it; neither has a private rule.
 
 **Accepted is not processed.** Everything here records that a message was
 durably received and in what order. Nothing here claims it was delivered,
-claimed by an Activation, executed, completed, failed or retried, and no field
-means any of those. Stage B has no Supervisor to do them.
+claimed by an Activation, executed, completed or failed, and no field means any
+of those: those are :mod:`traceh.supervision`'s facts, on a separate delivery
+stream this module knows nothing about.
 """
 
 from __future__ import annotations

@@ -7,12 +7,10 @@ Two different things live here and must not be confused.
 implements it, so it is no longer forward-looking.
 
 **Activation.** `AgentHandle` and `AgentSupervisor` describe a *live*, in-process
-Agent - something that can be created, stopped and created again. There is still
-no `AgentSupervisor` implementation, and none of these methods is backed by
-running code; `send`, `interrupt` and `dispose` in particular have no Inbox,
-delivery or disposal behind them. They define the boundary that later subagent
-tools and workflow engines can target without importing single-Agent loop
-internals.
+Agent - something that can be created, stopped and created again.  The shipped
+`traceh.supervision.ProcessAgentSupervisor` implements this boundary through a
+durable Inbox and delivery lifecycle while keeping scheduling out of the
+single-Agent Runtime.
 
 An `AgentHandle` is therefore never an identity. Stopping or rebuilding one
 cannot change an `AgentRecord`, and losing every handle in a process does not
@@ -23,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from traceh.api.json_types import JsonValue
 
@@ -116,9 +114,9 @@ class AcceptedMessage:
 
     **Accepted is not processed.** This records that the message was received
     and where it sits in that Agent's FIFO order. It does not mean the message
-    was delivered to an Activation, claimed, executed, completed, failed or
-    retried - v0.6 Stage B has no Supervisor to do any of those, and no field
-    here should ever be read as one of them.
+    was delivered to an Activation, claimed, executed, completed or failed:
+    those are recorded separately, on a delivery stream, and no field here
+    should ever be read as one of them.
 
     Every field is an immutable scalar, so a projector may hand the same object
     to two callers without either being able to write through it. That is a
@@ -158,8 +156,18 @@ class AgentHandle(Protocol):
     session_id: str
 
 
+@runtime_checkable
 class AgentSupervisor(Protocol):
-    async def create(self, spec: AgentSpec) -> AgentHandle:
+    """The public contract implemented by the process-local Supervisor."""
+
+    async def create(
+        self,
+        spec: AgentSpec,
+        *,
+        request_id: str,
+        agent_id: str | None = None,
+        session_id: str | None = None,
+    ) -> AgentHandle:
         ...
 
     async def resume(self, session_id: str) -> AgentHandle:
@@ -175,11 +183,14 @@ class AgentSupervisor(Protocol):
     ) -> MessageReceipt:
         ...
 
-    async def interrupt(self, agent_id: str, reason: str) -> None:
+    async def interrupt(self, agent_id: str, reason: str = "interrupted") -> bool:
         ...
 
     async def wait_idle(self, agent_id: str) -> None:
         ...
 
     async def dispose(self, agent_id: str) -> None:
+        ...
+
+    async def aclose(self) -> None:
         ...

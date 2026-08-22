@@ -12,7 +12,8 @@ truth about an append whose outcome is uncertain.
 
 It deliberately does **not** create the Agent's Session, start a Runtime,
 deliver messages or dispose anything. Those are Activation concerns and belong
-to the future `AgentSupervisor`; see ADR-0019.
+to `traceh.supervision`, which depends on this module and never the other way
+round; see ADR-0019 and ADR-0021.
 """
 
 from __future__ import annotations

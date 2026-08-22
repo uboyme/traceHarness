@@ -465,6 +465,18 @@ Subagent operations become normal tools (`spawn_agent`, `send_agent_message`,
 `wait_agent`, `collect_artifact`) backed by `AgentSupervisor`. The loop remains unaware
 that a tool creates another Agent.
 
+Status: Stages A-C have delivered durable identity, a durable per-Agent FIFO Inbox of
+accepted messages, a durable delivery lifecycle and a process-local
+`ProcessAgentSupervisor` that claims a message and runs exactly one Turn for it, with at
+most one live Activation per Agent and per Session. Its strict FIFO treats an open claim as a
+blocker, claim/terminal writes prove authoritative DTO provenance before append, complete
+create requests share one single-flight only when their identity semantics match, and shutdown
+converges pending candidates as well as installed Activations. See ADR-0019, ADR-0020 and
+ADR-0021.
+The remaining items on this list - lifecycle ownership, child-first disposal, budget
+allocation and the subagent tools themselves - are not implemented, so no model can yet
+spawn an Agent.
+
 ## v0.7 workspaces and workflows
 
 Writable coding children should receive isolated worktrees or overlay workspaces and

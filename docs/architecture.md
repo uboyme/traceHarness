@@ -19,8 +19,10 @@ Applications
 
 Control
   AgentRuntime, PluginCompositionCoordinator, AgentLoop, ContinuationRuntime
-  AgentRegistrar, AgentDirectory (durable Agent identity; no live Supervisor)
-  AgentInboxService, AgentInbox (durable accepted-message facts; no delivery)
+  AgentRegistrar, AgentDirectory (durable Agent identity)
+  AgentInboxService, AgentInbox (durable accepted-message facts)
+  ProcessAgentSupervisor, AgentDeliveryService, AgentDeliveryLog
+    (process-local Activations; durable claim and outcome facts)
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
@@ -125,11 +127,11 @@ Surface, recovery, invariants or the request fingerprint.
 
 `traceh.agents` depends only on `traceh.api`, the `EventStore` and the shared convergence and
 text-safety helpers. It does not import `AgentRuntime`, `AgentLoop` or `PluginManager`, and
-nothing imports it. A future `AgentSupervisor` will hold Activations and read identity from
+only `traceh.supervision` imports it. The Supervisor holds Activations and reads identity from
 it; the dependency never points back. `AgentRecord` is durable identity, `AgentHandle` is an
 Activation, and stopping or rebuilding the latter cannot change the former. See
 [ADR-0019](adr/0019-durable-agent-identity-and-activation-boundary.md); there is still no
-Supervisor, Inbox, message delivery or subagent tool.
+subagent tool, parent/child ownership or cold recovery.
 
 ### Agent Inbox Streams
 
@@ -140,15 +142,50 @@ advance another's `expected_seq`. Stream ids come from one constructor and are n
 back into an `agent_id`.
 
 **Accepted is not processed.** These events record that a message was durably received and
-where it sits in that Agent's order. Delivery, claiming, execution, completion, failure and
-retry are Activation facts with no representation here, and `wakeup` stores the sender's
-request rather than an action taken. Like the directory stream, none of this enters the model
-Surface, recovery, invariants or the request fingerprint.
+where it sits in that Agent's order. Claiming, execution and outcome live in a separate
+delivery stream and have no representation here, and `wakeup` stores the sender's request
+rather than an action taken. Like the directory stream, none of this enters the model
+Surface, recovery, invariants or the request fingerprint. See
+[ADR-0020](adr/0020-durable-agent-inbox-acceptance.md).
 
-Both control-plane transactions share `commit_reconciliation.py` for the `EventStore`
+### Agent Delivery Streams
+
+`agent-delivery:<agent_id>` records what a live Activation did with an accepted message:
+`agent/message-claimed` and then exactly one of `agent/message-completed`,
+`agent/message-failed` or `agent/message-cancelled`. It is a separate stream from the Inbox so
+that acceptance history stays a plain answer to "what was received" and so that claims do not
+contend for the `expected_seq` senders use. A claim carries the Inbox `accepted_seq` as well
+as the `message_id`, so replay can prove the two streams agree about which message is running.
+
+The claim append's `expected_seq` is the linearization point that makes a durably accepted
+message become exactly one Turn. Nothing may call a model or a tool before that claim is
+provably in the log - an unknown outcome faults the Activation rather than retrying, because
+retrying is the thing that could double-execute and no ledger correction undoes a tool that
+already wrote to a workspace. There is no in-memory queue: the worker re-reads the Inbox and
+the delivery log every round and takes the earliest unclaimed message. An open claim blocks
+every later FIFO item; Stage C has no stale-claim takeover. Before writing, the service also
+re-reads the authoritative Inbox/delivery views and proves the complete Acceptance or open
+Claim belongs to that Agent, so a frozen but fabricated/cross-Agent DTO cannot corrupt the log.
+
+Terminal facts carry a stable repository code, plus the real `turn_id` on completion. Model
+output, tool results and exception text belong to the Session Event Log and are never copied
+here.
+
+`traceh.supervision` reaches an `AgentRuntime` through a four-method protocol - run one
+message, cancel the current Turn, dispose, expose Session and `EventStore` identity - and
+`AgentRuntime` and `AgentLoop` do not know the package exists. `TurnInput` (in `traceh.api`,
+carrying content, a `message_id` and a source) is what lets the control plane's message
+identity reach `turn/start` in the Session; a plain `str` keeps the previous behaviour.
+Activations are process-local and are not rebuilt after a crash. See
+[ADR-0021](adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md); there is still
+no cold recovery, stale-claim takeover, retry policy or subagent tool. Create/resume
+single-flights and all installed Activations are owned by Supervisor disposal: `aclose()`
+closes admission once and converges candidates, rollback and runtime cleanup through one
+shared Task, while worker exceptions become stable faults rather than idle success.
+
+All three control-plane transactions share `commit_reconciliation.py` for the `EventStore`
 commit-point question - did our event land, and can we even tell - while each keeps its own
-error mapping. See [ADR-0020](adr/0020-durable-agent-inbox-acceptance.md); there is still no
-Supervisor, no Activation and no Turn scheduling.
+error mapping.
 
 ### Telemetry
 

@@ -19,10 +19,11 @@ Three properties are load-bearing and are not conveniences:
 
 What is *not* here, by decision: no Inbox, no message delivery, no wakeup, no
 Activation state, no parent/child disposal. Communication is a different
-relation on different streams - Stage B added a durable **acceptance** history
-per Agent in :mod:`traceh.agents.inbox`, which is still not delivery and still
-has no Supervisor behind it. `owner_agent_id` records lifecycle responsibility
-only, and is not a message route. See ADR-0019 and ADR-0020.
+relation on different streams - acceptance lives per Agent in
+:mod:`traceh.agents.inbox`, and claim/execution/outcome live on a separate
+delivery stream owned by :mod:`traceh.supervision`. `owner_agent_id` records
+lifecycle responsibility only, and is not a message route. See ADR-0019,
+ADR-0020 and ADR-0021.
 """
 
 from __future__ import annotations

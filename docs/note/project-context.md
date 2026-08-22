@@ -39,18 +39,18 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | 单进程、单 Session 同时最多一个活跃 Turn。v0.6 Stage A 另有持久化 Agent identity 与只读 Agent Directory，Stage B 再加上每 Agent 一条持久化 FIFO Inbox **接受**历史（见 20 节）；但**没有**活的 AgentSupervisor、消息投递、claim/执行或子 Agent 执行，accepted 不等于 processed |
-| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream 与每 Agent 的 Inbox Stream |
+| 当前 Agent 模型 | 单进程、单 Session 同时最多一个活跃 Turn。v0.6 Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor`：durable accepted → durable claim → 该 Agent 自己 Session 上的真实 Turn → durable completed/failed/cancelled（见 20 节）。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、子 Agent Tool、Parent/Child dispose 或 Budget 强制；`NEXT_STEP` 被拒绝而非改写 |
+| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream，以及每 Agent 的 Inbox Stream 与 Delivery Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | **v0.5.0 已发布**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活，Stage A Generation/Lease/Drain、Stage B Generation-owned `PluginActivationSet`，Stage C `traceh chat` 内的 `/plugins` 组合切换与 Session 显式迁移授权，以及 D1–D3 的四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 插件贡献（见 19 节）。Unreleased L1 新增独立 `traceh.plugin.creator` 技能 Wheel；L2 在 `traceh.evolution` 独立构建、审计、测试候选并跑可信核心回归；L3 再以精确 L2 Wheel、其记录的核心提交和宿主固定任务做 baseline/candidate 对比；L4 用两次调用分离审阅和批准，并把精确 Wheel 推广到显式目标 Python、保留确定性回滚。四者都不进入 Runtime 控制面。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。插件命令为 `list/inspect/doctor/validate/compare`，其中后两者是 Runtime 外的候选验证与能力对比控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 核心套件 `1523` collected；当前未提交工作区全量门禁 `1522 passed, 1 skipped`（Windows NUL 路径边界），其中 v0.6 Stage A 新增 `214` 项、Stage B 新增 `147` 项；仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归，并由公开 L3 CLI 得到 Python Quality v1 baseline `2/3`、candidate `3/3`、`improved`、0 regressions、0 不变量/请求重建违规；同一真实链路继续完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 和显式 rollback，回滚后候选 Distribution 不存在。该次对照冻结 `3` 个依赖 Wheel，两臂安装 receipt 均为同一组 `4` 个 Distribution。独立 Python Quality 插件另有 `17 passed`，独立 Plugin Creator Skill 另有 `10 passed` |
+| 当前自动化测试 | 核心套件 `1657` collected；当前未提交工作区全量门禁 `1656 passed, 1 skipped`（Windows NUL 路径边界），其中 v0.6 Stage A 新增 `214` 项、Stage B 新增 `147` 项、Stage C 新增 `134` 项；仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归，并由公开 L3 CLI 得到 Python Quality v1 baseline `2/3`、candidate `3/3`、`improved`、0 regressions、0 不变量/请求重建违规；同一真实链路继续完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 和显式 rollback，回滚后候选 Distribution 不存在。该次对照冻结 `3` 个依赖 Wheel，两臂安装 receipt 均为同一组 `4` 个 Distribution。独立 Python Quality 插件另有 `17 passed`，独立 Plugin Creator Skill 另有 `10 passed` |
 | 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
 
-当前版本为 0.5.0。Stage A–D3 的 Generation、ActivationSet、用户控制面、四层宿主装配和 application 执行能力贡献已经作为一个完整 Minor Release 进入默认 Runtime 主线。RC 同时交付独立 Distribution [`traceh-python-quality-plugin`](../../examples/plugins/traceh-python-quality-plugin/)；Unreleased L1 再增加 [`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 生成源码候选。L2 由 [`evolution/candidate_validation.py`](../../src/traceh/evolution/candidate_validation.py) 在 Runtime 外构建、审计、测试并锚定精确 Wheel；L3 由 [`evolution/candidate_comparison.py`](../../src/traceh/evolution/candidate_comparison.py) 消费该证据，在相同核心/候选安装环境中只切换是否启用插件，以宿主固定 Suite 和真实 Session/Verifier 证据分类；L4 由 [`evolution/candidate_promotion.py`](../../src/traceh/evolution/candidate_promotion.py) 把审阅摘要、人工批准、显式目标安装和确定性回滚组成独立事务。L1–L4 均没有修改 `AgentLoop`、`AgentRuntime` 或 `PluginManager`。Provider/Verifier 仍必须显式选择；Verifier 处在同一个 Step Lease 内。当前仍不是完整 scoped plugin activation，EventStore 仍由 Runtime/Session 固定持有，也没有 L5 弱点归纳/候选提案、依赖升级事务、任意运行中 Runtime 自动安装或启用、强制 module reload、文件 watcher、OS 沙箱、isolated、多 Agent、Workflow、MCP、TUI 或流式输出。
+当前版本为 0.5.0。Stage A–D3 的 Generation、ActivationSet、用户控制面、四层宿主装配和 application 执行能力贡献已经作为一个完整 Minor Release 进入默认 Runtime 主线。RC 同时交付独立 Distribution [`traceh-python-quality-plugin`](../../examples/plugins/traceh-python-quality-plugin/)；Unreleased L1 再增加 [`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 生成源码候选。L2 由 [`evolution/candidate_validation.py`](../../src/traceh/evolution/candidate_validation.py) 在 Runtime 外构建、审计、测试并锚定精确 Wheel；L3 由 [`evolution/candidate_comparison.py`](../../src/traceh/evolution/candidate_comparison.py) 消费该证据，在相同核心/候选安装环境中只切换是否启用插件，以宿主固定 Suite 和真实 Session/Verifier 证据分类；L4 由 [`evolution/candidate_promotion.py`](../../src/traceh/evolution/candidate_promotion.py) 把审阅摘要、人工批准、显式目标安装和确定性回滚组成独立事务。L1–L4 均没有修改 `AgentLoop`、`AgentRuntime` 或 `PluginManager`。Provider/Verifier 仍必须显式选择；Verifier 处在同一个 Step Lease 内。当前仍不是完整 scoped plugin activation，EventStore 仍由 Runtime/Session 固定持有，也没有 L5 弱点归纳/候选提案、依赖升级事务、任意运行中 Runtime 自动安装或启用、强制 module reload、文件 watcher、OS 沙箱、isolated、Workflow、MCP、TUI 或流式输出。多 Agent 只到 v0.6 Stage C 的进程内 Supervisor（见 1 表「当前 Agent 模型」与 20 节），仍没有子 Agent Tool、冷恢复或 Parent/Child dispose。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -86,7 +86,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 活跃的 AgentSupervisor、子 Agent Tool 和 Workflow Engine。v0.6 目前只建立**事实层**（20 节）：Stage A 记录哪些 Agent 存在、各自拥有哪个 Session；Stage B 再记录每个 Agent 已经**接受**了哪些消息、顺序如何。两者都不创建 Runtime、不投递消息、不执行子 Agent，也没有 `spawn_agent`、单活 Activation 强制、claim/ack/complete/retry、wakeup 真正唤醒任何东西或 Parent/Child dispose；
+- 子 Agent Tool（`spawn_agent` 等）、Parent/Child dispose 与 Workflow Engine。v0.6 Stage A/B 建立事实层，Stage C 增加进程内 `ProcessAgentSupervisor`（20 节），因此**已经**有单活 Activation、durable claim、真实 Turn 执行与 durable terminal outcome；但仍**没有**冷恢复、stale claim 接管、自动重试、模型可调用的子 Agent Tool、Parent/Child dispose、层级 Budget、Workspace 隔离或 Workflow，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git Worktree/Overlay Workspace 分支与合并；
 - Docker、远程沙箱或操作系统级安全隔离；
@@ -103,6 +103,7 @@ traceharness/
 ├── src/traceh/
 │   ├── version.py                    版本、Distribution 名、核心 plugin id 与默认兼容范围的唯一来源
 │   ├── agents/                       多 Agent 控制面事实层：Agent identity、创建事务、只读 Directory 投影，以及每 Agent 的 Inbox 接受协议、投影与事务
+│   ├── supervision/                  进程内 Agent Supervisor：Delivery lifecycle 协议/投影/事务、窄执行协议与 Activation 调度
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`）
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
@@ -329,7 +330,7 @@ flowchart LR
 
 `to_dict()` 与 `from_dict()` 同样脱离：`to_dict()` 返回的 `data` 是调用方自己的图，修改它不会改写原 `EventEnvelope`；`from_dict()` 也不与传入 `raw` 的嵌套容器共享引用（旧实现只做顶层浅重建）。`from_dict()` 继续要求 `event.data` 是 JSON 对象，非对象直接报 `event.data must be an object`，不会用 `str()` 之类手段悄悄修正类型。
 
-### 6.2 两类 Stream
+### 6.2 当前的 Stream 分类
 
 | Stream | ID 形式 | 用途 |
 |---|---|---|
@@ -337,8 +338,9 @@ flowchart LR
 | Effect Stream | `effects:<session_id>` | 现实副作用的 Intent、Dispatch、Outcome 与 Reconciliation |
 | Agent Directory Stream | `agents:directory` | 持久化 Agent identity：哪些 Agent 存在、各自拥有哪个 Session（20 节） |
 | Agent Inbox Stream | `agent-inbox:<agent_id>` | 每个 Agent 已**接受**的消息及其 FIFO 顺序（20.8）。accepted 不等于 claimed/processed |
+| Agent Delivery Stream | `agent-delivery:<agent_id>` | 每个 Agent 的投递生命周期：claim 与 completed/failed/cancelled（20.11） |
 
-前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。
+前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。后三个是控制面流：Directory 每个 Store 一条，Inbox 与 Delivery 每个 Agent 各一条，三者都不进入 Model Surface、Session Recovery 或 Request Fingerprint。
 
 Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-session 流，边界必须写准：Session Stream 记录“一个 Agent 运行时发生了什么”，Directory Stream 记录“存在哪些 Agent”。二者不合并，因为枚举 Agent 不应要求读遍每个 Session，而且一个 Agent 的执行历史不得断言另一个 Agent 的事实；二者也不分库，因为 `expected_seq`、跨进程文件锁、取消/提交点语义和事件所有权契约正是创建事务需要的东西。它**不进入 Model Surface、不参与 Session Recovery、不影响 Request Fingerprint**，`SessionService.list_sessions()` 按 `session:` 前缀过滤，因此看不到它。
 
@@ -354,7 +356,7 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | 工具 | `tool/call`、`tool/admitted`、`tool/result` |
 | 验证 | `verification/result` |
 | Runtime | `runtime/cancel-requested`、`runtime/error`、`runtime/recovered` |
-| Agent control plane（独立 Stream） | `agent/created`（只出现在 `agents:directory`）、`agent/message-accepted`（只出现在对应 `agent-inbox:<agent_id>`）。两者都不进入任何 Session Stream，也不进入 Model Surface |
+| Agent control plane（独立 Stream） | `agent/created`（只在 `agents:directory`）、`agent/message-accepted`（只在 `agent-inbox:<agent_id>`）、`agent/message-claimed`、`agent/message-completed`、`agent/message-failed`、`agent/message-cancelled`（只在 `agent-delivery:<agent_id>`）。它们都不进入任何 Session Stream，也不进入 Model Surface |
 | Surface | `surface/replace` |
 | Effect | `effect/intent`、`effect/dispatched`、`effect/outcome`、`effect/reconciled` |
 
@@ -1225,7 +1227,9 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | isolated 插件 | `PluginManifest.trust_mode` | 可声明，激活**明确拒绝**；无进程边界、无序列化契约、无崩溃子进程失败模型 |
 | 多 Agent 持久身份 | `AgentRecord`、`AgentDirectory`、`AgentRegistrar`、`agent/created` | **v0.6 Stage A 已实现**：identity 从 Agent control-plane Stream 重建，创建是 CAS 事务，冲突与畸形历史 fail closed（20 节） |
 | 多 Agent 持久 Inbox | `AcceptedMessage`、`AgentInbox`、`AgentInboxService`、`agent/message-accepted` | **v0.6 Stage B 已实现**：每 Agent 一条 FIFO **接受**历史，按 `message_id` 幂等，畸形/重复/错流历史 fail closed（20.8–20.9）。它只回答“接受了什么、什么顺序”，不回答“是否执行” |
-| 多 Agent 活控制面 | `AgentSpec`、`AgentHandle`、`AgentSupervisor` Protocol、Budget DTO | 活跃 Supervisor、单活 Activation 强制、Inbox、消息投递、子 Agent Tools、Parent/Child dispose、冷恢复均**缺失**；`AgentSupervisor` 的每个方法都没有实现支撑 |
+| 多 Agent 投递生命周期 | `MessageClaim`、`MessageOutcome`、`AgentDeliveryLog`、`AgentDeliveryService`、`agent/message-claimed|completed|failed|cancelled` | **v0.6 Stage C 已实现**：claim 是执行前提，CAS 线性化，畸形/重复/乱序历史 fail closed（20.11–20.12） |
+| 多 Agent 活控制面 | `ProcessAgentSupervisor`、`AgentExecution`、`AgentActivationFactory`、`SupervisedAgentHandle` | **v0.6 Stage C 已实现** create/resume/send/interrupt/wait_idle/dispose 与单活 Activation（20.13）。仍**缺失**：冷恢复、stale claim 接管、自动重试、子 Agent Tool、Parent/Child dispose、Budget 强制、`NEXT_STEP` |
+| 通用 Turn 输入 | `TurnInput` | **v0.6 Stage C 已实现**：`AgentLoop` 接受 `str` 或 `TurnInput`，后者让控制面 `message_id`/`source` 贯穿 Session Turn；`str` 行为与此前完全一致 |
 | Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
 | Workflow | 可复用单 Agent Runtime 边界 | Workflow Engine、Map/Join/Approval 节点缺失 |
 
@@ -1243,7 +1247,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前核心测试套件收集 `1523` 项，未提交工作区完整门禁为 `1522 passed, 1 skipped`；唯一跳过项是 Windows 不允许路径含 NUL 的平台边界。v0.6 Stage A 前的基线为 `1162` 收集、`1161 passed, 1 skipped`，Stage A 新增 [`tests/test_agent_identity.py`](../../tests/test_agent_identity.py) 的 `214` 项（见 20.6），Stage B 再新增 [`tests/test_agent_inbox.py`](../../tests/test_agent_inbox.py) 的 `147` 项（见 20.10）。独立 Python Quality 插件自身测试为 `17 passed`，独立 Plugin Creator Skill 为 `10 passed`。D1/D2 原有 Scope/Overlay、Policy 身份、Request 重建与跨 Runtime 隔离契约继续全绿。v0.5 RC 新增 [`tests/test_plugin_sdk.py`](../../tests/test_plugin_sdk.py) 固定外部作者需要的 Policy/Middleware/Verifier 公共导出；独立插件测试覆盖项目证据解析、缺失配置不得猜测、无效配置 fail-closed、Policy 反例和命名 Verifier；L1 技能测试固定四个打包 Topic、Entry Point/Manifest 单一身份、Prompt + `PURE_READ` 唯一贡献、错误 Topic fail-closed 与零 Workspace 路径泄漏；`contract` Topic 还明确区分 Verifier 的事实归属：它由 Generation 和 Step Lease 固定，但不进入 `CompositionSnapshot`，观测结果只通过 `verification/result` 持久化。真实 Wheel E2E 又证明这些能力从独立 Distribution 进入现有 AgentLoop/ToolRuntime/Step Lease 主线，并从隔离的声明源码副本构建和审计 Wheel 成员，避免工作区缓存或旧构建目录污染发行物。D3 新增 [`tests/test_plugin_extended_contributions.py`](../../tests/test_plugin_extended_contributions.py)：真实 AgentLoop 使用显式选中的插件 Provider；缺失 Provider/Verifier 和 Provider/Policy/Middleware 冲突在 health 前以固定 code 失败并完整 rollback；setup 结束后贡献入口关闭，health 不能再补注册 Policy/Middleware 绕过冲突检查；Tool、Provider、Policy、Middleware 的注册时名称会被单独保存，health 改写原对象名称会以 `plugin-contribution-identity-changed` 拒绝并回滚，Registry 撤销也只认注册时键；公开 `prepare_activation_set()` 返回后即使调用方让出事件循环，Generation 交接仍会按 transfer receipt 复核 Registry 成员、对象身份与固定名称，后台 Owned Task 的晚到改名会在 claim 前拒绝，Snapshot schema 与 ToolRuntime 查找键不能在同一代分裂；若 receipt 或 Scope 校验在 ActivationSet 构造时失败，Builder 会在所有权尚未交给调用方时 dispose 临时 Manager，取消并等待 Owned Task、恰好一次执行 cleanup，重复取消不能打穿收敛等待，同时保留原始交接错误与 cleanup 失败；两者都是普通 `Exception` 时对外仍是 `ExceptionGroup`，原始失败是 `KeyboardInterrupt`、`SystemExit` 或其他直接 `BaseException` 时则由 `BaseExceptionGroup` 保真，不能再被“分组类型不支持”产生的新 `TypeError` 遮蔽；Policy Overlay 冲突保留责任 `plugin_id`；ActivationSet 提供 LLM Registry 时，缺失所选 Provider 与对象身份不一致同样拒绝；插件 Policy/Middleware 真实经过 ToolRuntime 且名称进入 Composition Snapshot；命名 Verifier 只有显式选择才运行并追加 `verification/result`；Verifier 被 Gate 卡住时发布新 Generation，旧 Step 仍使用旧 Verifier，旧 Activation 直到 Lease 释放才 cleanup；取消 setup 会反向 dispose 四类新 Registration。旧式自定义 ActivationSet 没有 D3 `llms` 属性时，替换路径仍借用协调器已有核心 Registry；一旦候选显式提供 LLM Registry，就不能回退绕过身份守卫。CLI 测试还钉住自定义 Provider 必须同时显式启用插件和提供 Model、`--plugin-verifier`/`TRACEH_PLUGIN_VERIFIER` 必须显式启用插件、与 `--verify-command` 互斥，并在恢复命令中和插件 id 一起保真。若命令行显式选择一种 Verifier，它会覆盖较低优先级环境变量中的另一种；两种选择都来自命令行或都来自环境变量时仍明确报冲突。D3 原有三项反向验证继续保留；公开候选交接复核也做过反向验证：临时移除守卫时确定性测试稳定出现 `DID NOT RAISE`，恢复后才继续完整门禁；临时恢复“activate 后直接 transfer”的旧路径时，交接失败与 cleanup 失败测试会收到裸 `ValueError`，证明临时 Manager 的回滚保护不可省略；临时把 `BaseExceptionGroup` 换回 `ExceptionGroup` 时，直接 `BaseException` 反例稳定失败于 `TypeError: Cannot nest BaseExceptions in an ExceptionGroup`，恢复正确容器后交接四项契约与全量门禁重新通过。
+当前核心测试套件收集 `1657` 项，未提交工作区完整门禁为 `1656 passed, 1 skipped`；唯一跳过项是 Windows 不允许路径含 NUL 的平台边界。v0.6 Stage A 前的基线为 `1162` 收集、`1161 passed, 1 skipped`，Stage A 新增 [`tests/test_agent_identity.py`](../../tests/test_agent_identity.py) 的 `214` 项（见 20.6），Stage B 再新增 [`tests/test_agent_inbox.py`](../../tests/test_agent_inbox.py) 的 `147` 项（见 20.10），Stage C 再新增 [`tests/test_agent_delivery.py`](../../tests/test_agent_delivery.py) `73` 项与 [`tests/test_agent_supervisor.py`](../../tests/test_agent_supervisor.py) `61` 项（见 20.14）。独立 Python Quality 插件自身测试为 `17 passed`，独立 Plugin Creator Skill 为 `10 passed`。D1/D2 原有 Scope/Overlay、Policy 身份、Request 重建与跨 Runtime 隔离契约继续全绿。v0.5 RC 新增 [`tests/test_plugin_sdk.py`](../../tests/test_plugin_sdk.py) 固定外部作者需要的 Policy/Middleware/Verifier 公共导出；独立插件测试覆盖项目证据解析、缺失配置不得猜测、无效配置 fail-closed、Policy 反例和命名 Verifier；L1 技能测试固定四个打包 Topic、Entry Point/Manifest 单一身份、Prompt + `PURE_READ` 唯一贡献、错误 Topic fail-closed 与零 Workspace 路径泄漏；`contract` Topic 还明确区分 Verifier 的事实归属：它由 Generation 和 Step Lease 固定，但不进入 `CompositionSnapshot`，观测结果只通过 `verification/result` 持久化。真实 Wheel E2E 又证明这些能力从独立 Distribution 进入现有 AgentLoop/ToolRuntime/Step Lease 主线，并从隔离的声明源码副本构建和审计 Wheel 成员，避免工作区缓存或旧构建目录污染发行物。D3 新增 [`tests/test_plugin_extended_contributions.py`](../../tests/test_plugin_extended_contributions.py)：真实 AgentLoop 使用显式选中的插件 Provider；缺失 Provider/Verifier 和 Provider/Policy/Middleware 冲突在 health 前以固定 code 失败并完整 rollback；setup 结束后贡献入口关闭，health 不能再补注册 Policy/Middleware 绕过冲突检查；Tool、Provider、Policy、Middleware 的注册时名称会被单独保存，health 改写原对象名称会以 `plugin-contribution-identity-changed` 拒绝并回滚，Registry 撤销也只认注册时键；公开 `prepare_activation_set()` 返回后即使调用方让出事件循环，Generation 交接仍会按 transfer receipt 复核 Registry 成员、对象身份与固定名称，后台 Owned Task 的晚到改名会在 claim 前拒绝，Snapshot schema 与 ToolRuntime 查找键不能在同一代分裂；若 receipt 或 Scope 校验在 ActivationSet 构造时失败，Builder 会在所有权尚未交给调用方时 dispose 临时 Manager，取消并等待 Owned Task、恰好一次执行 cleanup，重复取消不能打穿收敛等待，同时保留原始交接错误与 cleanup 失败；两者都是普通 `Exception` 时对外仍是 `ExceptionGroup`，原始失败是 `KeyboardInterrupt`、`SystemExit` 或其他直接 `BaseException` 时则由 `BaseExceptionGroup` 保真，不能再被“分组类型不支持”产生的新 `TypeError` 遮蔽；Policy Overlay 冲突保留责任 `plugin_id`；ActivationSet 提供 LLM Registry 时，缺失所选 Provider 与对象身份不一致同样拒绝；插件 Policy/Middleware 真实经过 ToolRuntime 且名称进入 Composition Snapshot；命名 Verifier 只有显式选择才运行并追加 `verification/result`；Verifier 被 Gate 卡住时发布新 Generation，旧 Step 仍使用旧 Verifier，旧 Activation 直到 Lease 释放才 cleanup；取消 setup 会反向 dispose 四类新 Registration。旧式自定义 ActivationSet 没有 D3 `llms` 属性时，替换路径仍借用协调器已有核心 Registry；一旦候选显式提供 LLM Registry，就不能回退绕过身份守卫。CLI 测试还钉住自定义 Provider 必须同时显式启用插件和提供 Model、`--plugin-verifier`/`TRACEH_PLUGIN_VERIFIER` 必须显式启用插件、与 `--verify-command` 互斥，并在恢复命令中和插件 id 一起保真。若命令行显式选择一种 Verifier，它会覆盖较低优先级环境变量中的另一种；两种选择都来自命令行或都来自环境变量时仍明确报冲突。D3 原有三项反向验证继续保留；公开候选交接复核也做过反向验证：临时移除守卫时确定性测试稳定出现 `DID NOT RAISE`，恢复后才继续完整门禁；临时恢复“activate 后直接 transfer”的旧路径时，交接失败与 cleanup 失败测试会收到裸 `ValueError`，证明临时 Manager 的回滚保护不可省略；临时把 `BaseExceptionGroup` 换回 `ExceptionGroup` 时，直接 `BaseException` 反例稳定失败于 `TypeError: Cannot nest BaseExceptions in an ExceptionGroup`，恢复正确容器后交接四项契约与全量门禁重新通过。
 
 L2 新增 [`tests/test_candidate_validation.py`](../../tests/test_candidate_validation.py)，覆盖显式候选身份与依赖源、可信 clone 版本而非运行中 CLI 版本、大小写变体 `.env`、符号链接、Windows Junction/reparse point、缓存与 direct-reference 依赖拒绝、干净源码复制、Wheel 路径钩子/启动钩子/符号链接成员/宿主保留命名空间审计、两套独立 venv、宿主 pytest 配置、安装元数据合同、doctor、候选测试、可信核心回归、结构化 JSON 配置失败、执行后 Wheel 漂移拒绝、报告目录事务、SHA-256 产物和子进程取消收敛。真实验收不是用脏工作区充当核心：先在仓库外建立包含当前改动的临时 Git 提交，再让公开 CLI 从其 `HEAD` 克隆，13 道门禁与完整核心回归全部通过。当前 L4 未提交工作区收集 `1162` 项并得到 `1161 passed, 1 skipped`，唯一 skip 是 Windows NUL 路径边界；L2 已存在于当前可信 `HEAD`，仓库外干净克隆的真实链路再次跑完 13 道门禁和完整核心回归。反向验证除既有“测试失败不得产生 Wheel”和 `.pth` 拒绝外，还临时移除执行后 Wheel 复核，反例会把被追加启动钩子的 Wheel 错报为通过；临时改回就地写报告，报告写失败会留下半目录。恢复两道保护后新增反例与扩大门禁重新全绿。
 
@@ -1340,7 +1344,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 ### 15.3 发布快照与当前测试的区别
 
-`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后为 960/959/1，Stage B 为 980/979/1，Stage C 为 999/998/1，D0 为 1003/1002/1，D1 为 1029/1028/1，D2 为 1053/1052/1，D3 结束基线为 1088/1087/1；v0.5.0 发布基线为 1090/1089/1；Unreleased L1 时点为 1092/1091/1，L2 初版为 1110/1108/2，L2 加固后为 1116/1114/2，L3 初版为 1126/1124/2，L3 加固后为 1133/1131/2；当前 L4 为 1162/1161/1，独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
+`VALIDATION.md` 保存最初 v0.3 发布时的 24 项测试、覆盖率、Demo、Wheel 和干净安装验证。历史 v0.4 基线为 910 项（909 通过、1 项按平台跳过）；Stage A 后为 960/959/1，Stage B 为 980/979/1，Stage C 为 999/998/1，D0 为 1003/1002/1，D1 为 1029/1028/1，D2 为 1053/1052/1，D3 结束基线为 1088/1087/1；v0.5.0 发布基线为 1090/1089/1；Unreleased L1 时点为 1092/1091/1，L2 初版为 1110/1108/2，L2 加固后为 1116/1114/2，L3 初版为 1126/1124/2，L3 加固后为 1133/1131/2，L4 为 1162/1161/1；v0.6 Stage A 为 1329/1328/1，Stage B 为 1523/1522/1，**当前 Stage C 为 1657/1656/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。不要把发布时点数字误认为当前测试总数，也不要未经重新运行就改写历史验证结果。
 
 ## 16. 已知限制与风险
 
@@ -1383,12 +1387,16 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | L3 是固定合同对比，不是批准或通用 Benchmark | `plugins compare` 只比较可信核心提交内的固定 Suite；两套 venv 不是 OS 沙箱，Scripted Provider 的确定性结果不能外推真实模型波动、Token 成本或复杂仓库泛化。`improved` 只表示这组固定证据上有增益且无已观测回归 | L4 必须重新核对 L2/L3 摘要并由人批准精确产物；需要更广结论时由宿主独立扩展 Suite 或另建真实模型评测，候选不能控制 evaluator |
 | L4 是受控包管理，不是沙箱或自动启用 | 审批摘要能防止 L4 内的陈旧批准、错 Artifact、错目标和并发写入，但同权限进程仍可绕过 Registry 直接运行 pip/改文件；目标必须预先拥有与 L3 相同的非候选依赖，L4 v1 不解析或升级依赖，且一个目标环境同一时刻只允许一条受管 Distribution 链。推广成功也不会修改已运行 Runtime 的 Generation 或 Session | 使用专用目标 venv，只批准可信自有候选；完整回滚当前 Distribution 后才能把该环境移交给另一条链。多 Distribution 同时管理与依赖集合变化都需要未来的统一环境事务。启动新 Runtime 时仍显式 `--plugin`；硬崩溃后查看 Registry 非稳定态并用精确 promotion id 执行 rollback |
 | 插件贡献面仍有生命周期边界 | D3 已能提供 Provider、Policy、Middleware 和命名 Verifier，但全部是 application setup、trusted、进程内且 Generation-owned；EventStore 仍不能由插件提供 | EventStore 必须先有独立于 Step Generation 的进程级固定插件所有权，不能把账本跟着 `/plugins` 切换 |
-| Scope Overlay 仍不是 scoped plugin activation | D1/D2 已解析程序化 Service、Tool、Prompt、Policy binding，并把模型可见结果纳入既有 Generation/Snapshot；D3 的插件 Policy 仍来自 application setup。插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup。当前单 Runtime 只有一条 Agent 层装配，不等于已有 AgentSupervisor | 子层插件生命周期与多 Agent Scope 所有权留给后续明确设计；不得把程序化 binding 或 application 插件贡献误称为插件已能自行选择 scope |
+| Scope Overlay 仍不是 scoped plugin activation | D1/D2 已解析程序化 Service、Tool、Prompt、Policy binding，并把模型可见结果纳入既有 Generation/Snapshot；D3 的插件 Policy 仍来自 application setup。插件 Manifest 仍要求 application scope，Workspace/Preset/Agent 不能各自运行 setup。单 Runtime 的一条 Agent 层装配不等于多 Agent Scope 所有权，`ProcessAgentSupervisor` 也没有为每个 Agent 引入新的 scope 生命周期 | 子层插件生命周期与多 Agent Scope 所有权留给后续明确设计；不得把程序化 binding 或 application 插件贡献误称为插件已能自行选择 scope |
 | Session 插件身份与迁移 | 当前身份由共享事件解析器按 `session/created`、合法 `composition/snapshot` 和 `composition/migration-authorized` 顺序重建；身份变化必须在全局 Gate 内以 `source_seq`/Session head CAS 追加授权。授权已落盘而 publish 失败时 fail-closed；不会自动迁移所有 Session。版本按 PEP 440 等价判定 | 仍没有 Session 自动迁移、批量迁移或跨进程迁移协调；每次授权仍由用户命令显式触发，Generation identity 不持久化 |
 | 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
 | 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
-| Agent identity 只是身份，不是运行 | v0.6 Stage A 能记录并重建“存在哪些 Agent、各自拥有哪个 Session”，但**没有任何东西会运行它们**：没有 AgentSupervisor、单活 Activation 强制、`spawn_agent`、Parent/Child dispose 或冷恢复。`AgentRegistrar` 也不创建该 Agent 的 Session，只声明这个 `session_id` 归它所有 | Stage C 起才引入活 Activation；在那之前不得把 `AgentRecord` 描述成“一个正在运行的子 Agent” |
-| Inbox 只记录 accepted，不记录 processed | Stage B 能证明“这条消息已被持久接受、排在第几位、是否重复提交”，但**不能**证明它被投递、被 claim、被执行、完成、失败或需要重试。`wakeup` 只是发送方的**请求**，不会真的唤醒任何东西——Stage B 没有 Supervisor 可以唤醒 | claim/ack/complete/retry 与真正的唤醒属于 Stage C；协议刻意不预留这些字段，因为“存在但无意义的字段”一定会被后来的读取者当真 |
+| Agent identity 只是身份，不是运行 | `AgentRecord` 只记录“存在哪些 Agent、各自拥有哪个 Session”。运行由 Stage C 的 `ProcessAgentSupervisor` 负责，且只在本进程内；`AgentRegistrar` 仍不创建该 Agent 的 Session，只声明这个 `session_id` 归它所有 | 一条 `AgentRecord` 不等于“一个正在运行的子 Agent”；模型也仍然无法自行 spawn Agent |
+| Inbox 只记录 accepted | Inbox Stream 本身仍只回答“收到了什么、什么顺序”。是否被 claim、是否执行完毕由**独立的** Delivery Stream 回答（20.11），Stage B 的单事件类型合同没有被破坏 | 两条流分开是刻意的；读取任何一条都不能单独得出“这条消息处理完了” |
+| Supervisor 只在本进程内 | Stage C 的 `ProcessAgentSupervisor` 只管理**自己创建或显式 resume 的** Activation。进程启动后不会自动扫描全部 Agent，不会接管别的进程留下的 claim，也没有自动重试 | 冷恢复需要 attempt identity 与重试策略；在此之前，崩溃后留下的“已 claim 未 terminal”只能由人查看 Delivery Stream |
+| 无法证明的 claim 会让 Activation faulted | claim 结果 unknown 时不执行 Turn、不重试，Activation 进入 faulted，`wait_idle()` 报告而不是永远等待。代价是一次瞬时存储故障会停掉该 Agent | 这是没有重试策略的 Stage 应有的姿态；重试会引入重复执行风险 |
+| `NEXT_STEP` 未实现 | `send()` 在**接受之前**拒绝它，零事件。直接经 `AgentInboxService` 写入的 `NEXT_STEP` 会被 claim 后记为 `failed`/`unsupported-target`，既不跳过（会打乱 FIFO）也不 fault | 需要在活跃 Turn 中注入消息的安全接缝；Step 有冻结 Composition 和在途模型调用，当前没有这样的接缝 |
+| create 跨两条 Stream 非原子 | Session 与 Agent Directory 是两条 append-only 流，没有跨流事务。顺序是 Session 先、identity 后：失败最多留下一个可检测且无害的未归属 Session，绝不留下指向不存在 Session 的 `AgentRecord` | 这条边界如实记录，不通过删除事件或隐式回滚伪造原子性；`resume()` 会验证 Session 真实存在 |
 | 一条坏 Inbox 记录会阻塞该 Agent | 顺序就是这个投影给出的答案，因此坏记录不跳过：重复 `message_id`、未知事件类型、错 schema、错流、多键/少键 payload 都会让该 Agent 的 Inbox 读取**和新的接受**一起失败 | 这是事实源应有的行为；跳过一条会报出一个从未发生过的 FIFO 顺序。未来新增 Inbox 生命周期事件类型必须显式扩展该投影 |
 | Agent `budget` 记录但不执行 | `agent/created` 保存完整 `Budget`，因为它属于创建请求；当前没有任何预留、扣减或强制逻辑 | 层级 Budget reservation 属于 v0.7，届时才有消费者 |
 | Agent Directory 严格 fail closed | 重复 `agent_id`/`session_id`/`request_id`、畸形 payload、未知事件类型、self-owner 和悬空 owner 都会让整份 Directory 读写失败，而不是跳过坏记录。代价是一条坏记录会阻塞该 Store 上的全部 Agent 读取与新建 | 这是事实源应有的行为；未来新增 identity 生命周期事件类型必须显式扩展该投影，通信事件则应放在 per-Agent Stream 而不是这条流上 |
@@ -1426,7 +1434,10 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Composition 插件身份 | `composition_runtime.py`、`request_builder.py`、`session/service.py`、插件运行时测试 | 7.1、7.3、12、15、19.9 |
 | Agent 持久身份 / 创建事务 | `agents/identity.py`、`agents/directory.py`、`agents/registrar.py`、`agents/errors.py`、`api/agents.py`、`tests/test_agent_identity.py`、ADR-0019 | 1、2、3、4、6.2、6.3、14、15、16、17、20 |
 | Agent Inbox 接受协议 / 事务 | `agents/inbox_identity.py`、`agents/inbox.py`、`agents/inbox_service.py`、`agents/errors.py`、`api/agents.py`、`tests/test_agent_inbox.py`、ADR-0020 | 1、2、3、6.2、6.3、14、15、16、17、20.8–20.10 |
-| 提交点收敛（两个控制面事务共用） | `agents/commit_reconciliation.py`、`agents/registrar.py`、`agents/inbox_service.py`、两套 Agent 测试 | 15、16、20.5、20.9 |
+| 提交点收敛（三个控制面事务共用） | `agents/commit_reconciliation.py`、`agents/registrar.py`、`agents/inbox_service.py`、`supervision/delivery_service.py`、三套 Agent 测试 | 15、16、20.5、20.9、20.12 |
+| Agent Delivery 协议 / 投影 / 事务 | `supervision/delivery_identity.py`、`supervision/delivery.py`、`supervision/delivery_service.py`、`supervision/errors.py`、`tests/test_agent_delivery.py`、ADR-0021 | 1、2、3、6.2、6.3、14、15、16、17、20.11–20.14 |
+| Agent Supervisor / Activation | `supervision/supervisor.py`、`supervision/execution.py`、`tests/test_agent_supervisor.py`、ADR-0021 | 1、2、3、14、15、16、17、20.13–20.14 |
+| 通用 Turn 输入 | `api/turns.py`、`runtime/agent_loop.py`（仅入口归一化）、`runtime/agent_runtime.py`（仅签名放宽）、`tests/test_agent_supervisor.py` | 5、14、15、20.13 |
 | Multi-Agent/Workspace Protocol | `api/agents.py`、`api/workspaces.py`、`kernel/*` | 2、3、4、14、15、16、20 |
 | 开发流程/目录 | `AGENTS.md`、`CLAUDE.md`、CI、pyproject | 0、1、3、15、18 |
 
@@ -1676,7 +1687,7 @@ Tool、Prompt、Policy 都以稳定名字作为覆盖身份。相同 scope 的�
 
 插件 Tool/Prompt 仍由 application setup 贡献，因此有一个晚到祖先问题：初次解析 child Overlay 时插件内容尚不存在。Manager 会把 staged application Tool/Prompt 投影到私有候选，**在 health check 之前**再次解析 child Overlay；隐式覆盖因此以稳定 code 和责任 `plugin_id` 失败并回滚，第三方 health 不会获得一次本来就不该发生的执行机会。全部插件真实发布后再解析一次，最终 Tool/Prompt/Policy 三者一起转移到 ActivationSet。后续插件组合替换继续使用 Builder 保存的 child blueprint；协调器构造候选 ToolRuntime 时必须使用 ActivationSet 的 Policy tuple，CompositionGeneration 按长度、顺序和逐项 `is` 对象身份校验二者一致，绝不调用可由第三方重载的 `__eq__`。因此名称相同但 admission 行为不同的 Policy 不能伪装成同一候选能力。
 
-D2 只增加宿主装配能力；D3 才在下一层正式扩宽 `PluginContext`，见下一节。Binding 中的程序化 Tool/Policy 是借用能力，其生命周期仍由装配调用者持有；application 插件资源由对应 ActivationSet 清理。两个 Runtime 可以装配不同的 Agent Tool/Prompt/Policy，真实 Tool admission 与 Request Snapshot 会反映各自结果，但当前还没有 `AgentSupervisor` 去创建和管理两个 Agent。
+D2 只增加宿主装配能力；D3 才在下一层正式扩宽 `PluginContext`，见下一节。Binding 中的程序化 Tool/Policy 是借用能力，其生命周期仍由装配调用者持有；application 插件资源由对应 ActivationSet 清理。两个 Runtime 可以装配不同的 Agent Tool/Prompt/Policy，真实 Tool admission 与 Request Snapshot 会反映各自结果；Stage C 的 `ProcessAgentSupervisor` 能在一个进程内管理多个 Agent，但它通过窄执行协议使用 Runtime，并不改变这里的四层装配边界，插件仍只能在 application 层 setup。
 
 ### 19.15 D3：Provider、Policy、Middleware 与 Verifier 插件贡献
 
@@ -1688,11 +1699,11 @@ D3 没有给四类能力另建“插件 Runtime”。`PluginContext.register_pro
 
 EventStore 刻意没有加入 `PluginContext`。它是 SessionService、Recovery、Inspector 和所有事件写入共同借用的**进程级事实源**，而当前插件 ActivationSet 会随 Step Generation retire。若让 `/plugins` 切换卸载 Store 插件，旧 Session 会继续握着已经被 cleanup 的账本实现，或者同一 Runtime 出现两本账。真正开放前必须先设计独立于 Generation 的 process-lifetime/pinned Activation 所有权、Store 构造与关闭顺序、旧 Session 兼容和合同测试；当前仍只能在 Runtime 构造时直接注入 EventStore。这个收窄记录在 [ADR-0014](../adr/0014-generation-scoped-plugin-execution-capabilities.md)。
 
-## 20. 多 Agent 控制面（v0.6 Stage A 身份 + Stage B Inbox 接受事实）
+## 20. 多 Agent 控制面（Stage A 身份 + Stage B Inbox 接受 + Stage C Supervisor 与投递）
 
-Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（Inbox 接受）见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)。本节记录当前工程事实：20.1–20.7 是 Stage A，20.8–20.10 是 Stage B。
+Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（Inbox 接受）见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递生命周期）见 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)。本节记录当前工程事实：20.1–20.7 是 Stage A，20.8–20.10 是 Stage B，20.11–20.14 是 Stage C。
 
-**两个 Stage 都只实现事实层，不实现运行。** Stage A 只实现身份，Stage B 只实现「消息已被接受」。 没有活的 `AgentSupervisor`、没有 Inbox、没有 `send`/`wakeup`、没有 `spawn_agent` 等模型 Tool、没有单活 Activation 强制、没有 Parent/Child dispose、没有 WorkspaceProvider、没有 Workflow、没有层级 Budget 预留。本节任何内容都不得被表述成“已经能创建并运行子 Agent”。
+**Stage A 与 Stage B 只实现事实层；Stage C 才真正运行 Agent。** Stage A 是身份，Stage B 是「消息已被接受」，Stage C 是「claim → 真实 Turn → terminal」。以下 Stage A/B 小节中的「没有 Supervisor / 没有 claim / 没有 Turn 执行」是**那两个 Stage 当时的边界**，Stage C 已经补上其中的 Supervisor、claim 与执行；仍然没有的是：Agent 冷恢复与 stale claim 接管、自动重试、`spawn_agent` 等模型 Tool、Parent/Child dispose、`WorkspaceProvider`、Workflow、层级 Budget 预留、`MessageTarget.NEXT_STEP` 投递。本节任何内容都不得被表述成“已经能创建并运行子 Agent”——模型仍然无法自行 spawn 任何 Agent。
 
 ### 20.1 模块职责
 
@@ -1702,9 +1713,9 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 | [`agents/directory.py`](../../src/traceh/agents/directory.py) | 只读 `AgentDirectory` 投影与 `validate_agent_directory_events()`，以及只从 `EventStore` 读取的 `AgentDirectoryReader` |
 | [`agents/registrar.py`](../../src/traceh/agents/registrar.py) | `AgentRegistrar`：创建事务、线性化点、取消与 may-have-committed 收敛 |
 | [`agents/errors.py`](../../src/traceh/agents/errors.py) | 稳定 `code`、固定文案、**从不回显**被拒绝取值的错误层次 |
-| [`api/agents.py`](../../src/traceh/api/agents.py) | 冻结 DTO：新增 `AgentRecord`（durable identity），既有 `AgentSpec`/`Budget`/`AgentHandle`/`AgentSupervisor`（Activation 侧协议，仍无实现） |
+| [`api/agents.py`](../../src/traceh/api/agents.py) | 冻结 DTO：`AgentRecord`（durable identity）、`AgentSpec`/`Budget`/`AgentHandle`，以及由 `ProcessAgentSupervisor` 实际满足的 `AgentSupervisor` Protocol；公开合同包含显式 `request_id`、`interrupt() -> bool` 与 `aclose()`，不再保留一份与实现分叉的早期草图 |
 
-依赖方向单向：`agents/` 只导入 `traceh.api`、`traceh.session.event_store`、`traceh.concurrency` 与 `traceh.cli.text_safety`。它不导入 `AgentRuntime`、`AgentLoop` 或 `PluginManager`，也没有任何现有模块导入它——`AgentLoop` 本轮未修改。
+依赖方向单向：`agents/` 只导入 `traceh.api`、`traceh.session.event_store`、`traceh.concurrency` 与 `traceh.cli.text_safety`。它不导入 `AgentRuntime`、`AgentLoop` 或 `PluginManager`；Stage C 的 `traceh.supervision` 从它读取 durable identity/Inbox，反向依赖不存在，`AgentLoop` 也不感知控制面。
 
 ### 20.2 durable identity 与 Activation 的区别
 
@@ -1714,7 +1725,7 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 | 事实源 | Agent control-plane Stream | 无；它是运行状态，不是事实 |
 | 生命周期 | 一经追加即存在 | 可创建、停止、再创建 |
 | 崩溃后 | 全新进程只靠 `EventStore` 完整恢复 | 全部消失 |
-| 谁持有谁 | 未来 Supervisor 持有 Activation、从这里读 identity | Activation 永远不感知 Supervisor 或 Directory |
+| 谁持有谁 | `ProcessAgentSupervisor` 持有 Activation、从这里读 identity | Activation 永远不感知 Supervisor 或 Directory |
 
 因此：Activation stop/restart **不改变** identity；进程内丢失全部 Handle **不删除** Agent；identity 不能由内存中的 Runtime、Task 或 Handle 充当。
 
@@ -1854,15 +1865,15 @@ flowchart TD
 
 ### 20.7 Stage A 当时尚未实现的边界
 
-（其中「每个 Agent 一条 FIFO Inbox 的**接受**事实」已由 Stage B 补上，见 20.8；其余仍然缺失。）Stage C–F 仍缺失，不得在文档或对外说明中表述为已有能力：活的 `AgentSupervisor` 与单活 Activation 强制；消息投递、claim/ack/complete/retry 与真正的 wakeup；`spawn_agent`、`send_agent_message`、`wait_agent`、`stop_agent`、`collect_agent_artifact` 等模型 Tool；lifecycle ownership 图的 child-first 静默 dispose；`WorkspaceProvider`、Git worktree 与 Patch 合并；Workflow Engine；层级 Budget 预留事件；Agent 冷恢复。`AgentRegistrar` 也**不创建**该 Agent 的 Session——它只声明这个 `session_id` 归该 Agent 所有，Session 仍由 `SessionService` 按原有方式创建。
+（其中「每个 Agent 一条 FIFO Inbox 的**接受**事实」已由 Stage B 补上，见 20.8；「进程内 Supervisor、单活 Activation、claim/complete 与真正的 wakeup」已由 Stage C 补上，见 20.11–20.13。以下列出的其余项仍然缺失。）Stage D–F 仍缺失，不得在文档或对外说明中表述为已有能力：跨进程的 Activation 唯一性与 stale claim 接管；ack/retry 语义；`spawn_agent`、`send_agent_message`、`wait_agent`、`stop_agent`、`collect_agent_artifact` 等模型 Tool；lifecycle ownership 图的 child-first 静默 dispose；`WorkspaceProvider`、Git worktree 与 Patch 合并；Workflow Engine；层级 Budget 预留事件；Agent 冷恢复。`AgentRegistrar` 也**不创建**该 Agent 的 Session——它只声明这个 `session_id` 归该 Agent 所有，Session 仍由 `SessionService` 按原有方式创建。
 
 ### 20.8 Stage B：持久化 Agent Inbox 接受事实
 
 设计决定与被否决的替代方案见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)。
 
-**Stage B 只实现「已接受」这一个事实，不实现执行。** 没有活的 `AgentSupervisor`、没有消息投递、没有 claim/ack/complete/retry、没有 Turn 调度、没有冷恢复、没有子 Agent Tool。`wakeup` 只是发送方**请求**唤醒，Stage B 没有任何东西会被唤醒。文档、报告和代码都不得把 accepted 说成 processed 或 completed。
+**Stage B 这一层本身只实现「已接受」这个事实，不实现执行。** 消费它的 claim 与 Turn 执行由 Stage C 的 `traceh.supervision` 提供（见 20.11–20.13），本小节描述的模块不感知也不依赖它。写入 Inbox 事件本身仍然只意味着 accepted，不意味着 processed 或 completed；`wakeup` 字段在 Inbox 层仍只是发送方**请求**唤醒，真正去唤醒的是 Supervisor。
 
-Stage B 只回答四个问题：哪些消息已被持久接受、每条属于哪个 Agent、接受顺序是什么、同一 `message_id` 是否已经提交。
+Stage B 这一层只回答四个问题：哪些消息已被持久接受、每条属于哪个 Agent、接受顺序是什么、同一 `message_id` 是否已经提交。
 
 | 模块 | 职责 |
 |---|---|
@@ -1960,4 +1971,134 @@ flowchart TD
 | Envelope 协议字段移出解析器边界（Inbox） | 1 项：公开解析器泄漏裸异常 |
 | `_scan()` 自行预检事件类型 | 1 项：预检落在解析器边界之外，裸异常重新泄漏 |
 
-**Stage B 之后仍然缺失（Stage C 及以后）**：进程内 `AgentSupervisor`、单一 Live Activation 与其强制、Inbox claim/ack/complete/retry、真正的 wakeup 与 Turn 调度、Agent 冷恢复、`spawn_agent` 等子 Agent Tool、Parent/Child dispose、层级 Budget 预留、WorkspaceProvider 与 Workflow。版本仍为 `0.5.0`，Stage B **不是** v0.6 发布。
+**Stage B 当时仍然缺失的边界**：进程内 `AgentSupervisor`、单一 Live Activation 与其强制、Inbox claim/complete、真正的 wakeup 与 Turn 调度、Agent 冷恢复、`spawn_agent` 等子 Agent Tool、Parent/Child dispose、层级 Budget 预留、WorkspaceProvider 与 Workflow。其中前四项已由 Stage C 补上（见 20.11–20.14），其余仍然缺失。版本仍为 `0.5.0`，Stage B **不是** v0.6 发布。
+
+### 20.11 Stage C：Delivery lifecycle 事实层
+
+设计决定与被否决的替代方案见 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)。
+
+Stage C 是 v0.6 里第一个**真正运行** Agent 的阶段。它把 Stage B 已经持久接受的 `NEW_TURN` 消息变成：
+
+```text
+durable accepted → durable claim → 该 Agent 自己 Session 上的真实 Turn → durable completed / failed / cancelled
+```
+
+四件事被严格分开，不得混为一谈：
+
+| 概念 | 位置 | 崩溃后是否存活 |
+|---|---|---|
+| Identity（`AgentRecord`） | `agents:directory` | 是 |
+| Acceptance（`AcceptedMessage`） | `agent-inbox:<agent_id>` | 是 |
+| Delivery lifecycle（claim / outcome） | `agent-delivery:<agent_id>` | 是 |
+| Activation（worker + 执行 Runtime） | 内存 | **否** |
+
+Activation 可以从前三者重建，反过来不成立。claim 里记录的 `activation_id` 只说明“当时是哪一个活实例取走了它”，不证明该 Activation 现在还存在。
+
+| 模块 | 职责 |
+|---|---|
+| [`supervision/delivery_identity.py`](../../src/traceh/supervision/delivery_identity.py) | Stream ID、四种事件类型、schema、精确 payload 构造与解析——写入方与投影器**共用同一份**读法 |
+| [`supervision/delivery.py`](../../src/traceh/supervision/delivery.py) | 只读 `AgentDeliveryLog` 投影、`MessageClaim`/`MessageOutcome`、`validate_agent_delivery_events()` |
+| [`supervision/delivery_service.py`](../../src/traceh/supervision/delivery_service.py) | claim 与 terminal 的 CAS 事务、共用提交点收敛 |
+| [`supervision/execution.py`](../../src/traceh/supervision/execution.py) | 窄执行协议 `AgentExecution`、`AgentActivationFactory`、`AgentRuntimeExecution` 适配器 |
+| [`supervision/supervisor.py`](../../src/traceh/supervision/supervisor.py) | `ProcessAgentSupervisor` 与内存 Activation 状态机 |
+| [`api/turns.py`](../../src/traceh/api/turns.py) | 通用 `TurnInput`，让 Turn 可被寻址 |
+
+`AgentLoop` 与 `AgentRuntime` **不导入** `traceh.agents` 或 `traceh.supervision`，也没有获得任何 Supervisor 状态；依赖方向单向。
+
+#### 为什么 Delivery 用独立 Stream
+
+不复用 Inbox Stream。Stage B 的投影器只接受一种事件类型、拒绝其他一切，这条合同值得保留：一段既记“收到什么”又记“执行状态”的历史，不再是对“收到了什么”的直接回答。共享一条流还会让每次 claim 去推进发送方竞争的同一个 `expected_seq`。
+
+每 Agent 一条流，由唯一构造函数生成，**不提供**从流名反推 `agent_id` 的逆操作——理由与 Inbox 相同。
+
+claim 除 `message_id` 外还携带 `accepted_seq`，因此重放可以**证明**两条流对“正在执行哪一条消息”意见一致，而不是仅凭 id 相同就相信。
+
+事件类型：`agent/message-claimed`、`agent/message-completed`、`agent/message-failed`、`agent/message-cancelled`，`schema_version = 1`，`Durability.SYNC`。
+
+| 事件 | 精确 payload 键 |
+|---|---|
+| claimed | `agent_id`、`message_id`、`accepted_seq`、`claim_id`、`activation_id`、`session_id` |
+| completed | `agent_id`、`message_id`、`claim_id`、`turn_id`、`reason` |
+| failed | `agent_id`、`message_id`、`claim_id`、`error_code` |
+| cancelled | `agent_id`、`message_id`、`claim_id`、`reason` |
+
+**这条流不记录 Turn 内部发生了什么。** 模型输出、工具结果和异常正文属于 Session Event Log；terminal 事实只带仓库固定的 reason/error code，以及指向 Session 的 `turn_id`。原始异常文本与 traceback 是任意第三方输出，可能引用请求、路径或凭据，因此绝不持久化。
+
+#### 投影器的 fail-closed 规则
+
+`AgentDeliveryLog.rebuild(events, agent_id, inbox)` 必须传入 Inbox：claim 只有相对它引用的那条 acceptance 才有意义。以下全部 fail closed，并由 `validate_agent_delivery_events()` 以稳定 code + `seq` 报告：
+
+未知事件类型、`schema_version` 不是 1、payload 键集合不精确、事件在错误的流上、payload 的 `agent_id` 与所查 Agent 不符、传入另一 Agent 的 Inbox、任何标识符/reason/`accepted_seq` 畸形、claim 引用本 Agent 从未接受的消息、claim 与 acceptance 的 `accepted_seq` 不一致、claim 跳过 FIFO 头、前一 claim 尚未 terminal 却出现后一 claim、同一消息被 claim 两次、两个 claim 共用一个 `claim_id`、terminal 引用不存在的 claim、terminal 与 claim 的消息不符、同一 claim 出现第二个 terminal（completed/failed/cancelled 互斥）。
+
+这个投影器比展示型投影 fail 得更硬，因为它正是 worker 在调用模型前查阅的东西：一条无法验证的事件如果被读成“没有 claim”，结果就是同一条消息被再执行一次。
+
+与 Directory/Inbox 同理，**读取事件本身也是不可信操作**：`parse_delivery_event()` 把 `event.type`、`event.stream_id`、`event.schema_version` 与整段 payload 放进同一个异常边界，普通 `Exception` 转成固定的 `delivery-payload-invalid`；`SystemExit`/`KeyboardInterrupt` 原样传播；`_scan()` 不再自行预检类型。
+
+### 20.12 claim 线性化点与“durable claim 之前不得执行”
+
+这是整个 Stage 的承重规则。
+
+`AgentDeliveryService.claim()` **只有在 claim 可被证明落盘时才返回**，其余一切情况都抛出——**包括 unknown**。在未经证明的 claim 上运行 Turn 的 worker，可能正是第二个运行它的人，而这件事事后无法撤销：一个已经写过工作区的工具不会因为账本更正而回滚。
+
+- **线性化点是 claim append 的 `expected_seq`**，取自 worker 实际据以决策的那份 delivery log。两个读到同一 head 的 worker 不可能都 claim 成功：其一得到 `ConcurrencyConflict`，被报告为 `DeliveryConflictError`，含义就是“别人正在跑那条”。
+- **append 前先证明全部输入属于当前事实。** Service 在自己的 per-Agent 锁内重读 authoritative Inbox 与 delivery log，校验 `inbox.agent_id`、`delivery.agent_id`、完整 `AcceptedMessage`、delivery head/claim/outcome 视图以及“确实是下一个 FIFO 项”；terminal 同样重读并要求传入的 `MessageClaim` 与当前唯一 open claim 完整一致。伪造 Acceptance、跨 Agent 视图、stale/fabricated delivery view 与 foreign claim 全部在写入前失败，delivery stream 保持零增量。
+- **claim 结果 unknown 时**：不运行 Turn、不重试、Activation 进入 faulted。不重试是因为重试正是可能重复执行的动作；不继续是因为该 claim 可能对另一个 worker 不可见。`wait_idle()` 报告该 fault，而不是永远等待或假装一切正常。
+- **terminal append 失败或 unknown** 同样让 Activation faulted。此时 Turn 已经跑过，claim 也已落盘，因此**不会**被重新执行（它已不再是 unclaimed），但结果无法证明已记录，属于 Stage C 无法修复的状态。
+- 比较 JSON 事实使用既有 `canonical_json`，不用 Python 的宽松 `==`（`True == 1`、`1 == 1.0` 在 Python 为真，在账本里是不同事实）。只有协议错误才允许回答“不是我们的”；编码失败向上传播成 `None`。
+
+**没有内存队列。** worker 每次循环都重新读取 Inbox 与 delivery log，取 FIFO 中最早的未 claim 消息。把 accepted 消息复制进进程内列表，等于制造一份别的进程看不见的“下一步该跑什么”，而它第一个会搞错的就是别人已经 claim 的消息。FIFO 严格：最早的未 claim 消息胜出；若它已有 open claim，后面的消息全部被阻塞，直到该 claim 出现 terminal。Stage C 没有 stale-claim takeover，因此绝不把“已 claim 但未结束”解释成“可以跳过”。
+
+### 20.13 Activation 内存状态机与公开控制面
+
+**单活 Activation。** `_activate()` 的单飞（single-flight）是“一个 Agent 最多一个 Activation”的线性化点：并发调用要么找到已安装的 Activation，要么加入同一次在途构建，因此多个 resume 竞争时 Factory 只被调用一次。`session_id → agent_id` 另有映射，两个 Agent 不能绑定同一个 Session。
+
+**single-flight 合并的是完整请求，不只是 key。** `create()` 在第一个挂起点前 detach `AgentSpec.metadata`，并以 Agent identity 协议同一字段集合计算 request fingerprint；`request_id` 相同但 preset、workspace、owner/lineage、grants、budget 或显式 Agent/Session id 不同的调用得到 `AgentRequestConflictError`，不能加入别人的在途 Task。durable request 已存在时仍重新进入 `AgentRegistrar.create_agent()` 做完整 reconciliation，而不是按 `request_id` 查到记录就直接激活。Factory 获得另一份 detached spec，因此它不能在 provision await 中改写之后要持久化的身份请求。
+
+**唤醒不会丢失。** `_wake` 置位与 `_idle` 清除在同一把锁内完成；worker 在**排空之前**清除 `_wake`，并且只在同一把锁内确认 `_wake` 未置位后才置 `_idle`。这一配对消除了“我排空完了”与“我现在空闲”之间那个可能吞掉请求的窗口。**排空之后**再清除（直觉写法）才是有缺陷的那个。
+
+**Turn 输入身份贯穿控制面与 Session。** `AgentLoop.run_turn()` 原本自己生成 `message_id` 并把 `source` 写成 `user`，这让 Turn 无法被寻址。`TurnInput`（`traceh.api`，只含 content/message_id/source）解决了这一点：`AgentLoop` 接受它而无需导入任何 Agent 概念，传入普通 `str` 时行为与此前**完全一致**。于是同一个 `message_id` 出现在 Session 的 `inbox/accepted`、`inbox/claimed`、`turn/start`，也出现在 delivery 的 claim 与 completed 中；completed 还带真实 `turn_id`。
+
+**执行 Runtime 的身份校验。** Supervisor 通过四方法窄协议使用 Runtime（run one message、cancel current Turn、dispose、暴露 Session/EventStore 身份），不读取 `AgentRuntime` 私有字段。EventStore 按**对象身份**比较，只解析 `PublishingEventStore` 这一个仓库自带的透明装饰器（`build_default_runtime()` 总会包装）；配置看起来相同的两个 Store 仍是两条不同的账本，写错账本会让 claim 指向一段并不包含它的 Session 历史。Session 不符同样在运行 Turn 前拒绝。
+
+**`create()` 跨两条 Stream 不是原子的。** 顺序是：冻结 spec 与显式 id → 若该 `request_id` 已创建过 Agent则由 Registrar 复核完整请求后激活 → Provisioner 创建精确 Session 与候选 Runtime → 用同一 `request_id`/`agent_id`/`session_id` 追加 identity → 成功后才安装 Activation → 任何失败或取消（**包括 identity append unknown**）都 dispose 候选 Runtime。选择 Session 先、identity 后，是因为它的失败模式可以承受：一个无人引用的 Session 可检测且无害，而指向不存在 Session 的 `AgentRecord` 是一个谁都用不了的坏身份。这条边界如实记录，不通过删除事件伪造事务。
+
+**`wakeup`。** `False` 只持久接受，不创建、不恢复、不唤醒任何东西；`True` 确保 Activation 存在并触发 durable Inbox drain。若接受已成功但唤醒失败，抛 `MessageWakeError` 并**携带 `MessageReceipt`**——报告一个笼统失败会诱使调用方重试，把同一条消息用新 id 再写一遍。
+
+**`NEXT_STEP`。** `send()` 在**接受之前**拒绝，零事件。直接经 `AgentInboxService` 写入的 `NEXT_STEP` 会被 claim 后记为 `failed`/`unsupported-target`：既不跳过（会静默打乱 FIFO），也不 fault（一条无法投递的消息不该停掉其余）。
+
+**`interrupt` / `wait_idle` / `dispose`。**
+
+| 方法 | 语义 |
+|---|---|
+| `interrupt(agent_id, reason)` | 只取消当前 Turn，走 Runtime 既有取消主线并等待模型/工具/子进程收敛；worker 随后追加 `cancelled`。空闲时幂等返回 `False`。`reason` 先经长度与单行安全校验 |
+| `wait_idle(agent_id)` | 等待**已调度**的 claim/Turn/terminal append 全部完成。`wakeup=False` 的消息从未被调度，因此不等待也不假称已处理。Activation faulted 时抛 `ActivationFaultedError` 而不是永远等待。取消 `wait_idle` 不会取消 Agent |
+| `dispose(agent_id)` | 先建立该 Agent 的 admission/disposal gate，再取消并等待匹配的在途 create/resume、收敛 worker 与 terminal append、dispose 独占 Runtime、最后从 live registry 移除。关闭位于**唯一一个内部 Task**，重复取消不能让候选或 cleanup 逃逸；失败的 cleanup 由同一 Task 重放，不会被第二次调用静默改写为成功。**不删除**任何 durable 事实 |
+| `aclose()` | 在锁内永久关闭新 admission，并由一个共享内部 Task 依次收敛全部在途 create/activation build、所有已安装 Activation 与候选 rollback；调用者被重复取消只会中断等待，内部关闭继续到所有权清零。不同失败在全部资源都尝试 cleanup 后以 `BaseExceptionGroup` 一并报告 |
+
+Worker 主循环的普通异常（例如 Inbox/EventStore 重读失败）会转成固定 `worker-failed` fault，`wait_idle()` 与后续 wake 都显式失败；异常正文不进入日志或终端。`AgentRuntimeExecution.dispose()` 同样使用共享 Task：第一次 cleanup 失败会被后续调用原样重放，取消会等待真实 Runtime 收敛后再向外抛出。
+
+### 20.14 Stage C 验证基线与尚未实现的边界
+
+新增 [`tests/test_agent_delivery.py`](../../tests/test_agent_delivery.py)（`73 passed`）与 [`tests/test_agent_supervisor.py`](../../tests/test_agent_supervisor.py)（`61 passed`）；共享夹具在 `tests/supervision_fixtures.py`（不以 `test_` 开头，不被收集）。Stage A 的 `214` 项与 Stage B 的 `147` 项全部通过。全仓当前 `1657 collected`，最终门禁为 `1656 passed, 1 skipped`。
+
+Delivery 协议覆盖：accepted→claimed→completed、failed 与 cancelled、open claim 阻塞后续 FIFO、重放拒绝跳过 FIFO 头、事件只出现在自己的流上且 Inbox 流仍只含 acceptance、未知事件类型/错 schema/多键少键/错流、9 组畸形字段、7 组畸形 reason、claim 引用未接受消息、`accepted_seq` 不符、重复 claim、重复 `claim_id`、terminal 无 claim、双 terminal（4 种组合）、terminal 与 claim 不符、伪造 Acceptance/跨 Agent Inbox 与 delivery view/foreign terminal claim 写前拒绝且零事件、validator 返回 issue 不抛异常、公开 builder 拒绝而非修补、敌意 payload 容器与敌意 envelope 协议字段转成稳定协议错误、`KeyboardInterrupt`/`SystemExit` 原样传播、普通 `dict` 子类仍可读、CAS 三态（committed True/False/unknown）、别人的 claim 不被误认成自己的、claim/outcome 字段不可变。
+
+Supervisor 覆盖：accepted→claim→Turn→completed 全链路且 `turn_id` 与真实 Session Turn 一致、控制面 `message_id`/`source`/多行 content 贯穿 Session、普通 `str` 任务行为不变、5 条消息严格 FIFO、两个 Supervisor 竞争同一 Inbox 每条消息恰好执行一次、open claim 后的消息不执行、durable claim 之前 Provider 调用数为 0、claim unknown 时 Provider 调用数为 0 且 Activation faulted、丢失 claim 竞争不算 fault、`wakeup=False` 零 delivery 事件且不启动 Runtime、`wakeup=False` + `resume` 排空、`wakeup=True` 创建 Activation、12 条消息穿插唤醒无丢失、`NEXT_STEP` 接受前拒绝且零事件、直接写入的 `NEXT_STEP` 记为 failed 且不打乱 FIFO、唤醒失败仍带回 receipt、6 个并发 resume 只调用 Factory 一次、重复 resume 不新建 Runtime、dispose 后 resume 得到新 Activation、dispose 后无 Turn 可进入、EventStore/Session 身份不符被拒、同 `request_id` 的相同请求 single-flight、不同请求在 durable 与在途两条路径都拒绝、identity 失败/provision 失败不污染 registry 且候选 Runtime 被释放、resume 未知 Session/未创建 Session 明确失败、Worker 存储异常进入稳定 fault、失败 Turn 记稳定 code 且不泄漏异常文本或 traceback、interrupt 只取消当前 Turn 而 Activation 继续工作、空闲 interrupt 幂等、7 组非法 reason 被拒、Turn 运行中 dispose 收敛且无遗留 Task、dispose/`aclose()` 收敛在途 resume/create、连续三次取消不能提前返回、cleanup 主错误与失败同时保留、Runtime adapter 失败重放且只 cleanup 一次、dispose 保留全部 durable 事实、claim 途中 dispose 收敛、`wait_idle` 不等待未调度消息、取消 `wait_idle` 不取消 Agent，以及公开 Protocol 签名与结构检查。
+
+并发与取消一律使用 `asyncio.Event`、Gate 与真实 append latch；唯一的 `sleep(0)` 用于投递已经提出的取消请求，并在代码中注明原因。
+
+反向验证（每项都先复现失败、再恢复正确实现，仓库中不保留任何 scratch patch）：
+
+| 临时移除的保护 | 失败的测试与根因 |
+|---|---|
+| Activation 单飞线性化 | `concurrent_resume_builds_exactly_one_activation`：Factory 被调用多次，出现两份 Runtime |
+| durable claim 之前不得执行 | 2 项：claim 尚未落盘时 Provider 已被调用；claim unknown 时同样已调用 |
+| dispose 的 shield/convergence | `repeated_cancellation_cannot_release_dispose_early`：`DID NOT RAISE CancelledError`，dispose 提前返回 |
+| `AgentLoop` 复用 `TurnInput.message_id` | 2 项：Session 中的 `message_id` 变回随机 UUID，控制面与 Session 无法关联 |
+| open claim 的 FIFO 阻塞 | 2 项：`next_unclaimed()` 返回后一条消息，真实 Supervisor 随后尝试越过 open claim |
+| `request_id` 只查 id 不复核完整请求 | 不同 preset 被静默返回已有 Agent，`DID NOT RAISE AgentRequestConflictError` |
+| claim 写入前事实归属校验 | 伪造 Acceptance 与跨 Agent 视图都成功追加 claim，2 项 `DID NOT RAISE DeliveryProtocolError` |
+| Worker 异常转 fault | EventStore 重读失败后 `wait_idle()` 返回成功，`DID NOT RAISE ActivationFaultedError` |
+| Runtime cleanup 共享结果 | 第一次 dispose 失败后第二次静默成功，`DID NOT RAISE RuntimeError` |
+
+**Stage C 之后仍然缺失（Stage D 及以后）**：自动冷恢复与 stale claim 接管、自动重试与 attempt identity、`spawn_agent`/`send_agent_message`/`wait_agent`/`stop_agent`/`collect_agent_artifact` 等模型 Tool、Parent/Child child-first dispose、`WorkspaceProvider`/Git worktree/Patch merge、层级 Budget 预留与强制、Workflow、多 Agent 并行编排、`MessageTarget.NEXT_STEP` 投递、MCP、TUI、流式模型输出。版本仍为 `0.5.0`，Stage C **不是** v0.6 发布。

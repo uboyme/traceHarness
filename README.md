@@ -537,8 +537,8 @@ Projectors / Recovery / Inspector / Invariants
 | 可观测性 | 类型化 NOTIFY Hooks；进程内 `SessionEventFeed` 订阅 |
 | Step 安全的多代 Generation 与组合切换 | `CompositionRuntime.lease()`、Generation/Lease/Drain、`traceh chat /plugins` 控制面；仍没有 Wheel/module 级热替换 |
 | Agent 专属装配 | 四层 `ScopeChain` 与程序化 Tool/Prompt/Policy Overlay 已接入默认 Runtime；插件仍不能在子层 setup |
-| 子 Agent | 未来构建在 `AgentLoop` 之上的 `AgentSupervisor` |
-| 多 Agent Workflow | 未来调用 `AgentSupervisor` 的 Workflow 层 |
+| 子 Agent | `traceh.supervision` 已能在一个进程内创建、恢复、投递并运行多个 Agent；给模型用的 `spawn_agent` 等 Tool 仍未实现 |
+| 多 Agent Workflow | 未来调用 `ProcessAgentSupervisor` 的 Workflow 层 |
 
 延伸阅读：[插件说明](docs/plugins.md)、[ADR-0007](docs/adr/0007-transactional-plugin-activation.md)、[ADR-0009](docs/adr/0009-generation-owned-plugin-activation-set.md)、[ADR-0010](docs/adr/0010-session-plugin-composition-migration.md)、[ADR-0012](docs/adr/0012-four-layer-service-scope.md)、[ADR-0014](docs/adr/0014-generation-scoped-plugin-execution-capabilities.md)、[架构说明](docs/architecture.md)和[插件演进说明](docs/plugin-evolution.md)。
 
@@ -576,6 +576,7 @@ src/traceh/kernel       Scope、Activation、Hooks、可逆生命周期
 src/traceh/plugins      Entry Point 发现、显式启用、事务式 PluginManager
 src/traceh/session      EventStore、Projector、Recovery、不变量
 src/traceh/runtime      AgentLoop、Composition Lease、Request、Continuation、Verification
+src/traceh/supervision  进程内 Agent Activation、durable claim/outcome 与关闭收敛
 src/traceh/llm          Provider Registry 和 Adapter
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
@@ -616,14 +617,14 @@ traceh doctor
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
 - 插件现在可以提供 Tool、Prompt Section、Service、`LlmProvider`、`ToolPolicy`、`ToolMiddleware` 和命名 `CompletionVerifier`；Provider/Verifier 必须显式选择。插件仍**不能**提供 `EventStore`，因为账本是 Runtime/Session 的进程级事实源，尚无独立于 Step Generation 的固定所有权；
-- 没有 MCP、多 Agent 和 Workflow 接入面；
+- 没有 MCP、模型可调用的子 Agent Tool 和 Workflow 接入面；进程内多 Agent 控制面已经存在，但 CLI/模型尚不能自行 spawn；
 - Session 记录创建时的插件身份和后续真正使用过的 Composition；插件集合改变后，只有用户在当前空闲 Session 执行 `/plugins use ...` 才会追加 `composition/migration-authorized`，没有授权的旧 Session 仍拒绝继续，其他 Session 不会自动迁移。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；授权已落盘但 publish 失败时 Session fail-closed；
 - 插件的 Owned Task 只有**生命周期所有权**，没有监督器：它们的异常会被取回（因此不会冒 `Task exception was never retrieved`），取回之后**立刻丢弃、不留存**，也不会被重启，更**不会**把后台任务失败升级成 Runtime 故障；
 - L1 Plugin Creator 的“专用 Candidate Workspace”和“不执行候选”是流程合同，不是沙箱；它只产出未验证源码；
 - L2 可以独立 build/audit/doctor/test 并跑可信核心回归，但两套 venv 仍不是 OS 沙箱，候选代码拥有当前用户权限且只保证直接子进程收敛；L2 也不比较能力好坏、不做人工批准、正式安装或回滚；
 - L3 使用精确 L2 Wheel 和可信核心中的固定任务做确定性 baseline/candidate 对比；它仍不是 OS 沙箱或真实模型 Benchmark，也不批准、安装、晋升或回滚插件；
 - L4 只接受 `improved` 且零回归的精确 L2/L3 证据，但它仍不是 OS 沙箱或包签名系统；目标依赖必须已经与 L3 receipt 一致，L4 v1 不解析或升级依赖、也不同时管理同一环境中的多条 Distribution 链，不会把推广自动应用到正在运行的 Runtime；
-- 每个进程只有一个活跃 Agent Runtime，尚无 `AgentSupervisor`；
+- `ProcessAgentSupervisor` 是**进程内**的：它保证一个 Agent 在自己名下最多一个活实例，并在完整 Acceptance/claim 归属校验和 durable claim 落盘后才运行 Turn；open claim 会阻塞后续 FIFO，关闭会收敛在途 create/resume 与 Runtime cleanup。活实例不会在崩溃后自动恢复，也没有自动重试、stale claim 接管、子 Agent Tool、父子销毁或层级预算；CLI 仍然是单 Agent 入口；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat 和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
 - 硬中断（`Ctrl+Break`、关闭控制台）没有任何收敛：不打印提示、不闭合生命周期，只能依赖启动时已打印的恢复命令与崩溃恢复；

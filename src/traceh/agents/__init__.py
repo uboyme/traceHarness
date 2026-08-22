@@ -8,10 +8,11 @@ separate from `traceh.runtime`:
 * `AgentRuntime` is an **Activation** - a live, in-process object that can be
   built, stopped and built again. It is not an identity, and this package never
   holds one;
-* a future `AgentSupervisor` will hold Activations through a narrow interface
-  and use this package for identity. The dependency only points that way.
+* `traceh.supervision` holds Activations through a narrow interface and uses
+  this package for identity. The dependency only points that way - nothing here
+  imports it, and nothing here holds a runtime, a Task or a live Activation.
 
-Two fact layers exist so far, and both are only facts:
+Two fact layers live here, and both are only facts:
 
 * **Stage A** - identity and the creation transaction: which Agents exist and
   which Session each one owns
@@ -19,11 +20,14 @@ Two fact layers exist so far, and both are only facts:
 * **Stage B** - a durable per-Agent FIFO Inbox of **accepted** messages
   ([ADR-0020](../../../docs/adr/0020-durable-agent-inbox-acceptance.md)).
 
-**Accepted is not processed.** There is a persistent acceptance history, but no
-Supervisor, no delivery, no claim/ack/complete/retry, no Turn execution, no cold
-recovery, no subagent tool and no parent/child disposal; `owner_agent_id`
-records lifecycle responsibility only and `wakeup` records a sender request
-rather than waking anything.
+**Accepted is not processed - not by this package.** These streams record that a
+message was received and where it sits in that Agent's order. Claiming,
+execution and outcome are `traceh.supervision`'s facts on a separate delivery
+stream
+([ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md));
+here `wakeup` is still only a sender's request and `owner_agent_id` still records
+lifecycle responsibility alone. There is no cold recovery, retry policy, subagent
+tool or parent/child disposal anywhere yet.
 """
 
 from __future__ import annotations

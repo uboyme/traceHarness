@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from traceh.api.llm import Usage
 from traceh.api.tools import ToolExecutionContext
+from traceh.api.turns import TurnInput
 from traceh.kernel.hooks import STEP_FINISHED, TURN_FINISHED, TURN_STARTED, HookDispatcher
 from traceh.llm.runtime import LlmRuntime
 from traceh.runtime.composition_runtime import CompositionRuntime
@@ -62,18 +63,23 @@ class AgentLoop:
         self.max_verification_retries = max_verification_retries
         self.hooks = hooks or HookDispatcher()
 
-    async def run_turn(self, session_id: str, task: str) -> TurnResult:
+    async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
+        # A plain ``str`` keeps the historical behaviour exactly - a fresh id
+        # and ``source="user"``. A `TurnInput` lets the caller keep an identity
+        # it already recorded elsewhere, so the Session Turn is addressable
+        # afterwards. The loop knows nothing about who that caller is.
+        turn_input = TurnInput.from_task(task)
         await self.sessions.ensure_session(session_id)
         workspace = await self.sessions.workspace_for(session_id)
         turn_id = str(uuid4())
-        message_id = str(uuid4())
+        message_id = turn_input.message_id
         correlation_id = uuid4()
         current_step_id: str | None = None
         steps = 0
         total_input_tokens = 0
         total_output_tokens = 0
         final_text = ""
-        pending_messages = [task]
+        pending_messages = [turn_input.content]
         verification_failures = 0
         verification_passed: bool | None = None
         turn_open = False
@@ -84,8 +90,8 @@ class AgentLoop:
             "inbox/accepted",
             {
                 "message_id": message_id,
-                "source": "user",
-                "content": task,
+                "source": turn_input.source,
+                "content": turn_input.content,
                 "target": "new_turn",
             },
             correlation_id=correlation_id,

@@ -2,6 +2,87 @@
 
 ## Unreleased
 
+### v0.6 Stage C: process-local Agent Supervisor and delivery lifecycle
+
+- Added `traceh.supervision`: a durably accepted `NEW_TURN` message now becomes exactly one
+  claim, one Turn on that Agent's own Session, and one terminal fact. See
+  [ADR-0021](docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md).
+- Added a separate `agent-delivery:<agent_id>` stream holding `agent/message-claimed` and
+  exactly one of `agent/message-completed`, `agent/message-failed` or
+  `agent/message-cancelled`. It is not the Inbox stream, so acceptance history stays a plain
+  answer to "what was received" and claims do not contend for the `expected_seq` senders use.
+  A claim carries the Inbox `accepted_seq` as well as the `message_id`, so replay can prove
+  the two streams agree about which message is running.
+- **Nothing executes before the claim is durable.** `AgentDeliveryService.claim()` returns only
+  when the claim is provably in the log; every other outcome raises, including unknown. An
+  unknown claim faults the Activation instead of retrying, because retrying is what could
+  double-execute and no ledger correction undoes a tool that already wrote to a workspace.
+- Kept no in-memory queue: the worker re-reads the Inbox and the delivery log every round and
+  takes the earliest unclaimed message. FIFO is strict and a bad or undeliverable message is
+  never skipped. A claim without a terminal outcome blocks every later message rather than
+  being treated as completed or eligible for an undeclared stale-claim takeover.
+- Made `AgentDeliveryLog` fail closed against the Inbox it references - unknown event types,
+  wrong schema version, inexact key sets, wrong stream, wrong Agent, a claim on a message that
+  was never accepted, an `accepted_seq` that disagrees with the Inbox, a second claim on one
+  message, a duplicate `claim_id`, a terminal fact with no claim, and a second terminal fact on
+  one claim. Reading an event is itself untrusted: type, stream, schema version and payload sit
+  inside one exception boundary that catches `Exception` and never `BaseException`.
+- Claim and terminal transactions now re-read the authoritative Inbox and delivery stream
+  before append and prove the complete Acceptance/delivery view/open Claim belongs to the
+  requested Agent. Fabricated DTOs, cross-Agent views, stale or fabricated delivery facts and
+  foreign terminal claims fail before writing anything.
+- Recorded stable repository codes on failure and cancellation, plus the real `turn_id` on
+  completion. Exception text, tracebacks and model output stay in the Session Event Log; they
+  are arbitrary third-party output that may quote a request, a path or a credential.
+- Added `TurnInput` to `traceh.api` (content, `message_id`, source) so a Turn is addressable.
+  `AgentLoop.run_turn()` previously minted its own `message_id` and stamped `source="user"`,
+  which left no way to say which Session Turn ran which durable message except by comparing
+  text. Passing a plain `str` keeps the previous behaviour exactly, and `AgentLoop` still
+  imports nothing about Agents, Inboxes or Supervisors.
+- Kept the Supervisor out of `AgentRuntime`. It reaches a runtime through a four-method
+  protocol - run one message, cancel the current Turn, dispose, expose Session and
+  `EventStore` identity - never reads runtime internals, and neither `AgentRuntime` nor
+  `AgentLoop` knows the package exists. The store is compared by object identity, resolving
+  only `PublishingEventStore`, since two identically configured stores are still two logs.
+- Enforced one Activation per Agent and per Session within a Supervisor: concurrent `resume()`
+  calls join one in-flight build, so the factory runs once. Wake and idle are set under one
+  lock and the worker clears its wake flag *before* draining, so a request that lands during a
+  drain cannot be lost.
+- Documented that `create()` spans `session:<id>` and `agents:directory` without a transaction.
+  It provisions the Session first and appends identity second, because an unreferenced Session
+  is detectable and inert while an `AgentRecord` pointing at a missing Session is unusable; any
+  failure or cancellation, including an unknown identity append, disposes the candidate
+  runtime. The log is never rewritten to fake atomicity.
+- Bound create single-flight to the complete frozen request rather than `request_id` alone.
+  Existing durable requests are reconciled again through `AgentRegistrar`; concurrent calls
+  with a different preset, scope, budget or pinned identity are rejected instead of receiving
+  another caller's Agent, and the factory receives a detached spec it cannot use to mutate the
+  identity request across an await.
+- Gave `send()`, `interrupt()`, `wait_idle()` and `dispose()` real semantics. `wakeup=False`
+  accepts durably and starts nothing; a wake that fails after acceptance raises
+  `MessageWakeError` carrying the `MessageReceipt`, so a retry does not append the message
+  again. `interrupt()` cancels only the current Turn and the Activation keeps draining.
+  `wait_idle()` waits for what was scheduled and reports a faulted Activation instead of
+  hanging. Worker/store exceptions become stable Activation faults rather than successful
+  idle. `dispose()` and `aclose()` own in-flight create/resume candidates as well as installed
+  Activations, run through shared internal Tasks, converge through repeated cancellation and
+  preserve cleanup failures; `AgentRuntimeExecution` replays one failed cleanup instead of
+  silently succeeding on retry. Shutdown deletes nothing durable.
+- Reconciled the exported `AgentSupervisor` Protocol with the concrete implementation:
+  explicit `request_id`, optional explicit Agent/Session ids, `interrupt() -> bool`, and
+  `aclose()` now form one public contract.
+- Refused `MessageTarget.NEXT_STEP` in `send()` before acceptance, writing no events, since a
+  Step has a frozen Composition and an in-flight model call. A `NEXT_STEP` message written
+  directly through `AgentInboxService` is claimed and recorded as `failed`/`unsupported-target`
+  rather than skipped, which would silently reorder the FIFO.
+- Added `tests/test_agent_delivery.py` (73) and `tests/test_agent_supervisor.py` (61). Stage A
+  (214) and Stage B (147) suites still pass; the repository now collects 1657 tests, with
+  1656 passed and 1 platform skip. Concurrency tests use `asyncio.Event`,
+  gates and real append latches rather than `sleep()`.
+- Version remains `0.5.0`. Stage C is not a v0.6 release: there is still no cold recovery,
+  stale-claim takeover, retry policy, subagent tool, parent/child disposal, workspace,
+  hierarchical budget or Workflow.
+
 ### v0.6 Stage B: durable Agent Inbox acceptance
 
 - Added a durable, append-only FIFO acceptance history per Agent. `AgentInboxService.accept()`

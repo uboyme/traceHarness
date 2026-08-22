@@ -194,7 +194,7 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
 - **Stage A explicitly excludes**, and no part of it may be described as delivering: a live
   `AgentSupervisor`, single-activation enforcement, Inbox, message delivery or wakeup,
   subagent tools, parent/child disposal, and Agent cold recovery. `AgentSupervisor`'s methods
-  still have no implementation behind them.
+  had no implementation in Stage A; Stage C now supplies the process-local implementation.
 - **Stage B — completed as the durable Inbox fact layer:** one append-only FIFO acceptance
   history per Agent, on its own `agent-inbox:<agent_id>` stream in the existing `EventStore`.
   `AgentInboxService.accept()` freezes the request before its first `await`, requires the
@@ -208,19 +208,44 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
   `wakeup` is strictly `bool`. Both control-plane transactions now share one commit
   reconciliation with `True`/`False`/unknown, and `AgentRegistrar`'s contract is unchanged.
   See [ADR-0020](docs/adr/0020-durable-agent-inbox-acceptance.md).
-- **Stage B explicitly excludes**, and no part of it may be described as delivering:
-  **accepted is not processed.** There is no delivery, claim, ack, completion, failure or
-  retry, `wakeup` records the sender's request rather than waking anything, and there is still
-  no Supervisor, Activation, Turn scheduling or cold recovery.
-- Add single-activation enforcement and Inbox claim/Turn execution.
+- **Stage B explicitly excluded**, and nothing in that layer may be described as delivering:
+  **accepted is not processed.** The Inbox protocol cannot express delivery, claim,
+  completion, failure or retry, and `wakeup` records the sender's request rather than waking
+  anything. Stage C supplies the consumer; the Inbox stream itself is unchanged.
+- **Stage C — completed as the process-local Supervisor and delivery lifecycle:** a durably
+  accepted `NEW_TURN` message now becomes exactly one claim, one Turn on that Agent's own
+  Session, and one terminal fact. `ProcessAgentSupervisor` owns at most one Activation per
+  Agent and per Session, consumes the Inbox in strict FIFO by re-reading the log every round,
+  and reaches an `AgentRuntime` only through a four-method execution protocol.
+  `AgentDeliveryService` appends `agent/message-claimed` and exactly one of
+  `agent/message-completed`, `agent/message-failed` or `agent/message-cancelled` to a separate
+  `agent-delivery:<agent_id>` stream, and `AgentDeliveryLog` fails closed against the Inbox it
+  references. It also rejects a claim that skips the FIFO head; an open claim blocks every
+  later message. Claim/terminal transactions re-read and prove the authoritative Agent,
+  Acceptance, delivery view and open Claim before append, so cross-Agent or fabricated DTOs
+  write nothing. Nothing calls a model or a tool before the claim is provably in the log; an
+  unknown claim outcome faults the Activation rather than retrying. `TurnInput` lets the
+  control plane's `message_id` and source reach `turn/start`, so a completion can carry the
+  real `turn_id`. `create()`, `resume()`, `send()`, `interrupt()`, `wait_idle()` and
+  `dispose()`/`aclose()` have real semantics. Create single-flight compares the complete
+  request rather than `request_id` alone; disposal owns in-flight create/resume candidates as
+  well as installed Activations; worker failures become stable faults; runtime cleanup failure
+  is replayed rather than hidden. Repeated cancellation cannot release shutdown early.
+  See [ADR-0021](docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md).
+- **Stage C explicitly excludes**, and no part of it may be described as delivering: Agent
+  cold recovery and stale-claim takeover, automatic retry, `MessageTarget.NEXT_STEP` delivery
+  (it is refused before acceptance), cross-process activation uniqueness, subagent tools,
+  parent/child disposal, workspaces, hierarchical budgets and Workflow. Version remains
+  `0.5.0`; Stage C is not a v0.6 release.
 - Add lifecycle ownership graph and child-first quiescent disposal.
 - Implement `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
   `collect_agent_artifact` as tools backed by the Supervisor.
 - Keep history lineage, communication and ownership as separate relations.
 
 Definition of done: a parent can create a reviewer child with its own Session and Scope;
-parent cancellation leaves no orphan tasks. **Not met by Stage A**, which supplies the
-identity those need without implying any of them exists.
+parent cancellation leaves no orphan tasks. **Not met by Stages A-C**, which supply durable
+identity, durable acceptance and single-process claim/execution - none of which is a parent
+creating a child.
 
 ## v0.7: Budgets, workspaces and workflows
 

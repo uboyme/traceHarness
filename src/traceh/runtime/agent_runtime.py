@@ -12,6 +12,7 @@ from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.api.tools import Tool
+from traceh.api.turns import TurnInput
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.composition_overlays import (
     ScopedPolicyBinding,
@@ -234,6 +235,7 @@ class AgentRuntime:
         workspace: Path,
         *,
         metadata: dict[str, JsonValue] | None = None,
+        session_id: str | None = None,
     ) -> str:
         workspace = workspace.resolve()
         if not workspace.exists() or not workspace.is_dir():
@@ -248,7 +250,9 @@ class AgentRuntime:
             raise ValueError(f"{_PLUGIN_METADATA_KEY} is reserved by TraceHarness")
         expected: JsonValue = self._plugin_metadata()
         actual_metadata[_PLUGIN_METADATA_KEY] = expected
-        return await self.sessions.create_session(workspace, metadata=actual_metadata)
+        return await self.sessions.create_session(
+            workspace, metadata=actual_metadata, session_id=session_id
+        )
 
     async def persisted_external_plugin_ids(self, session_id: str) -> tuple[str, ...]:
         """Return the Session's durable plugin identity for safe resume output."""
@@ -303,11 +307,18 @@ class AgentRuntime:
             self.enabled_plugin_ids,
         )
 
-    async def run(self, workspace: Path, task: str) -> TurnResult:
+    async def run(self, workspace: Path, task: str | TurnInput) -> TurnResult:
         session_id = await self.create_session(workspace)
         return await self.run_existing(session_id, task)
 
-    async def run_existing(self, session_id: str, task: str) -> TurnResult:
+    async def run_existing(self, session_id: str, task: str | TurnInput) -> TurnResult:
+        """Run one Turn in an existing Session.
+
+        ``task`` may be a plain ``str``, which behaves exactly as before, or a
+        `TurnInput` carrying an identity the caller already recorded. The
+        facade only forwards it; nothing here interprets who the caller is.
+        """
+
         task_handle: asyncio.Task[TurnResult] | None = None
         try:
             async with self._plugin_compositions.turn_admission():

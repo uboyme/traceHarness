@@ -16,7 +16,7 @@ from dataclasses import replace
 from traceh.agents.errors import AgentDirectoryProtocolError, AgentIdentityError
 from traceh.api.agents import AgentRecord, AgentSpec, Budget
 from traceh.api.events import EventEnvelope
-from traceh.api.json_types import JsonValue, canonical_json, to_json_value
+from traceh.api.json_types import JsonValue, canonical_json, fingerprint, to_json_value
 from traceh.cli.text_safety import is_single_line_safe
 
 AGENT_DIRECTORY_STREAM = "agents:directory"
@@ -323,6 +323,46 @@ def validate_spec(spec: AgentSpec) -> None:
         raise AgentIdentityError("agent-metadata-invalid", "metadata")
 
 
+def freeze_agent_spec(spec: AgentSpec) -> AgentSpec:
+    """Validate and detach the mutable part of an Agent creation request.
+
+    `AgentSpec` is frozen, but its metadata graph is not.  A control-plane
+    single-flight therefore cannot retain the caller's object across an
+    ``await`` and later claim it joined the same request.  This helper applies
+    the identity module's one validation rule and returns a spec whose metadata
+    belongs to the caller of this function.
+    """
+
+    validate_spec(spec)
+    metadata = _normalized_metadata(spec.metadata)
+    assert metadata is not None  # established by ``validate_spec`` above
+    return replace(spec, metadata=metadata)
+
+
+def agent_spec_request_fingerprint(spec: AgentSpec) -> str:
+    """Fingerprint the fields that define request-id idempotency.
+
+    This is deliberately the same field set as `creation_matches`.  Metadata is
+    excluded by the existing durable protocol: it is descriptive rather than
+    identity-defining, so a cosmetic metadata change on a retry does not mint a
+    different request.  Generated Agent and Session ids are handled separately
+    by the caller because an unpinned retry is expected to generate different
+    candidates before it discovers the durable record.
+    """
+
+    frozen = freeze_agent_spec(spec)
+    return fingerprint(
+        {
+            "preset": frozen.preset,
+            "workspace_id": frozen.workspace_id,
+            "owner_agent_id": frozen.owner_agent_id,
+            "forked_from_session_id": frozen.forked_from_session_id,
+            "capability_grants": list(frozen.capability_grants),
+            "budget": budget_to_dict(frozen.budget),
+        }
+    )
+
+
 def budget_to_dict(budget: Budget) -> dict[str, JsonValue]:
     """Project a `Budget` to its payload shape without coercing anything.
 
@@ -547,6 +587,8 @@ __all__ = [
     "budget_to_dict",
     "creation_matches",
     "detach_record",
+    "freeze_agent_spec",
+    "agent_spec_request_fingerprint",
     "is_agent_identifier",
     "is_creation_fact",
     "parse_agent_created",

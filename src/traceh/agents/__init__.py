@@ -28,8 +28,10 @@ stream
 here `wakeup` is still only a sender's request and `owner_agent_id` still records
 lifecycle responsibility alone. Stage D's `traceh.supervision.lifecycle`
 projects that field for process-local child-first disposal without moving the
-fact or cleanup work into this package. There is still no cold recovery, retry
-policy or model-visible subagent tool.
+fact or cleanup work into this package. Stage E's model-visible Tool facade also
+lives in `traceh.supervision`; this package remains only the durable fact layer.
+There is still no cold recovery, retry policy, managed Workspace or hierarchical
+budget enforcement.
 """
 
 from __future__ import annotations

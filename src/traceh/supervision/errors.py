@@ -218,11 +218,40 @@ class MessageWakeError(SupervisionError):
         super().__init__("the message was accepted but the activation could not be woken")
 
 
+class AgentMessageNotFoundError(SupervisionError, LookupError):
+    """The requested durable Inbox message does not exist for this Agent."""
+
+    code = "agent-message-not-found"
+
+    def __init__(self) -> None:
+        super().__init__("the Agent has no message with that identity")
+
+
+class AgentMessageNotSettledError(SupervisionError):
+    """The requested message has not reached a durable terminal outcome."""
+
+    code = "agent-message-not-settled"
+
+    def __init__(self) -> None:
+        super().__init__("the Agent message has not settled")
+
+
+class AgentRunEvidenceError(SupervisionError):
+    """Durable delivery and Session facts do not prove one coherent run."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__("the Agent run evidence is incomplete or contradictory")
+
+
 __all__ = [
     "ActivationConflictError",
     "ActivationFaultedError",
     "AgentNotActiveError",
+    "AgentMessageNotFoundError",
+    "AgentMessageNotSettledError",
     "AgentOwnerNotActiveError",
+    "AgentRunEvidenceError",
     "DeliveryAppendError",
     "DeliveryConflictError",
     "DeliveryInputError",

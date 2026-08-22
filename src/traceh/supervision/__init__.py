@@ -16,12 +16,16 @@ Four things are kept apart:
 
 v0.6 Stage D also projects lifecycle ownership from the durable Agent
 Directory. Subtree disposal closes admission, waits admitted work to quiesce,
-then releases descendants before owners. There is still **no** cold recovery,
-stale-claim takeover, automatic retry, subagent model tool or budget
-enforcement; `MessageTarget.NEXT_STEP` is refused rather than reinterpreted. See
+then releases descendants before owners. Stage E adds a host-wired five-Tool
+facade over that same Supervisor and a durable report reader; it does not add a
+parallel worker, scheduler or result cache. There is still **no** cold recovery,
+stale-claim takeover, automatic retry, managed Workspace or budget enforcement;
+`MessageTarget.NEXT_STEP` is refused rather than reinterpreted. See
 [ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)
 and
-[ADR-0022](../../../docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md).
+[ADR-0022](../../../docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md),
+plus
+[ADR-0023](../../../docs/adr/0023-supervisor-backed-subagent-tools.md).
 """
 
 from __future__ import annotations
@@ -52,8 +56,11 @@ from traceh.supervision.delivery_service import AgentDeliveryService
 from traceh.supervision.errors import (
     ActivationConflictError,
     ActivationFaultedError,
+    AgentMessageNotFoundError,
+    AgentMessageNotSettledError,
     AgentNotActiveError,
     AgentOwnerNotActiveError,
+    AgentRunEvidenceError,
     DeliveryAppendError,
     DeliveryConflictError,
     DeliveryInputError,
@@ -75,10 +82,21 @@ from traceh.supervision.lifecycle import (
     AgentOwnershipGraph,
     AgentOwnershipGraphError,
 )
+from traceh.supervision.reports import AgentRunReportReader
 from traceh.supervision.supervisor import (
     AgentNotFoundError,
     ProcessAgentSupervisor,
     SupervisedAgentHandle,
+)
+from traceh.supervision.tools import (
+    AgentToolAuthorizationError,
+    AgentToolBindingError,
+    CollectAgentArtifactTool,
+    SendAgentMessageTool,
+    SpawnAgentTool,
+    StopAgentTool,
+    SupervisorToolset,
+    WaitAgentTool,
 )
 
 __all__ = [
@@ -96,7 +114,13 @@ __all__ = [
     "AgentDeliveryService",
     "AgentExecution",
     "AgentNotActiveError",
+    "AgentMessageNotFoundError",
+    "AgentMessageNotSettledError",
     "AgentOwnerNotActiveError",
+    "AgentRunEvidenceError",
+    "AgentRunReportReader",
+    "AgentToolAuthorizationError",
+    "AgentToolBindingError",
     "AgentLifecycleCoordinator",
     "AgentOwnershipGraph",
     "AgentOwnershipGraphError",
@@ -112,11 +136,17 @@ __all__ = [
     "MessageClaim",
     "MessageOutcome",
     "MessageWakeError",
+    "CollectAgentArtifactTool",
     "ProcessAgentSupervisor",
+    "SendAgentMessageTool",
+    "SpawnAgentTool",
+    "StopAgentTool",
     "SupervisedAgentHandle",
+    "SupervisorToolset",
     "SupervisionError",
     "SupervisorDisposedError",
     "UnsupportedMessageTargetError",
+    "WaitAgentTool",
     "agent_delivery_stream",
     "cancelled_data",
     "claimed_data",

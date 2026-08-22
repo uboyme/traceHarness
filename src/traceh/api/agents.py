@@ -149,6 +149,9 @@ class AgentRunReport:
     final_text: str
     artifact_refs: tuple[str, ...] = ()
     evidence_refs: tuple[str, ...] = ()
+    status: str = "completed"
+    message_id: str | None = None
+    turn_id: str | None = None
 
 
 class AgentHandle(Protocol):
@@ -187,6 +190,12 @@ class AgentSupervisor(Protocol):
         ...
 
     async def wait_idle(self, agent_id: str) -> None:
+        ...
+
+    async def wait_message(self, agent_id: str, message_id: str) -> AgentRunReport:
+        ...
+
+    async def report(self, agent_id: str, message_id: str) -> AgentRunReport:
         ...
 
     async def dispose(self, agent_id: str) -> None:

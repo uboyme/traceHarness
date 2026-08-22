@@ -2,6 +2,64 @@
 
 ## Unreleased
 
+### v0.6 Stage E: supervisor-backed subagent tools
+
+- Added a host-wired `SupervisorToolset` with exactly five ordinary Tool Runtime
+  capabilities: `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
+  `collect_agent_artifact`. The tools delegate to the existing Supervisor, durable Agent
+  Directory, Inbox, delivery ledger and per-Agent Session; they do not add a second scheduler,
+  worker queue or lifecycle registry. See
+  [ADR-0023](docs/adr/0023-supervisor-backed-subagent-tools.md).
+- Bound every toolset to one owner Agent, one Supervisor and the same authoritative
+  `EventStore`. At execution time the caller's Session must still be the owner's durable
+  Session, and target operations authorize only strict durable ownership descendants. The
+  model cannot choose an owner id, grants, budget or hidden Runtime object.
+- Made mutating calls retry-safe from existing Tool context. Spawn and send derive stable
+  request/message ids from the owner and durable Session/Turn/Step/Tool-call identity. The
+  Supervisor records one waiter per shared create. A freshly installed Activation remains
+  abandonable only until `create()`, `resume()` or wakeup publicly retains it under the same
+  lock; cancellation can select cleanup only when the final waiter leaves and no supported
+  public path has delivered the Activation. An authoritative task re-read that reuses an
+  already durable identity is retained from the outset, even if the caller entered with a
+  stale but valid Directory snapshot. Cancelling concurrent, later idempotent or overlapping
+  resume/wakeup calls therefore cannot destroy an already delivered child. The pending receipt
+  stays registered through compensation, so a late retry waits outside admission and reloads
+  only after cleanup instead of receiving the handle being disposed. Public create invocations
+  remain Supervisor-owned through this post-admission tail using an operation-level state and
+  method-return receipt. A post-return completion Task atomically removes the registration and
+  publishes that receipt under the Supervisor lock, so shutdown cannot miss an invocation that
+  has not actually returned. Entering the synchronous return/raise boundary explicitly revokes
+  permission to cancel the caller Task, even if early validation failed before owned work existed;
+  shutdown therefore cannot inject cancellation into the caller's later error handling while it
+  waits for the post-return receipt. `aclose()` joins those receipts without waiting for unrelated
+  work in the caller Task. An explicit resource hand-off avoids a close/compensation wait cycle. Repeated
+  cancellation waits the same cleanup Task; cleanup failure stays attached to a bare
+  cancellation and remains reportable by Supervisor close rather than escaping as a
+  `BaseExceptionGroup` and leaving an open delivery claim.
+- Added `AgentRunReportReader`, which reconstructs join results from the durable Inbox,
+  delivery and Session streams rather than a cached worker result. A completed report is
+  accepted only when its message, claim, terminal outcome, Turn boundaries, reason and final
+  assistant text agree. Failed, cancelled, unsettled and malformed evidence remain distinct
+  outcomes. `collect_agent_artifact` currently returns this durable final text and evidence
+  references; there is no invented patch-artifact store. `wait_agent` uses a per-message
+  notification as a fast path and bounded durable re-read as the authority, so a later message
+  cannot block an earlier completed join and a terminal written by another supported
+  Supervisor cannot leave the waiter asleep. Hostile Session sequence fields are normalized
+  to a stable evidence error, and missing/unsettled messages expose distinct fixed error codes.
+- Kept orchestration above the core Runtime. `AgentLoop`, `AgentRuntime` and `PluginManager`
+  have no Stage E changes; default CLI construction still does not silently enable subagents.
+  Added `tests/test_agent_tools.py` (30), including a real
+  AgentLoop -> ToolRuntime -> Supervisor -> child Session path and reverse checks for caller
+  identity, message-scoped waiting across Supervisors, concurrent idempotent-create ownership
+  and cancelled-spawn cleanup convergence, public resume/wakeup handoff, and operation-level
+  close ownership, including the post-return registration handoff and an early-failure return that
+  must not cancel later caller work. The repository now collects 1707 tests; Stage E is 30/30,
+  the Stage A-E control-plane set is 545/545, and the complete suite is 1706 passed with 1
+  platform skip, including the real recursive L2 validation and Wheel E2E gates.
+- Version remains `0.5.0`. Stage E is not a v0.6 release. Cold recovery, stale-claim takeover,
+  hierarchical budget enforcement, managed Workspace isolation, retry policy, Workflow and
+  a default product-level subagent configuration remain outside this stage.
+
 ### v0.6 Stage D: lifecycle ownership and quiescent subtree disposal
 
 - Added `AgentOwnershipGraph`, projected from the durable Agent Directory rather than kept as

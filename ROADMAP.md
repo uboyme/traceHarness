@@ -256,14 +256,38 @@ recorded in [ADR-0015](docs/adr/0015-source-only-plugin-candidate-authoring-skil
   Activation leases, stale-claim takeover, retry policy, Workspace and hierarchical budgets.
   It is a process-local explicit lifecycle guarantee and does not run after a hard process
   crash. Version remains `0.5.0`; Stage D is not a v0.6 release.
-- Implement `spawn_agent`, `send_agent_message`, `wait_agent`, `stop_agent` and
-  `collect_agent_artifact` as tools backed by the Supervisor.
-- Keep history lineage, communication and ownership as separate relations.
+- **Stage E — completed as host-bound model tools and durable run reports:**
+  `SupervisorToolset` exposes `spawn_agent`, `send_agent_message`, `wait_agent`,
+  `stop_agent` and `collect_agent_artifact` as ordinary tools backed by the same
+  Supervisor. The host binds owner identity and EventStore; targets must be strict
+  owned descendants. Spawn/message ids derive from Tool Call identity; Supervisor-owned
+  waiter receipts and an Activation-level retained/abandonment handoff ensure that cancellation
+  cleans only an otherwise-unreturned child. Cleanup provenance comes from the actual shared
+  create outcome rather than a pre-admission Directory snapshot, while `create`, `resume` and
+  wakeup all revoke abandonment when they publicly hand off the Activation. A stale retry or
+  overlapping public reuse therefore cannot destroy an already delivered child. Public create
+  invocations remain close-owned through post-admission compensation using an operation-level
+  return receipt. Registration removal and receipt publication happen atomically under the
+  Supervisor lock from a post-return completion Task, so close cannot miss a call that has not
+  actually returned. A synchronous exit marker ends caller-Task cancellation permission before
+  either successful return or early validation failure reaches the caller, so a delayed receipt
+  cannot expose unrelated caller work to shutdown cancellation. `aclose()` joins that complete
+  tail without waiting for unrelated caller work. `wait_agent` joins one
+  message terminal, not whole-Agent idle, and bounded durable re-read observes terminals
+  written by another supported Supervisor. Collection joins durable
+  Directory/Inbox/Delivery/Session facts instead of caching `TurnResult`. Repeated
+  cancellation cannot escape cleanup, and cleanup failure cannot replace the parent's
+  cancellation terminal. History lineage, communication and ownership remain separate. See
+  [ADR-0023](docs/adr/0023-supervisor-backed-subagent-tools.md).
+- **Stage E explicitly excludes:** default CLI product wiring, Patch Artifacts, Workspace
+  branching, hierarchical Budget enforcement, cold recovery, cross-process Activation
+  leases, retry/takeover and Workflow. `collect_agent_artifact` currently returns a durable
+  run report; it does not claim a workspace diff exists.
 
-Definition of done: a parent can create a reviewer child with its own Session and Scope;
-parent cancellation leaves no orphan tasks. **Not yet met by Stages A-D**: Stage D supplies
-the lifecycle guarantee once a host has created the ownership tree, but the model still has no
-tool that can create a reviewer child with its own Session and Scope.
+Definition of done: a suitably assembled parent can create a child with its own Session and
+host-resolved Agent Scope, send and collect one durable run, and dispose its subtree without
+orphaned process-local work. **Met by Stage E**. Version remains `0.5.0`; release packaging,
+final review and any additional v0.6 acceptance work are separate.
 
 ## v0.7: Budgets, workspaces and workflows
 

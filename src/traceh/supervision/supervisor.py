@@ -28,7 +28,7 @@ and neither `AgentRuntime` nor `AgentLoop` knows it exists.
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import uuid4
 
 from traceh.agents.errors import (
@@ -44,6 +44,7 @@ from traceh.api.agents import (
     AcceptedMessage,
     AgentMessage,
     AgentRecord,
+    AgentRunReport,
     AgentSpec,
     MessageReceipt,
     MessageTarget,
@@ -61,6 +62,7 @@ from traceh.supervision.delivery_service import AgentDeliveryService
 from traceh.supervision.errors import (
     ActivationConflictError,
     ActivationFaultedError,
+    AgentMessageNotSettledError,
     AgentNotActiveError,
     AgentOwnerNotActiveError,
     DeliveryAppendError,
@@ -83,6 +85,7 @@ from traceh.supervision.lifecycle import (
     AgentOwnershipGraphError,
     LifecycleAdmissionClosed,
 )
+from traceh.supervision.reports import AgentRunReportReader
 
 
 class AgentNotFoundError(SupervisionError):
@@ -126,10 +129,53 @@ class _CreateRequest:
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class _PendingCreate:
     request: _CreateRequest
-    task: asyncio.Task[_Activation]
+    task: asyncio.Task[_CreateOutcome]
+    waiters: set[object] = field(default_factory=set)
+    delivered: bool = False
+    compensation_task: asyncio.Task[None] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _CreateOutcome:
+    """The exact Activation materialized by one shared create operation."""
+
+    activation: _Activation
+
+
+@dataclass(frozen=True, slots=True)
+class _CancelledCreate:
+    """A cancelled waiter after the shared create has converged.
+
+    The sentinel crosses the lifecycle admission boundary before cleanup is
+    attempted.  Disposing while still holding that Agent's admission lease
+    would deadlock against subtree quiescence.
+    """
+
+    error: asyncio.CancelledError
+    compensation_task: asyncio.Task[None] | None
+
+
+@dataclass(frozen=True, slots=True)
+class _RetryCreate:
+    """A caller that arrived while an unreturned create was converging."""
+
+    compensation_task: asyncio.Task[None]
+
+
+@dataclass(slots=True)
+class _CreateCallState:
+    """One create invocation, separate from its caller Task container."""
+
+    caller: asyncio.Task[object]
+    owned_work: asyncio.Task[object] | None
+    exit_started: bool
+    returned: asyncio.Future[None]
+
+
+_MESSAGE_REPORT_POLL_SECONDS = 0.25
 
 
 def _failure_leaves(error: BaseException) -> tuple[BaseException, ...]:
@@ -186,11 +232,14 @@ class _Activation:
     """One Agent's live worker and exclusive execution runtime."""
 
     __slots__ = (
+        "_abandonment_task",
         "_current_claim",
         "_dispose_task",
         "_execution",
         "_fault",
         "_idle",
+        "_message_waiters",
+        "_retained",
         "_state_lock",
         "_stopping",
         "_supervisor",
@@ -209,6 +258,7 @@ class _Activation:
         activation_id: str,
         execution: AgentExecution,
         supervisor: ProcessAgentSupervisor,
+        abandonable: bool,
     ) -> None:
         self.agent_id = agent_id
         self.session_id = session_id
@@ -218,6 +268,13 @@ class _Activation:
         self._wake = asyncio.Event()
         self._idle = asyncio.Event()
         self._idle.set()
+        self._message_waiters: dict[str, set[asyncio.Future[None]]] = {}
+        # A fresh create is not yet an externally retained resource. The first
+        # successful create delivery, resume or wakeup atomically flips this
+        # bit under the Supervisor lock; abandonment may win that same race
+        # exactly once and publishes its cleanup Task instead.
+        self._retained = not abandonable
+        self._abandonment_task: asyncio.Task[None] | None = None
         self._state_lock = asyncio.Lock()
         self._worker: asyncio.Task[None] | None = None
         self._dispose_task: asyncio.Task[None] | None = None
@@ -361,7 +418,8 @@ class _Activation:
             await self._record_terminal(
                 lambda: self._supervisor.deliveries.fail(
                     agent_id=self.agent_id, claim=claim, error_code="unsupported-target"
-                )
+                ),
+                message_id=claim.message_id,
             )
             return self._fault is None
 
@@ -378,7 +436,8 @@ class _Activation:
             await self._record_terminal(
                 lambda: self._supervisor.deliveries.cancel(
                     agent_id=self.agent_id, claim=claim, reason="turn-cancelled"
-                )
+                ),
+                message_id=claim.message_id,
             )
             self._current_claim = None
             task = asyncio.current_task()
@@ -397,7 +456,8 @@ class _Activation:
             await self._record_terminal(
                 lambda: self._supervisor.deliveries.fail(
                     agent_id=self.agent_id, claim=claim, error_code="turn-failed"
-                )
+                ),
+                message_id=claim.message_id,
             )
             return self._fault is None
         self._current_claim = None
@@ -407,11 +467,12 @@ class _Activation:
                 claim=claim,
                 turn_id=result.turn_id,
                 reason=result.reason,
-            )
+            ),
+            message_id=claim.message_id,
         )
         return self._fault is None
 
-    async def _record_terminal(self, factory) -> None:
+    async def _record_terminal(self, factory, *, message_id: str) -> None:
         """Append a terminal fact, converging even if we are cancelled.
 
         The Turn already ran. Abandoning the append because a disposal arrived
@@ -421,14 +482,19 @@ class _Activation:
 
         task = asyncio.create_task(factory(), name=f"traceh-agent-terminal-{self.agent_id}")
         try:
-            await asyncio.shield(task)
-        except asyncio.CancelledError:
-            await await_worker_convergence(task)
-            if not task.cancelled():
-                self._absorb_terminal_result(task)
-            raise
-        except Exception:
-            self._set_fault("terminal-not-durable")
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await await_worker_convergence(task)
+                if not task.cancelled():
+                    self._absorb_terminal_result(task)
+                raise
+            except Exception:
+                self._set_fault("terminal-not-durable")
+        finally:
+            # This is only an in-process notification. The waiter always
+            # re-reads the durable report and never treats the Future as fact.
+            self._wake_message_waiters(message_id)
 
     def _absorb_terminal_result(self, task: asyncio.Task[None]) -> None:
         try:
@@ -441,6 +507,39 @@ class _Activation:
     def _set_fault(self, code: str) -> None:
         if self._fault is None:
             self._fault = code
+        self._wake_message_waiters()
+
+    def register_message_waiter(self, message_id: str) -> asyncio.Future[None]:
+        """Register one notification waiter without making it a fact source."""
+
+        if self._fault is not None:
+            raise ActivationFaultedError(self._fault)
+        if self._stopping:
+            raise SupervisorDisposedError()
+        waiter = asyncio.get_running_loop().create_future()
+        self._message_waiters.setdefault(message_id, set()).add(waiter)
+        return waiter
+
+    def remove_message_waiter(
+        self, message_id: str, waiter: asyncio.Future[None]
+    ) -> None:
+        waiters = self._message_waiters.get(message_id)
+        if waiters is None:
+            return
+        waiters.discard(waiter)
+        if not waiters:
+            self._message_waiters.pop(message_id, None)
+
+    def _wake_message_waiters(self, message_id: str | None = None) -> None:
+        if message_id is None:
+            groups = tuple(self._message_waiters.values())
+            self._message_waiters.clear()
+        else:
+            groups = (self._message_waiters.pop(message_id, set()),)
+        for waiters in groups:
+            for waiter in waiters:
+                if not waiter.done():
+                    waiter.set_result(None)
 
     async def dispose(self) -> None:
         """Stop this Activation and release its runtime.
@@ -453,6 +552,7 @@ class _Activation:
 
         async with self._state_lock:
             self._stopping = True
+            self._wake_message_waiters()
             # Wake the worker so it observes ``_stopping`` and returns instead
             # of parking forever.
             self._wake.set()
@@ -494,6 +594,8 @@ class ProcessAgentSupervisor:
 
     __slots__ = (
         "_activations",
+        "_create_calls",
+        "_close_resources_done",
         "_close_task",
         "_deliveries",
         "_disposed",
@@ -506,6 +608,7 @@ class ProcessAgentSupervisor:
         "_pending_activations",
         "_pending_creates",
         "_registrar",
+        "_reports",
         "_sessions",
         "_session_owner",
         "_store",
@@ -520,17 +623,20 @@ class ProcessAgentSupervisor:
         self._inbox_service = AgentInboxService(store)
         self._inboxes = AgentInboxReader(store)
         self._deliveries = AgentDeliveryService(store)
+        self._reports = AgentRunReportReader(store)
         self._sessions = SessionService(store)
         self._activations: dict[str, _Activation] = {}
         self._session_owner: dict[str, str] = {}
         self._pending_activations: dict[str, asyncio.Task[_Activation]] = {}
         self._pending_creates: dict[str, _PendingCreate] = {}
+        self._create_calls: dict[object, _CreateCallState] = {}
         self._agent_disposals: dict[str, asyncio.Task[None]] = {}
         self._tree_cleanup_tasks: dict[
             asyncio.Task[None], set[asyncio.Task[None]]
         ] = {}
         self._tree_disposals: dict[str, asyncio.Task[None]] = {}
         self._close_task: asyncio.Task[None] | None = None
+        self._close_resources_done = asyncio.Event()
         self._lifecycle = AgentLifecycleCoordinator()
         self._lock = asyncio.Lock()
         self._disposed = False
@@ -562,6 +668,58 @@ class ProcessAgentSupervisor:
         request_id: str,
         agent_id: str | None = None,
         session_id: str | None = None,
+    ) -> SupervisedAgentHandle:
+        """Create an Agent while making the full public call close-owned."""
+
+        caller = asyncio.current_task()
+        assert caller is not None
+        call_token = object()
+        state = _CreateCallState(
+            caller=caller,
+            owned_work=None,
+            exit_started=False,
+            returned=asyncio.get_running_loop().create_future(),
+        )
+        async with self._lock:
+            self._require_open()
+            self._create_calls[call_token] = state
+        try:
+            # Run inline so lifecycle admission keeps its established
+            # linearization. The state object, not the caller Task, is the
+            # operation receipt: close may use the Task only to deliver
+            # cancellation while this exact call remains registered.
+            return await self._create_call(
+                spec,
+                request_id=request_id,
+                agent_id=agent_id,
+                session_id=session_id,
+                call_state=state,
+            )
+        finally:
+            # From this synchronous, no-await point onward the create call is
+            # only transferring control back to its caller.  Cancelling the
+            # caller Task could therefore land in unrelated caller work rather
+            # than in this operation.  The post-return receipt remains
+            # close-owned, but caller cancellation permission ends here.
+            state.exit_started = True
+            # The completion Task cannot run until this coroutine returns to
+            # its caller.  It removes the registration and publishes the
+            # method-return receipt under one Supervisor-lock acquisition, so
+            # close observes either the live call or its completed receipt --
+            # never the old post-unregister/pre-return gap.
+            asyncio.create_task(
+                self._complete_create_call(call_token, state),
+                name="traceh-agent-create-complete",
+            )
+
+    async def _create_call(
+        self,
+        spec: AgentSpec,
+        *,
+        request_id: str,
+        agent_id: str | None = None,
+        session_id: str | None = None,
+        call_state: _CreateCallState,
     ) -> SupervisedAgentHandle:
         """Create an Agent, its Session and its Activation.
 
@@ -596,108 +754,181 @@ class ProcessAgentSupervisor:
             assigned_agent_id=requested_agent_id or str(uuid4()),
             requested_session_id=requested_session_id,
         )
-        directory = await self._registrar.directory()
-        graph = AgentOwnershipGraph(directory)
-        existing = directory.for_request(request_id)
-        try:
-            lineage = (
-                graph.lineage(existing.agent_id)
-                if existing is not None
-                else graph.lineage_for_new(
-                    request.assigned_agent_id, frozen_spec.owner_agent_id
+        while True:
+            directory = await self._registrar.directory()
+            graph = AgentOwnershipGraph(directory)
+            existing = directory.for_request(request_id)
+            try:
+                lineage = (
+                    graph.lineage(existing.agent_id)
+                    if existing is not None
+                    else graph.lineage_for_new(
+                        request.assigned_agent_id, frozen_spec.owner_agent_id
+                    )
                 )
-            )
-        except AgentOwnershipGraphError as error:
-            if error.code == "agent-owner-unknown":
-                raise AgentOwnerNotFoundError() from error
-            raise
-        try:
-            async with self._lifecycle.admission(lineage):
-                return await self._create_admitted(request, request_id)
-        except LifecycleAdmissionClosed as error:
-            raise SupervisorDisposedError() from error
+            except AgentOwnershipGraphError as error:
+                if error.code == "agent-owner-unknown":
+                    raise AgentOwnerNotFoundError() from error
+                raise
+            try:
+                async with self._lifecycle.admission(lineage):
+                    result = await self._create_admitted(
+                        request,
+                        request_id,
+                        call_state,
+                    )
+            except LifecycleAdmissionClosed as error:
+                raise SupervisorDisposedError() from error
+            if isinstance(result, _RetryCreate):
+                # The compensation Task was registered while the cancelled
+                # caller still held admission. Leave our admission before
+                # joining it, otherwise subtree quiescence would wait on us.
+                await self._await_task(result.compensation_task)
+                continue
+            if isinstance(result, _CancelledCreate):
+                if result.compensation_task is None:
+                    raise result.error
+                await self._raise_cancel_after_cleanup(
+                    result.error,
+                    result.compensation_task,
+                )
+            return result
 
     async def _create_admitted(
-        self, request: _CreateRequest, request_id: str
-    ) -> SupervisedAgentHandle:
-        """Join or start one create while its ownership lineage is admitted."""
-
-        async with self._lock:
-            self._require_open()
-            pending = self._pending_creates.get(request_id)
-            if pending is None:
-                task = asyncio.create_task(
-                    self._create(request, request_id),
-                    name=f"traceh-agent-create-{request_id}",
-                )
-                pending = _PendingCreate(request=request, task=task)
-                self._pending_creates[request_id] = pending
-            elif not pending.request.joins(request):
-                raise AgentRequestConflictError()
-        activation = await self._await_shared(pending.task)
-        return activation.handle()
-
-    async def _create(
         self,
         request: _CreateRequest,
         request_id: str,
-    ) -> _Activation:
-        try:
-            directory = await self._registrar.directory()
-            existing = directory.for_request(request_id)
-            if existing is not None:
-                # Re-enter the Registrar even though the id is known.  Its
-                # complete request reconciliation is the authority on whether
-                # this request means the same Agent; looking up request_id alone
-                # would silently accept a different preset or pinned identity.
-                record = await self._registrar.create_agent(
-                    request.spec,
-                    request_id=request_id,
-                    agent_id=request.requested_agent_id,
-                    session_id=request.requested_session_id,
+        call_state: _CreateCallState,
+    ) -> SupervisedAgentHandle | _CancelledCreate | _RetryCreate:
+        """Join one create and atomically account for handle delivery.
+
+        Every caller gets a process-local waiter token under the same lock as
+        the shared create.  Cancellation may own cleanup only when this is the
+        last waiter, no caller received a handle, and the actual shared task
+        installed a fresh local Activation rather than reusing a durable
+        identity. A caller-side Directory snapshot cannot express that
+        ownership across pending generations.
+        """
+
+        waiter = object()
+        async with self._lock:
+            self._require_open()
+            pending = self._pending_creates.get(request_id)
+            if pending is not None and pending.compensation_task is not None:
+                call_state.owned_work = pending.compensation_task
+                return _RetryCreate(pending.compensation_task)
+            if pending is None:
+                task = asyncio.create_task(
+                    self._materialize_create(request, request_id),
+                    name=f"traceh-agent-create-{request_id}",
                 )
-                return await self._activate(record)
+                pending = _PendingCreate(
+                    request=request,
+                    task=task,
+                )
+                self._pending_creates[request_id] = pending
+            elif not pending.request.joins(request):
+                raise AgentRequestConflictError()
+            pending.waiters.add(waiter)
+            call_state.owned_work = pending.task
+        try:
+            outcome = await self._await_shared(pending.task)
+        except asyncio.CancelledError as error:
+            compensation_task = await self._release_cancelled_create_waiter(
+                request_id,
+                pending,
+                waiter,
+                call_state,
+            )
+            return _CancelledCreate(error, compensation_task)
+        except BaseException:
+            await self._release_create_waiter_converged(
+                request_id,
+                pending,
+                waiter,
+                delivered=False,
+            )
+            raise
 
-            await self._require_live_owner(request.spec.owner_agent_id)
+        try:
+            async with self._lock:
+                self._release_create_waiter_locked(
+                    request_id,
+                    pending,
+                    waiter,
+                    delivered=True,
+                )
+        except asyncio.CancelledError as error:
+            # Cancellation may land after the shared task completed but before
+            # this caller atomically records that it received the handle.
+            compensation_task = await self._release_cancelled_create_waiter(
+                request_id,
+                pending,
+                waiter,
+                call_state,
+            )
+            return _CancelledCreate(error, compensation_task)
+        return outcome.activation.handle()
 
-            execution = await self._factory.provision(
-                freeze_agent_spec(request.spec),
-                agent_id=request.assigned_agent_id,
+    async def _materialize_create(
+        self,
+        request: _CreateRequest,
+        request_id: str,
+    ) -> _CreateOutcome:
+        directory = await self._registrar.directory()
+        existing = directory.for_request(request_id)
+        if existing is not None:
+            # Re-enter the Registrar even though the id is known.  Its
+            # complete request reconciliation is the authority on whether
+            # this request means the same Agent; looking up request_id alone
+            # would silently accept a different preset or pinned identity.
+            record = await self._registrar.create_agent(
+                request.spec,
+                request_id=request_id,
+                agent_id=request.requested_agent_id,
                 session_id=request.requested_session_id,
             )
-            try:
-                self._require_same_store(execution)
-                if (
-                    request.requested_session_id is not None
-                    and execution.session_id != request.requested_session_id
-                ):
-                    raise ExecutionSessionMismatchError()
-                record = await self._registrar.create_agent(
-                    request.spec,
-                    request_id=request_id,
-                    agent_id=request.assigned_agent_id,
-                    session_id=execution.session_id,
-                )
-            except BaseException as error:
-                # Includes the case where the identity append is *unknown*: a
-                # live Activation must not be left behind for an Agent whose
-                # record cannot be proved, so the candidate runtime is
-                # released and the caller is told.
-                await self._dispose_after_failure(execution, error)
+            return _CreateOutcome(await self._activate(record))
+
+        await self._require_live_owner(request.spec.owner_agent_id)
+
+        execution = await self._factory.provision(
+            freeze_agent_spec(request.spec),
+            agent_id=request.assigned_agent_id,
+            session_id=request.requested_session_id,
+        )
+        try:
+            self._require_same_store(execution)
             if (
-                record.agent_id != request.assigned_agent_id
-                or record.session_id != execution.session_id
+                request.requested_session_id is not None
+                and execution.session_id != request.requested_session_id
             ):
-                # Another process committed the same unpinned request while our
-                # Session was being provisioned.  Its durable identity wins;
-                # this candidate belongs to different ids and must converge
-                # before the winner can be activated.
-                await self._dispose_candidate(execution)
-                return await self._activate(record)
-            return await self._install(record, execution)
-        finally:
-            async with self._lock:
-                self._pending_creates.pop(request_id, None)
+                raise ExecutionSessionMismatchError()
+            record = await self._registrar.create_agent(
+                request.spec,
+                request_id=request_id,
+                agent_id=request.assigned_agent_id,
+                session_id=execution.session_id,
+            )
+        except BaseException as error:
+            # Includes the case where the identity append is *unknown*: a
+            # live Activation must not be left behind for an Agent whose
+            # record cannot be proved, so the candidate runtime is
+            # released and the caller is told.
+            await self._dispose_after_failure(execution, error)
+        if (
+            record.agent_id != request.assigned_agent_id
+            or record.session_id != execution.session_id
+        ):
+            # Another process committed the same unpinned request while our
+            # Session was being provisioned.  Its durable identity wins;
+            # this candidate belongs to different ids and must converge
+            # before the winner can be activated.
+            await self._dispose_candidate(execution)
+            return _CreateOutcome(await self._activate(record))
+        return _CreateOutcome(
+            await self._install(record, execution, abandonable=True)
+        )
 
     async def resume(self, session_id: str) -> SupervisedAgentHandle:
         """Rebuild an Activation for an Agent that already exists.
@@ -794,6 +1025,63 @@ class ProcessAgentSupervisor:
 
         await self._require_activation(agent_id).wait_idle()
 
+    async def report(self, agent_id: str, message_id: str) -> AgentRunReport:
+        """Return one message's report from durable facts, without waiting.
+
+        A terminal delivery outcome is necessary but not sufficient: completed
+        work must also point at one coherent Session Turn. The replay reader
+        checks that join and never consults an in-memory `TurnResult`.
+        """
+
+        return await self._reports.load(agent_id, message_id)
+
+    async def wait_message(self, agent_id: str, message_id: str) -> AgentRunReport:
+        """Wait for a scheduled message, then return its durable run report.
+
+        Waiting is intentionally separate from `send()`: acceptance is not
+        completion. Cancelling this waiter does not cancel the Agent or its
+        Turn; the caller must use `interrupt()` or `dispose()` for that. Local
+        message notification is only a fast path: another supported Supervisor
+        may write the terminal fact, so bounded polling always re-checks the
+        durable report.
+        """
+
+        while True:
+            try:
+                return await self.report(agent_id, message_id)
+            except AgentMessageNotSettledError:
+                pass
+
+            try:
+                activation = self._require_activation(agent_id)
+                waiter = activation.register_message_waiter(message_id)
+            except (AgentNotActiveError, ActivationFaultedError, SupervisorDisposedError) as error:
+                # Terminal persistence may win the race with disposal/fault.
+                # Durable evidence gets one final read before the process-local
+                # state error is allowed to escape.
+                try:
+                    return await self.report(agent_id, message_id)
+                except AgentMessageNotSettledError:
+                    raise error from None
+
+            try:
+                # Close the check/register race: a terminal append that landed
+                # immediately before registration is already durable, while a
+                # later local append resolves this exact message's waiter. A
+                # terminal append from another Supervisor is found by the
+                # bounded durable re-read below.
+                try:
+                    return await self.report(agent_id, message_id)
+                except AgentMessageNotSettledError:
+                    await self._wait_for_message_progress(waiter)
+            finally:
+                activation.remove_message_waiter(message_id, waiter)
+
+    async def _wait_for_message_progress(self, waiter: asyncio.Future[None]) -> None:
+        """Wait for local progress or the next durable report poll."""
+
+        await asyncio.wait((waiter,), timeout=_MESSAGE_REPORT_POLL_SECONDS)
+
     async def dispose(self, agent_id: str) -> None:
         """Stop this Agent's owned subtree, descendants before their owner.
 
@@ -810,18 +1098,33 @@ class ProcessAgentSupervisor:
                 task = None
             else:
                 close_task = None
-                task = self._tree_disposals.get(agent_id)
-                if task is None:
-                    task = asyncio.create_task(
-                        self._dispose_subtree(agent_id),
-                        name=f"traceh-supervisor-dispose-tree-{agent_id}",
-                    )
-                    self._tree_cleanup_tasks[task] = set()
-                    self._tree_disposals[agent_id] = task
+                task = self._tree_disposal_task_locked(agent_id)
         if close_task is not None:
             await self._await_task(close_task)
             return
         assert task is not None
+        await self._join_tree_disposal(agent_id, task)
+
+    def _tree_disposal_task_locked(self, agent_id: str) -> asyncio.Task[None]:
+        """Return the shared subtree Task while the Supervisor lock is held."""
+
+        task = self._tree_disposals.get(agent_id)
+        if task is None:
+            task = asyncio.create_task(
+                self._dispose_subtree(agent_id),
+                name=f"traceh-supervisor-dispose-tree-{agent_id}",
+            )
+            self._tree_cleanup_tasks[task] = set()
+            self._tree_disposals[agent_id] = task
+        return task
+
+    async def _join_tree_disposal(
+        self,
+        agent_id: str,
+        task: asyncio.Task[None],
+    ) -> None:
+        """Join one tree Task without deleting close-owned failure evidence."""
+
         try:
             await self._await_task(task)
         finally:
@@ -851,6 +1154,17 @@ class ProcessAgentSupervisor:
         await self._await_task(task)
 
     # -- internals ----------------------------------------------------------
+
+    async def _complete_create_call(
+        self,
+        call_token: object,
+        state: _CreateCallState,
+    ) -> None:
+        async with self._lock:
+            if self._create_calls.get(call_token) is state:
+                del self._create_calls[call_token]
+            if not state.returned.done():
+                state.returned.set_result(None)
 
     def _require_open(self) -> None:
         if self._disposed:
@@ -915,6 +1229,7 @@ class ProcessAgentSupervisor:
         """
 
         while True:
+            abandonment: asyncio.Task[None] | None = None
             async with self._lock:
                 self._require_open()
                 if record.owner_agent_id is not None:
@@ -938,7 +1253,9 @@ class ProcessAgentSupervisor:
                     del self._agent_disposals[record.agent_id]
                 existing = self._activations.get(record.agent_id)
                 if existing is not None and not existing.stopping:
-                    return existing
+                    abandonment = self._retain_activation_locked(existing)
+                    if abandonment is None:
+                        return existing
                 if existing is None:
                     pending = self._pending_activations.get(record.agent_id)
                     if pending is None:
@@ -949,12 +1266,49 @@ class ProcessAgentSupervisor:
                         self._pending_activations[record.agent_id] = pending
                 else:
                     pending = None
+            if abandonment is not None:
+                # Abandonment won the same Supervisor-lock race. Fail closed
+                # instead of handing out a handle already committed to
+                # cleanup. A later explicit retry may reactivate the durable
+                # identity after disposal converges.
+                raise SupervisorDisposedError()
             if pending is None:
                 # An Activation is being disposed. Wait for it to leave the
                 # registry rather than installing a second one beside it.
                 await existing.dispose()
                 continue
-            return await self._await_shared(pending)
+            activation = await self._await_shared(pending)
+            async with self._lock:
+                if (
+                    self._activations.get(record.agent_id) is not activation
+                    or activation.stopping
+                ):
+                    retry = True
+                    abandonment = None
+                else:
+                    retry = False
+                    abandonment = self._retain_activation_locked(activation)
+            if abandonment is not None:
+                raise SupervisorDisposedError()
+            if retry:
+                continue
+            return activation
+
+    @staticmethod
+    def _retain_activation_locked(
+        activation: _Activation,
+    ) -> asyncio.Task[None] | None:
+        """Retain one Activation or return the cleanup that won the race.
+
+        The caller must hold the Supervisor lock. Every public path that
+        resumes or wakes an Activation flows through `_activate()`, so the
+        abandonment decision observes more than create waiters alone.
+        """
+
+        if activation._abandonment_task is not None:
+            return activation._abandonment_task
+        activation._retained = True
+        return None
 
     async def _build(self, record: AgentRecord) -> _Activation:
         try:
@@ -965,12 +1319,18 @@ class ProcessAgentSupervisor:
                     raise ExecutionSessionMismatchError()
             except BaseException as error:
                 await self._dispose_after_failure(execution, error)
-            return await self._install(record, execution)
+            return await self._install(record, execution, abandonable=False)
         finally:
             async with self._lock:
                 self._pending_activations.pop(record.agent_id, None)
 
-    async def _install(self, record: AgentRecord, execution: AgentExecution) -> _Activation:
+    async def _install(
+        self,
+        record: AgentRecord,
+        execution: AgentExecution,
+        *,
+        abandonable: bool,
+    ) -> _Activation:
         installed: _Activation | None = None
         rejection: BaseException | None = None
         activation: _Activation | None = None
@@ -1000,6 +1360,7 @@ class ProcessAgentSupervisor:
                             activation_id=str(uuid4()),
                             execution=execution,
                             supervisor=self,
+                            abandonable=abandonable,
                         )
                         self._activations[record.agent_id] = activation
                         self._session_owner[record.session_id] = record.agent_id
@@ -1024,7 +1385,7 @@ class ProcessAgentSupervisor:
         return installed
 
     @staticmethod
-    async def _await_shared(task: asyncio.Task[_Activation]) -> _Activation:
+    async def _await_shared(task: asyncio.Task[_CreateOutcome]) -> _CreateOutcome:
         """Await work shared with other callers without abandoning it."""
 
         try:
@@ -1036,6 +1397,181 @@ class ProcessAgentSupervisor:
             # leaving it running after we return.
             await await_worker_convergence(task)
             raise
+
+    def _release_create_waiter_locked(
+        self,
+        request_id: str,
+        pending: _PendingCreate,
+        waiter: object,
+        *,
+        delivered: bool,
+    ) -> asyncio.Task[None] | None:
+        """Release one waiter and return its registered compensation Task."""
+
+        pending.waiters.remove(waiter)
+        if delivered:
+            pending.delivered = True
+            if (
+                pending.task.done()
+                and not pending.task.cancelled()
+                and pending.task.exception() is None
+            ):
+                pending.task.result().activation._retained = True
+        compensation_task: asyncio.Task[None] | None = None
+        if not pending.waiters:
+            activation = (
+                pending.task.result().activation
+                if pending.task.done()
+                and not pending.task.cancelled()
+                and pending.task.exception() is None
+                else None
+            )
+            if (
+                not pending.delivered
+                and activation is not None
+                and not activation._retained
+                and activation._abandonment_task is None
+            ):
+                compensation_task = asyncio.create_task(
+                    self._compensate_unreturned_create(
+                        request_id,
+                        pending,
+                        activation.agent_id,
+                    ),
+                    name=f"traceh-agent-create-cancel-{request_id}",
+                )
+                activation._abandonment_task = compensation_task
+                pending.compensation_task = compensation_task
+            else:
+                registered = self._pending_creates.get(request_id)
+                if registered is pending:
+                    del self._pending_creates[request_id]
+        return compensation_task
+
+    async def _release_create_waiter(
+        self,
+        request_id: str,
+        pending: _PendingCreate,
+        waiter: object,
+        *,
+        delivered: bool,
+    ) -> asyncio.Task[None] | None:
+        async with self._lock:
+            return self._release_create_waiter_locked(
+                request_id,
+                pending,
+                waiter,
+                delivered=delivered,
+            )
+
+    async def _release_create_waiter_converged(
+        self,
+        request_id: str,
+        pending: _PendingCreate,
+        waiter: object,
+        *,
+        delivered: bool,
+    ) -> asyncio.Task[None] | None:
+        """Finish waiter accounting despite repeated caller cancellation."""
+
+        task = asyncio.create_task(
+            self._release_create_waiter(
+                request_id,
+                pending,
+                waiter,
+                delivered=delivered,
+            ),
+            name=f"traceh-agent-create-release-{request_id}",
+        )
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            await await_worker_convergence(task)
+            return task.result()
+
+    async def _release_cancelled_create_waiter(
+        self,
+        request_id: str,
+        pending: _PendingCreate,
+        waiter: object,
+        call_state: _CreateCallState,
+    ) -> asyncio.Task[None] | None:
+        compensation = await self._release_create_waiter_converged(
+            request_id,
+            pending,
+            waiter,
+            delivered=False,
+        )
+        if compensation is not None:
+            update = asyncio.create_task(
+                self._set_create_owned_work(call_state, compensation),
+                name="traceh-agent-create-work-handoff",
+            )
+            try:
+                await asyncio.shield(update)
+            except asyncio.CancelledError:
+                await await_worker_convergence(update)
+        return compensation
+
+    async def _set_create_owned_work(
+        self,
+        call_state: _CreateCallState,
+        owned_work: asyncio.Task[object],
+    ) -> None:
+        async with self._lock:
+            call_state.owned_work = owned_work
+
+    async def _compensate_unreturned_create(
+        self,
+        request_id: str,
+        pending: _PendingCreate,
+        agent_id: str,
+    ) -> None:
+        """Dispose one unreturned create while keeping retries behind it."""
+
+        try:
+            async with self._lock:
+                close_owned = self._close_task is not None
+                task = (
+                    None
+                    if close_owned
+                    else self._tree_disposal_task_locked(agent_id)
+                )
+            if close_owned:
+                # Close owns the full durable forest. Waiting for its resource
+                # phase avoids a cycle where compensation awaits close while
+                # close awaits the public create call that owns compensation.
+                await self._close_resources_done.wait()
+            else:
+                assert task is not None
+                await self._join_tree_disposal(agent_id, task)
+        finally:
+            async with self._lock:
+                if self._pending_creates.get(request_id) is pending:
+                    del self._pending_creates[request_id]
+
+    @staticmethod
+    async def _raise_cancel_after_cleanup(
+        cancelled: asyncio.CancelledError,
+        cleanup: asyncio.Task[None],
+    ) -> None:
+        """Converge unreturned creation cleanup, then preserve cancellation."""
+
+        while not cleanup.done():
+            try:
+                await asyncio.shield(cleanup)
+            except asyncio.CancelledError:
+                # The first cancellation already selected this path. Further
+                # cancellations cannot transfer cleanup ownership or release
+                # the caller while the same subtree disposal is still live.
+                continue
+            except BaseException:
+                break
+        if not cleanup.cancelled():
+            cleanup_error = cleanup.exception()
+            if cleanup_error is not None:
+                raise cancelled from cleanup_error
+        raise cancelled
 
     @staticmethod
     async def _await_task(task: asyncio.Task[None]) -> None:
@@ -1141,11 +1677,25 @@ class ProcessAgentSupervisor:
                     for pending_id, task in self._pending_activations.items()
                     if pending_id in affected_set
                 )
-            for task in dict.fromkeys(pending):
+                pending_tasks = tuple(dict.fromkeys(pending))
+                create_calls = tuple(
+                    state
+                    for state in self._create_calls.values()
+                    if state.owned_work in pending_tasks
+                )
+            for task in pending_tasks:
                 error = await self._cancel_and_join(task)
                 if error is not None and not isinstance(error, SupervisorDisposedError):
                     failures.append(error)
             await barrier.wait_quiescent()
+            # Candidate cancellation can finish before the public create
+            # method completes its local return/unregister boundary. Join that
+            # exact receipt, but do not wait a call that transferred ownership
+            # to post-admission compensation: the overlapping subtree cleanup
+            # below is the resource owner in that case.
+            for state in create_calls:
+                if state.owned_work in pending_tasks:
+                    await asyncio.shield(state.returned)
             # A child creation admitted before the disposal scope may have
             # committed before cancellation reached it. Reloading after
             # quiescence is what prevents that durable child escaping.
@@ -1183,6 +1733,14 @@ class ProcessAgentSupervisor:
         async with self._lock:
             pending = [item.task for item in self._pending_creates.values()]
             pending.extend(self._pending_activations.values())
+            create_calls = tuple(self._create_calls.items())
+        # Public create owns more than the candidate Task: after cancellation
+        # it may leave admission and converge an unreturned Activation. Close
+        # requests cancellation now, performs the resource phase below, then
+        # joins every complete public call before it may return.
+        for _, state in create_calls:
+            if state.owned_work is None and not state.exit_started:
+                state.caller.cancel()
         for task in dict.fromkeys(pending):
             error = await self._cancel_and_join(task)
             if error is not None and not isinstance(error, SupervisorDisposedError):
@@ -1249,6 +1807,17 @@ class ProcessAgentSupervisor:
                 await asyncio.shield(task)
             except BaseException as error:
                 failures.append(error)
+        # Compensation that linearized after close began waits on this event
+        # instead of awaiting the close Task itself. This is the hand-off point:
+        # the durable forest and all known local resources have been attempted.
+        self._close_resources_done.set()
+        for _, state in create_calls:
+            try:
+                await asyncio.shield(state.returned)
+            except asyncio.CancelledError:
+                # Close requested this outcome; the call's compensation has
+                # already converged before the cancellation can become final.
+                pass
         if failures:
             raise BaseExceptionGroup("supervisor close failed", failures)
 

@@ -142,7 +142,18 @@ stays in `traceh.supervision`, so `AgentRuntime` and `AgentLoop` remain unaware.
 Directory is reported but cannot prevent release of known process-local Activations. Starting
 `aclose()` atomically retains every registered tree Task until close has observed its result, so a
 cancelled public disposer cannot erase shutdown failure evidence. There is still no
-model-visible subagent tool, cross-process lifecycle lease or cold recovery.
+cross-process lifecycle lease or cold recovery.
+
+Stage E exposes that same control plane through a host-wired `SupervisorToolset`. Its five
+ordinary tools create, send, wait, stop and collect a durable report for strict ownership
+descendants; the owner identity, authoritative Store and caller Session are host-bound rather
+than model arguments. Deterministic Tool-call identities make spawn/send retries idempotent,
+and a cancelled spawn converges both the create transaction and any committed child subtree
+before returning. Reports are reconstructed from Inbox, delivery and Session facts, not from a
+second result cache. This facade remains in `traceh.supervision`; it does not change
+`AgentLoop`, `AgentRuntime` or `PluginManager`. See
+[ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring, cold recovery,
+managed Workspaces/Patch Artifacts and hierarchical budgets remain future work.
 
 ### Agent Inbox Streams
 
@@ -189,7 +200,8 @@ carrying content, a `message_id` and a source) is what lets the control plane's 
 identity reach `turn/start` in the Session; a plain `str` keeps the previous behaviour.
 Activations are process-local and are not rebuilt after a crash. See
 [ADR-0021](adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md); there is still
-no cold recovery, stale-claim takeover, retry policy or subagent tool. Create/resume
+no cold recovery, stale-claim takeover or retry policy. Stage E's host-wired subagent
+tools are described above; they are not installed by the default CLI. Create/resume
 single-flights and all installed Activations are owned by Supervisor disposal: `aclose()`
 closes admission once and converges candidates, rollback and runtime cleanup through one
 shared Task, while worker exceptions become stable faults rather than idle success.

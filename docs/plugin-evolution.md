@@ -461,9 +461,27 @@ Multi-agent support should be built above `AgentLoop` with:
 - child-first cancellation and quiescent disposal;
 - budget allocation and depth limits.
 
-Subagent operations become normal tools (`spawn_agent`, `send_agent_message`,
-`wait_agent`, `collect_artifact`) backed by `AgentSupervisor`. The loop remains unaware
-that a tool creates another Agent.
+Stage E now exposes subagent operations as normal tools (`spawn_agent`,
+`send_agent_message`, `wait_agent`, `stop_agent`, `collect_agent_artifact`) backed by
+`AgentSupervisor`. `SupervisorToolset` binds the host-owned Agent identity and EventStore,
+and durable run reports join the existing fact layers; `wait_agent` waits one durable message
+terminal rather than whole-Agent idle. Local notification is only a fast path; bounded durable
+re-read also observes a terminal written by another supported Supervisor. Shared create owns
+  per-caller waiter receipts plus an Activation retained/abandonment state, so cancellation
+  converges only an otherwise-unreturned child. The shared task's actual result supplies cleanup
+  provenance, while public create delivery, resume and wakeup revoke abandonment under the same
+  lock. Neither a concurrent waiter, a later call carrying a stale Directory snapshot nor an
+  overlapping public handoff can destroy an already delivered child. Supervisor close owns the
+  full public create invocation through post-admission compensation and joins an operation-level
+  return receipt after resource cleanup, never the caller's unrelated Task tail. A post-return
+  completion Task removes the invocation registration and publishes that receipt atomically under
+  the Supervisor lock, closing the unregister-before-return window. The synchronous return/raise
+  boundary separately revokes caller-Task cancellation permission before any post-return receipt
+  delay, including early validation failures with no owned candidate; cleanup failure preserves
+  cancellation as the existing
+execution control signal. The loop remains
+unaware that a tool creates another Agent. Workspace patch artifacts and Workflow remain v0.7
+work.
 
 Status: Stages A-C have delivered durable identity, a durable per-Agent FIFO Inbox of
 accepted messages, a durable delivery lifecycle and a process-local
@@ -473,9 +491,10 @@ blocker, claim/terminal writes prove authoritative DTO provenance before append,
 create requests share one single-flight only when their identity semantics match, and shutdown
 converges pending candidates as well as installed Activations. See ADR-0019, ADR-0020 and
 ADR-0021.
-The remaining items on this list - lifecycle ownership, child-first disposal, budget
-allocation and the subagent tools themselves - are not implemented, so no model can yet
-spawn an Agent.
+Lifecycle ownership, child-first disposal and the five host-bound subagent tools are now
+implemented through Stages D–E. Remaining items include hierarchical budget allocation,
+default product/CLI wiring, cold recovery, cross-process ownership and workspace isolation;
+the tool layer itself does not claim those capabilities.
 
 ## v0.7 workspaces and workflows
 

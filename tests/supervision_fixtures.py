@@ -22,10 +22,31 @@ from traceh.session.event_store import Durability, EventStore, InMemoryEventStor
 from traceh.supervision import (
     AgentDeliveryReader,
     AgentRuntimeExecution,
+    ChildProvisioningProposal,
     agent_delivery_stream,
 )
 
 SPEC = AgentSpec(preset="unit-preset", workspace_id="unit-workspace")
+
+
+class RequestedChildPolicy:
+    """An explicit test-host policy that accepts the requested identifiers."""
+
+    def propose_child(
+        self,
+        *,
+        owner: AgentRecord,
+        requested_preset: str,
+        requested_workspace_id: str,
+    ) -> ChildProvisioningProposal:
+        del owner
+        return ChildProvisioningProposal(
+            preset=requested_preset,
+            workspace_id=requested_workspace_id,
+        )
+
+
+CHILD_POLICY = RequestedChildPolicy()
 
 
 def message(message_id: str = "m1", **overrides) -> AgentMessage:
@@ -272,6 +293,7 @@ def destroyed_pending(reports: list[dict]) -> list[dict]:
 
 
 __all__ = [
+    "CHILD_POLICY",
     "GatedProvider",
     "InMemoryEventStore",
     "MessageTarget",

@@ -34,6 +34,7 @@ from traceh.agents.errors import (
 from traceh.agents.identity import (
     AGENT_CREATED,
     AGENT_DIRECTORY_STREAM,
+    AGENT_EVENT_SCHEMA_VERSION,
     agent_created_data,
     creation_matches,
     is_creation_fact,
@@ -189,7 +190,13 @@ class AgentRegistrar:
             appended = await self._store.append(
                 AGENT_DIRECTORY_STREAM,
                 expected_seq=expected_seq,
-                events=(PendingEvent(type=AGENT_CREATED, data=data),),
+                events=(
+                    PendingEvent(
+                        type=AGENT_CREATED,
+                        data=data,
+                        schema_version=AGENT_EVENT_SCHEMA_VERSION,
+                    ),
+                ),
                 durability=Durability.SYNC,
             )
         except asyncio.CancelledError as error:

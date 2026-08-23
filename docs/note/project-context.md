@@ -39,18 +39,18 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、层级 Budget 强制、独立 Workspace/Patch Artifact 或 Workflow；`NEXT_STEP` 被拒绝而非改写 |
-| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream，以及每 Agent 的 Inbox Stream 与 Delivery Stream |
+| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 已把 Toolset 收窄到公共 `AgentSupervisor`、fresh-reader `AgentToolAuthority` 和必须显式提供的 `ChildProvisioningPolicy`；v0.7-A 又以一个 append-only Budget ledger 替换 v0.6 未执行的 DTO，但尚未把它接到真实 create/model/Step/Tool/process 边界。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Budget 强制、独立 Workspace/Patch Artifact 或 Workflow；`NEXT_STEP` 被拒绝而非改写 |
+| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream，以及每 Agent 的 Inbox Stream 与 Delivery Stream |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。插件命令为 `list/inspect/doctor/validate/compare/promote/rollback`；后四者构成 Runtime 外的 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 核心套件 `1707` collected；完整门禁 `1706 passed, 1 skipped`（唯一 skip 是 Windows NUL 路径边界），包含真实 L2 递归验证与 Wheel E2E；Stage E `30 passed`，Stage A–E 定向集合 `545 passed`。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归，并由公开 L3/L4 主线完成固定 Suite 对比、人工批准安装与显式回滚。v0.6 RC 还用真实 OpenAI-compatible 模型完成 parent spawn→send→wait→collect→stop、同一 child identity/Session 的显式恢复 Turn，以及独立取消收敛；两份 Session 的不变量与请求重建违规均为 0。独立 Python Quality 插件另有 `17 passed`，独立 Plugin Creator Skill 另有 `10 passed` |
+| 当前自动化测试 | 核心套件 `1732` collected；完整门禁 `1731 passed, 1 skipped`（唯一 skip 是 Windows NUL 路径边界），包含真实 L2 递归验证与 Wheel E2E；v0.7-A Budget Ledger `41 passed`，Budget + identity/lifecycle/D0 扩大定向集 `290 passed`。D0 架构守卫仍为 `5 passed`，v0.6.0 发布快照仍为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
 | 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
 
-当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、构建测试、比较或包管理塞进 `AgentRuntime`。当前仍没有 L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent lease、冷恢复、stale claim takeover、独立 Workspace/Patch Artifact、层级 Budget、Workflow、MCP、TUI 或流式输出。
+当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A 则完成同样未发布的 Budget 事实层：一个全局 Ledger、一个 Projector、一个宿主写入服务，并删除旧 identity Budget 双轨。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、构建测试、比较或包管理塞进 `AgentRuntime`。当前仍没有 Budget 执行强制、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent lease、冷恢复、stale claim takeover、独立 Workspace/Patch Artifact、Workflow、MCP、TUI 或流式输出。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -86,7 +86,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- Workflow Engine 与工作区分支。v0.6 Stage A/B 建立事实层，Stage C 增加进程内 `ProcessAgentSupervisor`，Stage D 增加 owner 子树的 admission gate 与 child-first disposal，Stage E 再增加模型可调用的五个子 Agent Tool（20 节）；因此**已经**能 spawn/send/wait/stop/collect，但仍**没有**冷恢复、stale claim 接管、自动重试、层级 Budget、Workspace 隔离/Patch 合并或 Workflow，`MessageTarget.NEXT_STEP` 也未实现；
+- Workflow Engine 与工作区分支。v0.6 Stage A/B 建立 Agent 事实层，Stage C 增加进程内 `ProcessAgentSupervisor`，Stage D 增加 owner 子树的 admission gate 与 child-first disposal，Stage E 再增加模型可调用的五个子 Agent Tool（20 节）；v0.7-A 已有层级 Budget Ledger，但还没有在 create/model/Step/Tool/process 边界强制。因此**已经**能 spawn/send/wait/stop/collect，仍**没有**冷恢复、stale claim 接管、自动重试、Budget 强制、Workspace 隔离/Patch 合并或 Workflow，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git Worktree/Overlay Workspace 分支与合并；
 - Docker、远程沙箱或操作系统级安全隔离；
@@ -103,8 +103,9 @@ traceharness/
 ├── src/traceh/
 │   ├── version.py                    版本、Distribution 名、核心 plugin id 与默认兼容范围的唯一来源
 │   ├── agents/                       多 Agent 控制面事实层：Agent identity、创建事务、只读 Directory 投影，以及每 Agent 的 Inbox 接受协议、投影与事务
-│   ├── supervision/                  进程内 Agent Supervisor：Delivery lifecycle、Activation/ownership 收敛、durable run report，以及绑定 owner 的五个子 Agent Tool
-│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`）
+│   ├── budgets/                      v0.7-A 单一层级 Budget 事件、投影与宿主写入事务；不负责 Runtime 强制
+│   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
+│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`）
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
 │   ├── evaluation/                   确定性 Benchmark Runner
@@ -339,8 +340,9 @@ flowchart LR
 | Agent Directory Stream | `agents:directory` | 持久化 Agent identity：哪些 Agent 存在、各自拥有哪个 Session（20 节） |
 | Agent Inbox Stream | `agent-inbox:<agent_id>` | 每个 Agent 已**接受**的消息及其 FIFO 顺序（20.8）。accepted 不等于 claimed/processed |
 | Agent Delivery Stream | `agent-delivery:<agent_id>` | 每个 Agent 的投递生命周期：claim 与 completed/failed/cancelled（20.11） |
+| Budget Ledger Stream | `budgets:ledger` | 每个 Store 一条的层级 Budget grant、reservation、usage 与 close 事实；v0.7-A 只建立事实层（20.20） |
 
-前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。后三个是控制面流：Directory 每个 Store 一条，Inbox 与 Delivery 每个 Agent 各一条，三者都不进入 Model Surface、Session Recovery 或 Request Fingerprint。
+前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。后四类是控制面流：Directory 与 Budget Ledger 每个 Store 各一条，Inbox 与 Delivery 每个 Agent 各一条；它们都不进入 Model Surface、Session Recovery 或 Request Fingerprint。
 
 Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-session 流，边界必须写准：Session Stream 记录“一个 Agent 运行时发生了什么”，Directory Stream 记录“存在哪些 Agent”。二者不合并，因为枚举 Agent 不应要求读遍每个 Session，而且一个 Agent 的执行历史不得断言另一个 Agent 的事实；二者也不分库，因为 `expected_seq`、跨进程文件锁、取消/提交点语义和事件所有权契约正是创建事务需要的东西。它**不进入 Model Surface、不参与 Session Recovery、不影响 Request Fingerprint**，`SessionService.list_sessions()` 按 `session:` 前缀过滤，因此看不到它。
 
@@ -357,6 +359,7 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | 验证 | `verification/result` |
 | Runtime | `runtime/cancel-requested`、`runtime/error`、`runtime/recovered` |
 | Agent control plane（独立 Stream） | `agent/created`（只在 `agents:directory`）、`agent/message-accepted`（只在 `agent-inbox:<agent_id>`）、`agent/message-claimed`、`agent/message-completed`、`agent/message-failed`、`agent/message-cancelled`（只在 `agent-delivery:<agent_id>`）。它们都不进入任何 Session Stream，也不进入 Model Surface |
+| Budget control plane（只在 `budgets:ledger`） | `budget/root-granted`、`budget/child-reserved`、`budget/reservation-committed`、`budget/reservation-released`、`budget/usage-charged`、`budget/account-closed`；只投影权限与用量，不进入 Model Surface |
 | Surface | `surface/replace` |
 | Effect | `effect/intent`、`effect/dispatched`、`effect/outcome`、`effect/reconciled` |
 
@@ -1228,7 +1231,7 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | 多 Agent 持久身份 | `AgentRecord`、`AgentDirectory`、`AgentRegistrar`、`agent/created` | **v0.6 Stage A 已实现**：identity 从 Agent control-plane Stream 重建，创建是 CAS 事务，冲突与畸形历史 fail closed（20 节） |
 | 多 Agent 持久 Inbox | `AcceptedMessage`、`AgentInbox`、`AgentInboxService`、`agent/message-accepted` | **v0.6 Stage B 已实现**：每 Agent 一条 FIFO **接受**历史，按 `message_id` 幂等，畸形/重复/错流历史 fail closed（20.8–20.9）。它只回答“接受了什么、什么顺序”，不回答“是否执行” |
 | 多 Agent 投递生命周期 | `MessageClaim`、`MessageOutcome`、`AgentDeliveryLog`、`AgentDeliveryService`、`agent/message-claimed|completed|failed|cancelled` | **v0.6 Stage C 已实现**：claim 是执行前提，CAS 线性化，畸形/重复/乱序历史 fail closed（20.11–20.12） |
-| 多 Agent 活控制面 | `ProcessAgentSupervisor`、`AgentExecution`、`AgentActivationFactory`、`SupervisedAgentHandle`、`AgentOwnershipGraph`、`SupervisorToolset` | **v0.6 Stage C–E 已实现** create/resume/send/interrupt/wait、durable report、单活 Activation、owner 子树 child-first dispose，以及绑定 owner 的五个模型 Tool（20.13、20.15、20.17）。仍**缺失**：冷恢复、stale claim 接管、自动重试、Budget 强制、独立 Workspace/Patch Artifact、`NEXT_STEP` |
+| 多 Agent 活控制面 | `ProcessAgentSupervisor`、公共 `AgentSupervisor`、`AgentExecution`、`AgentActivationFactory`、`SupervisedAgentHandle`、`AgentOwnershipGraph`、`SupervisorToolset`、`AgentToolAuthority`、`ChildProvisioningPolicy` | **v0.6 Stage C–E 已实现** create/resume/send/interrupt/wait、durable report、单活 Activation、owner 子树 child-first dispose，以及绑定 owner 的五个模型 Tool（20.13、20.15、20.17）。**v0.7 D0 已完成架构接缝**：Toolset 只依赖公共 Supervisor 协议；Authority 每次从同一 EventStore 重放 caller Session/严格后代权限；宿主 Policy 显式把 preset/workspace intent 变成小型 proposal，而 Provider/model/prompt/runtime 仍由 Factory 解析。没有第二个调度器或缓存事实。仍**缺失**：冷恢复、stale claim 接管、自动重试、Budget 强制、独立 Workspace/Patch Artifact、`NEXT_STEP` |
 | 通用 Turn 输入 | `TurnInput` | **v0.6 Stage C 已实现**：`AgentLoop` 接受 `str` 或 `TurnInput`，后者让控制面 `message_id`/`source` 贯穿 Session Turn；`str` 行为与此前完全一致 |
 | Workspace 分支 | `WorkspaceProvider`、Snapshot、PatchArtifact、MergeResult | Git Worktree/Overlay 实现和协调缺失 |
 | Workflow | 可复用单 Agent Runtime 边界 | Workflow Engine、Map/Join/Approval 节点缺失 |
@@ -1247,7 +1250,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前核心测试套件收集 `1707` 项，完整门禁为 `1706 passed, 1 skipped`；唯一 skip 是 Windows 不允许路径含 NUL 的平台边界，真实 L2 递归入口和 18 项 Wheel E2E 均完成。Stage E 的 [`tests/test_agent_tools.py`](../../tests/test_agent_tools.py) `30 passed`，Stage A–E 定向集合 `545 passed`。v0.6 Stage A 前基线为 `1162/1161/1`，Stage A 新增 `214` 项、Stage B `147` 项、Stage C `134` 项、Stage D `20` 项、Stage E `30` 项。独立 Python Quality 插件与 Plugin Creator Skill 分别另有 `17 passed`、`10 passed`。既有 D1–D3 Scope/Overlay、Policy/能力身份、事务交接、Request 重建、跨 Runtime 隔离、命名 Verifier 与 cleanup 失败保真契约继续由其专门测试固定。
+当前核心测试套件收集 `1732` 项，完整门禁为 `1731 passed, 1 skipped`；唯一 skip 是 Windows 不允许路径含 NUL 的平台边界，真实 L2 递归入口和 18 项 Wheel E2E 均完成。v0.7-A [`tests/test_budget_ledger.py`](../../tests/test_budget_ledger.py) 为 `41 passed`；Budget + identity/lifecycle/D0 扩大定向集为 `290 passed`。D0 架构守卫仍为 `5 passed`；v0.6.0 发布快照仍为 `1707/1706/1`。旧发布时点数字继续作为历史证据，不用于描述当前 cutover 后的文件数量。
 
 L2 新增 [`tests/test_candidate_validation.py`](../../tests/test_candidate_validation.py)，覆盖显式候选身份与依赖源、可信 clone 版本而非运行中 CLI 版本、大小写变体 `.env`、符号链接、Windows Junction/reparse point、缓存与 direct-reference 依赖拒绝、干净源码复制、Wheel 路径钩子/启动钩子/符号链接成员/宿主保留命名空间审计、两套独立 venv、宿主 pytest 配置、安装元数据合同、doctor、候选测试、可信核心回归、结构化 JSON 配置失败、执行后 Wheel 漂移拒绝、报告目录事务、SHA-256 产物和子进程取消收敛。真实验收不是用脏工作区充当核心：先在仓库外建立包含当前改动的临时 Git 提交，再让公开 CLI 从其 `HEAD` 克隆，13 道门禁与完整核心回归全部通过。当前 L4 未提交工作区收集 `1162` 项并得到 `1161 passed, 1 skipped`，唯一 skip 是 Windows NUL 路径边界；L2 已存在于当前可信 `HEAD`，仓库外干净克隆的真实链路再次跑完 13 道门禁和完整核心回归。反向验证除既有“测试失败不得产生 Wheel”和 `.pth` 拒绝外，还临时移除执行后 Wheel 复核，反例会把被追加启动钩子的 Wheel 错报为通过；临时改回就地写报告，报告写失败会留下半目录。恢复两道保护后新增反例与扩大门禁重新全绿。
 
@@ -1391,14 +1394,16 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Session 插件身份与迁移 | 当前身份由共享事件解析器按 `session/created`、合法 `composition/snapshot` 和 `composition/migration-authorized` 顺序重建；身份变化必须在全局 Gate 内以 `source_seq`/Session head CAS 追加授权。授权已落盘而 publish 失败时 fail-closed；不会自动迁移所有 Session。版本按 PEP 440 等价判定 | 仍没有 Session 自动迁移、批量迁移或跨进程迁移协调；每次授权仍由用户命令显式触发，Generation identity 不持久化 |
 | 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
 | 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
-| Agent identity 只是身份，不是运行 | `AgentRecord` 只记录“存在哪些 Agent、各自拥有哪个 Session”。运行由 Stage C 的 `ProcessAgentSupervisor` 负责，且只在本进程内；`AgentRegistrar` 仍不创建该 Agent 的 Session，只声明这个 `session_id` 归它所有 | 一条 `AgentRecord` 不等于“一个正在运行的子 Agent”；模型也仍然无法自行 spawn Agent |
+| Agent identity 只是身份，不是运行 | `AgentRecord` 只记录“存在哪些 Agent、各自拥有哪个 Session”。运行由 Stage C 的 `ProcessAgentSupervisor` 负责，且只在本进程内；`AgentRegistrar` 仍不创建该 Agent 的 Session，只声明这个 `session_id` 归它所有 | 一条 `AgentRecord` 不等于“一个正在运行的子 Agent”；Stage E 模型 Tool 能请求 spawn，但只有宿主显式装配并由 D0 provisioning policy 批准后才会进入同一个 Supervisor |
 | Inbox 只记录 accepted | Inbox Stream 本身仍只回答“收到了什么、什么顺序”。是否被 claim、是否执行完毕由**独立的** Delivery Stream 回答（20.11），Stage B 的单事件类型合同没有被破坏 | 两条流分开是刻意的；读取任何一条都不能单独得出“这条消息处理完了” |
 | Supervisor 只在本进程内 | Stage C 的 `ProcessAgentSupervisor` 只管理**自己创建或显式 resume 的** Activation。进程启动后不会自动扫描全部 Agent，不会接管别的进程留下的 claim，也没有自动重试 | 冷恢复需要 attempt identity 与重试策略；在此之前，崩溃后留下的“已 claim 未 terminal”只能由人查看 Delivery Stream |
 | 无法证明的 claim 会让 Activation faulted | claim 结果 unknown 时不执行 Turn、不重试，Activation 进入 faulted，`wait_idle()` 报告而不是永远等待。代价是一次瞬时存储故障会停掉该 Agent | 这是没有重试策略的 Stage 应有的姿态；重试会引入重复执行风险 |
 | `NEXT_STEP` 未实现 | `send()` 在**接受之前**拒绝它，零事件。直接经 `AgentInboxService` 写入的 `NEXT_STEP` 会被 claim 后记为 `failed`/`unsupported-target`，既不跳过（会打乱 FIFO）也不 fault | 需要在活跃 Turn 中注入消息的安全接缝；Step 有冻结 Composition 和在途模型调用，当前没有这样的接缝 |
 | create 跨两条 Stream 非原子 | Session 与 Agent Directory 是两条 append-only 流，没有跨流事务。顺序是 Session 先、identity 后：失败最多留下一个可检测且无害的未归属 Session，绝不留下指向不存在 Session 的 `AgentRecord` | 这条边界如实记录，不通过删除事件或隐式回滚伪造原子性；`resume()` 会验证 Session 真实存在 |
 | 一条坏 Inbox 记录会阻塞该 Agent | 顺序就是这个投影给出的答案，因此坏记录不跳过：重复 `message_id`、未知事件类型、错 schema、错流、多键/少键 payload 都会让该 Agent 的 Inbox 读取**和新的接受**一起失败 | 这是事实源应有的行为；跳过一条会报出一个从未发生过的 FIFO 顺序。未来新增 Inbox 生命周期事件类型必须显式扩展该投影 |
-| Agent `budget` 记录但不执行 | `agent/created` 保存完整 `Budget`，因为它属于创建请求；当前没有任何预留、扣减或强制逻辑 | 层级 Budget reservation 属于 v0.7，届时才有消费者 |
+| v0.7-A Budget 是事实层，不是执行层 | `agent/created` 已删除旧 Budget；`budgets:ledger` 有 root grant、reservation、Directory-backed commit、release、usage、close 和一个 Projector/Service，但尚未自动包住 create/model/Step/Tool/process | Stage B 只能在既有 owned boundary 复用同一本账；不得另造余额、在 `AgentLoop` 加分支或把 Ledger 说成已经强制 |
+| v0.7 D0 只是接缝 | `AgentToolAuthority` 和 `ChildProvisioningPolicy` 已进入现有 Toolset；Stage A Ledger 也在独立域完成，但 Workspace、Patch、Promotion、Workflow 仍不存在，Workspace id 仍只是宿主解释的标识 | 后续只能由独立域服务逐阶段实现，并复用同一个公共 Supervisor；不得把 D0/A 描述成隔离、工作区或预算强制已经生效 |
+| v0.7 Budget 是破坏式切换 | ADR-0025/0026 已落实：不把 v0.6 未执行的 Budget DTO 伪装成新账本，也不保留 legacy/V2/双 Projector/自动迁移路径 | 新 Agent 使用 schema 2；旧 schema 1 history 明确 fail closed 且永不自动删除旧 `.traceh` |
 | Agent Directory 严格 fail closed | 重复 `agent_id`/`session_id`/`request_id`、畸形 payload、未知事件类型、self-owner 和悬空 owner 都会让整份 Directory 读写失败，而不是跳过坏记录。代价是一条坏记录会阻塞该 Store 上的全部 Agent 读取与新建 | 这是事实源应有的行为；未来新增 identity 生命周期事件类型必须显式扩展该投影，通信事件则应放在 per-Agent Stream 而不是这条流上 |
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
 | API 稳定性 | Alpha，协议可能演进 | v1.0 前建立兼容策略和 Upcaster |
@@ -1438,6 +1443,8 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Agent Delivery 协议 / 投影 / 事务 | `supervision/delivery_identity.py`、`supervision/delivery.py`、`supervision/delivery_service.py`、`supervision/errors.py`、`tests/test_agent_delivery.py`、ADR-0021 | 1、2、3、6.2、6.3、14、15、16、17、20.11–20.14 |
 | Agent Supervisor / Activation | `supervision/supervisor.py`、`supervision/execution.py`、`tests/test_agent_supervisor.py`、ADR-0021 | 1、2、3、14、15、16、17、20.13–20.14 |
 | 子 Agent Tool / durable run report | `supervision/tools.py`、`supervision/reports.py`、`api/agents.py`、`tests/test_agent_tools.py`、ADR-0023 | 1、2、3、14、15、16、17、20.17–20.18 |
+| v0.7 Tool authority / child provisioning | `supervision/authority.py`、`supervision/provisioning.py`、`supervision/tools.py`、公共 `AgentSupervisor`、`AgentActivationFactory`、`tests/test_v07_d0_architecture.py`、ADR-0024 | 1、2、3、14、15、16、17、20.19 |
+| 层级 Budget 协议 | ADR-0025/0026、`api/budgets.py`、`budgets/events.py`/`projection.py`/`service.py`、Agent schema-v2 cutover，以及 Stage B 的创建与模型/Step/Tool/process 接线 | 1、2、3、6、14、15、16、17、20.19–20.20；这是 pre-1.0 破坏式切换，不保留 v0.6 Budget 双轨或 Runtime balance |
 | 通用 Turn 输入 | `api/turns.py`、`runtime/agent_loop.py`（仅入口归一化）、`runtime/agent_runtime.py`（仅签名放宽）、`tests/test_agent_supervisor.py` | 5、14、15、20.13 |
 | Multi-Agent/Workspace Protocol | `api/agents.py`、`api/workspaces.py`、`kernel/*` | 2、3、4、14、15、16、20 |
 | 开发流程/目录 | `AGENTS.md`、`CLAUDE.md`、CI、pyproject | 0、1、3、15、18 |
@@ -1702,9 +1709,9 @@ EventStore 刻意没有加入 `PluginContext`。它是 SessionService、Recovery
 
 ## 20. 多 Agent 控制面（Stage A 身份 + Stage B Inbox + Stage C 执行 + Stage D 生命周期 + Stage E 模型 Tool）
 
-Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（Inbox 接受）见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递生命周期）见 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（生命周期 ownership 与静默收敛）见 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（绑定 owner 的模型 Tool 与 durable run report）见 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。本节记录当前工程事实：20.1–20.7 是 Stage A，20.8–20.10 是 Stage B，20.11–20.14 是 Stage C，20.15–20.16 是 Stage D，20.17–20.18 是 Stage E。
+Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（Inbox 接受）见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递生命周期）见 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（生命周期 ownership 与静默收敛）见 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（绑定 owner 的模型 Tool 与 durable run report）见 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别见 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，已实现的单一 Budget Ledger 见 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)。本节记录当前工程事实：20.1–20.7 是 v0.6 Stage A，20.8–20.10 是 Stage B，20.11–20.14 是 Stage C，20.15–20.16 是 Stage D，20.17–20.18 是 Stage E，20.19 是 v0.7 D0，20.20 是 v0.7-A。
 
-**Stage A 与 Stage B 只实现事实层；Stage C 真正运行 Agent；Stage D 管住生命周期关系；Stage E 才把这套控制面作为普通 Tool 交给模型。** Stage A 是身份，Stage B 是「消息已被接受」，Stage C 是「claim → 真实 Turn → terminal」，Stage D 是「封闭 owner 子树 admission → 收敛在途候选 → 后代先于 owner cleanup」，Stage E 是「绑定 owner 的 Tool → 同一个 Supervisor → durable run report」。以下早期小节中的缺失项是当时边界；当前仍然没有的是：Agent 冷恢复与 stale claim 接管、自动重试、`WorkspaceProvider`/Patch Artifact、Workflow、层级 Budget 预留与 `MessageTarget.NEXT_STEP` 投递。模型现在能创建并运行 child，但 host 仍必须显式装配其 preset/workspace 解析和这组 Tool。
+**v0.6 Stage A 与 B 只实现 Agent 事实层；Stage C 真正运行 Agent；Stage D 管住生命周期关系；Stage E 才把这套控制面作为普通 Tool 交给模型。v0.7-A 另建 Budget 事实层，但尚未强制执行。** 当前仍然没有的是：Agent 冷恢复与 stale claim 接管、自动重试、`WorkspaceProvider`/Patch Artifact、Workflow、Budget 执行强制与 `MessageTarget.NEXT_STEP` 投递。模型现在能创建并运行 child，但 host 仍必须显式装配其 preset/workspace 解析和这组 Tool。
 
 ### 20.1 模块职责
 
@@ -1714,7 +1721,7 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 | [`agents/directory.py`](../../src/traceh/agents/directory.py) | 只读 `AgentDirectory` 投影与 `validate_agent_directory_events()`，以及只从 `EventStore` 读取的 `AgentDirectoryReader` |
 | [`agents/registrar.py`](../../src/traceh/agents/registrar.py) | `AgentRegistrar`：创建事务、线性化点、取消与 may-have-committed 收敛 |
 | [`agents/errors.py`](../../src/traceh/agents/errors.py) | 稳定 `code`、固定文案、**从不回显**被拒绝取值的错误层次 |
-| [`api/agents.py`](../../src/traceh/api/agents.py) | 冻结 DTO：`AgentRecord`、`AgentSpec`/`Budget`/`AgentHandle`/`AgentRunReport`，以及由 `ProcessAgentSupervisor` 实际满足的 `AgentSupervisor` Protocol；公开合同包含显式 `request_id`、`interrupt() -> bool`、`wait_message()`/`report()` 与 `aclose()` |
+| [`api/agents.py`](../../src/traceh/api/agents.py) | 冻结 DTO：`AgentRecord`、`AgentSpec`、`AgentHandle`、`AgentRunReport`，以及由 `ProcessAgentSupervisor` 实际满足的 `AgentSupervisor` Protocol；Budget authority 已移到独立 [`api/budgets.py`](../../src/traceh/api/budgets.py) 与 Ledger，不再属于身份 DTO |
 | [`supervision/reports.py`](../../src/traceh/supervision/reports.py) | 从 Directory、Inbox、Delivery 与 Session 重建指定消息的 durable `AgentRunReport`；不持有 Activation 或瞬时 `TurnResult` |
 | [`supervision/tools.py`](../../src/traceh/supervision/tools.py) | 把 owner/Store 权限绑定成五个普通 Tool，委托现有 Supervisor；不实现第二套队列、调度或 cleanup |
 
@@ -1734,9 +1741,9 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 
 ### 20.3 Agent 事实与三条独立关系
 
-`agent/created` 的 payload 恰好包含十个键：`agent_id`、`session_id`、`request_id`、`preset`、`workspace_id`、`owner_agent_id`、`forked_from_session_id`、`capability_grants`、`budget`、`metadata`。
+`agent/created` 的 schema version 2 payload 恰好包含九个键：`agent_id`、`session_id`、`request_id`、`preset`、`workspace_id`、`owner_agent_id`、`forked_from_session_id`、`capability_grants`、`metadata`。Budget 不再属于 identity。
 
-“恰好”是被强制的，不只是描述：投影器要求 `schema_version == 1`、`stream_id == agents:directory`，并且 payload 键集合**严格等于**上述十个。多一个键意味着写入方知道一些本读取方不知道的事，把剩余字段当作完整 v1 身份读下去会静默丢掉它新增的东西；少一个键则说明这条 payload 不是本协议写的。未来改变字段语义必须提升 `schema_version`，旧投影器会明确拒绝而不是照旧解读。
+“恰好”是被强制的，不只是描述：投影器要求 `schema_version == 2`、`stream_id == agents:directory`，并且 payload 键集合**严格等于**上述九个。v0.6 的 schema version 1 含有未执行的 caller-chosen `budget`，新读取器明确返回 `agent-budget-history-unsupported`，不会 upcast、推算 grant 或自动删除；其他版本也 fail closed。
 
 其中三条关系被**刻意分开**，不得互相解释：
 
@@ -1748,7 +1755,7 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 
 **communication 在本事件中完全没有字段。** 消息来源是 per-message 事实；把它折进创建事实会让“谁创建了我”和“谁在跟我说话”永远变成同一种关系。Stage A 只留清晰边界：未来的 Inbox/投递事件应放在 per-Agent Stream，而不是 `agents:directory`。
 
-`budget` 被记录是因为它属于创建请求，丢掉会损失 v0.7 预留逻辑需要的信息；**当前没有任何预留或强制**。
+Budget authority 由 20.20 的独立 Ledger 持有。Agent identity 不携带额度，模型或创建 DTO 因此不能通过“声明一个 Budget”给自己铸造权力。
 
 ### 20.4 Agent Directory 投影
 
@@ -1759,15 +1766,16 @@ Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-ident
 | 重复 `agent_id` | `agent-id-duplicate`，**绝不**“最后一条覆盖前一条” |
 | 重复 `session_id` | `agent-session-duplicate`：两个 Agent 不能拥有同一个 Session |
 | 重复 `request_id` | `agent-request-duplicate` |
-| payload 畸形 | `agent-payload-invalid` / `agent-identity-invalid` / `agent-budget-invalid` / `agent-grants-invalid` / `agent-metadata-invalid` |
+| payload 畸形 | `agent-payload-invalid` / `agent-identity-invalid` / `agent-grants-invalid` / `agent-metadata-invalid` |
 | 该流上出现未知事件类型 | `agent-event-type-unknown` |
 | 不在 `agents:directory` 上 | `agent-stream-unexpected`：Session Stream 里的同名事件不是身份事实 |
-| `schema_version` 不是 1 | `agent-schema-version-unsupported` |
+| `schema_version == 1` | `agent-budget-history-unsupported`，保留旧证据但不把旧 DTO 当 authority |
+| 其他非 2 版本 | `agent-schema-version-unsupported` |
 | payload 键集合不精确匹配 | `agent-payload-keys-unexpected` |
 | `owner_agent_id` 指向自己 | `agent-owner-self` |
 | `owner_agent_id` 此刻尚不存在 | `agent-owner-unknown`：外部 payload 不能自报一个尚未出现的 owner |
 
-**写入端校验与回放端校验必须是同一套规则。** 写入端比回放端宽松不是“检查弱一点”，而是一条**追加一条永远读不回来的事实**的通道：一个 `Budget(max_steps=True)` 曾经能成功落盘，此后该 Store 的每一次 Directory 重建**和**每一次新建 Agent 都会永久失败。因此 Budget 只有一处定义（`_budget_numbers()`），`validate_spec()` 用它校验**将要被持久化的那份映射**而不是只判断 `isinstance(budget, Budget)`，并且拒绝布尔、负数以及 NaN/±Infinity —— 后者能骗过 `< 0` 比较，也能在 Python 的非严格 JSON 里往返，但它们既不是 JSON 也不是预算。数值还被限制在 `MAX_BUDGET_VALUE = 2**53 - 1`（IEEE-754 双精度能精确表示的最大整数）以内：预算以 JSON 数字持久化，超出这个范围无法保证往返；更重要的是 `10**10000` 是合法 `int` 且非负，会从 `float()`/`math.isfinite()` 抛出**裸 `OverflowError`**，绕过统一的 `agent-budget-invalid` 出口。范围比较全部用整数比较完成，本身不可能抛异常。
+**写入端校验与回放端校验必须是同一套规则。** v0.7-A 不保留 v0.6 的 Budget validator，也不让新写入端继续产生 schema version 1。`AgentRegistrar` 与投影器共用 schema-v2 payload 规则；Budget 数值的 JSON 范围、层级关系和容量则只在 `traceh.budgets` 的构造器与 Projector 中定义。这样不会出现一个字段在 Agent Directory 和 Budget Ledger 被两套代码赋予两种意义。
 
 **读取持久化事件本身也是不可信操作，而且边界必须覆盖整个 Envelope。** `parse_agent_created()` 会对 Store 交回的容器执行 `set(data)`、`data.get()`、`data[key]`，也会比较 `event.type`、`event.stream_id`、`event.schema_version`。`EventEnvelope` 是**公开 DTO**，任何代码（包括测试）都能直接构造，所以它的协议字段与 payload 一样不可信：一个 `__ne__` 抛异常的 `str` 子类作为 `event.type` 会在第一次比较就炸。因此**整个事件的读取**——协议字段与 payload——位于同一个 `try` 之内，普通 `Exception` 一律转成固定的 `agent-payload-invalid`；边界外只剩 `event.seq` 的属性访问，那不会执行任何代码。两个 `_scan()` 也**不再自己预先比较事件类型**，否则那次读取又落在解析器边界之外。捕获的是 `Exception` 而**不是** `BaseException`。
 
@@ -1822,9 +1830,9 @@ flowchart TD
 
 ### 20.6 验证基线
 
-新增 [`tests/test_agent_identity.py`](../../tests/test_agent_identity.py)，`214 passed`。覆盖：全新 `JsonlEventStore` 实例重建、identity 与 Activation 对象无关（构造后销毁再重建）、`agent_id` 冲突、`session_id` 冲突、lineage 与 ownership 独立、创建事实不含任何通信字段、19 组畸形 payload、未知事件类型、坏记录不被跳过、坏历史阻塞写入、并发同一 identity/同一 session/8 个不同身份的线性化、stale read 被 CAS 拒绝、append 前取消零写入、may-have-committed 取消如实上报并可按 `request_id` 重读、重复取消不能提前放行、失败 append 的 `committed` 真值、`request_id` 幂等与复用拒绝、无遗留 Task、无 never-retrieved 异常、返回记录逐字段等于重放记录、修改返回记录的 payload 不改写历史。
+当前 [`tests/test_agent_identity.py`](../../tests/test_agent_identity.py) 收集 `193` 项；v0.7-A 删除旧 Budget DTO/validator 的用例，并把 schema-v1 拒绝契约放进 Budget Ledger 测试。其余覆盖包括：全新 `JsonlEventStore` 重建、identity/Activation 分离、id/session/request 冲突、lineage/ownership 分离、畸形 payload、并发线性化、CAS、取消与 may-have-committed 三态、metadata 所有权和敌意容器/Envelope 边界。
 
-外部审查（Codex）另发现四项写入/回放不对称与状态失真问题，均已修复并补上反例：10 组回放会拒绝的 Budget（布尔、负数、NaN、±Infinity、字符串、`None`）必须在**任何 append 之前**被拒且 Directory 仍可用；重读失败时 `committed` 必须是 `None` 而不是 `False`，且不得降级成 `AgentDirectoryConflictError`；`SystemExit`/`KeyboardInterrupt` 必须原样传出；`schema_version=999`、多键/少键 payload、Session Stream 上的同名事件必须 fail closed；通过 `get`/`for_session`/`for_request`/`children_of`/`records`/迭代六个入口写 `metadata` 都不能改变同一个 Directory 之后的答案。
+外部审查（Codex）在 v0.6 身份协议中曾发现 Budget 写入/回放不对称；v0.7-A 没有继续维护那条未执行路径，而是删除它并用 schema-v2 cutover test 证明旧 history 明确拒绝。仍属于 Agent identity 的三态重读、`BaseException` 传播、错 schema/错流/键集合 fail closed，以及六个 Directory 查询入口的 metadata detach 保证继续由本测试固定。
 
 复审第二轮又指出三处**同类但在入口侧**的问题，同样已修复并补上反例：`rebuild()` 后修改传入的 `EventEnvelope` 不得改变 Directory 的答案；在第一次 `await` 期间修改调用方 `metadata` 不得影响落盘内容、返回记录或 owner 冲突判定；`set`/`bytes`/任意对象/非法键的 metadata 必须在写前得到 `AgentIdentityError`；`10**10000` 在写入与回放两条路径上都必须落在稳定错误协议内。另有一项证明修正没有走过头：未固定 `agent_id`/`session_id` 的幂等重试仍然返回同一个 Agent（生成的新 id 本就应当不同，不属于请求身份）。
 
@@ -1846,7 +1854,6 @@ flowchart TD
 | 标识符类型检查（改为 `str()` 强制转换） | 23 项：`True`、数字、带空白的取值被接受为合法身份 |
 | owner 存在性检查 | `DID NOT RAISE`——payload 可以自报一个不存在的 owner |
 | `request_id` 幂等 | 3 项：重试造出第二个 Agent，复用同一 request id 指向不同身份未被拒绝 |
-| 写入端复用回放 Budget 规则 | 10 项：非法 Budget 先落盘再报错，此后该 Store 永久不可用 |
 | `committed` 的未知状态（改回 `False`） | 2 项：已落盘却被断言未落盘，并被误报成 CAS 冲突 |
 | `CancelledError` 与其他 `BaseException` 分开处理 | 2 项：`SystemExit`/`KeyboardInterrupt` 被改写成 `AgentCreationError` |
 | stream / `schema_version` / 键集合三道协议闸门 | 5 项：错流、未知版本、多键与少键 payload 全被当作合法 v1 身份读取 |
@@ -1854,7 +1861,6 @@ flowchart TD
 | 解析时深拷贝 metadata | 1 项：改传入事件即改变 Directory 的答案，出口复制救不回来 |
 | payload 深拷贝（改回浅拷贝） | 1 项：第一次 `await` 期间的修改被真正持久化 |
 | 写前校验整张 metadata 图 | 5 项：嵌套 `set`/`bytes`/对象直到 Store 才失败，报成 `AgentCreationError` |
-| `MAX_BUDGET_VALUE` 范围界 | 4 项：`10**10000` 在写入与回放两侧都泄漏裸 `OverflowError` |
 | metadata 有界遍历 + 扩大 except | 9 项：环状/过深图在写入与回放两侧泄漏裸 `RecursionError` |
 | 公开 helper 显式拒绝（改回 `or {}`） | 6 项：非法 metadata 被静默清空成 `{}`，调用方数据丢失 |
 | 对账改回只比 `request_id` | 5 项：另一个写入者的 Agent 被报成「我们的已记录」 |
@@ -1868,7 +1874,7 @@ flowchart TD
 
 ### 20.7 Stage A 当时尚未实现的边界
 
-（其中 FIFO Inbox 接受已由 Stage B 补上，进程内 Supervisor/单活 Activation/claim/complete/wakeup 已由 Stage C 补上，lifecycle ownership 图与 child-first quiescent dispose 已由 Stage D 补上，五个模型 Tool 已由 Stage E 补上，分别见 20.8、20.11–20.13、20.15、20.17。）当前仍缺失、不得在文档或对外说明中表述为已有能力的是：跨进程 Activation 唯一性与 stale claim 接管；ack/retry 语义；`WorkspaceProvider`、Git worktree 与 Patch 合并；Workflow Engine；层级 Budget 预留事件；Agent 冷恢复。`AgentRegistrar` 也**不创建**该 Agent 的 Session——它只声明这个 `session_id` 归该 Agent 所有，Session 仍由 `SessionService` 按原有方式创建。
+（其中 FIFO Inbox 接受已由 Stage B 补上，进程内 Supervisor/单活 Activation/claim/complete/wakeup 已由 Stage C 补上，lifecycle ownership 图与 child-first quiescent dispose 已由 Stage D 补上，五个模型 Tool 已由 Stage E 补上，层级 Budget 事实已由 v0.7-A 补上，分别见 20.8、20.11–20.13、20.15、20.17、20.20。）当前仍缺失、不得在文档或对外说明中表述为已有能力的是：跨进程 Activation 唯一性与 stale claim 接管；ack/retry 语义；`WorkspaceProvider`、Git worktree 与 Patch 合并；Workflow Engine；Budget 执行强制；Agent 冷恢复。`AgentRegistrar` 也**不创建**该 Agent 的 Session——它只声明这个 `session_id` 归该 Agent 所有，Session 仍由 `SessionService` 按原有方式创建。
 
 ### 20.8 Stage B：持久化 Agent Inbox 接受事实
 
@@ -1953,7 +1959,7 @@ flowchart TD
 
 ### 20.10 Stage B 验证基线与尚未实现的边界
 
-新增 [`tests/test_agent_inbox.py`](../../tests/test_agent_inbox.py)，`147 passed`；Stage A 为 `214 passed`。覆盖：单条接受与全新 `JsonlEventStore` 实例重建、严格 FIFO、两个 Agent 完全隔离（各自序号都从 1 开始）、receipt 与真实事件一致、事件只出现在目标 Inbox 流且 Session Stream 未被触碰、未知 Agent 零写入、相同 `message_id` 幂等、六种字段差异的复用拒绝、历史中重复 `message_id` fail closed、一个 Agent 的事件搬到另一条流后两侧都拒绝、坏 Inbox 阻塞新接受、16 组非法标识符、8 组非法 content 与 8 组合法多行/中文/emoji content 往返、非法 `target` 与非法 `wakeup`、14 组畸形持久化 payload、未知 schema/事件类型/错流、错误不回显 content 与 source、公开 helper 拒绝而非修补、同一 Service 并发同一消息只产生一个事件、8 条并发消息线性化为密集序号、三个 Agent 互不串行化、stale read 被 CAS 拒绝、append 前取消零写入、提交点后取消如实上报并可按 `message_id` 重试、重复取消不能提前放行、重读失败得到 `None`、失败 append 的 `committed` 真值、`SystemExit`/`KeyboardInterrupt` 原样传播、无遗留 Task 与 never-retrieved 异常、字段不可变性边界。
+[`tests/test_agent_inbox.py`](../../tests/test_agent_inbox.py) 仍为 `147` 项；v0.6 Stage A 当时是 `214` 项，当前 identity 经 v0.7-A 破坏式 Budget cutover 后为 `193` 项。Inbox 覆盖：fresh rebuild、严格 FIFO、跨 Agent 隔离、receipt/event 一致、未知 Agent 零写入、完整 payload 幂等、坏历史 fail closed、并发线性化、CAS、取消与 may-have-committed 三态、敌意 payload/Envelope 和字段不可变边界。
 
 并发与取消一律使用 `asyncio.Event` 门控与确定性 store stub，没有用 `sleep()` 猜时序；`YieldingStore` 仍是必需的，因为 `InMemoryEventStore` 从不 `await`，两个 Task 在它上面永远不会交错。
 
@@ -1974,7 +1980,7 @@ flowchart TD
 | Envelope 协议字段移出解析器边界（Inbox） | 1 项：公开解析器泄漏裸异常 |
 | `_scan()` 自行预检事件类型 | 1 项：预检落在解析器边界之外，裸异常重新泄漏 |
 
-**Stage B 当时仍然缺失的边界**：进程内 `AgentSupervisor`、单一 Live Activation 与其强制、Inbox claim/complete、真正的 wakeup 与 Turn 调度、Agent 冷恢复、`spawn_agent` 等子 Agent Tool、Parent/Child dispose、层级 Budget 预留、WorkspaceProvider 与 Workflow。其中执行相关前四项已由 Stage C 补上（见 20.11–20.14），Parent/Child dispose 已由 Stage D 补上（20.15），五个模型 Tool 已由 Stage E 补上（20.17）；当前仍缺失 Agent 冷恢复与 stale claim 接管、层级 Budget、Workspace/Patch 和 Workflow。版本仍为 `0.5.0`，Stage B **不是** v0.6 发布。
+**Stage B 当时仍然缺失的边界**：进程内 `AgentSupervisor`、单一 Live Activation 与其强制、Inbox claim/complete、真正的 wakeup 与 Turn 调度、Agent 冷恢复、`spawn_agent` 等子 Agent Tool、Parent/Child dispose、层级 Budget、WorkspaceProvider 与 Workflow。其中执行相关前四项已由 Stage C 补上（见 20.11–20.14），Parent/Child dispose 已由 Stage D 补上（20.15），五个模型 Tool已由 Stage E 补上（20.17），Budget 事实层已由 v0.7-A 补上（20.20）；当前仍缺失 Agent 冷恢复与 stale claim 接管、Budget 强制、Workspace/Patch 和 Workflow。版本仍为 `0.5.0`，Stage B **不是** v0.6 发布。
 
 ### 20.11 Stage C：Delivery lifecycle 事实层
 
@@ -2105,7 +2111,7 @@ Supervisor 覆盖：accepted→claim→Turn→completed 全链路且 `turn_id` �
 | Worker 异常转 fault | EventStore 重读失败后 `wait_idle()` 返回成功，`DID NOT RAISE ActivationFaultedError` |
 | Runtime cleanup 共享结果 | 第一次 dispose 失败后第二次静默成功，`DID NOT RAISE RuntimeError` |
 
-**Stage C 检查点之后的缺失项中，Parent/Child child-first dispose 已由 Stage D 补上，`spawn_agent`/`send_agent_message`/`wait_agent`/`stop_agent`/`collect_agent_artifact` 五个模型 Tool 已由 Stage E 补上。** 当前仍缺失的是：自动冷恢复与 stale claim 接管、自动重试与 attempt identity、`WorkspaceProvider`/Git worktree/Patch merge、层级 Budget 预留与强制、Workflow、多 Agent 并行编排、`MessageTarget.NEXT_STEP` 投递、MCP、TUI、流式模型输出。
+**Stage C 检查点之后的缺失项中，Parent/Child child-first dispose 已由 Stage D 补上，五个模型 Tool 已由 Stage E 补上，层级 Budget 事实层已由 v0.7-A 补上。** 当前仍缺失的是：自动冷恢复与 stale claim 接管、自动重试与 attempt identity、`WorkspaceProvider`/Git worktree/Patch merge、Budget 执行强制、Workflow、多 Agent 并行编排、`MessageTarget.NEXT_STEP` 投递、MCP、TUI、流式模型输出。
 
 ### 20.15 Stage D：durable ownership 投影与 child-first quiescence
 
@@ -2127,7 +2133,7 @@ Supervisor 覆盖：accepted→claim→Turn→completed 全链路且 `turn_id` �
 
 反向验证真实移除八项保护并在恢复前观察对应失败：post-order 临时反转为 owner-first 时 2 项顺序测试变红；移除 provision 前 owner-live 守卫时 child 虽最终被拒绝却已经错误创建候选 Runtime，测试观察到 provision 计数增加；遇到首个 cleanup 错误立即抛出时，兄弟与 owner 未被清理；移除 malformed Directory 的回收降级路径时，`aclose()` 在任何 cleanup 前泄漏 Activation；移除 durable `request_id` pending 匹配时，unpinned 重试不被取消且子树 disposal 卡在 admission；tree error 不剔除已由其观察的 cleanup Task 时，同一失败在 close 中出现两次；恢复全局按异常对象身份去重时，两个独立 cleanup Task 复用同一 `RuntimeError` 的第二次失败被吞掉；允许被取消的公开 disposer 在 close 开始后继续移除 tree 登记时，`aclose()` 未报告真实 tree failure。八项均恢复正确代码后重新通过 Stage D/Stage C 定向门禁。
 
-**Stage D 检查点当时仍然缺失、但 Stage E 已补上的能力**：模型可调用的 `spawn_agent`/`send_agent_message`/`wait_agent`/`stop_agent`/`collect_agent_artifact` Tool。当前仍缺失的是 Agent 冷恢复、跨进程 Activation lease 与 stale claim takeover、自动重试/attempt identity、独立 Workspace 与 Patch Artifact、层级 Budget、Workflow、`NEXT_STEP`、MCP、TUI 与流式模型输出。Stage D 是进程内显式生命周期保证，不是操作系统沙箱，也不会在进程硬崩溃时运行 cleanup。版本仍为 `0.5.0`，Stage D **不是** v0.6 发布。
+**Stage D 检查点当时仍然缺失、但 Stage E 已补上的能力**：模型可调用的五个子 Agent Tool；Budget 事实层随后也由 v0.7-A 补上。当前仍缺失的是 Agent 冷恢复、跨进程 Activation lease 与 stale claim takeover、自动重试/attempt identity、独立 Workspace 与 Patch Artifact、Budget 强制、Workflow、`NEXT_STEP`、MCP、TUI 与流式模型输出。Stage D 是进程内显式生命周期保证，不是操作系统沙箱，也不会在进程硬崩溃时运行 cleanup。版本仍为 `0.5.0`，Stage D **不是** v0.6 发布。
 
 ### 20.17 Stage E：Supervisor-backed 子 Agent Tool 与 durable run report
 
@@ -2135,15 +2141,15 @@ Stage E 新增 [`supervision/tools.py`](../../src/traceh/supervision/tools.py) �
 
 | Tool | 当前语义 |
 |---|---|
-| `spawn_agent` | 模型只提供 `preset` 与 `workspace_id`；`owner_agent_id` 由宿主绑定，调用现有 `ProcessAgentSupervisor.create()`，child 获得独立 durable identity、Session 与由宿主 Factory 解析的 Scope |
+| `spawn_agent` | 模型只提供 `preset` 与 `workspace_id` intent；`owner_agent_id` 由宿主绑定，先经必须显式提供的 `ChildProvisioningPolicy` 批准/映射，再调用公共 `AgentSupervisor.create()`；child 获得独立 durable identity、Session 与由宿主 Factory 解析的 Scope |
 | `send_agent_message` | 以当前 owner 作为不可伪造的 source，把消息持久接受进 owned descendant 的 FIFO Inbox 并唤醒；返回的 receipt 仍只表示 accepted，不表示 completed |
 | `wait_agent` | 等待**指定 `message_id`** 的已调度工作收敛，再返回 durable report 摘要；取消 waiter 不取消 child Turn |
 | `stop_agent` | 调用 Stage D 的 `dispose(agent_id)`，按 ownership subtree child-first 收敛；只停止 Activation，identity/Inbox/delivery/Session 全部保留 |
 | `collect_agent_artifact` | 读取已经 terminal 的 `AgentRunReport`，把 final text 作为 Tool content，并返回 Inbox/Delivery/Session evidence refs；当前 `artifact_refs` 为空，因为 Stage E 不伪装 v0.7 的 Workspace/Patch Artifact |
 
-**这不是第二套调度器。** Tool 只是薄适配层，仍走 Supervisor 的 create/send/wait/dispose；`AgentLoop`、`AgentRuntime` 和 `PluginManager` 没有 Stage E 改动。宿主通过 `build_default_runtime(additional_tools=toolset.tools)` 或等价的插件/装配路径把 Tool 放进某个 Agent 的 Composition。Factory 如何把 `preset`、`workspace_id` 映射为真实模型、目录和 Agent Scope 仍是宿主策略；通用控制面不把示例名称或本机路径写成默认值。
+**这不是第二套调度器。** Tool 只是薄适配层，仍经公共 `AgentSupervisor` 走同一个 create/send/wait/dispose；当前实现仍是 `ProcessAgentSupervisor`，但 Toolset 不再依赖它的私有类型或 Registrar。`AgentLoop`、`AgentRuntime` 和 `PluginManager` 没有 D0 改动。宿主通过 `build_default_runtime(additional_tools=toolset.tools)` 或等价的插件/装配路径把 Tool 放进某个 Agent 的 Composition。`ChildProvisioningPolicy` 只批准 preset/workspace intent 与描述 metadata；Factory 才能把批准后的标识映射为真实 Provider、model、prompt、Runtime、目录和 Agent Scope。通用控制面不把示例名称或本机路径写成默认值。
 
-**权限在装配时绑定，不由模型声明。** `SupervisorToolset` 同时固定 Supervisor、owner Agent id 和 Runtime 的 EventStore：两个 Store 的 durable object identity 不同就拒绝构造；执行时还要求 `ToolExecutionContext.session_id` 等于该 owner 的 durable Session。send/wait/stop/collect 每次从 Directory 重建 `AgentOwnershipGraph`，只允许 owner 的严格 descendant，不能操作自己、祖先、兄弟或无关树。模型输入 schema 中没有 `owner_agent_id`、capability grant 或 Budget 字段，避免把未强制的 Stage F/v0.7 设计冒充安全边界。
+**权限在装配时绑定，不由模型声明。** `SupervisorToolset` 同时固定公共 Supervisor、owner Agent id、Runtime 的 EventStore 和宿主 Policy：两个 Store 的 durable object identity 不同就拒绝构造；执行时还要求 `ToolExecutionContext.session_id` 等于该 owner 的 durable Session。`AgentToolAuthority` 只保存 reader 与 owner id，每次从 Event Log 重放 fresh Directory，并在同一 snapshot 中校验 caller Session 和严格 descendant；它不缓存 Directory/graph，也不读 live Activation。模型输入 schema 中没有 `owner_agent_id`、capability grant、Budget、task、Provider 或 model 字段，避免把未强制的 v0.7 设计冒充安全边界；task 仍必须另走 `send_agent_message`。
 
 **幂等和取消。** spawn 的 `request_id`、send 的 `message_id` 都从 owner + 当前 Session/Turn/Step/Tool Call identity 确定性派生；同一 Tool Call 重放会加入同一控制面事实，不会生成第二个 child 或第二条消息。create single-flight 在 Supervisor 锁内为每个并发调用登记独立 waiter receipt。shared create 若真正新安装本地 Activation，这份 Activation 起初只是“尚未被外部保留”，而不是永久拥有补偿权；`create()` 交出 handle，或同一 Activation 被公开 `resume()`/wakeup 路径交付时，都会在同一把锁下把它标记为 retained。取消方只有在“自己是最后一个 waiter、没有 create 调用收到 handle、shared create 证明它新安装了本地 Activation、且没有其他公开交付路径先 retained”四个条件同时成立时，才能在锁内选中一次 abandonment cleanup；若 cleanup 先赢，随后的公开复用会 fail-closed，不能拿到已经承诺销毁的 handle。实际任务若在权威 Directory 重读时复用了已有 durable identity，就从一开始没有补偿权；即使调用方入场时拿着另一 create generation 提交前的合法旧快照，也不能销毁已经交付的 child。因此并发首次调用、跨 generation 晚到重试以及 `resume()`/wakeup 与取消 spawn 的竞争都安全；Tool 层与外层 admission 不再用调用开始前的 Directory 布尔快照猜来源。若取消方取得清理权，Supervisor 先离开 lifecycle admission，再收敛对应 subtree，避免 disposal 等待自己持有的 admission；cleanup 期间的第二、第三次取消只会继续等待同一 Task。公开 `create()` 从入口到 admission 外补偿结束都由一个**调用级状态与方法返回回执**登记；调用者 Task 只在该调用仍登记时承担取消传递，绝不是关闭要等待的工作单位。公开协程返回时只调度一个 post-return completion Task；它不可能早于方法返回执行，并在同一次 Supervisor 锁内同时移除调用登记、发布 returned 回执。因此 close 只能看到“仍登记的调用”或“已经发布的完成”，不存在 unregister 后、方法返回前的空窗。`aclose()` 会停止新调用、收敛候选与 forest 资源，再等待这些调用级回执，所以既不能带着 create/cleanup 尾部提前返回，也不会等待调用方在 `create()` 返回后做的无关工作或形成 self-wait。close 与补偿用资源阶段 hand-off 事件避免互相等待。cleanup 自身若失败，外层仍抛裸 `CancelledError`，并把 cleanup failure 保存在其 cause；同时 Supervisor 持有的失败 disposal Task 会在 `aclose()` 再次如实报告。不能把二者装进含取消的 `BaseExceptionGroup`，因为现有 ToolRuntime/AgentLoop/Activation 的取消边界只识别 `CancelledError`，那会穿透 worker 并留下 open claim。已经成功返回给模型或其他公开调用方的 child 是有意创建的资源，不因以后某次 `interrupt(parent)` 自动消失；parent lifecycle `dispose/aclose` 仍按 Stage D ownership 保证收敛，`interrupt()` 仍只取消一个 Turn。
 
@@ -2159,4 +2165,46 @@ Stage E 新增 [`supervision/tools.py`](../../src/traceh/supervision/tools.py) �
 
 v0.6 RC 另用真实 OpenAI-compatible Provider 执行一次完整 product-host 装配：parent 模型依次调用 `spawn_agent`、`send_agent_message`、`wait_agent`、`collect_agent_artifact`、`stop_agent`；child 在独立 Session 完成真实模型 Turn，停用后以相同 durable Agent/Session identity 显式 `resume()` 并完成第二个真实 Turn，随后在确定性模型 Gate 中被 `interrupt()`，最终由 Delivery 与 Session 账本证明为 `cancelled`。该验收得到 2 条 Directory identity、1 条 ownership edge、4 条 Inbox acceptance、8 条 Delivery lifecycle event；parent 1 个闭合 Turn、child 3 个闭合 Turn，不变量与 Request Snapshot 重建违规均为 0。验收只通过公开 Runtime/Supervisor/Tool/Inspector 接口；临时 Workspace 与 Session 数据位于仓库外且不进入发行资产，未把模型、路径或凭据写成默认值。完整发行门禁见 [`validation-v0.6.0.md`](../validation-v0.6.0.md)。
 
-**v0.6.0 发布后仍缺失**：模型 Tool 的默认 CLI 产品装配与丰富交互；跨进程 Activation lease、冷恢复、stale claim takeover、自动 retry/attempt identity；层级 Budget 预留与强制（当前 `Budget` 仍只是 identity 字段）；独立 Workspace/Git worktree/Patch Artifact/merge；Workflow 与并行 join；`NEXT_STEP`；MCP、TUI 和流式模型输出。五个 Tool 运行在与宿主相同的进程/用户权限下，不是 OS 沙箱。
+**v0.6.0 发布时仍缺失**：模型 Tool 的默认 CLI 产品装配与丰富交互；跨进程 Activation lease、冷恢复、stale claim takeover、自动 retry/attempt identity；层级 Budget；独立 Workspace/Git worktree/Patch Artifact/merge；Workflow 与并行 join；`NEXT_STEP`；MCP、TUI 和流式模型输出。v0.7-A 已补 Budget 事实层，但尚未补强制，其余边界也未变化。五个 Tool 运行在与宿主相同的进程/用户权限下，不是 OS 沙箱。
+
+### 20.19 v0.7 D0：先固定控制面的接缝，不提前造能力
+
+D0 只解决「后续 Budget/Workspace/Patch/Workflow 应该从哪里接入」，不实现这些能力。完整决定见 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md) 与 [ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)。
+
+依赖方向现在固定为：未来 managed control service 在上层协调 Budget reservation → provisional Workspace → 公共 `AgentSupervisor.create()` → durable Directory reconciliation → Budget commit/release → Workspace attach/release/quarantine；它包住**一个**现有 `ProcessAgentSupervisor`，不能另建 Activation 表、Inbox、Directory 或关闭协议。Budget ledger、Workspace manager、Artifact service、Promotion service 与 Workflow 各自只拥有本域事实，Workflow 只调用这些公开服务。`AgentLoop` 仍只处理单个 Session/Turn/Step，`AgentRuntime` 仍只是一名 Agent 的执行门面。
+
+D0 的真实代码变化只有三个接缝：
+
+1. 公共 `AgentSupervisor` 增加只读 `store` 身份面，`SupervisorToolset` 的类型依赖改为该 Protocol；
+2. [`supervision/authority.py`](../../src/traceh/supervision/authority.py) 的 `AgentToolAuthority` 每次用 `AgentDirectoryReader` fresh replay caller/严格后代权限，没有缓存第二份身份事实；
+3. [`supervision/provisioning.py`](../../src/traceh/supervision/provisioning.py) 的 mandatory `ChildProvisioningPolicy` 只返回 `preset`、`workspace_id`、`metadata`。没有默认 pass-through；owner、Budget、grants、task、Provider/model/prompt/runtime 均不在 proposal 中，metadata 会在交给 Supervisor 前走既有 `freeze_agent_spec()` 脱离与校验。
+
+五个 Tool 的名称、input schema、Event 协议和幂等/取消/关闭语义都没有改变；`AgentActivationFactory` 仍是 concrete Runtime capability 与目录的唯一解析边界。新增架构守卫证明 Protocol-only Supervisor 可真实走 spawn、invalid Policy 在 create 前失败、Policy 不能夹带 runtime/task/Budget 字段、Authority 能看到后来追加的 child 且拒绝 self，并以 AST/import 检查固定 `AgentLoop`、`AgentRuntime`、`PluginManager` 和 concrete Supervisor 的依赖方向。
+
+Budget 在 D0 **仍未执行**；随后 v0.7-A 已按 ADR-0025 落实破坏式切换，详见 20.20：不会保留 `LegacyBudget`/`BudgetV2`、旧字段别名、双 writer/projector 或自动迁移；旧 v0.6 managed history 不能被猜成新 grant，而且程序绝不自动删除旧 `.traceh`。这条切换只针对 Budget，不授权破坏无关的插件、Session、EventStore 或单 Agent Runtime API。
+
+当前版本仍为 `0.6.0`。D0 没有创建 managed Workspace、Patch Artifact、Promotion、Workflow、Budget event 或 CLI 产品入口，也不是 OS sandbox。新增 5 项架构守卫；与既有 Tool/Supervisor 的定向门禁为 `96 passed`，全仓为 `1712 collected / 1711 passed / 1 skipped`。三项反向验证分别把 Toolset 协议注解退化为 `object`、绕过 host policy、缓存第一次 Directory；对应守卫均按根因失败，恢复后的两个生产文件 SHA-256 与验证前一致。D0 之后的 v0.7-A Budget Ledger 已由 20.20 补上；Workspace 与 Workflow 仍未开始。
+
+### 20.20 v0.7-A：单一 append-only 层级 Budget Ledger
+
+完整决定见 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)。Stage A 做的是**事实与权限来源切换**，不是执行接线：旧 `AgentSpec.budget`、`AgentRecord.budget` 和公共 `Budget` DTO 已删除；新 `agent/created` 使用 schema version 2 且没有 Budget 字段。schema version 1 的 v0.6 history 明确得到 `agent-budget-history-unsupported`，没有 alias、upcaster、双 reader/writer、自动 grant 推断或删除旧目录。
+
+[`api/budgets.py`](../../src/traceh/api/budgets.py) 提供七个必填 limit 的只读值、四种 durable usage amount 和只读 Account/Reservation/Charge；[`budgets/events.py`](../../src/traceh/budgets/events.py) 定义一条 `budgets:ledger` 的六种唯一事实；[`budgets/projection.py`](../../src/traceh/budgets/projection.py) 从这些事实与 fresh Agent Directory 重建所有余额；[`budgets/service.py`](../../src/traceh/budgets/service.py) 是唯一宿主写入服务。没有 per-Agent Budget stream、mutable balance、Runtime cache 或模型 Tool。
+
+| 维度 | Stage A 语义 |
+|---|---|
+| token / Step / Tool call / wall milliseconds | usage 与 child delegation 共用同一累计容量；child grant 从 parent 永久 carve out |
+| direct children | 每个 reservation 恰好 hold 1；`BudgetAmounts` 没有 children 字段，避免第二条记账路径 |
+| depth | child 必须严格递减的非消耗约束 |
+| processes | durable limit/child 单调约束已记录；真实进程 slot 是 Stage B 的 process-local lease |
+| `None` | 宿主明确未激活该维度，不是漏填后得到的宽松默认 |
+
+根 grant 只能指向 durable root Agent。child reservation 在 Agent 创建前立即占用 parent 容量；精确匹配 `child_agent_id + creation_request_id + owner_agent_id` 的 Directory 事实是**唯一**创建 commit proof，并据此打开 child Budget account。`budget/reservation-committed` 只是可选审计确认，不是第二条 identity。失败创建只有在 trusted host 明确提供 `creation_converged=True`，且 fresh Directory 同时没有 child/request 时才可 release。跨 Directory/Budget 两条流不存在原子 absence transaction，因此绕过未来 managed saga 的外部 writer 可使 history 进入 fail-closed contradiction；Stage B 必须在 D0 控制面上串行化受管 create/cleanup，这一边界不伪装成 Stage A 已解决。
+
+每次写入先完整 replay，再以 Budget stream `expected_seq` CAS 追加。`operation_id` 全局唯一；child id 与 creation request id 即使 release 后也不能换一个 reservation 重新解释。完全相同的 event type + canonical JSON payload 才是幂等重试，`true`/`1`/`1.0` 不会被 Python 相等规则混淆。append 失败或取消后复用同一收敛 helper 得到 committed/absent/unknown 三态；重复取消不能留下 reconciliation Task，普通 payload/Envelope 异常被稳定归一化，解释器级 `BaseException` 不被吞掉。
+
+跨流重建固定先读依赖方 Budget prefix、再读作为前置事实的 fresh Directory。这样任何已读到的 root grant/commit 都能看见更早落盘的 Agent 事实，不会把合法并发写入拼成“旧 Directory + 新 Ledger”的虚假损坏；反向出现“旧 Ledger + 新 Directory”只会保守地不给额外 Budget authority。Budget 数值只接受精确内置 `int`，在范围比较前拒绝 bool 和敌意 int 子类，公共写入与回放各自稳定归一化为 input/protocol error。
+
+Stage A **没有**修改 `AgentLoop`、`AgentRuntime`、`PluginManager`、Supervisor scheduler、五个 Tool schema 或 CLI，也不会自动 reserve/charge/stop。下一阶段只能是 v0.7-B：在 managed create、model attempt、Step、Tool dispatch 与 process slot 的既有 owned boundary 上复用这本 Ledger 并保证取消/失败收敛；不能另造余额或把 Budget 分支塞进主循环。
+
+新增 [`tests/test_budget_ledger.py`](../../tests/test_budget_ledger.py) `41 passed`，覆盖 root/child 状态、容量守恒、唯一 correlation、Directory-only commit、converged release、inactive/closed/depth 边界、CAS 并发、跨流依赖顺序、精确幂等、append 三态、取消、敌意 event/payload/数值、旧 history 明确拒绝和 API cutover。Budget + identity/lifecycle/D0 扩大定向集 `290 passed`；全仓 `1732 collected / 1731 passed / 1 skipped`。五项反向验证分别移除 delegation debit、Directory commit proof、schema-v1 专用拒绝、依赖顺序读取和精确整数保护；对应测试均按根因变红，恢复后源码哈希或定向门禁回到正确状态。

@@ -89,11 +89,13 @@ class AgentExecution(Protocol):
 class AgentActivationFactory(Protocol):
     """Builds the execution runtime for an Agent.
 
-    Deliberately injected rather than implemented here. Turning a ``preset``
-    into a model configuration, or a ``workspace_id`` into a directory, is a
-    host policy question - treating ``workspace_id`` as a local path, or
-    defaulting a preset to some example, would bake one deployment's choices
-    into the control plane.
+    Deliberately injected rather than implemented here. A
+    ``ChildProvisioningPolicy`` may approve or map the preset/workspace intent,
+    but this factory remains the only seam that turns the approved ``preset``
+    into a Provider, model, prompt and runtime, or the approved
+    ``workspace_id`` into a concrete directory. Treating ``workspace_id`` as a
+    local path, or defaulting a preset to some example, would bake one
+    deployment's choices into the control plane.
     """
 
     async def provision(

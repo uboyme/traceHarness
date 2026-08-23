@@ -2,6 +2,51 @@
 
 ## Unreleased
 
+### v0.7-A: append-only hierarchical Budget ledger
+
+- Removed the unenforced v0.6 `Budget` field from Agent identity instead of
+  retaining a compatibility DTO. New Agent facts use schema version 2; old
+  schema-version-1 Budget histories fail explicitly and remain untouched.
+- Added one global `budgets:ledger` fact vocabulary, immutable projector and
+  host mutation service for root grants, child reservations, exact
+  Directory-backed commit, converged release, usage charges and terminal
+  accounts. Tokens, Steps, Tool calls, wall milliseconds and direct-child
+  capacity are conserved without a mutable balance or Runtime cache.
+- Added CAS, globally unique operation ids, immutable child/request
+  correlation ids, canonical-JSON idempotency and three-state append
+  reconciliation. Child count has one accounting path through reservations;
+  process slots remain a Stage B process-local lease.
+- Ordered cross-stream replay as Budget prefix then fresh Directory, preventing
+  legal concurrent root/commit writes from being mistaken for corrupt history.
+  Exact built-in integers are required so hostile numeric subclasses cannot
+  leak caller-controlled comparison failures.
+- Recorded the implemented protocol and its cross-stream/trusted-host boundary
+  in ADR-0026. Stage A does not change `AgentLoop`, `AgentRuntime`,
+  `PluginManager`, Supervisor scheduling, Tool schemas or the CLI; real
+  enforcement remains Stage B. The Budget Ledger suite is 41 passed, the
+  expanded identity/lifecycle/D0 set is 290 passed, and the complete gate is
+  1732 collected / 1731 passed / 1 skipped.
+
+### v0.7 D0: managed control-plane seams
+
+- Changed `SupervisorToolset` to depend on the public `AgentSupervisor`
+  protocol and added the store identity surface required to prove that Tool
+  authority and control operations share one durable Event Log.
+- Added a cache-free `AgentToolAuthority` that replays the Directory for each
+  caller/strict-descendant decision, plus a mandatory host
+  `ChildProvisioningPolicy` whose proposal is limited to preset, workspace
+  intent and descriptive metadata. Task delivery remains a separate Tool and
+  concrete Provider/model/prompt/runtime resolution remains in
+  `AgentActivationFactory`.
+- Recorded the v0.7 dependency/threat model and the intentional breaking
+  hierarchical-Budget cutover in ADR-0024/0025. D0 adds no Budget event,
+  Workspace, Patch, Workflow, Tool schema or CLI capability; version remains
+  `0.6.0`.
+- Added five architecture guards. The D0 + existing Tool/Supervisor targeted
+  gate is 96 passed; the repository collects 1712 tests and the complete gate
+  is 1711 passed, 1 skipped. Reverse checks prove the guards fail if the public
+  Supervisor seam, mandatory policy call or fresh Directory replay is removed.
+
 ## 0.6.0 - 2026-08-23
 
 ### Release candidate acceptance

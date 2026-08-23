@@ -76,7 +76,9 @@ def _directory_message(code: str) -> str:
         "agent-payload-keys-unexpected": "an agent creation fact has unexpected payload keys",
         "agent-payload-invalid": "an agent creation fact is malformed",
         "agent-identity-invalid": "an agent creation fact has an unusable identity",
-        "agent-budget-invalid": "an agent creation fact has a malformed budget",
+        "agent-budget-history-unsupported": (
+            "the Agent directory contains unsupported v0.6 Budget history"
+        ),
         "agent-grants-invalid": "an agent creation fact has malformed capability grants",
         "agent-metadata-invalid": "an agent creation fact has malformed metadata",
         "agent-id-duplicate": "two agent creation facts claim the same agent id",

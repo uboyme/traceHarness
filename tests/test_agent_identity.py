@@ -43,10 +43,10 @@ from traceh.agents import (  # noqa: F401
 )
 from traceh.agents.identity import (
     AGENT_CREATED_KEYS,
-    MAX_BUDGET_VALUE,
+    AGENT_EVENT_SCHEMA_VERSION,
     MAX_METADATA_DEPTH,
 )
-from traceh.api.agents import AgentRecord, AgentSpec, Budget
+from traceh.api.agents import AgentRecord, AgentSpec
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.session.event_store import (
     ConcurrencyConflict,
@@ -74,7 +74,13 @@ async def read_directory(store: EventStore) -> AgentDirectory:
     return await AgentDirectoryReader(store).load()
 
 
-async def raw_append(store: EventStore, data: dict, *, event_type: str = AGENT_CREATED) -> None:
+async def raw_append(
+    store: EventStore,
+    data: dict,
+    *,
+    event_type: str = AGENT_CREATED,
+    schema_version: int = AGENT_EVENT_SCHEMA_VERSION,
+) -> None:
     """Append a payload directly, bypassing every registrar check.
 
     This is how the tests produce histories the writer would never create:
@@ -86,7 +92,13 @@ async def raw_append(store: EventStore, data: dict, *, event_type: str = AGENT_C
     await store.append(
         AGENT_DIRECTORY_STREAM,
         expected_seq=head,
-        events=(PendingEvent(type=event_type, data=data),),
+        events=(
+            PendingEvent(
+                type=event_type,
+                data=data,
+                schema_version=schema_version,
+            ),
+        ),
     )
 
 
@@ -438,7 +450,6 @@ async def test_creation_records_no_communication_relation():
         "owner_agent_id",
         "forked_from_session_id",
         "capability_grants",
-        "budget",
         "metadata",
     }
     assert not any(
@@ -575,12 +586,6 @@ async def test_identity_errors_never_echo_the_rejected_value():
         (lambda data: data.__setitem__("capability_grants", "read"), "agent-grants-invalid"),
         (lambda data: data.__setitem__("capability_grants", ["a", "a"]), "agent-grants-invalid"),
         (lambda data: data.__setitem__("capability_grants", [None]), "agent-grants-invalid"),
-        (lambda data: data.__setitem__("budget", None), "agent-budget-invalid"),
-        (lambda data: data.__setitem__("budget", {}), "agent-budget-invalid"),
-        (lambda data: data["budget"].__setitem__("max_steps", True), "agent-budget-invalid"),
-        (lambda data: data["budget"].__setitem__("max_steps", -1), "agent-budget-invalid"),
-        (lambda data: data["budget"].__setitem__("max_steps", "5"), "agent-budget-invalid"),
-        (lambda data: data["budget"].__setitem__("extra", 1), "agent-budget-invalid"),
         (lambda data: data.__setitem__("metadata", []), "agent-metadata-invalid"),
     ],
 )
@@ -605,7 +610,7 @@ async def test_a_malformed_record_is_never_silently_dropped():
     store = InMemoryEventStore()
     await AgentRegistrar(store).create_agent(SPEC, request_id="r1", agent_id="a1", session_id="s1")
     broken = agent_created_data(agent_id="a2", session_id="s2", request_id="r2", spec=spec())
-    broken["budget"] = "unlimited"
+    broken["metadata"] = "not-json-metadata"
     await raw_append(store, broken)
     await raw_append(
         store,
@@ -618,7 +623,7 @@ async def test_a_malformed_record_is_never_silently_dropped():
     # The scan reports the one bad record rather than quietly returning the
     # two good ones around it.
     issues = validate_agent_directory_events(events)
-    assert [(issue.code, issue.seq) for issue in issues] == [("agent-budget-invalid", 2)]
+    assert [(issue.code, issue.seq) for issue in issues] == [("agent-metadata-invalid", 2)]
 
 
 async def test_a_broken_directory_blocks_new_creations_instead_of_writing_into_it():
@@ -627,12 +632,12 @@ async def test_a_broken_directory_blocks_new_creations_instead_of_writing_into_i
 
     store = InMemoryEventStore()
     broken = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
-    broken["budget"] = "unlimited"
+    broken["metadata"] = "not-json-metadata"
     await raw_append(store, broken)
 
     with pytest.raises(AgentDirectoryProtocolError) as error:
         await AgentRegistrar(store).create_agent(SPEC, request_id="r2", agent_id="a2")
-    assert error.value.code == "agent-budget-invalid"
+    assert error.value.code == "agent-metadata-invalid"
     assert len(await store.read(AGENT_DIRECTORY_STREAM)) == 1
 
 
@@ -1016,8 +1021,6 @@ async def test_the_returned_record_equals_the_replayed_record_exactly():
             owner_agent_id=None,
             forked_from_session_id="origin",
             capability_grants=("read", "write"),
-            budget=Budget(max_tokens=11, max_steps=2, max_tool_calls=3, max_wall_seconds=4.5,
-                          max_children=1, max_depth=1, max_processes=1),
             metadata={"note": "example", "nested": {"k": [1, 2]}},
         ),
         request_id="r1",
@@ -1027,7 +1030,6 @@ async def test_the_returned_record_equals_the_replayed_record_exactly():
 
     replayed = (await read_directory(store)).get("a1")
     assert replayed == record
-    assert replayed.budget.max_wall_seconds == 4.5
     assert replayed.metadata == {"note": "example", "nested": {"k": [1, 2]}}
 
 
@@ -1078,64 +1080,6 @@ class FailingReadStore:
 
     async def list_streams(self, *, prefix=None):
         return await self.inner.list_streams(prefix=prefix)
-
-
-@pytest.mark.parametrize(
-    "budget",
-    [
-        Budget(max_steps=True),
-        Budget(max_tokens=-1),
-        Budget(max_processes=False),
-        Budget(max_wall_seconds=-0.5),
-        Budget(max_wall_seconds=float("nan")),
-        Budget(max_wall_seconds=float("inf")),
-        Budget(max_wall_seconds=float("-inf")),
-        Budget(max_wall_seconds="abc"),
-        Budget(max_wall_seconds=None),
-        Budget(max_steps="5"),
-    ],
-)
-async def test_a_budget_replay_would_reject_is_never_appended(budget):
-    """The writer must not be able to commit a fact the reader refuses.
-
-    A rule applied more loosely on the write path is not a weaker check: it is
-    a way to append a record that can never be read back. One such event used
-    to brick the whole directory for that store - every later rebuild *and*
-    every later creation failed forever.
-    """
-
-    store = InMemoryEventStore()
-
-    with pytest.raises(AgentIdentityError) as error:
-        await AgentRegistrar(store).create_agent(spec(budget=budget), request_id="r1")
-
-    assert error.value.code == "agent-budget-invalid"
-    assert error.value.field == "budget"
-    assert await store.read(AGENT_DIRECTORY_STREAM) == ()
-    # The directory is still usable, and a good creation still succeeds.
-    assert len(await read_directory(store)) == 0
-    assert (await AgentRegistrar(store).create_agent(SPEC, request_id="r2")).request_id == "r2"
-
-
-async def test_every_accepted_budget_survives_a_round_trip():
-    """Write-side acceptance and read-side acceptance are the same rule."""
-
-    store = InMemoryEventStore()
-    budget = Budget(
-        max_tokens=0,
-        max_steps=7,
-        max_tool_calls=1,
-        max_wall_seconds=0.0,
-        max_children=2,
-        max_depth=3,
-        max_processes=4,
-    )
-    record = await AgentRegistrar(store).create_agent(
-        spec(budget=budget), request_id="r1", agent_id="a1"
-    )
-
-    assert record.budget == budget
-    assert (await read_directory(store)).get("a1").budget == budget
 
 
 async def test_a_failed_reconciliation_read_reports_unknown_not_uncommitted():
@@ -1450,47 +1394,6 @@ async def test_metadata_the_store_cannot_encode_is_rejected_before_the_append(me
     assert await store.read(AGENT_DIRECTORY_STREAM) == ()
 
 
-@pytest.mark.parametrize("field", ["max_wall_seconds", "max_steps", "max_tokens"])
-async def test_an_enormous_budget_number_stays_inside_the_error_protocol(field):
-    """``10**10000`` is an ``int``, is not negative, and used to raise a bare
-    ``OverflowError`` out of ``float()``/``math.isfinite()`` - escaping the
-    fixed ``agent-budget-invalid`` outcome on both paths at once."""
-
-    huge = 10**10000
-    store = InMemoryEventStore()
-
-    with pytest.raises(AgentIdentityError) as error:
-        await AgentRegistrar(store).create_agent(
-            spec(budget=Budget(**{field: huge})), request_id="r1"
-        )
-    assert error.value.code == "agent-budget-invalid"
-    assert await store.read(AGENT_DIRECTORY_STREAM) == ()
-
-    # And the same value already persisted by some other writer replays as a
-    # stable protocol error, not an OverflowError.
-    data = agent_created_data(agent_id="a1", session_id="s1", request_id="r1", spec=spec())
-    data["budget"][field] = huge
-    await raw_append(store, data)
-    with pytest.raises(AgentDirectoryProtocolError) as replay_error:
-        await read_directory(store)
-    assert replay_error.value.code == "agent-budget-invalid"
-
-
-async def test_budget_values_are_bounded_at_the_json_safe_integer():
-    store = InMemoryEventStore()
-    at_limit = Budget(max_steps=MAX_BUDGET_VALUE, max_wall_seconds=float(2**52))
-    record = await AgentRegistrar(store).create_agent(
-        spec(budget=at_limit), request_id="r1", agent_id="a1"
-    )
-    assert record.budget.max_steps == MAX_BUDGET_VALUE
-    assert (await read_directory(store)).get("a1").budget == record.budget
-
-    with pytest.raises(AgentIdentityError):
-        await AgentRegistrar(InMemoryEventStore()).create_agent(
-            spec(budget=Budget(max_steps=MAX_BUDGET_VALUE + 1)), request_id="r2"
-        )
-
-
 async def test_an_unpinned_retry_still_returns_the_same_agent():
     """The frozen-payload comparison must not reject a legitimate retry.
 
@@ -1561,7 +1464,7 @@ def envelope_with_metadata(metadata: object, *, seq: int = 1) -> EventEnvelope:
         stream_id=AGENT_DIRECTORY_STREAM,
         seq=seq,
         type=AGENT_CREATED,
-        schema_version=1,
+        schema_version=AGENT_EVENT_SCHEMA_VERSION,
         data=data,
         occurred_at=datetime.now(UTC),
     )
@@ -1930,7 +1833,7 @@ async def test_a_malformed_unrelated_event_does_not_make_the_answer_unknown():
                 broken = agent_created_data(
                     agent_id="a2", session_id="s2", request_id="r2", spec=spec()
                 )
-                broken["budget"] = "unlimited"
+                broken["metadata"] = "not-json-metadata"
                 await raw_append(self.inner, broken)
             raise RuntimeError("failed after committing")
 
@@ -1989,7 +1892,7 @@ def poisoned_directory_event(container) -> EventEnvelope:
         stream_id=AGENT_DIRECTORY_STREAM,
         seq=1,
         type=AGENT_CREATED,
-        schema_version=1,
+        schema_version=AGENT_EVENT_SCHEMA_VERSION,
         data=container(data),
         occurred_at=datetime.now(UTC),
     )
@@ -2139,7 +2042,7 @@ def test_a_hostile_envelope_protocol_field_is_a_directory_protocol_error(field):
             stream_id=AGENT_DIRECTORY_STREAM,
             seq=1,
             type=AGENT_CREATED,
-            schema_version=1,
+            schema_version=AGENT_EVENT_SCHEMA_VERSION,
             data=data,
             occurred_at=datetime.now(UTC),
         ),
@@ -2170,7 +2073,7 @@ def test_an_interrupt_from_a_directory_envelope_field_is_not_a_protocol_error(
             stream_id=AGENT_DIRECTORY_STREAM,
             seq=1,
             type=AGENT_CREATED,
-            schema_version=1,
+            schema_version=AGENT_EVENT_SCHEMA_VERSION,
             data=data,
             occurred_at=datetime.now(UTC),
         ),
@@ -2191,7 +2094,7 @@ def _directory_envelope(**overrides) -> EventEnvelope:
         "stream_id": AGENT_DIRECTORY_STREAM,
         "seq": 1,
         "type": AGENT_CREATED,
-        "schema_version": 1,
+        "schema_version": AGENT_EVENT_SCHEMA_VERSION,
         "data": data,
         "occurred_at": datetime.now(UTC),
     }

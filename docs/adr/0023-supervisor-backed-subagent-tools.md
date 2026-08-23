@@ -4,6 +4,13 @@
 - Date: 2026-08-22
 - Stage: v0.6 Stage E
 
+> v0.7 D0 amendment: the Stage E behaviour and five Tool schemas remain, but
+> `SupervisorToolset` now targets the public `AgentSupervisor` protocol,
+> authorization is owned by a fresh-reader `AgentToolAuthority`, and child
+> intent must pass an explicit host `ChildProvisioningPolicy`. The new decision
+> and dependency boundary are recorded in [ADR-0024](0024-v07-managed-agent-control-plane-and-threat-boundary.md);
+> the original sections below remain the historical Stage E decision.
+
 ## Context
 
 Stages A–D established durable Agent identity, FIFO acceptance, claim/terminal

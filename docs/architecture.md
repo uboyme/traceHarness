@@ -2,11 +2,11 @@
 
 ## Goal
 
-TraceHarness v0.4 is a small coding-agent runtime whose current implementation can grow
+TraceHarness v0.6 is a small coding-agent runtime whose current implementation can grow
 without turning `AgentLoop` into a feature switchboard. The stable center is protocol
 semantics, not a specific provider, tool set or UI.
 
-That rule is why v0.4's plugin system sits in the runtime *assembly* layer rather than
+That rule is why the plugin system sits in the runtime *assembly* layer rather than
 inside the loop: plugin tools, prompt sections and services join the existing registries,
 and `AgentLoop` has no reference to `PluginManager`. See
 [`plugins.md`](plugins.md) and [ADR-0007](adr/0007-transactional-plugin-activation.md).
@@ -23,6 +23,9 @@ Control
   AgentInboxService, AgentInbox (durable accepted-message facts)
   ProcessAgentSupervisor, AgentDeliveryService, AgentDeliveryLog
     (process-local Activations; durable claim and outcome facts)
+  SupervisorToolset -> AgentSupervisor protocol
+  AgentToolAuthority, ChildProvisioningPolicy
+    (fresh durable authorization; explicit host provisioning decision)
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
@@ -100,8 +103,9 @@ Dependencies still point downward - the CLI timeline depends on the feed, and no
 11. close the Turn.
 
 Provider retry, prompt sections, policies, verification and persistence are delegated to
-services. Subagents should later be tools backed by `AgentSupervisor`, not branches in
-this loop.
+services. Subagents are ordinary tools backed by `AgentSupervisor`, not branches in this
+loop; v0.7 Budget, Workspace, Artifact, Promotion and Workflow services must remain above
+the same boundary.
 
 ## State planes
 
@@ -153,7 +157,35 @@ before returning. Reports are reconstructed from Inbox, delivery and Session fac
 second result cache. This facade remains in `traceh.supervision`; it does not change
 `AgentLoop`, `AgentRuntime` or `PluginManager`. See
 [ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring, cold recovery,
-managed Workspaces/Patch Artifacts and hierarchical budgets remain future work.
+managed Workspaces/Patch Artifacts and Budget enforcement remain future work.
+
+v0.7 D0 narrows that adapter without changing its five schemas or any durable event. The
+Toolset now accepts the public `AgentSupervisor` protocol rather than the concrete process
+implementation. A separate `AgentToolAuthority` replays a fresh `AgentDirectory` for every
+caller/descendant decision, while a mandatory `ChildProvisioningPolicy` converts only
+preset/workspace intent into an approved proposal. Owner, Budget, grants and executable
+Provider/model/prompt/runtime choices are not proposal fields; the existing
+`AgentActivationFactory` remains their runtime-resolution boundary. Future managed
+orchestration must wrap one `ProcessAgentSupervisor` and compose domain services rather than
+add state to it. See [ADR-0024](adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)
+and [ADR-0025](adr/0025-hierarchical-budget-breaking-cutover.md).
+
+### Budget Ledger Stream
+
+v0.7-A adds one `budgets:ledger` stream above Agent identity. It records
+host-issued root grants, child reservations, optional commit acknowledgements,
+converged release, usage charges and terminal accounts. Remaining capacity is
+always projected from immutable facts; it is not stored in `AgentRuntime`, the
+Supervisor or a mutable balance table. The exact `agents:directory` child fact
+is the only creation commit proof, so a Budget writer cannot invent an Agent.
+
+The v0.6 `AgentSpec.budget`/`AgentRecord.budget` shape was removed rather than
+kept as a second meaning of authority. New Agent identity uses schema version
+2, while old schema-version-1 Budget history fails closed and is never
+auto-migrated or deleted. Stage A exposes a host service only; Stage B will
+compose reservation and charging around existing create/model/Step/Tool/process
+boundaries without changing the thin loop. See
+[ADR-0026](adr/0026-append-only-hierarchical-budget-ledger.md).
 
 ### Agent Inbox Streams
 

@@ -294,15 +294,40 @@ invariant violations and zero request-reconstruction violations.
 
 ## v0.7: Budgets, workspaces and workflows
 
-- Add hierarchical token/Step/tool/process/child budgets with reservation events.
-- Add `WorkspaceProvider`, snapshots, Git worktrees or overlay branches and Patch
-  Artifacts.
-- Add resource claims for cross-Agent read/write coordination.
-- Add Workflow Engine nodes for AgentTask, Map, Join, Approval and Verification.
-- Ship a Reviewer-Coder-Parent demonstration.
+- **D0 — architecture seams (complete, unreleased):** make `SupervisorToolset`
+  depend on the public `AgentSupervisor` protocol, move durable Tool authority
+  into a fresh-reader `AgentToolAuthority`, require an explicit host
+  `ChildProvisioningPolicy`, and freeze the v0.7 dependency/threat boundary.
+- **A — hierarchical Budget protocol (complete, unreleased):** replaced the
+  unenforced v0.6 Budget DTO path with one append-only reservation/charge
+  ledger and schema-v2 Agent identity. Root grants, child holds,
+  Directory-backed commit, release, charges, terminal accounts, CAS,
+  idempotency and three-state reconciliation now exist. This is an intentional
+  pre-1.0 breaking cutover: no legacy/V2 mode, aliases, dual projector or
+  automatic migration; old managed histories fail closed and remain untouched.
+- **B — Budget enforcement:** reserve before managed create/effects, commit or
+  release after durable reconciliation, and enforce tokens/Steps/tools/process
+  slots/children at their existing owned boundaries without adding branches to
+  `AgentLoop`.
+- **C — managed Git workspaces:** provision contained worktrees, bind their
+  lifecycle to the managed Agent operation and quarantine uncertain cleanup.
+- **D1 — immutable Patch Artifacts:** collect a patch from one managed workspace
+  with base revision, byte digest and verification inputs; final text is not an
+  artifact.
+- **D2 — verification and human promotion:** run fixed host verification, record
+  explicit approval and promote the exact artifact through Git compare-and-swap.
+  No model may approve or move a target ref.
+- **E — typed Workflow:** compose public Budget/Workspace/Supervisor/Artifact/
+  Promotion services as AgentTask, Map, Join, Approval and Verification nodes;
+  do not build a second scheduler or fact source.
+- **F — product gate:** add explicit CLI/host assembly, a Reviewer–Coder–Parent
+  end-to-end demonstration, packaging/security checks and the v0.7 release.
 
 Definition of done: parallel coding children do not share one mutable directory and the
-parent merges evidence-backed patches.
+host can promote only an immutable, fixed-suite-verified, human-approved patch while the
+existing Agent Runtime, Supervisor concurrency kernel and Event Log fact sources stay singular.
+See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md) and
+[ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md).
 
 ## v1.0: Stable plugin platform
 

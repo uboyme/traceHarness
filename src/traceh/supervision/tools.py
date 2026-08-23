@@ -1,4 +1,4 @@
-"""Model-visible subagent tools backed by `ProcessAgentSupervisor`.
+"""Model-visible subagent tools backed by the public `AgentSupervisor` seam.
 
 This is an adapter above the control plane, not a second scheduler. Every tool
 delegates to the same Supervisor methods a host caller uses, and every durable
@@ -22,23 +22,29 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import NAMESPACE_URL, uuid5
 
-from traceh.agents.identity import require_identifier
+from traceh.agents import AgentDirectoryReader
+from traceh.agents.identity import freeze_agent_spec, require_identifier
 from traceh.agents.inbox_identity import is_message_content
-from traceh.api.agents import AgentMessage, AgentRunReport, AgentSpec, MessageTarget
+from traceh.api.agents import (
+    AgentMessage,
+    AgentRunReport,
+    AgentSpec,
+    AgentSupervisor,
+    MessageTarget,
+)
 from traceh.api.json_types import JsonValue
 from traceh.api.tools import EffectKind, Tool, ToolExecutionContext, ToolOutput
 from traceh.session.event_store import EventStore
+from traceh.supervision.authority import (
+    AgentToolAuthority,
+    AgentToolAuthorizationError,
+    AgentToolBindingError,
+)
 from traceh.supervision.execution import durable_log_identity
-from traceh.supervision.lifecycle import AgentOwnershipGraph
-from traceh.supervision.supervisor import ProcessAgentSupervisor
-
-
-class AgentToolBindingError(RuntimeError):
-    """The host bound the tools to a different Agent or durable store."""
-
-
-class AgentToolAuthorizationError(PermissionError):
-    """A bound Agent tried to operate outside its ownership subtree."""
+from traceh.supervision.provisioning import (
+    ChildProvisioningPolicy,
+    ChildProvisioningProposal,
+)
 
 
 def _operation_id(kind: str, owner_agent_id: str, context: ToolExecutionContext) -> str:
@@ -63,50 +69,63 @@ def _required_string(arguments: dict[str, JsonValue], name: str) -> str:
 
 
 class _BoundAgentControl:
-    __slots__ = ("owner_agent_id", "supervisor")
+    __slots__ = ("authority", "provisioning_policy", "supervisor")
 
     def __init__(
         self,
         *,
-        supervisor: ProcessAgentSupervisor,
-        owner_agent_id: str,
-        event_store: EventStore,
+        supervisor: AgentSupervisor,
+        authority: AgentToolAuthority,
+        provisioning_policy: ChildProvisioningPolicy,
     ) -> None:
-        self.owner_agent_id = require_identifier(owner_agent_id, field="owner_agent_id")
-        if durable_log_identity(supervisor.store) is not durable_log_identity(event_store):
+        if durable_log_identity(supervisor.store) is not durable_log_identity(
+            authority.store
+        ):
             raise AgentToolBindingError(
                 "the subagent tools and their Runtime use different event stores"
             )
         self.supervisor = supervisor
+        self.authority = authority
+        self.provisioning_policy = provisioning_policy
+
+    @property
+    def owner_agent_id(self) -> str:
+        return self.authority.owner_agent_id
 
     async def _require_caller(self, context: ToolExecutionContext) -> None:
-        directory = await self.supervisor.registrar.directory()
-        owner = directory.get(self.owner_agent_id)
-        if owner is None or owner.session_id != context.session_id:
-            raise AgentToolBindingError(
-                "the subagent tools are running outside their bound Agent Session"
-            )
+        await self.authority.require_caller(context.session_id)
 
     async def _require_owned(
         self, target_agent_id: str, context: ToolExecutionContext
     ) -> None:
-        await self._require_caller(context)
-        target_agent_id = require_identifier(target_agent_id, field="agent_id")
-        graph = AgentOwnershipGraph(await self.supervisor.registrar.directory())
-        lineage = graph.lineage(target_agent_id)
-        if not lineage or self.owner_agent_id not in lineage[:-1]:
-            raise AgentToolAuthorizationError(
-                "the target Agent is outside the caller's ownership subtree"
-            )
+        await self.authority.require_owned(target_agent_id, context.session_id)
 
     async def spawn(
         self, *, preset: str, workspace_id: str, context: ToolExecutionContext
     ):
-        await self._require_caller(context)
-        spec = AgentSpec(
-            preset=require_identifier(preset, field="preset"),
-            workspace_id=require_identifier(workspace_id, field="workspace_id"),
-            owner_agent_id=self.owner_agent_id,
+        owner = await self.authority.require_caller(context.session_id)
+        requested_preset = require_identifier(preset, field="preset")
+        requested_workspace_id = require_identifier(
+            workspace_id, field="workspace_id"
+        )
+        proposal = self.provisioning_policy.propose_child(
+            owner=owner,
+            requested_preset=requested_preset,
+            requested_workspace_id=requested_workspace_id,
+        )
+        if not isinstance(proposal, ChildProvisioningProposal):
+            raise AgentToolBindingError(
+                "the child provisioning policy returned an invalid proposal"
+            )
+        spec = freeze_agent_spec(
+            AgentSpec(
+                preset=require_identifier(proposal.preset, field="preset"),
+                workspace_id=require_identifier(
+                    proposal.workspace_id, field="workspace_id"
+                ),
+                owner_agent_id=self.owner_agent_id,
+                metadata=proposal.metadata,
+            )
         )
         request_id = _operation_id("spawn", self.owner_agent_id, context)
         # The Supervisor single-flight owns create delivery and compensation.
@@ -358,14 +377,19 @@ class SupervisorToolset:
     def __init__(
         self,
         *,
-        supervisor: ProcessAgentSupervisor,
+        supervisor: AgentSupervisor,
         owner_agent_id: str,
         event_store: EventStore,
+        provisioning_policy: ChildProvisioningPolicy,
     ) -> None:
+        authority = AgentToolAuthority(
+            directory_reader=AgentDirectoryReader(event_store),
+            owner_agent_id=owner_agent_id,
+        )
         self._control = _BoundAgentControl(
             supervisor=supervisor,
-            owner_agent_id=owner_agent_id,
-            event_store=event_store,
+            authority=authority,
+            provisioning_policy=provisioning_policy,
         )
         self._tools: tuple[Tool, ...] = (
             SpawnAgentTool(self._control),
@@ -381,6 +405,7 @@ class SupervisorToolset:
 
 
 __all__ = [
+    "AgentToolAuthority",
     "AgentToolAuthorizationError",
     "AgentToolBindingError",
     "CollectAgentArtifactTool",

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from supervision_fixtures import (
+    CHILD_POLICY,
     SPEC,
     GatedProvider,
     RuntimeFactory,
@@ -287,6 +288,7 @@ class SpawnCleanupFailureFactory:
             supervisor=self.supervisor,
             owner_agent_id=agent_id,
             event_store=self.store,
+            provisioning_policy=CHILD_POLICY,
         ).tools
         return build_default_runtime(
             RuntimeConfig(
@@ -359,6 +361,7 @@ async def tool_world(tmp_path):
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     yield store, factory, supervisor, owner, toolset
     await supervisor.aclose()
@@ -385,6 +388,7 @@ async def test_tools_reject_a_runtime_on_a_different_durable_store(tool_world):
             supervisor=supervisor,
             owner_agent_id=owner.agent_id,
             event_store=InMemoryEventStore(),
+            provisioning_policy=CHILD_POLICY,
         )
 
 
@@ -463,6 +467,7 @@ async def test_collect_refuses_an_accepted_but_unsettled_message(tmp_path):
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     child = await by_name(tools, "spawn_agent").execute(
         {"preset": "analysis-preset", "workspace_id": "child-workspace"},
@@ -495,6 +500,7 @@ async def test_cancelling_wait_does_not_cancel_the_child_turn(tmp_path):
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     child = await by_name(tools, "spawn_agent").execute(
         {"preset": "analysis-preset", "workspace_id": "child-workspace"},
@@ -608,6 +614,7 @@ async def test_interrupted_child_has_a_durable_cancelled_report(tmp_path):
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     child = await by_name(tools, "spawn_agent").execute(
         {"preset": "analysis-preset", "workspace_id": "child-workspace"},
@@ -676,6 +683,7 @@ async def test_owner_may_stop_a_grandchild_subtree(tool_world):
         supervisor=supervisor,
         owner_agent_id=child_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     grandchild = await by_name(child_tools, "spawn_agent").execute(
         {"preset": "leaf-preset", "workspace_id": "leaf-workspace"},
@@ -729,6 +737,7 @@ async def test_cancelling_an_idempotent_spawn_retry_keeps_the_delivered_child(tm
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     spawn = by_name(tools, "spawn_agent")
     execution_context = context(owner.session_id, call_id="stable-spawn")
@@ -770,6 +779,7 @@ async def test_cancelling_one_concurrent_first_spawn_keeps_the_delivered_child(
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     spawn = by_name(tools, "spawn_agent")
     execution_context = context(owner.session_id, call_id="concurrent-spawn")
@@ -803,6 +813,7 @@ async def test_stale_pre_admission_snapshot_cannot_own_spawn_compensation(tmp_pa
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     spawn = by_name(tools, "spawn_agent")
     execution_context = context(owner.session_id, call_id="stale-read-spawn")
@@ -911,6 +922,7 @@ async def test_spawn_retry_waits_for_selected_compensation_before_delivery(tmp_p
         supervisor=supervisor,
         owner_agent_id=owner.agent_id,
         event_store=store,
+        provisioning_policy=CHILD_POLICY,
     )
     spawn = by_name(tools, "spawn_agent")
     execution_context = context(owner.session_id, call_id="compensated-spawn")
@@ -1226,6 +1238,7 @@ class ToolAwareFactory:
             supervisor=self.supervisor,
             owner_agent_id=agent_id,
             event_store=self.store,
+            provisioning_policy=CHILD_POLICY,
         ).tools
         return build_default_runtime(
             RuntimeConfig(

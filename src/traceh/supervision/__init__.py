@@ -30,6 +30,11 @@ plus
 
 from __future__ import annotations
 
+from traceh.supervision.authority import (
+    AgentToolAuthority,
+    AgentToolAuthorizationError,
+    AgentToolBindingError,
+)
 from traceh.supervision.delivery import (
     AgentDeliveryLog,
     AgentDeliveryReader,
@@ -82,6 +87,10 @@ from traceh.supervision.lifecycle import (
     AgentOwnershipGraph,
     AgentOwnershipGraphError,
 )
+from traceh.supervision.provisioning import (
+    ChildProvisioningPolicy,
+    ChildProvisioningProposal,
+)
 from traceh.supervision.reports import AgentRunReportReader
 from traceh.supervision.supervisor import (
     AgentNotFoundError,
@@ -89,8 +98,6 @@ from traceh.supervision.supervisor import (
     SupervisedAgentHandle,
 )
 from traceh.supervision.tools import (
-    AgentToolAuthorizationError,
-    AgentToolBindingError,
     CollectAgentArtifactTool,
     SendAgentMessageTool,
     SpawnAgentTool,
@@ -119,6 +126,7 @@ __all__ = [
     "AgentOwnerNotActiveError",
     "AgentRunEvidenceError",
     "AgentRunReportReader",
+    "AgentToolAuthority",
     "AgentToolAuthorizationError",
     "AgentToolBindingError",
     "AgentLifecycleCoordinator",
@@ -137,6 +145,8 @@ __all__ = [
     "MessageOutcome",
     "MessageWakeError",
     "CollectAgentArtifactTool",
+    "ChildProvisioningPolicy",
+    "ChildProvisioningProposal",
     "ProcessAgentSupervisor",
     "SendAgentMessageTool",
     "SpawnAgentTool",

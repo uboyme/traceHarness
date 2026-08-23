@@ -14,7 +14,7 @@ from traceh.agents import (
     AgentOwnerNotFoundError,
     AgentRegistrar,
 )
-from traceh.api.agents import AgentRecord, AgentSpec, Budget
+from traceh.api.agents import AgentRecord, AgentSpec
 from traceh.api.events import PendingEvent
 from traceh.session.event_store import Durability, InMemoryEventStore
 from traceh.supervision import (
@@ -44,7 +44,6 @@ def _record(
         owner_agent_id=owner_agent_id,
         forked_from_session_id=forked_from_session_id,
         capability_grants=(),
-        budget=Budget(),
         metadata={},
         created_seq=seq,
     )

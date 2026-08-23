@@ -9,12 +9,11 @@ that payload becomes an `AgentRecord` lives here, and both sides import it.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import replace
 
 from traceh.agents.errors import AgentDirectoryProtocolError, AgentIdentityError
-from traceh.api.agents import AgentRecord, AgentSpec, Budget
+from traceh.api.agents import AgentRecord, AgentSpec
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint, to_json_value
 from traceh.cli.text_safety import is_single_line_safe
@@ -29,11 +28,11 @@ which Agents exist and which Session each one owns. Mixing them would make
 execution history assert facts about another Agent.
 """
 
-AGENT_EVENT_SCHEMA_VERSION = 1
+AGENT_EVENT_SCHEMA_VERSION = 2
 """The only payload shape this projector can read.
 
 A later writer that changes what a field means must raise this, so an old
-projector refuses the event instead of reading unfamiliar bytes as a v1
+projector refuses the event instead of reading unfamiliar bytes as the current
 identity. Accepting any version would make "fail closed on unknown protocol"
 untrue for exactly the case it exists to cover.
 """
@@ -59,29 +58,6 @@ outcome and makes the public API's error contract depend on
 ``sys.getrecursionlimit()``.
 """
 
-MAX_BUDGET_VALUE = 2**53 - 1
-"""Largest budget number this protocol accepts, on either side.
-
-A budget is persisted as a JSON number and most JSON readers parse numbers as
-IEEE-754 doubles, so anything above the largest exactly representable integer
-cannot be guaranteed to survive a round trip. The bound is also what keeps the
-error protocol stable: ``10**10000`` is an ``int``, passes ``>= 0``, and then
-raises a bare ``OverflowError`` out of ``math.isfinite()`` or ``float()`` -
-escaping the fixed ``agent-budget-invalid`` outcome on both the write and the
-replay path. Comparing against this bound is pure integer arithmetic and cannot
-raise.
-"""
-
-_BUDGET_INT_FIELDS = (
-    "max_tokens",
-    "max_steps",
-    "max_tool_calls",
-    "max_children",
-    "max_depth",
-    "max_processes",
-)
-_BUDGET_FLOAT_FIELDS = ("max_wall_seconds",)
-
 AGENT_CREATED_KEYS = frozenset(
     {
         "agent_id",
@@ -92,11 +68,10 @@ AGENT_CREATED_KEYS = frozenset(
         "owner_agent_id",
         "forked_from_session_id",
         "capability_grants",
-        "budget",
         "metadata",
     }
 )
-"""Exactly the keys an ``agent/created`` payload carries at schema version 1."""
+"""Exactly the keys an ``agent/created`` payload carries at schema version 2."""
 
 
 def is_agent_identifier(value: object) -> bool:
@@ -170,58 +145,6 @@ def _read_grants(data: dict[str, JsonValue], seq: int) -> tuple[str, ...]:
             raise AgentDirectoryProtocolError("agent-grants-invalid", seq)
         grants.append(item)
     return tuple(grants)
-
-
-def _budget_numbers(value: object) -> dict[str, int | float] | None:
-    """Read a budget mapping, or ``None`` if it does not satisfy the rules.
-
-    This is the **single** definition of what a valid budget is. The creation
-    transaction and replay both call it, because a rule the writer applies more
-    loosely than the reader is not a weaker check - it is a way to append a
-    fact that can never be read back. One `Budget(max_steps=True)` used to
-    commit successfully and then fail every subsequent rebuild, permanently
-    bricking the directory for that store.
-    """
-
-    if not isinstance(value, dict):
-        return None
-    if set(value) != set(_BUDGET_INT_FIELDS) | set(_BUDGET_FLOAT_FIELDS):
-        return None
-    numbers: dict[str, int | float] = {}
-    for field in _BUDGET_INT_FIELDS:
-        raw = value[field]
-        # ``bool`` is an ``int`` in Python; a budget of ``True`` is malformed
-        # data, not a limit of one. The range check is deliberately made with
-        # integer comparisons only, before anything converts to float.
-        if not isinstance(raw, int) or isinstance(raw, bool):
-            return None
-        if raw < 0 or raw > MAX_BUDGET_VALUE:
-            return None
-        numbers[field] = raw
-    for field in _BUDGET_FLOAT_FIELDS:
-        raw = value[field]
-        if isinstance(raw, bool) or not isinstance(raw, int | float):
-            return None
-        if isinstance(raw, int):
-            # Bound first: ``float(10**10000)`` raises, and so does
-            # ``math.isfinite()`` on it.
-            if raw < 0 or raw > MAX_BUDGET_VALUE:
-                return None
-            numbers[field] = float(raw)
-            continue
-        # NaN and the infinities survive ``raw < 0`` and round-trip through
-        # Python's non-strict JSON, but they are not JSON and are not budgets.
-        if not math.isfinite(raw) or raw < 0 or raw > MAX_BUDGET_VALUE:
-            return None
-        numbers[field] = raw
-    return numbers
-
-
-def _read_budget(data: dict[str, JsonValue], seq: int) -> Budget:
-    numbers = _budget_numbers(data.get("budget"))
-    if numbers is None:
-        raise AgentDirectoryProtocolError("agent-budget-invalid", seq)
-    return Budget(**numbers)  # type: ignore[arg-type]
 
 
 def _metadata_graph_is_bounded(value: object, depth: int, ancestors: tuple[int, ...]) -> bool:
@@ -309,12 +232,6 @@ def validate_spec(spec: AgentSpec) -> None:
         if grant in seen:
             raise AgentIdentityError("agent-grants-invalid", "capability_grants")
         seen.add(grant)
-    # Validated through the same rule replay uses, against the very mapping
-    # that would be persisted - not merely "is it a Budget instance". The
-    # dataclass accepts any value for its fields, so the type alone proves
-    # nothing about what would land in the log.
-    if not isinstance(spec.budget, Budget) or _budget_numbers(budget_to_dict(spec.budget)) is None:
-        raise AgentIdentityError("agent-budget-invalid", "budget")
     # Validates the entire graph, not just the top-level keys: a ``set`` deep
     # inside metadata used to pass here and only fail once the store tried to
     # encode it, turning a caller mistake into an `AgentCreationError` after
@@ -358,29 +275,8 @@ def agent_spec_request_fingerprint(spec: AgentSpec) -> str:
             "owner_agent_id": frozen.owner_agent_id,
             "forked_from_session_id": frozen.forked_from_session_id,
             "capability_grants": list(frozen.capability_grants),
-            "budget": budget_to_dict(frozen.budget),
         }
     )
-
-
-def budget_to_dict(budget: Budget) -> dict[str, JsonValue]:
-    """Project a `Budget` to its payload shape without coercing anything.
-
-    Deliberately no ``float()`` or other conversion: coercion here would either
-    raise the wrong error type for a bad field or quietly repair it, and in
-    both cases `_budget_numbers` would be judging a value other than the one
-    the caller supplied. Validation belongs to that one rule.
-    """
-
-    return {
-        "max_tokens": budget.max_tokens,
-        "max_steps": budget.max_steps,
-        "max_tool_calls": budget.max_tool_calls,
-        "max_wall_seconds": budget.max_wall_seconds,
-        "max_children": budget.max_children,
-        "max_depth": budget.max_depth,
-        "max_processes": budget.max_processes,
-    }
 
 
 def agent_created_data(
@@ -426,7 +322,6 @@ def agent_created_data(
         "owner_agent_id": spec.owner_agent_id,
         "forked_from_session_id": spec.forked_from_session_id,
         "capability_grants": list(spec.capability_grants),
-        "budget": budget_to_dict(spec.budget),
         "metadata": metadata,
     }
 
@@ -471,7 +366,6 @@ def creation_matches(record: AgentRecord, data: dict[str, JsonValue]) -> bool:
         and record.owner_agent_id == data["owner_agent_id"]
         and record.forked_from_session_id == data["forked_from_session_id"]
         and list(record.capability_grants) == data["capability_grants"]
-        and _budget_numbers(budget_to_dict(record.budget)) == _budget_numbers(data["budget"])
     )
 
 
@@ -548,6 +442,12 @@ def _read_agent_created(event: EventEnvelope) -> AgentRecord:
         # out of a Session Stream would let an Agent's execution history assert
         # who exists.
         raise AgentDirectoryProtocolError("agent-stream-unexpected", event.seq)
+    if event.schema_version == 1:
+        # The v0.6 shape carried a caller-chosen ``budget`` that was never
+        # reserved or enforced. It is evidence, not authority, and this
+        # pre-1.0 cutover refuses it explicitly rather than silently adopting,
+        # upcasting or deleting it.
+        raise AgentDirectoryProtocolError("agent-budget-history-unsupported", event.seq)
     if event.schema_version != AGENT_EVENT_SCHEMA_VERSION:
         raise AgentDirectoryProtocolError("agent-schema-version-unsupported", event.seq)
     data = event.data
@@ -569,7 +469,6 @@ def _read_agent_created(event: EventEnvelope) -> AgentRecord:
             data, "forked_from_session_id", event.seq
         ),
         capability_grants=_read_grants(data, event.seq),
-        budget=_read_budget(data, event.seq),
         metadata=_read_metadata(data, event.seq),
         created_seq=event.seq,
     )
@@ -580,11 +479,9 @@ __all__ = [
     "AGENT_CREATED_KEYS",
     "AGENT_DIRECTORY_STREAM",
     "AGENT_EVENT_SCHEMA_VERSION",
-    "MAX_BUDGET_VALUE",
     "MAX_IDENTIFIER_LENGTH",
     "MAX_METADATA_DEPTH",
     "agent_created_data",
-    "budget_to_dict",
     "creation_matches",
     "detach_record",
     "freeze_agent_spec",

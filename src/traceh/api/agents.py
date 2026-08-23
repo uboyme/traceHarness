@@ -24,17 +24,7 @@ from enum import Enum
 from typing import Protocol, runtime_checkable
 
 from traceh.api.json_types import JsonValue
-
-
-@dataclass(frozen=True, slots=True)
-class Budget:
-    max_tokens: int = 100_000
-    max_steps: int = 50
-    max_tool_calls: int = 200
-    max_wall_seconds: float = 900.0
-    max_children: int = 4
-    max_depth: int = 3
-    max_processes: int = 4
+from traceh.session.event_store import EventStore
 
 
 class MessageTarget(str, Enum):
@@ -58,7 +48,6 @@ class AgentSpec:
     owner_agent_id: str | None = None
     forked_from_session_id: str | None = None
     capability_grants: tuple[str, ...] = ()
-    budget: Budget = field(default_factory=Budget)
     metadata: dict[str, JsonValue] = field(default_factory=dict)
 
 
@@ -83,9 +72,9 @@ class AgentRecord:
     Communication has no field here at all: a message's source is a per-message
     fact, so it cannot be inferred from a creation record.
 
-    ``budget`` is recorded as part of the creation fact. Nothing reserves or
-    enforces it yet - hierarchical budget reservation is v0.7 work - so it must
-    not be read as an active limit.
+    Budget is deliberately absent. Capacity is host authority reconstructed
+    from the independent append-only Budget ledger; an Agent creation DTO
+    cannot mint or rewrite it.
     """
 
     agent_id: str
@@ -96,7 +85,6 @@ class AgentRecord:
     owner_agent_id: str | None
     forked_from_session_id: str | None
     capability_grants: tuple[str, ...]
-    budget: Budget
     metadata: dict[str, JsonValue]
     created_seq: int
 
@@ -162,6 +150,15 @@ class AgentHandle(Protocol):
 @runtime_checkable
 class AgentSupervisor(Protocol):
     """The public contract implemented by the process-local Supervisor."""
+
+    @property
+    def store(self) -> EventStore:
+        """The durable Event Store used by every control-plane operation.
+
+        This is an identity-validation surface for host adapters, not an
+        invitation to bypass the Supervisor and append control facts directly.
+        """
+        ...
 
     async def create(
         self,

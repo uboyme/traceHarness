@@ -1,6 +1,7 @@
 """Stable public protocols and frozen value types."""
 
-from traceh.api.agents import AgentSpec, AgentSupervisor, Budget
+from traceh.api.agents import AgentSpec, AgentSupervisor
+from traceh.api.budgets import BudgetAmounts, BudgetLimits
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.llm import (
     LlmProvider,
@@ -29,7 +30,8 @@ __all__ = [
     "DEFAULT_TURN_SOURCE",
     "AgentSpec",
     "AgentSupervisor",
-    "Budget",
+    "BudgetAmounts",
+    "BudgetLimits",
     "EffectKind",
     "EventEnvelope",
     "LlmProvider",

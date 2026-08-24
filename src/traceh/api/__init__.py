@@ -32,6 +32,16 @@ from traceh.api.tools import (
     ToolOutput,
 )
 from traceh.api.turns import DEFAULT_TURN_SOURCE, TurnInput
+from traceh.api.workspaces import (
+    WorkspaceAccess,
+    WorkspaceHandle,
+    WorkspaceLocalState,
+    WorkspaceProvider,
+    WorkspaceProvisioningRequest,
+    WorkspaceRecord,
+    WorkspaceSourceSnapshot,
+    WorkspaceStatus,
+)
 
 __all__ = [
     "CORE_PLUGIN_IDENTITY",
@@ -65,4 +75,12 @@ __all__ = [
     "TurnInput",
     "Usage",
     "UsageQuality",
+    "WorkspaceAccess",
+    "WorkspaceHandle",
+    "WorkspaceLocalState",
+    "WorkspaceProvider",
+    "WorkspaceProvisioningRequest",
+    "WorkspaceRecord",
+    "WorkspaceSourceSnapshot",
+    "WorkspaceStatus",
 ]

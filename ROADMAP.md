@@ -312,8 +312,15 @@ invariant violations and zero request-reconstruction violations.
   slots. The single ledger remains the only durable balance source;
   `AgentLoop`, `AgentRuntime` and `ProcessAgentSupervisor` have no Budget state
   or orchestration branch.
-- **C — managed Git workspaces:** provision contained worktrees, bind their
-  lifecycle to the managed Agent operation and quarantine uncertain cleanup.
+- **C — managed Git workspaces (complete, unreleased):** one append-only
+  Workspace Catalog now owns provisional/attached/quarantined/released facts;
+  a host-mapped Git provider pins clean sources to exact commits beneath one
+  managed root; and a public-Supervisor wrapper reconciles Agent/Session
+  identity without adding another scheduler. Dirty, unsafe or uncertain paths
+  are quarantined rather than force-deleted. Worktree markers are bound in both
+  directions to one exact Git admin registry entry, and wrapper-owned resume
+  post-validation converges before close. Read-only is enforced at explicit
+  Tool admission and is not claimed as an OS sandbox.
 - **D1 — immutable Patch Artifacts:** collect a patch from one managed workspace
   with base revision, byte digest and verification inputs; final text is not an
   artifact.
@@ -329,8 +336,9 @@ invariant violations and zero request-reconstruction violations.
 Definition of done: parallel coding children do not share one mutable directory and the
 host can promote only an immutable, fixed-suite-verified, human-approved patch while the
 existing Agent Runtime, Supervisor concurrency kernel and Event Log fact sources stay singular.
-See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md) and
-[ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md).
+See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md),
+[ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md) and
+[ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md).
 
 ## v1.0: Stable plugin platform
 

@@ -8,8 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from traceh.process_control import converge_process
 from traceh.tools.builtins.shell import sanitized_environment
-from traceh.tools.process_control import CapturedOutput, capture_output, converge_process
+from traceh.tools.process_control import CapturedOutput, capture_output
 
 
 @dataclass(frozen=True, slots=True)

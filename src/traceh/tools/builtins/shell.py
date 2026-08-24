@@ -10,7 +10,8 @@ from urllib.request import url2pathname
 
 from traceh.api.json_types import JsonValue
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
-from traceh.tools.process_control import capture_output, converge_process
+from traceh.process_control import converge_process
+from traceh.tools.process_control import capture_output
 
 _SENSITIVE_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "AUTH")
 

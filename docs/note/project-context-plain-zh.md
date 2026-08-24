@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。v0.7 D0 把接缝收干净；v0.7-A 把原先“写进 Agent 身份但没人执行”的 Budget 删掉，换成一条真正 append-only 的层级账本；v0.7-B 又用宿主显式装配的薄适配器，把同一本账接到 managed child create、模型/Token、Step、Tool dispatch、Turn wall time 和 process-local slot。它没有把余额塞进 `AgentRuntime`，也没有给 `AgentLoop` 增加预算分支。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel，并在本次发布升级到 `0.2.0`；插件仍不能自己选择子层或替换 EventStore。当前仍没有默认 CLI Budget grant、L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent 接管、独立工作区/Patch 或 Workflow。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。v0.7 D0 把接缝收干净；v0.7-A/B 把旧 Budget 删掉，换成单一 append-only 层级账本并接到真实 owned boundary；v0.7-C 又在独立域加入 Workspace Catalog、commit-pinned Git worktree、取消可收敛的宿主服务和只读 Tool Policy。它没有把余额、路径或 Git 塞进 `AgentRuntime`，也没有给 `AgentLoop` 增加分支。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel；插件仍不能自己选择子层或替换 EventStore。当前仍没有默认 CLI Budget/Workspace 装配、L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent/Workspace 接管、Patch Artifact/合并/推广或 Workflow。
 
 ### 版本为什么只准写在一个地方
 
@@ -63,11 +63,12 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能在运行中换插件吗 | 可以在空闲的 `traceh chat` 中用 `/plugins`、`/plugins reload`、`/plugins use ID...` 或 `--none` 切换当前进程已经能发现的已安装插件；这会重做 setup/conflict/health 并走 Generation/Lease/Drain，但不是 pip 安装、Wheel 替换或 Python module reload |
 | 有四层 Scope 吗 | 有程序化装配：Service、Tool、Prompt、Policy 都能由宿主 Python 代码明确放进 Application、Workspace、Preset 或 Agent 层，越靠近 Agent 越优先，而且 Step 开始后不会被新 Generation 原地换掉。插件本身仍只在 application 层 setup，不能自行选择子层；它提供的 Policy 属 application 候选 |
 | 插件是被沙箱隔开的吗 | 不是。v0.4 的插件和 Harness 同进程同权限；`isolated` 可以写在 Manifest 里，但会被**明确拒绝** |
-| 有多 Agent 吗 | **有了模型可调用的进程内子 Agent 主线。** v0.6 Stage A 记身份，Stage B 记 FIFO 收件，Stage C 认领并跑真实 Turn，Stage D 按 `owner_agent_id` child-first 收敛，Stage E 再提供 spawn/send/wait/stop/collect 五个普通 Tool（第 20 节）。v0.7-A/B 已用单一层级 Budget 账本和宿主薄适配器强制 managed create、模型、Step、Tool、wall 与进程 slot；仍没有默认 CLI grant、冷恢复、跨进程唯一性、自动重试、独立工作区/Patch 或 Workflow |
+| 有多 Agent 吗 | **有了模型可调用的进程内子 Agent 主线。** v0.6 Stage A–E 已有身份、FIFO、真实 Turn、child-first 生命周期和五个普通 Tool；v0.7-A/B 用单一层级 Budget 账本强制 managed create、模型、Step、Tool、wall 与进程 slot；v0.7-C 可给 managed Agent 分配独立 Git worktree。仍没有默认 CLI 装配、冷恢复、跨进程唯一性、自动重试、Patch/merge 或 Workflow |
+| 有独立工作区吗 | **宿主程序化装配时有。** source id 由宿主映射，revision 固定为一个 commit，模型只看到 workspace id；脏或无法证明安全的工作区会 quarantine，不会 force 删除。当前没有对应 CLI、Patch Artifact 或自动合并 |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | 核心收集 1770 项；完整门禁 1769 通过、1 项跳过（唯一 skip 是 Windows NUL 路径边界），包含真实 L2 递归验证和 Wheel E2E；v0.7-B Budget 账本/执行/Supervisor 专项 79 项、连同 Composition/插件主线的扩大定向 168 项全部通过。D0 架构守卫仍为 5 项，v0.6.0 发布快照仍是 1707/1706/1。仓库外干净 HEAD 克隆和 v0.6 RC 的真实 L2/L3/L4、真实 parent→child、恢复与取消证据仍保留；独立 Python Quality/Plugin Creator Skill 另有 17/10 项通过 |
+| 当前测试数 | 核心收集 1835 项；完整门禁 1832 通过、3 项跳过（Windows 上两处无权创建目录 symlink，一处路径不能含 NUL）。Stage C 五个专门文件共 60 项、另有 10 项进入既有测试，扩大定向 84 通过、2 跳过；v0.7-B 检查点仍是 1770/1769/1，v0.6.0 发布快照仍是 1707/1706/1。仓库外干净 HEAD 克隆和 v0.6 RC 的真实 L2/L3/L4、真实 parent→child、恢复与取消证据仍保留；独立 Python Quality/Plugin Creator Skill 另有 17/10 项通过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -111,7 +112,7 @@ flowchart LR
 6. 崩溃后不确定的写操作不能因为“可能没执行”就自动再执行；
 7. 模型的自我评价不能代替真实测试。
 
-当前不做的事情也同样重要。v0.4 有了插件系统，Stage A–D3 补上 Generation 生命周期、ActivationSet、用户可操作的 Session 级组合切换、四层宿主装配和 application 插件的 Provider/Policy/Middleware/Verifier，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，不能自己在 Workspace/Preset/Agent 层注册能力，也不能替换 EventStore。它也不是完整 Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。v0.6 到 Stage E 已把多 Agent 的**地基、发动机、生命周期保险和模型操作杆**接起来；v0.7-A/B 再增加单一预算账本和显式宿主执行门。系统仍只在一个进程里：崩溃后不会自己恢复，没有自动重试、默认 CLI Budget 装配、跨进程 lease、独立工作区/Patch 或 Workflow。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
+当前不做的事情也同样重要。v0.4 有了插件系统，Stage A–D3 补上 Generation 生命周期、ActivationSet、用户可操作的 Session 级组合切换、四层宿主装配和 application 插件的 Provider/Policy/Middleware/Verifier，但它**不是**完整插件平台：没有运行中 pip install/uninstall、强制 module reload、文件 watcher、跨进程隔离，插件仍只能在 application 层 setup，不能自己在 Workspace/Preset/Agent 层注册能力，也不能替换 EventStore。它也不是完整 Workflow、远程沙箱或 Codex 风格 TUI（`traceh chat` 只是行式多轮提示符）。v0.6 到 Stage E 已把多 Agent 的**地基、发动机、生命周期保险和模型操作杆**接起来；v0.7-A/B 增加单一预算账本和显式宿主执行门，v0.7-C 增加程序化 managed Git worktree。系统仍只在一个进程里：崩溃后不会自己恢复，没有自动重试、默认 CLI Budget/Workspace 装配、跨进程 lease、Patch/merge 或 Workflow。其余未来接口存在，是为了以后扩展时少拆主循环，不代表现在可用。
 
 ## 3. 从目录看懂整个项目
 
@@ -126,12 +127,13 @@ flowchart LR
 
 | 目录 | 通俗解释 | 典型入口 |
 |---|---|---|
-| `api/` | 各模块共同认可的合同和数据表格 | Event、ModelRequest、Tool、Plugin/Agent/Workspace Protocol，以及 v0.7-A 的只读 Budget Limits/Amounts/Account/Reservation 值 |
+| `api/` | 各模块共同认可的合同和数据表格 | Event、ModelRequest、Tool、Plugin/Agent，以及当前已实现的 Budget/Workspace Protocol 与只读值 |
 | `cli/` | 把终端命令和 `.env` 翻译成 Runtime 配置，提供交互式聊天，把事件翻成屏幕上的时间线，在长时间等待时报告进度，并把恢复命令按目标 Shell 安全地渲染出来 | `main.py`、`chat.py`、`console.py`、`timeline.py`、`activity.py`、`command_line.py`、`env_file.py` |
 | `runtime/` | 运行时中枢：对外门面、插件组合控制面和真正的一轮执行各有自己的负责人 | `AgentRuntime`、`PluginCompositionCoordinator`、`AgentLoop` |
 | `session/` | 账本、账本的跨进程文件锁、事件广播喇叭、从账本算状态、恢复和检查 | `JsonlEventStore`、`file_lock.py`、`event_feed.py`、Projector、Recovery |
 | `concurrency.py` | 杀不掉的后台活儿（线程）取消后怎么等它收尾 | `await_worker_convergence()` |
-| `tools/process_control.py` | 子进程取消/超时后怎么确保它真的死了、输出怎么不丢 | `capture_output()`、`converge_process()` |
+| `process_control.py` | Tool、Verifier、Git 都能复用的直接子进程取消/超时收敛 | `converge_process()` |
+| `tools/process_control.py` | Tool 专属的 stdout/stderr 临时文件捕获 | `capture_output()` |
 | `llm/` | 把统一 ModelRequest 交给具体模型 | Scripted、OpenAI-Compatible Provider |
 | `tools/` | 模型想碰文件或进程时必须经过的安检与执行通道 | `ToolRuntime` 和五个内置工具 |
 | `kernel/` | 插件生命周期和四层 Service/Composition 解析的基础零件 | ScopeChain、ServiceRegistry/ServiceView、CompositionOverlayPlan、Activation、Hook、Lifespan、OwnedTaskSet |
@@ -142,9 +144,10 @@ flowchart LR
 | `evolution/` | 在 Runtime 外跑 L2 验证、L3 对比和 L4 人工批准/推广/回滚 | `CandidateValidator`、`CandidateComparator`、`CandidatePromoter`、宿主 Probe、`artifacts.py` |
 | `agents/` | 记录「存在哪些 Agent、各自拥有哪个 Session」和「每个 Agent 已接受哪些消息、什么顺序」，并且只从账本回答 | `AgentRegistrar`/`AgentInboxService`（写）、`AgentDirectory`/`AgentInbox`（读）、`identity.py`/`inbox_identity.py`（读写共用的规则）、`commit_reconciliation.py`（三个事务共用的提交点判断） |
 | `budgets/` | 从一条全局 append-only Ledger 回放根 grant、child hold/commit/release、usage lifecycle、用量和关闭；再由显式宿主适配器把它接到已有 owned boundary，余额永远是计算结果 | `events.py`（唯一词汇）、`projection.py`（唯一投影）、`service.py`（宿主 CAS 写入）、`enforcement.py`（模型/Step/Tool/wall）、`supervision.py`（child/process） |
+| `workspaces/` | 从一条全局 Catalog 回放 worktree 生命周期，由宿主 Git Provider 管物理目录，再用公共 Supervisor 包装器把 exact Agent/Session 绑上去 | `events.py`/`catalog.py`、`local_git.py`、`service.py`、`supervision.py`、`policy.py` |
 | `supervision/` | 把已接受的消息真的跑起来，并按 durable owner 关系管生命周期，再把它安全地交给模型调用；D0 把 Tool 权限和宿主开 child 决策从并发内核旁边拆成窄接缝 | `ProcessAgentSupervisor`、Delivery 账、`lifecycle.py`、`execution.py`、`authority.py`、`provisioning.py`，以及 `reports.py`（持久化运行报告）和 `tools.py`（五个绑定 owner 的 Tool） |
 
-`api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 只面向这份公共合同。`WorkspaceProvider` 仍只是图纸上预留的接口尺寸。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
+`api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 与 Stage C Workspace wrapper 都只面向这份公共合同。`WorkspaceProvider` 也已有真实 Git 实现和契约测试；但 Patch/Merge 类型已经删除，等后续实现时再按真实合同引入。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
 
 `examples/plugins/` 下面放的是三个**能独立打包安装**的插件，不是仓库内的测试夹具：一个最小 Skill 示例、一个真正有用途的 Python Quality 插件，以及一个只负责写源码候选的 Plugin Creator Skill。它们存在的意义是：插件这条路必须按外部作者真正会遇到的方式走一遍（打 Wheel → 装进干净环境 → 被发现 → 显式启用 → 进入真实 Prompt/Tool/Policy/Verifier 主线），而不是靠内部假接口自说自话。
 
@@ -1040,9 +1043,15 @@ Stage B 已经把执行门接上，但它故意不是“导入包就自动开启
 
 要点是别把这两件事混起来：**身份**是账本里的事实，**Activation**（那个活的 `AgentRuntime` 对象）是可以随时停掉再建的临时物。有身份不等于有人在跑它。
 
-### WorkspaceProvider
+### Managed Workspace —— v0.7-C 已有真实 Git worktree
 
-存在 Snapshot、Branch、PatchArtifact、MergeResult 的协议，但没有 Git Worktree 实现，也没有并行 Agent 合并代码。
+现在不再只有一张接口草图。`traceh.workspaces` 有一条 `workspaces:catalog`，把每个工作区记成 provisional、attached、quarantined 或 released；它保存 source id、精确 base commit、读写能力和 Agent/Session 关联，但**不保存也不让模型选择本机路径**。宿主先把 source id 映射到一个可信、干净的顶层 Git 仓库，Provider 再把 revision 固定到一个 commit，在明确的 managed root 下建立 detached worktree。
+
+真正创建 child 时，上层 `WorkspaceManagedAgentSupervisor` 先建 provisional worktree，再调用原来的公共 Supervisor，最后重读 Agent Directory 和 Session，确认 creation request、owner、workspace id 与 Session 全部对得上才 attach。它没有复制 Activation 表、Inbox、Delivery 或 worker。停止 Agent 只停活实例，不删工作区；因为代码还可能需要审查或以后收集 Patch，只有宿主显式 release/reject/merged 才会尝试删除。
+
+删除也不是“看到目录就 rm”：必须证明它就是 Catalog 登记的 Git worktree、HEAD 仍是 base、没有修改，并且路径没有 symlink、Junction/reparse、异常 `.git` marker 或 registry 身份冲突。脏、危险或看不清的状态一律 quarantine，绝不会用 `--force` 或 broad prune 清掉。Read-only 由显式 Tool Policy 限制为纯读/工作区读，shell、写文件、网络等都会拒绝；但这只是 Harness 的 Tool 入口约束，不是操作系统沙箱，同权限插件或外部进程仍能直接改目录。
+
+当前仍没有 Patch Artifact、diff 验证、人工批准后的 Git ref CAS 合并、Workspace CLI、跨进程 workspace lease 或容器隔离。旧的 Snapshot/PatchArtifact/MergeResult 空壳已删除，不保留“看起来能用、实际没主线”的兼容层。
 
 正确说法是：“v0.4 实现了一个**范围明确**的插件系统；v0.5 Stage A–D3 补上 Generation/Lease/Drain、Generation-owned ActivationSet、空闲 Chat 组合切换、四层宿主装配，以及 application 插件的 Provider/Policy/Middleware/Verifier，并全部接入 Generation/Step Lease”，同时说明 EventStore、子层插件 setup、运行中 Wheel 安装和多 Agent 仍未实现。既不能说“还是只有协议、没有 PluginManager”（过时了），也不能说“已经是完整插件平台”（吹过头了）。
 
@@ -1060,7 +1069,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-当前工作区收集 1770 项，完整门禁为 1769 通过、1 项跳过；唯一 skip 是 Windows 的 NUL 路径边界，真实 L2 递归入口和 18 项 Wheel E2E 都已完成。v0.7-B Budget 账本/执行/Supervisor 专项 79 项，连同 Composition/插件主线的扩大定向集合 168 项。D0 架构守卫仍为 5 项；v0.6.0 发布基线仍是 1707/1706/1。旧发布时点数字继续保留作历史证据，当前代码要看本段的新门禁。
+当前工作区收集 1835 项，完整门禁为 1832 通过、3 项跳过；三个 Windows skip 是两处当前用户无权创建目录 symlink，以及一处路径不能包含 NUL。真实 L2 递归入口和 Wheel E2E 都已完成。Stage C 五个专门文件共 60 项：Catalog/Service 28、真实 Git 16、Policy 3、Supervisor wrapper 9、架构守卫 4；另有 10 项进入既有工具/取消测试，本轮净增 70 项；扩大定向为 84 通过、2 跳过。v0.7-B 检查点仍是 1770/1769/1，v0.6.0 发布基线仍是 1707/1706/1。旧发布时点数字继续保留作历史证据，当前代码要看本段的新门禁。
 
 Stage C 的 134 项（投递协议 73 项、Supervisor 61 项）问的是「事实归属、执行和收尾是不是真的都对」：已接受消息走认领→真实 Turn→结果，控制面的 `message_id`、来源和多行内容与真实 `turn_id` 都能在 Session 与投递账本互相对应；FIFO 不只保证先来先到，最早消息已有 open claim 时还会挡住全部后续消息，直到它出现完成/失败/取消；重放会拒绝跳头和并行 open claim。写 claim 前会重新读取权威 Inbox/Delivery，伪造 Acceptance、跨 Agent/过期视图和 foreign terminal claim 都零写入失败。两个 Supervisor 竞争时每条消息恰好执行一次，claim 未落盘或结果 unknown 时 Provider 调用数为 0；`wakeup=False` 不写投递也不启动 Runtime，显式 resume 才排空；`NEXT_STEP` 在接受前拒绝，绕过后则记稳定失败而不打乱 FIFO。create 的 durable 与在途重试都按完整请求核对，同一 `request_id` 不同 preset/身份字段会冲突；Factory 不能改写已冻结请求。worker 的普通异常进入稳定 fault，不会被报告成 idle。dispose/`aclose()` 会收敛在途 create/resume、候选回滚、Turn、terminal append 与 Runtime cleanup，重复取消不能提前返回，cleanup 失败会重放并与主错误一起保留；公开 `AgentSupervisor` Protocol 与真实实现签名一致，Runtime adapter 也只执行一次 cleanup。另有结构检查证明 `AgentRuntime` 没长出 Supervisor 状态、主循环不导入控制面、生产代码没有示例名字或本机路径；并发测试用 Event、Gate 和真实 append latch，唯一的 `sleep(0)` 只负责投递已提出的取消。
 
@@ -1168,7 +1177,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；L1 时点是 1092/1091/1；L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**v0.6.0 发布基线是 1707/1706/1**。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。发布快照记录当时证据，未来代码状态则要按新的真实门禁更新，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；L1 时点是 1092/1091/1；L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**v0.6.0 发布基线是 1707/1706/1**；v0.7 D0 是 1712/1711/1，A 是 1732/1731/1，B 是 1770/1769/1，当前 C 是 1835/1832/3（新增两个无目录 symlink 权限的 Windows skip）。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。发布快照记录当时证据，未来代码状态则要按新的真实门禁更新，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1215,10 +1224,11 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 40. **认领之后崩溃，那条消息就卡在那儿**：账本里会留下一个只有认领、没有结果的记录。当前既不会重跑它（它已经不算「未认领」），也不会释放它——投递日志会如实显示这个状态，修它是以后的事。
 41. **「不知道有没有写进账本」会让这个活实例停摆**：认领写不确定时，不跑、不重试、直接进入出故障状态，`wait_idle()` 会把这个故障报出来。代价是一次瞬时的存储问题会卡住这个 Agent 直到有人来看；但在一个还没有重试策略的阶段，这是唯一不会造成重复执行的姿势。
 42. **创建这一笔跨两条流，不是原子的**：先建会话、再写身份。中间崩溃会留下一个没人引用的会话——可以查出来，也无害；反过来（先写身份）留下的是一个指向不存在会话的坏身份，那才是修不了的。这条边界是明写的，不靠删事件假装原子。
-43. **D0 是插头，Stage A 是独立账本，都不是完整产品能力**：`AgentToolAuthority` 每次重读 durable 名册，`ChildProvisioningPolicy` 只批准 preset/workspace intent 和 metadata；真正 Provider/model/prompt/runtime 仍由 Factory 解析。Budget Ledger 已存在，但还没有强制，Git worktree、Patch、Promotion、Workflow 也没有，更不是 OS 沙箱。
+43. **D0 是插头，不是能力本身**：`AgentToolAuthority` 每次重读 durable 名册，`ChildProvisioningPolicy` 只批准 preset/workspace intent 和 metadata；真正 Provider/model/prompt/runtime 仍由 Factory 解析。后面的 A/B 已把 Budget 事实和强制接上，C 已在独立域接上 Git worktree；Patch、Promotion、Workflow 仍没有，Stage C 的 Tool Policy 也不是 OS 沙箱。
 44. **v0.7 Budget 不兼容旧的“记了但不管”语义**：这是有意的 pre-1.0 破坏式切换。现在只有一套新 ledger/projector，不保留 LegacyBudget、BudgetV2、旧字段别名、双读写或自动迁移；旧 schema 1 数据会明确拒绝并原样保留，绝不自动删除。
+45. **工作区的“安全删除”宁可不删**：只有 exact registered、clean、HEAD 仍等于 base 的 worktree 才能移除。脏目录、被占用的路径、symlink/Junction/reparse、Git registry 对不上或 append/Git 结果不明都会 quarantine。Agent 停掉也不会自动删，因为审查和未来 Patch 可能还要用它。这个服务只有进程内协调锁，不是跨进程 lease；read-only 只卡 Tool，不是 OS 权限隔离。
 
-接下来实现 v0.7 时，D0→B 已完成，优先级是 C→D1→D2→E→F：接下来做 Workspace，再做 Patch/Promotion、Workflow 和产品验收。不能为了 Roadmap 好看把后续能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
+接下来实现 v0.7 时，D0→C 已完成，优先级是 D1→D2→E→F：接下来先把一个 worktree 的变化冻结成 immutable Patch Artifact，再做验证/人工 Promotion、Workflow 和产品验收。不能为了 Roadmap 好看把后续能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
 
 ## 17. 改一个地方时，还要想到哪些地方
 
@@ -1257,8 +1267,9 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 | Supervisor、活实例或销毁语义 | `supervision/supervisor.py`、`supervision/execution.py`、`tests/test_agent_supervisor.py`、`concurrency.py`、ADR-0021 | 单活线性化、唤醒不丢、认领落盘前不许跑、重复取消不能让 dispose 提前返回——这四条改一条就要连着看，它们互相支撑 |
 | 子 Agent Tool 权限或开 child 策略 | `supervision/tools.py`、`authority.py`、`provisioning.py`、公共 `AgentSupervisor`、`AgentActivationFactory`、D0 架构测试、ADR-0024 | Toolset 只能依赖公共协议；权限每次重读同一 Store；Policy 只能批 preset/workspace intent/metadata，不能偷偷变成第二个 Runtime 工厂或调度器 |
 | 层级 Budget | ADR-0025/0026/0027、`api/budgets.py`、`budgets/events.py`/`projection.py`/`service.py`、`budgets/enforcement.py`/`supervision.py`，以及 Runtime/Tool 的窄注入点 | 当前只有一个 Ledger/Projector/Service；child 必须先 reserve 再按 Directory reconcile/commit/release，外部 work 必须 reserve/START/settle；不准留 v0.6 双轨、自动删旧数据、另造 Runtime balance 或把分支塞进 AgentLoop |
+| Managed Workspace | ADR-0028、`api/workspaces.py`、`workspaces/events.py`/`catalog.py`/`service.py`/`local_git.py`/`supervision.py`/`policy.py`、路径与取消测试 | Catalog、Git worktree、Agent Directory 与 Session 是四个不同事实/效果边界；必须核对 exact identity、保守 quarantine、只删 clean registered worktree，并继续包住公共 Supervisor，不能另造 Activation/Directory 或把路径/Git 塞进 Runtime |
 | Turn 的输入形状 | `api/turns.py`、`runtime/agent_loop.py`（只做入口归一化）、`runtime/agent_runtime.py`（只放宽签名） | 控制面和会话账本靠同一个 `message_id` 对上；主循环一旦自己重新编 id，这条关联就断了，而且断了不会报错 |
-| Multi-Agent/Workspace DTO | 未来协议测试和“未实现”边界描述 | 不能把接口误写成产品能力 |
+| Multi-Agent / Patch / Workflow DTO | 已实现的 Agent/Workspace 契约测试与未来 Patch/Workflow 的“未实现”边界描述 | Agent 与 Workspace 已有真实主线；Patch/Workflow 仍不能因为出现类型草图就误写成产品能力 |
 | 目录或开发流程 | AGENTS、两份上下文、README/CI | 下一次 AI 必须找到新的入口 |
 
 每次只需更新真正受影响的章节，但不能跳过检查。例如只给 README 改错别字，不必重写 ToolRuntime；修改 Tool Result 字段，则一定要检查第 6、9、11、12、15、16 节。
@@ -1973,7 +1984,7 @@ send 为什么不直接等到最终答案？因为“消息落账”和“任务
 
 发版前还做了一次不靠 Scripted Provider 的真实验收。parent 模型必须一项一项调用 spawn、send、wait、collect、stop，并且只能拿上一项 Tool Result 里的真实 id 做下一项；child 在自己的 Session 完成回答。停掉 child 后，宿主用同一个 durable Agent/Session identity 显式恢复它，让它再完成一轮真实模型对话；最后又把另一轮卡在确定性模型 Gate 上发出取消，账本最终明确记录 cancelled。整个过程只有 2 个 Agent、1 条 owner 边、4 条收件和 8 条投递生命周期事件；parent 1 个 Turn、child 3 个 Turn 都闭合，两份 Session 的不变量和请求重建错误都是 0。这说明“模型真的能沿这五个 Tool 用同一套 Supervisor 管 child”，不是只靠单元测试猜出来的。完整的自动化、真实模型、打包和安全门禁见 [`validation-v0.6.0.md`](../validation-v0.6.0.md)。
 
-v0.6.0 发布时仍然不是 OS 沙箱，也没有跨进程唯一 Activation、冷恢复、stale claim 接管、自动重试、层级 Budget 强制、独立 Git worktree/Patch merge、Workflow、`NEXT_STEP`、MCP、TUI 或流式输出。v0.7-A/B 后，层级 Budget 已可由宿主显式强制，但默认 CLI 和跨进程 lease 仍没有；其余边界也没有因此消失。宿主还要明确装配 Toolset，并提供 preset/workspace 的真实解析策略；默认 CLI 不会偷偷打开多 Agent。Stage E 已随 `0.6.0` 正式发布。
+v0.6.0 发布时仍然不是 OS 沙箱，也没有跨进程唯一 Activation、冷恢复、stale claim 接管、自动重试、层级 Budget 强制、独立 Git worktree/Patch merge、Workflow、`NEXT_STEP`、MCP、TUI 或流式输出。v0.7-A/B 后，层级 Budget 已可由宿主显式强制；v0.7-C 后，managed Git worktree 也有了程序化装配。但默认 CLI、Patch/merge、跨进程 lease 与 OS sandbox 仍没有。宿主还要明确装配 Toolset，并提供 preset/workspace 的真实解析策略；默认 CLI 不会偷偷打开多 Agent。Stage E 已随 `0.6.0` 正式发布。
 
 ### 20.13 v0.7 D0：先把插头固定住，别把新东西全塞进 Supervisor
 
@@ -2021,6 +2032,24 @@ Token、Step、Tool call 和 wall time 都用整数累计；分给 child 的额�
 
 Step 会从 Session 的 durable `step/start` 补记，没余额就在 `turn/start` 前拒绝。Tool 则先做 lookup、Schema 和普通 Policy，再把剩下的调用按模型给出的顺序一次性送进 Budget gate，只放行额度容得下的最长前缀；全部 admitted 事实落盘后才允许 parallel-safe Tool 并发。已放行的 Tool 即使失败或取消也不退款。如果 Budget charge 已落盘而 `tool/admitted` 写失败，Tool 不执行、容量仍保守花掉——这比再造一套跨 Stream reserve/commit 或在不确定时退款更安全。已经 dispatch 的 Tool 写 cancelled effect 时也有明确 Task owner；第二、第三次取消只能等它落盘、外层补齐 `tool/result` 后再返回。
 
-这些适配器必须由宿主显式装配并绑定同一个 Store、Agent 和 Session；对不上就不开始，Activation 候选对不上则先清干净再报错。宿主注入 Runtime 只用 `is None` 判断是不是缺省，ESTIMATED 开关也只接受精确 bool。默认 CLI 不会替用户发 root grant、决定 child 配额、选择 tokenizer 或创建 process authority。它仍只保证一个 managed host/process，跨进程 Activation lease、进程硬崩溃留下的 STARTED recovery、默认 CLI、独立 Workspace/Patch、Workflow、冷恢复和 stale claim 接管都没有。版本仍为 `0.6.0`，Stage B 完成不等于 v0.7 发布。
+这些适配器必须由宿主显式装配并绑定同一个 Store、Agent 和 Session；对不上就不开始，Activation 候选对不上则先清干净再报错。宿主注入 Runtime 只用 `is None` 判断是不是缺省，ESTIMATED 开关也只接受精确 bool。默认 CLI 不会替用户发 root grant、决定 child 配额、选择 tokenizer 或创建 process authority。它仍只保证一个 managed host/process，跨进程 Activation lease、进程硬崩溃留下的 STARTED recovery、默认 CLI、Patch、Workflow、冷恢复和 stale claim 接管都没有。独立 Workspace 后来由 Stage C 补上，但没有改变这些 Budget 边界。版本仍为 `0.6.0`，Stage B 完成不等于 v0.7 发布。
 
 Budget 专项现在共 79 项，连同 Composition/插件切换主线的扩大定向集合 168 项；全仓收集 1770 项，完整门禁 1769 通过、1 项跳过。原来的五次故障反转仍记录 settle 校验、Store identity、slot rollback、Runtime truthiness 与 Tool finalizer ownership。本轮又分别删掉 START 取消终态、child reserve 取消补偿和精确 bool 校验，得到 2、1、3 项对应失败；再次恢复 Runtime truthiness 也得到 1 项失败；拿掉 `RELEASED` 创建许可守卫时，新反例会先真的写入 child，再因 `budget-release-after-agent` 失败。全部恢复后定向与完整门禁重新跑绿。wall timeout 用例还改成先等 Provider 真正进入，再观察真实超时取消，不再拿 20ms 猜调度。
+
+### 20.16 v0.7-C：每个 managed Agent 可以拿一棵独立 Git worktree
+
+正式合同见正式版 20.22 与 [ADR-0028](../adr/0028-managed-git-workspace-lifecycle.md)。这一步仍然没有去改 `AgentLoop`、`AgentRuntime` 或那个很复杂的 `ProcessAgentSupervisor`。新的 `traceh.workspaces` 自己管一条 `workspaces:catalog`、Git 的物理效果和跨域收尾；`WorkspaceManagedAgentSupervisor` 只是包住公共 Supervisor，不复制它的 Activation、Inbox、Delivery、Directory 或关闭协议。
+
+Catalog 可以理解成工作区名册：先记 `PROVISIONAL`，Agent 与 Session 三方身份全部对上后记 `ATTACHED`；脏、危险、Git 状态看不清或写入结果不确定就记 `QUARANTINED`；只有宿主明确说 release/rejected/merged，并且工作区仍能证明安全删除时才记 `RELEASED`。从 quarantine 回到 attached 也只能回到原来已经证明的那一个 Agent/Session，不能拿一棵旧目录去套另一名 Agent。事件解析后，operation receipt 保存的是系统自己的事件类型常量，不会把 EventStore 交回的奇怪 `str` 子类留到下一次幂等比较时再执行。
+
+模型不能传 `C:\...` 这类路径。宿主 Policy 只返回 source id、revision 和 read-only/writable；真正 source path 来自宿主 mapping。Provider 会确认 source 是干净的顶层普通 Git 仓库，把 revision 解析成精确 commit，然后在唯一 managed root 下建立 detached worktree。Catalog 只记 source identity、repository fingerprint 与 commit，不记本机路径。这样换机器时不会把某台电脑的路径写成协议事实，模型也拿不到“我想去哪就去哪”的文件系统权限。
+
+路径和删除都采取最保守的规则：source/root/target 里有 symlink、Windows Junction/reparse，目标目录已被别的东西占着，`.git` marker 异常，Git worktree registry/common-dir/HEAD 对不上，全部拒绝或 quarantine。marker 还要做双向身份证明：common-dir 中必须恰好有一个 `worktrees/*/gitdir` 指回这棵目录的 `.git`，而 `.git` 让 Git 解析出的 admin directory 又必须正好是它；所以两棵同仓库、同 Commit 的合法 worktree 交换 marker 也骗不过检查。只有 exact registered、HEAD 仍是 base、status clean 才能删除；不会 `--force`，不会 broad `worktree prune`，不会执行 repo hook。Git 子进程取消或超时也会等直接 child 真正收敛，和 Tool/Verifier 共用新的 `traceh.process_control`；Tool 的 stdout/stderr 捕获仍留在 `traceh.tools.process_control`，旧位置没有保留兼容别名。
+
+create 的真实顺序是：宿主选 source → provisional worktree → 原 Supervisor 创建 Agent/Session → fresh Directory 与 `session/created` 精确核对 → attach。中途失败或取消，会先等 Agent cleanup 和 Workspace compensation 收敛，再把 worktree 安全 release 或 quarantine，最后才把原错误/取消交回调用者。`resume()` 也不只是 inner Supervisor 返回就结束：前置 Workspace 检查、inner resume、后置 Agent/Session/路径复核和失败 cleanup 都由 wrapper 的同一把锁管到公开返回，所以 `aclose()` 不会先返回、随后再冒出一个已经失活的 handle。停 Agent 只停 Activation，不删 worktree，因为人还可能要审查代码，后面的 D1 也要从它收集 Patch。
+
+Read-only 不是说 Windows/Linux 把目录权限锁死了，而是宿主把 `ManagedWorkspaceAccessPolicy` 显式装进 ToolRuntime：纯读和工作区读可以继续，写、shell/进程、网络和外部副作用拒绝；writable 则继续交给其他 Policy 决定。同权限插件或外部程序还是能直接写，所以千万不能把它宣传成 OS sandbox。
+
+五个专门测试文件共 60 项：Catalog/Service 28、真实 Git 16、Policy 3、Supervisor wrapper 9、架构守卫 4；另有 10 项进入既有测试，本轮净增 70 项。扩大定向是 84 通过、2 跳过。全仓收集 1835 项，完整门禁 1832 通过、3 跳过；三个 Windows skip 是两处当前用户无权创建目录 symlink，一处路径不能含 NUL。前一轮临时允许 attached dirty 删除、忽略 occupied target、去掉 Session workspace 精确核对；复审修复又分别去掉 marker/admin 双向绑定、resume/close 共享锁和 Catalog event type 冻结。六个反例都按根因变红，恢复后再跑定向、Ruff 与全量。
+
+现在仍没有 Patch Artifact、diff/Verifier 冻结、人工批准、Git ref CAS merge/promotion、Workspace CLI、跨进程 workspace lease、容器或 OS sandbox。外部 Git writer 仍可能制造冲突；当前选择 fail closed/quarantine，不冒充分布式锁。版本仍是 `0.6.0`，Stage C 完成不等于 v0.7 发布；下一步是 D1 immutable Patch Artifact。

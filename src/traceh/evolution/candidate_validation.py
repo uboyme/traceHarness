@@ -44,8 +44,8 @@ from traceh.evolution.artifacts import (
     transient_wheel_members,
 )
 from traceh.plugins import is_plugin_id
+from traceh.process_control import converge_process
 from traceh.tools.builtins.shell import sanitized_environment
-from traceh.tools.process_control import converge_process
 from traceh.version import DISTRIBUTION_NAME
 
 REPORT_SCHEMA_VERSION = 1

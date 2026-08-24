@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+### v0.7-C: managed Git workspace lifecycle
+
+- Added one append-only `workspaces:catalog` lifecycle with provisional,
+  attached, quarantined and released facts. Workspace identity is correlated
+  with the exact Agent creation request and Session workspace id; paths remain
+  host-only and never become model-supplied authority.
+- Added `LocalGitWorkspaceProvider`, which maps an explicit source id to a
+  clean top-level repository, resolves one immutable commit and materializes a
+  detached worktree beneath one managed root. Symlinks, junctions/reparse
+  points, occupied paths, registry/HEAD mismatches and dirty cleanup are
+  rejected or quarantined; each marker's absolute admin directory must also
+  equal the unique registry entry that points back to that exact worktree, so
+  swapping two otherwise valid sibling markers is rejected. No force removal
+  or broad prune is used.
+- Added a cancellation-safe `WorkspaceService` and
+  `WorkspaceManagedAgentSupervisor`. The wrapper delegates execution and
+  lifecycle to the existing public Supervisor, then reconciles the Directory
+  and Session before attach. Resume validation remains wrapper-owned through
+  its post-check, so close cannot return before it converges; Agent disposal
+  preserves the worktree until an explicit host release/reject/merged decision.
+- Added `ManagedWorkspaceAccessPolicy`: read-only Agents can use only pure and
+  workspace-read Tools, while writes, processes, network and external effects
+  are denied. This is an explicitly installed Tool capability boundary, not an
+  operating-system sandbox.
+- Moved generic direct-child process convergence to `traceh.process_control`;
+  Tool output capture remains in `traceh.tools.process_control`. The old
+  location is not retained as a compatibility alias.
+- Recorded the ownership, path, Git, reconciliation and explicit threat
+  boundaries in ADR-0028. Stage C adds no Patch Artifact, diff/merge,
+  promotion, Workflow, Workspace CLI or distributed lease; version remains
+  `0.6.0`. The five dedicated Stage C files contain 60 tests, with 10 more
+  regressions added to existing files; the expanded
+  Stage C/tool/cancellation gate is 84 passed, 2 skipped, and the complete gate
+  is 1835 collected / 1832 passed / 3 Windows platform skips. Catalog operation
+  receipts retain protocol constants rather than hostile envelope objects.
+
 ### v0.7-B: Budget enforcement at owned boundaries
 
 - Added explicit host adapters for managed child creation, model/token usage,
@@ -30,9 +66,11 @@
   handling and required an exact boolean for the estimated-Usage policy, so
   Python truthiness cannot replace an injected mainline or weaken evidence.
 - Recorded the ownership, cancellation and explicit-host boundaries in
-  ADR-0027. Default CLI grants, cross-process leases, hard-crash recovery for
-  STARTED reservations, Workspace/Patch and Workflow remain future work;
-  version stays `0.6.0`. The Budget suite is 79 passed, the expanded
+  ADR-0027. At the Stage B checkpoint, default CLI grants, cross-process
+  leases, hard-crash recovery for STARTED reservations, Workspace/Patch and
+  Workflow remained future work; Stage C subsequently adds Workspace only,
+  without changing the other Budget boundaries.
+  Version stays `0.6.0`. The Budget suite is 79 passed, the expanded
   Composition/plugin set is 168 passed, and the complete gate is 1770
   collected / 1769 passed / 1 skipped.
 

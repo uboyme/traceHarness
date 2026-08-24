@@ -26,12 +26,16 @@ Control
   SupervisorToolset -> AgentSupervisor protocol
   AgentToolAuthority, ChildProvisioningPolicy
     (fresh durable authorization; explicit host provisioning decision)
+  WorkspaceManagedAgentSupervisor -> AgentSupervisor protocol
+  WorkspaceService, ManagedWorkspaceAccessPolicy
+    (managed Git lifecycle; durable attach; explicit Tool capability)
 
 Capabilities
   CompositionRuntime, PromptAssembler, LlmRegistry, ToolRuntime, CompletionVerifier
 
 State
   SessionService, EventStore, SessionEventFeed, SurfaceProjector, RecoveryService
+  WorkspaceCatalog; LocalGitWorkspaceProvider (host filesystem/Git effects)
 
 Kernel
   ScopeChain, ServiceRegistry/View, CompositionOverlayPlan, HookDispatcher, Activation,
@@ -104,8 +108,8 @@ Dependencies still point downward - the CLI timeline depends on the feed, and no
 
 Provider retry, prompt sections, policies, verification and persistence are delegated to
 services. Subagents are ordinary tools backed by `AgentSupervisor`, not branches in this
-loop; v0.7 Budget, Workspace, Artifact, Promotion and Workflow services must remain above
-the same boundary.
+loop; v0.7 Budget enforcement and managed Workspace lifecycle already remain above this
+boundary, and Artifact, Promotion and Workflow services must do the same.
 
 ## State planes
 
@@ -156,9 +160,10 @@ and a cancelled spawn converges both the create transaction and any committed ch
 before returning. Reports are reconstructed from Inbox, delivery and Session facts, not from a
 second result cache. This facade remains in `traceh.supervision`; it does not change
 `AgentLoop`, `AgentRuntime` or `PluginManager`. See
-[ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring, cold recovery and
-managed Workspaces/Patch Artifacts remain future work; v0.7-B now offers explicit host-wired
-Budget enforcement without moving that policy into the Supervisor. Child reserve and
+[ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring and cold recovery
+remain future work. v0.7-B offers explicit host-wired Budget enforcement and v0.7-C wraps the
+same public Supervisor with managed Git workspace provisioning without moving either policy
+into the concurrency kernel. Patch Artifacts remain future work. Child reserve and
 Token/wall START writes are themselves owned tasks: same-process cancellation waits for release
 or conservative settlement before returning, while recovery of STARTED facts left by a hard
 process crash remains future work.
@@ -196,6 +201,38 @@ Tool admission happens in model order between ordinary Policy and dispatch.
 state or Budget branch. See
 [ADR-0026](adr/0026-append-only-hierarchical-budget-ledger.md) and
 [ADR-0027](adr/0027-budget-enforcement-at-owned-boundaries.md).
+
+### Workspace Catalog Stream
+
+v0.7-C adds one `workspaces:catalog` stream per EventStore. It records a
+framework-generated workspace identity, host-approved source id, exact Git base
+commit and access capability before materialization, then one attachment,
+quarantine or release lifecycle. The catalog is the only durable workspace
+lifecycle view; concrete filesystem paths stay inside the host provider and do
+not enter model input, Session Surface or request fingerprints.
+
+`LocalGitWorkspaceProvider` creates detached, commit-pinned worktrees beneath
+one explicit managed root. It validates the source/common-dir/worktree registry,
+HEAD and regular `.git` marker. The registry's unique admin entry must point
+back to this target marker, and Git must resolve the marker back to that exact
+admin directory; swapping sibling markers therefore fails identity validation.
+It rejects symlink/junction/reparse traversal and occupied paths, disables Git
+hooks and prompts, and never force-removes or broadly prunes. Only an exact
+registered worktree that is clean at its base can be removed. Dirty, unsafe or
+unknowable state is quarantined for inspection.
+
+`WorkspaceManagedAgentSupervisor` wraps the public `AgentSupervisor`; it does
+not own Activations, Inbox, Delivery or Directory state. Its create saga
+provisions first, delegates one ordinary Supervisor create, then uses fresh
+Directory and Session facts to attach. Failure or cancellation converges Agent
+cleanup and workspace release/quarantine before returning. Agent stop/host
+close preserves worktrees because review and later artifacts outlive a live
+Activation. Its shared wrapper lock also keeps `resume()` admission, inner
+resume, post-validation and failure cleanup visible to `aclose()` until the
+public operation returns. `ManagedWorkspaceAccessPolicy` can explicitly restrict a
+read-only Agent to pure/workspace-read Tools, but it is not an OS sandbox and
+does not constrain arbitrary code running as the host user. See
+[ADR-0028](adr/0028-managed-git-workspace-lifecycle.md).
 
 ### Agent Inbox Streams
 

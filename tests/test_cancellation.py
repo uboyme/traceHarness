@@ -12,8 +12,10 @@ from pathlib import Path
 import pytest
 
 import traceh
+from traceh import process_control
 from traceh.api.llm import ModelResponse
 from traceh.llm.scripted import ScriptedLlmProvider
+from traceh.process_control import converge_process
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.continuation import (
     Continue,
@@ -22,9 +24,7 @@ from traceh.runtime.continuation import (
 )
 from traceh.runtime.verification import SUMMARY_TAIL_CHARS, CommandVerifier
 from traceh.session.file_lock import FileLockTimeout, exclusive_file_lock
-from traceh.tools import process_control
 from traceh.tools.builtins.shell import sanitized_environment
-from traceh.tools.process_control import converge_process
 
 SRC_ROOT = Path(traceh.__file__).resolve().parents[1]
 

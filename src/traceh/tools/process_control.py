@@ -41,15 +41,11 @@ third Ctrl+C cannot turn a child into an orphan.
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
-import time
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import IO
-
-DEFAULT_GRACE_SECONDS = 2.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,74 +76,6 @@ def capture_output() -> Iterator[CapturedOutput]:
         yield CapturedOutput(stdout=stdout, stderr=stderr)
 
 
-async def converge_process(
-    process: asyncio.subprocess.Process,
-    *,
-    grace_seconds: float = DEFAULT_GRACE_SECONDS,
-) -> bool:
-    """Stop `process` and do not return until it is gone.
-
-    Terminate first so the child can exit on its own terms, wait a bounded
-    grace period, then kill and wait for good. Returns True when at least one
-    cancellation was absorbed while doing so, which lets the caller re-raise it
-    once the child is actually dead.
-
-    Only the direct child is managed. A grandchild it spawned may keep running
-    and may keep writing into the captured files; that is out of scope and does
-    not hold this function up.
-    """
-
-    interrupted = False
-    if process.returncode is None:
-        _request_stop(process.terminate)
-        exited, interrupted = await _await_exit(process, grace_seconds)
-        if not exited:
-            _request_stop(process.kill)
-            _, interrupted_after_kill = await _await_exit(process, None)
-            interrupted = interrupted or interrupted_after_kill
-    return interrupted
-
-
 def _read_from_start(handle: IO[bytes]) -> bytes:
     handle.seek(0)
     return handle.read()
-
-
-def _request_stop(action: Callable[[], None]) -> None:
-    try:
-        action()
-    except ProcessLookupError:
-        # It exited between the check and the signal; nothing left to stop.
-        pass
-
-
-async def _await_exit(
-    process: asyncio.subprocess.Process,
-    limit_seconds: float | None,
-) -> tuple[bool, bool]:
-    """Wait for exit, returning (exited, absorbed_a_cancellation).
-
-    `exited` is False when `limit_seconds` elapsed first. Cancellation aimed at
-    this coroutine is absorbed and the same wait is resumed, so repeated
-    cancellation cannot cut the wait short.
-    """
-
-    waiter = asyncio.ensure_future(process.wait())
-    deadline = None if limit_seconds is None else time.monotonic() + limit_seconds
-    interrupted = False
-    try:
-        while not waiter.done():
-            remaining = None if deadline is None else deadline - time.monotonic()
-            if remaining is not None and remaining <= 0:
-                return False, interrupted
-            try:
-                await asyncio.wait_for(asyncio.shield(waiter), remaining)
-            except TimeoutError:
-                return False, interrupted
-            except asyncio.CancelledError:
-                interrupted = True
-                continue
-        return True, interrupted
-    finally:
-        # Cancelling the waiter never affects the child, only our interest in it.
-        waiter.cancel()

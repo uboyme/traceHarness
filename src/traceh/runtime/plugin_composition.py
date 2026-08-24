@@ -264,6 +264,7 @@ class PluginCompositionCoordinator:
                 ),
                 timeout_seconds=self._tool_timeout_seconds,
                 max_output_chars=self._max_tool_output_chars,
+                admission_gate=current.tools.admission_gate,
             )
             generation = CompositionGeneration(
                 llms=llms,

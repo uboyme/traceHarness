@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
-from traceh.api.tools import Tool
+from traceh.api.tools import Tool, ToolAdmissionGate
 from traceh.api.turns import TurnInput
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.composition_overlays import (
@@ -500,6 +500,8 @@ class _PreparedRuntime:
     verifier: CompletionVerifier | None
     verifier_name: str | None
     continuation: ContinuationRuntime | None
+    llm_runtime: LlmRuntime
+    tool_admission_gate: ToolAdmissionGate | None
 
 
 def _prepare_default_runtime(
@@ -512,6 +514,8 @@ def _prepare_default_runtime(
     verifier: CompletionVerifier | None = None,
     verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
+    llm_runtime: LlmRuntime | None = None,
+    tool_admission_gate: ToolAdmissionGate | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -606,6 +610,8 @@ def _prepare_default_runtime(
         verifier=effective_verifier,
         verifier_name=selected_verifier_name,
         continuation=continuation,
+        llm_runtime=LlmRuntime() if llm_runtime is None else llm_runtime,
+        tool_admission_gate=tool_admission_gate,
     )
 
 
@@ -624,6 +630,7 @@ def _finish_default_runtime(
         middlewares=prepared.tool_middlewares,
         timeout_seconds=config.tool_timeout_seconds,
         max_output_chars=config.max_tool_output_chars,
+        admission_gate=prepared.tool_admission_gate,
     )
     tool_runtime = ToolRuntime(
         activation_set.tools,
@@ -632,6 +639,7 @@ def _finish_default_runtime(
         middlewares=activation_set.middlewares,
         timeout_seconds=config.tool_timeout_seconds,
         max_output_chars=config.max_tool_output_chars,
+        admission_gate=prepared.tool_admission_gate,
     )
     request_builder = RequestBuilder(prepared.sessions, prepared.surface)
     hooks = HookDispatcher()
@@ -654,7 +662,7 @@ def _finish_default_runtime(
         sessions=prepared.sessions,
         compositions=composition_runtime,
         request_builder=request_builder,
-        llm_runtime=LlmRuntime(),
+        llm_runtime=prepared.llm_runtime,
         data_dir=prepared.data_dir,
         max_steps=config.max_steps,
         continuation=prepared.continuation,
@@ -692,6 +700,8 @@ def build_default_runtime(
     verifier: CompletionVerifier | None = None,
     verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
+    llm_runtime: LlmRuntime | None = None,
+    tool_admission_gate: ToolAdmissionGate | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -711,6 +721,8 @@ def build_default_runtime(
         verifier=verifier,
         verifier_name=verifier_name,
         continuation=continuation,
+        llm_runtime=llm_runtime,
+        tool_admission_gate=tool_admission_gate,
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
@@ -753,6 +765,8 @@ async def build_default_runtime_async(
     verifier: CompletionVerifier | None = None,
     verifier_name: str | None = None,
     continuation: ContinuationRuntime | None = None,
+    llm_runtime: LlmRuntime | None = None,
+    tool_admission_gate: ToolAdmissionGate | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -780,6 +794,8 @@ async def build_default_runtime_async(
         verifier=verifier,
         verifier_name=verifier_name,
         continuation=continuation,
+        llm_runtime=llm_runtime,
+        tool_admission_gate=tool_admission_gate,
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Protocol
 
 from traceh.api.json_types import JsonValue, to_json_value
@@ -87,10 +88,24 @@ class ToolSchema:
         )
 
 
+class UsageQuality(StrEnum):
+    """How trustworthy a provider's token count is.
+
+    Missing usage is not zero usage.  Budget enforcement may accept an
+    estimate only when the host explicitly opts into that weaker contract;
+    otherwise an unknown response consumes the whole reservation.
+    """
+
+    EXACT = "exact"
+    ESTIMATED = "estimated"
+    UNKNOWN = "unknown"
+
+
 @dataclass(frozen=True, slots=True)
 class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
+    quality: UsageQuality = UsageQuality.UNKNOWN
 
     @property
     def total_tokens(self) -> int:
@@ -101,6 +116,7 @@ class Usage:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "total_tokens": self.total_tokens,
+            "quality": self.quality.value,
         }
 
 

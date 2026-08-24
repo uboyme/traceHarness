@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from traceh.api.json_types import JsonValue
 
@@ -35,6 +35,38 @@ class ToolExecutionContext:
     tool_call_id: str
     workspace: Path
     data_dir: Path
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedToolCall:
+    """A call that already passed lookup, schema validation and normal Policy."""
+
+    tool_call_id: str
+    tool_name: str
+    arguments: dict[str, JsonValue]
+    effect_kind: EffectKind
+    policy: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ToolAdmissionDecision:
+    """One host admission answer corresponding to one prepared call."""
+
+    tool_call_id: str
+    admitted: bool
+    code: str | None = None
+
+
+@runtime_checkable
+class ToolAdmissionGate(Protocol):
+    """Stateful host admission after normal Policy and before dispatch."""
+
+    async def admit(
+        self,
+        calls: tuple[PreparedToolCall, ...],
+        context: ToolExecutionContext,
+    ) -> tuple[ToolAdmissionDecision, ...]:
+        ...
 
 
 @dataclass(frozen=True, slots=True)

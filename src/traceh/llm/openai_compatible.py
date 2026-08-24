@@ -10,7 +10,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage
+from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 from traceh.concurrency import await_worker_convergence
 
 
@@ -135,6 +135,12 @@ class OpenAICompatibleProvider:
         usage_raw = raw.get("usage", {}) if isinstance(raw, dict) else {}
         if not isinstance(usage_raw, dict):
             usage_raw = {}
+        usage_is_exact = (
+            type(usage_raw.get("prompt_tokens")) is int
+            and usage_raw["prompt_tokens"] >= 0
+            and type(usage_raw.get("completion_tokens")) is int
+            and usage_raw["completion_tokens"] >= 0
+        )
         return ModelResponse(
             content=str(message.get("content") or ""),
             tool_calls=tuple(tool_calls),
@@ -142,6 +148,9 @@ class OpenAICompatibleProvider:
             usage=Usage(
                 input_tokens=int(usage_raw.get("prompt_tokens", 0)),
                 output_tokens=int(usage_raw.get("completion_tokens", 0)),
+                quality=(
+                    UsageQuality.EXACT if usage_is_exact else UsageQuality.UNKNOWN
+                ),
             ),
             raw={"response_id": str(raw.get("id", ""))} if isinstance(raw, dict) else {},
         )

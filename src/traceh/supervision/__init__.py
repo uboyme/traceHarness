@@ -18,14 +18,17 @@ v0.6 Stage D also projects lifecycle ownership from the durable Agent
 Directory. Subtree disposal closes admission, waits admitted work to quiesce,
 then releases descendants before owners. Stage E adds a host-wired five-Tool
 facade over that same Supervisor and a durable report reader; it does not add a
-parallel worker, scheduler or result cache. There is still **no** cold recovery,
-stale-claim takeover, automatic retry, managed Workspace or budget enforcement;
-`MessageTarget.NEXT_STEP` is refused rather than reinterpreted. See
+parallel worker, scheduler or result cache. v0.7-B can wrap the public
+Supervisor and Activation factory with explicit host-owned Budget adapters;
+this package still owns no Budget ledger or mutable balance. There is still
+**no** cold recovery, stale-claim takeover, automatic retry or managed
+Workspace; `MessageTarget.NEXT_STEP` is refused rather than reinterpreted. See
 [ADR-0021](../../../docs/adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)
 and
 [ADR-0022](../../../docs/adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md),
 plus
-[ADR-0023](../../../docs/adr/0023-supervisor-backed-subagent-tools.md).
+[ADR-0023](../../../docs/adr/0023-supervisor-backed-subagent-tools.md), plus
+[ADR-0027](../../../docs/adr/0027-budget-enforcement-at-owned-boundaries.md).
 """
 
 from __future__ import annotations

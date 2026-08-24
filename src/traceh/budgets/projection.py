@@ -18,12 +18,16 @@ from traceh.api.budgets import (
     BudgetAccountStatus,
     BudgetAmounts,
     BudgetCharge,
+    BudgetChargeMode,
     BudgetLimits,
     BudgetReservation,
     BudgetReservationStatus,
+    BudgetUsageReservation,
+    BudgetUsageReservationStatus,
 )
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json
+from traceh.api.llm import UsageQuality
 from traceh.budgets.errors import (
     BudgetAccountClosedError,
     BudgetAccountNotFoundError,
@@ -39,6 +43,10 @@ from traceh.budgets.events import (
     BUDGET_RESERVATION_RELEASED,
     BUDGET_ROOT_GRANTED,
     BUDGET_USAGE_CHARGED,
+    BUDGET_USAGE_RELEASED,
+    BUDGET_USAGE_RESERVED,
+    BUDGET_USAGE_SETTLED,
+    BUDGET_USAGE_STARTED,
     AccountClosedFact,
     BudgetFact,
     ChildReservedFact,
@@ -46,6 +54,10 @@ from traceh.budgets.events import (
     ReservationReleasedFact,
     RootGrantedFact,
     UsageChargedFact,
+    UsageReleasedFact,
+    UsageReservedFact,
+    UsageSettledFact,
+    UsageStartedFact,
     parse_budget_fact,
 )
 from traceh.session.event_store import EventStore
@@ -101,6 +113,30 @@ def _subtract(left: BudgetAmounts, right: BudgetAmounts) -> BudgetAmounts:
     return BudgetAmounts(**values)
 
 
+def _usage_settlement_matches(
+    reservation: BudgetUsageReservation,
+    amounts: BudgetAmounts,
+    usage_quality: UsageQuality | None,
+) -> bool:
+    """Keep settlement on the reservation's one active dimension and cap."""
+
+    if reservation.amounts.tokens:
+        return (
+            amounts.tokens <= reservation.amounts.tokens
+            and not amounts.steps
+            and not amounts.tool_calls
+            and not amounts.wall_milliseconds
+            and usage_quality is not None
+        )
+    return (
+        amounts.wall_milliseconds <= reservation.amounts.wall_milliseconds
+        and not amounts.tokens
+        and not amounts.steps
+        and not amounts.tool_calls
+        and usage_quality is None
+    )
+
+
 def _event_type(fact: BudgetFact) -> str:
     if isinstance(fact, RootGrantedFact):
         return BUDGET_ROOT_GRANTED
@@ -112,6 +148,14 @@ def _event_type(fact: BudgetFact) -> str:
         return BUDGET_RESERVATION_RELEASED
     if isinstance(fact, UsageChargedFact):
         return BUDGET_USAGE_CHARGED
+    if isinstance(fact, UsageReservedFact):
+        return BUDGET_USAGE_RESERVED
+    if isinstance(fact, UsageStartedFact):
+        return BUDGET_USAGE_STARTED
+    if isinstance(fact, UsageSettledFact):
+        return BUDGET_USAGE_SETTLED
+    if isinstance(fact, UsageReleasedFact):
+        return BUDGET_USAGE_RELEASED
     if isinstance(fact, AccountClosedFact):
         return BUDGET_ACCOUNT_CLOSED
     raise AssertionError("unreachable Budget fact")
@@ -168,7 +212,7 @@ def _ensure_capacity(
     *,
     children: int = 0,
 ) -> None:
-    used = _add(account.charged, account.delegated)
+    used = _add(_add(account.charged, account.delegated), account.reserved)
     for limit_field, amount_field in _CONSUMABLE_DIMENSIONS:
         limit = getattr(account.limits, limit_field)
         if limit is None:
@@ -215,6 +259,7 @@ class BudgetLedger:
         "_head_seq",
         "_operations",
         "_reservations",
+        "_usage_reservations",
     )
 
     def __init__(
@@ -223,12 +268,14 @@ class BudgetLedger:
         accounts: dict[str, BudgetAccount],
         reservations: dict[str, BudgetReservation],
         charges: dict[str, BudgetCharge],
+        usage_reservations: dict[str, BudgetUsageReservation],
         operations: dict[str, _Operation],
         head_seq: int,
     ) -> None:
         self._accounts = dict(accounts)
         self._reservations = dict(reservations)
         self._charges = dict(charges)
+        self._usage_reservations = dict(usage_reservations)
         self._operations = dict(operations)
         self._head_seq = head_seq
 
@@ -241,6 +288,7 @@ class BudgetLedger:
         accounts: dict[str, BudgetAccount] = {}
         reservations: dict[str, BudgetReservation] = {}
         charges: dict[str, BudgetCharge] = {}
+        usage_reservations: dict[str, BudgetUsageReservation] = {}
         operations: dict[str, _Operation] = {}
         child_reservations: dict[str, str] = {}
         request_reservations: dict[str, str] = {}
@@ -283,6 +331,8 @@ class BudgetLedger:
                     if parent.status is BudgetAccountStatus.CLOSED:
                         raise BudgetProtocolError("budget-account-closed", fact.seq)
                     if fact.reservation_id in reservations:
+                        raise BudgetProtocolError("budget-reservation-duplicate", fact.seq)
+                    if fact.reservation_id in usage_reservations:
                         raise BudgetProtocolError("budget-reservation-duplicate", fact.seq)
                     if fact.child_agent_id == fact.parent_agent_id:
                         raise BudgetProtocolError(
@@ -428,7 +478,8 @@ class BudgetLedger:
                             and getattr(account.limits, limit_field) is None
                         ):
                             raise BudgetProtocolError("budget-charge-inactive", fact.seq)
-                    _ensure_capacity(account, fact.amounts, fact.seq)
+                    if fact.mode is BudgetChargeMode.ADMISSION:
+                        _ensure_capacity(account, fact.amounts, fact.seq)
                     accounts[fact.agent_id] = replace(
                         account, charged=_add(account.charged, fact.amounts)
                     )
@@ -436,7 +487,110 @@ class BudgetLedger:
                         operation_id=fact.operation_id,
                         agent_id=fact.agent_id,
                         amounts=fact.amounts,
+                        mode=fact.mode,
+                        usage_quality=fact.usage_quality,
                         charged_seq=fact.seq,
+                    )
+                    head_seq = fact.seq
+                    continue
+
+                if isinstance(fact, UsageReservedFact):
+                    account = accounts.get(fact.agent_id)
+                    if account is None:
+                        raise BudgetProtocolError("budget-account-unknown", fact.seq)
+                    if account.status is BudgetAccountStatus.CLOSED:
+                        raise BudgetProtocolError("budget-account-closed", fact.seq)
+                    if (
+                        fact.reservation_id in reservations
+                        or fact.reservation_id in usage_reservations
+                    ):
+                        raise BudgetProtocolError("budget-reservation-duplicate", fact.seq)
+                    for limit_field, amount_field in _CONSUMABLE_DIMENSIONS:
+                        if (
+                            getattr(fact.amounts, amount_field)
+                            and getattr(account.limits, limit_field) is None
+                        ):
+                            raise BudgetProtocolError("budget-charge-inactive", fact.seq)
+                    _ensure_capacity(account, fact.amounts, fact.seq)
+                    usage_reservations[fact.reservation_id] = BudgetUsageReservation(
+                        reservation_id=fact.reservation_id,
+                        agent_id=fact.agent_id,
+                        amounts=fact.amounts,
+                        status=BudgetUsageReservationStatus.PENDING,
+                        reserved_seq=fact.seq,
+                    )
+                    accounts[fact.agent_id] = replace(
+                        account, reserved=_add(account.reserved, fact.amounts)
+                    )
+                    head_seq = fact.seq
+                    continue
+
+                if isinstance(fact, UsageStartedFact):
+                    reservation = usage_reservations.get(fact.reservation_id)
+                    if reservation is None:
+                        raise BudgetProtocolError(
+                            "budget-usage-reservation-unknown", fact.seq
+                        )
+                    if reservation.status is not BudgetUsageReservationStatus.PENDING:
+                        raise BudgetProtocolError("budget-reservation-terminal", fact.seq)
+                    usage_reservations[fact.reservation_id] = replace(
+                        reservation,
+                        status=BudgetUsageReservationStatus.STARTED,
+                        started_seq=fact.seq,
+                    )
+                    head_seq = fact.seq
+                    continue
+
+                if isinstance(fact, (UsageSettledFact, UsageReleasedFact)):
+                    reservation = usage_reservations.get(fact.reservation_id)
+                    if reservation is None:
+                        raise BudgetProtocolError(
+                            "budget-usage-reservation-unknown", fact.seq
+                        )
+                    expected_status = (
+                        BudgetUsageReservationStatus.STARTED
+                        if isinstance(fact, UsageSettledFact)
+                        else BudgetUsageReservationStatus.PENDING
+                    )
+                    if reservation.status is not expected_status:
+                        raise BudgetProtocolError("budget-reservation-terminal", fact.seq)
+                    account = accounts.get(reservation.agent_id)
+                    if account is None:
+                        raise BudgetProtocolError("budget-account-unknown", fact.seq)
+                    if isinstance(fact, UsageSettledFact):
+                        if not _usage_settlement_matches(
+                            reservation,
+                            fact.amounts,
+                            fact.usage_quality,
+                        ):
+                            raise BudgetProtocolError(
+                                "budget-usage-settlement-invalid", fact.seq
+                            )
+                    accounts[account.agent_id] = replace(
+                        account,
+                        reserved=_subtract(account.reserved, reservation.amounts),
+                        charged=(
+                            _add(account.charged, fact.amounts)
+                            if isinstance(fact, UsageSettledFact)
+                            else account.charged
+                        ),
+                    )
+                    usage_reservations[fact.reservation_id] = replace(
+                        reservation,
+                        status=(
+                            BudgetUsageReservationStatus.SETTLED
+                            if isinstance(fact, UsageSettledFact)
+                            else BudgetUsageReservationStatus.RELEASED
+                        ),
+                        terminal_seq=fact.seq,
+                        settled_amounts=(
+                            fact.amounts if isinstance(fact, UsageSettledFact) else None
+                        ),
+                        usage_quality=(
+                            fact.usage_quality
+                            if isinstance(fact, UsageSettledFact)
+                            else None
+                        ),
                     )
                     head_seq = fact.seq
                     continue
@@ -451,6 +605,18 @@ class BudgetLedger:
                     reservation.parent_agent_id == fact.agent_id
                     and reservation.status is BudgetReservationStatus.PENDING
                     for reservation in reservations.values()
+                ):
+                    raise BudgetProtocolError(
+                        "budget-close-with-pending-reservation", fact.seq
+                    )
+                if any(
+                    reservation.agent_id == fact.agent_id
+                    and reservation.status
+                    in {
+                        BudgetUsageReservationStatus.PENDING,
+                        BudgetUsageReservationStatus.STARTED,
+                    }
+                    for reservation in usage_reservations.values()
                 ):
                     raise BudgetProtocolError(
                         "budget-close-with-pending-reservation", fact.seq
@@ -470,6 +636,7 @@ class BudgetLedger:
             accounts=accounts,
             reservations=reservations,
             charges=charges,
+            usage_reservations=usage_reservations,
             operations=operations,
             head_seq=head_seq,
         )
@@ -490,6 +657,10 @@ class BudgetLedger:
     def charges(self) -> tuple[BudgetCharge, ...]:
         return tuple(self._charges.values())
 
+    @property
+    def usage_reservations(self) -> tuple[BudgetUsageReservation, ...]:
+        return tuple(self._usage_reservations.values())
+
     def account(self, agent_id: str) -> BudgetAccount | None:
         return self._accounts.get(agent_id)
 
@@ -498,6 +669,11 @@ class BudgetLedger:
 
     def charge(self, operation_id: str) -> BudgetCharge | None:
         return self._charges.get(operation_id)
+
+    def usage_reservation(
+        self, reservation_id: str
+    ) -> BudgetUsageReservation | None:
+        return self._usage_reservations.get(reservation_id)
 
     def operation_exists(self, operation_id: str) -> bool:
         return operation_id in self._operations
@@ -555,7 +731,7 @@ class BudgetLedger:
             if error.code == "budget-depth-exhausted":
                 raise BudgetExhaustedError("max_depth") from None
             if error.code == "budget-capacity-exceeded":
-                used = _add(account.charged, account.delegated)
+                used = _add(_add(account.charged, account.delegated), account.reserved)
                 for limit_field, amount_field in _CONSUMABLE_DIMENSIONS:
                     limit = getattr(account.limits, limit_field)
                     if limit is not None and (
@@ -586,7 +762,7 @@ class BudgetLedger:
             _ensure_capacity(account, amounts, self._head_seq + 1)
         except BudgetProtocolError as error:
             if error.code == "budget-capacity-exceeded":
-                used = _add(account.charged, account.delegated)
+                used = _add(_add(account.charged, account.delegated), account.reserved)
                 for limit_field, amount_field in _CONSUMABLE_DIMENSIONS:
                     limit = getattr(account.limits, limit_field)
                     if limit is not None and (
@@ -595,12 +771,40 @@ class BudgetLedger:
                         raise BudgetExhaustedError(limit_field) from None
             raise
 
+    def ensure_observation_allowed(
+        self, agent_id: str, amounts: BudgetAmounts
+    ) -> None:
+        account = self.require_open_account(agent_id)
+        for limit_field, amount_field in _CONSUMABLE_DIMENSIONS:
+            if getattr(amounts, amount_field) and getattr(account.limits, limit_field) is None:
+                raise BudgetInputError("budget-charge-inactive", "amounts")
+
+    def ensure_usage_reservation_capacity(
+        self, agent_id: str, amounts: BudgetAmounts
+    ) -> None:
+        if (
+            bool(amounts.tokens) == bool(amounts.wall_milliseconds)
+            or amounts.steps
+            or amounts.tool_calls
+        ):
+            raise BudgetInputError("budget-usage-reservation-invalid", "amounts")
+        self.ensure_charge_capacity(agent_id, amounts)
+
+    @staticmethod
+    def ensure_usage_settlement(
+        reservation: BudgetUsageReservation,
+        amounts: BudgetAmounts,
+        usage_quality: UsageQuality | None,
+    ) -> None:
+        if not _usage_settlement_matches(reservation, amounts, usage_quality):
+            raise BudgetInputError("budget-usage-settlement-invalid", "amounts")
+
     def available(self, agent_id: str) -> BudgetLimits:
         account = self.require_open_account(agent_id)
-        used = _add(account.charged, account.delegated)
+        used = _add(_add(account.charged, account.delegated), account.reserved)
 
         def remaining(limit: int | None, amount: int) -> int | None:
-            return None if limit is None else limit - amount
+            return None if limit is None else max(0, limit - amount)
 
         return BudgetLimits(
             max_tokens=remaining(account.limits.max_tokens, used.tokens),

@@ -156,8 +156,12 @@ and a cancelled spawn converges both the create transaction and any committed ch
 before returning. Reports are reconstructed from Inbox, delivery and Session facts, not from a
 second result cache. This facade remains in `traceh.supervision`; it does not change
 `AgentLoop`, `AgentRuntime` or `PluginManager`. See
-[ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring, cold recovery,
-managed Workspaces/Patch Artifacts and Budget enforcement remain future work.
+[ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring, cold recovery and
+managed Workspaces/Patch Artifacts remain future work; v0.7-B now offers explicit host-wired
+Budget enforcement without moving that policy into the Supervisor. Child reserve and
+Token/wall START writes are themselves owned tasks: same-process cancellation waits for release
+or conservative settlement before returning, while recovery of STARTED facts left by a hard
+process crash remains future work.
 
 v0.7 D0 narrows that adapter without changing its five schemas or any durable event. The
 Toolset now accepts the public `AgentSupervisor` protocol rather than the concrete process
@@ -174,18 +178,24 @@ and [ADR-0025](adr/0025-hierarchical-budget-breaking-cutover.md).
 
 v0.7-A adds one `budgets:ledger` stream above Agent identity. It records
 host-issued root grants, child reservations, optional commit acknowledgements,
-converged release, usage charges and terminal accounts. Remaining capacity is
-always projected from immutable facts; it is not stored in `AgentRuntime`, the
-Supervisor or a mutable balance table. The exact `agents:directory` child fact
-is the only creation commit proof, so a Budget writer cannot invent an Agent.
+converged release, usage charges, usage reservation lifecycles and terminal
+accounts. Remaining capacity is always projected from immutable facts; it is
+not stored in `AgentRuntime`, the Supervisor or a mutable balance table. The
+exact `agents:directory` child fact is the only creation commit proof, so a
+Budget writer cannot invent an Agent.
 
 The v0.6 `AgentSpec.budget`/`AgentRecord.budget` shape was removed rather than
 kept as a second meaning of authority. New Agent identity uses schema version
 2, while old schema-version-1 Budget history fails closed and is never
-auto-migrated or deleted. Stage A exposes a host service only; Stage B will
-compose reservation and charging around existing create/model/Step/Tool/process
-boundaries without changing the thin loop. See
-[ADR-0026](adr/0026-append-only-hierarchical-budget-ledger.md).
+auto-migrated or deleted. Stage B composes thin, explicit host adapters around
+the existing create/model/Step/Tool/process boundaries: child creation remains
+one Supervisor saga, process capacity is a process-local ancestor lease, and
+model/wall usage uses reserve/start/settle rather than a repeatable permission.
+Tool admission happens in model order between ordinary Policy and dispatch.
+`AgentLoop`, `AgentRuntime` and `ProcessAgentSupervisor` still own no Budget
+state or Budget branch. See
+[ADR-0026](adr/0026-append-only-hierarchical-budget-ledger.md) and
+[ADR-0027](adr/0027-budget-enforcement-at-owned-boundaries.md).
 
 ### Agent Inbox Streams
 

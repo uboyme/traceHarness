@@ -305,10 +305,13 @@ invariant violations and zero request-reconstruction violations.
   idempotency and three-state reconciliation now exist. This is an intentional
   pre-1.0 breaking cutover: no legacy/V2 mode, aliases, dual projector or
   automatic migration; old managed histories fail closed and remain untouched.
-- **B — Budget enforcement:** reserve before managed create/effects, commit or
-  release after durable reconciliation, and enforce tokens/Steps/tools/process
-  slots/children at their existing owned boundaries without adding branches to
-  `AgentLoop`.
+- **B — Budget enforcement (complete, unreleased):** thin host adapters now
+  reserve before managed child/model/wall work, reconcile child grants against
+  the durable Directory, terminalize reserve/START cancellation windows,
+  enforce Step and ordered Tool admission, and hold process-local ancestor
+  slots. The single ledger remains the only durable balance source;
+  `AgentLoop`, `AgentRuntime` and `ProcessAgentSupervisor` have no Budget state
+  or orchestration branch.
 - **C — managed Git workspaces:** provision contained worktrees, bind their
   lifecycle to the managed Agent operation and quarantine uncertain cleanup.
 - **D1 — immutable Patch Artifacts:** collect a patch from one managed workspace

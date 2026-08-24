@@ -30,8 +30,9 @@ lifecycle responsibility alone. Stage D's `traceh.supervision.lifecycle`
 projects that field for process-local child-first disposal without moving the
 fact or cleanup work into this package. Stage E's model-visible Tool facade also
 lives in `traceh.supervision`; this package remains only the durable fact layer.
-There is still no cold recovery, retry policy, managed Workspace or hierarchical
-budget enforcement.
+There is still no cold recovery, retry policy or managed Workspace. v0.7-B
+enforces hierarchical Budget through host-owned adapters above this fact layer;
+`traceh.agents` itself still owns no balance or execution policy.
 """
 
 from __future__ import annotations

@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### v0.7-B: Budget enforcement at owned boundaries
+
+- Added explicit host adapters for managed child creation, model/token usage,
+  Step continuation, ordered Tool admission, active Turn wall time and
+  process-local descendant slots. Existing Supervisor, Runtime and Tool paths
+  remain the only execution paths; `AgentLoop` owns no Budget branch.
+- Extended the single Budget ledger with reserve/start/settle/release usage
+  facts. A START is a one-shot execution claim rather than an idempotent retry
+  permission; failure, cancellation and uncertain Usage conservatively retain
+  or consume capacity instead of repeating external work.
+- Made the reserve/START append itself owned work. Cancellation after a child
+  hold commits but before provision now releases it; cancellation after a
+  Token/wall START commits but before Provider/Turn entry conservatively
+  settles the full hold. Repeated cancellation cannot return before either
+  terminal fact is durable.
+- Added deterministic child-grant reconciliation against the Agent Directory,
+  ancestor process leases, trusted/estimated/unknown token evidence, ordered
+  batch Tool admission, durable Step reconciliation and monotonic wall-time
+  finalization. Store/Session mismatches fail before work or clean the candidate
+  before returning.
+- Separated reserve-fact idempotency from child-creation permission. A
+  `RELEASED` child reservation is now rejected before the inner Supervisor can
+  create durable identity; `PENDING` remains the first-attempt permit and
+  `COMMITTED` remains the exact durable-child retry path.
+- Preserved falsey caller-supplied LLM runtimes through explicit `None`
+  handling and required an exact boolean for the estimated-Usage policy, so
+  Python truthiness cannot replace an injected mainline or weaken evidence.
+- Recorded the ownership, cancellation and explicit-host boundaries in
+  ADR-0027. Default CLI grants, cross-process leases, hard-crash recovery for
+  STARTED reservations, Workspace/Patch and Workflow remain future work;
+  version stays `0.6.0`. The Budget suite is 79 passed, the expanded
+  Composition/plugin set is 168 passed, and the complete gate is 1770
+  collected / 1769 passed / 1 skipped.
+
 ### v0.7-A: append-only hierarchical Budget ledger
 
 - Removed the unenforced v0.6 `Budget` field from Agent identity instead of

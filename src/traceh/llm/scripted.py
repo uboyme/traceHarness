@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage
+from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 
 
 class ScriptExhaustedError(RuntimeError):
@@ -62,6 +62,12 @@ class ScriptedLlmProvider:
         usage_raw = raw.get("usage", {})
         if not isinstance(usage_raw, Mapping):
             usage_raw = {}
+        has_exact_usage = (
+            type(usage_raw.get("input_tokens")) is int
+            and usage_raw["input_tokens"] >= 0
+            and type(usage_raw.get("output_tokens")) is int
+            and usage_raw["output_tokens"] >= 0
+        )
         return ModelResponse(
             content=str(raw.get("content") or ""),
             tool_calls=tuple(calls),
@@ -69,6 +75,9 @@ class ScriptedLlmProvider:
             usage=Usage(
                 input_tokens=int(usage_raw.get("input_tokens", 0)),
                 output_tokens=int(usage_raw.get("output_tokens", 0)),
+                quality=(
+                    UsageQuality.EXACT if has_exact_usage else UsageQuality.UNKNOWN
+                ),
             ),
         )
 

@@ -1,10 +1,19 @@
 """Append-only hierarchical Budget authority."""
 
+from traceh.budgets.enforcement import (
+    BudgetContinuationRuntime,
+    BudgetedAgentExecution,
+    BudgetedLlmRuntime,
+    BudgetEnforcement,
+    BudgetToolAdmissionGate,
+    TokenCounter,
+)
 from traceh.budgets.errors import (
     BudgetAccountClosedError,
     BudgetAccountNotFoundError,
     BudgetDirectoryMismatchError,
     BudgetError,
+    BudgetEvidenceError,
     BudgetExhaustedError,
     BudgetInputError,
     BudgetLedgerConflictError,
@@ -22,6 +31,13 @@ from traceh.budgets.projection import (
     validate_budget_ledger_events,
 )
 from traceh.budgets.service import BudgetLedgerService
+from traceh.budgets.supervision import (
+    BudgetedActivationFactory,
+    BudgetedAgentSupervisor,
+    ChildBudgetPolicy,
+    ProcessSlotAuthority,
+    ProcessSlotLease,
+)
 
 __all__ = [
     "BUDGET_LEDGER_STREAM",
@@ -29,6 +45,9 @@ __all__ = [
     "BudgetAccountNotFoundError",
     "BudgetDirectoryMismatchError",
     "BudgetError",
+    "BudgetEvidenceError",
+    "BudgetContinuationRuntime",
+    "BudgetEnforcement",
     "BudgetExhaustedError",
     "BudgetInputError",
     "BudgetLedger",
@@ -36,10 +55,19 @@ __all__ = [
     "BudgetLedgerIssue",
     "BudgetLedgerReader",
     "BudgetLedgerService",
+    "BudgetToolAdmissionGate",
+    "BudgetedActivationFactory",
+    "BudgetedAgentExecution",
+    "BudgetedAgentSupervisor",
+    "BudgetedLlmRuntime",
+    "ChildBudgetPolicy",
     "BudgetOperationConflictError",
     "BudgetProtocolError",
     "BudgetReservationNotFoundError",
     "BudgetReservationStateError",
     "BudgetWriteError",
+    "ProcessSlotAuthority",
+    "ProcessSlotLease",
+    "TokenCounter",
     "validate_budget_ledger_events",
 ]

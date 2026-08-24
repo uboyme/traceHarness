@@ -9,14 +9,19 @@ from traceh.api.budgets import (
     BudgetAccount,
     BudgetAmounts,
     BudgetCharge,
+    BudgetChargeMode,
     BudgetLimits,
     BudgetReservation,
     BudgetReservationStatus,
+    BudgetUsageReservation,
+    BudgetUsageReservationStatus,
 )
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.json_types import JsonValue
+from traceh.api.llm import UsageQuality
 from traceh.budgets.errors import (
     BudgetDirectoryMismatchError,
+    BudgetInputError,
     BudgetLedgerConflictError,
     BudgetOperationConflictError,
     BudgetReservationNotFoundError,
@@ -31,14 +36,23 @@ from traceh.budgets.events import (
     BUDGET_RESERVATION_RELEASED,
     BUDGET_ROOT_GRANTED,
     BUDGET_USAGE_CHARGED,
+    BUDGET_USAGE_RELEASED,
+    BUDGET_USAGE_RESERVED,
+    BUDGET_USAGE_SETTLED,
+    BUDGET_USAGE_STARTED,
+    MAX_BUDGET_VALUE,
     account_closed_data,
     child_reserved_data,
     freeze_amounts,
     freeze_limits,
     is_budget_fact,
+    require_budget_identifier,
     reservation_terminal_data,
     root_granted_data,
     usage_charged_data,
+    usage_released_data,
+    usage_reserved_data,
+    usage_settled_data,
 )
 from traceh.budgets.projection import BudgetLedger, BudgetLedgerReader
 from traceh.session.event_store import ConcurrencyConflict, Durability, EventStore
@@ -241,7 +255,7 @@ class BudgetLedgerService:
             assert result is not None
             return result
 
-    async def charge(
+    async def admit_usage(
         self,
         *,
         operation_id: str,
@@ -250,8 +264,104 @@ class BudgetLedgerService:
     ) -> BudgetCharge:
         amounts = freeze_amounts(amounts)
         data = usage_charged_data(
-            operation_id=operation_id, agent_id=agent_id, amounts=amounts
+            operation_id=operation_id,
+            agent_id=agent_id,
+            amounts=amounts,
+            mode=BudgetChargeMode.ADMISSION,
+            usage_quality=(UsageQuality.EXACT if amounts.tokens else None),
         )
+        return await self._charge(data, operation_id, agent_id, amounts, enforce=True)
+
+    async def admit_tool_calls(
+        self,
+        *,
+        operation_id: str,
+        agent_id: str,
+        requested: int,
+    ) -> int:
+        """Admit the largest model-order prefix in one ledger transaction.
+
+        A Tool batch must not let per-call scheduling decide which calls get
+        the final slots. One operation therefore records the admitted prefix
+        as one charge. An inactive Tool dimension permits the whole batch
+        without manufacturing usage facts for a limit the host did not enable.
+        """
+
+        operation_id = require_budget_identifier(
+            operation_id, field="operation_id"
+        )
+        agent_id = require_budget_identifier(agent_id, field="agent_id")
+        if type(requested) is not int or requested < 1 or requested > MAX_BUDGET_VALUE:
+            raise BudgetInputError("budget-tool-request-invalid", "requested")
+        async with self._lock:
+            ledger, _ = await self._reader.load_context()
+            existing = ledger.charge(operation_id)
+            if existing is not None:
+                amounts = existing.amounts
+                if (
+                    existing.agent_id != agent_id
+                    or existing.mode is not BudgetChargeMode.ADMISSION
+                    or amounts.tokens
+                    or amounts.steps
+                    or amounts.wall_milliseconds
+                    or amounts.tool_calls < 1
+                    or amounts.tool_calls > requested
+                ):
+                    raise BudgetOperationConflictError
+                return amounts.tool_calls
+            if ledger.operation_exists(operation_id):
+                raise BudgetOperationConflictError
+
+            remaining = ledger.available(agent_id).max_tool_calls
+            if remaining is None:
+                return requested
+            admitted = min(requested, remaining)
+            if admitted == 0:
+                return 0
+            amounts = BudgetAmounts(tool_calls=admitted)
+            data = usage_charged_data(
+                operation_id=operation_id,
+                agent_id=agent_id,
+                amounts=amounts,
+                mode=BudgetChargeMode.ADMISSION,
+                usage_quality=None,
+            )
+            await self._append(
+                expected_seq=ledger.head_seq,
+                event_type=BUDGET_USAGE_CHARGED,
+                data=data,
+            )
+            charge = (await self._reader.load()).charge(operation_id)
+            assert charge is not None
+            return charge.amounts.tool_calls
+
+    async def record_usage(
+        self,
+        *,
+        operation_id: str,
+        agent_id: str,
+        amounts: BudgetAmounts,
+        usage_quality: UsageQuality | None = None,
+    ) -> BudgetCharge:
+        amounts = freeze_amounts(amounts)
+        data = usage_charged_data(
+            operation_id=operation_id,
+            agent_id=agent_id,
+            amounts=amounts,
+            mode=BudgetChargeMode.OBSERVATION,
+            usage_quality=usage_quality,
+        )
+        return await self._charge(data, operation_id, agent_id, amounts, enforce=False)
+
+    async def _charge(
+        self,
+        data: dict[str, JsonValue],
+        operation_id: str,
+        agent_id: str,
+        amounts: BudgetAmounts,
+        *,
+        enforce: bool,
+    ) -> BudgetCharge:
         async with self._lock:
             ledger, _ = await self._reader.load_context()
             if self._operation_matches_or_raise(
@@ -260,7 +370,10 @@ class BudgetLedgerService:
                 charge = ledger.charge(operation_id)
                 assert charge is not None
                 return charge
-            ledger.ensure_charge_capacity(agent_id, amounts)
+            if enforce:
+                ledger.ensure_charge_capacity(agent_id, amounts)
+            else:
+                ledger.ensure_observation_allowed(agent_id, amounts)
             await self._append(
                 expected_seq=ledger.head_seq,
                 event_type=BUDGET_USAGE_CHARGED,
@@ -269,6 +382,154 @@ class BudgetLedgerService:
             charge = (await self._reader.load()).charge(operation_id)
             assert charge is not None
             return charge
+
+    async def reserve_usage(
+        self,
+        *,
+        operation_id: str,
+        reservation_id: str,
+        agent_id: str,
+        amounts: BudgetAmounts,
+    ) -> BudgetUsageReservation:
+        amounts = freeze_amounts(amounts)
+        data = usage_reserved_data(
+            operation_id=operation_id,
+            reservation_id=reservation_id,
+            agent_id=agent_id,
+            amounts=amounts,
+        )
+        async with self._lock:
+            ledger, _ = await self._reader.load_context()
+            if self._operation_matches_or_raise(
+                ledger, operation_id, BUDGET_USAGE_RESERVED, data
+            ):
+                reservation = ledger.usage_reservation(reservation_id)
+                assert reservation is not None
+                return reservation
+            if ledger.usage_reservation(reservation_id) is not None:
+                raise BudgetOperationConflictError
+            ledger.ensure_usage_reservation_capacity(agent_id, amounts)
+            await self._append(
+                expected_seq=ledger.head_seq,
+                event_type=BUDGET_USAGE_RESERVED,
+                data=data,
+            )
+            reservation = (await self._reader.load()).usage_reservation(
+                reservation_id
+            )
+            assert reservation is not None
+            return reservation
+
+    async def start_usage(
+        self,
+        *,
+        operation_id: str,
+        reservation_id: str,
+    ) -> BudgetUsageReservation:
+        """Claim one reserved external invocation exactly once.
+
+        Retrying a start must not call the external Provider or Turn a second
+        time. A concurrent writer that already appended this fact therefore
+        loses with a state error instead of becoming another execution owner.
+        """
+
+        data = reservation_terminal_data(
+            operation_id=operation_id,
+            reservation_id=reservation_id,
+        )
+        async with self._lock:
+            ledger, _ = await self._reader.load_context()
+            if ledger.operation_exists(operation_id):
+                raise BudgetReservationStateError
+            reservation = ledger.usage_reservation(reservation_id)
+            if reservation is None:
+                raise BudgetReservationNotFoundError
+            if reservation.status is not BudgetUsageReservationStatus.PENDING:
+                raise BudgetReservationStateError
+            appended = await self._append(
+                expected_seq=ledger.head_seq,
+                event_type=BUDGET_USAGE_STARTED,
+                data=data,
+            )
+            if appended is None:
+                raise BudgetReservationStateError
+            result = (await self._reader.load()).usage_reservation(reservation_id)
+            assert result is not None
+            return result
+
+    async def settle_usage(
+        self,
+        *,
+        operation_id: str,
+        reservation_id: str,
+        amounts: BudgetAmounts,
+        usage_quality: UsageQuality | None,
+    ) -> BudgetUsageReservation:
+        amounts = freeze_amounts(amounts, require_usage=False)
+        data = usage_settled_data(
+            operation_id=operation_id,
+            reservation_id=reservation_id,
+            amounts=amounts,
+            usage_quality=usage_quality,
+        )
+        async with self._lock:
+            ledger, _ = await self._reader.load_context()
+            if self._operation_matches_or_raise(
+                ledger, operation_id, BUDGET_USAGE_SETTLED, data
+            ):
+                reservation = ledger.usage_reservation(reservation_id)
+                assert reservation is not None
+                return reservation
+            reservation = ledger.usage_reservation(reservation_id)
+            if reservation is None:
+                raise BudgetReservationNotFoundError
+            if reservation.status is not BudgetUsageReservationStatus.STARTED:
+                raise BudgetReservationStateError
+            ledger.ensure_usage_settlement(
+                reservation,
+                amounts,
+                usage_quality,
+            )
+            await self._append(
+                expected_seq=ledger.head_seq,
+                event_type=BUDGET_USAGE_SETTLED,
+                data=data,
+            )
+            result = (await self._reader.load()).usage_reservation(reservation_id)
+            assert result is not None
+            return result
+
+    async def release_usage(
+        self,
+        *,
+        operation_id: str,
+        reservation_id: str,
+    ) -> BudgetUsageReservation:
+        data = usage_released_data(
+            operation_id=operation_id,
+            reservation_id=reservation_id,
+        )
+        async with self._lock:
+            ledger, _ = await self._reader.load_context()
+            if self._operation_matches_or_raise(
+                ledger, operation_id, BUDGET_USAGE_RELEASED, data
+            ):
+                reservation = ledger.usage_reservation(reservation_id)
+                assert reservation is not None
+                return reservation
+            reservation = ledger.usage_reservation(reservation_id)
+            if reservation is None:
+                raise BudgetReservationNotFoundError
+            if reservation.status is not BudgetUsageReservationStatus.PENDING:
+                raise BudgetReservationStateError
+            await self._append(
+                expected_seq=ledger.head_seq,
+                event_type=BUDGET_USAGE_RELEASED,
+                data=data,
+            )
+            result = (await self._reader.load()).usage_reservation(reservation_id)
+            assert result is not None
+            return result
 
     async def close_account(
         self, *, operation_id: str, agent_id: str
@@ -287,6 +548,16 @@ class BudgetLedgerService:
                 reservation.parent_agent_id == account.agent_id
                 and reservation.status is BudgetReservationStatus.PENDING
                 for reservation in ledger.reservations
+            ):
+                raise BudgetReservationStateError
+            if any(
+                reservation.agent_id == agent_id
+                and reservation.status
+                in {
+                    BudgetUsageReservationStatus.PENDING,
+                    BudgetUsageReservationStatus.STARTED,
+                }
+                for reservation in ledger.usage_reservations
             ):
                 raise BudgetReservationStateError
             await self._append(

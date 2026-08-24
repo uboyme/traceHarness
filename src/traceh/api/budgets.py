@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from traceh.api.llm import UsageQuality
+
 
 @dataclass(frozen=True, slots=True)
 class BudgetLimits:
@@ -58,6 +60,20 @@ class BudgetReservationStatus(StrEnum):
     RELEASED = "released"
 
 
+class BudgetChargeMode(StrEnum):
+    """Whether capacity was admitted before work or observed afterwards."""
+
+    ADMISSION = "admission"
+    OBSERVATION = "observation"
+
+
+class BudgetUsageReservationStatus(StrEnum):
+    PENDING = "pending"
+    STARTED = "started"
+    SETTLED = "settled"
+    RELEASED = "released"
+
+
 @dataclass(frozen=True, slots=True)
 class BudgetAccount:
     """One account reconstructed from root and committed-child facts."""
@@ -69,6 +85,7 @@ class BudgetAccount:
     created_seq: int
     charged: BudgetAmounts = BudgetAmounts()
     delegated: BudgetAmounts = BudgetAmounts()
+    reserved: BudgetAmounts = BudgetAmounts()
     reserved_children: int = 0
     closed_seq: int | None = None
 
@@ -95,7 +112,24 @@ class BudgetCharge:
     operation_id: str
     agent_id: str
     amounts: BudgetAmounts
+    mode: BudgetChargeMode
+    usage_quality: UsageQuality | None
     charged_seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class BudgetUsageReservation:
+    """One durable Token or active-Turn wall hold and its terminal state."""
+
+    reservation_id: str
+    agent_id: str
+    amounts: BudgetAmounts
+    status: BudgetUsageReservationStatus
+    reserved_seq: int
+    started_seq: int | None = None
+    terminal_seq: int | None = None
+    settled_amounts: BudgetAmounts | None = None
+    usage_quality: UsageQuality | None = None
 
 
 __all__ = [
@@ -103,7 +137,10 @@ __all__ = [
     "BudgetAccountStatus",
     "BudgetAmounts",
     "BudgetCharge",
+    "BudgetChargeMode",
     "BudgetLimits",
     "BudgetReservation",
     "BudgetReservationStatus",
+    "BudgetUsageReservation",
+    "BudgetUsageReservationStatus",
 ]

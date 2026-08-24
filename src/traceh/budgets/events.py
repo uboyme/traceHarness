@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.agents.identity import is_agent_identifier
-from traceh.api.budgets import BudgetAmounts, BudgetLimits
+from traceh.api.budgets import BudgetAmounts, BudgetChargeMode, BudgetLimits
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json
+from traceh.api.llm import UsageQuality
 from traceh.budgets.errors import BudgetInputError, BudgetProtocolError
 
 BUDGET_LEDGER_STREAM = "budgets:ledger"
@@ -19,6 +20,10 @@ BUDGET_CHILD_RESERVED = "budget/child-reserved"
 BUDGET_RESERVATION_COMMITTED = "budget/reservation-committed"
 BUDGET_RESERVATION_RELEASED = "budget/reservation-released"
 BUDGET_USAGE_CHARGED = "budget/usage-charged"
+BUDGET_USAGE_RESERVED = "budget/usage-reserved"
+BUDGET_USAGE_STARTED = "budget/usage-started"
+BUDGET_USAGE_SETTLED = "budget/usage-settled"
+BUDGET_USAGE_RELEASED = "budget/usage-released"
 BUDGET_ACCOUNT_CLOSED = "budget/account-closed"
 
 _LIMIT_FIELDS = (
@@ -44,7 +49,15 @@ _RESERVE_KEYS = frozenset(
     )
 )
 _TERMINAL_KEYS = frozenset(("operation_id", "reservation_id"))
-_CHARGE_KEYS = frozenset(("operation_id", "agent_id", "amounts"))
+_CHARGE_KEYS = frozenset(
+    ("operation_id", "agent_id", "amounts", "mode", "usage_quality")
+)
+_USAGE_RESERVE_KEYS = frozenset(
+    ("operation_id", "reservation_id", "agent_id", "amounts")
+)
+_USAGE_SETTLE_KEYS = frozenset(
+    ("operation_id", "reservation_id", "amounts", "usage_quality")
+)
 _CLOSE_KEYS = frozenset(("operation_id", "agent_id"))
 
 
@@ -86,6 +99,40 @@ class UsageChargedFact:
     operation_id: str
     agent_id: str
     amounts: BudgetAmounts
+    mode: BudgetChargeMode
+    usage_quality: UsageQuality | None
+    seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class UsageReservedFact:
+    operation_id: str
+    reservation_id: str
+    agent_id: str
+    amounts: BudgetAmounts
+    seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class UsageStartedFact:
+    operation_id: str
+    reservation_id: str
+    seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class UsageSettledFact:
+    operation_id: str
+    reservation_id: str
+    amounts: BudgetAmounts
+    usage_quality: UsageQuality | None
+    seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class UsageReleasedFact:
+    operation_id: str
+    reservation_id: str
     seq: int
 
 
@@ -102,6 +149,10 @@ type BudgetFact = (
     | ReservationCommittedFact
     | ReservationReleasedFact
     | UsageChargedFact
+    | UsageReservedFact
+    | UsageStartedFact
+    | UsageSettledFact
+    | UsageReleasedFact
     | AccountClosedFact
 )
 
@@ -177,18 +228,22 @@ def freeze_amounts(value: object, *, require_usage: bool = True) -> BudgetAmount
     return BudgetAmounts(**values)
 
 
-def amounts_to_data(value: BudgetAmounts) -> dict[str, JsonValue]:
-    frozen = freeze_amounts(value)
+def amounts_to_data(
+    value: BudgetAmounts, *, require_usage: bool = True
+) -> dict[str, JsonValue]:
+    frozen = freeze_amounts(value, require_usage=require_usage)
     return {name: getattr(frozen, name) for name in _AMOUNT_FIELDS}
 
 
-def _read_amounts(value: object, seq: int) -> BudgetAmounts:
+def _read_amounts(
+    value: object, seq: int, *, require_usage: bool = True
+) -> BudgetAmounts:
     if not isinstance(value, dict) or set(value) != set(_AMOUNT_FIELDS):
         raise BudgetProtocolError("budget-amounts-invalid", seq)
     values = {name: value[name] for name in _AMOUNT_FIELDS}
     if not all(_valid_amount(item) for item in values.values()):
         raise BudgetProtocolError("budget-amounts-invalid", seq)
-    if not any(values.values()):
+    if require_usage and not any(values.values()):
         raise BudgetProtocolError("budget-charge-empty", seq)
     return BudgetAmounts(**values)  # type: ignore[arg-type]
 
@@ -235,14 +290,97 @@ def reservation_terminal_data(
     }
 
 
+def _quality_value(value: UsageQuality | None, *, field: str) -> str | None:
+    if value is None:
+        return None
+    if type(value) is not UsageQuality:
+        raise BudgetInputError("budget-usage-quality-invalid", field)
+    return value.value
+
+
 def usage_charged_data(
-    *, operation_id: str, agent_id: str, amounts: BudgetAmounts
+    *,
+    operation_id: str,
+    agent_id: str,
+    amounts: BudgetAmounts,
+    mode: BudgetChargeMode,
+    usage_quality: UsageQuality | None,
 ) -> dict[str, JsonValue]:
+    if type(mode) is not BudgetChargeMode:
+        raise BudgetInputError("budget-charge-mode-invalid", "mode")
+    frozen = freeze_amounts(amounts)
+    if frozen.tokens:
+        if usage_quality is None:
+            raise BudgetInputError("budget-usage-quality-invalid", "usage_quality")
+    elif usage_quality is not None:
+        raise BudgetInputError("budget-usage-quality-invalid", "usage_quality")
     return {
         "operation_id": require_budget_identifier(operation_id, field="operation_id"),
         "agent_id": require_budget_identifier(agent_id, field="agent_id"),
-        "amounts": amounts_to_data(amounts),
+        "amounts": amounts_to_data(frozen),
+        "mode": mode.value,
+        "usage_quality": _quality_value(usage_quality, field="usage_quality"),
     }
+
+
+def usage_reserved_data(
+    *,
+    operation_id: str,
+    reservation_id: str,
+    agent_id: str,
+    amounts: BudgetAmounts,
+) -> dict[str, JsonValue]:
+    frozen = freeze_amounts(amounts)
+    if (
+        bool(frozen.tokens) == bool(frozen.wall_milliseconds)
+        or frozen.steps
+        or frozen.tool_calls
+    ):
+        raise BudgetInputError("budget-usage-reservation-invalid", "amounts")
+    return {
+        "operation_id": require_budget_identifier(operation_id, field="operation_id"),
+        "reservation_id": require_budget_identifier(
+            reservation_id, field="reservation_id"
+        ),
+        "agent_id": require_budget_identifier(agent_id, field="agent_id"),
+        "amounts": amounts_to_data(frozen),
+    }
+
+
+def usage_settled_data(
+    *,
+    operation_id: str,
+    reservation_id: str,
+    amounts: BudgetAmounts,
+    usage_quality: UsageQuality | None,
+) -> dict[str, JsonValue]:
+    frozen = freeze_amounts(amounts, require_usage=False)
+    if (
+        frozen.steps
+        or frozen.tool_calls
+        or (frozen.tokens and frozen.wall_milliseconds)
+        or (frozen.tokens and usage_quality is None)
+        or (frozen.wall_milliseconds and usage_quality is not None)
+    ):
+        raise BudgetInputError("budget-usage-settlement-invalid", "amounts")
+    return {
+        "operation_id": require_budget_identifier(operation_id, field="operation_id"),
+        "reservation_id": require_budget_identifier(
+            reservation_id, field="reservation_id"
+        ),
+        "amounts": amounts_to_data(frozen, require_usage=False),
+        "usage_quality": _quality_value(
+            usage_quality, field="usage_quality"
+        ),
+    }
+
+
+def usage_released_data(
+    *, operation_id: str, reservation_id: str
+) -> dict[str, JsonValue]:
+    return reservation_terminal_data(
+        operation_id=operation_id, reservation_id=reservation_id
+    )
 
 
 def account_closed_data(*, operation_id: str, agent_id: str) -> dict[str, JsonValue]:
@@ -258,6 +396,22 @@ def _read_identifier(data: dict[str, JsonValue], field: str, seq: int) -> str:
         raise BudgetProtocolError("budget-identity-invalid", seq)
     assert isinstance(value, str)
     return value
+
+
+def _read_mode(value: object, seq: int) -> BudgetChargeMode:
+    try:
+        return BudgetChargeMode(value)
+    except (TypeError, ValueError):
+        raise BudgetProtocolError("budget-charge-mode-invalid", seq) from None
+
+
+def _read_quality(value: object, seq: int) -> UsageQuality | None:
+    if value is None:
+        return None
+    try:
+        return UsageQuality(value)
+    except (TypeError, ValueError):
+        raise BudgetProtocolError("budget-usage-quality-invalid", seq) from None
 
 
 def parse_budget_fact(event: EventEnvelope) -> BudgetFact:
@@ -319,10 +473,71 @@ def _read_budget_fact(event: EventEnvelope) -> BudgetFact:
     if event.type == BUDGET_USAGE_CHARGED:
         if set(data) != _CHARGE_KEYS:
             raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        amounts = _read_amounts(data["amounts"], event.seq)
+        quality = _read_quality(data["usage_quality"], event.seq)
+        if (amounts.tokens > 0) != (quality is not None):
+            raise BudgetProtocolError("budget-usage-quality-invalid", event.seq)
         return UsageChargedFact(
             operation_id=_read_identifier(data, "operation_id", event.seq),
             agent_id=_read_identifier(data, "agent_id", event.seq),
-            amounts=_read_amounts(data["amounts"], event.seq),
+            amounts=amounts,
+            mode=_read_mode(data["mode"], event.seq),
+            usage_quality=quality,
+            seq=event.seq,
+        )
+    if event.type == BUDGET_USAGE_RESERVED:
+        if set(data) != _USAGE_RESERVE_KEYS:
+            raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        amounts = _read_amounts(data["amounts"], event.seq)
+        if (
+            bool(amounts.tokens) == bool(amounts.wall_milliseconds)
+            or amounts.steps
+            or amounts.tool_calls
+        ):
+            raise BudgetProtocolError("budget-usage-reservation-invalid", event.seq)
+        return UsageReservedFact(
+            operation_id=_read_identifier(data, "operation_id", event.seq),
+            reservation_id=_read_identifier(data, "reservation_id", event.seq),
+            agent_id=_read_identifier(data, "agent_id", event.seq),
+            amounts=amounts,
+            seq=event.seq,
+        )
+    if event.type == BUDGET_USAGE_STARTED:
+        if set(data) != _TERMINAL_KEYS:
+            raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        return UsageStartedFact(
+            operation_id=_read_identifier(data, "operation_id", event.seq),
+            reservation_id=_read_identifier(data, "reservation_id", event.seq),
+            seq=event.seq,
+        )
+    if event.type == BUDGET_USAGE_SETTLED:
+        if set(data) != _USAGE_SETTLE_KEYS:
+            raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        amounts = _read_amounts(
+            data["amounts"], event.seq, require_usage=False
+        )
+        quality = _read_quality(data["usage_quality"], event.seq)
+        if (
+            amounts.steps
+            or amounts.tool_calls
+            or (amounts.tokens and amounts.wall_milliseconds)
+            or (amounts.tokens and quality is None)
+            or (amounts.wall_milliseconds and quality is not None)
+        ):
+            raise BudgetProtocolError("budget-usage-settlement-invalid", event.seq)
+        return UsageSettledFact(
+            operation_id=_read_identifier(data, "operation_id", event.seq),
+            reservation_id=_read_identifier(data, "reservation_id", event.seq),
+            amounts=amounts,
+            usage_quality=quality,
+            seq=event.seq,
+        )
+    if event.type == BUDGET_USAGE_RELEASED:
+        if set(data) != _TERMINAL_KEYS:
+            raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        return UsageReleasedFact(
+            operation_id=_read_identifier(data, "operation_id", event.seq),
+            reservation_id=_read_identifier(data, "reservation_id", event.seq),
             seq=event.seq,
         )
     if event.type == BUDGET_ACCOUNT_CLOSED:
@@ -359,6 +574,10 @@ __all__ = [
     "BUDGET_ROOT_GRANTED",
     "BUDGET_SCHEMA_VERSION",
     "BUDGET_USAGE_CHARGED",
+    "BUDGET_USAGE_RELEASED",
+    "BUDGET_USAGE_RESERVED",
+    "BUDGET_USAGE_STARTED",
+    "BUDGET_USAGE_SETTLED",
     "MAX_BUDGET_VALUE",
     "AccountClosedFact",
     "BudgetFact",
@@ -367,6 +586,10 @@ __all__ = [
     "ReservationReleasedFact",
     "RootGrantedFact",
     "UsageChargedFact",
+    "UsageReleasedFact",
+    "UsageReservedFact",
+    "UsageStartedFact",
+    "UsageSettledFact",
     "account_closed_data",
     "amounts_to_data",
     "child_reserved_data",
@@ -379,4 +602,7 @@ __all__ = [
     "reservation_terminal_data",
     "root_granted_data",
     "usage_charged_data",
+    "usage_released_data",
+    "usage_reserved_data",
+    "usage_settled_data",
 ]

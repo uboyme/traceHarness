@@ -16,8 +16,10 @@ from traceh.api.budgets import (
     BudgetAmounts,
     BudgetLimits,
     BudgetReservationStatus,
+    BudgetUsageReservationStatus,
 )
 from traceh.api.events import EventEnvelope, PendingEvent
+from traceh.api.llm import UsageQuality
 from traceh.budgets import (
     BUDGET_LEDGER_STREAM,
     BudgetAccountClosedError,
@@ -41,9 +43,11 @@ from traceh.budgets.events import (
     BUDGET_ROOT_GRANTED,
     BUDGET_SCHEMA_VERSION,
     BUDGET_USAGE_CHARGED,
+    BUDGET_USAGE_SETTLED,
     account_closed_data,
     child_reserved_data,
     root_granted_data,
+    usage_settled_data,
 )
 from traceh.session.event_store import Durability, EventStore, InMemoryEventStore
 
@@ -414,7 +418,7 @@ async def test_child_authority_cannot_exceed_parent_constraints(
 async def test_usage_and_delegation_share_one_conserved_balance() -> None:
     store = InMemoryEventStore()
     service = await granted_root(store)
-    await service.charge(
+    await service.admit_usage(
         operation_id="charge-root",
         agent_id="root",
         amounts=BudgetAmounts(tokens=61),
@@ -572,7 +576,7 @@ async def test_inactive_dimensions_are_explicit_and_are_not_charged() -> None:
         store, root_limits=limits(max_tokens=None, max_steps=None)
     )
     with pytest.raises(BudgetInputError) as error:
-        await service.charge(
+        await service.admit_usage(
             operation_id="charge-inactive",
             agent_id="root",
             amounts=BudgetAmounts(tokens=1),
@@ -603,7 +607,7 @@ async def test_close_is_terminal_and_refuses_pending_reservations() -> None:
     )
     assert account.status is BudgetAccountStatus.CLOSED
     with pytest.raises(BudgetAccountClosedError):
-        await service.charge(
+        await service.admit_usage(
             operation_id="charge-closed",
             agent_id="root",
             amounts=BudgetAmounts(steps=1),
@@ -1040,7 +1044,7 @@ async def test_public_builders_normalize_hostile_integer_subclasses() -> None:
         limits=limits(),
     )
     with pytest.raises(BudgetInputError) as amount_error:
-        await service.charge(
+        await service.admit_usage(
             operation_id="charge-hostile-amount",
             agent_id="root",
             amounts=BudgetAmounts(steps=RaisingOrderInteger(1)),
@@ -1052,16 +1056,161 @@ async def test_public_builders_normalize_hostile_integer_subclasses() -> None:
 async def test_manual_charge_cannot_exceed_the_projected_balance() -> None:
     store = InMemoryEventStore()
     service = await granted_root(store)
-    await service.charge(
+    await service.admit_usage(
         operation_id="charge-one",
         agent_id="root",
         amounts=BudgetAmounts(steps=20),
     )
     with pytest.raises(BudgetExhaustedError):
-        await service.charge(
+        await service.admit_usage(
             operation_id="charge-two",
             agent_id="root",
             amounts=BudgetAmounts(steps=1),
         )
     events = await store.read(BUDGET_LEDGER_STREAM)
     assert [event.type for event in events] == [BUDGET_ROOT_GRANTED, BUDGET_USAGE_CHARGED]
+
+
+async def test_usage_start_has_one_execution_owner_and_exact_settlement() -> None:
+    store = InMemoryEventStore()
+    service = await granted_root(store, root_limits=limits(max_tokens=10))
+    await service.reserve_usage(
+        operation_id="reserve-model",
+        reservation_id="model-reservation",
+        agent_id="root",
+        amounts=BudgetAmounts(tokens=8),
+    )
+
+    outcomes = await asyncio.gather(
+        service.start_usage(
+            operation_id="start-model",
+            reservation_id="model-reservation",
+        ),
+        BudgetLedgerService(store).start_usage(
+            operation_id="start-model",
+            reservation_id="model-reservation",
+        ),
+        return_exceptions=True,
+    )
+
+    started = [item for item in outcomes if not isinstance(item, BaseException)]
+    failures = [item for item in outcomes if isinstance(item, BaseException)]
+    assert len(started) == 1
+    assert started[0].status is BudgetUsageReservationStatus.STARTED
+    assert len(failures) == 1
+    assert isinstance(failures[0], BudgetReservationStateError)
+
+    settled = await service.settle_usage(
+        operation_id="settle-model",
+        reservation_id="model-reservation",
+        amounts=BudgetAmounts(tokens=3),
+        usage_quality=UsageQuality.EXACT,
+    )
+    assert settled.status is BudgetUsageReservationStatus.SETTLED
+    assert settled.settled_amounts == BudgetAmounts(tokens=3)
+    account = (await service.ledger()).account("root")
+    assert account is not None
+    assert account.reserved.tokens == 0
+    assert account.charged.tokens == 3
+
+
+async def test_usage_settlement_is_validated_before_append() -> None:
+    store = InMemoryEventStore()
+    service = await granted_root(store, root_limits=limits(max_tokens=10))
+    await service.reserve_usage(
+        operation_id="reserve-model",
+        reservation_id="model-reservation",
+        agent_id="root",
+        amounts=BudgetAmounts(tokens=5),
+    )
+    await service.start_usage(
+        operation_id="start-model",
+        reservation_id="model-reservation",
+    )
+    head = await store.head(BUDGET_LEDGER_STREAM)
+
+    with pytest.raises(BudgetInputError) as wrong_dimension:
+        await service.settle_usage(
+            operation_id="settle-wall",
+            reservation_id="model-reservation",
+            amounts=BudgetAmounts(wall_milliseconds=1),
+            usage_quality=None,
+        )
+    assert wrong_dimension.value.code == "budget-usage-settlement-invalid"
+    with pytest.raises(BudgetInputError) as overage:
+        await service.settle_usage(
+            operation_id="settle-overage",
+            reservation_id="model-reservation",
+            amounts=BudgetAmounts(tokens=6),
+            usage_quality=UsageQuality.EXACT,
+        )
+    assert overage.value.code == "budget-usage-settlement-invalid"
+    assert await store.head(BUDGET_LEDGER_STREAM) == head
+
+
+async def test_only_pending_usage_can_be_released() -> None:
+    store = InMemoryEventStore()
+    service = await granted_root(store)
+    pending = await service.reserve_usage(
+        operation_id="reserve-unused",
+        reservation_id="unused-reservation",
+        agent_id="root",
+        amounts=BudgetAmounts(tokens=2),
+    )
+    assert pending.status is BudgetUsageReservationStatus.PENDING
+    released = await service.release_usage(
+        operation_id="release-unused",
+        reservation_id="unused-reservation",
+    )
+    assert released.status is BudgetUsageReservationStatus.RELEASED
+
+    await service.reserve_usage(
+        operation_id="reserve-started",
+        reservation_id="started-reservation",
+        agent_id="root",
+        amounts=BudgetAmounts(wall_milliseconds=20),
+    )
+    await service.start_usage(
+        operation_id="start-wall",
+        reservation_id="started-reservation",
+    )
+    with pytest.raises(BudgetReservationStateError):
+        await service.release_usage(
+            operation_id="release-started",
+            reservation_id="started-reservation",
+        )
+
+
+async def test_replay_rejects_settlement_above_the_reserved_amount() -> None:
+    store = InMemoryEventStore()
+    service = await granted_root(store, root_limits=limits(max_tokens=10))
+    await service.reserve_usage(
+        operation_id="reserve-model",
+        reservation_id="model-reservation",
+        agent_id="root",
+        amounts=BudgetAmounts(tokens=5),
+    )
+    await service.start_usage(
+        operation_id="start-model",
+        reservation_id="model-reservation",
+    )
+    head = await store.head(BUDGET_LEDGER_STREAM)
+    await store.append(
+        BUDGET_LEDGER_STREAM,
+        expected_seq=head,
+        events=(
+            PendingEvent(
+                type=BUDGET_USAGE_SETTLED,
+                data=usage_settled_data(
+                    operation_id="settle-overage",
+                    reservation_id="model-reservation",
+                    amounts=BudgetAmounts(tokens=6),
+                    usage_quality=UsageQuality.EXACT,
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(BudgetProtocolError) as error:
+        await BudgetLedgerReader(store).load()
+    assert error.value.code == "budget-usage-settlement-invalid"

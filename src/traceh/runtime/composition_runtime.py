@@ -984,6 +984,7 @@ class _FrozenToolRuntime:
             middlewares=frozen_middlewares,
             timeout_seconds=source.timeout_seconds,
             max_output_chars=source.max_output_chars,
+            admission_gate=source.admission_gate,
         )
 
     @property
@@ -1009,6 +1010,10 @@ class _FrozenToolRuntime:
     @property
     def max_output_chars(self) -> int:
         return self._delegate.max_output_chars
+
+    @property
+    def admission_gate(self):
+        return self._delegate.admission_gate
 
     async def execute_batch(self, *args, **kwargs):
         return await self._delegate.execute_batch(*args, **kwargs)

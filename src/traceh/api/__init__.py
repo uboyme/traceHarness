@@ -11,6 +11,7 @@ from traceh.api.llm import (
     ToolCall,
     ToolSchema,
     Usage,
+    UsageQuality,
 )
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
@@ -22,7 +23,14 @@ from traceh.api.plugins import (
 )
 from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
-from traceh.api.tools import EffectKind, Tool, ToolOutput
+from traceh.api.tools import (
+    EffectKind,
+    PreparedToolCall,
+    Tool,
+    ToolAdmissionDecision,
+    ToolAdmissionGate,
+    ToolOutput,
+)
 from traceh.api.turns import DEFAULT_TURN_SOURCE, TurnInput
 
 __all__ = [
@@ -39,6 +47,7 @@ __all__ = [
     "ModelRequest",
     "ModelResponse",
     "PendingEvent",
+    "PreparedToolCall",
     "Plugin",
     "PluginContext",
     "PluginDependency",
@@ -48,9 +57,12 @@ __all__ = [
     "Registration",
     "ServiceKey",
     "Tool",
+    "ToolAdmissionDecision",
+    "ToolAdmissionGate",
     "ToolCall",
     "ToolOutput",
     "ToolSchema",
     "TurnInput",
     "Usage",
+    "UsageQuality",
 ]

@@ -113,6 +113,9 @@ automatic grant inference or deletion of the old data.
 scheduler or CLI.  It does not reserve around managed create, charge real model
 usage, stop Steps, lease process slots or expose Budget mutation to a model.
 Those integrations belong to Stage B at the existing owned boundaries.
+Stage B subsequently implemented those adapters and extended the usage
+reservation vocabulary; see ADR-0027.  This paragraph remains the historical
+Stage A boundary rather than a claim about the current repository.
 
 ## Rejected alternatives
 

@@ -58,6 +58,14 @@ def _protocol_message(code: str) -> str:
         "budget-capacity-exceeded": "a budget fact exceeds available capacity",
         "budget-charge-inactive": "a charge uses a dimension the host did not activate",
         "budget-charge-empty": "a budget charge contains no usage",
+        "budget-charge-mode-invalid": "a budget charge has an invalid mode",
+        "budget-usage-quality-invalid": "a budget fact has invalid usage quality",
+        "budget-usage-reservation-invalid": "a usage reservation is malformed",
+        "budget-usage-settlement-invalid": "a usage settlement is malformed",
+        "budget-tool-request-invalid": "a Tool admission request is malformed",
+        "budget-usage-reservation-unknown": (
+            "a budget fact names an unknown usage reservation"
+        ),
         "budget-close-with-pending-reservation": (
             "a budget account was closed with an open reservation"
         ),
@@ -137,11 +145,21 @@ class BudgetDirectoryMismatchError(BudgetError):
         super().__init__("durable Agent identity does not match the Budget operation")
 
 
+class BudgetEvidenceError(BudgetError):
+    """Durable execution evidence cannot safely support an enforcement verdict."""
+
+    code = "budget-evidence-invalid"
+
+    def __init__(self) -> None:
+        super().__init__("durable execution evidence is incomplete or inconsistent")
+
+
 __all__ = [
     "BudgetAccountClosedError",
     "BudgetAccountNotFoundError",
     "BudgetDirectoryMismatchError",
     "BudgetError",
+    "BudgetEvidenceError",
     "BudgetExhaustedError",
     "BudgetInputError",
     "BudgetLedgerConflictError",

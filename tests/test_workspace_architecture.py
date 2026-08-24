@@ -66,7 +66,7 @@ def test_local_git_provider_has_no_broad_cleanup_or_promotion_command() -> None:
     assert "apply" not in string_literals
 
 
-def test_stage_c_does_not_retain_future_patch_or_merge_api_stubs() -> None:
+def test_workspace_api_does_not_absorb_artifact_or_future_merge_types() -> None:
     import traceh.api.workspaces as api
 
     assert not hasattr(api, "PatchArtifact")

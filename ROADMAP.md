@@ -321,9 +321,15 @@ invariant violations and zero request-reconstruction violations.
   directions to one exact Git admin registry entry, and wrapper-owned resume
   post-validation converges before close. Read-only is enforced at explicit
   Tool admission and is not claimed as an OS sandbox.
-- **D1 — immutable Patch Artifacts:** collect a patch from one managed workspace
-  with base revision, byte digest and verification inputs; final text is not an
-  artifact.
+- **D1 — immutable Patch Artifacts (complete, unreleased):** one terminal
+  message can now be captured from its exact managed worktree as a full Git
+  candidate tree, binary Patch, SHA-256 CAS blob and append-only Manifest.
+  Capture uses a temporary index, terminal durable evidence, the Workspace
+  lifecycle gate, before/after drift checks and cancellation-safe
+  reconciliation. Derived identities are recomputed during replay, CAS owns its
+  complete non-reparse parent chain, and inherited Git configuration injection
+  is removed. Final text is not a Patch; the read-only collect Tool only reports
+  refs that a host already captured.
 - **D2 — verification and human promotion:** run fixed host verification, record
   explicit approval and promote the exact artifact through Git compare-and-swap.
   No model may approve or move a target ref.
@@ -338,7 +344,8 @@ host can promote only an immutable, fixed-suite-verified, human-approved patch w
 existing Agent Runtime, Supervisor concurrency kernel and Event Log fact sources stay singular.
 See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md),
 [ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md) and
-[ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md).
+[ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md), and
+[ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md).
 
 ## v1.0: Stable plugin platform
 

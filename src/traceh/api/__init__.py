@@ -1,6 +1,14 @@
 """Stable public protocols and frozen value types."""
 
 from traceh.api.agents import AgentSpec, AgentSupervisor
+from traceh.api.artifacts import (
+    ArtifactCas,
+    PatchArtifact,
+    PatchBlob,
+    PatchCaptureLimits,
+    PatchManifest,
+    WorkspaceCaptureGate,
+)
 from traceh.api.budgets import BudgetAmounts, BudgetLimits
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.llm import (
@@ -48,6 +56,7 @@ __all__ = [
     "DEFAULT_TURN_SOURCE",
     "AgentSpec",
     "AgentSupervisor",
+    "ArtifactCas",
     "BudgetAmounts",
     "BudgetLimits",
     "EffectKind",
@@ -57,6 +66,10 @@ __all__ = [
     "ModelRequest",
     "ModelResponse",
     "PendingEvent",
+    "PatchArtifact",
+    "PatchBlob",
+    "PatchCaptureLimits",
+    "PatchManifest",
     "PreparedToolCall",
     "Plugin",
     "PluginContext",
@@ -76,6 +89,7 @@ __all__ = [
     "Usage",
     "UsageQuality",
     "WorkspaceAccess",
+    "WorkspaceCaptureGate",
     "WorkspaceHandle",
     "WorkspaceLocalState",
     "WorkspaceProvider",

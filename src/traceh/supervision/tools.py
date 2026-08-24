@@ -13,8 +13,9 @@ Authority is bound by the host when the tools are assembled:
 * the Runtime and Supervisor must share the same durable Event Store object.
 
 The Stage E artifact is an `AgentRunReport` (final text plus durable evidence
-references). It is not a workspace patch. Writable branch isolation and
-`PatchArtifact` production remain v0.7 work.
+references), not a capture command. v0.7-D1 may decorate that report with
+already-recorded immutable Patch references; this Tool remains read-only and
+never performs Workspace, Git or CAS mutation.
 """
 
 from __future__ import annotations
@@ -332,8 +333,9 @@ class CollectAgentArtifactTool:
     control: _BoundAgentControl
     name: str = "collect_agent_artifact"
     description: str = (
-        "Collect a settled child message's durable run report and final text. "
-        "This stage does not create a workspace patch artifact."
+        "Collect a settled child message's durable run report, final text, and "
+        "any already-recorded artifact references. This read never captures or "
+        "modifies a workspace."
     )
     effect_kind: EffectKind = EffectKind.PURE_READ
     input_schema: dict[str, JsonValue] = field(init=False, repr=False)

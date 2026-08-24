@@ -6,9 +6,9 @@ did not execute the Turn therefore reaches the same answer, and a terminal
 delivery fact that points at missing or contradictory Session facts fails
 closed instead of manufacturing a successful child result.
 
-Workspace patch artifacts are intentionally absent. Stage E can return the
-child's final text and stable evidence references; isolated workspace branches
-and `PatchArtifact` collection remain v0.7 work.
+This Stage E reader never captures a workspace patch. v0.7-D1 can wrap its
+durable answer with already-recorded immutable Patch references, while capture,
+Git and CAS mutation remain outside this read-only module.
 """
 
 from __future__ import annotations

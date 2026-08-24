@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+### v0.7-D1: immutable Patch Artifact capture
+
+- Added an independent Artifact domain with one append-only
+  `artifacts:catalog`, immutable schema-1 Patch Manifests and an explicit
+  SHA-256 content-addressed store for raw Patch bytes. Manifests bind exact
+  Agent, Session, message, Turn, Workspace generation, repository fingerprint,
+  base/head/candidate tree and changed paths without persisting host paths.
+- Added full managed-worktree capture through a temporary Git index. Staged,
+  unstaged, untracked, deleted, binary and executable-mode changes become one
+  candidate tree; capture rejects symlink/junction/reparse paths, gitlinks,
+  `.gitmodules`, control paths, invalid modes, unsafe Unicode/case collisions
+  and explicit size-limit violations without modifying the user's index.
+- Added terminal durable-evidence validation, a Workspace-owned capture gate,
+  before/after Git and evidence receipts, shared per-message capture tasks and
+  cancellation-safe Catalog reconciliation. Drift fails closed and no Manifest
+  is appended; a prewritten but unreferenced CAS blob is the only allowed
+  residue after a later failure.
+- Added fresh Catalog/CAS reading and an optional reporting adapter that only
+  attaches already-recorded Artifact refs. `collect_agent_artifact` remains a
+  pure read and never captures or modifies a Workspace.
+- Hardened the trust boundary: Catalog builders and replay recompute both
+  derived identities, CAS validates the complete root-to-Blob parent chain
+  before directory creation/read/write, and Git capture removes every inherited
+  `GIT_*` variable before adding only its controlled settings.
+- Recorded the ownership and threat boundaries in ADR-0029. D1 adds no Patch
+  Verifier, Review Report, approval, integration tree/ref promotion, CLI,
+  model capture Tool, cross-process lease or OS sandbox; version remains
+  `0.6.0`. The four dedicated D1 files contain 40 tests (`39 passed,
+  1 skipped`); the expanded Workspace/Supervisor/Tool gate is `82 passed,
+  1 skipped`, and the complete gate is `1875 collected / 1871 passed /
+  4 skipped`.
+
 ### v0.7-C: managed Git workspace lifecycle
 
 - Added one append-only `workspaces:catalog` lifecycle with provisional,

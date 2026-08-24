@@ -161,9 +161,10 @@ before returning. Reports are reconstructed from Inbox, delivery and Session fac
 second result cache. This facade remains in `traceh.supervision`; it does not change
 `AgentLoop`, `AgentRuntime` or `PluginManager`. See
 [ADR-0023](adr/0023-supervisor-backed-subagent-tools.md). Default CLI wiring and cold recovery
-remain future work. v0.7-B offers explicit host-wired Budget enforcement and v0.7-C wraps the
-same public Supervisor with managed Git workspace provisioning without moving either policy
-into the concurrency kernel. Patch Artifacts remain future work. Child reserve and
+remain future work. v0.7-B offers explicit host-wired Budget enforcement, v0.7-C wraps the
+same public Supervisor with managed Git workspace provisioning, and v0.7-D1 consumes a
+generic Workspace capture gate to freeze immutable Patch Artifacts without moving any of
+those policies into the concurrency kernel. Patch verification and promotion remain future work. Child reserve and
 Token/wall START writes are themselves owned tasks: same-process cancellation waits for release
 or conservative settlement before returning, while recovery of STARTED facts left by a hard
 process crash remains future work.
@@ -233,6 +234,37 @@ public operation returns. `ManagedWorkspaceAccessPolicy` can explicitly restrict
 read-only Agent to pure/workspace-read Tools, but it is not an OS sandbox and
 does not constrain arbitrary code running as the host user. See
 [ADR-0028](adr/0028-managed-git-workspace-lifecycle.md).
+
+### Patch Artifact Catalog and CAS
+
+v0.7-D1 adds one `artifacts:catalog` per EventStore and an explicit host-supplied
+SHA-256 content-addressed store. The catalog records immutable Manifest facts;
+raw Patch bytes remain in CAS and are rehashed on every fresh read. Catalog
+replay recomputes the capture key from its source tuple and the Artifact id from
+that key. CAS operations validate every root-to-parent component before any
+directory creation, write or read, rejecting post-initialization reparse points.
+A Manifest
+binds one exact terminal Agent message and Turn to its Workspace generation,
+repository fingerprint, base/head/candidate tree, changed paths, byte length
+and digest. It stores neither host paths nor mutable verification state.
+
+Capture is a host operation above the existing Supervisor and Workspace
+domains. It fresh-replays Directory, Inbox, Delivery, Session and Workspace
+facts, then holds the same Workspace wrapper gate used by send/resume/close.
+Git constructs a full candidate tree through a temporary index, preserving the
+user index while including staged, unstaged, untracked, deleted, binary and
+mode changes. Full-tree and filesystem validation reject symlink/junction/
+reparse traversal, gitlinks, `.gitmodules`, control paths and ambiguous names.
+Capture removes all inherited `GIT_*` variables before adding only its owned Git
+settings, rather than trying to enumerate configuration injection variables.
+Before/after Git and durable evidence receipts reject drift; concurrent capture
+of the same Agent/message shares one cancellation-safe task.
+
+The optional reporting adapter only attaches already-recorded Artifact refs to
+a fresh durable report. The model-facing collect Tool remains read-only and
+cannot capture or mutate a Workspace. D1 contains no Verifier, approval,
+integration tree, ref promotion, CLI or OS sandbox. See
+[ADR-0029](adr/0029-immutable-patch-artifact-capture.md).
 
 ### Agent Inbox Streams
 

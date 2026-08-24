@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from typing import Protocol
 
@@ -16,7 +18,7 @@ from traceh.api.agents import (
     MessageReceipt,
     MessageTarget,
 )
-from traceh.api.workspaces import WorkspaceProvisioningRequest
+from traceh.api.workspaces import WorkspaceHandle, WorkspaceProvisioningRequest
 from traceh.session.event_store import EventStore
 from traceh.supervision.delivery_identity import require_delivery_identifier
 from traceh.supervision.errors import SupervisorDisposedError
@@ -198,10 +200,30 @@ class WorkspaceManagedAgentSupervisor:
         target: MessageTarget,
         wakeup: bool,
     ) -> MessageReceipt:
-        await self._service.resolve_for_agent(agent_id)
-        return await self._inner.send(
-            agent_id, message, target=target, wakeup=wakeup
-        )
+        async with self._lock:
+            if self._closed:
+                raise SupervisorDisposedError
+            await self._service.resolve_for_agent(agent_id)
+            return await self._inner.send(
+                agent_id, message, target=target, wakeup=wakeup
+            )
+
+    @asynccontextmanager
+    async def capture_workspace(
+        self, agent_id: str
+    ) -> AsyncIterator[WorkspaceHandle]:
+        """Hold the managed writer/close gate across one host-owned snapshot.
+
+        The Artifact domain consumes this through its public
+        ``WorkspaceCaptureGate`` Protocol.  No Artifact type enters this
+        module, and the lease owns no second Activation or workspace fact.
+        """
+
+        agent_id = require_delivery_identifier(agent_id, field="agent_id")
+        async with self._lock:
+            if self._closed:
+                raise SupervisorDisposedError
+            yield await self._service.resolve_for_agent(agent_id)
 
     async def interrupt(self, agent_id: str, reason: str = "interrupted") -> bool:
         return await self._inner.interrupt(agent_id, reason)

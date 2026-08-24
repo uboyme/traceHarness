@@ -108,8 +108,8 @@ Dependencies still point downward - the CLI timeline depends on the feed, and no
 
 Provider retry, prompt sections, policies, verification and persistence are delegated to
 services. Subagents are ordinary tools backed by `AgentSupervisor`, not branches in this
-loop; v0.7 Budget enforcement and managed Workspace lifecycle already remain above this
-boundary, and Artifact, Promotion and Workflow services must do the same.
+loop; v0.7 Budget enforcement, managed Workspace lifecycle, immutable Patch Artifacts and
+Patch promotion already remain above this boundary, and Workflow services must do the same.
 
 ## State planes
 
@@ -262,9 +262,48 @@ of the same Agent/message shares one cancellation-safe task.
 
 The optional reporting adapter only attaches already-recorded Artifact refs to
 a fresh durable report. The model-facing collect Tool remains read-only and
-cannot capture or mutate a Workspace. D1 contains no Verifier, approval,
-integration tree, ref promotion, CLI or OS sandbox. See
+cannot capture or mutate a Workspace. D1 itself contains no Verifier, approval,
+integration tree, ref promotion, CLI or OS sandbox; those belong to the separate
+promotion plane below. See
 [ADR-0029](adr/0029-immutable-patch-artifact-capture.md).
+
+### Patch Promotion Ledger
+
+v0.7-D2 adds one `patch-promotions:ledger` per EventStore carrying exactly three
+schema-1 facts: `patch/review-recorded`, `patch/approval-recorded` and
+`patch/promotion-committed`. One projector rebuilds Review, Approval and
+Promotion from that stream on every load; there is no cached state, registry or
+second Artifact/Workspace truth. Replay recomputes the review id, evidence
+digest, `passed` flag, approval digest and promotion id instead of trusting the
+payload, and refuses a promotion that contradicts its Review. The log stores
+`target_id`, a repository fingerprint, the ref and exact revisions - never a
+repository path, verifier output or environment value.
+
+Review resolves a host-configured `target_id` to a **bare** repository, clones it
+into a temporary directory, sets HEAD to the exact expected revision, applies the
+exact CAS-verified Patch with `git apply --cached` (never `--3way`), and produces
+a deterministic integration tree and single-parent commit whose message, author,
+committer and timestamp are protocol constants. The host's frozen
+`VerificationPlan` then runs by argv - no shell, no candidate-supplied command,
+no `GIT_*` in its environment - and records only bounded structured evidence:
+status, exit code, and the digest and byte size of each output stream. Review
+never moves a target ref and leaves no object in the target repository.
+
+Approval is a host API taking the exact content digest of a freshly replayed,
+passing Review. That digest enumerates the Manifest, target identity, ref,
+expected revision, integration tree and commit, verifier definition digest,
+evidence digest and merge policy version. There is no `approved=True` form, no
+CLI and no model-visible approve/merge/promote/`update-ref` Tool.
+
+Promotion re-replays Review and Approval, re-verifies the Artifact, rebuilds the
+identical tree and commit inside the target's own object database through a
+temporary index, and moves the ref only with
+`git update-ref <ref> <new> <expected-old>`. Because that mutation and the ledger
+append are not one transaction, the ref is re-read and only three states are
+accepted: approved-new (converged), expected-old (retry the compare-and-swap) or
+anything else (target drift, fail closed). A failed or unknown append never
+implies that Git did not move. See
+[ADR-0030](adr/0030-verified-approved-git-ref-promotion.md).
 
 ### Agent Inbox Streams
 

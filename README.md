@@ -581,6 +581,7 @@ src/traceh/supervision  Agent Activation、durable claim/outcome、child-first �
 src/traceh/budgets      单一层级 Budget Ledger 与宿主显式执行门
 src/traceh/workspaces   commit-pinned Git worktree 生命周期与 Tool Policy
 src/traceh/artifacts    immutable Patch Manifest、Git capture、SHA-256 CAS 与只读报告关联
+src/traceh/promotion    固定 Verifier、Review/Approval/Promotion Ledger 与 Git ref compare-and-swap
 src/traceh/llm          Provider Registry 和 Adapter
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
@@ -630,7 +631,8 @@ traceh doctor
 - L4 只接受 `improved` 且零回归的精确 L2/L3 证据，但它仍不是 OS 沙箱或包签名系统；目标依赖必须已经与 L3 receipt 一致，L4 v1 不解析或升级依赖、也不同时管理同一环境中的多条 Distribution 链，不会把推广自动应用到正在运行的 Runtime；
 - `ProcessAgentSupervisor` 是**进程内**的：它保证一个 Agent 在自己名下最多一个活实例，并在完整 Acceptance/claim 归属校验和 durable claim 落盘后才运行 Turn；open claim 会阻塞后续 FIFO，关闭按 owner 子树 child-first 收敛在途 create/resume 与 Runtime cleanup。Stage E Tool 只允许操作绑定 owner 的后代，并从账本重建 run report。v0.7 未发布开发树已用宿主薄适配器接入层级 Budget、managed Git worktree 和 immutable Patch capture，但默认 CLI 仍是单 Agent 入口，也没有自动重试、stale claim 接管、Patch 验证/merge、Workflow 或跨进程 lease；
 - v0.7-C managed Workspace 只接受宿主 source mapping，固定到精确 Git commit，并双向核对 `.git` marker 与唯一 worktree admin registry entry；dirty/unsafe/unknown worktree 会 quarantine，Agent 停止不会自动删除它。Wrapper 的 `resume()` 后置 Workspace 复核也必须在 `aclose()` 返回前收敛。Read-only 是显式 Tool Policy，不是 OS sandbox；
-- v0.7-D1 可由宿主把一个 terminal message 对应的 staged/unstaged/untracked/deleted/binary/mode 状态冻结为完整 candidate tree、binary Patch、SHA-256 CAS bytes 和 append-only Manifest。它使用临时 index 与 Workspace capture gate；Catalog 重算派生身份，CAS 逐层拒绝 reparse 父链，Git 子进程不继承宿主 `GIT_*` 注入；`collect_agent_artifact` 仍只读。当前没有 Patch Verifier、Review Report、人工批准、Git ref CAS promotion、Workspace/Artifact CLI 或模型 capture Tool；
+- v0.7-D1 可由宿主把一个 terminal message 对应的 staged/unstaged/untracked/deleted/binary/mode 状态冻结为完整 candidate tree、binary Patch、SHA-256 CAS bytes 和 append-only Manifest。它使用临时 index 与 Workspace capture gate；Catalog 重算派生身份，CAS 逐层拒绝 reparse 父链，Git 子进程不继承宿主 `GIT_*` 注入；`collect_agent_artifact` 仍只读；
+- v0.7-D2 可由宿主把一个不可变 Patch 在临时 clone 中应用到精确 target revision、跑固定 Verifier、记录 immutable Review Report，再凭人工提交的 exact approval digest 用 `git update-ref <ref> <new> <expected-old>` 推广到宿主管理的 **bare** 仓库。Verifier 以同一用户权限运行，是能力与证据边界而不是 OS sandbox；D2 没有 CLI、Workflow、自动批准、非 bare 目标、跨进程 lease，也没有模型可见的 approve/merge/promote Tool；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat 和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
 - 硬中断（`Ctrl+Break`、关闭控制台）没有任何收敛：不打印提示、不闭合生命周期，只能依赖启动时已打印的恢复命令与崩溃恢复；
@@ -650,7 +652,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-当前 v0.7-D1 工作树收集 1875 项自动化测试，完整门禁为 1871 通过、4 项按平台跳过（Windows 上三处目录 symlink 权限边界，一处路径不能包含 NUL）；D1 四个专门文件为 39 通过、1 跳过，扩大 Workspace/Supervisor/Tool 门禁为 82 通过、1 跳过。v0.6.0 发布基线仍是 1707/1706/1。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback。v0.6 RC 又使用真实 OpenAI-compatible 模型完成 parent → spawn → send → wait → collect → stop；同一 child Session 随后显式恢复并完成第二个真实 Turn，独立取消路径收敛为 durable `cancelled`。两份 Session 都没有开放 Turn/Step，不变量和请求重建违规均为 0。详见 [v0.6.0 验证记录](docs/validation-v0.6.0.md)。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。
+当前 v0.7-D2 工作树收集 2005 项自动化测试，完整门禁为 2000 通过、5 项按平台跳过（Windows 上四处目录 symlink 权限边界，一处路径不能包含 NUL）；D2 四个专门文件为 129 通过、1 跳过，连同 D1 Artifact 与 Workspace 架构回归的扩大门禁为 172 通过、2 跳过。v0.7-D1 检查点为 1875/1871/4，v0.6.0 发布基线仍是 1707/1706/1。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback。v0.6 RC 又使用真实 OpenAI-compatible 模型完成 parent → spawn → send → wait → collect → stop；同一 child Session 随后显式恢复并完成第二个真实 Turn，独立取消路径收敛为 durable `cancelled`。两份 Session 都没有开放 Turn/Step，不变量和请求重建违规均为 0。详见 [v0.6.0 验证记录](docs/validation-v0.6.0.md)。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

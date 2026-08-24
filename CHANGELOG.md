@@ -2,6 +2,91 @@
 
 ## Unreleased
 
+### v0.7-D2: fixed verification, human approval and Git ref compare-and-swap promotion
+
+- Added an independent promotion control plane outside the execution kernel:
+  `traceh.api.promotion` (frozen host values and the target-resolver seam) and
+  `traceh.promotion` (identities/digests, events, one projector, the fixed
+  verifier runner, all Git effects and the three transactions). `AgentLoop`,
+  `AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` are unchanged and
+  no module outside the domain imports it.
+- Added one append-only `patch-promotions:ledger` carrying exactly
+  `patch/review-recorded`, `patch/approval-recorded` and
+  `patch/promotion-committed` at schema 1. A single projector rebuilds Review,
+  Approval and Promotion on every load and recomputes the review id, evidence
+  digest, `passed` flag, approval digest and promotion id instead of trusting the
+  payload. Sequence gaps, unknown schema/event types, unexpected keys, duplicate
+  identities, approvals of failed reviews and promotions that contradict their
+  Review are refused. No repository path, verifier output or environment value
+  enters the log.
+- Added fixed host verification: a frozen `VerificationPlan` validated once at
+  the public boundary (exact int/bool types, bounded argv/timeouts/output, unique
+  command ids, no `GIT_*` in the environment policy). Commands run by argv with
+  no shell, in a positive-list environment, and record only command identity,
+  status, exit code and the SHA-256 plus byte size of each output stream.
+- Added deterministic integration: review clones a host-configured **bare**
+  target into a temporary directory, pins HEAD to the exact expected revision,
+  applies the exact CAS-verified Patch with `git apply --cached` (never
+  `--3way`), and produces an integration tree and single-parent commit whose
+  parent, tree, message, author, committer and timestamp are protocol constants
+  or approved inputs. Review never updates a target ref and leaves no object in
+  the target repository; a failing verifier still produces a durable
+  `passed=False` report that can never be approved.
+- Added an explicit human approval API bound to the exact content digest of a
+  freshly replayed Review — Manifest, target identity/ref/expected revision,
+  integration tree/commit, verifier definition digest, evidence digest and merge
+  policy version. There is no `approved=True` form, no CLI and no model-visible
+  approve/merge/promote/`update-ref`/capture Tool. `operation_id` is exactly
+  idempotent and any different payload conflicts.
+- Added safe promotion: fresh replay, fresh Artifact verification, fresh target
+  resolution, reconstruction of the identical tree and commit through a
+  temporary index inside the target's own object database, and a single
+  linearization point at `git update-ref <ref> <new> <expected-old>`. Git
+  mutation and Event append are reconciled across three ref states
+  (approved-new, expected-old, anything else); a failed, cancelled or unknown
+  append never implies that Git did not move, and a bounded retry keeps an
+  already-durable ref update from becoming an unrecorded one.
+- Hardened the boundary: every inherited `GIT_*` variable is removed before the
+  host's own Git controls are added, targets must be bare repositories with no
+  reparse component, refs are restricted to validated `refs/heads/*`, owned tasks
+  converge under repeated cancellation, and scratch directories converge on
+  success, failure, cancellation and cleanup failure without masking the primary
+  error.
+- Bound the evidence to what was actually verified: the integration worktree is
+  proved by hashing the filesystem, so neither an unstaged edit, a
+  candidate-supplied `.gitignore` rule nor an `--assume-unchanged` index flag
+  can hide what a verifier really executed. The checkout is additionally proved
+  to *be* the integration tree - each file hashed as a Git blob and compared
+  against the tree's own object ids - because `checkout-index` converts line
+  endings under `core.autocrlf`/`core.eol` or a candidate-supplied
+  `.gitattributes`, which would otherwise let a review approve LF bytes a
+  verifier never ran. Configuration-driven conversion is suppressed and
+  attribute-driven conversion fails closed; verifiers are granted owned scratch
+  space outside the checkout, and a failure to remove it is reported rather than
+  silently ignored. When several things fail at once - the work itself, the
+  removal, and a cancellation - the caller sees its own `CancelledError` with
+  every other failure retained as the cause, both together as a
+  `BaseExceptionGroup` when both occurred. That composition lives in one shared
+  helper used by both the integration and verifier scratch lifetimes. Git's executable
+  bit is compared where the platform can store it; on Windows, which cannot, the
+  tree's own mode is carried through and a mode change is still caught by the
+  Git-side tree re-derivation. The
+  output limit is enforced while a command runs, and the deadline covers the
+  output readers as well as the direct child, so an orphaned grandchild holding
+  an inherited pipe cannot extend or remove the bound the host set. Every
+  returned result is matched in order against its frozen command before the
+  evidence digest is recomputed, review/approval idempotency binds the complete
+  operation definition instead of the identity alone, and reading a hostile
+  event envelope raises the stable protocol error without swallowing
+  `BaseException`.
+- Recorded the decision, threat boundary and rejected alternatives in ADR-0030.
+  D2 adds no CLI, Workflow, automatic approval, automatic target selection,
+  non-bare target, multi-parent merge, object/CAS garbage collection,
+  cross-process lease or OS sandbox; version remains `0.6.0`. The four dedicated
+  D2 files contain 130 tests (`129 passed, 1 skipped`); the expanded
+  Artifact/Workspace gate is `172 passed, 2 skipped`, and the complete gate is
+  `2005 collected / 2000 passed / 5 skipped`.
+
 ### v0.7-D1: immutable Patch Artifact capture
 
 - Added an independent Artifact domain with one append-only

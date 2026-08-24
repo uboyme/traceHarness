@@ -330,9 +330,20 @@ invariant violations and zero request-reconstruction violations.
   complete non-reparse parent chain, and inherited Git configuration injection
   is removed. Final text is not a Patch; the read-only collect Tool only reports
   refs that a host already captured.
-- **D2 — verification and human promotion:** run fixed host verification, record
-  explicit approval and promote the exact artifact through Git compare-and-swap.
-  No model may approve or move a target ref.
+- **D2 — verification and human promotion (complete, unreleased):** one
+  append-only `patch-promotions:ledger` now records Review, Approval and
+  Promotion. Review clones a host-configured **bare** target into a temporary
+  directory, applies the exact CAS-verified Patch to the exact expected revision
+  with `git apply --cached` (never `--3way`), builds a deterministic integration
+  tree and single-parent commit, and runs the host's frozen verification plan by
+  argv with a positive-list environment and bounded, digest-only evidence.
+  Approval requires the exact content digest of a freshly replayed passing
+  Review; promotion rebuilds the identical tree and commit inside the target's
+  own object database and moves the ref only through
+  `git update-ref <ref> <new> <expected-old>`, reconciling the three possible
+  ref states against a failed, cancelled or unknown Event append. No model gains
+  an approve, merge, promote or `update-ref` Tool, and D2 adds no CLI, Workflow,
+  automatic approval, non-bare target or cross-process lease.
 - **E — typed Workflow:** compose public Budget/Workspace/Supervisor/Artifact/
   Promotion services as AgentTask, Map, Join, Approval and Verification nodes;
   do not build a second scheduler or fact source.
@@ -343,9 +354,10 @@ Definition of done: parallel coding children do not share one mutable directory 
 host can promote only an immutable, fixed-suite-verified, human-approved patch while the
 existing Agent Runtime, Supervisor concurrency kernel and Event Log fact sources stay singular.
 See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md),
-[ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md) and
-[ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md), and
-[ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md).
+[ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md),
+[ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md),
+[ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md) and
+[ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md).
 
 ## v1.0: Stable plugin platform
 

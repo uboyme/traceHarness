@@ -344,9 +344,17 @@ invariant violations and zero request-reconstruction violations.
   ref states against a failed, cancelled or unknown Event append. No model gains
   an approve, merge, promote or `update-ref` Tool, and D2 adds no CLI, Workflow,
   automatic approval, non-bare target or cross-process lease.
-- **E — typed Workflow:** compose public Budget/Workspace/Supervisor/Artifact/
-  Promotion services as AgentTask, Map, Join, Approval and Verification nodes;
-  do not build a second scheduler or fact source.
+- **E — typed Workflow (complete, unreleased):** one append-only
+  `workflow:<run_id>` stream and one projector now compose the public
+  Supervisor, capture and promotion services as AgentTask, Map, Join,
+  Verification and Approval nodes. The DAG is fixed and fully validated before
+  anything runs; definitions carry host binding ids rather than prompts, paths
+  or policy, and are bound to a canonical definition hash. Agent, message,
+  review and map-child identities derive from the run and node, so re-entry is a
+  fresh read rather than a repeat. Approval is a human barrier the coordinator
+  cannot cross, and the only continuable interrupted state is a clean stop at
+  that barrier - every other in-between state fails closed. Agent FIFO, Turn
+  execution and Activation lifetime remain owned by the existing Supervisor.
 - **F — product gate:** add explicit CLI/host assembly, a Reviewer–Coder–Parent
   end-to-end demonstration, packaging/security checks and the v0.7 release.
 
@@ -357,7 +365,8 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 [ADR-0025](docs/adr/0025-hierarchical-budget-breaking-cutover.md),
 [ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md),
 [ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md) and
-[ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md).
+[ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md) and
+[ADR-0031](docs/adr/0031-fixed-typed-workflow-above-public-services.md).
 
 ## v1.0: Stable plugin platform
 

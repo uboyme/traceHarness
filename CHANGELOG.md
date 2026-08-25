@@ -2,6 +2,108 @@
 
 ## Unreleased
 
+### v0.7-E: fixed typed Workflow above the public services
+
+- Added `traceh.api.workflow` (frozen host values, five node kinds and the host
+  binding-resolver seam) and `traceh.workflow` (definition freezing and derived
+  identities, the orchestration event vocabulary, one projector, the five node
+  executors and a single-flight coordinator). `AgentLoop`, `AgentRuntime`,
+  `ProcessAgentSupervisor` and `PluginManager` are unchanged, and an
+  architecture test asserts the domain reads no private Supervisor state.
+- Added one append-only `workflow:<run_id>` stream per run carrying seven
+  schema-1 orchestration facts. One projector rebuilds the run on every load;
+  there is no status file, result cache or second store, and the stream keeps
+  identities pointing at the Directory, Session, Artifact Catalog and promotion
+  ledger rather than copies of their state. Map child ids are re-derived during
+  replay, so a forged child id is refused.
+- Added a fixed DAG that is fully validated before anything runs: duplicate
+  ids, unknown predecessors, self-edges, cycles, unreachable nodes, bounded
+  node/predecessor/fan-out counts and typed cross-references. Definitions carry
+  host binding ids rather than specs, prompts, paths or policy, and bind to a
+  canonical definition hash that distinguishes `True` from `1`.
+- Added stable identity for every side-effecting call: Agent, session, create
+  request, message, review request and map child all derive from the run and
+  node, never from scheduling order. Re-entry replays the Directory and Inbox to
+  decide whether to create or resume and whether the message still needs
+  sending, instead of repeating the side effect.
+- Added the five node contracts: AgentTask converges its Activation, Workspace
+  and process slot in a `finally`; Map appends its expansion before any child
+  starts; Join waits for every map child; Verification binds the exact Artifact,
+  target and Review; Approval is a human barrier the Workflow cannot cross and
+  requires an approval covering that exact review and artifact.
+- Added narrow recovery: only a run stopped cleanly at a human Approval barrier
+  may continue. A node with a start fact and no terminal fact fails closed,
+  because it could have left an Agent claim, an open Turn, a Budget hold, a
+  provisional Workspace, a running capture or a running Review behind.
+- Cancellation converges on one owned task per run, independent nodes run with
+  structured concurrency, failures are collected per node so two nodes raising
+  the same exception object are two failures, and stream appends reuse the
+  existing three-state may-have-committed reconciliation. The multi-failure
+  composition rule moved to `traceh.concurrency` so D2 and E share one copy.
+- Every composed service must write to the one durable log the run uses,
+  resolved through the same `durable_log_identity` helper the Budget, Artifact
+  and Promotion domains already use; two logs cannot check each other.
+- Re-entry matches complete durable facts, not just derived ids: an existing
+  Agent must carry the create fact this node would have written (session,
+  request, preset, not owned by or forked from another Agent), and an accepted
+  message must match content, source and both correlation fields.
+  `workspace_id` is excluded, because a workspace-managing Supervisor legitimately
+  rewrites it and the Workflow does not own that decision.
+- A terminal fact can no longer redefine the node it ends: its kind and map key
+  must equal the started ones, and `run(definition)` additionally requires every
+  node in the stream to be declared by that definition (or be a map child of a
+  real Map) with the kind the definition gives it.
+- A failed run records `run-finished(failed)` before node errors reach the
+  caller, so a later `resume()` cannot supply the missing terminal itself and
+  look like a legitimate continuation. A cancelled node still writes no run
+  terminal and stays un-continuable.
+- `state()` now refuses a definition whose hash the run never recorded, matching
+  `start()` and `resume()`.
+- Re-entry comparison goes through the protocols' own `creation_matches()` and
+  `acceptance_matches()` rather than a hand-written subset, so
+  `capability_grants`, `target` and `wakeup` all participate: an Agent with
+  different grants, or a message accepted without the required wake-up, is no
+  longer adopted as this node's own work.
+- A completion must carry the evidence its node kind produces and only that, and
+  its Agent and message ids are recomputed from the run and node - an AgentTask
+  can no longer complete with no Agent evidence while holding a foreign
+  Artifact.
+- A run may report `completed` only when every declared node, plus every child of
+  every expanded Map, is durably completed; a lone `run-finished(completed)` can
+  no longer claim success for a DAG that never ran.
+- If the failed-run terminal cannot be written, the node failures and the write
+  failure are composed through the shared rule instead of the bookkeeping error
+  replacing the root cause.
+- Fixed a v0.7-D2 verifier defect found while investigating a recurring
+  full-suite failure: the output capture accounted whole read chunks, so the
+  recorded size and digest depended on how the pipe split the stream, and at the
+  largest legal bound the crossing chunk pushed `stdout_bytes` past what a
+  `VerifierOutcome` may carry - turning "output exceeded" into a leaked input
+  error. The capture now accounts exactly the first `max_output_bytes` of each
+  stream and keeps draining past that so the child can still exit, making the
+  evidence chunk-invariant and always within the recordable range.
+- Completion evidence is checked in two layers by one shared rule. `rebuild()`
+  enforces everything a stream can decide alone - a Join carrying no Artifact,
+  Review or digest, a Verification carrying both, an Approval adding the digest,
+  and Agent/message ids recomputed from the run and node - so the public
+  Projector still fails closed with no definition in hand. `run(definition)`
+  then adds the constraints only the definition supplies: `capture_artifact`,
+  with a Map child following its parent's setting.
+- Map fan-out is closed at the replay boundary too. `rebuild()` now requires
+  that only a running Map parent records an expansion - a Join can no longer
+  record one and report map keys it never produced - that a child id and its key
+  correspond exactly, that a node nobody expanded carries no key, and that one
+  child belongs to one expansion and cannot appear before it. The definition
+  layer keeps what only it can decide: whether the expanding node is a Map in
+  that definition, and whether a separately declared node may carry a key.
+- Recorded the decision and boundaries in ADR-0031. v0.7-E adds no CLI, no
+  model-visible workflow/approve/promote/capture Tool, no retry policy, no
+  conditional or loop node, no cross-process lease, no cold Activation recovery
+  and no OS sandbox; version remains `0.6.0`. The three dedicated Stage E files
+  contain 85 tests (all passing). After committing the verifier fix, the
+  recursive L2 gate passed from the new core commit and the complete suite is
+  `2093 collected / 2088 passed / 5 skipped`.
+
 ### v0.7-D2: fixed verification, human approval and Git ref compare-and-swap promotion
 
 - Added an independent promotion control plane outside the execution kernel:

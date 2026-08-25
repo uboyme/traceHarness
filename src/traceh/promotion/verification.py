@@ -34,9 +34,9 @@ _EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 _READ_CHUNK_BYTES = 65536
 """How much of a verifier stream is consumed per read.
 
-It also bounds the overshoot: the read that first crosses the configured limit
-kills the writer, so a command can exceed the bound by at most one chunk per
-stream before it is stopped.
+It is a transport detail only. Recorded evidence is exactly the first
+``max_output_bytes`` of a stream regardless of how the pipe splits it, so the
+chunk size changes neither the recorded size nor the digest.
 """
 
 
@@ -145,13 +145,17 @@ class HostVerificationRunner:
             )
 
         # Reading each pipe as it fills is what makes the bound exact: the read
-        # that first crosses the limit kills the writer, so overshoot is one
-        # chunk per stream rather than "whatever it managed to produce".
-        captures = (_StreamCapture(), _StreamCapture())
+        # that first crosses the limit kills the writer, and the capture accounts
+        # only the bytes that fit, so the evidence is exactly the first
+        # `max_output_bytes` of the stream however the pipe happened to split it.
+        captures = (
+            _StreamCapture(max_output_bytes),
+            _StreamCapture(max_output_bytes),
+        )
         breach = _OutputBreach(process)
         readers = tuple(
             asyncio.create_task(
-                _drain(stream, capture, max_output_bytes, breach),
+                _drain(stream, capture, breach),
                 name="traceh-promotion-verifier-drain",
             )
             for stream, capture in zip(
@@ -254,24 +258,44 @@ class _StreamCapture:
     return value.
     """
 
-    __slots__ = ("_digest", "size")
+    __slots__ = ("_digest", "_limit", "exceeded", "size")
 
-    def __init__(self) -> None:
+    def __init__(self, limit: int) -> None:
         self._digest = hashlib.sha256()
+        self._limit = limit
+        self.exceeded = False
         self.size = 0
 
-    def update(self, chunk: bytes) -> None:
-        self.size += len(chunk)
-        self._digest.update(chunk)
+    def update(self, chunk: bytes) -> bool:
+        """Account the part of ``chunk`` that fits, and report any overflow.
+
+        Evidence is exactly the first ``limit`` bytes of the stream: no more, and
+        never a whole read chunk that happened to straddle the bound. Counting
+        the crossing chunk in full made the recorded size and digest depend on
+        how the pipe split the data, so the same output could be recorded two
+        different ways - and with the largest legal bound it pushed the recorded
+        size past what a `VerifierOutcome` may carry, turning "output exceeded"
+        into a leaked input error.
+
+        The bytes past the bound are still read by the caller so the child can
+        exit, but they are evidence of nothing except that the bound was crossed.
+        """
+
+        room = self._limit - self.size
+        if room > 0:
+            accounted = chunk[:room]
+            self.size += len(accounted)
+            self._digest.update(accounted)
+        if len(chunk) > room:
+            self.exceeded = True
+        return self.exceeded
 
     @property
     def digest(self) -> str:
         return self._digest.hexdigest()
 
 
-async def _drain(
-    stream, capture: _StreamCapture, max_output_bytes: int, breach: _OutputBreach
-) -> None:
+async def _drain(stream, capture: _StreamCapture, breach: _OutputBreach) -> None:
     """Consume one stream, stopping the writer on the read that crosses the bound."""
 
     if stream is None:  # pragma: no cover - defensive; both pipes are requested
@@ -283,8 +307,9 @@ async def _drain(
             return
         if not chunk:
             return
-        capture.update(chunk)
-        if capture.size > max_output_bytes:
+        if capture.update(chunk):
+            # The loop still has to drain so the child can exit and this stream
+            # can reach EOF, but the capture has stopped accounting.
             breach.trip()
 
 

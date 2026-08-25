@@ -130,9 +130,18 @@ def test_no_cli_or_workflow_entry_point_exists_for_promotion() -> None:
 
 
 def test_only_the_promotion_domain_imports_the_promotion_domain() -> None:
+    """Promotion has exactly one consumer, and it is an orchestration layer.
+
+    ADR-0024 reserves this direction: a Workflow node *calls* the public
+    promotion service. What must never happen is the execution kernel, the CLI
+    or another domain learning about promotion, so every other module is still
+    checked.
+    """
+
     package = Path(agent_runtime_module.__file__).parent.parent
+    allowed = {PROMOTION_ROOT, package / "workflow"}
     for source in sorted(package.rglob("*.py")):
-        if source.parent == PROMOTION_ROOT:
+        if source.parent in allowed:
             continue
         imported = {
             node.module
@@ -279,8 +288,10 @@ async def test_the_output_bound_is_enforced_while_a_verifier_is_running() -> Non
     outcome = evidence.results[0]
     assert outcome.status == "output-exceeded"
     assert evidence.passed is False
-    # The bound must stop the writer, not merely describe it afterwards.
-    assert outcome.stdout_bytes < 1024 * 1024, outcome.stdout_bytes
+    # The bound must stop the writer, not merely describe it afterwards, and
+    # the recorded size must not depend on how fast the kill landed: at most one
+    # read chunk may cross the limit, whatever the machine load.
+    assert outcome.stdout_bytes <= 1024 + 65536, outcome.stdout_bytes
 
 
 async def test_a_verifier_timeout_is_not_extended_by_a_surviving_grandchild() -> None:
@@ -679,3 +690,100 @@ async def test_cancelling_during_a_failing_cleanup_keeps_both_failures(
         isinstance(item, OSError) and "forced cleanup failure" in str(item)
         for item in causes
     ), causes
+
+
+def test_recorded_output_evidence_does_not_depend_on_pipe_chunking() -> None:
+    """The same bytes must produce the same size and digest, however split."""
+
+    import hashlib
+
+    from traceh.promotion.verification import _StreamCapture
+
+    def capture(chunks):
+        item = _StreamCapture(5)
+        for chunk in chunks:
+            item.update(chunk)
+        return item.size, item.digest, item.exceeded
+
+    whole = capture([b"abcdef"])
+    split = capture([b"abc", b"def"])
+    byte_at_a_time = capture([bytes([value]) for value in b"abcdef"])
+    assert whole == split == byte_at_a_time
+    # Exactly the first `limit` bytes are evidence - not the crossing chunk.
+    assert whole == (5, hashlib.sha256(b"abcde").hexdigest(), True)
+
+
+def test_recorded_output_never_exceeds_what_an_outcome_may_carry() -> None:
+    """At the largest legal bound, overshoot must not become an input error."""
+
+    from traceh.promotion.models import MAX_OUTPUT_BYTES
+    from traceh.promotion.verification import _StreamCapture
+
+    item = _StreamCapture(MAX_OUTPUT_BYTES)
+    item.update(b"x" * 65536)
+    assert item.size <= MAX_OUTPUT_BYTES
+    assert item.exceeded is False
+
+
+async def test_the_largest_legal_output_bound_still_reports_output_exceeded() -> None:
+    """A breach at the maximum bound returns evidence, not a leaked error."""
+
+    import sys
+    import tempfile
+
+    from traceh.api.promotion import (
+        VerificationPlan,
+        VerifierCommand,
+        VerifierEnvironmentPolicy,
+    )
+    from traceh.promotion import HostVerificationRunner
+    from traceh.promotion.models import MAX_OUTPUT_BYTES
+    from traceh.promotion.verification import _StreamCapture
+
+    # Driving 64 MiB through a real pipe would make this a throughput test, so
+    # the boundary itself is exercised directly and the runner is exercised at a
+    # bound it can reach quickly.
+    at_maximum = _StreamCapture(MAX_OUTPUT_BYTES)
+    at_maximum.update(b"y" * 65536)
+    assert at_maximum.size == 65536 <= MAX_OUTPUT_BYTES
+
+    plan = VerificationPlan(
+        plan_id="bounded-verifier",
+        plan_version=1,
+        commands=(
+            VerifierCommand(
+                command_id="floods-stdout",
+                argv=(
+                    sys.executable,
+                    "-c",
+                    "import sys\n"
+                    "sys.stdout.buffer.write(b'z' * 1048576)\n"
+                    "sys.stdout.buffer.flush()\n",
+                ),
+                timeout_ms=60_000,
+            ),
+        ),
+        environment=VerifierEnvironmentPolicy(
+            policy_id="bounded-env",
+            passthrough=(
+                "PATH",
+                "PATHEXT",
+                "SYSTEMROOT",
+                "SYSTEMDRIVE",
+                "WINDIR",
+                "COMSPEC",
+                "TEMP",
+                "TMP",
+                "TMPDIR",
+            ),
+            overrides=(),
+        ),
+        max_output_bytes=4096,
+        protocol_version=1,
+    )
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
+        evidence = await HostVerificationRunner().run(plan, cwd=Path(workdir))
+    outcome = evidence.results[0]
+    assert outcome.status == "output-exceeded"
+    # Deterministic: exactly the configured bound, never the crossing chunk.
+    assert outcome.stdout_bytes == 4096, outcome.stdout_bytes

@@ -39,18 +39,18 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 固定公共控制面接缝，v0.7-A/B 用单一 Budget Ledger 与薄适配器强制七个维度；v0.7-C 用独立 Workspace 域给 managed Agent 分配 commit-pinned worktree；v0.7-D1 把 terminal Agent 的完整 Git 状态捕获为 CAS bytes + append-only Manifest；v0.7-D2 再在 Runtime 外新增独立 Promotion 域，把不可变 Patch 经固定宿主 Verifier、人工精确批准和 Git ref compare-and-swap 推广到宿主管理的 bare 仓库。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Budget、Workspace、Artifact 或 Promotion 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、模型可见的 approve/promote Tool 或 Workflow；Budget/Workspace/Artifact/Promotion 宿主装配仍需显式提供，`NEXT_STEP` 被拒绝而非改写 |
-| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，以及每 Agent 的 Inbox Stream 与 Delivery Stream；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
+| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 固定公共控制面接缝，v0.7-A/B 用单一 Budget Ledger 与薄适配器强制七个维度；v0.7-C 用独立 Workspace 域给 managed Agent 分配 commit-pinned worktree；v0.7-D1 把 terminal Agent 的完整 Git 状态捕获为 CAS bytes + append-only Manifest；v0.7-D2 在 Runtime 外新增独立 Promotion 域，把不可变 Patch 经固定宿主 Verifier、人工精确批准和 Git ref compare-and-swap 推广到宿主管理的 bare 仓库；v0.7-E 再在其上加一层固定 Typed Workflow，用 AgentTask/Map/Join/Verification/Approval 五类节点组合这些公共服务，并把编排事实写进每个 Run 一条的 append-only 流。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略或模型可见的 approve/promote/workflow Tool；Budget/Workspace/Artifact/Promotion/Workflow 宿主装配仍需显式提供，`NEXT_STEP` 被拒绝而非改写 |
+| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream，以及每个 Workflow Run 一条的 Workflow Stream；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。插件命令为 `list/inspect/doctor/validate/compare/promote/rollback`；后四者构成 Runtime 外的 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 核心套件 `2005` collected；完整门禁 `2000 passed, 5 skipped`。五个 skip 全部是平台权限或路径边界：三处目录 symlink（Workspace、Tool、D1 capture）、一处 D2 推广目标 symlink，以及一处路径不能包含 NUL。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`），连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`。v0.7-D1 检查点为 1875/1871/4，v0.7-C 为 1835/1832/3，v0.7-B 为 1770/1769/1，v0.6.0 发布快照为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
+| 当前自动化测试 | 核心套件 `2093` collected；本轮从已提交的新 `HEAD` 实测 `2088 passed, 5 skipped`。五个 skip 全部是平台权限或路径边界：三处目录 symlink（Workspace、Tool、D1 capture）、一处 D2 推广目标 symlink，以及一处路径不能包含 NUL。递归 L2 门禁也已单独从该 `HEAD` 克隆并通过。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`），连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`；E 三个专门文件另有 `85 passed`。v0.7-D1 检查点为 1875/1871/4，v0.7-C 为 1835/1832/3，v0.7-B 为 1770/1769/1，v0.6.0 发布快照为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
 | 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
 
-当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A/B 建立并执行单一层级 Budget Ledger；v0.7-C 加入独立 managed Workspace；v0.7-D1 加入独立 Artifact Catalog、SHA-256 CAS、临时 Git index 完整快照、终态证据复核和只读报告关联；v0.7-D2 再加入独立 Promotion Ledger、固定宿主 Verifier、确定性 integration commit、精确 approval digest 与 Git ref compare-and-swap 推广。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、路径、Git、Artifact、Promotion 或包管理塞进 `AgentRuntime`。当前仍没有 v0.7 Budget/Workspace/Artifact/Promotion 的默认 CLI 装配、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent/Workspace/Promotion lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、Workflow、MCP、TUI 或流式输出。
+当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A/B 建立并执行单一层级 Budget Ledger；v0.7-C 加入独立 managed Workspace；v0.7-D1 加入独立 Artifact Catalog、SHA-256 CAS、临时 Git index 完整快照、终态证据复核和只读报告关联；v0.7-D2 再加入独立 Promotion Ledger、固定宿主 Verifier、确定性 integration commit、精确 approval digest 与 Git ref compare-and-swap 推广；v0.7-E 又在这些公共服务之上加入固定 Typed Workflow：五类节点、每 Run 一条编排流与人工 Approval 屏障。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、路径、Git、Artifact、Promotion 或包管理塞进 `AgentRuntime`。当前仍没有 v0.7 Budget/Workspace/Artifact/Promotion 的默认 CLI 装配、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent/Workspace/Promotion lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.25）、Workflow CLI 装配、MCP、TUI 或流式输出。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -86,7 +86,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- Workflow Engine。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或 Workflow，`MessageTarget.NEXT_STEP` 也未实现；
+- 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
 - Docker、远程沙箱或操作系统级安全隔离；
@@ -107,8 +107,9 @@ traceharness/
 │   ├── workspaces/                   v0.7-C Workspace Catalog、Git Provider、取消收敛服务、Supervisor 包装器与只读 Tool Policy
 │   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
+│   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
-│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`）
+│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`）
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
@@ -349,6 +350,7 @@ flowchart LR
 | Workspace Catalog Stream | `workspaces:catalog` | 每个 Store 一条的 managed worktree 生命周期：provisional、attached、quarantined、released；只保存宿主 source identity/commit，不保存模型可控路径（20.22） |
 | Patch Artifact Catalog Stream | `artifacts:catalog` | 每个 Store 一条的不可变 Patch Manifest 事实；保存 CAS digest、Agent/Session/message/Turn/Workspace/Git 来源，不保存 Patch bytes 或本机路径（20.23） |
 | Patch Promotion Ledger Stream | `patch-promotions:ledger` | 每个 Store 一条的 Review、Approval 与 Promotion 控制流；保存 target id/fingerprint/ref/revision、integration tree/commit、verifier 定义与证据摘要，不保存仓库路径、verifier 输出或环境值（20.24） |
+| Workflow Run Stream | `workflow:<run_id>` | 每个 Workflow Run 一条的编排事实：run/node 生命周期、Map 展开与 Approval 等待；只保存指向其它事实源的身份，不复制 Agent 报告、Patch bytes、Review 证据或 Approval（20.25） |
 
 前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。其余七类是控制面流：Directory、Budget Ledger、Workspace Catalog、Patch Artifact Catalog 与 Patch Promotion Ledger 每个 Store 各一条，Inbox 与 Delivery 每个 Agent 各一条；它们都不进入 Model Surface、Session Recovery 或 Request Fingerprint。Artifact 原始 bytes 位于显式 SHA-256 CAS，由 Manifest 引用并在读取时重新校验。
 
@@ -371,6 +373,7 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | Workspace control plane（只在 `workspaces:catalog`） | `workspace/provisioned`、`workspace/attached`、`workspace/quarantined`、`workspace/released`；只投影 host-managed worktree identity/lifecycle，不持久化本机路径，也不进入 Model Surface |
 | Artifact control plane（只在 `artifacts:catalog`） | `artifact/patch-captured`；只记录不可变 Manifest 与 CAS 引用，Patch bytes 不进入 Event Log，报告关联由 `(agent_id, message_id)` fresh replay 重建（20.23） |
 | Promotion control plane（只在 `patch-promotions:ledger`） | `patch/review-recorded`、`patch/approval-recorded`、`patch/promotion-committed`；只记录固定验证结论、精确 approval digest 与已完成的 ref compare-and-swap，不进入 Model Surface，也不保存路径或 verifier 输出（20.24） |
+| Workflow control plane（只在 `workflow:<run_id>`） | `workflow/run-started`、`workflow/node-started`、`workflow/map-expanded`、`workflow/node-completed`、`workflow/node-failed`、`workflow/approval-awaited`、`workflow/run-finished`；只记录编排，不进入 Model Surface，也不复制其它域的状态（20.25） |
 | Surface | `surface/replace` |
 | Effect | `effect/intent`、`effect/dispatched`、`effect/outcome`、`effect/reconciled` |
 
@@ -1242,12 +1245,12 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | 多 Agent 持久身份 | `AgentRecord`、`AgentDirectory`、`AgentRegistrar`、`agent/created` | **v0.6 Stage A 已实现**：identity 从 Agent control-plane Stream 重建，创建是 CAS 事务，冲突与畸形历史 fail closed（20 节） |
 | 多 Agent 持久 Inbox | `AcceptedMessage`、`AgentInbox`、`AgentInboxService`、`agent/message-accepted` | **v0.6 Stage B 已实现**：每 Agent 一条 FIFO **接受**历史，按 `message_id` 幂等，畸形/重复/错流历史 fail closed（20.8–20.9）。它只回答“接受了什么、什么顺序”，不回答“是否执行” |
 | 多 Agent 投递生命周期 | `MessageClaim`、`MessageOutcome`、`AgentDeliveryLog`、`AgentDeliveryService`、`agent/message-claimed|completed|failed|cancelled` | **v0.6 Stage C 已实现**：claim 是执行前提，CAS 线性化，畸形/重复/乱序历史 fail closed（20.11–20.12） |
-| 多 Agent 活控制面 | `ProcessAgentSupervisor`、公共 `AgentSupervisor`、`AgentExecution`、`AgentActivationFactory`、`SupervisedAgentHandle`、`AgentOwnershipGraph`、`SupervisorToolset`、`AgentToolAuthority`、`ChildProvisioningPolicy` | **v0.6 Stage C–E 已实现** create/resume/send/interrupt/wait、durable report、单活 Activation、owner 子树 child-first dispose，以及绑定 owner 的五个模型 Tool（20.13、20.15、20.17）。**v0.7 D0/B/C/D1/D2 已完成公共接缝、显式 Budget、managed Workspace、独立 Patch Artifact 与独立 Promotion 装配**：Toolset 只依赖公共 Supervisor；Budget/Workspace adapters 包住同一 seam；Artifact 域只消费通用 Workspace capture gate 与 durable report；Promotion 域只读 Artifact 与 EventStore。没有第二个调度器或缓存事实。仍**缺失**：默认 CLI 装配、冷恢复、stale claim 接管、自动重试、Workflow、`NEXT_STEP` |
+| 多 Agent 活控制面 | `ProcessAgentSupervisor`、公共 `AgentSupervisor`、`AgentExecution`、`AgentActivationFactory`、`SupervisedAgentHandle`、`AgentOwnershipGraph`、`SupervisorToolset`、`AgentToolAuthority`、`ChildProvisioningPolicy` | **v0.6 Stage C–E 已实现** create/resume/send/interrupt/wait、durable report、单活 Activation、owner 子树 child-first dispose，以及绑定 owner 的五个模型 Tool（20.13、20.15、20.17）。**v0.7 D0/B/C/D1/D2 已完成公共接缝、显式 Budget、managed Workspace、独立 Patch Artifact 与独立 Promotion 装配**：Toolset 只依赖公共 Supervisor；Budget/Workspace adapters 包住同一 seam；Artifact 域只消费通用 Workspace capture gate 与 durable report；Promotion 域只读 Artifact 与 EventStore。没有第二个调度器或缓存事实。v0.7-E 的固定 Typed Workflow 也只通过同一个公共 Supervisor 接缝组合它。仍**缺失**：默认 CLI 装配、冷恢复、stale claim 接管、自动重试、通用 Workflow DSL、`NEXT_STEP` |
 | 通用 Turn 输入 | `TurnInput` | **v0.6 Stage C 已实现**：`AgentLoop` 接受 `str` 或 `TurnInput`，后者让控制面 `message_id`/`source` 贯穿 Session Turn；`str` 行为与此前完全一致 |
 | Managed Workspace | `WorkspaceProvider`、`WorkspaceService`、`WorkspaceCatalog`、`LocalGitWorkspaceProvider`、`WorkspaceManagedAgentSupervisor`、`ManagedWorkspaceAccessPolicy` | **v0.7-C 已实现** host source mapping、精确 commit worktree、provisional/attached/quarantined/released 生命周期、Agent/Session 精确关联与 read-only Tool admission。D1 在其通用 capture gate 外侧实现 Patch，不把 Artifact 状态塞回 Workspace 域。路径不进入模型，dirty/unsafe 不强删。仍无 Workspace CLI、跨进程 lease 或 OS sandbox |
 | Immutable Patch Artifact | `api/artifacts.py`、`PatchCaptureService`、`GitPatchBuilder`、`LocalArtifactCas`、`PatchArtifactCatalog`/Reader、`ArtifactReportingAgentSupervisor` | **v0.7-D1 已实现** terminal evidence + Workspace lease、临时 index 全状态快照、SHA-256 CAS、append-only Manifest、fresh replay/byte verification 与只读 report refs（20.23、ADR-0029）。它本身不判断质量、不批准、不推广；那属于下一行的 Promotion 域，没有 CLI，也没有模型 capture Tool |
-| Patch Review / Approval / Promotion | `api/promotion.py`、`PatchPromotionService`、`LocalBareGitPromotionTargets`、`LocalGitPromotionEngine`、`HostVerificationRunner`、`PromotionLedger`/Reader | **v0.7-D2 已实现** 固定宿主 `VerificationPlan`、临时 clone 集成与确定性 integration commit、有界结构化证据、immutable Review Report、精确 approval digest、目标内重建与 `git update-ref <ref> <new> <expected-old>`，以及 Git/Event 三态对账（20.24、ADR-0030）。没有 CLI、Workflow、自动批准、非 bare 目标、跨进程 lease 或模型可见的 approve/promote Tool |
-| Workflow | 可复用单 Agent Runtime 边界 | Workflow Engine、Map/Join/Approval 节点缺失 |
+| Patch Review / Approval / Promotion | `api/promotion.py`、`PatchPromotionService`、`LocalBareGitPromotionTargets`、`LocalGitPromotionEngine`、`HostVerificationRunner`、`PromotionLedger`/Reader | **v0.7-D2 已实现** 固定宿主 `VerificationPlan`、临时 clone 集成与确定性 integration commit、有界结构化证据、immutable Review Report、精确 approval digest、目标内重建与 `git update-ref <ref> <new> <expected-old>`，以及 Git/Event 三态对账（20.24、ADR-0030）。D2 域本身没有 CLI、自动批准、非 bare 目标、跨进程 lease 或模型可见的 approve/promote Tool；它被 v0.7-E 的 Verification/Approval 节点作为公共服务调用（20.25） |
+| Typed Workflow | `api/workflow.py`、`WorkflowService`、`WorkflowProjection`、`NodeExecutor`、`WorkflowServices` | **v0.7-E 已实现** 固定五类节点 DAG、每 Run 一条编排流、派生稳定身份、Map 先落盘再展开、Join 等全部子节点、Verification 绑定精确 Artifact/target、Approval 人工屏障与窄恢复边界（20.25、ADR-0031）。没有 CLI、重试策略、条件/循环节点、跨进程 lease 或模型可见 Workflow Tool |
 
 标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
@@ -1263,9 +1266,9 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前核心测试套件收集 `2005` 项，完整门禁为 `2000 passed, 5 skipped`；五个 skip 全部是平台权限或路径边界——三处目录 symlink（Workspace、Tool 与 D1 capture）、一处 D2 推广目标 symlink（[`test_patch_promotion.py`](../../tests/test_patch_promotion.py)），以及一处 CLI 路径不能包含 NUL。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`）；连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`。v0.7-D1 检查点为 `1875/1871/4`，v0.7-C 为 `1835/1832/3`，v0.7-B 为 `1770/1769/1`，v0.6.0 发布快照为 `1707/1706/1`。旧发布时点数字继续作为历史证据，不用于描述当前工作区。
+当前核心测试套件收集 `2093` 项，本轮从已提交的新 `HEAD` 实测为 `2088 passed, 5 skipped`；五个 skip 全部是平台权限或路径边界——三处目录 symlink（Workspace、Tool 与 D1 capture）、一处 D2 推广目标 symlink（[`test_patch_promotion.py`](../../tests/test_patch_promotion.py)），以及一处 CLI 路径不能包含 NUL。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`）；连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`。v0.7-E 三个专门文件另有 `85 passed`。v0.7-E 检查点为 `2093 collected / 2088 passed / 5 skipped`，v0.7-D2 为 `2005/2000/5`，v0.7-D1 为 `1875/1871/4`，v0.7-C 为 `1835/1832/3`，v0.7-B 为 `1770/1769/1`，v0.6.0 发布快照为 `1707/1706/1`。旧发布时点数字继续作为历史证据，不用于描述当前工作区。
 
-已知基线不稳定项（**与 D2 无关**）：`tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate` 会在子进程里嵌套跑一遍完整基线套件，并用 `allow_index=True` 联网建两套 venv，因此它在完整门禁中偶发失败（本轮 8 次全量中 2 次）。单独运行始终通过。同样的偶发失败已在**干净 `HEAD`（`66067a8`）仓库外克隆**上独立复现（`1870 passed, 1 failed, 4 skipped`；单独运行 `1 passed`），因此它先于 D2 存在，应作为独立的基线问题处理。
+已关闭的递归门禁问题：`tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate` 会在子进程里克隆并检出已提交的 core commit，再在其中跑一遍完整基线套件。此前失败的是嵌套套件里的 `tests/test_promotion_architecture.py::test_the_output_bound_is_enforced_while_a_verifier_is_running`：D2 输出捕获曾按整个 read chunk 计入，使字节数与摘要依赖管道分块；在最大合法 `max_output_bytes` 下还可能把 `stdout_bytes` 顶过 `VerifierOutcome` 上限。现在捕获只精确计入并摘要每个流的前 `max_output_bytes` 字节，其余继续 drain，因此证据与分块无关且必然可记录（20.24）。修复提交后，递归 L2 已从新 `HEAD` 单独通过，完整 `2093` 项套件也得到 `2088 passed, 5 skipped`；这条历史问题不再是当前边界。
 
 L2 新增 [`tests/test_candidate_validation.py`](../../tests/test_candidate_validation.py)，覆盖显式候选身份与依赖源、可信 clone 版本而非运行中 CLI 版本、大小写变体 `.env`、符号链接、Windows Junction/reparse point、缓存与 direct-reference 依赖拒绝、干净源码复制、Wheel 路径钩子/启动钩子/符号链接成员/宿主保留命名空间审计、两套独立 venv、宿主 pytest 配置、安装元数据合同、doctor、候选测试、可信核心回归、结构化 JSON 配置失败、执行后 Wheel 漂移拒绝、报告目录事务、SHA-256 产物和子进程取消收敛。真实验收不是用脏工作区充当核心：先在仓库外建立包含当前改动的临时 Git 提交，再让公开 CLI 从其 `HEAD` 克隆，13 道门禁与完整核心回归全部通过。当前 L4 未提交工作区收集 `1162` 项并得到 `1161 passed, 1 skipped`，唯一 skip 是 Windows NUL 路径边界；L2 已存在于当前可信 `HEAD`，仓库外干净克隆的真实链路再次跑完 13 道门禁和完整核心回归。反向验证除既有“测试失败不得产生 Wheel”和 `.pth` 拒绝外，还临时移除执行后 Wheel 复核，反例会把被追加启动钩子的 Wheel 错报为通过；临时改回就地写报告，报告写失败会留下半目录。恢复两道保护后新增反例与扩大门禁重新全绿。
 
@@ -1420,7 +1423,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | create 跨两条 Stream 非原子 | Session 与 Agent Directory 是两条 append-only 流，没有跨流事务。顺序是 Session 先、identity 后：失败最多留下一个可检测且无害的未归属 Session，绝不留下指向不存在 Session 的 `AgentRecord` | 这条边界如实记录，不通过删除事件或隐式回滚伪造原子性；`resume()` 会验证 Session 真实存在 |
 | 一条坏 Inbox 记录会阻塞该 Agent | 顺序就是这个投影给出的答案，因此坏记录不跳过：重复 `message_id`、未知事件类型、错 schema、错流、多键/少键 payload 都会让该 Agent 的 Inbox 读取**和新的接受**一起失败 | 这是事实源应有的行为；跳过一条会报出一个从未发生过的 FIFO 顺序。未来新增 Inbox 生命周期事件类型必须显式扩展该投影 |
 | v0.7-B Budget 是显式宿主装配，不是默认 CLI 或分布式调度 | `budgets:ledger` 已包住 managed create、model、Step、Tool、Turn wall 与 process-local slot；默认 CLI 不猜 root/child grant、tokenizer 或 policy，跨进程同时执行也没有 distributed lease | 产品入口留给后续 Stage；不得把 process-local slot 说成分布式锁，也不得另造余额或在 `AgentLoop` 加分支 |
-| v0.7 D0 是接缝而非能力本身 | `AgentToolAuthority` 和 `ChildProvisioningPolicy` 已进入现有 Toolset；A/B 已在独立域建立/执行 Budget，C 已在独立域实现 managed Git Workspace，D1 已在独立 Artifact 域冻结 Patch，D2 已在独立 Promotion 域完成验证/批准/ref CAS；Workflow 仍不存在 | 后续继续复用同一个公共 Supervisor 与各域服务；不得把 D0 本身说成后续能力，也不得把 Stage C 的 Tool policy、D1 capture 或 D2 Verifier 说成 OS 隔离 |
+| v0.7 D0 是接缝而非能力本身 | `AgentToolAuthority` 和 `ChildProvisioningPolicy` 已进入现有 Toolset；A/B 已在独立域建立/执行 Budget，C 已在独立域实现 managed Git Workspace，D1 已在独立 Artifact 域冻结 Patch，D2 已在独立 Promotion 域完成验证/批准/ref CAS，E 已在独立 Workflow 域组合它们；通用 DSL、CLI 与产品装配仍不存在 | 后续继续复用同一个公共 Supervisor 与各域服务；不得把 D0 本身说成后续能力，也不得把 Stage C 的 Tool policy、D1 capture 或 D2 Verifier 说成 OS 隔离 |
 | v0.7-D1 Patch Artifact 不是验证或推广 | D1 只证明一份 terminal durable evidence 对应的 managed worktree 状态被完整冻结成 Manifest + CAS bytes；Git candidate tree、Patch bytes 和来源身份会重验，但不会判断修改是否正确或安全 | 验证、批准与 ref CAS 推广由独立的 D2 Promotion 域承担；capture service 仍不得自批、自合并或成为模型写 Tool |
 | v0.7-D2 推广是证据边界，不是隔离或分布式锁 | Verifier 以宿主同一用户权限运行，只保证命令、参数、环境和超时是宿主提前冻结的，并只留有界摘要证据；另一个有目标仓库写权限的进程仍可移动 ref，D2 只能检测并 fail closed。`write-tree`/`commit-tree` 会在 ref 移动前写入目标对象库，被拒绝的推广可能留下不可达对象 | 需要真正隔离时使用容器或远程 sandbox；不可达对象的回收仍是运维显式动作，不得由推广路径静默 GC；也不得引入自动批准、非 bare 目标或模型可见的 approve/promote Tool |
 | v0.7 Budget 是破坏式切换 | ADR-0025/0026/0027 已落实：不把 v0.6 未执行的 Budget DTO 伪装成新账本，也不保留 legacy/V2/双 Projector/自动迁移路径；执行只由显式宿主适配器接到既有 owned boundary | 新 Agent 使用 schema 2；旧 schema 1 history 明确 fail closed 且永不自动删除旧 `.traceh`；Runtime 与 Supervisor 不保存第二份 balance |
@@ -1469,6 +1472,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Multi-Agent/Workspace Protocol | `api/agents.py`、`api/workspaces.py`、`kernel/*` | 2、3、4、14、15、16、20 |
 | Immutable Patch Artifact / Git capture | `api/artifacts.py`、`artifacts/*`、`workspaces/supervision.py` 的通用 capture gate、`supervision/tools.py` 的只读 report 行为、四个 D1 测试、ADR-0029 | 1、2、3、6、14、15、16、17、20.23 |
 | Patch 验证 / 人工批准 / Git ref promotion | `api/promotion.py`、`promotion/*`、`tests/test_promotion_ledger.py`、`tests/test_patch_review.py`、`tests/test_patch_promotion.py`、`tests/test_promotion_architecture.py`、ADR-0030 | 1、2、3、6、14、15、16、17、20.24；不得引入模型可见的 approve/promote Tool、第二调度器或 CLI |
+| 固定 Typed Workflow | `api/workflow.py`、`workflow/*`、`tests/test_workflow_definition.py`、`tests/test_workflow_execution.py`、`tests/test_workflow_architecture.py`、ADR-0031 | 1、2、3、6、14、15、16、17、20.25；只能调用公共服务，不得读 Supervisor 私有状态、不得新增第二事实源或调度器，也不得放宽 Approval 屏障与恢复边界 |
 | 开发流程/目录 | `AGENTS.md`、`CLAUDE.md`、CI、pyproject | 0、1、3、15、18 |
 
 ## 18. 当前维护流程
@@ -1733,7 +1737,7 @@ EventStore 刻意没有加入 `PluginContext`。它是 SessionService、Recovery
 
 Stage A（身份）的设计决定见 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（Inbox 接受）见 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递生命周期）见 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（生命周期 ownership 与静默收敛）见 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（绑定 owner 的模型 Tool 与 durable run report）见 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别见 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，单一 Budget Ledger 与 owned-boundary 执行分别见 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)、[ADR-0027](../adr/0027-budget-enforcement-at-owned-boundaries.md)，managed Git Workspace 见 [ADR-0028](../adr/0028-managed-git-workspace-lifecycle.md)。本节记录当前工程事实：20.1–20.7 是 v0.6 Stage A，20.8–20.10 是 Stage B，20.11–20.14 是 Stage C，20.15–20.16 是 Stage D，20.17–20.18 是 Stage E，20.19 是 v0.7 D0，20.20–20.22 是 v0.7-A/B/C。
 
-**v0.6 Stage A 与 B 只实现 Agent 事实层；Stage C 真正运行 Agent；Stage D 管住生命周期关系；Stage E 才把这套控制面作为普通 Tool 交给模型。v0.7-A 建立 Budget 事实层，v0.7-B 完成显式宿主执行强制，v0.7-C 提供 host-managed Git worktree 生命周期，v0.7-D1 把一个 terminal message 对应的完整 Git 状态冻结成 immutable Patch Artifact，v0.7-D2 再在独立域完成固定验证、人工批准与 Git ref compare-and-swap 推广（20.24）。** 当前仍然没有的是：Agent 冷恢复与 stale claim 接管、自动重试、Workflow、默认 CLI Budget/Workspace/Artifact/Promotion 装配与 `MessageTarget.NEXT_STEP` 投递。模型现在能创建并运行 child，host 能给它绑定独立 worktree，宿主也能显式捕获 Patch 并推广它；但仍必须显式装配 preset、Toolset、Budget grant/policy、Workspace source/policy、capture service 和 read-only Tool policy。
+**v0.6 Stage A 与 B 只实现 Agent 事实层；Stage C 真正运行 Agent；Stage D 管住生命周期关系；Stage E 才把这套控制面作为普通 Tool 交给模型。v0.7-A 建立 Budget 事实层，v0.7-B 完成显式宿主执行强制，v0.7-C 提供 host-managed Git worktree 生命周期，v0.7-D1 把一个 terminal message 对应的完整 Git 状态冻结成 immutable Patch Artifact，v0.7-D2 再在独立域完成固定验证、人工批准与 Git ref compare-and-swap 推广（20.24），v0.7-E 再把这些公共服务组合成固定 Typed Workflow（20.25）。** 当前仍然没有的是：Agent 冷恢复与 stale claim 接管、自动重试、通用 Workflow DSL 与 Workflow 重试策略、默认 CLI Budget/Workspace/Artifact/Promotion/Workflow 装配与 `MessageTarget.NEXT_STEP` 投递。模型现在能创建并运行 child，host 能给它绑定独立 worktree，宿主也能显式捕获 Patch 并推广它；但仍必须显式装配 preset、Toolset、Budget grant/policy、Workspace source/policy、capture service 和 read-only Tool policy。
 
 ### 20.1 模块职责
 
@@ -2437,4 +2441,101 @@ D2 的四个专门测试文件共 `130` 项（`129 passed, 1 skipped`）：`test
 
 真正需要行尾转换的仓库在 D2 v1 无法推广：Review 会 fail closed，而不是批准一份没人真正跑过的字节。这是明确的边界，不是遗漏。
 
-D2 仍**没有**：CLI、Workflow、自动批准、自动选择目标、非 bare 目标、tag/note ref、多父 merge、CAS 或 Git 对象垃圾回收、跨进程 lease，以及 OS 沙箱。Verifier 以同一用户权限运行，是能力与证据边界而不是隔离边界；另一个拥有目标仓库写权限的进程仍可能移动 ref，D2 只保证检测并拒绝，不声称拥有分布式锁。`git write-tree`/`commit-tree` 会在 ref 移动前把对象写入目标仓库，因此被拒绝或失败的推广可能留下不可达对象；没有任何 ref 引用它们，垃圾回收仍是运维显式动作。版本仍为 `0.6.0`；D2 完成不等于 v0.7 发布。
+D2 本身仍**没有**：CLI、Workflow（由 20.25 的 E 单独实现）、自动批准、自动选择目标、非 bare 目标、tag/note ref、多父 merge、CAS 或 Git 对象垃圾回收、跨进程 lease，以及 OS 沙箱。Verifier 以同一用户权限运行，是能力与证据边界而不是隔离边界；另一个拥有目标仓库写权限的进程仍可能移动 ref，D2 只保证检测并拒绝，不声称拥有分布式锁。`git write-tree`/`commit-tree` 会在 ref 移动前把对象写入目标仓库，因此被拒绝或失败的推广可能留下不可达对象；没有任何 ref 引用它们，垃圾回收仍是运维显式动作。版本仍为 `0.6.0`；D2 完成不等于 v0.7 发布。
+
+### 20.25 v0.7-E：固定 Typed Workflow
+
+完整决定见 [ADR-0031](../adr/0031-fixed-typed-workflow-above-public-services.md)。E 在 D0–D2 的公共服务之上加一层**固定** Typed DAG，不修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager`，也不新增第二个调度器。
+
+#### 模块与公共接缝
+
+[`api/workflow.py`](../../src/traceh/api/workflow.py) 只定义冻结（`frozen=True, slots=True`）的公共值：五种 Node、`WorkflowDefinition`、`NodeOutcome`、`WorkflowRun`、状态枚举，以及宿主 `WorkflowBindingResolver`。[`workflow/`](../../src/traceh/workflow/) 拥有实现：`models.py`（定义冻结、DAG 校验、派生身份与 definition hash）、`events.py`（七类事件与严格解析）、`projection.py`（唯一投影与 ready 推导）、`execution.py`（五类节点执行器）、`service.py`（单飞协调器）、`errors.py`。
+
+依赖方向单向：Workflow 只调用公共 `AgentSupervisor`、`PatchCaptureService`、`PatchPromotionService` 与 `EventStore`，不 import `agent_loop`、`agent_runtime`、`supervision.supervisor`、`supervision.execution`、`plugins.manager` 或 CLI；反过来这些模块也不 import Workflow。架构测试还按名字断言域内没有出现 `_activations`、`_pending_create`、`_workers`、`_inbox`、`_delivery`、`_activation` 等私有调度状态。
+
+#### 固定 DAG 而不是 DSL
+
+只有五类节点，没有表达式、条件、循环、重试或调用方 callable。定义在任何东西开始跑之前被**完整**校验：重复 node id、未知 predecessor、自环、DAG 环、不可达节点，以及节点数（`MAX_NODES = 256`）、依赖数（`MAX_PREDECESSORS = 32`）与 Map fan-out（`MAX_FAN_OUT = 64`）上限。引用型节点还要求被引用者类型正确且确实是自己的祖先。
+
+节点只保存宿主 binding id（`spec_binding`/`message_binding`/`keys_binding`），不保存 `AgentSpec`、Prompt、仓库路径、命令环境或 Python 对象；具体值由宿主 `WorkflowBindingResolver` 在运行时解析。`workflow_definition_hash()` 用 canonical JSON 覆盖每个决策字段，因此 `True` 与 `1` 是不同定义；Run 绑定的是这个 hash，不是名字。
+
+#### 事实源与状态机
+
+每个 Run 一条 `workflow:<run_id>`，schema 只支持 `1`，共七类事实：`run-started`、`node-started`、`map-expanded`、`node-completed`、`node-failed`、`approval-awaited`、`run-finished`。唯一投影器每次 `load()` 从整条流重建；没有 status 文件、结果缓存或第二个 store。
+
+节点状态机是 `PENDING → RUNNING → COMPLETED|FAILED`；Run 状态由投影派生为 `running`/`awaiting_approval`/`completed`/`failed`。流**只记录编排**：Agent 是否存在、报告说了什么、Patch 是哪些字节、Review 证明了什么、谁批准了，仍分别属于 Directory、Session、Artifact Catalog 与 Promotion Ledger；Workflow 只保存指向它们的身份。
+
+replay 会**重算**派生值而不是照抄 payload：map child id 由 parent node id 与 canonical key 重新推导，伪造的 child id 被拒绝；key set、schema、事件类型、序号与顺序不对都拒绝而不是迁移。
+
+terminal fact 只描述节点**怎么结束**，不能改写它**是什么**：其 kind 与 map_key 必须等于 node-started 记录的值，投影器采用 start 的值而不是 payload 的值。否则一个已启动的 AgentTask 可以以 Join 身份完成并携带外部 Artifact，之后所有读者（包括 Verification）都会相信它。
+
+completion 还必须携带**该节点自己会产生**的证据，且只有这些。这是**同一条规则的两层**，第二层是叠加而不是替代。
+
+`rebuild()` 负责**仅凭流即可判定**的部分：Join 不带 Artifact/Review/digest；Verification 必须同时有 Artifact 与 Review；Approval 再加 approval digest；跑 Agent 的节点必须给出 agent_id/message_id，且这两个 id 由 run 与 node **重算**而不只是要求非空。这一层必须能独立成立：`WorkflowProjection.rebuild()` 与 `WorkflowStreamReader.load()` 是公开且不接受 Definition 的入口，任何只做 replay 的调用方也必须被拒绝畸形终态。
+
+`run(definition)` 再补上**只有 Definition 能决定**的那一项：该 AgentTask 是否被要求捕获。`capture_artifact` 是单个节点的属性，只按 kind 判断会同时放过“没捕获却带着别人 Artifact”和“被要求捕获却没有产出”；Map child 沿用父节点的设置。
+
+Map 展开同样分两层，且大部分属于 replay。仅凭一条流即可判定的四条都在 `rebuild()` 强制：只有**处于运行中的 Map 父节点**能记录 expansion（因此 Join 不能记录展开并携带它从未产生的 map key）；child node id 与 key 必须精确对应；没有被任何 expansion 展开过的节点不能带 key；同一个 child 只能属于一个 expansion，也不能出现在创建它的那次展开之前。
+
+Definition 层保留只有它能判断的部分：expansion 背后的节点在**这份 Definition 里**是不是 Map，以及一个被 Definition 单独声明的节点是否有资格带 key——Definition 完全可以声明一个 id 恰好等于某个真实 child id 的节点，而 replay 无从得知。
+
+用某个 Definition 解释 Run 时还有两层：流里出现的每个节点都必须由该 Definition 声明，或者是一个真正 Map 节点的 map child，且 kind 与 Definition 一致；反向同样成立——只有当每个已声明节点、以及每个已展开 Map 的全部 child 都 durably completed 时，Run 才可以报告 `completed`。否则单独一条 `run-finished(completed)` 就足以为一个从未运行的 DAG 宣称成功。
+
+正因为"解释"本身可能是错的，**读取路径也要检查**：`state()` 与 `start()`/`resume()` 一样拒绝 definition hash 不匹配的 Definition；否则只读调用方会把真实 Run 与错误 Definition 关联，报告出这个 Run 从未同意过的节点类型和结果。
+
+#### 稳定身份与重入
+
+所有有副作用的调用都由 run 与 node 派生身份：
+
+```text
+agent id / session id / create request = hash(run_id, node_id, "create")
+message id                             = hash(run_id, node_id, "message")
+review request id                      = hash(run_id, node_id, "review")
+map child node id                      = hash(parent_node_id, canonical_key)
+```
+
+调度顺序不参与。重入是**重新读取**而不是重跑：执行器先 fresh replay Agent Directory 决定 `create` 还是 `resume`，再 fresh replay Inbox 决定消息是否还需要发送；Artifact capture 本身对 `(agent, message)` 幂等。Map key 在展开前被 canonical 排序，因此同一定义两次运行得到相同的 child 身份。
+
+**只比对身份是不够的**：派生身份可预测，因而可被他人占用。采纳既有 Agent 或既有消息前，要求 durable fact 就是本节点自己会发起的那次完整操作。这段比较**不在 Workflow 里手写**，而是走各协议自己的 `creation_matches()` 与 `acceptance_matches()`，因此定义该操作的每个字段都参与——包括决定被采纳 Agent 能做什么的 `capability_grants`，以及 `AgentMessage` 比较根本看不到的投递语义 `target`/`wakeup`。文字完全相同但没有本节点要求的 wakeup，就不是本节点的操作。只是占住了身份的记录会被拒绝，而不是被采纳。
+
+`workspace_id` 被**刻意排除**在该比对之外：管理 Workspace 的 Supervisor 会把 spec 的 intent id 改写成 managed catalog id，durable 值本就不是本节点请求的那个。Workspace 分配属于那一层，Workflow 不断言自己不拥有的事实。
+
+#### 五类节点的真实调用路径
+
+| 节点 | 真实调用 |
+|---|---|
+| AgentTask | fresh Directory → `creation_matches()` 完整比对 → `create`/`resume` → fresh Inbox → `acceptance_matches()` 完整比对（含 target/wakeup） → `send` → `wait_message` → 可选 `PatchCaptureService.capture` → `finally: dispose`（收敛 Activation 与 process slot；**不**释放 Workspace） |
+| Map | `resolver.map_keys` → `freeze_map_keys` → **先** append `map-expanded` → 子节点在下一轮成为 ready |
+| Join | 只从 predecessor 的 durable terminal 推导；Map 的后继等待它的**子节点**全部终态，而不只是等展开 |
+| Verification | 从 artifact 节点的 durable outcome 取 `artifact_id` → `PatchPromotionService.review(...)`；未通过则该节点 `failed`，Review 本身仍留在 Promotion Ledger 里 |
+| Approval | fresh 读 Promotion Ledger；没有批准就 append `approval-awaited` 并停止；有批准则要求它覆盖**这一份** review，digest 由 review 内容重算，artifact 与本 Run 捕获的一致 |
+
+Workflow **永远不会**自己批准或推广：架构测试断言域内不存在对 `approve`、`promote`、`compare_and_swap` 的调用。Approval 出现之前，任何后继都不会启动。
+
+#### 取消、失败与关闭
+
+所有被组合的服务必须写到本次 Run 使用的**同一条** durable log，用 Budget/Artifact/Promotion 已有的同一个 `durable_log_identity` 解析（这是 `traceh.supervision.execution` 中唯一被允许引入的符号）。拆开会产生两段无法互证的历史：Workflow 记录某节点创建了 Agent，而 Agent 事实落在这次 Run 永远读不到的地方。
+
+失败的 Run 会在把节点异常交给调用方**之前**先写 `run-finished(failed)`。若让 Run 持久状态停在 `running`，之后的 `resume()` 会自己补写这个终态，与合法继续无法区分，等于悄悄放宽上面的恢复边界。**被取消**的节点则不同：它保留 start fact 且没有 terminal，Run 因此不可继续，也不写 Run 终态。
+
+如果这条终态写不进去，调用方仍必须知道节点为什么失败：两者用同一条共享组合规则合并，而不是让记账错误替换掉根因——真正的失败被 append 错误遮蔽，比单纯失败更糟。
+
+一个 Run 只有一个 owned 单飞 Task。调用方取消后等待**同一个** Task 并重新抛出最初的 `CancelledError`；重复取消不能提前放行。同一轮 ready 的独立节点并行执行，但每一个都会在调用方返回前收敛，因此一个节点失败不会让兄弟节点还在动 Agent、Workspace 或 Git。
+
+失败按**节点**收集，所以两个节点抛出同一个异常**对象**仍算两次独立失败；同一节点被多条 join 路径观察也只报告一次。「多件事同时失败」的组合规则复用 D2 已有的一份，现收敛到 [`concurrency.py`](../../src/traceh/concurrency.py) 的 `combine_failures()`/`informative_failure()`，不再各写一份。流 append 复用既有 `committed_after_failure()` 三态对账：失败或取消的 append 绝不假定未提交。
+
+#### Workspace 归属
+
+节点结束时 `dispose()` 关闭的是 Activation 与 process slot，**不释放 Workspace**：managed worktree 的寿命长于用它的 Agent，因为其中的 Patch 仍是证据。释放是宿主的显式决定，Stage E 不把它变成节点结束的副作用。
+
+#### 恢复边界
+
+v0.7-E **不实现**通用崩溃恢复。唯一可继续的中断状态是：干净地停在人工 Approval 屏障。有 start 事实但没有 terminal 事实的节点一律拒绝（`workflow-node-still-running`）——那可能意味着未关闭的 Agent claim、开放 Turn/Step、pending/started Budget 用量、未释放的 process slot、provisional Workspace、正在跑的 capture 或 Review，而流里分不出是哪一种，猜测就可能重复外部工作。stale-claim 接管、自动重试、冷恢复 Activation、跨进程 lease 与 retry policy 都明确不做。
+
+#### 验证基线与已知边界
+
+E 的三个专门测试文件共 `85` 项全部通过：`test_workflow_definition.py` 52（定义/DAG/身份/流严格性/终态绑定/两层证据规则/Map 展开与 map_key 闭合/DAG 完整性）、`test_workflow_execution.py` 8（五类节点的真实端到端路径）、`test_workflow_architecture.py` 25（恢复边界、取消、关闭、事实源、完整事实重入与依赖守卫）。
+
+二十一项反向验证分别移除恢复门、把 Map 展开改到子节点之后记录、去掉 Approval 的绑定校验、让被禁模块 import promotion、去掉 EventStore 同一性检查、失败后不写 Run 终态、`state()` 不校验 definition hash、消息重入只比 id、create fact 重入只比身份、让 terminal fact 自带 kind、退回手写的缩水身份比较、去掉 DAG 完整性要求，去掉 completion 的结果形状与派生身份校验、把输出捕获退回按整块计数，让证据复核忽略 `capture_artifact`、单独移除 replay 基础层，单独移除 Definition 层，移除 map_key 与节点角色的绑定、允许任意节点记录 expansion、去掉 replay 层的 key 绑定，以及去掉 child 归属唯一性；对应测试都按各自根因失败，恢复后源码无临时补丁残留。
+
+E 仍**没有**：CLI、模型可见的 workflow/approve/promote/capture Tool、重试策略、条件或循环节点、跨进程 lease、冷恢复 Activation 与 OS 沙箱。Verifier 仍以宿主同一用户权限运行。版本仍为 `0.6.0`；E 完成不等于 v0.7 发布，Stage F 尚未开始。

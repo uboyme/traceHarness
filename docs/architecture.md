@@ -108,8 +108,8 @@ Dependencies still point downward - the CLI timeline depends on the feed, and no
 
 Provider retry, prompt sections, policies, verification and persistence are delegated to
 services. Subagents are ordinary tools backed by `AgentSupervisor`, not branches in this
-loop; v0.7 Budget enforcement, managed Workspace lifecycle, immutable Patch Artifacts and
-Patch promotion already remain above this boundary, and Workflow services must do the same.
+loop; v0.7 Budget enforcement, managed Workspace lifecycle, immutable Patch Artifacts,
+Patch promotion and the typed Workflow all remain above this boundary.
 
 ## State planes
 
@@ -304,6 +304,37 @@ accepted: approved-new (converged), expected-old (retry the compare-and-swap) or
 anything else (target drift, fail closed). A failed or unknown append never
 implies that Git did not move. See
 [ADR-0030](adr/0030-verified-approved-git-ref-promotion.md).
+
+### Workflow Run Streams
+
+v0.7-E adds one `workflow:<run_id>` stream per run, carrying seven schema-1
+orchestration facts: run start, node start, map expansion, node completion, node
+failure, approval wait and run finish. One projector rebuilds the run on every
+load; there is no status file, result cache or second store. The stream records
+orchestration only - whether an Agent exists, what its report said, which bytes a
+Patch holds, what a Review proved and who approved it stay owned by the
+Directory, Session, Artifact Catalog and promotion ledger.
+
+The DAG is fixed: five node kinds, no expressions, conditions, loops or
+callables. A definition is fully validated before anything runs (duplicate ids,
+unknown predecessors, self-edges, cycles, unreachable nodes, bounded node,
+predecessor and fan-out counts) and is bound to a canonical definition hash.
+Nodes carry host binding ids, never a resolved spec, prompt, path or policy.
+
+Agent, session, create-request, message, review-request and map-child identities
+all derive from the run and node, never from scheduling order, so re-entry
+addresses exactly the operation the first attempt used. Re-entry replays the
+Directory and Inbox to decide whether to create or resume and whether the message
+still needs sending, rather than repeating a side effect.
+
+The coordinator derives ready nodes from durable facts, runs independent ones
+concurrently and converges all of them before returning; Agent FIFO, Turn
+execution and Activation lifetime stay in the existing Supervisor. Approval is a
+human barrier: the Workflow records that it is waiting and stops, and continuing
+requires an approval in the promotion ledger that covers this exact review and
+artifact. The only continuable interrupted state is a clean stop at that
+barrier. See
+[ADR-0031](adr/0031-fixed-typed-workflow-above-public-services.md).
 
 ### Agent Inbox Streams
 

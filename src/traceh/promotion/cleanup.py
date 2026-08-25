@@ -24,7 +24,11 @@ import asyncio
 from collections.abc import Callable
 from pathlib import Path
 
-from traceh.concurrency import await_worker_convergence
+from traceh.concurrency import (
+    await_worker_convergence,
+    combine_failures,
+    informative_failure,
+)
 
 
 async def release_scratch(
@@ -51,8 +55,8 @@ async def release_scratch(
     except asyncio.CancelledError as cancellation:
         # Repeated cancellation still waits for this same task.
         await await_worker_convergence(cleanup)
-        cause = _combine(
-            _informative(primary), _task_failure(cleanup), group_message
+        cause = combine_failures(
+            informative_failure(primary), _task_failure(cleanup), group_message
         )
         if cause is not None:
             raise cancellation from cause
@@ -69,24 +73,6 @@ def _task_failure(cleanup: asyncio.Task[None]) -> BaseException | None:
     if cleanup.cancelled():
         return None
     return cleanup.exception()
-
-
-def _informative(error: BaseException | None) -> BaseException | None:
-    """A cancellation is not extra information about why something failed."""
-
-    if error is None or isinstance(error, asyncio.CancelledError):
-        return None
-    return error
-
-
-def _combine(
-    primary: BaseException | None,
-    cleanup_error: BaseException | None,
-    group_message: str,
-) -> BaseException | None:
-    if primary is not None and cleanup_error is not None:
-        return BaseExceptionGroup(group_message, (primary, cleanup_error))
-    return primary if primary is not None else cleanup_error
 
 
 __all__ = ["release_scratch"]

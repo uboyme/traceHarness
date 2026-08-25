@@ -31,3 +31,33 @@ async def await_worker_convergence[T](future: asyncio.Future[T]) -> None:
             break
     if future.done() and not future.cancelled():
         future.exception()
+
+
+def informative_failure(error: BaseException | None) -> BaseException | None:
+    """Drop a cancellation, which explains nothing about *why* work failed.
+
+    A caller that cancelled already knows it cancelled. Keeping that in a cause
+    chain only pads the report with a fact the caller supplied itself.
+    """
+
+    if error is None or isinstance(error, asyncio.CancelledError):
+        return None
+    return error
+
+
+def combine_failures(
+    primary: BaseException | None,
+    secondary: BaseException | None,
+    message: str,
+) -> BaseException | None:
+    """Keep every independent failure that really happened.
+
+    Convergence points routinely have more than one true answer - the work
+    failed *and* its cleanup failed - and choosing one silently deletes the
+    other. Written once here so each convergence point cannot grow its own
+    slightly different rule.
+    """
+
+    if primary is not None and secondary is not None:
+        return BaseExceptionGroup(message, (primary, secondary))
+    return primary if primary is not None else secondary

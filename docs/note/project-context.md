@@ -43,7 +43,7 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 固定公共控制面接缝，v0.7-A/B 用单一 Budget Ledger 与薄适配器强制七个维度；v0.7-C 用独立 Workspace 域给 managed Agent 分配 commit-pinned worktree；v0.7-D1 把 terminal Agent 的完整 Git 状态捕获为 CAS bytes + append-only Manifest；v0.7-D2 在 Runtime 外新增独立 Promotion 域，把不可变 Patch 经固定宿主 Verifier、人工精确批准和 Git ref compare-and-swap 推广到宿主管理的 bare 仓库；v0.7-E 再在其上加一层固定 Typed Workflow，用 AgentTask/Map/Join/Verification/Approval 五类节点组合这些公共服务，并把编排事实写进每个 Run 一条的 append-only 流；v0.7-F0 只**冻结**统一 `traceh chat` 产品面的合同（`api/product.py`）；v0.7-F1 又在独立 `traceh.product` 域实现了这份合同的第一条真实生产主线——ProductTask 持久事实层（20.27），但仍不接 Chat、不跑 Router、不执行 Workflow。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略或模型可见的 approve/promote/workflow Tool；Budget/Workspace/Artifact/Promotion/Workflow 宿主装配仍需显式提供，`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 固定公共控制面接缝，v0.7-A/B 用单一 Budget Ledger 与薄适配器强制七个维度；v0.7-C 用独立 Workspace 域给 managed Agent 分配 commit-pinned worktree；v0.7-D1 把 terminal Agent 的完整 Git 状态捕获为 CAS bytes + append-only Manifest；v0.7-D2 在 Runtime 外新增独立 Promotion 域，把不可变 Patch 经固定宿主 Verifier、人工精确批准和 Git ref compare-and-swap 推广到宿主管理的 bare 仓库；v0.7-E 再在其上加一层固定 Typed Workflow，用 AgentTask/Map/Join/Verification/Approval 五类节点组合这些公共服务，并把编排事实写进每个 Run 一条的 append-only 流；v0.7-F0 只**冻结**统一 `traceh chat` 产品面的合同（`api/product.py`）；v0.7-F1 又在独立 `traceh.product` 域实现了这份合同的第一条真实生产主线——ProductTask 持久事实层（20.27）；v0.7-F2 在同一个域补上“确认之后、执行之前”的一段：严格 Router、唯一 Profile Registry、精确 preflight 绑定与固定 Product Assembly（20.28）。它仍不接 Chat、不执行 Workflow、不调用真实模型。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略或模型可见的 approve/promote/workflow Tool；Budget/Workspace/Artifact/Promotion/Workflow 宿主装配仍需显式提供，`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream、每个 Workflow Run 一条的 Workflow Stream，以及每个 ProductTask 一条的产品事实流；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
@@ -51,10 +51,10 @@
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。插件命令为 `list/inspect/doctor/validate/compare/promote/rollback`；后四者构成 Runtime 外的 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | 当前收集 `2253` 项；独立复审清零后，最终工作树全量门禁只运行一次，实测为 `2253 collected / 2248 passed / 5 skipped`，退出码 0。当前 F1 专项 `87 passed`、F0 合同 `73 passed`，合并定向 `160 passed`；连同 Session 核心不变量、Workflow/Promotion 架构、版本合同、Agent identity/Inbox 与 EventStore 的扩大回归 `655 passed`。五个既有 skip 全部是平台权限或路径边界：三处目录 symlink（Workspace、Tool、D1 capture）、一处 D2 推广目标 symlink，以及一处路径不能包含 NUL。递归 L2 门禁与最终工作树完整门禁均已通过。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`），连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`；E 三个专门文件另有 `85 passed`。v0.7-D1 检查点为 1875/1871/4，v0.7-C 为 1835/1832/3，v0.7-B 为 1770/1769/1，v0.6.0 发布快照为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
+| 当前自动化测试 | F2 独立复审清零后，最终工作树全量只运行一次，实测 `2326 collected / 2321 passed / 5 skipped`，退出码 0；产品域定向 `233 passed`（F2 新文件 69、跨阶段架构 15、F0 合同 73、F1 专项 76），当前 Budget/Workflow/Promotion/Product 相邻回归 `375 passed`，`compileall`、改动范围 Ruff 与文档 QA 通过。五个既有 skip 全部是平台权限或路径边界：三处目录 symlink（Workspace、Tool、D1 capture）、一处 D2 推广目标 symlink，以及一处路径不能包含 NUL。F1 最终门禁的历史检查点为 `2253/2248/5`。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`），连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`；E 三个专门文件另有 `85 passed`。v0.7-D1 检查点为 1875/1871/4，v0.7-C 为 1835/1832/3，v0.7-B 为 1770/1769/1，v0.6.0 发布快照为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
 | 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
 
-当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A/B 建立并执行单一层级 Budget Ledger；v0.7-C 加入独立 managed Workspace；v0.7-D1 加入独立 Artifact Catalog、SHA-256 CAS、临时 Git index 完整快照、终态证据复核和只读报告关联；v0.7-D2 再加入独立 Promotion Ledger、固定宿主 Verifier、确定性 integration commit、精确 approval digest 与 Git ref compare-and-swap 推广；v0.7-E 又在这些公共服务之上加入固定 Typed Workflow：五类节点、每 Run 一条编排流与人工 Approval 屏障；v0.7-F0 在此之上只新增**一个公共合同模块与一组合同测试**，冻结 ProductTask 事件协议、Profile/Assembly Receipt 形状与产品权限边界；v0.7-F1 再新增独立 `traceh.product` 域，把 ProductTask 变成可严格写入、重放、幂等对账和 fresh 查询的持久事实，但不接 Chat、不调用 Router 模型、不执行 Workflow、不推广。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、路径、Git、Artifact、Promotion 或包管理塞进 `AgentRuntime`。当前仍没有 v0.7 Budget/Workspace/Artifact/Promotion 的默认 CLI 装配、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent/Workspace/Promotion lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.25）、Workflow CLI 装配、MCP、TUI 或流式输出。**ProductTask 现在是真实事实层**（20.27）：有 parser、投影、reader 与宿主写入服务；但仍**没有** Router、Chat 接线、Proposal 渲染、默认 Profile/Registry/Assembly、Workflow 执行、Promotion 调用或 Benchmark 改造。
+当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A/B 建立并执行单一层级 Budget Ledger；v0.7-C 加入独立 managed Workspace；v0.7-D1 加入独立 Artifact Catalog、SHA-256 CAS、临时 Git index 完整快照、终态证据复核和只读报告关联；v0.7-D2 再加入独立 Promotion Ledger、固定宿主 Verifier、确定性 integration commit、精确 approval digest 与 Git ref compare-and-swap 推广；v0.7-E 又在这些公共服务之上加入固定 Typed Workflow：五类节点、每 Run 一条编排流与人工 Approval 屏障；v0.7-F0 在此之上只新增**一个公共合同模块与一组合同测试**，冻结 ProductTask 事件协议、Profile/Assembly Receipt 形状与产品权限边界；v0.7-F1 再新增独立 `traceh.product` 域，把 ProductTask 变成可严格写入、重放、幂等对账和 fresh 查询的持久事实；v0.7-F2 又在同一个域加入严格 Router、唯一 Profile Registry、精确 preflight 与固定 Product Assembly，使任何已确认任务都能在执行前得到唯一 `ProductAssemblyReceipt` 或稳定拒绝，但仍不接 Chat、不执行 Workflow、不推广，也没有真实模型验收。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、路径、Git、Artifact、Promotion 或包管理塞进 `AgentRuntime`。当前仍没有 v0.7 Budget/Workspace/Artifact/Promotion 的默认 CLI 装配、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent/Workspace/Promotion lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.25）、Workflow CLI 装配、MCP、TUI 或流式输出。**ProductTask 现在是真实事实层**（20.27），并且**已经可以被装配成一个尚未执行的精确计划**（20.28）：有 parser、投影、reader、宿主写入服务、严格 Router、Profile Registry、preflight 绑定与两种固定 Workflow 定义；但仍**没有** Chat 接线、Proposal 渲染、Workflow 执行、Promotion 调用、真实模型验收或 Benchmark 改造。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -90,7 +90,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 统一 `traceh chat` 产品面：v0.7-F0 冻结合同（20.26），v0.7-F1 实现 ProductTask 持久事实层（20.27）。仍然**没有** `/task`、`/start`、`/approve` 等命令，没有 Proposal 渲染，没有 Router Agent 或真实模型调用，没有默认 Profile/Registry/Assembly，没有从产品层发起的 Workflow 执行或 Promotion，`cli/chat.py` 未被修改；
+- 统一 `traceh chat` 产品面：v0.7-F0 冻结合同（20.26），v0.7-F1 实现 ProductTask 持久事实层（20.27），v0.7-F2 实现严格 Router、Profile Registry 与固定 Product Assembly（20.28）。仍然**没有** `/task`、`/start`、`/approve` 等命令，没有 Proposal 渲染，没有真实模型或 Provider 调用，没有从产品层发起的 Workflow 执行或 Promotion，`cli/chat.py` 未被修改；Profile 必须由宿主显式注册，没有任何默认 profile；
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
@@ -113,7 +113,7 @@ traceharness/
 │   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
-│   ├── product/                      v0.7-F1 ProductTask 持久事实层：严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务
+│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
@@ -1267,7 +1267,8 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 | Patch Review / Approval / Promotion | `api/promotion.py`、`PatchPromotionService`、`LocalBareGitPromotionTargets`、`LocalGitPromotionEngine`、`HostVerificationRunner`、`PromotionLedger`/Reader | **v0.7-D2 已实现** 固定宿主 `VerificationPlan`、临时 clone 集成与确定性 integration commit、有界结构化证据、immutable Review Report、精确 approval digest、目标内重建与 `git update-ref <ref> <new> <expected-old>`，以及 Git/Event 三态对账（20.24、ADR-0030）。D2 域本身没有 CLI、自动批准、非 bare 目标、跨进程 lease 或模型可见的 approve/promote Tool；它被 v0.7-E 的 Verification/Approval 节点作为公共服务调用（20.25） |
 | Typed Workflow | `api/workflow.py`、`WorkflowService`、`WorkflowProjection`、`NodeExecutor`、`WorkflowServices` | **v0.7-E 已实现** 固定五类节点 DAG、每 Run 一条编排流、派生稳定身份、Map 先落盘再展开、Join 等全部子节点、Verification 绑定精确 Artifact/target、Approval 人工屏障与窄恢复边界（20.25、ADR-0031）。没有 CLI、重试策略、条件/循环节点、跨进程 lease 或模型可见 Workflow Tool |
 | 统一 Chat 产品面（合同） | `api/product.py`：`ProductTaskStatus`/`ProductTaskViewStatus`、`RequestedTaskMode`/`ResolvedTaskMode`、`PRODUCT_TASK_EVENTS`、`ProductTaskProfile`、`ProductPreflightBinding`/`ProductAssemblyReceipt`、`ProductTaskSummary`/`View`、`ProductTaskReader`、`TaskRoutingParser` | **v0.7-F0 已冻结**（20.26、ADR-0032）。它仍是纯合同：无 I/O、无可变状态，实现在别处 |
-| ProductTask 持久事实层 | `traceh.product`：`rebuild_product_task()`、`ProductTaskStreamReader`、`ProductTaskService`、`SessionEvidenceReader`、`WorkflowStateSource`/`TaskOwnershipSource` | **v0.7-F1 已实现**（20.27）：严格 parser、唯一投影、fresh reader、九种事件写入、精确幂等、CAS、三态对账、取消收敛与三次 fresh read 的派生视图。它**不执行**任何它记录的东西：不 import Workflow、Promotion、Supervisor、Runtime、CLI 或 Provider。仍缺 Router、Chat、默认装配 |
+| ProductTask 持久事实层 | `traceh.product`：`rebuild_product_task()`、`ProductTaskStreamReader`、`ProductTaskService`、`SessionEvidenceReader`、`WorkflowStateSource`/`TaskOwnershipSource` | **v0.7-F1 已实现**（20.27）：严格 parser、唯一投影、fresh reader、九种事件写入、精确幂等、CAS、三态对账、取消收敛与三次 fresh read 的派生视图。它**不执行**任何它记录的东西 |
+| 严格 Router、Profile Registry 与 Product Assembly | `traceh.product`：`StrictTaskRoutingParser`、`ProductModeRouter`、`ProductProfileRegistry`、`ProductAssemblyResolver`、`ResolvedAgentAssembly`、`product_workflow_definition()`、`ProductAssemblyService` | **v0.7-F2 已实现**（20.28）：只认一种 JSON 形状的严格路由解析、由显式 Profile 决定界限且绑定实际 resolved assembly 的 owned Router 调用、无默认值的唯一 Profile Registry、强制“写权限来自槽位”与“Router 不持 Tool”、覆盖真实解析结果的三个 assembly digest、single/multi 两种固定拓扑与共同安全尾部，以及对 source/Verifier/Promotion target 精确 ref+revision 漂移即拒绝的 preflight/receipt 装配。它产出计划但**不执行**：不启动 Workflow、不捕获 Patch、不验证、不批准、不推广，只允许 import 五个具名纯函数。仍缺 Chat 接线与真实模型验收 |
 
 标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
@@ -1283,7 +1284,7 @@ python -m ruff check src tests
 
 带 `slow` 标记的打包验收会构建 Wheel 并创建虚拟环境；需要跳过时用 `-m "not slow"`。
 
-当前工作树收集 `2253` 项。F1 复审修复后的分层门禁为 F1 `87 passed`、F0 `73 passed`、合并 `160 passed`，相邻扩大回归（Session 核心不变量、Workflow/Promotion 架构、版本合同、Agent identity/Inbox、EventStore 合同）`655 passed`；独立复审清零后最终全量只运行一次，实测为 `2253 collected / 2248 passed / 5 skipped`，退出码 0。五个 skip 全部是平台权限或路径边界——三处目录 symlink（Workspace、Tool 与 D1 capture）、一处 D2 推广目标 symlink（[`test_patch_promotion.py`](../../tests/test_patch_promotion.py)），以及一处 CLI 路径不能包含 NUL。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`）；连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`。v0.7-E 三个专门文件另有 `85 passed`。当前 F1 最终检查点为 `2253/2248/5`，上一 F1 检查点为 `2235/2230/5`，v0.7-F0 为 `2165/2160/5`，v0.7-E 为 `2093/2088/5`，v0.7-D2 为 `2005/2000/5`，v0.7-D1 为 `1875/1871/4`，v0.7-C 为 `1835/1832/3`，v0.7-B 为 `1770/1769/1`，v0.6.0 发布快照为 `1707/1706/1`。旧发布时点数字继续作为历史证据，不用于描述当前工作区。
+F2 独立复审清零后，最终全量只运行一次，实测为 `2326 collected / 2321 passed / 5 skipped`，退出码 0；产品域定向为 `233 passed`（三个新文件 69 项 + 跨阶段架构 15 项 + F0 合同 73 项 + F1 两个专门文件 76 项），当前 Budget/Workflow/Promotion/Product 相邻回归 `375 passed`。五个 skip 全部是平台权限或路径边界——三处目录 symlink（Workspace、Tool 与 D1 capture）、一处 D2 推广目标 symlink（[`test_patch_promotion.py`](../../tests/test_patch_promotion.py)），以及一处 CLI 路径不能包含 NUL。F1 最终检查点为 `2253/2248/5`，上一 F1 检查点为 `2235/2230/5`，v0.7-F0 为 `2165/2160/5`，v0.7-E 为 `2093/2088/5`，v0.7-D2 为 `2005/2000/5`，v0.7-D1 为 `1875/1871/4`，v0.7-C 为 `1835/1832/3`，v0.7-B 为 `1770/1769/1`，v0.6.0 发布快照为 `1707/1706/1`。旧发布时点数字继续作为历史证据，不用于描述当前工作区。
 
 已关闭的递归门禁问题：`tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate` 会在子进程里克隆并检出已提交的 core commit，再在其中跑一遍完整基线套件。此前失败的是嵌套套件里的 `tests/test_promotion_architecture.py::test_the_output_bound_is_enforced_while_a_verifier_is_running`：D2 输出捕获曾按整个 read chunk 计入，使字节数与摘要依赖管道分块；在最大合法 `max_output_bytes` 下还可能把 `stdout_bytes` 顶过 `VerifierOutcome` 上限。现在捕获只精确计入并摘要每个流的前 `max_output_bytes` 字节，其余继续 drain，因此证据与分块无关且必然可记录（20.24）。修复提交后，递归 L2 已从新 `HEAD` 单独通过，完整 `2093` 项套件也得到 `2088 passed, 5 skipped`；这条历史问题不再是当前边界。
 
@@ -2765,7 +2766,7 @@ F0 完成时 [`tests/test_product_contract.py`](../../tests/test_product_contrac
 
 #### F0 之后仍未实现的部分
 
-F1 随后实现了 ProductTask 事件写入与 CAS/三态对账、Projector 与 ProductService（见 20.27）。F2–F5 仍未开始：Router 实现与真实 Agent 装配、Chat Proposal 渲染与 `/start`、`/approve`、`/cancel`、`/inspect`、`/abandon` 等宿主命令、coder 的有界 report 注入、默认 Profile/Registry/产品装配、`traceh eval` 重构与旧 manifest 拒绝、真实模型验收，以及 v0.7.0 发布。版本仍为 `0.6.0`。
+F1 随后实现了 ProductTask 事件写入与 CAS/三态对账、Projector 与 ProductService（见 20.27），F2 再实现严格 Router、Profile Registry 与固定 Product Assembly（见 20.28）。F3–F5 仍未开始：Chat Proposal 渲染与 `/start`、`/approve`、`/cancel`、`/inspect`、`/abandon` 等宿主命令、coder 的有界 report 注入、从产品层发起的 Workflow 执行与 Promotion、`traceh eval` 重构与旧 manifest 拒绝、真实模型验收，以及 v0.7.0 发布。版本仍为 `0.6.0`。
 
 ### 20.27 v0.7-F1：ProductTask 持久事实层
 
@@ -2844,7 +2845,7 @@ Turn claim 是关键但不是 Turn 本身：没有对应 `turn/start`，claim �
 
 三个专门测试文件覆盖：九种事件正向 replay、形状/顺序/取值拒绝、敌意 Envelope、终态后追加、未知 schema；确认证据、准入、幂等与内容冲突、CAS 竞争、三态对账、取消与重复取消、关闭收敛、三种视图状态、不缓存、abandoned 条件；以及受保护文件字节钉、依赖方向、不执行所记录之事、无 Router/Chat/CLI、唯一事实源和版本边界。当前精确数量以本节后面的最终门禁为准。
 
-F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 当前为 `73 passed`，F1 三个专门文件为 `87 passed`，合并 `160 passed`；当前工作树收集 `2253` 项；独立复审清零后的最终全量为 `2248 passed, 5 skipped`，退出码 0。其中一项按阶段推进改写：原先断言"`src/traceh/product/` 不存在"，而 F1 正是创建它的阶段。改写后断言它**存在**、合同模块本身仍无 `EventStore`/`PendingEvent`/`.append(`/`.read(`，且 F2 的 `router.py`/`chat.py`/`registry.py`/`assembly.py` 仍不存在。
+F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 在 F1 完成时为 `73 passed`，F1 三个专门文件为 `87 passed`，合并 `160 passed`；那时的工作树收集 `2253` 项，独立复审清零后的最终全量为 `2248 passed, 5 skipped`，退出码 0。其中一项按阶段推进改写：原先断言"`src/traceh/product/` 不存在"，而 F1 正是创建它的阶段。改写后断言它**存在**、合同模块本身仍无 `EventStore`/`PendingEvent`/`.append(`/`.read(`；F2 又把"F2 的 `router.py`/`registry.py`/`assembly.py` 尚不存在"改写为"它们存在、F3 的 `chat.py` 仍不存在"（见 20.28）。
 
 八项反向验证全部经**公开生产路径**触发，各自按预期根因变红后恢复：
 
@@ -2877,6 +2878,128 @@ F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 
 
 #### F1 之后仍未实现的部分
 
-F2 起才有：Router Agent 与真实模型调用、Profile Registry 与真实 Product Assembly、Chat Proposal 渲染与宿主命令、从产品层发起的 Workflow 执行与 Promotion、`traceh eval` 重构、真实模型验收、v0.7.0 发布。Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
+F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28）。F3 起才有：Chat Proposal 渲染与宿主命令、从产品层发起的 Workflow 执行与 Promotion、`traceh eval` 重构、真实模型验收、v0.7.0 发布。Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
 
-后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F2–F5，不替代本文件、源码、测试或 ADR 的当前事实。
+
+### 20.28 v0.7-F2：严格 Router、Profile Registry 与固定 Product Assembly
+
+设计决定仍在 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。F2 没有新的设计决定，只把 F0 冻结、F1 记账的那条主线补上“确认之后、执行之前”的一段：把宿主显式配置和一个已确认的 ProductTask 解析成唯一、精确、可验证但**尚未执行**的 `ProductAssemblyReceipt` 与固定 Workflow definition。
+
+#### 本轮实现了什么、没实现什么
+
+[`traceh.product`](../../src/traceh/product/) 新增四个文件：
+
+| 文件 | 职责 |
+|---|---|
+| [`router.py`](../../src/traceh/product/router.py) | 严格 `TaskRoutingParser` 实现、由 Profile 定界的 owned Router 调用，以及两个只收发文本的接缝 |
+| [`registry.py`](../../src/traceh/product/registry.py) | 唯一 Profile Registry、`ResolvedAgentAssembly` 与三个派生 digest |
+| [`topology.py`](../../src/traceh/product/topology.py) | 两种固定 Workflow 形状与它们的派生节点/binding 身份 |
+| [`assembly.py`](../../src/traceh/product/assembly.py) | preflight 绑定、mode 决定与 receipt 装配 |
+
+`errors.py` 增加 `ProductProfileError` 与 `ProductRoutingError` 两类稳定失败。
+
+**没有实现**：Workflow 执行或恢复、`traceh chat` 改动、任何 Chat 命令、Patch Artifact 捕获、Verification 执行、Approval、Promotion、真实模型/API/凭据调用，以及 F3–F5 的任何部分。`cli/chat.py` 一字未改，四个受保护文件零 diff，版本仍是 `0.6.0`，本轮**没有真实模型验收**。
+
+架构守卫被**收窄而不是放宽**：`traceh.product` 仍然不 import 任何会让事情发生的模块（`traceh.workflow.service`/`execution`/`projection`、`traceh.promotion.service`/`verification`/`local_git`/`projection`、`traceh.artifacts`、`traceh.workspaces.*`、`traceh.supervision.*`、`traceh.runtime`、`traceh.plugins`、`traceh.cli`、`traceh.llm`），只允许五个**具名纯函数**：`traceh.workflow.models` 的 `freeze_workflow_definition`/`workflow_definition_hash`，与 `traceh.promotion.models` 的 `freeze_verification_plan`/`verifier_definition_digest`/`require_target_ref`。理由与 Workflow 域被允许引入 `durable_log_identity` 完全相同：receipt 记的必须是**那一份** definition hash、**那一份** verifier definition digest 和 Promotion 域定义的那一种分支 ref，在产品域另算一遍就是同一个问题的第二个答案，两者迟早分叉。[`tests/test_promotion_architecture.py`](../../tests/test_promotion_architecture.py) 的“只有 promotion 与 workflow 能 import promotion”同样按具名符号扩展，其余名字全部仍然拒绝。另有一条按名字断言域内不出现 `WorkflowService`、`PatchPromotionService`、`PatchCaptureService`、`AgentSupervisor`、`AgentRuntime`、`WorkspaceService`、`PluginManager`。
+
+#### 严格 Router
+
+接受的形状是**恰好一个** JSON 对象，键集恰好是 `mode` 与 `reason`：
+
+- `mode` 只能是 `single` 或 `multi`。`ResolvedTaskMode` 没有 `auto` 成员，所以“未解析”过不了解析器；
+- `reason` 是 `null`，或一段有界、单行安全、不超过 256 字符的展示文字（复用 F1 的 `require_display_text()`）；
+- 只 strip 首尾空白，其余一律拒绝：代码围栏、前后散文、第二个 JSON 对象、JSON 数组、裸字符串与数字全部失败。`json.loads` 本身拒绝尾随内容，因此“两份答案”和“一份答案加一句话”走同一条规则；
+- 多一个键或少一个键都拒绝，不迁移、也不忽略未知键——被忽略的键就是第二条没人读的指令通道。
+
+失败一律是稳定的 `ProductRoutingError`，**不自动重试**、**不从自由文本猜测**。`reason_display` 是整个协议里唯一写给人看的字符串：一条 `mode` 为 `single` 而 `reason` 声称“必须用 multi”的答案仍然解析为 `single`，决定始终来自枚举。
+
+宿主边界 `ProductModeRouter` 的每一个界限都来自显式 `ProductRouterProfile`：`timeout_milliseconds` 与 `max_response_bytes` **没有代码默认值**，缺失或不合法即构造错误；响应字节上界在解析之前生效。构造时传入的是实际 `ResolvedAgentAssembly` 而不是调用方声称的 digest，Router 自己复用 `router_assembly_digest()` 计算身份；`auto` 首次路由前，Assembler 必须同时核对 Profile bounds 与 fresh preflight 的 Router assembly digest，不同 bounds、model 或组合都在花 Token 前拒绝。接缝交给实现的只有一个字符串（`RouterResponder.respond(summary: str) -> RouterResponse`），因此没有 Supervisor、Workflow、Workspace、Artifact、Promotion 或 Registry 句柄**经由它**进入；Router Agent 自身不持 Tool 是由下面的 `router_assembly_digest` 与注册表校验证明的，不是由接缝声明的。
+
+`MAX_ROUTER_SUMMARY_CHARS = 4096` 是协议上界而非宿主策略：它限定这套协议**最多愿意问多长的问题**，方向与 Profile 决定的超时/响应上界相反。
+
+Router 调用是 owned work：超时先取消并**收敛** responder 再抛 `product-router-timeout`；被取消的调用方同样先收敛再重抛自己的 `CancelledError`，重复取消不能提前放行；`aclose()` 拒绝新问题并**等待**已经问出去的那一个——等待而不是取消，因为它属于一个仍在 await 的 `route()` 调用方。
+
+#### 唯一 Profile Registry
+
+`ProductProfileRegistry` 收 `(profile_id, ProductProfileBinding)` **序对序列**而不是 Mapping：Mapping 表达不出重复 id，而对重复 id 静默保留最后一条正是注册表不该做的决定。
+
+**没有默认 profile**：未知 id、空 id、非法 id 全部失败，空注册表什么都解析不出来。
+
+构造期校验 `ProductTaskProfile` 的每个名字是合法标识符、`profile_version >= 1`、`default_mode` 是 `RequestedTaskMode`、三个角色槽位的 preset/grants/budget 与 Router profile 合法，并要求 `VerificationPlan` 能被 `freeze_verification_plan()` 冻结且其 `plan_id` 等于 profile 命名的那一个。五个账户的七个 Budget 维度不在产品域复制一套较弱范围：Registry 直接复用 Budget 域的 `freeze_limits()`，所以 `None`、整数类型、非负与 `MAX_BUDGET_VALUE` 上界和真正写 Ledger 时是同一份合同。
+
+解析期通过宿主 `ProductAssemblyResolver` 得到四份 `ResolvedAgentAssembly`（三个角色加 Router），每一份都必须**回答被问的那个槽位**：resolved `AgentSpec` 的 preset 与 capability grants 必须等于槽位声明的值，provider/model 必须等于 profile 的值。解析器有资格回答“这个 preset 现在是什么”，没有资格回答“我被问的是哪个 preset”。
+
+两条不变量是**强制**而不是记录：
+
+1. **写权限来自槽位**。`workspace_access` 必须等于 `ProductRole.workspace_access`，所以解析器交回一个可写的 reviewer 会被当场拒绝，而不是被记进 digest 等以后发现；
+2. **Router 不持 Tool**。Router assembly 的 `tool_ids` 必须为空、capability grants 必须为空、access 必须是 `READ_ONLY`。
+
+三个派生 digest 都是计算属性：`agent_assembly_digest()` 覆盖 `agent_spec_request_fingerprint()`（复用仓库对“AgentSpec 身份”的唯一定义）、provider/model、Tool/Prompt/Policy 组合与 workspace access；`role_assembly_digest()` 按固定顺序覆盖**全部三个**角色，缺一个就拒绝出 digest——绑定是在选模式之前做的，一个随模式变化的 digest 会变含义；`router_assembly_digest()` 覆盖 Router 那一份；`verification_plan_digest` 直接是 `verifier_definition_digest(plan)`。组合列表**保序不排序**：换了顺序的 policy 链是另一条链，压成集合会让两套实质不同的组合共用一个 digest。
+
+因此“名字一字不改、registry 重绑”是可检测的：`profile_digest` 不变，`role_assembly_digest` 变，preflight digest 随之变。
+
+#### Preflight 与固定 Assembly
+
+`ProductAssemblyService.preflight(profile_id)` 每次都重新解析、不缓存：Registry 解析 → 宿主 `ProductSourceResolver.resolve_source()` 得到精确 commit → `PromotionTargetResolver.resolve()` 得到目标 fingerprint、**精确 branch ref** 与 expected revision，组成 `ProductPreflightBinding` 的九个字段。source 与 target 的回答都必须**对得上被问的 id**，摘要、ref 与 revision 的形状也在这里校验。
+
+返回的 `ProductPreflight` 携带 `WorkspaceSourceSnapshot`（宿主接下来要用精确 commit 开 worktree），但**不携带**解析出来的 `PromotionTarget`——那个值里有仓库路径，而这一层欠外界的只有 fingerprint、精确 ref 与 expected revision，三者都已经在 binding 里。两个窄接缝正是既有实现已经具备的方法：`LocalGitWorkspaceProvider.resolve_source` 与 `LocalBareGitPromotionTargets.resolve`，一条用真实 Git 仓库的用例证明它们直接满足这两个 Protocol。
+
+`assemble(task_id=..., profile_id=..., routing_summary=None)` 的顺序本身就是合同：
+
+1. 通过 F1 的 `ProductTaskService.load()` 读任务；未开启是 `product-task-unknown`，已终结是 `product-task-settled`；
+2. fresh `preflight()`；
+3. `profile_digest` 与 opened 记录的不同 → `product-profile-drifted`；
+4. preflight digest 与 opened 记录的不同 → `product-preflight-drifted`。这一条同时覆盖 source base revision 漂移、VerificationPlan 变更、Promotion target 的**分支身份改变或分支头前进**与 registry 重绑，并且发生在 **Router 之前**：跑不了的任务不该花路由 Token。它比较的正是 `ProductAssemblyReceipt.binds()` 的那两个摘要，只是提前一步；F1 的 `start_task()` 之后还会再比一次；
+5. 决定 mode：explicit 请求就是它自己（Router 根本不被调用）；`auto` 且已有 durable `resolved_mode` 就用那一个；`auto` 且尚未路由时先核对 live Router 的 Profile 与实际 assembly digest 正是 fresh preflight 绑定的那份，再调用 Router，然后**通过 F1 的 `record_routing()`** 写 `product/task-routed`，operation id 由 task id 派生，因此重试是同一次写入而不是第二条事实；
+6. 用 `product_workflow_definition(mode, promotion_target_id=...)` 构建并完整校验定义，再由 `workflow_definition_hash()` 从**这一份**定义算出 receipt 的 `workflow_definition_hash`；
+7. 返回 `ProductAssembly(preflight, receipt, definition)`。
+
+`assemble()` **不写** `product/task-started`，因为 Workflow 尚未启动；架构测试按公开方法集断言这一点（只有 `tasks`、`preflight`、`assemble`，没有任何 start/run/execute/resume/approve/promote）。
+
+写入方必须是真正的 `ProductTaskService`（`type(...) is` 判定），不是 duck-typed 替身。F2 只有这一个 EventStore 支撑的接缝，而它自己已经要求 Session 与 Workflow reader 共享同一个 Store 对象，因此“同一事实宇宙”在这一层是结构性的，不需要再比一次身份。
+
+并发下 routing 仍然只有一个结果：两个调用方都进了 Router、先完成的那个写下事实之后，落后的那个拿到 `ProductStateError`/`ProductOperationConflictError`，重新读到 durable 结果并采用它；两个写入真正同时在途时，输的那个得到确定的 `ProductOperationConflictError`，而流里仍然只有一条 `product/task-routed`。may-have-committed 的 routing 写入复用 F1 的三态对账，没有第二套。
+
+#### 两种固定拓扑
+
+| 模式 | 节点顺序 |
+|---|---|
+| `single` | `product-role-coder` → `product-verification` → `product-approval` |
+| `multi` | `product-role-parent` → `product-role-reviewer` → `product-role-coder` → 同一条安全尾部 |
+
+`single` 是**更短的** Workflow，不是绕过关卡的快车道：同一份冻结验证计划、同一个不可变 Artifact、同一个人工 Approval 屏障。reviewer 在 coder **之前**跑，因为放在之后没有任何东西会消费它的意见。只有 coder 捕获 Artifact，因为只有 coder 可写。两种模式都不使用 Map/Join，Stage E 的 Map/Join 一行未动。
+
+节点 id 与 binding id 全部由角色和节点类型派生（`product-role-*`、`product-spec-*`、`product-message-*`），没有示例硬编码；定义只带 binding id，不带 Prompt、`AgentSpec`、仓库路径或凭据。`VerificationNode.target_id` 是 profile 的 promotion target id，因此它进入 definition hash——两个指向不同仓库的运行不是同一份计划。`PRODUCT_MODE_ROLES` 是只读映射。task 配置、Router 响应与 Profile 里都没有节点、边、Agent 数量或 fan-out 字段，架构测试按字段名断言这一点。
+
+#### 验证基线与反向验证
+
+F2 三个新测试文件共 `69 passed`：[`test_product_router.py`](../../tests/test_product_router.py) 18、[`test_product_registry.py`](../../tests/test_product_registry.py) 21、[`test_product_assembly.py`](../../tests/test_product_assembly.py) 30。跨阶段的 [`test_product_architecture.py`](../../tests/test_product_architecture.py) 为 15。F0 合同仍为 `73 passed`，其中“F2 的 `router.py`/`registry.py`/`assembly.py` 尚不存在”那条按阶段推进改写为“它们存在，而 F3 的 `chat.py` 不存在、CLI 不 import 产品域”。F1 两个专门文件仍为 `76 passed`。产品域定向合计 `233 passed`。
+
+十七项反向验证全部经**公开生产路径**触发，各自按预期根因变红后恢复：
+
+1. 解析器忽略未知键 → 键集用例与“被拒答案不留事实”变红；
+2. JSON 失败后从自由文本捞 mode → “自由文本不被开采”与“两份答案不是答案”变红；
+3. 忽略 Profile 的响应字节上界 → 超长答案用例变红；
+4. 超时不收敛 responder → 超时用例按 `responder.cancelled` 变红；
+5. 取消不收敛 responder → 取消用例按 `InvalidStateError: Exception is not set` 变红，即调用方在 worker 收敛前被放行；
+6. 让解析器决定 workspace access → 槽位权限与 Router 权限两条变红；
+7. 去掉“Router 不持 Tool”检查 → Router 权限用例变红；
+8. `role_assembly_digest()` 只哈希 preset 名字 → registry 重绑的两条（digest 变化与漂移拒绝）变红；
+9. 去掉 preflight digest 漂移比较 → source/target/plan/registry 四条漂移用例变红；
+10. `auto` 忽略已有 durable routing 结果 → “第二次装配复用唯一结果”变红；
+11. 把 Router 调用挪到 preflight 之前 → “角色不可用不花路由 Token”、“source 漂移在 Router 之前失败”、“外部读取失败不留半成品”三条变红；
+12. receipt 的 hash 不来自真正要跑的那份定义 → definition hash 用例变红；
+13. 写入方接受 duck-typed 替身 → 写入方身份用例变红；
+14. explicit 模式也去问 Router → “explicit 不调用 Router”以及三条依赖它的用例变红。
+15. 让 live Router 对任何 Profile/assembly 都声称匹配 → bounds 不同与 model/组合不同的两条用例都错误完成路由；
+16. 从 preflight 身份中丢掉真实 target ref → 同一仓库、同一 commit 下把目标 id 从一个分支重绑到另一分支不再被识别为漂移；
+17. 去掉 Registry 对 Budget owner 合同的复用 → 超过 `MAX_BUDGET_VALUE`、真正 Ledger 无法接受的 Profile 被错误注册。
+
+恢复后四个新文件的 SHA-256 与验证前逐字节一致，反向验证全程**没有修改任何受保护文件**。
+
+当前最终门禁：独立审查无 P0/P1/P2；产品域定向 `233 passed`，Budget/Workflow/Promotion/Product 相邻回归 `375 passed`，最终全量只运行一次并得到 `2326 collected / 2321 passed / 5 skipped`、退出码 0；`python -m compileall -q src tests`、改动范围 `ruff check` 与文档 QA 通过。20.27 记录的 `2253/2248/5` 是 **F1** 的历史检查点。
+
+#### F2 之后仍未实现的部分
+
+F3 起才有：Chat Proposal 渲染与 `/start`/`/approve`/`/cancel`/`/inspect`/`/abandon` 等宿主命令、由产品控制器发起的 Workflow 执行与 Promotion、coder 的有界 report 注入、真实模型端到端验收。F4 重构现有 `traceh eval` 并明确拒绝旧 manifest；F5 才是 v0.7.0 的 RC、打包门禁、tag 与发布。Stage E 的恢复边界没有被放宽一格，版本仍为 `0.6.0`。
+后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F3–F5，不替代本文件、源码、测试或 ADR 的当前事实。

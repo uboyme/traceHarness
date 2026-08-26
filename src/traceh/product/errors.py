@@ -61,6 +61,35 @@ class ProductEvidenceError(ProductError):
         super().__init__("the claimed durable evidence was not found")
 
 
+class ProductProfileError(ProductError):
+    """Host configuration this build refuses to turn into a runnable plan.
+
+    A Profile is a host decision, so a missing, duplicated, incomplete or
+    self-contradicting one is a configuration failure rather than a rejected
+    argument or a task state. There is no default Profile to fall back to: the
+    absence of a decision is the failure.
+    """
+
+    def __init__(self, code: str, field: str | None = None) -> None:
+        self.code = code
+        self.field = field
+        super().__init__("the product profile could not be resolved")
+
+
+class ProductRoutingError(ProductError):
+    """A router answer this build refuses to read as a decision.
+
+    Every one of these is final. A malformed, over-long, ambiguous or unknown
+    answer is never retried and never guessed at: re-asking would turn one
+    bounded decision into an unbounded loop, and guessing would let prose become
+    the decision that the enum beside it exists to carry.
+    """
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__("the router answer is not a usable decision")
+
+
 class ProductOperationConflictError(ProductError):
     code = "product-operation-reused"
 
@@ -108,7 +137,9 @@ __all__ = [
     "ProductEvidenceError",
     "ProductInputError",
     "ProductOperationConflictError",
+    "ProductProfileError",
     "ProductProtocolError",
+    "ProductRoutingError",
     "ProductServiceClosedError",
     "ProductStateError",
     "ProductStreamConflictError",

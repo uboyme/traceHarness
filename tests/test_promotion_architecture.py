@@ -129,13 +129,35 @@ def test_no_cli_or_workflow_entry_point_exists_for_promotion() -> None:
     assert not (package / "promotion" / "cli.py").exists()
 
 
+PRODUCT_PURE_SYMBOLS = {
+    "traceh.promotion.models": {
+        "freeze_verification_plan",
+        "require_target_ref",
+        "verifier_definition_digest",
+    }
+}
+"""What v0.7-F2's Profile Registry may reuse, and nothing more.
+
+A product preflight records ``verification_plan_digest``, which has to be *the*
+digest of a frozen plan rather than a second definition of one, and a preflight
+target ref must use Promotion's exact ref syntax. Computing either rule in
+the product domain would create two answers to a question this domain owns, and
+they would drift the first time either changed. So these three pure functions are
+allowed - neither reads a store, runs a verifier or touches a repository - and
+every other name in the promotion domain, including the service itself, remains
+out of reach. This mirrors the single-symbol allowance the Workflow domain has
+for ``durable_log_identity``.
+"""
+
+
 def test_only_the_promotion_domain_imports_the_promotion_domain() -> None:
-    """Promotion has exactly one consumer, and it is an orchestration layer.
+    """Promotion has one calling consumer, and it is an orchestration layer.
 
     ADR-0024 reserves this direction: a Workflow node *calls* the public
     promotion service. What must never happen is the execution kernel, the CLI
     or another domain learning about promotion, so every other module is still
-    checked.
+checked - and the product domain, which needs three pure identity helpers, is
+    held to exactly those names.
     """
 
     package = Path(agent_runtime_module.__file__).parent.parent
@@ -143,17 +165,31 @@ def test_only_the_promotion_domain_imports_the_promotion_domain() -> None:
     for source in sorted(package.rglob("*.py")):
         if source.parent in allowed:
             continue
+        tree = ast.parse(source.read_text(encoding="utf-8"))
         imported = {
             node.module
-            for node in ast.walk(
-                ast.parse(source.read_text(encoding="utf-8"))
-            )
+            for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom) and node.module is not None
         }
-        assert not any(
-            name == "traceh.promotion" or name.startswith("traceh.promotion.")
+        touching = {
+            name
             for name in imported
-        ), str(source.relative_to(package))
+            if name == "traceh.promotion" or name.startswith("traceh.promotion.")
+        }
+        if source.parent == package / "product":
+            assert touching <= set(PRODUCT_PURE_SYMBOLS), str(source.name)
+            for node in ast.walk(tree):
+                if (
+                    isinstance(node, ast.ImportFrom)
+                    and node.module in PRODUCT_PURE_SYMBOLS
+                ):
+                    names = {alias.name for alias in node.names}
+                    assert names <= PRODUCT_PURE_SYMBOLS[node.module], (
+                        source.name,
+                        names,
+                    )
+            continue
+        assert not touching, str(source.relative_to(package))
 
 
 def test_the_model_gains_no_approve_merge_or_promote_tool() -> None:

@@ -50,6 +50,7 @@ from traceh.api.product import (
     product_started_values,
 )
 from traceh.product.errors import ProductInputError, ProductProtocolError
+from traceh.promotion.models import require_target_ref
 
 MAX_REASON_DISPLAY_CHARS = 256
 """Bound on the one display-only string the protocol admits.
@@ -311,6 +312,10 @@ def _validated_preflight(binding: object) -> tuple[str, str]:
     )
     for field, value, lengths in fields:
         require_hex_digest(value, lengths=lengths, field=field.replace("_", "-"))
+    try:
+        require_target_ref(binding.promotion_target_ref)
+    except Exception:
+        raise ProductInputError("product-preflight-invalid", "preflight") from None
     try:
         digest = binding.digest
     except Exception:

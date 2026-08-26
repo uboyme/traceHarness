@@ -693,7 +693,10 @@ class ProductPreflightBinding:
     This is what a Proposal shows a person and what a task binds to: a Profile
     says ``main``, this says which commit that was; a Profile names a
     verification plan and a promotion target, this carries the frozen plan's
-    digest and the target's fingerprint and exact current revision.
+    digest and the target's fingerprint, exact ref and current revision. The ref
+    is separate from the repository fingerprint: two branches in one repository
+    may currently point at the same commit but grant different promotion
+    authority.
 
     ``role_assembly_digest`` and ``router_assembly_digest`` are the answer to a
     gap a name-only binding cannot close. A host registry may keep ``preset``
@@ -727,6 +730,7 @@ class ProductPreflightBinding:
     base_revision: str
     verification_plan_digest: str
     promotion_target_fingerprint: str
+    promotion_target_ref: str
     promotion_expected_revision: str
 
     @property

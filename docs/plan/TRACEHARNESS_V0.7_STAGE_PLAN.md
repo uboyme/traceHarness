@@ -80,7 +80,7 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 | E | 用固定 Typed Workflow 组合公共服务，不引入通用 DSL 或第二调度器 | 已完成并提交 |
 | F0 | 冻结统一 Chat 产品合同、DTO、事件、Profile、Assembly 和架构守卫 | 已完成并提交 |
 | F1 | 实现 ProductTask append-only 事实层、严格 replay、幂等写入与派生视图 | 已完成，独立审查与最终门禁通过 |
-| F2 | 实现严格 Router、Profile Registry 和 Product Assembly | 未开始 |
+| F2 | 实现严格 Router、Profile Registry 和 Product Assembly | 已完成；独立审查与最终全量通过 |
 | F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 未开始 |
 | F4 | 重构现有 `traceh eval`，完成 single/multi/auto 的小规模真实度量 | 未开始 |
 | F5 | v0.7 RC、安全/打包门禁、版本、tag 与 GitHub Release | 未开始 |
@@ -134,7 +134,7 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 - `RequestedTaskMode` 有 `single`、`multi`、`auto`；执行态的 `ResolvedTaskMode` 只有 `single`、`multi`。
 - ProductTask 有自己的 durable identity 和九种精确事件；proposal 本身是确认前的临时值，不是事实。
 - 用户确认必须点名 proposal，是不同于 origin 的消息；origin/confirmation 的 claim 都必须由真实 durable Turn start 锚定，同一 Session 还必须通过核心生命周期不变量，最后由持久 seq 证明 confirmation accepted 发生在 Proposal Turn 的合法 `turn/end` 之后。
-- `ProductPreflightBinding` 冻结 Profile、角色装配、Router、仓库、base revision、Verifier 和 Promotion target。
+- `ProductPreflightBinding` 冻结 Profile、角色装配、Router、仓库、base revision、Verifier，以及 Promotion target 的仓库身份、精确 ref 与 revision。
 - `ProductAssemblyReceipt` 冻结 resolved mode、Workflow definition 和 preflight binding。
 - single 与 multi 都是固定 Workflow profile；single 不是绕过安全门的旧主线。
 - durable status 与 derived view status 分类型，`interrupted` 不写事件。
@@ -153,6 +153,14 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 ## 6. F2 — Router、Profile Registry 与 Product Assembly
 
 F2 只负责“把已经确认的 ProductTask 装配成一个精确、可执行但尚未执行的宿主计划”。
+
+### F2 当前交付
+
+- `traceh.product` 新增 `router.py`（严格 `TaskRoutingParser` 实现与由 `ProductRouterProfile` 定界的 owned `ProductModeRouter`）、`registry.py`（唯一 `ProductProfileRegistry` 与三个派生 assembly digest）、`topology.py`（single/multi 两种固定 Workflow 与派生身份）、`assembly.py`（`ProductAssemblyService.preflight`/`assemble`）。
+- Router 只认恰好一个 JSON 对象、键集恰好 `mode`/`reason`；未知 mode、多余键、超长、畸形 JSON 与多份答案一律稳定失败，不重试、不猜文本；超时与响应上限只来自显式 Profile，live Router 的实际 assembly 身份还必须匹配 fresh preflight；`reason_display` 只展示，任何生产分支不读它。
+- 注册表没有默认 profile；解析器交回的 assembly 必须匹配被问的槽位，写权限来自 `ProductRole.workspace_access`，Router 不持 Tool——两条不变量当场强制。
+- 预检每次重新解析：source 精确 commit、VerificationPlan digest、Promotion target fingerprint/精确 ref/expected revision 全部来自真实 resolver 结果；drift 是拒绝，不是重绑。
+- 装配用 F1 的 writer 写唯一 `product/task-routed`（operation id 派生，重试是同一次写入），并从真正会跑的 Workflow definition 算 `workflow_definition_hash`；本阶段不写 `product/task-started`。
 
 必须完成：
 

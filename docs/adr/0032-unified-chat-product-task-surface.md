@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0 contract frozen, F1 fact layer implemented, F2-F5 not implemented**
+- Status: Accepted; **F0 contract frozen, F1 fact layer implemented, F2 router/registry/assembly implemented, F3-F5 not implemented**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -21,10 +21,22 @@ projection and idempotency checks; the built-in Unicode value is extracted
 without dispatching a caller-controlled ``__str__``. Its Session replay also
 proves that confirmation is a distinct message accepted only after the
 Proposal-producing Turn ended; different identifiers alone are not temporal
-evidence. What still does **not** exist is
-the router, the chat controller, any product CLI command, any default assembly,
-the benchmark rework, real-model acceptance or the v0.7 release. `traceh chat`
-remains unchanged and F2-F5 remain unimplemented. The
+evidence.
+
+F2 has since implemented the strict router, the Profile Registry and the
+Product Assembly: a parser that accepts exactly one JSON answer shape, a host
+router boundary bounded entirely by an explicit `ProductRouterProfile`, the
+single registry whose resolved assemblies make "the role slot decides write
+authority" and "the router holds no Tool" checked facts, and an assembly
+service that turns a confirmed task into one `ProductAssemblyReceipt` beside
+the fixed Workflow definition its hash was taken from. It plans a task and
+deliberately stops there: it starts no run, captures nothing, verifies nothing,
+approves nothing, promotes nothing and calls no model.
+
+What still does **not** exist is
+the chat controller, any product CLI command, the benchmark rework, real-model
+acceptance or the v0.7 release. `traceh chat`
+remains unchanged and F3-F5 remain unimplemented. The
 package version is still `0.6.0`. Nothing here should be read as "the product
 works".
 
@@ -238,6 +250,13 @@ and its assembly. It is evidenced by the resolved `router_assembly_digest` and
 must be proven by architecture tests over the stage that writes the
 implementation - not asserted by a Protocol declaration.
 
+The concrete `ProductModeRouter` therefore receives the resolved assembly, not
+a caller-supplied digest, and derives that digest with the registry's one
+function. Before the first `auto` decision, the assembler compares both the live
+Router Profile and this derived assembly identity with the freshly resolved
+preflight. This is an identity check at the existing host seam, not a second
+router registry or a second source of task state.
+
 The router runs **after** `product/task-opened`, not before. Routing costs real
 tokens, and capacity is only attributable to an Agent Session: `_require_agent_session`
 in `budgets/enforcement.py` means a plain read-only chat turn never enters the
@@ -401,6 +420,11 @@ dimensions are required at construction on every account, which is a property
 `BudgetLimits` already had for the same reason: an omitted host decision must not
 become a permissive default.
 
+The numeric contract is not copied into the Product Registry. Profile
+validation calls the Budget domain's `freeze_limits()`, so the accepted integer
+types, `None` meaning, non-negative rule and `MAX_BUDGET_VALUE` ceiling are the
+same facts the only Ledger writer enforces.
+
 ### 14. An Assembly Receipt is a binding, and its digest is derived
 
 A Profile may say `main`. A task binds to the commit `main` resolved to.
@@ -426,8 +450,11 @@ Those two are *supplied*, because resolving a registry is I/O this module does
 not do. What is derived is the digest over them, so a resolution result cannot
 be recorded and then quietly disagreed with.
 
-Every field is a non-secret identity, digest or revision, so the whole binding is
-safe to show a person and safe to keep in history.
+Every field is a non-secret identity, digest, exact branch ref or revision, so
+the whole binding is safe to show a person and safe to keep in history. The
+promotion target binding includes both repository fingerprint and exact ref:
+two branches in one repository may point at the same commit while granting
+different compare-and-swap authority.
 
 The binding a person confirmed also has to survive into the stream, which the
 first version did not arrange. `product/task-opened` records `preflight_digest`
@@ -465,10 +492,11 @@ added later. Provider identity, presets, capability grants, workspace access and
 all seven Budget dimensions of every account are covered transitively through
 `profile_digest` rather than repeated, for the same no-second-copy reason.
 
-Resuming re-resolves and compares. Because the target's expected revision is part
-of the binding, a task whose target ref has moved does **not** silently re-base
-onto the new tip: it fails closed and must be opened again against what the branch
-is now. Two long-running tasks against one branch therefore cannot both promote
+Resuming re-resolves and compares. Because the target's exact ref and expected
+revision are both part of the binding, neither rebinding the target id to another
+branch nor moving the original branch silently changes the authority a person
+confirmed: it fails closed and must be opened again against what the branch is
+now. Two long-running tasks against one branch therefore cannot both promote
 without a human re-opening the second. That is the same refusal ADR-0030 makes on
 target drift, applied one level up, and it is a real cost of not guessing.
 

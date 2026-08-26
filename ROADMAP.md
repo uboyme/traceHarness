@@ -394,8 +394,29 @@ remain the authority for implemented facts.
     before the first append; and a view derived from three fresh reads so
     `unreconciled`, `resumable` and `interrupted` are distinct.
     It records what happens to a task and executes none of it.
-  - **F2–F5 — not started:** the Router Agent and real model calls, the Profile
-    registry and real product assembly, the chat surface and its host commands,
+  - **F2 — strict Router, Profile Registry and Product Assembly (complete,
+    unreleased):** the concrete `TaskRoutingParser` accepts exactly one JSON
+    answer shape (`mode`/`reason`) and refuses unknown modes, extra keys,
+    over-long, malformed or doubled answers without retrying or mining prose;
+    the host `ProductModeRouter` runs inside bounds that come only from an
+    explicit `ProductRouterProfile`, derives identity from its actual resolved
+    assembly and must match fresh preflight before routing. The single `ProductProfileRegistry` has no
+    default and enforces both authority invariants - write access comes from
+    the `ProductRole` slot, and the router assembly carries no Tool or grant -
+    while `role_assembly_digest`, `router_assembly_digest` and
+    `verification_plan_digest` cover what presets actually resolved to, so a
+    registry rebinding that keeps every name spelled the same changes the
+    binding. `ProductAssemblyService` re-resolves source commit, verification
+    plan and the promotion target's repository/ref/revision on every preflight, refuses any drift from the
+    confirmed `preflight_digest` *before* spending a routing call, records the
+    one durable `product/task-routed` through the F1 writer, and takes the
+    receipt's `workflow_definition_hash` from the exact fixed definition that
+    would run: `single` is `coder → verification → approval`, `multi` is
+    `parent → reviewer → coder →` the same safety tail, neither uses Map/Join
+    and only the coder captures. It writes no `product/task-started` and starts
+    nothing: no Workflow execution, capture, verification, approval,
+    promotion, real model call or chat surface.
+  - **F3–F5 — not started:** the chat surface and its host commands,
     Workflow execution and Promotion driven from the product layer, the
     `traceh eval` rework (replacing it, with old manifests explicitly refused),
     real-model acceptance, packaging/security checks and the v0.7 release.

@@ -1,17 +1,21 @@
-"""v0.7-F1 boundaries: what the ProductTask domain may reach, and what it may not.
+"""v0.7-F1/F2 boundaries: what the product domain may reach, and what it may not.
 
-F1 makes ProductTask a durable fact. It does not make anything happen. These
-tests pin that difference, because it is exactly the boundary a later stage will
-be tempted to blur.
+F1 makes ProductTask a durable fact and F2 turns a confirmed one into an exact
+plan. Neither makes anything happen. These tests pin that difference, because it
+is exactly the boundary a later stage will be tempted to blur: recording that a
+Workflow *would* run is not running one, and hashing a definition is not
+executing it.
 """
 
 from __future__ import annotations
 
 import ast
+import dataclasses
 import hashlib
 import inspect as inspect_module
 from pathlib import Path
 
+import traceh.api.product as product_api
 import traceh.plugins.manager as plugin_manager_module
 import traceh.product.service as product_service_module
 import traceh.runtime.agent_loop as agent_loop_module
@@ -19,7 +23,14 @@ import traceh.runtime.agent_runtime as agent_runtime_module
 import traceh.supervision.supervisor as supervisor_module
 import traceh.supervision.tools as tools_module
 import traceh.workflow.service as workflow_service_module
-from traceh.product import ProductTaskService
+from traceh.product import (
+    ProductAssemblyService,
+    ProductModeRouter,
+    ProductTaskService,
+    RouterResponder,
+    StrictTaskRoutingParser,
+)
+from traceh.product.router import ROUTER_RESPONSE_KEYS
 from traceh.version import __version__
 
 PACKAGE_ROOT = Path(agent_runtime_module.__file__).parent.parent
@@ -118,30 +129,102 @@ def test_no_existing_owner_learns_about_the_product_domain() -> None:
         ), source.name
 
 
-def test_the_product_domain_executes_nothing_it_records() -> None:
-    """F1 writes facts about work. It does not start, verify or promote any."""
+EXECUTING_MODULES = {
+    "traceh.workflow",
+    "traceh.workflow.service",
+    "traceh.workflow.execution",
+    "traceh.workflow.projection",
+    "traceh.promotion",
+    "traceh.promotion.service",
+    "traceh.promotion.verification",
+    "traceh.promotion.local_git",
+    "traceh.promotion.projection",
+    "traceh.artifacts",
+    "traceh.workspaces",
+    "traceh.workspaces.local_git",
+    "traceh.workspaces.service",
+    "traceh.supervision",
+    "traceh.supervision.supervisor",
+    "traceh.supervision.execution",
+    "traceh.runtime",
+    "traceh.runtime.agent_loop",
+    "traceh.runtime.agent_runtime",
+    "traceh.plugins",
+    "traceh.plugins.manager",
+    "traceh.cli",
+    "traceh.evolution",
+    "traceh.llm",
+}
+"""Everything that owns an Agent, a worktree, a Git repository or a run."""
 
-    forbidden = {
-        "traceh.workflow",
-        "traceh.workflow.service",
-        "traceh.promotion",
-        "traceh.promotion.service",
-        "traceh.artifacts",
-        "traceh.workspaces",
-        "traceh.supervision",
-        "traceh.supervision.supervisor",
-        "traceh.runtime",
-        "traceh.runtime.agent_loop",
-        "traceh.runtime.agent_runtime",
-        "traceh.plugins",
-        "traceh.plugins.manager",
-        "traceh.cli",
-        "traceh.evolution",
-        "traceh.llm",
-    }
+PURE_PEER_SYMBOLS = {
+    "traceh.workflow.models": {
+        "freeze_workflow_definition",
+        "workflow_definition_hash",
+    },
+    "traceh.promotion.models": {
+        "freeze_verification_plan",
+        "require_target_ref",
+        "verifier_definition_digest",
+    },
+}
+"""The named pure symbols F2 reuses instead of writing a second definition of.
+
+A product receipt records *the* Workflow definition hash and *the* verifier
+definition digest. Computing either one here would create a second answer to a
+question another domain already owns, and the two would drift the first time
+either changed. The target ref likewise uses the Promotion domain's one syntax
+rule rather than a weaker Product copy. So exactly these five functions are
+allowed - none of them reads
+a store, starts a run or touches a repository - and nothing else from those
+modules is. This follows the precedent the Workflow domain set for
+``durable_log_identity``.
+"""
+
+
+def test_the_product_domain_executes_nothing_it_records() -> None:
+    """The domain writes facts about work and plans it. It runs none of it."""
+
     for source, _ in _sources(PRODUCT_ROOT):
+        tree = ast.parse(source.read_text(encoding="utf-8"))
         imported = _imports(source)
-        assert forbidden.isdisjoint(imported), (source.name, forbidden & imported)
+        assert EXECUTING_MODULES.isdisjoint(imported), (
+            source.name,
+            EXECUTING_MODULES & imported,
+        )
+        for module, allowed in PURE_PEER_SYMBOLS.items():
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module == module:
+                    names = {alias.name for alias in node.names}
+                    assert names <= allowed, (source.name, module, names)
+        assert not any(
+            name.startswith("traceh.workflow.")
+            and name not in PURE_PEER_SYMBOLS
+            for name in imported
+        ), source.name
+        assert not any(
+            name.startswith("traceh.promotion.")
+            and name not in PURE_PEER_SYMBOLS
+            for name in imported
+        ), source.name
+
+
+def test_the_domain_calls_no_service_that_would_make_something_happen() -> None:
+    """Import guards catch a module; this catches the name that would use one."""
+
+    forbidden = (
+        "WorkflowService",
+        "PatchPromotionService",
+        "PatchCaptureService",
+        "ProcessAgentSupervisor",
+        "AgentSupervisor",
+        "AgentRuntime",
+        "WorkspaceService",
+        "PluginManager",
+    )
+    for source, text in _sources(PRODUCT_ROOT):
+        for name in forbidden:
+            assert name not in text, (source.name, name)
 
 
 def test_the_product_domain_reuses_the_shared_rules_it_needs() -> None:
@@ -157,15 +240,11 @@ def test_the_product_domain_reuses_the_shared_rules_it_needs() -> None:
     assert "traceh.session.invariants" in reused
 
 
-def test_no_chat_command_or_router_arrived_early() -> None:
-    """F2 owns the Router; the chat surface is later still."""
+def test_no_chat_control_plane_arrived_early() -> None:
+    """F2 owns the Router. The chat surface and its commands are F3."""
 
     for source, text in _sources(PRODUCT_ROOT):
-        for forbidden in (
-            "TaskRoutingParser",
-            "propose_task",
-            "start_proposal",
-        ):
+        for forbidden in ("propose_task", "start_proposal", "handle_command"):
             assert forbidden not in text, (source.name, forbidden)
         command_literals = {
             "/approve",
@@ -173,12 +252,59 @@ def test_no_chat_command_or_router_arrived_early() -> None:
             "/cancel",
             "/inspect",
             "/abandon",
+            "/task",
         }
         assert command_literals.isdisjoint(_literals(text)), source.name
     package = PACKAGE_ROOT
     for source, text in _sources(package / "cli"):
         assert "traceh.product" not in text, source.name
         assert "ProductTaskService" not in text, source.name
+        assert "ProductAssemblyService" not in text, source.name
+
+
+def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
+    """No handle reaches the router *through* the seam - it is handed a string."""
+
+    responder = inspect_module.signature(RouterResponder.respond)
+    assert list(responder.parameters) == ["self", "summary"]
+    assert responder.parameters["summary"].annotation == "str"
+    parser = inspect_module.signature(StrictTaskRoutingParser.parse)
+    assert list(parser.parameters) == ["self", "response"]
+    assert parser.parameters["response"].annotation == "str"
+    assert list(inspect_module.signature(ProductModeRouter.route).parameters) == [
+        "self",
+        "summary",
+    ]
+
+
+def test_the_assembly_service_plans_and_stops() -> None:
+    """It produces a receipt. Starting, verifying and promoting are elsewhere."""
+
+    public = {
+        name for name in vars(ProductAssemblyService) if not name.startswith("_")
+    }
+    assert public == {"tasks", "preflight", "assemble"}
+    for verb in ("start", "run", "execute", "resume", "approve", "promote"):
+        assert not any(verb in name for name in public), verb
+    assert list(
+        inspect_module.signature(ProductAssemblyService.__init__).parameters
+    ) == ["self", "tasks", "registry", "sources", "targets", "router"]
+
+
+def test_no_topology_can_arrive_from_configuration() -> None:
+    """A Profile chooses who. It has no field with which to choose the graph."""
+
+    for value in (
+        product_api.ProductTaskProfile,
+        product_api.ProductRoleProfile,
+        product_api.ProductRouterProfile,
+        product_api.TaskRouting,
+        product_api.ProductTaskProposal,
+    ):
+        names = {item.name for item in dataclasses.fields(value)}
+        for forbidden in ("node", "edge", "graph", "dag", "fan_out", "agents", "count"):
+            assert not any(forbidden in name for name in names), (value, forbidden)
+    assert set(ROUTER_RESPONSE_KEYS) == {"mode", "reason"}
 
 
 def test_the_domain_grants_no_approve_promote_or_capture_capability() -> None:

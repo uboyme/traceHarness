@@ -1,18 +1,33 @@
-"""ProductTask persistent facts: parser, projection, reader and host writer.
+"""ProductTask facts, and the plan a confirmed task may run - but never running one.
 
-This domain owns one thing - what a ProductTask durably *is* - and nothing that
-happens to one. It starts no Workflow, calls no model, promotes nothing, renders
-no chat and exposes no model-visible capability. The contract it implements is
-frozen in :mod:`traceh.api.product`; this package is the first real production
-mainline built on it.
+This domain owns two things and refuses everything between them and execution.
+v0.7-F1 owns what a ProductTask durably *is*: a strict parser, one projector, a
+fresh reader and the single host writer. v0.7-F2 adds what a confirmed task will
+run *as*: the strict mode router, the one Profile Registry, the preflight binding
+and the fixed Workflow definition a receipt is taken from.
+
+It still starts no Workflow, captures nothing, verifies nothing, approves
+nothing, promotes nothing, renders no chat and exposes no model-visible
+capability. The contract both stages implement is frozen in
+:mod:`traceh.api.product`.
 """
 
+from traceh.product.assembly import (
+    ProductAssembly,
+    ProductAssemblyService,
+    ProductPreflight,
+    ProductSourceResolver,
+    product_routing_operation_id,
+    require_assemblable,
+)
 from traceh.product.errors import (
     ProductError,
     ProductEvidenceError,
     ProductInputError,
     ProductOperationConflictError,
+    ProductProfileError,
     ProductProtocolError,
+    ProductRoutingError,
     ProductServiceClosedError,
     ProductStateError,
     ProductStreamConflictError,
@@ -46,6 +61,24 @@ from traceh.product.projection import (
     rebuild_product_task,
     validate_product_task,
 )
+from traceh.product.registry import (
+    ProductAssemblyResolver,
+    ProductProfileBinding,
+    ProductProfileRegistry,
+    ResolvedAgentAssembly,
+    ResolvedProductProfile,
+    agent_assembly_digest,
+    role_assembly_digest,
+    router_assembly_digest,
+)
+from traceh.product.router import (
+    MAX_ROUTER_SUMMARY_CHARS,
+    ProductModeRouter,
+    RouterDecision,
+    RouterResponder,
+    RouterResponse,
+    StrictTaskRoutingParser,
+)
 from traceh.product.service import (
     MAX_APPEND_ATTEMPTS,
     ProductTaskService,
@@ -53,33 +86,73 @@ from traceh.product.service import (
     WorkflowStateSource,
     converge_product_task,
 )
+from traceh.product.topology import (
+    PRODUCT_APPROVAL_NODE,
+    PRODUCT_MODE_ROLES,
+    PRODUCT_VERIFICATION_NODE,
+    product_definition_hash,
+    product_message_binding,
+    product_role_node_id,
+    product_spec_binding,
+    product_workflow_definition,
+)
 
 __all__ = [
     "MAX_APPEND_ATTEMPTS",
     "MAX_REASON_DISPLAY_CHARS",
+    "MAX_ROUTER_SUMMARY_CHARS",
+    "PRODUCT_APPROVAL_NODE",
+    "PRODUCT_MODE_ROLES",
+    "PRODUCT_VERIFICATION_NODE",
     "MessageEvidence",
+    "ProductAssembly",
+    "ProductAssemblyResolver",
+    "ProductAssemblyService",
     "ProductError",
     "ProductEvidenceError",
     "ProductInputError",
+    "ProductModeRouter",
     "ProductOperationConflictError",
+    "ProductPreflight",
+    "ProductProfileBinding",
+    "ProductProfileError",
+    "ProductProfileRegistry",
     "ProductProtocolError",
+    "ProductRoutingError",
     "ProductServiceClosedError",
+    "ProductSourceResolver",
     "ProductStateError",
     "ProductStreamConflictError",
     "ProductTaskIssue",
     "ProductTaskService",
     "ProductTaskStreamReader",
     "ProductWriteError",
+    "ResolvedAgentAssembly",
+    "ResolvedProductProfile",
+    "RouterDecision",
+    "RouterResponder",
+    "RouterResponse",
     "SessionEvidenceReader",
+    "StrictTaskRoutingParser",
     "TaskOwnershipSource",
     "WorkflowStateSource",
+    "agent_assembly_digest",
     "converge_product_task",
     "is_product_fact",
+    "product_definition_hash",
     "product_event_header",
+    "product_message_binding",
+    "product_role_node_id",
+    "product_routing_operation_id",
+    "product_spec_binding",
     "product_task_stream",
+    "product_workflow_definition",
     "rebuild_product_task",
+    "require_assemblable",
     "require_confirmation_evidence",
     "require_product_identifier",
+    "role_assembly_digest",
+    "router_assembly_digest",
     "task_abandoned_data",
     "task_awaiting_data",
     "task_cancelled_data",

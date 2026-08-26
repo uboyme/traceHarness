@@ -2,6 +2,96 @@
 
 ## Unreleased
 
+### v0.7-F2: strict Router, Profile Registry and Product Assembly
+
+- Added the router, registry, topology and assembly stages to `traceh.product`
+  so a confirmed ProductTask can be turned into one exact
+  `ProductAssemblyReceipt` beside the fixed Workflow definition its hash was
+  taken from - or refused with a stable error. It deliberately stops there: no
+  Workflow run, capture, verification, approval, promotion, real model call or
+  chat surface, and no `product/task-started` is written.
+- `StrictTaskRoutingParser` accepts exactly one JSON object whose key set is
+  exactly `mode`/`reason`; unknown modes, extra keys, code fences, prose,
+  arrays, doubled answers and over-long or non-text bodies are all stable
+  `ProductRoutingError`s, never retried and never guessed from free text. The
+  enum beside the display-only `reason_display` is the decision; a reason that
+  contradicts it changes nothing. `ProductModeRouter` takes every bound from an
+  explicit `ProductRouterProfile` (no code defaults) and converges its owned
+  responder on timeout, cancellation and close, so a deadline never leaves a
+  router still talking to a provider. The live router receives the actual
+  resolved assembly and derives its identity; before a new `auto` decision the
+  assembler checks both its Profile bounds and assembly digest against the
+  fresh preflight, so a paper Router cannot cover another live configuration.
+- `ProductProfileRegistry` resolves one explicit profile id and has no default:
+  unknown, empty, duplicated or ill-typed ids fail. Entries are
+  `(profile_id, binding)` pairs rather than a mapping, so a repeated id is a
+  construction error instead of a silent overwrite. The resolved
+  `ResolvedAgentAssembly` must answer the slot it was asked about - preset,
+  grants, provider and model - and two authorities are enforced rather than
+  recorded: `workspace_access` must equal `ProductRole.workspace_access` (a
+  writable reviewer is refused), and the router assembly carries no Tool, no
+  grant and read-only access. `agent_assembly_digest` covers the resolved
+  `AgentSpec` fingerprint (the repository's own definition), provider/model and
+  the order-preserving Tool/Prompt/Policy composition; `role_assembly_digest`
+  covers all three roles or refuses to produce one. A registry rebinding that
+  keeps every name spelled the same changes `role_assembly_digest` while
+  `profile_digest` stays put, which is exactly the drift a name-only binding
+  cannot see. Profile Budget validation reuses the Budget domain's
+  `freeze_limits()` contract, including `MAX_BUDGET_VALUE`, rather than keeping
+  a weaker Product-local range.
+- `ProductAssemblyService.preflight()` re-resolves on every call and caches
+  nothing: the source snapshot's exact commit, the frozen
+  `verifier_definition_digest` and the promotion target's fingerprint, exact
+  branch ref and expected revision all come from the real resolvers (`LocalGitWorkspaceProvider`
+  and `LocalBareGitPromotionTargets` already satisfy the two narrow seams). The
+  resulting binding carries identities and revisions only - no repository path,
+  prompt, credential or verifier argv.
+- `assemble()` checks the freshly resolved `profile_digest` and preflight digest
+  against the values recorded at opening *before* any routing call, so source
+  drift, a changed verification plan, an advanced promotion target ref or a
+  registry rebinding all fail closed with no routing token spent and no second
+  receipt minted. An explicit `single`/`multi` never reaches the router; an
+  `auto` task reuses its one durable `product/task-routed` fact, or asks exactly
+  once and records the result through the F1 writer with a task-derived
+  `operation_id`, so a retry is the same write and two racing assemblies leave
+  exactly one routing fact. The receipt's `workflow_definition_hash` is
+  computed from the definition that would actually run.
+- The two fixed topologies live in `product/topology.py` and are not
+  configurable: `single` is `coder → verification → approval`, `multi` is
+  `parent → reviewer → coder →` the same safety tail, neither uses Map/Join,
+  only the coder captures an Artifact, and the reviewer runs before the coder so
+  its report is part of the work. No Profile, task or router answer has a field
+  for nodes, edges, Agent counts or fan-out.
+- Tightened the architecture guards rather than loosening them: the product
+  domain may import exactly five named pure functions
+  (`freeze_workflow_definition`/`workflow_definition_hash` from
+  `traceh.workflow.models`, `freeze_verification_plan`/
+  `verifier_definition_digest`/`require_target_ref` from
+  `traceh.promotion.models`) so a receipt records *the* definition hash, *the*
+  verifier digest and Promotion's exact ref rule rather than a second
+  computation of any; everything else in every executing domain remains
+  unreachable, and `tests/test_promotion_architecture.py` was extended the same
+  way. The assembly service takes the concrete `ProductTaskService` by type, so
+  the one fact universe is structural rather than a remembered comparison.
+- Added `tests/test_product_router.py` (18), `tests/test_product_registry.py`
+  (21) and `tests/test_product_assembly.py` (30); the cross-stage
+  `tests/test_product_architecture.py` grew from 11 to 15, and the F0 contract
+  guard about "no `router.py`/`registry.py`/`assembly.py` yet" became "they
+  exist, `chat.py` and any CLI import still do not". Seventeen reverse
+  validations, each through the public path and each failing for its own root
+  cause before restoration: unknown-key tolerance, prose salvaging, an ignored
+  response bound, timeout/cancellation without convergence, resolver-decided
+  access, a dropped no-Tool check, name-only role digests, dropped drift
+  comparison, re-deciding an already durable routing, routing before preflight,
+  hashing a definition other than the one that would run, a duck-typed writer,
+  and routing explicit modes, plus live Router profile/assembly binding, exact
+  promotion target-ref binding and reuse of the Budget domain's range contract.
+- Final post-review evidence: product-targeted gate `233 passed`, current
+  adjacent Budget/Workflow/Promotion/Product regression `375 passed`, and the
+  one final full gate `2321 passed, 5 skipped`; `compileall`, scoped `ruff` and
+  document QA clean. The independent review found no P0/P1/P2. The four protected files are
+  byte-identical and the version stays `0.6.0`.
+
 ### v0.7-F1: ProductTask as a durable fact
 
 - Added `traceh.product`, an independent domain implementing the F0 contract:

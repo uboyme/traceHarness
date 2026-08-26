@@ -1,4 +1,4 @@
-"""Shared builders for the v0.7-F1 ProductTask fact tests.
+"""Shared builders for the v0.7-F1 fact-layer and v0.7-F2 assembly tests.
 
 Deliberately not named ``test_*`` so pytest does not collect it.
 
@@ -10,13 +10,16 @@ this file. An architecture test asserts that.
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 
+from traceh.api.agents import AgentSpec
 from traceh.api.budgets import BudgetLimits
 from traceh.api.events import PendingEvent
 from traceh.api.product import (
     ProductAssemblyReceipt,
     ProductPreflightBinding,
+    ProductRole,
     ProductRoleProfile,
     ProductRouterProfile,
     ProductTaskProfile,
@@ -26,8 +29,26 @@ from traceh.api.product import (
     ResolvedTaskMode,
     TaskModeSource,
 )
+from traceh.api.promotion import (
+    PromotionTarget,
+    VerificationPlan,
+    VerifierCommand,
+    VerifierEnvironmentPolicy,
+)
 from traceh.api.workflow import WorkflowStatus
-from traceh.product import ProductTaskService, SessionEvidenceReader
+from traceh.api.workspaces import WorkspaceAccess, WorkspaceSourceSnapshot
+from traceh.product import (
+    ProductAssemblyService,
+    ProductModeRouter,
+    ProductProfileBinding,
+    ProductProfileRegistry,
+    ProductTaskService,
+    ResolvedAgentAssembly,
+    RouterResponse,
+    SessionEvidenceReader,
+    StrictTaskRoutingParser,
+)
+from traceh.product.errors import ProductProfileError
 from traceh.session.event_store import EventStore, InMemoryEventStore
 
 ORIGIN_SESSION = "session-alpha"
@@ -36,6 +57,15 @@ ORIGIN_MESSAGE = "message-1"
 PROPOSED_TURN = "turn-1"
 CONFIRM_TURN = "turn-2"
 CONFIRM_MESSAGE = "message-2"
+
+PROFILE_ID = "profile-alpha"
+SOURCE_FINGERPRINT = "a1" * 32
+SOURCE_BASE_REVISION = "b2" * 20
+TARGET_FINGERPRINT = "c3" * 32
+TARGET_EXPECTED_REVISION = "d4" * 20
+ROUTER_AGENT = "agent-router"
+ROUTER_SESSION = "session-router"
+ROUTING_SUMMARY = "add a configuration check to the tracked module"
 
 
 def limits(**overrides: int | None) -> BudgetLimits:
@@ -91,6 +121,7 @@ def preflight(**overrides: str) -> ProductPreflightBinding:
         base_revision="4" * 40,
         verification_plan_digest="5" * 64,
         promotion_target_fingerprint="6" * 64,
+        promotion_target_ref="refs/heads/main",
         promotion_expected_revision="7" * 40,
     )
     return replace(binding, **overrides) if overrides else binding
@@ -316,24 +347,335 @@ class Gate:
         await self.release.wait()
 
 
+# --------------------------------------------------------------- v0.7-F2
+
+
+def verification_plan(
+    *, plan_id: str = "registered-plan", plan_version: int = 1
+) -> VerificationPlan:
+    return VerificationPlan(
+        plan_id=plan_id,
+        plan_version=plan_version,
+        commands=(
+            VerifierCommand(
+                command_id="tracked-check",
+                argv=("python", "-c", "raise SystemExit(0)"),
+                timeout_ms=60_000,
+            ),
+        ),
+        environment=VerifierEnvironmentPolicy(
+            policy_id="verifier-env",
+            passthrough=("PATH",),
+            overrides=(("PYTHONIOENCODING", "utf-8"),),
+        ),
+        max_output_bytes=1024 * 1024,
+        protocol_version=1,
+    )
+
+
+def resolved_role(
+    role: ProductRole,
+    *,
+    access: WorkspaceAccess | None = None,
+    preset: str | None = None,
+    grants: tuple[str, ...] | None = None,
+    provider_id: str = "registered-provider",
+    model_id: str = "registered-model",
+    tools: tuple[str, ...] = ("read-file",),
+    prompts: tuple[str, ...] = ("prompt-role",),
+    policies: tuple[str, ...] = ("policy-role",),
+) -> ResolvedAgentAssembly:
+    slot = profile().role_profile(role)
+    return ResolvedAgentAssembly(
+        spec=AgentSpec(
+            preset=slot.preset if preset is None else preset,
+            workspace_id=f"workspace-{role.value}",
+            capability_grants=(
+                slot.capability_grants if grants is None else grants
+            ),
+        ),
+        provider_id=provider_id,
+        model_id=model_id,
+        tool_ids=tools,
+        prompt_ids=prompts,
+        policy_ids=policies,
+        workspace_access=role.workspace_access if access is None else access,
+    )
+
+
+def resolved_router(
+    *,
+    tools: tuple[str, ...] = (),
+    grants: tuple[str, ...] = (),
+    access: WorkspaceAccess = WorkspaceAccess.READ_ONLY,
+    preset: str | None = None,
+) -> ResolvedAgentAssembly:
+    router = profile().router
+    return ResolvedAgentAssembly(
+        spec=AgentSpec(
+            preset=router.preset if preset is None else preset,
+            workspace_id="workspace-router",
+            capability_grants=grants,
+        ),
+        provider_id="registered-provider",
+        model_id="registered-model",
+        tool_ids=tools,
+        prompt_ids=("prompt-router",),
+        policy_ids=(),
+        workspace_access=access,
+    )
+
+
+@dataclass(slots=True)
+class RecordingAssemblies:
+    """A host resolver whose answers a test controls role by role."""
+
+    roles: dict[ProductRole, ResolvedAgentAssembly] = field(
+        default_factory=lambda: {role: resolved_role(role) for role in ProductRole}
+    )
+    router: ResolvedAgentAssembly = field(default_factory=resolved_router)
+    unavailable: frozenset[ProductRole] = frozenset()
+    calls: list[str] = field(default_factory=list)
+
+    async def role_assembly(self, *, role, profile, provider_id, model_id):
+        del profile, provider_id, model_id
+        self.calls.append(role.value)
+        if role in self.unavailable:
+            raise ProductProfileError("product-assembly-unavailable", role.value)
+        return self.roles[role]
+
+    async def router_assembly(self, *, profile, provider_id, model_id):
+        del profile, provider_id, model_id
+        self.calls.append("router")
+        return self.router
+
+
+@dataclass(slots=True)
+class RecordingSources:
+    """A source resolver whose answer a test can move between reads."""
+
+    fingerprint: str = SOURCE_FINGERPRINT
+    revision: str = SOURCE_BASE_REVISION
+    source_id: str | None = None
+    reads: int = 0
+
+    async def resolve_source(
+        self, source_id: str, revision: str
+    ) -> WorkspaceSourceSnapshot:
+        self.reads += 1
+        return WorkspaceSourceSnapshot(
+            source_id=self.source_id if self.source_id is not None else source_id,
+            requested_revision=revision,
+            repository_fingerprint=self.fingerprint,
+            base_revision=self.revision,
+        )
+
+
+@dataclass(slots=True)
+class RecordingTargets:
+    """A promotion target resolver whose ref a test can advance."""
+
+    fingerprint: str = TARGET_FINGERPRINT
+    target_ref: str = "refs/heads/main"
+    revision: str = TARGET_EXPECTED_REVISION
+    reads: int = 0
+
+    async def resolve(self, target_id: str) -> PromotionTarget:
+        self.reads += 1
+        return PromotionTarget(
+            target_id=target_id,
+            repository_path=Path("/product-promotion-target"),
+            repository_fingerprint=self.fingerprint,
+            target_ref=self.target_ref,
+            expected_revision=self.revision,
+        )
+
+
+@dataclass(slots=True)
+class ScriptedResponder:
+    """A router Agent stand-in: text in, one bounded answer out."""
+
+    text: str = '{"mode": "multi", "reason": "three roles help here"}'
+    router_agent_id: str = ROUTER_AGENT
+    routing_session_id: str = ROUTER_SESSION
+    gate: Gate | None = None
+    failure: BaseException | None = None
+    calls: list[str] = field(default_factory=list)
+
+    async def respond(self, summary: str) -> RouterResponse:
+        self.calls.append(summary)
+        if self.gate is not None:
+            await self.gate.wait()
+        if self.failure is not None:
+            raise self.failure
+        return RouterResponse(
+            text=self.text,
+            router_agent_id=self.router_agent_id,
+            routing_session_id=self.routing_session_id,
+        )
+
+
+def registry(
+    *,
+    assemblies: RecordingAssemblies | None = None,
+    task_profile: ProductTaskProfile | None = None,
+    plan: VerificationPlan | None = None,
+    profile_id: str = PROFILE_ID,
+    extra: tuple[tuple[str, ProductProfileBinding], ...] = (),
+) -> ProductProfileRegistry:
+    binding = ProductProfileBinding(
+        profile=profile() if task_profile is None else task_profile,
+        verification_plan=verification_plan() if plan is None else plan,
+    )
+    return ProductProfileRegistry(
+        ((profile_id, binding), *extra),
+        assemblies=RecordingAssemblies() if assemblies is None else assemblies,
+    )
+
+
+def mode_router(
+    responder: ScriptedResponder | None = None,
+    *,
+    task_profile: ProductTaskProfile | None = None,
+    assembly: ResolvedAgentAssembly | None = None,
+) -> ProductModeRouter:
+    return ProductModeRouter(
+        ScriptedResponder() if responder is None else responder,
+        StrictTaskRoutingParser(),
+        profile=(profile() if task_profile is None else task_profile).router,
+        assembly=resolved_router() if assembly is None else assembly,
+    )
+
+
+@dataclass(slots=True)
+class Plan:
+    """One complete F2 host assembly built on one F1 writer."""
+
+    base: Assembly
+    registry: ProductProfileRegistry
+    assemblies: RecordingAssemblies
+    sources: RecordingSources
+    targets: RecordingTargets
+    responder: ScriptedResponder
+    router: ProductModeRouter
+    service: ProductAssemblyService
+
+    @property
+    def store(self) -> EventStore:
+        return self.base.store
+
+    @property
+    def tasks(self) -> ProductTaskService:
+        return self.base.service
+
+    async def aclose(self) -> None:
+        await self.router.aclose()
+        await self.base.aclose()
+
+
+async def build_plan(
+    *,
+    assemblies: RecordingAssemblies | None = None,
+    sources: RecordingSources | None = None,
+    targets: RecordingTargets | None = None,
+    responder: ScriptedResponder | None = None,
+    task_profile: ProductTaskProfile | None = None,
+    plan: VerificationPlan | None = None,
+) -> Plan:
+    base = await build_assembly()
+    assemblies = RecordingAssemblies() if assemblies is None else assemblies
+    sources = RecordingSources() if sources is None else sources
+    targets = RecordingTargets() if targets is None else targets
+    responder = ScriptedResponder() if responder is None else responder
+    profiles = registry(
+        assemblies=assemblies, task_profile=task_profile, plan=plan
+    )
+    resolved = await profiles.resolve(PROFILE_ID)
+    router = mode_router(
+        responder,
+        task_profile=task_profile,
+        assembly=resolved.router,
+    )
+    service = ProductAssemblyService(
+        base.service,
+        registry=profiles,
+        sources=sources,
+        targets=targets,
+        router=router,
+    )
+    return Plan(
+        base=base,
+        registry=profiles,
+        assemblies=assemblies,
+        sources=sources,
+        targets=targets,
+        responder=responder,
+        router=router,
+        service=service,
+    )
+
+
+async def open_for_plan(
+    plan: Plan,
+    *,
+    task_id: str = "task-1",
+    requested_mode: RequestedTaskMode = RequestedTaskMode.SINGLE,
+    profile_id: str = PROFILE_ID,
+):
+    """Open a task against the binding this host currently resolves.
+
+    The preflight comes from the real resolver rather than a literal, so the
+    ``preflight_digest`` a person confirmed is exactly the one a later assembly
+    has to reproduce.
+    """
+
+    current = await plan.service.preflight(profile_id)
+    return await plan.tasks.open_task(
+        task_id=task_id,
+        operation_id=f"{task_id}-open",
+        proposal=proposal(requested_mode=requested_mode, binding=current.binding),
+        confirmation=confirmation(),
+    )
+
+
 __all__ = [
     "CONFIRM_MESSAGE",
     "CONFIRM_TURN",
     "ORIGIN_MESSAGE",
     "ORIGIN_SESSION",
     "ORIGIN_TURN",
+    "PROFILE_ID",
     "PROPOSED_TURN",
+    "ROUTER_AGENT",
+    "ROUTER_SESSION",
+    "ROUTING_SUMMARY",
+    "SOURCE_BASE_REVISION",
+    "SOURCE_FINGERPRINT",
+    "TARGET_EXPECTED_REVISION",
+    "TARGET_FINGERPRINT",
     "Assembly",
     "Gate",
+    "Plan",
+    "RecordingAssemblies",
     "RecordingOwnership",
+    "RecordingSources",
+    "RecordingTargets",
     "RecordingWorkflow",
+    "ScriptedResponder",
     "build_assembly",
+    "build_plan",
     "confirmation",
     "limits",
+    "mode_router",
+    "open_for_plan",
     "opened",
     "preflight",
     "profile",
     "proposal",
     "receipt",
+    "registry",
+    "resolved_role",
+    "resolved_router",
     "seed_session",
+    "verification_plan",
 ]

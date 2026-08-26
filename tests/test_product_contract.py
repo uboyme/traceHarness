@@ -166,6 +166,7 @@ def _preflight(profile: ProductTaskProfile) -> ProductPreflightBinding:
         base_revision="c" * 40,
         verification_plan_digest="d" * 64,
         promotion_target_fingerprint="e" * 64,
+        promotion_target_ref="refs/heads/main",
         promotion_expected_revision="f" * 40,
     )
 
@@ -298,19 +299,21 @@ def test_the_workflow_does_not_learn_about_the_product_surface() -> None:
 
 
 def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
-    """F0 froze a contract; v0.7-F1 implements it in a separate domain.
+    """F0 froze a contract; F1 and F2 implement it in a separate domain.
 
-    The guard that mattered at F0 - "no implementation package exists yet" - has
-    been overtaken by F1, which is the stage that creates one. What must remain
-    true is the boundary it was protecting: the contract lives in
-    ``traceh.api.product`` and stays free of I/O and state, while everything that
-    reads or writes a stream lives in ``traceh.product`` and is checked by
+    The guard that mattered at F0 - "no implementation package exists yet" - was
+    overtaken by F1, and its "no router or registry yet" successor by F2. What
+    must remain true is the boundary all three were protecting: the contract
+    lives in ``traceh.api.product`` and stays free of I/O and state, while
+    everything that reads a stream, resolves a Profile or parses a router answer
+    lives in ``traceh.product`` and is checked by
     ``tests/test_product_architecture.py``.
     """
 
     implementation = PACKAGE_ROOT / "product"
     assert implementation.is_dir()
-    assert (implementation / "service.py").exists()
+    for name in ("service.py", "router.py", "registry.py", "assembly.py"):
+        assert (implementation / name).exists(), name
 
     # The contract module still contains no implementation of its own. A
     # Protocol *declaration* of ``load`` is the contract and stays; what must
@@ -319,9 +322,10 @@ def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
     for forbidden in ("EventStore", "PendingEvent", ".append(", ".read("):
         assert forbidden not in text, forbidden
 
-    # F2 capabilities have still not arrived.
-    for name in ("router.py", "chat.py", "registry.py", "assembly.py"):
-        assert not (implementation / name).exists(), name
+    # F3's chat control plane has still not arrived.
+    assert not (implementation / "chat.py").exists()
+    for source in sorted((PACKAGE_ROOT / "cli").glob("*.py")):
+        assert "traceh.product" not in source.read_text(encoding="utf-8"), source.name
 
 
 def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
@@ -1371,6 +1375,7 @@ def test_the_binding_holds_only_non_secret_identities_and_exact_revisions() -> N
     ):
         assert forbidden not in names, forbidden
     assert binding.base_revision == "c" * 40
+    assert binding.promotion_target_ref == "refs/heads/main"
     assert binding.promotion_expected_revision == "f" * 40
 
 

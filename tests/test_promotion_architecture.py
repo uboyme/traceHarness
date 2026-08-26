@@ -117,47 +117,64 @@ def test_no_existing_owner_learns_about_promotion() -> None:
         ), module.__name__
 
 
-def test_no_cli_or_workflow_entry_point_exists_for_promotion() -> None:
+def test_no_standalone_patch_promotion_cli_exists() -> None:
     package = Path(agent_runtime_module.__file__).parent.parent
     for source, text in _sources(package / "cli"):
-        # The CLI already owns the unrelated L4 plugin-promotion commands; it
-        # must not gain a D2 Patch review/approval/promotion entry point.
-        assert "traceh.promotion" not in text, source.name
+        # F3's explicit composition root may select a local target resolver and
+        # translate Promotion errors. It still must not own the service, ledger,
+        # stream, or a parallel Patch-promotion subcommand.
         assert "PatchPromotionService" not in text, source.name
         assert "patch-promotions" not in text, source.name
     assert not (package / "workflows").exists()
     assert not (package / "promotion" / "cli.py").exists()
 
 
-PRODUCT_PURE_SYMBOLS = {
-    "traceh.promotion.models": {
-        "freeze_verification_plan",
-        "require_target_ref",
-        "verifier_definition_digest",
-    }
+PRODUCT_PROMOTION_IMPORTS = {
+    "assembly.py": {
+        "traceh.promotion.models": {"require_target_ref"},
+    },
+    "control.py": {
+        "traceh.promotion.models": {"expected_approval_digest"},
+        "traceh.promotion.service": {"PatchPromotionService"},
+    },
+    "events.py": {
+        "traceh.promotion.models": {"require_target_ref"},
+    },
+    "host.py": {
+        "traceh.promotion.service": {"PatchPromotionService"},
+    },
+    "registry.py": {
+        "traceh.promotion.models": {
+            "freeze_verification_plan",
+            "verifier_definition_digest",
+        },
+    },
 }
-"""What v0.7-F2's Profile Registry may reuse, and nothing more.
+"""The exact F2/F3 Product-to-Promotion dependency surface.
 
-A product preflight records ``verification_plan_digest``, which has to be *the*
-digest of a frozen plan rather than a second definition of one, and a preflight
-target ref must use Promotion's exact ref syntax. Computing either rule in
-the product domain would create two answers to a question this domain owns, and
-they would drift the first time either changed. So these three pure functions are
-allowed - neither reads a store, runs a verifier or touches a repository - and
-every other name in the promotion domain, including the service itself, remains
-out of reach. This mirrors the single-symbol allowance the Workflow domain has
-for ``durable_log_identity``.
+F2 reuses Promotion's identity rules instead of copying them. F3 adds exactly
+two orchestration consumers: the Product host constructs the service and the
+Product control plane reads/reviews/approves/promotes through it. Per-file
+symbol sets prevent that stage advance from becoming blanket domain access.
 """
 
 
-def test_only_the_promotion_domain_imports_the_promotion_domain() -> None:
-    """Promotion has one calling consumer, and it is an orchestration layer.
+CLI_PROMOTION_IMPORTS = {
+    "main.py": {
+        "traceh.promotion.errors": {"PromotionError"},
+        "traceh.promotion.local_git": {"LocalBareGitPromotionTargets"},
+    },
+}
 
-    ADR-0024 reserves this direction: a Workflow node *calls* the public
-    promotion service. What must never happen is the execution kernel, the CLI
-    or another domain learning about promotion, so every other module is still
-checked - and the product domain, which needs three pure identity helpers, is
-    held to exactly those names.
+
+def test_only_declared_orchestration_seams_import_the_promotion_domain() -> None:
+    """Promotion remains behind Workflow, Product and one composition root.
+
+    Runtime/Agent/Tool owners still know nothing about Promotion. Product is an
+    F3 orchestration layer, while ``cli/main.py`` only chooses the concrete
+    target resolver and translates its stable error at the explicit opt-in
+    assembly boundary. Every permitted concrete import is pinned by file and
+    symbol; all other modules must have an empty dependency set.
     """
 
     package = Path(agent_runtime_module.__file__).parent.parent
@@ -166,30 +183,28 @@ checked - and the product domain, which needs three pure identity helpers, is
         if source.parent in allowed:
             continue
         tree = ast.parse(source.read_text(encoding="utf-8"))
-        imported = {
-            node.module
+        imports = {
+            node.module: {alias.name for alias in node.names}
             for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom) and node.module is not None
-        }
-        touching = {
-            name
-            for name in imported
-            if name == "traceh.promotion" or name.startswith("traceh.promotion.")
+            and (
+                node.module == "traceh.promotion"
+                or node.module.startswith("traceh.promotion.")
+            )
         }
         if source.parent == package / "product":
-            assert touching <= set(PRODUCT_PURE_SYMBOLS), str(source.name)
-            for node in ast.walk(tree):
-                if (
-                    isinstance(node, ast.ImportFrom)
-                    and node.module in PRODUCT_PURE_SYMBOLS
-                ):
-                    names = {alias.name for alias in node.names}
-                    assert names <= PRODUCT_PURE_SYMBOLS[node.module], (
-                        source.name,
-                        names,
-                    )
+            assert imports == PRODUCT_PROMOTION_IMPORTS.get(source.name, {}), (
+                source.name,
+                imports,
+            )
             continue
-        assert not touching, str(source.relative_to(package))
+        if source.parent == package / "cli":
+            assert imports == CLI_PROMOTION_IMPORTS.get(source.name, {}), (
+                source.name,
+                imports,
+            )
+            continue
+        assert not imports, str(source.relative_to(package))
 
 
 def test_the_model_gains_no_approve_merge_or_promote_tool() -> None:

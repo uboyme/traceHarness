@@ -153,7 +153,7 @@ async def test_the_router_returns_the_decision_and_who_produced_it() -> None:
     router = mode_router(
         ScriptedResponder(text='{"mode": "multi", "reason": "needs review"}')
     )
-    decision = await router.route(ROUTING_SUMMARY)
+    decision = await router.route(ROUTING_SUMMARY, task_id="task-router")
     assert decision.routing.resolved_mode is ResolvedTaskMode.MULTI
     assert decision.router_agent_id == ROUTER_AGENT
     assert decision.routing_session_id == ROUTER_SESSION
@@ -174,7 +174,7 @@ async def test_an_over_long_answer_fails_before_it_is_parsed() -> None:
         task_profile=bounded,
     )
     with pytest.raises(ProductRoutingError) as caught:
-        await router.route(ROUTING_SUMMARY)
+        await router.route(ROUTING_SUMMARY, task_id="task-router")
     assert caught.value.code == "product-router-response-too-large"
     await router.aclose()
 
@@ -187,10 +187,10 @@ async def test_the_question_this_protocol_will_ask_is_bounded_too() -> None:
         ("x" * (MAX_ROUTER_SUMMARY_CHARS + 1), "product-router-summary-too-large"),
     ):
         with pytest.raises(ProductRoutingError) as caught:
-            await router.route(value)
+            await router.route(value, task_id="task-router")
         assert caught.value.code == code
     with pytest.raises(ProductRoutingError):
-        await router.route(None)  # type: ignore[arg-type]
+        await router.route(None, task_id="task-router")  # type: ignore[arg-type]
     await router.aclose()
 
 
@@ -223,7 +223,7 @@ def test_neither_bound_has_a_code_default() -> None:
 async def test_a_responder_that_answers_for_nobody_is_refused() -> None:
     router = mode_router(ScriptedResponder(router_agent_id=""))
     with pytest.raises(ProductInputError):
-        await router.route(ROUTING_SUMMARY)
+        await router.route(ROUTING_SUMMARY, task_id="task-router")
     await router.aclose()
 
 
@@ -237,7 +237,8 @@ class _Hanging:
     gate: Gate
     cancelled: bool = False
 
-    async def respond(self, summary: str) -> RouterResponse:
+    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
+        del task_id
         del summary
         try:
             await self.gate.wait()
@@ -259,7 +260,8 @@ class _Stubborn:
         self.release = asyncio.Event()
         self.finished = False
 
-    async def respond(self, summary: str) -> RouterResponse:
+    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
+        del task_id
         del summary
         self.started.set()
         while not self.release.is_set():
@@ -290,7 +292,7 @@ async def test_a_deadline_converges_the_call_it_gives_up_on() -> None:
         assembly=resolved_router(),
     )
     with pytest.raises(ProductRoutingError) as caught:
-        await router.route(ROUTING_SUMMARY)
+        await router.route(ROUTING_SUMMARY, task_id="task-router")
     assert caught.value.code == "product-router-timeout"
     assert responder.cancelled is True
     await router.aclose()
@@ -299,7 +301,9 @@ async def test_a_deadline_converges_the_call_it_gives_up_on() -> None:
 async def test_a_cancelled_caller_gets_its_own_cancellation_back() -> None:
     responder = _Hanging(Gate())
     router = mode_router(responder)  # type: ignore[arg-type]
-    caller = asyncio.create_task(router.route(ROUTING_SUMMARY))
+    caller = asyncio.create_task(
+        router.route(ROUTING_SUMMARY, task_id="task-router")
+    )
     await responder.gate.entered.wait()
     caller.cancel()
     with pytest.raises(asyncio.CancelledError):
@@ -311,7 +315,9 @@ async def test_a_cancelled_caller_gets_its_own_cancellation_back() -> None:
 async def test_cancelling_again_cannot_release_the_caller_early() -> None:
     responder = _Stubborn()
     router = mode_router(responder)  # type: ignore[arg-type]
-    caller = asyncio.create_task(router.route(ROUTING_SUMMARY))
+    caller = asyncio.create_task(
+        router.route(ROUTING_SUMMARY, task_id="task-router")
+    )
     await responder.started.wait()
     caller.cancel()
     await asyncio.sleep(0)
@@ -328,12 +334,14 @@ async def test_cancelling_again_cannot_release_the_caller_early() -> None:
 async def test_close_refuses_new_questions_and_waits_for_the_one_asked() -> None:
     responder = _Hanging(Gate())
     router = mode_router(responder)  # type: ignore[arg-type]
-    caller = asyncio.create_task(router.route(ROUTING_SUMMARY))
+    caller = asyncio.create_task(
+        router.route(ROUTING_SUMMARY, task_id="task-router")
+    )
     await responder.gate.entered.wait()
     closing = asyncio.create_task(router.aclose())
     await asyncio.sleep(0)
     with pytest.raises(ProductServiceClosedError):
-        await router.route(ROUTING_SUMMARY)
+        await router.route(ROUTING_SUMMARY, task_id="task-router")
     assert not closing.done()
     responder.gate.release.set()
     decision = await caller

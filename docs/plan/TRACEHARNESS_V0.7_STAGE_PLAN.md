@@ -81,7 +81,7 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 | F0 | 冻结统一 Chat 产品合同、DTO、事件、Profile、Assembly 和架构守卫 | 已完成并提交 |
 | F1 | 实现 ProductTask append-only 事实层、严格 replay、幂等写入与派生视图 | 已完成，独立审查与最终门禁通过 |
 | F2 | 实现严格 Router、Profile Registry 和 Product Assembly | 已完成；独立审查与最终全量通过 |
-| F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 未开始 |
+| F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 已实现；独立复审与最终全量通过，待提交 |
 | F4 | 重构现有 `traceh eval`，完成 single/multi/auto 的小规模真实度量 | 未开始 |
 | F5 | v0.7 RC、安全/打包门禁、版本、tag 与 GitHub Release | 未开始 |
 
@@ -181,13 +181,14 @@ F3 把现有行式 `traceh chat`、F1 ProductTask、F2 Assembly、Stage E Workfl
 产品行为：
 
 1. 普通聊天继续原样运行；没有 proposal/人类确认就没有 ProductTask。
-2. 模型只能提出结构化 proposal；宿主用固定面板显示模式、Profile、仓库和安全边界。
+2. 模型只能提出结构化 proposal；用户明确指定时可附带 single/multi/auto，否则使用 Profile 默认值。宿主用固定面板显示模式、来源、Profile、仓库、安全边界和确认后将使用的唯一 prospective task id。
 3. 用户在后续 Turn 用自然语言确认时，宿主记录该用户 message/Turn，并创建 ProductTask；确定性命令可以作为同一控制面的快捷入口，但不能形成另一条任务主线。
 4. explicit single/multi 或 auto resolved mode 经 F2 装配后启动现有 Workflow。
 5. 到 Approval 屏障时，宿主渲染 Review evidence；模型上下文不获得 secret approval/promotion values。
 6. 人工批准后，由产品控制器显式调用 Promotion；Workflow 自己不推广。
 7. `inspect`、`approve`、`reject`、`cancel`、`abandon` 等宿主操作都按 task identity fresh replay，不依赖当时的聊天内存。
 8. `interrupted` 不伪装成可恢复；只有 Stage E 已证明的 Approval 屏障可继续。
+9. `product/task-opened` 以后、Workflow 启动以前的普通 Router/装配失败必须先复用现有 owner 清理，再写失败终态；清理失败不能伪造收敛。
 
 真实验收至少覆盖：
 

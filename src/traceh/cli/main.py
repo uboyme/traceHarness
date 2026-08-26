@@ -13,6 +13,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from traceh.api.llm import ModelResponse
+from traceh.api.tools import Tool
 from traceh.cli.activity import DEFAULT_HEARTBEAT_SECONDS, validate_heartbeat_seconds
 from traceh.cli.chat import (
     INTERRUPTED_EXIT_CODE,
@@ -279,8 +280,17 @@ def _provider_and_model(args: argparse.Namespace):
     return provider, args.model
 
 
-async def _runtime(args: argparse.Namespace):
-    provider, model = _provider_and_model(args)
+async def _runtime(
+    args: argparse.Namespace,
+    *,
+    provider_and_model=None,
+    additional_tools: tuple[Tool, ...] = (),
+):
+    provider, model = (
+        _provider_and_model(args)
+        if provider_and_model is None
+        else provider_and_model
+    )
     config = RuntimeConfig(
         data_dir=args.data_dir,
         provider=args.provider,
@@ -293,6 +303,7 @@ async def _runtime(args: argparse.Namespace):
         config,
         provider=provider,
         verifier_name=args.verifier_name,
+        additional_tools=additional_tools,
         enabled_plugins=getattr(args, "plugins", ()),
     )
 
@@ -320,7 +331,96 @@ async def _run(args: argparse.Namespace) -> int:
 async def _chat(args: argparse.Namespace) -> int:
     workspace, session_id = chat_target(args.workspace, args.session_id)
     configure_stdio()
-    runtime = await _runtime(args)
+    product_config = None
+    product_host = None
+    actions = None
+    provider_and_model = _provider_and_model(args)
+    additional_tools: tuple[Tool, ...] = ()
+    if args.product_config is not None:
+        # Keep the default CLI surface light: none of Product, Workspace, CAS or
+        # Promotion is imported merely because another command imported this
+        # module.  The explicit flag is the assembly boundary.
+        from traceh.artifacts.cas import LocalArtifactCas
+        from traceh.artifacts.errors import ArtifactError
+        from traceh.budgets.errors import BudgetError
+        from traceh.product.chat import (
+            ConfirmProductTaskTool,
+            ProductTurnActions,
+            ProposeProductTaskTool,
+        )
+        from traceh.product.config import load_product_host_file
+        from traceh.product.errors import ProductError
+        from traceh.product.host import build_product_chat_host
+        from traceh.promotion.errors import PromotionError
+        from traceh.promotion.local_git import LocalBareGitPromotionTargets
+        from traceh.workspaces.errors import WorkspaceError
+        from traceh.workspaces.local_git import LocalGitWorkspaceProvider
+
+        try:
+            product_config = load_product_host_file(args.product_config)
+        except ProductError as error:
+            raise CliConfigurationError(error.code) from None
+        profile = product_config.host_profile.profile
+        provider, model = provider_and_model
+        if profile.provider_id != args.provider or profile.model_id != model:
+            raise CliConfigurationError(
+                "the Product profile provider/model must match this Chat runtime"
+            )
+        if provider is None:
+            raise CliConfigurationError(
+                "Product Chat currently requires a directly configured built-in provider"
+            )
+        actions = ProductTurnActions()
+        additional_tools = (
+            ProposeProductTaskTool(actions),
+            ConfirmProductTaskTool(actions),
+        )
+    runtime = await _runtime(
+        args,
+        provider_and_model=provider_and_model,
+        additional_tools=additional_tools,
+    )
+    if product_config is not None:
+        provider, _ = provider_and_model
+        assert provider is not None
+        try:
+            workspace_provider = LocalGitWorkspaceProvider(
+                managed_root=product_config.managed_workspace_root,
+                sources={
+                    product_config.source_id: product_config.source_repository,
+                },
+            )
+            promotion_targets = LocalBareGitPromotionTargets(
+                targets={
+                    product_config.promotion_target_id: product_config.promotion_target,
+                }
+            )
+            product_host = await build_product_chat_host(
+                store=runtime.sessions.store,
+                data_dir=Path(args.data_dir),
+                host_profile=product_config.host_profile,
+                providers={args.provider: provider},
+                workspace_provider=workspace_provider,
+                artifact_cas=LocalArtifactCas(product_config.cas_root),
+                promotion_targets=promotion_targets,
+                capture_limits=product_config.capture_limits,
+                approver_id=product_config.approver_id,
+                max_report_chars=product_config.max_report_chars,
+                actions=actions,
+            )
+        except (
+            ArtifactError,
+            BudgetError,
+            ProductError,
+            PromotionError,
+            WorkspaceError,
+        ) as error:
+            await runtime.dispose()
+            code = getattr(error, "code", "product-host-configuration-invalid")
+            raise CliConfigurationError(code) from None
+        except BaseException:
+            await runtime.dispose()
+            raise
     heartbeat_seconds = validate_heartbeat_seconds(
         args.heartbeat_seconds, timeline=args.timeline
     )
@@ -338,6 +438,7 @@ async def _chat(args: argparse.Namespace) -> int:
         # "reloaded for you" instead of "supply it again" only when that is true.
         env_file_supplies=frozenset(report.applied_keys) if loaded else frozenset(),
         verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
+        product_config=args.product_config,
     )
     return await run_chat(
         runtime,
@@ -347,6 +448,7 @@ async def _chat(args: argparse.Namespace) -> int:
         timeline=args.timeline,
         heartbeat_seconds=heartbeat_seconds,
         resume_environment=resume_environment,
+        product=product_host,
     )
 
 
@@ -721,6 +823,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Seconds between 'still working' lines while a model call or tool runs "
             f"(default {DEFAULT_HEARTBEAT_SECONDS:g}; 0 disables them and keeps the timeline)"
+        ),
+    )
+    chat.add_argument(
+        "--product-config",
+        type=Path,
+        default=None,
+        help=(
+            "Enable the controlled ProductTask surface with one explicit schema-1 "
+            "host configuration"
         ),
     )
     _add_runtime_arguments(chat)

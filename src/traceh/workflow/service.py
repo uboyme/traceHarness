@@ -116,6 +116,17 @@ class WorkflowService:
     def store(self) -> EventStore:
         return self._store
 
+    async def workflow_status(self, run_id: str) -> WorkflowStatus | None:
+        """Fresh run-level status for product reconciliation.
+
+        This is a projection of the existing Workflow stream, not a cached
+        lifecycle flag.  A caller needing node evidence must still call
+        :meth:`state` with the exact frozen definition.
+        """
+
+        run_id = require_workflow_identifier(run_id, field="run_id")
+        return (await self._reader.load(run_id)).status
+
     async def state(self, run_id: str, definition: WorkflowDefinition) -> WorkflowRun:
         """Read one run without advancing it."""
 
@@ -137,6 +148,35 @@ class WorkflowService:
         self, run_id: str, definition: WorkflowDefinition
     ) -> WorkflowRun:
         return await self._advance(run_id, definition, allow_start=False)
+
+    async def cancel(self, run_id: str) -> bool:
+        """Cancel and converge this host's in-flight advancement of ``run_id``.
+
+        This does not manufacture a durable Workflow terminal.  A cancellation
+        may land while a node owns an external side effect, so the honest
+        durable state is the partial stream already written.  The method owns
+        only the process-local execution task: it cancels that exact task,
+        waits for node cleanup to finish, and reports whether this service was
+        driving the run.  ProductTask may then record its own user cancellation
+        without pretending the interrupted Workflow became resumable.
+        """
+
+        run_id = require_workflow_identifier(run_id, field="run_id")
+        async with self._lock:
+            pending = self._pending.get(run_id)
+            task = None if pending is None else pending[1]
+        if task is None:
+            return False
+        task.cancel()
+        await await_worker_convergence(task)
+        # Retrieve an ordinary failure so it cannot become an unobserved task
+        # exception.  Cancellation is the requested outcome; a distinct
+        # cleanup failure still belongs to the caller as its cause.
+        if not task.cancelled():
+            failure = task.exception()
+            if failure is not None:
+                raise failure
+        return True
 
     async def _advance(
         self, run_id: str, definition: WorkflowDefinition, *, allow_start: bool

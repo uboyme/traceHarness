@@ -31,18 +31,6 @@ from traceh.workspaces.events import require_workspace_identifier
 
 _MAX_GIT_OUTPUT = 1024 * 1024
 _DEFAULT_GIT_TIMEOUT_SECONDS = 30.0
-_GIT_ENVIRONMENT_KEYS = (
-    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-    "GIT_COMMON_DIR",
-    "GIT_CONFIG",
-    "GIT_CONFIG_COUNT",
-    "GIT_DIR",
-    "GIT_INDEX_FILE",
-    "GIT_OBJECT_DIRECTORY",
-    "GIT_WORK_TREE",
-)
-
-
 @dataclass(frozen=True, slots=True)
 class _GitOutcome:
     exit_code: int | None
@@ -60,6 +48,7 @@ class _GitRunner:
         *,
         cwd: Path,
         timeout_seconds: float,
+        index_file: Path | None = None,
     ) -> _GitOutcome:
         with tempfile.TemporaryFile() as capture:
             try:
@@ -67,7 +56,7 @@ class _GitRunner:
                     asyncio.create_subprocess_exec(
                         *argv,
                         cwd=cwd,
-                        env=_git_environment(),
+                        env=_git_environment(index_file),
                         stdin=asyncio.subprocess.DEVNULL,
                         stdout=capture,
                         stderr=asyncio.subprocess.DEVNULL,
@@ -106,10 +95,13 @@ class _GitRunner:
             return _GitOutcome(process.returncode, capture.read())
 
 
-def _git_environment() -> dict[str, str]:
+def _git_environment(index_file: Path | None = None) -> dict[str, str]:
     environment = dict(os.environ)
-    for key in _GIT_ENVIRONMENT_KEYS:
-        environment.pop(key, None)
+    for key in tuple(environment):
+        if key.upper().startswith("GIT_"):
+            environment.pop(key, None)
+    if index_file is not None:
+        environment["GIT_INDEX_FILE"] = str(index_file)
     environment["GIT_TERMINAL_PROMPT"] = "0"
     environment["GCM_INTERACTIVE"] = "Never"
     environment["LC_ALL"] = "C"
@@ -435,6 +427,63 @@ class LocalGitWorkspaceProvider:
         if await self.inspect(record) is not WorkspaceLocalState.MISSING:
             raise WorkspaceGitError
 
+    async def remove_captured(
+        self, record: WorkspaceRecord, *, candidate_tree: str
+    ) -> None:
+        """Remove only the exact dirty tree already frozen as an Artifact.
+
+        ``--force`` is safe only after the registered worktree identity and the
+        complete Git-visible tree have both been re-derived.  A later edit is a
+        different tree and remains quarantinable evidence rather than data this
+        method is allowed to discard.
+        """
+
+        if type(candidate_tree) is not str or not _is_object_id(candidate_tree):
+            raise WorkspaceInputError("workspace-candidate-tree-invalid", "candidate_tree")
+        state = await self.inspect(record)
+        if state is WorkspaceLocalState.MISSING:
+            return
+        if state not in {WorkspaceLocalState.CLEAN, WorkspaceLocalState.DIRTY}:
+            raise WorkspacePathError
+        target = self._target(record.workspace_id)
+        first = await self._candidate_tree(target)
+        second = await self._candidate_tree(target)
+        if first != candidate_tree or second != first:
+            raise WorkspaceDirtyError
+        source, _ = await self._source_context(record.source_id)
+        outcome = await self._runner.run(
+            self._command(
+                "-C", str(source), "worktree", "remove", "--force", str(target)
+            ),
+            cwd=source,
+            timeout_seconds=self._timeout_seconds,
+        )
+        if outcome.start_failed or outcome.timed_out or outcome.exit_code != 0:
+            if await self.inspect(record) is WorkspaceLocalState.MISSING:
+                return
+            raise WorkspaceGitError
+        if await self.inspect(record) is not WorkspaceLocalState.MISSING:
+            raise WorkspaceGitError
+
+    async def _candidate_tree(self, target: Path) -> str:
+        with tempfile.TemporaryDirectory(prefix="traceh-workspace-index-") as raw:
+            index = Path(raw) / "index"
+            await self._run_required(
+                self._command("-C", str(target), "read-tree", "HEAD"),
+                cwd=target,
+                index_file=index,
+            )
+            await self._run_required(
+                self._command("-C", str(target), "add", "-A", "--", "."),
+                cwd=target,
+                index_file=index,
+            )
+            return await self._capture_one(
+                self._command("-C", str(target), "write-tree"),
+                cwd=target,
+                index_file=index,
+            )
+
     def _handle(self, record: WorkspaceRecord) -> WorkspaceHandle:
         return WorkspaceHandle(
             workspace_id=record.workspace_id,
@@ -627,8 +676,14 @@ class LocalGitWorkspaceProvider:
         if status:
             raise WorkspaceSourceError
 
-    async def _capture_one(self, argv: tuple[str, ...], *, cwd: Path) -> str:
-        raw = await self._run_required(argv, cwd=cwd)
+    async def _capture_one(
+        self,
+        argv: tuple[str, ...],
+        *,
+        cwd: Path,
+        index_file: Path | None = None,
+    ) -> str:
+        raw = await self._run_required(argv, cwd=cwd, index_file=index_file)
         if b"\0" in raw:
             raise WorkspaceGitError
         return _decode_output_line(raw)
@@ -639,9 +694,18 @@ class LocalGitWorkspaceProvider:
         # because the host selected that repository as a source.
         return (self._git, "-c", "core.hooksPath=/dev/null", *arguments)
 
-    async def _run_required(self, argv: tuple[str, ...], *, cwd: Path) -> bytes:
+    async def _run_required(
+        self,
+        argv: tuple[str, ...],
+        *,
+        cwd: Path,
+        index_file: Path | None = None,
+    ) -> bytes:
         outcome = await self._runner.run(
-            argv, cwd=cwd, timeout_seconds=self._timeout_seconds
+            argv,
+            cwd=cwd,
+            timeout_seconds=self._timeout_seconds,
+            index_file=index_file,
         )
         if outcome.start_failed or outcome.timed_out or outcome.exit_code != 0:
             raise WorkspaceGitError

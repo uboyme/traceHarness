@@ -43,18 +43,18 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A 有持久化 Agent identity 与只读 Directory，Stage B 有每 Agent 一条持久化 FIFO Inbox **接受**历史，Stage C 有进程内 `ProcessAgentSupervisor` 完成 durable claim → 真实 Turn → durable terminal，Stage D 把 `owner_agent_id` 投影成 child-first 生命周期树；Stage E 再提供绑定 owner 的 `spawn_agent`/send/wait/stop/collect 五个模型 Tool（见 20 节）。v0.7 D0 固定公共控制面接缝，v0.7-A/B 用单一 Budget Ledger 与薄适配器强制七个维度；v0.7-C 用独立 Workspace 域给 managed Agent 分配 commit-pinned worktree；v0.7-D1 把 terminal Agent 的完整 Git 状态捕获为 CAS bytes + append-only Manifest；v0.7-D2 在 Runtime 外新增独立 Promotion 域，把不可变 Patch 经固定宿主 Verifier、人工精确批准和 Git ref compare-and-swap 推广到宿主管理的 bare 仓库；v0.7-E 再在其上加一层固定 Typed Workflow，用 AgentTask/Map/Join/Verification/Approval 五类节点组合这些公共服务，并把编排事实写进每个 Run 一条的 append-only 流；v0.7-F0 只**冻结**统一 `traceh chat` 产品面的合同（`api/product.py`）；v0.7-F1 又在独立 `traceh.product` 域实现了这份合同的第一条真实生产主线——ProductTask 持久事实层（20.27）；v0.7-F2 在同一个域补上“确认之后、执行之前”的一段：严格 Router、唯一 Profile Registry、精确 preflight 绑定与固定 Product Assembly（20.28）。它仍不接 Chat、不执行 Workflow、不调用真实模型。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略或模型可见的 approve/promote/workflow Tool；Budget/Workspace/Artifact/Promotion/Workflow 宿主装配仍需显式提供，`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A–E 提供持久 Agent identity/Inbox/Delivery、进程内 `ProcessAgentSupervisor`、owner 子树 child-first disposal 和五个绑定 owner 的模型 Tool。未发布的 v0.7 D0–E 又以 Runtime 外公共服务加入执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow；F0–F2 加入 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 再从 CLI 外层把它们装配成显式启用的 Chat 产品面（20.29）。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream、每个 Workflow Run 一条的 Workflow Stream，以及每个 ProductTask 一条的产品事实流；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat（`--no-timeline`、`--heartbeat-seconds` 可调），首次 Ctrl+C 只取消当前 Turn 并保留 Session；空闲提示符支持 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none` 的异步组合切换，不创建 Turn。其余命令仍是一次执行一个 Turn。不是流式 TUI。插件命令为 `list/inspect/doctor/validate/compare/promote/rollback`；后四者构成 Runtime 外的 L2–L4 控制面 |
+| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat；不传 Product 配置时行为不变。显式 `--product-config` 后，宿主增加 Proposal/后续确认和 `/task inspect|approve|reject|cancel|abandon TASK_ID`，命令在模型前分派。空闲提示符原有 `/plugins` 组合切换继续保留。它仍不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | F2 独立复审清零后，最终工作树全量只运行一次，实测 `2326 collected / 2321 passed / 5 skipped`，退出码 0；产品域定向 `233 passed`（F2 新文件 69、跨阶段架构 15、F0 合同 73、F1 专项 76），当前 Budget/Workflow/Promotion/Product 相邻回归 `375 passed`，`compileall`、改动范围 Ruff 与文档 QA 通过。五个既有 skip 全部是平台权限或路径边界：三处目录 symlink（Workspace、Tool、D1 capture）、一处 D2 推广目标 symlink，以及一处路径不能包含 NUL。F1 最终门禁的历史检查点为 `2253/2248/5`。D2 四个专门文件共 `130` 项（`129 passed, 1 skipped`），连同 D1 Artifact 与 Workspace 架构回归的扩大定向门禁为 `172 passed, 2 skipped`；E 三个专门文件另有 `85 passed`。v0.7-D1 检查点为 1875/1871/4，v0.7-C 为 1835/1832/3，v0.7-B 为 1770/1769/1，v0.6.0 发布快照为 1707/1706/1。仓库外干净 `HEAD` 克隆另行完成 L2 `13/13` 门禁与完整可信核心回归；v0.6 RC 还用真实模型完成 parent→child 主线、恢复与取消收敛。独立 Python Quality/Plugin Creator Skill 另有 `17`/`10 passed` |
+| 当前自动化测试 | F3 独立复审无 P0/P1 后完成最终确认：全仓 `2344 collected / 2339 passed / 5 skipped`，退出码 0；F3/Chat/CLI/Product/Workspace 离线定向门禁为 `273 passed, 2 skipped`，两个 F3 专测文件共 `16 passed`。首次全量暴露两条仍按 D2 阶段禁止 CLI/Product 使用 Promotion 的旧架构守卫；守卫被收窄为逐文件/模块/符号的精确 F3 composition-root 与 Product orchestration 依赖表，并经反向验证后，确认全量全绿。五个 skip 均为既有平台权限或路径边界。F2 历史检查点是 `2326/2321/5`，F1 是 `2253/2248/5`，D2 扩大定向为 `172 passed, 2 skipped`，v0.6.0 发布快照为 `1707/1706/1` |
 | 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
 
-当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0 又完成了**未发布、无新增产品能力**的依赖接缝；v0.7-A/B 建立并执行单一层级 Budget Ledger；v0.7-C 加入独立 managed Workspace；v0.7-D1 加入独立 Artifact Catalog、SHA-256 CAS、临时 Git index 完整快照、终态证据复核和只读报告关联；v0.7-D2 再加入独立 Promotion Ledger、固定宿主 Verifier、确定性 integration commit、精确 approval digest 与 Git ref compare-and-swap 推广；v0.7-E 又在这些公共服务之上加入固定 Typed Workflow：五类节点、每 Run 一条编排流与人工 Approval 屏障；v0.7-F0 在此之上只新增**一个公共合同模块与一组合同测试**，冻结 ProductTask 事件协议、Profile/Assembly Receipt 形状与产品权限边界；v0.7-F1 再新增独立 `traceh.product` 域，把 ProductTask 变成可严格写入、重放、幂等对账和 fresh 查询的持久事实；v0.7-F2 又在同一个域加入严格 Router、唯一 Profile Registry、精确 preflight 与固定 Product Assembly，使任何已确认任务都能在执行前得到唯一 `ProductAssemblyReceipt` 或稳定拒绝，但仍不接 Chat、不执行 Workflow、不推广，也没有真实模型验收。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入本次 Wheel E2E；前者的作者合同针对 `>=0.6,<0.7`，后者经验证继续兼容 `>=0.5,<0.7`。这些能力均没有修改 `AgentLoop` 的职责，也没有把多 Agent 队列、余额、路径、Git、Artifact、Promotion 或包管理塞进 `AgentRuntime`。当前仍没有 v0.7 Budget/Workspace/Artifact/Promotion 的默认 CLI 装配、L5 自动弱点归纳/候选提案、任意运行中 Runtime 自动安装/启用、OS 沙箱、isolated、跨进程 Agent/Workspace/Promotion lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.25）、Workflow CLI 装配、MCP、TUI 或流式输出。**ProductTask 现在是真实事实层**（20.27），并且**已经可以被装配成一个尚未执行的精确计划**（20.28）：有 parser、投影、reader、宿主写入服务、严格 Router、Profile Registry、preflight 绑定与两种固定 Workflow 定义；但仍**没有** Chat 接线、Proposal 渲染、Workflow 执行、Promotion 调用、真实模型验收或 Benchmark 改造。
+当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0–E 又在未发布开发树中依次加入依赖接缝、执行型层级 Budget、managed Workspace、immutable Artifact、固定验证/人工审批/Git ref CAS Promotion 与 Typed Workflow；F0–F2 冻结并实现 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 现已把这些既有 owner 作为**可选** `traceh chat --product-config` 产品面串通，支持自然语言提议/后续确认、single/multi/auto、Approval 暂停、按 task id 重启后 inspect/approve/reject/cancel/abandon，以及由宿主显式调用 Promotion。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入 Wheel E2E。这些能力均没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager` 的职责。当前仍没有 F4 eval cutover、真实外部模型 F3 验收、v0.7 默认 Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI 或流式输出。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -90,7 +90,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 统一 `traceh chat` 产品面：v0.7-F0 冻结合同（20.26），v0.7-F1 实现 ProductTask 持久事实层（20.27），v0.7-F2 实现严格 Router、Profile Registry 与固定 Product Assembly（20.28）。仍然**没有** `/task`、`/start`、`/approve` 等命令，没有 Proposal 渲染，没有真实模型或 Provider 调用，没有从产品层发起的 Workflow 执行或 Promotion，`cli/chat.py` 未被修改；Profile 必须由宿主显式注册，没有任何默认 profile；
+- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、后续真人确认、固定 Workflow、Review/Approval 与 Promotion；`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile；未启用配置时普通 Chat 不创建 ProductTask；
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
@@ -2766,7 +2766,7 @@ F0 完成时 [`tests/test_product_contract.py`](../../tests/test_product_contrac
 
 #### F0 之后仍未实现的部分
 
-F1 随后实现了 ProductTask 事件写入与 CAS/三态对账、Projector 与 ProductService（见 20.27），F2 再实现严格 Router、Profile Registry 与固定 Product Assembly（见 20.28）。F3–F5 仍未开始：Chat Proposal 渲染与 `/start`、`/approve`、`/cancel`、`/inspect`、`/abandon` 等宿主命令、coder 的有界 report 注入、从产品层发起的 Workflow 执行与 Promotion、`traceh eval` 重构与旧 manifest 拒绝、真实模型验收，以及 v0.7.0 发布。版本仍为 `0.6.0`。
+F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29）。仍未完成的是 F4 `traceh eval` 重构、真实外部模型验收与 F5 v0.7.0 发布。版本仍为 `0.6.0`。
 
 ### 20.27 v0.7-F1：ProductTask 持久事实层
 
@@ -2878,7 +2878,7 @@ F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 
 
 #### F1 之后仍未实现的部分
 
-F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28）。F3 起才有：Chat Proposal 渲染与宿主命令、从产品层发起的 Workflow 执行与 Promotion、`traceh eval` 重构、真实模型验收、v0.7.0 发布。Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
+F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29）。接下来只剩 F4 benchmark cutover、外部模型验收与 F5 发布；Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
 
 
 ### 20.28 v0.7-F2：严格 Router、Profile Registry 与固定 Product Assembly
@@ -3001,5 +3001,69 @@ F2 三个新测试文件共 `69 passed`：[`test_product_router.py`](../../tests
 
 #### F2 之后仍未实现的部分
 
-F3 起才有：Chat Proposal 渲染与 `/start`/`/approve`/`/cancel`/`/inspect`/`/abandon` 等宿主命令、由产品控制器发起的 Workflow 执行与 Promotion、coder 的有界 report 注入、真实模型端到端验收。F4 重构现有 `traceh eval` 并明确拒绝旧 manifest；F5 才是 v0.7.0 的 RC、打包门禁、tag 与发布。Stage E 的恢复边界没有被放宽一格，版本仍为 `0.6.0`。
+F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收。F4 重构现有 `traceh eval` 并明确拒绝旧 manifest；真实外部模型验收和 F5 的 v0.7.0 RC/发布仍未完成。Stage E 的恢复边界没有被放宽，版本仍为 `0.6.0`。
 后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F3–F5，不替代本文件、源码、测试或 ADR 的当前事实。
+
+
+### 20.29 v0.7-F3：统一 Chat 产品控制面与真实本地执行链
+
+设计决定仍由 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md) 统一记录。F3 没有新增第二个 Runtime、Scheduler 或事实源，而是把 F1 ProductTask、F2 固定 Assembly、Stage E Workflow，以及 Budget/Workspace/Artifact/Promotion 的既有公共服务装配到可选的 `traceh chat` 产品面。
+
+#### 当前入口与权限边界
+
+普通 `traceh chat` 完全保持原行为。只有显式传入 `--product-config <schema-1.json>` 才装配 Product host，并把两个低权限 Tool 加入 Chat Agent：`propose_product_task` 和 `confirm_product_task`。二者只持有 [`ProductTurnActions`](../../src/traceh/product/chat.py) 的当前 Turn 临时动作，不持有 Supervisor、Workflow、Review、Promotion 或文件路径。Proposal Tool 只允许在用户明确要求时附带 `single`、`multi` 或 `auto`；省略时才使用 Profile 默认值。它不能指定 DAG、Agent 数、Budget、Verifier、approval digest 或 target revision。
+
+模型 Turn durable close 后，Chat host 才消费动作。Proposal 仍是进程内问题，宿主面板显示模型提出的**有界精确 requirement**、mode 及其来源、fresh preflight 的 Profile/source/target/safety，以及该 Proposal 若被确认将使用的唯一 prospective task id。用户必须在后续 user Turn 自然确认，F1 的 Session replay 再证明 message/Turn/accepted 顺序；第一条持久任务事实仍只在确认后写入。同一 Proposal 不能因两条确认消息生成两个任务。Requirement 与 auto Router 共用 `4096` 字符协议上限。没有 Proposal 或没有确认，就没有 `product-task:*`、Workflow、task Budget 或 managed Workspace。
+
+Host 命令只有：
+
+```text
+/task inspect TASK_ID
+/task approve TASK_ID
+/task reject TASK_ID
+/task cancel TASK_ID
+/task abandon TASK_ID
+```
+
+它们在模型分派前由现有 Chat command seam 处理，并从 task id fresh replay。Review id、Patch SHA-256、approval digest、target ref/revision 与 promotion id 只写向宿主 Console；产品 Agent 的请求中没有这些值。`/task approve` 是唯一 Promotion authority：Workflow 的 Approval node 仍只建立屏障，`traceh.workflow` 没有 Product import，也不调用 `approve()`/`promote()`。
+
+#### 显式配置与固定装配
+
+[`product/config.py`](../../src/traceh/product/config.py) 只读 exact-key schema 1。宿主必须显式给出 Profile id、provider/model、default mode、三角色 preset/grants/Budget、Router preset/limits、aggregate task Budget、source id/repository/revision、managed Workspace root、CAS root、完整 VerificationPlan、bare promotion target/ref、capture limits 与 report bound。路径必须是绝对路径。未知键、缺字段、旧版本、相对路径或不合法值稳定拒绝；没有 legacy reader、默认 Profile 或自动迁移。配置没有 nodes、edges、graph、prompt、approval digest、Agent count 或 fan-out 字段，因此不会把 ADR-0031 拒绝的自由 DSL 从 JSON 带回来。
+
+F3 v1 只共享当前 Chat 已直接构造的内置 Provider 对象：Profile 的 `provider_id`/`model_id` 必须与当前 Chat 精确相同，插件 Provider 因 CLI 只有已注册能力、没有可交给 Product host 的明确 Provider 对象而被拒绝。它不偷偷再构造第二个模型客户端，也不把这个实现边界伪装成跨 Provider 编排能力。
+
+[`product/runtime.py`](../../src/traceh/product/runtime.py) 是具名 built-in assembly resolver：只解析 shipped read/write Coding Tools、固定 Prompt section 与 Policy 组合，未知 grant/preset 不 fallback。每个实际角色 Runtime 都复用同一个 EventStore、managed Workspace 与 `BudgetEnforcement`；Router 是真实 no-Tool managed Agent，identity 从 task id 派生，响应仍经 F2 严格 parser。一个不调用模型的 task-root Agent 锚定 ownership tree 与 aggregate Budget，角色 child 的授权仍由现有 Supervisor/Workspace/Budget adapters 执行。
+
+#### 执行、暂停、重启和推广
+
+[`product/control.py`](../../src/traceh/product/control.py) 是宿主状态机，`execution.py` 只把 F2 binding 解析成现有 Workflow 调用，`resources.py` 只翻译 Profile 到既有 Workspace/Budget/Supervisor policy，`host.py` 负责显式装配与关闭顺序。它们不保存另一份 task status；进程内只保留未回答 Proposal、live binding 和 owned Task receipt。
+
+确认后的顺序是：
+
+1. 写 `product/task-opened`，fresh preflight，准备 task-root/Budget/Workspace；
+2. explicit single/multi 直接使用固定 topology；auto 由真实 bounded Router Agent 决定一次并写 `product/task-routed`；
+3. 写 `product/task-started`，启动同 id Workflow；
+4. parent/reviewer/coder 按固定拓扑运行，coder 使用唯一 writable worktree；前序 report 从 durable Agent report 读取并按 host bound 截断后注入，里面没有 Review/approval/promotion 值；
+5. 捕获 immutable Artifact，运行固定 Verifier，写 Review；Workflow 停在 Approval；
+6. Product 写 `product/task-awaiting` 并在 Console 显示 Review；当前 host 可关闭，live Activation/process slot 全部收敛，但 durable task/workspace/evidence 保留；
+7. 新进程用同一个 EventStore 和 task id 重建 Assembly/Workflow/Review；人工 `/task approve` 先写 Promotion approval、继续 Workflow 的 Approval node，再由 Product controller 显式 `promote()`；
+8. target ref CAS 成功后先收敛/释放资源，最后写 `product/task-completed`。
+
+Router、fresh assembly 或 `product/task-started` 在 Workflow 启动前发生普通失败时，宿主先复用现有 release 收敛 ownership tree、Budget account 与 Workspace，再写 `product/task-failed` 和稳定错误码；只有清理成功后才能声称终态。Product 内部的 failed/cancelled 不扩张 Workspace 协议，clean worktree 映射到既有 `explicit-release`，dirty 失败证据仍 quarantine。清理或终态写入本身失败时保留原始失败并让任务保持可重试，而不是伪造收敛。
+
+终态事实故意最后写：若进程在 ref 已移动但 Product terminal 尚未写时崩溃，下一次 approve 从 Promotion ledger 找到同一 digest 的既有 promotion，先补清理再幂等补 terminal；不会重复移动 ref。Reject/cancel/fail 同样先停止并清理，再写 Product terminal，避免“账上已经结束、资源却再也没有合法重试入口”。
+
+跨 Product/Workflow 两条 CAS 流没有伪事务。若 Workflow 已 durable 到 Approval/Completed 而 Product 仍是 STARTED，`inspect/approve/reject` fresh replay 后只补 `product/task-awaiting`，不重跑节点；Workflow FAILED 则按 durable terminal 清资源并补 Product failure。开放 Agent node 等其余 partial state 仍派生为 `interrupted`，不能 resume；人只能 inspect 后 cancel/abandon，F3 没有 stale-claim takeover 或冷 Activation 恢复。
+
+#### Workspace 清理与取消收敛
+
+成功推广或人工拒绝后，dirty worktree 只能走 `release_captured(candidate_tree=...)`：Local Git provider 使用临时 index 连续两次重算完整 Git tree，必须与 Artifact Manifest 的 `candidate_tree` 精确相同，之后才允许唯一一处受控 `git worktree remove --force`。后置修改、marker/admin identity 漂移、symlink/Junction/reparse 或未知状态均拒绝并 quarantine；外部文件不会因 Product terminal 被删除。失败/取消没有丢弃 captured bytes 的权限，dirty worktree 被保留为 quarantine evidence。
+
+确认执行期间的调用方取消会显式取消 Workflow advancement，并 child-first dispose task-root ownership tree，使 Provider/Tool/process slot 收敛；它不会伪造 Workflow terminal。ProductTask 保持 STARTED，下一次 fresh view 是 interrupted，可由人明确 cancel 或 abandon。重复取消不能跳过同一 owned cleanup。
+
+#### 当前验证与边界
+
+F3 新增 [`tests/test_product_f3_e2e.py`](../../tests/test_product_f3_e2e.py) 与 [`tests/test_product_config.py`](../../tests/test_product_config.py)，使用真实本地 Git source/worktree、真实 Patch capture、固定 verifier subprocess、SHA-256 CAS 和一次性 bare target，覆盖 ordinary Chat 不创建任务、single、multi、auto、Approval 屏障、进程重建后 approve/promote、reject 不移动 ref、模型请求不含 Review/approval 值、确认取消收敛、Router 失败后的 Budget/Workspace 收敛、用户可见 task id、逐任务显式 mode 与配置拒绝自由 topology。两份专测共 `16 passed`；Chat/CLI/Product/Workspace 离线定向门禁为 `273 passed, 2 skipped`。独立 Sol 复审清零 P0/P1 后，最终确认全量为 `2344 collected / 2339 passed / 5 skipped`、退出码 0。测试 Provider 是确定性 `LlmProvider` 实现；本阶段没有读取 `.env`、没有调用外部模型/API、没有接触真实远端，所以“真实外部模型验收”仍是 F3 提交后或 F5 RC 前的显式运行项，不能由这些测试冒充。
+
+F3 没有实现 F4 benchmark、旧 eval manifest cutover、重试策略、跨进程 lease、冷恢复、OS sandbox、默认 Product Profile 或 v0.7 发布。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。独立复审和最终全量均已通过，但当前工作树尚未提交，也没有进入 F4。

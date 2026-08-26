@@ -61,9 +61,21 @@ def test_local_git_provider_has_no_broad_cleanup_or_promotion_command() -> None:
         if isinstance(node, ast.Constant) and isinstance(node.value, str)
     }
     assert "prune" not in string_literals
-    assert "--force" not in string_literals
     assert "update-ref" not in string_literals
     assert "apply" not in string_literals
+    # The sole forced removal is fenced by two exact candidate-tree
+    # derivations in ``remove_captured``; ordinary ``remove`` still refuses a
+    # dirty tree and no generic force/prune surface exists.
+    assert sum(value == "--force" for value in string_literals) == 1
+    source = Path(local_git_module.__file__).read_text(encoding="utf-8")
+    method = next(
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.AsyncFunctionDef) and node.name == "remove_captured"
+    )
+    method_text = ast.unparse(method)
+    assert method_text.count("_candidate_tree") == 2
+    assert "first != candidate_tree" in method_text
 
 
 def test_workspace_api_does_not_absorb_artifact_or_future_merge_types() -> None:

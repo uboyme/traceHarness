@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### v0.7-F3: unified Chat ProductTask execution and approval
+
+- A Proposal may now carry an explicit `single`, `multi` or `auto` mode when
+  the user asked for one. The host renders the mode and its source before a
+  later human confirmation; omission still uses the Profile default, and no
+  topology or Agent count becomes model-controlled.
+- Derive one prospective task identity from the exact Proposal and render it
+  before confirmation. Confirmation still creates the first durable task fact,
+  but Router failures and caller interruption can no longer leave the user
+  without the identity needed for inspect/cancel/abandon.
+- Treat every ordinary failure after `product/task-opened` and before Workflow
+  execution as a task failure: release the already allocated ownership tree,
+  Budget accounts and Workspaces first, then append `product/task-failed` with
+  the stable error code. Cleanup or terminal-write failure retains the original
+  error and does not claim convergence.
+- Added an opt-in `traceh chat --product-config` host assembly. Plain Chat is
+  unchanged when the flag is absent. The exact schema-1 file selects a Profile,
+  source, managed Workspace root, CAS, fixed VerificationPlan and bare target;
+  it cannot contain a DAG, prompt, approval digest or Agent count.
+- Added low-authority proposal/confirmation Tools that retain only a current
+  Turn action. The host opens a ProductTask only after the Turn closes and the
+  existing Session evidence reader proves a later human confirmation.
+- Connected the fixed single/multi/auto Product Assembly to the existing
+  Supervisor, hierarchical Budget, managed Git Workspace, Patch capture,
+  Workflow, Review and Promotion services. Workflow still does not promote;
+  `/task approve TASK_ID` is the explicit host authority.
+- Added fresh task-id commands for inspect/approve/reject/cancel/abandon and
+  restart continuation at the proven Approval barrier. Product/Workflow
+  cross-stream reconciliation fills only a missing awaiting/failed fact and
+  never re-runs a partial node.
+- Resource cleanup now precedes Product terminal facts. Exact captured trees
+  may be removed after merge/reject; later drift fails closed, while failed or
+  cancelled dirty work is quarantined. Confirmation interruption cancels and
+  converges the live ownership tree instead of waiting forever.
+- Added deterministic real-Git end-to-end coverage for ordinary Chat, explicit
+  single/multi, auto routing, restart approval/promotion, rejection, model
+  secrecy and cancellation. No external credential or real remote is used.
+- Final F3 confirmation collected 2344 tests and passed 2339 with 5 existing
+  platform skips. Promotion architecture guards now pin the exact F3 Product
+  orchestration and CLI composition-root imports by file, module and symbol.
+
 ### v0.7-F2: strict Router, Profile Registry and Product Assembly
 
 - Added the router, registry, topology and assembly stages to `traceh.product`

@@ -114,7 +114,7 @@ class RouterResponder(Protocol):
     declaration.
     """
 
-    async def respond(self, summary: str) -> RouterResponse:
+    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
         ...
 
 
@@ -261,15 +261,17 @@ class ProductModeRouter:
             return False
         return self._profile == profile and self._router_assembly_digest == digest
 
-    async def route(self, summary: str) -> RouterDecision:
+    async def route(self, summary: str, *, task_id: str) -> RouterDecision:
         """Ask once, inside the Profile's bounds, and refuse anything else."""
 
         text = require_router_summary(summary)
+        task_id = require_product_identifier(task_id, field="task_id")
         async with self._lock:
             if self._closed:
                 raise ProductServiceClosedError
             task = asyncio.create_task(
-                self._responder.respond(text), name="traceh-product-route"
+                self._responder.respond(text, task_id=task_id),
+                name="traceh-product-route",
             )
             self._pending.add(task)
         try:

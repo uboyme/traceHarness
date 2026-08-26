@@ -120,6 +120,32 @@ async def test_dirty_worktree_is_never_force_removed(tmp_path: Path) -> None:
     assert released.status is WorkspaceStatus.RELEASED
 
 
+async def test_captured_release_refuses_a_tree_that_was_not_the_frozen_artifact(
+    tmp_path: Path,
+) -> None:
+    source, _ = _repository(tmp_path / "source")
+    _, _, service = _service(source, tmp_path / "managed")
+    handle = await service.provision(
+        operation_id="provision-op",
+        creation_request_id="create-request",
+        request=_request(),
+        owner_agent_id=None,
+    )
+    marker = handle.root / "candidate-change.txt"
+    marker.write_text("candidate\n", encoding="utf-8")
+
+    with pytest.raises(WorkspaceDirtyError):
+        await service.release_captured(
+            handle.workspace_id,
+            candidate_tree="0" * 40,
+            reason="rejected",
+        )
+
+    record = (await service.catalog()).get(handle.workspace_id)
+    assert record is not None and record.status is WorkspaceStatus.QUARANTINED
+    assert marker.read_text(encoding="utf-8") == "candidate\n"
+
+
 async def test_dirty_provisional_retry_is_quarantined_instead_of_adopted(
     tmp_path: Path,
 ) -> None:

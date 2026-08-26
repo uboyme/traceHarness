@@ -322,10 +322,19 @@ def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
     for forbidden in ("EventStore", "PendingEvent", ".append(", ".read("):
         assert forbidden not in text, forbidden
 
-    # F3's chat control plane has still not arrived.
-    assert not (implementation / "chat.py").exists()
-    for source in sorted((PACKAGE_ROOT / "cli").glob("*.py")):
-        assert "traceh.product" not in source.read_text(encoding="utf-8"), source.name
+    # F3 lives in the implementation package; it does not move Chat, Workflow
+    # or Promotion handles into the dependency-free public DTO module.
+    for name in ("chat.py", "control.py", "execution.py", "host.py"):
+        assert (implementation / name).exists(), name
+    cli_consumers = {
+        source.name
+        for source in sorted((PACKAGE_ROOT / "cli").glob("*.py"))
+        if "traceh.product" in source.read_text(encoding="utf-8")
+    }
+    # F3's only product UI is the existing Chat command: ``main`` assembles the
+    # optional host and ``chat`` delegates rendering/commands to its surface.
+    # No second Product CLI or generic command module learns this authority.
+    assert cli_consumers == {"chat.py", "main.py"}
 
 
 def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:

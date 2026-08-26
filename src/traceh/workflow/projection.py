@@ -122,6 +122,26 @@ class WorkflowProjection:
     def awaiting_approval(self) -> tuple[str, ...]:
         return self._awaiting
 
+    @property
+    def status(self) -> WorkflowStatus | None:
+        """Run-level status available without re-supplying a definition.
+
+        A ProductTask view only needs to know whether no run exists, work is in
+        progress, the human barrier is active, or the run has ended.  It must
+        not invent a Workflow definition merely to answer that question.  Node
+        outcomes still require :meth:`run` and the exact frozen definition.
+        """
+
+        if self._head_seq == 0:
+            return None
+        if self._terminal == NodeStatus.COMPLETED.value:
+            return WorkflowStatus.COMPLETED
+        if self._terminal == NodeStatus.FAILED.value:
+            return WorkflowStatus.FAILED
+        if self._awaiting:
+            return WorkflowStatus.AWAITING_APPROVAL
+        return WorkflowStatus.RUNNING
+
     def state(self, node_id: str) -> _NodeState | None:
         return self._nodes.get(node_id)
 

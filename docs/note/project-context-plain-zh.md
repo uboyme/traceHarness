@@ -68,7 +68,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | F2 独立复审清零后最终全量只运行一次，实测 2326 收集 / 2321 通过 / 5 跳过，退出码 0；产品域定向 233 通过（三个新文件 69 项、跨阶段架构 15 项、F0 合同 73 项、F1 两个专门文件 76 项），当前 Budget/Workflow/Promotion/Product 相邻回归 375 通过，`compileall`、改动范围 Ruff 和文档 QA 通过。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能含 NUL。F1 最终门禁的历史检查点是 2253/2248/5。D2 四个专门文件共 130 项（129 通过、1 跳过），连同 D1 Artifact 与 Workspace 架构回归的扩大定向为 172 通过、2 跳过；E 三个专门文件另有 85 通过。仓库外干净 HEAD 克隆和 v0.6 RC 的真实 L2/L3/L4、真实 parent→child、恢复与取消证据仍保留；独立 Python Quality/Plugin Creator Skill 另有 17/10 项通过 |
+| 当前测试数 | F3 独立复审清零后，最终确认全量为 2344 收集 / 2339 通过 / 5 跳过，退出码 0；F3/Chat/CLI/Product/Workspace 离线定向为 273 通过、2 跳过，两份 F3 专测共 16 通过。首次全量发现两条停在 D2 阶段的旧 Promotion 架构守卫，现已改成逐文件/模块/符号的精确 F3 依赖表并完成反向验证；确认全量全绿。五个 skip 仍是既有平台权限或路径边界。F2 历史检查点是 2326/2321/5，F1 是 2253/2248/5，v0.6.0 发布快照为 1707/1706/1 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -148,7 +148,7 @@ flowchart LR
 | `artifacts/` | 把一个已完成消息对应的完整 Git 改动冻成不可变证据：Patch bytes 进内容寻址仓库，来源绑定进一条全局 Manifest 账 | `events.py`/`catalog.py`（Manifest 词汇与投影）、`git_patch.py`（临时 index 快照）、`cas.py`、`capture.py`、`reader.py`、`reporting.py` |
 | `promotion/` | 对那份不可变 Patch 做固定检查、记不可改的 Review、接收人工的精确批准，最后用 Git 分支的比较后交换推广出去 | `models.py`（身份与摘要）、`events.py`/`projection.py`（一条账与唯一投影）、`verification.py`（固定检查执行）、`local_git.py`（裸仓库解析、临时集成与 ref CAS）、`cleanup.py`（草稿地失败的统一组合）、`service.py`（review/approve/promote） |
 | `workflow/` | 用一张**固定**的流程图把上面这些公共服务串起来：跑 Agent、扇出、汇合、检查、等人签字；每次运行单独记一条编排账 | `models.py`（定义冻结、DAG 校验、派生身份）、`events.py`/`projection.py`（七类事实与唯一投影）、`execution.py`（五类节点各自怎么做）、`service.py`（单飞协调器） |
-| `product/` | 产品任务自己的账和计划：F1 记一个 ProductTask 从开启到终结的九种事实；F2 再把一个已确认的任务装配成还没执行的开工清单——严格路由器、Profile 注册表、两种固定流程图形状 | `errors.py`、`events.py`/`projection.py`（事实与唯一投影）、`evidence.py`/`service.py`（确认证据与宿主写入）、`router.py`（严格路由）、`registry.py`（Profile 注册表）、`topology.py`（两种固定拓扑）、`assembly.py`（preflight 与回执装配） |
+| `product/` | 产品任务的薄控制层：F1 记唯一 ProductTask 账，F2 做严格路由与固定装配，F3 再把现有 Chat、Workflow、Budget、Workspace、Artifact 和 Promotion 串成可暂停、可按 task id 继续的产品主线 | `events.py`/`projection.py`/`service.py`（事实）、`router.py`/`registry.py`/`topology.py`/`assembly.py`（固定计划）、`chat.py`/`control.py`/`execution.py`/`resources.py`/`host.py`（宿主产品面） |
 | `supervision/` | 把已接受的消息真的跑起来，并按 durable owner 关系管生命周期，再把它安全地交给模型调用；D0 把 Tool 权限和宿主开 child 决策从并发内核旁边拆成窄接缝 | `ProcessAgentSupervisor`、Delivery 账、`lifecycle.py`、`execution.py`、`authority.py`、`provisioning.py`，以及 `reports.py`（持久化运行报告）和 `tools.py`（五个绑定 owner 的 Tool） |
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 与 Stage C Workspace wrapper 都只面向这份公共合同。`WorkspaceProvider` 也已有真实 Git 实现和契约测试；`api/artifacts.py` 与 `api/promotion.py` 里的 Patch、Review、Approval、Promotion 值同样都有真实实现和测试，不是占位。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
@@ -1237,7 +1237,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 47. **通过检查 + 有人签字，仍然不等于“这个改动是对的”**：D2 只能证明这份 Patch 干净地应用到了那个精确 commit 上、跑完了宿主**事先定死**的那几条命令、并且有人对这份具体内容交回了精确摘要。检查命令跑在同一个用户权限下，那是能力和证据边界，不是操作系统隔离；另一个有目标仓库写权限的进程照样能挪分支，系统只保证发现并拒绝。另外 `write-tree`/`commit-tree` 会在分支移动前先把对象写进目标仓库，被拒绝的推广可能留下没人引用的对象——没有分支指向它们，但清理仍要人显式做。
 48. **推广没有“自动”这一档**：没有自动批准、没有自动挑目标、没有 CLI，也没有模型可见的 approve/merge/promote 工具。目标只支持宿主管理的裸仓库，不动任何普通 checkout；分支只能靠 `update-ref` 的比较后交换移动，失败之后不做自动回滚去覆盖别人后来写进去的东西。
 
-接下来按 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md) 推进：D0、A/B、C、D1/D2、E、F0 已提交，F1 进入审查收尾，随后依次是 F2 装配、F3 产品验收、F4 度量、F5 发布。不能为了 Roadmap 好看把后续能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
+接下来按 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md) 推进：D0、A/B、C、D1/D2、E、F0–F2 已提交；F3 已实现并正在独立复审收尾，之后才是 F4 度量和 F5 发布。不能为了 Roadmap 好看把后续能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
 
 ## 17. 改一个地方时，还要想到哪些地方
 
@@ -2640,7 +2640,7 @@ Turn claim 很关键，但 claim payload 里写了一个 Turn id 不等于那个
 
 #### 还差什么
 
-F2 随后做出了严格路由器、Profile 注册表、preflight 绑定和固定产品装配（见 20.22）。F3 起才有：聊天里的提议渲染和那些宿主命令、由产品层发起的流程图执行与推广、`traceh eval` 重构、真实模型验收、v0.7.0 发布。Stage E 的恢复边界没有被放宽一格。版本仍然是 `0.6.0`。
+F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配，F3 又把 Chat、Workflow、Approval 和 Promotion 接通（见 20.23）。接下来只剩 benchmark 改造、真实外部模型验收和发布；Stage E 的恢复边界没有被放宽。版本仍是 `0.6.0`。
 
 
 ### 20.22 v0.7-F2：任务可以开工之前，先得有一张算得清、对得上的开工清单
@@ -2741,5 +2741,50 @@ mode 只决定一次：explicit 请求就是它自己（Router 根本不被叫�
 
 #### 还差什么
 
-F3 起才有：聊天里的提议渲染和那些宿主命令、由产品控制器发起的 Workflow 执行与推广、coder 的有界报告注入、真实模型端到端验收。F4 重构现有 `traceh eval` 并明确拒绝旧 manifest；F5 才是 v0.7.0 的 RC、打包门禁、tag 和发布。Stage E 的恢复边界没有被放宽一格。版本仍然是 `0.6.0`。
+F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推广，并跑通确定性本地 Git 链。F4 才重构 `traceh eval` 并拒绝旧 manifest；真实外部模型验收与 F5 RC/发布仍没完成。Stage E 的恢复边界没有被放宽，版本仍是 `0.6.0`。
 后续唯一的阶段顺序、不能偏离的原则和最终用户效果，统一写在新建的 `docs/plan/` 目录下这份 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。`docs/plan/` 只管“接下来按什么顺序达到什么效果”；它负责让后面的实施者不走散，但不替代源码、测试、ADR 和两份上下文的工程事实。
+
+
+### 20.23 v0.7-F3：终于能在原来的聊天里真正开工、停下来等人、重启后再继续
+
+正式记录见正式版 20.29，设计决定仍是 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。这一阶段没有再造一个 Runtime 或调度器，而是把前面已经做好的 ProductTask 账、固定 Workflow、Budget、Git worktree、Patch、检查和推广串到原来的 `traceh chat` 上。
+
+#### 用户看到什么
+
+不传 `--product-config` 时，聊天跟以前一模一样。传了显式配置以后，模型多两个很弱的 Tool：一个说“建议把这件事变成任务”，一个说“这条用户消息像是在确认”。它们只能在当前 Turn 留一张临时便签，不能开任务、选 DAG、看 Review、批准或推广。第一个 Tool 只允许在用户明确要求时附带 `single`、`multi` 或 `auto`；不写就用 Profile 默认值，绝不能顺带指定 Agent 数量、预算或流程图。
+
+当前 v1 只复用 Chat 已经直接拿到的那个内置 Provider 对象，所以 Product Profile 的 provider/model 必须与这次 Chat 完全一样；插件 Provider 目前不会被产品面悄悄重建或转交。这样不会为了“看起来支持更多模型”再开第二套模型客户端和生命周期。
+
+模型这一轮彻底写进 Session 以后，宿主才看便签。提议屏由宿主画出来，显示模型提议的那段**有界、精确需求**、模式及其来源、Profile、锁定的 source commit、推广目标、安全边界，以及确认后会使用的唯一 task id；需求和 auto Router 共用 4096 字符上限。用户必须下一轮自然地说同意，系统再拿 Session 事件证明这真是更晚的一条真人消息。第一条持久任务事实仍只在确认后出现，同一提议也不会因为两条确认消息变成两个任务。没有这一步，就不会建 Workflow、worktree 或花 task Budget。
+
+宿主命令是：
+
+```text
+/task inspect TASK_ID
+/task approve TASK_ID
+/task reject TASK_ID
+/task cancel TASK_ID
+/task abandon TASK_ID
+```
+
+这些命令在模型看到输入前就被 Chat 截走。Review id、Patch 哈希、approval digest、目标版本和 promotion id 只显示给人，不会塞回模型上下文。真正能推广的只有 `/task approve`；Workflow 走到 Approval 只会停住，绝不会自己点同意。
+
+#### 它怎样复用旧架构
+
+配置文件必须把 Profile、模型、角色 grants 和 Budget、Router 界限、source 仓库、managed root、CAS、固定 Verifier、bare target、capture/report 上限全部写清楚。没有默认 Profile，没有兼容旧 schema。配置里根本没有 nodes、edges、prompt、approval digest 或 Agent 数量这些格子，所以不能偷偷把自由 Workflow DSL 从 JSON 搬回来。
+
+一个不干模型活的 task-root Agent 负责挂住 ownership tree 和总 Budget。parent/reviewer/coder 仍由现有 Supervisor 创建，仍用现有 Budget gate，仍各拿 managed worktree；只有 coder 可写。Router 也是真实的 no-Tool Agent，但它只能给 `single`/`multi` 两个严格 JSON 答案。Product 层只是把 F2 已经算好的 binding 递给 Workflow，不复制 Session、Workspace、Artifact、Review 或余额。
+
+流程是：确认 → 开 ProductTask → fresh preflight → 建资源 → single/multi/auto 固定图 → coder 改 worktree → 冻 Patch → 跑固定检查 → 写 Review → 停在 Approval。Router、装配或启动事实在 Workflow 真正开始前普通失败时，宿主会先释放 Agent ownership、Budget 和 clean Workspace，再写失败终态；dirty 失败证据仍会 quarantine，不能为了好看直接删除。只有清理成功才能声称任务 failed，清理或终态写入失败会保留原错误和可重试入口。到 Approval 时程序可以退出；live Agent 和 process slot 会收完，但任务、worktree 和证据还在。第二天重新启动，只要同一个 data dir、同一份显式配置和 task id，就能 `/task inspect`，再由人 `/task approve`。
+
+批准后，产品控制器先继续 Workflow 的 Approval 节点，再自己调用 Promotion。Git 用 expected-old 做 ref CAS。ref 移动后先清资源，最后才写 `product/task-completed`：如果刚好在中间断电，下一次批准能从 Promotion ledger 看出 ref 已经由这次 approval 推过，补清理和 terminal，不会再推第二次。拒绝、取消和失败也把终态放在清理之后，避免账说“结束了”但资源再也没有合法入口收尾。
+
+两条事件流不能假装有数据库事务。Workflow 已到 Approval、Product 还停在 STARTED 时，下一次 inspect/approve/reject 只补那条漏写的 awaiting fact，不会重跑 Agent；Workflow 已失败就补失败和清理。卡在开放 Agent node 的情况仍叫 interrupted，不能冒充可恢复，只能交给人 inspect 后 cancel 或 abandon。
+
+dirty worktree 也不能因为“任务结束了”就随便 `--force`。只有 Artifact 里冻结的 candidate tree 与删除前连续两次用临时 index 重算的完整 Git tree一模一样，merged/rejected 才允许受控删除；后来又改过、路径身份不对或出现 Junction/reparse 就 quarantine。失败/取消更没有丢证据的权力，dirty 内容留下来检查。
+
+#### 测到了什么、还没做到什么
+
+当前确定性端到端测试真的创建本地 Git source、managed worktree、Patch/CAS、Verifier 子进程和一次性 bare target，跑了普通聊天、single、multi、auto、重启批准、拒绝不动 ref、模型拿不到 Review/approval 值、执行中断收敛、Router 失败资源收敛、用户可见 task id 和逐任务显式模式。两份 F3 专测共 `16 passed`；Chat/CLI/Product/Workspace 离线定向门禁为 `273 passed, 2 skipped`。独立 Sol 复审清零 P0/P1 后，最终确认全量为 `2344 collected / 2339 passed / 5 skipped`、退出码 0。这里的 Provider 是测试用的确定性实现，不是外部 API；这一轮没有读 `.env`、没有花真实模型额度、没有碰真实远端，所以不能把它写成“真实外部模型已经验收”。
+
+F4 的 benchmark 重构、旧 eval manifest 切断，F5 的 RC/版本/tag/Release 都没开始。没有通用 Workflow DSL、自动重试、跨进程 lease、冷恢复或 OS sandbox。四个并发核心文件仍然零改动，版本还是 `0.6.0`。F3 的独立复审和最终全量已经通过，但工作树尚未提交，也没有进入 F4。

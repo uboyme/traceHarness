@@ -126,6 +126,13 @@ class WorkspaceProvider(Protocol):
     async def remove(self, record: WorkspaceRecord) -> None:
         ...
 
+    async def remove_captured(
+        self, record: WorkspaceRecord, *, candidate_tree: str
+    ) -> None:
+        """Remove a dirty worktree only when it still equals an immutable capture."""
+
+        ...
+
 
 __all__ = [
     "WorkspaceAccess",

@@ -259,7 +259,9 @@ class ProductAssemblyService:
         # binding and refused if any of them was unavailable. That ordering is
         # the point: a task that could not run either way never costs a routing
         # token, and a drifted binding is refused before the question is asked.
-        decision = await self._router.route(routing_summary)
+        decision = await self._router.route(
+            routing_summary, task_id=summary.task_id
+        )
         try:
             routed = await self._tasks.record_routing(
                 task_id=summary.task_id,

@@ -549,7 +549,8 @@ class _Sequenced:
     answers: tuple[str, ...]
     calls: list[str] = field(default_factory=list)
 
-    async def respond(self, summary: str) -> RouterResponse:
+    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
+        del task_id
         index = len(self.calls)
         self.calls.append(summary)
         await self.gates[index].wait()

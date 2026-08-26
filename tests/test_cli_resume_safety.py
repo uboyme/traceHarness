@@ -181,6 +181,20 @@ def test_an_unparseable_base_url_still_produces_a_usable_block(tmp_path: Path) -
     assert console.has("traceh chat")
 
 
+def test_product_configuration_is_carried_into_the_chat_resume_command(
+    tmp_path: Path,
+) -> None:
+    runtime = build_runtime(tmp_path)
+    config = tmp_path / "product host.json"
+    console = resume_lines(
+        runtime,
+        environment=ResumeEnvironment(product_config=config),
+    )
+
+    assert "--product-config" in console.command_line()
+    assert str(config.resolve()) in console.command_line()
+
+
 @pytest.mark.parametrize(
     ("url", "expected"),
     [

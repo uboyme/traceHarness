@@ -1,10 +1,8 @@
-"""v0.7-F1/F2 boundaries: what the product domain may reach, and what it may not.
+"""v0.7-F boundaries: facts/plans stay pure and F3 executes only through seams.
 
 F1 makes ProductTask a durable fact and F2 turns a confirmed one into an exact
-plan. Neither makes anything happen. These tests pin that difference, because it
-is exactly the boundary a later stage will be tempted to blur: recording that a
-Workflow *would* run is not running one, and hashing a definition is not
-executing it.
+plan. F3 adds an explicit host control plane, while the fact/projector/assembly
+modules remain non-executing and the four v0.6 kernel owners remain unchanged.
 """
 
 from __future__ import annotations
@@ -181,11 +179,25 @@ modules is. This follows the precedent the Workflow domain set for
 ``durable_log_identity``.
 """
 
+PLANNING_FILES = {
+    "assembly.py",
+    "errors.py",
+    "events.py",
+    "evidence.py",
+    "projection.py",
+    "registry.py",
+    "router.py",
+    "service.py",
+    "topology.py",
+}
+
 
 def test_the_product_domain_executes_nothing_it_records() -> None:
     """The domain writes facts about work and plans it. It runs none of it."""
 
     for source, _ in _sources(PRODUCT_ROOT):
+        if source.name not in PLANNING_FILES:
+            continue
         tree = ast.parse(source.read_text(encoding="utf-8"))
         imported = _imports(source)
         assert EXECUTING_MODULES.isdisjoint(imported), (
@@ -223,6 +235,8 @@ def test_the_domain_calls_no_service_that_would_make_something_happen() -> None:
         "PluginManager",
     )
     for source, text in _sources(PRODUCT_ROOT):
+        if source.name not in PLANNING_FILES:
+            continue
         for name in forbidden:
             assert name not in text, (source.name, name)
 
@@ -240,33 +254,26 @@ def test_the_product_domain_reuses_the_shared_rules_it_needs() -> None:
     assert "traceh.session.invariants" in reused
 
 
-def test_no_chat_control_plane_arrived_early() -> None:
-    """F2 owns the Router. The chat surface and its commands are F3."""
+def test_the_f3_model_tools_hold_only_ephemeral_turn_actions() -> None:
+    """Proposal Tools cannot reach execution, Review, approval or promotion."""
 
-    for source, text in _sources(PRODUCT_ROOT):
-        for forbidden in ("propose_task", "start_proposal", "handle_command"):
-            assert forbidden not in text, (source.name, forbidden)
-        command_literals = {
-            "/approve",
-            "/start",
-            "/cancel",
-            "/inspect",
-            "/abandon",
-            "/task",
-        }
-        assert command_literals.isdisjoint(_literals(text)), source.name
-    package = PACKAGE_ROOT
-    for source, text in _sources(package / "cli"):
-        assert "traceh.product" not in text, source.name
-        assert "ProductTaskService" not in text, source.name
-        assert "ProductAssemblyService" not in text, source.name
+    from traceh.product.chat import ConfirmProductTaskTool, ProposeProductTaskTool
+
+    assert ProposeProductTaskTool.__slots__ == ("_actions",)
+    assert ConfirmProductTaskTool.__slots__ == ("_actions",)
+    source = (PRODUCT_ROOT / "chat.py").read_text(encoding="utf-8")
+    imported = _imports(PRODUCT_ROOT / "chat.py")
+    assert "traceh.workflow" not in imported
+    assert "traceh.promotion.service" not in imported
+    for forbidden in ("PatchPromotionService", "WorkflowService", "AgentSupervisor"):
+        assert forbidden not in source
 
 
 def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
     """No handle reaches the router *through* the seam - it is handed a string."""
 
     responder = inspect_module.signature(RouterResponder.respond)
-    assert list(responder.parameters) == ["self", "summary"]
+    assert list(responder.parameters) == ["self", "summary", "task_id"]
     assert responder.parameters["summary"].annotation == "str"
     parser = inspect_module.signature(StrictTaskRoutingParser.parse)
     assert list(parser.parameters) == ["self", "response"]
@@ -274,6 +281,7 @@ def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
     assert list(inspect_module.signature(ProductModeRouter.route).parameters) == [
         "self",
         "summary",
+        "task_id",
     ]
 
 
@@ -307,14 +315,7 @@ def test_no_topology_can_arrive_from_configuration() -> None:
     assert set(ROUTER_RESPONSE_KEYS) == {"mode", "reason"}
 
 
-def test_the_domain_grants_no_approve_promote_or_capture_capability() -> None:
-    defined: set[str] = set()
-    for _source, text in _sources(PRODUCT_ROOT):
-        for node in ast.walk(ast.parse(text)):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                defined.add(node.name)
-    for forbidden in ("approve", "promote", "compare_and_swap", "capture"):
-        assert not any(forbidden in name for name in defined), forbidden
+def test_generic_agent_tools_gain_no_product_authority() -> None:
     toolset = Path(tools_module.__file__).read_text(encoding="utf-8")
     for forbidden in ("product", "task_id", "ProductTask"):
         assert forbidden not in toolset, forbidden
@@ -326,11 +327,19 @@ def test_the_product_task_stream_is_the_only_new_fact_source() -> None:
     prefixes: set[str] = set()
     for _, text in _sources(PRODUCT_ROOT):
         for value in _literals(text):
-            if value.endswith(":"):
+            if (
+                value.endswith(":")
+                and value == value.strip()
+                and " " not in value
+                and value == value.lower()
+            ):
                 prefixes.add(value)
     # ``session:`` is read-only evidence, never written by this domain.
-    assert prefixes <= {"product-task:", "session:"}
+    assert prefixes <= {"product-task:", "session:", "product:"}
+    fact_files = {"events.py", "projection.py", "service.py"}
     for source, text in _sources(PRODUCT_ROOT):
+        if source.name not in fact_files:
+            continue
         for forbidden in ("sqlite", "json.dump", "open(", "Path(", "shelve"):
             assert forbidden not in text, (source.name, forbidden)
 

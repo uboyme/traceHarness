@@ -1,4 +1,4 @@
-"""ProductTask facts, and the plan a confirmed task may run - but never running one.
+"""ProductTask facts, fixed assembly and the optional F3 Chat control plane.
 
 This domain owns two things and refuses everything between them and execution.
 v0.7-F1 owns what a ProductTask durably *is*: a strict parser, one projector, a
@@ -6,10 +6,10 @@ fresh reader and the single host writer. v0.7-F2 adds what a confirmed task will
 run *as*: the strict mode router, the one Profile Registry, the preflight binding
 and the fixed Workflow definition a receipt is taken from.
 
-It still starts no Workflow, captures nothing, verifies nothing, approves
-nothing, promotes nothing, renders no chat and exposes no model-visible
-capability. The contract both stages implement is frozen in
-:mod:`traceh.api.product`.
+F3 adds a thin host assembly over the existing Workflow, Agent, Budget,
+Workspace, Artifact and Promotion services.  It does not move those facts or
+lifecycles into this package; the only model-visible actions create an
+ephemeral proposal/confirmation note which the host verifies after Turn close.
 """
 
 from traceh.product.assembly import (
@@ -54,6 +54,11 @@ from traceh.product.evidence import (
     MessageEvidence,
     SessionEvidenceReader,
     require_confirmation_evidence,
+)
+from traceh.product.host import (
+    ProductChatHost,
+    ProductHostProfile,
+    build_product_chat_host,
 )
 from traceh.product.projection import (
     ProductTaskIssue,
@@ -108,9 +113,11 @@ __all__ = [
     "ProductAssembly",
     "ProductAssemblyResolver",
     "ProductAssemblyService",
+    "ProductChatHost",
     "ProductError",
     "ProductEvidenceError",
     "ProductInputError",
+    "ProductHostProfile",
     "ProductModeRouter",
     "ProductOperationConflictError",
     "ProductPreflight",
@@ -137,6 +144,7 @@ __all__ = [
     "TaskOwnershipSource",
     "WorkflowStateSource",
     "agent_assembly_digest",
+    "build_product_chat_host",
     "converge_product_task",
     "is_product_fact",
     "product_definition_hash",

@@ -137,6 +137,27 @@ class WorkspaceService:
     async def catalog(self) -> WorkspaceCatalog:
         return await self._catalogs.load()
 
+    async def resolve_for_creation(self, workspace_id: str) -> WorkspaceHandle:
+        """Return the exact provisional worktree during the managed create saga.
+
+        This seam exists for an ``AgentActivationFactory`` invoked *inside*
+        :class:`WorkspaceManagedAgentSupervisor.create`.  It never adopts an
+        arbitrary path: the id must already name a catalogued provisional
+        workspace and the provider re-validates/materializes that exact record.
+        Attached workspaces continue to use ``resolve_for_agent/session``.
+        """
+
+        workspace_id = require_workspace_identifier(
+            workspace_id, field="workspace_id"
+        )
+        catalog = await self._catalogs.load()
+        record = catalog.get(workspace_id)
+        if record is None:
+            raise WorkspaceNotFoundError
+        if record.status is not WorkspaceStatus.PROVISIONAL:
+            raise WorkspaceStateError
+        return await self._provider.materialize(record)
+
     async def provision(
         self,
         *,
@@ -482,6 +503,70 @@ class WorkspaceService:
         )
         assert isinstance(result, WorkspaceRecord)
         return result
+
+    async def release_captured(
+        self,
+        workspace_id: str,
+        *,
+        candidate_tree: str,
+        reason: str,
+    ) -> WorkspaceRecord:
+        """Release a dirty Workspace only through the provider's exact-tree proof."""
+
+        workspace_id = require_workspace_identifier(
+            workspace_id, field="workspace_id"
+        )
+        if type(reason) is not str or reason not in {"merged", "rejected"}:
+            raise WorkspaceInputError("workspace-release-reason-invalid", "reason")
+        result = await converge_workspace_operation(
+            self._release_captured(workspace_id, candidate_tree, reason),
+            name="traceh-workspace-captured-release",
+        )
+        assert isinstance(result, WorkspaceRecord)
+        return result
+
+    async def _release_captured(
+        self, workspace_id: str, candidate_tree: str, reason: str
+    ) -> WorkspaceRecord:
+        async with self._lock:
+            catalog = await self._catalogs.load()
+            record = catalog.get(workspace_id)
+            if record is None:
+                raise WorkspaceNotFoundError
+            if record.status is WorkspaceStatus.RELEASED:
+                if record.reason != reason:
+                    raise WorkspaceOperationConflictError
+                return record
+            try:
+                await self._provider.remove_captured(
+                    record, candidate_tree=candidate_tree
+                )
+            except WorkspaceDirtyError:
+                await self._quarantine_locked(record, "workspace-dirty")
+                raise
+            except BaseException as primary:
+                local = await self._safe_inspect(record)
+                if local is WorkspaceLocalState.MISSING:
+                    try:
+                        return await self._release_locked(record, reason)
+                    except BaseException as cleanup_error:
+                        if isinstance(primary, asyncio.CancelledError):
+                            raise primary from cleanup_error
+                        raise BaseExceptionGroup(
+                            "captured workspace removal and recording both failed",
+                            (primary, cleanup_error),
+                        ) from None
+                try:
+                    await self._quarantine_locked(record, "git-state-unknown")
+                except BaseException as cleanup_error:
+                    if isinstance(primary, asyncio.CancelledError):
+                        raise primary from cleanup_error
+                    raise BaseExceptionGroup(
+                        "captured workspace removal and quarantine both failed",
+                        (primary, cleanup_error),
+                    ) from None
+                raise
+            return await self._release_locked(record, reason)
 
     async def _release(self, workspace_id: str, reason: str) -> WorkspaceRecord:
         async with self._lock:

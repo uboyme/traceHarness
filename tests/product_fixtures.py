@@ -501,9 +501,11 @@ class ScriptedResponder:
     gate: Gate | None = None
     failure: BaseException | None = None
     calls: list[str] = field(default_factory=list)
+    task_ids: list[str] = field(default_factory=list)
 
-    async def respond(self, summary: str) -> RouterResponse:
+    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
         self.calls.append(summary)
+        self.task_ids.append(task_id)
         if self.gate is not None:
             await self.gate.wait()
         if self.failure is not None:

@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0 contract frozen, F1 fact layer implemented, F2 router/registry/assembly implemented, F3-F5 not implemented**
+- Status: Accepted; **F0-F3 implemented, F4-F5 not implemented**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -33,12 +33,17 @@ the fixed Workflow definition its hash was taken from. It plans a task and
 deliberately stops there: it starts no run, captures nothing, verifies nothing,
 approves nothing, promotes nothing and calls no model.
 
-What still does **not** exist is
-the chat controller, any product CLI command, the benchmark rework, real-model
-acceptance or the v0.7 release. `traceh chat`
-remains unchanged and F3-F5 remain unimplemented. The
-package version is still `0.6.0`. Nothing here should be read as "the product
-works".
+F3 has since implemented the optional product host above the existing Chat,
+Workflow, Agent, Budget, Workspace, Artifact and Promotion services. A model
+may only leave an ephemeral proposal/confirmation action for the current Turn;
+after that Turn closes, the host replays the durable Session evidence. The
+Product controller starts the fixed Workflow, pauses at its Approval barrier,
+and only a later host command may call Promotion. Restart continuation begins
+from a task id and fresh domain replays, not from the old Chat process.
+
+What still does **not** exist is the `traceh eval` benchmark rework, external
+real-provider acceptance for this F3 tree, or the v0.7 release. The package
+version remains `0.6.0`.
 
 ## Context
 
@@ -513,7 +518,62 @@ user's old data.
 
 F0 implements none of this.
 
-### 16. No compatibility layer
+### 16. F3 assembles existing owners; it does not create another runtime
+
+The optional `--product-config` host file is schema 1 with an exact key set. It
+selects one Profile, source repository, managed Workspace root, local CAS,
+verification plan and bare promotion target. It cannot carry Workflow nodes,
+edges, prompts, approval digests or a free-form Agent count. Without the flag,
+ordinary Chat constructs no Product service and behaves exactly as before.
+
+F3 v1 reuses the directly constructed built-in Provider of that Chat process.
+The Product Profile provider/model must match the Chat runtime exactly; plugin
+providers are rejected because the CLI has a registered capability but no
+explicit Provider object whose identity and lifetime can be handed to the
+Product host. F3 does not construct a second implicit model client.
+
+The two model-visible tools hold only a process-local current-Turn action. They
+do not hold a Supervisor, Workflow, Review or Promotion service. Proposal
+rendering includes the exact bounded requirement the model proposed and may
+include one explicit `single`, `multi` or `auto` mode when the user requested
+it. Omitting the mode uses the Profile default. The mode, its source and the
+one prospective task identity are rendered before confirmation; no durable
+task exists until a later human message passes Session replay. Review ids,
+Patch hashes, approval digests and promotion revisions are rendered by the
+host and never appended to a later model request.
+
+One non-model task-root Agent anchors the ownership tree and aggregate Budget.
+Role Agents use the existing `ProcessAgentSupervisor`, Budget enforcement and
+managed Git Workspace adapter. The Product execution adapter only resolves the
+fixed F2 bindings and invokes the existing Workflow service; Workflow still
+never calls `approve()` or `promote()`.
+
+At the Approval barrier the process may exit. A new host reconstructs the
+Product Assembly and Workflow state from the same EventStore, re-resolves the
+Review from the Promotion ledger, and may approve by exact task id. The product
+controller invokes Promotion explicitly only after the human command. Resource
+cleanup precedes the Product terminal fact, so a crash between promotion and
+cleanup remains retryable. A captured dirty tree is force-removed only when its
+freshly re-derived Git tree equals the Artifact manifest; failure/cancellation
+preserves dirty evidence in quarantine instead of discarding it.
+
+Cross-stream writes are reconciled in one direction: if Workflow durably reached
+Approval but ProductTask is still `started`, a fresh task operation appends the
+missing awaiting fact without re-running a node. A failed Workflow is likewise
+settled from its durable terminal. Other partial Workflow states remain
+`interrupted`; F3 does not invent cold recovery or stale-claim takeover.
+
+Routing and assembly deliberately occur after `product/task-opened`, because
+their cost and decision belong to that task. Therefore every ordinary failure
+between opening and Workflow execution is settled by the Product controller:
+it first releases the existing ownership tree, Budget accounts and Workspaces,
+then appends `product/task-failed` with a stable code. A cleanup or terminal
+write failure retains the original error and leaves a retryable non-terminal
+task. Internal Product reasons such as failed/cancelled are not copied into the
+Workspace protocol; a clean Workspace uses that domain's existing
+`explicit-release`, while dirty failure evidence remains quarantined.
+
+### 17. No compatibility layer
 
 There is nothing to be compatible with. No ProductTask event has ever been
 written by any build, so F0 defines protocol version 1 and schema version 1 with
@@ -620,9 +680,9 @@ no legacy branch, and later stages refuse unknown versions rather than guessing.
 
 ## Explicit boundaries
 
-v0.7-F0 adds one public module and one test file. It adds no implementation
-package, no event writer, no projector, no service, no router, no chat command,
-no CLI, no default assembly and no benchmark. It calls no model, uses no
-credential and touches no repository. `AgentLoop`, `AgentRuntime`,
-`ProcessAgentSupervisor` and `PluginManager` are byte-identical. The package
-version remains `0.6.0`, and v0.7 is not released.
+F3 is an opt-in host assembly, not a default Profile, general Workflow DSL,
+retry engine, cross-process lease, cold Activation recovery or OS sandbox. It
+does not provide a model-visible approve/promote Tool. `AgentLoop`,
+`AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` remain
+byte-identical. F4 benchmark work and F5 release work have not begun; the
+package version remains `0.6.0` and v0.7 is not released.

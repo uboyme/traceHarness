@@ -13,6 +13,7 @@ import asyncio
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from traceh.cli.activity import (
@@ -37,6 +38,9 @@ from traceh.concurrency import await_worker_convergence
 from traceh.runtime.agent_runtime import AgentRuntime
 from traceh.session.event_feed import EventSubscription
 from traceh.session.service import SessionNotFoundError
+
+if TYPE_CHECKING:
+    from traceh.product.chat import ProductChatSurface, ProductChatTurn
 
 PROMPT = "you> "
 ASSISTANT_PREFIX = "assistant> "
@@ -68,6 +72,11 @@ _HELP_LINES = (
     "/plugins reload          rebuild the active plugin composition",
     "/plugins use ID [ID ...] switch this session to installed plugins",
     "/plugins use --none      switch this session to no external plugins",
+    "/task inspect TASK_ID    inspect a durable ProductTask (with --product-config)",
+    "/task approve TASK_ID    approve and promote a verified ProductTask",
+    "/task reject TASK_ID     reject without moving the target ref",
+    "/task cancel TASK_ID     cancel owned work and release resources",
+    "/task abandon TASK_ID    record an unowned interrupted task as abandoned",
     "/exit     leave the chat",
     "/quit     leave the chat",
     "",
@@ -117,6 +126,7 @@ class ResumeEnvironment:
     script: Path | None = None
     env_file_supplies: frozenset[str] = frozenset()
     verifier_from_env_file: bool = False
+    product_config: Path | None = None
 
 
 def _safe_base_url(value: str | None) -> tuple[str | None, str | None]:
@@ -191,6 +201,7 @@ async def run_chat(
     heartbeat_seconds: float = DEFAULT_HEARTBEAT_SECONDS,
     clock: Clock | None = None,
     resume_environment: ResumeEnvironment | None = None,
+    product: ProductChatSurface | None = None,
 ) -> int:
     """Open or continue a session, then read turns until the user leaves."""
 
@@ -216,6 +227,7 @@ async def run_chat(
                 heartbeat_seconds=interval,
                 clock=resolved_clock,
                 resume_environment=environment,
+                product=product,
             )
         except (KeyboardInterrupt, asyncio.CancelledError):
             # Reached only for an interrupt the loop did not already absorb - an
@@ -225,7 +237,18 @@ async def run_chat(
             await _converge_interrupted(runtime, console, session, environment)
             return INTERRUPTED_EXIT_CODE
     finally:
-        await runtime.dispose()
+        failures: list[BaseException] = []
+        if product is not None:
+            try:
+                await product.aclose()
+            except BaseException as error:
+                failures.append(error)
+        try:
+            await runtime.dispose()
+        except BaseException as error:
+            failures.append(error)
+        if failures:
+            raise BaseExceptionGroup("chat shutdown failed", failures)
 
 
 async def _open_session(
@@ -287,6 +310,7 @@ async def _chat_loop(
     heartbeat_seconds: float,
     clock: Clock,
     resume_environment: ResumeEnvironment,
+    product: ProductChatSurface | None = None,
 ) -> int:
     console.write("Type /help for commands, /exit to leave.")
     while True:
@@ -314,7 +338,14 @@ async def _chat_loop(
             )
             continue
         if text.startswith("/"):
-            if await _handle_command(runtime, console, session, text, resume_environment):
+            if await _handle_command(
+                runtime,
+                console,
+                session,
+                text,
+                resume_environment,
+                product=product,
+            ):
                 await _write_resume_block_for_session(
                     runtime, console, session, resume_environment
                 )
@@ -328,6 +359,7 @@ async def _chat_loop(
             timeline=timeline,
             heartbeat_seconds=heartbeat_seconds,
             clock=clock,
+            product=product,
         )
         if interrupted_twice:
             # The user asked again while the first interrupt was still
@@ -352,11 +384,15 @@ async def _handle_command(
     session: ChatSession,
     text: str,
     resume_environment: ResumeEnvironment,
+    *,
+    product: ProductChatSurface | None = None,
 ) -> bool:
     """Handle one internal command. Returns True when the chat should end."""
 
     if text in {"/exit", "/quit"}:
         return True
+    if product is not None and await product.handle_command(text, console):
+        return False
     if text == "/help":
         for entry in _HELP_LINES:
             console.write(entry)
@@ -416,6 +452,7 @@ async def _run_turn(
     timeline: bool,
     heartbeat_seconds: float,
     clock: Clock,
+    product: ProductChatSurface | None = None,
 ) -> bool:
     """Run one turn, narrating it while it happens.
 
@@ -433,10 +470,18 @@ async def _run_turn(
         heartbeat_seconds=heartbeat_seconds, clock=clock,
     )
 
+    prepared: ProductChatTurn | None = None
+    task_input = text
+    if product is not None:
+        prepared = await product.prepare_turn(session.session_id, text)
+        task_input = prepared.turn_input
+
     # Shielded so an interrupt delivered here cannot detach the turn: the
     # runtime keeps tracking it and can still cancel it through its own
     # cancellation path.
-    turn = asyncio.ensure_future(runtime.run_existing(session.session_id, text))
+    turn = asyncio.ensure_future(
+        runtime.run_existing(session.session_id, task_input)
+    )
     try:
         result = await asyncio.shield(turn)
     except asyncio.CancelledError:
@@ -446,12 +491,19 @@ async def _run_turn(
         # `runtime.cancel()` runs, so tearing the display down first published
         # all of it to nobody. The display therefore stays open across
         # convergence and is drained afterwards.
-        return await _interrupt_turn(runtime, console, session, display, turn)
+        interrupted = await _interrupt_turn(
+            runtime, console, session, display, turn
+        )
+        if product is not None:
+            await product.discard_turn(session.session_id, None)
+        return interrupted
     except Exception as error:
         # AgentLoop already recorded runtime/error and closed the lifecycle.
         # Draining first keeps the timeline that led up to the failure - it is
         # the most useful part of it - ahead of the error line.
         await _stop_display(display)
+        if product is not None:
+            await product.discard_turn(session.session_id, None)
         console.write(f"error: {type(error).__name__}: {error}")
         return False
     except BaseException:
@@ -459,6 +511,14 @@ async def _run_turn(
         raise
     await _stop_display(display)
     _write_turn_result(console, result)
+    if product is not None:
+        assert prepared is not None
+        await product.finish_turn(
+            session.session_id,
+            prepared,
+            turn_id=result.turn_id,
+            console=console,
+        )
     return False
 
 
@@ -799,6 +859,12 @@ def _write_resume_block(
             "  note: --script replays the same file from its first response; "
             "the scripted cursor is not persisted across processes."
         )
+
+    if environment.product_config is not None:
+        restore += [
+            Literal("--product-config"),
+            str(Path(environment.product_config).resolve()),
+        ]
 
     base_url, withheld_reason = _safe_base_url(environment.base_url)
     if base_url:

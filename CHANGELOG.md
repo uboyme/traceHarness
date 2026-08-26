@@ -2,6 +2,114 @@
 
 ## Unreleased
 
+### v0.7-F1: ProductTask as a durable fact
+
+- Added `traceh.product`, an independent domain implementing the F0 contract:
+  a strict parser and single projector, a fresh reader, host-owned writes for
+  all nine facts, Session-replayed confirmation evidence, and a derived view.
+  It records what happens to a task and drives none of it - an architecture
+  test asserts it imports no Workflow, Promotion, Artifact, Workspace,
+  Supervisor, Runtime, plugin, CLI or Provider module.
+- `rebuild_product_task()` replays the whole stream every time: no status file,
+  cache or second store. It enforces shape (stream, sequence, schema 1, exact
+  key set), order (`PRODUCT_TASK_TRANSITIONS`) and value (`product_required_values()`),
+  cross-checks the payload's `task_id` against the stream name, refuses a
+  duplicate `operation_id`, and returns `None` - not an invented summary - for a
+  task that was never opened.
+- Stated the projector's reach honestly: `mode`, `workflow_run_id` and
+  `preflight_digest` are replay-checkable, while `definition_hash`,
+  `assembly_digest` and `source_base_revision` need the Receipt and are checked
+  by the service through `binds()` and `product_started_values()`.
+- `ProductTaskService` reuses the existing rules rather than reinventing weaker
+  ones: the projection that validated the history supplies the compare-and-swap
+  expectation, idempotency binds an `operation_id` to its exact canonical
+  payload (a different payload under the same id is a conflict refused *before*
+  the append), failed or cancelled appends go through the shared three-state
+  `committed_after_failure()`, and one owned single-flight task per task means a
+  cancelled caller re-raises its own `CancelledError` after convergence.
+- Confirmation is proven, not trusted: opening a task replays a schema-1,
+  contiguous, structurally valid `session/created` → `inbox/accepted` →
+  `inbox/claimed` history for both messages plus the proposing Turn's durable
+  `turn/start`/`turn/end`. Both claimed message Turns must have a real durable
+  `turn/start`, and the whole Session must pass the shared
+  `CoreInvariantChecker`; a `turn/end` written over an open Step is not valid
+  authorization. Only a distinct plain `source="user"` message whose acceptance
+  sequence follows the Proposal Turn end can authorize the task; an older
+  origin message or one queued while the offer was still being produced cannot
+  be relabelled as consent. Acceptance `source`, `content` and `target` are
+  detached as exact built-in strings before comparison, and `target` must be
+  exactly `new_turn`; a `str` subclass cannot impersonate that value. The
+  evidence reader must share the exact EventStore object with the ProductTask
+  writer. Backend-specific Session read failures become the single stable
+  `product-session-unreadable` outcome, while caller-control `BaseException`s
+  remain unchanged.
+- Normalize an opening exactly once before policy, Session evidence and
+  persistence. `proposal_confirmable()` compares detached built-in strings,
+  and the service uses the same normalized Proposal/Confirmation that produced
+  the payload, so a hostile `str` subclass cannot authorize one Session while
+  writing another.
+- Parse each Product event once into a detached `ParsedProductEvent`; replay,
+  cross-event checks and operation idempotency share that representation.
+  Caller-defined equality or a stateful `str.__str__` can no longer forge a
+  decided value, make an operation disappear between replays or append a
+  duplicate fact that poisons the stream.
+- Preserve known commit state after a normal append return: if the final result
+  reload fails, the public error is `ProductWriteError(committed=True)`, not a
+  raw Store exception or an unknown outcome.
+- The Workflow status source is bound to that same EventStore at construction
+  and checked again before a view read, so another fact universe cannot decide
+  `resumable`/`interrupted` or authorize `abandon_task()` for this task.
+- Every field in `ProductPreflightBinding` and `ProductAssemblyReceipt` is
+  validated before the first append. A malformed definition hash, revision,
+  registry binding or derived digest is therefore an input error with a clean
+  stream, not a durable fact that later poisons replay.
+- `view()` reads the ProductTask, the Workflow state and ownership fresh on
+  every call and caches none of them, so `unreconciled`, `resumable` and
+  `interrupted` are all genuinely reachable. `abandon_task()` writes only where
+  the derived view really is `interrupted`.
+- Added `tests/test_product_task_stream.py`, `tests/test_product_service.py` and
+  `tests/test_product_architecture.py` (`87 passed`; F0+F1 `160 passed`). Eight original reverse validations
+  ran through the public path; one of them - the compare-and-swap source - did
+  **not** go red at first, which exposed a missing test, and a case gating
+  between replay and append was added before it did.
+- Added four hardening counterexample groups for human Session evidence,
+  malformed Session protocol, cross-Store fact sources and pre-append Receipt
+  validation; all first failed on the old public path and pass after the fix.
+- Added three review counterexamples for an older message reused as approval, a
+  stateful string identity changing across replays, and a successful append
+  followed by a failed result read. Removing each corresponding guard makes
+  only its counterexample fail; all three guards were restored.
+- Added three Session-authorization counterexamples: origin and confirmation
+  claims cannot name Turns that never started, and a Turn ending over an open
+  Step cannot authorize. Removing the durable-start checks makes both ghost
+  Turns open a task; removing the shared invariant check makes the invalid
+  closure open one. All guards were restored.
+- Added four Session payload/read counterexample cases: plain and hostile
+  non-`new_turn` targets are equally refused without invoking subclass
+  comparison, a Store read failure has one non-reflective Product error, and
+  `SystemExit` remains caller control. Restoring the hostile comparison and
+  removing the read boundary each makes only its own counterexample fail.
+- Bound every claimed Turn to exactly one message during Session replay, so a
+  confirmation cannot borrow a Turn another message started. Product replay
+  now also normalizes its public query identity once and uses that plain value
+  for stream selection, payload identity checks and the returned Summary.
+  Both public-path counterexamples failed before the fixes and pass afterwards.
+- Added repository-wide review admission and stopping rules to `AGENTS.md`:
+  blocking findings require a deterministic current public path and concrete
+  contract impact; P2 is non-blocking by default; offline semantic review is
+  separated from the single final full/network gate; and review stops expanding
+  the threat model once P0/P1 are clear.
+- After the independent review cleared P0/P1, the single final full gate passed:
+  `2253 collected / 2248 passed / 5 skipped`, exit code 0.
+- No Router, chat surface, default Profile/Registry/Assembly, Workflow
+  execution, Promotion call or benchmark rework. `cli/chat.py` is unchanged, the
+  four protected files are byte-identical, and the version stays `0.6.0`.
+- Added `docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md` as the single execution
+  plan for D0 through F5, including the target Chat experience, architectural
+  invariants, evidence-derived measurements and explicit v0.7 non-goals. It
+  coordinates work but does not replace source, tests, ADRs or context as the
+  authority for implemented facts.
+
 ### v0.7-F0: the unified chat product contract, frozen but not implemented
 
 - Added `traceh.api.product`: a **contract-only** public module for the unified

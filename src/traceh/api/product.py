@@ -845,8 +845,10 @@ class ProductTaskProposal:
       accepted;
     * **Confirmation names the exact ``proposal_id``** and carries nothing else -
       see :class:`ProposalConfirmation`;
-    * **Confirmation comes from a later Turn** than the one that produced the
-      Proposal - see :func:`proposal_confirmable`.
+    * **Confirmation is a different message accepted after the Turn that
+      produced the Proposal ended** - the pure part is checked by
+      :func:`proposal_confirmable`; the durable ordering proof belongs to the
+      ProductTask writer's fresh Session replay.
 
     The three ``origin_*`` fields identify where the *requirement* was stated,
     and they must be a consistent triple: the Turn is the one that claimed that
@@ -907,22 +909,77 @@ def proposal_confirmable(
     Proposal belongs to one conversation; an acceptance arriving from another is
     not the same person agreeing to the same thing.
 
-    And the confirming Turn must differ from ``proposed_turn_id`` - the Turn that
-    produced the offer. Without that, a model could propose and confirm in one
-    breath, and the human decision the whole surface is built around would be a
-    formality it performed on its own behalf. A person saying "go ahead" is
-    always a later Turn, so this costs a real user nothing.
+    The confirming message must not be the requirement's origin message, and
+    the confirming Turn must differ from ``proposed_turn_id`` - the Turn that
+    produced the offer. Without both checks, an earlier real user message could
+    be relabelled as an acceptance, or a model could propose and confirm in one
+    breath. The concrete writer additionally proves from Session sequence
+    numbers that the confirming message was accepted only after the proposing
+    Turn ended; identifiers alone cannot express temporal order.
 
     What this cannot decide is whether ``confirming_message_id`` names a real
     durable user message. That is a fresh Session replay, and it belongs to the
     writer.
     """
 
-    return (
-        confirmation.proposal_id == proposal.proposal_id
-        and confirmation.confirming_session_id == proposal.origin_session_id
-        and confirmation.confirming_turn_id != proposal.proposed_turn_id
+    if (
+        type(proposal) is not ProductTaskProposal
+        or type(confirmation) is not ProposalConfirmation
+    ):
+        return False
+    values = tuple(
+        _plain_proposal_text(value)
+        for value in (
+            proposal.proposal_id,
+            proposal.origin_session_id,
+            proposal.origin_message_id,
+            proposal.proposed_turn_id,
+            confirmation.proposal_id,
+            confirmation.confirming_session_id,
+            confirmation.confirming_turn_id,
+            confirmation.confirming_message_id,
+        )
     )
+    if any(value is None for value in values):
+        return False
+    (
+        proposal_id,
+        origin_session_id,
+        origin_message_id,
+        proposed_turn_id,
+        confirmed_proposal_id,
+        confirming_session_id,
+        confirming_turn_id,
+        confirming_message_id,
+    ) = values
+    return (
+        confirmed_proposal_id == proposal_id
+        and confirming_session_id == origin_session_id
+        and confirming_message_id != origin_message_id
+        and confirming_turn_id != proposed_turn_id
+    )
+
+
+def _plain_proposal_text(value: object) -> str | None:
+    """Detach comparison from caller-controlled ``str`` methods.
+
+    A frozen dataclass freezes the reference, not the behaviour of an object a
+    caller placed in it. Converting once to an exact built-in value prevents a
+    ``str`` subclass from defining what equality means at this authorization
+    boundary. Identifier shape is enforced by the concrete writer; this pure
+    F0 helper only owns the comparison rule.
+    """
+
+    if not isinstance(value, str):
+        return None
+    try:
+        # Call the built-in descriptor directly. ``str(value)`` dispatches to a
+        # subclass's mutable ``__str__`` and can produce a different identity
+        # each time the same frozen DTO is inspected.
+        normalized = str.__str__(value)
+    except Exception:
+        return None
+    return normalized if type(normalized) is str else None
 
 
 # ------------------------------------------------------------------ read model

@@ -297,12 +297,31 @@ def test_the_workflow_does_not_learn_about_the_product_surface() -> None:
         ), module.__name__
 
 
-def test_no_product_implementation_package_exists_yet() -> None:
-    """F0 froze a contract. An implementation package would mean it did more."""
+def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
+    """F0 froze a contract; v0.7-F1 implements it in a separate domain.
 
-    assert not (PACKAGE_ROOT / "product").exists()
-    for name in ("events.py", "projection.py", "service.py", "router.py"):
-        assert not (PACKAGE_ROOT / "product" / name).exists()
+    The guard that mattered at F0 - "no implementation package exists yet" - has
+    been overtaken by F1, which is the stage that creates one. What must remain
+    true is the boundary it was protecting: the contract lives in
+    ``traceh.api.product`` and stays free of I/O and state, while everything that
+    reads or writes a stream lives in ``traceh.product`` and is checked by
+    ``tests/test_product_architecture.py``.
+    """
+
+    implementation = PACKAGE_ROOT / "product"
+    assert implementation.is_dir()
+    assert (implementation / "service.py").exists()
+
+    # The contract module still contains no implementation of its own. A
+    # Protocol *declaration* of ``load`` is the contract and stays; what must
+    # not appear is anything that could touch a stream.
+    text = PRODUCT_API.read_text(encoding="utf-8")
+    for forbidden in ("EventStore", "PendingEvent", ".append(", ".read("):
+        assert forbidden not in text, forbidden
+
+    # F2 capabilities have still not arrived.
+    for name in ("router.py", "chat.py", "registry.py", "assembly.py"):
+        assert not (implementation / name).exists(), name
 
 
 def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
@@ -1456,6 +1475,48 @@ def test_confirming_requires_the_exact_proposal() -> None:
     assert proposal_confirmable(proposal, _confirmation())
     # A stale confirmation cannot accept a Proposal that has been replaced.
     assert not proposal_confirmable(proposal, _confirmation(proposal_id="proposal-0"))
+    # A real requirement message is not also evidence that the offer was accepted.
+    assert not proposal_confirmable(
+        proposal, _confirmation(confirming_message_id="message-1")
+    )
+
+
+def test_confirmation_comparisons_use_plain_values_not_hostile_string_equality() -> None:
+    """A caller-controlled ``str`` subclass cannot manufacture human consent."""
+
+    class EqualToEverything(str):
+        def __eq__(self, other: object) -> bool:  # noqa: D105
+            del other
+            return True
+
+        def __ne__(self, other: object) -> bool:  # noqa: D105
+            del other
+            return False
+
+        __hash__ = str.__hash__
+
+    proposal = _proposal(origin_session_id="session-alpha")
+    forged = _confirmation(
+        proposal_id=EqualToEverything("proposal-other"),
+        confirming_session_id=EqualToEverything("session-beta"),
+    )
+
+    assert not proposal_confirmable(proposal, forged)
+
+    class Disguised(str):
+        def __new__(cls, value: str, disguise: str):
+            instance = super().__new__(cls, value)
+            instance.disguise = disguise
+            return instance
+
+        def __str__(self) -> str:  # noqa: D105
+            return self.disguise
+
+    stateful = _confirmation(
+        proposal_id=Disguised("proposal-other", "proposal-1"),
+        confirming_session_id=Disguised("session-beta", "session-alpha"),
+    )
+    assert not proposal_confirmable(proposal, stateful)
 
 
 def test_a_confirmation_from_another_conversation_is_not_this_person() -> None:

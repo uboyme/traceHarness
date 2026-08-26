@@ -294,6 +294,11 @@ invariant violations and zero request-reconstruction violations.
 
 ## v0.7: Budgets, workspaces and workflows
 
+The authoritative execution order, non-goals and intended product effect are
+kept in [the v0.7 stage plan](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md). The
+plan coordinates stages; source, tests, ADRs and the two context documents
+remain the authority for implemented facts.
+
 - **D0 — architecture seams (complete, unreleased):** make `SupervisorToolset`
   depend on the public `AgentSupervisor` protocol, move durable Tool authority
   into a fresh-reader `AgentToolAuthority`, require an explicit host
@@ -368,7 +373,7 @@ invariant violations and zero request-reconstruction violations.
     digests over host-resolved assemblies, the temporary Proposal and its
     confirmation rule, one read model and two narrow protocols. Plain chat stays
     plain, a Proposal is temporary and must be confirmed from the same Session
-    and a Turn later than the one that offered it, opening a task binds the
+    by a distinct message accepted after the Turn that offered it ended, opening a task binds the
     preflight the person actually confirmed,
     `workflow_run_id == task_id`, both modes reuse one `WorkflowService`, the
     role slot alone decides write authority so only the coder may write, and
@@ -376,8 +381,22 @@ invariant violations and zero request-reconstruction violations.
     evidence for. **Contract only:** no implementation package, no event writer,
     projector, service, router, chat command, CLI or default assembly;
     `cli/chat.py` is unchanged and no ProductTask event has ever been written.
-  - **F1–F5 — not started:** event writing and projection, the product service
-    and router, the chat surface and its host commands, default assembly, the
+  - **F1 — ProductTask fact layer (complete, unreleased):** `traceh.product`
+    turns the frozen contract into a durable fact: a strict parser and single
+    projector enforcing shape, order and cross-event values; a fresh reader
+    returning `None` for an unopened task; host-owned writes for all nine facts
+    with exact-payload idempotency, replay-sourced compare-and-swap, shared
+    three-state reconciliation and owned-task cancellation convergence;
+    confirmation proven by replaying a structurally valid, ordered, human-authored
+    Session from the same EventStore and comparing the confirmation acceptance
+    sequence with the proposing Turn's durable end, with the Workflow status source bound to
+    that same Store; preflight and receipt inputs validated
+    before the first append; and a view derived from three fresh reads so
+    `unreconciled`, `resumable` and `interrupted` are distinct.
+    It records what happens to a task and executes none of it.
+  - **F2–F5 — not started:** the Router Agent and real model calls, the Profile
+    registry and real product assembly, the chat surface and its host commands,
+    Workflow execution and Promotion driven from the product layer, the
     `traceh eval` rework (replacing it, with old manifests explicitly refused),
     real-model acceptance, packaging/security checks and the v0.7 release.
 

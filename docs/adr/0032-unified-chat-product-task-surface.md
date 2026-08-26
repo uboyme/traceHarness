@@ -1,22 +1,30 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0 contract frozen, F1-F5 not implemented**
+- Status: Accepted; **F0 contract frozen, F1 fact layer implemented, F2-F5 not implemented**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
 ## Status, precisely
 
-This ADR records decisions, not shipped behaviour. What exists after F0 is
+This ADR records decisions, not shipped behaviour. What existed after F0 was
 `traceh.api.product`: frozen values, two mode enums, a durable status enum with
 its allowed transitions, a derived view status, the exact key set of every
 ProductTask event, the host Profile, the preflight binding and Assembly Receipt,
 the temporary Proposal and its confirmation rule, one read model and two narrow
 protocols.
 
-What does **not** exist: the event writer, the parser, the projector, the
-service, the router, the chat controller, any CLI command, any default
-assembly, the benchmark rework, real-model acceptance and the v0.7 release.
-`traceh chat` is unchanged, no ProductTask event has ever been written, and the
+At F0 none of the event writer, parser, projector or service existed. F1 has
+since implemented that ProductTask fact layer. Its implementation normalizes a
+Proposal/Confirmation once before policy, evidence and persistence, and parses
+each durable Product event once into domain-owned built-in values shared by
+projection and idempotency checks; the built-in Unicode value is extracted
+without dispatching a caller-controlled ``__str__``. Its Session replay also
+proves that confirmation is a distinct message accepted only after the
+Proposal-producing Turn ended; different identifiers alone are not temporal
+evidence. What still does **not** exist is
+the router, the chat controller, any product CLI command, any default assembly,
+the benchmark rework, real-model acceptance or the v0.7 release. `traceh chat`
+remains unchanged and F2-F5 remain unimplemented. The
 package version is still `0.6.0`. Nothing here should be read as "the product
 works".
 
@@ -82,14 +90,15 @@ carries a `ProductPreflightBinding` rather than a full Assembly Receipt: an
 the router has not run and will not run until the task exists. Pretending
 otherwise would put a fabricated decision on the screen a person is reading.
 
-Three rules make "go ahead" unambiguous and keep it a human act. At most one
+Four rules make "go ahead" unambiguous and keep it a human act. At most one
 Proposal is active per chat Session, so a new one replaces the previous. The
 confirmation must come from that same Session - a Proposal belongs to one
 conversation, and an acceptance arriving from another is not the same person
-agreeing to the same thing. And `proposal_confirmable()` requires the confirming
-Turn to differ from `proposed_turn_id`: without that, a model could propose and
-confirm in one breath, and the human decision this whole surface is built around
-would be a formality it performed on its own behalf.
+agreeing to the same thing. The confirming message must be distinct from the
+requirement's origin message. And `proposal_confirmable()` requires the
+confirming Turn to differ from `proposed_turn_id`: without those identity checks,
+an older message could be relabelled as approval or a model could propose and
+confirm in one breath.
 
 `proposed_turn_id` is a separate field from `origin_turn_id`, and the first
 version of this decision got that wrong. `origin_turn_id` is where the
@@ -97,7 +106,15 @@ version of this decision got that wrong. `origin_turn_id` is where the
 asks a question, gets an answer, then says "alright, do it", and the model
 proposes during that Turn. Comparing against the requirement Turn therefore let
 a model propose in Turn 2 and confirm in Turn 2. The Turn that must differ is the
-one that made the offer.
+one that made the offer. Even that is not enough to establish "later": the F1
+writer freshly replays the Session, requires the proposing Turn's durable
+`turn/start` and `turn/end`, requires both claimed message Turns to have a real
+durable `turn/start`, and requires each Turn to belong to exactly one claimed
+message. It rejects any history the shared `CoreInvariantChecker`
+finds lifecycle-invalid, and requires the confirmation's `inbox/accepted`
+sequence to follow that end. A different but older message, one queued while
+the Proposal response was still running, a claim naming a nonexistent Turn, or
+a `turn/end` written over an open Step is not confirmation.
 
 `ProposalConfirmation` carries the proposal id plus the confirming Session, Turn
 and message, and nothing else. Mode, budgets, source, verification plan and
@@ -105,7 +122,14 @@ promotion target are already bound in the preflight, so the low-privilege
 operation a model may perform on a user's behalf cannot become a high-privilege
 one by gaining an argument - but an id alone cannot show that a person agreed,
 which is why the three identities are there. Proving `confirming_message_id`
-names a real durable acceptance is a fresh Session replay the writer performs.
+names a real durable acceptance **after the Proposal Turn closed** is a fresh
+Session replay the writer performs. The acceptance's `source`, `content` and
+`target` are accepted only as exact built-in strings and detached before any
+comparison; `target` must be exactly `new_turn`, so a caller-controlled string
+subclass cannot turn another delivery mode into consent. Ordinary Store read
+failures are normalized as unavailable evidence without reflecting backend
+details, while cancellation and interpreter-control `BaseException`s retain
+their original meaning.
 
 The confirmation is what creates `product/task-opened`, and only then.
 
@@ -543,6 +567,11 @@ no legacy branch, and later stages refuse unknown versions rather than guessing.
 - **Compare a confirmation against the Turn the requirement was stated in.**
   That is routinely a different Turn from the one that made the offer, so a
   model could still propose and confirm in a single Turn.
+- **Treat any different Turn or any real user message as "later".** Identifiers
+  are not clocks. An older requirement message then becomes reusable approval,
+  and a message queued before the Proposal response finishes can cross the
+  boundary. The Session sequence must place its acceptance after the proposing
+  Turn's durable end.
 - **Freeze the status order and leave payload values to F1.** A `single` task
   could start as `multi`, and a rejection could name a review nobody awaited.
 - **Keep the derived view status as a constructor field.** It becomes a second

@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。v0.7 D0 把接缝收干净；v0.7-A/B 把旧 Budget 删掉，换成单一 append-only 层级账本并接到真实 owned boundary；v0.7-C 在独立域加入 Workspace Catalog 和 commit-pinned Git worktree；v0.7-D1 把一个 terminal message 对应的完整 Git 状态冻结成独立 Manifest + CAS Patch Artifact；v0.7-D2 在 Runtime 外加一条独立的推广主线：固定检查、不可改的 Review 报告、人工交回精确摘要，最后用 `git update-ref <分支> <新 commit> <预期旧 commit>` 推到宿主管理的裸仓库；v0.7-E 再在这些公共服务之上加一层**固定**的流程图（Typed Workflow），用五类节点把它们串起来，并且每次运行单独记一条编排账。它没有把余额、路径、Git、Patch 或审批塞进 `AgentRuntime`，也没有给 `AgentLoop` 增加分支。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel；插件仍不能自己选择子层或替换 EventStore。当前仍没有默认 CLI 的 Budget/Workspace/Artifact/Promotion/Workflow 装配、L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent/Workspace 接管、自动批准、非裸仓库推广目标，也没有通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.19）。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。v0.7 D0 把接缝收干净；v0.7-A/B 把旧 Budget 删掉，换成单一 append-only 层级账本并接到真实 owned boundary；v0.7-C 在独立域加入 Workspace Catalog 和 commit-pinned Git worktree；v0.7-D1 把一个 terminal message 对应的完整 Git 状态冻结成独立 Manifest + CAS Patch Artifact；v0.7-D2 在 Runtime 外加一条独立的推广主线：固定检查、不可改的 Review 报告、人工交回精确摘要，最后用 `git update-ref <分支> <新 commit> <预期旧 commit>` 推到宿主管理的裸仓库；v0.7-E 再在这些公共服务之上加一层**固定**的流程图（Typed Workflow），用五类节点把它们串起来，并且每次运行单独记一条编排账。它没有把余额、路径、Git、Patch 或审批塞进 `AgentRuntime`，也没有给 `AgentLoop` 增加分支。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel；插件仍不能自己选择子层或替换 EventStore。当前仍没有默认 CLI 的 Budget/Workspace/Artifact/Promotion/Workflow 装配、L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent/Workspace 接管、自动批准、非裸仓库推广目标，也没有通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.19）。v0.7-F0 又往上加了一层，但**只加了合同**：统一 `traceh chat` 产品面的协议已经定死，功能一行都没实现（见 20.20）。
 
 ### 版本为什么只准写在一个地方
 
@@ -68,7 +68,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | 核心收集 2093 项；本轮从已提交的新 HEAD 实测 2088 通过、5 跳过（Windows 上四处目录 symlink 权限边界，一处路径不能含 NUL），递归 L2 门禁也已从该 HEAD 单独克隆并通过。D2 四个专门文件共 130 项（129 通过、1 跳过），连同 D1 Artifact 与 Workspace 架构回归的扩大定向为 172 通过、2 跳过；E 三个专门文件另有 85 通过；v0.7-D1 检查点是 1875/1871/4，v0.7-C 是 1835/1832/3，v0.6.0 发布快照仍是 1707/1706/1。仓库外干净 HEAD 克隆和 v0.6 RC 的真实 L2/L3/L4、真实 parent→child、恢复与取消证据仍保留；独立 Python Quality/Plugin Creator Skill 另有 17/10 项通过 |
+| 当前测试数 | 核心套件最终全量实测为 2165 收集 / 2160 通过 / 5 跳过（v0.7-F0 新增 72 项；Windows 上四处目录 symlink 权限边界，一处路径不能含 NUL），递归 L2 门禁也已从当前代码路径完整通过。D2 四个专门文件共 130 项（129 通过、1 跳过），连同 D1 Artifact 与 Workspace 架构回归的扩大定向为 172 通过、2 跳过；E 三个专门文件另有 85 通过，F0 的合同测试另有 72 通过；v0.7-E 检查点是 2093/2088/5，v0.7-D1 是 1875/1871/4，v0.7-C 是 1835/1832/3，v0.6.0 发布快照仍是 1707/1706/1。仓库外干净 HEAD 克隆和 v0.6 RC 的真实 L2/L3/L4、真实 parent→child、恢复与取消证据仍保留；独立 Python Quality/Plugin Creator Skill 另有 17/10 项通过 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -261,7 +261,7 @@ flowchart LR
 
 ## 6. 为什么有两本事件账
 
-（严格说现在不止两条流：除了下面这两本按会话分的账，还有五条**全局的**控制账——Agent 名册 `agents:directory`、Budget 账本 `budgets:ledger`、Workspace 名册 `workspaces:catalog`、Patch Manifest 名册 `artifacts:catalog` 和推广账本 `patch-promotions:ledger`，外加**每次 Workflow 运行一条**的编排账 `workflow:<run_id>`；另外**每个 Agent 各两条**收件/投递流 `agent-inbox:<agent_id>` 与 `agent-delivery:<agent_id>`，都见第 20 节。这些控制流不进模型历史、不参与 Session 恢复、不影响请求指纹，`traceh sessions` 也看不到它们——那条命令只认 `session:` 开头的流。Patch bytes 也不塞进事件，而在宿主显式 SHA-256 CAS 中由 `artifact/patch-captured` Manifest 引用。Budget 账本当前共有十类事实：`root-granted`、`child-reserved`、`reservation-committed/released`、`usage-charged`、`usage-reserved/started/settled/released` 和 `account-closed`；推广账本只有三类：`patch/review-recorded`、`patch/approval-recorded` 和 `patch/promotion-committed`。）
+（严格说现在不止两条流：除了下面这两本按会话分的账，还有五条**全局的**控制账——Agent 名册 `agents:directory`、Budget 账本 `budgets:ledger`、Workspace 名册 `workspaces:catalog`、Patch Manifest 名册 `artifacts:catalog` 和推广账本 `patch-promotions:ledger`，外加**每次 Workflow 运行一条**的编排账 `workflow:<run_id>`；另外**每个 Agent 各两条**收件/投递流 `agent-inbox:<agent_id>` 与 `agent-delivery:<agent_id>`，都见第 20 节。v0.7-F0 冻结的 `product-task:<task_id>` **不在这个清单里**：协议已经定死，但没有任何写入者，任何构建都从来没产生过这样一条流，见 20.20。这些控制流不进模型历史、不参与 Session 恢复、不影响请求指纹，`traceh sessions` 也看不到它们——那条命令只认 `session:` 开头的流。Patch bytes 也不塞进事件，而在宿主显式 SHA-256 CAS 中由 `artifact/patch-captured` Manifest 引用。Budget 账本当前共有十类事实：`root-granted`、`child-reserved`、`reservation-committed/released`、`usage-charged`、`usage-reserved/started/settled/released` 和 `account-closed`；推广账本只有三类：`patch/review-recorded`、`patch/approval-recorded` 和 `patch/promotion-committed`。）
 
 ### Session Stream：Agent 认为发生了什么
 
@@ -1072,7 +1072,7 @@ Compileall 主要发现语法和导入前的字节码编译问题；pytest 检�
 
 其中有一项标了 `slow`：它会真的打包、真的建虚拟环境，比较慢。想跳过用 `-m "not slow"`。
 
-当前核心套件收集 2093 项，本轮从已提交的新 HEAD 实测为 2088 通过、5 项跳过；新增 skip 是推广目标 symlink 测试在当前 Windows 用户无权创建目录 symlink 时跳过，原有四个是 Workspace/Tool/D1 capture 的三处目录 symlink 权限边界和一处路径不能包含 NUL。递归 L2 门禁也已从该 HEAD 单独克隆并通过。D2 四个专门文件共 130 项（129 通过、1 跳过）；扩大到 D1 Artifact 与 Workspace 架构回归为 172 通过、2 跳过。E 三个专门文件另有 85 通过。v0.7-D1 检查点是 1875/1871/4，v0.7-C 是 1835/1832/3，v0.7-B 是 1770/1769/1，v0.6.0 发布基线仍是 1707/1706/1。旧发布时点数字继续保留作历史证据，当前代码要看本段的新门禁。
+当前核心套件的最终全量实测为 2165 收集 / 2160 通过 / 5 跳过。定向合同门禁 72 通过，相邻架构门禁 55 通过。新增 skip 是推广目标 symlink 测试在当前 Windows 用户无权创建目录 symlink 时跳过，原有四个是 Workspace/Tool/D1 capture 的三处目录 symlink 权限边界和一处路径不能包含 NUL。递归 L2 门禁也已从当前代码路径完整通过。D2 四个专门文件共 130 项（129 通过、1 跳过）；扩大到 D1 Artifact 与 Workspace 架构回归为 172 通过、2 跳过。E 三个专门文件另有 85 通过，F0 的合同测试另有 72 通过。v0.7-F0 检查点是 2165/2160/5，v0.7-E 是 2093/2088/5，v0.7-D1 是 1875/1871/4，v0.7-C 是 1835/1832/3，v0.7-B 是 1770/1769/1，v0.6.0 发布基线仍是 1707/1706/1。旧发布时点数字继续保留作历史证据，当前代码要看本段的新门禁。
 
 此前递归 L2 有过一个已经关闭的不稳定问题：`test_real_candidate_validation_runs_every_l2_gate` 会在子进程里克隆并检出已提交的 core commit，再在里面跑一遍完整套件。之前挂掉的是嵌套套件里那条「验证器还在跑的时候就要卡住输出上限」的 D2 测试。根因不是网络或 venv，而是 D2 曾按整个读块记录输出，导致字节数和摘要依赖管道分块；在允许的最大上限下，越界读块还可能超过结果本身能承载的范围。现在只精确计入并摘要每个流的前 N 个字节，其余继续读空以收敛子进程。修复提交后，递归 L2 已从新 HEAD 单独通过，随后完整 2093 项套件得到 2088 通过、5 跳过，因此它不再是当前已知不稳定项。
 
@@ -1182,7 +1182,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 
 值得单独记一笔，因为它说明"测试全绿"不等于"没问题"：重构 CLI 时漏掉了一个 import，结果 `recover`、`inspect`、`replay`、`compact`、`sessions` **五个命令全都跑不起来**——而整套测试照样全绿，因为当时根本没有任何测试通过 `main()` 走过这几条路。ruff 的 F821（未定义名字）直接把它指了出来。现在这个覆盖缺口也补上了。
 
-`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；L1 时点是 1092/1091/1；L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**v0.6.0 发布基线是 1707/1706/1**；v0.7 D0 是 1712/1711/1，A 是 1732/1731/1，B 是 1770/1769/1，C 是 1835/1832/3，D1 是 1875/1871/4，D2 是 2005/2000/5，当前 E 是 2093 收集 / 2088 通过 / 5 跳过。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。发布快照记录当时证据，未来代码状态则要按新的真实门禁更新，两者用途不同。
+`VALIDATION.md` 里的 24 项、80% Coverage、Wheel 安装等是最初发布时点证据，不能随意改成今天的数字。Stage B 历史基线是 980 项收集、979 通过、1 项按平台跳过；Stage C 是 999/998/1；D0 是 1003/1002/1；D1 是 1029/1028/1；D2 是 1053/1052/1；D3 结束时是 1088/1087/1；v0.5.0 发布基线是 1090/1089/1；L1 时点是 1092/1091/1；L2 初版是 1110/1108/2，加固后是 1116/1114/2；L3 初版是 1126/1124/2，L3 加固后是 1133/1131/2；L4 是 1162/1161/1；v0.6 Stage A 是 1329/1328/1，Stage B 是 1523/1522/1，Stage C 是 1657/1656/1；Stage D 是 1677/1676/1；**v0.6.0 发布基线是 1707/1706/1**；v0.7 D0 是 1712/1711/1，A 是 1732/1731/1，B 是 1770/1769/1，C 是 1835/1832/3，D1 是 1875/1871/4，D2 是 2005/2000/5，E 是 2093/2088/5，F0 是 2165/2160/5。独立 Python Quality 与 Plugin Creator Skill 分别另有 17、10 项通过。发布快照记录当时证据，未来代码状态则要按新的真实门禁更新，两者用途不同。
 
 ## 16. 当前最需要保持清醒的地方
 
@@ -1280,6 +1280,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 | 不可变 Patch Artifact | ADR-0029、`api/artifacts.py`、`artifacts/*`、`workspaces/supervision.py` 的 capture gate、`supervision/tools.py` 的只读 report、四个 D1 测试 | capture 跨 Agent/Session/Workspace/Git/CAS/账本六个边界，任何一处不重新核对就会产出“看着像证据”的假 Artifact；`collect_agent_artifact` 也必须保持纯读 |
 | Patch 检查 / 人工批准 / 分支推广 | ADR-0030、`api/promotion.py`、`promotion/*`、`tests/test_promotion_ledger.py`、`tests/test_patch_review.py`、`tests/test_patch_promotion.py`、`tests/test_promotion_architecture.py` | 检查计划必须是宿主提前冻结的、批准必须绑定完整内容、分支只能靠 `update-ref` 的比较后交换移动；不准出现模型可见的 approve/promote 工具、第二个调度器或 CLI |
 | 固定 Typed Workflow | ADR-0031、`api/workflow.py`、`workflow/*`、`tests/test_workflow_definition.py`、`tests/test_workflow_execution.py`、`tests/test_workflow_architecture.py` | 它只能调用公共服务：不能读 Supervisor 的私有状态、不能另开一本账或第二个调度器，也不能放松签字屏障和“能从哪接着跑”这两条边界 |
+| 统一 Chat 产品面（**只有合同**） | ADR-0032、`api/product.py`、`tests/test_product_contract.py` | 只冻结协议：不能建实现包、不能写 ProductTask 事件、不能改 `cli/chat.py`、不能给模型 approve/promote 能力，也不能放宽 Stage E 的恢复边界 |
 | Multi-Agent DTO | 已实现的 Agent/Workspace/Artifact/Promotion/Workflow 契约测试与仍未实现能力的边界描述 | 这五条都已有真实主线；通用 Workflow DSL、条件/循环节点和重试策略仍不能因为出现类型草图就误写成产品能力 |
 | 目录或开发流程 | AGENTS、两份上下文、README/CI | 下一次 AI 必须找到新的入口 |
 
@@ -1561,7 +1562,7 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 
 ## 20. 多 Agent 是怎么起步的（身份 + 收件箱 + 执行 + 生命周期 + 模型 Tool）
 
-正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（父子生命周期收敛）在 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（模型 Tool）在 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别在 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，Budget 账本与执行接线分别在 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)、[ADR-0027](../adr/0027-budget-enforcement-at-owned-boundaries.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14），20.11 讲 Stage D（对应正式版 20.15–20.16），20.12 讲 Stage E（对应正式版 20.17–20.18），20.13 讲 v0.7 D0（对应正式版 20.19），20.14/20.15 讲 v0.7-A/B（对应正式版 20.20/20.21）。
+正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（父子生命周期收敛）在 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（模型 Tool）在 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别在 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，Budget 账本与执行接线分别在 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)、[ADR-0027](../adr/0027-budget-enforcement-at-owned-boundaries.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14），20.11 讲 Stage D（对应正式版 20.15–20.16），20.12 讲 Stage E（对应正式版 20.17–20.18），20.13 讲 v0.7 D0（对应正式版 20.19），20.14/20.15 讲 v0.7-A/B（对应正式版 20.20/20.21），20.16 讲 v0.7-C（正式版 20.22），20.17 讲 v0.7-D1（正式版 20.23），20.18 讲 v0.7-D2（正式版 20.24），20.19 讲 v0.7-E（正式版 20.25），20.20 讲 v0.7-F0（正式版 20.26，ADR 是 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)）。
 
 ### 20.1 先说清楚 Stage A 当时**没有**做什么
 
@@ -2274,4 +2275,283 @@ v0.7-E **不做**通用崩溃恢复。唯一允许接着跑的中断状态是：
 
 E 的三个专门测试文件共 85 项全部通过：定义与流的严格性 52 项、五类节点的真实端到端 8 项、恢复边界/取消/关闭/事实源/完整事实重入/依赖守卫 25 项。二十一项反向验证分别拿掉恢复门、把扇出展开改到子节点之后才记账、去掉批准的绑定校验、让被禁模块去 import 推广域、去掉“同一本账”的检查、失败后不写运行终态、`state()` 不校验定义哈希、消息重入只比 id、创建记录重入只比身份、让结束事实自带节点类型、退回手写的缩水身份比较、去掉流程图完整性要求，去掉完成事实的形状与派生身份校验、把输出记账退回按整块计数，让证据复核忽略“要不要捕获”这个开关、单独拿掉重放那一层，单独拿掉定义那一层，拿掉扇出键与节点角色的绑定、让任意节点都能记录展开、去掉重放层的键绑定，以及去掉子节点归属唯一性；二十一个反例都按各自根因变红，改回去之后源码没有留下任何临时补丁。
 
-E 仍然**没有**：CLI、模型可见的 workflow/approve/promote/capture 工具、重试策略、条件或循环节点、跨进程锁、冷启动恢复活实例，也不是操作系统沙箱；检查命令仍然用宿主同一个用户的权限跑。版本还是 `0.6.0`，E 做完不等于 v0.7 发布，Stage F 还没开始。
+E 仍然**没有**：CLI、模型可见的 workflow/approve/promote/capture 工具、重试策略、条件或循环节点、跨进程锁、冷启动恢复活实例，也不是操作系统沙箱；检查命令仍然用宿主同一个用户的权限跑。版本还是 `0.6.0`，E 做完不等于 v0.7 发布。Stage F 已经开始，但只走完 F0，见下一节。
+
+### 20.20 v0.7-F0：只把「统一聊天入口」这件事的合同定死
+
+正式合同见正式版 20.26 与 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。
+
+#### 先把话说清楚：这一轮什么都还不能用
+
+F0 在**生产代码**上只新增了一个文件：公共合同模块 `api/product.py`；配套一个测试文件 `tests/test_product_contract.py`。除此之外还新增了 ADR-0032，并同步改了 `CHANGELOG.md`、`README.md`、`ROADMAP.md` 和两份上下文文档——本轮一共动了 8 个文件，只是其中只有 1 个进 `src/`。
+
+**没有**实现包、没有事件写入、没有解析器、没有投影器、没有 Service、没有 Router 实现、没有聊天里的任何命令（`/task`、`/start`、`/approve` 全都不存在）、没有默认装配、没有真实模型验收、没有 Benchmark 改造、没有发布。`cli/chat.py` 一个字都没动，任何构建都从来没有写过一条 ProductTask 事件，版本还是 `0.6.0`。
+
+这一节讲的是**已经定死的协议**，不是「产品已经能跑了」。
+
+#### 要解决的是什么问题
+
+前面五个域各自都做好了：预算、工作区、Patch 冻结、检查与人工签字、把它们串成流程图。但它们**只有宿主写代码才能碰到**。一个人坐在提示符前面说「帮我改一下这个」，然后看着它发生、最后自己签字——今天做不到；而且「这个任务到底是什么、跑到哪一步了」也没有一个持久的答案。
+
+如果哪个宿主现在自己去做，它多半会自己发明一个 task 概念，把进度写进一个状态文件，于是那些已经能互相印证的账旁边，多出一本谁也不去核对它的账。F0 就是先把这件事的边界定死，免得后面各写各的。
+
+而且这一层的诱惑很具体：让模型多决定一点、让模型自己拿着证据、让模型说「可以了」。这三件事每一件都是拿一句听上去很像样的话去顶替一个被核对过的事实。这份合同大部分内容其实就是在拒绝它们。
+
+#### 普通聊天还是普通聊天
+
+问一句话和让它干活是同一个对话，不是两个工具，所以入口只有 `traceh chat` 一个。
+
+但**普通聊天只产生会话**，不创建 ProductTask、不创建流程图、不开工作区、不开任务预算账户。这不是省事，而是让那套会真的动 Git、真的花钱的机器，永远挂在一个明确的人类决定后面，而不是挂在模型对一句问话的推测后面。
+
+接缝其实早就有了：现在的 `_handle_command` 已经在模型看到输入**之前**处理 `/exit`、`/help`、`/session`、`/plugins ...`。后面那些确定性的宿主命令走的就是 `/plugins` 已经在走的那条路，不用另造。
+
+#### 提议是临时的，只有被确认过的才落账
+
+真正创建任务之前，先给一屏「提议」：请求的模式、分支名当时指向的**精确 commit**、检查计划、推广目标、解析后的角色与路由器装配，以及每个账户全部七个预算维度——全部由宿主渲染。
+
+先把成本说准，因为上一版说错了：提议通常是**由一次普通聊天 Turn 产生的**，那次 Turn 该花的会话 token 一分不少。提议**不做**的是：不跑路由器、不开 ProductTask 预算账户、不写 ProductTask 事件；宿主渲染那一屏本身不叫模型。
+
+它**不是事件**，退出进程就没了。这正是要点。提议是一个问句，而一个没人回答的问句，最诚实的持久记录就是没有记录。真把它存下来，就会多出一类「半个任务」：读的人要解释它、投影器要给它设过期、恢复流程还得替它做判断——全都是为了描述一件根本没开始的工作。
+
+所以 `ProductTaskProposal` 是一个**有类型、但没有任何事件类型对应**的公共值。它带的是 `ProductPreflightBinding` 而不是完整装配回执：`auto` 的提议根本没有解析出的模式、也没有流程图定义哈希，因为路由器要等任务存在之后才跑。硬塞一个进去，就是在给人看的那一屏上写一个编造的决定。
+
+三条规则让「开始吧」既不含糊、又仍然是人的决定：
+
+1. 每个聊天会话**至多一个活跃提议**，新的替换旧的，所以一句光秃秃的「开始吧」永远不会指错对象；
+2. `ProposalConfirmation` 只有 `proposal_id` 和 `confirming_turn_id` **两个字段**——模型代用户做的这个低权限动作，不可能靠多传一个参数变成高权限动作；
+3. `proposal_confirmable()` 要求确认**来自同一个聊天会话**，而且**所在的 Turn 不同于 `proposed_turn_id`——也就是提出那份提议的那个 Turn**。否则模型可以一口气自问自答，整个产品面赖以成立的那个「人点了头」就成了它替自己走的形式。真人说「开始吧」本来就是下一个 Turn，所以这条对人零成本。
+
+第 3 条里「哪个 Turn」曾经取错过，值得记下来。提议里有两个 Turn：`origin_turn_id` 是**需求被说出来**的那个 Turn，`proposed_turn_id` 是**提议被摆出来**的那个 Turn。这两个经常不是同一个——用户先问一句、得到回答、再说「那就动手吧」，模型是在**后面那个** Turn 里提的议。早先的比较用的是 `origin_turn_id`，于是「需求在 turn-1、提议在 turn-2、确认也在 turn-2」这种情况会被判为合法，模型照样能自问自答。现在比的是 `proposed_turn_id`。
+
+`ProposalConfirmation` 也因此带上了会话、Turn 和消息三项身份：光有一个 id 证明不了「这是同一场对话里真人发的一条消息」。其中 `confirming_message_id` 必须指向该会话里一条真实的持久接受记录——但这一点只能由写入方重放会话去证明，不是这个值能替自己声称的。
+
+用户确认之后，才写 `product/task-opened`。
+
+#### 启动的必须就是人点头的那一份
+
+`product/task-opened` 除了 `profile_digest`，还记 `preflight_digest`，以及**确认发生在哪个会话、哪个 Turn、哪条消息**。
+
+不记这几项，就留了一个真实的窟窿：提议屏上摆着某个精确 commit、某份检查计划、某个推广目标；用户点了头；写完 opened 之后源仓库或 registry 漂移了、或者进程崩了；接下来的 `product/task-started` 完全可以绑一份**别的** Preflight，而账本里没有任何东西能反驳它——「跑的就是你同意的那个」根本无从证明。
+
+`ProductAssemblyReceipt.binds(preflight_digest)` 要求这份回执所依赖的 preflight 摘要，正好等于 opened 记下的那一个。
+
+**但上一版在这里把话说过头了，得改回来。** `binds()` 要有一份完整回执才能算，所以只有持有回执的 Service 做得到；一个只拿到事件流的投影器，手里只有一个不透明的 `assembly_digest`，它没办法从摘要倒推出回执——「让投影器重放时做同一次检查」是不成立的。
+
+真正的补法是让 `task-started` **也**记一份 `preflight_digest`。这样只读事件的人至少能把 started 和 opened 这两个摘要对起来。
+
+于是 started 这条事实的取值明确分成两层：
+
+| 关系 | 谁验证得了 |
+|---|---|
+| `mode`、`workflow_run_id`、`preflight_digest` | **纯投影器**：`product_required_values()` 从更早的事件里推出来 |
+| `definition_hash`、`assembly_digest`、`source_base_revision` | **只有持有回执的 Service**：`product_started_values()` 从那一份回执推出来 |
+
+`product_started_values(task_id=..., receipt=...)` 是拼 started payload 的**唯一**入口：除了 `task_id` 和 `operation_id` 这两项写入身份，其余每个字段都从同一份回执推出，所以写入方不可能拼出「一半描述这份绑定、一半描述另一份」的 payload。只冻结 `mode` 的时候，剩下四个字段可以分别指向别的 task、别的定义、另一份回执和另一个 commit。
+
+#### 这条账不是第二个事实源
+
+每个任务一条 `product-task:<task_id>`，放在**已经有的** EventStore 里。不加数据库、不加状态文件、不加缓存、不加第二个调度器。
+
+它只记产品身份、宿主的控制决定、摘要，和**指向别处的引用**。Agent 的报告、会话花了多少 token、工作区里有什么、Patch 是哪些字节、检查证明了什么、谁签的字、分支现在指向哪——这些仍然分别归 Agent 名册、会话账、Workspace 名册、Patch 名册和推广账本管，要用的时候**重新读一遍**那本账。
+
+这和 Workflow 那条账是同一条规则、同一个理由：副本就是第二个答案，两个答案早晚会打架。
+
+有两个字段确实和信封里的身份重复了，而且是故意的，抄的是收件箱协议里 `agent/message-accepted` 重复 `agent_id` 的做法：每条事件都带 `task_id`，是为了让投影器能**证明** payload 和流名一致，而不是二选一地信一个；`product/task-started` 上的 `workflow_run_id` 则让「运行 id 就是任务 id」变成能核对的事实，而不是一句假设。（这一轮本来提过一个更小的设计——「流名已经有 task_id 了，payload 就别重复」——去翻了 `agents/inbox.py` 之后放弃：那里正好是**先从流名推出期望值，再和 payload 比对**。）
+
+#### 五个结局是五种事件，不是一个万能字段包
+
+`completed`、`rejected`、`cancelled`、`failed`、`abandoned` 是五种不同的事件类型，各有各的精确字段集，而不是一个 `settled` 事件靠一堆可选字段表达。
+
+如果做成万能字段包，「完成了却没有推广记录」和「被取消了却带着 review id」就成了**能写出来的形状**，然后只能靠约定去拒绝。分成五种类型之后，它们根本写不出来。`cancelled` 和 `abandoned` 也是两件不同的事，所以是两种类型。
+
+每种事件的字段集是**精确**的：多一个字段、少一个字段都拒绝，不做迁移。里面没有异常字符串、没有模型输出、没有路径、没有秘密、没有别人家的状态副本。
+
+#### 唯一一处「模型的话」
+
+`product/task-routed` 上有一个 `reason_display`：有界、清洗过、**只给人看**。这是整份协议里唯一一处模型影响到的文字。
+
+它存在的意义是让人能看懂「为什么选了这个模式」，但**任何代码都不许对它做判断**——决定由它旁边那个枚举 `resolved_mode` 承担。这样一来，说法和决定不可能不一致。
+
+正因为它是唯一写给人看的东西，`ProductTaskSummary` 也必须带上它。本轮审查指出：账里记了、读取面却读不出来，聊天界面就没法告诉用户模式是怎么选的——那这段解释等于白记。现在它是 Summary 上的一个可选字段（宿主不愿意留模型措辞时就是 `None`），但仍然只给人看。
+
+#### 路由器只能在两个值里挑；接缝只负责解析它的回答
+
+只有 `auto` 才会跑路由器，它只能返回 `single` 或 `multi`。`ResolvedTaskMode` 这个枚举里**根本没有** `auto`，所以「还没定」活不到执行阶段——这一条类型确实管得住。
+
+接缝叫 `TaskRoutingParser.parse(response: str)`，名字就是它干的事：**解析一个已经拿到的回答，而不是去把回答拿回来**。创建路由器 Agent、管它的 Session 和预算账户、卡住超时和响应字节上限，全都归调用方；接缝只收那段文本。
+
+这里必须把话说准，因为上一版说过头了。它原先叫 `TaskModeRouter`，并且声称「同步签名证明路由器不做 I/O、不持有服务句柄」。**这两条它都证明不了**：同步方法照样可以阻塞在 socket 上；满足 Protocol 的对象也可以在 `__init__` 里被塞进任何东西——写一个带 `self.supervisor` 的合规实现只要三行。测试里就确定性地构造了这样一个对象。
+
+签名真正确立的是更窄、但仍然值得要的一条：**接缝交给实现的只有一个字符串**，所以没有任何 Supervisor、Workflow、Workspace、Patch 或推广句柄是**经由它**进去的。
+
+至于路由器 Agent 本身不带任何 Tool、计在自己的预算账户上、跑在声明的上下界里——那是**具体实现和装配**的性质，证据是 `router_assembly_digest`，并且必须由写实现那个阶段的架构测试来证明。一个 Protocol 声明代不了这个班。
+
+路由器在 `product/task-opened` **之后**跑，不是之前。理由是能查的：路由要花真 token，而额度只能算到某个 Agent 会话头上——`budgets/enforcement.py` 里的 `_require_agent_session` 决定了普通只读聊天根本不进预算账本。所以路由器必须是一个有自己预算账户的真实 Agent，而它要路由的那个任务得先存在，费用才有地方记。
+
+#### 单 Agent 也走同一条流水线
+
+`single` 是 `coder → 检查 → 签字`，`multi` 是 `parent → reviewer → coder → 检查 → 签字`。
+
+`single` 是**更短的流程图，不是绕过流程图的近路**：固定检查计划、不可变 Patch、人工签字屏障、compare-and-swap 推广，一条不少。真做一条「快速通道」，就是第二套引擎，两边的关卡一改就会漂移——而且「为了快点，这步先跳过吧」这种事，永远是在快速通道上发生的。
+
+两种模式都不用 Map/Join。Stage E 的扇出没有被删掉也没有被削弱，只是产品面暂时用不上；发一个没人跑过的扇出，等于发一条没测过的路径。
+
+#### 为什么审阅在写代码之前
+
+`multi` 里 reviewer 排在 coder **前面**，审的是**计划**。然后 coder 去读 parent 和 reviewer 的持久报告，再动手。
+
+看上去更自然的顺序——先写、后审——被否掉了，理由很实在：**没有任何东西会消费 reviewer 的意见**。固定检查器不读它，签字节点不读它，后面也没有节点会跑。那样的 reviewer 就是一个花钱的旁观者，它提的反对意见改变不了任何事。放到 coder 前面，它才真的参与了执行。
+
+报告是通过宿主渲染的**有界注入**进到 coder 那里的，还带着截断证据：原始多少字节、注入了多少、有没有被截。一份无界的报告就是一段无界的提示词。
+
+写权限跟着角色走，**配置改不了**：`CODER` 是可写，`PARENT`/`REVIEWER` 是只读。只有一个角色能写，所以「这些字节可能是谁写的」只有一个答案。
+
+这条本轮被审查抓到过一次，值得记下来。`ProductRoleProfile` 原先自带一个 `role` 字段，于是宿主可以把一个 `role=CODER` 的 profile 放进 `reviewer` 槽位，再读回来「reviewer 可写」——同一个角色有两份互相打架的事实。现在这个字段没了：**你占的是哪个槽位，你就是哪个角色**；`ProductRole.workspace_access` 是「这个角色能干什么」的唯一定义；`ProductTaskProfile.role_profile()` 是两者之间唯一的映射，而且只从槽位指向 profile。profile 现在对这件事没有意见，也没有地方放意见。
+
+#### 签字和推广永远是人和宿主的事
+
+模型没有 approve/promote/update-ref/capture 工具，`api/product.py` 里也根本没有这种能力。
+
+更进一步：**批准摘要、Patch 的 SHA-256、精确的新旧 commit，都不会进模型的上下文**。不是「藏起来了」，是压根不给。一个模型从来没收到过的值，它就不可能转述错——而转述错一个摘要，正是一个人最后签下「跟他读到的不是同一个东西」的典型路径。宿主负责渲染那一屏，模型只能把人指过去。
+
+签字节点做的还是 Stage E 已经定的事：写一条「在等批准」然后停住，它自己永远不批准。**推广是在整个运行完成之后，由产品层显式调用的**。把推广塞进节点里，等于把一次 Git 分支移动放进一个有失败语义、没有重试、还要写运行终态的地方去重新推理一遍；而且会给编排器一个 ADR-0031 专门写了架构测试去证明它没有的权限。
+
+因此 `product/task-completed` 带的是 `promotion_id`。「批准了但故意不推广」这种结局，在这套词汇里没有对应的终态——因为这条流水线批准之后一定推广。这是范围声明，不是遗漏。
+
+#### 硬中断：宁可说不知道，也不假装收拾干净了
+
+Stage E 只能从一个地方接着跑：干干净净停在人工签字那一步。F0 一格都没放宽。
+
+所以硬中断得到的是一个**算出来的**答案，不是一条事件。「只看这条流能得出什么」的那个枚举里**没有** `interrupted`；只有给人看的那个视图枚举比它恰好多这一个成员。它由三次重新读取算出来：这个任务还没终结、流程图自己的持久状态、以及**本进程是不是还拥有这次运行**。算出来的结果放在**另一个类型**上，不混进那份持久摘要里；而且在那个类型上它是**算出来的属性，不是可以传进去的字段**。这一条被抓到过：它原先是字段，于是调用方可以交回一个「摘要说 opened、视图说 completed」的对象——正是这个类型存在的意义所要排除的自相矛盾。现在多传一个 `status` 直接报错。
+
+**还有一条被抓到的：它一开始根本没用上流程图的状态。** 一个 STARTED、无人拥有的任务，不管流程图是 running、awaiting_approval、completed 还是 failed，全都被压成同一个 `interrupted`——可这四种情况分别该「人去看」「先对账」「先对账」「先对账」，答案不可能一样。
+
+现在 `product_view_status()` 真的读三处：任务自己的持久状态、流程图自己的持久状态、以及本进程还拥不拥有这次运行。`PRODUCT_TASK_COHERENT_WORKFLOW` 把「两条流什么时候算对得上」冻死：`opened`/`routed` 只该对应「还没有 run」，`started` 只该对应 running，`awaiting_approval` 只该对应流程图的 awaiting_approval；终态不进这张表，因为任务一旦真的结束了，它自己的流就是答案。
+
+于是有三种只属于视图的答案：
+
+- **`unreconciled`**：两条流对不上，产品这边落后了。**跟拥不拥有无关**——活着的宿主也可能在一次 append 失败之后发现自己的流落在后面。要先把自己的账补齐，别的都还谈不上；
+- **`resumable`**：没人拥有，但两条流都停在人工签字那一步——这正是 Stage E 唯一能接着跑的状态。把它压进 `interrupted`，等于把一个本来直接接着跑就行的任务推给人去查；
+- **`interrupted`**：没人拥有，而且没有干净的接续点。它的含义被刻意收窄成「得有人去看一眼」：Stage E 到底允不允许继续，取决于有没有「开始了却没有结束」的节点，而 run 级状态看不到这一点，所以这个视图**不假装**自己能判断。
+
+写 `abandoned` 合法的唯一条件，仍然是视图给出 `interrupted`。
+
+在那里写 `cancelled` 等于宣称一次没人执行过的收敛：同进程取消能证明工作树释放了、预算结算了，而一个已经死掉的进程什么都证明不了。把 `interrupted` 写成事件，则是把一个下次读取就可能被推翻的猜测冻起来。
+
+用户可以去 inspect，也可以写一条诚实的 `product/task-abandoned`——它只说「这个任务已经不在活跃列表里了」，并且**明确不声称**底层的 Agent 认领、预算占用或工作树已经释放。`cancelled` 和 `abandoned` 分成两种事件，就是为了这个。
+
+#### Profile 只决定「谁」，不决定「图长什么样」
+
+Profile 是定长的：版本、默认模式、provider/model 的**注册表身份**、三个角色、一个路由器、任务预算、源仓库 id 与 revision 意图、检查计划 id、推广目标 id。
+
+里面**没有** nodes/edges/扇出/DAG——拓扑由上面那两条决定固定，不由配置决定。也没有原始检查命令、没有仓库路径、没有凭据。
+
+**所有字段都必填**。少一个决定就是少一个字段，少一个字段就是构造报错——所以某次 Demo 的 preset、某个模型名、某台机器上的路径或某个测试夹具，永远不可能变成真实任务实际使用的值。五个账户的七个预算维度全都必须显式写出来，这是 `BudgetLimits` 本来就有的性质，理由一样：漏填的宿主决定不能变成宽松默认。路由器的那份 Profile **没有** capability_grants 字段，所以宿主没法给路由器塞工具。
+
+#### 装配回执：Profile 说 main，回执说是哪个 commit
+
+Profile 可以写 `main`。任务绑定的是 `main` 当时解析出来的那个 commit。
+
+但**只绑名字是不够的**，这是本轮被审查抓到的第二个真问题。宿主的 registry 完全可以让 `preset`、provider、model 的名字一字不变，却把它解析成另一个 `AgentSpec`、另一组权限、或者另一套 Tool/Prompt/Policy/Provider 组合。`profile_digest` 看不出来；流程图定义哈希也看不出来——它覆盖的是**绑定 id**，不是解析器针对这些 id 返回的东西。
+
+所以现在要求宿主对**实际解析出来的东西**再算两个摘要：
+
+- `role_assembly_digest`：三个角色各自解析出的 `AgentSpec`、有效权限、有效 Tool/Prompt/Policy/Provider 组合；
+- `router_assembly_digest`：路由器的同一组事实。它正是让「路由器没有被给任何 Tool」在恢复时**可核对**、而不只是一句声明的东西。
+
+这两个值是**宿主填进来的**（解析 registry 是这个模块不做的 I/O），但盖在它们上面的 `digest` 仍然是算出来的——所以填进来的解析结果不可能事后被悄悄改成别的。
+
+绑定还拆成了两层，也是为了诚实：
+
+- `ProductPreflightBinding`：选模式**之前**就能确定的一切——Profile 摘要、两个装配摘要、仓库指纹、精确 base commit、冻结后的检查计划摘要、推广目标指纹和它当前的精确 revision；
+- `ProductAssemblyReceipt`：上面这一层，**加上**只有选定模式才产生的两件事——解析出的模式和对应的流程图定义哈希。
+
+为什么要拆？因为 `auto` 的提议根本没有解析出的模式：路由器要等任务存在才跑。不拆的话，那一屏上就得摆一个编造的值。
+
+两处摘要都是**算出来的属性**，不是存下来的字段。宿主自己填的摘要是同一个事实的第二个存放点，可能跟它声称描述的配置对不上，也可能在以后新增字段时悄悄漏掉；算出来的做不到这两件事。provider/model、三个 preset 和它们的权限、每个读写决定、五个账户的全部七个维度，都是**通过 Profile 摘要传递性地**被覆盖的，而不是在回执里再抄一遍。
+
+恢复时重新解析、重新比对。由于目标分支的「预期 revision」也是绑定的一部分，分支一旦被别人推动过，这个任务**不会**悄悄换到新的分支头上继续，而是直接失败，必须按分支现在的样子重新开一个。所以同一个分支上的两个长任务，不可能都推广而不经人重新开启一次。这是 D2 遇到目标漂移时那条拒绝规则往上抬了一层，是明确代价，不是漏掉了。
+
+#### 光有形状还不够，顺序也得定死
+
+九种事件形状只说明「一条事实可以长什么样」，完全没说「什么后面能接什么」。合同停在这里，等于把排序这件事原样还给它本来该约束的那个阶段——审查正是这么指出来的。
+
+现在 `PRODUCT_TASK_TRANSITIONS` 和 `product_transition_allowed()` 把顺序也定死了：
+
+- 还没有流的时候，唯一能写的第一条事实是 `task-opened`；
+- 五个终态后面接空集合，**终态之后什么都追加不了**；
+- 没有任何状态能接自己，所以 `routed`、`started`、`awaiting` 各自最多发生一次；
+- 有两条边跟「请求的模式」有关，光看状态表表达不了，所以函数要收这个参数：写死 `single`/`multi` 的任务**没有什么可路由**，写 `auto` 的任务**必须先 routed 才能 started**。不然 `opened → started` 会静默放过一个模式从来没被任何东西解析过的任务；
+- `completed` 和 `rejected` **只能**从 `awaiting_approval` 来。一个任务不能在从没记录过「我在等人签字」的情况下，报告人工审查的结果。
+
+最后这一条是**给写入方加的义务，不是给它的许可**：如果进程恰好死在「流程图已经写了等待批准、产品层还没写 `task-awaiting`」这个缝里，恢复时必须先拿流程图的持久状态对账、把缺的那条补上，而不是跳过它接着往下走。
+
+`cancelled`、`failed`、`abandoned` 可以从任何非终态进入，因为活儿随时可能停。
+
+在只有形状的合同下合法、现在被明确拒绝的序列，包括 `opened → completed`、`started → routed`、`awaiting → started`，以及终态之后再追加任何东西。
+
+至于 `abandoned` 什么时候写才算数：由 `product_view_status()` 给出——一个**非终态、且本进程不拥有**的任务派生成 `interrupted`，而这恰好是、也仅仅是写 `task-abandoned` 合法的那个条件。至于这样一个任务还能不能**接着跑**，那是另一个问题、另一个来源：流程图自己的持久状态，由 `ProductTaskView` 摆在状态旁边一起交出来。
+
+这张表是**只读映射**，不是普通 `dict`。一张谁 import 进去都能改的准入表算不上合同——改掉一项，之后每一个调用方被允许写什么就立刻变了。反向验证时把它改回 `dict`，那次改写**真的泄漏进了后面的用例**，正好说明这不是洁癖。
+
+#### 顺序对了，取值仍然可能是错的
+
+迁移函数只看状态和「请求的模式」，**看不到 payload**。所以一个写明 `single` 的任务，照样可以记一条 `mode` 写着 `multi` 的 `task-started`；一条 rejected 也可以指向一个从来没被等待过的 review。审查正是这么指出来的。
+
+`ProductTaskFacts` 加上 `product_required_values()` 把这一层补上了。它的做法不是「拿去校验」，而是**算出来**：既然更早的事实已经把这个值定死了，那就只有一个合法值——写入方算它、投影器重算它，而不是先提一个再问它对不对。这跟流程图那层对派生身份的做法是同一条规则。
+
+- `task-started` 的 `mode`：写死 `single`/`multi` 的任务，答案就是它自己（`single` 不可能以 `multi` 启动）；写 `auto` 的任务，答案**恰好等于** `task-routed` 记下的那个 `resolved_mode`，而在还没路由之前，这条事实**根本不能写**（返回 `None`）；
+- `task-rejected` 的 `review_id`：必须等于 `awaiting` 记下的那一个；没有等待过任何 review 时，这条事实也不能写；
+- `task-completed` 这类：返回空映射——它带的东西（比如 promotion id）没有任何更早的事实能决定；
+- 不认识的事件类型：返回 `None`，没有合同。
+
+「已经定下了什么」只有一个装配点：`ProductTaskSummary.facts()`。写入方和读取方因此不可能对这件事有两种看法。
+
+#### 不留兼容层
+
+没有任何构建写过 ProductTask 事件，所以直接定 protocol 1 和 schema 1，没有 legacy 分支；后面遇到不认识的版本就明确拒绝，不猜。
+
+将来的 Benchmark 也一样：复用并重构现有的 `traceh eval`，旧的 `case.json` **明确拒绝**、不做升级、不留适配层，也绝不自动删用户的旧数据。多一条并行的 benchmark 通路，就是两个关于「这东西到底行不行」的定义，没人看的那个一定会烂掉。F0 不实现它。
+
+#### 测了什么
+
+新增 72 项合同/架构测试全部通过（首版 33 项，第二轮 51 项，第三轮 62 项，第四轮 72 项）。它证明的东西大致分四类：
+
+- **阶段边界**：四个受保护文件（`agent_loop.py`、`agent_runtime.py`、`supervisor.py`、`manager.py`）内容逐字节被钉住；workflow 那一层不 import product；实现包不存在；product 模块不 import EventStore/asyncio/os/subprocess/pathlib；版本还是 `0.6.0`。
+- **权限边界**：模块里根本没有 approve/promote/compare_and_swap/update_ref 这类东西；工具集里没有 product/task 词汇；批准摘要、Patch SHA、artifact id 都不是任何产品 DTO 的字段。
+- **协议形状与顺序**：九种事件互不相同、都带 `task_id` 和 `operation_id`；五个终态互不携带对方的证据；没有事件带别人家的状态；`interrupted` 不在持久枚举里、不是终态、不出现在任何事件类型里；顺序规则的每一条都有正例和反例，包括四条具体的非法序列。
+- **不能被绕过的性质**：把 coder 的 profile 塞进 reviewer 槽位，reviewer 仍然只读，而且整个模块里只有 `ProductRole` 一个值回答写权限问题；未知任务读出来是 `None`，而且空 Summary 根本构造不出来（直接抛 `TypeError`）；两个装配摘要一变、绑定摘要就变，而 `profile_digest` 纹丝不动；同一 Turn 内自问自答被拒、跨会话确认被拒；确认对象只有会话/Turn/消息加提议 id 四个字段；explicit 请求自己决定 started 的模式、`auto` 没路由前根本不能 started、rejected 必须指向被等待过的 review；视图状态是算出来的属性、多传即报错；迁移表改不动；七个预算维度逐个省略都会报错；Profile 和回执的**每一个**字段被改都会让摘要变化；摘要是算出来的属性而不是字段；模块里的字面量不含模型名、示例名、本机路径、URL 或秘密词。
+
+还有一项测试是专门用来**防止我把话说回去**的：它确定性地造一个满足 Protocol、同时手里攥着 `self.supervisor` 的对象，证明同步签名管的是参数而不是实例，并断言文档里写明了这条性质归架构测试和 `router_assembly_digest` 管。
+
+#### 反向验证：把保护拆掉，确认真的会红
+
+第二轮六项，每一项都确认了对应测试**按预期的根因**变红，然后改回去：
+
+1. 给 `ProductRoleProfile` 重新加上 `role` 和 `workspace_access` → `role` 字段那条、「只有 `ProductRole` 回答」那条，加上夹具构造，三处同时变红；
+2. 把 `load` 的返回改回 `ProductTaskSummary`（不许返回 `None`）→ 返回注解那条变红；
+3. 保留两个装配摘要字段，但让绑定摘要只哈希手写的一部分、跳过它们 → 「名字级摘要看不见 registry 重绑」那条按「两个摘要相等」变红；
+4. 去掉顺序函数里依赖模式的两条边 → explicit/auto 那条变红；另外单独把 `COMPLETED` 加进 `STARTED` 的后继集合 → 「报结果前必须先等过」那条按 `(STARTED, COMPLETED)` 变红；
+5. 让 `proposal_confirmable()` 只比 id → 「不能一口气自问自答」那条变红；
+6. 保留 `TaskRoutingParser` 这个名字，只把过度声称的注释换回旧版 → 「接缝不冒充保证」那条变红。
+
+第 3 和第 6 项都先试过更省事的改法——直接删字段、直接把类名改回去——结果只拿到夹具的 `TypeError` 和收集阶段的 `ImportError`。那是「操作根本没发生」式的空验证，不能算数，所以换成了上面这两种能真正打到根因的形态。
+
+第三轮又做了六项：
+
+1. 让 `receipt.binds()` 对任何 preflight 都点头 → 「启动的必须是人点头那份」变红；
+2. 把确认比较改回 `origin_turn_id` → 「不能一口气自问自答」按 requirement/proposal 分离的那个反例变红；
+3. 让 `product_started_mode()` 无视写死的模式 → 「explicit 请求自己决定模式」变红；
+4. 把 `ProductTaskView.status` 改回字段 → 专门那条守卫按「`status` 仍然是字段」变红；
+5. 把迁移表从只读映射改回 `dict` → 「表改不动」按「没有抛 TypeError」变红，**而且那次改写真的泄漏进了后面的用例**；
+6. 从 Summary 删掉 `reason_display` → 「给人看的解释必须到得了读取面」变红。
+
+第四轮又做了三项：把 started payload 的四个字段从推导里删掉（两条用例变红）；从 started 事实里删掉 `preflight_digest`（两条用例变红）；让 `product_view_status()` 重新无视流程图状态（五条用例分别按 `awaiting_approval`、`RESUMABLE`、`unreconciled`、过早存在的 run 和视图转发变红）。
+
+全部恢复之后，两个新文件的 SHA-256 和验证前逐字节一致，没有留下临时补丁。
+
+要说明的是第 6 项之外还有一条：**反向验证全程没有动过任何受保护文件**。哈希钉有没有效，是靠临时改测试里的期望摘要证明的，不是靠去改 `agent_loop.py`。
+
+#### 还差什么
+
+F1 到 F5 一个都没开始：事件写入与 CAS/三态对账、投影器、ProductService、路由器实现和它的真实 Agent 装配、聊天里的提议渲染和 `/start`、`/approve`、`/cancel`、`/inspect`、`/abandon` 这些宿主命令、coder 的有界报告注入、默认产品装配、`traceh eval` 重构和旧 manifest 拒绝、真实模型验收，以及 v0.7.0 发布。版本仍然是 `0.6.0`。

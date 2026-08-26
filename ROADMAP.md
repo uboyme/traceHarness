@@ -355,8 +355,31 @@ invariant violations and zero request-reconstruction violations.
   cannot cross, and the only continuable interrupted state is a clean stop at
   that barrier - every other in-between state fails closed. Agent FIFO, Turn
   execution and Activation lifetime remain owned by the existing Supervisor.
-- **F — product gate:** add explicit CLI/host assembly, a Reviewer–Coder–Parent
-  end-to-end demonstration, packaging/security checks and the v0.7 release.
+- **F — product gate.** One unified `traceh chat` entry point above everything
+  above, split into a contract stage and five implementation stages.
+  - **F0 — product contract (complete, unreleased):** `traceh.api.product`
+    freezes the ProductTask event vocabulary (nine types, exact key sets, five
+    distinct terminals rather than one optional-field blob), its allowed status
+    transitions *and the cross-event value consistency order alone cannot
+    express*, the requested and resolved mode enums, a durable status
+    enum plus a derived view whose three extra answers are `resumable`,
+    `unreconciled`, and `interrupted`, the fixed
+    host Profile, the preflight binding and Assembly Receipt with computed
+    digests over host-resolved assemblies, the temporary Proposal and its
+    confirmation rule, one read model and two narrow protocols. Plain chat stays
+    plain, a Proposal is temporary and must be confirmed from the same Session
+    and a Turn later than the one that offered it, opening a task binds the
+    preflight the person actually confirmed,
+    `workflow_run_id == task_id`, both modes reuse one `WorkflowService`, the
+    role slot alone decides write authority so only the coder may write, and
+    approval and promotion stay host operations the model never sees the
+    evidence for. **Contract only:** no implementation package, no event writer,
+    projector, service, router, chat command, CLI or default assembly;
+    `cli/chat.py` is unchanged and no ProductTask event has ever been written.
+  - **F1–F5 — not started:** event writing and projection, the product service
+    and router, the chat surface and its host commands, default assembly, the
+    `traceh eval` rework (replacing it, with old manifests explicitly refused),
+    real-model acceptance, packaging/security checks and the v0.7 release.
 
 Definition of done: parallel coding children do not share one mutable directory and the
 host can promote only an immutable, fixed-suite-verified, human-approved patch while the
@@ -366,7 +389,8 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 [ADR-0028](docs/adr/0028-managed-git-workspace-lifecycle.md),
 [ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md) and
 [ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md) and
-[ADR-0031](docs/adr/0031-fixed-typed-workflow-above-public-services.md).
+[ADR-0031](docs/adr/0031-fixed-typed-workflow-above-public-services.md) and
+[ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md).
 
 ## v1.0: Stable plugin platform
 

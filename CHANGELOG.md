@@ -2,6 +2,128 @@
 
 ## Unreleased
 
+### v0.7-F0: the unified chat product contract, frozen but not implemented
+
+- Added `traceh.api.product`: a **contract-only** public module for the unified
+  `traceh chat` product surface. It defines the ProductTask event vocabulary
+  (nine types, each with an exact key set), the requested/resolved mode enums,
+  the durable status enum with its allowed transitions, the derived view
+  status, the fixed host Profile, the preflight binding and Assembly Receipt,
+  the temporary Proposal and its confirmation rule, one read model, one derived
+  view and two narrow protocols. It
+  performs no I/O, holds no mutable state and imports only `traceh.api`.
+- **Nothing is implemented.** There is no `src/traceh/product/` package, no
+  event writer, no parser, no projector, no service, no router, no chat
+  controller, no CLI command, no default assembly and no benchmark rework.
+  `cli/chat.py` is unchanged, no build has ever written a ProductTask event,
+  and the version stays `0.6.0`.
+- Froze `product-task:<task_id>` as one append-only stream per task inside the
+  existing Event Store: no database, status file, cache or second scheduler.
+  It carries product identity, host control decisions, digests and references
+  into the Agent Directory, Session, Workspace catalog, Artifact catalog and
+  promotion ledger - never copies of their state.
+- Froze five terminals as five distinct event types rather than one `settled`
+  event with optional fields, so "completed without a promotion" and "cancelled
+  carrying a review id" are not expressible shapes. `cancelled` and `abandoned`
+  are separate facts, because a process that died proves no convergence.
+- Froze `workflow_run_id == task_id` as a derived property of the read model,
+  and both modes onto one `WorkflowService`: `single` is
+  `coder -> verification -> approval`, `multi` is
+  `parent -> reviewer -> coder -> verification -> approval`. The reviewer runs
+  before the coder so its opinion is actually consumed. Write authority follows
+  the role: `ProductRoleProfile` carries no role or access field of its own, so
+  the slot it occupies is the only thing that makes it the parent, the reviewer
+  or the coder, and `ProductRole.workspace_access` is the single definition of
+  what that role may do. Stage E's Map/Join is neither used nor weakened.
+- Froze `interrupted` as a derived view status only. The durable enum has no
+  such member and no event can carry it: recording `cancelled` would claim a
+  convergence nobody performed, and recording `interrupted` would freeze a guess
+  the next read may contradict. An honest `product/task-abandoned` stays
+  available and explicitly does not claim resources were released.
+- Froze the routing seam honestly. `ResolvedTaskMode` has no `auto` member, so
+  an unresolved mode cannot reach execution. `TaskRoutingParser.parse` is named
+  for what it does: it parses a bounded response, it does not obtain one, and
+  the caller owns the router Agent's Session, Budget account and bounds. A
+  synchronous Protocol does **not** prove an implementation performs no I/O or
+  holds no service handle - only that no handle arrives through the seam. That
+  the router Agent holds no Tool is evidenced by `router_assembly_digest` and
+  must be proven by the implementing stage. Routing runs after
+  `product/task-opened`, because routing costs tokens and only an Agent Session
+  enters the Budget ledger.
+- Froze approval and promotion as host operations. No model-visible approve,
+  promote, update-ref or capture capability exists, and the approval digest,
+  Patch SHA-256 and exact revisions are absent from every product value.
+  Promotion is called by the product service after the run completes, not from
+  inside the Workflow.
+- Froze the Profile as a fixed-length schema with no graph fields, no raw
+  verifier command, no path and no credential; every field is required, and all
+  seven Budget dimensions must be stated explicitly on all five accounts. Both
+  `digest` values are computed properties rather than stored fields, so a
+  supplied digest cannot disagree with what it describes or silently omit a
+  field added later.
+- Froze the binding in two layers, and made it cover more than names. A Profile
+  may say `main`; `ProductPreflightBinding` records which commit that was, and
+  `ProductAssemblyReceipt` adds the resolved mode and definition hash that only
+  choosing a mode produces. Because a registry can rebind a preset without
+  changing any name - and `workflow_definition_hash()` covers binding ids, not
+  resolved specs - the binding also carries host-supplied `role_assembly_digest`
+  and `router_assembly_digest` over what was actually resolved. Because the
+  promotion target's expected revision is part of the binding, a task whose
+  target ref moved fails closed and must be re-opened rather than silently
+  re-basing.
+- Froze what a person confirmed into the stream: `product/task-opened` and
+  `product/task-started` both record `preflight_digest`, opening also records the
+  exact confirming Session, Turn and message, and
+  `ProductAssemblyReceipt.binds()` requires a started task to rest on that exact
+  binding. `binds()` needs the Receipt, so only a Service can evaluate it; the
+  repeated digest is what lets a pure projector compare the two facts. Without it the Proposal could show one commit and one promotion
+  target, the world could move, and `product/task-started` could record a
+  different receipt with nothing able to contradict it.
+- Froze cross-event value consistency, not only order: `ProductTaskFacts`,
+  `product_required_values()` and `product_started_mode()`. Where an earlier fact
+  decided a value there is exactly one legal value for the later one, derived
+  rather than proposed-and-checked - an explicit request is its own started mode,
+  `auto` has none until routing produced one and cannot start before then, and a
+  rejection must name the awaited review. `ProductTaskSummary.facts()` is the
+  single assembly point. `product_started_values()` derives *every* value the
+  started fact carries from one Receipt, so a payload cannot half-describe one
+  binding and half-describe another; freezing only `mode` had left the run id,
+  definition hash, assembly digest and base revision free.
+- `ProductTaskView.status` is a computed property rather than a field, so a view
+  can no longer carry a status that contradicts its own summary, and it is
+  derived from all three fresh reads: `PRODUCT_TASK_COHERENT_WORKFLOW` freezes
+  when the ProductTask and Workflow streams agree, yielding `resumable` for a
+  clean Approval barrier, `unreconciled` for a lagging product stream and
+  `interrupted` only where a person really has to look, and
+  `PRODUCT_TASK_TRANSITIONS` is a read-only mapping rather than a `dict` an
+  importer could rewrite. `ProductTaskSummary` carries `reason_display`, so the
+  one thing written for a person to read actually reaches them.
+- Froze the durable status *order*, not only the event shapes:
+  `PRODUCT_TASK_TRANSITIONS` and `product_transition_allowed()` fix the allowed
+  predecessors, forbid repeats and close every terminal. An explicit mode is
+  never routed and `auto` can never skip routing; `completed` and `rejected` are
+  reachable only from `awaiting_approval`, which obliges a resuming writer to
+  reconcile a missing `product/task-awaiting` rather than skip it.
+  `product_view_status()` derives `interrupted`, which is the only condition
+  under which writing `product/task-abandoned` is legitimate.
+- Froze the temporary Proposal: `ProductTaskProposal`, `ProposalConfirmation`
+  and `proposal_confirmable()`. One active Proposal per Session, confirmation
+  names the exact id plus the confirming Session, Turn and message, the
+  confirmation must come from the Proposal's own Session, and the confirming
+  Turn must differ from `proposed_turn_id` - the Turn that made the offer, which
+  is routinely *not* the Turn the requirement was stated in, so comparing the
+  latter still let a model propose and confirm in one breath. A Proposal carries a `ProductPreflightBinding` rather than a
+  full receipt, because an `auto` Proposal has no resolved mode yet.
+- Added `tests/test_product_contract.py` (`72 passed`), including a byte pin on
+  `agent_loop.py`, `agent_runtime.py`, `supervisor.py` and `manager.py`. Six
+  reverse validations confirmed each guard fails for its own root cause; none of
+  them touched a protected file, and two were re-done after the first attempt
+  produced only a fixture `TypeError` and a collection `ImportError` rather than
+  the real root cause. A third review round added six more guards and six more
+  reverse validations; one of them showed a mutable transition table leaking a
+  rewrite into unrelated cases.
+- See [ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md).
+
 ### v0.7-E: fixed typed Workflow above the public services
 
 - Added `traceh.api.workflow` (frozen host values, five node kinds and the host

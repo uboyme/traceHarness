@@ -107,6 +107,19 @@ class ProductChatHost:
     def tools(self) -> tuple[object, object]:
         return (self.propose_tool, self.confirm_tool)
 
+    @property
+    def control(self) -> ProductTaskControlPlane:
+        """The host-side control plane this host already owns.
+
+        ``ProductChatSurface`` is the console rendering of these operations, not
+        a second authority over them.  A non-console host - the benchmark in
+        :mod:`traceh.evaluation` - drives the same object so there is one
+        confirm/approve/reject/cancel path rather than two.  Nothing model-facing
+        reaches it: the two Tools still hold only ``ProductTurnActions``.
+        """
+
+        return self._control
+
     async def prepare_turn(self, session_id: str, text: str) -> ProductChatTurn:
         return await self._surface.prepare_turn(session_id, text)
 

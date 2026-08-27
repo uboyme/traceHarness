@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0-F3 implemented, F4-F5 not implemented**
+- Status: Accepted; **F0-F4 implemented, F5 not implemented**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -41,9 +41,12 @@ Product controller starts the fixed Workflow, pauses at its Approval barrier,
 and only a later host command may call Promotion. Restart continuation begins
 from a task id and fresh domain replays, not from the old Chat process.
 
-What still does **not** exist is the `traceh eval` benchmark rework, external
-real-provider acceptance for this F3 tree, or the v0.7 release. The package
-version remains `0.6.0`.
+The `traceh eval` benchmark rework this ADR anticipated in section 15 is now
+implemented in v0.7-F4 and recorded in
+[ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md).
+
+What still does **not** exist is external real-provider acceptance for this tree
+or the v0.7 release. The package version remains `0.6.0`.
 
 ## Context
 
@@ -516,7 +519,11 @@ follows the same pre-1.0 rule as ADR-0025's Budget cutover: no alias, no
 adapter, no dual reader, no silent rewrite, and never automatic deletion of the
 user's old data.
 
-F0 implements none of this.
+F0 implements none of this. v0.7-F4 implements it; the decisions that this
+section left open - how the measurement itself stays honest - are recorded
+separately in [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md)
+rather than added here, because they are new decisions and this ADR is the F0
+record.
 
 ### 16. F3 assembles existing owners; it does not create another runtime
 
@@ -684,5 +691,7 @@ F3 is an opt-in host assembly, not a default Profile, general Workflow DSL,
 retry engine, cross-process lease, cold Activation recovery or OS sandbox. It
 does not provide a model-visible approve/promote Tool. `AgentLoop`,
 `AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` remain
-byte-identical. F4 benchmark work and F5 release work have not begun; the
-package version remains `0.6.0` and v0.7 is not released.
+byte-identical. F4 benchmark work is implemented separately in
+[ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md); F5 release
+work has not begun; the package version remains `0.6.0` and v0.7 is not
+released.

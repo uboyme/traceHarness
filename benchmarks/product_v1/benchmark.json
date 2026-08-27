@@ -1,0 +1,141 @@
+{
+  "protocol_version": 1,
+  "benchmark_id": "traceh-product-v1",
+  "profile_id": "product-benchmark-v1",
+  "approver_id": "benchmark-host",
+  "default_mode": "single",
+  "roles": {
+    "parent": {
+      "preset": "product-benchmark-parent",
+      "capability_grants": ["list_files", "read_file", "search_text"],
+      "budget": {
+        "max_tokens": 60000,
+        "max_steps": 12,
+        "max_tool_calls": 40,
+        "max_wall_milliseconds": 300000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    },
+    "reviewer": {
+      "preset": "product-benchmark-reviewer",
+      "capability_grants": ["list_files", "read_file", "search_text"],
+      "budget": {
+        "max_tokens": 60000,
+        "max_steps": 12,
+        "max_tool_calls": 40,
+        "max_wall_milliseconds": 300000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    },
+    "coder": {
+      "preset": "product-benchmark-coder",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text",
+        "apply_patch",
+        "shell"
+      ],
+      "budget": {
+        "max_tokens": 120000,
+        "max_steps": 24,
+        "max_tool_calls": 80,
+        "max_wall_milliseconds": 600000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    }
+  },
+  "router": {
+    "preset": "product-benchmark-router",
+    "budget": {
+      "max_tokens": 8000,
+      "max_steps": 2,
+      "max_tool_calls": 0,
+      "max_wall_milliseconds": 60000,
+      "max_children": 0,
+      "max_depth": 0,
+      "max_processes": 4
+    },
+    "timeout_milliseconds": 60000,
+    "max_response_bytes": 2048
+  },
+  "task_budget": {
+    "max_tokens": 500000,
+    "max_steps": 200,
+    "max_tool_calls": 400,
+    "max_wall_milliseconds": 1800000,
+    "max_children": 8,
+    "max_depth": 2,
+    "max_processes": 8
+  },
+  "verification": {
+    "plan_id": "benchmark-unittest-v1",
+    "plan_version": 1,
+    "commands": [
+      {
+        "command_id": "unittest",
+        "argv": ["python", "-m", "unittest", "discover", "-s", ".", "-p", "test_*.py"],
+        "timeout_ms": 180000
+      }
+    ],
+    "environment": {
+      "policy_id": "benchmark-minimal-v1",
+      "passthrough": [
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "SYSTEMDRIVE",
+        "WINDIR",
+        "COMSPEC",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "HOME",
+        "LANG",
+        "LC_ALL"
+      ],
+      "overrides": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
+    },
+    "max_output_bytes": 1048576,
+    "protocol_version": 1
+  },
+  "capture_limits": {
+    "max_changed_paths": 100,
+    "max_path_bytes": 1024,
+    "max_file_bytes": 1048576,
+    "max_total_file_bytes": 4194304,
+    "max_patch_bytes": 4194304
+  },
+  "max_report_chars": 4096,
+  "arms": [
+    { "requested_mode": "single", "repetitions": 2 },
+    { "requested_mode": "multi", "repetitions": 2 },
+    { "requested_mode": "auto", "repetitions": 2 }
+  ],
+  "tasks": [
+    {
+      "task_id": "fix_failing_check",
+      "requirement": "The unit tests in this repository currently fail. Fix the source code so that running the test suite passes. Do not change or delete the tests.",
+      "initial_dir": "fix_failing_check/initial"
+    },
+    {
+      "task_id": "add_missing_helper",
+      "requirement": "The test suite calls a helper that does not exist yet. Add it to the existing module so that running the test suite passes. Do not change or delete the tests.",
+      "initial_dir": "add_missing_helper/initial"
+    },
+    {
+      "task_id": "guard_invalid_input",
+      "requirement": "A parsing function accepts values the test suite says it must reject. Add the missing validation so that running the test suite passes. Do not change or delete the tests.",
+      "initial_dir": "guard_invalid_input/initial"
+    }
+  ]
+}

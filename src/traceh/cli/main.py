@@ -31,7 +31,6 @@ from traceh.cli.env_file import (
 )
 from traceh.cli.errors import CliConfigurationError
 from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
-from traceh.evaluation.runner import BenchmarkRunner
 from traceh.evolution.artifacts import ArtifactContractError
 from traceh.evolution.candidate_comparison import (
     COMPARISON_EXIT_CODE,
@@ -530,10 +529,52 @@ async def _compact(args: argparse.Namespace) -> int:
         await runtime.dispose()
 
 
+#: `traceh eval` measured every attempt it ran, and every task stayed coherent.
+EVAL_INCOMPLETE_EXIT_CODE = 4
+
+
 async def _eval(args: argparse.Namespace) -> int:
-    report = await BenchmarkRunner(args.benchmark, args.output).run()
-    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
-    return 0 if report.success_rate == 1.0 else 4
+    """Run the ProductTask benchmark and write its two consistent reports.
+
+    The exit code answers "did the measurement complete", not "did the tasks
+    succeed". A benchmark whose exit code fell over on a failed coding task
+    would report a real result as a tool error; a benchmark that could not
+    derive a metric it promised is the failure worth signalling.
+    """
+
+    # Imported here for the same reason `chat` does it: no other command should
+    # pull in Product, Workspace, Artifact and Promotion just by importing this
+    # module.
+    from traceh.evaluation.errors import EvaluationError
+    from traceh.evaluation.runner import ProductBenchmarkRunner
+
+    provider, model = _provider_and_model(args)
+    if provider is None:
+        raise CliConfigurationError(
+            "eval requires a directly configured built-in provider"
+        )
+    if args.output.exists():
+        raise CliConfigurationError(
+            "eval --output must be a directory that does not exist yet"
+        )
+    try:
+        runner = ProductBenchmarkRunner(
+            args.benchmark, args.output, provider=provider, model_id=model
+        )
+    except EvaluationError as error:
+        raise CliConfigurationError(getattr(error, "code", "benchmark-error")) from None
+    report = await runner.run()
+    result = {
+        "command": "eval",
+        "benchmark_id": report.benchmark_id,
+        "complete": report.complete,
+        "attempts_run": len(report.attempts),
+        "attempts_measured": report.measured,
+        "report_json": str((args.output / "report.json").resolve()),
+        "report_markdown": str((args.output / "report.md").resolve()),
+    }
+    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0 if report.complete else EVAL_INCOMPLETE_EXIT_CODE
 
 
 def _plugins_list(args: argparse.Namespace) -> int:
@@ -879,9 +920,27 @@ def build_parser() -> argparse.ArgumentParser:
     summary_group.add_argument("--summary-file", type=Path)
     compact.set_defaults(handler=_compact)
 
-    evaluate = sub.add_parser("eval", help="Run a benchmark directory")
+    evaluate = sub.add_parser(
+        "eval",
+        help="Run the ProductTask benchmark defined by a benchmark.json manifest",
+    )
     evaluate.add_argument("benchmark", type=Path)
-    evaluate.add_argument("--output", type=Path, default=Path(".traceh/eval"))
+    evaluate.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="New evidence directory; it must not exist yet",
+    )
+    # Deliberately narrower than `_add_runtime_arguments`: a benchmark owns its
+    # own data directories, verifier and repositories, so `--data-dir`,
+    # `--verify-command`, `--plugin-verifier`, `--max-steps` and `--plugin` would
+    # be arguments this command cannot honour.
+    _add_env_file_argument(evaluate)
+    evaluate.add_argument("--provider", default=None)
+    evaluate.add_argument("--model", default=None)
+    evaluate.add_argument("--script", type=Path)
+    evaluate.add_argument("--base-url", default=None)
+    evaluate.add_argument("--api-key-env", default=None)
     evaluate.set_defaults(handler=_eval)
 
     plugins = sub.add_parser(

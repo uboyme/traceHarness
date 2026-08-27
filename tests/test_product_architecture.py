@@ -127,6 +127,38 @@ def test_no_existing_owner_learns_about_the_product_domain() -> None:
         ), source.name
 
 
+def test_the_benchmark_host_is_a_leaf_nothing_else_depends_on() -> None:
+    """F4 assembles the product mainline; nothing may assemble itself onto F4.
+
+    A benchmark that some owner imported would be a second place the product
+    surface is defined, and the direction would stop being decidable. The one
+    permitted reference is the deferred import inside the ``eval`` handler, which
+    is why the CLI is allowed to name it while nothing else is.
+    """
+
+    package = PACKAGE_ROOT
+    evaluation_root = package / "evaluation"
+    for source in sorted(package.rglob("*.py")):
+        if source.parent == evaluation_root:
+            continue
+        imported = _imports(source)
+        referenced = {
+            name for name in imported if name.startswith("traceh.evaluation")
+        }
+        if source == package / "cli" / "main.py":
+            assert referenced == {
+                "traceh.evaluation.errors",
+                "traceh.evaluation.runner",
+            }, referenced
+            continue
+        assert not referenced, str(source.relative_to(package))
+    # And the benchmark never reaches into a private name of the domain it drives.
+    for source, text in _sources(evaluation_root):
+        assert "._tasks" not in text, source.name
+        assert "._control" not in text, source.name
+        assert "._execution" not in text, source.name
+
+
 EXECUTING_MODULES = {
     "traceh.workflow",
     "traceh.workflow.service",

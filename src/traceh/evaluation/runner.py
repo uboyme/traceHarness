@@ -1,177 +1,179 @@
-"""Run deterministic or real-provider benchmark cases and verify the world."""
+"""The one benchmark runner ``traceh eval`` drives.
+
+There is exactly one benchmark path in this repository.  A second one would mean
+two definitions of "did this work", and the definition nobody looks at is the one
+that rots.  So this runner does not re-implement anything the product mainline
+already owns: it assembles the same Product host ``traceh chat --product-config``
+assembles, drives the same control plane, and reads every number back out of the
+fact sources that already own it.
+
+What the runner itself owns is small and deliberate:
+
+* the grid - tasks x arms x repetitions - and the order it is walked in;
+* one throwaway source repository and one one-shot bare target per attempt;
+* one monotonic clock, because no durable fact records when a host decided;
+* the coherence checks that make two arms comparable rather than merely adjacent.
+"""
 
 from __future__ import annotations
 
-import asyncio
 import json
-import shutil
 import time
-from dataclasses import asdict, dataclass
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from traceh.llm.scripted import ScriptedLlmProvider
-from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
-from traceh.runtime.verification import CommandVerifier
+from traceh.api.llm import LlmProvider
+from traceh.evaluation.attempt import AttemptRequest, run_attempt
+from traceh.evaluation.errors import BenchmarkExecutionError, EvaluationError
+from traceh.evaluation.manifest import (
+    BENCHMARK_PROTOCOL_VERSION,
+    BenchmarkManifest,
+    BenchmarkTask,
+    load_benchmark_manifest,
+)
+from traceh.evaluation.report import (
+    AttemptReport,
+    BenchmarkReport,
+    build_task_conditions,
+    render_markdown,
+)
+
+REPORT_JSON = "report.json"
+REPORT_MARKDOWN = "report.md"
+ATTEMPTS_DIRECTORY = "attempts"
 
 
-@dataclass(frozen=True, slots=True)
-class BenchmarkCase:
-    name: str
-    task: str
-    verify_command: str
-    initial_dir: Path
-    script_file: Path
+class ProductBenchmarkRunner:
+    """Run one manifest and write one report.
 
+    ``providers`` is supplied by the composition root, exactly as the Product
+    Chat host requires: the Profile names a provider id and a model id, and the
+    host refuses any object whose ``name`` does not match.  The runner never
+    constructs a model client of its own.
+    """
 
-@dataclass(frozen=True, slots=True)
-class CaseResult:
-    name: str
-    success: bool
-    session_id: str | None
-    reason: str
-    steps: int
-    duration_seconds: float
-    verification_summary: str
-    invariant_violations: int
-    tool_errors: int
-    error: str | None = None
+    __slots__ = ("_manifest", "_monotonic", "_output_dir", "_providers")
 
+    def __init__(
+        self,
+        benchmark_dir: Path,
+        output_dir: Path,
+        *,
+        provider: LlmProvider,
+        model_id: str,
+        monotonic: Callable[[], float] = time.monotonic,
+    ) -> None:
+        provider_id = getattr(provider, "name", None)
+        if type(provider_id) is not str or not provider_id:
+            # The Product host identifies a provider by name; an object without
+            # one could never be matched to the Profile it is supposed to serve.
+            raise BenchmarkExecutionError("benchmark-provider-binding-missing")
+        self._manifest = load_benchmark_manifest(
+            Path(benchmark_dir), provider_id=provider_id, model_id=model_id
+        )
+        self._output_dir = Path(output_dir).absolute()
+        self._providers: Mapping[str, LlmProvider] = {provider_id: provider}
+        self._monotonic = monotonic
 
-@dataclass(frozen=True, slots=True)
-class BenchmarkReport:
-    benchmark: str
-    cases: tuple[CaseResult, ...]
-    success_rate: float
-    total_duration_seconds: float
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "benchmark": self.benchmark,
-            "cases": [asdict(case) for case in self.cases],
-            "success_rate": self.success_rate,
-            "total_duration_seconds": self.total_duration_seconds,
-        }
-
-
-class BenchmarkRunner:
-    def __init__(self, benchmark_dir: Path, output_dir: Path) -> None:
-        self.benchmark_dir = benchmark_dir.resolve()
-        self.output_dir = output_dir.resolve()
-
-    def discover(self) -> tuple[BenchmarkCase, ...]:
-        cases = []
-        for manifest in sorted(self.benchmark_dir.glob("*/case.json")):
-            raw = json.loads(manifest.read_text(encoding="utf-8"))
-            case_dir = manifest.parent
-            cases.append(
-                BenchmarkCase(
-                    name=str(raw.get("name") or case_dir.name),
-                    task=str(raw["task"]),
-                    verify_command=str(raw["verify_command"]),
-                    initial_dir=case_dir / str(raw.get("initial_dir", "initial")),
-                    script_file=case_dir / str(raw.get("script", "script.json")),
-                )
-            )
-        return tuple(cases)
+    @property
+    def manifest(self) -> BenchmarkManifest:
+        return self._manifest
 
     async def run(self) -> BenchmarkReport:
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        started = time.perf_counter()
-        results = []
-        for case in self.discover():
-            results.append(await self._run_case(case))
-        total = time.perf_counter() - started
-        success_count = sum(item.success for item in results)
+        """Walk the grid, write both outputs and return the report."""
+
+        self._output_dir.mkdir(parents=True, exist_ok=False)
+        attempts: list[AttemptReport] = []
+        index = 0
+        for task in self._manifest.tasks:
+            for arm in self._manifest.arms:
+                for repetition in range(1, arm.repetitions + 1):
+                    index += 1
+                    attempts.append(
+                        await self._attempt(
+                            task, arm.requested_mode, repetition, index
+                        )
+                    )
         report = BenchmarkReport(
-            self.benchmark_dir.name,
-            tuple(results),
-            success_count / len(results) if results else 0.0,
-            total,
+            benchmark_id=self._manifest.benchmark_id,
+            protocol_version=BENCHMARK_PROTOCOL_VERSION,
+            profile_id=self._manifest.settings.host_profile.profile_id,
+            provider_id=self._manifest.settings.host_profile.profile.provider_id,
+            model_id=self._manifest.settings.host_profile.profile.model_id,
+            attempts=tuple(attempts),
+            tasks=tuple(
+                build_task_conditions(
+                    task.task_id,
+                    [
+                        attempt
+                        for attempt in attempts
+                        if attempt.benchmark_task_id == task.task_id
+                    ],
+                    verifier_definition_digest=(
+                        self._manifest.verifier_definition_digest
+                    ),
+                )
+                for task in self._manifest.tasks
+            ),
         )
-        (self.output_dir / "report.json").write_text(
-            json.dumps(report.to_dict(), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        self._write_markdown(report)
+        self._write(report)
         return report
 
-    async def _run_case(self, case: BenchmarkCase) -> CaseResult:
-        run_dir = self.output_dir / case.name
-        if run_dir.exists():
-            shutil.rmtree(run_dir)
-        workspace = run_dir / "workspace"
-        shutil.copytree(case.initial_dir, workspace)
-        provider = ScriptedLlmProvider.from_file(case.script_file)
-        verifier = CommandVerifier(case.verify_command)
-        runtime = build_default_runtime(
-            RuntimeConfig(
-                data_dir=run_dir / ".traceh",
-                provider="scripted",
-                model="benchmark-script",
-                max_steps=20,
-            ),
-            provider=provider,
-            verifier=verifier,
+    async def _attempt(
+        self, task: BenchmarkTask, requested_mode, repetition: int, index: int
+    ) -> AttemptReport:
+        relative = f"{ATTEMPTS_DIRECTORY}/{index:03d}"
+        request = AttemptRequest(
+            attempt_id=f"{task.task_id}/{requested_mode.value}/{repetition}",
+            task=task,
+            requested_mode=requested_mode,
+            repetition=repetition,
+            directory=self._output_dir / ATTEMPTS_DIRECTORY / f"{index:03d}",
+            relative_directory=relative,
         )
-        started = time.perf_counter()
-        session_id: str | None = None
         try:
-            session_id = await runtime.create_session(workspace, metadata={"benchmark": case.name})
-            result = await runtime.run_existing(session_id, case.task)
-            verification = await verifier.verify(workspace)
-            violations = await runtime.check_invariants(session_id)
-            events = await runtime.sessions.read_session(session_id)
-            tool_errors = sum(
-                1
-                for event in events
-                if event.type == "tool/result" and event.data.get("status") != "succeeded"
+            return await run_attempt(
+                request,
+                manifest=self._manifest,
+                providers=self._providers,
+                monotonic=self._monotonic,
             )
-            success = verification.passed and not violations
-            return CaseResult(
-                case.name,
-                success,
-                session_id,
-                result.reason,
-                result.steps,
-                time.perf_counter() - started,
-                verification.summary,
-                len(violations),
-                tool_errors,
+        except (EvaluationError, OSError) as error:
+            # An attempt that cannot be measured is reported as unmeasured, not
+            # dropped and not folded in as a zero. The run continues so the rest
+            # of the grid still produces evidence, and the report stays
+            # incomplete so the exit code still says the measurement failed.
+            #
+            # ``OSError`` belongs here for a specific, observed reason: on
+            # Windows a long output directory plus a derived stream file name can
+            # exceed the path limit, and the honest answer is one unmeasured
+            # attempt rather than a traceback that destroys the whole run's
+            # evidence.
+            code = getattr(error, "code", None)
+            return AttemptReport(
+                attempt_id=request.attempt_id,
+                benchmark_task_id=task.task_id,
+                requested_mode=requested_mode,
+                repetition=repetition,
+                directory=relative,
+                error_code=code if type(code) is str else "benchmark-attempt-unreadable",
+                evidence=None,
+                timing=None,
             )
-        except BaseException as error:
-            return CaseResult(
-                case.name,
-                False,
-                session_id,
-                "runtime_error",
-                0,
-                time.perf_counter() - started,
-                "verification not completed",
-                0,
-                0,
-                f"{type(error).__name__}: {error}",
-            )
-        finally:
-            await runtime.dispose()
 
-    def _write_markdown(self, report: BenchmarkReport) -> None:
-        lines = [
-            f"# Benchmark: {report.benchmark}",
-            "",
-            f"Success rate: **{report.success_rate:.1%}**",
-            f"Total duration: **{report.total_duration_seconds:.2f}s**",
-            "",
-            "| Case | Success | Steps | Tool errors | Invariants | Duration |",
-            "|---|---:|---:|---:|---:|---:|",
-        ]
-        for case in report.cases:
-            lines.append(
-                f"| {case.name} | {'yes' if case.success else 'no'} | {case.steps} | "
-                f"{case.tool_errors} | {case.invariant_violations} | "
-                f"{case.duration_seconds:.2f}s |"
-            )
-        (self.output_dir / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    def _write(self, report: BenchmarkReport) -> None:
+        (self._output_dir / REPORT_JSON).write_text(
+            json.dumps(report.to_dict(), ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        (self._output_dir / REPORT_MARKDOWN).write_text(
+            render_markdown(report), encoding="utf-8"
+        )
 
 
-def run_benchmark_sync(benchmark_dir: Path, output_dir: Path) -> BenchmarkReport:
-    return asyncio.run(BenchmarkRunner(benchmark_dir, output_dir).run())
+__all__ = [
+    "ATTEMPTS_DIRECTORY",
+    "REPORT_JSON",
+    "REPORT_MARKDOWN",
+    "ProductBenchmarkRunner",
+]

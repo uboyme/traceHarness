@@ -43,7 +43,7 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A–E 提供持久 Agent identity/Inbox/Delivery、进程内 `ProcessAgentSupervisor`、owner 子树 child-first disposal 和五个绑定 owner 的模型 Tool。未发布的 v0.7 D0–E 又以 Runtime 外公共服务加入执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow；F0–F2 加入 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 再从 CLI 外层把它们装配成显式启用的 Chat 产品面（20.29）。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | **v0.6.0 已发布**单进程多 Agent 主线：Stage A–E 提供持久 Agent identity/Inbox/Delivery、进程内 `ProcessAgentSupervisor`、owner 子树 child-first disposal 和五个绑定 owner 的模型 Tool。未发布的 v0.7 D0–E 又以 Runtime 外公共服务加入执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow；F0–F2 加入 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 再从 CLI 外层把它们装配成显式启用的 Chat 产品面（20.29）；F4 让 `traceh eval` 成为同一条主线的第二个 composition root，只度量、不新增能力（20.30）。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream、每个 Workflow Run 一条的 Workflow Stream，以及每个 ProductTask 一条的产品事实流；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
@@ -51,10 +51,10 @@
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat；不传 Product 配置时行为不变。显式 `--product-config` 后，宿主增加 Proposal/后续确认和 `/task inspect|approve|reject|cancel|abandon TASK_ID`，命令在模型前分派。空闲提示符原有 `/plugins` 组合切换继续保留。它仍不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | F3 独立复审无 P0/P1 后完成最终确认：全仓 `2344 collected / 2339 passed / 5 skipped`，退出码 0；F3/Chat/CLI/Product/Workspace 离线定向门禁为 `273 passed, 2 skipped`，两个 F3 专测文件共 `16 passed`。首次全量暴露两条仍按 D2 阶段禁止 CLI/Product 使用 Promotion 的旧架构守卫；守卫被收窄为逐文件/模块/符号的精确 F3 composition-root 与 Product orchestration 依赖表，并经反向验证后，确认全量全绿。五个 skip 均为既有平台权限或路径边界。F2 历史检查点是 `2326/2321/5`，F1 是 `2253/2248/5`，D2 扩大定向为 `172 passed, 2 skipped`，v0.6.0 发布快照为 `1707/1706/1` |
-| 内置 Benchmark | `traceh eval` 有 1 个确定性修复案例；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同 |
+| 当前自动化测试 | F4 前两轮独立审查共提出 5 个 P1、2 个 P2，全部按根因修复并各自补上确定性反例；最终复审清零 P0/P1/P2 后只运行一次全量并得到 `2395 collected / 2390 passed / 5 skipped`、退出码 0、耗时 `28:04`。此前定向门禁为：两个 F4 专测文件共 `51 passed`；Product/架构 `304 passed`；Budget/Workspace/Artifact/Promotion/Workflow `325 passed, 2 skipped`；CLI `519 passed, 1 skipped`。`python -m compileall -q src tests`、改动范围 Ruff、文档 QA 与 `git diff --check` 均通过，四个受保护核心文件零 diff。五个 skip 仍是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 的历史检查点是全仓 `2344 collected / 2339 passed / 5 skipped`，F2 是 `2326/2321/5`，F1 是 `2253/2248/5`，D2 扩大定向为 `172 passed, 2 skipped`，v0.6.0 发布快照为 `1707/1706/1` |
+| 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0–E 又在未发布开发树中依次加入依赖接缝、执行型层级 Budget、managed Workspace、immutable Artifact、固定验证/人工审批/Git ref CAS Promotion 与 Typed Workflow；F0–F2 冻结并实现 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 现已把这些既有 owner 作为**可选** `traceh chat --product-config` 产品面串通，支持自然语言提议/后续确认、single/multi/auto、Approval 暂停、按 task id 重启后 inspect/approve/reject/cancel/abandon，以及由宿主显式调用 Promotion。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入 Wheel E2E。这些能力均没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager` 的职责。当前仍没有 F4 eval cutover、真实外部模型 F3 验收、v0.7 默认 Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI 或流式输出。
+当前版本为 `0.6.0`。它在 v0.5 插件 Composition 主线之上正式发布两组能力：Runtime 外的 L1–L4 受控候选演进控制面，以及 v0.6 Stage A–E 的 durable Agent identity/Inbox/Delivery、进程内 Supervisor、owner 子树 child-first disposal 和五个模型 Tool。v0.7 D0–E 又在未发布开发树中依次加入依赖接缝、执行型层级 Budget、managed Workspace、immutable Artifact、固定验证/人工审批/Git ref CAS Promotion 与 Typed Workflow；F0–F2 冻结并实现 ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly；F3 现已把这些既有 owner 作为**可选** `traceh chat --product-config` 产品面串通，支持自然语言提议/后续确认、single/multi/auto、Approval 暂停、按 task id 重启后 inspect/approve/reject/cancel/abandon，以及由宿主显式调用 Promotion。Plugin Creator Skill 与 Python Quality 仍是独立 Distribution，分别以 `0.2.0` 进入 Wheel E2E。F4 再把 `traceh eval` 重构成这条同一主线的宿主 Benchmark：一次性本地仓库、programmatic immediate approval、按解析后模式聚合的 single/multi 度量，以及只来自持久事实与宿主单调时钟的指标（20.30）。这些能力均没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager` 的职责。当前仍没有真实外部模型验收、v0.7 默认 Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI 或流式输出。
 
 ### 1.1 为什么引入 `packaging`
 
@@ -90,7 +90,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、后续真人确认、固定 Workflow、Review/Approval 与 Promotion；`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile；未启用配置时普通 Chat 不创建 ProductTask；
+- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、后续真人确认、固定 Workflow、Review/Approval 与 Promotion；`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile；未启用配置时普通 Chat 不创建 ProductTask。F4（20.30）的 `traceh eval` 是同一条主线的另一个 composition root：它复用同一个 `ProductChatHost` 与同一个控制面，但由 manifest 而不是模型提供需求与模式，并自己创建一次性本地仓库；
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
@@ -113,14 +113,14 @@ traceharness/
 │   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
-│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配
+│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3 的宿主控制面、Chat 表面、schema-1 配置解析与显式装配
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
-│   ├── evaluation/                   确定性 Benchmark Runner
+│   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、descriptive 报告与唯一 Runner
 │   ├── evolution/                    L2 验证、L3 对比与 L4 人工批准/精确推广/回滚
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       四层 Service 与 Composition Overlay、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
@@ -132,7 +132,7 @@ traceharness/
 ├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
 │   └── plugins/                      三个可独立构建安装的外部插件 Distribution（示例、Python Quality、Plugin Creator Skill）
-├── benchmarks/                       独立复制 Workspace 的评估案例
+├── benchmarks/                       `product_v1` 是 `traceh eval` 的 3 个通用任务与唯一 manifest；`evolution/python_quality_v1` 是 L3 的固定对比 Suite
 ├── docs/
 │   ├── note/                         当前项目正式版与通俗版上下文
 │   ├── adr/                          已接受设计决定及原因（含 0007 插件事务激活）
@@ -831,14 +831,15 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 
 ### 12.4 Benchmark
 
-`BenchmarkRunner` 发现 `*/case.json`，为每个案例复制独立 Workspace，使用 Scripted Provider 和真实 Tool Runtime/Verifier，生成：
+`ProductBenchmarkRunner` 读取 `<benchmark>/benchmark.json`（schema 1、精确键集），按 `tasks × arms × repetitions` 走一遍网格。每次 attempt 走的是 20.30 的完整 ProductTask 主线：自建一次性源仓库与一次性本地 bare target、真实确认、固定 Workflow、managed worktree、不可变 Patch Artifact、冻结 Verifier、Review、宿主立即批准与 Git ref compare-and-swap。
 
-- 案例 Workspace；
-- `.traceh` Session/Effect JSONL；
+输出位于要求尚不存在的 `--output` 目录：
+
+- `attempts/<NNN>/`：每次 attempt 自己的 `source`、`tgt.git`、`ev`（JSONL 事件）、`work`（managed worktree）、`cas`、`rt`/`rw`（requester Runtime 与工作区）、`pd`；
 - `report.json`；
-- `report.md`。
+- `report.md`（由同一个 `to_dict()` 渲染，因此两份输出不可能对同一个数字给出不同答案）。
 
-成功条件是最终外部验证通过且不变量无违规。当前只有 `fix_addition` 一个确定性案例，不能代表复杂真实 Coding 任务质量。
+成功条件是四条互相独立的持久事实同时成立：ProductTask 终态 `completed`、Workflow 终态 `completed`、Review `passed`，以及一条 Promotion 回执且目标 ref 现在确实指向它记录的 new revision。旧 `*/case.json` 布局被明确拒绝，不做升级也不留兼容 reader。完整语义与边界见 20.30。
 
 ## 13. CLI、配置与日常运行
 
@@ -854,7 +855,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh replay` | 重放模型 Surface 并检查请求重建 |
 | `traceh compact` | 手动追加 Surface Replacement |
 | `traceh sessions` | 列出 Session |
-| `traceh eval` | 运行 Benchmark 目录 |
+| `traceh eval` | 运行 `benchmark.json` 定义的 ProductTask Benchmark；`--output` 必须尚不存在，度量不完整时退出码 4 |
 | `traceh plugins list` | 列出已安装插件的元数据，**不 import 任何插件** |
 | `traceh plugins inspect <id>` | 同上，针对单个插件；未知或有问题时退出码 6 |
 | `traceh plugins doctor [ids...]` | import、setup、health check 后**立即 dispose**；失败时退出码 7 |
@@ -864,7 +865,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh plugins rollback` | 按显式当前/未完成推广 ID 恢复上一份精确 Wheel 或卸载首版；失败时退出码 10 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
 
-`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
+`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`eval` 只接受 `--output`、`--env-file` 与 provider 选择四项（`--provider`、`--model`、`--script`、`--base-url`、`--api-key-env`）：Benchmark 自己拥有数据目录、Verifier 和仓库，所以 `--data-dir`、`--verify-command`、`--plugin-verifier`、`--max-steps` 和 `--plugin` 是它无法兑现的参数，因此干脆不提供而不是接受后忽略。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
 
 除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，以及 Turn 运行期间的实时 Step/Tool Timeline（13.6）；但它仍是行式提示符：没有 token 流式输出、执行前审批，也不能在 Turn 运行期间继续输入。`run`/`resume` 本轮**没有**接 Timeline。
 
@@ -1463,7 +1464,8 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Provider/Request | `api/llm.py`、`llm/*`、`request_builder.py` | 7、8、13、15、16 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
-| Verifier/Eval | `verification.py`、`evaluation/*` | 10、12、15、16 |
+| Verifier | `verification.py` | 10、12、15、16 |
+| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033 | 1、3、12.4、13.1、15、16、20.29、20.30；改 Product host 装配、Workflow 拓扑、Promotion 回执字段或 Session 事件形状时必须同时核对本域的指标推导 |
 | 插件发现/启用/激活 | `plugins/*`、`api/plugins.py`、`api/prompts.py`、`kernel/activation.py`、`kernel/tasks.py`、`runtime/agent_runtime.py`、`tests/test_plugin_*.py` | 1、2、3、4、7.1、13、14、15、16、19 |
 | Runtime 关闭 / dispose | `runtime/agent_runtime.py`（`_shutdown`、`dispose`）、`plugins/manager.py` 的 `dispose`、`tests/test_runtime_dispose.py` | 5.3、5.5、15、16、19.8 |
 | 插件组合控制面 / Session 迁移 | `runtime/plugin_composition.py`、`runtime/agent_runtime.py` 门面、`tests/test_plugin_composition_coordinator.py`、Stage B/C 控制面测试 | 4、5.3、14、15、16、19.7–19.9 |
@@ -2594,7 +2596,7 @@ F0 在**生产代码**上只新增一个公共合同模块 [`api/product.py`](..
 | 推广时机 | Workflow Approval 节点只等人；Run 完成后才由 ProductService 显式调用 Promotion |
 | 恢复边界 | 不放宽 Stage E：只有干净停在 Approval 屏障的 Workflow 可继续 |
 | interrupted | 派生视图状态，**不写 Event** |
-| Benchmark | 将来复用并重构现有 `traceh eval`，旧 manifest 明确拒绝、不留兼容层；F0 不实现 |
+| Benchmark | 复用并重构现有 `traceh eval`，旧 manifest 明确拒绝、不留兼容层；F0 只冻结这条决定，F4 实现（20.30、ADR-0033） |
 | 受保护文件 | `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 一字未改 |
 
 #### 九种事件与它们的精确 key 集
@@ -2766,7 +2768,7 @@ F0 完成时 [`tests/test_product_contract.py`](../../tests/test_product_contrac
 
 #### F0 之后仍未实现的部分
 
-F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29）。仍未完成的是 F4 `traceh eval` 重构、真实外部模型验收与 F5 v0.7.0 发布。版本仍为 `0.6.0`。
+F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29），F4 再把 `traceh eval` 重构成同一条主线的宿主 Benchmark（见 20.30）。仍未完成的是真实外部模型验收与 F5 v0.7.0 发布。版本仍为 `0.6.0`。
 
 ### 20.27 v0.7-F1：ProductTask 持久事实层
 
@@ -2878,7 +2880,7 @@ F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 
 
 #### F1 之后仍未实现的部分
 
-F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29）。接下来只剩 F4 benchmark cutover、外部模型验收与 F5 发布；Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
+F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29），F4 完成 benchmark cutover（见 20.30）。接下来只剩外部模型验收与 F5 发布；Stage E 的恢复边界没有被放宽。版本仍为 `0.6.0`。
 
 
 ### 20.28 v0.7-F2：严格 Router、Profile Registry 与固定 Product Assembly
@@ -3001,7 +3003,7 @@ F2 三个新测试文件共 `69 passed`：[`test_product_router.py`](../../tests
 
 #### F2 之后仍未实现的部分
 
-F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收。F4 重构现有 `traceh eval` 并明确拒绝旧 manifest；真实外部模型验收和 F5 的 v0.7.0 RC/发布仍未完成。Stage E 的恢复边界没有被放宽，版本仍为 `0.6.0`。
+F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收；F4 已在 20.30 重构 `traceh eval` 并明确拒绝旧 manifest。真实外部模型验收和 F5 的 v0.7.0 RC/发布仍未完成。Stage E 的恢复边界没有被放宽，版本仍为 `0.6.0`。
 后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F3–F5，不替代本文件、源码、测试或 ADR 的当前事实。
 
 
@@ -3066,4 +3068,129 @@ Router、fresh assembly 或 `product/task-started` 在 Workflow 启动前发生�
 
 F3 新增 [`tests/test_product_f3_e2e.py`](../../tests/test_product_f3_e2e.py) 与 [`tests/test_product_config.py`](../../tests/test_product_config.py)，使用真实本地 Git source/worktree、真实 Patch capture、固定 verifier subprocess、SHA-256 CAS 和一次性 bare target，覆盖 ordinary Chat 不创建任务、single、multi、auto、Approval 屏障、进程重建后 approve/promote、reject 不移动 ref、模型请求不含 Review/approval 值、确认取消收敛、Router 失败后的 Budget/Workspace 收敛、用户可见 task id、逐任务显式 mode 与配置拒绝自由 topology。两份专测共 `16 passed`；Chat/CLI/Product/Workspace 离线定向门禁为 `273 passed, 2 skipped`。独立 Sol 复审清零 P0/P1 后，最终确认全量为 `2344 collected / 2339 passed / 5 skipped`、退出码 0。测试 Provider 是确定性 `LlmProvider` 实现；本阶段没有读取 `.env`、没有调用外部模型/API、没有接触真实远端，所以“真实外部模型验收”仍是 F3 提交后或 F5 RC 前的显式运行项，不能由这些测试冒充。
 
-F3 没有实现 F4 benchmark、旧 eval manifest cutover、重试策略、跨进程 lease、冷恢复、OS sandbox、默认 Product Profile 或 v0.7 发布。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。独立复审和最终全量均已通过，但当前工作树尚未提交，也没有进入 F4。
+F3 本身没有实现 benchmark、旧 eval manifest cutover、重试策略、跨进程 lease、冷恢复、OS sandbox、默认 Product Profile 或 v0.7 发布；前两项由 20.30 的 F4 完成，其余仍未做。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。
+
+### 20.30 v0.7-F4：`traceh eval` 成为 ProductTask 主线的度量入口
+
+通俗版对应 [20.24](project-context-plain-zh.md)；两份文档的 20.x 子编号自 v0.7 D0 起有固定偏移，通俗版每个标题都写明了它对应的正式版编号。完整决定见 [ADR-0033](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)。F4 不新增任何产品能力：它把 v0.6 的单 Agent scripted benchmark 换成一个**只度量**的宿主，跑的正是 20.29 那条主线。
+
+#### 只有一条 benchmark 通路
+
+[`traceh.evaluation`](../../src/traceh/evaluation/) 是**第二个 composition root**，与 `traceh.cli` 平级：它调用同一个 [`build_product_chat_host()`](../../src/traceh/product/host.py)，驱动同一个 `ProductTaskControlPlane`，不拥有第二个任务状态机、调度器、Workflow 或“成功”的第二个定义。七个文件各司其职：
+
+| 文件 | 职责 |
+|---|---|
+| [`manifest.py`](../../src/traceh/evaluation/manifest.py) | schema-1 精确键集解析、旧 `case.json` 明确拒绝、Benchmark 自有身份常量 |
+| [`repositories.py`](../../src/traceh/evaluation/repositories.py) | 每次 attempt 的一次性源仓库与一次性本地 bare target，以及有界、无链接的初始树复制 |
+| [`attempt.py`](../../src/traceh/evaluation/attempt.py) | 一次 attempt：两个真实 user Turn、确认、立即批准、相位计时与 owner 收敛 |
+| [`metrics.py`](../../src/traceh/evaluation/metrics.py) | 从各自的事实源推导每个指标，或报告 unavailable |
+| [`report.py`](../../src/traceh/evaluation/report.py) | DTO、descriptive 聚合、实验条件一致性与两份一致的输出 |
+| [`runner.py`](../../src/traceh/evaluation/runner.py) | 唯一 `ProductBenchmarkRunner`：网格顺序、输出目录与报告写入 |
+| [`errors.py`](../../src/traceh/evaluation/errors.py) | 三类稳定失败，均不回显 payload、路径或异常文本 |
+
+为此 `ProductChatHost` 公开了 `control` 属性：`ProductChatSurface` 是这些操作的**控制台渲染**，不是它们的第二个权限来源；模型侧没有变化，两个 Chat Tool 仍只持有 `ProductTurnActions`。Product host 配置 schema 的共享一半收敛到 [`parse_product_host_settings()`](../../src/traceh/product/config.py)，因此 Chat 配置文件与 Benchmark manifest 不可能对“什么是 Profile”给出两种答案。
+
+架构守卫按具名符号扩展而不是放宽：`tests/test_promotion_architecture.py` 新增 `EVALUATION_PROMOTION_IMPORTS`（`attempt.py` 只允许 `LocalBareGitPromotionTargets`，`metrics.py` 只允许 `PromotionLedgerReader`）；`tests/test_product_architecture.py` 新增一条断言——除 `cli/main.py` 里 `eval` handler 内的两个延迟 import 外，`traceh` 包内没有任何模块 import `traceh.evaluation`，且 Benchmark 不触碰它所驱动域的私有名。
+
+#### manifest 不能命名仓库、模型或图
+
+`<benchmark>/benchmark.json` 的顶层键集恰好是 `PRODUCT_HOST_SETTINGS_KEYS ∪ {protocol_version, benchmark_id, arms, tasks}`。它只能命名 Profile、三个角色槽位与 Budget、Router 上界、任务总 Budget、冻结 `VerificationPlan`、capture 上限、arms 与 tasks。
+
+它**没有**仓库、推广目标、`managed_workspace_root`、`cas_root`、`provider_id`、`model_id`、节点、边、fan-out、Agent 数量或 approval digest 字段。源仓库与一次性本地 bare target 由 Runner 从任务的 `initial/` 树自建，因此“绝不接触真实远端”是结构性质而不是需要有人记住的规则。provider/model 来自 `--provider` / `--model`，一次运行的所有 arm 因此必然使用同一个模型族。
+
+初始树复制只接受普通文件，拒绝 symlink/Junction/其他 reparse point、`.git`/`.traceh` 名字，并受显式条目数与字节上限约束。源提交使用固定 tree、固定 author/committer 身份与固定时间戳，所以同一个任务的每次 attempt 得到**相同的 base revision**——报告随后核对这一点，而不是假设它。
+
+#### 候选不能改写题目
+
+需求文本与请求模式来自 manifest，直接交给 `ProductTaskControlPlane.offer()`。Chat 表面存在的意义是让**人**把对话变成任务；Benchmark 已经知道题目，而能提出题目的模型就能改写自己被评分的问题。
+
+`product/task-opened` 仍要求真实 Session 证据，因此 Benchmark 用一个宿主冻结、**无 Tool** 的 requester Provider 跑两个真实 user Turn。它不做任何决定、看不到 managed Workspace，它的 Session 也不属于被度量的 Agent 子树。
+
+#### 立即批准，并且到处标注
+
+Benchmark 到达 Approval 屏障后由宿主对自己的一次性本地目标立即批准，两份报告都写明 `approval_policy: programmatic-immediate`。它不在别处产生任何权限：普通 Chat 仍必须由人执行 `/task approve`。
+
+它存在的理由是让 `active elapsed` 度量的是工作：approval wait 作为独立区间计时并从 active 中扣除，wall 则包含它。三者由减法定义，因此不可能互相矛盾。
+
+#### 每个指标的事实源
+
+| 指标 | 来源 |
+|---|---|
+| 是否成功 | ProductTask 终态 + Workflow 终态 + Review `passed` + Promotion 回执，且目标 ref **现在确实**指向回执记录的 new revision |
+| routing tokens / elapsed | `product/task-routed` 指名的那个 Agent 的 Session |
+| execution tokens / steps / tool calls | Workflow 节点 outcome 指名的那些 Agent 的 Session |
+| 累计工作时长 | durable `turn/start` → `turn/end` 区间求和 |
+| Budget 结果 | Budget Ledger，按本任务 ownership 子树取值 |
+| active / approval wait / wall | Runner 自己的单调时钟 |
+
+相位边界是唯一的非持久指标，并被如实标注：没有任何持久事实记录“宿主是什么时候决定的”。
+
+数事件不等于读 Session：每条被度量的 Session 先经过既有 `CoreInvariantChecker`，不通过就 fail closed（`benchmark-session-invariants-violated`）。Benchmark 不拥有第二套更弱的生命周期定义，因此一条“看起来像 Session”的流（例如多出一条没有对应 start 的 `model/attempt-end`）只会让指标拒绝，而不会让 Token 列膨胀。
+
+**失败**的 AgentTask 节点不记录 `agent_id`——它的终态 payload 只有 failure code。只读 outcome 会把该角色失败前真实花掉的 Token 全部丢掉，并给一个已经干过活的角色报一个笃定的 0。因此 Agent 身份改由 `agent_identity(run_id, node_id)`（执行器用的同一条规则）推出；outcome 带 id 时两者必须一致，这是交叉核对而不是替换。
+
+Workflow Verification outcome、ProductTask 的 `review_id` 与 Promotion 回执必须描述**同一份** Review，且 promotion 的 approval digest 必须是那份 Review 内容的 digest。三者各自都形状合法，所以独立读取会让一份报告用三条互不相干的记录说出“已验证、已批准、已推广”。
+
+`product/task-routed` 同时记了 Router Agent 与 routing Session，但“这个 Agent 实际拥有哪条 Session”只有 Agent Directory 说了算，因此 routing Session 从 Directory 解析并要求与记录值一致（`benchmark-routing-session-mismatch`）。直接采信 payload 里的这一对，会让 routing identity 指向同一任务某个角色的 Session——它解析正常、也过得了不变量检查——于是同一批 Token 被 routing 和 execution 各算一次，正好毁掉这两个指标存在的意义。
+
+报告同时给出两个 Token 总数，它们不是同一件事：Session 总数是 Provider 声称用掉的量，Ledger 总数是 Budget 权限实际结算的量（对非 `exact` 用量按设计保守地结算整份预留）。用其中一个冒充另一个，就会误报被替换掉的那一个。
+
+推不出来的指标报告为 **unavailable**，不填 0。特别是 `UsageQuality.UNKNOWN` 会让该 Session 的 Token 总数变成 unavailable——`unknown` 正是本仓库对“这个计数不是证据”的说法，而 Token 列里的 `0` 读起来是“没有用 Token”。`estimated` 仍作为数值报告并带上 quality 标签。
+
+Workflow 或 routing 事实指名了本任务不拥有的 Agent 时 fail closed（`benchmark-agent-set-inconsistent`）；反向不成立：Router Agent 在答案被解析**之前**就已创建，因此被拒绝的路由会留下一个真实、被拥有、却没有任何持久 Product 事实指名的 Agent。它的开销单列为 `unattributed`，既不丢弃，也不冒充成从未记录过的 routing。
+
+#### auto 不是第三个质量 arm
+
+质量聚合按**解析后**的模式分组，包含所有解析到该模式的 attempt（含 auto）。auto 只单独报告严格解析是否成功、路由 Token 与路由耗时。把 auto 当成第三个 arm，等于拿 `multi` 和它自己比较，再把差值当作结论。
+
+聚合只有计数、总和、最小、最大和均值；没有方差、没有置信区间、没有显著性声明；只有一次观测的 arm 在两份输出里都标注 `single observation`。
+
+#### 可比性是被证明的
+
+每个任务都记录所有 arm 共享的 `requirement_digest`、`profile_digest`、`source_base_revision` 与 `verifier_definition_digest`，并点名任何发生分歧的字段。
+
+其中 verifier 由**宿主冻结的 manifest** 证明，而不是从「哪些 attempt 恰好走到了 Review」反推：在 Review 之前就失败的 arm 根本没有 verifier digest，把这个缺失过滤掉正是「只有 single 活下来、却宣称两条 arm 共用同一个 verifier」的来源。已经建立了 digest 的 attempt 必须与冻结计划一致。
+
+其他列同理：缺失不等于一致。没有建立某个字段的 attempt 被计入 `unproven_fields`，与 `coherent` 并列报告而不是并入它——一个在启动前就失败的 attempt 本来就没有 source revision，为此把整个任务判成 incoherent，等于把一次正常失败报告成实验被破坏。
+
+存在分歧的条件、或存在无法度量的 attempt，都会让 `complete: false` 并使 `traceh eval` 退出码为 `4`。退出码回答的是“度量是否完成”，不是“编码任务是否成功”：一个失败的任务是数据，而不是工具错误。
+
+一个 attempt 无法度量（例如 Windows 上过长的输出目录加上派生流文件名超过路径上限）时，它被记为 unmeasured 并让整轮 `complete: false`，而不是用 traceback 毁掉其余 attempt 的证据。
+
+#### 收敛，而不是删除
+
+失败与取消都通过同一个控制面收敛既有 owner——ownership tree、Budget account 与 managed worktree——然后写下诚实的终态。Workspace 的 **quarantine 是收敛终态**而不是未收敛：Product 资源合同正是为了保住 dirty worktree 里的证据才 quarantine 它，收敛只排除仍停在 `provisional`/`attached` 的记录，报告用 `live` 显式给出这个数。`--output` 目录下任何东西都不会被删除：一次 attempt「干净」的含义是它的 owner 已经收敛，不是它的证据被抹掉了。
+
+attempt 目录是编号的（`attempts/<NNN>/`）而不是描述性的：managed worktree 由 77 字符的派生身份命名并位于其中，描述性路径加上该身份会在任何普通输出目录下超出 Windows 路径上限。可读的 `attempt_id` 与目录在报告里通过相对 `directory` 字段关联，报告不写宿主绝对路径。
+
+#### 验证基线与反向验证
+
+F4 新增 [`tests/test_product_benchmark.py`](../../tests/test_product_benchmark.py)（manifest、旧布局拒绝、聚合与 CLI 接线）与 [`tests/test_product_benchmark_e2e.py`](../../tests/test_product_benchmark_e2e.py)（真实本地 Git、真实 Patch capture、固定 verifier subprocess、SHA-256 CAS、一次性 bare target），两份共 `51 passed`。Product/架构门禁 `304 passed`，Budget/Workspace/Artifact/Promotion/Workflow 相邻回归 `325 passed, 2 skipped`，CLI 门禁 `519 passed, 1 skipped`，collect-only `2395 collected`；`python -m compileall -q src tests`、改动范围 `ruff check` 与 `git diff --check` 通过。最终独立复审清零 P0/P1/P2 后只运行一次全量，得到 `2390 passed, 5 skipped`、退出码 0、耗时 `28:04`；五个 skip 仍是既有 Windows 权限/路径边界。
+
+两轮独立审查共提出 5 个 P1 与 2 个 P2，全部按根因修复：失败角色的 Session 曾被整段丢弃、Session 指标未过 `CoreInvariantChecker`、Verification/Review/Promotion 未绑成同一条证据链、quarantine 被误判为未收敛、缺失的实验条件被过滤成一致，routing Session 未与 Router Agent 的 Directory 记录交叉绑定，以及两份上下文的编号与 ADR-0032 状态未同步。每条都补了确定性反例（见下），其中六条同时做了反向验证。
+
+十七项反向验证全部经**公开路径**触发，各自按预期根因变红后恢复：
+
+1. 成功判定去掉“目标 ref 现在确实指向 new revision” → 只有 ref 不一致的用例仍报成功；
+2. 去掉 definition hash 一致性检查 → 用另一份 definition 解释同一次 run 不再被拒绝；
+3. 去掉 Promotion target ref 一致性检查 → 指向别的 ref 的读取不再被拒绝；
+4. `summarize()` 把 unavailable 当作 0 → 观测数与均值同时变错；
+5. `active_ms` 返回 `wall_ms` → 相位口径用例变红；
+6. 质量 arm 按请求模式分组 → auto 变成第三个 arm，两条用例变红；
+7. 去掉旧 `case.json` 探测 → 旧布局得到 `benchmark-manifest-missing` 而不是明确拒绝；
+8. 实验条件永不报告分歧 → 分歧用例被静默平均；
+9. 去掉取消路径的 `_settle` → 被中断的 attempt 停在 `started`，Budget/Workspace 不收敛；
+10. 把 routing Session 并入 execution group → 两类 Token 不再可分离；
+11. 接受 `UsageQuality.UNKNOWN` 作为 Token 计数 → 报告出现 `total_tokens: 0, quality: unknown`；
+12. 失败节点只读 `outcome.agent_id` → 先真实 `apply_patch`、随后模型调用失败的 coder 得到 `execution_sessions=0`、`execution_tokens=0`；
+13. 去掉 Session 的 `CoreInvariantChecker` → 在成功 attempt 的执行 Session 后追加一条没有对应 start 的 `model/attempt-end`，Token 被伪造放大而 success 仍为 true；
+14. 去掉 Verification/Review/Promotion 的链绑定 → 把 Workflow 里的 review 换成另一个格式合法的 id 后，报告仍然 success=true；
+15. quarantine 不算收敛终态 → 真实 dirty failure 的 `workspaces=2, released=1, quarantined=1` 被报成 `converged=false`；
+16. 实验条件的 verifier 从幸存 attempt 反推而不是从冻结 manifest 证明 → 只有 single 走到 Review 的任务被误报为条件一致；
+17. routing Session 直接采信 ProductTask payload 而不从 Directory 解析 → 把 durable `routing_session_id` 换成同一任务 coder 的合法 Session 后仍 `success=true`，同一组 Token 被两边重复计量。
+
+恢复后源码没有临时补丁残留，定向门禁重新全绿。另有一次通过 CLI 的真实冒烟运行（`--provider scripted`、shipped manifest 的一个任务/一个 arm）证明命令端到端可跑：内置占位 Provider 不修改任何文件，attempt 被如实记为失败（`workflow-node-failed`），Budget 与 Workspace 收敛，退出码为 `0`——因为**度量**完成了。
+
+#### F4 之后仍未完成的部分
+
+F4 **没有**做：真实外部模型验收（本阶段所有 Provider 都是确定性进程内实现，没有读取 `.env`、没有调用外部 API、没有接触真实远端）、F5 的 v0.7.0 RC/打包/发布、重试策略、跨进程 lease、冷恢复、OS sandbox 或默认 Product Profile。Stage E 的恢复边界没有被放宽。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。独立复审已清零 P0/P1/P2，唯一一次最终全量已通过；工作区仍未提交。

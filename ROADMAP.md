@@ -416,10 +416,19 @@ remain the authority for implemented facts.
     and only the coder captures. It writes no `product/task-started` and starts
     nothing: no Workflow execution, capture, verification, approval,
     promotion, real model call or chat surface.
-  - **F3–F5 — not started:** the chat surface and its host commands,
-    Workflow execution and Promotion driven from the product layer, the
-    `traceh eval` rework (replacing it, with old manifests explicitly refused),
-    real-model acceptance, packaging/security checks and the v0.7 release.
+  - **F3 — implemented:** the optional `traceh chat --product-config` surface,
+    its `/task inspect|approve|reject|cancel|abandon` host commands, Workflow
+    execution driven from the product layer and Promotion invoked explicitly by
+    the host after a human approval.
+  - **F4 — implemented:** `traceh eval` reworked into the ProductTask
+    benchmark, replacing the v0.6 runner and refusing old `*/case.json`
+    manifests explicitly. It is a second composition root over the same host and
+    control plane, creates a throwaway source repository and a one-shot local
+    bare target per attempt, and derives every metric from a durable fact source
+    or its own monotonic clock. See
+    [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md).
+  - **F5 — not started:** real-model acceptance, packaging/security checks and
+    the v0.7 release.
 
 Definition of done: parallel coding children do not share one mutable directory and the
 host can promote only an immutable, fixed-suite-verified, human-approved patch while the
@@ -430,7 +439,8 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 [ADR-0029](docs/adr/0029-immutable-patch-artifact-capture.md) and
 [ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md) and
 [ADR-0031](docs/adr/0031-fixed-typed-workflow-above-public-services.md) and
-[ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md).
+[ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md) and
+[ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md).
 
 ## v1.0: Stable plugin platform
 

@@ -1,14 +1,23 @@
-"""Strict JSON host configuration for the optional F3 Chat surface.
+"""Strict JSON host configuration for the Product surfaces.
 
 The file selects names, bounds and local repositories.  It cannot contain a
 Workflow node, edge, prompt or approval value; topology and authority remain in
 the shipped Product contracts.  There is no default Profile and no legacy
 schema fallback.
+
+The schema is split in exactly one place, along the line that actually differs
+between hosts: :data:`PRODUCT_HOST_SETTINGS_KEYS` is the path-free part - who
+runs, under which bounds, verified by which frozen plan - and the rest of
+:func:`load_product_host_file` adds the local repositories and roots a Chat host
+must be told about.  The benchmark host in :mod:`traceh.evaluation` reuses the
+first part verbatim and supplies the second itself, so there is one definition
+of "what a Product Profile is" rather than two that drift.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,18 +38,11 @@ from traceh.api.promotion import (
 from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductHostProfile
 
-_TOP_KEYS = frozenset(
+PRODUCT_HOST_SETTINGS_KEYS = frozenset(
     {
-        "protocol_version",
         "profile_id",
         "approver_id",
-        "provider_id",
-        "model_id",
         "default_mode",
-        "source",
-        "promotion_target",
-        "managed_workspace_root",
-        "cas_root",
         "roles",
         "router",
         "task_budget",
@@ -49,6 +51,29 @@ _TOP_KEYS = frozenset(
         "max_report_chars",
     }
 )
+"""The keys that describe *what a Profile is*, whatever it is bound to.
+
+They are exactly the decisions that must stay identical for two runs to be
+comparable: the three role slots, the Router bounds, the aggregate task Budget,
+the frozen verification plan and the capture limits.  Nothing here names a
+provider, a model, a repository or a root - those are bindings, and every caller
+supplies its own, which is why reusing this part cannot smuggle a path into a
+host that owns its own repositories.
+"""
+
+_LOCATION_KEYS = frozenset(
+    {
+        "protocol_version",
+        "provider_id",
+        "model_id",
+        "source",
+        "promotion_target",
+        "managed_workspace_root",
+        "cas_root",
+    }
+)
+
+_TOP_KEYS = PRODUCT_HOST_SETTINGS_KEYS | _LOCATION_KEYS
 _BUDGET_KEYS = frozenset(
     {
         "max_tokens",
@@ -60,6 +85,16 @@ _BUDGET_KEYS = frozenset(
         "max_processes",
     }
 )
+
+
+@dataclass(frozen=True, slots=True)
+class ProductHostSettings:
+    """The path-free part of a schema-1 Product host configuration."""
+
+    host_profile: ProductHostProfile
+    approver_id: str
+    capture_limits: PatchCaptureLimits
+    max_report_chars: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,29 +111,34 @@ class ProductHostFileConfiguration:
     max_report_chars: int
 
 
-def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
-    """Read schema 1 exactly; malformed or partial input has one stable verdict."""
+def parse_product_host_settings(
+    root: Mapping[str, object],
+    *,
+    provider_id: str,
+    model_id: str,
+    source_id: str,
+    source_revision: str,
+    promotion_target_id: str,
+) -> ProductHostSettings:
+    """Read the shared keys of one already shape-checked configuration object.
+
+    The caller owns its own exact top-level key set, because that is what makes
+    an unknown key a rejection rather than an ignored second instruction
+    channel.  What this function owns is the meaning of the shared keys, so a
+    second host cannot accept a Profile the Chat host would refuse.
+
+    The provider, model and source/target identities are parameters rather than
+    keys.  A Chat host reads them from its file; a host that creates its own
+    throwaway repositories and takes its model from the command line states them
+    directly.  Neither can be talked into a value the other's file supplied.
+    """
 
     try:
-        raw_path = Path(path)
-        with raw_path.open("r", encoding="utf-8") as stream:
-            raw = json.load(stream)
-        root = _object(raw, _TOP_KEYS, "root")
-        if _integer(root["protocol_version"], "protocol_version") != 1:
-            raise ValueError
-        profile_id = _text(root["profile_id"], "profile_id")
-        provider_id = _text(root["provider_id"], "provider_id")
-        model_id = _text(root["model_id"], "model_id")
-        source = _object(
-            root["source"],
-            frozenset({"source_id", "repository", "revision"}),
-            "source",
-        )
-        target = _object(
-            root["promotion_target"],
-            frozenset({"target_id", "repository", "ref"}),
-            "promotion_target",
-        )
+        missing = PRODUCT_HOST_SETTINGS_KEYS - set(root)
+        if missing:
+            raise ProductInputError(
+                "product-host-config-shape-invalid", sorted(missing)[0]
+            )
         roles = _object(
             root["roles"], frozenset({"parent", "reviewer", "coder"}), "roles"
         )
@@ -116,8 +156,8 @@ def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
         profile = ProductTaskProfile(
             profile_version=1,
             default_mode=RequestedTaskMode(_text(root["default_mode"], "default_mode")),
-            provider_id=provider_id,
-            model_id=model_id,
+            provider_id=_text(provider_id, "provider_id"),
+            model_id=_text(model_id, "model_id"),
             parent=role_values["parent"],
             reviewer=role_values["reviewer"],
             coder=role_values["coder"],
@@ -132,16 +172,59 @@ def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
                 ),
             ),
             task_budget=_budget(root["task_budget"], "task_budget"),
+            source_id=_text(source_id, "source.source_id"),
+            source_revision=_text(source_revision, "source.revision"),
+            verification_plan_id=verification.plan_id,
+            promotion_target_id=_text(promotion_target_id, "target.target_id"),
+        )
+        return ProductHostSettings(
+            host_profile=ProductHostProfile(
+                _text(root["profile_id"], "profile_id"), profile, verification
+            ),
+            approver_id=_text(root["approver_id"], "approver_id"),
+            capture_limits=_capture_limits(root["capture_limits"]),
+            max_report_chars=_positive(root["max_report_chars"], "max_report_chars"),
+        )
+    except ProductInputError:
+        raise
+    except Exception:
+        raise ProductInputError("product-host-config-invalid", "product_config") from None
+
+
+def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
+    """Read schema 1 exactly; malformed or partial input has one stable verdict."""
+
+    try:
+        raw_path = Path(path)
+        with raw_path.open("r", encoding="utf-8") as stream:
+            raw = json.load(stream)
+        root = _object(raw, _TOP_KEYS, "root")
+        if _integer(root["protocol_version"], "protocol_version") != 1:
+            raise ValueError
+        source = _object(
+            root["source"],
+            frozenset({"source_id", "repository", "revision"}),
+            "source",
+        )
+        target = _object(
+            root["promotion_target"],
+            frozenset({"target_id", "repository", "ref"}),
+            "promotion_target",
+        )
+        settings = parse_product_host_settings(
+            root,
+            provider_id=_text(root["provider_id"], "provider_id"),
+            model_id=_text(root["model_id"], "model_id"),
             source_id=_text(source["source_id"], "source.source_id"),
             source_revision=_text(source["revision"], "source.revision"),
-            verification_plan_id=verification.plan_id,
             promotion_target_id=_text(target["target_id"], "target.target_id"),
         )
         source_path = _absolute(source["repository"], "source.repository")
         target_path = _absolute(target["repository"], "target.repository")
+        profile = settings.host_profile.profile
         return ProductHostFileConfiguration(
-            host_profile=ProductHostProfile(profile_id, profile, verification),
-            approver_id=_text(root["approver_id"], "approver_id"),
+            host_profile=settings.host_profile,
+            approver_id=settings.approver_id,
             managed_workspace_root=_absolute(
                 root["managed_workspace_root"], "managed_workspace_root"
             ),
@@ -153,8 +236,8 @@ def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
                 repository_path=target_path,
                 target_ref=_text(target["ref"], "target.ref"),
             ),
-            capture_limits=_capture_limits(root["capture_limits"]),
-            max_report_chars=_positive(root["max_report_chars"], "max_report_chars"),
+            capture_limits=settings.capture_limits,
+            max_report_chars=settings.max_report_chars,
         )
     except ProductInputError:
         raise
@@ -302,4 +385,10 @@ def _absolute(value: object, field: str) -> Path:
     return path
 
 
-__all__ = ["ProductHostFileConfiguration", "load_product_host_file"]
+__all__ = [
+    "PRODUCT_HOST_SETTINGS_KEYS",
+    "ProductHostFileConfiguration",
+    "ProductHostSettings",
+    "load_product_host_file",
+    "parse_product_host_settings",
+]

@@ -380,12 +380,24 @@ traceh run <workspace> "任务" --plugin my.plugin.id --plugin-verifier my.verif
 
 ## 运行内置 Benchmark
 
-```bash
-PYTHONPATH=src python -m traceh.cli.main eval benchmarks/basic \
-  --output /tmp/traceh-eval
+`traceh eval` 是**唯一**的 benchmark 通路。它跑的就是 `traceh chat --product-config` 那条 ProductTask 主线：真实确认、固定 Workflow、managed Git worktree、不可变 Patch Artifact、冻结 Verifier、Review 和 Git ref compare-and-swap 推广。
+
+```powershell
+PYTHONPATH=src python -m traceh.cli.main eval benchmarks/product_v1 `
+  --output <一个尚不存在的证据目录> `
+  --provider openai-compatible --base-url <url> --model <model>
 ```
 
-每个案例都会生成 `report.json`、`report.md`、复制后的 Workspace 和持久化 Trace。只有外部 Verifier 通过且协议不变量保持干净，案例才算成功。
+- `--output` 必须尚不存在；每次 attempt 在 `attempts/<NNN>/` 下留下自己的源仓库、一次性 bare target、事件流、worktree 和 CAS，运行结束后写 `report.json` 与 `report.md`。失败或取消不会删除任何证据：attempt「干净」的含义是所有 owner 已收敛，而不是证据被删掉。
+- Manifest（`benchmarks/product_v1/benchmark.json`，schema 1、精确键集）只能命名 Profile、三个角色槽位与 Budget、Router 上界、任务总 Budget、冻结 VerificationPlan、capture 上限、arms 和 tasks。它**不能**命名仓库、推广目标、provider、model、节点、边、Agent 数量或 approval digest——每次 attempt 的源仓库和一次性本地 bare target 都由 Runner 自己创建，因此这条命令在结构上无法接触真实远端。
+- provider/model 来自 `--provider` / `--model`（或 `TRACEH_PROVIDER` / `TRACEH_MODEL`），一次运行的所有 arm 使用同一个模型族，报告会记录它是哪一个。
+- 报告按**解析后**的模式聚合：`auto` 的结果计入 Router 实际选择的那个 arm，`auto` 只单独报告路由是否严格解析成功、路由 Token 和路由耗时；它不是第三个质量 arm。
+- 只有一次观测的 arm 会在两份报告里标注 `single observation`；聚合只有计数、总和、最小、最大和均值，不声称统计显著性。
+- `approval wait` 单独计时并从 `active elapsed` 中扣除；本 Benchmark 使用 `approval_policy: programmatic-immediate`（宿主对自己的一次性本地目标立即批准），两份报告都会写明。普通 Chat 仍然必须由人执行 `/task approve`。
+- 无法从持久事实可靠推出的指标报告为 *unavailable*，绝不填 0。`UsageQuality.UNKNOWN` 的用量报告会让该 Session 的 Token 总数变成 unavailable。
+- 退出码回答的是「度量是否完成」：全部 attempt 可度量且每个任务的实验条件一致时为 `0`，否则为 `4`。某个编码任务失败是数据，不是工具错误。
+
+v0.6 的 `*/case.json` 布局被**明确拒绝**（`benchmark-legacy-manifest-rejected`），不做升级、不留适配层，也不会删除旧数据。完整设计决定见 [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md)，Benchmark 自身说明见 [`benchmarks/product_v1/README.md`](benchmarks/product_v1/README.md)。
 
 ## 使用 OpenAI-Compatible 接口
 
@@ -588,7 +600,7 @@ src/traceh/product      v0.7-F1–F3 ProductTask 事实、固定装配与可选 
 src/traceh/llm          Provider Registry 和 Adapter
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
-src/traceh/evaluation   确定性 Benchmark Runner
+src/traceh/evaluation   v0.7-F4 ProductTask Benchmark：manifest、一次性仓库、durable 指标与报告
 src/traceh/evolution    L2 验证、L3 对比与 L4 人工批准/推广/回滚控制面
 examples/plugins        可独立构建的示例、Python Quality 与 Plugin Creator Distribution
 tests                   契约、恢复、取消、插件和端到端测试
@@ -605,7 +617,7 @@ traceh inspect
 traceh replay
 traceh compact
 traceh sessions
-traceh eval
+traceh eval             # ProductTask Benchmark；--output 必须尚不存在，度量不完整时退出码 4
 traceh plugins list     # 只读元数据，不 import 插件
 traceh plugins inspect  # 同上，针对单个插件
 traceh plugins doctor   # 会 import、setup、health check，随后立即 dispose
@@ -663,7 +675,7 @@ python -m pytest -o addopts='' -q
 python -m ruff check src tests
 ```
 
-F3 已完成独立 Sol 复审和最终门禁：全仓 2344 收集 / 2339 通过 / 5 跳过，退出码 0；F3 与 Chat/CLI/Product/Workspace 相邻的离线定向门禁为 273 通过、2 跳过，确定性真实本地 Git 端到端与配置专测共 16 项通过。首次全量暴露两条停留在 D2 边界的旧 Promotion 架构守卫，现已收窄成逐文件、模块和符号的精确 F3 Product orchestration/CLI composition-root 依赖表，并经反向验证后由确认全量证明全绿。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F2 历史检查点为 2326/2321/5，F1 为 2253/2248/5，v0.6.0 发布基线仍是 1707/1706/1。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback。v0.6 RC 又使用真实 OpenAI-compatible 模型完成 parent → spawn → send → wait → collect → stop；同一 child Session 随后显式恢复并完成第二个真实 Turn，独立取消路径收敛为 durable `cancelled`。两份 Session 都没有开放 Turn/Step，不变量和请求重建违规均为 0。详见 [v0.6.0 验证记录](docs/validation-v0.6.0.md)。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。
+F4 已完成独立复审和唯一一次最终门禁：全仓 2395 收集 / 2390 通过 / 5 跳过，退出码 0，耗时 28:04；F4 定向测试 51 项、Product/架构相邻回归 304 项、Budget/Workspace/Artifact/Promotion/Workflow 相邻回归 325 项通过且 2 项跳过、CLI 回归 519 项通过且 1 项跳过。两轮复审发现的 5 个 P1 和 2 个 P2 均已用确定性公开路径反例修复，其中 6 项完成逐项反向验证；compileall、修改范围 Ruff、文档 QA、`git diff --check` 均通过，四个受保护核心文件零 diff。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 历史检查点为 2344/2339/5，F2 为 2326/2321/5，F1 为 2253/2248/5，v0.6.0 发布基线仍是 1707/1706/1。仓库外干净 HEAD 克隆已跑通公开 L2 的 13/13 门禁与完整核心回归，并让公开 L3 命令在 Python Quality v1 固定任务中得到 baseline 2/3、candidate 3/3、`improved`、0 regressions、0 不变量/请求重建违规；同一条真实链路随后完成 L4 非变更 review、精确摘要 apply、目标 `plugins list/doctor` 与显式 rollback。v0.6 RC 又使用真实 OpenAI-compatible 模型完成 parent → spawn → send → wait → collect → stop；同一 child Session 随后显式恢复并完成第二个真实 Turn，独立取消路径收敛为 durable `cancelled`。两份 Session 都没有开放 Turn/Step，不变量和请求重建违规均为 0。详见 [v0.6.0 验证记录](docs/validation-v0.6.0.md)。独立 Python Quality 插件另有 17 项契约测试；独立 Plugin Creator Skill 另有 10 项。
 
 其中 74 项来自第三方复审确认的 5 个阻断项的两轮修复：Owned Task 的异常所有权（不再出现 `Task exception was never retrieved`，取回后**不保留**异常对象）、`AgentRuntime.dispose()` 的单任务收敛（取消不再让插件永远卸载不掉）、Session 插件身份按 PEP 440 **对象**比较（`1.0` 与 `1.0.0` 等价，`1.0` 与 `1.0.1` 仍拒绝；键**缺席**是 v0.3 会话，显式 `null` 是损坏数据）、保留 metadata 键 `traceh_plugins` 按**出现**拒绝、以及 `traceh run` 的 `create_session` 纳入 `try/finally`（其测试真正不读取开发者 `.env`）。
 

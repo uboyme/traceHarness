@@ -2,6 +2,91 @@
 
 ## Unreleased
 
+### v0.7-F4: `traceh eval` is the ProductTask benchmark
+
+- Replaced the v0.6 single-Agent scripted benchmark with one that drives the
+  real ProductTask mainline: a confirmed proposal, the fixed Workflow, a managed
+  Git worktree, an immutable Patch Artifact, the frozen verifier, a Review and a
+  Git ref compare-and-swap promotion. `traceh.evaluation` assembles the same
+  `ProductChatHost` the Chat host assembles and drives the same control plane;
+  there is no second runner, task state machine or definition of success.
+- The v0.6 `*/case.json` layout is now refused with a stable
+  `benchmark-legacy-manifest-rejected`, without reading any of it. There is no
+  adapter, no dual reader and no automatic rewrite or deletion of old data.
+- Added a schema-1 `benchmark.json` with an exact key set. It names the Profile,
+  role slots and Budgets, Router bounds, the aggregate task Budget, the frozen
+  VerificationPlan, capture limits, arms and tasks. It cannot name a repository,
+  a promotion target, a provider, a model, a node, an edge, an Agent count or an
+  approval digest: each attempt's source repository and one-shot local bare
+  target are created by the runner, so the command structurally cannot reach a
+  real remote.
+- The requirement and the requested mode come from the manifest and are passed
+  to the host control plane directly. A host-frozen, tool-free requester
+  provider produces only the durable Session evidence `product/task-opened`
+  requires, so a candidate can never author the question it is scored on.
+- Metrics are derived from the fact source that owns each one: success from a
+  ProductTask terminal plus a Workflow terminal plus a passed Review plus a
+  Promotion receipt whose new revision is what the target ref actually holds;
+  routing and execution tokens from the Sessions the routing fact and the
+  Workflow node outcomes name; steps, tool calls and cumulative work duration
+  from durable Session facts; Budget outcome from the ledger scoped to the
+  task's ownership subtree. Active, approval-wait and wall intervals come from
+  the runner's own monotonic clock and are labelled as the one non-durable
+  measurement.
+- A metric the facts cannot support is reported as unavailable rather than zero,
+  including a `UsageQuality.UNKNOWN` usage report, which makes that Session's
+  token total unavailable instead of contributing a misleading `0`.
+- A **failed** AgentTask node records no `agent_id`, so the role's Agent is
+  derived from run and node by the executor's own rule and cross-checked against
+  the outcome. Reading the terminal payload alone dropped every token a role
+  spent before it failed and aggregated a confident zero for real work.
+- Every measured Session is checked with the existing `CoreInvariantChecker`
+  before any number is taken from it, so a stream that merely looks like a
+  Session cannot inflate a token count.
+- The Workflow Verification outcome, the ProductTask `review_id` and the
+  Promotion receipt must describe one Review, and the promotion's approval
+  digest must be that Review's expected digest. Read independently, three
+  unrelated well-formed records still read as "verified, approved, promoted".
+- The routing Session is resolved from the Agent Directory record of the Router
+  Agent and must match the one `product/task-routed` recorded. Trusting the pair
+  in the payload let a routing identity point at a role Session of the same
+  task, billing one set of tokens to both the routing and execution metrics.
+- Workspace quarantine is reported as a converged terminal, not as failure to
+  converge: the Product resource contract quarantines a dirty worktree on
+  failure or cancellation to preserve the captured bytes. Convergence now
+  excludes only records still `provisional` or `attached`, exposed as `live`.
+- The shared verifier is proved from the frozen manifest instead of inferred
+  from whichever attempts reached a Review, and a field no attempt established
+  is listed in `unproven_fields` rather than filtered into apparent agreement.
+- `auto` is not a third quality arm: each auto attempt is aggregated into the arm
+  its Router resolved to, and auto is reported separately only as strict-parse
+  outcome, routing tokens and routing elapsed. An arm with one observation is
+  labelled `single observation`, and aggregation claims no significance.
+- Approval is `programmatic-immediate` and labelled in both outputs, so active
+  elapsed measures work rather than how long a person was away. It grants no
+  authority outside the benchmark; ordinary Chat still requires `/task approve`.
+- Each task's shared `requirement_digest`, `profile_digest`,
+  `source_base_revision` and `verifier_definition_digest` are recorded across
+  arms and any divergence is named, so "single and multi ran the same
+  experiment" is checked rather than assumed.
+- `traceh eval` now requires `--output` and refuses an existing directory, takes
+  `--provider`/`--model`/`--base-url`/`--api-key-env`/`--script`, and exits `4`
+  when the measurement is incomplete rather than when a coding task fails.
+  Failure and cancellation converge the existing owners and record an honest
+  terminal; no evidence directory is deleted.
+- `parse_product_host_settings` now owns the shared half of the Product host
+  schema so the Chat host file and the benchmark manifest cannot disagree about
+  what a Profile is; `ProductChatHost.control` exposes the host-side operations
+  the console surface renders. Design decisions are recorded in
+  [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md).
+- Independent F4 review is complete: two review rounds found five P1 and two P2
+  defects, all fixed with deterministic public-path counter-examples, including
+  six per-fix reverse verifications. The single final full gate collected 2395
+  tests and finished with 2390 passed, 5 skipped, exit code 0 in 28:04;
+  compileall, changed-scope Ruff, documentation QA and `git diff --check` also
+  passed, and the four protected core files have zero diff. Real external-model
+  acceptance and all F5 release work remain outstanding.
+
 ### v0.7-F3: unified Chat ProductTask execution and approval
 
 - A Proposal may now carry an explicit `single`, `multi` or `auto` mode when

@@ -81,8 +81,8 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 | F0 | 冻结统一 Chat 产品合同、DTO、事件、Profile、Assembly 和架构守卫 | 已完成并提交 |
 | F1 | 实现 ProductTask append-only 事实层、严格 replay、幂等写入与派生视图 | 已完成，独立审查与最终门禁通过 |
 | F2 | 实现严格 Router、Profile Registry 和 Product Assembly | 已完成；独立审查与最终全量通过 |
-| F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 已实现；独立复审与最终全量通过，待提交 |
-| F4 | 重构现有 `traceh eval`，完成 single/multi/auto 的小规模真实度量 | 未开始 |
+| F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 已提交；独立复审与最终全量通过 |
+| F4 | 重构现有 `traceh eval`，完成 single/multi/auto 的小规模真实度量 | 已实现；独立复审已清零 P0/P1/P2，唯一一次最终全量通过，待提交 |
 | F5 | v0.7 RC、安全/打包门禁、版本、tag 与 GitHub Release | 未开始 |
 
 ## 4. 已完成基础阶段的固定效果
@@ -231,6 +231,19 @@ F3 验收通过后才进入性能度量；一次真实模型运行不能证明�
 | 预算结果 | Ledger reservation/charge/settlement facts |
 
 报告只描述观察结果和取舍，不让模型自评“变好了”。
+
+### F4 当前交付
+
+- `traceh.evaluation` 是与 `traceh.cli` 平级的第二个 composition root：它调用同一个 `build_product_chat_host()`、驱动同一个 `ProductTaskControlPlane`，没有第二个任务状态机、调度器、Workflow 或“成功”的第二个定义。为此 `ProductChatHost` 公开 `control`，Product host 配置 schema 的共享一半收敛到 `parse_product_host_settings()`。
+- `benchmark.json` 是 schema 1 + 精确键集；它不能命名仓库、推广目标、provider、model、节点、边、Agent 数量或 approval digest。每次 attempt 的源仓库与一次性本地 bare target 由 Runner 从任务 `initial/` 树自建，因此“不接触真实远端”是结构性质。provider/model 来自 `--provider`/`--model`。
+- 需求与模式来自 manifest 并直接交给控制面；一个宿主冻结、无 Tool 的 requester Provider 只负责产生 `product/task-opened` 需要的真实 Session 证据。
+- 指标全部落在上表口径上；推不出来的报告为 `unavailable` 而不是 0，`UsageQuality.UNKNOWN` 会让该 Session 的 Token 总数变成 unavailable。Session 报告的 Token 与 Ledger 结算的 Token 并列呈现，不互相冒充。
+- 质量聚合按 resolved mode 分组，auto 只单列路由结果与开销；`n=1` 标注 `single observation`；每个任务跨 arm 的 requirement/profile/source revision/verifier 摘要被核对并在分歧时点名。
+- 失败与取消通过同一控制面收敛既有 owner 再写终态；证据目录不删。退出码回答“度量是否完成”。
+- 旧 `*/case.json` 布局稳定拒绝（`benchmark-legacy-manifest-rejected`），不读取其内容、不升级、不删除用户旧数据。
+- 设计决定记录在 [`docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md`](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)，工程事实见两份上下文的 20.30 / 20.24。
+
+尚未完成：真实外部模型验收，以及 F5 的全部内容。
 
 ## 9. F5 — v0.7 RC 与发布
 

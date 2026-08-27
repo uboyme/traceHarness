@@ -167,14 +167,40 @@ CLI_PROMOTION_IMPORTS = {
 }
 
 
+EVALUATION_PROMOTION_IMPORTS = {
+    "attempt.py": {
+        "traceh.promotion.local_git": {"LocalBareGitPromotionTargets"},
+    },
+    "manifest.py": {
+        "traceh.promotion.models": {"verifier_definition_digest"},
+    },
+    "metrics.py": {
+        "traceh.promotion.models": {"expected_approval_digest"},
+        "traceh.promotion.projection": {"PromotionLedgerReader"},
+    },
+}
+"""F4's benchmark host is a composition root, and a reader of its own evidence.
+
+It selects the concrete one-shot bare target for each attempt, exactly as
+``cli/main.py`` selects one for Chat, and it reads the ledger back to decide
+whether a promotion really happened. The two pure digest functions are reused
+rather than reimplemented, for the same reason F2 reuses them: a benchmark that
+computed its own answer to "which verifier" or "which approval covers this
+Review" would be a second answer that drifts. It owns no Review, Approval or
+Promotion *operation*: the whole run goes through the Product control plane, and
+the symbol sets here are what keeps that true as the stage advances.
+"""
+
+
 def test_only_declared_orchestration_seams_import_the_promotion_domain() -> None:
-    """Promotion remains behind Workflow, Product and one composition root.
+    """Promotion remains behind Workflow, Product and two composition roots.
 
     Runtime/Agent/Tool owners still know nothing about Promotion. Product is an
-    F3 orchestration layer, while ``cli/main.py`` only chooses the concrete
-    target resolver and translates its stable error at the explicit opt-in
-    assembly boundary. Every permitted concrete import is pinned by file and
-    symbol; all other modules must have an empty dependency set.
+    F3 orchestration layer, while ``cli/main.py`` and F4's ``evaluation/`` only
+    choose the concrete target resolver, read the resulting ledger and translate
+    stable errors at their explicit assembly boundaries. Every permitted concrete
+    import is pinned by file and symbol; all other modules must have an empty
+    dependency set.
     """
 
     package = Path(agent_runtime_module.__file__).parent.parent
@@ -200,6 +226,12 @@ def test_only_declared_orchestration_seams_import_the_promotion_domain() -> None
             continue
         if source.parent == package / "cli":
             assert imports == CLI_PROMOTION_IMPORTS.get(source.name, {}), (
+                source.name,
+                imports,
+            )
+            continue
+        if source.parent == package / "evaluation":
+            assert imports == EVALUATION_PROMOTION_IMPORTS.get(source.name, {}), (
                 source.name,
                 imports,
             )

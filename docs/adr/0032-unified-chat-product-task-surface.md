@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0-F5 implemented and v0.7.0 released; v0.7.1 authority correction in progress**
+- Status: Accepted; **F0-F5 implemented; v0.7.0 and the v0.7.1 authority correction released**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -48,12 +48,14 @@ implemented in v0.7-F4 and recorded in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md).
 
 Real-provider RC grids, final review, packaging and offline installation have
-since exercised this tree; annotated `v0.7.0` and its GitHub Release exist.
+since exercised this tree; annotated `v0.7.0` and `v0.7.1` GitHub Releases exist.
 [ADR-0034](0034-separate-product-token-budget-and-request-output-limit.md)
 records the released cumulative-Token/per-request-output split. A later
 independent review found that the model's confirmation suggestion still acted
 as start authority; v0.7.1 corrects that host boundary without changing the
-ProductTask event schema, Workflow, Approval or Promotion authority.
+ProductTask event schema, Workflow, Approval or Promotion authority. The
+correction and its generic cancellation/target-venv companions are released in
+`v0.7.1`.
 
 ## Context
 
@@ -736,5 +738,5 @@ Attempt/Step/Turn repeated-cancellation convergence; no Product import or state
 enters it. F4 benchmark work is implemented separately in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md). F5 release
 stabilization, ADR-0034's Token-bound split, final review, packaging and release
-are complete in annotated `v0.7.0`. The `0.7.1` maintenance candidate is not yet
-committed, tagged or released.
+are complete in annotated `v0.7.0`. The bounded maintenance corrections are
+complete in annotated `v0.7.1` without beginning v0.8 or v0.9.

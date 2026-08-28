@@ -1,4 +1,4 @@
-# TraceHarness Py v0.7.1 (unreleased)
+# TraceHarness Py v0.7.1
 
 TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 再把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
@@ -632,10 +632,9 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.7.1 维护候选与 v0.7 已发布能力
+## v0.7.1 维护版与 v0.7 已发布能力
 
-最新已发布版本仍是 `v0.7.0`；当前工作树的单一版本源已推进到尚未发布的
-`0.7.1`。这个维护候选只修三条已复现边界：ProductTask 开始前必须由终端用户
+最新已发布版本是 `v0.7.1`。这个维护版只修三条已复现边界：ProductTask 开始前必须由终端用户
 对屏幕上精确 task 输入 `START`，模型的确认 Tool Call 只能请求这次宿主提示；
 AgentLoop 的取消收尾由一个 owned Task 顺序写完 Attempt/Step/Turn，重复 Ctrl+C
 不能让调用方提前返回；L4 在 `-I -S` 下检查目标 venv 时显式使用 `venv`
@@ -721,6 +720,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [测试策略](docs/testing.md)
 - [v0.6.0 验证记录](docs/validation-v0.6.0.md)
 - [v0.7.0 发布验证记录](docs/validation-v0.7.0.md)
+- [v0.7.1 发布验证记录](docs/validation-v0.7.1.md)
 - [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明

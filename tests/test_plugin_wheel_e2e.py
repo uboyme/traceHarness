@@ -172,8 +172,8 @@ def test_wheels_install_together_in_a_clean_environment(e2e_report: dict) -> Non
     versions = e2e_report["installed_versions"]
     assert versions["traceharness-py"] == __version__
     assert versions["traceh-example-skill-plugin"] == "0.1.0"
-    assert versions["traceh-plugin-creator-skill-plugin"] == "0.2.0"
-    assert versions["traceh-python-quality-plugin"] == "0.2.0"
+    assert versions["traceh-plugin-creator-skill-plugin"] == "0.2.1"
+    assert versions["traceh-python-quality-plugin"] == "0.2.1"
     assert versions["packaging"], "packaging must be installed from the offline wheelhouse"
 
 
@@ -242,7 +242,7 @@ def test_python_quality_plugin_runs_tool_policy_and_named_verifier(
     assert quality["prompt_contains_section"] is True
     assert quality["snapshot_plugins"] == [
         {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
-        {"plugin_id": "traceh.python.quality", "version": "0.2.0"},
+        {"plugin_id": "traceh.python.quality", "version": "0.2.1"},
     ]
     assert quality["invariant_violations"] == []
     assert quality["reconstruction_violations"] == []
@@ -263,7 +263,7 @@ def test_plugin_creator_skill_runs_through_the_existing_mainline(e2e_report: dic
     assert creator["workspace_entries"] == []
     assert creator["snapshot_plugins"] == [
         {"plugin_id": "traceh.core", "version": e2e_report["traceh_version"]},
-        {"plugin_id": "traceh.plugin.creator", "version": "0.2.0"},
+        {"plugin_id": "traceh.plugin.creator", "version": "0.2.1"},
     ]
     assert creator["invariant_violations"] == []
     assert creator["reconstruction_violations"] == []

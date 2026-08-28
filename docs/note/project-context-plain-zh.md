@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布仍是 **`v0.7.0`**；当前工作树已经把唯一版本源推进到尚未发布的 **`0.7.1`** 维护候选。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，只修三条已经真实复现的边界（见 20.26）：模型说“用户像是同意了”不能直接开任务，终端用户还要对屏幕上的精确 task 输入 `START`；AgentLoop 取消时必须把 Attempt、Step、Turn 三个结束事实写完再返回，连续 Ctrl+C 也不能逃逸；L4 在 `-I -S` 下检查目标 venv 时必须明确使用 venv 自己的 sysconfig scheme。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的独立复审、最终全量、打包、提交、tag 和发布都还没做。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布仍是 **`v0.7.0`**；当前工作树已经把唯一版本源推进到尚未发布的 **`0.7.1`** 维护候选。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，只修三条已经真实复现的边界（见 20.26）：模型说“用户像是同意了”不能直接开任务，终端用户还要对屏幕上的精确 task 输入 `START`；AgentLoop 取消时必须把 Attempt、Step、Turn 三个结束事实写完再返回，连续 Ctrl+C 也不能逃逸；L4 在 `-I -S` 下检查目标 venv 时必须明确使用 venv 自己的 sysconfig scheme。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的最终全量复验、打包、发布提交、tag 和发布都还没做。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -72,7 +72,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。v0.7.1 的最终独立复审、唯一一次全量和打包尚未运行。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
+| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。第一次发布全量得到 2388 通过、5 跳过、1 失败、17 error，红灯全来自两个示例插件仍写 `<0.7`；修成各自 0.2.1 的一致 Wheel/Manifest 范围后，插件自身 10+17 项和真实四 Wheel E2E 18 项通过。最终全量复验与打包还没运行。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -3027,4 +3027,6 @@ JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际�
 
 现在只要旁边有 `pyvenv.cfg`，探针就明确选择标准 `venv` scheme，再检查算出来的 `purelib/platlib` 确实留在这个 venv 里面、目录也真实存在。`-I -S` 没删，`site` 没打开，候选仍不 import。没有 venv 时才继续使用目标 base interpreter 的默认布局。
 
-三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。当前还没做独立复审、最终全量、打包、提交、tag、push 或发布，所以最新正式版本仍是 `v0.7.0`。
+第一次准备发布时，全量测试还抓出了一条旧版本留下的包装问题：Plugin Creator 和 Python Quality 虽然都是仓库里的真实独立 Wheel，但它们的安装依赖和运行时 Manifest 还写着“只支持 `<0.7`”。所以核心已经是 0.7.1 时，pip 正确拒绝把四个 Wheel 装在一起，L2 也正确拒绝拿这个 Plugin Creator 当候选。这不是 pip 或验证器太严格，而是插件自己的元数据忘了跟着已兼容的公开 SDK 前进。现在两个插件都升到 `0.2.1`，各自的 Wheel 依赖和 Manifest 完全一致并覆盖 0.7；Creator 自己可装在 0.6/0.7，但它教 Agent 新建的候选只写当前 `>=0.7,<0.8`，不提前猜 v0.8 会不会兼容。旧范围已经真实复现过 pip `ResolutionImpossible` 和 L2 fail closed，修正后插件自身测试和真实离线四 Wheel 测试都重新通过。
+
+三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。第一次发布全量已经把插件旧范围问题抓出来并由真实 Wheel 测试证明修好；最终全量复验、打包、发布提交、tag、push 或发布仍未执行，所以最新正式版本仍是 `v0.7.0`。

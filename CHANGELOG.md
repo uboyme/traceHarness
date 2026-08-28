@@ -20,6 +20,11 @@
   `pyvenv.cfg`. Resolved package roots must remain inside that venv, preventing
   distro-specific Python 3.13 default schemes from redirecting inspection to a
   nonexistent `local/.../dist-packages` tree.
+- The release gate found that the independently built Plugin Creator and Python
+  Quality examples still excluded every 0.7 core in both Wheel metadata and
+  `PluginManifest`. They are now `0.2.1`, with matching `<0.8` runtime ranges;
+  the Creator package remains installable on 0.6/0.7 while its authoring guide
+  generates new candidates for the current `>=0.7,<0.8` contract.
 - Added deterministic public-path counter-examples for a model confirming a
   user's refusal, three separately gated cancellation terminals plus finalizer
   failure, and a distro-biased sysconfig default exercised through

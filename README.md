@@ -639,7 +639,9 @@ traceh doctor
 对屏幕上精确 task 输入 `START`，模型的确认 Tool Call 只能请求这次宿主提示；
 AgentLoop 的取消收尾由一个 owned Task 顺序写完 Attempt/Step/Turn，重复 Ctrl+C
 不能让调用方提前返回；L4 在 `-I -S` 下检查目标 venv 时显式使用 `venv`
-sysconfig scheme，并拒绝逃出目标前缀的包目录。它没有增加 retry/fallback、
+sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修正了两个独立示例
+插件遗留的 `<0.7` 元数据：Plugin Creator 与 Python Quality `0.2.1` 的 Distribution
+依赖和 Manifest 现在都覆盖 0.7，真实 Wheel 可以与 0.7.1 核心离线共存。它没有增加 retry/fallback、
 第二个 Workflow/Benchmark、默认 Product Profile 或新的模型权限。
 
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；

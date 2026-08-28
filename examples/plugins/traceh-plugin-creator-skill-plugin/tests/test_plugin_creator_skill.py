@@ -40,7 +40,7 @@ def test_manifest_and_entry_point_use_one_identity() -> None:
     assert entry_points == {
         PLUGIN_ID: "traceh_plugin_creator_skill:PluginCreatorSkillPlugin"
     }
-    assert project["project"]["dependencies"] == ["traceharness-py>=0.6,<0.7"]
+    assert project["project"]["dependencies"] == ["traceharness-py>=0.6,<0.8"]
 
 
 @pytest.mark.parametrize(

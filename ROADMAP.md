@@ -497,6 +497,9 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   before the public Turn returns, even under repeated cancellation.
 - Inspect an explicitly selected target venv with an explicit `venv` sysconfig
   scheme under `-I -S`, independent of distro default-scheme patches.
+- Repair the two independently built example plugins' Distribution/Manifest
+  compatibility ranges exposed by the 0.7.1 offline Wheel gate; their patch
+  releases support the existing 0.7 SDK without promising v0.8 compatibility.
 - Keep v0.8/v0.9 planning out of this patch release. Final independent review,
   the single full test gate, packaging, tag and release remain separately
   gated.

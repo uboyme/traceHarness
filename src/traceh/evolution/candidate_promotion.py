@@ -2053,17 +2053,29 @@ executable = Path(sys.executable).absolute()
 venv_config = executable.parent.parent / "pyvenv.cfg"
 if venv_config.is_file():
     target_prefix = venv_config.parent.resolve()
+    target_paths = sysconfig.get_paths(
+        scheme="venv",
+        vars={"base": str(target_prefix), "platbase": str(target_prefix)},
+    )
 else:
     target_prefix = Path(sys.base_prefix).resolve()
-target_paths = sysconfig.get_paths(
-    vars={"base": str(target_prefix), "platbase": str(target_prefix)}
-)
-for candidate_path in {
+    target_paths = sysconfig.get_paths(
+        vars={"base": str(target_prefix), "platbase": str(target_prefix)}
+    )
+package_roots = []
+for raw_root in (
     target_paths.get("purelib"),
     target_paths.get("platlib"),
-}:
-    if candidate_path and candidate_path not in sys.path:
-        sys.path.append(candidate_path)
+):
+    if raw_root:
+        root = Path(raw_root).resolve()
+        if venv_config.is_file() and not root.is_relative_to(target_prefix):
+            raise SystemExit(15)
+        if root not in package_roots:
+            package_roots.append(root)
+        rendered_root = str(root)
+        if rendered_root not in sys.path:
+            sys.path.append(rendered_root)
 
 def canonical(name):
     return re.sub(r"[-_.]+", "-", name).lower()
@@ -2101,12 +2113,6 @@ for installed in metadata.distributions():
     if len(distributions) > max_distributions:
         raise SystemExit(14)
 distributions.sort(key=lambda item: item["name"])
-package_roots = []
-for raw_root in (target_paths.get("purelib"), target_paths.get("platlib")):
-    if raw_root:
-        root = Path(raw_root).resolve()
-        if root not in package_roots:
-            package_roots.append(root)
 environment_digest = hashlib.sha256()
 environment_count = 0
 environment_total = 0

@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0-F4 implemented, F5 release stabilization in progress**
+- Status: Accepted; **F0-F5 implemented and v0.7.0 released; v0.7.1 authority correction in progress**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -35,8 +35,10 @@ approves nothing, promotes nothing and calls no model.
 
 F3 has since implemented the optional product host above the existing Chat,
 Workflow, Agent, Budget, Workspace, Artifact and Promotion services. A model
-may only leave an ephemeral proposal/confirmation action for the current Turn;
-after that Turn closes, the host replays the durable Session evidence. The
+may only leave an ephemeral proposal/confirmation suggestion for the current
+Turn; after that Turn closes, the host replays the durable Session evidence and
+an exact task-bound terminal prompt requires the host user to type `START`.
+The model Tool Call cannot supply or bypass that capability gesture. The
 Product controller starts the fixed Workflow, pauses at its Approval barrier,
 and only a later host command may call Promotion. Restart continuation begins
 from a task id and fresh domain replays, not from the old Chat process.
@@ -45,13 +47,13 @@ The `traceh eval` benchmark rework this ADR anticipated in section 15 is now
 implemented in v0.7-F4 and recorded in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md).
 
-Real-provider RC grids have since exercised this tree, but the release
-stabilization they exposed is still in progress. In particular,
+Real-provider RC grids, final review, packaging and offline installation have
+since exercised this tree; annotated `v0.7.0` and its GitHub Release exist.
 [ADR-0034](0034-separate-product-token-budget-and-request-output-limit.md)
-separates cumulative Token authority from the per-request output bound, so the
-new frozen Profile conditions still require their own acceptance run. Final
-review, packaging, version `0.7.0`, tag and release do not yet exist; the package
-version remains `0.6.0`.
+records the released cumulative-Token/per-request-output split. A later
+independent review found that the model's confirmation suggestion still acted
+as start authority; v0.7.1 corrects that host boundary without changing the
+ProductTask event schema, Workflow, Approval or Promotion authority.
 
 ## Context
 
@@ -143,20 +145,29 @@ a `turn/end` written over an open Step is not confirmation.
 
 `ProposalConfirmation` carries the proposal id plus the confirming Session, Turn
 and message, and nothing else. Mode, budgets, source, verification plan and
-promotion target are already bound in the preflight, so the low-privilege
-operation a model may perform on a user's behalf cannot become a high-privilege
-one by gaining an argument - but an id alone cannot show that a person agreed,
-which is why the three identities are there. Proving `confirming_message_id`
-names a real durable acceptance **after the Proposal Turn closed** is a fresh
-Session replay the writer performs. The acceptance's `source`, `content` and
+promotion target are already bound in the preflight, so a confirmation cannot
+change them by gaining an argument. The identities establish the later user
+message's context; they do not prove the semantics of its prose. Proving
+`confirming_message_id` names a real durable user message **after the Proposal
+Turn closed** is a fresh Session replay the writer performs. The message's
+`source`, `content` and
 `target` are accepted only as exact built-in strings and detached before any
 comparison; `target` must be exactly `new_turn`, so a caller-controlled string
-subclass cannot turn another delivery mode into consent. Ordinary Store read
+subclass cannot turn another delivery mode into user context. Ordinary Store read
 failures are normalized as unavailable evidence without reflecting backend
 details, while cancellation and interpreter-control `BaseException`s retain
 their original meaning.
 
-The confirmation is what creates `product/task-opened`, and only then.
+The later user Turn is necessary Session evidence but the model's classification
+of that Turn is not authority. When the model suggests confirmation, the host
+renders the exact pending task identity and accepts only a separate terminal
+`START` control token. EOF, undecodable input or any other token starts nothing.
+This is deliberately not a language-specific yes/no parser. The prompt is bound
+to the one current Session Proposal; `confirm()` freshly rechecks and consumes
+that exact pending object, so stale or cross-Session gestures cannot open a task.
+
+Only after that host-owned capability gesture does the confirmation create
+`product/task-opened`.
 
 ### 3. A ProductTask is not a second fact source
 
@@ -621,8 +632,9 @@ no legacy branch, and later stages refuse unknown versions rather than guessing.
   Agent Directory, the Session stream, the Workspace catalog, the Artifact
   catalog, the promotion ledger and the Workflow run stream rather than from a
   copy of any of them.
-- The four protected files - `agent_loop.py`, `agent_runtime.py`,
-  `supervisor.py`, `manager.py` - gain nothing. A test pins their bytes.
+- The Product surface adds no Product dependency or state to the four protected
+  kernel files. v0.7.1 separately changes `agent_loop.py` only at the generic
+  repeated-cancellation finalizer; tests pin all four current byte sequences.
 - The reviewer costs real tokens and produces something the coder actually reads.
 - A branch that moves under an open task invalidates that task's binding.
 - A task interrupted by a hard process exit needs a human. There is no answer
@@ -718,9 +730,11 @@ no legacy branch, and later stages refuse unknown versions rather than guessing.
 F3 is an opt-in host assembly, not a default Profile, general Workflow DSL,
 retry engine, cross-process lease, cold Activation recovery or OS sandbox. It
 does not provide a model-visible approve/promote Tool. `AgentLoop`,
-`AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` remain
-byte-identical. F4 benchmark work is implemented separately in
+`AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` remain outside the
+Product state machine. v0.7.1 changes `AgentLoop` only for its generic
+Attempt/Step/Turn repeated-cancellation convergence; no Product import or state
+enters it. F4 benchmark work is implemented separately in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md). F5 release
-stabilization is in progress, including ADR-0034's Token-bound split; final
-review, packaging, version update, tag and release remain incomplete. The
-package version remains `0.6.0` and v0.7 is not released.
+stabilization, ADR-0034's Token-bound split, final review, packaging and release
+are complete in annotated `v0.7.0`. The `0.7.1` maintenance candidate is not yet
+committed, tagged or released.

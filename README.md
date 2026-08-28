@@ -1,4 +1,4 @@
-# TraceHarness Py v0.7.0
+# TraceHarness Py v0.7.1 (unreleased)
 
 TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 再把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
@@ -632,12 +632,20 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.7.0 已发布能力与明确边界
+## v0.7.1 维护候选与 v0.7 已发布能力
+
+最新已发布版本仍是 `v0.7.0`；当前工作树的单一版本源已推进到尚未发布的
+`0.7.1`。这个维护候选只修三条已复现边界：ProductTask 开始前必须由终端用户
+对屏幕上精确 task 输入 `START`，模型的确认 Tool Call 只能请求这次宿主提示；
+AgentLoop 的取消收尾由一个 owned Task 顺序写完 Attempt/Step/Turn，重复 Ctrl+C
+不能让调用方提前返回；L4 在 `-I -S` 下检查目标 venv 时显式使用 `venv`
+sysconfig scheme，并拒绝逃出目标前缀的包目录。它没有增加 retry/fallback、
+第二个 Workflow/Benchmark、默认 Product Profile 或新的模型权限。
 
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
 - 插件现在可以提供 Tool、Prompt Section、Service、`LlmProvider`、`ToolPolicy`、`ToolMiddleware` 和命名 `CompletionVerifier`；Provider/Verifier 必须显式选择。插件仍**不能**提供 `EventStore`，因为账本是 Runtime/Session 的进程级事实源，尚无独立于 Step Generation 的固定所有权；
-- 没有 MCP 接入面，也没有通用 Workflow DSL。v0.7-F3 已给现有 `traceh chat` 增加**可选** `--product-config` 产品面：自然聊天里的结构化提议/确认经过宿主验证后启动固定 single/multi/auto Workflow，`/task inspect|approve|reject|cancel|abandon TASK_ID` 按持久身份 fresh replay；Workflow 自己仍不推广，批准只来自宿主命令。配置必须显式给出 Profile、source、Budget、Verifier、managed root、CAS 与 bare target，没有默认 profile，也不能携带 DAG/Prompt/approval 值；F3 v1 还要求 Product Profile 的 provider/model 与当前 Chat 完全相同，并只支持可直接共享 Provider 对象的内置 Provider，不接受插件 Provider；不传配置时仍是原来的单 Agent Chat；
+- 没有 MCP 接入面，也没有通用 Workflow DSL。v0.7-F3 已给现有 `traceh chat` 增加**可选** `--product-config` 产品面：模型可在自然聊天中建议结构化提议/确认，但 v0.7.1 要求终端用户对宿主显示的精确 task 再输入固定 `START`，之后才启动 fixed single/multi/auto Workflow；模型 Tool 不能代替这个动作。`/task inspect|approve|reject|cancel|abandon TASK_ID` 按持久身份 fresh replay；Workflow 自己仍不推广，批准只来自宿主命令。配置必须显式给出 Profile、source、Budget、Verifier、managed root、CAS 与 bare target，没有默认 profile，也不能携带 DAG/Prompt/approval 值；F3 v1 还要求 Product Profile 的 provider/model 与当前 Chat 完全相同，并只支持可直接共享 Provider 对象的内置 Provider，不接受插件 Provider；不传配置时仍是原来的单 Agent Chat；
 - Session 记录创建时的插件身份和后续真正使用过的 Composition；插件集合改变后，只有用户在当前空闲 Session 执行 `/plugins use ...` 才会追加 `composition/migration-authorized`，没有授权的旧 Session 仍拒绝继续，其他 Session 不会自动迁移。版本按 PEP 440 等价判定，因此 `1.0` 与 `1.0.0` 不算变化；授权已落盘但 publish 失败时 Session fail-closed；
 - 插件的 Owned Task 只有**生命周期所有权**，没有监督器：它们的异常会被取回（因此不会冒 `Task exception was never retrieved`），取回之后**立刻丢弃、不留存**，也不会被重启，更**不会**把后台任务失败升级成 Runtime 故障；
 - L1 Plugin Creator 的“专用 Candidate Workspace”和“不执行候选”是流程合同，不是沙箱；它只产出未验证源码；
@@ -655,7 +663,7 @@ traceh doctor
 - F1 还要求一个 durable Turn 只能归属一条 claimed message，confirmation 不能借用别的消息已经启动过的 Turn。ProductTask 查询身份在 replay 入口只规范化一次，选择 Stream、核对 payload 和构造 Summary 全部使用同一个内建 `task_id`；
 - v0.7-F2 在同一个 `src/traceh/product/` 域补上「确认之后、执行之前」的一段：严格 Router（只认恰好一个 `{"mode", "reason"}` JSON 对象，未知 mode/多余键/超长/畸形/多份答案一律稳定失败，不重试、不猜文本；超时与响应上限只来自显式 `ProductRouterProfile`，live Router 的实际 assembly 摘要也必须对上 fresh preflight，`reason_display` 只展示）、唯一 Profile Registry（没有默认 profile，assembly 必须匹配被问的槽位，写权限来自 `ProductRole` 槽位，Router 不持 Tool——当场强制；Budget 范围复用 Ledger 域的唯一合同）、每次 fresh 解析的 preflight（source 精确 commit、VerificationPlan digest、Promotion target fingerprint/**精确 ref**/expected revision 都来自真实 resolver，漂移即拒绝），以及用 F1 writer 写唯一 `product/task-routed` 并从真正会跑的 Workflow definition 算出 `workflow_definition_hash` 的固定 Assembly。single 固定 `coder → verification → approval`，multi 固定 `parent → reviewer → coder →` 同一安全尾部。它**只出计划，不执行**：不写 `product/task-started`、不启动 Workflow、不捕获、不验证、不批准、不推广、不调用真实模型，也没有任何 Chat 接线或产品命令；
 - 生产 Router 请求现在也明确写出 parser 已经执行的完整合同：exact keys 与 mode，`reason` 为 `null` 或非空、单行安全且受共享 `MAX_REASON_DISPLAY_CHARS` 约束的展示文字，无首尾空白或附加散文。Parser 仍然严格拒绝，不截断、不重试、不 fallback；
-- v0.7-F3 在现有 `traceh chat` 上增加可选产品 host：Proposal 可带用户明确要求的 single/multi/auto，省略才使用 Profile 默认值；宿主把模式、来源和“确认后将使用的 task id”一起显示，后续真人确认才写第一条持久任务事实。确认后立即打印 task id，并沿用可选 Chat heartbeat 从现有 durable Product/Workflow 视图显示进度；到 Approval 或执行 `/task inspect` 时，宿主从固定 Workflow、Agent Directory、Artifact CAS 与 Review 账本只读拼出节点、Session replay、变更路径、有界 Patch 和 Verifier 结果，证据缺失或被改写时明确提示 unavailable 与不可批准，不新增 Product 状态或事实源。固定两种拓扑复用 Supervisor、层级 Budget、managed Workspace、immutable Artifact、Verifier、Workflow 与 Promotion。到 Approval 可以退出进程，重启后按 task id fresh replay 再批准；Router/装配等 Workflow 前普通失败会先释放资源、再写 task failed，终态和 promotion/cleanup 崩溃窗口均可幂等补齐。Review/Patch/approval/promotion 值不进模型上下文；捕获过的 dirty worktree 只有 exact candidate tree 才能在 merged/rejected 后受控删除；
+- v0.7-F3 在现有 `traceh chat` 上增加可选产品 host：Proposal 可带用户明确要求的 single/multi/auto，省略才使用 Profile 默认值；宿主把模式、来源和 prospective task id 一起显示。后续用户 Turn 仍提供 durable 身份/顺序证据，但 v0.7.1 明确要求独立终端 `START` 才写第一条持久任务事实，不从自然语言猜授权。开始后立即打印 task id，并沿用可选 Chat heartbeat 从现有 durable Product/Workflow 视图显示进度；到 Approval 或执行 `/task inspect` 时，宿主从固定 Workflow、Agent Directory、Artifact CAS 与 Review 账本只读拼出节点、Session replay、变更路径、有界 Patch 和 Verifier 结果，证据缺失或被改写时明确提示 unavailable 与不可批准，不新增 Product 状态或事实源。固定两种拓扑复用 Supervisor、层级 Budget、managed Workspace、immutable Artifact、Verifier、Workflow 与 Promotion。到 Approval 可以退出进程，重启后按 task id fresh replay 再批准；Router/装配等 Workflow 前普通失败会先释放资源、再写 task failed，终态和 promotion/cleanup 崩溃窗口均可幂等补齐。Review/Patch/approval/promotion 值不进模型上下文；捕获过的 dirty worktree 只有 exact candidate tree 才能在 merged/rejected 后受控删除；
 - Product Profile 中 `budget.max_tokens` 是一个 Agent 整个生命周期累计的 input+output 权限，`max_output_tokens` 是每次 provider 请求的输出上限；role 与 Router 必须同时显式提供，两者均进入 Profile digest。旧 shape 不兼容、不默认、不迁移；现有 Budget ledger、Provider、`AgentLoop` 与 `AgentRuntime` 没有 Product 特例，见 [ADR-0034](docs/adr/0034-separate-product-token-budget-and-request-output-limit.md)；
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
@@ -710,7 +718,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [插件与多 Agent 演进](docs/plugin-evolution.md)
 - [测试策略](docs/testing.md)
 - [v0.6.0 验证记录](docs/validation-v0.6.0.md)
-- [v0.7.0 验证记录](docs/validation-v0.7.0.md)
+- [v0.7.0 发布验证记录](docs/validation-v0.7.0.md)
 - [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明

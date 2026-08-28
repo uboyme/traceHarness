@@ -85,7 +85,7 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "9a00d94ca8d400c55c0746c5f5d67d9b541f9a30f29ae602828d40c8b3f954e0"
+        "cbfffa49d1624584c85143c467ba653e8bc85dc7ca2c96cc5c39c7c441c9c54f"
     ),
     "runtime/agent_runtime.py": (
         "fc76d8a4eb6f953da4e61eb81140a0748ef1d4fc4e15c0fc876cfcc02e83ae92"
@@ -100,9 +100,9 @@ PROTECTED_SOURCES = {
 """SHA-256 of each protected file with line endings normalized to LF.
 
 These four own the v0.6 concurrency kernel. The product surface is built
-entirely above their public seams, so v0.7-F must not need a single byte of
-them - and the cheapest way to keep that honest is to notice immediately if it
-did. Normalizing line endings keeps the pin identical on every checkout,
+entirely above their public seams. v0.7.1 changes ``AgentLoop`` only at its
+generic repeated-cancellation finalizer; it gains no Product dependency or
+state. Normalizing line endings keeps the pin identical on every checkout,
 whatever ``core.autocrlf`` did locally.
 
 Changing one of these files is a real architectural decision. Update the pin in
@@ -366,10 +366,10 @@ def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
         assert getattr(value, "__slots__", None) is not None, name
 
 
-def test_the_package_version_is_the_v07_release() -> None:
-    """F5 owns the single v0.7 version transition."""
+def test_the_package_version_is_the_v071_release() -> None:
+    """The maintenance release keeps the single v0.7 version source."""
 
-    assert __version__ == "0.7.0"
+    assert __version__ == "0.7.1"
 
 
 # --------------------------------------------------- authority boundaries

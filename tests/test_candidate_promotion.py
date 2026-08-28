@@ -1242,3 +1242,64 @@ async def test_target_probe_uses_the_selected_venv_without_running_site(tmp_path
     assert Path(facts.python_prefix) == target.resolve()
     assert facts.distributions == (InstalledDistribution("traceharness-py", __version__),)
     assert facts.candidate is None
+
+
+@pytest.mark.asyncio
+async def test_public_review_ignores_a_distro_default_scheme_for_target_venv(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "target"
+    venv.EnvBuilder(with_pip=False).create(target)
+    if os.name == "nt":
+        python = target / "Scripts" / "python.exe"
+        site_packages = target / "Lib" / "site-packages"
+    else:
+        python = target / "bin" / "python"
+        site_packages = (
+            target
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+        )
+    core_metadata = site_packages / "traceharness_py-0.5.0.dist-info"
+    core_metadata.mkdir(parents=True)
+    (core_metadata / "METADATA").write_text(
+        "Metadata-Version: 2.1\nName: traceharness-py\nVersion: 0.5.0\n",
+        encoding="utf-8",
+    )
+    validation, comparison = _write_evidence(tmp_path / "evidence")
+    script = promotion_module._TARGET_INSPECTION_SCRIPT
+    marker = "target_paths = sysconfig.get_paths(\n"
+    assert marker in script
+    biased = (
+        "_real_get_paths = sysconfig.get_paths\n"
+        "    def _distro_get_paths(*args, **kwargs):\n"
+        "        if 'scheme' not in kwargs:\n"
+        "            wrong = target_prefix / 'distro-default' / 'site-packages'\n"
+        "            return {'purelib': str(wrong), 'platlib': str(wrong)}\n"
+        "        return _real_get_paths(*args, **kwargs)\n"
+        "    target_paths = _distro_get_paths(\n"
+    )
+    monkeypatch.setattr(
+        promotion_module,
+        "_TARGET_INSPECTION_SCRIPT",
+        script.replace(marker, biased, 1),
+    )
+    config = CandidatePromotionConfig(
+        validation,
+        comparison,
+        python,
+        tmp_path / "registry",
+        tmp_path / "review",
+    )
+
+    report = await CandidatePromoter(
+        config,
+        runner=SubprocessCommandRunner(),
+    ).run()
+
+    assert report.action == "review"
+    assert report.code == "human-approval-required"
+    assert report.approval_digest is not None
+    assert (tmp_path / "review" / "report.json").is_file()

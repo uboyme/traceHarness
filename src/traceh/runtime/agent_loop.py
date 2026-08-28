@@ -6,11 +6,12 @@ import asyncio
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from traceh.api.llm import Usage
 from traceh.api.tools import ToolExecutionContext
 from traceh.api.turns import TurnInput
+from traceh.concurrency import await_worker_convergence, combine_failures
 from traceh.kernel.hooks import STEP_FINISHED, TURN_FINISHED, TURN_STARTED, HookDispatcher
 from traceh.llm.runtime import LlmRuntime
 from traceh.runtime.composition_runtime import CompositionRuntime
@@ -75,6 +76,8 @@ class AgentLoop:
         message_id = turn_input.message_id
         correlation_id = uuid4()
         current_step_id: str | None = None
+        current_attempt_id: str | None = None
+        current_attempt_revision: str | None = None
         steps = 0
         total_input_tokens = 0
         total_output_tokens = 0
@@ -180,6 +183,8 @@ class AgentLoop:
                         composition_revision=composition.revision,
                     )
                     attempt_id = str(uuid4())
+                    current_attempt_id = attempt_id
+                    current_attempt_revision = composition.revision
                     await self.sessions.append_session(
                         session_id,
                         "model/attempt-start",
@@ -221,22 +226,10 @@ class AgentLoop:
                             on_text_delta=record_text_delta,
                         )
                     except asyncio.CancelledError:
-                        await asyncio.shield(
-                            self.sessions.append_session(
-                                session_id,
-                                "model/attempt-end",
-                                {
-                                    "turn_id": turn_id,
-                                    "step_id": current_step_id,
-                                    "attempt_id": attempt_id,
-                                    "status": "cancelled",
-                                    "error_type": "CancelledError",
-                                    "message": "Model attempt was cancelled",
-                                },
-                                correlation_id=correlation_id,
-                                composition_revision=composition.revision,
-                            )
-                        )
+                        # One outer owner closes Attempt -> Step -> Turn in
+                        # order. Closing the Attempt in a separate shield here
+                        # let repeated cancellation detach that append from the
+                        # Step/Turn finalizer.
                         raise
                     except Exception as error:
                         await self.sessions.append_session(
@@ -399,18 +392,31 @@ class AgentLoop:
                     usage=Usage(total_input_tokens, total_output_tokens),
                     verification_passed=verification_passed,
                 )
-        except asyncio.CancelledError:
-            await asyncio.shield(
-                self._close_interrupted(
+        except asyncio.CancelledError as cancellation:
+            finalizer = asyncio.create_task(
+                self._close_cancelled(
                     session_id,
                     turn_id,
                     current_step_id,
-                    step_open=step_open,
-                    turn_open=turn_open,
-                    reason="cancelled",
-                )
+                    current_attempt_id=current_attempt_id,
+                    current_attempt_revision=current_attempt_revision,
+                    correlation_id=correlation_id,
+                ),
+                name=f"traceh-turn-cancel-finalize-{turn_id}",
             )
-            raise
+            await await_worker_convergence(finalizer)
+            if finalizer.cancelled():
+                raise cancellation
+            failure = finalizer.exception()
+            if failure is not None:
+                combined = combine_failures(
+                    cancellation,
+                    failure,
+                    "Turn cancellation and durable finalization both failed",
+                )
+                assert combined is not None
+                raise combined from None
+            raise cancellation
         except Exception as error:
             await self.sessions.append_session(
                 session_id,
@@ -456,3 +462,76 @@ class AgentLoop:
                 "turn/end",
                 {"turn_id": turn_id, "reason": reason},
             )
+
+    async def _close_cancelled(
+        self,
+        session_id: str,
+        turn_id: str,
+        step_id: str | None,
+        *,
+        current_attempt_id: str | None,
+        current_attempt_revision: str | None,
+        correlation_id: UUID,
+    ) -> None:
+        """Durably close one cancelled Turn from a single owned Task.
+
+        The fresh read resolves cancellation/commit ambiguity at the Attempt
+        append boundary: if attempt-start committed but its caller was
+        cancelled before observing the return, exactly one matching end is
+        still appended.  All three terminals are then written sequentially, so
+        no later close fact can outlive the public ``run_turn()`` call.
+        """
+
+        events = await self.sessions.read_session(session_id)
+        if current_attempt_id is not None and step_id is not None:
+            started = any(
+                event.type == "model/attempt-start"
+                and event.data.get("attempt_id") == current_attempt_id
+                for event in events
+            )
+            ended = any(
+                event.type == "model/attempt-end"
+                and event.data.get("attempt_id") == current_attempt_id
+                for event in events
+            )
+            if started and not ended:
+                await self.sessions.append_session(
+                    session_id,
+                    "model/attempt-end",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": step_id,
+                        "attempt_id": current_attempt_id,
+                        "status": "cancelled",
+                        "error_type": "CancelledError",
+                        "message": "Model attempt was cancelled",
+                    },
+                    correlation_id=correlation_id,
+                    composition_revision=current_attempt_revision,
+                )
+        step_open = step_id is not None and any(
+            event.type == "step/start"
+            and event.data.get("turn_id") == turn_id
+            and event.data.get("step_id") == step_id
+            for event in events
+        ) and not any(
+            event.type == "step/end"
+            and event.data.get("turn_id") == turn_id
+            and event.data.get("step_id") == step_id
+            for event in events
+        )
+        turn_open = any(
+            event.type == "turn/start" and event.data.get("turn_id") == turn_id
+            for event in events
+        ) and not any(
+            event.type == "turn/end" and event.data.get("turn_id") == turn_id
+            for event in events
+        )
+        await self._close_interrupted(
+            session_id,
+            turn_id,
+            step_id,
+            step_open=step_open,
+            turn_open=turn_open,
+            reason="cancelled",
+        )

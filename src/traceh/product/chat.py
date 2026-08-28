@@ -3,7 +3,9 @@
 The two model Tools only leave a process-local note about the current Turn.
 They cannot open a ProductTask, choose a mode, inspect a Review, approve or
 promote.  After the Turn is durably closed, the chat host combines that note
-with the user message identity it supplied and invokes the host control plane.
+with the user message identity it supplied; a confirmation suggestion must
+then cross a separate exact-task terminal authorization before the host invokes
+the control plane.
 """
 
 from __future__ import annotations
@@ -24,7 +26,11 @@ from traceh.cli.command_line import (
     escape_for_display,
     render_command,
 )
-from traceh.cli.console import Console
+from traceh.cli.console import (
+    Console,
+    contains_undecodable_input,
+    normalize_input,
+)
 from traceh.concurrency import await_worker_convergence
 from traceh.product.control import (
     PendingProductProposal,
@@ -147,12 +153,13 @@ class ProposeProductTaskTool:
 
 
 class ConfirmProductTaskTool:
-    """Recognize the user's current message as confirmation of the shown offer."""
+    """Ask the host to offer its explicit start authorization boundary."""
 
     name = "confirm_product_task"
     description = (
-        "Use only when the user clearly accepts the currently displayed task "
-        "proposal. The host independently verifies the later user Turn."
+        "Use only when the user appears to accept the currently displayed task "
+        "proposal. This only asks the host for an explicit start authorization; "
+        "the Tool Call cannot start a ProductTask."
     )
     effect_kind = EffectKind.PURE_READ
     input_schema: dict[str, JsonValue] = {
@@ -176,7 +183,7 @@ class ConfirmProductTaskTool:
             context.session_id, context.turn_id, _TurnAction("confirm")
         )
         return ToolOutput(
-            "The host will verify this user Turn before starting any task."
+            "The host will ask the user for an explicit start authorization."
         )
 
 
@@ -251,6 +258,8 @@ class ProductChatSurface:
             pending = await self._control.pending_proposal(session_id)
             if pending is None:
                 console.write("task confirmation ignored: no proposal was pending")
+                return
+            if not _explicit_start_authorized(console, pending):
                 return
             _render_execution_started(console, pending)
             resolved_clock = clock or default_clock()
@@ -373,7 +382,35 @@ def _render_proposal(console: Console, pending: PendingProductProposal) -> None:
         f"at {binding.promotion_expected_revision}"
     )
     console.write("  safety: fixed Workflow, host verification, human approval")
-    console.write("Reply naturally in a later message to accept or decline this proposal.")
+    console.write(
+        "Reply naturally in a later message. If acceptance is detected, the host "
+        "will require exact START authorization before any task begins."
+    )
+
+
+def _explicit_start_authorized(
+    console: Console, pending: PendingProductProposal
+) -> bool:
+    """Require one host-owned capability gesture for this exact pending task.
+
+    Natural-language classification remains useful for choosing when to show
+    the prompt, but it is never start authority.  A fixed control token avoids
+    language-specific yes/no parsing and the prompt binds that token to the
+    exact deterministic ProductTask identity currently pending in this Session.
+    """
+
+    try:
+        answer = console.read_line(
+            f"Start exact ProductTask {pending.task_id}? Type START to authorize: "
+        )
+    except EOFError:
+        console.write(f"task {pending.task_id}: start not authorized (input ended)")
+        return False
+    if contains_undecodable_input(answer) or normalize_input(answer) != "START":
+        console.write(f"task {pending.task_id}: start not authorized")
+        return False
+    console.write(f"task {pending.task_id}: explicit START authorized by host user")
+    return True
 
 
 def _render_inspection(

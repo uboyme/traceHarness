@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.7.1 - Unreleased
+
+### Host authorization, cancellation convergence and target-venv portability
+
+- A chat model's `confirm_product_task` Tool Call now only requests a
+  host-owned authorization prompt. The exact pending ProductTask starts only
+  after the terminal user types the fixed `START` control token; EOF, any other
+  input, or undecodable input leaves the Proposal pending and creates no
+  ProductTask, task Budget, managed Workspace or Workflow. This is a structural
+  host capability boundary, not an English/Chinese yes/no keyword parser.
+- `AgentLoop` now owns one cancellation finalizer that durably closes the
+  current Model Attempt, Step and Turn in that order. Repeated caller
+  cancellation is absorbed until the same finalizer converges, commit ambiguity
+  is resolved from a fresh Session replay, and an independent finalizer failure
+  remains visible beside the original cancellation.
+- L4 target inspection keeps `-I -S` but explicitly selects the standard
+  `venv` sysconfig scheme when the selected interpreter has an adjacent
+  `pyvenv.cfg`. Resolved package roots must remain inside that venv, preventing
+  distro-specific Python 3.13 default schemes from redirecting inspection to a
+  nonexistent `local/.../dist-packages` tree.
+- Added deterministic public-path counter-examples for a model confirming a
+  user's refusal, three separately gated cancellation terminals plus finalizer
+  failure, and a distro-biased sysconfig default exercised through
+  `CandidatePromoter.run()`. Each root protection has been reverse-verified.
+
 ## 0.7.0 - 2026-08-28
 
 ### v0.7-F5 RC: ProductTask acceptance and release stabilization

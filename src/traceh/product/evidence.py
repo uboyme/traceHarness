@@ -241,13 +241,14 @@ async def require_confirmation_evidence(
     proposal: ProductTaskProposal,
     confirmation: ProposalConfirmation,
 ) -> None:
-    """Refuse to open a task unless the Session shows both messages.
+    """Refuse to open a task unless the Session shows both message contexts.
 
     ``proposal_confirmable()`` has already decided the identity-only rules. This
     decides the facts and the temporal rule: the proposing Turn must have ended,
-    and the confirmation must have been accepted afterwards. Both are needed:
+    and the confirming message must have been accepted afterwards. Both are needed:
     different ids do not prove order, and presence alone would let an older
-    message through.
+    message through. This proves durable identity and time, not natural-language
+    consent; the trusted host owns the separate start-authorization decision.
     """
 
     origin_session_id = _evidence_identity(proposal.origin_session_id)

@@ -1,8 +1,9 @@
 # TraceHarness v0.7 总阶段计划与目标效果
 
-状态：v0.7.0 已发布
-当前版本：`0.7.0`
+状态：v0.7.0 已发布；v0.7.1 维护候选修复中
+当前版本：`0.7.1`（未发布）
 目标发布版本：`0.7.0`
+维护候选目标：`0.7.1`
 
 本文只规定 v0.7 的产品目标、阶段边界、架构约束、验收顺序和最终用户效果。各阶段的协议理由以对应 ADR 为准，当前工程事实以源码、测试和两份项目上下文为准；本文不是新的事实源，也不替代它们。
 
@@ -134,6 +135,7 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 - `RequestedTaskMode` 有 `single`、`multi`、`auto`；执行态的 `ResolvedTaskMode` 只有 `single`、`multi`。
 - ProductTask 有自己的 durable identity 和九种精确事件；proposal 本身是确认前的临时值，不是事实。
 - 用户确认必须点名 proposal，是不同于 origin 的消息；origin/confirmation 的 claim 都必须由真实 durable Turn start 锚定，同一 Session 还必须通过核心生命周期不变量，最后由持久 seq 证明 confirmation accepted 发生在 Proposal Turn 的合法 `turn/end` 之后。
+- v0.7.1 明确修正：上述 Session 事实只证明后续用户消息的身份与顺序，不证明自然语言授权；交互式 Chat 还必须取得绑定当前精确 task 的宿主终端 `START`，模型 Tool 只能请求该提示。
 - `ProductPreflightBinding` 冻结 Profile、角色装配、Router、仓库、base revision、Verifier，以及 Promotion target 的仓库身份、精确 ref 与 revision。
 - `ProductAssemblyReceipt` 冻结 resolved mode、Workflow definition 和 preflight binding。
 - single 与 multi 都是固定 Workflow profile；single 不是绕过安全门的旧主线。
@@ -182,7 +184,7 @@ F3 把现有行式 `traceh chat`、F1 ProductTask、F2 Assembly、Stage E Workfl
 
 1. 普通聊天继续原样运行；没有 proposal/人类确认就没有 ProductTask。
 2. 模型只能提出结构化 proposal；用户明确指定时可附带 single/multi/auto，否则使用 Profile 默认值。宿主用固定面板显示模式、来源、Profile、仓库、安全边界和确认后将使用的唯一 prospective task id。
-3. 用户在后续 Turn 用自然语言确认时，宿主记录该用户 message/Turn，并创建 ProductTask；确定性命令可以作为同一控制面的快捷入口，但不能形成另一条任务主线。
+3. 用户在后续 Turn 表达意图时，宿主仍记录该 message/Turn 作为身份与顺序证据；模型的确认 Tool 只能请求一次绑定当前精确 task 的宿主提示，只有终端用户再输入固定 `START` 才创建 ProductTask。宿主命令仍属于同一控制面，不能形成另一条任务主线。
 4. explicit single/multi 或 auto resolved mode 经 F2 装配后启动现有 Workflow。
 5. 到 Approval 屏障时，宿主渲染 Review evidence；模型上下文不获得 secret approval/promotion values。
 6. 人工批准后，由产品控制器显式调用 Promotion；Workflow 自己不推广。
@@ -261,6 +263,17 @@ F4 已提交。F5 的真实外部模型验收现有多轮 `18/18 measured` 历�
 
 完成状态：第 3 项由当前 Profile 的第七轮完成。它在修正 WLAN DNS 后从新仓库外目录运行 3 个任务 × `{single,multi,auto}` × 2 次，`18/18 measured`、`16/18 success`；DNS/TLS failure 为 0，两次失败分别是远端主动断开和累计 Budget fail-closed，JSON/Markdown 与资源收敛已复核。第六轮的三个 DNS 失败与全部更早历史报告均保留，不能选择性隐藏。验收发现的 D1/D2 新目录 leaf-entry、Router 模型可见合同、Chat 可读性、Windows UTF-8 与 ADR-0034 Token 两层上限均已按现有 owner 根修。两项独立审查 P1 由 Promotion owner 共享规则保护 inspect/review/approve/promote、F4 collector 与 crash-prefix recovery；相关反例和七类关键保护均反向验证。最终复审 P0/P1/P2 清零，唯一一次完整 pytest 为 2402 通过、5 跳过、退出码 0。第 5 项安全扫描检查了 377 个受控文本文件，没有真实凭据形态、当前机器路径或生产夹具硬编码；第 4 项 protected-core 零 diff 已验证。第 6–9 项全部完成。
 
+### 9.1 v0.7.1 维护修复
+
+发布后的独立审查确定了两个 P1 和一个受支持平台缺陷：模型确认 Tool Call
+实际承担了 ProductTask 启动授权；AgentLoop 的两层裸 `shield()` 在重复取消时可
+让关闭事实晚于公开调用返回；Python 3.13 的发行版默认 sysconfig scheme 可在
+`-I -S` 下把目标 venv 的包目录推到不存在的位置。v0.7.1 只修这三条根因：
+宿主对精确 task 再要求固定 `START`，AgentLoop 用单一 owned finalizer 顺序关闭
+Attempt/Step/Turn，L4 对目标 venv 显式选择 `venv` scheme 并校验路径归属。
+三项均有确定性公开路径反例和反向验证。最终独立复审、唯一一次全量、打包、
+提交、tag 与发布尚未执行，不得把本段当作发布完成记录。
+
 ## 10. 每个阶段的交付纪律
 
 - 一个阶段只实现该阶段，不偷跑下一阶段。
@@ -282,9 +295,14 @@ TraceHarness：可以。我建议创建一个编码任务：
   Profile：python-quality
   仓库：已固定到 commit <display id>
   安全边界：候选只进入 managed worktree；检查后仍需你批准才会推广。
-  是否开始？
+  要启动这个精确 task，请在宿主终端输入 START。
 
-用户：开始吧。
+用户（聊天消息）：我接受这项提议。
+
+TraceHarness：模型已请求启动，但普通聊天文字不是执行授权。
+  Start exact ProductTask task-...? Type START to authorize:
+
+用户：START
 
 TraceHarness：任务 task-... 已创建。Router 选择 multi。
   parent 正在拆分工作，coder 在独立 worktree 修改，reviewer 只读检查。

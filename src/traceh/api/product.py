@@ -883,18 +883,19 @@ class ProductTaskProposal:
 
 @dataclass(frozen=True, slots=True)
 class ProposalConfirmation:
-    """A person accepting one exact Proposal.
+    """A trusted host attesting acceptance of one exact Proposal.
 
-    It carries an id and where the acceptance happened, and nothing else. Mode,
+    It carries an id and the later user-message context, and nothing else. Mode,
     budgets, source, verification plan and promotion target are already bound in
     the Proposal's preflight, so a confirmation has no field with which to change
-    any of them - the low-privilege operation a model may perform on a user's
-    behalf cannot become a high-privilege one by adding an argument.
+    any of them. A model may only suggest that an interactive host request this
+    operation; the host's explicit task-bound authorization remains outside the
+    model Tool and this value.
 
-    The Session, Turn and message are what make "a person accepted this" a
-    checkable claim rather than an assertion. ``confirming_message_id`` must name
-    a real durable acceptance in that Session; proving it does is a fresh replay
-    the writer performs, not something this value can assert about itself.
+    The Session, Turn and message make the context and ordering checkable.
+    ``confirming_message_id`` must name a real later durable user message in that
+    Session; a fresh replay proves those facts, but deliberately does not parse
+    natural-language consent. The trusted host owns that authorization boundary.
     """
 
     proposal_id: str
@@ -924,8 +925,9 @@ def proposal_confirmable(
     Turn ended; identifiers alone cannot express temporal order.
 
     What this cannot decide is whether ``confirming_message_id`` names a real
-    durable user message. That is a fresh Session replay, and it belongs to the
-    writer.
+    durable user message, or whether its prose semantically grants authority.
+    The first is a fresh Session replay owned by the writer; the second is an
+    explicit host capability decision, never a model classification.
     """
 
     if (

@@ -66,10 +66,11 @@ class _Console:
     def __init__(self, inputs: tuple[str, ...]) -> None:
         self.inputs = list(inputs)
         self.lines: list[str] = []
+        self.prompts: list[str] = []
         self.waiting = asyncio.Event()
 
     def read(self, prompt: str) -> str:
-        del prompt
+        self.prompts.append(prompt)
         if not self.inputs:
             raise EOFError
         return self.inputs.pop(0)
@@ -96,11 +97,17 @@ class _ChatProvider:
         *,
         proposal_text: str = "please add the accepted file",
         proposal_mode: RequestedTaskMode | None = None,
+        confirmation_text: str = "yes, do it",
+        requests: list[ModelRequest] | None = None,
     ) -> None:
         self.proposal_text = proposal_text
         self.proposal_mode = proposal_mode
+        self.confirmation_text = confirmation_text
+        self.requests = requests
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
+        if self.requests is not None:
+            self.requests.append(request)
         last_user = next(
             message.content
             for message in reversed(request.messages)
@@ -128,7 +135,7 @@ class _ChatProvider:
                     arguments=arguments,
                 ),
             )
-        if last_user == "yes, do it":
+        if last_user == self.confirmation_text:
             return _response(
                 "",
                 ToolCall(
@@ -354,7 +361,7 @@ async def _run_to_barrier(
         tmp_path, store, source, target, cas, actions, mode, product_provider
     )
     runtime = _chat_runtime(tmp_path, store, actions)
-    first = _Console(("please add the accepted file", "yes, do it"))
+    first = _Console(("please add the accepted file", "yes, do it", "START"))
     chat_workspace = tmp_path / "chat-workspace"
     chat_workspace.mkdir(exist_ok=True)
     assert await run_chat(
@@ -367,6 +374,10 @@ async def _run_to_barrier(
     matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
     assert matched is not None, first.output
     assert "requirement: please add the accepted file" in first.output
+    assert any(
+        f"Start exact ProductTask {matched.group(1)}?" in prompt
+        for prompt in first.prompts
+    )
     session_match = re.search(r"session_id=([^ ]+)", first.output)
     assert session_match is not None
     return matched.group(1), session_match.group(1), first.output
@@ -468,6 +479,60 @@ async def test_auto_router_receives_the_complete_reason_contract(
     assert summary.resolved_mode is ResolvedTaskMode.SINGLE
 
 
+async def test_model_confirmation_cannot_start_without_explicit_host_authorization(
+    tmp_path: Path,
+) -> None:
+    source, base = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        LocalArtifactCas(tmp_path / "cas"),
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    refusal = "do not start the proposed task"
+    chat_requests: list[ModelRequest] = []
+    runtime = _chat_runtime(
+        tmp_path,
+        store,
+        actions,
+        _ChatProvider(confirmation_text=refusal, requests=chat_requests),
+    )
+    workspace = tmp_path / "chat-workspace"
+    workspace.mkdir()
+    console = _Console(
+        ("please add the accepted file", refusal, "NOT AUTHORIZED", "/exit")
+    )
+
+    assert await run_chat(
+        runtime,
+        console.console,
+        workspace=workspace,
+        timeline=False,
+        product=product,
+    ) == 0
+
+    task_id = _proposed_task_id(console.output)
+    assert await store.list_streams(prefix="product-task:") == ()
+    assert not (await BudgetLedgerReader(store).load()).accounts
+    assert not (await WorkspaceCatalogReader(store).load()).workspaces
+    assert any(
+        f"Start exact ProductTask {task_id}?" in prompt for prompt in console.prompts
+    )
+    assert f"task {task_id}: start not authorized" in console.output
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    assert all(
+        message.content != "NOT AUTHORIZED"
+        for request in chat_requests
+        for message in request.messages
+    )
+
+
 async def test_router_failure_releases_resources_and_returns_the_durable_task(
     tmp_path: Path,
 ) -> None:
@@ -488,7 +553,9 @@ async def test_router_failure_releases_resources_and_returns_the_durable_task(
     runtime = _chat_runtime(tmp_path, store, actions)
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
-    console = _Console(("please add the accepted file", "yes, do it", "/exit"))
+    console = _Console(
+        ("please add the accepted file", "yes, do it", "START", "/exit")
+    )
 
     assert await run_chat(
         runtime,
@@ -548,7 +615,7 @@ async def test_confirmed_single_mode_bypasses_an_auto_profiles_router(
     )
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
-    console = _Console((requirement, "yes, do it", "/exit"))
+    console = _Console((requirement, "yes, do it", "START", "/exit"))
 
     assert await run_chat(
         runtime,
@@ -1014,7 +1081,7 @@ async def test_interrupting_confirmation_converges_owned_work_without_promotion(
     runtime = _chat_runtime(tmp_path, store, actions)
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
-    console = _Console(("please add the accepted file", "yes, do it"))
+    console = _Console(("please add the accepted file", "yes, do it", "START"))
     gated_clock = _GatedClock()
     running = asyncio.create_task(
         run_chat(

@@ -13,7 +13,8 @@ import pytest
 
 import traceh
 from traceh import process_control
-from traceh.api.llm import ModelResponse
+from traceh.api.events import EventEnvelope, PendingEvent
+from traceh.api.llm import ModelRequest, ModelResponse
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.process_control import converge_process
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -23,7 +24,9 @@ from traceh.runtime.continuation import (
     VerificationFeedback,
 )
 from traceh.runtime.verification import SUMMARY_TAIL_CHARS, CommandVerifier
+from traceh.session.event_store import Durability, InMemoryEventStore
 from traceh.session.file_lock import FileLockTimeout, exclusive_file_lock
+from traceh.session.invariants import CoreInvariantChecker
 from traceh.tools.builtins.shell import sanitized_environment
 
 SRC_ROOT = Path(traceh.__file__).resolve().parents[1]
@@ -246,6 +249,85 @@ def terminate_recorded_processes(pid_file: Path) -> None:
             pass
 
 
+class _GatedProvider:
+    name = "gated"
+
+    def __init__(self) -> None:
+        self.entered = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        del request
+        self.entered.set()
+        await self.release.wait()
+        return ModelResponse(content="too late")
+
+
+class _TerminalGateStore:
+    """Hold each cancelled Turn terminal before it becomes durable."""
+
+    _TERMINALS = ("model/attempt-end", "step/end", "turn/end")
+
+    def __init__(self) -> None:
+        self.inner = InMemoryEventStore()
+        self.entered = {name: asyncio.Event() for name in self._TERMINALS}
+        self.release = {name: asyncio.Event() for name in self._TERMINALS}
+
+    async def append(
+        self,
+        stream_id: str,
+        *,
+        expected_seq: int,
+        events: tuple[PendingEvent, ...],
+        durability: Durability = Durability.SYNC,
+    ) -> tuple[EventEnvelope, ...]:
+        for event in events:
+            if event.type in self.entered:
+                self.entered[event.type].set()
+                await self.release[event.type].wait()
+        return await self.inner.append(
+            stream_id,
+            expected_seq=expected_seq,
+            events=events,
+            durability=durability,
+        )
+
+    async def read(
+        self, stream_id: str, *, from_seq: int = 1
+    ) -> tuple[EventEnvelope, ...]:
+        return await self.inner.read(stream_id, from_seq=from_seq)
+
+    async def head(self, stream_id: str) -> int:
+        return await self.inner.head(stream_id)
+
+    async def list_streams(self, *, prefix: str | None = None) -> tuple[str, ...]:
+        return await self.inner.list_streams(prefix=prefix)
+
+
+class _FailingAttemptEndStore(_TerminalGateStore):
+    def __init__(self) -> None:
+        super().__init__()
+        for release in self.release.values():
+            release.set()
+
+    async def append(
+        self,
+        stream_id: str,
+        *,
+        expected_seq: int,
+        events: tuple[PendingEvent, ...],
+        durability: Durability = Durability.SYNC,
+    ) -> tuple[EventEnvelope, ...]:
+        if any(event.type == "model/attempt-end" for event in events):
+            raise OSError("deterministic terminal append failure")
+        return await super().append(
+            stream_id,
+            expected_seq=expected_seq,
+            events=events,
+            durability=durability,
+        )
+
+
 @pytest.mark.asyncio
 async def test_cancel_closes_turn_and_reaches_quiescence(tmp_path) -> None:
     workspace = tmp_path / "workspace"
@@ -274,6 +356,85 @@ async def test_cancel_closes_turn_and_reaches_quiescence(tmp_path) -> None:
     assert events[-1].type == "turn/end"
     assert events[-1].data["reason"] == "cancelled"
     assert not await runtime.check_invariants(session_id)
+    await runtime.dispose()
+
+
+@pytest.mark.asyncio
+async def test_repeated_cancellation_waits_for_attempt_step_and_turn_facts(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    provider = _GatedProvider()
+    store = _TerminalGateStore()
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data", provider="gated", model="slow"),
+        provider=provider,
+        event_store=store,
+    )
+    session_id = await runtime.create_session(workspace)
+    running = asyncio.create_task(runtime.run_existing(session_id, "wait"))
+    try:
+        await asyncio.wait_for(provider.entered.wait(), timeout=10)
+        running.cancel()
+
+        for event_type in _TerminalGateStore._TERMINALS:
+            await asyncio.wait_for(store.entered[event_type].wait(), timeout=10)
+            await cancel_again_and_assert_still_running(running)
+            assert not any(
+                event.type == event_type
+                for event in await runtime.sessions.read_session(session_id)
+            )
+            store.release[event_type].set()
+
+        with pytest.raises(asyncio.CancelledError):
+            await running
+
+        events = await runtime.sessions.read_session(session_id)
+        assert tuple(event.type for event in events[-3:]) == (
+            "model/attempt-end",
+            "step/end",
+            "turn/end",
+        )
+        assert events[-3].data["status"] == "cancelled"
+        assert events[-2].data["reason"] == "cancelled"
+        assert events[-1].data["reason"] == "cancelled"
+        assert CoreInvariantChecker().check(events) == ()
+        durable_ids = tuple(event.event_id for event in events)
+        await asyncio.sleep(0)
+        assert tuple(
+            event.event_id
+            for event in await runtime.sessions.read_session(session_id)
+        ) == durable_ids
+    finally:
+        for release in store.release.values():
+            release.set()
+        if not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
+        await runtime.dispose()
+
+
+@pytest.mark.asyncio
+async def test_cancelled_turn_keeps_a_finalizer_failure_visible(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    provider = _GatedProvider()
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data", provider="gated", model="slow"),
+        provider=provider,
+        event_store=_FailingAttemptEndStore(),
+    )
+    session_id = await runtime.create_session(workspace)
+    running = asyncio.create_task(runtime.run_existing(session_id, "wait"))
+    await asyncio.wait_for(provider.entered.wait(), timeout=10)
+
+    running.cancel()
+    with pytest.raises(BaseExceptionGroup) as caught:
+        await running
+
+    assert any(isinstance(error, asyncio.CancelledError) for error in caught.value.exceptions)
+    assert any(isinstance(error, OSError) for error in caught.value.exceptions)
     await runtime.dispose()
 
 

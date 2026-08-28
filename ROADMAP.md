@@ -1,6 +1,8 @@
 # Roadmap
 
-The order below preserves the current protocol and keeps `AgentLoop` stable.
+The order below preserves the current protocol and keeps orchestration
+boundaries narrow. v0.7.1 changes `AgentLoop` only at its generic cancellation
+owner; Product state still stays outside it.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -486,6 +488,18 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 [ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md) and
 [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md) and
 [ADR-0034](docs/adr/0034-separate-product-token-budget-and-request-output-limit.md).
+
+## v0.7.1: Maintenance corrections — in progress
+
+- Require an exact host-terminal `START` action before a model-suggested
+  Product confirmation can create any durable task or allocate resources.
+- Converge one AgentLoop-owned Attempt → Step → Turn cancellation finalizer
+  before the public Turn returns, even under repeated cancellation.
+- Inspect an explicitly selected target venv with an explicit `venv` sysconfig
+  scheme under `-I -S`, independent of distro default-scheme patches.
+- Keep v0.8/v0.9 planning out of this patch release. Final independent review,
+  the single full test gate, packaging, tag and release remain separately
+  gated.
 
 ## v1.0: Stable plugin platform
 

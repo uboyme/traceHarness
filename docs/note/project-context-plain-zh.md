@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前已发布版本是 **`0.7.0`**，对应 annotated tag `v0.7.0`。它保留 v0.5 的插件 Composition、v0.6 的 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并把 v0.7 的层级 Budget、独立 Git Workspace、不可变 Patch、固定检查/Review/真人 Approval/bare ref CAS Promotion、固定 Typed Workflow、ProductTask 真账、严格 Router、可选完整 Chat 产品面和唯一 `traceh eval` Benchmark 收进同一条主线。它没有把这些状态塞进 `AgentLoop`、`AgentRuntime`、Supervisor 并发内核或 `PluginManager`，也没有增加第二个 Workflow、Benchmark Runner 或旧 eval 兼容。F5 的多轮 18 次真实网格都保留证据（见 20.25）：当前 manifest 在修正 WLAN DNS 后的第七轮是 18/18 可度量、16/18 成功，DNS/TLS failure 都为 0；独立复审、唯一一次最终全量、安全扫描、真实网格、最终提交后的干净打包/内容审计和全新 venv 离线安装都已完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布仍是 **`v0.7.0`**；当前工作树已经把唯一版本源推进到尚未发布的 **`0.7.1`** 维护候选。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，只修三条已经真实复现的边界（见 20.26）：模型说“用户像是同意了”不能直接开任务，终端用户还要对屏幕上的精确 task 输入 `START`；AgentLoop 取消时必须把 Attempt、Step、Turn 三个结束事实写完再返回，连续 Ctrl+C 也不能逃逸；L4 在 `-I -S` 下检查目标 venv 时必须明确使用 venv 自己的 sysconfig scheme。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的独立复审、最终全量、打包、提交、tag 和发布都还没做。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -57,7 +57,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能修改代码吗 | 能，通过五个受控 Coding Tools |
 | 能验证修改吗 | 能，可配置外部命令 Verifier |
 | 能继续同一个会话吗 | 能，`resume` 会在同一个 Session 追加新 Turn |
-| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话，能实时打印每一步和每次工具调用，卡在慢操作上时还会每隔几秒报一次「还在跑」；ProductTask 确认后也会立即给 task id 并报告 durable 进度，到审批时显示节点、Session/replay、改动文件、有界 Patch 和固定检查结果。按一次 Ctrl+C 只取消当前这一轮、会话还在。但它仍是行式提示符，不是流式 TUI |
+| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话，能实时打印每一步和每次工具调用，卡在慢操作上时还会每隔几秒报一次「还在跑」。Product 模型判断用户可能同意后，终端会再显示精确 task id；只有用户输入 `START` 才真正开工，其他输入不会创建 Product 资源。开始后会报告 durable 进度，到审批时显示节点、Session/replay、改动文件、有界 Patch 和固定检查结果。按一次 Ctrl+C 只取消当前这一轮、会话还在；重复取消也要等账本收尾完成。但它仍是行式提示符，不是流式 TUI |
 | 有插件系统吗 | **有**。装一个 Wheel 就能被发现，显式启用后它的 Tool、Prompt、Service、Provider、Policy、Middleware、命名 Verifier 都能走正常主线（第 19 节）；其中 Provider/Verifier 还要再明确选择 |
 | 能让 Agent 帮我写新插件吗 | L1 可以：显式启用 `traceh.plugin.creator` 后，它会读取打包在 Wheel 里的工作流、合同、模板和清单，把**源码候选**写进单独 Candidate Workspace。但结果必须标成“未验证”，不会自动 build/test/install/enable |
 | 能独立验证这份候选吗 | L2 可以：显式指定候选目录、可信核心 Git 仓库、新输出目录和依赖源后，`traceh plugins validate` 会跑 13 道宿主管控门禁。普通门禁失败只有完整报告；报告自己都写不完时连输出目录都不会留下；通过才发布精确哈希产物 |
@@ -72,7 +72,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | F4 前两轮独立审查发现的 5 个 P1、2 个 P2 已全部按根因修好，最终复审清零后只跑了一次全量：2395 收集 / 2390 通过 / 5 跳过，退出码 0，耗时 28:04。F5 早期 D1/D2 与 Router 修复的历史门禁分别是 111 通过、2 跳过和 141 通过。本轮发版前稳定化定向门禁为：Product（不重复 Benchmark）257 通过，Evaluation/F4 Benchmark 52 通过，Budget/Workspace/Artifact/Promotion/Workflow 397 通过、3 跳过，CLI 521 通过、1 跳过；全仓 collect-only 是 2407。task id/heartbeat、CAS 篡改拒批、每请求 Token 上限、Windows Unicode replay、旧 schema 拒绝、Evaluation 冻结 Verifier 绑定和已有 Promotion 恢复重验七类关键保护都逐项做了反向验证。第一次独立审查发现一份内部摘要自洽、却把 `argv_digest` 换成别的值的 Review 曾能显示通过、直接批准并移动 bare ref；共享规则随后保护 inspection、旧 Review 重用、approve、promote 和 Evaluation evidence collection。复审又发现 Promotion 已落盘但 Product terminal 未写的恢复分支会直接补 `completed`，绕过 owner；现在它先进入幂等 `promote()` 重验。拿掉保护时，公共测试分别重现 ref 移动、错误 Benchmark 成功和恢复窗口错误完成；恢复后 F3/F4 定向全绿。最终独立复审是 P0/P1/P2 全部为 0；随后唯一一次完整 pytest 得到 2407 收集 / 2402 通过 / 5 跳过、退出码 0，quiet 输出没有给可引用总耗时。compileall、改动范围 Ruff、示例硬编码扫描、`git diff --check` 和四个受保护核心文件零改动均通过。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 的历史检查点是 2344/2339/5，F2 是 2326/2321/5，F1 是 2253/2248/5，v0.6.0 发布快照为 1707/1706/1 |
+| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。v0.7.1 的最终独立复审、唯一一次全量和打包尚未运行。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -2763,7 +2763,7 @@ F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推�
 
 当前 v1 只复用 Chat 已经直接拿到的那个内置 Provider 对象，所以 Product Profile 的 provider/model 必须与这次 Chat 完全一样；插件 Provider 目前不会被产品面悄悄重建或转交。这样不会为了“看起来支持更多模型”再开第二套模型客户端和生命周期。
 
-模型这一轮彻底写进 Session 以后，宿主才看便签。提议屏由宿主画出来，显示模型提议的那段**有界、精确需求**、模式及其来源、Profile、锁定的 source commit、推广目标、安全边界，以及确认后会使用的唯一 task id；需求和 auto Router 共用 4096 字符上限。用户必须下一轮自然地说同意，系统再拿 Session 事件证明这真是更晚的一条真人消息。第一条持久任务事实仍只在确认后出现，同一提议也不会因为两条确认消息变成两个任务。没有这一步，就不会建 Workflow、worktree 或花 task Budget。
+模型这一轮彻底写进 Session 以后，宿主才看便签。提议屏由宿主画出来，显示模型提议的那段**有界、精确需求**、模式及其来源、Profile、锁定的 source commit、推广目标、安全边界，以及确认后会使用的唯一 task id；需求和 auto Router 共用 4096 字符上限。下一轮真人消息仍会写进 Session，账本能证明它确实晚于提议，但账本不会也不应该猜自然语言到底算不算同意。模型如果调用确认 Tool，现在只会让宿主再显示一次绑定精确 task 的提示；终端用户必须输入固定的 `START` 才真正开任务。EOF、乱码或其他任何字都不会建 ProductTask、Workflow、worktree 或花 task Budget。这不是中英文 yes/no 词表，而是一个模型无法替用户输入的宿主能力手势。
 
 宿主命令是：
 
@@ -3010,3 +3010,21 @@ JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际�
 54 个 Budget 账户全都终结；54 个 Workspace 是 52 released、2 个脏失败 quarantine、`live=0`，全部收敛。总 execution tokens 438973、账本结算 542491、active/wall 1347723 ms、审批等待 0、218 steps、189 次 Tool、累计 Agent 工作 1076003 ms。成功样本中 single（n=11）平均约 12515 Token / 51.0 秒，multi（n=5）约 28814 Token / 93.0 秒；这里只能说明固定 multi 在这批小题上成本更高。JSON 与 Markdown 的 18 行逐项一致，没有 Key 或本机路径；第六轮继续作为改 DNS 前的历史对照。
 
 源码、manifest、测试、新 ADR、三个 `.gitignore` 和文档已经进入同一个 `0.7.0` 发布提交；真实网格、安全门禁、版本事实源、验证记录、从最终提交做的干净打包、Wheel/source ZIP 内容审计和离线安装全部通过。没有增加 retry/fallback/代理特例，也没有改四个并发核心文件；annotated tag、push 和 GitHub Release 已完成。
+
+### 20.26 v0.7.1：模型可以建议开工，但最后的钥匙必须在人手里（正式版 20.32）
+
+这不是 v0.8，也没有偷偷开始做 TUI、SQLite、Memory 或 Provider retry。它只是 `v0.7.0` 发布后的一次窄维护：两个确定 P1，加一个 Python 平台兼容缺陷。
+
+第一个问题很好理解：以前模型看到你下一句话后，如果它调用了 `confirm_product_task`，宿主就会直接开任务。Prompt 虽然告诉模型“只有用户明确同意才能调用”，但 Prompt 是软规则，不是权限。一个合法但判断错误的 Provider 完全可以在用户说“不要开始”时照样调用 Tool，结果 ProductTask、预算、worktree、Agent 和检查都已经跑了，只是最后的 Promotion 还被人工审批挡住。
+
+现在模型的 Tool Call 只相当于“请宿主问一下用户”。终端会显示：这是哪个精确 task，要开始就输入 `START`。只有这个固定控制词能过门；EOF、乱码、`NO`、普通聊天句子或任何其他输入都不会创建一条 Product 事实，也不会分配资源。系统不去维护中英文“同意/拒绝”词库，因为那仍然是在猜语义。模型负责判断什么时候值得问，宿主终端里的真人动作才拿着开工钥匙。原来 Session 里的后续用户消息仍保留，它能证明身份和先后顺序，但不再被冒充成一份机器可判定的授权。
+
+第二个问题发生在 Ctrl+C 的最后几步。一次 Turn 取消后要依次补三笔账：当前模型 Attempt 结束、当前 Step 结束、当前 Turn 结束。旧代码分别套了 `asyncio.shield()`，看起来像“不会被取消”，其实 shield 只保护里面那次写入，不保证外面等它的人遇到第二、第三次 Ctrl+C 后还继续等。于是调用方可能先拿到 `CancelledError`，几笔结束事实却还在后台慢慢追加。
+
+现在 AgentLoop 自己创建一个唯一的收尾 Task，先重新读 Session，确认 attempt start 是否真的落盘、end 是否缺失，再按 Attempt → Step → Turn 的顺序补齐。所有重复取消都只能打断等待者的一次等待，公共 `await_worker_convergence()` 会继续等**同一个**收尾 Task；全部持久化后才把最初的取消重新抛回去。如果写账本本身坏了，系统会同时保留“用户取消”和“收尾失败”，不会为了看起来干净吞掉后者。AgentLoop 之所以这次允许修改，是因为这个生命周期本来就是它的职责；里面没有新增任何 Product、Workflow、Budget 或 Workspace 状态。
+
+第三个问题是 Linux 发行版 Python 3.13 可能把默认 sysconfig scheme 改成 `posix_local`。L4 为了不执行候选 `.pth` 和启动钩子，一直用目标 Python 的 `-I -S`；可 `-S` 又会跳过 venv 前缀初始化。旧代码虽然找到了目标 `pyvenv.cfg`，却只传 `base/platbase`，没明确说“请用 venv 布局”，所以有的平台会去找 `<venv>/local/.../dist-packages`，而真实包明明在 `<venv>/lib/.../site-packages`，最终只能报目标检查失败。
+
+现在只要旁边有 `pyvenv.cfg`，探针就明确选择标准 `venv` scheme，再检查算出来的 `purelib/platlib` 确实留在这个 venv 里面、目录也真实存在。`-I -S` 没删，`site` 没打开，候选仍不 import。没有 venv 时才继续使用目标 base interpreter 的默认布局。
+
+三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。当前还没做独立复审、最终全量、打包、提交、tag、push 或发布，所以最新正式版本仍是 `v0.7.0`。

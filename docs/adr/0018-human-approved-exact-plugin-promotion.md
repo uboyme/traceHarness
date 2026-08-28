@@ -36,8 +36,10 @@ so cancellation, concurrent operators and crashes need an explicit owner and rec
   cannot be recorded as a false stable promotion.
 - Target inspection runs with `-I -S` so candidate `.pth` and startup hooks do not execute. Because
   `-S` also suppresses virtual-environment prefix initialisation, the probe preserves the selected
-  executable path, locates its adjacent `pyvenv.cfg`, and supplies that venv root as `base` and
-  `platbase` to `sysconfig`; it must not fall through to the host/base interpreter's packages.
+  executable path, locates its adjacent `pyvenv.cfg`, explicitly selects the standard `venv`
+  sysconfig scheme, and supplies that venv root as `base` and `platbase`. Its resolved
+  `purelib`/`platlib` roots must remain inside that venv and exist; it must not inherit a
+  distro-patched host default scheme or fall through to the host/base interpreter's packages.
 - The first promotion refuses to take over an already installed, unmanaged candidate
   Distribution. Later operations require the installed candidate content receipt and complete
   environment receipt to match the Registry's stable state.

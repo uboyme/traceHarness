@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，只修三条已经真实复现的边界（见 20.26）：模型说“用户像是同意了”不能直接开任务，终端用户还要对屏幕上的精确 task 输入 `START`；AgentLoop 取消时必须把 Attempt、Step、Turn 三个结束事实写完再返回，连续 Ctrl+C 也不能逃逸；L4 在 `-I -S` 下检查目标 venv 时必须明确使用 venv 自己的 sysconfig scheme。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，修了四条真实边界（见 20.26）：模型不能替用户开工；AgentLoop 连续取消也要写完 Attempt/Step/Turn；L4 要用目标 venv 自己的 sysconfig scheme；嵌套 L2 下的 Workspace 身份不能把 Git for Windows 的内部管理路径顶爆。第四项仍保留完整 SHA-256，只把重复的 `workspace` 目录标签去掉。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -72,7 +72,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。第一次发布全量得到 2388 通过、5 跳过、1 失败、17 error，红灯全来自两个示例插件仍写 `<0.7`；修成各自 0.2.1 的一致 Wheel/Manifest 范围后，插件自身 10+17 项、真实四 Wheel E2E 18 项和真实 L2 通过，Windows 全量是 2406 通过、5 跳过、退出码 0。第一次远端 Ubuntu 3.12/3.13 还抓出两条 Windows 假绿的测试夹具：executable Patch 只改 Git index、没有同步 POSIX 文件 mode；Benchmark 权限测试把本来就必须告诉模型的 writable Workspace 父路径错当 evaluator 值，Windows 只是因为 `repr` 把反斜杠双写才没命中。两项已按真实合同修正，L2 红灯只是它递归跑到这两项后的连带结果；生产隔离没有放宽，新三平台 CI 必须在 tag 前通过。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
+| 当前测试数 | v0.7.1 的前三组公开反例覆盖宿主 `START`、AgentLoop owned finalizer 和 L4 venv scheme；第四组用真实 Git for Windows 把 nested worktree admin path 构造到边界。恢复旧 `ws-workspace-<digest>` 后，Git 稳定报 `$GIT_DIR too big`，当前 `ws-<完整 SHA-256>` 则能 provision/release。四项都做过反向验证。第一次发布全量的插件兼容红灯、首次远端 Linux 的两条夹具错误、Windows L2 日志看不见首错的问题，以及最后定位出的路径缺陷，都按真实 owner 修正，没有放宽 Product/Evaluation 或加入重试。最终数字见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -2877,7 +2877,7 @@ Token 报了两个数，它们不是一回事：一个是模型自己说用了�
 
 失败和被取消都通过同一个控制面把既有的东西收干净——Agent 树、预算账户、worktree——然后老老实实写一个终态。这里要说清一件容易搞反的事：worktree 被 **quarantine（隔离保留）是正常终点**，不是「没收干净」。产品资源合同本来就要求失败时把脏的 worktree 隔离下来保住证据；把它算成未收敛，等于在它正好按设计办事的那一刻说它坏了。真正的未收敛是还停在 `provisional`/`attached` 的记录，报告用 `live` 这个数单独给出来。输出目录里的任何东西都不删：一次尝试「干净」的含义是它的资源收敛了，不是它的证据被抹掉了。
 
-尝试目录是编号的（`attempts/001` 这样）而不是描述性的。原因很具体：worktree 的名字是一串 77 字符的派生身份，再加上一个描述性路径，在 Windows 上会超出路径长度上限。可读的名字和目录在报告里对得上。
+尝试目录是编号的（`attempts/001` 这样）而不是描述性的。worktree 现在用 67 字符的 `ws-<完整 SHA-256>` 身份：只去掉重复的 `workspace` 标签，不截短摘要，给 Git for Windows 的内部管理目录省出十个字符。描述性 attempt 路径仍可能越过 Windows 边界，所以可读名字和编号目录继续在报告里对上。
 
 #### 测了什么，以及十一次「拆了它」
 
@@ -3011,9 +3011,9 @@ JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际�
 
 源码、manifest、测试、新 ADR、三个 `.gitignore` 和文档已经进入同一个 `0.7.0` 发布提交；真实网格、安全门禁、版本事实源、验证记录、从最终提交做的干净打包、Wheel/source ZIP 内容审计和离线安装全部通过。没有增加 retry/fallback/代理特例，也没有改四个并发核心文件；annotated tag、push 和 GitHub Release 已完成。
 
-### 20.26 v0.7.1：模型可以建议开工，但最后的钥匙必须在人手里（正式版 20.32）
+### 20.26 v0.7.1：宿主钥匙、可靠收尾和平台路径都要守住（正式版 20.32）
 
-这不是 v0.8，也没有偷偷开始做 TUI、SQLite、Memory 或 Provider retry。它只是 `v0.7.0` 发布后的一次窄维护：两个确定 P1，加一个 Python 平台兼容缺陷。
+这不是 v0.8，也没有偷偷开始做 TUI、SQLite、Memory 或 Provider retry。它只是 `v0.7.0` 发布后的一次窄维护：两个确定 P1、一个 Python 平台兼容缺陷，再加一条由三平台发布门禁真实抓到的 Windows Git 路径缺陷。
 
 第一个问题很好理解：以前模型看到你下一句话后，如果它调用了 `confirm_product_task`，宿主就会直接开任务。Prompt 虽然告诉模型“只有用户明确同意才能调用”，但 Prompt 是软规则，不是权限。一个合法但判断错误的 Provider 完全可以在用户说“不要开始”时照样调用 Tool，结果 ProductTask、预算、worktree、Agent 和检查都已经跑了，只是最后的 Promotion 还被人工审批挡住。
 
@@ -3049,4 +3049,16 @@ target 和 verifier 值进入 ModelRequest，不再把一个位置名称冒充�
 失败时也会把已经保存的 32 KiB 有界诊断写进 CI 日志。它不改变跑哪些测试或红绿判定，
 只保证下一次远端失败时能看见真正原因。
 
-三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。第一次发布全量把插件旧范围问题抓出来，真实 Wheel/L2 修好后 Windows 全量 2406 通过、5 跳过；首次远端 Linux 夹具问题也按上面的真实平台行为修正，新的三平台 CI 必须在 tag 前清零。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+下一轮 Windows CI 终于把共同首错露出来了：23 个 Benchmark 红灯都先遇到
+`workspace-git-failed`。L2 比普通测试多套了 Candidate 临时根、可信核心和第二层
+pytest temp；旧 Workspace 名 `ws-workspace-<64 位摘要>` 又直接拿去当目录名，最后
+Git for Windows 明确报 `fatal: '$GIT_DIR' too big`。这不是 23 个评分器问题，也不是
+Git 2.55 自己突然坏了——同一版本、同一插件和隔离环境在短目录里全部通过，把本机
+目录精确加长就会稳定重现。
+
+现在名字改成 `ws-<完整 SHA-256>`。少的是重复的十个标签字符，不是摘要内容；
+Catalog、Agent、Session、路径反查和安全删除仍核对同一个完整身份。程序没有偷偷换
+临时目录、重试或 fallback。新 Windows 测试把内部 admin path 做到 229 字符，旧前缀
+一恢复就多十个字符并得到真实 `WorkspaceGitError`，正确前缀则能正常创建和释放。
+
+四条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 稳定报 `promotion-target-inspection-failed`；恢复冗余 Workspace 前缀，真实 Git 又报 `$GIT_DIR too big`。全部恢复后，全仓收集 `2413` 项；只跑一次的最终完整 pytest 是 `2408` 通过、`5` 个既有平台跳过、退出码 0、耗时 `39:33`，真实 L2 也包含在里面。第一次发布全量抓到的插件旧范围、首次远端 Linux 夹具错误和 Windows L2 诊断缺口都保留为过程证据。完整结果见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。

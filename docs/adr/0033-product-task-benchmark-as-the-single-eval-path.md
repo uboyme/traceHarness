@@ -202,9 +202,11 @@ because its evidence was removed.
 - A benchmark run cannot reach a real remote or a real model without an explicit
   `--provider` / `--base-url`, and cannot reach a real repository at all.
 - Attempt directories are numbered rather than descriptive. A managed worktree is
-  named by a 77-character derived identity, and a descriptive path plus that
-  identity exceeds the Windows path limit from an ordinary output directory. The
-  readable `attempt_id` and the directory are connected in the report.
+  named by a 67-character `ws-<full SHA-256>` identity. The compact prefix keeps
+  Git for Windows' linked-worktree administration path below its fixed internal
+  limit without truncating the identity digest; descriptive attempt names can
+  still exceed the platform boundary. The readable `attempt_id` and the numbered
+  directory are connected in the report.
 - The frozen verifier proves the declared checks passed on the reviewed bytes. It
   does **not** prove a candidate left those checks as strong as it found them.
   That gap is stated in the report rather than closed here; the human/host

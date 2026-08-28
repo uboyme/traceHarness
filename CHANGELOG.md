@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.7.1 - 2026-08-28
+## 0.7.1 - 2026-08-29
 
-### Host authorization, cancellation convergence and target-venv portability
+### Host authorization, convergence and supported-platform portability
 
 - A chat model's `confirm_product_task` Tool Call now only requests a
   host-owned authorization prompt. The exact pending ProductTask starts only
@@ -20,6 +20,13 @@
   `pyvenv.cfg`. Resolved package roots must remain inside that venv, preventing
   distro-specific Python 3.13 default schemes from redirecting inspection to a
   nonexistent `local/.../dist-packages` tree.
+- Managed Workspace identities now use `ws-<full SHA-256>` instead of the
+  redundant `ws-workspace-<full SHA-256>`. The full 256-bit identity and all
+  ownership checks remain unchanged, while the ten-character reduction keeps
+  nested Candidate L2 Product Benchmark worktrees below Git for Windows'
+  fixed `$GIT_DIR` boundary. A real long-path worktree test reproduces
+  `workspace-git-failed` with the old label and passes with the compact identity;
+  no retry, path-specific exception or shortened digest was added.
 - The release gate found that the independently built Plugin Creator and Python
   Quality examples still excluded every 0.7 core in both Wheel metadata and
   `PluginManifest`. They are now `0.2.1`, with matching `<0.8` runtime ranges;

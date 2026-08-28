@@ -26,7 +26,11 @@ from traceh.workspaces.errors import (
 from traceh.workspaces.events import WORKSPACE_CATALOG_STREAM
 from traceh.workspaces.local_git import LocalGitWorkspaceProvider
 from traceh.workspaces.policy import ManagedWorkspaceAccessPolicy
-from traceh.workspaces.service import WorkspaceService, workspace_operation_id
+from traceh.workspaces.service import (
+    WorkspaceService,
+    workspace_identity,
+    workspace_operation_id,
+)
 from traceh.workspaces.supervision import (
     AgentWorkspacePolicy,
     WorkspaceManagedAgentSupervisor,
@@ -58,5 +62,6 @@ __all__ = [
     "WorkspaceStateError",
     "WorkspaceWriteError",
     "validate_workspace_catalog_events",
+    "workspace_identity",
     "workspace_operation_id",
 ]

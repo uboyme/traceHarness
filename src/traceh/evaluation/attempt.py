@@ -105,10 +105,11 @@ class AttemptRequest:
     """One (task, requested mode, repetition) cell of the benchmark grid.
 
     ``directory`` is short and numbered rather than descriptive.  A managed Git
-    worktree is named by a 77-character derived identity and lives inside it, and
-    a descriptive path plus that identity exceeds the Windows path limit from any
-    ordinary output directory.  ``relative_directory`` is recorded in the report,
-    so the readable ``attempt_id`` and the directory on disk stay connected.
+    worktree is named by a 67-character full-digest identity and lives inside
+    it, and a descriptive path plus that identity exceeds the Windows path
+    limit from any ordinary output directory.  ``relative_directory`` is
+    recorded in the report, so the readable ``attempt_id`` and the directory
+    on disk stay connected.
     """
 
     attempt_id: str

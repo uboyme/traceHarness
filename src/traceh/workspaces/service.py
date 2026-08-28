@@ -68,6 +68,32 @@ def workspace_operation_id(purpose: str, **parts: object) -> str:
     return f"ws-{purpose}-{digest}"
 
 
+def workspace_identity(*, operation_id: str, creation_request_id: str) -> str:
+    """Build the compact full-digest identity used as a worktree leaf name.
+
+    Workspace identities are also filesystem leaf names.  Repeating the
+    ``workspace`` label from the operation namespace wastes ten characters in
+    every linked-worktree administration path and can cross Git for Windows'
+    fixed ``$GIT_DIR`` limit inside otherwise valid nested temporary roots.
+    The complete 256-bit digest remains intact; only the redundant label is
+    omitted.
+    """
+
+    operation_id = require_workspace_identifier(
+        operation_id, field="operation_id"
+    )
+    creation_request_id = require_workspace_identifier(
+        creation_request_id, field="creation_request_id"
+    )
+    digest = fingerprint(
+        {
+            "operation_id": operation_id,
+            "creation_request_id": creation_request_id,
+        }
+    )
+    return f"ws-{digest}"
+
+
 async def converge_workspace_operation(coro, *, name: str) -> object:
     task = asyncio.create_task(coro, name=name)
     cancellation: asyncio.CancelledError | None = None
@@ -205,8 +231,7 @@ class WorkspaceService:
                         ),
                         frozen,
                     )
-                    workspace_id = workspace_operation_id(
-                        "workspace",
+                    workspace_id = workspace_identity(
                         operation_id=operation_id,
                         creation_request_id=creation_request_id,
                     )
@@ -836,5 +861,6 @@ def _same_path(first: Path, second: Path) -> bool:
 __all__ = [
     "WorkspaceService",
     "converge_workspace_operation",
+    "workspace_identity",
     "workspace_operation_id",
 ]

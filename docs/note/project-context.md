@@ -51,10 +51,10 @@
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat；不传 Product 配置时行为不变。显式 `--product-config` 后，模型只能建议 Proposal 或确认；当它建议确认时，宿主把精确 pending task 显示在独立终端提示中，只有用户输入固定 `START` 才能创建 ProductTask，其他输入/EOF 均不分配 task Budget、Workspace 或 Workflow。`/task inspect|approve|reject|cancel|abandon TASK_ID` 继续在模型前分派；开始后立即显示 task id，并沿用显式 heartbeat 间隔投影 durable Product/Workflow 进度。Approval 与 inspect 会显示固定节点、Agent Session/replay 命令、changed paths、有界 Patch 和 Verifier status/exit/evidence digest，证据缺失或被篡改时明确标为 unavailable。空闲提示符原有 `/plugins` 组合切换继续保留。它仍不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
 | 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | `0.7.1` 新增三个确定性公开路径反例：模型把否定消息误报为确认时宿主不创建任何 Product 资源；Attempt/Step/Turn 三个终止 append 分别被 Gate 卡住并反复取消时公开 Turn 始终等待，finalizer 独立失败与原取消同时可见；`CandidatePromoter.run()` 在未指定 scheme 会被偏到错误目录的模拟发行版环境中仍使用目标 venv。三项保护均已逐项反向移除并精确重现旧错误，恢复后门禁为 Product 主线 `258 passed`、Product Benchmark `52 passed`、Runtime/CLI cancellation 相邻组 `79 passed`、L4/Promotion/插件 CLI/版本相邻组 `202 passed, 1 skipped`，全仓 collect-only `2411`；compileall 与修改范围 Ruff 已通过。第一次发布全量为 `2388 passed, 5 skipped, 1 failed, 17 errors`，所有红灯归并到两个示例插件仍声明 `<0.7` 的同一真实离线安装/L2 根因；改为各自 `0.2.1` 的一致 Distribution/Manifest 范围后，插件自身 `10 + 17 passed`、真实四 Wheel E2E `18 passed`、真实 L2 公共入口 `1 passed`，Windows 最终全量为 `2406 passed, 5 skipped`、退出码 0。第一次远端 Ubuntu 3.12/3.13 又发现两条 Windows 假绿的测试夹具：executable Patch 只改 index、没有同步 POSIX 文件 mode；Benchmark 权限测试把必然进入模型上下文的 writable Workspace 父路径误列为 evaluator 值，且 Windows `repr` 转义掩盖了断言。两条测试已按真实合同修正，Candidate L2 红灯只是递归命中它们的连带结果；没有修改或放宽生产隔离。新的三平台 CI 必须在 tag 前通过。v0.7.0 的发布基线仍是 `2407 collected / 2402 passed / 5 skipped`，退出码 0；其历史定向数字与七类 F5 反向验证保留在 20.31，不冒充本轮结果。当前维护版有意更新 `AgentLoop` 保护摘要，因为修改的是通用取消收敛；另三个受保护核心文件仍未修改。五个本地既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL |
+| 当前自动化测试 | `0.7.1` 的三个原始确定性公开路径反例覆盖宿主 `START` 授权、AgentLoop 重复取消收敛和 L4 目标 venv scheme；发布门禁新增第四条真实 Git for Windows 长路径反例，证明旧 `ws-workspace-<digest>` 在 nested L2 路径稳定得到 `fatal: '$GIT_DIR' too big`，当前 `ws-<完整 SHA-256>` provision/release 通过。四项保护均逐项反向验证。第一次发布全量的插件兼容红灯、首次远端 Linux 的两个夹具错误，以及其后 Windows L2 的不可诊断失败均按真实 owner 修复；`--tb=line` 让第三次 CI 显示 23 项 Benchmark 失败共享 `workspace-git-failed`，本地同版 Git 与等长路径反例随后把根因固定到身份目录长度，而非 Product/Evaluation。最终门禁数字见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。v0.7.0 的发布基线仍是 `2407 collected / 2402 passed / 5 skipped`，退出码 0；旧数字不冒充本轮结果。当前维护版有意更新 `AgentLoop` 保护摘要，因为修改的是通用取消收敛；另三个受保护核心文件仍未修改。五个本地既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前正式版本为 `v0.7.1`。它保留 v0.7.0 的全部 ProductTask/Benchmark 能力与真实网格历史（20.31），只修宿主启动授权、AgentLoop 重复取消收敛和目标 venv sysconfig scheme 三条已复现边界（20.32）；发布门禁另补齐两个独立示例插件对 0.7 核心的真实 Wheel/Manifest 兼容元数据。其中 AgentLoop 改动只属于通用生命周期 owner，不引入任何 Product 依赖或状态；`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 没有本轮职责变化。当前仍没有默认 Product Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI、流式输出或 Provider retry/fallback。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+当前正式版本为 `v0.7.1`。它保留 v0.7.0 的全部 ProductTask/Benchmark 能力与真实网格历史（20.31），修复宿主启动授权、AgentLoop 重复取消收敛、目标 venv sysconfig scheme，以及发布门禁发现的 Git for Windows nested-worktree 身份长度边界（20.32）；发布门禁另补齐两个独立示例插件对 0.7 核心的真实 Wheel/Manifest 兼容元数据。其中 AgentLoop 改动只属于通用生命周期 owner，不引入任何 Product 依赖或状态；`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 没有本轮职责变化。当前仍没有默认 Product Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI、流式输出或 Provider retry/fallback。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -3165,7 +3165,7 @@ Workflow 或 routing 事实指名了本任务不拥有的 Agent 时 fail closed�
 
 失败与取消都通过同一个控制面收敛既有 owner——ownership tree、Budget account 与 managed worktree——然后写下诚实的终态。Workspace 的 **quarantine 是收敛终态**而不是未收敛：Product 资源合同正是为了保住 dirty worktree 里的证据才 quarantine 它，收敛只排除仍停在 `provisional`/`attached` 的记录，报告用 `live` 显式给出这个数。`--output` 目录下任何东西都不会被删除：一次 attempt「干净」的含义是它的 owner 已经收敛，不是它的证据被抹掉了。
 
-attempt 目录是编号的（`attempts/<NNN>/`）而不是描述性的：managed worktree 由 77 字符的派生身份命名并位于其中，描述性路径加上该身份会在任何普通输出目录下超出 Windows 路径上限。可读的 `attempt_id` 与目录在报告里通过相对 `directory` 字段关联，报告不写宿主绝对路径。
+attempt 目录是编号的（`attempts/<NNN>/`）而不是描述性的：managed worktree 使用保留完整 SHA-256 的 67 字符 `ws-<digest>` 身份并位于其中；它不再重复 `workspace` 目录标签，避免嵌套 L2 临时根把 Git for Windows 的 linked-worktree admin path 推过固定 `$GIT_DIR` 上限。描述性 attempt 路径仍可能越界，所以可读的 `attempt_id` 与编号目录继续通过报告的相对 `directory` 字段关联，报告不写宿主绝对路径。
 
 #### 验证基线与反向验证
 
@@ -3317,9 +3317,9 @@ CLI 的 UTF-8 策略从只在 `chat` handler 生效提升到 `main()` 的统一�
 
 F5 已完成：独立 P0/P1/P2 复审、唯一一次最终完整 pytest、F5 安全扫描、变更后 18-attempt 真实验收、单一 `0.7.0` 版本、验证记录、最终提交后的干净输入打包/Wheel/source ZIP 内容审计和全新 venv 离线安装均已通过；annotated tag、push 与 GitHub Release 已完成。没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager`，也没有新增 retry/fallback。
 
-### 20.32 v0.7.1：宿主启动授权、取消收敛与目标 venv 可移植性（通俗版 20.26）
+### 20.32 v0.7.1：宿主启动授权、取消收敛与受支持平台可移植性（通俗版 20.26）
 
-`0.7.1` 是已发布的窄维护版，不进入 v0.8/v0.9。它处理发布源码独立审查给出的两个确定 P1 与一个受支持平台缺陷，没有新增状态机、事实流、Runner、重试/fallback 或模型权限。
+`0.7.1` 是已发布的窄维护版，不进入 v0.8/v0.9。它处理发布源码独立审查给出的两个确定 P1、一个目标 Python 平台缺陷，以及三平台发布门禁继续发现的 Windows Git 路径缺陷；没有新增状态机、事实流、Runner、重试/fallback 或模型权限。
 
 第一项属于 Product Chat 的**能力升级边界**。[`product/chat.py`](../../src/traceh/product/chat.py) 中的 `confirm_product_task` 仍只记录当前 Turn 的进程内建议，但该建议不再直接调用 `ProductTaskControlPlane.confirm()`。宿主先显示当前 Session 唯一 pending Proposal 推导出的精确 task id，并从独立 Console 输入只接受固定 `START`；EOF、含替换字符的不可解码输入或任何其他文本都只显示 `start not authorized`。这里不解析“是/否”“开始吧”或某种语言的关键词：自然语言模型可以决定何时建议显示提示，但模型不能产生终端输入。通过后控制面仍 fresh 读取同一个 pending Proposal，原有 deterministic task identity、Session/Turn/message 时序证据与一次性消费规则继续生效。没有 `START` 时不会出现 `product-task:*`、task Budget account、managed Workspace 或 Workflow；Approval/Promotion 仍是后续独立宿主权限。`traceh eval` 的 programmatic-immediate 本地实验授权仍由可信 Benchmark host 直接调用控制面，不借用 Chat 模型 Tool。
 
@@ -3349,4 +3349,17 @@ Candidate Validation 仍完整执行核心回归，只把 traceback 呈现改为
 让真实 L2 测试在失败时输出已经持久化的有界诊断；删除该参数会使对应 argv 合同测试
 失败。该改动不改变收集、执行或 fail-closed 判定，只让下一次三平台 run 可复核。
 
-三项新增测试都走真实公开主线而非夹具导入失败：模型在一条明确否定消息上仍合法调用确认 Tool，错误宿主 token 后断言 Product/预算/Workspace/Workflow 全部不存在；EventStore 分别在 Attempt/Step/Turn 终止 append 前设 Gate 并反复取消公开 Turn，全部 durable 后才允许返回，另有 finalizer `OSError` 与原取消同时可见；真实 `CandidatePromoter.run()` 在子进程内把“未显式给 scheme”的路径偏向不存在目录，当前显式 venv scheme 仍生成 review。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`：三条测试依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、以及 `promotion-target-inspection-failed`；保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；Windows 全量与真实 L2 已通过，首次远端 Linux 夹具问题也已按上述真实平台行为修正，新的三平台 CI 必须在 tag 前清零。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+改进后的第三次 CI 证明 23 项 Product Benchmark 红灯共享同一个更早的
+`workspace-git-failed`，而不是 23 个 Evaluation 缺陷。CI 的 L2 会在普通 Windows
+临时目录下再嵌一层 Candidate root、可信核心和 pytest temp；Workspace 原来把
+`ws-workspace-<64 hex>` 同时作为 durable identity 与 worktree leaf，最终令
+`.git/worktrees/<identity>` 触发 Git for Windows 的固定错误
+`fatal: '$GIT_DIR' too big`。同一 Git 2.55、候选插件、隔离 HOME/TEMP 与完整
+Benchmark 在较短目录中均通过；把本机临时根精确延长到边界则稳定重现同一错误。
+[`WorkspaceService`](../../src/traceh/workspaces/service.py) 现在为资源身份使用
+`ws-<完整 SHA-256>`：只去掉操作命名空间已经表达过的 `workspace` 标签，完整摘要、
+Catalog/Directory/Session identity 和 provider path 双向校验均不变。它没有截断摘要、
+自动换目录、重试或 fallback。Windows 边界测试把 admin path 构造到 229 字符；恢复
+旧前缀会增加十个字符并真实得到 `WorkspaceGitError`，当前 provision/release 通过。
+
+四项新增测试都走真实公开主线而非夹具导入失败：前三项分别覆盖否定消息不能授权 ProductTask、Attempt/Step/Turn owned finalizer 与真实 L4 target venv；第四项用真实 Git for Windows 构造 nested admin path。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`、恢复冗余 `ws-workspace-` 前缀，依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、`promotion-target-inspection-failed` 与 `WorkspaceGitError`。保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；首次远端 Linux 夹具问题、Windows L2 诊断缺口和最终 nested-worktree 平台缺陷也按各自 owner 修正。当前 collect-only 为 `2413`；只运行一次的最终完整 pytest 为 `2408 passed, 5 skipped`、退出码 0、耗时 `39:33`，真实 L2 包含在内。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。

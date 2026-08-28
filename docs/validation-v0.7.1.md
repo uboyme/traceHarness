@@ -1,6 +1,6 @@
 # TraceHarness Py v0.7.1 验证记录
 
-验证日期：2026-08-28
+验证日期：2026-08-29
 
 状态：全部发布门禁通过；以 annotated tag `v0.7.1` 发布。
 
@@ -10,7 +10,7 @@ F5 安全审查和历史资产仍是当时的发布快照。
 
 ## 1. 发布范围
 
-v0.7.1 只修复三个已通过公开生产路径复现的边界：
+v0.7.1 修复三个发布前已通过公开生产路径复现的边界，并在三平台发布门禁中继续修复一个受支持平台缺陷：
 
 - Product Chat 中，模型的 `confirm_product_task` 只能请求宿主提示；终端用户必须对
   屏幕上的精确 task 输入固定 `START` 才创建 ProductTask 和资源；
@@ -18,6 +18,9 @@ v0.7.1 只修复三个已通过公开生产路径复现的边界：
   重复取消不能让公开调用提前返回，独立收尾失败也不会被吞；
 - L4 在 `-I -S` 下检查目标 venv 时显式使用标准 `venv` sysconfig scheme，并要求
   `purelib`/`platlib` 留在目标前缀内。
+- Workspace 的完整 256-bit 身份从冗余的 `ws-workspace-<digest>` 收紧为
+  `ws-<digest>`；嵌套 L2 临时根因此不会再把 Git for Windows 的 linked-worktree
+  admin path 推过固定 `$GIT_DIR` 上限，其他 identity/owner/path 校验不变。
 
 最终门禁还发现两个独立示例插件的 Wheel dependency 与运行时 Manifest 仍排斥
 0.7 核心。拥有元数据的插件各自修复并升为补丁版本：Plugin Creator `0.2.1`
@@ -30,12 +33,15 @@ retry/fallback 或 OS sandbox，也没有改变 ProductTask/Workflow schema、�
 
 ## 2. 审查、反例与自动化门禁
 
-冻结范围复审结果为 `P0=0 / P1=0`。三个原始修复都完成了逐项反向验证：
+冻结范围复审结果为 `P0=0 / P1=0`。三个原始修复和发布门禁发现的平台修复都完成了逐项反向验证：
 
 - 去掉宿主 `START` 守卫，否定消息会真实创建 `product-task:*`；
 - 把 owned convergence 退回单次 `shield`，第二次取消会让调用方在 durable 终态前返回；
 - 删除 `scheme="venv"`，真实 `CandidatePromoter.run()` 稳定得到
   `promotion-target-inspection-failed`。
+- 恢复 `ws-workspace-<digest>` 目录身份后，真实 Git for Windows 在构造到边界的
+  nested worktree 上稳定返回 `fatal: '$GIT_DIR' too big`，公开 provision 测试重新得到
+  `WorkspaceGitError`；恢复紧凑前缀后同一路径 provision/release 通过。
 
 第一次发布全量得到 `2388 passed, 5 skipped, 1 failed, 17 errors`。18 个红灯只有
 一个根因：两个真实示例插件仍声明 `<0.7`。pip 以 `ResolutionImpossible` 拒绝四
@@ -62,10 +68,20 @@ stack 填满了只保留尾部的 32 KiB 诊断，外层 pytest 又把 `CommandO
 失败测试输出已经持久化的有界诊断；这不改变 collection、执行项或 fail-closed 结果，
 只保证下一次三平台 run 能给出可复核原因。
 
+改进后的下一次 Windows CI 将 23 个 Benchmark 红灯收敛到同一个更早的
+`workspace-git-failed`。使用同版 Git 2.55、候选插件、隔离 HOME/TEMP 和完整
+Benchmark 的短路径本地对照通过；把临时根延长到 CI 等价边界则稳定得到
+`fatal: '$GIT_DIR' too big`。根因是 Workspace 的
+`ws-workspace-<64 hex>` durable identity 也直接充当 worktree leaf，使 nested L2 的
+`.git/worktrees/<identity>` 越过 Git for Windows 固定上限。当前只删去冗余标签，使用
+`ws-<完整 SHA-256>`；新的真实 Git 边界测试在 229 字符 admin path 上完成
+provision/release。恢复旧前缀后同一测试重新得到 `WorkspaceGitError`，恢复正确实现后
+再次通过。没有更改 Product/Evaluation、截断摘要、自动搬移目录、重试或 fallback。
+
 | 门禁 | 结果 |
 |---|---:|
-| 全仓 collect-only | 2411 |
-| 最终完整 pytest | 2406 passed, 5 skipped |
+| 全仓 collect-only | 2413 |
+| 最终完整 pytest | 2408 passed, 5 skipped |
 | Product 主线 | 258 passed |
 | Product Benchmark | 52 passed |
 | Runtime/CLI cancellation 相邻组 | 79 passed |

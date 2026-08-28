@@ -24,6 +24,7 @@ from traceh.workspaces import (
     WorkspacePathError,
     WorkspaceService,
     WorkspaceSourceError,
+    workspace_identity,
     workspace_operation_id,
 )
 
@@ -63,6 +64,53 @@ def _service(source: Path, managed: Path):
         sources={"trusted-source": source},
     )
     return store, provider, WorkspaceService(store, provider)
+
+
+def test_workspace_identity_keeps_the_full_digest_without_a_path_label() -> None:
+    identity = workspace_identity(
+        operation_id="provision-op",
+        creation_request_id="create-request",
+    )
+
+    assert identity.startswith("ws-")
+    assert len(identity) == 67
+    assert all(character in "0123456789abcdef" for character in identity[3:])
+    assert identity != workspace_identity(
+        operation_id="provision-op",
+        creation_request_id="another-create-request",
+    )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Git for Windows path boundary")
+async def test_workspace_identity_fits_a_nested_git_admin_path(
+    tmp_path: Path,
+) -> None:
+    operation_id = "provision-op"
+    creation_request_id = "create-request"
+    identity = workspace_identity(
+        operation_id=operation_id,
+        creation_request_id=creation_request_id,
+    )
+    suffix = Path("source") / ".git" / "worktrees" / identity
+    probe = tmp_path / "p" / suffix
+    padding = 1 + (229 - len(str(probe)))
+    if padding < 1 or padding > 200:
+        pytest.skip("the host temporary root cannot form the boundary path")
+    base = tmp_path / ("p" * padding)
+    base.mkdir()
+    source, _ = _repository(base / "source")
+    _, _, service = _service(source, base / "managed")
+
+    handle = await service.provision(
+        operation_id=operation_id,
+        creation_request_id=creation_request_id,
+        request=_request(),
+        owner_agent_id=None,
+    )
+
+    assert handle.workspace_id == identity
+    assert len(str(source / ".git" / "worktrees" / identity)) == 229
+    await service.release(handle.workspace_id)
 
 
 async def test_real_worktree_is_pinned_and_clean_release_unregisters_it(
@@ -182,8 +230,7 @@ async def test_existing_unregistered_directory_is_quarantined_not_deleted(
     operation_id = workspace_operation_id(
         "provision", creation_request_id="create-request", owner_agent_id=None
     )
-    workspace_id = workspace_operation_id(
-        "workspace",
+    workspace_id = workspace_identity(
         operation_id=operation_id,
         creation_request_id="create-request",
     )
@@ -214,8 +261,7 @@ async def test_dangling_symlink_target_is_quarantined_not_replaced(
     operation_id = workspace_operation_id(
         "provision", creation_request_id="create-request", owner_agent_id=None
     )
-    workspace_id = workspace_operation_id(
-        "workspace",
+    workspace_id = workspace_identity(
         operation_id=operation_id,
         creation_request_id="create-request",
     )
@@ -404,8 +450,7 @@ async def test_windows_junction_target_is_quarantined_without_traversal(
     operation_id = workspace_operation_id(
         "provision", creation_request_id="create-request", owner_agent_id=None
     )
-    workspace_id = workspace_operation_id(
-        "workspace",
+    workspace_id = workspace_identity(
         operation_id=operation_id,
         creation_request_id="create-request",
     )

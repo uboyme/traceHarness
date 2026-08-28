@@ -72,7 +72,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。第一次发布全量得到 2388 通过、5 跳过、1 失败、17 error，红灯全来自两个示例插件仍写 `<0.7`；修成各自 0.2.1 的一致 Wheel/Manifest 范围后，插件自身 10+17 项、真实四 Wheel E2E 18 项和真实 L2 通过，最终全量是 2406 通过、5 跳过、退出码 0。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
+| 当前测试数 | v0.7.1 新增三组真正走公开主线的反例：模型在用户明确拒绝时仍调用确认 Tool，也不能创建 ProductTask/Budget/Workspace/Workflow；EventStore 把 Attempt/Step/Turn 的结束写入分别卡住并连续取消，公开 Turn 必须一直等，收尾自己失败也不能被吞；真实 `CandidatePromoter.run()` 遇到模拟发行版的错误默认 scheme，仍能检查选中的 venv。三项都临时拿掉各自保护做过反向验证，分别重现了未经授权开任务、第二次取消提前返回和 `promotion-target-inspection-failed`。恢复后的门禁是 Product 主线 258 通过、Product Benchmark 52 通过、Runtime/CLI 取消相邻组 79 通过、L4/Promotion/插件 CLI/版本相邻组 202 通过 1 跳过，全仓 collect-only 2411；compileall 和改动范围 Ruff 通过。第一次发布全量得到 2388 通过、5 跳过、1 失败、17 error，红灯全来自两个示例插件仍写 `<0.7`；修成各自 0.2.1 的一致 Wheel/Manifest 范围后，插件自身 10+17 项、真实四 Wheel E2E 18 项和真实 L2 通过，Windows 全量是 2406 通过、5 跳过、退出码 0。第一次远端 Ubuntu 3.12/3.13 还抓出两条 Windows 假绿的测试夹具：executable Patch 只改 Git index、没有同步 POSIX 文件 mode；Benchmark 权限测试把本来就必须告诉模型的 writable Workspace 父路径错当 evaluator 值，Windows 只是因为 `repr` 把反斜杠双写才没命中。两项已按真实合同修正，L2 红灯只是它递归跑到这两项后的连带结果；生产隔离没有放宽，新三平台 CI 必须在 tag 前通过。v0.7.0 发布基线仍是 2407 收集 / 2402 通过 / 5 跳过，退出码 0；旧数字不冒充本轮结果。当前有意更新 AgentLoop 的保护摘要，另外三个受保护核心文件未修改 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -3029,4 +3029,14 @@ JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际�
 
 第一次准备发布时，全量测试还抓出了一条旧版本留下的包装问题：Plugin Creator 和 Python Quality 虽然都是仓库里的真实独立 Wheel，但它们的安装依赖和运行时 Manifest 还写着“只支持 `<0.7`”。所以核心已经是 0.7.1 时，pip 正确拒绝把四个 Wheel 装在一起，L2 也正确拒绝拿这个 Plugin Creator 当候选。这不是 pip 或验证器太严格，而是插件自己的元数据忘了跟着已兼容的公开 SDK 前进。现在两个插件都升到 `0.2.1`，各自的 Wheel 依赖和 Manifest 完全一致并覆盖 0.7；Creator 自己可装在 0.6/0.7，但它教 Agent 新建的候选只写当前 `>=0.7,<0.8`，不提前猜 v0.8 会不会兼容。旧范围已经真实复现过 pip `ResolutionImpossible` 和 L2 fail closed，修正后插件自身测试和真实离线四 Wheel 测试都重新通过。
 
-三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。第一次发布全量把插件旧范围问题抓出来，真实 Wheel/L2 修好后最终全量 2406 通过、5 跳过；干净打包、离线安装、annotated tag、push 和 GitHub Release 也已完成。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+第一次把最终候选推到 GitHub 后，Ubuntu 3.12/3.13 还帮我们抓出了两条
+“Windows 看起来绿、其实夹具没把合同说清楚”的问题。第一条测试只把可执行位写进
+Git index；Linux 上 `git add -A` 会相信磁盘上真实的文件 mode，所以夹具现在也真的
+对文件做 `chmod`。第二条测试把 attempt 输出目录当成 evaluator secret，但 Agent
+本来就必须知道位于它下面的 writable Workspace 绝对路径；Windows 只是因为
+`repr` 把反斜杠写成两个而没撞上字符串断言。现在只禁止真实的 Review、Promotion、
+target 和 verifier 值进入 ModelRequest，不再把一个位置名称冒充权限。生产边界没放宽，
+系统依然不是 OS sandbox。L2 的红灯只是它递归跑全量时又碰到这两条测试，不是新的
+生产缺陷。
+
+三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。第一次发布全量把插件旧范围问题抓出来，真实 Wheel/L2 修好后 Windows 全量 2406 通过、5 跳过；首次远端 Linux 夹具问题也按上面的真实平台行为修正，新的三平台 CI 必须在 tag 前清零。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。

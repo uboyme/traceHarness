@@ -1033,6 +1033,11 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
     assert evidence is not None and attempt.success
     surface = repr(requests)
     assert requests
+    # The model must receive its writable Workspace path, which deliberately
+    # lives below the attempt directory.  That parent directory is a location,
+    # not evaluator authority or a frozen evaluation value.  The values below
+    # are the actual Review, Promotion, verifier and target facts that must stay
+    # out of every ModelRequest.
     secrets = [
         evidence.review_id,
         evidence.promotion_id,
@@ -1041,7 +1046,6 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
         evidence.target_ref,
         evidence.verifier_definition_digest,
         _VERIFIER_ARGV[2],
-        str(tmp_path / "evidence"),
     ]
     for value in secrets:
         assert value is not None

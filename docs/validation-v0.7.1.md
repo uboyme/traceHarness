@@ -42,6 +42,16 @@ retry/fallback 或 OS sandbox，也没有改变 ProductTask/Workflow schema、�
 Wheel 共存，L2 以 `candidate-traceh-dependency-incompatible` fail closed；没有吞错、
 跳过或放宽验证器。修复后门禁如下：
 
+最终提交的第一次远端 Ubuntu 3.12/3.13 CI 又暴露了两条 Windows 本地门禁无法
+证明的平台夹具错误，而不是生产实现失败。Git Patch 夹具只用
+`git update-index --chmod=+x` 改了 index；POSIX 上随后的 `git add -A` 会按真实文件
+mode 把它还原，所以现在夹具同时给真实文件设置 executable bit。Benchmark 权限测试
+则把包含 Agent writable Workspace 的 attempt 父目录路径误列为 evaluator secret；
+POSIX `repr` 保留 `/` 因而失败，Windows `repr` 转义 `\` 才偶然假绿。当前测试只检查
+真正冻结的 Review、Promotion、target 与 verifier 值，Workspace 仍在模型可见上下文
+中，生产隔离合同没有放宽。Candidate L2 的失败只是递归全量碰到这两条错误后的连带
+结果。修正后先运行两条精确反例，再由新的 GitHub Actions run 在 tag 前复验三个矩阵。
+
 | 门禁 | 结果 |
 |---|---:|
 | 全仓 collect-only | 2411 |

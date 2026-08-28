@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+import stat
 import subprocess
 from pathlib import Path
 
@@ -81,6 +82,15 @@ async def test_full_patch_captures_committed_staged_unstaged_untracked_deleted_a
     (workspace / "committed.txt").write_text("committed\n", encoding="utf-8")
     _git("add", "committed.txt", cwd=workspace)
     _git("update-index", "--chmod=+x", "tracked.txt", cwd=workspace)
+    if os.name != "nt":
+        # On filesystems where Git honours the executable bit, ``git add -A``
+        # reconciles the temporary index with the real worktree mode.  Make the
+        # fixture's worktree agree with the index change so the candidate
+        # genuinely contains an executable file on every platform.
+        tracked = workspace / "tracked.txt"
+        tracked.chmod(
+            tracked.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
     _git("commit", "-m", "candidate commit", cwd=workspace)
     (workspace / "tracked.txt").write_text("unstaged final\n", encoding="utf-8")
     (workspace / "staged.txt").write_text("staged first\n", encoding="utf-8")

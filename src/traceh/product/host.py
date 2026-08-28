@@ -40,6 +40,7 @@ from traceh.product.execution import (
     ProductExecutionHost,
     ProductWorkflowBindingResolver,
 )
+from traceh.product.inspection import ProductInspectionEvidenceReader
 from traceh.product.registry import ProductProfileBinding, ProductProfileRegistry
 from traceh.product.resources import ManagedProductTaskProvisioner, ProductResourceBindings
 from traceh.product.router import ProductModeRouter, StrictTaskRoutingParser
@@ -216,9 +217,10 @@ async def build_product_chat_host(
         artifact_cas,
         limits=capture_limits,
     )
+    artifact_reader = PatchArtifactReader(store, artifact_cas)
     promotion = PatchPromotionService(
         store,
-        PatchArtifactReader(store, artifact_cas),
+        artifact_reader,
         promotion_targets,
         plan=resolved.verification_plan,
     )
@@ -270,7 +272,21 @@ async def build_product_chat_host(
         profile_id=host_profile.profile_id,
     )
     actions = ProductTurnActions() if actions is None else actions
-    surface = ProductChatSurface(control, actions, approver_id=approver_id)
+    evidence = ProductInspectionEvidenceReader(
+        store,
+        artifact_reader,
+        verification_plan=resolved.verification_plan,
+        verification_plan_digest=resolved.verification_plan_digest,
+        promotion_target_id=resolved.profile.promotion_target_id,
+        max_patch_chars=max_report_chars,
+    )
+    surface = ProductChatSurface(
+        control,
+        actions,
+        evidence,
+        approver_id=approver_id,
+        data_dir=data_dir,
+    )
     return ProductChatHost(
         surface=surface,
         control=control,

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import io
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ from traceh.cli.main import (
     _configure_from_environment,
     _provider_and_model,
     build_parser,
+    main,
 )
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -525,9 +527,79 @@ def test_configure_stdio_degrades_safely_on_streams_without_reconfigure() -> Non
     assert report.stderr is False
 
 
+def test_configure_stdio_degrades_on_an_incompatible_reconfigure_signature() -> None:
+    class IncompatibleStream:
+        def reconfigure(self) -> None:
+            return None
+
+    stream = IncompatibleStream()
+    report = configure_stdio(stdin=stream, stdout=stream, stderr=stream)
+    assert report == type(report)(False, False, False)
+
+
 def test_configure_stdio_applies_utf8_to_real_text_streams() -> None:
     stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
     report = configure_stdio(stdin=stream, stdout=stream, stderr=stream)
     assert report.stdout is True
     assert stream.encoding.lower().replace("-", "") == "utf8"
     assert stream.errors == "replace"
+
+
+class _LegacyWindowsTextStream:
+    """A strict GBK-like stream until the CLI applies its UTF-8 policy."""
+
+    def __init__(self) -> None:
+        self.encoding = "gbk"
+        self.errors = "strict"
+        self.parts: list[str] = []
+
+    def reconfigure(self, *, encoding: str, errors: str) -> None:
+        self.encoding = encoding
+        self.errors = errors
+
+    def write(self, value: str) -> int:
+        value.encode(self.encoding, errors=self.errors)
+        self.parts.append(value)
+        return len(value)
+
+    def flush(self) -> None:
+        return None
+
+
+def test_public_replay_configures_unicode_output_before_rendering(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    data_dir = tmp_path / "data"
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    async def seed() -> str:
+        runtime = build_default_runtime(
+            RuntimeConfig(
+                data_dir=data_dir,
+                provider="scripted",
+                model="scripted-model",
+            ),
+            provider=ScriptedLlmProvider(
+                (ModelResponse(content="verified ✅"),), repeat_last=True
+            ),
+        )
+        try:
+            session_id = await runtime.create_session(workspace)
+            await runtime.run_existing(session_id, "respond")
+            return session_id
+        finally:
+            await runtime.dispose()
+
+    session_id = asyncio.run(seed())
+    stdout = _LegacyWindowsTextStream()
+    stderr = _LegacyWindowsTextStream()
+    monkeypatch.setattr(sys, "stdout", stdout)
+    monkeypatch.setattr(sys, "stderr", stderr)
+
+    with pytest.raises(SystemExit) as caught:
+        main(["replay", session_id, "--data-dir", str(data_dir)])
+
+    assert caught.value.code == 0
+    assert stdout.encoding == "utf-8"
+    assert "verified ✅" in "".join(stdout.parts)

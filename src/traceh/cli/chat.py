@@ -518,6 +518,8 @@ async def _run_turn(
             prepared,
             turn_id=result.turn_id,
             console=console,
+            heartbeat_seconds=heartbeat_seconds,
+            clock=clock,
         )
     return False
 

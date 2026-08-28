@@ -87,6 +87,7 @@ def profile() -> ProductTaskProfile:
         return ProductRoleProfile(
             preset=f"preset-{name}",
             capability_grants=("read-workspace",),
+            max_output_tokens=4_096,
             budget=limits(max_children=0, max_depth=0),
         )
 
@@ -100,6 +101,7 @@ def profile() -> ProductTaskProfile:
         coder=role("coder"),
         router=ProductRouterProfile(
             preset="preset-router",
+            max_output_tokens=256,
             budget=limits(max_tokens=2_000, max_steps=2, max_tool_calls=0),
             timeout_milliseconds=30_000,
             max_response_bytes=2_048,

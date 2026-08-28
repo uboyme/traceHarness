@@ -140,6 +140,9 @@ PRODUCT_PROMOTION_IMPORTS = {
     "events.py": {
         "traceh.promotion.models": {"require_target_ref"},
     },
+    "inspection.py": {
+        "traceh.promotion.models": {"review_matches_verification_plan"},
+    },
     "host.py": {
         "traceh.promotion.service": {"PatchPromotionService"},
     },
@@ -175,7 +178,10 @@ EVALUATION_PROMOTION_IMPORTS = {
         "traceh.promotion.models": {"verifier_definition_digest"},
     },
     "metrics.py": {
-        "traceh.promotion.models": {"expected_approval_digest"},
+        "traceh.promotion.models": {
+            "expected_approval_digest",
+            "review_matches_verification_plan",
+        },
         "traceh.promotion.projection": {"PromotionLedgerReader"},
     },
 }
@@ -183,12 +189,13 @@ EVALUATION_PROMOTION_IMPORTS = {
 
 It selects the concrete one-shot bare target for each attempt, exactly as
 ``cli/main.py`` selects one for Chat, and it reads the ledger back to decide
-whether a promotion really happened. The two pure digest functions are reused
-rather than reimplemented, for the same reason F2 reuses them: a benchmark that
-computed its own answer to "which verifier" or "which approval covers this
-Review" would be a second answer that drifts. It owns no Review, Approval or
-Promotion *operation*: the whole run goes through the Product control plane, and
-the symbol sets here are what keeps that true as the stage advances.
+whether a promotion really happened. Promotion's approval digest and shared
+frozen-plan Review matcher are reused rather than reimplemented, for the same
+reason F2 reuses its identity rules: a benchmark that computed its own answer to
+"which verifier" or "which approval covers this Review" would be a second answer
+that drifts. It owns no Review, Approval or Promotion *operation*: the whole run
+goes through the Product control plane, and the symbol sets here are what keeps
+that true as the stage advances.
 """
 
 

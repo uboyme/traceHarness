@@ -593,6 +593,7 @@ class ProductRoleProfile:
 
     preset: str
     capability_grants: tuple[str, ...]
+    max_output_tokens: int
     budget: BudgetLimits
 
 
@@ -606,6 +607,7 @@ class ProductRouterProfile:
     """
 
     preset: str
+    max_output_tokens: int
     budget: BudgetLimits
     timeout_milliseconds: int
     max_response_bytes: int

@@ -11,6 +11,7 @@ import asyncio
 import json
 import sys
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from traceh.api.product import (
     ProductTaskStatus,
     ResolvedTaskMode,
 )
+from traceh.api.promotion import VerifierOutcome
 from traceh.api.workflow import WorkflowStatus
 from traceh.evaluation.attempt import REQUESTER_PROVIDER_ID
 from traceh.evaluation.errors import BenchmarkEvidenceError, BenchmarkExecutionError
@@ -29,6 +31,12 @@ from traceh.evaluation.metrics import collect_attempt_evidence
 from traceh.evaluation.report import APPROVAL_POLICY
 from traceh.evaluation.repositories import read_target_revision
 from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.promotion.models import (
+    expected_approval_digest,
+    promotion_identity,
+    verification_evidence_digest,
+)
+from traceh.promotion.projection import PromotionLedgerReader
 from traceh.session.jsonl import JsonlEventStore
 
 PRODUCT_PROVIDER_ID = "benchmark-test-provider"
@@ -182,7 +190,12 @@ def _budget(**changes: int | None) -> dict[str, int | None]:
 
 
 def _role(preset: str, grants: tuple[str, ...]) -> dict[str, object]:
-    return {"preset": preset, "capability_grants": list(grants), "budget": _budget()}
+    return {
+        "preset": preset,
+        "capability_grants": list(grants),
+        "max_output_tokens": 4_096,
+        "budget": _budget(),
+    }
 
 
 def build_benchmark(
@@ -218,6 +231,7 @@ def build_benchmark(
         },
         "router": {
             "preset": "bench-router",
+            "max_output_tokens": 256,
             "budget": _budget(max_steps=2, max_tool_calls=0),
             "timeout_milliseconds": 60_000,
             "max_response_bytes": 2_048,
@@ -577,6 +591,7 @@ async def test_interrupting_a_run_converges_before_it_propagates(
         promotion_target_id=BENCHMARK_TARGET_ID,
         target_ref="refs/heads/main",
         target_revision=await read_target_revision(target, "refs/heads/main"),
+        verification_plan=runner.manifest.settings.host_profile.verification_plan,
     )
     assert not evidence.success
     assert evidence.product_status is ProductTaskStatus.CANCELLED
@@ -718,6 +733,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     assert unknown.value.code == "benchmark-product-task-missing"
 
@@ -728,6 +744,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id="a-different-target",
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     # A run interpreted through a definition it never agreed to would report node
     # kinds and results that never happened.
@@ -740,6 +757,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/somewhere-else",
             target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     assert ref.value.code == "benchmark-promotion-target-mismatch"
 
@@ -795,6 +813,7 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-session-invariants-violated"
 
@@ -829,8 +848,103 @@ async def test_a_review_the_workflow_never_produced_breaks_the_chain(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-review-chain-broken"
+
+
+async def test_a_review_result_outside_the_frozen_plan_is_refused(
+    tmp_path: Path,
+) -> None:
+    """Internal Review consistency cannot replace binding to the host plan.
+
+    Recomputing the Review's evidence digest leaves a shape-valid durable event.
+    The collector must still refuse it because the result no longer names the
+    exact verifier command frozen in the benchmark manifest.
+    """
+
+    runner = _runner(tmp_path, arms=(("single", 1),))
+    report = await runner.run()
+    (attempt,) = report.attempts
+    assert attempt.evidence is not None and attempt.success
+
+    events = tmp_path / "evidence" / attempt.directory / "ev"
+    stream = events / "patch-promotions%3Aledger.jsonl"
+    event_store = JsonlEventStore(events)
+    ledger = await PromotionLedgerReader(event_store).load()
+    assert attempt.evidence.review_id is not None
+    review = ledger.review(attempt.evidence.review_id)
+    assert review is not None
+    assert attempt.evidence.promotion_id is not None
+    promotion = ledger.promotion(attempt.evidence.promotion_id)
+    assert promotion is not None
+    records = [
+        json.loads(line)
+        for line in stream.read_text(encoding="utf-8").splitlines()
+    ]
+    recorded = next(
+        record for record in records if record["type"] == "patch/review-recorded"
+    )
+    result = dict(recorded["data"]["results"][0])
+    replacement = "9" * 64
+    assert result["argv_digest"] != replacement
+    result["argv_digest"] = replacement
+    recorded["data"]["results"] = [result]
+    results = (VerifierOutcome(**result),)
+    evidence_digest = verification_evidence_digest(
+        recorded["data"]["verifier_definition_digest"], results
+    )
+    recorded["data"]["verification_evidence_digest"] = evidence_digest
+    approval_digest = expected_approval_digest(
+        replace(
+            review,
+            results=results,
+            verification_evidence_digest=evidence_digest,
+        )
+    )
+    replacement_promotion_id = promotion_identity(approval_digest)
+    for record in records:
+        if "approval_digest" in record["data"]:
+            record["data"]["approval_digest"] = approval_digest
+        if record["type"] == "patch/promotion-committed":
+            record["data"]["promotion_id"] = replacement_promotion_id
+    stream.write_text(
+        "".join(
+            json.dumps(
+                record,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+            for record in records
+        ),
+        encoding="utf-8",
+    )
+    # Keep the other durable domains internally consistent with the rewritten
+    # ledger. Without the frozen-plan check the old collector therefore accepts
+    # the attempt as a successful, fully chained measurement.
+    for fact_stream in (
+        events / f"product-task%3A{attempt.evidence.task_id}.jsonl",
+        events / f"workflow%3A{attempt.evidence.task_id}.jsonl",
+    ):
+        original = fact_stream.read_text(encoding="utf-8")
+        rewritten = original.replace(promotion.approval_digest, approval_digest)
+        rewritten = rewritten.replace(
+            promotion.promotion_id, replacement_promotion_id
+        )
+        fact_stream.write_text(rewritten, encoding="utf-8")
+
+    with pytest.raises(BenchmarkEvidenceError) as caught:
+        await collect_attempt_evidence(
+            JsonlEventStore(events),
+            task_id=attempt.evidence.task_id,
+            promotion_target_id=BENCHMARK_TARGET_ID,
+            target_ref="refs/heads/main",
+            target_revision=attempt.evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+        )
+    assert caught.value.code == "benchmark-verifier-evidence-mismatch"
 
 
 async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
@@ -870,6 +984,7 @@ async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=evidence.new_revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-routing-session-mismatch"
 
@@ -892,6 +1007,7 @@ async def test_success_requires_the_ref_to_hold_the_promoted_revision(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=revision,
+            verification_plan=runner.manifest.settings.host_profile.verification_plan,
         )
         assert evidence.product_status.value == "completed"
         assert evidence.review_passed is True

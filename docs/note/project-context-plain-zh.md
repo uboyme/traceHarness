@@ -28,7 +28,11 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前版本是 **`0.6.0`**。v0.5 的 Generation、Lease、插件组合切换、四层宿主装配和 application 插件执行能力全部保留；v0.6 又正式发布两条主线：一条是 Runtime 外的 L1–L4（写源码候选、独立验证、固定任务对比、人工批准后精确推广/回滚），另一条是 Stage A–E 的多 Agent 控制面（身份、FIFO 收件、真实投递、child-first 生命周期和五个模型 Tool）。v0.7 D0 把接缝收干净；v0.7-A/B 把旧 Budget 删掉，换成单一 append-only 层级账本并接到真实 owned boundary；v0.7-C 在独立域加入 Workspace Catalog 和 commit-pinned Git worktree；v0.7-D1 把一个 terminal message 对应的完整 Git 状态冻结成独立 Manifest + CAS Patch Artifact；v0.7-D2 在 Runtime 外加一条独立的推广主线：固定检查、不可改的 Review 报告、人工交回精确摘要，最后用 `git update-ref <分支> <新 commit> <预期旧 commit>` 推到宿主管理的裸仓库；v0.7-E 再在这些公共服务之上加一层**固定**的流程图（Typed Workflow），用五类节点把它们串起来，并且每次运行单独记一条编排账。它没有把余额、路径、Git、Patch 或审批塞进 `AgentRuntime`，也没有给 `AgentLoop` 增加分支。Plugin Creator Skill 与 Python Quality 仍是独立 Wheel；插件仍不能自己选择子层或替换 EventStore。当前仍没有默认 CLI 的 Budget/Workspace/Artifact/Promotion/Workflow 装配、L5 自动归纳弱点/提出候选、操作系统沙箱、隔离插件、跨进程 Agent/Workspace 接管、自动批准、非裸仓库推广目标，也没有通用 Workflow DSL（固定 Typed Workflow 已实现，见 20.19）。v0.7-F0 又往上加了一层，但**只加了合同**：统一 `traceh chat` 产品面的协议已经定死（见 20.20）；v0.7-F1 再把这份合同的第一条真实主线做出来——ProductTask 成了一本能严格写入、重放、幂等对账和实时查询的真账（见 20.21）；v0.7-F2 又补上「确认之后、执行之前」的一段：严格路由器、唯一 Profile 注册表和固定产品装配（见 20.22）；v0.7-F3 才真正在原来的聊天里把它跑起来——提议、后续真人确认、固定流程图、停在审批关卡、重启后按任务编号继续，最后由宿主显式推广（见 20.23）；v0.7-F4 再把 `traceh eval` 换成这条同一主线的度量入口：一次性本地仓库、宿主立即签字、按解析后模式聚合的 single/multi 数字，指标只来自账本和宿主自己的秒表（见 20.24）。到这里仍然没有真实外部模型验收，也还没发布。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前候选版本是 **`0.7.0`**，还没有 tag、push 或发布。它保留 v0.5 的插件 Composition、v0.6 的 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并把 v0.7 的层级 Budget、独立 Git Workspace、不可变 Patch、固定检查/Review/真人 Approval/bare ref CAS Promotion、固定 Typed Workflow、ProductTask 真账、严格 Router、可选完整 Chat 产品面和唯一 `traceh eval` Benchmark 收进同一个候选。它没有把这些状态塞进 `AgentLoop`、`AgentRuntime`、Supervisor 并发内核或 `PluginManager`，也没有增加第二个 Workflow、Benchmark Runner 或旧 eval 兼容。F5 的多轮 18 次真实网格都保留证据（见 20.25）：当前 manifest 在修正 WLAN DNS 后的第七轮是 18/18 可度量、16/18 成功，DNS/TLS failure 都为 0；独立复审、唯一一次最终全量、安全扫描、真实网格、候选提交后的干净打包/内容审计和全新 venv 离线安装都已完成。tag、push 和发布仍要另行授权。
+
+第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
+
+第五轮后的手工 single/multi Chat 又暴露两个发版前问题：执行中长时间没有 Product 进度、Approval 只给一堆哈希；以及角色累计 Token 总预算被误当成每次 provider 输出上限。现在确认后会立即显示 task id，并沿用用户显式 heartbeat 间隔报告 durable task/workflow/mode；Approval 和 `/task inspect` 能看到节点、实际 Agent Session/replay 命令、变更文件、有界 Patch、检查状态与退出码，证据读不出来会明确说 unavailable。新的 ADR-0034 把角色整个生命周期的 `budget.max_tokens` 与每次请求的 `max_output_tokens` 分开，旧配置形状明确拒绝；这改变了实验 Profile，所以第五轮只保留为历史证据。新 Profile 的第六轮定位出坏 DNS，第七轮在修正 DNS 后完成当前真实验收。Windows 的 `inspect/replay` 也统一使用 UTF-8 输出，不再被合法的 `✅` 卡死。
 
 ### 版本为什么只准写在一个地方
 
@@ -53,7 +57,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能修改代码吗 | 能，通过五个受控 Coding Tools |
 | 能验证修改吗 | 能，可配置外部命令 Verifier |
 | 能继续同一个会话吗 | 能，`resume` 会在同一个 Session 追加新 Turn |
-| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话，能实时打印每一步和每次工具调用，卡在慢操作上时还会每隔几秒报一次「还在跑」；按一次 Ctrl+C 只取消当前这一轮、会话还在。但它仍是行式提示符，不是流式 TUI |
+| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话，能实时打印每一步和每次工具调用，卡在慢操作上时还会每隔几秒报一次「还在跑」；ProductTask 确认后也会立即给 task id 并报告 durable 进度，到审批时显示节点、Session/replay、改动文件、有界 Patch 和固定检查结果。按一次 Ctrl+C 只取消当前这一轮、会话还在。但它仍是行式提示符，不是流式 TUI |
 | 有插件系统吗 | **有**。装一个 Wheel 就能被发现，显式启用后它的 Tool、Prompt、Service、Provider、Policy、Middleware、命名 Verifier 都能走正常主线（第 19 节）；其中 Provider/Verifier 还要再明确选择 |
 | 能让 Agent 帮我写新插件吗 | L1 可以：显式启用 `traceh.plugin.creator` 后，它会读取打包在 Wheel 里的工作流、合同、模板和清单，把**源码候选**写进单独 Candidate Workspace。但结果必须标成“未验证”，不会自动 build/test/install/enable |
 | 能独立验证这份候选吗 | L2 可以：显式指定候选目录、可信核心 Git 仓库、新输出目录和依赖源后，`traceh plugins validate` 会跑 13 道宿主管控门禁。普通门禁失败只有完整报告；报告自己都写不完时连输出目录都不会留下；通过才发布精确哈希产物 |
@@ -68,7 +72,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个 Session 文件吗 | 能，事件文件不会被写坏；Windows 和 Linux 都有真正的操作系统级文件锁 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | F4 前两轮独立审查发现的 5 个 P1、2 个 P2 已全部按根因修好，最终复审清零后只跑了一次全量：2395 收集 / 2390 通过 / 5 跳过，退出码 0，耗时 28:04。两个 F4 专测文件 51 通过；Product/架构 304 通过；Budget/Workspace/Artifact/Promotion/Workflow 325 通过、2 跳过；CLI 519 通过、1 跳过。compileall、改动范围 Ruff、文档 QA、`git diff --check` 都通过，四个受保护核心文件零 diff。五个 skip 仍是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 的历史检查点是 2344/2339/5，F2 是 2326/2321/5，F1 是 2253/2248/5，v0.6.0 发布快照为 1707/1706/1 |
+| 当前测试数 | F4 前两轮独立审查发现的 5 个 P1、2 个 P2 已全部按根因修好，最终复审清零后只跑了一次全量：2395 收集 / 2390 通过 / 5 跳过，退出码 0，耗时 28:04。F5 早期 D1/D2 与 Router 修复的历史门禁分别是 111 通过、2 跳过和 141 通过。本轮发版前稳定化定向门禁为：Product（不重复 Benchmark）257 通过，Evaluation/F4 Benchmark 52 通过，Budget/Workspace/Artifact/Promotion/Workflow 397 通过、3 跳过，CLI 521 通过、1 跳过；全仓 collect-only 是 2407。task id/heartbeat、CAS 篡改拒批、每请求 Token 上限、Windows Unicode replay、旧 schema 拒绝、Evaluation 冻结 Verifier 绑定和已有 Promotion 恢复重验七类关键保护都逐项做了反向验证。第一次独立审查发现一份内部摘要自洽、却把 `argv_digest` 换成别的值的 Review 曾能显示通过、直接批准并移动 bare ref；共享规则随后保护 inspection、旧 Review 重用、approve、promote 和 Evaluation evidence collection。复审又发现 Promotion 已落盘但 Product terminal 未写的恢复分支会直接补 `completed`，绕过 owner；现在它先进入幂等 `promote()` 重验。拿掉保护时，公共测试分别重现 ref 移动、错误 Benchmark 成功和恢复窗口错误完成；恢复后 F3/F4 定向全绿。最终独立复审是 P0/P1/P2 全部为 0；随后唯一一次完整 pytest 得到 2407 收集 / 2402 通过 / 5 跳过、退出码 0，quiet 输出没有给可引用总耗时。compileall、改动范围 Ruff、示例硬编码扫描、`git diff --check` 和四个受保护核心文件零改动均通过。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 的历史检查点是 2344/2339/5，F2 是 2326/2321/5，F1 是 2253/2248/5，v0.6.0 发布快照为 1707/1706/1 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -148,7 +152,7 @@ flowchart LR
 | `artifacts/` | 把一个已完成消息对应的完整 Git 改动冻成不可变证据：Patch bytes 进内容寻址仓库，来源绑定进一条全局 Manifest 账 | `events.py`/`catalog.py`（Manifest 词汇与投影）、`git_patch.py`（临时 index 快照）、`cas.py`、`capture.py`、`reader.py`、`reporting.py` |
 | `promotion/` | 对那份不可变 Patch 做固定检查、记不可改的 Review、接收人工的精确批准，最后用 Git 分支的比较后交换推广出去 | `models.py`（身份与摘要）、`events.py`/`projection.py`（一条账与唯一投影）、`verification.py`（固定检查执行）、`local_git.py`（裸仓库解析、临时集成与 ref CAS）、`cleanup.py`（草稿地失败的统一组合）、`service.py`（review/approve/promote） |
 | `workflow/` | 用一张**固定**的流程图把上面这些公共服务串起来：跑 Agent、扇出、汇合、检查、等人签字；每次运行单独记一条编排账 | `models.py`（定义冻结、DAG 校验、派生身份）、`events.py`/`projection.py`（七类事实与唯一投影）、`execution.py`（五类节点各自怎么做）、`service.py`（单飞协调器） |
-| `product/` | 产品任务的薄控制层：F1 记唯一 ProductTask 账，F2 做严格路由与固定装配，F3 再把现有 Chat、Workflow、Budget、Workspace、Artifact 和 Promotion 串成可暂停、可按 task id 继续的产品主线 | `events.py`/`projection.py`/`service.py`（事实）、`router.py`/`registry.py`/`topology.py`/`assembly.py`（固定计划）、`chat.py`/`control.py`/`execution.py`/`resources.py`/`host.py`（宿主产品面） |
+| `product/` | 产品任务的薄控制层：F1 记唯一 ProductTask 账，F2 做严格路由与固定装配，F3 再把现有 Chat、Workflow、Budget、Workspace、Artifact 和 Promotion 串成可暂停、可按 task id 继续的产品主线；F5 的审批可读性只 fresh join 旧账，不加新状态 | `events.py`/`projection.py`/`service.py`（事实）、`router.py`/`registry.py`/`topology.py`/`assembly.py`（固定计划）、`chat.py`/`inspection.py`/`control.py`/`execution.py`/`resources.py`/`host.py`（宿主产品面与只读证据卡） |
 | `supervision/` | 把已接受的消息真的跑起来，并按 durable owner 关系管生命周期，再把它安全地交给模型调用；D0 把 Tool 权限和宿主开 child 决策从并发内核旁边拆成窄接缝 | `ProcessAgentSupervisor`、Delivery 账、`lifecycle.py`、`execution.py`、`authority.py`、`provisioning.py`，以及 `reports.py`（持久化运行报告）和 `tools.py`（五个绑定 owner 的 Tool） |
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 与 Stage C Workspace wrapper 都只面向这份公共合同。`WorkspaceProvider` 也已有真实 Git 实现和契约测试；`api/artifacts.py` 与 `api/promotion.py` 里的 Patch、Review、Approval、Promotion 值同样都有真实实现和测试，不是占位。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
@@ -1241,7 +1245,7 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 47. **通过检查 + 有人签字，仍然不等于“这个改动是对的”**：D2 只能证明这份 Patch 干净地应用到了那个精确 commit 上、跑完了宿主**事先定死**的那几条命令、并且有人对这份具体内容交回了精确摘要。检查命令跑在同一个用户权限下，那是能力和证据边界，不是操作系统隔离；另一个有目标仓库写权限的进程照样能挪分支，系统只保证发现并拒绝。另外 `write-tree`/`commit-tree` 会在分支移动前先把对象写进目标仓库，被拒绝的推广可能留下没人引用的对象——没有分支指向它们，但清理仍要人显式做。
 48. **推广没有“自动”这一档**：没有自动批准、没有自动挑目标、没有 CLI，也没有模型可见的 approve/merge/promote 工具。目标只支持宿主管理的裸仓库，不动任何普通 checkout；分支只能靠 `update-ref` 的比较后交换移动，失败之后不做自动回滚去覆盖别人后来写进去的东西。
 
-接下来按 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md) 推进：D0、A/B、C、D1/D2、E、F0–F3 已提交；F4 的度量入口已实现，独立复审和唯一一次最终全量均已通过，工作区仍待提交；之后才是 F5 发布。不能为了 Roadmap 好看把后续能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
+接下来按 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md) 推进：D0、A/B、C、D1/D2、E、F0–F4 都已提交；现在只做 F5 发版稳定化与门禁。不能为了 Roadmap 好看把 v0.8/v0.9 能力提前塞进 Supervisor、`AgentRuntime` 或 `AgentLoop`。
 
 ## 17. 改一个地方时，还要想到哪些地方
 
@@ -1569,7 +1573,7 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 
 ## 20. 多 Agent 是怎么起步的（身份 + 收件箱 + 执行 + 生命周期 + 模型 Tool）
 
-正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（父子生命周期收敛）在 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（模型 Tool）在 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别在 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，Budget 账本与执行接线分别在 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)、[ADR-0027](../adr/0027-budget-enforcement-at-owned-boundaries.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14），20.11 讲 Stage D（对应正式版 20.15–20.16），20.12 讲 Stage E（对应正式版 20.17–20.18），20.13 讲 v0.7 D0（对应正式版 20.19），20.14/20.15 讲 v0.7-A/B（对应正式版 20.20/20.21），20.16 讲 v0.7-C（正式版 20.22），20.17 讲 v0.7-D1（正式版 20.23），20.18 讲 v0.7-D2（正式版 20.24），20.19 讲 v0.7-E（正式版 20.25），20.20 讲 v0.7-F0（正式版 20.26，ADR 是 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)），20.21 讲 v0.7-F1（正式版 20.27，无新 ADR），20.22 讲 v0.7-F2（正式版 20.28，无新 ADR），20.23 讲 v0.7-F3（正式版 20.29，仍用 ADR-0032），20.24 讲 v0.7-F4（正式版 20.30，ADR 是 [ADR-0033](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)）。
+正式版第 20 节是工程事实，这里讲清楚“为什么这么设计”。Stage A（身份）的正式记录在 [ADR-0019](../adr/0019-durable-agent-identity-and-activation-boundary.md)，Stage B（收件箱接受）在 [ADR-0020](../adr/0020-durable-agent-inbox-acceptance.md)，Stage C（Supervisor 与投递）在 [ADR-0021](../adr/0021-process-local-agent-supervisor-and-delivery-lifecycle.md)，Stage D（父子生命周期收敛）在 [ADR-0022](../adr/0022-agent-lifecycle-ownership-and-quiescent-disposal.md)，Stage E（模型 Tool）在 [ADR-0023](../adr/0023-supervisor-backed-subagent-tools.md)。v0.7 D0 的控制面/威胁边界与 Budget 破坏式切换分别在 [ADR-0024](../adr/0024-v07-managed-agent-control-plane-and-threat-boundary.md)、[ADR-0025](../adr/0025-hierarchical-budget-breaking-cutover.md)，Budget 账本与执行接线分别在 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)、[ADR-0027](../adr/0027-budget-enforcement-at-owned-boundaries.md)。本节 20.1–20.8 讲 Stage A（对应正式版 20.1–20.7），20.9 讲 Stage B（对应正式版 20.8–20.10），20.10 讲 Stage C（对应正式版 20.11–20.14），20.11 讲 Stage D（对应正式版 20.15–20.16），20.12 讲 Stage E（对应正式版 20.17–20.18），20.13 讲 v0.7 D0（对应正式版 20.19），20.14/20.15 讲 v0.7-A/B（对应正式版 20.20/20.21），20.16 讲 v0.7-C（正式版 20.22），20.17 讲 v0.7-D1（正式版 20.23），20.18 讲 v0.7-D2（正式版 20.24），20.19 讲 v0.7-E（正式版 20.25），20.20 讲 v0.7-F0（正式版 20.26，ADR 是 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)），20.21 讲 v0.7-F1（正式版 20.27，无新 ADR），20.22 讲 v0.7-F2（正式版 20.28，无新 ADR），20.23 讲 v0.7-F3（正式版 20.29，仍用 ADR-0032），20.24 讲 v0.7-F4（正式版 20.30，ADR 是 [ADR-0033](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)），20.25 讲 v0.7-F5 RC 真实模型验收与发版稳定化（正式版 20.31；Token 两层上限见 [ADR-0034](../adr/0034-separate-product-token-budget-and-request-output-limit.md)）。
 
 ### 20.1 先说清楚 Stage A 当时**没有**做什么
 
@@ -2079,7 +2083,7 @@ Stage C 当时仍没有 Patch Artifact；随后 D1 补上 immutable capture、D2
 
 capture 必须明确指定一个已经 terminal 的 `message_id`。宿主先重读 Agent、Inbox、Delivery、Session 和 Workspace 账本，确认它们确实指向同一名 Agent、同一个 Session、同一个已闭合 Turn 和同一棵 worktree；有 open claim、开放 Turn/Step、矛盾事件或不变量错误时都拒绝。随后它使用 Workspace wrapper 原来那一把 gate：捕获期间新的 send 和 close 不能插进来，不能一边截快照一边继续让 Agent 改文件。
 
-Git 侧不会拿用户 index 当临时草稿本。系统建立独立临时 index，从精确 HEAD 读入，再把 staged、unstaged、untracked、deleted、binary 和 executable-bit 变化一起写成 candidate tree，最后生成 base→candidate 的 binary/full-index Patch。完整候选树会拒绝 symlink、Junction/reparse、submodule/gitlink、任何 `.gitmodules`、`.git`/`.traceh` 控制路径、非法 mode、非 UTF-8/NFC 路径、大小写折叠冲突和超出明确上限的输入。原 index 的摘要在前中后都会复核，不能被 capture 偷改。
+Git 侧不会拿用户 index 当临时草稿本。系统建立独立临时 index，从精确 HEAD 读入，再把 staged、unstaged、untracked、deleted、binary 和 executable-bit 变化一起写成 candidate tree，最后生成 base→candidate 的 binary/full-index Patch。读 raw tree diff 时必须递归到最里面的文件：一个刚创建的目录在 Git 里会先表现成 `040000` 容器，它不是候选塞进了特殊 tree；真正要检查的是下面的 `100644`/`100755` 普通文件 leaf。完整候选树会拒绝 symlink、Junction/reparse、submodule/gitlink、任何 `.gitmodules`、`.git`/`.traceh` 控制路径、非法 leaf mode、非 UTF-8/NFC 路径、大小写折叠冲突和超出明确上限的输入。原 index 的摘要在前中后都会复核，不能被 capture 偷改。
 
 CAS 先按 bytes 算摘要并幂等写入，Catalog 再用 expected-seq 追加精确 Manifest。Manifest 记录 Agent/Session/message/Turn、Workspace generation、仓库 fingerprint、base/head/candidate tree、changed paths、Patch 摘要和长度。`capture_key` 必须从 Agent/message/Workspace/generation 重算，`artifact_id` 再从这个 key 重算；即使事件里的字符串形状正确，重算不一致也会拒绝，不能由调用方另立一套身份。读取时不信任“文件名看起来像哈希”，而会重新计算 bytes。CAS 每次建目录、写入或读取前还会逐层检查配置根下面的父链，初始化之后有人把 `sha256` 换成 Junction/reparse point，也既不能在根外创建目录，也不能把根外文件冒充 Artifact。若 Catalog 追加遇到取消或异常，就按 canonical JSON 重读判定已提交、未提交还是 unknown；比较本身读不清时绝不能冒充“没写”。CAS 可能留下没有 Manifest 引用的 orphan blob，但不会出现有效 Manifest 指向不存在或错摘要 bytes 的假证据。
 
@@ -2140,7 +2144,7 @@ Review 会把目标克隆到临时目录，把 HEAD 钉在精确的预期 commit
 
 可执行位（`100755`）只在**这个平台存得下它**的时候才比对文件系统。Windows 存不下：可执行文件 checkout 出来 `st_mode` 就是 `0o666`，在那里硬要求这一位，只会把所有带可运行脚本的正常仓库全拒了，而且什么也没多证明。所以这类平台上直接沿用树里记的 mode；mode 的保证仍然在 Git 那一侧——`write-tree` 会从 index 把树重建一遍，再和被审阅的树比对，所以检查命令去改已记录的 mode 照样会被抓出来。POSIX 上则会真的再比一次这一位。
 
-因为现在**任何**新文件都会让证明失败，所以检查命令会被发一块 checkout **外面**的草稿地：每次运行创建一个自己的临时目录，并把 `TMPDIR`/`TEMP`/`TMP` 指过去。passthrough 只是“把宿主恰好有的值继承过去”，所以自带草稿地优先级更高；但如果宿主明确写了 override，那是真正的宿主决定，仍然它说了算。这里**不用** `--3way`：冲突就是冲突，不允许 Git 自作主张重新解释这次改动。`--cached` 让树完全由对象计算、不经过工作目录转换，所以 Review 和后面的正式推广算出的树逐字节相同。提交的父、树、说明、作者、提交者和时间全是固定值，所以同一份 Patch 打在同一个 commit 上永远得到同一个 commit id。整个 Review 过程既不动目标分支，也不往目标仓库里塞对象。
+因为现在**任何**新文件都会让证明失败，所以检查命令会被发一块 checkout **外面**的草稿地：每次运行创建一个自己的临时目录，并把 `TMPDIR`/`TEMP`/`TMP` 指过去。passthrough 只是“把宿主恰好有的值继承过去”，所以自带草稿地优先级更高；但如果宿主明确写了 override，那是真正的宿主决定，仍然它说了算。这里**不用** `--3way`：冲突就是冲突，不允许 Git 自作主张重新解释这次改动。`--cached` 让树完全由对象计算、不经过工作目录转换，所以 Review 和后面的正式推广算出的树逐字节相同。提交的父、树、说明、作者、提交者和时间全是固定值，所以同一份 Patch 打在同一个 commit 上永远得到同一个 commit id。集成 diff 和 D1 一样递归读取普通文件 leaf：新目录下的普通文件可以推广，真正的 symlink/gitlink mode 仍会拒绝。整个 Review 过程既不动目标分支，也不往目标仓库里塞对象。
 
 检查结果只记有界的结构化事实：命令 id、参数摘要、状态（通过/失败/超时/起不来/输出超限）、退出码，以及 stdout 与 stderr 各自的 SHA-256 和字节数。输出只被流式算哈希，不进内存也不进账本——所以一个检查命令没法把无限长的文本、终端控制字符、本机路径或密钥写进永久历史。
 
@@ -2160,13 +2164,13 @@ Review 会把目标克隆到临时目录，把 HEAD 钉在精确的预期 commit
 
 它**故意不复用** Review 报告自身的整体摘要。原因很实际：如果直接用整体摘要，那么就算把“检查定义”和“检查证据”从绑定里拿掉，摘要照样会变，于是“换了检查命令旧批准就该失效”这条性质根本没法被测试证伪。现在它能被证伪——反向验证里把这两项拿掉，对应测试立刻变红。
 
-批准时还会重新解析一次目标；目标定义或当前 commit 和 Review 对不上就拒绝。同一个 operation id 配同样的内容返回同一条批准；同一个 id 换了内容、或者对同一份 Review 批第二次，都是冲突。
+批准时还会重新解析一次目标；目标定义或当前 commit 和 Review 对不上就拒绝。这里还要分清“Review 自己算得通”和“它真的来自宿主冻结命令”：投影器没有 VerificationPlan，只能重算 Review 内部摘要；如果有人把一条结果的 `argv_digest` 换掉，再同步重算 evidence digest，内部仍然自洽。现在持有 Plan 的 Promotion service 会在复用 Review、批准和推广（包括幂等返回旧结果）前统一重验 definition digest、结果数量/顺序、每个 command id/`argv_digest`、evidence digest 和 `passed`。换了命令摘要的 Review 会在碰 Git 前拒绝。同一个 operation id 配同样的内容返回同一条批准；同一个 id 换了内容、或者对同一份 Review 批第二次，都是冲突。
 
 幂等绑的是**整个操作的定义**，不是只绑一个名字。review 的 id 是从请求 id 推出来的，所以命中一份已经记下的报告时，还要核对 artifact、目标和检查定义摘要是否一致；正在跑的那个任务也只会和“请求摘要完全一样”的调用方共享。否则第二个内容不同的请求，会拿到一份它从来没描述过的凭据。`approver_id` 只是宿主给的审计身份，D2 不假装自己有一套登录系统。
 
 #### 只有一个真正的“交换点”
 
-推广会重新重放 Review 和批准、重新校验 Artifact、重新解析目标并重新证明仓库身份，然后用临时 index 在**正式仓库自己的对象库**里把树和 commit 重建一遍。重建结果必须和批准的完全一致，否则连碰都不碰分支。
+推广会重新重放 Review 和批准、用冻结 Plan 重验完整的 Verifier 结果绑定、重新校验 Artifact、重新解析目标并重新证明仓库身份，然后用临时 index 在**正式仓库自己的对象库**里把树和 commit 重建一遍。重建结果必须和批准的完全一致，否则连碰都不碰分支。
 
 唯一的交换点就是 `git update-ref <分支> <新 commit> <预期旧 commit>`。没有强制更新、没有 merge、没有 rebase、没有 reset、不碰任何工作目录、不搞“谁最后写谁赢”；目标漂移之后也不允许重新打一遍 Patch 还沿用旧批准；失败之后也不做“自动回滚”去覆盖别人后来写进去的东西。推广 id 由批准摘要稳定推出来，所以重试指的还是同一次推广。
 
@@ -2561,7 +2565,7 @@ F0 完成时有 72 项合同/架构测试（首版 33 项，第二轮 51 项，�
 
 #### 还差什么
 
-F1 随后做出了事件写入与 CAS/三态对账、投影器和 ProductService（见 20.21），F2 再做出严格路由器、Profile 注册表和固定产品装配（见 20.22），F3 把聊天、流程图、审批和推广接通（见 20.23），F4 把 `traceh eval` 换成同一条主线的度量入口并拒绝旧 manifest（见 20.24）。仍然没做的是真实外部模型验收和 v0.7.0 发布。版本仍然是 `0.6.0`。
+F1 随后做出了事件写入与 CAS/三态对账、投影器和 ProductService（见 20.21），F2 再做出严格路由器、Profile 注册表和固定产品装配（见 20.22），F3 把聊天、流程图、审批和推广接通（见 20.23），F4 把 `traceh eval` 换成同一条主线的度量入口并拒绝旧 manifest（见 20.24），F5 又完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换（见 20.25）。当前候选是 `0.7.0`；还差从候选提交做打包/离线安装，tag、push 和发布另行授权。
 
 ### 20.21 v0.7-F1：ProductTask 终于变成一本真的账（正式版 20.27）
 
@@ -2644,7 +2648,7 @@ Turn claim 很关键，但 claim payload 里写了一个 Turn id 不等于那个
 
 #### 还差什么
 
-F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配，F3 又把 Chat、Workflow、Approval 和 Promotion 接通（见 20.23），F4 再把 benchmark 换成同一条主线的度量入口（见 20.24）。接下来只剩真实外部模型验收和发布；Stage E 的恢复边界没有被放宽。版本仍是 `0.6.0`。
+F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配，F3 又把 Chat、Workflow、Approval 和 Promotion 接通（见 20.23），F4 再把 benchmark 换成同一条主线的度量入口（见 20.24），F5 完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换（见 20.25）。当前候选是 `0.7.0`，还差从候选提交做打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 和发布另行授权。
 
 
 ### 20.22 v0.7-F2：任务可以开工之前，先得有一张算得清、对得上的开工清单（正式版 20.28）
@@ -2663,7 +2667,7 @@ F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配�
 
 能通过的答案只有一种：**恰好一个** JSON 对象，键恰好是 `mode` 和 `reason`。`mode` 只能是 `single` 或 `multi`——`ResolvedTaskMode` 根本没有 `auto` 这个成员，所以「还没想好」根本活不过解析器。`reason` 要么是 `null`，要么是一段不超过 256 字、单行安全的展示文字。
 
-其余全部拒绝：代码围栏、前后带散文、两个 JSON 对象、JSON 数组、裸字符串、多一个键、少一个键。失败都是稳定的 `ProductRoutingError`，**不自动重试、不从自由文本猜**。`reason_display` 只给人看：一条 `mode` 是 `single`、理由写着「必须用 multi」的答案，照样解析成 `single`——决定永远来自枚举。
+其余全部拒绝：代码围栏、前后带散文、两个 JSON 对象、JSON 数组、裸字符串、多一个键、少一个键。失败都是稳定的 `ProductRoutingError`，**不自动重试、不从自由文本猜**。`reason_display` 只给人看：一条 `mode` 是 `single`、理由写着「必须用 multi」的答案，照样解析成 `single`——决定永远来自枚举。F5 的真模型后来暴露了一个很朴素的缺口：程序既然按这些规则验答案，就也要在问 Router 时把规则说全。现在生产提示会明确告诉模型只能给那两个键和 mode，reason 可以是 `null`，否则必须非空、不超过唯一常量规定的 256 字、没有首尾空白并且能安全放在一行；不能再跟别的话。最后把关的仍是严格 parser，不是“相信模型听话”。
 
 宿主边界 `ProductModeRouter` 的每个界限都来自显式 `ProductRouterProfile`：超时和响应字节上限**没有代码默认值**，没填就是构造错误；字节上限在解析之前先生效。构造时交进去的是实际解析出的 Router assembly，不是调用方随口写的摘要；Router 自己计算摘要，`auto` 第一次花 Token 前还要把 live Profile 与 assembly 摘要跟 fresh preflight 对上，所以换了 bounds、model 或组合都会拒绝。接缝交给实现的只有一个字符串，所以 Supervisor、Workflow、Workspace、Artifact、Promotion、Registry 这些句柄**经由它**一个都进不去；Router Agent 自己不拿任何 Tool，靠的是下面的 `router_assembly_digest` 和注册表当场检查，不是靠接缝嘴上声明。
 
@@ -2745,7 +2749,7 @@ mode 只决定一次：explicit 请求就是它自己（Router 根本不被叫�
 
 #### 还差什么
 
-F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推广，并跑通确定性本地 Git 链；F4 已在 20.24 重构 `traceh eval` 并拒绝旧 manifest。真实外部模型验收与 F5 RC/发布仍没完成。Stage E 的恢复边界没有被放宽，版本仍是 `0.6.0`。
+F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推广，并跑通确定性本地 Git 链；F4 已在 20.24 重构 `traceh eval` 并拒绝旧 manifest；F5 在 20.25 完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换。当前候选是 `0.7.0`，还差从候选提交做打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 和发布另行授权。
 后续唯一的阶段顺序、不能偏离的原则和最终用户效果，统一写在新建的 `docs/plan/` 目录下这份 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。`docs/plan/` 只管“接下来按什么顺序达到什么效果”；它负责让后面的实施者不走散，但不替代源码、测试、ADR 和两份上下文的工程事实。
 
 
@@ -2773,11 +2777,15 @@ F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推�
 
 这些命令在模型看到输入前就被 Chat 截走。Review id、Patch 哈希、approval digest、目标版本和 promotion id 只显示给人，不会塞回模型上下文。真正能推广的只有 `/task approve`；Workflow 走到 Approval 只会停住，绝不会自己点同意。
 
+发版前的手工体验证明，光有正确权限还不够：确认以后如果一两分钟什么都不显示，用户会以为卡死；到了 Approval 只看到哈希，也没法知道 multi 的三个角色到底跑没跑。现在确认被宿主接受后会先打印 task id 和 requested mode，auto 会说明还在等 Router；原来用户显式配置的 heartbeat 间隔继续用宿主单调时钟，每次只重读 ProductTask/Workflow 的真实 status 和 resolved mode。到 Approval 或手动 inspect 时，新的只读投影会把固定节点、Directory 里的真实 Session、安全的 `traceh replay` 命令、changed paths、有界 Patch、Verifier executable/参数数量/argv digest/status/exit 一起显示。CAS 被改坏或身份链对不上时只说 evidence unavailable 并警告不要批准，不会猜一个结果；这些屏幕文字不写新账，也不会喂给模型。
+
 #### 它怎样复用旧架构
 
-配置文件必须把 Profile、模型、角色 grants 和 Budget、Router 界限、source 仓库、managed root、CAS、固定 Verifier、bare target、capture/report 上限全部写清楚。没有默认 Profile，没有兼容旧 schema。配置里根本没有 nodes、edges、prompt、approval digest 或 Agent 数量这些格子，所以不能偷偷把自由 Workflow DSL 从 JSON 搬回来。
+配置文件必须把 Profile、模型、角色 grants、**每次请求** `max_output_tokens` 与**整个角色累计** Budget、Router 的同样两层 Token 界限、source 仓库、managed root、CAS、固定 Verifier、bare target、capture/report 上限全部写清楚。没有默认 Profile，没有兼容旧 schema；少了新字段的旧 role/router 形状直接拒绝，不补默认值、不迁移。配置里根本没有 nodes、edges、prompt、approval digest 或 Agent 数量这些格子，所以不能偷偷把自由 Workflow DSL 从 JSON 搬回来。
 
 一个不干模型活的 task-root Agent 负责挂住 ownership tree 和总 Budget。parent/reviewer/coder 仍由现有 Supervisor 创建，仍用现有 Budget gate，仍各拿 managed worktree；只有 coder 可写。Router 也是真实的 no-Tool Agent，但它只能给 `single`/`multi` 两个严格 JSON 答案。Product 层只是把 F2 已经算好的 binding 递给 Workflow，不复制 Session、Workspace、Artifact、Review 或余额。
+
+[ADR-0034](../adr/0034-separate-product-token-budget-and-request-output-limit.md) 专门说明两层 Token 为什么不能混：`budget.max_tokens` 是 Ledger 对一名 Agent 全生命周期累计 input+output 的权限，`max_output_tokens` 只是某一次 provider 回答最多能吐多少。Product resource binding 把后者交给原有 `RuntimeConfig`，Budget gate 仍取“这次上限”和“账户剩余”的较小值并按原规则结算。两者都进入 Profile digest；没有往 Provider、主循环或 Budget 账本里写某个模型的特例。
 
 流程是：确认 → 开 ProductTask → fresh preflight → 建资源 → single/multi/auto 固定图 → coder 改 worktree → 冻 Patch → 跑固定检查 → 写 Review → 停在 Approval。Router、装配或启动事实在 Workflow 真正开始前普通失败时，宿主会先释放 Agent ownership、Budget 和 clean Workspace，再写失败终态；dirty 失败证据仍会 quarantine，不能为了好看直接删除。只有清理成功才能声称任务 failed，清理或终态写入失败会保留原错误和可重试入口。到 Approval 时程序可以退出；live Agent 和 process slot 会收完，但任务、worktree 和证据还在。第二天重新启动，只要同一个 data dir、同一份显式配置和 task id，就能 `/task inspect`，再由人 `/task approve`。
 
@@ -2883,4 +2891,122 @@ Token 报了两个数，它们不是一回事：一个是模型自己说用了�
 
 #### 还差什么
 
-真实外部模型验收还没做（这一轮所有 Provider 都是确定性的进程内实现，没有读 `.env`、没有花真实额度、没有碰真实远端）。F5 的 RC、打包、版本、tag 和 Release 也都没开始。没有通用 Workflow DSL、自动重试、跨进程 lease、冷恢复或 OS sandbox。四个并发核心文件仍然零改动，版本还是 `0.6.0`。独立复审已经清零 P0/P1/P2，唯一一次最终全量已经通过；工作区仍未提交。
+F4 **本身**没有做真实外部模型验收：这一阶段的 Provider 都是确定性的进程内实现，没有读 `.env`、没有花真实额度、没有碰真实远端。F5 后来做的真实验收见下面 20.25。F4 也没有做 RC 打包、版本、tag 和 Release；没有通用 Workflow DSL、自动重试、跨进程 lease、冷恢复或 OS sandbox。四个并发核心文件仍然零改动，版本还是 `0.6.0`。F4 独立复审已经清零 P0/P1/P2，唯一一次最终全量已经通过，并已提交为 `a4ed8a6`。
+
+### 20.25 v0.7-F5 RC 进行中：真的让外部模型跑 ProductTask（正式版 20.31）
+
+正式工程事实见正式版 20.31。这次不是测试替身，也不是再写一条脚本：仍然只有 `traceh eval benchmarks/product_v1` 这一个入口，显式选择 OpenAI-compatible provider 和 `qwen-plus`，让 3 道不同任务按 single、multi、auto 各跑两次，一共 18 次。Key 只由现有 `.env` loader 注入，运行没有打开或打印秘密；每次尝试仍只碰 Runner 自己创建的一次性源仓库和本地裸仓库，所有证据留在仓库外。
+
+#### 付费网格先抓到两个真实问题
+
+第一轮 18 次都留下了完整度量，但质量全败。原因不是“模型不行”，而是当时 Profile 只有一种 Token 数：角色整个生命周期累计可花 60000/120000；没有 tokenizer、请求又没写独立输出上限时，预算层会保守地把账户剩余额度当成下一次请求的 `max_tokens`，当前模型接口最多接受 32768。当时为了继续 RC，公开 manifest 暂时把三个角色的累计额度都设成 32768，任务总预算仍是 500000，三种 arm 仍共用同一规则，也没有往 Provider、Budget 或主循环塞模型特例。但第五轮后的真实 Chat 证明 32768 作为**累计账户**又会让多轮 coder 在合法调用中提前用光；最终根因修复是下面 ADR-0034 的“两层上限”，不能再把这个临时值说成最终设计。
+
+接着单次冒烟里，模型真改对了代码、固定测试也过了，却在冻结 Patch 时收到 `artifact-git-mode-rejected`。原因是它运行 Python 后在一个新目录里留下普通文件；非递归 Git tree diff 先看到的是目录容器 `040000`，旧代码把容器误当成候选文件的非法 mode。D2 推广也用了同样读法。
+
+根因修复很小：D1 和 D2 的 `diff-tree` 都加 `-r`，递归读到真正的普通文件 leaf。两个真实 Git 反例分别从公开 capture 和 promotion service 证明“在新目录里加第一个普通文件”能冻结、应用、检查和推广；临时拿掉 `-r`，两个测试会分别重现 Artifact 和 Promotion 的拒绝，恢复后重新通过。三个题目的初始树也各自跟踪普通 `.gitignore`，排除 Python 生成的 `__pycache__`/`*.py[cod]`；它是 source commit 的可见部分，不是 Runner 偷藏规则，也没改题目和评分。
+
+修好后的单次真实冒烟完整成功：8 steps、7 次 Tool、12200 个 exact execution tokens，Product 和 Workflow 都 completed，Review passed，Promotion 回执与目标分支一致，预算和工作区收干净，`live=0`。
+
+#### 正式结果：18 次可度量，11 次质量成功
+
+第二轮正式网格的 JSON 和 Markdown 一致：18/18 次都 measured，没有 unavailable attempt，`complete=true`。这里的 complete 是“证据和实验条件完整”，不是“模型 18 次全做对”。按任务终态、流程终态、Review、Promotion 回执和当前目标分支同时成立的严格定义，结果是 **11/18 成功**：
+
+| 看法 | 次数 | 成功 | 说明 |
+|---|---:|---:|---|
+| 请求 single | 6 | 5 | 都实际跑 single |
+| 请求 multi | 6 | 2 | 都实际跑 multi |
+| 请求 auto | 6 | 4 | 4 次严格解析成 single 并归进 single；2 次没解析成合法模式 |
+| 实际 single arm | 10 | 9 | 119968 execution tokens，152909 Ledger tokens，72 steps / 62 tools |
+| 实际 multi arm | 6 | 2 | 80129 execution tokens，201936 Ledger tokens，57 steps / 46 tools |
+
+auto 的 6 次里有 4 次严格解析成功，路由共 979 tokens、9463 ms；另外两次如实写 unavailable，不填 0。一次是模型虽然回了 JSON，但 reason 太长，被严格合同拒绝为 `product-router-reason-invalid`；另一次是 Router 调用遇到 TLS EOF。auto 仍不是第三个质量选手。
+
+总共 7 次质量失败，其中 6 次 Session 账本明确记着 `ProviderHttpError` 和 TLS `UNEXPECTED_EOF_WHILE_READING`。它们是当时网络/服务传输失败，不是检查命令证明候选质量差；当前阶段也没有授权借机实现 retry/fallback。剩下 1 次就是严格 Router reason 拒绝。成功链路里没有 Verifier 失败；三道任务分别成功 2/6、6/6、3/6，所以这也不是“给某一道例题做隐藏优化”的漂亮数字。
+
+所有审批都是报告明确写出的 `programmatic-immediate`，只批准自己的一次性本地目标；等待审批总时间是 0。全部 attempt 的 active/wall 合计 887599 ms，Ledger 共结算 363104 tokens。所有预算账户和工作区都收敛，最大 `live=0`、quarantine 总数为 0；三个任务的实验条件都 coherent，没有 divergent fields。启动前失败导致的 source/verifier 缺失仍老实列进 `unproven_fields`，没有把“不知道”写成“大家一致”。
+
+#### 现在还不能发布
+
+两份正式报告、每次 Session/Workflow/Product/Budget/Workspace/Promotion 事实和一次性仓库都保存在仓库外，没有删失败证据，也没有把 Key 写进报告。新增反例、D1/D2 修复与 Product Benchmark 相邻回归是 111 通过、2 个既有 Windows symlink 跳过；Router 提示修复的 Router/F3、Product 合同/架构与 Benchmark E2E 共 141 通过。后续 Chat/Token/Unicode/frozen-plan/recovery 稳定化当前定向门禁是 Product 257、Evaluation 52、相邻资源域 397 通过/3 跳过、CLI 521 通过/1 跳过；compileall、改动范围 Ruff、示例硬编码扫描、`git diff --check` 通过，全仓 collect-only 是 2407 项。独立复审清零 P0/P1/P2 后，唯一一次最终全量得到 2402 通过、5 跳过、退出码 0。
+
+但 F5 还没结束：这批修复和文档还没提交，也还没经过独立复审；最终全量、打包与 Wheel 内容审计、离线安装、安全检查、版本升到 `0.7.0`、验证记录、tag、push 和 GitHub Release 都没做。四个并发核心文件没有修改，也没有新增自动重试、真实远端或第二条 benchmark。
+
+#### 第三轮为什么证明“短探针通过”还不够
+
+为了避免一上来就花模型额度，仓库外先写了一个通用 TLS 探针。它不带 Key、不调用模型，URL、次数、超时都必须显式给；用的正是 Provider 当前的 Python `urllib`/OpenSSL 路径。只要服务返回 401/404，就说明 HTTPS 已经握手并收到了 HTTP；TLS EOF 或其他传输异常才算失败。
+
+第一次连做 50 次，36 次收到 HTTP 401，14 次直接 TLS EOF。把同一域名的 4 个 IP 分别交给 Windows Schannel/curl，各做 8 次却是 32/32 成功，所以不是简单的“其中一个 DNS 地址坏了”，而更像当前 Python TLS 路径和服务链路的组合问题。还试过一次只用于定位的 OpenSSL“忽略缺少 close-notify”选项：TLS EOF 虽然变成 0，仍有 2 次别的传输错误，所以没有拿它去改正式 Provider。后来标准探针短暂得到 20/20，才按约定启动未打补丁的新网格。
+
+这个第三轮依旧是同一个 `traceh eval`、同一 manifest、同一 provider/model 和同一预算/评分规则，没重试失败调用、没替换某一次，也没把旧结果拼进来。报告仍是 18/18 measured、`complete=true`，但质量只成功 **3/18**：请求 single 是 0/6，multi 是 2/6，auto 是 1/6；实际 single arm 是 1/10，multi arm 是 2/6。auto 仍有 4/6 严格解析成功且全部选 single，另外 2 次 unresolved；路由用了 992 tokens、11242 ms。
+
+失败的 15 次里，14 次都能从 durable `model/attempt-end` 看到同一个 TLS EOF：coder 10 次、multi parent 3 次、Router 1 次；剩下 1 次是严格 Router 拒绝过长 reason。三个题目都只成功 1/6，没有 Verifier 失败。全部 Budget/Workspace 都收敛、最大 `live=0`；2 个脏失败工作区按合同 quarantine 留证，没有被删掉装干净。active/wall 总计 740851 ms，approval wait 仍是 0，Ledger 结算 526805 tokens。
+
+所以这轮最重要的结论不是“模型突然变差”，而是：无凭据 GET 探针能发现已经发生的 TLS 故障，却不能保证后面一长串 POST 模型请求不出错。14 次外部传输失败把 single/multi 的质量比较严重污染，不能拿 1/10 对 2/6 宣称哪种方式更强。第二轮 11/18 和第三轮 3/18 都保留；后一次不会覆盖前一次，也没有借机往生产代码塞 retry、fallback 或 SSL 放宽。
+
+#### 绕过梯子后的第四轮
+
+继续检查才发现，虽然环境变量和 WinHTTP 都没写代理，Python `urllib` 会读取 Windows 用户代理设置，因此它看到了一个不带凭据的本机回环 HTTP 代理，端口是 7897。也就是说，TraceHarness 和前面的 Python 探针一直经过梯子，而 curl 对照在直连；前面的“Python 对 curl”其实还混进了网络路径差异。
+
+同机即时对照把原因钉得更清楚：默认走 7897 的 20 次探针只有 16 次收到 HTTP、4 次 TLS EOF，平均约 2638 ms；同一个 Python/OpenSSL 只绕过代理后是 20/20、0 错误，平均约 127 ms。甚至不用关掉梯子，只对子进程设置 `NO_PROXY=dashscope.aliyuncs.com`，也得到 20/20、0 错误、平均约 133 ms。因此第三轮的大量 TLS EOF 主要属于本机代理链路，不是 ProductTask、题目、single/multi 或 DashScope 直连本身。
+
+第四轮先在同一个 `NO_PROXY` 条件下做 50 次无凭据探针：50/50 收到 HTTP 401、0 TLS EOF、0 其他传输错误，平均约 127 ms。随后从全新目录跑完整 18 次，仍不重试、不补某一次、不拼旧报告。结果是 18/18 measured、`complete=true`，严格质量成功 **13/18**：请求 single 5/6、multi 5/6、auto 3/6；实际 single arm 8/10、multi arm 5/6。auto 仍有 4/6 严格解析成 single，另外 2 次没解析；路由共 1000 tokens、6291 ms。
+
+5 次失败不是一锅粥：2 次是 Router reason 太长，被严格合同拒绝；1 次 coder 把自己的 Budget 用完；另外 2 次 coder 是 Windows `getaddrinfo failed`，也就是直连时的瞬时 DNS 解析失败。第四轮没有 TLS EOF，也没有 Verifier failure；三个题目分别成功 4/6、4/6、5/6。换句话说，绕过梯子已把最严重的 TLS 故障消掉，但还不能宣称“18 次零 Provider 错误”。
+
+全部预算和工作区都收敛，最大 `live=0`；2 个脏失败工作区按合同 quarantine 留证。active/wall 总计 1115618 ms，approval wait 为 0，Ledger 结算 357843 tokens。JSON 与 Markdown 的 18 行逐字段一致。第二、三、四轮报告都保留，没有选择最好看的一份覆盖历史，也没有给生产 Provider 增加重试、fallback、代理特例或 SSL 放宽。
+
+#### 第四轮之后，Router 提示到底修了什么
+
+第四轮那两次 reason 拒绝不是因为 256 字上限不合理，而是宿主只告诉模型“回 `mode` 和 `reason`”，没告诉它 reason 的现成限制；模型于是写了 339 和 434 字的解释，parser 按合同拒绝。正确修法不是放宽、截断、重试或偷偷替模型选模式，而是把 parser 已经执行的合同原样告诉模型。现在提示从事件层的同一个 `MAX_REASON_DISPLAY_CHARS` 常量读上限，并说清 `null`、非空、单行安全、首尾空白和不能夹带其他文字；Parser、Budget、Workflow、Benchmark 和 Provider 都没变。
+
+新测试不是偷看私有字符串：它真的走 Chat → Router → ProductTask。测试 Router 只有在请求里看见完整限制时才给短 reason，看不见就故意给 257 字。旧提示会稳定得到 `product-router-reason-invalid`，流程根本不启动；修好后同一路径严格选出 `single`。这就是反向验证。第四轮的 13/18 仍然只是修复前的历史数据；修复后的结论由下面独立第五轮承担，旧报告没有被改名或覆盖。
+
+#### 修好 Router 提示后的第五轮
+
+第五轮还是同一份公开题目、同一个 `qwen-plus`、同一条 `traceh eval`，只是在新的仓库外目录重跑；没补跑失败项、没拼旧结果，也没改题目和检查器。开始前，同一个 `NO_PROXY` 网络条件下先做 50 次无 Key 探针：50/50 都收到 HTTP 401，TLS EOF 和其他传输错误都是 0，平均约 124 ms。完整网格最后正常退出，18/18 都有度量，没有 unavailable，`complete=true`。
+
+严格成功是 **15/18**：明确 single 6/6、明确 multi 4/6、auto 5/6；按真正执行的模式看，single arm 是 11/12，multi arm 是 4/6。最重要的修复验证是 auto 6/6 都严格解析，而且全部选 single；reason 过长拒绝从第四轮的 2 次变成 0。路由单独用了 1761 tokens 和 8200 ms，仍没有把 auto 当第三个质量选手。
+
+剩下 3 次失败都不是模型把代码改错，也不是固定检查失败：coder 的持久 Session 都写着同一个 Windows DNS 错误 `[Errno 11001] getaddrinfo failed`，分别落在 1 次 auto 和 2 次 multi。没有 TLS EOF、Budget 耗尽、Router failure 或 Verifier failure。把这 3 次外部 DNS 失败分开后，其余 15/15 都完成 Product、Workflow、Review 和 Promotion；三个题目也恰好各成功 5/6，所以不能把原始 11/12 对 4/6 说成 single 质量显著更高。
+
+效率数字仍然有用，但只能老实写成这次小样本：resolved single 平均 execution tokens 12449.75、active 48847.25 ms；multi 分别是 23273.67 和 82504.33 ms。也就是说，这批简单任务里 multi 大约用了 1.87 倍执行 Token、1.69 倍 active 时间，步骤和 Tool 调用也更多；它说明固定协作拓扑有成本，不证明别的任务永远不值得 multi。
+
+18 次总 active/wall 是 1081193 ms，审批等待仍是 0；execution tokens 289039，账本结算 381778，183 steps、153 次 Tool、累计 Agent 工作 740437 ms。54 个 Budget 账户全关、54 个 Workspace 全释放，`live=0`、quarantine=0。每道题的条件都 coherent、没有 divergent field；每题恰有一次 DNS 失败没走到 Review，所以 verifier 证据老实列为 unproven，而不是填成一致。
+
+JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际核对一致，报告里没有 Key。第二到第五轮全部保留；`complete=true` 依旧只表示“证据完整”，不是“18 次全成功”。
+
+#### 手工聊天为什么又挡住了直接发布
+
+随后真的用同一个 provider 分别跑了一遍 single 和 multi Chat。功能链没有坏：两边都改了代码、跑了固定检查、停在人工 Approval，输入 `/task approve` 后也都把一次性裸仓库分支移动到了精确 integration commit；multi 确实跑了 parent、reviewer、coder 三名真实 Agent。问题是人看不出来——确认后屏幕沉默一两分钟，最后只给 Review/Patch/target/digest 哈希，看不到三个角色、改了哪些文件、检查过没，也不知道该 replay 哪条 Session。这就是“功能正确、体验像黑盒”。
+
+现在没有为此新建事件或状态。确认一接受就先显示 task id；沿用 `--heartbeat-seconds` 的单调时间，每次 fresh replay 已有 Product/Workflow 状态。Approval 和 `/task inspect` 再从固定 Workflow、Agent 名册、Patch CAS、Review 账本临时拼出一张人能读的卡：节点状态、真实 Session 和 replay 命令、changed paths、有界 Patch、Verifier 的 executable/参数个数/argv digest/status/exit。Verifier 参数本身不打印，避免错误配置把秘密放进命令参数后又泄到 Console。把 CAS blob 改成同长度假内容的确定性反例会得到 `artifact-cas-collision`、`evidence unavailable` 和“不要批准”，不会显示伪 Patch；把 Review 的命令摘要换掉并重算内部 evidence digest，同样会 unavailable，而且直接跳过 inspect 输入 `/task approve` 也会拒绝，bare ref 不动。这些内容也不会进入模型上下文。
+
+这条冻结计划核对不只服务聊天界面。Promotion owner 的同一个 matcher 还保护旧 Review 重用、approve、promote；F4 的指标收集器也必须拿到 manifest 冻结的 VerificationPlan，在使用 `review.passed` 前走同一条规则。新反例把 Review、批准、推广、ProductTask 和 Workflow 的关联摘要与编号都同步改到彼此一致，但把结果里的 `argv_digest` 换成计划外的值：拿掉 matcher 时，Benchmark 会把它当成完整成功；恢复后稳定报 `benchmark-verifier-evidence-mismatch`。这证明修的是“是否属于宿主冻结计划”，不是靠某个账本先读坏来碰巧挡住。
+
+还有一个容易漏掉的崩溃窗口：Promotion 和 ref CAS 已经成功，但 Product 还没来得及写 `task-completed`。以前重启后的 `/task approve` 只要在账本里找到 receipt 就直接补成功，等于绕过 Promotion owner。现在恢复分支必须先调用幂等 `promote()`；它会用当前宿主冻结计划重新核对 Review，确认同一 receipt 后才允许 Product 收尾。新测试先走一遍真实 Chat/Promotion，再恢复成这个持久前缀；把代码退回旧早退逻辑，任务会错误变成 `completed`，正确代码则保持 `awaiting_approval` 并报 `promotion-review-verification-mismatch`。
+
+手工 single 还暴露了前面 32768 临时方案的另一面：coder 已经把代码和测试做完，11 次成功回答实际累计 38454 Token，最后只差总结时整个角色账户耗尽。**一次回答最多多长**和**这个 Agent 一辈子总共能花多少**本来就是两件事。[ADR-0034](../adr/0034-separate-product-token-budget-and-request-output-limit.md) 现在要求 role/router 都明确写 `max_output_tokens`；它只限制每次请求，原来的 `budget.max_tokens` 继续由 Ledger 累计 input+output。旧配置缺这个键就拒绝，没有默认、别名或迁移。公开 benchmark 当前是 parent/reviewer 总额各 60000、coder 120000、三角色每次 8192；Router 总额 8000、每次 256；任务总额 500000，single/multi/auto 仍共用一份 Profile。
+
+另一个黑盒问题发生在 Windows：合法模型文本里有 `✅` 时，旧 `traceh replay` 会在 GBK stdout 上直接 `UnicodeEncodeError`。现在 UTF-8 `errors=replace` 的 stdio 策略放到了统一 CLI 入口，所有命令都先配置，再打印帮助、检查或 replay；不能 reconfigure 的测试/嵌入流会安全降级。公开反例真的持久化一条含 `✅` 的 Session，再交给严格 GBK-like stdout 跑 `main(["replay", ...])`，当前能正常结束。
+
+第五轮报告仍然有效，但只证明它当时那份耦合 Profile；新字段改变了 Profile digest，不能把旧 15/18 换个标题当作新配置验收。两项独立审查 P1 都已按上面的 Promotion owner 规则修复并反向验证，最终复审已经清零 P0/P1/P2，唯一一次最终完整 pytest 也通过。F5 安全扫描还检查了全部 377 个 Git 跟踪或本轮预期新增的文本文件：没有真实 Key 形态、当前机器用户路径或 Benchmark/Provider 名称混进生产代码；宽泛告警只来自测试里故意写的合成身份。approval/promotion secret 不进入模型请求则由已经通过的架构测试证明。
+
+#### 当前 Profile 的第六轮
+
+拿到明确授权后，系统用新的仓库外 `acceptance-6` 目录把当前 manifest 又完整跑了一遍。仍是 `qwen-plus`、3 道题、single/multi/auto 各两次，没有重试、补跑或覆盖旧报告。这个进程开始前把大小写代理变量都清空，并设置 `NO_PROXY=*`，所以没有走系统代理；这只是本次运行条件，没有改生产 Provider。`.env` 仍只由现有 loader 使用，Key 没有被打开、打印或写进报告。
+
+结果是 18/18 都有完整度量，报告 `complete=true`，严格成功 15/18：明确 single 5/6、multi 4/6、auto 6/6；auto 六次全都严格解析并选 single，所以真正执行的 single 是 11/12，multi 是 4/6。三个失败全是 Windows DNS 的 `getaddrinfo failed`：一次 single coder、一次 multi parent、一次 multi 在 parent/reviewer 完成后的 coder。没有 TLS EOF、Router 格式错、Budget 耗尽或固定检查失败。也就是说，排除这三个外部 DNS 故障，真正拿到模型执行机会的 15 次全部完成了 Review 和 Promotion；不能拿原始 11/12 对 4/6 宣称 single 质量更好。
+
+资源没有因为失败泄漏：52 个 Budget 账户全部终结；52 个 Workspace 中 51 released，1 个脏失败按合同 quarantine 留证，`live=0`。总 execution tokens 273869、账本结算 557367、active/wall 都是 915899 ms、审批等待 0、178 steps、150 次 Tool、累计 Agent 工作 693763 ms。JSON 和 Markdown 的 18 行与两个 arm/路由汇总逐项一致，也没有 Key 或本机路径。成功样本里，single 平均约 12788 Token / 43.1 秒，multi 约 26029 Token / 77.8 秒；这说明固定多智能体协作在这批小题上大约多花一倍 Token 和 81% 时间，只是小样本成本观察，不是统计显著或通用质量结论。
+
+#### DNS 修复后的第七轮
+
+第六轮以后只测 DNS，结果把问题指向 WLAN 通过 DHCP 拿到的首选 `211.138.200.69`：绕过缓存直接问它，UDP 50 次全失败、TCP 10 次全失败；同一时间问 `223.5.5.5`，UDP 50/50、TCP 10/10。用户用管理员 PowerShell 把 WLAN DNS 改成 `223.5.5.5` 和 `223.6.6.6` 后，Windows 系统解析连续 200/200；默认 UDP 100/100，两台 DNS 的 UDP 各 50/50。再用与 Provider 相同的 Python `urllib`/OpenSSL、强制不走代理、也不带 Key 做 50 次 HTTPS admission probe，结果是 50/50 收到 HTTP 响应，DNS/TLS/其他传输错误都是 0。
+
+系统随后从新的仓库外 `acceptance-7` 目录完整重跑同一份 18-attempt manifest，没有补跑第六轮失败项，也没有 retry、fallback 或覆盖历史报告。结果仍是 18/18 都能度量、`complete=true`，严格成功 **16/18**：明确 single 5/6、multi 5/6、auto 6/6；真正执行的 single 是 11/12，multi 是 5/6。auto 六次都按严格 JSON 合同解析并选 single；这轮 durable failure 里的 DNS 和 TLS EOF 都是 0，所以可以确认 DNS 修改奏效。
+
+剩下两次也不是同一种问题。一次 single coder 在已经做了 8 步、7 次 Tool 后遇到 `RemoteDisconnected`，是远端主动断开；另一次 multi 的 parent/reviewer 已完成，coder 做了 22 步、21 次 Tool、累计精确使用 126312 Token 后，下一次请求被累计 Budget 拒绝。后者说明 Budget 对随机跑长的模型按合同 fail closed，不应为了凑 18/18 在看过结果后临时加额度。三个任务分别为 6/6、4/6、6/6；这是小样本事实，不是模式显著性结论。
+
+54 个 Budget 账户全都终结；54 个 Workspace 是 52 released、2 个脏失败 quarantine、`live=0`，全部收敛。总 execution tokens 438973、账本结算 542491、active/wall 1347723 ms、审批等待 0、218 steps、189 次 Tool、累计 Agent 工作 1076003 ms。成功样本中 single（n=11）平均约 12515 Token / 51.0 秒，multi（n=5）约 28814 Token / 93.0 秒；这里只能说明固定 multi 在这批小题上成本更高。JSON 与 Markdown 的 18 行逐项一致，没有 Key 或本机路径；第六轮继续作为改 DNS 前的历史对照。
+
+源码、manifest、测试、新 ADR、三个 `.gitignore` 和文档已经进入同一个 `0.7.0` 候选提交；真实网格、安全门禁、版本事实源、验证记录、从候选提交做的干净打包、Wheel/source ZIP 内容审计和离线安装全部通过。没有增加 retry/fallback/代理特例，也没有改四个并发核心文件；tag、push 和 Release 尚未授权。

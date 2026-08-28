@@ -221,6 +221,7 @@ class GitPatchBuilder:
             raw_diff = await self._run_required(
                 root,
                 "diff-tree",
+                "-r",
                 "--no-commit-id",
                 "--raw",
                 "-z",

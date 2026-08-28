@@ -10,14 +10,22 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from pathlib import Path
 from uuid import uuid4
 
 from traceh.api.json_types import JsonValue
 from traceh.api.product import ProductTaskViewStatus, RequestedTaskMode
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.turns import TurnInput
-from traceh.cli.command_line import escape_for_display
+from traceh.cli.activity import Clock, default_clock
+from traceh.cli.command_line import (
+    Literal,
+    UnsafeCommandValue,
+    escape_for_display,
+    render_command,
+)
 from traceh.cli.console import Console
+from traceh.concurrency import await_worker_convergence
 from traceh.product.control import (
     PendingProductProposal,
     ProductAdvanceResult,
@@ -25,6 +33,10 @@ from traceh.product.control import (
     ProductTaskControlPlane,
 )
 from traceh.product.errors import ProductInputError
+from traceh.product.inspection import (
+    ProductInspectionEvidenceReader,
+    ProductTaskEvidence,
+)
 from traceh.product.router import MAX_ROUTER_SUMMARY_CHARS
 
 
@@ -171,22 +183,34 @@ class ConfirmProductTaskTool:
 class ProductChatSurface:
     """One optional product surface attached to the existing chat loop."""
 
-    __slots__ = ("_actions", "_approver_id", "_control")
+    __slots__ = (
+        "_actions",
+        "_approver_id",
+        "_control",
+        "_data_dir",
+        "_evidence",
+    )
 
     def __init__(
         self,
         control: ProductTaskControlPlane,
         actions: ProductTurnActions,
+        evidence: ProductInspectionEvidenceReader,
         *,
         approver_id: str,
+        data_dir: Path,
     ) -> None:
         if type(control) is not ProductTaskControlPlane:
             raise ProductInputError("product-control-invalid", "control")
         if type(approver_id) is not str or not approver_id.strip():
             raise ProductInputError("product-approver-invalid", "approver_id")
+        if type(evidence) is not ProductInspectionEvidenceReader:
+            raise ProductInputError("product-inspection-invalid", "evidence")
         self._control = control
         self._actions = actions
+        self._evidence = evidence
         self._approver_id = approver_id
+        self._data_dir = Path(data_dir).absolute()
 
     async def prepare_turn(self, session_id: str, text: str) -> ProductChatTurn:
         pending = await self._control.pending_proposal(session_id)
@@ -202,6 +226,8 @@ class ProductChatSurface:
         *,
         turn_id: str,
         console: Console,
+        heartbeat_seconds: float = 0.0,
+        clock: Clock | None = None,
     ) -> None:
         action = await self._actions.take(session_id, turn_id)
         if action is None:
@@ -222,12 +248,43 @@ class ProductChatSurface:
             if not prepared.had_pending_proposal:
                 console.write("task confirmation ignored: no proposal was pending")
                 return
-            result = await self._control.confirm(
-                session_id=session_id,
-                confirming_turn_id=turn_id,
-                confirming_message_id=prepared.turn_input.message_id,
+            pending = await self._control.pending_proposal(session_id)
+            if pending is None:
+                console.write("task confirmation ignored: no proposal was pending")
+                return
+            _render_execution_started(console, pending)
+            resolved_clock = clock or default_clock()
+            heartbeat = (
+                asyncio.create_task(
+                    _emit_product_heartbeat(
+                        console,
+                        self._control,
+                        pending.task_id,
+                        interval_seconds=heartbeat_seconds,
+                        clock=resolved_clock,
+                    ),
+                    name=f"traceh-product-heartbeat-{pending.task_id}",
+                )
+                if heartbeat_seconds > 0
+                else None
             )
-            _render_advance(console, result)
+            try:
+                result = await self._control.confirm(
+                    session_id=session_id,
+                    confirming_turn_id=turn_id,
+                    confirming_message_id=prepared.turn_input.message_id,
+                )
+            finally:
+                if heartbeat is not None:
+                    heartbeat.cancel()
+                    await await_worker_convergence(heartbeat)
+            if (
+                result.summary.status.value
+                == ProductTaskViewStatus.AWAITING_APPROVAL.value
+            ):
+                await self._render_task_inspection(console, result.summary.task_id)
+            else:
+                _render_advance(console, result)
         except Exception as error:
             _render_operation_failure(console, error)
 
@@ -255,7 +312,7 @@ class ProductChatSurface:
         operation, task_id = parts[1], parts[2]
         try:
             if operation == "inspect":
-                _render_inspection(console, await self._control.inspect(task_id))
+                await self._render_task_inspection(console, task_id)
             elif operation == "approve":
                 _render_advance(
                     console,
@@ -272,6 +329,29 @@ class ProductChatSurface:
         except Exception as error:
             _render_operation_failure(console, error)
         return True
+
+    async def _render_task_inspection(
+        self, console: Console, task_id: str
+    ) -> None:
+        inspection = await self._control.inspect(task_id)
+        evidence = None
+        evidence_error = None
+        try:
+            evidence = await self._evidence.load(
+                inspection.view.summary, inspection.review
+            )
+        except Exception as error:
+            code = getattr(error, "code", None)
+            evidence_error = (
+                code if type(code) is str and code else "product-evidence-unavailable"
+            )
+        _render_inspection(
+            console,
+            inspection,
+            evidence=evidence,
+            evidence_error=evidence_error,
+            data_dir=self._data_dir,
+        )
 
     async def aclose(self) -> None:
         await self._control.aclose()
@@ -296,13 +376,38 @@ def _render_proposal(console: Console, pending: PendingProductProposal) -> None:
     console.write("Reply naturally in a later message to accept or decline this proposal.")
 
 
-def _render_inspection(console: Console, inspection: ProductInspection) -> None:
+def _render_inspection(
+    console: Console,
+    inspection: ProductInspection,
+    *,
+    evidence: ProductTaskEvidence | None,
+    evidence_error: str | None,
+    data_dir: Path,
+) -> None:
     summary = inspection.view.summary
     console.write(f"task {summary.task_id}: {inspection.view.status.value}")
+    console.write(f"  requested mode: {summary.requested_mode.value}")
+    console.write(f"  mode source: {summary.mode_source.value}")
     if summary.resolved_mode is not None:
-        console.write(f"  mode: {summary.resolved_mode.value}")
+        console.write(f"  resolved mode: {summary.resolved_mode.value}")
+    if inspection.view.workflow_status is not None:
+        console.write(f"  workflow: {inspection.view.workflow_status.value}")
+    if evidence_error is not None:
+        console.write(f"  evidence: unavailable ({evidence_error})")
+        console.write("  do not approve until the durable evidence can be read")
+    elif evidence is not None:
+        _render_evidence(console, evidence, data_dir=data_dir)
     if inspection.review is not None:
         _render_review(console, inspection)
+        if evidence_error is None and evidence is not None:
+            console.write(
+                "  decision: /task approve TASK_ID or /task reject TASK_ID "
+                "after reviewing the evidence above"
+            )
+        else:
+            console.write(
+                "  decision: do not approve; retry inspection or reject the task"
+            )
 
 
 def _render_review(console: Console, inspection: ProductInspection) -> None:
@@ -313,6 +418,104 @@ def _render_review(console: Console, inspection: ProductInspection) -> None:
     console.write(f"  target: {review.target_ref} at {review.expected_revision}")
     console.write(f"  integration_commit: {review.integration_commit}")
     console.write(f"  approval_digest: {inspection.approval_digest}")
+
+
+def _render_evidence(
+    console: Console, evidence: ProductTaskEvidence, *, data_dir: Path
+) -> None:
+    if evidence.nodes:
+        console.write("  workflow nodes:")
+    for node in evidence.nodes:
+        line = f"    {node.node_id}: {node.status} ({node.kind})"
+        if node.failure_code is not None:
+            line += f" failure={node.failure_code}"
+        console.write(line)
+        if node.agent_id is not None:
+            console.write(f"      agent: {node.agent_id}")
+        if node.session_id is not None:
+            console.write(f"      session: {node.session_id}")
+            try:
+                replay = render_command(
+                    (
+                        Literal("traceh"),
+                        Literal("replay"),
+                        node.session_id,
+                        Literal("--data-dir"),
+                        str(data_dir),
+                    )
+                )
+            except UnsafeCommandValue:
+                replay = "unavailable: a value cannot be rendered as one safe command"
+            console.write(f"      replay: {replay}")
+    review = evidence.review
+    if review is None:
+        return
+    console.write(f"  changed paths ({len(review.changed_paths)})")
+    for path in review.changed_paths:
+        console.write(f"    {escape_for_display(path, limit=500)}")
+    console.write("  verification:")
+    for verifier in review.verifiers:
+        exit_code = "unavailable" if verifier.exit_code is None else str(verifier.exit_code)
+        console.write(
+            f"    {verifier.command_id}: {verifier.status} exit={exit_code}"
+        )
+        executable = escape_for_display(verifier.executable, limit=500)
+        console.write(
+            f"      command: {executable} ({verifier.argument_count} arguments; "
+            f"argv_sha256={verifier.argv_digest})"
+        )
+    suffix = "truncated" if review.patch_preview_truncated else "complete"
+    console.write(f"  patch preview ({review.patch_size_bytes} bytes, {suffix})")
+    for line in review.patch_preview.split("\n"):
+        console.write(f"    {line}")
+    if review.patch_utf8_replaced:
+        console.write("    note: non-UTF-8 Patch bytes are shown with replacement characters")
+
+
+def _render_execution_started(
+    console: Console, pending: PendingProductProposal
+) -> None:
+    console.write(f"task {pending.task_id}: confirmation accepted; starting execution")
+    console.write(f"  requested mode: {pending.proposal.requested_mode.value}")
+    if pending.proposal.requested_mode is RequestedTaskMode.AUTO:
+        console.write("  resolved mode: pending Router decision")
+
+
+async def _emit_product_heartbeat(
+    console: Console,
+    control: ProductTaskControlPlane,
+    task_id: str,
+    *,
+    interval_seconds: float,
+    clock: Clock,
+) -> None:
+    started = clock.monotonic()
+    while True:
+        await clock.sleep(interval_seconds)
+        try:
+            inspection = await control.inspect(task_id)
+        except Exception:
+            continue
+        summary = inspection.view.summary
+        elapsed = max(0.0, clock.monotonic() - started)
+        mode = (
+            "pending"
+            if summary.resolved_mode is None
+            else summary.resolved_mode.value
+        )
+        workflow = (
+            "not-started"
+            if inspection.view.workflow_status is None
+            else inspection.view.workflow_status.value
+        )
+        console.write(
+            f"[waiting {_format_seconds(elapsed)}] task {task_id}: "
+            f"{inspection.view.status.value}; workflow={workflow}; mode={mode}"
+        )
+
+
+def _format_seconds(value: float) -> str:
+    return f"{int(value)}s" if value.is_integer() else f"{value:.1f}s"
 
 
 def _render_advance(console: Console, result: ProductAdvanceResult) -> None:

@@ -53,7 +53,7 @@ from traceh.api.product import (
     ResolvedTaskMode,
     TaskModeSource,
 )
-from traceh.api.promotion import PatchPromotion, PatchReviewReport
+from traceh.api.promotion import PatchPromotion, PatchReviewReport, VerificationPlan
 from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.budgets.projection import BudgetLedgerReader
@@ -67,7 +67,10 @@ from traceh.product.topology import (
     product_role_node_id,
     product_workflow_definition,
 )
-from traceh.promotion.models import expected_approval_digest
+from traceh.promotion.models import (
+    expected_approval_digest,
+    review_matches_verification_plan,
+)
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
@@ -270,6 +273,7 @@ async def collect_attempt_evidence(
     promotion_target_id: str,
     target_ref: str,
     target_revision: str | None,
+    verification_plan: VerificationPlan,
 ) -> AttemptEvidence:
     """Rebuild one attempt's measurement from the stores that own each fact."""
 
@@ -357,6 +361,14 @@ async def collect_attempt_evidence(
     review = None if summary.review_id is None else ledger.review(summary.review_id)
     if summary.review_id is not None and review is None:
         raise BenchmarkEvidenceError("benchmark-review-missing", task_id)
+    if review is not None and not review_matches_verification_plan(
+        review, verification_plan
+    ):
+        # The Promotion projector proves that the Review is internally
+        # coherent; the benchmark owns the host-frozen VerificationPlan and
+        # must additionally prove that every durable result belongs to that
+        # exact plan before it can use ``passed`` as a quality fact.
+        raise BenchmarkEvidenceError("benchmark-verifier-evidence-mismatch", task_id)
     promotion = (
         None if summary.promotion_id is None else ledger.promotion(summary.promotion_id)
     )

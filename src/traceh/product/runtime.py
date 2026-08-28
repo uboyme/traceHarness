@@ -26,6 +26,7 @@ from traceh.api.workspaces import WorkspaceAccess
 from traceh.budgets.enforcement import BudgetEnforcement
 from traceh.budgets.service import BudgetLedgerService
 from traceh.product.errors import ProductProfileError, ProductStateError
+from traceh.product.events import MAX_REASON_DISPLAY_CHARS
 from traceh.product.registry import ResolvedAgentAssembly
 from traceh.product.resources import ProductResourceBindings
 from traceh.product.router import RouterResponder, RouterResponse
@@ -212,6 +213,7 @@ class ProductAgentRuntimeFactory:
                 provider=assembly.provider_id,
                 model=assembly.model_id,
                 max_steps=limits.max_steps,
+                max_output_tokens=binding.max_output_tokens,
             ),
             provider=provider,
             event_store=self._store,
@@ -258,8 +260,13 @@ class ProductRouterAgentResponder(RouterResponder):
                 source=f"product:{task_id}",
                 content=(
                     "Choose the smaller safe execution shape. Reply with exactly "
-                    "one JSON object with keys mode and reason; mode is single or "
-                    f"multi.\n\nTask summary:\n{summary}"
+                    "one JSON object with exactly the keys mode and reason; mode "
+                    "must be exactly single or multi; reason must be null or a "
+                    "non-empty single-line string of at most "
+                    f"{MAX_REASON_DISPLAY_CHARS} characters with no leading or "
+                    "trailing whitespace and no characters in Unicode categories "
+                    f"Cc, Cf, Cs, Co, Zl, or Zp. Return no other text.\n\n"
+                    f"Task summary:\n{summary}"
                 ),
             )
             await self._supervisor.send(

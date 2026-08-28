@@ -377,6 +377,45 @@ def verification_evidence_digest(
     )
 
 
+def review_matches_verification_plan(
+    report: object, plan: object
+) -> bool:
+    """Whether a durable Review proves the supplied frozen verifier plan.
+
+    The Promotion projector can prove that a Review is internally coherent,
+    but it does not own a host's VerificationPlan.  A consumer that *does* own
+    the plan must also bind every result to the exact frozen command; otherwise
+    a shape-valid event can replace ``argv_digest``, recompute its internal
+    evidence digest and still look like a passed Review.
+    """
+
+    if type(report) is not PatchReviewReport:
+        return False
+    try:
+        frozen = freeze_verification_plan(plan)
+        definition_digest = verifier_definition_digest(frozen)
+        if report.verifier_definition_digest != definition_digest:
+            return False
+        results = report.results
+        if type(results) is not tuple or len(results) != len(frozen.commands):
+            return False
+        for command, outcome in zip(frozen.commands, results, strict=True):
+            freeze_verifier_outcome(outcome)
+            if outcome.command_id != command.command_id:
+                return False
+            if outcome.argv_digest != verifier_command_digest(command):
+                return False
+        if report.verification_evidence_digest != verification_evidence_digest(
+            definition_digest, results
+        ):
+            return False
+        return type(report.passed) is bool and report.passed is all(
+            outcome.passed for outcome in results
+        )
+    except PromotionInputError:
+        return False
+
+
 def review_identity(review_request_id: str) -> str:
     review_request_id = require_promotion_identifier(
         review_request_id, field="review_request_id"
@@ -524,6 +563,7 @@ __all__ = [
     "require_hex_digest",
     "require_promotion_identifier",
     "require_target_ref",
+    "review_matches_verification_plan",
     "review_identity",
     "review_report_digest",
     "verification_evidence_digest",

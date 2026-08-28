@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -32,10 +33,12 @@ from traceh.api.product import (
     ResolvedTaskMode,
     TaskModeSource,
 )
-from traceh.api.promotion import VerifierCommand
+from traceh.api.promotion import VerifierCommand, VerifierOutcome
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.artifacts.cas import LocalArtifactCas
+from traceh.artifacts.catalog import PatchArtifactCatalogReader
 from traceh.budgets.projection import BudgetLedgerReader
+from traceh.cli.activity import Clock
 from traceh.cli.chat import run_chat
 from traceh.cli.console import Console
 from traceh.product.chat import (
@@ -43,9 +46,16 @@ from traceh.product.chat import (
     ProductTurnActions,
     ProposeProductTaskTool,
 )
+from traceh.product.events import MAX_REASON_DISPLAY_CHARS
 from traceh.product.host import ProductHostProfile, build_product_chat_host
 from traceh.product.projection import ProductTaskStreamReader
 from traceh.product.runtime import READ_TOOL_IDS, WRITE_TOOL_IDS
+from traceh.promotion.models import (
+    expected_approval_digest,
+    promotion_identity,
+    verification_evidence_digest,
+)
+from traceh.promotion.projection import PromotionLedgerReader
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.session.event_store import InMemoryEventStore
 from traceh.workspaces.catalog import WorkspaceCatalogReader
@@ -56,6 +66,7 @@ class _Console:
     def __init__(self, inputs: tuple[str, ...]) -> None:
         self.inputs = list(inputs)
         self.lines: list[str] = []
+        self.waiting = asyncio.Event()
 
     def read(self, prompt: str) -> str:
         del prompt
@@ -65,6 +76,8 @@ class _Console:
 
     def write(self, text: str) -> None:
         self.lines.append(text)
+        if text.startswith("[waiting ") and "task product-task-" in text:
+            self.waiting.set()
 
     @property
     def console(self) -> Console:
@@ -165,6 +178,35 @@ class _InvalidRouterProvider(_ProductProvider):
         return await super().complete(request)
 
 
+class _ContractAwareRouterProvider(_ProductProvider):
+    """Stay within the reason bound only when the host actually discloses it."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.saw_reason_bound = False
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        if request.system_prompt and "routing classifier" in request.system_prompt:
+            last_user = next(
+                message.content
+                for message in reversed(request.messages)
+                if message.role == "user"
+            )
+            self.saw_reason_bound = (
+                "reason must be null or" in last_user
+                and f"at most {MAX_REASON_DISPLAY_CHARS} characters" in last_user
+                and "no leading or trailing whitespace" in last_user
+                and "Unicode categories Cc, Cf, Cs, Co, Zl, or Zp" in last_user
+            )
+            reason = (
+                "one bounded role is sufficient"
+                if self.saw_reason_bound
+                else "x" * (MAX_REASON_DISPLAY_CHARS + 1)
+            )
+            return _response(f'{{"mode":"single","reason":"{reason}"}}')
+        return await super().complete(request)
+
+
 def _response(content: str, *calls: ToolCall) -> ModelResponse:
     return ModelResponse(
         content=content,
@@ -194,16 +236,26 @@ def _profile(mode: RequestedTaskMode) -> ProductTaskProfile:
         provider_id="product-provider",
         model_id="product-model",
         parent=ProductRoleProfile(
-            "product-parent", READ_TOOL_IDS, _limits(max_children=0, max_depth=0)
+            "product-parent",
+            READ_TOOL_IDS,
+            4_096,
+            _limits(max_children=0, max_depth=0),
         ),
         reviewer=ProductRoleProfile(
-            "product-reviewer", READ_TOOL_IDS, _limits(max_children=0, max_depth=0)
+            "product-reviewer",
+            READ_TOOL_IDS,
+            4_096,
+            _limits(max_children=0, max_depth=0),
         ),
         coder=ProductRoleProfile(
-            "product-coder", WRITE_TOOL_IDS, _limits(max_children=0, max_depth=0)
+            "product-coder",
+            WRITE_TOOL_IDS,
+            4_096,
+            _limits(max_children=0, max_depth=0),
         ),
         router=ProductRouterProfile(
             "product-router",
+            256,
             _limits(max_steps=2, max_tool_calls=0, max_children=0, max_depth=0),
             30_000,
             2_048,
@@ -392,6 +444,30 @@ async def test_chat_task_modes_pause_restart_and_promote(
     )
 
 
+async def test_auto_router_receives_the_complete_reason_contract(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    provider = _ContractAwareRouterProvider()
+
+    task_id, _, _ = await _run_to_barrier(
+        tmp_path,
+        store,
+        source,
+        target,
+        LocalArtifactCas(tmp_path / "cas"),
+        RequestedTaskMode.AUTO,
+        provider,
+    )
+
+    assert provider.saw_reason_bound
+    summary = await ProductTaskStreamReader(store).load(task_id)
+    assert summary is not None
+    assert summary.resolved_mode is ResolvedTaskMode.SINGLE
+
+
 async def test_router_failure_releases_resources_and_returns_the_durable_task(
     tmp_path: Path,
 ) -> None:
@@ -558,6 +634,299 @@ async def test_model_requests_never_receive_review_or_approval_values(
     assert all(value not in model_surface for value in sensitive)
 
 
+async def test_approval_screen_uses_durable_evidence_and_separate_request_caps(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    requests: list[ModelRequest] = []
+
+    _, _, output = await _run_to_barrier(
+        tmp_path,
+        InMemoryEventStore(),
+        source,
+        target,
+        LocalArtifactCas(tmp_path / "cas"),
+        RequestedTaskMode.AUTO,
+        _ProductProvider(requests),
+    )
+
+    routing = [
+        request
+        for request in requests
+        if request.system_prompt and "routing classifier" in request.system_prompt
+    ]
+    execution = [request for request in requests if request not in routing]
+    assert routing and execution
+    assert {request.max_output_tokens for request in routing} == {256}
+    assert {request.max_output_tokens for request in execution} == {4_096}
+    assert "workflow nodes:" in output
+    assert "changed paths (1)" in output
+    assert "added.txt" in output
+    assert "added-file: passed exit=0" in output
+    assert "patch preview (" in output
+    assert "diff --git" in output
+    assert "replay: traceh replay" in output
+
+    model_surface = repr(requests)
+    assert "diff --git" not in model_surface
+    assert "import pathlib,sys;sys.exit" not in model_surface
+
+
+async def test_inspection_marks_tampered_patch_evidence_unavailable(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    task_id, session_id, _ = await _run_to_barrier(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        RequestedTaskMode.SINGLE,
+    )
+    manifest = (await PatchArtifactCatalogReader(store).load()).manifests[0]
+    blob_path = cas.local_root / "sha256" / manifest.blob.sha256[:2] / manifest.blob.sha256
+    blob_path.write_bytes(b"x" * manifest.blob.size_bytes)
+
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    runtime = _chat_runtime(tmp_path, store, actions)
+    console = _Console((f"/task inspect {task_id}", "/exit"))
+
+    assert await run_chat(
+        runtime,
+        console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+    assert "evidence: unavailable (artifact-cas-collision)" in console.output
+    assert "do not approve until the durable evidence can be read" in console.output
+    assert "decision: do not approve; retry inspection or reject the task" in console.output
+    assert "decision: /task approve" not in console.output
+    assert "patch preview (" not in console.output
+
+
+async def test_forged_verifier_result_blocks_inspection_and_direct_approval(
+    tmp_path: Path,
+) -> None:
+    source, base = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    task_id, session_id, _ = await _run_to_barrier(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        RequestedTaskMode.SINGLE,
+    )
+
+    # Corrupt the durable history, then observe only public Product commands.
+    # Recomputing the Review's internal evidence digest proves the missing
+    # invariant is its binding to the host-frozen command, not basic shape.
+    event = store._streams["patch-promotions:ledger"][0]
+    assert event.type == "patch/review-recorded"
+    result = dict(event.data["results"][0])
+    forged = "9" * 64
+    assert result["argv_digest"] != forged
+    result["argv_digest"] = forged
+    event.data["results"] = [result]
+    event.data["verification_evidence_digest"] = verification_evidence_digest(
+        event.data["verifier_definition_digest"],
+        (VerifierOutcome(**result),),
+    )
+
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    inspect_console = _Console((f"/task inspect {task_id}", "/exit"))
+    assert await run_chat(
+        _chat_runtime(tmp_path, store, actions),
+        inspect_console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    approve_console = _Console(
+        (f"/task approve {task_id}", f"/task reject {task_id}", "/exit")
+    )
+    assert await run_chat(
+        _chat_runtime(tmp_path, store, actions),
+        approve_console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    assert (
+        "evidence: unavailable (product-inspection-verifier-mismatch)"
+        in inspect_console.output
+    )
+    assert "decision: do not approve" in inspect_console.output
+    assert forged not in inspect_console.output
+    assert (
+        "task operation failed: promotion-review-verification-mismatch"
+        in approve_console.output
+    )
+    assert f"task {task_id}: rejected" in approve_console.output
+
+
+async def test_existing_promotion_recovery_revalidates_the_frozen_plan(
+    tmp_path: Path,
+) -> None:
+    """A durable Promotion is not authority to bypass its owning service.
+
+    Promotion can commit before the Product terminal is recorded. Recovery from
+    that real prefix must re-enter the idempotent Promotion path, which binds the
+    durable Review to the host-frozen plan before Product records success.
+    """
+
+    source, base = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    task_id, session_id, _ = await _run_to_barrier(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        RequestedTaskMode.SINGLE,
+    )
+
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    completed_console = _Console((f"/task approve {task_id}", "/exit"))
+    assert await run_chat(
+        _chat_runtime(tmp_path, store, actions),
+        completed_console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+    completed = await ProductTaskStreamReader(store).load(task_id)
+    assert completed is not None
+    assert completed.status is ProductTaskStatus.COMPLETED
+    assert completed.review_id is not None
+    assert completed.promotion_id is not None
+
+    ledger = await PromotionLedgerReader(store).load()
+    review = ledger.review(completed.review_id)
+    promotion = ledger.promotion(completed.promotion_id)
+    assert review is not None and promotion is not None
+
+    # Recreate the durable crash prefix: Promotion committed, Product terminal
+    # not yet appended. The target drift below also proves recovery does not
+    # infer success merely from the existence of a receipt.
+    product_stream = store._streams[f"product-task:{task_id}"]
+    terminal = product_stream.pop()
+    assert terminal.type == "product/task-completed"
+    awaiting = await ProductTaskStreamReader(store).load(task_id)
+    assert awaiting is not None
+    assert awaiting.status is ProductTaskStatus.AWAITING_APPROVAL
+
+    review_event = store._streams["patch-promotions:ledger"][0]
+    assert review_event.type == "patch/review-recorded"
+    result = dict(review_event.data["results"][0])
+    replacement = "9" * 64
+    assert result["argv_digest"] != replacement
+    result["argv_digest"] = replacement
+    results = (VerifierOutcome(**result),)
+    evidence_digest = verification_evidence_digest(
+        review_event.data["verifier_definition_digest"], results
+    )
+    review_event.data["results"] = [result]
+    review_event.data["verification_evidence_digest"] = evidence_digest
+    approval_digest = expected_approval_digest(
+        replace(
+            review,
+            results=results,
+            verification_evidence_digest=evidence_digest,
+        )
+    )
+    replacement_promotion_id = promotion_identity(approval_digest)
+    for event in store._streams["patch-promotions:ledger"]:
+        if "approval_digest" in event.data:
+            event.data["approval_digest"] = approval_digest
+        if event.type == "patch/promotion-committed":
+            event.data["promotion_id"] = replacement_promotion_id
+    for event in store._streams[f"workflow:{awaiting.workflow_run_id}"]:
+        if "approval_digest" in event.data:
+            event.data["approval_digest"] = approval_digest
+
+    git("update-ref", "refs/heads/main", base, cwd=target)
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    recovery_console = _Console((f"/task approve {task_id}", "/exit"))
+    assert await run_chat(
+        _chat_runtime(tmp_path, store, actions),
+        recovery_console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+
+    recovered = await ProductTaskStreamReader(store).load(task_id)
+    assert recovered is not None
+    assert recovered.status is ProductTaskStatus.AWAITING_APPROVAL
+    assert (
+        "task operation failed: promotion-review-verification-mismatch"
+        in recovery_console.output
+    )
+    assert f"task {task_id}: completed" not in recovery_console.output
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+
+
 async def test_ordinary_chat_creates_no_product_task(tmp_path: Path) -> None:
     source, _ = build_source_repository(tmp_path / "source")
     target = make_bare_target(source, tmp_path / "target.git")
@@ -598,6 +967,32 @@ class _GatedProductProvider(_ProductProvider):
         return await super().complete(request)
 
 
+class _GatedClock:
+    def __init__(self) -> None:
+        self.now = 0.0
+        self.waiters: asyncio.Queue[tuple[float, asyncio.Future[None]]] = (
+            asyncio.Queue()
+        )
+
+    def monotonic(self) -> float:
+        return self.now
+
+    async def sleep(self, delay: float) -> None:
+        gate = asyncio.get_running_loop().create_future()
+        await self.waiters.put((delay, gate))
+        await gate
+        self.now += delay
+
+    async def advance_live_waiter(self) -> None:
+        while True:
+            delay, gate = await asyncio.wait_for(self.waiters.get(), timeout=10)
+            del delay
+            if gate.done():
+                continue
+            gate.set_result(None)
+            return
+
+
 async def test_interrupting_confirmation_converges_owned_work_without_promotion(
     tmp_path: Path,
 ) -> None:
@@ -620,20 +1015,32 @@ async def test_interrupting_confirmation_converges_owned_work_without_promotion(
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
     console = _Console(("please add the accepted file", "yes, do it"))
+    gated_clock = _GatedClock()
     running = asyncio.create_task(
         run_chat(
             runtime,
             console.console,
             workspace=workspace,
-            timeline=False,
+            timeline=True,
+            heartbeat_seconds=1,
+            clock=Clock(gated_clock.monotonic, gated_clock.sleep),
             product=product,
         )
     )
     await asyncio.wait_for(provider.entered.wait(), timeout=10)
+    task_id = _proposed_task_id(console.output)
+    assert f"task {task_id}: confirmation accepted; starting execution" in console.output
+    await gated_clock.advance_live_waiter()
+    await asyncio.wait_for(console.waiting.wait(), timeout=10)
+    assert f"task {task_id}: started; workflow=running; mode=single" in console.output
 
     running.cancel()
     assert await asyncio.wait_for(running, timeout=10) == 130
-    task_id = _proposed_task_id(console.output)
+    assert not any(
+        task.get_name().startswith("traceh-product-heartbeat-")
+        for task in asyncio.all_tasks()
+        if task is not asyncio.current_task()
+    )
     assert await store.list_streams(prefix="product-task:") == (
         f"product-task:{task_id}",
     )

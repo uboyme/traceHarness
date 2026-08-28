@@ -189,6 +189,39 @@ async def test_capture_ignores_inherited_git_config_parameters(
     assert snapshot.changed_paths == ("new.txt",)
 
 
+async def test_capture_recurses_into_a_new_regular_directory(tmp_path: Path) -> None:
+    """A new directory is a container, not a special Git object.
+
+    ``git diff-tree --raw`` reports the directory itself as mode ``040000``
+    unless the reader asks for recursive leaf entries.  Treating that container
+    as the candidate file rejects every ordinary Patch that adds its first file
+    below a new directory.
+    """
+
+    source, base = _repository(tmp_path / "source")
+    workspace = _worktree(source, tmp_path / "workspace", base)
+    nested = workspace / "package"
+    nested.mkdir()
+    (nested / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    index_before = _index_bytes(workspace)
+
+    snapshot = await GitPatchBuilder().capture(
+        workspace,
+        base_revision=base,
+        repository_fingerprint=_repository_fingerprint(workspace),
+        limits=_limits(),
+    )
+
+    assert snapshot.changed_paths == ("package/module.py",)
+    assert b"diff --git a/package/module.py b/package/module.py" in snapshot.patch_bytes
+    integration = _worktree(source, tmp_path / "integration", base)
+    patch_file = tmp_path / "nested.patch"
+    patch_file.write_bytes(snapshot.patch_bytes)
+    _git("apply", "--binary", "--index", str(patch_file), cwd=integration)
+    assert _git("write-tree", cwd=integration) == snapshot.candidate_tree
+    assert _index_bytes(workspace) == index_before
+
+
 @pytest.mark.skipif(not hasattr(os, "symlink"), reason="symlink unavailable")
 async def test_symlink_change_is_rejected_before_manifest_creation(tmp_path: Path) -> None:
     source, base = _repository(tmp_path / "source")

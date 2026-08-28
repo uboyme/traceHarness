@@ -721,6 +721,7 @@ class LocalGitPromotionEngine(_GitBoundary):
             "-C",
             str(repository),
             "diff-tree",
+            "-r",
             "--no-commit-id",
             "--raw",
             "-z",

@@ -50,6 +50,7 @@ class ProductRuntimeBinding:
 
     assembly: ResolvedAgentAssembly | None
     budget: BudgetLimits | None
+    max_output_tokens: int | None
 
 
 class ProductResourceBindings:
@@ -78,7 +79,7 @@ class ProductResourceBindings:
             source_id=preflight.source.source_id,
             revision=preflight.source.base_revision,
             access=WorkspaceAccess.READ_ONLY,
-            runtime=ProductRuntimeBinding(None, None),
+            runtime=ProductRuntimeBinding(None, None, None),
         )
         profile = preflight.profile.profile
         for role in ProductRole:
@@ -90,7 +91,9 @@ class ProductResourceBindings:
                 revision=preflight.source.base_revision,
                 access=role.workspace_access,
                 runtime=ProductRuntimeBinding(
-                    resolved, freeze_limits(profile.role_profile(role).budget)
+                    resolved,
+                    freeze_limits(profile.role_profile(role).budget),
+                    profile.role_profile(role).max_output_tokens,
                 ),
             )
         router = preflight.profile.router
@@ -101,7 +104,9 @@ class ProductResourceBindings:
             revision=preflight.source.base_revision,
             access=WorkspaceAccess.READ_ONLY,
             runtime=ProductRuntimeBinding(
-                router, freeze_limits(profile.router.budget)
+                router,
+                freeze_limits(profile.router.budget),
+                profile.router.max_output_tokens,
             ),
         )
         current_router = self._router_specs.get(task_id)
@@ -361,6 +366,8 @@ def _same_runtime(
     left: ProductRuntimeBinding, right: ProductRuntimeBinding
 ) -> bool:
     if left.budget != right.budget:
+        return False
+    if left.max_output_tokens != right.max_output_tokens:
         return False
     if left.assembly is None or right.assembly is None:
         return left.assembly is right.assembly

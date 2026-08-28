@@ -78,7 +78,7 @@ def _reconfigure(stream: object) -> bool:
         return False
     try:
         reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, LookupError, OSError, ValueError):
+    except (AttributeError, LookupError, OSError, TypeError, ValueError):
         return False
     return True
 

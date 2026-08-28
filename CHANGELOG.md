@@ -1,6 +1,174 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 - 2026-08-28
+
+### v0.7-F5 RC: ProductTask acceptance and release stabilization
+
+- Advanced the package's single version source to `0.7.0`; pyproject metadata,
+  package exports, core plugin identity, plugin API compatibility and CLI output
+  continue to derive from `traceh.version.__version__`. Added the dedicated
+  [v0.7.0 validation record](docs/validation-v0.7.0.md). The candidate commit
+  passed clean-input packaging, archive audit and a fresh `--no-index` install;
+  tag, push and release remain separately gated.
+- Built the `0.7.0` Wheel, sdist and Git-index source ZIP from a clean clone of
+  the candidate commit. Archive audit found 190 Wheel entries, 306 sdist entries
+  and an exact 388-file source ZIP, with no env file, cache, bytecode, Git data
+  or undeclared working-tree note. A fresh venv installed the core and its
+  locally reconstructed `packaging 24.1` dependency exclusively from a local
+  wheelhouse; package/distribution versions, CLI banner, scripted doctor,
+  `eval --help` and plugin discovery all passed without index or Provider use.
+
+- Made the existing Product Chat approval barrier readable without adding a
+  state machine or event stream. Confirmation now prints the task id before
+  execution, the existing optional heartbeat reports fresh durable Product and
+  Workflow progress, and `/task inspect` plus the automatic approval screen join
+  the fixed Workflow, Agent Directory, immutable Artifact and Review facts to
+  show node/Session replay identities, changed paths, bounded inert Patch text
+  and verifier outcomes. Missing or tampered evidence is explicitly unavailable
+  and the screen says not to approve. None of the projection enters a model
+  request. All CLI commands now apply the UTF-8 stdio policy before rendering,
+  so `replay` and `inspect` cannot crash on a valid Unicode scalar under a
+  legacy Windows code page.
+- Root-fixed an independent-review P1 in the approval evidence chain. A durable
+  Review could replace one verifier result's `argv_digest`, recompute its
+  internal evidence digest, still render as passed, and then be directly
+  approved and promoted. Promotion now owns one frozen-plan Review validator
+  covering definition digest, result count/order, command ids and argv digests,
+  evidence digest and `passed`; inspection, existing-Review reuse, approval and
+  promotion all reuse it, including idempotent reads. F4 evidence collection
+  now also requires the manifest's frozen VerificationPlan and reuses that same
+  matcher before treating `review.passed` as a metric. The public-path
+  counter-example now renders unavailable/do-not-approve, rejects direct
+  approval and leaves the bare ref unchanged; a second counter-example keeps
+  every Product/Workflow/Promotion identity coherent while substituting a
+  result outside the plan, and the collector refuses it. Short-circuiting the
+  shared rule reproduced both the old ref movement and the false successful
+  measurement before the protection was restored.
+- Fixed the remaining Product recovery path found by independent re-review.
+  When a Promotion fact was durable but `product/task-completed` was not, the
+  control plane previously trusted a ledger lookup and completed the task
+  without re-entering Promotion's frozen-plan validation. Recovery now calls
+  the idempotent `promote()` operation first and uses its returned receipt. A
+  real Chat/Promotion crash-prefix counter-example remains awaiting approval
+  and reports `promotion-review-verification-mismatch`; restoring the old early
+  return made it durably `completed` again.
+- Separated cumulative Product Token authority from each provider request's
+  output ceiling in [ADR-0034]. Every role and Router now requires an explicit
+  `max_output_tokens` in addition to `budget.max_tokens`; the exact schema
+  rejects the old shape, the resource binding passes the request bound through
+  the existing `RuntimeConfig`, and the Budget ledger remains unchanged. The
+  shipped benchmark restores cumulative role accounts of 60000/60000/120000,
+  uses 8192 per role request, and uses 8000 cumulative/256 per request for the
+  Router. All arms still share one frozen Profile. Because this changes the
+  Profile digest, the fifth 18-attempt grid remains historical and did not
+  certify the current manifest; the next item records its replacement gate.
+- Completed that post-change grid from a fresh repository-external directory
+  with process-local proxy variables disabled and `NO_PROXY=*`. The unchanged
+  public CLI measured all 18 attempts with no unavailable metrics and produced
+  15 full successes: requested single 5/6, multi 4/6 and auto 6/6; all auto
+  routes parsed strictly and resolved to single. The three failures were
+  durable Windows DNS `getaddrinfo failed` errors at one single coder, one
+  multi parent and one multi coder; there was no TLS EOF, Budget exhaustion,
+  Router rejection or Verifier failure. All 52 Budget accounts terminalized;
+  51 of 52 Workspaces released and the one dirty Provider failure quarantined
+  its evidence with `live=0`. JSON and Markdown agree across all attempt and
+  aggregate rows and contain no credential shape or current-machine path.
+- Isolated the remaining lookup failures to the WLAN's preferred DHCP DNS: its
+  uncached UDP and TCP queries failed 50/50 and 10/10 while the healthy
+  resolver passed. After the user replaced the WLAN pair with
+  `223.5.5.5`/`223.6.6.6`, the Windows resolver passed 200/200 and the same
+  proxy-free Python `urllib`/OpenSSL admission path used by the Provider passed
+  50/50 without a key. A seventh fresh, unchanged 18-attempt grid then measured
+  all attempts and produced 16 full successes: requested single 5/6, multi
+  5/6 and auto 6/6, with zero DNS or TLS EOF failure. The two remaining durable
+  failures were one remote disconnect and one multi coder stopped by its
+  cumulative Budget after 126312 measured tokens. All 54 Budget accounts and
+  54 Workspaces converged; two dirty failures were quarantined with `live=0`.
+  No retry, fallback, report replacement, proxy special case or SSL relaxation
+  was added.
+- Aligned the production Router request with the strict response contract it
+  already enforces. The host now tells the model that `reason` is `null` or
+  non-empty single-line-safe display text bounded by the shared
+  `MAX_REASON_DISPLAY_CHARS`, with no surrounding whitespace or extra prose;
+  the parser remains fail closed with no truncation, retry or fallback. A
+  deterministic Chat-to-ProductTask counter-example returns 257 characters
+  when that contract is absent: the old prompt reproduces
+  `product-router-reason-invalid`, while the corrected public path resolves to
+  `single`. A fresh 18-attempt real-model grid then measured every attempt and
+  produced 15 full successes: auto strictly parsed 6/6 with no reason rejection
+  and resolved all six to single. The remaining three failures were coder-side
+  Windows DNS `getaddrinfo failed`; there was no TLS EOF or verifier failure.
+  All Budget accounts and Workspaces converged, and the prior 13/18 grid remains
+  intact as pre-fix historical evidence.
+- Identified the prior TLS instability as the Windows user-level loopback proxy
+  path used automatically by Python `urllib`: the proxied path reproduced 4 TLS
+  EOFs in 20 credential-free probes, while the same Python/OpenSSL stack was
+  20/20 when direct. A process-local `NO_PROXY` also proved 20/20 without
+  changing the system proxy. After a 50/50 clean admission probe, a third
+  corrected 18-attempt grid using that bypass measured every attempt and had 13
+  full successes with no TLS EOF. Its five failures were two strict Router
+  reason rejections, one coder Budget exhaustion and two transient Windows DNS
+  `getaddrinfo failed` errors. Resolved single was 8/10 and multi 5/6; these are
+  descriptive small-n results. No production proxy special case or retry was
+  added, and all three corrected reports remain intact outside the repository.
+- Repeated the corrected 18-attempt grid through the unchanged public CLI after
+  a credential-free TLS admission probe briefly returned 20/20 HTTP responses.
+  The follow-up again measured all 18 attempts and converged every Budget and
+  Workspace, but only 3 met the full success definition: 14 durable model
+  attempts failed with TLS `UNEXPECTED_EOF_WHILE_READING` (coder 10, parent 3,
+  Router 1), and one Router answer failed the strict reason contract. The
+  preceding Python/OpenSSL probe had observed 14 TLS EOFs in 50 requests while
+  Windows Schannel/curl reached all four resolved IPs 32/32; the later clean
+  20-request window therefore did not predict POST stability. No retry,
+  fallback, attempt replacement, report splicing or SSL relaxation was added.
+  Both corrected reports remain evidence; the transport-confounded 1/10
+  resolved-single versus 2/6 resolved-multi result is not a quality claim.
+- Ran the shipped ProductTask benchmark through its only production entry with
+  one explicit OpenAI-compatible model: three tasks by single, multi and auto,
+  repeated twice. The corrected run measured all 18 attempts with no unavailable
+  attempt and coherent experiment conditions; 11 attempts met the full Product,
+  Workflow, Review and Promotion success definition. Resolved single was 9/10
+  and resolved multi 2/6. Auto strictly parsed 4/6, resolved those four to
+  single and kept routing cost separate.
+- Classified the seven quality failures from durable facts instead of model
+  prose: six were provider TLS `UNEXPECTED_EOF_WHILE_READING` failures and one
+  was the strict `product-router-reason-invalid` contract. `complete=true`
+  therefore means the measurement and evidence chain completed, not that every
+  coding attempt succeeded. Every Budget account and Workspace converged with
+  no live record.
+- As an interim RC measure, the fifth grid used `32768` for each role's
+  cumulative account so the provider would not see a larger request ceiling.
+  A later real Chat showed why that was not a final design: one Coder consumed
+  38454 exact tokens across eleven legal responses and exhausted the cumulative
+  account before its summary. ADR-0034 replaces that coupling with the explicit
+  two-limit contract above. Each task's tracked initial tree also ignores
+  ordinary Python bytecode caches, keeping verifier-generated files out of
+  candidate Patches without adding a runner fallback or changing evaluation.
+- Fixed a D1/D2 Git boundary defect exposed by the real model: non-recursive
+  `git diff-tree --raw` reported a newly added directory container as mode
+  `040000`, causing Artifact capture and Promotion to reject an ordinary first
+  file below that directory. Both existing readers now request recursive leaf
+  entries. Two deterministic public-path tests use real Git to prove capture and
+  promotion of a new regular directory; removing the recursive flag reproduced
+  `artifact-git-mode-rejected` and `promotion-git-mode-rejected` before the
+  sources were restored.
+- A corrected one-attempt smoke completed the full model/tool/Patch/verifier/
+  approval/promotion chain. The 18-attempt JSON and Markdown reports agree and
+  all evidence remains outside the repository. Targeted adjacent regression is
+  `111 passed, 2 skipped`; the Router/F3, Product contract/architecture and
+  Product Benchmark E2E correction gate is `141 passed`. The current Chat/Token/
+  Unicode stabilization gates are Product `257 passed`, Evaluation `52 passed`,
+  Budget/Workspace/Artifact/Promotion/Workflow `397 passed, 3 skipped`, and CLI
+  `521 passed, 1 skipped`; collect-only is 2407. Seven classes of critical
+  protection were reverse-verified individually. Compileall, changed-scope Ruff, the generic
+  example-hardcoding scan, `git diff --check` and the four protected-core zero
+  diff check pass. Independent re-review cleared P0/P1/P2; the one final full
+  suite then passed `2402 passed, 5 skipped` from 2407 collected tests with exit
+  code 0. The F5 security scan covered 377 tracked or intended-new text files:
+  no real credential shape, current-machine user path, or benchmark/provider
+  name appeared in production code; broad key-like matches were synthetic test
+  identities. The post-change real-model grid, packaging/offline-install gates,
+  version bump, validation record, tag and release remain outstanding.
 
 ### v0.7-F4: `traceh eval` is the ProductTask benchmark
 
@@ -85,7 +253,8 @@
   tests and finished with 2390 passed, 5 skipped, exit code 0 in 28:04;
   compileall, changed-scope Ruff, documentation QA and `git diff --check` also
   passed, and the four protected core files have zero diff. Real external-model
-  acceptance and all F5 release work remain outstanding.
+  acceptance was still outstanding at the F4 checkpoint and was completed later
+  in the F5 RC work recorded above; the remaining release work is still open.
 
 ### v0.7-F3: unified Chat ProductTask execution and approval
 

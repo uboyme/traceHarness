@@ -53,7 +53,7 @@ from traceh.api.product import (
 from traceh.api.promotion import VerificationPlan
 from traceh.api.workspaces import WorkspaceAccess
 from traceh.budgets.errors import BudgetInputError
-from traceh.budgets.events import freeze_limits
+from traceh.budgets.events import MAX_BUDGET_VALUE, freeze_limits
 from traceh.product.errors import ProductProfileError
 from traceh.product.events import require_product_identifier
 from traceh.promotion.models import freeze_verification_plan, verifier_definition_digest
@@ -379,6 +379,9 @@ def _require_profile(profile: object, profile_id: str) -> None:
     if type(router) is not ProductRouterProfile:
         raise ProductProfileError("product-router-profile-invalid", profile_id)
     _require_identifier(router.preset, profile_id, "router_preset")
+    _require_output_limit(
+        router.max_output_tokens, profile_id, "router_max_output_tokens"
+    )
     _require_limits(router.budget, profile_id, "router_budget")
     _require_limits(profile.task_budget, profile_id, "task_budget")
 
@@ -396,7 +399,14 @@ def _require_role_profile(slot: object, profile_id: str, field: str) -> None:
         if grant in seen:
             raise ProductProfileError("product-role-grants-invalid", profile_id)
         seen.add(grant)
+    _require_output_limit(slot.max_output_tokens, profile_id, f"{field}_max_output_tokens")
     _require_limits(slot.budget, profile_id, f"{field}_budget")
+
+
+def _require_output_limit(value: object, profile_id: str, field: str) -> None:
+    if type(value) is not int or value < 1 or value > MAX_BUDGET_VALUE:
+        raise ProductProfileError("product-output-limit-invalid", field)
+    del profile_id
 
 
 def _require_limits(limits: object, profile_id: str, field: str) -> None:

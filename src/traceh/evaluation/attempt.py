@@ -239,6 +239,7 @@ async def run_attempt(
         promotion_target_id=BENCHMARK_TARGET_ID,
         target_ref=repositories.target_ref,
         target_revision=target_revision,
+        verification_plan=settings.host_profile.verification_plan,
     )
     if (
         evidence.source_base_revision is not None

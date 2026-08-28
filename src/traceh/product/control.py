@@ -442,11 +442,20 @@ class ProductTaskControlPlane:
             digest = expected_approval_digest(review)
             existing_promotion = ledger.promotion_for_approval(digest)
             if existing_promotion is not None:
+                # A Promotion may be durable while the Product terminal is not:
+                # ref CAS, resource release and ``product/task-completed`` are
+                # necessarily separate effects. Recovery must not treat the
+                # ledger lookup as authority to skip Promotion's frozen-plan
+                # validation. ``promote`` owns that invariant and returns the
+                # same receipt idempotently without moving the ref again.
+                promotion = await self._promotions.promote(
+                    approval_digest=digest
+                )
                 await self._execution.release(task_id, reason="merged")
                 completed = await self._tasks.complete_task(
                     task_id=task_id,
                     operation_id=_operation_id("complete", task_id),
-                    promotion_id=existing_promotion.promotion_id,
+                    promotion_id=promotion.promotion_id,
                 )
                 return ProductAdvanceResult(summary=completed)
             assembly = await self._assembly.assemble(

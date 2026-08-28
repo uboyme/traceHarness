@@ -130,6 +130,7 @@ def _role(name: str) -> ProductRoleProfile:
     return ProductRoleProfile(
         preset=f"preset-{name}",
         capability_grants=("read-workspace",),
+        max_output_tokens=4_096,
         budget=_limits(max_children=0, max_depth=0),
     )
 
@@ -145,6 +146,7 @@ def _profile() -> ProductTaskProfile:
         coder=_role("coder"),
         router=ProductRouterProfile(
             preset="preset-router",
+            max_output_tokens=256,
             budget=_limits(max_tokens=2_000, max_steps=2, max_tool_calls=0),
             timeout_milliseconds=30_000,
             max_response_bytes=2_048,
@@ -364,10 +366,10 @@ def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
         assert getattr(value, "__slots__", None) is not None, name
 
 
-def test_the_package_version_is_unchanged() -> None:
-    """F0 releases nothing; the v0.7 bump belongs to the release stage."""
+def test_the_package_version_is_the_v07_release() -> None:
+    """F5 owns the single v0.7 version transition."""
 
-    assert __version__ == "0.6.0"
+    assert __version__ == "0.7.0"
 
 
 # --------------------------------------------------- authority boundaries

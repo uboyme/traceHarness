@@ -427,8 +427,52 @@ remain the authority for implemented facts.
     bare target per attempt, and derives every metric from a durable fact source
     or its own monotonic clock. See
     [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md).
-  - **F5 — not started:** real-model acceptance, packaging/security checks and
-    the v0.7 release.
+  - **F5 — in progress:** four corrected OpenAI-compatible ProductTask grids
+    are complete as measurements (`18/18` each). They progressed from `11/18`
+    with 6 TLS EOF failures, to a proxy-confounded `3/18` with 14 TLS EOFs, then
+    to `13/18` with no TLS EOF after a process-local `NO_PROXY` bypass. That run
+    still had two strict Router rejections, one Budget exhaustion and two DNS
+    lookup errors.
+    All resources converged and no retry/fallback was added. The run exposed and
+    root-fixed the shared D1/D2 non-recursive tree-diff defect for ordinary files
+    in new directories. It also exposed that the production Router request did
+    not disclose the parser's existing reason bound; the prompt now states that
+    shared contract and a deterministic public-path reverse verification covers
+    it without relaxing the parser. A fresh post-fix grid then produced `15/18`:
+    auto parsed 6/6 with zero reason rejection, and all three failures were DNS
+    lookup errors. Manual Chat then exposed two release blockers: the approval
+    barrier was technically complete but opaque, and one cumulative Token
+    Budget was also being used as a per-request output ceiling. Product Chat now
+    renders bounded durable Workflow/Session/Patch/verifier evidence and
+    optional progress without a new fact source; ADR-0034 gives every role and
+    Router an explicit request output limit separate from cumulative Budget.
+    The exact old Profile shape is rejected. This changed the benchmark Profile,
+    so the old `15/18` remains historical. A fresh post-change grid also
+    measured 18/18 and produced 15 full successes; its three failures were
+    durable Windows DNS errors, with no TLS, Budget, Router or Verifier failure,
+    and all Budget/Workspace owners converged. DNS-only probes then identified
+    the WLAN's preferred DHCP resolver as the fault. After replacing the DNS
+    pair, the Windows resolver passed 200/200 and the Provider-equivalent,
+    proxy-free Python admission path passed 50/50. A seventh fresh grid measured
+    18/18 and produced 16 full successes with zero DNS/TLS failure; the two
+    remaining durable failures were one remote disconnect and one cumulative
+    Budget fail-closed after a stochastic coder overrun. A first independent review also
+    found one approval-chain P1: an
+    internally coherent Review could carry an argv digest not belonging to the
+    frozen command. One Promotion-owned frozen-plan validator now protects
+    inspect, Review reuse, approve, promote and F4 evidence collection; its two
+    public reverse verifications reproduce the old bare-ref movement and the
+    false successful measurement when disabled. Independent re-review then
+    found the Product recovery branch for an already-durable Promotion was
+    returning before that owner check; it now re-enters idempotent promotion,
+    and restoring the early return reproduces an incorrect durable Product
+    completion. Independent re-review cleared P0/P1/P2 and the single final full
+    gate passed 2402 tests with 5 skips. The F5 security scan then found no
+    real credential shape, current-machine path or benchmark/provider fixture
+    embedded in production. The single package version and validation record
+    are now `0.7.0`; clean-input packaging, archive audit and a fresh offline
+    installation from the candidate also passed. Tag, push and release remain
+    separately gated.
 
 Definition of done: parallel coding children do not share one mutable directory and the
 host can promote only an immutable, fixed-suite-verified, human-approved patch while the
@@ -440,7 +484,8 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 [ADR-0030](docs/adr/0030-verified-approved-git-ref-promotion.md) and
 [ADR-0031](docs/adr/0031-fixed-typed-workflow-above-public-services.md) and
 [ADR-0032](docs/adr/0032-unified-chat-product-task-surface.md) and
-[ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md).
+[ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md) and
+[ADR-0034](docs/adr/0034-separate-product-token-budget-and-request-output-limit.md).
 
 ## v1.0: Stable plugin platform
 

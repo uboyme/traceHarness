@@ -35,6 +35,7 @@ from traceh.api.promotion import (
     VerifierCommand,
     VerifierEnvironmentPolicy,
 )
+from traceh.budgets.events import MAX_BUDGET_VALUE
 from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductHostProfile
 
@@ -148,7 +149,13 @@ def parse_product_host_settings(
         router_raw = _object(
             root["router"],
             frozenset(
-                {"preset", "budget", "timeout_milliseconds", "max_response_bytes"}
+                {
+                    "preset",
+                    "max_output_tokens",
+                    "budget",
+                    "timeout_milliseconds",
+                    "max_response_bytes",
+                }
             ),
             "router",
         )
@@ -163,6 +170,9 @@ def parse_product_host_settings(
             coder=role_values["coder"],
             router=ProductRouterProfile(
                 preset=_text(router_raw["preset"], "router.preset"),
+                max_output_tokens=_output_limit(
+                    router_raw["max_output_tokens"], "router.max_output_tokens"
+                ),
                 budget=_budget(router_raw["budget"], "router.budget"),
                 timeout_milliseconds=_integer(
                     router_raw["timeout_milliseconds"], "router.timeout_milliseconds"
@@ -248,7 +258,9 @@ def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
 def _role(value: object, field: str) -> ProductRoleProfile:
     item = _object(
         value,
-        frozenset({"preset", "capability_grants", "budget"}),
+        frozenset(
+            {"preset", "capability_grants", "max_output_tokens", "budget"}
+        ),
         field,
     )
     grants = item["capability_grants"]
@@ -257,6 +269,9 @@ def _role(value: object, field: str) -> ProductRoleProfile:
     return ProductRoleProfile(
         preset=_text(item["preset"], f"{field}.preset"),
         capability_grants=tuple(grants),
+        max_output_tokens=_output_limit(
+            item["max_output_tokens"], f"{field}.max_output_tokens"
+        ),
         budget=_budget(item["budget"], f"{field}.budget"),
     )
 
@@ -373,6 +388,13 @@ def _integer(value: object, field: str) -> int:
 def _positive(value: object, field: str) -> int:
     result = _integer(value, field)
     if result < 1:
+        raise ProductInputError("product-host-config-value-invalid", field)
+    return result
+
+
+def _output_limit(value: object, field: str) -> int:
+    result = _positive(value, field)
+    if result > MAX_BUDGET_VALUE:
         raise ProductInputError("product-host-config-value-invalid", field)
     return result
 

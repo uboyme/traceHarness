@@ -29,6 +29,7 @@ def _configuration(tmp_path: Path) -> dict[str, object]:
     role = {
         "preset": "coding-role",
         "capability_grants": ["list_files", "read_file", "search_text"],
+        "max_output_tokens": 4_096,
         "budget": _budget(),
     }
     return {
@@ -66,6 +67,7 @@ def _configuration(tmp_path: Path) -> dict[str, object]:
         },
         "router": {
             "preset": "mode-router",
+            "max_output_tokens": 256,
             "budget": _budget(),
             "timeout_milliseconds": 30_000,
             "max_response_bytes": 2_048,
@@ -145,3 +147,33 @@ def test_chat_parser_exposes_one_optional_product_configuration() -> None:
     )
 
     assert args.product_config == Path("product.json")
+
+
+def test_legacy_role_shape_without_a_request_output_limit_is_refused(
+    tmp_path: Path,
+) -> None:
+    payload = _configuration(tmp_path)
+    roles = payload["roles"]
+    assert isinstance(roles, dict)
+    coder = roles["coder"]
+    assert isinstance(coder, dict)
+    coder.pop("max_output_tokens")
+
+    with pytest.raises(ProductInputError) as caught:
+        load_product_host_file(_write(tmp_path, payload))
+
+    assert caught.value.code == "product-host-config-shape-invalid"
+
+
+def test_request_output_limit_must_be_a_positive_explicit_integer(
+    tmp_path: Path,
+) -> None:
+    payload = _configuration(tmp_path)
+    router = payload["router"]
+    assert isinstance(router, dict)
+    router["max_output_tokens"] = 0
+
+    with pytest.raises(ProductInputError) as caught:
+        load_product_host_file(_write(tmp_path, payload))
+
+    assert caught.value.code == "product-host-config-value-invalid"

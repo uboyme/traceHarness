@@ -126,6 +126,13 @@ the digest of that Review's content. Each is well-formed alone, so reading them
 independently lets a report say "verified, approved and promoted" from three
 unrelated records.
 
+The Promotion projector proves that a Review is internally coherent, but the
+benchmark host also owns the frozen `VerificationPlan`. Before using
+`review.passed`, the evidence collector reuses Promotion's shared frozen-plan
+matcher to bind every result, in order, to the exact command id and argv digest
+from that plan. Recomputing a Review's internal evidence and approval digests is
+therefore not enough to substitute a different verifier result.
+
 `product/task-routed` names both the Router Agent and its Session, but only the
 Agent Directory decides which Session that Agent owns, so the routing Session is
 resolved there and required to match the recorded one. Taking the pair on trust

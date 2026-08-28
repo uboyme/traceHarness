@@ -101,10 +101,10 @@ def test_the_four_protected_files_are_byte_identical() -> None:
         assert hashlib.sha256(raw).hexdigest() == expected, relative
 
 
-def test_the_package_version_is_unchanged() -> None:
-    """F1 ships a fact layer, not a release."""
+def test_the_package_version_is_the_v07_release() -> None:
+    """The release stage is the only stage that changes the package version."""
 
-    assert __version__ == "0.6.0"
+    assert __version__ == "0.7.0"
 
 
 def test_no_existing_owner_learns_about_the_product_domain() -> None:

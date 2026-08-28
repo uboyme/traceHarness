@@ -329,7 +329,6 @@ async def _run(args: argparse.Namespace) -> int:
 
 async def _chat(args: argparse.Namespace) -> int:
     workspace, session_id = chat_target(args.workspace, args.session_id)
-    configure_stdio()
     product_config = None
     product_host = None
     actions = None
@@ -1059,6 +1058,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
+    # Every command may render persisted model or verifier text, not only Chat.
+    # Configure before argparse can print help/errors so a valid Unicode scalar
+    # never crashes a Windows console that inherited a legacy code page.
+    configure_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:

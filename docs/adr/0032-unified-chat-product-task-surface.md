@@ -1,6 +1,6 @@
 # ADR-0032: One chat entry point above a durable ProductTask
 
-- Status: Accepted; **F0-F4 implemented, F5 not implemented**
+- Status: Accepted; **F0-F4 implemented, F5 release stabilization in progress**
 - Date: 2026-08-26
 - Stage: v0.7-F0
 
@@ -45,8 +45,13 @@ The `traceh eval` benchmark rework this ADR anticipated in section 15 is now
 implemented in v0.7-F4 and recorded in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md).
 
-What still does **not** exist is external real-provider acceptance for this tree
-or the v0.7 release. The package version remains `0.6.0`.
+Real-provider RC grids have since exercised this tree, but the release
+stabilization they exposed is still in progress. In particular,
+[ADR-0034](0034-separate-product-token-budget-and-request-output-limit.md)
+separates cumulative Token authority from the per-request output bound, so the
+new frozen Profile conditions still require their own acceptance run. Final
+review, packaging, version `0.7.0`, tag and release do not yet exist; the package
+version remains `0.6.0`.
 
 ## Context
 
@@ -549,6 +554,29 @@ task exists until a later human message passes Session replay. Review ids,
 Patch hashes, approval digests and promotion revisions are rendered by the
 host and never appended to a later model request.
 
+The host now also makes execution and approval readable without adding a
+status stream. It prints the prospective task id as soon as the later
+confirmation is accepted, emits optional monotonic waiting notices using the
+existing Chat heartbeat interval, and replays ProductTask/Workflow progress on
+each notice. At the Approval barrier and on `/task inspect`, a read-only
+projection joins the fixed Workflow, Agent Directory, Artifact CAS and Review
+ledger to show node status, Agent Session replay commands, changed paths,
+bounded inert Patch text, and verifier status/exit/evidence digests. Missing or
+tampered evidence is shown as unavailable with an explicit do-not-approve
+warning. Promotion owns one shared frozen-plan Review validation: each result's
+command id, position and argv digest, the definition/evidence digests and
+`passed` must all match the host plan. The projection, Review reuse, direct
+approval and promotion apply the same rule, so skipping the screen cannot
+bypass it. If a Promotion receipt is durable but the Product terminal is not,
+the recovery branch re-enters the idempotent Promotion operation before it
+writes `product/task-completed`; a ledger lookup alone is not an alternate
+approval authority. None of this projection is persisted or sent to a model.
+
+Role and Router Profiles also carry an explicit per-request
+`max_output_tokens`, separate from cumulative `BudgetLimits.max_tokens`; that
+decision and its rejected alternatives are recorded in
+[ADR-0034](0034-separate-product-token-budget-and-request-output-limit.md).
+
 One non-model task-root Agent anchors the ownership tree and aggregate Budget.
 Role Agents use the existing `ProcessAgentSupervisor`, Budget enforcement and
 managed Git Workspace adapter. The Product execution adapter only resolves the
@@ -692,6 +720,7 @@ retry engine, cross-process lease, cold Activation recovery or OS sandbox. It
 does not provide a model-visible approve/promote Tool. `AgentLoop`,
 `AgentRuntime`, `ProcessAgentSupervisor` and `PluginManager` remain
 byte-identical. F4 benchmark work is implemented separately in
-[ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md); F5 release
-work has not begun; the package version remains `0.6.0` and v0.7 is not
-released.
+[ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md). F5 release
+stabilization is in progress, including ADR-0034's Token-bound split; final
+review, packaging, version update, tag and release remain incomplete. The
+package version remains `0.6.0` and v0.7 is not released.

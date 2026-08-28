@@ -26,9 +26,9 @@ from traceh.version import DEFAULT_REQUIRES_TRACEH, DISTRIBUTION_NAME, __version
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def test_version_is_the_expected_v06_release() -> None:
-    assert __version__ == "0.6.0"
-    assert Version(__version__) == Version("0.6.0")
+def test_version_is_the_expected_v07_release() -> None:
+    assert __version__ == "0.7.0"
+    assert Version(__version__) == Version("0.7.0")
 
 
 def test_package_version_comes_from_the_version_module() -> None:

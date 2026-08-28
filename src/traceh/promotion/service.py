@@ -72,6 +72,7 @@ from traceh.promotion.models import (
     require_promotion_identifier,
     require_target_ref,
     review_identity,
+    review_matches_verification_plan,
     verification_evidence_digest,
     verifier_command_digest,
     verifier_definition_digest,
@@ -256,7 +257,7 @@ class PatchPromotionService:
         if (
             review.artifact_id != artifact_id
             or review.target_id != target_id
-            or review.verifier_definition_digest != self._definition_digest
+            or not review_matches_verification_plan(review, self._plan)
         ):
             raise PromotionOperationConflictError
 
@@ -345,11 +346,16 @@ class PatchPromotionService:
         recorded = ledger.approval_for_operation(operation_id)
         if recorded is not None:
             _require_same_approval(recorded, data)
-            return recorded
 
         review = ledger.review(review_id)
         if review is None:
             raise PromotionNotFoundError("promotion-review-unknown")
+        if not review_matches_verification_plan(review, self._plan):
+            raise PromotionApprovalError(
+                "promotion-review-verification-mismatch"
+            )
+        if recorded is not None:
+            return recorded
         if not review.passed:
             raise PromotionApprovalError("promotion-review-not-passed")
         if approval_digest != expected_approval_digest(review):
@@ -398,16 +404,20 @@ class PatchPromotionService:
     async def _promote(self, approval_digest: str) -> PatchPromotion:
         ledger = await self._ledger.load()
         recorded = ledger.promotion_for_approval(approval_digest)
-        if recorded is not None:
-            return recorded
         approval = ledger.approval_for_digest(approval_digest)
         if approval is None:
             raise PromotionApprovalError("promotion-approval-unknown")
         review = ledger.review(approval.review_id)
         if review is None or not review.passed:
             raise PromotionApprovalError("promotion-review-not-passed")
+        if not review_matches_verification_plan(review, self._plan):
+            raise PromotionApprovalError(
+                "promotion-review-verification-mismatch"
+            )
         if approval_digest != expected_approval_digest(review):
             raise PromotionApprovalError("promotion-approval-digest-stale")
+        if recorded is not None:
+            return recorded
 
         artifact = await self._artifacts.load(review.artifact_id)
         if (

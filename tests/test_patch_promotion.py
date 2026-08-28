@@ -394,6 +394,52 @@ async def test_promotion_moves_the_ref_to_the_exact_approved_commit(
         assert len(await store.read(PROMOTION_LEDGER_STREAM)) == 3
 
 
+async def test_promotion_accepts_a_new_regular_directory(tmp_path: Path) -> None:
+    """D2 validates recursive file entries rather than a tree container mode."""
+
+    source, _ = build_source_repository(tmp_path / "source")
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    patch_source = make_patch(
+        source, scratch, {"package/module.py": "VALUE = 1\n"}
+    )
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    artifact = await record_artifact(store, cas, patch_source)
+    plan = verification_plan(
+        VerifierCommand(
+            command_id="nested-file-present",
+            argv=(
+                sys.executable,
+                "-c",
+                "import pathlib, sys;"
+                "sys.exit(0 if pathlib.Path('package/module.py').read_text() "
+                "== 'VALUE = 1\\n' else 1)",
+            ),
+            timeout_ms=60_000,
+        )
+    )
+    service = promotion_service(
+        store,
+        cas,
+        promotion_targets("main-target", target),
+        plan=plan,
+    )
+    try:
+        report, approval = await _approved(service, artifact)
+        promotion = await service.promote(
+            approval_digest=approval.approval_digest
+        )
+
+        assert promotion.new_revision == report.integration_commit
+        assert git(
+            "show", f"{promotion.new_revision}:package/module.py", cwd=target
+        ) == "VALUE = 1"
+    finally:
+        await service.aclose()
+
+
 async def test_an_unapproved_review_can_never_be_promoted(tmp_path: Path) -> None:
     engine = _CountingEngine()
     async with _assembly(tmp_path, engine=engine) as (store, target, artifacts, service):

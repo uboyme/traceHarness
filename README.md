@@ -1,6 +1,6 @@
-# TraceHarness Py v0.6
+# TraceHarness Py v0.7.0
 
-TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 则发布 L1–L4 受控能力演进控制面，以及建立在 durable Directory、Inbox、Delivery 和独立 Session 之上的进程内 `AgentSupervisor`。宿主可以把五个普通子 Agent Tool 显式绑定给 parent，使真实模型创建 child、发送消息、按 message identity 等待、收集 durable report 并 child-first 停止，而 `AgentLoop`、`AgentRuntime` 和 `PluginManager` 仍保持原有职责边界。
+TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 再把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
@@ -39,7 +39,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 需要 Python 3.12 或更高版本。
 
 ```bash
-cd traceharness-py-v0.6
+cd traceHarness
 export PYTHONPATH="$PWD/src"
 python -m traceh.cli.main doctor
 pytest

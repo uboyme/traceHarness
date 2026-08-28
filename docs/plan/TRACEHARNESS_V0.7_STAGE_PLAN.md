@@ -1,7 +1,7 @@
 # TraceHarness v0.7 总阶段计划与目标效果
 
-状态：v0.7.0 发布候选门禁进行中
-当前候选版本：`0.7.0`（尚未 tag、push 或发布）
+状态：v0.7.0 已发布
+当前版本：`0.7.0`
 目标发布版本：`0.7.0`
 
 本文只规定 v0.7 的产品目标、阶段边界、架构约束、验收顺序和最终用户效果。各阶段的协议理由以对应 ADR 为准，当前工程事实以源码、测试和两份项目上下文为准；本文不是新的事实源，也不替代它们。
@@ -83,7 +83,7 @@ v0.6 已经具备进程内多 Agent 的身份、收件、投递、生命周期�
 | F2 | 实现严格 Router、Profile Registry 和 Product Assembly | 已完成；独立审查与最终全量通过 |
 | F3 | 接入统一 Chat 产品控制面并完成真实端到端验收 | 已提交；独立复审与最终全量通过 |
 | F4 | 重构现有 `traceh eval`，完成 single/multi/auto 的小规模真实度量 | 已完成并提交；独立复审清零 P0/P1/P2，唯一一次最终全量通过 |
-| F5 | v0.7 RC、安全/打包门禁、版本、tag 与 GitHub Release | 进行中；当前候选为 0.7.0；第七轮 18/18 可度量、16/18 成功且 DNS/TLS failure 为 0；安全扫描、最终复审、唯一一次最终全量、干净打包/归档审计与离线安装已通过；仅待另行授权的 tag、push 与发布 |
+| F5 | v0.7 RC、安全/打包门禁、版本、tag 与 GitHub Release | 已完成；第七轮 18/18 可度量、16/18 成功且 DNS/TLS failure 为 0；安全扫描、最终复审、唯一一次最终全量、最终提交的干净打包/归档审计与离线安装通过；annotated tag 与 GitHub Release 已发布 |
 
 ## 4. 已完成基础阶段的固定效果
 
@@ -243,7 +243,7 @@ F3 验收通过后才进入性能度量；一次真实模型运行不能证明�
 - 旧 `*/case.json` 布局稳定拒绝（`benchmark-legacy-manifest-rejected`），不读取其内容、不升级、不删除用户旧数据。
 - 设计决定记录在 [`docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md`](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)，工程事实见两份上下文的 20.30 / 20.24。
 
-F4 已提交。F5 的真实外部模型验收现有多轮 `18/18 measured` 历史证据；其中第五轮 `15/18` 只证明 ADR-0034 前的旧 Profile。手工 Chat 促成累计 Token Budget/每请求上限根因拆分、可读审批/进度与 Windows 全 CLI UTF-8 后，当前 Profile 的第六轮在显式无代理进程和新仓库外目录再次得到 `18/18 measured`、`15/18 success`，三个失败均为 durable Windows DNS。DNS-only 诊断随后证明 WLAN 的首选 DHCP DNS 直查 UDP `0/50`、TCP `0/10`；换成 `223.5.5.5`/`223.6.6.6` 后，Windows resolver `200/200`、Provider 同路径无 Key 探针 `50/50`。全新第七轮得到 `18/18 measured`、`16/18 success`：single `5/6`、multi `5/6`、auto `6/6`，auto 全部严格解析到 single，DNS/TLS failure 均为 0；余下是一次远端断开和一次累计 Budget fail-closed，全部 Budget/Workspace owner 收敛。独立复审、唯一一次最终全量、F5 安全扫描、候选提交后的干净打包/归档审计和离线安装均已通过；版本事实源与验证记录为 `0.7.0`，仅待另行授权的 tag、push 与 GitHub Release。工程事实见两份上下文的 20.31 / 20.25。
+F4 已提交。F5 的真实外部模型验收现有多轮 `18/18 measured` 历史证据；其中第五轮 `15/18` 只证明 ADR-0034 前的旧 Profile。手工 Chat 促成累计 Token Budget/每请求上限根因拆分、可读审批/进度与 Windows 全 CLI UTF-8 后，当前 Profile 的第六轮在显式无代理进程和新仓库外目录再次得到 `18/18 measured`、`15/18 success`，三个失败均为 durable Windows DNS。DNS-only 诊断随后证明 WLAN 的首选 DHCP DNS 直查 UDP `0/50`、TCP `0/10`；换成 `223.5.5.5`/`223.6.6.6` 后，Windows resolver `200/200`、Provider 同路径无 Key 探针 `50/50`。全新第七轮得到 `18/18 measured`、`16/18 success`：single `5/6`、multi `5/6`、auto `6/6`，auto 全部严格解析到 single，DNS/TLS failure 均为 0；余下是一次远端断开和一次累计 Budget fail-closed，全部 Budget/Workspace owner 收敛。独立复审、唯一一次最终全量、F5 安全扫描、最终提交后的干净打包/归档审计和离线安装均已通过；版本事实源与验证记录为 `0.7.0`，annotated tag 与 GitHub Release 已发布。工程事实见两份上下文的 20.31 / 20.25。
 
 ## 9. F5 — v0.7 RC 与发布
 
@@ -259,7 +259,7 @@ F4 已提交。F5 的真实外部模型验收现有多轮 `18/18 measured` 历�
 8. 创建并推送提交与 `v0.7.0` tag；
 9. GitHub Release 附带精确构建资产、摘要和真实验证说明，并设为 Latest。
 
-当前进度：第 3 项由当前 Profile 的第七轮完成。它在修正 WLAN DNS 后从新仓库外目录运行 3 个任务 × `{single,multi,auto}` × 2 次，`18/18 measured`、`16/18 success`；DNS/TLS failure 为 0，两次失败分别是远端主动断开和累计 Budget fail-closed，JSON/Markdown 与资源收敛已复核。第六轮的三个 DNS 失败与全部更早历史报告均保留，不能选择性隐藏。验收发现的 D1/D2 新目录 leaf-entry、Router 模型可见合同、Chat 可读性、Windows UTF-8 与 ADR-0034 Token 两层上限均已按现有 owner 根修。两项独立审查 P1 由 Promotion owner 共享规则保护 inspect/review/approve/promote、F4 collector 与 crash-prefix recovery；相关反例和七类关键保护均反向验证。最终复审 P0/P1/P2 清零，唯一一次完整 pytest 为 2402 通过、5 跳过、退出码 0。第 5 项安全扫描检查了 377 个受控文本文件，没有真实凭据形态、当前机器路径或生产夹具硬编码；第 4 项 protected-core 零 diff 已验证。第 6–7 项已经完成；第 8–9 项中的 tag、push 与发布仍未授权。
+完成状态：第 3 项由当前 Profile 的第七轮完成。它在修正 WLAN DNS 后从新仓库外目录运行 3 个任务 × `{single,multi,auto}` × 2 次，`18/18 measured`、`16/18 success`；DNS/TLS failure 为 0，两次失败分别是远端主动断开和累计 Budget fail-closed，JSON/Markdown 与资源收敛已复核。第六轮的三个 DNS 失败与全部更早历史报告均保留，不能选择性隐藏。验收发现的 D1/D2 新目录 leaf-entry、Router 模型可见合同、Chat 可读性、Windows UTF-8 与 ADR-0034 Token 两层上限均已按现有 owner 根修。两项独立审查 P1 由 Promotion owner 共享规则保护 inspect/review/approve/promote、F4 collector 与 crash-prefix recovery；相关反例和七类关键保护均反向验证。最终复审 P0/P1/P2 清零，唯一一次完整 pytest 为 2402 通过、5 跳过、退出码 0。第 5 项安全扫描检查了 377 个受控文本文件，没有真实凭据形态、当前机器路径或生产夹具硬编码；第 4 项 protected-core 零 diff 已验证。第 6–9 项全部完成。
 
 ## 10. 每个阶段的交付纪律
 

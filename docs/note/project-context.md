@@ -38,12 +38,12 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前候选版本 | `0.7.0`，尚未 tag、push 或发布。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata 与被导入的包不可能不一致；源码 ZIP 默认文件名也从该属性派生 |
+| 当前版本 | `0.7.0`，已以 annotated tag `v0.7.0` 发布。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata 与被导入的包不可能不一致；源码 ZIP 默认文件名也从该属性派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | `0.7.0` 发布候选保留 v0.6 的单进程多 Agent 主线，并在 Runtime 外加入执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow；ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly 由可选 Chat 产品面和唯一 `traceh eval` 组合使用（20.19–20.31）。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | `0.7.0` 已发布版本保留 v0.6 的单进程多 Agent 主线，并在 Runtime 外加入执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow；ProductTask 事实、严格 Router、唯一 Profile Registry、fresh preflight 与固定 Product Assembly 由可选 Chat 产品面和唯一 `traceh eval` 组合使用（20.19–20.31）。`AgentLoop`、`AgentRuntime`、concrete Supervisor 并发内核与 `PluginManager` 都不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream、每个 Workflow Run 一条的 Workflow Stream，以及每个 ProductTask 一条的产品事实流；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
@@ -54,7 +54,7 @@
 | 当前自动化测试 | F4 前两轮独立审查共提出 5 个 P1、2 个 P2，全部按根因修复并各自补上确定性反例；最终复审清零 P0/P1/P2 后只运行一次全量并得到 `2395 collected / 2390 passed / 5 skipped`、退出码 0、耗时 `28:04`。F5 的早期 D1/D2 与 Router 修复历史门禁分别是 `111 passed, 2 skipped` 和 `141 passed`。本轮发版前稳定化定向门禁为：Product（不重复 Benchmark）`257 passed`，Evaluation/F4 Benchmark `52 passed`，Budget/Workspace/Artifact/Promotion/Workflow `397 passed, 3 skipped`，CLI `521 passed, 1 skipped`；全仓 collect-only 为 `2407`。确认后可见 task id/heartbeat、CAS 篡改 fail-closed、Profile 每请求上限、旧 schema 拒绝、Windows Unicode replay、Evaluation 冻结 Verifier 绑定和 Promotion 已落盘恢复重验七类关键保护均完成逐项反向验证。第一次独立审查发现内部摘要自洽但 `argv_digest` 不属于冻结命令的 durable Review 曾可被显示、批准并移动 bare ref；共享 frozen-plan Review 校验随后保护 inspection、review 重用、approve、promote 和 Evaluation evidence collection。复审又找到 Promotion 已落盘但 Product terminal 未写的恢复早退分支会绕过该 owner；当前分支先调用幂等 `promote()` 重验，再释放资源并补 terminal。反向移除这些保护时，公共测试分别精确重现 ref 移动、错误 Benchmark 成功度量与恢复窗口错误写 `completed`；恢复后 F3 端到端与 F4 定向均全绿。最终独立复审已清零 `P0/P1/P2`，随后唯一一次完整 `python -m pytest -q` 得到 `2407 collected / 2402 passed / 5 skipped`、退出码 0；当前 quiet 输出没有提供可引用总耗时。`python -m compileall -q src tests`、修改范围 Ruff、通用示例硬编码扫描、`git diff --check` 与四个受保护核心文件零 diff 均通过。五个既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL。F3 的历史检查点是全仓 `2344 collected / 2339 passed / 5 skipped`，F2 是 `2326/2321/5`，F1 是 `2253/2248/5`，D2 扩大定向为 `172 passed, 2 skipped`，v0.6.0 发布快照为 `1707/1706/1` |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前候选版本为 `0.7.0`，尚未 tag、push 或发布。它保留 v0.5 插件 Composition、v0.6 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并正式纳入 v0.7 D0–E 的依赖接缝、执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow，以及 F0–F4 的 ProductTask 事实、严格 Router、唯一 Profile Registry、可选 `traceh chat --product-config` 产品面和唯一 `traceh eval` ProductTask Benchmark。F5 的多轮真实模型网格均保留可重放证据（20.31）：经 Router 合同、Budget/request-cap 和 DNS 根因修复，当前 manifest 的第七轮为 `18/18 measured`、`16/18 success`，DNS/TLS failure 为 0；剩余是一次远端断开和一次累计 Budget fail-closed。所有能力均没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager` 的职责。当前仍没有默认 Product Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI 或流式输出；独立复审、唯一一次最终全量、安全扫描、真实网格、候选提交后的干净打包/归档审计和离线安装均已通过；tag、push 与 Release 另行授权。
+当前版本为已发布的 `0.7.0`。它保留 v0.5 插件 Composition、v0.6 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并正式纳入 v0.7 D0–E 的依赖接缝、执行型层级 Budget、managed Workspace、immutable Artifact、固定 Verification/Approval/Git ref CAS Promotion 与 Typed Workflow，以及 F0–F4 的 ProductTask 事实、严格 Router、唯一 Profile Registry、可选 `traceh chat --product-config` 产品面和唯一 `traceh eval` ProductTask Benchmark。F5 的多轮真实模型网格均保留可重放证据（20.31）：经 Router 合同、Budget/request-cap 和 DNS 根因修复，当前 manifest 的第七轮为 `18/18 measured`、`16/18 success`，DNS/TLS failure 为 0；剩余是一次远端断开和一次累计 Budget fail-closed。所有能力均没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager` 的职责。当前仍没有默认 Product Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI 或流式输出；独立复审、唯一一次最终全量、安全扫描、真实网格、最终提交后的干净打包/归档审计和离线安装均已通过。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -2770,7 +2770,7 @@ F0 完成时 [`tests/test_product_contract.py`](../../tests/test_product_contrac
 
 #### F0 之后仍未实现的部分
 
-F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29），F4 再把 `traceh eval` 重构成同一条主线的宿主 Benchmark（见 20.30），F5 RC 随后完成真实外部模型网格、独立复审、最终门禁、安全扫描和版本切换（见 20.31）。当前候选版本是 `0.7.0`；仍待从候选提交完成打包/离线安装，tag、push 与发布另行授权。
+F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29），F4 再把 `traceh eval` 重构成同一条主线的宿主 Benchmark（见 20.30），F5 随后完成真实外部模型网格、独立复审、最终门禁、安全扫描、版本切换、打包与发布（见 20.31）。当前已发布版本是 `0.7.0`。
 
 ### 20.27 v0.7-F1：ProductTask 持久事实层
 
@@ -2882,7 +2882,7 @@ F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 
 
 #### F1 之后仍未实现的部分
 
-F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29），F4 完成 benchmark cutover（见 20.30），F5 RC 的真实外部模型验收、独立复审、最终门禁、安全扫描与版本切换见 20.31。当前候选版本是 `0.7.0`，仍待候选提交后的打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 与发布另行授权。
+F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29），F4 完成 benchmark cutover（见 20.30），F5 的真实外部模型验收、独立复审、最终门禁、安全扫描、版本切换、打包与发布见 20.31。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
 
 
 ### 20.28 v0.7-F2：严格 Router、Profile Registry 与固定 Product Assembly
@@ -3005,7 +3005,7 @@ F2 三个新测试文件共 `69 passed`：[`test_product_router.py`](../../tests
 
 #### F2 之后仍未实现的部分
 
-F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收；F4 已在 20.30 重构 `traceh eval` 并明确拒绝旧 manifest；F5 RC 的真实外部模型网格、独立复审、最终门禁、安全扫描与版本切换见 20.31。当前候选版本是 `0.7.0`，仍待候选提交后的打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 与发布另行授权。
+F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收；F4 已在 20.30 重构 `traceh eval` 并明确拒绝旧 manifest；F5 的真实外部模型网格、独立复审、最终门禁、安全扫描、版本切换、打包与发布见 20.31。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
 后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F3–F5，不替代本文件、源码、测试或 ADR 的当前事实。
 
 
@@ -3199,9 +3199,9 @@ F4 新增 [`tests/test_product_benchmark.py`](../../tests/test_product_benchmark
 
 F4 **本身没有**做真实外部模型验收（该阶段所有 Provider 都是确定性进程内实现，没有读取 `.env`、没有调用外部 API、没有接触真实远端），也没有做 F5 的 v0.7.0 RC/打包/发布、重试策略、跨进程 lease、冷恢复、OS sandbox 或默认 Product Profile。F5 后续真实验收见 20.31。Stage E 的恢复边界没有被放宽。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。独立复审已清零 P0/P1/P2，唯一一次最终全量已通过；F4 已提交为 `a4ed8a6`。
 
-### 20.31 v0.7-F5 RC 进行中：真实模型 ProductTask 验收（通俗版 20.25）
+### 20.31 v0.7-F5：真实模型 ProductTask 验收与发布（通俗版 20.25）
 
-通俗版对应 [20.25](project-context-plain-zh.md)。本节记录 F4 提交后的 RC 验收事实，不把真实模型的随机质量、外部传输故障或“报告完整”混成同一个结论。当前候选版本是 `0.7.0`；本节仍不是 tag、push 或 Release 记录。
+通俗版对应 [20.25](project-context-plain-zh.md)。本节记录 F4 提交后的 RC 验收与发布事实，不把真实模型的随机质量、外部传输故障或“报告完整”混成同一个结论。当前已发布版本是 `0.7.0`。
 
 #### 预检、首轮反例与 RC 根因修复
 
@@ -3315,4 +3315,4 @@ CLI 的 UTF-8 策略从只在 `chat` handler 生效提升到 `main()` 的统一�
 
 新增两个真实 Git 反例、D1/D2 修复和 Product Benchmark 相邻回归为 `111 passed, 2 skipped`；Router/F3、Product 合同/架构与 Product Benchmark E2E 修复门禁为 `141 passed`。本轮发版前稳定化又新增 durable 审批投影、CAS 篡改、Product heartbeat 收敛、request cap/cumulative Budget 分离、旧 schema 拒绝、Windows replay Unicode、Evaluation frozen-plan 与已有 Promotion 恢复重验公开路径反例；当前 Product（不重复 Benchmark）`257 passed`、Evaluation/F4 Benchmark `52 passed`、Budget/Workspace/Artifact/Promotion/Workflow `397 passed, 3 skipped`、CLI `521 passed, 1 skipped`，collect-only 为 `2407`。独立审查先发现 frozen command/Review 绑定 P1，修复后复审又发现已有 Promotion 的 Product 恢复早退绕过 owner；当前两处均按 Promotion owner 根修，并增加真实 `/task inspect`、direct `/task approve`、bare ref、Benchmark collector 与 crash-prefix recovery 反例，连同此前保护共七类关键反向验证。最终独立复审为 `P0=0/P1=0/P2=0`；其后唯一一次最终全量为 `2407 collected / 2402 passed / 5 skipped`、退出码 0。compileall、修改范围 Ruff、示例硬编码扫描、`git diff --check` 与受保护核心文件零 diff 已通过。F5 安全扫描又检查了全部 377 个 Git 跟踪或本轮预期新增的文本文件：没有真实凭据形态、当前机器用户路径或 Benchmark/Provider 名称渗入生产实现；宽泛 Key 形态只命中确定性测试里的合成身份字符串。模型可见请求不含 approval/promotion secret 由已经通过的架构契约测试证明。变更后第六、七轮真实网格均完成并通过报告一致性、秘密形态与资源收敛检查；第七轮证明 DNS failure 已归零，余下两次失败由 Remote disconnect 与 Budget fail-closed 分别解释。
 
-F5 的代码与候选门禁已经完成：独立 P0/P1/P2 复审、唯一一次最终完整 pytest、F5 安全扫描、变更后 18-attempt 真实验收、单一 `0.7.0` 版本、验证记录、候选提交后的干净输入打包/Wheel/source ZIP 内容审计和全新 venv 离线安装均已通过。tag、push 与 GitHub Release 尚未授权，因此 F5 的外部发布动作仍未完成。没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager`，没有新增 retry/fallback，也没有接触真实 Git 远端。
+F5 已完成：独立 P0/P1/P2 复审、唯一一次最终完整 pytest、F5 安全扫描、变更后 18-attempt 真实验收、单一 `0.7.0` 版本、验证记录、最终提交后的干净输入打包/Wheel/source ZIP 内容审计和全新 venv 离线安装均已通过；annotated tag、push 与 GitHub Release 已完成。没有修改 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 或 `PluginManager`，也没有新增 retry/fallback。

@@ -632,7 +632,7 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.7.0 发布候选面与明确边界
+## v0.7.0 已发布能力与明确边界
 
 - 插件 setup 只支持 **application scope、trusted、进程内**：`trust_mode="isolated"` 可以在 Manifest 中声明，但会被明确拒绝。D1/D2 的四层能力是宿主程序显式装配的借用型 Service/Tool/Prompt/Policy binding；插件还不能在 Workspace/Preset/Agent 层 setup；
 - **切换边界**：空闲 `traceh chat` 支持 `/plugins`、`/plugins reload`、`/plugins use ID...` 和 `/plugins use --none`。它只重做当前进程已经能发现的 Entry Point 激活，不是运行中 pip install/uninstall、Wheel 替换、强制 module reload 或文件 watcher；旧 Generation 仍要等 Lease 归零后才 cleanup；
@@ -684,7 +684,7 @@ F5 RC 前三次修复后的 OpenAI-compatible `qwen-plus` 正式网格都完成 
 
 当前 manifest 的第六轮随后在显式无代理的进程环境和新仓库外目录完成：`18/18 measured`、`complete=true`、严格成功 `15/18`；requested single `5/6`、multi `4/6`、auto `6/6`，auto 六次严格解析且全部归入 single。三个失败仍全部是 durable DNS `getaddrinfo failed`（single coder、multi parent、multi coder），没有 TLS EOF、Budget exhaustion、Router 或 Verifier failure；其余 15/15 完成 Review 与 Promotion。52 个 Budget account 全部 terminal，52 个 Workspace 为 51 released + 1 quarantined、`live=0`。JSON/Markdown 逐项一致且无 Key/本机路径。
 
-DNS-only 诊断随后定位到 WLAN 的首选 DHCP DNS：该服务器直查 UDP `0/50`、TCP `0/10`，而备用 DNS UDP `50/50`、TCP `10/10`。将 WLAN DNS 修正为 `223.5.5.5`/`223.6.6.6` 后，Windows system resolver `200/200`，与 Provider 同 Python `urllib`/OpenSSL 且无代理的无 Key 探针为 `50/50`。全新第七轮仍不重试、不 fallback、不覆盖历史报告，得到 `18/18 measured`、`complete=true`、严格成功 `16/18`：requested single `5/6`、multi `5/6`、auto `6/6`，DNS 和 TLS EOF 都为 0。剩余失败分别是一次远端主动断开，以及一次 multi coder 在 durable 使用 126312 tokens 后由累计 Budget fail closed；54 个 Budget account 与 54 个 Workspace 全部收敛，dirty failure 以 2 个 quarantine 留证、`live=0`。当前仍没有生产 retry/fallback/代理特例/SSL 放宽；独立复审、唯一一次最终全量、F5 安全扫描、真实网格、候选提交后的干净打包/归档审计和离线安装均已通过。版本事实源与验证记录已进入 `0.7.0` 发布候选；tag、push 与 Release 尚未执行。
+DNS-only 诊断随后定位到 WLAN 的首选 DHCP DNS：该服务器直查 UDP `0/50`、TCP `0/10`，而备用 DNS UDP `50/50`、TCP `10/10`。将 WLAN DNS 修正为 `223.5.5.5`/`223.6.6.6` 后，Windows system resolver `200/200`，与 Provider 同 Python `urllib`/OpenSSL 且无代理的无 Key 探针为 `50/50`。全新第七轮仍不重试、不 fallback、不覆盖历史报告，得到 `18/18 measured`、`complete=true`、严格成功 `16/18`：requested single `5/6`、multi `5/6`、auto `6/6`，DNS 和 TLS EOF 都为 0。剩余失败分别是一次远端主动断开，以及一次 multi coder 在 durable 使用 126312 tokens 后由累计 Budget fail closed；54 个 Budget account 与 54 个 Workspace 全部收敛，dirty failure 以 2 个 quarantine 留证、`live=0`。当前仍没有生产 retry/fallback/代理特例/SSL 放宽；独立复审、唯一一次最终全量、F5 安全扫描、真实网格、最终提交后的干净打包/归档审计和离线安装均已通过，`v0.7.0` 已正式发布。
 
 本轮发版稳定化定向门禁为 Product `257 passed`、Evaluation `52 passed`、Budget/Workspace/Artifact/Promotion/Workflow `397 passed, 3 skipped`、CLI `521 passed, 1 skipped`，collect-only `2407`。独立审查先发现 frozen-command/Review P1，修复后复审又找到已有 Promotion 的恢复早退；两处都已按 Promotion owner 修复。反向验证分别复现旧 ref 移动、错误 Benchmark 成功与错误 Product `completed`。最终独立复审为 P0/P1/P2 全零，随后唯一一次最终全量得到 `2402 passed, 5 skipped`、退出码 0。
 

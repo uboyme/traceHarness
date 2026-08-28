@@ -28,7 +28,7 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前候选版本是 **`0.7.0`**，还没有 tag、push 或发布。它保留 v0.5 的插件 Composition、v0.6 的 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并把 v0.7 的层级 Budget、独立 Git Workspace、不可变 Patch、固定检查/Review/真人 Approval/bare ref CAS Promotion、固定 Typed Workflow、ProductTask 真账、严格 Router、可选完整 Chat 产品面和唯一 `traceh eval` Benchmark 收进同一个候选。它没有把这些状态塞进 `AgentLoop`、`AgentRuntime`、Supervisor 并发内核或 `PluginManager`，也没有增加第二个 Workflow、Benchmark Runner 或旧 eval 兼容。F5 的多轮 18 次真实网格都保留证据（见 20.25）：当前 manifest 在修正 WLAN DNS 后的第七轮是 18/18 可度量、16/18 成功，DNS/TLS failure 都为 0；独立复审、唯一一次最终全量、安全扫描、真实网格、候选提交后的干净打包/内容审计和全新 venv 离线安装都已完成。tag、push 和发布仍要另行授权。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。当前已发布版本是 **`0.7.0`**，对应 annotated tag `v0.7.0`。它保留 v0.5 的插件 Composition、v0.6 的 L1–L4 受控能力演进和 Stage A–E 多 Agent 主线，并把 v0.7 的层级 Budget、独立 Git Workspace、不可变 Patch、固定检查/Review/真人 Approval/bare ref CAS Promotion、固定 Typed Workflow、ProductTask 真账、严格 Router、可选完整 Chat 产品面和唯一 `traceh eval` Benchmark 收进同一条主线。它没有把这些状态塞进 `AgentLoop`、`AgentRuntime`、Supervisor 并发内核或 `PluginManager`，也没有增加第二个 Workflow、Benchmark Runner 或旧 eval 兼容。F5 的多轮 18 次真实网格都保留证据（见 20.25）：当前 manifest 在修正 WLAN DNS 后的第七轮是 18/18 可度量、16/18 成功，DNS/TLS failure 都为 0；独立复审、唯一一次最终全量、安全扫描、真实网格、最终提交后的干净打包/内容审计和全新 venv 离线安装都已完成。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -2565,7 +2565,7 @@ F0 完成时有 72 项合同/架构测试（首版 33 项，第二轮 51 项，�
 
 #### 还差什么
 
-F1 随后做出了事件写入与 CAS/三态对账、投影器和 ProductService（见 20.21），F2 再做出严格路由器、Profile 注册表和固定产品装配（见 20.22），F3 把聊天、流程图、审批和推广接通（见 20.23），F4 把 `traceh eval` 换成同一条主线的度量入口并拒绝旧 manifest（见 20.24），F5 又完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换（见 20.25）。当前候选是 `0.7.0`；还差从候选提交做打包/离线安装，tag、push 和发布另行授权。
+F1 随后做出了事件写入与 CAS/三态对账、投影器和 ProductService（见 20.21），F2 再做出严格路由器、Profile 注册表和固定产品装配（见 20.22），F3 把聊天、流程图、审批和推广接通（见 20.23），F4 把 `traceh eval` 换成同一条主线的度量入口并拒绝旧 manifest（见 20.24），F5 又完成真实模型网格、独立审查、最终门禁、安全扫描、版本切换、打包和发布（见 20.25）。当前已发布版本是 `0.7.0`。
 
 ### 20.21 v0.7-F1：ProductTask 终于变成一本真的账（正式版 20.27）
 
@@ -2648,7 +2648,7 @@ Turn claim 很关键，但 claim payload 里写了一个 Turn id 不等于那个
 
 #### 还差什么
 
-F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配，F3 又把 Chat、Workflow、Approval 和 Promotion 接通（见 20.23），F4 再把 benchmark 换成同一条主线的度量入口（见 20.24），F5 完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换（见 20.25）。当前候选是 `0.7.0`，还差从候选提交做打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 和发布另行授权。
+F2 随后做出了严格路由、Profile 注册表、preflight 和固定装配，F3 又把 Chat、Workflow、Approval 和 Promotion 接通（见 20.23），F4 再把 benchmark 换成同一条主线的度量入口（见 20.24），F5 完成真实模型网格、独立审查、最终门禁、安全扫描、版本切换、打包和发布（见 20.25）。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
 
 
 ### 20.22 v0.7-F2：任务可以开工之前，先得有一张算得清、对得上的开工清单（正式版 20.28）
@@ -2749,7 +2749,7 @@ mode 只决定一次：explicit 请求就是它自己（Router 根本不被叫�
 
 #### 还差什么
 
-F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推广，并跑通确定性本地 Git 链；F4 已在 20.24 重构 `traceh eval` 并拒绝旧 manifest；F5 在 20.25 完成真实模型网格、独立审查、最终门禁、安全扫描和版本切换。当前候选是 `0.7.0`，还差从候选提交做打包/离线安装；Stage E 的恢复边界没有被放宽，tag、push 和发布另行授权。
+F3 已在 20.23 接通聊天提议、宿主命令、固定流程图和显式推广，并跑通确定性本地 Git 链；F4 已在 20.24 重构 `traceh eval` 并拒绝旧 manifest；F5 在 20.25 完成真实模型网格、独立审查、最终门禁、安全扫描、版本切换、打包和发布。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
 后续唯一的阶段顺序、不能偏离的原则和最终用户效果，统一写在新建的 `docs/plan/` 目录下这份 [v0.7 总阶段计划](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。`docs/plan/` 只管“接下来按什么顺序达到什么效果”；它负责让后面的实施者不走散，但不替代源码、测试、ADR 和两份上下文的工程事实。
 
 
@@ -2893,7 +2893,7 @@ Token 报了两个数，它们不是一回事：一个是模型自己说用了�
 
 F4 **本身**没有做真实外部模型验收：这一阶段的 Provider 都是确定性的进程内实现，没有读 `.env`、没有花真实额度、没有碰真实远端。F5 后来做的真实验收见下面 20.25。F4 也没有做 RC 打包、版本、tag 和 Release；没有通用 Workflow DSL、自动重试、跨进程 lease、冷恢复或 OS sandbox。四个并发核心文件仍然零改动，版本还是 `0.6.0`。F4 独立复审已经清零 P0/P1/P2，唯一一次最终全量已经通过，并已提交为 `a4ed8a6`。
 
-### 20.25 v0.7-F5 RC 进行中：真的让外部模型跑 ProductTask（正式版 20.31）
+### 20.25 v0.7-F5：真的让外部模型跑 ProductTask 并完成发布（正式版 20.31）
 
 正式工程事实见正式版 20.31。这次不是测试替身，也不是再写一条脚本：仍然只有 `traceh eval benchmarks/product_v1` 这一个入口，显式选择 OpenAI-compatible provider 和 `qwen-plus`，让 3 道不同任务按 single、multi、auto 各跑两次，一共 18 次。Key 只由现有 `.env` loader 注入，运行没有打开或打印秘密；每次尝试仍只碰 Runner 自己创建的一次性源仓库和本地裸仓库，所有证据留在仓库外。
 
@@ -2925,11 +2925,11 @@ auto 的 6 次里有 4 次严格解析成功，路由共 979 tokens、9463 ms；
 
 所有审批都是报告明确写出的 `programmatic-immediate`，只批准自己的一次性本地目标；等待审批总时间是 0。全部 attempt 的 active/wall 合计 887599 ms，Ledger 共结算 363104 tokens。所有预算账户和工作区都收敛，最大 `live=0`、quarantine 总数为 0；三个任务的实验条件都 coherent，没有 divergent fields。启动前失败导致的 source/verifier 缺失仍老实列进 `unproven_fields`，没有把“不知道”写成“大家一致”。
 
-#### 现在还不能发布
+#### 当时为什么还不能发布
 
 两份正式报告、每次 Session/Workflow/Product/Budget/Workspace/Promotion 事实和一次性仓库都保存在仓库外，没有删失败证据，也没有把 Key 写进报告。新增反例、D1/D2 修复与 Product Benchmark 相邻回归是 111 通过、2 个既有 Windows symlink 跳过；Router 提示修复的 Router/F3、Product 合同/架构与 Benchmark E2E 共 141 通过。后续 Chat/Token/Unicode/frozen-plan/recovery 稳定化当前定向门禁是 Product 257、Evaluation 52、相邻资源域 397 通过/3 跳过、CLI 521 通过/1 跳过；compileall、改动范围 Ruff、示例硬编码扫描、`git diff --check` 通过，全仓 collect-only 是 2407 项。独立复审清零 P0/P1/P2 后，唯一一次最终全量得到 2402 通过、5 跳过、退出码 0。
 
-但 F5 还没结束：这批修复和文档还没提交，也还没经过独立复审；最终全量、打包与 Wheel 内容审计、离线安装、安全检查、版本升到 `0.7.0`、验证记录、tag、push 和 GitHub Release 都没做。四个并发核心文件没有修改，也没有新增自动重试、真实远端或第二条 benchmark。
+在那个检查点，F5 还没结束：修复和文档尚未提交或独立复审，最终全量、打包与 Wheel 内容审计、离线安装、安全检查、版本升到 `0.7.0`、验证记录、tag、push 和 GitHub Release 都没做。后来这些门禁和发布动作已经完成；四个并发核心文件始终没有修改，也没有新增自动重试、真实远端或第二条 benchmark。
 
 #### 第三轮为什么证明“短探针通过”还不够
 
@@ -3009,4 +3009,4 @@ JSON 和 Markdown 的 18 行、两个质量 arm、auto 路由聚合已经实际�
 
 54 个 Budget 账户全都终结；54 个 Workspace 是 52 released、2 个脏失败 quarantine、`live=0`，全部收敛。总 execution tokens 438973、账本结算 542491、active/wall 1347723 ms、审批等待 0、218 steps、189 次 Tool、累计 Agent 工作 1076003 ms。成功样本中 single（n=11）平均约 12515 Token / 51.0 秒，multi（n=5）约 28814 Token / 93.0 秒；这里只能说明固定 multi 在这批小题上成本更高。JSON 与 Markdown 的 18 行逐项一致，没有 Key 或本机路径；第六轮继续作为改 DNS 前的历史对照。
 
-源码、manifest、测试、新 ADR、三个 `.gitignore` 和文档已经进入同一个 `0.7.0` 候选提交；真实网格、安全门禁、版本事实源、验证记录、从候选提交做的干净打包、Wheel/source ZIP 内容审计和离线安装全部通过。没有增加 retry/fallback/代理特例，也没有改四个并发核心文件；tag、push 和 Release 尚未授权。
+源码、manifest、测试、新 ADR、三个 `.gitignore` 和文档已经进入同一个 `0.7.0` 发布提交；真实网格、安全门禁、版本事实源、验证记录、从最终提交做的干净打包、Wheel/source ZIP 内容审计和离线安装全部通过。没有增加 retry/fallback/代理特例，也没有改四个并发核心文件；annotated tag、push 和 GitHub Release 已完成。

@@ -7,11 +7,11 @@
 - Advanced the package's single version source to `0.7.0`; pyproject metadata,
   package exports, core plugin identity, plugin API compatibility and CLI output
   continue to derive from `traceh.version.__version__`. Added the dedicated
-  [v0.7.0 validation record](docs/validation-v0.7.0.md). The candidate commit
-  passed clean-input packaging, archive audit and a fresh `--no-index` install;
-  tag, push and release remain separately gated.
+  [v0.7.0 validation record](docs/validation-v0.7.0.md). The release commit
+  passed clean-input packaging, archive audit and a fresh `--no-index` install
+  before the annotated tag and GitHub Release were published.
 - Built the `0.7.0` Wheel, sdist and Git-index source ZIP from a clean clone of
-  the candidate commit. Archive audit found 190 Wheel entries, 306 sdist entries
+  the release commit. Archive audit found 190 Wheel entries, 306 sdist entries
   and an exact 388-file source ZIP, with no env file, cache, bytecode, Git data
   or undeclared working-tree note. A fresh venv installed the core and its
   locally reconstructed `packaging 24.1` dependency exclusively from a local

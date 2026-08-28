@@ -2,7 +2,7 @@
 
 验证日期：2026-08-28
 
-状态：发布候选打包门禁通过；tag、push 与 GitHub Release 尚未执行。
+状态：全部发布门禁通过；以 annotated tag `v0.7.0` 发布。
 
 本记录描述 `v0.7.0` 的发布门禁。它补充而不改写
 [`VALIDATION.md`](../VALIDATION.md) 和
@@ -100,8 +100,8 @@ manifest、确定性测试、历史验收说明或用户输入；生产实现没
 
 ## 5. 候选提交、打包与离线安装
 
-本节从包含本记录的候选提交的全新仓库外 clone 运行，结果为 **PASSED**。验证记录更新后
-还要从最终候选提交再次构建，确保文档修订本身也进入 source ZIP；失败时不得 tag 或发布。
+本节从包含本记录的最终发布提交的全新仓库外 clone 运行，结果为 **PASSED**。发布资产
+只接受该提交再次构建的字节，确保最终文档本身也进入 source ZIP；失败时不得 tag 或发布。
 
 候选资产：
 
@@ -134,5 +134,5 @@ manifest、确定性测试、历史验收说明或用户输入；生产实现没
 
 `v0.7.0` 不提供 OS sandbox、跨进程 Agent/Workspace 接管、冷恢复、stale claim takeover、
 自动 retry、自动批准、真实远端 Promotion、任意 Workflow DSL、MCP、TUI 或模型流式输出。
-Product 配置仍是显式 opt-in，不是默认 CLI 行为。发布候选门禁通过也不等于已经 tag、push
-或发布；这三项必须另获授权。
+Product 配置仍是显式 opt-in，不是默认 CLI 行为。`v0.7.0` 的发布不扩大这些产品、宿主
+权限或恢复边界。

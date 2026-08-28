@@ -3039,4 +3039,14 @@ target 和 verifier 值进入 ModelRequest，不再把一个位置名称冒充�
 系统依然不是 OS sandbox。L2 的红灯只是它递归跑全量时又碰到这两条测试，不是新的
 生产缺陷。
 
+夹具修好后的下一次 CI 里，Ubuntu 3.12/3.13 都通过，Windows 外层也只剩真实 L2
+一项失败。L2 里面说有 23 个 Product Benchmark 失败，可旧的 `--tb=short` 会给每项
+打印一段 stack，32 KiB 的有界日志很快被塞满；外层 pytest 再把整个结果缩成 `...`，
+最后连第一条真实错误码都看不到。同一提交在本机 Windows 完整全量是退出码 0，换成
+官方 CPython 3.12.13、装上候选插件的精确隔离环境、detached clean clone 三种方式，
+这组也都是 `25 passed`，所以不能凭一个被截断的汇总去乱改 Product/Evaluation。
+现在 L2 仍把核心测试完整跑完，只把 traceback 显示成“每个失败一行”，真实 L2 测试
+失败时也会把已经保存的 32 KiB 有界诊断写进 CI 日志。它不改变跑哪些测试或红绿判定，
+只保证下一次远端失败时能看见真正原因。
+
 三条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 在模拟发行版偏置下稳定报 `promotion-target-inspection-failed`。保险恢复后，Product 258 项、Product Benchmark 52 项、Runtime/CLI 取消相邻组 79 项都通过，L4/Promotion/插件 CLI/版本相邻组 202 项通过、1 项是既有平台 skip；全仓能收集 2411 项。compileall、改动范围 Ruff、文档链接/围栏/章节对应和 diff 空白检查也通过。第一次发布全量把插件旧范围问题抓出来，真实 Wheel/L2 修好后 Windows 全量 2406 通过、5 跳过；首次远端 Linux 夹具问题也按上面的真实平台行为修正，新的三平台 CI 必须在 tag 前清零。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。

@@ -52,6 +52,16 @@ POSIX `repr` 保留 `/` 因而失败，Windows `repr` 转义 `\` 才偶然假绿
 中，生产隔离合同没有放宽。Candidate L2 的失败只是递归全量碰到这两条错误后的连带
 结果。修正后先运行两条精确反例，再由新的 GitHub Actions run 在 tag 前复验三个矩阵。
 
+该 run 的两个 Ubuntu matrix 通过，Windows 外层全量仅在真实 L2 上失败；L2 内部
+汇总是 23 个 Product Benchmark 失败、2386 通过、2 跳过，但原 `--tb=short` 的多份
+stack 填满了只保留尾部的 32 KiB 诊断，外层 pytest 又把 `CommandOutcome` 缩略为
+`...`，因此没有任何首个错误码可供归因。同一提交随后在本机 Windows 完整全量退出
+0，并在官方 CPython 3.12.13、已安装候选插件的精确隔离环境、detached clean clone
+三种反例中各自把该 Benchmark 组跑到 25 passed。没有证据支持修改 Product/Evaluation
+生产代码。L2 仍运行完整核心回归，只把 traceback 格式改为 `--tb=line`，并让真实 L2
+失败测试输出已经持久化的有界诊断；这不改变 collection、执行项或 fail-closed 结果，
+只保证下一次三平台 run 能给出可复核原因。
+
 | 门禁 | 结果 |
 |---|---:|
 | 全仓 collect-only | 2411 |

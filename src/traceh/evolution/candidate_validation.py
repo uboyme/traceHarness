@@ -927,7 +927,12 @@ class CandidateValidator:
                     str(trusted_core / "pyproject.toml"),
                     "-o",
                     "addopts=",
-                    "--tb=short",
+                    # Keep every failing test visible inside the bounded tail
+                    # captured below.  A short traceback per failure can fill
+                    # the entire 32 KiB with stacks and hide the actual list;
+                    # line mode changes diagnostics only, not collection,
+                    # execution, or the fail-closed exit-code decision.
+                    "--tb=line",
                     "-q",
                     str(trusted_core / "tests"),
                 ),

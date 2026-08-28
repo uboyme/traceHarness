@@ -3339,4 +3339,14 @@ Workspace 绝对路径；Windows 只因 `repr` 把反斜杠双写而假绿。当
 也没有改变“不提供 OS sandbox”的既有边界。L2 红灯是候选递归全量命中这两项后的
 连带结果，不是第三个生产缺陷。
 
+修正夹具后的下一次 CI 中，Ubuntu 3.12/3.13 已通过，Windows 外层只剩真实 L2
+失败；其内部核心回归汇总为 23 个 Product Benchmark 失败，但 L2 原有 `--tb=short`
+让多份 stack 占满了 `SubprocessCommandRunner` 只保留尾部的 32 KiB，外层 pytest 又
+缩略 `CommandOutcome`，最终日志没有保留首个失败码。同一提交在本机 Windows 全量
+退出 0，而且官方 CPython 3.12.13、已安装候选插件的精确隔离环境、detached clean
+clone 三条本地反例均得到该组 `25 passed`，所以没有证据支持猜改 Product/Evaluation。
+Candidate Validation 仍完整执行核心回归，只把 traceback 呈现改为 `--tb=line`，并
+让真实 L2 测试在失败时输出已经持久化的有界诊断；删除该参数会使对应 argv 合同测试
+失败。该改动不改变收集、执行或 fail-closed 判定，只让下一次三平台 run 可复核。
+
 三项新增测试都走真实公开主线而非夹具导入失败：模型在一条明确否定消息上仍合法调用确认 Tool，错误宿主 token 后断言 Product/预算/Workspace/Workflow 全部不存在；EventStore 分别在 Attempt/Step/Turn 终止 append 前设 Gate 并反复取消公开 Turn，全部 durable 后才允许返回，另有 finalizer `OSError` 与原取消同时可见；真实 `CandidatePromoter.run()` 在子进程内把“未显式给 scheme”的路径偏向不存在目录，当前显式 venv scheme 仍生成 review。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`：三条测试依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、以及 `promotion-target-inspection-failed`；保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；Windows 全量与真实 L2 已通过，首次远端 Linux 夹具问题也已按上述真实平台行为修正，新的三平台 CI 必须在 tag 前清零。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。

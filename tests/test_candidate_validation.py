@@ -228,6 +228,7 @@ async def test_validator_uses_host_owned_gates_and_emits_exact_artifact(
     candidate_request = next(
         item for item in runner.requests if item.purpose == "candidate-tests"
     )
+    assert "--tb=line" in core_request.argv
     assert "trusted-core" in " ".join(core_request.argv)
     assert "candidate-source/pyproject.toml" not in " ".join(candidate_request.argv)
     config_path = Path(candidate_request.argv[candidate_request.argv.index("-c") + 1])
@@ -740,6 +741,14 @@ async def test_real_candidate_validation_runs_every_l2_gate(tmp_path: Path) -> N
         runner=runner,
     ).run()
 
+    if not report.ok:
+        diagnostic = output / "diagnostics" / "core-regression.txt"
+        if diagnostic.is_file():
+            pytest.fail(
+                "real L2 core regression failed:\n"
+                + diagnostic.read_text(encoding="utf-8"),
+                pytrace=False,
+            )
     assert report.ok is True, {
         "checks": {check.name: (check.status, check.code) for check in report.checks},
         "core_regression": runner.outcomes.get("core-regression"),

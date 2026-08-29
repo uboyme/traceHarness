@@ -6,7 +6,12 @@ from dataclasses import dataclass
 
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, fingerprint
-from traceh.api.llm import ModelRequest, ToolSchema
+from traceh.api.llm import (
+    REQUEST_SNAPSHOT_KEYS,
+    ModelRequest,
+    ToolSchema,
+    dispatch_request_matches_composed,
+)
 from traceh.kernel.composition import CompositionSnapshot
 from traceh.session.plugin_identity import parse_plugin_identities
 from traceh.session.service import SessionService
@@ -158,14 +163,80 @@ async def verify_request_snapshots(
     for event in events:
         if event.type != "request/snapshot":
             continue
-        rebuilt = await reconstruct_request(sessions, surface, session_id, event)
-        expected = str(event.data.get("fingerprint", ""))
-        if rebuilt.fingerprint != expected:
+        if set(event.data) != REQUEST_SNAPSHOT_KEYS:
             violations.append(
                 {
                     "seq": event.seq,
-                    "expected": expected,
+                    "code": "request-snapshot-keys-invalid",
+                }
+            )
+            continue
+        try:
+            rebuilt = await reconstruct_request(sessions, surface, session_id, event)
+            raw_composed = event.data["composed_request"]
+            raw_dispatch = event.data["dispatch_request"]
+            if not isinstance(raw_composed, dict) or not isinstance(raw_dispatch, dict):
+                raise ValueError
+            composed = ModelRequest.from_dict(raw_composed)
+            dispatch = ModelRequest.from_dict(raw_dispatch)
+            canonical_composed = composed.to_dict()
+            canonical_dispatch = dispatch.to_dict()
+            if raw_composed != canonical_composed or raw_dispatch != canonical_dispatch:
+                raise ValueError
+            expected_composed = event.data["composed_fingerprint"]
+            expected_dispatch = event.data["dispatch_fingerprint"]
+            if not isinstance(expected_composed, str) or not isinstance(
+                expected_dispatch, str
+            ):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            violations.append(
+                {
+                    "seq": event.seq,
+                    "code": "request-snapshot-payload-invalid",
+                }
+            )
+            continue
+
+        actual_dispatch = fingerprint(canonical_dispatch)
+        if (
+            rebuilt.fingerprint != expected_composed
+            or fingerprint(canonical_composed) != expected_composed
+            or rebuilt.request.to_dict() != canonical_composed
+        ):
+            violations.append(
+                {
+                    "seq": event.seq,
+                    "code": "request-composed-fingerprint-mismatch",
+                    "expected": expected_composed,
                     "actual": rebuilt.fingerprint,
                 }
             )
+        if actual_dispatch != expected_dispatch:
+            violations.append(
+                {
+                    "seq": event.seq,
+                    "code": "request-dispatch-fingerprint-mismatch",
+                    "expected": expected_dispatch,
+                    "actual": actual_dispatch,
+                }
+            )
+
+        if not dispatch_request_matches_composed(composed, dispatch):
+            violations.append(
+                {
+                    "seq": event.seq,
+                    "code": "request-dispatch-not-derived-from-composed",
+                }
+            )
     return tuple(violations)
+
+
+__all__ = [
+    "BuiltRequest",
+    "REQUEST_SNAPSHOT_KEYS",
+    "RequestBuilder",
+    "composition_from_event",
+    "reconstruct_request",
+    "verify_request_snapshots",
+]

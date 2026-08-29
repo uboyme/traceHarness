@@ -85,7 +85,7 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "cbfffa49d1624584c85143c467ba653e8bc85dc7ca2c96cc5c39c7c441c9c54f"
+        "b53e5f5b9a1e59852ea21afa0f0af0ebc1423c736b37824bee3993bc1d418a60"
     ),
     "runtime/agent_runtime.py": (
         "fc76d8a4eb6f953da4e61eb81140a0748ef1d4fc4e15c0fc876cfcc02e83ae92"
@@ -100,10 +100,11 @@ PROTECTED_SOURCES = {
 """SHA-256 of each protected file with line endings normalized to LF.
 
 These four own the v0.6 concurrency kernel. The product surface is built
-entirely above their public seams. v0.7.1 changes ``AgentLoop`` only at its
-generic repeated-cancellation finalizer; it gains no Product dependency or
-state. Normalizing line endings keeps the pin identical on every checkout,
-whatever ``core.autocrlf`` did locally.
+entirely above their public seams. v0.8-F0 changes ``AgentLoop`` only at its
+generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
+and failure-convergence seam; it gains no Product dependency or state.
+Normalizing line endings keeps the pin identical on every checkout, whatever
+``core.autocrlf`` did locally.
 
 Changing one of these files is a real architectural decision. Update the pin in
 the same commit as the change and say why, rather than deleting this guard.

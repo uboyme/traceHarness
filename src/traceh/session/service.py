@@ -7,12 +7,28 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from traceh.api.events import EventEnvelope, PendingEvent
-from traceh.api.json_types import JsonValue
-from traceh.session.event_store import Durability, EventStore
+from traceh.api.json_types import JsonValue, fingerprint
+from traceh.api.llm import (
+    ModelAttemptIdentity,
+    ModelRequest,
+    dispatch_request_matches_composed,
+    model_attempt_reservation_id,
+)
+from traceh.session.event_store import ConcurrencyConflict, Durability, EventStore
 
 
 class SessionNotFoundError(LookupError):
     pass
+
+
+class ModelAttemptConflictError(RuntimeError):
+    """The caller did not acquire this Step ordinal's dispatch permit."""
+
+    code = "model-attempt-dispatch-conflict"
+
+    def __init__(self, *, ownership_lost: bool = False) -> None:
+        super().__init__(self.code)
+        self.ownership_lost = ownership_lost
 
 
 class SessionService:
@@ -84,7 +100,7 @@ class SessionService:
             "session/created",
             {
                 "session_id": session_id,
-                "workspace": str(workspace.resolve()),
+                "workspace": str(workspace.resolve()),  # noqa: ASYNC240
                 "metadata": metadata or {},
             },
         )
@@ -119,6 +135,185 @@ class SessionService:
             causation_id=causation_id,
             composition_revision=composition_revision,
         )
+
+    async def start_model_attempt(
+        self,
+        session_id: str,
+        *,
+        attempt: ModelAttemptIdentity,
+        source_seq: int,
+        composition_revision: str,
+        composed_request: ModelRequest,
+        composed_fingerprint: str,
+        dispatch_request: ModelRequest,
+        dispatch_fingerprint: str,
+        reservation_id: str | None,
+        correlation_id: UUID | None = None,
+    ) -> tuple[EventEnvelope, EventEnvelope]:
+        """Atomically freeze the Step request and claim one dispatch ordinal.
+
+        The first ordinal appends ``request/snapshot`` and
+        ``model/attempt-start`` in one Store CAS. Later ordinals reuse that one
+        snapshot. A concurrent or recovered owner can therefore observe the
+        existing permit, but can never append another ordinal by treating fact
+        idempotency as execution authority.
+        """
+
+        if attempt.session_id != session_id:
+            raise ModelAttemptConflictError
+        if type(source_seq) is not int or source_seq < 1:
+            raise ModelAttemptConflictError
+        if not isinstance(composition_revision, str) or not composition_revision:
+            raise ModelAttemptConflictError
+        expected_metadata = {
+            "session_id": session_id,
+            "turn_id": attempt.turn_id,
+            "step_id": attempt.step_id,
+            "composition_revision": composition_revision,
+        }
+        for request in (composed_request, dispatch_request):
+            if any(
+                request.metadata.get(key) != value
+                for key, value in expected_metadata.items()
+            ):
+                raise ModelAttemptConflictError
+        if fingerprint(composed_request.to_dict()) != composed_fingerprint:
+            raise ModelAttemptConflictError
+        if fingerprint(dispatch_request.to_dict()) != dispatch_fingerprint:
+            raise ModelAttemptConflictError
+        if not dispatch_request_matches_composed(composed_request, dispatch_request):
+            raise ModelAttemptConflictError
+        expected_reservation_id = model_attempt_reservation_id(attempt)
+        if reservation_id is not None and reservation_id != expected_reservation_id:
+            raise ModelAttemptConflictError
+
+        stream_id = self.session_stream(session_id)
+        async with self._lock(stream_id):
+            events = await self.store.read(stream_id)
+            if not events or events[0].type != "session/created":
+                raise SessionNotFoundError(session_id)
+            head = events[-1].seq
+            if source_seq > head:
+                raise ModelAttemptConflictError
+
+            open_turn: str | None = None
+            open_step: str | None = None
+            starts: list[EventEnvelope] = []
+            all_attempt_ids: set[str] = set()
+            ended: set[str] = set()
+            snapshots: list[EventEnvelope] = []
+            for event in events:
+                if event.type == "turn/start":
+                    open_turn = str(event.data.get("turn_id", ""))
+                elif event.type == "turn/end":
+                    open_turn = None
+                elif event.type == "step/start":
+                    open_step = str(event.data.get("step_id", ""))
+                elif event.type == "step/end":
+                    open_step = None
+                elif event.type == "request/snapshot" and (
+                    event.data.get("turn_id") == attempt.turn_id
+                    and event.data.get("step_id") == attempt.step_id
+                ):
+                    snapshots.append(event)
+                elif event.type == "model/attempt-start" and (
+                    event.data.get("turn_id") == attempt.turn_id
+                    and event.data.get("step_id") == attempt.step_id
+                ):
+                    starts.append(event)
+                    all_attempt_ids.add(str(event.data.get("attempt_id", "")))
+                elif event.type == "model/attempt-start":
+                    all_attempt_ids.add(str(event.data.get("attempt_id", "")))
+                elif event.type == "model/attempt-end":
+                    ended.add(str(event.data.get("attempt_id", "")))
+
+            if open_turn != attempt.turn_id or open_step != attempt.step_id:
+                raise ModelAttemptConflictError(ownership_lost=True)
+            if any(
+                str(event.data.get("attempt_id", "")) not in ended
+                for event in starts
+            ):
+                raise ModelAttemptConflictError(ownership_lost=True)
+            if attempt.attempt_id in all_attempt_ids:
+                raise ModelAttemptConflictError(ownership_lost=True)
+            if any(
+                event.data.get("ordinal") == attempt.ordinal
+                for event in starts
+            ):
+                raise ModelAttemptConflictError(ownership_lost=True)
+            ordinals = [event.data.get("ordinal") for event in starts]
+            if ordinals != list(range(1, len(starts) + 1)):
+                raise ModelAttemptConflictError(ownership_lost=True)
+            if attempt.ordinal != len(starts) + 1:
+                raise ModelAttemptConflictError(ownership_lost=True)
+
+            pending: list[PendingEvent] = []
+            if attempt.ordinal == 1:
+                if snapshots:
+                    raise ModelAttemptConflictError(ownership_lost=True)
+                request_snapshot_seq = head + 1
+                snapshot_data: dict[str, JsonValue] = {
+                    "turn_id": attempt.turn_id,
+                    "step_id": attempt.step_id,
+                    "source_seq": source_seq,
+                    "composition_revision": composition_revision,
+                    "composed_fingerprint": composed_fingerprint,
+                    "dispatch_fingerprint": dispatch_fingerprint,
+                    "composed_request": composed_request.to_dict(),
+                    "dispatch_request": dispatch_request.to_dict(),
+                }
+                pending.append(
+                    PendingEvent(
+                        type="request/snapshot",
+                        data=snapshot_data,
+                        correlation_id=correlation_id,
+                        composition_revision=composition_revision,
+                    )
+                )
+            else:
+                if len(snapshots) != 1:
+                    raise ModelAttemptConflictError
+                snapshot = snapshots[0]
+                if (
+                    snapshot.data.get("composed_fingerprint")
+                    != composed_fingerprint
+                    or snapshot.data.get("dispatch_fingerprint")
+                    != dispatch_fingerprint
+                ):
+                    raise ModelAttemptConflictError
+                request_snapshot_seq = snapshot.seq
+
+            start_data: dict[str, JsonValue] = {
+                "turn_id": attempt.turn_id,
+                "step_id": attempt.step_id,
+                "attempt_id": attempt.attempt_id,
+                "ordinal": attempt.ordinal,
+                "request_snapshot_seq": request_snapshot_seq,
+                "dispatch_fingerprint": dispatch_fingerprint,
+                "reservation_id": reservation_id,
+                "provider": dispatch_request.provider,
+                "model": dispatch_request.model,
+            }
+            pending.append(
+                PendingEvent(
+                    type="model/attempt-start",
+                    data=start_data,
+                    correlation_id=correlation_id,
+                    composition_revision=composition_revision,
+                )
+            )
+            try:
+                appended = await self.store.append(
+                    stream_id,
+                    expected_seq=head,
+                    events=tuple(pending),
+                    durability=Durability.SYNC,
+                )
+            except ConcurrencyConflict:
+                raise ModelAttemptConflictError(ownership_lost=True) from None
+            if attempt.ordinal == 1:
+                return appended[0], appended[1]
+            return snapshots[0], appended[0]
 
     async def append_effect(
         self,

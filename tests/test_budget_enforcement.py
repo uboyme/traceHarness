@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -15,6 +16,7 @@ from traceh.api.budgets import (
     BudgetUsageReservationStatus,
 )
 from traceh.api.llm import (
+    ModelAttemptIdentity,
     ModelMessage,
     ModelRequest,
     ModelResponse,
@@ -37,11 +39,10 @@ from traceh.budgets import (
     BudgetExhaustedError,
     BudgetInputError,
     BudgetLedgerService,
-    BudgetReservationStateError,
     BudgetToolAdmissionGate,
 )
 from traceh.budgets.events import BUDGET_USAGE_STARTED
-from traceh.llm.runtime import LlmRuntime
+from traceh.llm.runtime import LlmAdmission, LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.continuation import DefaultContinuationRuntime
@@ -163,6 +164,36 @@ def request(step_id: str, *, max_output_tokens: int | None = None) -> ModelReque
     )
 
 
+def attempt_for(model_request: ModelRequest, *, ordinal: int = 1) -> ModelAttemptIdentity:
+    metadata = model_request.metadata
+    session_id = str(metadata["session_id"])
+    turn_id = str(metadata["turn_id"])
+    step_id = str(metadata["step_id"])
+    return ModelAttemptIdentity(
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        attempt_id=str(uuid4()),
+        ordinal=ordinal,
+    )
+
+
+async def invoke(
+    runtime: LlmRuntime,
+    provider,
+    model_request: ModelRequest,
+) -> ModelResponse:
+    admission = await runtime.admit(
+        provider,
+        model_request,
+        attempt=attempt_for(model_request),
+    )
+    return await admission.dispatch(
+        provider=admission.provider,
+        request=admission.request,
+    )
+
+
 class CountingProvider:
     name = "scripted"
 
@@ -200,7 +231,7 @@ async def test_token_reservation_settles_exact_usage_and_releases_unused_capacit
         session_id="session-root",
     )
 
-    response = await runtime.invoke(provider, request("step-one"))
+    response = await invoke(runtime, provider, request("step-one"))
 
     assert response.content == "ok"
     account = (await service.ledger()).account("agent-root")
@@ -237,7 +268,7 @@ async def test_unknown_or_untrusted_usage_is_conservative(
         allow_estimated=allow_estimated,
     )
 
-    await runtime.invoke(provider, request("step-quality"))
+    await invoke(runtime, provider, request("step-quality"))
 
     account = (await service.ledger()).account("agent-root")
     assert account is not None
@@ -256,7 +287,7 @@ async def test_token_counter_caps_output_without_using_character_count() -> None
         token_counter=FixedTokenCounter(4),
     )
 
-    await runtime.invoke(provider, request("step-counter", max_output_tokens=50))
+    await invoke(runtime, provider, request("step-counter", max_output_tokens=50))
 
     assert provider.requests[0].max_output_tokens == 6
 
@@ -272,7 +303,7 @@ async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> No
         session_id="session-root",
     )
 
-    await runtime.invoke(provider, request("step-overage", max_output_tokens=50))
+    await invoke(runtime, provider, request("step-overage", max_output_tokens=50))
 
     assert provider.requests[0].max_output_tokens == 10
     ledger = await service.ledger()
@@ -282,45 +313,41 @@ async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> No
     assert ledger.usage_reservations[0].usage_quality is UsageQuality.UNKNOWN
 
 
-async def test_one_token_start_owner_prevents_duplicate_provider_calls() -> None:
-    _, service = await root_context(root_limits=limits(max_tokens=10))
-    entered = asyncio.Event()
-    release = asyncio.Event()
-
-    class GatedProvider:
-        name = "scripted"
-
-        def __init__(self) -> None:
-            self.calls = 0
-
-        async def complete(self, model_request: ModelRequest) -> ModelResponse:
-            del model_request
-            self.calls += 1
-            entered.set()
-            await release.wait()
-            return ModelResponse(
-                content="ok",
-                usage=Usage(2, 1, UsageQuality.EXACT),
-            )
-
-    provider = GatedProvider()
+async def test_competing_admissions_hold_independent_pending_reservations() -> None:
+    _, service = await root_context(root_limits=limits(max_tokens=20))
+    provider = CountingProvider(
+        ModelResponse(content="ok", usage=Usage(2, 1, UsageQuality.EXACT))
+    )
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
         session_id="session-root",
+        token_counter=FixedTokenCounter(5),
     )
-    first = asyncio.create_task(runtime.invoke(provider, request("step-shared")))
-    await entered.wait()
+    model_request = request("step-shared", max_output_tokens=5)
+    first = await runtime.admit(
+        provider,
+        model_request,
+        attempt=attempt_for(model_request),
+    )
+    second = await runtime.admit(
+        provider,
+        model_request,
+        attempt=attempt_for(model_request),
+    )
 
-    with pytest.raises(BudgetReservationStateError):
-        await runtime.invoke(provider, request("step-shared"))
-    assert provider.calls == 1
-    release.set()
-    await first
+    assert first.reservation_id != second.reservation_id
+    assert provider.calls == 0
+    assert [
+        item.status for item in (await service.ledger()).usage_reservations
+    ] == [BudgetUsageReservationStatus.PENDING, BudgetUsageReservationStatus.PENDING]
 
-    with pytest.raises(BudgetReservationStateError):
-        await runtime.invoke(provider, request("step-shared"))
+    await second.abort()
+    await first.dispatch(provider=first.provider, request=first.request)
     assert provider.calls == 1
+    assert [
+        item.status for item in (await service.ledger()).usage_reservations
+    ] == [BudgetUsageReservationStatus.SETTLED, BudgetUsageReservationStatus.RELEASED]
 
 
 async def test_provider_failure_consumes_the_whole_token_reservation() -> None:
@@ -339,7 +366,7 @@ async def test_provider_failure_consumes_the_whole_token_reservation() -> None:
         session_id="session-root",
     )
     with pytest.raises(RuntimeError, match="provider failed"):
-        await runtime.invoke(FailingProvider(), request("step-failed"))
+        await invoke(runtime, FailingProvider(), request("step-failed"))
 
     account = (await service.ledger()).account("agent-root")
     assert account is not None
@@ -370,7 +397,7 @@ async def test_provider_cancellation_settles_once_before_propagation() -> None:
         session_id="session-root",
     )
     invocation = asyncio.create_task(
-        runtime.invoke(BlockingProvider(), request("step-cancelled"))
+        invoke(runtime, BlockingProvider(), request("step-cancelled"))
     )
     await entered.wait()
     invocation.cancel()
@@ -400,7 +427,7 @@ async def test_cancel_after_token_start_commit_settles_without_calling_provider(
         session_id="session-root",
     )
     invocation = asyncio.create_task(
-        runtime.invoke(provider, request("step-start-cancelled"))
+        invoke(runtime, provider, request("step-start-cancelled"))
     )
     await store.committed.wait()
 
@@ -434,22 +461,23 @@ async def test_falsey_injected_llm_runtime_remains_the_wrapped_mainline() -> Non
         def __bool__(self) -> bool:
             return False
 
-        async def invoke(
+        async def admit(
             self,
             provider,
             model_request,
             *,
-            on_text_delta=None,
-        ) -> ModelResponse:
-            del provider, model_request, on_text_delta
+            attempt,
+        ) -> LlmAdmission:
             self.calls += 1
-            return ModelResponse(
-                content="wrapped",
-                usage=Usage(1, 1, UsageQuality.EXACT),
-            )
+            return LlmAdmission(provider, model_request, attempt=attempt)
 
     inner = FalseyRuntime()
-    provider = CountingProvider()
+    provider = CountingProvider(
+        ModelResponse(
+            content="wrapped",
+            usage=Usage(1, 1, UsageQuality.EXACT),
+        )
+    )
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
@@ -457,11 +485,11 @@ async def test_falsey_injected_llm_runtime_remains_the_wrapped_mainline() -> Non
         inner=inner,
     )
 
-    response = await runtime.invoke(provider, request("step-falsey-runtime"))
+    response = await invoke(runtime, provider, request("step-falsey-runtime"))
 
     assert response.content == "wrapped"
     assert inner.calls == 1
-    assert provider.calls == 0
+    assert provider.calls == 1
 
 
 @pytest.mark.parametrize("invalid", ["false", 1, None])

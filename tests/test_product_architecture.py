@@ -2,7 +2,8 @@
 
 F1 makes ProductTask a durable fact and F2 turns a confirmed one into an exact
 plan. F3 adds an explicit host control plane, while the fact/projector/assembly
-modules remain non-executing and the four v0.6 kernel owners remain unchanged.
+modules remain non-executing. v0.8-F0 changes only the generic AgentLoop model
+admission/dispatch seam and keeps Product outside the kernel.
 """
 
 from __future__ import annotations
@@ -37,7 +38,7 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "cbfffa49d1624584c85143c467ba653e8bc85dc7ca2c96cc5c39c7c441c9c54f"
+        "b53e5f5b9a1e59852ea21afa0f0af0ebc1423c736b37824bee3993bc1d418a60"
     ),
     "runtime/agent_runtime.py": (
         "fc76d8a4eb6f953da4e61eb81140a0748ef1d4fc4e15c0fc876cfcc02e83ae92"
@@ -52,11 +53,12 @@ PROTECTED_SOURCES = {
 """SHA-256 of each protected file with line endings normalized to LF.
 
 These four own the v0.6 concurrency kernel. The product surface is built
-entirely above their public seams. v0.7.1 changes ``AgentLoop`` only to make its
-generic Attempt -> Step -> Turn cancellation finalizer survive repeated caller
-cancellation; no Product state or dependency enters it. Changing any pin is a
-real architectural decision: update it in the same commit and say why, rather
-than deleting the guard.
+entirely above their public seams. v0.8-F0 changes ``AgentLoop`` only to admit
+the exact request before Session CAS dispatch permission, bind the resulting
+capability back to the host-resolved Provider/Attempt, and converge open
+Attempts on generic failure; no Product state or dependency enters it.
+Changing any pin is a real architectural decision: update it in the same
+commit and say why, rather than deleting the guard.
 """
 
 

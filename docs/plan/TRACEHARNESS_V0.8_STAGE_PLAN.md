@@ -1,0 +1,511 @@
+# TraceHarness v0.8 冻结阶段计划
+
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现并完成定向验证，F1-F5 未开始。**
+>
+> 冻结基线：已发布 `v0.7.1`，HEAD
+> `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
+>
+> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0 外，不表示
+> 后续能力已经存在，也不授权
+> commit、push、tag、release、真实 Provider、外部网络或秘密读取。每个阶段开工前仍须重新核对
+> HEAD、两份上下文、ADR、源码与测试；真实代码始终高于本计划。
+
+## 1. 单一产品目标
+
+v0.8 的单一目标是：**把已能完成 ProductTask 的 v0.7.1 主线，变成一个更可靠、可长期使用、
+对人可观察的本地产品。**
+
+实现顺序固定为：
+
+```text
+终端异常安全 + Attempt/Budget 准入事实先自洽
+  -> SQLite 成为唯一生产 EventStore
+  -> 同 Provider/同模型的有界重试
+  -> UI 无关 Chat 驱动与只读观察
+  -> 可选 Textual TUI
+  -> 独立审查、真实验收与发布
+```
+
+这不是四条平行产品线。SQLite 解决本地事实存储；retry 解决瞬时 Provider 故障；Chat 驱动和
+TUI 只改善同一 ProductTask 的交互。任何一层都不得另造 Runtime、Workflow、ProductTask 状态、
+Benchmark Runner 或事实源。
+
+## 2. 冻结前审查结论
+
+### 2.1 已由 v0.7.1 解决，不再列为 v0.8 工作
+
+上一轮独立审查所依据的是 v0.7.0。以下问题已在 v0.7.1 的真实源码、反例和发布门禁中处理：
+
+- ProductTask 的真正启动授权已移到独立宿主 Console `START` 手势，模型确认 Tool 不再拥有启动权；
+- `AgentLoop` 的 Attempt/Step/Turn 取消收尾已改为一个 owned finalizer，重复取消不能提前返回；
+- L4 目标 venv 在 Python 3.13 上使用明确的 `venv` scheme；
+- Windows 嵌套 worktree 身份已缩短为 `ws-<完整 SHA-256>`，没有截断摘要或 fallback。
+
+这些事实进入 v0.8 相邻回归，但不得重复实现第二次。
+
+### 2.2 当前结构不一致与 v0.8 新增合同
+
+F0 开工时的 ADR 与正式上下文已经把 Attempt 定义为“一次真实 Provider 调用”，不是本计划新发明的
+严格化。基线公开路径是：`AgentLoop` 先写 `request/snapshot` 和 `model/attempt-start`，随后才调用
+`BudgetedLlmRuntime.invoke()`；而 Budget runtime 会在内部检查余额、预留，并可能把
+`max_output_tokens` 替换成更小的最终值。因此当前实现与现行合同之间已经可能出现：
+
+- Budget 准入失败，但 Session 已经声称一次 Model Attempt 开始；
+- durable request snapshot 只能证明 Composition/Surface 组装出的请求，不能证明最终交给 Provider 的
+  dispatch request。
+
+第一项不是 SQLite 或 retry 才新产生的问题。F0 已先用公开反例固定错误结果，再在拥有该不变量的既有
+边界修复。第二项是 ADR-0034 已接受的组装请求证据边界，F0 为 retry 新增“每个
+Attempt 必须绑定同一最终 dispatch request，并各自拥有 reservation”的合同。现有缺陷与新增合同必须
+分开验证，不能一起藏进 Provider retry 循环。
+
+另一个当前 P1 与上述状态机无关：`traceh chat` 的最终异常行会把 `str(error)` 原样写入终端，而
+OpenAI-compatible adapter 的 HTTP 异常可能包含第三方响应正文。它绕过现有单行清洗漏斗，允许控制字符、
+换行或双向格式字符进入与人工 Approval 共用的终端。该问题作为 F0 的第一项窄修复先收敛；Provider
+异常进入 durable `model/attempt-end`/`runtime/error` 的 P2 则由 F2 的 typed adapter 边界根治。
+
+冻结审查中提到的“现有 composed snapshot 不是 wire request”和“Attempt 尚未 durable 绑定
+reservation”不作为当前 P2：前者是 ADR-0034 已接受但证据不完整的现行合同，后者在当前单
+Attempt/Step 下没有可观察错误。二者仍是 F0/F2 必须完成的新合同前置。
+
+## 3. 冻结边界
+
+### 3.1 一条 durable 事实主线
+
+- SQLite 切换后成为唯一生产 EventStore；不保留 JSONL reader、dual write、迁移器、旧字段别名、
+  自动导入或“SQLite 打不开就读 JSONL”的 fallback；
+- `InMemoryEventStore` 只保留为确定性测试替身；`JsonlEventStore` 从生产与公共导出中删除，旧目录
+  只检测并明确拒绝，绝不读取、移动、改写或删除；
+- ProductTask、Workflow、Budget、Workspace、Artifact、Promotion 和 Session 仍各自解释自己的
+  stream；SQLite 只保存事实，不成为第二领域状态机；
+- `PublishingEventStore` 仍只在底层 append 成功后发送低延迟提示。Feed 无 replay、不是事实源，
+  UI 不能从 Feed payload 直接更新权威状态。
+
+### 3.2 Attempt 是一次真实 Provider dispatch
+
+- 一个 Provider 网络调用恰好对应一个 Model Attempt；一个 Step 可以包含多个 Attempt；
+- Budget 拒绝发生在 dispatch 之前时，不得伪造 `model/attempt-start`；
+- 现有 `request/snapshot` 对 Composition/Surface 请求及其 fingerprint 的重建语义继续保留；current
+  schema 另行保存最终 dispatch request 及其 fingerprint，二者不能用一个含糊的“request”字段互相覆盖；
+- 每次 Attempt 有独立 identity、ordinal、start/end、Provider outcome、usage quality、Budget
+  reservation/charge/settlement，并绑定同一个 dispatch fingerprint；失败 Attempt 的成本不会因后续
+  成功而消失；
+- 所有 retry Attempt 使用同一个 Provider、model、Composition Lease 和**同一份最终 provider-bound
+  request bytes**；retry 不缩短输出上限、不改 prompt、不增删 Tool、不切换模型；
+- 若余额不足以再次预留同一请求，停止 retry 并 fail closed，不能为继续重试偷偷缩小请求；
+- recovery 只收敛已经 durable start 的 Attempt；重启后不自动恢复 retry、不重新 dispatch。
+
+### 3.3 UI 不获得权限
+
+- Line CLI 与 TUI 都适配同一个 UI-neutral Chat 驱动和 ProductTaskControlPlane；
+- v0.7.1 的独立宿主 `START`、人工 Approval 和 Promotion digest 绑定保持不变；
+- 观察 API 必须纯读，不执行 reconciliation、不补事件、不启动 Workflow、不持有后台 owner；
+- TUI widget、内存列表和模型文字都不是状态；重启只从 durable facts 恢复；
+- UI 只能调用既有宿主动作，不能自动 approve/promote，也不能把 evaluator、Verifier 或 Budget
+  authority 放入模型上下文。
+
+### 3.4 资源所有权
+
+- `build_default_runtime` 及内部 runtime factory 不再隐式创建 EventStore，store 参数成为必填依赖；
+- store-open/close 的真实生产 owner 必须按调用路径完整盘点，不能再概括成“两个 root”：
+  CLI composition boundary 覆盖 chat/run/resume/replay/inspect/recover/sessions/compact 等实际入口，
+  Evaluation 的每个 attempt 独立拥有一份实验 store，Evolution `plugin compare` 的每个 comparison case
+  也独立拥有自己的 store；
+- CLI 内部提取一个显式 store 作用域供各子命令复用；Evaluation attempt 与 comparison case 使用同一
+  store-open/close 合同，但各自保留资源作用域。Product host 由这些入口装配，不另造事实源；
+- Runtime 与各领域 service 只借用注入的 store，不关闭它；不为了测试把 `close()` 塞进通用
+  `EventStore` protocol，也不增加无操作 ownership fallback；
+- 备份是宿主操作，不是调用方复制一个看起来像数据库的文件。WAL 模式可能同时存在 `-wal`/`-shm`；
+  一致备份必须使用 SQLite backup API 或等价的受支持事务边界输出到全新目标，并记录 schema/version
+  receipt；
+- close、backup、append/read 的并发准入和取消必须由同一 owner 定义。重复取消不能留下 detached
+  thread、connection、transaction 或 backup worker。
+
+## 4. 明确不做
+
+v0.8 不实现：
+
+- Provider/model fallback、自动降级、跨 Step 重试或 Provider SDK 隐式重试；
+- JSONL 迁移、兼容读取、dual schema、projection checkpoint 或 event upcaster；
+- Agent cold recovery、stale claim takeover、跨进程 Activation/Workspace/Promotion lease；
+- token streaming、Web UI、移动端、完整历史 Dashboard；
+- PostgreSQL/MySQL、远程数据库、云同步或多用户权限；
+- Skill、长期 Memory、RAG 或向量数据库；
+- OS sandbox、容器或插件进程隔离；
+- 第二 Chat backend、第二 Event bus、第二 Eval/Benchmark 命令或 Runner。
+
+Sandbox 仍是独立 hardening 主题：只有将来要运行不受信 Skill、插件或命令时才成为前置。v0.8
+可以记录 subprocess/filesystem/network 威胁边界，但不得提前实现半个沙箱。
+
+## 5. v0.8-F0：当前 P1 收敛、Attempt 准入与请求快照
+
+### 5.1 先关闭终端异常注入
+
+第一项实现必须保持窄而完整：所有 `traceh chat` 异常展示都复用现有 terminal-safe 单行清洗漏斗，
+对内容做控制/格式/分隔字符惰性化和有界截断；异常类型也按同一规则处理，不能只清洗 message。
+Provider 返回含换行、ANSI/OSC、双向覆盖、超长正文和形似 Approval 文本的确定性 HTTP 错误时，公开
+Chat 只能输出一条有界惰性错误行，不能伪造任务状态或后续提示。临时移除这条清洗，反例必须真实恢复
+终端注入；修复不改 Provider retry、Budget、Session schema 或 Approval 权限。
+
+### 5.2 冻结两阶段 Model Runtime 边界
+
+实现必须在 ADR 或正式设计决定中冻结以下语义；准确方法名由真实源码决定，但不能继续用一个
+`invoke()` 同时隐藏 Budget 准入、最终请求变换和 Provider 副作用：
+
+```text
+prepared
+  -> admitted(final dispatch request + attempt reservation)
+  -> composed/dispatch request evidence frozen
+  -> attempt-start durable
+  -> dispatched
+  -> outcome-recorded
+  -> budget-settled
+  -> step-closed
+```
+
+- `prepared` 是 RequestBuilder 根据 Composition/Surface 得到的 composed request，还不是 Attempt；
+- Budget owner 执行 admission，返回最终 dispatch request 与本次 Attempt 的 reservation handle；首次
+  admission 可以按现行 Budget 规则确定输出上限，后续 retry 只能完整预留已冻结请求，不能再次缩小；
+- `AgentLoop` 仍是唯一 Session Event writer；首次 admission 后只写一条同时含 composed 与 dispatch
+  证据的 current-schema snapshot，再写本次 `model/attempt-start`；后续 admission 引用同一 snapshot/
+  dispatch fingerprint，只新增自己的 Attempt start。snapshot/start 写入失败必须通过本次 reservation
+  handle 补偿；
+- `dispatched` 的线性化证据是 `model/attempt-start` durable 后才允许调用 Provider；若 start 结果
+  unknown，不得调用 Provider；
+- dispatch 只消费已经 admitted 的 concrete handle，不再次 reserve、不修改请求；handle 必须绑定当前
+  Composition Lease 解析出的同一个 Provider 对象与 host Attempt，Budget 只挂接 accounting lifecycle，
+  不拥有可覆写的 Provider dispatch；Provider outcome 返回后由同一 Budget owner charge/settle；
+- `outcome-recorded` 保存稳定 typed outcome 和 usage quality，不持久化 raw response body、任意异常正文、
+  traceback、秘密或本机路径；
+- settlement 结束前不能把本次 Attempt 当成完成。取消/失败组合仍保留原错误和 cleanup 错误。
+
+这是一条两阶段 public runtime 协议，不是让 Budget service 直接写 Session Event，也不是新增第二
+AgentLoop。`request/snapshot`、`model/attempt-start` 与 Budget reservation identity 采用一套 forward-only
+current schema；F1 切换 SQLite 时旧 JSONL Session 明确拒绝，不写 upcaster、别名或兼容 reader。
+
+attempt-scoped reservation 会取代 ADR-0027 §5 由 Step-scoped reservation 承担的反重复派发互锁，
+因此 F0 必须新增 ADR 或明确修订该决定：Budget reservation 只持有/结算本次 Attempt 的费用，不能单独
+成为 dispatch 权限；真正的派发许可由现有 Step 执行 owner 在 Session stream 上成功追加
+`model/attempt-start` 的 CAS 线性化点取得。只有同一 live owner 在上一 Attempt 已 durable 结束且被
+typed policy 判定可重试时，才可为下一 ordinal 申请新 reservation；recovery 只闭合 open Attempt/Step，
+不创建 retry 权限。若当前所有权无法证明这一点，F0 停止，不以 attempt UUID 代替 owner。
+
+### 5.3 Attempt 与 snapshot 的绑定
+
+`request/snapshot` 同时保留两种不可混同的证据：
+
+- **composed request/fingerprint**：继续供现有 `verify_request_snapshots` 从 Composition/Surface 重建；
+- **dispatch request/fingerprint**：保存 Budget admission 后真正允许发送的 provider/model/参数/消息/
+  Tool schema，并供 Provider dispatch 与 retry 绑定。
+
+每个 Attempt 至少能从 durable facts 证明：
+
+- 它属于哪个 Turn/Step、ordinal 是多少；
+- 它引用哪条 request snapshot（seq 或稳定 identity）及 dispatch fingerprint；
+- Provider/model 与 snapshot/Composition 一致；
+- reservation identity 由 attempt identity/ordinal 派生并与 Attempt 一致，同一 Step 的不同 Attempt
+  不能复用 reservation；
+- start/end 一一对应、ordinal 连续，终态互斥；
+- 多 Attempt 的 provider-bound request bytes 完全相同。
+
+`attempt_id` 与 reservation handle 由 runtime owner 显式传递，不塞进 `ModelRequest.metadata`，避免改变
+composed 或 dispatch fingerprint。旧的 `agent/session/turn/step` reservation 派生规则必须同步切换，
+否则第二次 Attempt 会与第一次冲突；不保留旧规则 fallback。
+
+### 5.4 F0 必测与反向验证
+
+- Budget 为 0 或不足时 Provider 调用数为 0，且没有虚假的 Attempt start；
+- Budget 将输出上限裁成最终值时，composed snapshot 仍可由 RequestBuilder 重建，dispatch snapshot 与
+  Provider 实收请求逐字段一致；
+- 同一 Step 两次 admission 得到两个不同 reservation identity，而两个 Attempt 的 dispatch fingerprint
+  完全相同；临时恢复旧 reservation 派生规则时第二次预留必须稳定冲突；
+- 两个执行 owner 对同一 Step 并发 admission 时，只能一个 `model/attempt-start` CAS 获得派发许可；
+  失败 owner 返回前释放自己的 reservation，Provider 调用总数为 1。临时移除 Session CAS/Step owner
+  守卫时必须真实出现两次外部调用；
+- 已 durable start 的 Attempt 在进程死亡后只被 recovery 保守闭合，新 owner 不自动创建下一 ordinal；
+- snapshot append、attempt-start append、reserve 和 settlement 在 success/failure/cancel/unknown 窗口
+  都收敛，不泄漏 reservation 或后台 append；
+- 篡改 snapshot identity、attempt ordinal、Provider/model 或 reservation binding 时 replay fail closed；
+- 公开注入 Runtime 返回“声明 request 正确但替换 Provider”的普通 admission，或返回在 dispatch 时改写
+  request 的 Admission 子类时，两个 Provider 调用数都必须为 0、不得写 snapshot/start；bounded Budget
+  已预留时还必须 RELEASED；
+- 临时恢复当前“先写 snapshot/start，再由 Budget 裁请求”的顺序，新反例必须真实复现错误结果；恢复
+  正确实现后再过相邻回归。
+
+### 5.5 F0 停止点
+
+终端窄修复和 Attempt/Budget 两阶段协议可分成两个可审查提交，但都属于 F0。独立审查必须先清零
+F0 的 P0/P1；该停止点不要求立刻发布一个版本，但未清零前不得实现 SQLite 切换或 retry。
+
+### 5.6 实现结果（2026-08-29）
+
+F0 已按 [ADR-0035](../adr/0035-two-stage-model-admission-and-session-dispatch-permit.md) 落地：
+
+- Chat 的最终异常类型与正文分别经过现有 bounded single-line sanitizer，不能用换行、控制序列、
+  双向格式字符或超长正文伪造 Product/Approval 行；
+- `LlmRuntime.admit()` 冻结最终请求，`LlmAdmission.dispatch()` 才能跨 Provider 边界；bounded Token
+  admission 只创建 PENDING Attempt reservation，败选或未取得 Session permit 时由同一 handle 释放；
+- `AgentLoop` 只接受 concrete `LlmAdmission`，并在写 Session 事实前核对它绑定 active Composition 的同一
+  Provider 对象与 host Attempt；真实 `Provider.complete()` 固定由基类使用该 request 调用，Budget 由
+  accounting hook 包围 START/settle/abort，不再通过 Admission 子类接管 dispatch；
+- 首个 current-schema `request/snapshot` 同时保存可重建 composed request 和 exact dispatch request，
+  并与 `model/attempt-start` 在一个 Session CAS batch 中持久化；每个 start/end 重复 ordinal、snapshot
+  seq、dispatch fingerprint 与 reservation identity；
+- Attempt id 每次 admission 独立生成，reservation 由完整 Attempt identity 派生；Budget 不再抢先成为
+  dispatch lock，Session CAS 是唯一派发许可；
+- live failure/cancellation 会 fresh read 并按 Attempt → Step → Turn 收敛，commit-return unknown 不调用
+  Provider；cold recovery 仍只闭合既有 open Attempt，不创建下一 ordinal。
+
+确定性公开反例已覆盖零 Token、Budget 裁剪、双 owner 并发、append 前取消、commit-return unknown、
+证据篡改、恢复、Provider swapping 与 dispatch-time request rewrite。后两条在修复前都真实完成 Turn；
+修复后均在 Session 写入前以 `model-admission-binding-mismatch` 拒绝，Provider 调用为 0，bounded hold
+收敛为 RELEASED。其余反向验证把 reservation 临时退回 Step-scoped 后第二次 admission 稳定冲突；把
+Session owner/CAS 守卫移除后同一 Step 真实调用 Provider 两次；把顺序退回“先记 Attempt、后做
+Budget”后零 Token 路径重新留下虚假 start 并触发 durable Budget evidence mismatch。保护均已恢复。
+F1 尚未开始，JSONL/SQLite、retry、driver/TUI 和 v0.9 能力均未改变。
+
+独立复审清零 P0/P1 后执行最终全量。第一次全量在 53% 处发现唯一确定性遗漏：
+`test_real_turn_keeps_one_generation_during_publish_and_rebuilds_requests` 仍读取已被 current schema 删除的
+`request/snapshot.provider/model/request` 顶层旧字段。没有为它恢复别名或 compatibility reader；测试改为
+同时核对唯一新格式的 `composed_request` 与 `dispatch_request`，定向通过。修复后的确认全量收集口径为
+`2426`，进度到 100%、退出码 0，只有 5 个既有 skip 标记。全程未联网、未调用真实 Provider/API、未读
+`.env`，也未另跑 Wheel/L2-L4 或 F1-F5。
+
+## 6. v0.8-F1：SQLite 唯一生产 EventStore
+
+### 6.1 schema 与线性化合同
+
+使用 Python stdlib `sqlite3`，由唯一 store-open/ownership 边界创建。至少冻结：
+
+- `build_default_runtime` 及内部 factory 缺少显式 store 时稳定失败；CLI 与
+  `evaluation/attempt.py`、`evolution/comparison_probe.py` 分别负责自己创建 store 的作用域、关闭顺序和
+  错误传播；
+- 单个数据目录只有一个 current schema version；unknown/older/newer 均稳定拒绝；
+- stream identity 与 seq 由数据库唯一约束和事务共同保证；
+- `append(expected_seq)` 在同一事务内检查 head、写入整组事件并提交，跨进程并发只能一个成功；
+- `read(from_seq)`、`head()`、`list_streams(prefix)` 的排序、过滤和 detached ownership 与当前
+  `EventStore` 合同一致；
+- payload 用唯一 canonical JSON 边界编码；非法 row、seq gap、重复 seq、非法 Envelope 不被修补；
+- busy/timeout 只产生稳定 Store 错误，不在内部无限 retry，也不把 lock contention 当成 CAS 成功。
+
+SQL 表名、索引、journal mode、connection/thread 模型和 busy 数值由最小原型与确定性测试决定，不能在
+计划里写成未经证明的默认。
+
+### 6.2 单库写入串行化、busy 与 durability
+
+JSONL 当前按 stream 分锁，而单个 SQLite 数据库的 writer 会跨 stream 串行化；这是 F1 的主要并发合同，
+不能只测“同一 stream 的 expected seq CAS”。普通的同进程多 stream 竞争由 store 内部做**有界等待与
+串行化**，不得直接变成 Agent/Workflow 失败；超过明确上限才返回稳定 Store availability error。
+Provider retry 层永远不处理 Store busy，调用方也不得无限重试或把第二次 append 猜成安全。具体
+busy timeout、connection/thread 模型和是否需要进程内 writer gate 由最小原型决定，成为显式、文档化、
+可测试的 store 配置，不从某台机器或测试时序偷取默认。
+
+`Durability.BATCHED` 同时作为普通合同清理删除：所有当前 caller（包括每次 Attempt 仅出现一次的
+`assistant/chunk`）统一走唯一 append/commit 合同；`PublishingEventStore` 只在底层提交成功后发布提示。
+当前 Provider 没有真实 token streaming，这项清理不是 F1 的主要破坏风险；未来真正 streaming 必须另行
+设计可证明的批处理协议。ADR 仍须说明 SQLite commit、WAL 与平台断电保证的边界，不能把普通测试无法
+证明的 crash durability 写成事实。
+
+### 6.3 legacy 与备份
+
+- 新目录创建 current SQLite；已存在 current SQLite 正常打开；
+- 发现旧 JSONL 痕迹但无合法 SQLite，稳定提示用户选择新 data dir；
+- JSONL 与 SQLite 混合目录、数据库 schema 不一致、数据库路径被链接替换均 fail closed；
+- legacy 文件零读取、零移动、零删除、零自动转换；
+- 备份只通过宿主持有的一致性 backup 操作写入一个事先不存在的目标；不宣传 raw copy 或“永远只有
+  一个物理文件”。恢复必须先验证 schema/version 与完整性，不能覆盖活跃数据目录。
+
+### 6.4 F1 必测与反向验证
+
+- 两个进程/独立实例对同一 stream、同一 expected seq 竞争，只提交一组连续事件；
+- 单进程 N 个 Session/领域 stream 与 Feed 订阅者并发写入时，普通竞争全部有界串行化、各流顺序正确、
+  Feed 只在提交后提示且没有非确定性 Store error；测试使用 Gate/Barrier，不用 `sleep()` 猜时序；
+- 两个进程写不同 stream 时，锁等待上限、成功/timeout 结果和错误 owner 与 ADR 一致；临时把 busy
+  配置恢复为立即失败时，真实多角色 ProductTask/等价公开并发反例必须变红；
+- commit 已发生后调用方被取消，调用方返回前 worker 收敛，fresh replay 能判定 may-have-committed；
+- commit 未发生、已发生和无法判断三种结果不坍缩；
+- caller 修改 append/read 返回 payload 不改变历史或另一读者；
+- prefix 枚举不泄露其他 stream，结果确定排序；
+- legacy/mixed/version/link 拒绝不会产生空白新数据库掩盖旧历史；
+- chat/run/resume/replay/inspect/recover/sessions/compact、`evaluation/attempt.py` 与公开
+  `traceh plugin compare` 共用同一 store-open/close 规则；
+- owned/borrowed close、重复 close、close 期间取消、backup 与 writer 竞争全部收敛；
+- 临时移除 DB unique/CAS、legacy gate、schema gate、取消重读和 ownership close 中的关键保护，公开
+  反例按根因变红后恢复。
+
+### 6.5 Release Stop A
+
+F0+F1 完成后做一次独立 P0/P1 审查和 SQLite 真实多进程/备份验证。只有这条事实层清零，才能在其上
+增加 retry；停止点不自动意味着 tag 或公开版本。
+
+## 7. v0.8-F2：同 Provider/同模型的 bounded retry
+
+### 7.1 typed、清洗后的失败分类
+
+Provider adapter 必须把 transport/HTTP 结果映射成仓库自有、稳定、无秘密的失败类别；host retry
+policy 只消费类别，不解析异常字符串。至少区分：
+
+- 明确不可重试：认证/权限、无效请求、上下文或输出参数、配置、协议/严格响应解析错误；
+- 候选可重试：临时 DNS、connect/read timeout、TLS 提前 EOF、response 前断连、明确批准的
+  408/429/部分 5xx；
+- 未识别：默认不可重试。
+
+清洗责任在 Provider adapter：typed Provider exception 的公开 message 不能包含 raw HTTP response body、
+headers、底层 `URLError` 正文、秘密或本机路径；`model/attempt-end` 只记录稳定 code/category。现有
+`runtime/error` 对非 Provider 故障保留有界 traceback 的诊断合同不在本阶段全面删除，但 Provider 故障
+进入该 traceback 时也只能暴露已经清洗的 typed exception。
+
+具体状态表、最大 Attempt 数、总 retry elapsed、单次 delay、`Retry-After` cap 和 backoff/jitter 必须
+来自显式 host policy；测试使用注入 clock/scheduler，不能 sleep 猜时序。Provider SDK 自带 retry 必须
+显式关闭或证明不存在，避免双层重试。
+
+### 7.2 Budget、请求和计量
+
+- 第一次 Attempt 的 provider-bound request 在 F0 冻结；后续 Attempt 原样复用；
+- 每次 Attempt 重新为同一请求独立 reserve/start/charge/settle；失败和成功全部计入累计 Budget；
+- usage unknown 时沿用现有保守 settlement，不把未知填 0；
+- backoff 不计 Provider active elapsed，但计入 Step/wall；报告分列 Attempt count、retry wait、Provider
+  active、failure category 与最终结果；
+- Budget 不足、retry count/elapsed 用尽或取消已经提出时，不得再 dispatch；
+- `traceh eval` 的 Product success 定义不变。新网格只能说明当前条件下的可靠性，不能把 retry 后成功
+  解释为模型质量提升，也不能与旧网格声称统计显著。
+
+### 7.3 F2 必测与反向验证
+
+- 第一次断连、第二次成功：同一 Step 两个 Attempt、两份 reservation/settlement、一个最终响应；
+- 认证、bad request、Router strict parse、未知异常均一次即停；
+- 取消发生在 delay、reserve、start append、Provider invoke、end append 和 settlement 各窗口时，
+  Provider 调用数都不多一次；
+- 第一次 unknown usage 后，余额不足以完整预留相同请求时不缩请求、不重试；
+- 重启只关闭 open Attempt，不自动继续 retry；
+- raw body/headers/异常正文、凭据和本机路径不进入 Event/CLI/report；
+- 临时移除不可重试 gate、attempt-scoped reservation、no-next-attempt 取消 gate 和 frozen request guard，
+  分别真实复现认证风暴、费用覆盖、取消后额外付费调用和请求漂移。
+
+### 7.4 Release Stop B
+
+F2 先用确定性 Provider stub 完成 retry/error/cancel 全矩阵并独立审查。若用户另行授权，只做一次有界的
+真实 Provider smoke 来证明 adapter 接线，不跑完整 Benchmark 网格，也不把 smoke 当发布或质量证据。
+真实运行使用新输出目录、不补跑失败项、不 fallback、不覆盖历史报告、不打开/打印/记录 Key。清零
+P0/P1 后才进入 UI 重构；唯一完整发布网格留到 F5。
+
+## 8. v0.8-F3：UI-neutral Chat 驱动与只读 Product observation
+
+### 8.1 驱动边界
+
+- 外部 adapter 异步提交输入并消费 typed update；driver 不直接读取 stdin，也不渲染终端文本；
+- Line CLI 先迁移为第一个 adapter，普通 Chat、Product Proposal、v0.7.1 宿主 `START`、`/task`
+  命令、Approval 和 Ctrl+C 语义保持一致；
+- Product command 解析保持纯函数；所有写动作调用既有 control-plane owner；
+- observation 只 fresh read Product/Workflow/Directory/Artifact/Promotion，不调用带 reconciliation 的
+  `inspect/approve` 路径，不 append，不持有业务 worker；
+- ProductTask 与 Workflow 是两条事实流。纯读 view 必须并列保留两者状态：例如 Workflow 已到
+  awaiting approval、而 ProductTask 仍是 started 时，明确显示“Workflow 已等待批准，ProductTask 尚未
+  对账”，不能假装两者一致，也不能等 heartbeat 写一条 Product 事实才让用户看见 Approval；
+- 用户真正执行 inspect/approve/reject/cancel 等动作时仍进入现有 control-plane reconciliation owner，
+  observation 不替它推进状态；
+- 现有 `ActivityTracker` 的事件派生逻辑重构为 driver 的唯一 typed ephemeral activity 来源，Line CLI 与
+  TUI 都消费它；不得让 TUI 按相同事件另建第二份 in-flight 推断。它仍不持久化、不参与 recovery。
+
+### 8.2 Feed 只是“该刷新了”的提示
+
+不能只写“replay + Feed + `(stream_id, seq)` 去重”。正确观察握手至少是：
+
+1. 先订阅当前已知的精确 stream；
+2. 再 fresh read durable heads 与投影；
+3. 若读取发现新的相关 stream，订阅它们并重新读取，直到观察集合稳定；
+4. Feed 事件只把 view 标成 dirty，随后重新读取事实，不直接信任 payload；
+5. 每次用户动作后、周期 heartbeat、进入 Approval 前和 terminal 前都强制 durable refresh。
+
+这样事件发生在“订阅之前”、Feed 丢失、adapter 暂停或 TUI 重启都不会改变最终 view。不得新增 wildcard
+全局 Event bus 或 replayable Feed。
+
+### 8.3 F3 必测与反向验证
+
+- 没有 stdin 输入时，进度/取消仍由 event loop 处理；
+- 高频 observation 前后全部相关 stream head 不变；
+- 相同录制输入经旧 Line 行为合同和新 driver 得到相同 durable Product 事实；
+- 在 subscribe/read 各竞态窗口注入事件，最终 view 不漏 terminal/approval；
+- Workflow 已 awaiting approval、ProductTask 仍 started 且没有任何用户动作的稳态下，纯读 view 必须
+  持续显示两条状态及分歧，所有相关 stream head 保持不变；随后执行真实 Approval 动作才由原 owner 对账；
+- 丢弃全部 Feed 通知后，heartbeat/action/final refresh 仍恢复相同 view；
+- Line/TUI 对同一事件与 monotonic clock 得到同一 typed activity update，移除共享 tracker 后重复实现的
+  差异反例必须变红；
+- UI 关闭时调用原 owner 的 cancel/close，不遗弃 ProductTask；
+- 临时去掉 subscribe-before-read、周期 refresh 或 observation 纯读守卫，对应公开用例真实漏状态或产生
+  非法写入。
+
+## 9. v0.8-F4：可选 Textual TUI
+
+### 9.1 最小产品面
+
+- 仍使用 `traceh chat --tui`，不新增第二 Product Chat 命令；
+- Textual 是可选依赖；核心安装、Line CLI、Eval 和离线 Wheel 不依赖它；
+- 最小界面包含对话、当前 ProductTask、固定 Workflow 角色/节点进度、Review/Verifier 摘要、
+  Approval/Reject/Cancel 与错误状态；
+- 首版不做完整历史 Dashboard、Web UI、拖拽 DAG 或模型 token streaming；
+- 所有模型文字、Patch preview、路径和失败展示都按不可信内容转义并有界；
+- Approval 前显示 review/target/digest 的安全摘要，按钮仍调用同一 control-plane 幂等操作。
+
+### 9.2 F4 必测
+
+- Line/TUI 对同一输入创建相同 Proposal/Task identity；
+- 未执行宿主 `START` 或人工 Approval 时，模型动作和 UI 事件都不能越权；
+- 双击、重复、stale digest 使用现有幂等/CAS 保护；
+- restart 只靠 durable observation 恢复，不依赖 widget state；
+- 未安装 TUI extra 时给出明确提示，不静默切换成不同语义；
+- markup、控制字符、超长 Unicode 和二进制摘要不能执行 UI 标记或破坏布局；
+- Windows 终端 resize、Ctrl+C、EOF 和后台任务关闭走原 owner 收敛。
+
+### 9.3 Release Stop C
+
+UI/TUI 完成后独立审查 UI 是否获得新 authority；清零 P0/P1 后才进入最终全量与打包。
+
+## 10. v0.8-F5：最终验证与发布候选
+
+### 10.1 门禁顺序
+
+1. compileall；
+2. F0 terminal safety/Attempt/Budget、F1 SQLite、F2 retry、F3 driver、F4 TUI 定向测试；
+3. Session/Turn/Step/Attempt、Product/Workflow/Budget/Workspace/Artifact/Promotion/Evaluation 相邻回归；
+4. SQLite 同进程多 stream/Feed、跨进程同流 CAS/异流 busy、backup/restore、legacy refusal、所有 fresh
+   data dir CLI 子命令，以及 `evaluation/attempt.py` 与 `evolution/comparison_probe.py` 的显式 store
+   ownership 验收；
+5. collect-only、修改范围 Ruff、`git diff --check`、链接/围栏/章节对应 QA；
+6. 每个 release stop 的 Finding 已关闭后，做一次最终独立 P0/P1 审查；
+7. 审查清零后只运行一次最终全量；
+8. clean-input Wheel/sdist/source ZIP、archive audit、无 `[tui]` 与带 `[tui]` 的离线安装；
+9. 用户另行授权后只运行一次作为发布证据的完整真实 Provider acceptance：fresh SQLite data dir、fresh
+   eval output、不重试旧报告、不 fallback、不打开/打印/记录 `.env` Key。F2 的可选 smoke 不与该网格
+   合并、不补样本，也不宣称质量结论。
+
+停止点是审查边界，不要求每个小阶段都跑全量或发布版本。最终全量只在全局 P0/P1 清零后运行一次。
+
+### 10.2 文档与完成定义
+
+实现时先更新正式上下文，再同步通俗版；同时更新 README、CHANGELOG、Roadmap、必要 ADR 和验证记录。
+不得在 F5 前升级版本、tag、push 或 release。
+
+v0.8 完成必须证明：
+
+- snapshot 同时证明可重建的 composed request 与最终 provider-bound dispatch request，Budget 拒绝不会
+  产生虚假 Attempt；
+- SQLite 是所有生产入口唯一 EventStore，旧 JSONL 明确拒绝且零迁移/零读取；
+- store owner、close、backup、CAS、跨 stream busy、durability 和取消收敛都有公开反例；
+- retry 同 Provider/同模型/同请求、有界、逐 Attempt 计费、可取消且无 fallback；
+- Line/TUI 复用同一 Product/Workflow/Approval/Promotion 权限主线与唯一 ephemeral activity projection；
+- Feed 丢失或 UI 重启后，durable observation 仍得到相同事实；
+- 没有第二 Runtime、Supervisor、Workflow、ProductTask 状态、Event bus 或 Benchmark Runner。
+
+## 11. 冻结后的执行与停止规则
+
+- 最终独立计划审查已经结束；不再为本文启动第五轮开放式审查。实现中的新 P0/P1 仍按 `AGENTS.md`
+  证据准入处理，但设计偏好、未来扩展或没有公开错误结果的理论对象不能重新打开范围；
+- F0 必须显式修订 ADR-0027 的反重复派发归属；F1 至少需要一份覆盖 SQLite schema、store ownership、
+  busy/durability/backup/legacy refusal 的 ADR。F3 采用本文已冻结的纯读双状态 view，因此不新增让
+  heartbeat 写 Product 事实的 ADR；
+- 每个 release stop 只审查已经实现的当前阶段与相邻公开路径，不提前实现或用后续阶段测试掩盖前一层；
+- 全量测试、真实 Provider 完整网格、版本升级、打包、tag、push 与 release 只在 F5 且分别获得所需授权；
+- 如果真实源码证明某个准确类名或拆分不可行，可以选择更轻实现，但不得改变本计划的 owner、事实源、
+  权限、唯一 Runner、无 compatibility reader 和失败收敛合同；需要改变这些冻结边界时必须由项目所有者
+  重新批准，而不是实施者自行扩展。

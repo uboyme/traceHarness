@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### v0.8-F0: two-stage Model admission and dispatch evidence
+
+- Split the generic model boundary into side-effect-free admission and one-shot
+  dispatch. Budget admission now freezes the exact provider-bound request and
+  holds an Attempt-scoped PENDING Token reservation before any Session Attempt
+  evidence or Provider call exists.
+- Made the Session stream CAS the only Provider-dispatch permit. The first
+  Attempt atomically persists one exact composed/dispatch request snapshot and
+  its start; competing owners use independent Attempt/reservation identities,
+  and the loser releases its hold without calling the Provider.
+- Bound the admitted capability back to the exact Composition-resolved Provider
+  object and host Attempt before Session evidence is written. `AgentLoop`
+  accepts only the concrete host admission; Budget contributes accounting hooks
+  but no longer owns an overridable dispatch method, so an injected Runtime
+  cannot declare one Provider/request and dispatch another through that handle.
+- Bound Attempt start/end to ordinal, request snapshot seq, dispatch
+  fingerprint, provider/model and reservation identity. Request replay verifies
+  the composed request independently and permits only a non-increasing
+  `max_output_tokens` difference in the exact dispatch request.
+- Converge pre-dispatch cancellation, unavailable append returns, Provider
+  outcomes and Budget settlement without detached work. A zero or insufficient
+  Token Budget now records no false Model Attempt.
+- Sanitize the final `traceh chat` exception type and message through the
+  existing bounded single-line terminal safety boundary, preventing control,
+  newline and bidirectional text from forging Product or Approval output.
+- Added deterministic public-path tests and reverse verification for the old
+  Step-scoped reservation collision, Budget-after-Attempt ordering and missing
+  Session CAS, plus Provider swapping and dispatch-time request rewriting. No
+  retry, SQLite, Provider fallback, TUI or v0.9 capability is included.
+
 ## 0.7.1 - 2026-08-29
 
 ### Host authorization, convergence and supported-platform portability

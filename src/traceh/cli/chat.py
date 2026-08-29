@@ -33,7 +33,7 @@ from traceh.cli.command_line import (
 from traceh.cli.console import Console, contains_undecodable_input, normalize_input
 from traceh.cli.env_file import is_env_var_name
 from traceh.cli.errors import CliConfigurationError
-from traceh.cli.timeline import TimelineRenderer
+from traceh.cli.timeline import TimelineRenderer, sanitize
 from traceh.concurrency import await_worker_convergence
 from traceh.runtime.agent_runtime import AgentRuntime
 from traceh.session.event_feed import EventSubscription
@@ -504,7 +504,9 @@ async def _run_turn(
         await _stop_display(display)
         if product is not None:
             await product.discard_turn(session.session_id, None)
-        console.write(f"error: {type(error).__name__}: {error}")
+        error_type = sanitize(type(error).__name__) or "Error"
+        message = sanitize(str(error)) or "error"
+        console.write(f"error: {error_type}: {message}")
         return False
     except BaseException:
         await _stop_display(display)

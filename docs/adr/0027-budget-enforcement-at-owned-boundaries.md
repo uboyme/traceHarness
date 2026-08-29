@@ -108,6 +108,12 @@ still leave STARTED without a terminal fact.
 
 ### 5. Token calls reserve once and settle by evidence quality
 
+> **Forward decision:** v0.8-F0 [ADR-0035](0035-two-stage-model-admission-and-session-dispatch-permit.md)
+> supersedes this section's Step-scoped reservation as the anti-duplicate
+> Provider-dispatch guard. Token capacity, usage quality, START/SETTLED
+> lifecycle and cancellation convergence below remain in force; the current
+> cost hold is Attempt-scoped and Session CAS grants dispatch authority.
+
 One model Step derives one stable reservation and one non-idempotent START
 claim.  Concurrent or recovered attempts cannot call the Provider a second
 time after another owner reached STARTED or SETTLED.  A trusted `TokenCounter`

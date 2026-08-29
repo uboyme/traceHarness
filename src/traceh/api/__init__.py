@@ -13,6 +13,7 @@ from traceh.api.budgets import BudgetAmounts, BudgetLimits
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.llm import (
     LlmProvider,
+    ModelAttemptIdentity,
     ModelMessage,
     ModelRequest,
     ModelResponse,
@@ -20,6 +21,8 @@ from traceh.api.llm import (
     ToolSchema,
     Usage,
     UsageQuality,
+    dispatch_request_matches_composed,
+    model_attempt_reservation_id,
 )
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
@@ -74,6 +77,7 @@ __all__ = [
     "EffectKind",
     "EventEnvelope",
     "LlmProvider",
+    "ModelAttemptIdentity",
     "ModelMessage",
     "ModelRequest",
     "ModelResponse",
@@ -106,6 +110,8 @@ __all__ = [
     "TurnInput",
     "Usage",
     "UsageQuality",
+    "dispatch_request_matches_composed",
+    "model_attempt_reservation_id",
     "VerificationPlan",
     "VerifierCommand",
     "VerifierEnvironmentPolicy",

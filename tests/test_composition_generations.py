@@ -2073,11 +2073,15 @@ async def test_real_turn_keeps_one_generation_during_publish_and_rebuilds_reques
             events = await runtime.sessions.read_session(session_id)
             composition_event = next(e for e in events if e.type == "composition/snapshot")
             request_event = next(e for e in events if e.type == "request/snapshot")
-            assert composition_event.data["provider"] == request_event.data["provider"]
-            assert composition_event.data["model"] == request_event.data["model"]
-            request_data = request_event.data["request"]
-            assert isinstance(request_data, dict)
-            assert composition_event.data["system_prompt"] == request_data["system_prompt"]
+            for request_key in ("composed_request", "dispatch_request"):
+                request_data = request_event.data[request_key]
+                assert isinstance(request_data, dict)
+                assert composition_event.data["provider"] == request_data["provider"]
+                assert composition_event.data["model"] == request_data["model"]
+                assert (
+                    composition_event.data["system_prompt"]
+                    == request_data["system_prompt"]
+                )
             observed.append(
                 (
                     str(composition_event.data["model"]),

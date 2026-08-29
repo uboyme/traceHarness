@@ -4,6 +4,8 @@ from uuid import uuid4
 
 import pytest
 
+from traceh.api.json_types import fingerprint
+from traceh.api.llm import ModelAttemptIdentity, ModelMessage, ModelRequest
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.recovery import RecoveryService
@@ -26,18 +28,56 @@ async def open_step_with_attempt(
     await sessions.append_session(
         session_id, "step/start", {"turn_id": turn_id, "step_id": step_id}
     )
-    await sessions.append_session(
+    await start_attempt(
+        sessions,
         session_id,
-        "model/attempt-start",
-        {
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "attempt_id": attempt_id,
-            "provider": "scripted",
-            "model": "scripted-model",
-        },
+        attempt_id=attempt_id,
+        turn_id=turn_id,
+        step_id=step_id,
         correlation_id=correlation_id,
         composition_revision=composition_revision,
+    )
+
+
+async def start_attempt(
+    sessions: SessionService,
+    session_id: str,
+    *,
+    attempt_id: str = "a",
+    turn_id: str = "t",
+    step_id: str = "s",
+    correlation_id=None,
+    composition_revision: str | None = None,
+) -> None:
+    model_request = ModelRequest(
+        provider="scripted",
+        model="scripted-model",
+        messages=(ModelMessage(role="user", content="work"),),
+        metadata={
+            "session_id": session_id,
+            "turn_id": turn_id,
+            "step_id": step_id,
+            "composition_revision": composition_revision or "revision",
+        },
+    )
+    events = await sessions.read_session(session_id)
+    await sessions.start_model_attempt(
+        session_id,
+        attempt=ModelAttemptIdentity(
+            session_id=session_id,
+            turn_id=turn_id,
+            step_id=step_id,
+            attempt_id=attempt_id,
+            ordinal=1,
+        ),
+        source_seq=events[-1].seq,
+        composition_revision=composition_revision or "revision",
+        composed_request=model_request,
+        composed_fingerprint=fingerprint(model_request.to_dict()),
+        dispatch_request=model_request,
+        dispatch_fingerprint=fingerprint(model_request.to_dict()),
+        reservation_id=None,
+        correlation_id=correlation_id,
     )
 
 
@@ -367,11 +407,7 @@ async def test_recovery_ignores_a_message_written_before_the_attempt_started(tmp
         "assistant/message",
         {"turn_id": "t", "step_id": "s", "attempt_id": "a", "content": "earlier"},
     )
-    await sessions.append_session(
-        session_id,
-        "model/attempt-start",
-        {"turn_id": "t", "step_id": "s", "attempt_id": "a"},
-    )
+    await start_attempt(sessions, session_id)
 
     await RecoveryService(sessions).recover(session_id)
     events = await sessions.read_session(session_id)
@@ -391,11 +427,7 @@ async def test_recovery_counts_only_chunks_inside_the_attempt_scope(tmp_path) ->
         "assistant/chunk",
         {"turn_id": "t", "step_id": "s", "attempt_id": "a", "content": "before start"},
     )
-    await sessions.append_session(
-        session_id,
-        "model/attempt-start",
-        {"turn_id": "t", "step_id": "s", "attempt_id": "a"},
-    )
+    await start_attempt(sessions, session_id)
     for scope in (
         {"turn_id": "t", "step_id": "s"},
         {"turn_id": "t", "step_id": "s"},
@@ -456,10 +488,12 @@ async def test_recovery_closes_multiple_attempts_in_start_order(tmp_path) -> Non
         await sessions.append_session(
             session_id, "step/start", {"turn_id": "t", "step_id": step_id}
         )
-        await sessions.append_session(
+        await start_attempt(
+            sessions,
             session_id,
-            "model/attempt-start",
-            {"turn_id": "t", "step_id": step_id, "attempt_id": attempt_id},
+            attempt_id=attempt_id,
+            turn_id="t",
+            step_id=step_id,
         )
         if step_id == "s1":
             await sessions.append_session(

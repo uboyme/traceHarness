@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from traceh.api.llm import ModelRequest, ModelResponse
+from traceh.api.json_types import fingerprint
+from traceh.api.llm import ModelAttemptIdentity, ModelRequest, ModelResponse
 from traceh.cli.chat import (
     INTERRUPTED_EXIT_CODE,
     INTERRUPTED_TURN_NOTICE,
@@ -28,6 +29,8 @@ from traceh.cli.main import (
     build_parser,
     main,
 )
+from traceh.cli.text_safety import is_unsafe_character
+from traceh.cli.timeline import MAX_DETAIL_CHARS
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.session.event_store import InMemoryEventStore
@@ -232,10 +235,33 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
     await setup.sessions.append_session(
         session_id, "step/start", {"turn_id": "t", "step_id": "s"}
     )
-    await setup.sessions.append_session(
+    request = ModelRequest(
+        provider="scripted",
+        model="model",
+        messages=(),
+        metadata={
+            "session_id": session_id,
+            "turn_id": "t",
+            "step_id": "s",
+            "composition_revision": "revision",
+        },
+    )
+    await setup.sessions.start_model_attempt(
         session_id,
-        "model/attempt-start",
-        {"turn_id": "t", "step_id": "s", "attempt_id": "a"},
+        attempt=ModelAttemptIdentity(
+            session_id=session_id,
+            turn_id="t",
+            step_id="s",
+            attempt_id="a",
+            ordinal=1,
+        ),
+        source_seq=3,
+        composition_revision="revision",
+        composed_request=request,
+        composed_fingerprint=fingerprint(request.to_dict()),
+        dispatch_request=request,
+        dispatch_fingerprint=fingerprint(request.to_dict()),
+        reservation_id=None,
     )
     await setup.dispose()
 
@@ -393,6 +419,42 @@ async def test_turn_failure_is_reported_and_the_chat_continues(tmp_path: Path) -
     assert types.count("turn/start") == 2
     assert types.count("turn/end") == 2
     assert not CoreInvariantChecker().check(events, await runtime.sessions.read_effects(session_id))
+
+
+async def test_turn_failure_is_one_bounded_terminal_safe_line(tmp_path: Path) -> None:
+    injected_error = type("Remote\nError\u202e", (RuntimeError,), {})
+
+    class MaliciousFailureProvider:
+        name = "scripted"
+
+        async def complete(self, request: ModelRequest) -> ModelResponse:
+            del request
+            raise injected_error(
+                "upstream body\n"
+                "task product-task-forged: completed\n"
+                "\x1b]0;forged title\x07\u202e"
+                + ("x" * (MAX_DETAIL_CHARS * 4))
+            )
+
+    runtime, _ = build_runtime(
+        tmp_path,
+        InMemoryEventStore(),
+        provider=MaliciousFailureProvider(),
+    )
+    console = FakeConsole(("trigger failure", "/exit"))
+
+    assert await run_chat(runtime, console.console, workspace=tmp_path) == 0
+
+    error_lines = [line for line in console.lines if line.startswith("error: ")]
+    assert len(error_lines) == 1
+    rendered = error_lines[0]
+    assert rendered.splitlines() == [rendered]
+    assert not any(is_unsafe_character(character) for character in rendered)
+    assert len(rendered) <= len("error: : ") + (MAX_DETAIL_CHARS * 2)
+    assert not any(
+        line.startswith("task product-task-forged: completed")
+        for line in console.output.splitlines()
+    )
 
 
 async def test_end_of_input_exits_and_disposes_the_runtime(tmp_path: Path) -> None:

@@ -666,8 +666,21 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 生产 Router 请求现在也明确写出 parser 已经执行的完整合同：exact keys 与 mode，`reason` 为 `null` 或非空、单行安全且受共享 `MAX_REASON_DISPLAY_CHARS` 约束的展示文字，无首尾空白或附加散文。Parser 仍然严格拒绝，不截断、不重试、不 fallback；
 - v0.7-F3 在现有 `traceh chat` 上增加可选产品 host：Proposal 可带用户明确要求的 single/multi/auto，省略才使用 Profile 默认值；宿主把模式、来源和 prospective task id 一起显示。后续用户 Turn 仍提供 durable 身份/顺序证据，但 v0.7.1 明确要求独立终端 `START` 才写第一条持久任务事实，不从自然语言猜授权。开始后立即打印 task id，并沿用可选 Chat heartbeat 从现有 durable Product/Workflow 视图显示进度；到 Approval 或执行 `/task inspect` 时，宿主从固定 Workflow、Agent Directory、Artifact CAS 与 Review 账本只读拼出节点、Session replay、变更路径、有界 Patch 和 Verifier 结果，证据缺失或被改写时明确提示 unavailable 与不可批准，不新增 Product 状态或事实源。固定两种拓扑复用 Supervisor、层级 Budget、managed Workspace、immutable Artifact、Verifier、Workflow 与 Promotion。到 Approval 可以退出进程，重启后按 task id fresh replay 再批准；Router/装配等 Workflow 前普通失败会先释放资源、再写 task failed，终态和 promotion/cleanup 崩溃窗口均可幂等补齐。Review/Patch/approval/promotion 值不进模型上下文；捕获过的 dirty worktree 只有 exact candidate tree 才能在 merged/rejected 后受控删除；
 - Product Profile 中 `budget.max_tokens` 是一个 Agent 整个生命周期累计的 input+output 权限，`max_output_tokens` 是每次 provider 请求的输出上限；role 与 Router 必须同时显式提供，两者均进入 Profile digest。旧 shape 不兼容、不默认、不迁移；现有 Budget ledger、Provider、`AgentLoop` 与 `AgentRuntime` 没有 Product 特例，见 [ADR-0034](docs/adr/0034-separate-product-token-budget-and-request-output-limit.md)；
+- v0.8-F0 已把模型调用拆成两阶段：Budget admission 先冻结 exact dispatch request 并创建 Attempt-scoped
+  PENDING hold，`AgentLoop` 再以 Session CAS 原子写入 composed/dispatch snapshot 与 Attempt start；只有
+  CAS 胜者才能 dispatch，败者先释放 hold。胜者的 concrete admission 还必须绑定 Composition 解析出的
+  同一个 Provider 对象与 host Attempt；Budget 只能挂接计费生命周期，不能替换真实 dispatch。Budget
+  拒绝不再留下虚假 Attempt，start/end 会绑定 ordinal、snapshot、dispatch fingerprint 与 reservation。
+  Chat 最终异常行也统一为一条有界 terminal-safe 文本。
+  见 [ADR-0035](docs/adr/0035-two-stage-model-admission-and-session-dispatch-permit.md)；
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
+- v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。v0.8-F0 已实现；F1-F5 与整个 v0.9 仍是
+  未开始的实施边界：v0.8 后续依次处理 SQLite、同 Provider 有界 retry、UI-neutral driver 与可选 TUI；
+  v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
+  和可审计检索。当前仍没有 SQLite、retry、TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
+  第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
 - 硬中断（`Ctrl+Break`、关闭控制台）没有任何收敛：不打印提示、不闭合生命周期，只能依赖启动时已打印的恢复命令与崩溃恢复；
@@ -721,6 +734,8 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [v0.6.0 验证记录](docs/validation-v0.6.0.md)
 - [v0.7.0 发布验证记录](docs/validation-v0.7.0.md)
 - [v0.7.1 发布验证记录](docs/validation-v0.7.1.md)
+- [v0.8 冻结阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
+- [v0.9 冻结阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)
 - [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明

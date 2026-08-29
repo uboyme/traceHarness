@@ -245,6 +245,7 @@ sequenceDiagram
     participant U as User
     participant AR as AgentRuntime
     participant AL as AgentLoop
+    participant B as LlmRuntime / Budget Admission
     participant ES as EventStore
     participant M as Model Provider
     participant T as ToolRuntime
@@ -254,10 +255,17 @@ sequenceDiagram
     AR->>AL: run_turn
     AL->>ES: inbox/accepted, inbox/claimed, turn/start
     loop 每个 Step
-        AL->>ES: step/start, composition/snapshot, request/snapshot
-        AL->>ES: model/attempt-start
-        AL->>M: ModelRequest
-        M-->>AL: ModelResponse
+        AL->>ES: step/start, composition/snapshot
+        AL->>B: admit(composed request, fresh Attempt)
+        B->>ES: PENDING Attempt Token reservation（若 bounded）
+        B-->>AL: exact dispatch request + reservation handle
+        AL->>ES: CAS batch(request/snapshot + model/attempt-start)
+        AL->>B: admission.dispatch()
+        B->>ES: Token reservation STARTED
+        B->>M: exact dispatch ModelRequest
+        M-->>B: ModelResponse
+        B->>ES: Token reservation SETTLED
+        B-->>AL: ModelResponse
         AL->>ES: assistant/chunk, assistant/message, model/attempt-end
         alt 有 Tool Calls
             AL->>T: execute_batch
@@ -277,7 +285,9 @@ sequenceDiagram
 - `AgentRuntime` 用内存锁和 `_active` 表保证同一 Session 同时只有一个活跃 Turn；这是单进程保证。事件写入层（6.5）已有跨进程锁，但“同一 Session 只跑一个 Turn”仍未跨进程强制：两个进程同时 run 同一 Session 时，事件文件不会损坏，结果是事件交错或 `SessionService.append_event()` 抛出 `ConcurrencyConflict`，而不是被 Runtime 提前拒绝。
 - Turn admission 与 Stage C Session 迁移共用一把 Composition Gate：Turn 在 Gate 内完成 durable 身份校验并登记 active Turn；迁移在同一 Gate 内确认全局没有 active Turn、准备候选、执行授权 CAS 和 publish。迁移持 Gate 时，新的 Turn 只能等待，不能出现“检查时空闲、下一瞬间 Turn 已开始”的窗口。Gate 不是持久化事实；真正的 Session 身份仍来自事件。
 - `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。`JsonlEventStore` 的取消语义见 6.6：被取消的 Store 操作不会留下仍在后台写入的线程。
-- `AgentLoop` 在取消/异常时追加 Attempt、Step、Turn 的终止或错误事件；ToolRuntime 尽量补齐未完成调用的 Tool Result。
+- `AgentLoop` 在取消/异常时 fresh read 当前 Attempt；只有 durable start 才补 Attempt End，然后依次关闭
+  Step、Turn。admission 未取得 Session CAS permit 时先释放 PENDING reservation，不制造 Attempt；ToolRuntime
+  尽量补齐未完成调用的 Tool Result。
 - `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn，然后 Drain Composition，最后卸载插件；完整语义见 5.5。Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
 
 ### 5.5 `AgentRuntime.dispose()` 的收敛语义
@@ -588,7 +598,11 @@ Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-
 
 ### 7.3 Request Snapshot 与 Fingerprint
 
-`RequestBuilder` 使用“截至 Composition Event 的 Surface + 同一 Lease 提供的 Composition Snapshot”生成 `ModelRequest`，持久化完整 Request、`source_seq`、composition revision 和稳定 fingerprint。内部 Generation identity 不进入 Request Fingerprint；因此请求重建、Replay 和 `verify_request_snapshots()` 继续依据持久化的内容 revision 工作。
+`RequestBuilder` 使用“截至 Composition Event 的 Surface + 同一 Lease 提供的 Composition Snapshot”生成
+composed `ModelRequest`。Budget admission 可以只把 `max_output_tokens` 正向下调，产生 exact dispatch
+request。首个 Attempt 的 Session CAS batch 只写一条 current-schema `request/snapshot`，其中同时保存
+两份 canonical request/fingerprint、`source_seq` 和 composition revision；同一 batch 再写
+`model/attempt-start`。内部 Generation/Attempt/reservation identity 不进入 Request Fingerprint。
 
 ```mermaid
 flowchart LR
@@ -596,18 +610,29 @@ flowchart LR
     SU --> MSG["Model-visible Messages"]
     CO["Composition Snapshot"] --> REQ["ModelRequest"]
     MSG --> REQ
-    REQ --> FP["Canonical JSON Fingerprint"]
-    FP --> SNAP["request/snapshot"]
-    SNAP --> REBUILD["Replay 时独立重建并比较"]
+    REQ --> CFP["Composed Fingerprint"]
+    REQ --> ADMIT["Budget Admission"]
+    ADMIT --> DISPATCH["Exact Dispatch Request / Fingerprint"]
+    CFP --> SNAP["唯一 request/snapshot"]
+    DISPATCH --> SNAP
+    SNAP --> START["同一 CAS batch: model/attempt-start"]
+    SNAP --> REBUILD["Replay 独立重建 composed 并校验 dispatch"]
 ```
 
-`verify_request_snapshots()` 能重新定位对应 Composition、重建当时的 Turn/Step metadata 和 Request，并报告 fingerprint 不一致。
+`verify_request_snapshots()` 能重新定位对应 Composition、重建当时的 Turn/Step metadata 和 composed
+Request，并独立验证两份 fingerprint。dispatch 除正向收紧输出上限外必须逐字段等于 composed request。
+Core invariant 另行核对 Attempt ordinal、snapshot seq、dispatch fingerprint、provider/model 与
+reservation binding；Budget reconciliation 再把 non-null reservation 与唯一 ledger 交叉验证。
 
 ## 8. 模型层
 
 ### 8.1 公共边界
 
-`LlmProvider.complete(ModelRequest) -> ModelResponse` 是 Provider 协议；`LlmRegistry` 按名称注册；`LlmRuntime.invoke()` 是主循环与 Provider 之间的调用边界。
+`LlmProvider.complete(ModelRequest) -> ModelResponse` 是 Provider 协议；`LlmRegistry` 按名称注册。
+`LlmRuntime.admit(provider, composed_request, attempt)` 返回不调用 Provider 的 `LlmAdmission`；只有 Session
+CAS 已持久化 exact request 与 Attempt start 后，`LlmAdmission.dispatch()` 才是一-shot Provider 边界。
+`abort()` 收敛从未取得 permit 的 admission。Budget wrapper 只在 admit 创建 PENDING hold，在 dispatch
+START/SETTLE；它不再以 Step-scoped reservation 充当外部执行锁，见 [ADR-0035](../adr/0035-two-stage-model-admission-and-session-dispatch-permit.md)。
 
 当前 `LlmRuntime` 等 Provider 完成后，只把完整文本作为一个 delta 交给 `assistant/chunk` 回调。协议上有 Chunk 事件，但当前网络适配并非真正 token streaming。
 
@@ -3363,3 +3388,70 @@ Catalog/Directory/Session identity 和 provider path 双向校验均不变。它
 旧前缀会增加十个字符并真实得到 `WorkspaceGitError`，当前 provision/release 通过。
 
 四项新增测试都走真实公开主线而非夹具导入失败：前三项分别覆盖否定消息不能授权 ProductTask、Attempt/Step/Turn owned finalizer 与真实 L4 target venv；第四项用真实 Git for Windows 构造 nested admin path。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`、恢复冗余 `ws-workspace-` 前缀，依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、`promotion-target-inspection-failed` 与 `WorkspaceGitError`。保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；首次远端 Linux 夹具问题、Windows L2 诊断缺口和最终 nested-worktree 平台缺陷也按各自 owner 修正。当前 collect-only 为 `2413`；只运行一次的最终完整 pytest 为 `2408 passed, 5 skipped`、退出码 0、耗时 `39:33`，真实 L2 包含在内。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+
+### 20.33 v0.8/v0.9 冻结计划与 v0.8-F0 实现状态（通俗版 20.27）
+
+2026-08-29 在已发布 `v0.7.1`、HEAD `194f44fe84ecb9adb85fc1d48d182d364bb94f45`
+上完成多轮独立只读审查后，范围分别冻结为 [`v0.8` 阶段计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
+与 [`v0.9` 阶段计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前 HEAD 仍是该发布提交，但未提交工作树
+已完成 v0.8-F0；F1-F5 和整个 v0.9 均未开始。计划与 F0 实现不构成 commit、push、tag、release、联网、
+真实 Provider 或秘密读取授权。
+
+F0 的基线反例确认，旧 `AgentLoop` 会在 `BudgetedLlmRuntime.invoke()` 准入前写
+`request/snapshot`/`model/attempt-start`，零 Token 时 Provider 调用数虽为 0，Session 仍虚构一次 Attempt；
+旧 snapshot 也只描述 composed request，不能证明 Budget 裁剪后真正发送的 request。另一个独立公开路径
+会把 Chat 异常类型与 `str(error)` 原样写进与人工 Approval 共用的终端。当前实现先分别通过现有
+single-line sanitizer 清洗并限制异常类型与正文，换行、ANSI/OSC、控制字符、双向格式字符、超长正文和
+伪造状态文本只能落在一条惰性错误行。Provider raw error 进入 durable Attempt/runtime evidence 的剩余
+边界仍由 F2 typed adapter 处理，不在 F0 假装完成。
+
+F0 的两阶段协议已由
+[`ADR-0035`](../adr/0035-two-stage-model-admission-and-session-dispatch-permit.md) 冻结并实现。
+`LlmRuntime.admit()` 不调用 Provider；bounded Budget admission 先冻结 final dispatch request 并创建
+Attempt-scoped PENDING reservation。`AgentLoop` 随后让 `SessionService.start_model_attempt()` 在一个 CAS
+batch 内写唯一 current-schema snapshot 与 ordinal-1 start，成功 append 才是 dispatch permit。snapshot
+同时保存可从 Composition/Surface/`source_seq` 重建的 composed request/fingerprint，以及 Provider 实收的
+canonical dispatch request/fingerprint；二者除 `max_output_tokens` 只能被正向下调外逐字段一致。
+Attempt start/end 重复 snapshot seq、dispatch fingerprint、provider/model 与 reservation identity；Budget
+reconciliation 和 replay 对不一致 fail closed。每次 admission 使用独立 Attempt id，reservation 由完整
+Attempt identity 派生；两个 owner 可各自 hold，但只有 Session CAS 胜者 dispatch，败者返回前 abort 并
+RELEASED。append 前取消不会留下 snapshot/start，commit 已发生但返回 unavailable 时不会调用 Provider，
+live failure/cancellation fresh read 后按 Attempt → Step → Turn 闭合；cold recovery 仍只闭合既有 open
+Attempt，不创建下一 ordinal。ADR-0027 §5 的 Token usage/settlement/cancellation 规则继续有效，只有
+Step-scoped Budget 互锁被 Session dispatch permit 取代。
+
+dispatch permit 还绑定真实 capability，而不只校验它展示的 DTO。`AgentLoop` 只接受 exact concrete
+`LlmAdmission`，并要求其 Provider 对象与 active Composition Lease 解析出的对象同一、Attempt 与宿主生成
+identity 相等；随后基类只用该 Provider 与 CAS 前捕获的 exact request 调用 `Provider.complete()`。Budget
+通过 accounting-only hook 包围 START/settle/abort，不再用 Admission 子类拥有 dispatch。因此公开注入
+Runtime 无法用“声明 primary、实际 alternate”或 dispatch 时改 model 的 handle 通过生产循环。任意注入
+Python 在 `admit()` 内自行联网仍违反 side-effect-free 注入合同，不被伪装成可由 DTO 校验解决的问题。
+
+F0 的确定性公开测试覆盖零 Token、Budget 输出裁剪、双 owner 竞争、append 前取消、commit-return
+unknown、recovery、篡改 snapshot/ordinal/provider/reservation、Provider swapping、dispatch-time request
+rewrite 与相邻 Session/Runtime/Budget/CLI 合同。
+反向验证把 reservation 暂时退回 Step-scoped 后第二次 admission 稳定报 reservation state conflict；移除
+Session owner/CAS 后同一 Step 的 Provider 调用从 1 变成 2；退回“先写 Attempt、后做 Budget”后零 Token
+路径重新产生虚假 start 并令 durable Budget evidence fail closed；新增两条 capability 反例在修复前都
+实际完成 Turn，修复后均在 Session 写入前拒绝、Provider 调用为 0，bounded hold 为 RELEASED。保护均已恢复。
+
+独立复审清零 P0/P1 后执行 F0 最终全量。第一次全量唯一失败是
+`test_real_turn_keeps_one_generation_during_publish_and_rebuilds_requests` 仍按已删除的旧 snapshot 顶层
+`provider/model/request` 读取 current event；实现没有恢复旧字段或兼容 reader，而是让测试同时验证唯一
+新格式的 `composed_request`/`dispatch_request` 与同一 Generation 的 Provider、model、system prompt。
+该测试定向通过后，修复确认全量按 `2426 collected` 口径运行到 100%、退出码 0，只有 5 个既有 skip
+标记。门禁未联网、未调用真实 Provider/API、未读 `.env`，也未另跑 Wheel/L2-L4 或 F1-F5。
+
+F1 才会使用 stdlib SQLite 作为唯一生产 EventStore，明确拒绝旧 JSONL 且无迁移/dual reader/fallback；
+CLI 各运行入口、Evaluation attempt 与 Evolution comparison case 都显式拥有 store scope。F2 只做同
+Provider/同模型/同冻结 dispatch request 的有界 retry；F3/F4 让 Line/TUI 共用一个 driver 和 ephemeral
+activity projection，并保持 Product/Workflow observation 纯读。唯一完整真实 Provider 网格只在 F5
+作为发布证据运行。当前仍是 JSONL、无 retry、无 driver/TUI。
+
+v0.9 只有 v0.8 完成发布后才可重新核对和批准实施。trusted Plugin 在现有
+Activation/Generation/Lease 中贡献 typed Skill catalog，selection 不启用插件、不授予 Tool；Workspace
+Memory 由宿主按 exact digest 批准并 append-only。每个 Step 在 Composition Lease 内先追加唯一 Context
+Input event，再追加 `composition/snapshot`，因此现有 `source_seq` 仍界定完整请求。exact/SQLite FTS 是
+基础检索，本地 embedding/reranker 仅可显式、离线、derived 启用。检索评测仍复用唯一 `traceh eval`；
+完整 corpus、人工 relevance judgment 与 evaluator 不进入 coder writable Workspace 或模型上下文，也不
+新增第二 Runner。

@@ -1,8 +1,9 @@
 # Roadmap
 
 The order below preserves the current protocol and keeps orchestration
-boundaries narrow. v0.7.1 changes `AgentLoop` only at its generic cancellation
-owner; Product state still stays outside it.
+boundaries narrow. v0.7.1 is released; the frozen v0.8 and v0.9 plans describe
+future work rather than current capability. Product state remains outside
+`AgentLoop`.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -504,11 +505,61 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   regression, clean packaging, offline install, annotated tag and GitHub Release
   are complete.
 
+## v0.8: Reliable local ProductTask host — F0 implemented, F1-F5 pending
+
+- F0 closes the terminal-error injection path and makes one durable Model
+  Attempt correspond to one admitted Provider dispatch. Attempt-scoped cost
+  holds are independent; the Session/Step CAS owner now preserves ADR-0027's
+  anti-duplicate-dispatch property. The exact composed and Budget-bounded
+  dispatch requests are frozen together under ADR-0035. The concrete admission
+  must also bind the exact Composition Provider object and host Attempt; Budget
+  accounting cannot override or substitute the actual dispatch.
+- Replace JSONL with one SQLite production EventStore and reject legacy data
+  explicitly: no migration, dual reader or fallback. CLI commands, Evaluation
+  attempts and Evolution comparison cases own explicit store scopes. Same-process
+  multi-stream serialization, cross-process CAS, busy ownership, backup and close
+  convergence are release gates.
+- Add bounded retry only for the same Provider, model and frozen dispatch request,
+  with typed sanitized failures and independent per-Attempt Budget evidence. No
+  Provider/model fallback is added.
+- Refactor the existing Line Chat into one UI-neutral driver and one ephemeral
+  activity projection, then add an optional Textual TUI. Product/Workflow
+  observation remains read-only and displays cross-stream divergence instead of
+  advancing facts from a heartbeat.
+- Keep `traceh eval` as the only benchmark path and run one full real-Provider grid
+  only as final release evidence.
+
+See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
+
+## v0.9: Host-owned long context — frozen route, not authorized to start
+
+- Add one request-scoped Context Input contract whose exact Skill/Memory bytes are
+  durable, bounded by the existing request `source_seq`, reconstructable without
+  rerunning retrieval and never projected into conversation history.
+- Add typed Skill contributions to the existing trusted
+  Activation/Generation/Lease lifecycle. Selection does not enable a plugin,
+  publish a Generation or grant a Tool; associated resources remain owned by the
+  leased Generation.
+- Add host-approved, Workspace-scoped, append-only Memory in the same EventStore.
+  Models may propose bounded candidates but cannot approve, supersede or revoke
+  them.
+- Use exact and SQLite FTS retrieval as the core path, with progressive disclosure,
+  two host filters and explicit Context Budget. Local embeddings/rerankers remain
+  optional, offline and derived.
+- Evaluate retrieval through the existing Product Benchmark runner. Its existing
+  attempt owner loads frozen host-only corpus inputs; no second runner, external
+  vector database or model self-evaluation is allowed.
+
+v0.9 must be rechecked and explicitly authorized after v0.8 is released. See the
+[frozen v0.9 stage plan](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md).
+
 ## v1.0: Stable plugin platform
 
 - Freeze `traceh.api` and `traceh.sdk` compatibility policy.
-- Add event upcasters and opaque plugin-event handling.
-- Add SQLite EventStore and projection checkpoints.
+- Add the migration/upcaster and projection-checkpoint policy required by a stable
+  post-1.0 compatibility promise; pre-1.0 v0.8 intentionally provides no JSONL
+  migration reader.
 - Add isolated process plugin host and capability grants.
-- Add OpenTelemetry plugin, streaming provider protocol and model retry/fallback.
+- Add OpenTelemetry plugin, a real streaming provider protocol and explicit
+  Provider/model fallback policy beyond v0.8's same-provider bounded retry.
 - Publish migration guide and third-party contract test kit.

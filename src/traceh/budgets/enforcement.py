@@ -23,9 +23,11 @@ from traceh.api.budgets import (
 from traceh.api.json_types import fingerprint
 from traceh.api.llm import (
     LlmProvider,
+    ModelAttemptIdentity,
     ModelRequest,
     ModelResponse,
     UsageQuality,
+    model_attempt_reservation_id,
 )
 from traceh.api.tools import (
     PreparedToolCall,
@@ -44,7 +46,12 @@ from traceh.budgets.errors import (
 from traceh.budgets.events import MAX_BUDGET_VALUE
 from traceh.budgets.service import BudgetLedgerService
 from traceh.concurrency import await_worker_convergence
-from traceh.llm.runtime import LlmRuntime, TextDeltaHandler
+from traceh.llm.runtime import (
+    LlmAdmission,
+    LlmAdmissionAccounting,
+    LlmRuntime,
+    require_llm_admission_binding,
+)
 from traceh.runtime.agent_loop import TurnResult
 from traceh.runtime.continuation import (
     ContinuationRuntime,
@@ -82,6 +89,84 @@ async def _require_agent_session(
     record = directory.get(agent_id)
     if record is None or record.session_id != session_id:
         raise BudgetDirectoryMismatchError
+
+
+async def _validate_model_attempt_budget_evidence(
+    service: BudgetLedgerService,
+    *,
+    agent_id: str,
+    session_id: str,
+) -> None:
+    """Cross-check Session dispatch permits against the one Budget ledger."""
+
+    await _require_agent_session(
+        service.store,
+        agent_id=agent_id,
+        session_id=session_id,
+    )
+    ledger = await service.ledger()
+    account = ledger.account(agent_id)
+    if account is None:
+        raise BudgetEvidenceError
+    token_budgeted = account.limits.max_tokens is not None
+    events = await SessionService(service.store).read_session(session_id)
+    attempt_ends = [event for event in events if event.type == "model/attempt-end"]
+    for event in events:
+        if event.type != "model/attempt-start":
+            continue
+        try:
+            turn_id = _read_identity(event.data.get("turn_id"))
+            step_id = _read_identity(event.data.get("step_id"))
+            attempt_id = _read_identity(event.data.get("attempt_id"))
+            ordinal = event.data.get("ordinal")
+            if type(ordinal) is not int or ordinal < 1:
+                raise BudgetEvidenceError
+            identity = ModelAttemptIdentity(
+                session_id=session_id,
+                turn_id=turn_id,
+                step_id=step_id,
+                attempt_id=attempt_id,
+                ordinal=ordinal,
+            )
+            reservation_id = event.data.get("reservation_id")
+            matching_ends = [
+                end
+                for end in attempt_ends
+                if end.data.get("attempt_id") == attempt_id
+            ]
+            if len(matching_ends) != 1:
+                raise BudgetEvidenceError
+            end = matching_ends[0]
+            for key, expected in (
+                ("turn_id", turn_id),
+                ("step_id", step_id),
+                ("ordinal", ordinal),
+                ("reservation_id", reservation_id),
+            ):
+                if end.data.get(key) != expected:
+                    raise BudgetEvidenceError
+            if token_budgeted:
+                if reservation_id != model_attempt_reservation_id(identity):
+                    raise BudgetEvidenceError
+                assert isinstance(reservation_id, str)
+                reservation = ledger.usage_reservation(reservation_id)
+                if (
+                    reservation is None
+                    or reservation.agent_id != agent_id
+                    or reservation.amounts.tokens < 1
+                    or reservation.status
+                    not in {
+                        BudgetUsageReservationStatus.SETTLED,
+                        BudgetUsageReservationStatus.RELEASED,
+                    }
+                ):
+                    raise BudgetEvidenceError
+            elif reservation_id is not None:
+                raise BudgetEvidenceError
+        except BudgetEvidenceError:
+            raise
+        except Exception:
+            raise BudgetEvidenceError from None
 
 
 def _read_identity(value: object) -> str:
@@ -401,6 +486,11 @@ class BudgetContinuationRuntime:
         return directive
 
     async def reconcile(self) -> None:
+        await _validate_model_attempt_budget_evidence(
+            self._service,
+            agent_id=self._agent_id,
+            session_id=self._session_id,
+        )
         ledger = await self._service.ledger()
         if ledger.available(self._agent_id).max_steps is None:
             return
@@ -443,6 +533,77 @@ class BudgetContinuationRuntime:
             )
 
 
+class _BudgetedLlmAccounting(LlmAdmissionAccounting):
+    """One pending Token hold around, but never owning, Provider dispatch."""
+
+    __slots__ = ("_owner", "_reservation_id")
+
+    def __init__(self, owner: BudgetedLlmRuntime, *, reservation_id: str) -> None:
+        self._owner = owner
+        self._reservation_id = reservation_id
+
+    async def start(self) -> object:
+        return await _start_reserved_usage(
+            self._owner._service,
+            reservation_id=self._reservation_id,
+            start_operation_kind="model-token-start",
+            release_operation_kind="model-token-release",
+            settle_operation_kind="model-token-settle",
+            usage_quality=UsageQuality.UNKNOWN,
+        )
+
+    async def finish(
+        self,
+        started: object,
+        *,
+        response: ModelResponse | None,
+        error: BaseException | None,
+    ) -> None:
+        if type(started) is not BudgetUsageReservation:
+            raise BudgetReservationStateError
+        reserved = started.amounts.tokens
+        if error is not None:
+            await self._owner._settle_after_outcome(
+                self._reservation_id,
+                reserved,
+                UsageQuality.UNKNOWN,
+                error,
+            )
+            return
+        assert response is not None
+        try:
+            tokens, quality = self._owner._settlement(response, reserved)
+        except BaseException as settlement_error:
+            await self._owner._settle_after_outcome(
+                self._reservation_id,
+                reserved,
+                UsageQuality.UNKNOWN,
+                settlement_error,
+            )
+            raise
+        await self._owner._settle_after_outcome(
+            self._reservation_id,
+            tokens,
+            quality,
+            None,
+        )
+
+    async def abort(self) -> None:
+        ledger = await self._owner._service.ledger()
+        reservation = ledger.usage_reservation(self._reservation_id)
+        if (
+            reservation is not None
+            and reservation.status is BudgetUsageReservationStatus.PENDING
+        ):
+            await self._owner._service.release_usage(
+                operation_id=budget_operation_id(
+                    "model-token-release",
+                    reservation_id=self._reservation_id,
+                ),
+                reservation_id=self._reservation_id,
+            )
+
+
 class BudgetedLlmRuntime(LlmRuntime):
     """Reserve Token authority before a provider call and settle it afterwards."""
 
@@ -477,13 +638,13 @@ class BudgetedLlmRuntime(LlmRuntime):
         self._token_counter = token_counter
         self._allow_estimated = allow_estimated
 
-    async def invoke(
+    async def admit(
         self,
         provider: LlmProvider,
         request: ModelRequest,
         *,
-        on_text_delta: TextDeltaHandler | None = None,
-    ) -> ModelResponse:
+        attempt: ModelAttemptIdentity,
+    ) -> LlmAdmission:
         metadata = request.metadata
         try:
             request_session = _read_identity(metadata.get("session_id"))
@@ -491,28 +652,34 @@ class BudgetedLlmRuntime(LlmRuntime):
             step_id = _read_identity(metadata.get("step_id"))
         except Exception:
             raise BudgetEvidenceError from None
-        if request_session != self._session_id:
+        if (
+            request_session != self._session_id
+            or attempt.session_id != self._session_id
+            or attempt.turn_id != turn_id
+            or attempt.step_id != step_id
+        ):
             raise BudgetDirectoryMismatchError
         await _require_agent_session(
             self._service.store,
             agent_id=self._agent_id,
             session_id=self._session_id,
         )
-        reservation_id = budget_operation_id(
-            "model-token-reservation",
-            agent_id=self._agent_id,
-            session_id=self._session_id,
-            turn_id=turn_id,
-            step_id=step_id,
-        )
+        reservation_id = model_attempt_reservation_id(attempt)
         ledger = await self._service.ledger()
         if ledger.usage_reservation(reservation_id) is not None:
             raise BudgetReservationStateError
         available = ledger.available(self._agent_id)
         remaining = available.max_tokens
         if remaining is None:
-            return await self._inner.invoke(
-                provider, request, on_text_delta=on_text_delta
+            inner = await self._inner.admit(
+                provider,
+                request,
+                attempt=attempt,
+            )
+            return require_llm_admission_binding(
+                inner,
+                provider=provider,
+                attempt=attempt,
             )
         if remaining == 0:
             raise BudgetExhaustedError("max_tokens")
@@ -540,47 +707,30 @@ class BudgetedLlmRuntime(LlmRuntime):
             raise
         if reservation.status is not BudgetUsageReservationStatus.PENDING:
             raise BudgetReservationStateError
-        reservation = await _start_reserved_usage(
-            self._service,
-            reservation_id=reservation_id,
-            start_operation_kind="model-token-start",
-            release_operation_kind="model-token-release",
-            settle_operation_kind="model-token-settle",
-            usage_quality=UsageQuality.UNKNOWN,
-        )
-
         try:
-            response = await self._inner.invoke(
-                provider, bounded_request, on_text_delta=on_text_delta
+            inner = await self._inner.admit(
+                provider,
+                bounded_request,
+                attempt=attempt,
+            )
+            inner = require_llm_admission_binding(
+                inner,
+                provider=provider,
+                attempt=attempt,
+            )
+            inner._bind_accounting(
+                _BudgetedLlmAccounting(self, reservation_id=reservation_id),
+                reservation_id=reservation_id,
             )
         except BaseException as error:
-            await self._settle_after_outcome(
-                reservation_id,
-                reservation.amounts.tokens,
-                UsageQuality.UNKNOWN,
-                error,
+            await _release_pending_usage(
+                self._service,
+                reservation_id=reservation_id,
+                operation_kind="model-token-release",
+                primary=error,
             )
             raise
-
-        try:
-            tokens, quality = self._settlement(
-                response, reservation.amounts.tokens
-            )
-        except BaseException as error:
-            await self._settle_after_outcome(
-                reservation_id,
-                reservation.amounts.tokens,
-                UsageQuality.UNKNOWN,
-                error,
-            )
-            raise
-        await self._settle_after_outcome(
-            reservation_id,
-            tokens,
-            quality,
-            None,
-        )
-        return response
+        return inner
 
     def _bounded_request(
         self, request: ModelRequest, remaining: int

@@ -3,6 +3,8 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 from traceh.api.events import EventEnvelope, PendingEvent
+from traceh.api.json_types import fingerprint
+from traceh.api.llm import ModelMessage, ModelRequest
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.surface import SurfaceProjector
 
@@ -64,11 +66,60 @@ def attempt_start(
     turn_id: str = "t",
     step_id: str = "a",
     event_id: UUID | None = None,
+    ordinal: int = 1,
+    request_snapshot_seq: int = 4,
 ) -> PendingEvent:
     return PendingEvent(
         "model/attempt-start",
-        {"turn_id": turn_id, "step_id": step_id, "attempt_id": attempt_id},
+        {
+            "turn_id": turn_id,
+            "step_id": step_id,
+            "attempt_id": attempt_id,
+            "ordinal": ordinal,
+            "request_snapshot_seq": request_snapshot_seq,
+            "dispatch_fingerprint": request_fingerprint(),
+            "reservation_id": None,
+            "provider": "scripted",
+            "model": "model",
+        },
         event_id=event_id,
+    )
+
+
+def request_payload() -> dict[str, object]:
+    return ModelRequest(
+        provider="scripted",
+        model="model",
+        messages=(ModelMessage(role="user", content="work"),),
+        metadata={
+            "session_id": "s",
+            "turn_id": "t",
+            "step_id": "a",
+            "composition_revision": "revision",
+        },
+    ).to_dict()
+
+
+def request_fingerprint() -> str:
+    return fingerprint(request_payload())
+
+
+def request_snapshot(*, turn_id: str = "t", step_id: str = "a") -> PendingEvent:
+    payload = request_payload()
+    request_hash = fingerprint(payload)
+    return PendingEvent(
+        "request/snapshot",
+        {
+            "turn_id": turn_id,
+            "step_id": step_id,
+            "source_seq": 3,
+            "composition_revision": "revision",
+            "composed_fingerprint": request_hash,
+            "dispatch_fingerprint": request_hash,
+            "composed_request": payload,
+            "dispatch_request": payload,
+        },
+        composition_revision="revision",
     )
 
 
@@ -87,6 +138,10 @@ def recovered_attempt_end(
             "turn_id": turn_id,
             "step_id": step_id,
             "attempt_id": attempt_id,
+            "ordinal": 1,
+            "request_snapshot_seq": 4,
+            "dispatch_fingerprint": request_fingerprint(),
+            "reservation_id": None,
             "status": "unknown_after_crash",
             "recovered": True,
         },
@@ -103,7 +158,16 @@ def attempt_end(
 ) -> PendingEvent:
     return PendingEvent(
         "model/attempt-end",
-        {"turn_id": turn_id, "step_id": step_id, "attempt_id": attempt_id, "status": status},
+        {
+            "turn_id": turn_id,
+            "step_id": step_id,
+            "attempt_id": attempt_id,
+            "ordinal": 1,
+            "request_snapshot_seq": 4,
+            "dispatch_fingerprint": request_fingerprint(),
+            "reservation_id": None,
+            "status": status,
+        },
     )
 
 
@@ -117,6 +181,7 @@ def test_invariants_accept_a_paired_model_attempt() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             PendingEvent(
                 "assistant/message",
@@ -136,6 +201,7 @@ def test_invariants_accept_an_attempt_still_running_in_an_open_step() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
         ]
     )
@@ -151,6 +217,7 @@ def test_invariants_accept_append_only_attempt_repair() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1", event_id=start_event_id),
             PendingEvent("step/end", {"turn_id": "t", "step_id": "a", "reason": "interrupted"}),
             PendingEvent("turn/end", {"turn_id": "t", "reason": "interrupted"}),
@@ -167,6 +234,7 @@ def test_invariants_detect_plain_attempt_end_after_the_step_closed() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("turn/end", {"turn_id": "t"}),
@@ -184,6 +252,7 @@ def test_invariants_reject_a_late_recovered_end_without_causation() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1", event_id=uuid4()),
             PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("turn/end", {"turn_id": "t"}),
@@ -200,6 +269,7 @@ def test_invariants_reject_unusable_attempt_ids() -> None:
                 PendingEvent("session/created", {"session_id": "s"}),
                 PendingEvent("turn/start", {"turn_id": "t"}),
                 PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+                request_snapshot(),
                 attempt_start(unusable),
             ]
         )
@@ -224,6 +294,7 @@ def test_invariants_detect_attempt_started_in_a_step_that_is_not_open() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1", step_id="b"),
         ]
     )
@@ -250,6 +321,7 @@ def test_invariants_detect_duplicate_attempt_start() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             attempt_start("m1"),
             attempt_end("m1"),
@@ -264,6 +336,7 @@ def test_invariants_detect_duplicate_attempt_end() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             attempt_end("m1"),
             attempt_end("m1"),
@@ -278,6 +351,7 @@ def test_invariants_detect_attempt_closed_in_another_step() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "b"}),
@@ -293,6 +367,7 @@ def test_invariants_detect_unclosed_attempt_in_closed_step() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("turn/end", {"turn_id": "t"}),
@@ -319,6 +394,7 @@ def test_invariants_detect_two_open_attempts_in_one_step() -> None:
             PendingEvent("session/created", {"session_id": "s"}),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+            request_snapshot(),
             attempt_start("m1"),
             attempt_start("m2"),
         ]

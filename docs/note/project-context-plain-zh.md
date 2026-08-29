@@ -185,7 +185,7 @@ flowchart TD
     COMP --> SCOPE["四层 Service Scope：最近一层优先"]
     COMP --> OVERLAY["四层 Tool / Prompt / Policy → 一份有效 Composition"]
     LOOP --> REQUEST["RequestBuilder：重建模型请求"]
-    LOOP --> LLM["LlmRuntime：调用模型"]
+    LOOP --> LLM["LlmRuntime：先准入，再凭 Session 许可调用模型"]
     LOOP --> TOOLS["ToolRuntime：审核和执行工具"]
     LOOP --> VERIFIER["Verifier：检查完成证据"]
     REQUEST --> EVENTS["SessionService / EventStore"]
@@ -239,11 +239,13 @@ flowchart TD
 2. `inbox/claimed` 把它绑定到新 Turn；
 3. 写 `turn/start`；
 4. 每轮先写 `step/start`；
-5. 冻结 Composition，生成 Request，调用模型；
-6. 如果模型要用工具，执行工具，然后进入下一 Step；
-7. 如果模型不再要工具，运行可选 Verifier；
-8. 写 `step/end`；
-9. Continuation 判断继续还是写 `turn/end`。
+5. 冻结 Composition，生成“组装请求”；Budget admission 先算出最终线上请求并做 PENDING 费用预留，
+   但还不调用模型；
+6. Session 用一次 CAS 同时记下两份请求证据和 Attempt start；只有成功者才 dispatch，失败者先释放预留；
+7. 如果模型要用工具，执行工具，然后进入下一 Step；
+8. 如果模型不再要工具，运行可选 Verifier；
+9. 写 `step/end`；
+10. Continuation 判断继续还是写 `turn/end`。
 
 项目里曾有一个真实历史案例：一个 Turn 用 6 个 Step，依次 `list_files → read_file → read_file → apply_patch → shell → 最终回答`，Session 前 70 个事件完整记录了修复与验证。它只是帮助理解的案例，不是 Agent 固定脚本；详细轨迹在 [`../code-walkthrough-zh.md`](../code-walkthrough-zh.md)。
 
@@ -478,7 +480,15 @@ Stage B 把插件资源从这套“能力-wide owner”边界里单独分出来�
 
 ### Request Snapshot 是事后证据
 
-每次模型调用前保存：完整请求、历史读到的 `source_seq`、同一 Lease 的 Composition revision 和 fingerprint。Generation identity 不进入 fingerprint。Replay 时重新按当时边界计算一遍，如果 fingerprint 不一样，就说明现在的重建规则无法还原当时请求，Inspector 会报告违规。
+现在一次调用先有两份不能混叫的请求。RequestBuilder 根据 Surface/Composition 生成“组装请求”；Budget
+admission 只允许把输出上限压低，得到“最终线上请求”，但这时还没有调用 Provider。当前 Step 的 owner
+随后用一次 Session CAS 同时保存一条 snapshot 和 Attempt start。snapshot 里分别放两份完整请求与摘要、
+历史读到的 `source_seq` 和 Composition revision；Attempt start 再指回这条 snapshot、最终请求摘要和
+费用 reservation。只有 CAS 成功才 dispatch，失败 owner 释放预留。
+
+Replay 会按当时边界重建组装请求，再独立验证最终请求；除了输出上限只能向下收紧，其余字段必须完全
+一样。Generation、Attempt 和 reservation identity 都不进入请求 fingerprint。它们通过旁边的 Attempt
+证据互相绑定，避免“为了记账改变了模型真正看到的请求”。
 
 Fingerprint 不是加密秘密保护，它主要是稳定内容校验：相同结构生成相同摘要，任意请求内容变化都会导致摘要变化。
 
@@ -3062,3 +3072,60 @@ Catalog、Agent、Session、路径反查和安全删除仍核对同一个完整�
 一恢复就多十个字符并得到真实 `WorkspaceGitError`，正确前缀则能正常创建和释放。
 
 四条修复都做了“把保险拆掉再看会不会撞车”的反向验证：拆掉 `START` 守卫，否定消息真的创建出 `product-task:*`；把 owned convergence 换回单次 shield，第二次取消立刻让公开 Turn 提前结束；删掉 `scheme="venv"`，真实 `CandidatePromoter.run()` 稳定报 `promotion-target-inspection-failed`；恢复冗余 Workspace 前缀，真实 Git 又报 `$GIT_DIR too big`。全部恢复后，全仓收集 `2413` 项；只跑一次的最终完整 pytest 是 `2408` 通过、`5` 个既有平台跳过、退出码 0、耗时 `39:33`，真实 L2 也包含在里面。第一次发布全量抓到的插件旧范围、首次远端 Linux 夹具错误和 Windows L2 诊断缺口都保留为过程证据。完整结果见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+
+### 20.27 v0.8/v0.9 已定边界，v0.8-F0 已实现（正式版 20.33）
+
+在 `v0.7.1` 已发布、代码仍是 `194f44fe84ecb9adb85fc1d48d182d364bb94f45` 时，多轮独立审核完成，
+路线写进 [`v0.8` 冻结计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
+[`v0.9` 冻结计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前 HEAD 还是这个发布提交，但未提交工作树
+已经做完 v0.8-F0；F1-F5 和整个 v0.9 都没开始。SQLite、retry、TUI、Skill、Memory 仍不能用，也没有
+自动提交、发版、联网或读取 Key 的授权。
+
+F0 开工前的真问题已经由反例复现：AgentLoop 先记“模型调用开始”，Budget 后检查；余额为 0 时
+Provider 一次也没收到请求，账本却声称有 Attempt。snapshot 还只记了组装请求，不是 Budget 压低输出
+上限后的线上请求。Chat 最后的错误行也会直接打印异常文字，换行、终端控制符、双向文字和形似任务
+状态的内容能混进 Approval 共用屏幕。现在异常类型和正文都走原有的单行、有界安全显示，只能得到一条
+惰性错误行。Provider 原始错误进入持久事件的问题仍留给 F2 的 typed adapter，F0 没有越界宣称根治。
+
+F0 现在把“准备好一次调用”和“真的发出去”拆开了。Budget admission 先算出最终请求，只创建一笔
+PENDING 费用预留，不碰 Provider。随后 Session 在同一次 CAS 中写入一条同时含“组装请求”和“最终
+线上请求”的 snapshot，再写 Attempt start；只有成功写账的 owner 才拿到派发许可。Attempt id 每次
+admission 都不同，费用 reservation 也不同，所以两个 owner 可以各自预留，但败者必须在返回前释放，
+不会因为 Budget id 冲突抢先决定胜负。每个 Attempt 的 start/end 都重复 ordinal、snapshot seq、最终
+请求摘要和 reservation id，篡改任一关系都会被 replay 或 Budget 对账拒绝。写账前取消不会留下假证据；
+写账其实成功但返回结果丢失时也不会冒险调用 Provider，当前进程会先闭合 Attempt/Step/Turn，真崩溃则
+由 recovery 只收尾、不自动再发。这个决定见
+[`ADR-0035`](../adr/0035-two-stage-model-admission-and-session-dispatch-permit.md)。
+
+这张“派发许可证”现在也会核对真正拿去调用的对象，不再只看 admission 自己声称什么。AgentLoop 只收
+宿主的 concrete admission，要求它拿着当前 Composition 真正解析出的同一个 Provider 对象和宿主生成的
+同一个 Attempt；最后也是基类亲自把 CAS 前冻结的那份 request 交给这个 Provider。Budget 只能在前后
+记 START、结算或释放，不能再靠 Admission 子类偷偷换掉 dispatch。于是插件式 Runtime 若声称用 A、
+实际把 handle 绑到 B，或等到 dispatch 才改 model，会在 Session 记账前直接失败，两个 Provider 都不会
+被调用。有意注入一段 Python 并让它在 `admit()` 函数内部自己联网仍属于违反“admit 无 Provider 副作用”
+的宿主扩展合同，不是这次 capability 绑定可以也不需要假装防住的情况。
+
+公开反例已经覆盖零 Token、Budget 裁请求、两个 owner 同时抢、写账前取消、写成但返回未知、恢复、
+四种证据篡改、换 Provider 和 dispatch 时改 request。后两条修复前都真的把 Turn 跑成成功；修复后都在
+记 Session 事实前拒绝，Provider 调用为 0，有 Budget 预留时也会变成 RELEASED。把 reservation 临时改回
+“一步只有一个”后，第二个 admission 立刻冲突；拆掉 Session CAS 后 Provider 真从 1 次变成 2 次；退回
+旧顺序后零 Token 又出现假 Attempt。保护都已恢复。
+
+独立复审确认没有 P0/P1 后跑了 F0 最终全量。第一次只剩一个失败：Generation 的老测试还在读已经
+删除的 snapshot 顶层 `provider/model/request`，并不是新运行时写错。这里没有为了让老测试绿而恢复旧
+字段或双格式 reader，而是把测试改成同时检查唯一新格式中的“组装请求”和“最终线上请求”确实都属于
+同一个 Generation。它定向通过后，确认全量按 `2426` 项收集口径跑到 100%，退出码 0，只有 5 个既有
+skip 标记。整个门禁没有联网、没有真实 Provider/API、没有读取 `.env`，也没有另跑 Wheel/L2-L4 或
+提前做 F1-F5。
+
+F1 才会把生产 EventStore 一次性切到 SQLite，旧 JSONL 只明确拒绝，不迁移、不双读、不 fallback；
+Chat/CLI、每次 Eval attempt 和每个插件 comparison case 都自己打开并最终关闭 store。F2 只允许同
+Provider、同模型、同一份冻结请求做有限 retry，不会换模型或 fallback。F3/F4 让旧行式 CLI 和可选
+TUI 共用同一个 driver、同一份临时活动状态；界面只读两条真实状态，不让 heartbeat 替用户写账。完整
+付费网格只在 F5 跑一次。现在仍是 JSONL，没有 retry、driver 或 TUI。
+
+v0.9 必须等 v0.8 发布后再批准。Skill 仍属于现有 trusted Plugin 的 Activation/Generation/Lease；
+选择 Skill 不等于启用插件或获得 Tool。Memory 是 Workspace 的宿主批准事实，模型只能提议。每一步先
+冻结 Context Input，再写 Composition snapshot，`source_seq` 继续限定请求证据。基础检索是 exact +
+SQLite FTS，本地 embedding/reranker 只可显式、离线、derived 启用；质量评测仍走唯一 `traceh eval`，
+完整语料、人工答案和评分器不进 coder Workspace/模型上下文，也不另开第二 Runner。

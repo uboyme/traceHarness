@@ -121,6 +121,10 @@ class RecoveryService:
                 "turn_id": turn_id,
                 "step_id": step_id,
                 "attempt_id": attempt_id,
+                "ordinal": start.data.get("ordinal"),
+                "request_snapshot_seq": start.data.get("request_snapshot_seq"),
+                "dispatch_fingerprint": start.data.get("dispatch_fingerprint"),
+                "reservation_id": start.data.get("reservation_id"),
                 "recovered": True,
             }
             if durable_message:
@@ -186,7 +190,11 @@ class RecoveryService:
                 continue
             outcome = outcomes.get(call_id)
             intent = intents.get(call_id)
-            effect_id = str((outcome or intent).data.get("effect_id")) if (outcome or intent) else None
+            effect_id = (
+                str((outcome or intent).data.get("effect_id"))
+                if (outcome or intent)
+                else None
+            )
             if outcome is not None:
                 status = str(outcome.data.get("status", "unknown"))
                 content = str(
@@ -202,7 +210,8 @@ class RecoveryService:
             else:
                 recovered_status = "unknown_after_crash"
                 content = (
-                    "The process stopped after the tool call was recorded but before a durable outcome "
+                    "The process stopped after the tool call was recorded but before "
+                    "a durable outcome "
                     "was available. TraceHarness did not repeat the side effect automatically."
                 )
                 data = {}

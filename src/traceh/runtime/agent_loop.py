@@ -8,12 +8,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from traceh.api.llm import Usage
+from traceh.api.events import EventEnvelope
+from traceh.api.json_types import fingerprint
+from traceh.api.llm import ModelAttemptIdentity, Usage
 from traceh.api.tools import ToolExecutionContext
 from traceh.api.turns import TurnInput
 from traceh.concurrency import await_worker_convergence, combine_failures
 from traceh.kernel.hooks import STEP_FINISHED, TURN_FINISHED, TURN_STARTED, HookDispatcher
-from traceh.llm.runtime import LlmRuntime
+from traceh.llm.runtime import (
+    LlmAdmission,
+    LlmRuntime,
+    require_llm_admission_binding,
+)
 from traceh.runtime.composition_runtime import CompositionRuntime
 from traceh.runtime.continuation import (
     ContinuationRuntime,
@@ -24,7 +30,7 @@ from traceh.runtime.continuation import (
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.event_store import Durability
-from traceh.session.service import SessionService
+from traceh.session.service import ModelAttemptConflictError, SessionService
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,41 +169,56 @@ class AgentLoop:
                         composition=composition,
                         through_seq=composition_event.seq,
                     )
-                    await self.sessions.append_session(
-                        session_id,
-                        "request/snapshot",
-                        {
-                            "turn_id": turn_id,
-                            "step_id": current_step_id,
-                            "source_seq": built.source_seq,
-                            "composition_revision": composition.revision,
-                            "fingerprint": built.fingerprint,
-                            "provider": built.request.provider,
-                            "model": built.request.model,
-                            "temperature": built.request.temperature,
-                            "max_output_tokens": built.request.max_output_tokens,
-                            "metadata": dict(built.request.metadata),
-                            "request": built.request.to_dict(),
-                        },
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
-                    )
                     attempt_id = str(uuid4())
+                    attempt = ModelAttemptIdentity(
+                        session_id=session_id,
+                        turn_id=turn_id,
+                        step_id=current_step_id,
+                        attempt_id=attempt_id,
+                        ordinal=1,
+                    )
                     current_attempt_id = attempt_id
                     current_attempt_revision = composition.revision
-                    await self.sessions.append_session(
-                        session_id,
-                        "model/attempt-start",
-                        {
-                            "turn_id": turn_id,
-                            "step_id": current_step_id,
-                            "attempt_id": attempt_id,
-                            "provider": composition.provider,
-                            "model": composition.model,
-                        },
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
+                    admission = await self.llm_runtime.admit(
+                        active_composition.provider,
+                        built.request,
+                        attempt=attempt,
                     )
+                    try:
+                        admission = require_llm_admission_binding(
+                            admission,
+                            provider=active_composition.provider,
+                            attempt=attempt,
+                        )
+                        dispatch_provider = admission.provider
+                        dispatch_request = admission.request
+                        dispatch_fingerprint = fingerprint(dispatch_request.to_dict())
+                        _, attempt_start = await self.sessions.start_model_attempt(
+                            session_id,
+                            attempt=attempt,
+                            source_seq=built.source_seq,
+                            composition_revision=composition.revision,
+                            composed_request=built.request,
+                            composed_fingerprint=built.fingerprint,
+                            dispatch_request=dispatch_request,
+                            dispatch_fingerprint=dispatch_fingerprint,
+                            reservation_id=admission.reservation_id,
+                            correlation_id=correlation_id,
+                        )
+                    except BaseException as error:
+                        try:
+                            if type(admission) is LlmAdmission:
+                                await admission.abort()
+                        except BaseException as abort_error:
+                            combined = combine_failures(
+                                error,
+                                abort_error,
+                                "model dispatch claim and admission abort both failed",
+                            )
+                            assert combined is not None
+                            raise combined from None
+                        raise
+
                     async def record_text_delta(
                         delta: str,
                         *,
@@ -220,9 +241,9 @@ class AgentLoop:
                         )
 
                     try:
-                        response = await self.llm_runtime.invoke(
-                            active_composition.provider,
-                            built.request,
+                        response = await admission.dispatch(
+                            provider=dispatch_provider,
+                            request=dispatch_request,
                             on_text_delta=record_text_delta,
                         )
                     except asyncio.CancelledError:
@@ -239,6 +260,12 @@ class AgentLoop:
                                 "turn_id": turn_id,
                                 "step_id": current_step_id,
                                 "attempt_id": attempt_id,
+                                "ordinal": attempt.ordinal,
+                                "request_snapshot_seq": attempt_start.data[
+                                    "request_snapshot_seq"
+                                ],
+                                "dispatch_fingerprint": dispatch_fingerprint,
+                                "reservation_id": admission.reservation_id,
                                 "status": "failed",
                                 "error_type": type(error).__name__,
                                 "message": str(error),
@@ -270,6 +297,12 @@ class AgentLoop:
                             "turn_id": turn_id,
                             "step_id": current_step_id,
                             "attempt_id": attempt_id,
+                            "ordinal": attempt.ordinal,
+                            "request_snapshot_seq": attempt_start.data[
+                                "request_snapshot_seq"
+                            ],
+                            "dispatch_fingerprint": dispatch_fingerprint,
+                            "reservation_id": admission.reservation_id,
                             "status": "succeeded",
                             "finish_reason": response.finish_reason,
                             "usage": response.usage.to_dict(),
@@ -418,27 +451,103 @@ class AgentLoop:
                 raise combined from None
             raise cancellation
         except Exception as error:
+            if (
+                isinstance(error, ModelAttemptConflictError)
+                and error.ownership_lost
+            ):
+                raise
+            try:
+                await self.sessions.append_session(
+                    session_id,
+                    "runtime/error",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": current_step_id,
+                        "error_type": type(error).__name__,
+                        "message": str(error),
+                        "traceback": "".join(traceback.format_exception(error))[-12_000:],
+                    },
+                    correlation_id=correlation_id,
+                )
+                await self._close_open_attempt(
+                    session_id,
+                    turn_id,
+                    current_step_id,
+                    current_attempt_id=current_attempt_id,
+                    current_attempt_revision=current_attempt_revision,
+                    correlation_id=correlation_id,
+                    status="unknown_after_failure",
+                    error_type="InterruptedBeforeAttemptEnd",
+                    message="Model attempt ended before its outcome was durably recorded",
+                )
+                await self._close_interrupted(
+                    session_id,
+                    turn_id,
+                    current_step_id,
+                    step_open=step_open,
+                    turn_open=turn_open,
+                    reason="failed",
+                )
+            except BaseException as cleanup_error:
+                combined = combine_failures(
+                    error,
+                    cleanup_error,
+                    "Turn failure and durable finalization both failed",
+                )
+                assert combined is not None
+                raise combined from None
+            raise
+
+    async def _close_open_attempt(
+        self,
+        session_id: str,
+        turn_id: str,
+        step_id: str | None,
+        *,
+        current_attempt_id: str | None,
+        current_attempt_revision: str | None,
+        correlation_id: UUID,
+        status: str,
+        error_type: str,
+        message: str,
+    ) -> tuple[EventEnvelope, ...]:
+        events = await self.sessions.read_session(session_id)
+        if current_attempt_id is None or step_id is None:
+            return events
+        start = next(
+            (
+                event
+                for event in events
+                if event.type == "model/attempt-start"
+                and event.data.get("attempt_id") == current_attempt_id
+            ),
+            None,
+        )
+        ended = any(
+            event.type == "model/attempt-end"
+            and event.data.get("attempt_id") == current_attempt_id
+            for event in events
+        )
+        if start is not None and not ended:
             await self.sessions.append_session(
                 session_id,
-                "runtime/error",
+                "model/attempt-end",
                 {
                     "turn_id": turn_id,
-                    "step_id": current_step_id,
-                    "error_type": type(error).__name__,
-                    "message": str(error),
-                    "traceback": "".join(traceback.format_exception(error))[-12_000:],
+                    "step_id": step_id,
+                    "attempt_id": current_attempt_id,
+                    "ordinal": start.data.get("ordinal"),
+                    "request_snapshot_seq": start.data.get("request_snapshot_seq"),
+                    "dispatch_fingerprint": start.data.get("dispatch_fingerprint"),
+                    "reservation_id": start.data.get("reservation_id"),
+                    "status": status,
+                    "error_type": error_type,
+                    "message": message,
                 },
                 correlation_id=correlation_id,
+                composition_revision=current_attempt_revision,
             )
-            await self._close_interrupted(
-                session_id,
-                turn_id,
-                current_step_id,
-                step_open=step_open,
-                turn_open=turn_open,
-                reason="failed",
-            )
-            raise
+        return events
 
     async def _close_interrupted(
         self,
@@ -482,33 +591,17 @@ class AgentLoop:
         no later close fact can outlive the public ``run_turn()`` call.
         """
 
-        events = await self.sessions.read_session(session_id)
-        if current_attempt_id is not None and step_id is not None:
-            started = any(
-                event.type == "model/attempt-start"
-                and event.data.get("attempt_id") == current_attempt_id
-                for event in events
-            )
-            ended = any(
-                event.type == "model/attempt-end"
-                and event.data.get("attempt_id") == current_attempt_id
-                for event in events
-            )
-            if started and not ended:
-                await self.sessions.append_session(
-                    session_id,
-                    "model/attempt-end",
-                    {
-                        "turn_id": turn_id,
-                        "step_id": step_id,
-                        "attempt_id": current_attempt_id,
-                        "status": "cancelled",
-                        "error_type": "CancelledError",
-                        "message": "Model attempt was cancelled",
-                    },
-                    correlation_id=correlation_id,
-                    composition_revision=current_attempt_revision,
-                )
+        events = await self._close_open_attempt(
+            session_id,
+            turn_id,
+            step_id,
+            current_attempt_id=current_attempt_id,
+            current_attempt_revision=current_attempt_revision,
+            correlation_id=correlation_id,
+            status="cancelled",
+            error_type="CancelledError",
+            message="Model attempt was cancelled",
+        )
         step_open = step_id is not None and any(
             event.type == "step/start"
             and event.data.get("turn_id") == turn_id

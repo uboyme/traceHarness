@@ -7,7 +7,14 @@ from typing import NamedTuple
 from uuid import UUID
 
 from traceh.api.events import EventEnvelope, attempt_identity
-from traceh.api.json_types import JsonValue
+from traceh.api.json_types import JsonValue, fingerprint
+from traceh.api.llm import (
+    REQUEST_SNAPSHOT_KEYS,
+    ModelAttemptIdentity,
+    ModelRequest,
+    dispatch_request_matches_composed,
+    model_attempt_reservation_id,
+)
 from traceh.session.plugin_identity import validate_plugin_identity_events
 
 
@@ -24,6 +31,25 @@ class _AttemptStart(NamedTuple):
     step_id: str
     seq: int
     event_id: UUID
+    ordinal: int | None
+    request_snapshot_seq: int | None
+    dispatch_fingerprint: str | None
+    reservation_id: str | None
+
+
+_ATTEMPT_START_KEYS = frozenset(
+    {
+        "turn_id",
+        "step_id",
+        "attempt_id",
+        "ordinal",
+        "request_snapshot_seq",
+        "dispatch_fingerprint",
+        "reservation_id",
+        "provider",
+        "model",
+    }
+)
 
 
 class CoreInvariantChecker:
@@ -51,6 +77,9 @@ class CoreInvariantChecker:
         attempt_starts: dict[str, _AttemptStart] = {}
         attempt_ends: set[str] = set()
         open_attempt: str | None = None
+        request_snapshots: dict[int, EventEnvelope] = {}
+        snapshot_steps: dict[tuple[str, str], list[int]] = {}
+        attempt_ordinals: dict[tuple[str, str], list[int]] = {}
 
         for event in session_events:
             if event.seq != expected_seq:
@@ -114,6 +143,110 @@ class CoreInvariantChecker:
 
             seen_seqs.add(event.seq)
 
+            if event.type == "request/snapshot":
+                declared_turn = event.data.get("turn_id")
+                declared_step = event.data.get("step_id")
+                snapshot_valid = True
+                if set(event.data) != REQUEST_SNAPSHOT_KEYS:
+                    snapshot_valid = False
+                    violations.append(
+                        InvariantViolation(
+                            "request-snapshot-keys",
+                            "request snapshot does not use the current exact key set",
+                            event.seq,
+                        )
+                    )
+                if (
+                    not isinstance(declared_turn, str)
+                    or not declared_turn
+                    or not isinstance(declared_step, str)
+                    or not declared_step
+                    or declared_turn != open_turn
+                    or declared_step != open_step
+                ):
+                    snapshot_valid = False
+                    violations.append(
+                        InvariantViolation(
+                            "request-snapshot-inside-step",
+                            "request snapshot is not inside its declared open Turn and Step",
+                            event.seq,
+                        )
+                    )
+                source_seq = event.data.get("source_seq")
+                composition_revision = event.data.get("composition_revision")
+                if (
+                    type(source_seq) is not int
+                    or source_seq < 1
+                    or source_seq >= event.seq
+                    or not isinstance(composition_revision, str)
+                    or not composition_revision
+                    or event.composition_revision != composition_revision
+                ):
+                    snapshot_valid = False
+                    violations.append(
+                        InvariantViolation(
+                            "request-snapshot-source-binding",
+                            "request snapshot source boundary is invalid",
+                            event.seq,
+                        )
+                    )
+                if snapshot_valid:
+                    try:
+                        raw_composed = event.data["composed_request"]
+                        raw_dispatch = event.data["dispatch_request"]
+                        if not isinstance(raw_composed, dict) or not isinstance(
+                            raw_dispatch, dict
+                        ):
+                            raise ValueError
+                        composed = ModelRequest.from_dict(raw_composed)
+                        dispatch = ModelRequest.from_dict(raw_dispatch)
+                        if (
+                            composed.to_dict() != raw_composed
+                            or dispatch.to_dict() != raw_dispatch
+                            or not dispatch_request_matches_composed(
+                                composed, dispatch
+                            )
+                            or any(
+                                dispatch.metadata.get(key) != expected
+                                for key, expected in (
+                                    (
+                                        "session_id",
+                                        event.stream_id.removeprefix("session:"),
+                                    ),
+                                    ("turn_id", declared_turn),
+                                    ("step_id", declared_step),
+                                    (
+                                        "composition_revision",
+                                        event.data["composition_revision"],
+                                    ),
+                                )
+                            )
+                        ):
+                            raise ValueError
+                        composed_fingerprint = event.data["composed_fingerprint"]
+                        dispatch_fingerprint = event.data["dispatch_fingerprint"]
+                        if (
+                            not isinstance(composed_fingerprint, str)
+                            or fingerprint(raw_composed) != composed_fingerprint
+                            or not isinstance(dispatch_fingerprint, str)
+                            or fingerprint(raw_dispatch) != dispatch_fingerprint
+                        ):
+                            raise ValueError
+                    except (KeyError, TypeError, ValueError):
+                        snapshot_valid = False
+                        violations.append(
+                            InvariantViolation(
+                                "request-dispatch-evidence",
+                                "request snapshot has invalid dispatch evidence",
+                                event.seq,
+                            )
+                        )
+                if isinstance(declared_turn, str) and isinstance(declared_step, str):
+                    snapshot_steps.setdefault(
+                        (declared_turn, declared_step), []
+                    ).append(event.seq)
+                request_snapshots[event.seq] = event
+
             if event.type == "turn/start":
                 turn_id = str(event.data.get("turn_id"))
                 if open_turn is not None:
@@ -148,6 +281,56 @@ class CoreInvariantChecker:
                 attempt_id = attempt_identity(event.data)
                 declared_turn = str(event.data.get("turn_id", ""))
                 declared_step = str(event.data.get("step_id", ""))
+                ordinal = event.data.get("ordinal")
+                request_snapshot_seq = event.data.get("request_snapshot_seq")
+                dispatch_fingerprint = event.data.get("dispatch_fingerprint")
+                reservation_id = event.data.get("reservation_id")
+                if set(event.data) != _ATTEMPT_START_KEYS:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-start-keys",
+                            "model attempt start does not use the current exact key set",
+                            event.seq,
+                        )
+                    )
+                if type(ordinal) is not int or ordinal < 1:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-ordinal-valid",
+                            "model attempt ordinal must be a positive integer",
+                            event.seq,
+                        )
+                    )
+                    ordinal = None
+                if type(request_snapshot_seq) is not int:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-request-snapshot-binding",
+                            "model attempt must reference one earlier request snapshot",
+                            event.seq,
+                        )
+                    )
+                    request_snapshot_seq = None
+                if not isinstance(dispatch_fingerprint, str) or not dispatch_fingerprint:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-dispatch-fingerprint",
+                            "model attempt has no valid dispatch fingerprint",
+                            event.seq,
+                        )
+                    )
+                    dispatch_fingerprint = None
+                if reservation_id is not None and (
+                    not isinstance(reservation_id, str) or not reservation_id
+                ):
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-reservation-binding",
+                            "model attempt reservation identity is invalid",
+                            event.seq,
+                        )
+                    )
+                    reservation_id = None
                 if attempt_id is None:
                     violations.append(
                         InvariantViolation(
@@ -165,9 +348,94 @@ class CoreInvariantChecker:
                         )
                     )
                 else:
+                    if ordinal is not None:
+                        if isinstance(reservation_id, str):
+                            try:
+                                identity = ModelAttemptIdentity(
+                                    session_id=event.stream_id.removeprefix("session:"),
+                                    turn_id=declared_turn,
+                                    step_id=declared_step,
+                                    attempt_id=attempt_id,
+                                    ordinal=ordinal,
+                                )
+                                expected_reservation = model_attempt_reservation_id(
+                                    identity
+                                )
+                            except (TypeError, ValueError):
+                                expected_reservation = None
+                            if reservation_id != expected_reservation:
+                                violations.append(
+                                    InvariantViolation(
+                                        "attempt-reservation-binding",
+                                        "model attempt reservation does not match its identity",
+                                        event.seq,
+                                    )
+                                )
                     attempt_starts[attempt_id] = _AttemptStart(
-                        declared_turn, declared_step, event.seq, event.event_id
+                        declared_turn,
+                        declared_step,
+                        event.seq,
+                        event.event_id,
+                        ordinal,
+                        request_snapshot_seq,
+                        dispatch_fingerprint,
+                        reservation_id,
                     )
+                if ordinal is not None:
+                    key = (declared_turn, declared_step)
+                    observed = attempt_ordinals.setdefault(key, [])
+                    if ordinal != len(observed) + 1:
+                        violations.append(
+                            InvariantViolation(
+                                "attempt-ordinal-contiguous",
+                                "model attempt ordinals are not contiguous within the Step",
+                                event.seq,
+                            )
+                        )
+                    observed.append(ordinal)
+                snapshot = (
+                    request_snapshots.get(request_snapshot_seq)
+                    if request_snapshot_seq is not None
+                    else None
+                )
+                if (
+                    snapshot is None
+                    or snapshot.seq >= event.seq
+                    or snapshot.data.get("turn_id") != declared_turn
+                    or snapshot.data.get("step_id") != declared_step
+                ):
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-request-snapshot-binding",
+                            "model attempt does not reference its Step request snapshot",
+                            event.seq,
+                        )
+                    )
+                elif (
+                    snapshot.data.get("dispatch_fingerprint")
+                    != dispatch_fingerprint
+                ):
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-dispatch-fingerprint",
+                            "model attempt dispatch fingerprint differs from its snapshot",
+                            event.seq,
+                        )
+                    )
+                elif isinstance(snapshot.data.get("dispatch_request"), dict):
+                    dispatch_request = snapshot.data["dispatch_request"]
+                    if (
+                        dispatch_request.get("provider")
+                        != event.data.get("provider")
+                        or dispatch_request.get("model") != event.data.get("model")
+                    ):
+                        violations.append(
+                            InvariantViolation(
+                                "attempt-provider-model-binding",
+                                "model attempt provider/model differ from its dispatch request",
+                                event.seq,
+                            )
+                        )
                 # The payload does not get to declare its own scope: the attempt
                 # must sit inside the turn and step that are really open here.
                 if open_turn is None or open_step is None:
@@ -226,6 +494,20 @@ class CoreInvariantChecker:
                             )
                         )
                     else:
+                        for key, expected in (
+                            ("ordinal", start.ordinal),
+                            ("request_snapshot_seq", start.request_snapshot_seq),
+                            ("dispatch_fingerprint", start.dispatch_fingerprint),
+                            ("reservation_id", start.reservation_id),
+                        ):
+                            if event.data.get(key) != expected:
+                                violations.append(
+                                    InvariantViolation(
+                                        "attempt-end-evidence-binding",
+                                        f"model attempt {attempt_id} end changed {key}",
+                                        event.seq,
+                                    )
+                                )
                         if start.turn_id != str(
                             event.data.get("turn_id", "")
                         ) or start.step_id != str(event.data.get("step_id", "")):
@@ -337,6 +619,16 @@ class CoreInvariantChecker:
                         "attempt-has-end",
                         f"model attempt {attempt_id} in closed step {start.step_id} has no end",
                         start.seq,
+                    )
+                )
+
+        for key, seqs in snapshot_steps.items():
+            if len(seqs) != 1:
+                violations.append(
+                    InvariantViolation(
+                        "single-request-snapshot",
+                        f"Turn/Step {key[0]}/{key[1]} has {len(seqs)} request snapshots",
+                        seqs[-1],
                     )
                 )
 

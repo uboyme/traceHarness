@@ -15,6 +15,8 @@ from traceh.api.tools import ToolExecutionContext
 from traceh.api.turns import TurnInput
 from traceh.concurrency import await_worker_convergence, combine_failures
 from traceh.kernel.hooks import STEP_FINISHED, TURN_FINISHED, TURN_STARTED, HookDispatcher
+from traceh.llm.failures import ProviderFailure
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy, RetryScheduler
 from traceh.llm.runtime import (
     LlmAdmission,
     LlmRuntime,
@@ -44,6 +46,10 @@ class TurnResult:
     verification_passed: bool | None = None
 
 
+class ModelRetryRequestDriftError(RuntimeError):
+    """A later admission did not preserve the first provider-bound request."""
+
+
 class AgentLoop:
     def __init__(
         self,
@@ -58,6 +64,8 @@ class AgentLoop:
         verifier: CompletionVerifier | None = None,
         max_verification_retries: int = 1,
         hooks: HookDispatcher | None = None,
+        retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+        retry_scheduler: RetryScheduler | None = None,
     ) -> None:
         self.sessions = sessions
         self.compositions = compositions
@@ -69,6 +77,8 @@ class AgentLoop:
         self.verifier = verifier
         self.max_verification_retries = max_verification_retries
         self.hooks = hooks or HookDispatcher()
+        self.retry_policy = retry_policy
+        self.retry_scheduler = retry_scheduler or RetryScheduler.real()
 
     async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
         # A plain ``str`` keeps the historical behaviour exactly - a fresh id
@@ -84,6 +94,7 @@ class AgentLoop:
         current_step_id: str | None = None
         current_attempt_id: str | None = None
         current_attempt_revision: str | None = None
+        current_provider_active_milliseconds: int | None = None
         steps = 0
         total_input_tokens = 0
         total_output_tokens = 0
@@ -169,90 +180,212 @@ class AgentLoop:
                         composition=composition,
                         through_seq=composition_event.seq,
                     )
-                    attempt_id = str(uuid4())
-                    attempt = ModelAttemptIdentity(
-                        session_id=session_id,
-                        turn_id=turn_id,
-                        step_id=current_step_id,
-                        attempt_id=attempt_id,
-                        ordinal=1,
-                    )
-                    current_attempt_id = attempt_id
-                    current_attempt_revision = composition.revision
-                    admission = await self.llm_runtime.admit(
-                        active_composition.provider,
-                        built.request,
-                        attempt=attempt,
-                    )
-                    try:
-                        admission = require_llm_admission_binding(
-                            admission,
-                            provider=active_composition.provider,
+                    retry_window_started = self.retry_scheduler.monotonic()
+                    frozen_dispatch_request = None
+                    frozen_dispatch_fingerprint: str | None = None
+                    retry_wait_milliseconds = 0
+                    retry_failure: ProviderFailure | None = None
+                    ordinal = 1
+                    while True:
+                        attempt_id = str(uuid4())
+                        attempt = ModelAttemptIdentity(
+                            session_id=session_id,
+                            turn_id=turn_id,
+                            step_id=current_step_id,
+                            attempt_id=attempt_id,
+                            ordinal=ordinal,
+                        )
+                        current_attempt_id = attempt_id
+                        current_attempt_revision = composition.revision
+                        current_provider_active_milliseconds = None
+                        admission_request = (
+                            built.request
+                            if frozen_dispatch_request is None
+                            else frozen_dispatch_request
+                        )
+                        admission = await self.llm_runtime.admit(
+                            active_composition.provider,
+                            admission_request,
                             attempt=attempt,
                         )
-                        dispatch_provider = admission.provider
-                        dispatch_request = admission.request
-                        dispatch_fingerprint = fingerprint(dispatch_request.to_dict())
-                        _, attempt_start = await self.sessions.start_model_attempt(
-                            session_id,
-                            attempt=attempt,
-                            source_seq=built.source_seq,
-                            composition_revision=composition.revision,
-                            composed_request=built.request,
-                            composed_fingerprint=built.fingerprint,
-                            dispatch_request=dispatch_request,
-                            dispatch_fingerprint=dispatch_fingerprint,
-                            reservation_id=admission.reservation_id,
-                            correlation_id=correlation_id,
-                        )
-                    except BaseException as error:
                         try:
-                            if type(admission) is LlmAdmission:
-                                await admission.abort()
-                        except BaseException as abort_error:
-                            combined = combine_failures(
-                                error,
-                                abort_error,
-                                "model dispatch claim and admission abort both failed",
+                            admission = require_llm_admission_binding(
+                                admission,
+                                provider=active_composition.provider,
+                                attempt=attempt,
                             )
-                            assert combined is not None
-                            raise combined from None
-                        raise
+                            dispatch_provider = admission.provider
+                            dispatch_request = admission.request
+                            dispatch_fingerprint = fingerprint(
+                                dispatch_request.to_dict()
+                            )
+                            if frozen_dispatch_request is None:
+                                frozen_dispatch_request = dispatch_request
+                                frozen_dispatch_fingerprint = dispatch_fingerprint
+                            elif (
+                                dispatch_request != frozen_dispatch_request
+                                or dispatch_fingerprint
+                                != frozen_dispatch_fingerprint
+                            ):
+                                raise ModelRetryRequestDriftError(
+                                    "model-retry-request-drift"
+                                )
+                            _, attempt_start = await self.sessions.start_model_attempt(
+                                session_id,
+                                attempt=attempt,
+                                source_seq=built.source_seq,
+                                composition_revision=composition.revision,
+                                composed_request=built.request,
+                                composed_fingerprint=built.fingerprint,
+                                dispatch_request=dispatch_request,
+                                dispatch_fingerprint=dispatch_fingerprint,
+                                reservation_id=admission.reservation_id,
+                                retry_wait_milliseconds=retry_wait_milliseconds,
+                                retry_failure_code=(
+                                    None if retry_failure is None else retry_failure.code
+                                ),
+                                retry_failure_category=(
+                                    None
+                                    if retry_failure is None
+                                    else retry_failure.category.value
+                                ),
+                                correlation_id=correlation_id,
+                            )
+                        except BaseException as error:
+                            try:
+                                if type(admission) is LlmAdmission:
+                                    await admission.abort()
+                            except BaseException as abort_error:
+                                combined = combine_failures(
+                                    error,
+                                    abort_error,
+                                    "model dispatch claim and admission abort both failed",
+                                )
+                                assert combined is not None
+                                raise combined from None
+                            raise
 
-                    async def record_text_delta(
-                        delta: str,
-                        *,
-                        step_id: str = current_step_id,
-                        model_attempt_id: str = attempt_id,
-                        revision: str = composition.revision,
-                    ) -> None:
+                        async def record_text_delta(
+                            delta: str,
+                            *,
+                            step_id: str = current_step_id,
+                            model_attempt_id: str = attempt_id,
+                            revision: str = composition.revision,
+                        ) -> None:
+                            await self.sessions.append_session(
+                                session_id,
+                                "assistant/chunk",
+                                {
+                                    "turn_id": turn_id,
+                                    "step_id": step_id,
+                                    "attempt_id": model_attempt_id,
+                                    "content": delta,
+                                },
+                                durability=Durability.SYNC,
+                                correlation_id=correlation_id,
+                                composition_revision=revision,
+                            )
+
+                        try:
+                            response = await admission.dispatch(
+                                provider=dispatch_provider,
+                                request=dispatch_request,
+                                on_text_delta=record_text_delta,
+                            )
+                        except asyncio.CancelledError:
+                            # One outer owner closes Attempt -> Step -> Turn in
+                            # order. No later ordinal can be admitted after the
+                            # cancellation has reached this owner.
+                            current_provider_active_milliseconds = (
+                                admission.provider_active_milliseconds
+                            )
+                            raise
+                        except Exception as error:
+                            current_provider_active_milliseconds = (
+                                admission.provider_active_milliseconds
+                            )
+                            failure_data = {
+                                "turn_id": turn_id,
+                                "step_id": current_step_id,
+                                "attempt_id": attempt_id,
+                                "ordinal": attempt.ordinal,
+                                "request_snapshot_seq": attempt_start.data[
+                                    "request_snapshot_seq"
+                                ],
+                                "dispatch_fingerprint": dispatch_fingerprint,
+                                "reservation_id": admission.reservation_id,
+                                "status": "failed",
+                                "provider_active_milliseconds": (
+                                    current_provider_active_milliseconds
+                                ),
+                            }
+                            if type(error) is ProviderFailure:
+                                failure_data.update(
+                                    failure_code=error.code,
+                                    failure_category=error.category.value,
+                                )
+                                if error.usage is not None:
+                                    failure_data["usage"] = error.usage.to_dict()
+                            else:
+                                failure_data.update(
+                                    error_type=type(error).__name__,
+                                    message=str(error),
+                                )
+                            await self.sessions.append_session(
+                                session_id,
+                                "model/attempt-end",
+                                failure_data,
+                                correlation_id=correlation_id,
+                                composition_revision=composition.revision,
+                            )
+                            elapsed = (
+                                self.retry_scheduler.monotonic()
+                                - retry_window_started
+                            )
+                            decision = self.retry_policy.decide(
+                                error,
+                                completed_ordinal=ordinal,
+                                elapsed_seconds=elapsed,
+                                entropy=self.retry_scheduler.entropy(),
+                            )
+                            if decision is None:
+                                raise
+                            wait_started = self.retry_scheduler.monotonic()
+                            await self.retry_scheduler.sleep(decision.delay_seconds)
+                            wait_finished = self.retry_scheduler.monotonic()
+                            if (
+                                wait_finished < wait_started
+                                or wait_finished - retry_window_started
+                                > self.retry_policy.max_elapsed_seconds
+                            ):
+                                raise
+                            retry_wait_milliseconds = int(
+                                (wait_finished - wait_started) * 1000
+                            )
+                            retry_failure = error
+                            ordinal += 1
+                            continue
+
+                        total_input_tokens += response.usage.input_tokens
+                        total_output_tokens += response.usage.output_tokens
+                        current_provider_active_milliseconds = (
+                            admission.provider_active_milliseconds
+                        )
                         await self.sessions.append_session(
                             session_id,
-                            "assistant/chunk",
+                            "assistant/message",
                             {
                                 "turn_id": turn_id,
-                                "step_id": step_id,
-                                "attempt_id": model_attempt_id,
-                                "content": delta,
+                                "step_id": current_step_id,
+                                "attempt_id": attempt_id,
+                                "content": response.content,
+                                "tool_calls": [
+                                    call.to_dict() for call in response.tool_calls
+                                ],
                             },
-                            durability=Durability.SYNC,
                             correlation_id=correlation_id,
-                            composition_revision=revision,
+                            composition_revision=composition.revision,
                         )
-
-                    try:
-                        response = await admission.dispatch(
-                            provider=dispatch_provider,
-                            request=dispatch_request,
-                            on_text_delta=record_text_delta,
-                        )
-                    except asyncio.CancelledError:
-                        # One outer owner closes Attempt -> Step -> Turn in
-                        # order. Closing the Attempt in a separate shield here
-                        # let repeated cancellation detach that append from the
-                        # Step/Turn finalizer.
-                        raise
-                    except Exception as error:
                         await self.sessions.append_session(
                             session_id,
                             "model/attempt-end",
@@ -266,50 +399,17 @@ class AgentLoop:
                                 ],
                                 "dispatch_fingerprint": dispatch_fingerprint,
                                 "reservation_id": admission.reservation_id,
-                                "status": "failed",
-                                "error_type": type(error).__name__,
-                                "message": str(error),
+                                "status": "succeeded",
+                                "finish_reason": response.finish_reason,
+                                "usage": response.usage.to_dict(),
+                                "provider_active_milliseconds": (
+                                    current_provider_active_milliseconds
+                                ),
                             },
                             correlation_id=correlation_id,
                             composition_revision=composition.revision,
                         )
-                        raise
-
-                    total_input_tokens += response.usage.input_tokens
-                    total_output_tokens += response.usage.output_tokens
-                    await self.sessions.append_session(
-                        session_id,
-                        "assistant/message",
-                        {
-                            "turn_id": turn_id,
-                            "step_id": current_step_id,
-                            "attempt_id": attempt_id,
-                            "content": response.content,
-                            "tool_calls": [call.to_dict() for call in response.tool_calls],
-                        },
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
-                    )
-                    await self.sessions.append_session(
-                        session_id,
-                        "model/attempt-end",
-                        {
-                            "turn_id": turn_id,
-                            "step_id": current_step_id,
-                            "attempt_id": attempt_id,
-                            "ordinal": attempt.ordinal,
-                            "request_snapshot_seq": attempt_start.data[
-                                "request_snapshot_seq"
-                            ],
-                            "dispatch_fingerprint": dispatch_fingerprint,
-                            "reservation_id": admission.reservation_id,
-                            "status": "succeeded",
-                            "finish_reason": response.finish_reason,
-                            "usage": response.usage.to_dict(),
-                        },
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
-                    )
+                        break
 
                     if response.tool_calls:
                         tool_context = ToolExecutionContext(
@@ -433,6 +533,9 @@ class AgentLoop:
                     current_step_id,
                     current_attempt_id=current_attempt_id,
                     current_attempt_revision=current_attempt_revision,
+                    current_provider_active_milliseconds=(
+                        current_provider_active_milliseconds
+                    ),
                     correlation_id=correlation_id,
                 ),
                 name=f"traceh-turn-cancel-finalize-{turn_id}",
@@ -457,16 +560,27 @@ class AgentLoop:
             ):
                 raise
             try:
+                runtime_error = {
+                    "turn_id": turn_id,
+                    "step_id": current_step_id,
+                    "error_type": type(error).__name__,
+                    "message": str(error),
+                    "traceback": "".join(traceback.format_exception(error))[-12_000:],
+                }
+                if type(error) is ProviderFailure:
+                    runtime_error = {
+                        "turn_id": turn_id,
+                        "step_id": current_step_id,
+                        "error_type": "ProviderFailure",
+                        "message": error.code,
+                        "traceback": f"ProviderFailure: {error.code}",
+                        "failure_code": error.code,
+                        "failure_category": error.category.value,
+                    }
                 await self.sessions.append_session(
                     session_id,
                     "runtime/error",
-                    {
-                        "turn_id": turn_id,
-                        "step_id": current_step_id,
-                        "error_type": type(error).__name__,
-                        "message": str(error),
-                        "traceback": "".join(traceback.format_exception(error))[-12_000:],
-                    },
+                    runtime_error,
                     correlation_id=correlation_id,
                 )
                 await self._close_open_attempt(
@@ -475,6 +589,9 @@ class AgentLoop:
                     current_step_id,
                     current_attempt_id=current_attempt_id,
                     current_attempt_revision=current_attempt_revision,
+                    current_provider_active_milliseconds=(
+                        current_provider_active_milliseconds
+                    ),
                     correlation_id=correlation_id,
                     status="unknown_after_failure",
                     error_type="InterruptedBeforeAttemptEnd",
@@ -506,6 +623,7 @@ class AgentLoop:
         *,
         current_attempt_id: str | None,
         current_attempt_revision: str | None,
+        current_provider_active_milliseconds: int | None,
         correlation_id: UUID,
         status: str,
         error_type: str,
@@ -543,6 +661,9 @@ class AgentLoop:
                     "status": status,
                     "error_type": error_type,
                     "message": message,
+                    "provider_active_milliseconds": (
+                        current_provider_active_milliseconds
+                    ),
                 },
                 correlation_id=correlation_id,
                 composition_revision=current_attempt_revision,
@@ -580,6 +701,7 @@ class AgentLoop:
         *,
         current_attempt_id: str | None,
         current_attempt_revision: str | None,
+        current_provider_active_milliseconds: int | None,
         correlation_id: UUID,
     ) -> None:
         """Durably close one cancelled Turn from a single owned Task.
@@ -597,6 +719,9 @@ class AgentLoop:
             step_id,
             current_attempt_id=current_attempt_id,
             current_attempt_revision=current_attempt_revision,
+            current_provider_active_milliseconds=(
+                current_provider_active_milliseconds
+            ),
             correlation_id=correlation_id,
             status="cancelled",
             error_type="CancelledError",

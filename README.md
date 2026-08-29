@@ -11,6 +11,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 薄异步 Agent Loop，把 Prompt、模型、工具和 Continuation 行为委托给独立服务；
 - 冻结的 Composition Snapshot，以及可以独立重建的模型请求；
 - 确定性的 Scripted Provider 和 OpenAI-Compatible Provider；
+- typed、无秘密的 Provider failure 分类，以及宿主显式限制的同 Provider/同模型/同冻结请求 retry；
 - 统一 Tool Runtime，支持 Schema 校验、单调 Policy、超时、读并发、写入/进程排他 Barrier 和结构化结果；
 - 五个 Coding Tools：`list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；
 - Workspace 路径边界和子进程环境变量清洗；
@@ -168,7 +169,7 @@ you>
 
 ```text
 resume later (PowerShell):
-  traceh chat --session-id <id> --data-dir <绝对路径> --provider <p> --model <m> [--max-steps N] [--script <绝对路径>] [--base-url <url>] [--api-key-env NAME] [--env-file <绝对路径>]
+  traceh chat --session-id <id> --data-dir <绝对路径> --provider <p> --model <m> [--max-steps N] [--script <绝对路径>] [--base-url <url>] [--api-key-env NAME] [--env-file <绝对路径>] [--model-retry-* <value>]
   traceh sessions --data-dir <绝对路径>
   note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
 ```
@@ -403,6 +404,7 @@ PYTHONPATH=src python -m traceh.cli.main eval benchmarks/product_v1 `
 - 只有一次观测的 arm 会在两份报告里标注 `single observation`；聚合只有计数、总和、最小、最大和均值，不声称统计显著性。
 - `approval wait` 单独计时并从 `active elapsed` 中扣除；本 Benchmark 使用 `approval_policy: programmatic-immediate`（宿主对自己的一次性本地目标立即批准），两份报告都会写明。普通 Chat 仍然必须由人执行 `/task approve`。
 - 无法从持久事实可靠推出的指标报告为 *unavailable*，绝不填 0。`UsageQuality.UNKNOWN` 的用量报告会让该 Session 的 Token 总数变成 unavailable。
+- F2 把 model Attempt 数、retry wait、Provider-active 时间、稳定 failure category 与最终模型结果加入同一份 durable 报告；失败 Attempt 的 Usage 只有可信时才计入 Token，否则仍是 unavailable。retry 后成功是可靠性数据，不是模型质量提升。
 - 退出码回答的是「度量是否完成」：全部 attempt 可度量且每个任务的实验条件一致时为 `0`，否则为 `4`。某个编码任务失败是数据，不是工具错误。
 
 v0.6 的 `*/case.json` 布局被**明确拒绝**（`benchmark-legacy-manifest-rejected`），不做升级、不留适配层，也不会删除旧数据。完整设计决定见 [ADR-0033](docs/adr/0033-product-task-benchmark-as-the-single-eval-path.md)，Benchmark 自身说明见 [`benchmarks/product_v1/README.md`](benchmarks/product_v1/README.md)。
@@ -437,7 +439,7 @@ traceh doctor
 traceh run . "Inspect the project and report what should be improved"
 ```
 
-使用 `--env-file path/to/file.env` 可以选择其他配置文件。支持的 Runtime 配置包括 `TRACEH_PROVIDER`、`TRACEH_BASE_URL`、`TRACEH_MODEL`、`TRACEH_API_KEY_ENV`、`TRACEH_DATA_DIR`、`TRACEH_MAX_STEPS`、`TRACEH_VERIFY_COMMAND` 和 `TRACEH_PLUGIN_VERIFIER`。`openai-compatible` Provider 必须显式配置 Base URL 和 Model；TraceHarness 不会静默选择某个厂商地址、模型或插件能力。
+使用 `--env-file path/to/file.env` 可以选择其他配置文件。支持的 Runtime 配置包括 `TRACEH_PROVIDER`、`TRACEH_BASE_URL`、`TRACEH_MODEL`、`TRACEH_API_KEY_ENV`、`TRACEH_DATA_DIR`、`TRACEH_MAX_STEPS`、`TRACEH_VERIFY_COMMAND`、`TRACEH_PLUGIN_VERIFIER`，以及 `TRACEH_MODEL_RETRY_MAX_ATTEMPTS`、`TRACEH_MODEL_RETRY_MAX_ELAPSED_SECONDS`、`TRACEH_MODEL_RETRY_BASE_DELAY_SECONDS`、`TRACEH_MODEL_RETRY_MAX_DELAY_SECONDS`、`TRACEH_MODEL_RETRY_AFTER_CAP_SECONDS`、`TRACEH_MODEL_RETRY_JITTER_RATIO`。`openai-compatible` Provider 必须显式配置 Base URL 和 Model；TraceHarness 不会静默选择某个厂商地址、模型或插件能力。
 
 仍然支持等价的进程环境变量配置：
 
@@ -452,7 +454,7 @@ PYTHONPATH=src python -m traceh.cli.main run ./your-project \
   --verify-command "python -m pytest -q"
 ```
 
-v0.3 Adapter 使用 `/chat/completions` 和非流式 HTTP。Event Protocol 已经把 Model Attempt 分成独立边界，因此未来可以增加流式、重试和 Provider Fallback，而不改变 Step 语义。
+OpenAI-compatible Adapter 使用 `/chat/completions` 和非流式 HTTP，本身没有 SDK/内部 retry。v0.8-F2 的宿主策略默认包括第一次在内最多 3 个 Attempt、总 retry window 30 秒、base/max delay 0.5/4 秒、Retry-After cap 8 秒和 jitter 0.2；只候选 DNS、timeout/408、TLS EOF、disconnect、429 与选定 5xx，认证/权限/bad request/config/protocol/unknown 一次即停。每次 retry 都是同一 Step 的新 durable Attempt 与独立 Budget reservation，不换 Provider/model/request。程序化 Runtime 默认 `NO_MODEL_RETRY`，只有 composition root 显式提供 policy 才启用；没有 Provider/model fallback。完整决定见 [ADR-0037](docs/adr/0037-typed-provider-failures-and-bounded-model-retry.md)。
 
 取消 Turn 无法中止已经发出的 `urllib` 请求。Provider 不会把 Worker 丢在后台，而是先等待请求收敛，再重新抛出取消，因此 CLI 宣布 Turn 结束后不会还有后台 Worker 继续与 Endpoint 通信。最坏情况下需要等到 Provider Timeout 到期；这是等待收敛，不是立即中止。
 
@@ -605,7 +607,7 @@ src/traceh/promotion    固定 Verifier、Review/Approval/Promotion Ledger 与 G
 src/traceh/workflow     固定 Typed DAG：AgentTask/Map/Join/Verification/Approval 与一条编排账
 src/traceh/api/product  v0.7-F0 冻结的统一 Chat 产品面合同（纯协议、无 I/O）
 src/traceh/product      v0.7-F1–F3 ProductTask 事实、固定装配与可选 Chat 产品控制面
-src/traceh/llm          Provider Registry 和 Adapter
+src/traceh/llm          Provider Registry、Adapter、typed failure 与 bounded retry policy
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
 src/traceh/evaluation   v0.7-F4 ProductTask Benchmark：manifest、一次性仓库、durable 指标与报告
@@ -661,7 +663,7 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - L2 可以独立 build/audit/doctor/test 并跑可信核心回归，但两套 venv 仍不是 OS 沙箱，候选代码拥有当前用户权限且只保证直接子进程收敛；L2 也不比较能力好坏、不做人工批准、正式安装或回滚；
 - L3 使用精确 L2 Wheel 和可信核心中的固定任务做确定性 baseline/candidate 对比；它仍不是 OS 沙箱或真实模型 Benchmark，也不批准、安装、晋升或回滚插件；
 - L4 只接受 `improved` 且零回归的精确 L2/L3 证据，但它仍不是 OS 沙箱或包签名系统；目标依赖必须已经与 L3 receipt 一致，L4 v1 不解析或升级依赖、也不同时管理同一环境中的多条 Distribution 链，不会把推广自动应用到正在运行的 Runtime；
-- `ProcessAgentSupervisor` 是**进程内**的：它保证一个 Agent 在自己名下最多一个活实例，并在完整 Acceptance/claim 归属校验和 durable claim 落盘后才运行 Turn；open claim 会阻塞后续 FIFO，关闭按 owner 子树 child-first 收敛在途 create/resume 与 Runtime cleanup。Stage E Tool 只允许操作绑定 owner 的后代，并从账本重建 run report。v0.7-F3 只在显式 Product 配置下从 CLI 外层装配 Supervisor/Budget/Workspace/Artifact/Workflow/Promotion，核心仍不知道产品；没有自动重试、stale claim 接管、通用 Workflow DSL 或跨进程 lease；
+- `ProcessAgentSupervisor` 是**进程内**的：它保证一个 Agent 在自己名下最多一个活实例，并在完整 Acceptance/claim 归属校验和 durable claim 落盘后才运行 Turn；open claim 会阻塞后续 FIFO，关闭按 owner 子树 child-first 收敛在途 create/resume 与 Runtime cleanup。Stage E Tool 只允许操作绑定 owner 的后代，并从账本重建 run report。v0.7-F3 只在显式 Product 配置下从 CLI 外层装配 Supervisor/Budget/Workspace/Artifact/Workflow/Promotion，核心仍不知道产品；F2 的模型 retry 不接管 stale claim，也没有 Workflow/Tool retry、通用 Workflow DSL 或跨进程 lease；
 - v0.7-C managed Workspace 只接受宿主 source mapping，固定到精确 Git commit，并双向核对 `.git` marker 与唯一 worktree admin registry entry；dirty/unsafe/unknown worktree 会 quarantine，Agent 停止不会自动删除它。Wrapper 的 `resume()` 后置 Workspace 复核也必须在 `aclose()` 返回前收敛。Read-only 是显式 Tool Policy，不是 OS sandbox；
 - v0.7-D1 可由宿主把一个 terminal message 对应的 staged/unstaged/untracked/deleted/binary/mode 状态冻结为完整 candidate tree、binary Patch、SHA-256 CAS bytes 和 append-only Manifest。它使用临时 index 与 Workspace capture gate，raw tree diff 递归到 leaf entry，因此新目录中的普通文件不会被目录容器 mode 误拒绝；Catalog 重算派生身份，CAS 逐层拒绝 reparse 父链，Git 子进程不继承宿主 `GIT_*` 注入；`collect_agent_artifact` 仍只读；
 - v0.7-D2 可由宿主把一个不可变 Patch 在临时 clone 中应用到精确 target revision、跑固定 Verifier、记录 immutable Review Report，再凭人工提交的 exact approval digest 用 `git update-ref <ref> <new> <expected-old>` 推广到宿主管理的 **bare** 仓库。集成 diff 同样递归检查普通文件 leaf，仍拒绝 symlink/gitlink mode。Verifier 以同一用户权限运行，是能力与证据边界而不是 OS sandbox；D2 域本身没有 CLI、自动批准、非 bare 目标、跨进程 lease，也没有模型可见的 approve/merge/promote Tool；它由 v0.7-E 的 Verification/Approval 节点作为公共服务调用；
@@ -684,11 +686,11 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
-  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0/F1 已完成两阶段
-  Model admission 与 SQLite 唯一生产 EventStore；F2-F5 仍依次处理同 Provider 有界 retry、
-  UI-neutral driver 与可选 TUI；
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0/F1/F2 已完成两阶段
+  Model admission、SQLite 唯一生产 EventStore，以及 typed Provider failure + 同冻结请求有界 retry；F2
+  已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量，F3-F5 尚未开始；
   v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
-  和可审计检索。当前已有 SQLite，但仍没有 retry、TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
+  和可审计检索。当前已有 SQLite 与 bounded model retry，但仍没有 TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
   第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
@@ -696,7 +698,7 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - Session Event Feed 只在同一进程内可见，没有跨进程实时观察；它的队列无上限，因此不对 Runtime 施加背压，但被遗弃的订阅者会占用内存，且尚无 Overflow 策略；它可丢失、不重放历史、不提升唯一 `SYNC` SQLite append 的保证，不能当作恢复证据；
 - Timeline 已对注入做了清洗，但形似结构标记的惰性文本仍可能出现在该行内部：保证是"不会产生第二行、行首为真实事件号"，不是"不会出现形似标记的字符"；
 - SQLite 只解决本地事实存储：同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒；它不是跨主机数据库，打开时 exact schema/history 校验的成本随历史增长；额外持久 trigger/view/index 会被拒绝，未知数据库先经 immutable schema probe，因此在拒绝前不会触发 hot-journal recovery 或切换 WAL；
-- OpenAI-Compatible Adapter 非流式，且没有 Retry/Fallback Middleware；
+- OpenAI-Compatible Adapter 非流式，adapter 内没有 retry；宿主只有 F2 同请求 bounded retry，没有 Fallback Middleware；
 - `apply_patch` 执行精确文本替换，不解析 Unified Diff；
 - 默认 Shell Policy 是 Guardrail，不是安全沙箱；运行不可信 Agent 时应使用容器或远程 Sandbox；
 - Effect Reconciliation 当前是通用实现；Git、远程 API 和事务系统的领域 Reconciler 应由后续插件提供。

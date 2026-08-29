@@ -122,8 +122,13 @@ class SessionWork:
     turns: int
     steps: int
     tool_calls: int
+    model_attempts: int
     tokens: TokenTotals | None
     work_duration_ms: int | None
+    retry_wait_milliseconds: int | None
+    provider_active_milliseconds: int | None
+    provider_failure_categories: tuple[str, ...]
+    final_model_result: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +150,10 @@ class SessionGroup:
         return sum(item.tool_calls for item in self.sessions)
 
     @property
+    def model_attempts(self) -> int:
+        return sum(item.model_attempts for item in self.sessions)
+
+    @property
     def tokens(self) -> TokenTotals | None:
         parts = [item.tokens for item in self.sessions]
         if any(part is None for part in parts):
@@ -163,6 +172,28 @@ class SessionGroup:
         if any(part is None for part in parts):
             return None
         return sum(part for part in parts if part is not None)
+
+    @property
+    def retry_wait_milliseconds(self) -> int | None:
+        parts = [item.retry_wait_milliseconds for item in self.sessions]
+        if any(part is None for part in parts):
+            return None
+        return sum(part for part in parts if part is not None)
+
+    @property
+    def provider_active_milliseconds(self) -> int | None:
+        parts = [item.provider_active_milliseconds for item in self.sessions]
+        if any(part is None for part in parts):
+            return None
+        return sum(part for part in parts if part is not None)
+
+    @property
+    def provider_failure_categories(self) -> tuple[str, ...]:
+        return tuple(
+            category
+            for item in self.sessions
+            for category in item.provider_failure_categories
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -542,6 +573,13 @@ async def _session_work(
     tokens_available = True
     duration_ms = 0
     duration_available = True
+    model_attempts = 0
+    retry_wait_milliseconds = 0
+    retry_wait_available = True
+    provider_active_milliseconds = 0
+    provider_active_available = True
+    provider_failure_categories: list[str] = []
+    final_model_result: str | None = None
     started: dict[str, datetime] = {}
     for event in events:
         data = event.data if type(event.data) is dict else {}
@@ -569,7 +607,24 @@ async def _session_work(
             steps += 1
         elif event.type == "tool/call":
             tool_calls += 1
-        elif event.type == "model/attempt-end" and data.get("status") == "succeeded":
+        elif event.type == "model/attempt-start":
+            model_attempts += 1
+            retry_wait = data.get("retry_wait_milliseconds")
+            if type(retry_wait) is not int or retry_wait < 0:
+                retry_wait_available = False
+            else:
+                retry_wait_milliseconds += retry_wait
+        elif event.type == "model/attempt-end":
+            status = data.get("status")
+            final_model_result = status if type(status) is str else None
+            active = data.get("provider_active_milliseconds")
+            if type(active) is not int or active < 0:
+                provider_active_available = False
+            else:
+                provider_active_milliseconds += active
+            failure_category = data.get("failure_category")
+            if isinstance(failure_category, str) and failure_category:
+                provider_failure_categories.append(failure_category)
             usage = data.get("usage")
             if type(usage) is not dict:
                 tokens_available = False
@@ -603,12 +658,21 @@ async def _session_work(
         turns=turns,
         steps=steps,
         tool_calls=tool_calls,
+        model_attempts=model_attempts,
         tokens=(
             TokenTotals(input_tokens, output_tokens, _worst_quality(tuple(qualities)))
             if tokens_available
             else None
         ),
         work_duration_ms=duration_ms if duration_available else None,
+        retry_wait_milliseconds=(
+            retry_wait_milliseconds if retry_wait_available else None
+        ),
+        provider_active_milliseconds=(
+            provider_active_milliseconds if provider_active_available else None
+        ),
+        provider_failure_categories=tuple(provider_failure_categories),
+        final_model_result=final_model_result,
     )
 
 
@@ -679,6 +743,10 @@ def _note_unavailable(sink: list[str], label: str, work: SessionWork) -> None:
         sink.append(f"{label}.tokens")
     if work.work_duration_ms is None:
         sink.append(f"{label}.work_duration_ms")
+    if work.retry_wait_milliseconds is None:
+        sink.append(f"{label}.retry_wait_milliseconds")
+    if work.provider_active_milliseconds is None:
+        sink.append(f"{label}.provider_active_milliseconds")
 
 
 def _worst_quality(values: tuple[str, ...]) -> str:

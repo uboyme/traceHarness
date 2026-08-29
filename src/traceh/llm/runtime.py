@@ -8,6 +8,7 @@ its Attempt before :meth:`LlmAdmission.dispatch` can cross the external boundary
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 
@@ -18,6 +19,7 @@ from traceh.api.llm import (
     ModelResponse,
 )
 from traceh.concurrency import await_worker_convergence, combine_failures
+from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 
 TextDeltaHandler = Callable[[str], Awaitable[None]]
 
@@ -64,6 +66,8 @@ class LlmAdmission:
         "_attempt",
         "_lock",
         "_provider",
+        "_provider_active_milliseconds",
+        "_provider_clock",
         "_request",
         "_reservation_id",
         "_state",
@@ -75,10 +79,13 @@ class LlmAdmission:
         request: ModelRequest,
         *,
         attempt: ModelAttemptIdentity,
+        provider_clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if type(request) is not ModelRequest or type(attempt) is not ModelAttemptIdentity:
             raise LlmAdmissionBindingError("model-admission-binding-mismatch")
         self._provider = provider
+        self._provider_clock = provider_clock
+        self._provider_active_milliseconds: int | None = None
         self._request = request
         self._attempt = attempt
         self._reservation_id: str | None = None
@@ -102,6 +109,10 @@ class LlmAdmission:
     @property
     def reservation_id(self) -> str | None:
         return self._reservation_id
+
+    @property
+    def provider_active_milliseconds(self) -> int | None:
+        return self._provider_active_milliseconds
 
     def _bind_accounting(
         self,
@@ -155,11 +166,43 @@ class LlmAdmission:
                 assert combined is not None
                 raise combined from None
 
+        provider_started = self._provider_clock()
         try:
-            response = await provider.complete(request)
+            try:
+                response = await provider.complete(request)
+            except asyncio.CancelledError:
+                raise
+            except ProviderFailure as failure:
+                if type(failure) is ProviderFailure:
+                    raise
+                raise ProviderFailure(
+                    "provider-failure-unclassified",
+                    ProviderFailureCategory.UNKNOWN,
+                ) from None
+            except Exception:
+                # A Provider or plugin that did not implement the typed adapter
+                # contract is still prevented from leaking exception text into
+                # Session/CLI evidence. Unknown is deliberately non-retryable.
+                raise ProviderFailure(
+                    "provider-failure-unclassified",
+                    ProviderFailureCategory.UNKNOWN,
+                ) from None
+            provider_finished = self._provider_clock()
+            if provider_finished >= provider_started:
+                self._provider_active_milliseconds = int(
+                    (provider_finished - provider_started) * 1000
+                )
             if response.content and on_text_delta is not None:
                 await on_text_delta(response.content)
         except BaseException as error:
+            provider_finished = self._provider_clock()
+            if (
+                self._provider_active_milliseconds is None
+                and provider_finished >= provider_started
+            ):
+                self._provider_active_milliseconds = int(
+                    (provider_finished - provider_started) * 1000
+                )
             if accounting is not None:
                 assert started is not None
                 await accounting.finish(started, response=None, error=error)
@@ -206,6 +249,9 @@ class LlmAdmission:
 
 
 class LlmRuntime:
+    def __init__(self, *, provider_clock: Callable[[], float] = time.monotonic) -> None:
+        self._provider_clock = provider_clock
+
     async def admit(
         self,
         provider: LlmProvider,
@@ -215,7 +261,12 @@ class LlmRuntime:
     ) -> LlmAdmission:
         """Freeze one side-effect-free admission for the Session owner."""
 
-        return LlmAdmission(provider, request, attempt=attempt)
+        return LlmAdmission(
+            provider,
+            request,
+            attempt=attempt,
+            provider_clock=self._provider_clock,
+        )
 
 
 def require_llm_admission_binding(

@@ -34,6 +34,8 @@ from traceh.evaluation.metrics import collect_attempt_evidence
 from traceh.evaluation.report import APPROVAL_POLICY
 from traceh.evaluation.repositories import read_target_revision
 from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.promotion.models import (
     expected_approval_digest,
     promotion_identity,
@@ -176,6 +178,22 @@ class _FailAfterWritingProvider(_ProductProvider):
             message.role == "tool" for message in request.messages
         ):
             raise RuntimeError("candidate stopped responding")
+        return await super().complete(request)
+
+
+class _TransientFirstCallProvider(_ProductProvider):
+    def __init__(self) -> None:
+        super().__init__()
+        self.calls = 0
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        self.calls += 1
+        if self.calls == 1:
+            raise ProviderFailure(
+                "provider-dns-temporary",
+                ProviderFailureCategory.DNS,
+                usage=Usage(0, 0, UsageQuality.EXACT),
+            )
         return await super().complete(request)
 
 
@@ -375,6 +393,7 @@ def _runner(
     provider: _ProductProvider | None = None,
     tasks: tuple[str, ...] = ("write_expected_file",),
     output: str = "evidence",
+    retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
 ) -> ProductBenchmarkRunner:
     benchmark = build_benchmark(tmp_path / "benchmark", arms=arms, tasks=tasks)
     clock = steady_clock()
@@ -383,6 +402,7 @@ def _runner(
         tmp_path / output,
         provider=provider or _ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
+        retry_policy=retry_policy,
         monotonic=lambda: next(clock),
     )
 
@@ -423,6 +443,43 @@ async def test_an_explicit_arm_runs_the_whole_product_mainline(
     assert evidence.execution.tokens is not None
     assert evidence.execution.tokens.total_tokens > 0
     assert evidence.execution.tokens.quality == "exact"
+
+
+async def test_benchmark_reports_retry_cost_without_changing_product_success(
+    tmp_path: Path,
+) -> None:
+    provider = _TransientFirstCallProvider()
+    policy = ModelRetryPolicy(
+        max_attempts=2,
+        max_elapsed_seconds=10.0,
+        base_delay_seconds=0.0,
+        max_delay_seconds=1.0,
+        retry_after_cap_seconds=1.0,
+        jitter_ratio=0.0,
+    )
+    report = await _runner(
+        tmp_path,
+        arms=(("single", 1),),
+        provider=provider,
+        retry_policy=policy,
+    ).run()
+
+    data = report.to_dict()
+    attempt = data["attempts"][0]
+    execution = attempt["evidence"]["execution"]
+    arm = data["quality_arms"][0]
+    assert report.complete
+    assert attempt["success"] is True
+    assert provider.calls == 3  # failed call, successful Tool call, final response
+    assert execution["model_attempts"] == 3
+    assert execution["retry_wait_milliseconds"] == 0
+    assert execution["provider_failure_categories"] == ["dns"]
+    assert execution["final_model_results"][0]["result"] == "succeeded"
+    assert execution["tokens"]["quality"] == "exact"
+    assert arm["model_attempts"]["total"] == 3
+    assert arm["provider_failure_categories"] == ["dns"]
+    markdown = (tmp_path / "evidence" / "report.md").read_text(encoding="utf-8")
+    assert "provider_failure_categories: dns" in markdown
 
 
 async def test_the_promoted_revision_is_what_the_target_ref_points_at(
@@ -630,7 +687,17 @@ async def test_a_router_failure_is_measured_and_its_owners_converge(
     tmp_path: Path,
 ) -> None:
     runner = _runner(
-        tmp_path, arms=(("auto", 1),), provider=_UnparsableRouterProvider()
+        tmp_path,
+        arms=(("auto", 1),),
+        provider=_UnparsableRouterProvider(),
+        retry_policy=ModelRetryPolicy(
+            max_attempts=2,
+            max_elapsed_seconds=10.0,
+            base_delay_seconds=0.0,
+            max_delay_seconds=1.0,
+            retry_after_cap_seconds=1.0,
+            jitter_ratio=0.0,
+        ),
     )
     report = await runner.run()
 
@@ -649,6 +716,7 @@ async def test_a_router_failure_is_measured_and_its_owners_converge(
     assert evidence.routing is None
     assert evidence.routing_parsed is False
     assert len(evidence.unattributed.sessions) == 1
+    assert evidence.unattributed.model_attempts == 1
     assert evidence.unattributed.tokens is not None
     assert evidence.unattributed.tokens.total_tokens > 0
     assert evidence.execution.sessions == ()
@@ -748,11 +816,22 @@ async def test_a_role_that_worked_before_failing_still_reports_its_cost(
     assert len(evidence.execution.sessions) == 1
     coder = evidence.execution.sessions[0]
     assert coder.tool_calls == 1
-    assert coder.tokens is not None and coder.tokens.total_tokens > 0
+    assert coder.tokens is None
+    assert "execution.coder.tokens" in evidence.unavailable
+    assert evidence.budget.settled_tokens > 0
     # The cost belongs to the coder, not to an unattributed bucket.
     assert evidence.unattributed.sessions == ()
     arm = report.to_dict()["quality_arms"][0]
-    assert arm["execution_tokens"]["total"] == coder.tokens.total_tokens
+    assert arm["execution_tokens"] == {
+        "observations": 0,
+        "unavailable": 1,
+        "values": [],
+        "total": 0,
+        "minimum": None,
+        "maximum": None,
+        "mean": None,
+    }
+    assert arm["ledger_settled_tokens"]["total"] == evidence.budget.settled_tokens
     assert arm["tool_calls"]["total"] == 1
 
 

@@ -60,6 +60,7 @@ from traceh.evolution.candidate_validation import (
 )
 from traceh.inspector import SessionInspector
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
+from traceh.llm.retry import ModelRetryPolicy
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.plugins import PluginError, resolve_enabled_plugins
 from traceh.runtime.agent_runtime import (
@@ -105,6 +106,7 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
+    _add_model_retry_arguments(parser)
     parser.add_argument("--verify-command")
     parser.add_argument(
         "--plugin-verifier",
@@ -126,6 +128,15 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_model_retry_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--model-retry-max-attempts", type=int, default=None)
+    parser.add_argument("--model-retry-max-elapsed-seconds", type=float, default=None)
+    parser.add_argument("--model-retry-base-delay-seconds", type=float, default=None)
+    parser.add_argument("--model-retry-max-delay-seconds", type=float, default=None)
+    parser.add_argument("--model-retry-after-cap-seconds", type=float, default=None)
+    parser.add_argument("--model-retry-jitter-ratio", type=float, default=None)
+
+
 def _from_environment(args: argparse.Namespace, attribute: str, variable: str, default=None):
     current = getattr(args, attribute, None)
     if current is not None:
@@ -140,6 +151,16 @@ def _positive_integer(value: object, *, variable: str) -> int:
         raise CliConfigurationError(f"{variable} must be an integer") from error
     if parsed < 1:
         raise CliConfigurationError(f"{variable} must be at least 1")
+    return parsed
+
+
+def _nonnegative_float(value: object, *, variable: str) -> float:
+    try:
+        parsed = float(str(value))
+    except ValueError as error:
+        raise CliConfigurationError(f"{variable} must be a number") from error
+    if parsed < 0 or parsed == float("inf") or parsed != parsed:
+        raise CliConfigurationError(f"{variable} must be finite and non-negative")
     return parsed
 
 
@@ -188,6 +209,31 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
     if hasattr(args, "max_steps"):
         raw_max_steps = _from_environment(args, "max_steps", "TRACEH_MAX_STEPS", 20)
         args.max_steps = _positive_integer(raw_max_steps, variable="TRACEH_MAX_STEPS")
+    if hasattr(args, "model_retry_max_attempts"):
+        args.model_retry_max_attempts = _positive_integer(
+            _from_environment(
+                args,
+                "model_retry_max_attempts",
+                "TRACEH_MODEL_RETRY_MAX_ATTEMPTS",
+                3,
+            ),
+            variable="TRACEH_MODEL_RETRY_MAX_ATTEMPTS",
+        )
+        for attribute, variable, default in (
+            ("model_retry_max_elapsed_seconds", "TRACEH_MODEL_RETRY_MAX_ELAPSED_SECONDS", 30.0),
+            ("model_retry_base_delay_seconds", "TRACEH_MODEL_RETRY_BASE_DELAY_SECONDS", 0.5),
+            ("model_retry_max_delay_seconds", "TRACEH_MODEL_RETRY_MAX_DELAY_SECONDS", 4.0),
+            ("model_retry_after_cap_seconds", "TRACEH_MODEL_RETRY_AFTER_CAP_SECONDS", 8.0),
+            ("model_retry_jitter_ratio", "TRACEH_MODEL_RETRY_JITTER_RATIO", 0.2),
+        ):
+            setattr(
+                args,
+                attribute,
+                _nonnegative_float(
+                    _from_environment(args, attribute, variable, default),
+                    variable=variable,
+                ),
+            )
     if hasattr(args, "verify_command"):
         # The two verifier selectors are mutually exclusive, but a selector
         # explicitly written on the command line still outranks the other
@@ -272,6 +318,20 @@ def _provider_and_model(args: argparse.Namespace):
     return provider, args.model
 
 
+def _model_retry_policy(args: argparse.Namespace) -> ModelRetryPolicy:
+    try:
+        return ModelRetryPolicy(
+            max_attempts=args.model_retry_max_attempts,
+            max_elapsed_seconds=args.model_retry_max_elapsed_seconds,
+            base_delay_seconds=args.model_retry_base_delay_seconds,
+            max_delay_seconds=args.model_retry_max_delay_seconds,
+            retry_after_cap_seconds=args.model_retry_after_cap_seconds,
+            jitter_ratio=args.model_retry_jitter_ratio,
+        )
+    except (TypeError, ValueError) as error:
+        raise CliConfigurationError(f"invalid model retry policy: {error}") from None
+
+
 async def _runtime(
     args: argparse.Namespace,
     *,
@@ -289,6 +349,7 @@ async def _runtime(
         max_steps=args.max_steps,
         verification_command=args.verify_command,
         verifier_name=args.verifier_name,
+        model_retry_policy=_model_retry_policy(args),
     )
     return await build_default_runtime_async(
         config,
@@ -472,6 +533,7 @@ async def _chat(args: argparse.Namespace) -> int:
                 approver_id=product_config.approver_id,
                 max_report_chars=product_config.max_report_chars,
                 actions=actions,
+                model_retry_policy=runtime.config.model_retry_policy,
             )
         heartbeat_seconds = validate_heartbeat_seconds(
             args.heartbeat_seconds, timeline=args.timeline
@@ -614,7 +676,11 @@ async def _eval(args: argparse.Namespace) -> int:
         raise CliConfigurationError("eval --output must be a directory that does not exist yet")
     try:
         runner = ProductBenchmarkRunner(
-            args.benchmark, args.output, provider=provider, model_id=model
+            args.benchmark,
+            args.output,
+            provider=provider,
+            model_id=model,
+            retry_policy=_model_retry_policy(args),
         )
     except EvaluationError as error:
         raise CliConfigurationError(getattr(error, "code", "benchmark-error")) from None
@@ -996,6 +1062,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--script", type=Path)
     evaluate.add_argument("--base-url", default=None)
     evaluate.add_argument("--api-key-env", default=None)
+    _add_model_retry_arguments(evaluate)
     evaluate.set_defaults(handler=_eval)
 
     plugins = sub.add_parser(

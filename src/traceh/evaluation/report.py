@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from traceh.api.json_types import JsonValue
 from traceh.api.product import RequestedTaskMode, ResolvedTaskMode
 from traceh.evaluation.metrics import AttemptEvidence, SessionWork, TokenTotals
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 
 APPROVAL_POLICY = "programmatic-immediate"
 """The benchmark host approves its own one-shot local target, immediately.
@@ -197,8 +198,26 @@ class AttemptReport:
                 "steps": evidence.execution.steps,
                 "tool_calls": evidence.execution.tool_calls,
                 "turns": evidence.execution.turns,
+                "model_attempts": evidence.execution.model_attempts,
                 "tokens": _tokens_dict(evidence.execution.tokens),
                 "cumulative_work_duration_ms": evidence.execution.work_duration_ms,
+                "retry_wait_milliseconds": (
+                    evidence.execution.retry_wait_milliseconds
+                ),
+                "provider_active_milliseconds": (
+                    evidence.execution.provider_active_milliseconds
+                ),
+                "provider_failure_categories": list(
+                    evidence.execution.provider_failure_categories
+                ),
+                "final_model_results": [
+                    {
+                        "session_id": item.session_id,
+                        "agent_id": item.agent_id,
+                        "result": item.final_model_result,
+                    }
+                    for item in evidence.execution.sessions
+                ],
             },
             # Owned Agents no durable Product or Workflow fact names - a Router
             # whose answer was rejected is the one that really happens. Their
@@ -297,6 +316,23 @@ class QualityArm:
             "tool_calls": summarize(
                 [item.execution.tool_calls for item in evidences]
             ).to_dict(),
+            "model_attempts": summarize(
+                [item.execution.model_attempts for item in evidences]
+            ).to_dict(),
+            "retry_wait_milliseconds": summarize(
+                [item.execution.retry_wait_milliseconds for item in evidences]
+            ).to_dict(),
+            "provider_active_milliseconds": summarize(
+                [item.execution.provider_active_milliseconds for item in evidences]
+            ).to_dict(),
+            "provider_failure_categories": sorted(
+                {
+                    category
+                    for item in evidences
+                    for category in item.execution.provider_failure_categories
+                }
+            ),
+            "final_model_results": _model_result_counts(evidences),
             "cumulative_work_duration_ms": summarize(
                 [item.execution.work_duration_ms for item in evidences]
             ).to_dict(),
@@ -360,6 +396,37 @@ class RoutingArm:
                     for item in evidences
                 ]
             ).to_dict(),
+            "model_attempts": summarize(
+                [
+                    None if item.routing is None else item.routing.model_attempts
+                    for item in evidences
+                ]
+            ).to_dict(),
+            "retry_wait_milliseconds": summarize(
+                [
+                    None if item.routing is None else item.routing.retry_wait_milliseconds
+                    for item in evidences
+                ]
+            ).to_dict(),
+            "provider_active_milliseconds": summarize(
+                [
+                    None
+                    if item.routing is None
+                    else item.routing.provider_active_milliseconds
+                    for item in evidences
+                ]
+            ).to_dict(),
+            "provider_failure_categories": sorted(
+                {
+                    category
+                    for item in evidences
+                    if item.routing is not None
+                    for category in item.routing.provider_failure_categories
+                }
+            ),
+            "final_model_results": _session_result_counts(
+                [item.routing for item in evidences]
+            ),
         }
 
 
@@ -410,6 +477,7 @@ class BenchmarkReport:
     model_id: str
     attempts: tuple[AttemptReport, ...]
     tasks: tuple[TaskConditions, ...]
+    retry_policy: ModelRetryPolicy = NO_MODEL_RETRY
 
     @property
     def quality_arms(self) -> tuple[QualityArm, ...]:
@@ -468,6 +536,7 @@ class BenchmarkReport:
             "provider_id": self.provider_id,
             "model_id": self.model_id,
             "approval_policy": APPROVAL_POLICY,
+            "retry_policy": self.retry_policy.to_dict(),
             "attempts_run": len(self.attempts),
             "attempts_measured": self.measured,
             "attempts_with_unavailable_metrics": self.attempts_with_unavailable_metrics,
@@ -491,6 +560,9 @@ def render_markdown(report: BenchmarkReport) -> str:
         f"- profile: {data['profile_id']}",
         f"- provider/model: {data['provider_id']} / {data['model_id']}",
         f"- approval policy: {data['approval_policy']}",
+        "- model retry policy: "
+        f"max_attempts={data['retry_policy']['max_attempts']}, "
+        f"max_elapsed_seconds={data['retry_policy']['max_elapsed_seconds']}",
         f"- attempts run/measured: {data['attempts_run']} / {data['attempts_measured']}",
         "- attempts with unavailable metrics: "
         f"{data['attempts_with_unavailable_metrics']}",
@@ -544,12 +616,23 @@ def render_markdown(report: BenchmarkReport) -> str:
             "ledger_settled_tokens",
             "steps",
             "tool_calls",
+            "model_attempts",
+            "retry_wait_milliseconds",
+            "provider_active_milliseconds",
             "cumulative_work_duration_ms",
             "active_ms",
             "approval_wait_ms",
             "wall_ms",
         ):
             lines.append(f"- {label}: {_summary(arm[label])}")
+        lines.append(
+            "- provider_failure_categories: "
+            + (", ".join(arm["provider_failure_categories"]) or "none")
+        )
+        lines.append(
+            "- final_model_results: "
+            + _counts(arm["final_model_results"])
+        )
         lines.append("")
     routing = data["routing_arm"]
     lines.extend(("## Routing (auto only, not a quality arm)", ""))
@@ -571,22 +654,66 @@ def render_markdown(report: BenchmarkReport) -> str:
         lines.append(
             f"- routing_elapsed_ms: {_summary(routing['routing_elapsed_ms'])}"
         )
+        for label in (
+            "model_attempts",
+            "retry_wait_milliseconds",
+            "provider_active_milliseconds",
+        ):
+            lines.append(f"- routing_{label}: {_summary(routing[label])}")
+        lines.append(
+            "- routing_provider_failure_categories: "
+            + (", ".join(routing["provider_failure_categories"]) or "none")
+        )
+        lines.append(
+            "- routing_final_model_results: "
+            + _counts(routing["final_model_results"])
+        )
     lines.extend(("", "## Attempts", ""))
     lines.append(
         "| attempt | directory | requested | resolved | success | measured | "
+        "model attempts | retry wait ms | provider active ms | failures | final model | "
         "active_ms | approval_wait_ms | wall_ms | promotion |"
     )
-    lines.append("|---|---|---|---|---|---|---:|---:|---:|---|")
+    lines.append(
+        "|---|---|---|---|---|---|---:|---:|---:|---|---|---:|---:|---:|---|"
+    )
     for attempt in data["attempts"]:
         evidence = attempt["evidence"]
         timing = attempt["timing"]
         resolved = "-" if evidence is None else _text(evidence["resolved_mode"])
         promotion = "-" if evidence is None else _text(evidence["promotion_id"])
+        execution = None if evidence is None else evidence["execution"]
+        model_attempts = (
+            "-" if execution is None else _text(execution["model_attempts"])
+        )
+        retry_wait = (
+            "-"
+            if execution is None
+            else _text(execution["retry_wait_milliseconds"])
+        )
+        provider_active = (
+            "-" if execution is None else _text(execution["provider_active_milliseconds"])
+        )
+        failures = (
+            "-"
+            if execution is None
+            else (", ".join(execution["provider_failure_categories"]) or "none")
+        )
+        final_model = (
+            "-"
+            if execution is None
+            else ", ".join(
+                _text(item["result"])
+                for item in execution["final_model_results"]
+            )
+        )
         lines.append(
             f"| {attempt['attempt_id']} | {attempt['directory']} | "
             f"{attempt['requested_mode']} | {resolved} | "
             f"{str(attempt['success']).lower()} | "
             f"{str(attempt['measured']).lower()} | "
+            f"{model_attempts} | {retry_wait} | {provider_active} | {failures} | "
+            f"{final_model} | "
             f"{_number(timing, 'active_ms')} | "
             f"{_number(timing, 'approval_wait_ms')} | "
             f"{_number(timing, 'wall_ms')} | {promotion} |"
@@ -645,9 +772,48 @@ def _session_dict(work: SessionWork | None) -> JsonValue:
         "turns": work.turns,
         "steps": work.steps,
         "tool_calls": work.tool_calls,
+        "model_attempts": work.model_attempts,
         "tokens": _tokens_dict(work.tokens),
         "work_duration_ms": work.work_duration_ms,
+        "retry_wait_milliseconds": work.retry_wait_milliseconds,
+        "provider_active_milliseconds": work.provider_active_milliseconds,
+        "provider_failure_categories": list(work.provider_failure_categories),
+        "final_model_result": work.final_model_result,
     }
+
+
+def _model_result_counts(evidences: list[AttemptEvidence]) -> dict[str, JsonValue]:
+    return _session_result_counts(
+        [session for evidence in evidences for session in evidence.execution.sessions]
+    )
+
+
+def _session_result_counts(
+    sessions: list[SessionWork | None],
+) -> dict[str, JsonValue]:
+    counts: dict[str, int] = {}
+    unavailable = 0
+    for session in sessions:
+        if session is None or session.final_model_result is None:
+            unavailable += 1
+        else:
+            counts[session.final_model_result] = (
+                counts.get(session.final_model_result, 0) + 1
+            )
+    return {"counts": dict(sorted(counts.items())), "unavailable": unavailable}
+
+
+def _counts(value: JsonValue) -> str:
+    if not isinstance(value, dict):
+        return "unavailable"
+    raw_counts = value.get("counts")
+    unavailable = value.get("unavailable")
+    parts = []
+    if isinstance(raw_counts, dict):
+        parts.extend(f"{key}={number}" for key, number in raw_counts.items())
+    if isinstance(unavailable, int) and unavailable:
+        parts.append(f"unavailable={unavailable}")
+    return ", ".join(parts) or "none"
 
 
 def _tokens_dict(tokens: TokenTotals | None) -> JsonValue:

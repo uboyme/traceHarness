@@ -42,6 +42,7 @@ from traceh.budgets import (
     BudgetToolAdmissionGate,
 )
 from traceh.budgets.events import BUDGET_USAGE_STARTED
+from traceh.llm.failures import ProviderFailure
 from traceh.llm.runtime import LlmAdmission, LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
@@ -359,7 +360,7 @@ async def test_provider_failure_consumes_the_whole_token_reservation() -> None:
         agent_id="agent-root",
         session_id="session-root",
     )
-    with pytest.raises(RuntimeError, match="provider failed"):
+    with pytest.raises(ProviderFailure, match="provider-failure-unclassified"):
         await invoke(runtime, FailingProvider(), request("step-failed"))
 
     account = (await service.ledger()).account("agent-root")

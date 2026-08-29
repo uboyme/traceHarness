@@ -423,10 +423,10 @@ async def test_a_failed_turn_keeps_its_timeline_and_chat_continues(tmp_path: Pat
     # The timeline reported the failure, and the chat printed its own error line.
     # Match distinctly: the timeline line is prefixed with "[event N] ", so a
     # plain substring would find the same line twice.
-    assert console.has("] Runtime error: RuntimeError")
-    chat_error = console.index_of_line_starting_with("error: RuntimeError")
+    assert console.has("] Runtime error: ProviderFailure")
+    chat_error = console.index_of_line_starting_with("error: ProviderFailure")
     # Timeline for the failed turn comes before the chat's error line.
-    assert console.index_of("] Runtime error: RuntimeError") < chat_error
+    assert console.index_of("] Runtime error: ProviderFailure") < chat_error
     # And the chat kept going.
     assert console.has("assistant> Recovered answer.")
 

@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### v0.8-F2: typed Provider failures and bounded same-request retry
+
+- Added stable, sanitized Provider failure codes/categories. The
+  OpenAI-compatible adapter classifies approved transport and HTTP failures by
+  type/status without exposing response bodies, headers, transport text,
+  secrets or local paths; untyped Provider/plugin failures become non-retryable
+  `provider-failure-unclassified`.
+- Added one explicit host `ModelRetryPolicy` with finite Attempt/elapsed/delay,
+  Retry-After and jitter bounds. Only temporary DNS, timeout/408, TLS EOF,
+  disconnect, 429 and selected 5xx categories are candidates; permanent and
+  unknown categories cannot be added. Exponential delay applies the finite cap
+  without materializing an unbounded integer, so even a very large valid
+  ordinal cannot overflow before the decision. The adapter itself has no
+  hidden retry.
+- Kept retry inside the existing AgentLoop Step: every later ordinal reuses the
+  same Composition-resolved Provider/model and exact request frozen by ordinal
+  one. AgentLoop and Session CAS both reject drift before dispatch, and later
+  Attempt starts bind the immediately preceding typed failure. Session also
+  reuses the full core invariant checker under its Stream lock before granting
+  a later dispatch permit, so an already-invalid history cannot authorize a
+  paid call and is preserved rather than folded, repaired or deleted.
+- Gave every retry ordinal an independent Budget reserve/start/settle lifecycle.
+  Known failure Usage is charged and reported; unknown Usage remains
+  conservative, and insufficient balance refuses a retry rather than shrinking
+  the frozen request.
+- Made cancellation converge without a later paid call across retry delay,
+  reservation, Attempt start/end, Provider and settlement windows. Cancellation
+  after a failed Provider outcome now returns to the AgentLoop lifecycle owner
+  after Budget convergence instead of escaping as a `BaseExceptionGroup` with
+  open Attempt/Step/Turn evidence.
+- Extended `traceh eval` JSON/Markdown with one recorded policy, Attempt counts,
+  retry wait, Provider-active time, stable failure categories and final model
+  results for routing and execution. Product success, auto arm attribution and
+  quality semantics are unchanged; retry-assisted success is reliability data,
+  not a quality claim.
+- Added deterministic clock/Gate tests and reverse verification for permanent
+  failure storms, uncharged later calls, cancellation ownership and request
+  drift. Public counterexamples also reject missing response messages and
+  explicit null Usage as protocol failures, and prove a large valid retry
+  ordinal still returns a finite bounded delay. No Provider/model fallback,
+  proxy/TLS weakening, second Runner, driver/TUI, v0.9 capability, version bump
+  or release action is included.
+- Closed Release Stop B after independent re-review found no P0/P1/P2. The first
+  full F1+F2 suite exposed one stale CLI Activity assertion that expected a raw
+  Provider `RuntimeError`; the production-safe typed failure was retained and
+  only that assertion was synchronized. A complete rerun from a new short
+  external pytest directory passed with `2472 passed, 7 skipped`, exit code 0;
+  no `--lf`, test filtering, network, real Provider or F3 work was used.
+
 ### v0.8-F1: single production SQLite EventStore
 
 - Replaced the production JSONL backend with one stdlib SQLite EventStore and

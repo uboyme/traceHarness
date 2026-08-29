@@ -831,7 +831,7 @@ async def test_a_failed_turn_leaves_no_heartbeat_task(tmp_path: Path) -> None:
         heartbeat_seconds=10.0, clock=clock.clock,
     )
 
-    assert console.has("error: RuntimeError: provider exploded")
+    assert console.has("error: ProviderFailure: provider-failure-unclassified")
     assert not live_display_tasks()
 
 

@@ -37,6 +37,7 @@ from traceh.evaluation.report import (
     build_task_conditions,
     render_markdown,
 )
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 
 REPORT_JSON = "report.json"
 REPORT_MARKDOWN = "report.md"
@@ -52,7 +53,7 @@ class ProductBenchmarkRunner:
     constructs a model client of its own.
     """
 
-    __slots__ = ("_manifest", "_monotonic", "_output_dir", "_providers")
+    __slots__ = ("_manifest", "_monotonic", "_output_dir", "_providers", "_retry_policy")
 
     def __init__(
         self,
@@ -61,6 +62,7 @@ class ProductBenchmarkRunner:
         *,
         provider: LlmProvider,
         model_id: str,
+        retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         provider_id = getattr(provider, "name", None)
@@ -74,6 +76,7 @@ class ProductBenchmarkRunner:
         self._output_dir = Path(output_dir).absolute()
         self._providers: Mapping[str, LlmProvider] = {provider_id: provider}
         self._monotonic = monotonic
+        self._retry_policy = retry_policy
 
     @property
     def manifest(self) -> BenchmarkManifest:
@@ -115,6 +118,7 @@ class ProductBenchmarkRunner:
                 )
                 for task in self._manifest.tasks
             ),
+            retry_policy=self._retry_policy,
         )
         self._write(report)
         return report
@@ -136,6 +140,7 @@ class ProductBenchmarkRunner:
                 request,
                 manifest=self._manifest,
                 providers=self._providers,
+                retry_policy=self._retry_policy,
                 monotonic=self._monotonic,
             )
         except (EvaluationError, OSError) as error:

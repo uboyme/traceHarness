@@ -30,9 +30,10 @@
 
 TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，修了四条真实边界（见 20.26）：模型不能替用户开工；AgentLoop 连续取消也要写完 Attempt/Step/Turn；L4 要用目标 venv 自己的 sysconfig scheme；嵌套 L2 下的 Workspace 身份不能把 Git for Windows 的内部管理路径顶爆。第四项仍保留完整 SHA-256，只把重复的 `workspace` 目录标签去掉。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
 
-当前未发布开发线又完成了 v0.8-F0/F1：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS 成为
-唯一派发许可证；F1 把所有生产事件切到一个 SQLite 数据库，并删除 JSONL compatibility。版本号仍是
-`0.7.1`，这不是新 release，也还没有 retry、TUI、Skill 或 Memory。
+当前未发布开发线又完成了 v0.8-F0/F1/F2：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
+成为唯一派发许可证；F1 把所有生产事件切到一个 SQLite 数据库，并删除 JSONL compatibility；F2 只给
+同 Provider、同模型、同一份冻结请求增加有限的瞬时故障 retry。版本号仍是 `0.7.1`，这不是新 release，
+也还没有 Provider/model fallback、TUI、Skill 或 Memory。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -71,12 +72,12 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能在运行中换插件吗 | 可以在空闲的 `traceh chat` 中用 `/plugins`、`/plugins reload`、`/plugins use ID...` 或 `--none` 切换当前进程已经能发现的已安装插件；这会重做 setup/conflict/health 并走 Generation/Lease/Drain，但不是 pip 安装、Wheel 替换或 Python module reload |
 | 有四层 Scope 吗 | 有程序化装配：Service、Tool、Prompt、Policy 都能由宿主 Python 代码明确放进 Application、Workspace、Preset 或 Agent 层，越靠近 Agent 越优先，而且 Step 开始后不会被新 Generation 原地换掉。插件本身仍只在 application 层 setup，不能自行选择子层；它提供的 Policy 属 application 候选 |
 | 插件是被沙箱隔开的吗 | 不是。v0.4 的插件和 Harness 同进程同权限；`isolated` 可以写在 Manifest 里，但会被**明确拒绝** |
-| 有多 Agent 吗 | **有了模型可调用的进程内子 Agent 主线。** v0.6 Stage A–E 已有身份、FIFO、真实 Turn、child-first 生命周期和五个普通 Tool；v0.7-A/B 用单一层级 Budget 账本强制 managed create、模型、Step、Tool、wall 与进程 slot；v0.7-C/D1 可给 managed Agent 分配独立 Git worktree 并冻结 immutable Patch；v0.7-D2 又能对这份 Patch 做固定检查、人工批准和 Git 分支的比较后交换；v0.7-E 再把这些公共服务串成固定五类节点的流程图。仍没有默认 CLI 装配、冷恢复、跨进程唯一性、自动重试、自动批准或通用 Workflow DSL |
+| 有多 Agent 吗 | **有了模型可调用的进程内子 Agent 主线。** v0.6 Stage A–E 已有身份、FIFO、真实 Turn、child-first 生命周期和五个普通 Tool；v0.7-A/B 用单一层级 Budget 账本强制 managed create、模型、Step、Tool、wall 与进程 slot；v0.7-C/D1 可给 managed Agent 分配独立 Git worktree 并冻结 immutable Patch；v0.7-D2 又能对这份 Patch 做固定检查、人工批准和 Git 分支的比较后交换；v0.7-E 再把这些公共服务串成固定五类节点的流程图。F2 只有同一次模型请求的有限瞬时 Provider retry；仍没有默认 CLI 装配、冷恢复、跨进程唯一性、Workflow/Tool 自动重试、自动批准或通用 Workflow DSL |
 | 有独立工作区吗 | **宿主程序化装配时有。** source id 由宿主映射，revision 固定为一个 commit，模型只看到 workspace id；脏或无法证明安全的工作区会 quarantine，不会 force 删除。D1 可以由宿主显式捕获不可变 Patch Artifact，D2 可以对它做固定检查、人工批准并推广到宿主管理的裸仓库；当前没有对应 CLI，也没有自动批准或自动合并 |
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个数据库吗 | 能。SQLite 事务和主键保护连续 seq；同库 writer（包括不同 Stream）会有界排队，默认 5 秒，超时明确失败。但“同一 Session 同时只跑一个 Turn”仍只是单进程规则 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。v0.8-F1 现在可收集 `2446` 项；SQLite 直接组 100 通过、2 个文件 symlink 权限 skip，Session/Runtime/Agent 608 通过，插件组合 184 通过。跨域大组最初 692 通过、2 失败、2 skip；失败只是 F1 合法改过的 AgentLoop/AgentRuntime 摘要仍钉在 F0，更新这两个摘要后对应两文件 90 通过，Supervisor/PluginManager 没变。CLI + comparison 最初 537 通过、1 失败、1 skip；唯一失败是夹具把事件写到内存、公开 replay 却从 SQLite 读，改成夹具显式拥有同一本 SQLite 后聚焦 38 通过。Release Stop A 两轮找到的三项 SQLite P1 已修复，review-fix 相邻组 155 通过、2 skip，最终复审确认 P0/P1 清零；按计划这里没有跑完整 pytest |
+| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。v0.8-F2 现在可收集 `2479` 项；Release Stop B 最终复审 P0/P1/P2 全零。第一次完整测试只剩一条 CLI 旧文字断言，修正后从全新短目录完整重跑得到 `2472 passed, 7 skipped`、退出码 0，最慢的 L2 隔离验证为 `1097.00s`；详细经过见 20.28 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -3090,8 +3091,8 @@ Catalog、Agent、Session、路径反查和安全删除仍核对同一个完整�
 在 `v0.7.1` 已发布、基线是 `194f44fe84ecb9adb85fc1d48d182d364bb94f45` 时，多轮独立审核完成，
 路线写进 [`v0.8` 冻结计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
 [`v0.9` 冻结计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。v0.8-F0 已经做完并提交为 `4906590`；F1
-已经实现、正在未提交工作树完成门禁；F2-F5 和整个 v0.9 都没开始。SQLite 已可用，retry、TUI、Skill、
-Memory 仍不能用；F0/F1 都没有升级版本、push、tag、发版、联网、调用真实 Provider 或读取 Key。
+也已实现、复审清零并提交为 `5797927`。这是 F1 停止点的记录：当时 F2-F5 和整个 v0.9 都没开始；F2
+后来的真实实现见 20.28。F0/F1 都没有升级版本、push、tag、发版、联网、调用真实 Provider 或读取 Key。
 
 F0 开工前的真问题已经由反例复现：AgentLoop 先记“模型调用开始”，Budget 后检查；余额为 0 时
 Provider 一次也没收到请求，账本却声称有 Attempt。snapshot 还只记了组装请求，不是 Budget 压低输出
@@ -3201,12 +3202,108 @@ Release Stop A 现在已经由最终独立复审确认 P0/P1 清零。F1 到此�
 确认仍然必须做，不能只跑失败项说全绿。并发、取消、多进程、SQLite 和 Git 用例也不会为了快而默认
 开 xdist；Wheel、L2-L4、联网和真实 Provider 只在当前改动或发布阶段确实负责它们时运行。
 
-F2 只允许同 Provider、同模型、同一份冻结请求做有限 retry，不会换模型或 fallback。F3/F4 让旧行式
+冻结计划里的 F2 只允许同 Provider、同模型、同一份冻结请求做有限 retry，不会换模型或 fallback；它
+现在已按 20.28 实现并等待 Release Stop B。F3/F4 让旧行式
 CLI 和可选 TUI 共用同一个 driver、同一份临时活动状态；界面只读两条真实状态，不让 heartbeat 替用户
-写账。完整付费网格只在 F5 跑一次。现在已经是 SQLite，但没有 retry、driver 或 TUI。
+写账。完整付费网格只在 F5 跑一次。现在已经是 SQLite 且有同请求 bounded retry，但没有
+Provider/model fallback、driver 或 TUI。
 
 v0.9 必须等 v0.8 发布后再批准。Skill 仍属于现有 trusted Plugin 的 Activation/Generation/Lease；
 选择 Skill 不等于启用插件或获得 Tool。Memory 是 Workspace 的宿主批准事实，模型只能提议。每一步先
 冻结 Context Input，再写 Composition snapshot，`source_seq` 继续限定请求证据。基础检索是 exact +
 SQLite FTS，本地 embedding/reranker 只可显式、离线、derived 启用；质量评测仍走唯一 `traceh eval`，
 完整语料、人工答案和评分器不进 coder Workspace/模型上下文，也不另开第二 Runner。
+
+### 20.28 v0.8-F2：网络偶发故障可以有限重试，但每次都要单独记账（正式版 20.34）
+
+这一阶段解决的不是“模型答得不好再问一次”，而是 DNS、超时、TLS 提前断开、429 或部分 5xx 这类
+Provider 瞬时故障。认证失败、没权限、请求写错、配置错误、Provider 返回了不合合同的 JSON，以及无法
+识别的异常，都只调用一次。严格 Router 给出不合法 JSON 也不会重试——那是模型已经成功回答、只是答案
+不符合产品合同，不是网络故障。
+
+为什么不能简单在 HTTP Provider 里写个 `for` 循环？因为那样账本只看见 1 次 Model Attempt，网络上却
+可能付费 3 次，Budget 也只扣一笔。现在 retry 仍在原来的 `AgentLoop` Step 里：第一次请求经过 Budget
+确定最终输出上限后冻结；临时失败时，同一个 Step 新建 ordinal 2/3。每个 ordinal 都有自己的 Attempt id、
+Token reservation、START 和 settlement，但 Provider 对象、model 和整份 request 完全相同。既不会换到
+另一个模型，也不会为了余额不足偷偷调小输出上限。
+
+有两道门防止第二次请求漂移。AgentLoop 先比较真正拿到的 request；随后 Session 在写
+`model/attempt-start` 的 CAS 里再和 ordinal 1 的唯一 snapshot 比指纹。后续 start 还必须写明“我是因为
+前一个 failed Attempt 的哪个稳定 code/category 才来的”。删掉两道门做反向测试时，一个被改小输出上限
+的第二次请求真的跑成功了；恢复后它在 Provider 调用前失败。
+
+Session 发许可证时还要看“旧账本本身是不是已经坏了”。它在同一把 Stream lock 里读取最新 Session，
+直接复用完整的 `CoreInvariantChecker`；只要已有事件违反任一核心规则，就不再允许下一次 Provider 调用。
+它不会用 set 把重复事件悄悄折叠，也不会为了继续运行去删证据或修账。这样“checker 明明已经能看出账本
+非法，但 retry 仍继续付费”的两套答案不会同时存在。
+
+Provider 错误也不再把原始异常文字到处传。[`llm/failures.py`](../../src/traceh/llm/failures.py) 的异常只
+公开短 code、类别、可选的数字 Retry-After 和可信 Usage。HTTP body、header、底层异常里的 Key、路径或
+请求片段不会进入 Event、CLI 或报告。OpenAI-compatible adapter 按 HTTP 状态和 Python 异常**类型**
+分类，不搜索字符串。插件 Provider 若直接抛普通异常，会被统一变成 unknown、不可重试的安全错误。
+
+有限到底是多少，由 [`llm/retry.py`](../../src/traceh/llm/retry.py) 的宿主 policy 明说。CLI 当前默认包括
+第一次在内最多 3 次，总 retry window 最长 30 秒，base delay 0.5 秒、单次最多 4 秒、Retry-After 最多
+信 8 秒，jitter 0.2。对应六个参数都能用 `--model-retry-...` 或
+`TRACEH_MODEL_RETRY_...` 显式修改；程序化创建 Runtime 默认仍是 1 次、不自动重试，必须由 composition
+root 主动给 policy。ProductTask 的 Router/parent/reviewer/coder 共用同一份；`traceh eval` 的所有任务、
+重复和 single/multi/auto 也共用一份并把它写进报告。
+Chat 启动时打印的恢复命令也会带上这六个不含秘密的数值；以后照着命令恢复，重试策略不会悄悄变回
+默认值。
+
+两个边角也没有靠“反正默认只试三次”遮过去：公开 policy 允许很大的正整数 Attempt 上限，所以退避计算
+现在先走有界浮点指数并在溢出时落到宿主 cap，合法大 ordinal 不会先炸 `OverflowError`；Provider 返回的
+choice 连 `message` 都没有，或明确写了 `usage: null`，也不能冒充一次空成功/未知用量，统一按 protocol
+failure 停止。三条反例在旧逻辑上分别真实得到一次溢出和两次“没有抛错”，修复后都通过。
+
+等待和真正调用 Provider 的时间是两列。Attempt start 记录 retry wait，Attempt end 记录
+Provider-active milliseconds；Benchmark 还报告 Attempt 数、失败类别和每个 Session 最后的模型结果。
+失败调用若真有可信 Token Usage，就计入 execution/routing Tokens；若无法知道，就写 unavailable，不能
+填 0。Budget Ledger 仍按原规则保守扣完整 reservation，所以“模型声称用了多少”和“系统实际扣了多少
+权限”不会被混成一个数。auto 仍归入它真正选中的 single 或 multi，retry 后成功也只能说网络可靠性
+改善，不能说模型质量提升。
+
+取消边界也逐个测了：delay、Budget reservation 已提交、Attempt start 已提交、Provider 正在执行、
+Attempt end 已提交、Budget 正在 settlement。无论在哪个窗口取消，当前工作都会先收敛，Provider 不会
+多调用一次，也不会留下下一 ordinal。这里还修了一个真实根因：Provider 先失败、用户又在结算时取消，
+旧 finalizer 会把两者包成 `BaseExceptionGroup`，导致 AgentLoop 收不到取消、Attempt/Step/Turn 没人收尾；
+现在结算完成后把取消交回真正的生命周期 owner。冷恢复仍只关掉崩溃时开放的 Attempt，从不替用户继续
+retry。
+
+四次反向验证分别拆掉“永久错误不重试”“每次独立 Budget”“取消后不准下一次”“请求冻结”保护，真实
+看到认证/协议错误打第二次、Provider 2 次但 Ledger 只有 1 笔、嵌套异常留下不完整证据、漂移请求成功；
+全部恢复后 F2 反例集重新全绿。实现与完整状态见
+[ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md)。当前版本仍是未发布的
+`0.7.1` 工作树，没有联网、没有真实 Key、没有 fallback/代理/TLS 放宽，也没有提前做 driver/TUI。
+Release Stop B 最终复审已经清零 P0/P1/P2，完整 F1 SQLite + F2 retry 集成门禁也已通过；F2 到此结束，
+下一步可以进入 F3，但这里没有提前实现它。
+
+Release Stop B 首轮审查确实抓到上述“坏账仍发许可证”：第一次临时失败正在等待时，外部追加了第二条
+完全规范但重复的 Attempt end。旧代码把两条 end 折叠成一个，真的又调用了 Provider；结果是 2 条 start、
+3 条 end，Turn 还成功。新反例先证明旧保护 `DID NOT RAISE` 且调用次数为 2，再恢复完整历史 gate；现在
+只调用第一次并以 ownership conflict 停止，重复证据仍原样保留。旧 Recovery 测试若需要构造多条未闭合
+Attempt，也改为明确从 EventStore 测试接缝注入崩溃历史，不再让正式许可证 API 制造非法记录。另一条
+Benchmark 红灯只是测试仍想保留“部分精确 Token”：现在它正确检查 Session Token unavailable，同时确认
+Budget Ledger 的保守 `settled_tokens` 大于 0，因此成本没有被藏成零。
+
+这次已经实际跑过的门禁是：F2 核心与 CLI 定向组 `416 passed`；Runtime/Session/Budget/取消/CLI 相邻组
+`474 passed, 1 skipped`；Product/Workflow/Promotion/Benchmark 大组先是
+`504 passed, 2 failed, 1 skipped`，两个失败只是 F2 合法改过的 `AgentLoop`/`AgentRuntime` 文件摘要还钉在
+F1，更新这两个明确名字的保护摘要后对应测试 `2 passed`；另外六条受 retry 影响、会真正创建本地临时
+Git 仓库的 Benchmark E2E 是 `6 passed`。全仓只收集不执行得到 `2478` 项；compileall、改动范围 Ruff、
+diff、反示例硬编码/新增秘密值扫描和文档章节、围栏、图、链接检查都通过。完整全量还没跑，这些数字也
+没有拿 F1 的旧结果来充数。
+
+首轮审查修好后又分四组实际跑了 `90 + 7 + 32 + 131 = 260 passed`，四组没有重复：分别覆盖
+Retry/Session/Budget/Recovery、真实本地 Git Benchmark、Provider/Runtime/架构、以及 CLI Chat/Product
+合同/Benchmark 报告。全仓现在只收集得到 `2479` 项；compileall、本次四个 Python 文件 Ruff、生产修复的
+反示例硬编码扫描和 diff 检查通过。这些在当时仍只是修复后的短门禁，没有假装已经跑完随后那次最终
+完整测试。
+
+最终完整测试刻意使用仓库外的全新短临时目录，因为复审已经证明 Windows 长 pytest 路径会在真正逻辑
+开始前让 Git Workspace 建立失败；测试本身一项没筛。第一次全量是 `2471 passed, 7 skipped, 1 failed`，
+唯一红灯只因 Activity 测试还期待原始 `RuntimeError: provider exploded`，但 F2 的正确合同早已把这种
+插件/Provider 普通异常变成安全的 `ProviderFailure: provider-failure-unclassified`。heartbeat 清理断言
+本身没有失败，所以只改旧预期，不改生产代码。目标测试加两条已有 CLI 清洗反例 `3 passed` 后，又从
+另一个全新短目录完整跑一遍，最终是 **`2472 passed, 7 skipped`、退出码 0**；最慢的真实 L2 隔离验证
+耗时 `1097.00s`。这是同一个门禁首次跑红后修到全绿，不是用 `--lf` 或只跑失败项冒充全量。

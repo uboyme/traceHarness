@@ -29,6 +29,7 @@ from traceh.budgets import (
     BudgetExhaustedError,
     BudgetLedgerService,
 )
+from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.llm.runtime import LlmAdmission, LlmAdmissionBindingError, LlmRuntime
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.continuation import DefaultContinuationRuntime
@@ -510,7 +511,22 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
         "step/start",
         {"turn_id": "turn-root", "step_id": "step-root"},
     )
-    provider = CountingProvider()
+    class RetryCountingProvider(CountingProvider):
+        async def complete(self, request: ModelRequest) -> ModelResponse:
+            self.calls += 1
+            self.requests.append(request)
+            if self.calls == 1:
+                raise ProviderFailure(
+                    "provider-dns-temporary",
+                    ProviderFailureCategory.DNS,
+                    usage=Usage(1, 0, UsageQuality.EXACT),
+                )
+            return ModelResponse(
+                content="done",
+                usage=Usage(2, 1, UsageQuality.EXACT),
+            )
+
+    provider = RetryCountingProvider()
     llm = BudgetedLlmRuntime(
         budgets,
         agent_id="agent-root",
@@ -536,11 +552,20 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
             dispatch_request=admission.request,
             dispatch_fingerprint=fingerprint(admission.request.to_dict()),
             reservation_id=admission.reservation_id,
+            retry_wait_milliseconds=0 if ordinal == 1 else 1,
+            retry_failure_code=(
+                None if ordinal == 1 else "provider-dns-temporary"
+            ),
+            retry_failure_category=None if ordinal == 1 else "dns",
         )
-        await admission.dispatch(
-            provider=admission.provider,
-            request=admission.request,
-        )
+        status = "succeeded"
+        try:
+            await admission.dispatch(
+                provider=admission.provider,
+                request=admission.request,
+            )
+        except ProviderFailure:
+            status = "failed"
         await sessions.append_session(
             "session-root",
             "model/attempt-end",
@@ -552,7 +577,15 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
                 "request_snapshot_seq": start.data["request_snapshot_seq"],
                 "dispatch_fingerprint": start.data["dispatch_fingerprint"],
                 "reservation_id": admission.reservation_id,
-                "status": "succeeded",
+                "status": status,
+                **(
+                    {
+                        "failure_code": "provider-dns-temporary",
+                        "failure_category": "dns",
+                    }
+                    if status == "failed"
+                    else {}
+                ),
             },
         )
         admissions.append(admission)

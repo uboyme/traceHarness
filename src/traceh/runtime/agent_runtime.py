@@ -23,6 +23,7 @@ from traceh.kernel.hooks import HookDispatcher
 from traceh.kernel.registry import ServiceRegistry, ServiceView
 from traceh.kernel.scope import Scope, ScopedServiceBinding
 from traceh.llm.registry import LlmRegistry
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy, RetryScheduler
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_loop import AgentLoop, TurnResult
@@ -100,6 +101,7 @@ class RuntimeConfig:
     verifier_name: str | None = None
     verification_timeout_seconds: float = 60.0
     max_verification_retries: int = 1
+    model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -112,6 +114,8 @@ class RuntimeConfig:
             raise ValueError("verification_timeout_seconds must be positive")
         if self.max_verification_retries < 0:
             raise ValueError("max_verification_retries cannot be negative")
+        if type(self.model_retry_policy) is not ModelRetryPolicy:
+            raise TypeError("model_retry_policy must be ModelRetryPolicy")
 
 
 class AgentRuntime:
@@ -501,6 +505,7 @@ class _PreparedRuntime:
     continuation: ContinuationRuntime | None
     llm_runtime: LlmRuntime
     tool_admission_gate: ToolAdmissionGate | None
+    retry_scheduler: RetryScheduler
 
 
 def _prepare_default_runtime(
@@ -515,6 +520,7 @@ def _prepare_default_runtime(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -613,6 +619,7 @@ def _prepare_default_runtime(
         continuation=continuation,
         llm_runtime=LlmRuntime() if llm_runtime is None else llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        retry_scheduler=retry_scheduler or RetryScheduler.real(),
     )
 
 
@@ -670,6 +677,8 @@ def _finish_default_runtime(
         verifier=prepared.verifier,
         max_verification_retries=config.max_verification_retries,
         hooks=hooks,
+        retry_policy=config.model_retry_policy,
+        retry_scheduler=prepared.retry_scheduler,
     )
     return AgentRuntime(
         config=config,
@@ -703,6 +712,7 @@ def build_default_runtime(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -724,6 +734,7 @@ def build_default_runtime(
         continuation=continuation,
         llm_runtime=llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        retry_scheduler=retry_scheduler,
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,
@@ -768,6 +779,7 @@ async def build_default_runtime_async(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
     include_default_tools: bool = True,
@@ -797,6 +809,7 @@ async def build_default_runtime_async(
         continuation=continuation,
         llm_runtime=llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        retry_scheduler=retry_scheduler,
         event_store=event_store,
         additional_tools=additional_tools,
         include_default_tools=include_default_tools,

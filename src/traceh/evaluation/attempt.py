@@ -54,6 +54,7 @@ from traceh.evaluation.repositories import (
     build_attempt_repositories,
     read_target_revision,
 )
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.product.control import ProductTaskControlPlane
 from traceh.product.errors import ProductError, ProductStateError
 from traceh.product.host import ProductChatHost, build_product_chat_host
@@ -126,6 +127,7 @@ async def run_attempt(
     *,
     manifest: BenchmarkManifest,
     providers: Mapping[str, LlmProvider],
+    retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
     monotonic: Callable[[], float] = time.monotonic,
 ) -> AttemptReport:
     """Execute one attempt and return what its durable facts support."""
@@ -144,6 +146,7 @@ async def run_attempt(
             request,
             manifest=manifest,
             providers=providers,
+            retry_policy=retry_policy,
             monotonic=monotonic,
             repositories=repositories,
             store=store,
@@ -167,6 +170,7 @@ async def _run_attempt_with_store(
     *,
     manifest: BenchmarkManifest,
     providers: Mapping[str, LlmProvider],
+    retry_policy: ModelRetryPolicy,
     monotonic: Callable[[], float],
     repositories: AttemptRepositories,
     store: SqliteEventStore,
@@ -207,6 +211,7 @@ async def _run_attempt_with_store(
             capture_limits=settings.capture_limits,
             approver_id=settings.approver_id,
             max_report_chars=settings.max_report_chars,
+            model_retry_policy=retry_policy,
         )
     except BaseException as primary:
         # The Runtime exists from here on and owns a shutdown Task. Host assembly

@@ -16,7 +16,7 @@ from traceh.api.product import (
 )
 from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess
-from traceh.cli.main import build_parser
+from traceh.cli.main import _configure_from_environment, _model_retry_policy, build_parser
 from traceh.evaluation.errors import BenchmarkManifestError
 from traceh.evaluation.manifest import (
     BENCHMARK_SOURCE_ID,
@@ -286,6 +286,11 @@ def _evidence(
     profile_digest: str = "profile-1",
     source_base_revision: str = "rev-1",
     duration_ms: int | None = 900,
+    model_attempts: int = 1,
+    retry_wait_milliseconds: int | None = 0,
+    provider_active_milliseconds: int | None = 400,
+    provider_failure_categories: tuple[str, ...] = (),
+    routing: bool = False,
 ) -> AttemptEvidence:
     session = SessionWork(
         session_id=f"session-{resolved.value}",
@@ -293,8 +298,13 @@ def _evidence(
         turns=1,
         steps=2,
         tool_calls=1,
+        model_attempts=model_attempts,
         tokens=None if tokens is None else TokenTotals(tokens, 0, "exact"),
         work_duration_ms=duration_ms,
+        retry_wait_milliseconds=retry_wait_milliseconds,
+        provider_active_milliseconds=provider_active_milliseconds,
+        provider_failure_categories=provider_failure_categories,
+        final_model_result="succeeded",
     )
     return AttemptEvidence(
         task_id="product-task-1",
@@ -312,8 +322,8 @@ def _evidence(
         workflow_status=(
             WorkflowStatus.COMPLETED if success else WorkflowStatus.FAILED
         ),
-        routing=None,
-        routing_parsed=False,
+        routing=session if routing else None,
+        routing_parsed=routing,
         execution=SessionGroup((session,)),
         unattributed=SessionGroup(()),
         budget=BudgetOutcome(2, 2, 1, 1, 3, 3, 90, 2, 1),
@@ -391,7 +401,7 @@ def test_auto_never_becomes_a_third_quality_arm() -> None:
                 requested=RequestedTaskMode.MULTI,
             ),
             _attempt(
-                _evidence(resolved=ResolvedTaskMode.MULTI),
+                _evidence(resolved=ResolvedTaskMode.MULTI, routing=True),
                 requested=RequestedTaskMode.AUTO,
                 repetition=2,
             ),
@@ -404,6 +414,11 @@ def test_auto_never_becomes_a_third_quality_arm() -> None:
     assert data["quality_arms"][0]["requested_modes"] == {"auto": 1, "multi": 1}
     assert data["routing_arm"]["observations"] == 1
     assert data["routing_arm"]["resolved_modes"] == {"multi": 1}
+    assert data["routing_arm"]["final_model_results"] == {
+        "counts": {"succeeded": 1},
+        "unavailable": 0,
+    }
+    assert "routing_final_model_results: succeeded=1" in render_markdown(report)
 
 
 def test_one_observation_is_labelled_and_two_are_not() -> None:
@@ -557,6 +572,35 @@ def test_the_markdown_reads_the_same_dictionary_the_json_does() -> None:
     assert data["attempts"][0]["timing"]["active_ms"] == 800
 
 
+def test_retry_metrics_and_failure_categories_are_reported_from_session_facts() -> None:
+    report = _report(
+        (
+            _attempt(
+                _evidence(
+                    resolved=ResolvedTaskMode.SINGLE,
+                    model_attempts=2,
+                    retry_wait_milliseconds=250,
+                    provider_active_milliseconds=40,
+                    provider_failure_categories=("dns",),
+                ),
+                requested=RequestedTaskMode.SINGLE,
+            ),
+        )
+    )
+
+    arm = report.to_dict()["quality_arms"][0]
+    assert arm["model_attempts"]["total"] == 2
+    assert arm["retry_wait_milliseconds"]["total"] == 250
+    assert arm["provider_active_milliseconds"]["total"] == 40
+    assert arm["provider_failure_categories"] == ["dns"]
+    assert arm["final_model_results"] == {
+        "counts": {"succeeded": 1},
+        "unavailable": 0,
+    }
+    assert "provider_failure_categories: dns" in render_markdown(report)
+    assert "final_model_results: succeeded=1" in render_markdown(report)
+
+
 # --------------------------------------------------------------------- the CLI
 
 
@@ -572,6 +616,46 @@ def test_the_eval_command_takes_one_manifest_and_a_new_output_directory() -> Non
     # arguments are deliberately absent rather than accepted and ignored.
     for absent in ("data_dir", "verify_command", "verifier_name", "plugins", "max_steps"):
         assert not hasattr(args, absent), absent
+
+
+def test_eval_uses_one_explicit_bounded_retry_policy_for_the_whole_grid(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    for name in (
+        "TRACEH_MODEL_RETRY_MAX_ATTEMPTS",
+        "TRACEH_MODEL_RETRY_MAX_ELAPSED_SECONDS",
+        "TRACEH_MODEL_RETRY_BASE_DELAY_SECONDS",
+        "TRACEH_MODEL_RETRY_MAX_DELAY_SECONDS",
+        "TRACEH_MODEL_RETRY_AFTER_CAP_SECONDS",
+        "TRACEH_MODEL_RETRY_JITTER_RATIO",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    env_file = tmp_path / "empty.env"
+    env_file.write_text("", encoding="utf-8")
+    args = build_parser().parse_args(
+        [
+            "eval",
+            "benchmarks/product_v1",
+            "--output",
+            "run-1",
+            "--model",
+            "m",
+            "--env-file",
+            str(env_file),
+            "--model-retry-max-attempts",
+            "2",
+            "--model-retry-max-elapsed-seconds",
+            "12",
+        ]
+    )
+    _configure_from_environment(args)
+
+    policy = _model_retry_policy(args)
+    assert policy.max_attempts == 2
+    assert policy.max_elapsed_seconds == 12
+    assert policy.base_delay_seconds == 0.5
+    assert policy.max_delay_seconds == 4.0
 
 
 def test_the_eval_command_requires_an_output_directory() -> None:

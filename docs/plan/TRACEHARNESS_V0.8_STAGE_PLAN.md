@@ -1,6 +1,6 @@
 # TraceHarness v0.8 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现、完成最终全量并提交；F1 已实现，Release Stop A 两轮独立审查发现的三项 P1 已按 SQLite owner 修复并完成反向验证，最终复审确认 P0/P1 清零；F2 已获准作为下一阶段但尚未实现，F3-F5 未开始。**
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现、完成最终全量并提交；F1 已实现并在 Release Stop A 独立复审清零 P0/P1；F2 已实现 typed Provider failure、同 Provider/同模型/同冻结请求的有界 retry、Attempt/Budget/Session 证据与 Benchmark 度量，Release Stop B 最终复审已清零 P0/P1/P2，F1+F2 完整集成门禁已通过；F2 到此结束，F3-F5 未开始。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD
 > `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
@@ -363,6 +363,43 @@ F0+F1 完成后做一次独立 P0/P1 审查和 SQLite 真实多进程/备份验�
 
 ## 7. v0.8-F2：同 Provider/同模型的 bounded retry
 
+**当前实施状态（2026-08-29）**：本节代码、确定性失败/取消矩阵、报告字段和
+[ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md) 已实现。retry 位于既有
+`AgentLoop` 的 Step 内，以后续 Model Attempt ordinal 复用 ordinal one 冻结的 exact provider-bound
+request；没有 Provider 内部重试、第二 Runner 或 fallback。四项要求的反向验证已经分别真实复现
+认证/协议/未知失败风暴、后续调用逃出 Budget reservation、结算取消绕过生命周期 owner、以及第二次
+调用请求漂移，随后均恢复保护。Release Stop B 最终复审已经清零 P0/P1/P2，F1+F2 完整集成门禁也已
+通过；F2 到此结束，阶段顺序允许下一步进入 F3，但本节没有提前实现 F3。
+
+Release Stop B 首轮审查发现非法 Session 历史仍可能取得下一张 dispatch permit。修复集中在唯一 owner：
+`SessionService.start_model_attempt()` 在同一 Stream lock 内、CAS 前复用完整 `CoreInvariantChecker`；已有
+任何核心不变量失败都按 ownership conflict 拒绝，不折叠、修补或删除证据。确定性反例在 retry wait
+期间追加第二条 canonical Attempt end；旧逻辑真实发出 ordinal 2，新逻辑保持 Provider 调用 1 次。另一条
+P2 是 Benchmark E2E 的旧 Usage 断言，现改为同时证明 Provider Token unavailable 与 Ledger 保守结算，
+没有改生产计量语义。短复审最终确认 P0/P1/P2 全零，允许进入完整集成门禁。
+
+实施自审又用公开边界固定三个同范围反例：极大但合法的 Attempt ordinal 不能让指数退避先溢出，choice
+缺少 `message` 与显式 `usage: null` 不能被当成空成功或“usage 缺席”。旧实现分别真实得到
+`OverflowError` 和两次 `DID NOT RAISE ProviderFailure`；修复集中在 policy 算术与 adapter 严格解析 owner。
+
+实施侧停止点门禁已完成：F2/CLI 定向组 `416 passed`，Runtime/Session/Budget/取消/CLI 相邻组
+`474 passed, 1 skipped`，Product/Workflow/Promotion/Benchmark 跨域组除两处阶段授权文件的旧摘要 pin
+外为 `504 passed, 1 skipped`，更新具名 pin 后对应 `2 passed`，受影响的本地 Git Benchmark E2E
+`6 passed`；全仓 `2478 collected`。compileall、改动范围 Ruff、diff、反硬编码/新增秘密值与文档 QA
+通过。这些结果只允许进入 Release Stop B 独立审查，不等价于该停止点已经清零。
+
+首轮审查修复后的不重叠门禁为 `90 + 7 + 32 + 131 = 260 passed`，依次覆盖 Retry/Session/Budget/
+Recovery、受影响真实本地 Git Benchmark E2E、Provider/Runtime/架构，以及 CLI Chat/Product 合同与
+Benchmark 报告；全仓 `2479 collected`。compileall、本次修改 Python 文件 Ruff、生产修复反示例硬编码
+扫描和 diff 通过。这些在当时仍严格等待短复审清零 P0/P1，没有冒充随后运行的完整全量。
+
+短复审清零后，完整门禁从全新仓库外短 `basetemp` 执行全部 `2479` 项。第一次运行得到
+`2471 passed, 7 skipped, 1 failed`；唯一失败是 CLI Activity 测试仍期待 F2 已禁止暴露的 raw
+`RuntimeError` 文本，而生产已正确输出安全的 `ProviderFailure: provider-failure-unclassified`，heartbeat
+生命周期断言本身通过。只同步该旧测试预期后，目标与既有 CLI 清洗反例 `3 passed`；再从另一个全新短
+目录完整重跑，最终 **`2472 passed, 7 skipped`、退出码 0**，最慢 L2 隔离验证 `1097.00s`。没有使用
+`--lf`、测试筛选或缓存结果冒充最终全量；Release Stop B 到此关闭。
+
 ### 7.1 typed、清洗后的失败分类
 
 Provider adapter 必须把 transport/HTTP 结果映射成仓库自有、稳定、无秘密的失败类别；host retry
@@ -402,8 +439,12 @@ headers、底层 `URLError` 正文、秘密或本机路径；`model/attempt-end`
 - 第一次 unknown usage 后，余额不足以完整预留相同请求时不缩请求、不重试；
 - 重启只关闭 open Attempt，不自动继续 retry；
 - raw body/headers/异常正文、凭据和本机路径不进入 Event/CLI/report；
+- 极大合法 ordinal 的退避计算仍有限且不溢出；缺失 response message 与显式 null Usage 是 protocol
+  failure；
 - 临时移除不可重试 gate、attempt-scoped reservation、no-next-attempt 取消 gate 和 frozen request guard，
   分别真实复现认证风暴、费用覆盖、取消后额外付费调用和请求漂移。
+- 在 retry wait 期间追加重复 canonical Attempt end，下一次 Session permit 必须 fail closed；临时移除完整
+  history gate 时 Provider 必须真实多调用一次，不能只证明 checker 另处会报错。
 
 ### 7.4 Release Stop B
 

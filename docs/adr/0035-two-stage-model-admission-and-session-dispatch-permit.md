@@ -198,3 +198,6 @@ Budget needs lifecycle accounting, not ownership of `Provider.complete()`.
   TUI, Skill, Memory, second Benchmark runner or Product-specific AgentLoop.
 - Raw Provider exception normalization in durable events remains an explicit
   F2 boundary; only the terminal rendering injection path is closed here.
+  F2 subsequently implemented that boundary in
+  [ADR-0037](0037-typed-provider-failures-and-bounded-model-retry.md) without
+  changing this ADR's dispatch-permit ownership.

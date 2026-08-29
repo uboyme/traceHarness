@@ -849,6 +849,22 @@ def _write_resume_block(
     if config.max_steps:
         restore += [Literal("--max-steps"), str(config.max_steps)]
 
+    retry = config.model_retry_policy
+    restore += [
+        Literal("--model-retry-max-attempts"),
+        str(retry.max_attempts),
+        Literal("--model-retry-max-elapsed-seconds"),
+        str(retry.max_elapsed_seconds),
+        Literal("--model-retry-base-delay-seconds"),
+        str(retry.base_delay_seconds),
+        Literal("--model-retry-max-delay-seconds"),
+        str(retry.max_delay_seconds),
+        Literal("--model-retry-after-cap-seconds"),
+        str(retry.retry_after_cap_seconds),
+        Literal("--model-retry-jitter-ratio"),
+        str(retry.jitter_ratio),
+    ]
+
     if config.verifier_name is not None:
         restore += [Literal("--plugin-verifier"), config.verifier_name]
 

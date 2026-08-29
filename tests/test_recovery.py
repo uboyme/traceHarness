@@ -195,6 +195,9 @@ async def test_recovery_closes_attempt_that_crashed_right_after_start(tmp_path) 
     assert report.closed_model_attempts == 1
 
     events = await sessions.read_session(session_id)
+    # Recovery has no retry authority: it closes the paid Attempt that existed
+    # before the crash and never creates a later ordinal or calls a Provider.
+    assert sum(event.type == "model/attempt-start" for event in events) == 1
     attempt_end = next(event for event in events if event.type == "model/attempt-end")
     assert attempt_end.data["status"] == "unknown_after_crash"
     assert attempt_end.data["error_type"] == "RecoveredAfterCrash"
@@ -488,19 +491,72 @@ async def test_recovery_closes_multiple_attempts_in_start_order(tmp_path) -> Non
         await sessions.append_session(
             session_id, "step/start", {"turn_id": "t", "step_id": step_id}
         )
-        await start_attempt(
-            sessions,
-            session_id,
-            attempt_id=attempt_id,
-            turn_id="t",
-            step_id=step_id,
-        )
         if step_id == "s1":
+            await start_attempt(
+                sessions,
+                session_id,
+                attempt_id=attempt_id,
+                turn_id="t",
+                step_id=step_id,
+            )
             await sessions.append_session(
                 session_id,
                 "step/end",
                 {"turn_id": "t", "step_id": step_id, "reason": "interrupted"},
             )
+            continue
+
+        # Recovery deliberately accepts historical crash evidence containing
+        # more than one unclosed Attempt.  The dispatch-permit API must not be
+        # used to manufacture that illegal history, so inject the second
+        # canonical pair at the EventStore-facing test seam.
+        model_request = ModelRequest(
+            provider="scripted",
+            model="scripted-model",
+            messages=(ModelMessage(role="user", content="work"),),
+            metadata={
+                "session_id": session_id,
+                "turn_id": "t",
+                "step_id": step_id,
+                "composition_revision": "revision",
+            },
+        )
+        request_fingerprint = fingerprint(model_request.to_dict())
+        source_seq = (await sessions.read_session(session_id))[-1].seq
+        snapshot = await sessions.append_session(
+            session_id,
+            "request/snapshot",
+            {
+                "turn_id": "t",
+                "step_id": step_id,
+                "source_seq": source_seq,
+                "composition_revision": "revision",
+                "composed_fingerprint": request_fingerprint,
+                "dispatch_fingerprint": request_fingerprint,
+                "composed_request": model_request.to_dict(),
+                "dispatch_request": model_request.to_dict(),
+            },
+            composition_revision="revision",
+        )
+        await sessions.append_session(
+            session_id,
+            "model/attempt-start",
+            {
+                "turn_id": "t",
+                "step_id": step_id,
+                "attempt_id": attempt_id,
+                "ordinal": 1,
+                "request_snapshot_seq": snapshot.seq,
+                "dispatch_fingerprint": request_fingerprint,
+                "reservation_id": None,
+                "provider": "scripted",
+                "model": "scripted-model",
+                "retry_wait_milliseconds": 0,
+                "retry_failure_code": None,
+                "retry_failure_category": None,
+            },
+            composition_revision="revision",
+        )
 
     report = await RecoveryService(sessions).recover(session_id)
     assert report.closed_model_attempts == 2

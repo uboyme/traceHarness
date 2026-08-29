@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import json
+import socket
 import threading
+import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
 from traceh.api.llm import ModelMessage, ModelRequest, ToolSchema
+from traceh.api.turns import TurnInput
 from traceh.llm import openai_compatible
+from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
+from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.session.event_store import InMemoryEventStore
+from traceh.supervision import AgentRuntimeExecution
 
 
 def serve(handler: type[BaseHTTPRequestHandler]) -> tuple[ThreadingHTTPServer, threading.Thread]:
@@ -186,3 +193,254 @@ async def test_cancelling_a_request_waits_for_the_http_worker(monkeypatch) -> No
         server.server_close()
 
     assert order == ["worker-in-flight", "worker-finished", "caller-returned"]
+
+
+@pytest.mark.asyncio
+async def test_http_failure_is_typed_without_body_headers_or_secret() -> None:
+    exposed = "credential-material C:\\private\\provider.txt"
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            body = exposed.encode("utf-8")
+            self.send_response(401)
+            self.send_header("X-Diagnostic", exposed)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="credential-material",
+        )
+        with pytest.raises(ProviderFailure) as caught:
+            await provider.complete(
+                ModelRequest(
+                    provider=provider.name,
+                    model="test-model",
+                    messages=(ModelMessage("user", "hello"),),
+                )
+            )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert caught.value.code == "provider-http-authentication"
+    assert caught.value.category is ProviderFailureCategory.AUTHENTICATION
+    assert str(caught.value) == "provider-http-authentication"
+    assert exposed not in str(caught.value)
+
+
+@pytest.mark.asyncio
+async def test_retry_after_is_reduced_to_a_numeric_hint() -> None:
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(429)
+            self.send_header("Retry-After", "7.5")
+            self.end_headers()
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        with pytest.raises(ProviderFailure) as caught:
+            await provider.complete(
+                ModelRequest(
+                    provider=provider.name,
+                    model="test-model",
+                    messages=(ModelMessage("user", "hello"),),
+                )
+            )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert caught.value.category is ProviderFailureCategory.RATE_LIMITED
+    assert caught.value.retry_after_seconds == 7.5
+
+
+@pytest.mark.asyncio
+async def test_dns_exception_text_is_not_exposed(monkeypatch) -> None:
+    def fail(*args, **kwargs):
+        del args, kwargs
+        raise urllib.error.URLError(
+            socket.gaierror(-2, "credential-material C:\\private\\dns.txt")
+        )
+
+    monkeypatch.setattr(openai_compatible.urllib.request, "urlopen", fail)
+    provider = OpenAICompatibleProvider("https://provider.invalid/v1", api_key="secret")
+    with pytest.raises(ProviderFailure) as caught:
+        await provider.complete(
+            ModelRequest(
+                provider=provider.name,
+                model="test-model",
+                messages=(ModelMessage("user", "hello"),),
+            )
+        )
+
+    assert caught.value.category is ProviderFailureCategory.DNS
+    assert str(caught.value) == "provider-dns-temporary"
+    assert caught.value.usage is not None
+    assert caught.value.usage.quality.value == "exact"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"not-json",
+        json.dumps({"choices": [{"finish_reason": "stop"}]}).encode("utf-8"),
+        json.dumps(
+            {
+                "choices": [
+                    {"message": {"content": "done"}, "finish_reason": "stop"}
+                ],
+                "usage": None,
+            }
+        ).encode("utf-8"),
+    ],
+    ids=("invalid-json", "missing-message", "explicit-null-usage"),
+)
+async def test_invalid_response_is_non_retryable_protocol_failure(
+    body: bytes,
+) -> None:
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        with pytest.raises(ProviderFailure) as caught:
+            await provider.complete(
+                ModelRequest(
+                    provider=provider.name,
+                    model="test-model",
+                    messages=(ModelMessage("user", "hello"),),
+                )
+            )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert caught.value.code == "provider-response-invalid"
+    assert caught.value.category is ProviderFailureCategory.PROTOCOL
+
+
+@pytest.mark.asyncio
+async def test_malformed_usage_is_sanitized_as_a_protocol_failure() -> None:
+    exposed = "credential-material C:\\private\\usage.txt"
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            body = json.dumps(
+                {
+                    "choices": [
+                        {
+                            "message": {"content": "done"},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": exposed,
+                        "completion_tokens": 1,
+                    },
+                }
+            ).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        with pytest.raises(ProviderFailure) as caught:
+            await provider.complete(
+                ModelRequest(
+                    provider=provider.name,
+                    model="test-model",
+                    messages=(ModelMessage("user", "hello"),),
+                )
+            )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert caught.value.category is ProviderFailureCategory.PROTOCOL
+    assert exposed not in str(caught.value)
+
+
+@pytest.mark.asyncio
+async def test_adapter_failure_leaves_only_sanitized_durable_facts(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    exposed = "credential-material C:\\private\\transport.txt"
+
+    def fail(*args, **kwargs):
+        del args, kwargs
+        raise urllib.error.URLError(socket.gaierror(-2, exposed))
+
+    monkeypatch.setattr(openai_compatible.urllib.request, "urlopen", fail)
+    provider = OpenAICompatibleProvider("https://provider.invalid/v1", api_key=exposed)
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "data",
+            provider=provider.name,
+            model="test-model",
+            max_steps=1,
+        ),
+        provider=provider,
+        event_store=InMemoryEventStore(),
+    )
+    session_id = await runtime.create_session(tmp_path)
+    execution = AgentRuntimeExecution(runtime, session_id)
+    try:
+        with pytest.raises(ProviderFailure):
+            await execution.run_turn(TurnInput("perform the task", "message-root"))
+        events = await runtime.sessions.read_session(session_id)
+    finally:
+        await execution.dispose()
+
+    serialized = json.dumps([event.to_dict() for event in events], ensure_ascii=False)
+    attempt_end = next(event for event in events if event.type == "model/attempt-end")
+    runtime_error = next(event for event in events if event.type == "runtime/error")
+    assert exposed not in serialized
+    assert "C:\\private" not in serialized
+    assert attempt_end.data["failure_code"] == "provider-dns-temporary"
+    assert "message" not in attempt_end.data
+    assert "error_type" not in attempt_end.data
+    assert runtime_error.data["traceback"] == "ProviderFailure: provider-dns-temporary"

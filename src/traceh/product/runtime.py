@@ -25,6 +25,7 @@ from traceh.api.prompts import PromptSection
 from traceh.api.workspaces import WorkspaceAccess
 from traceh.budgets.enforcement import BudgetEnforcement
 from traceh.budgets.service import BudgetLedgerService
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.product.errors import ProductProfileError, ProductStateError
 from traceh.product.events import MAX_REASON_DISPLAY_CHARS
 from traceh.product.registry import ResolvedAgentAssembly
@@ -115,6 +116,7 @@ class ProductAgentRuntimeFactory:
         "_budgets",
         "_data_dir",
         "_providers",
+        "_retry_policy",
         "_store",
         "_workspaces",
     )
@@ -128,6 +130,7 @@ class ProductAgentRuntimeFactory:
         *,
         data_dir: Path,
         providers: Mapping[str, LlmProvider],
+        retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
     ) -> None:
         self._store = store
         self._workspaces = workspaces
@@ -135,6 +138,7 @@ class ProductAgentRuntimeFactory:
         self._budgets = budgets
         self._data_dir = Path(data_dir).absolute()
         self._providers = dict(providers)
+        self._retry_policy = retry_policy
 
     async def provision(
         self,
@@ -182,6 +186,7 @@ class ProductAgentRuntimeFactory:
                     provider="scripted",
                     model="product-owner",
                     max_steps=1,
+                    model_retry_policy=NO_MODEL_RETRY,
                 ),
                 event_store=self._store,
                 include_default_tools=False,
@@ -214,6 +219,7 @@ class ProductAgentRuntimeFactory:
                 model=assembly.model_id,
                 max_steps=limits.max_steps,
                 max_output_tokens=binding.max_output_tokens,
+                model_retry_policy=self._retry_policy,
             ),
             provider=provider,
             event_store=self._store,

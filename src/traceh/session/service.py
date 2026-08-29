@@ -148,6 +148,9 @@ class SessionService:
         dispatch_request: ModelRequest,
         dispatch_fingerprint: str,
         reservation_id: str | None,
+        retry_wait_milliseconds: int = 0,
+        retry_failure_code: str | None = None,
+        retry_failure_category: str | None = None,
         correlation_id: UUID | None = None,
     ) -> tuple[EventEnvelope, EventEnvelope]:
         """Atomically freeze the Step request and claim one dispatch ordinal.
@@ -186,12 +189,39 @@ class SessionService:
         expected_reservation_id = model_attempt_reservation_id(attempt)
         if reservation_id is not None and reservation_id != expected_reservation_id:
             raise ModelAttemptConflictError
+        if type(retry_wait_milliseconds) is not int or retry_wait_milliseconds < 0:
+            raise ModelAttemptConflictError
+        if attempt.ordinal == 1:
+            if (
+                retry_wait_milliseconds != 0
+                or retry_failure_code is not None
+                or retry_failure_category is not None
+            ):
+                raise ModelAttemptConflictError
+        elif (
+            not isinstance(retry_failure_code, str)
+            or not retry_failure_code
+            or not isinstance(retry_failure_category, str)
+            or not retry_failure_category
+        ):
+            raise ModelAttemptConflictError
 
         stream_id = self.session_stream(session_id)
         async with self._lock(stream_id):
             events = await self.store.read(stream_id)
             if not events or events[0].type != "session/created":
                 raise SessionNotFoundError(session_id)
+            # Import at the ownership boundary rather than module import time:
+            # the invariant checker also validates plugin identity and that
+            # dependency graph reaches ToolRuntime, which itself uses this
+            # service.
+            from traceh.session.invariants import CoreInvariantChecker
+
+            if CoreInvariantChecker().check(events):
+                # This service owns the only durable dispatch permit.  A later
+                # Attempt cannot be authorized from history that the shared
+                # Session projector already proves is not legally replayable.
+                raise ModelAttemptConflictError(ownership_lost=True)
             head = events[-1].seq
             if source_seq > head:
                 raise ModelAttemptConflictError
@@ -201,6 +231,7 @@ class SessionService:
             starts: list[EventEnvelope] = []
             all_attempt_ids: set[str] = set()
             ended: set[str] = set()
+            attempt_ends: dict[str, EventEnvelope] = {}
             snapshots: list[EventEnvelope] = []
             for event in events:
                 if event.type == "turn/start":
@@ -225,7 +256,9 @@ class SessionService:
                 elif event.type == "model/attempt-start":
                     all_attempt_ids.add(str(event.data.get("attempt_id", "")))
                 elif event.type == "model/attempt-end":
-                    ended.add(str(event.data.get("attempt_id", "")))
+                    ended_id = str(event.data.get("attempt_id", ""))
+                    ended.add(ended_id)
+                    attempt_ends[ended_id] = event
 
             if open_turn != attempt.turn_id or open_step != attempt.step_id:
                 raise ModelAttemptConflictError(ownership_lost=True)
@@ -246,6 +279,19 @@ class SessionService:
                 raise ModelAttemptConflictError(ownership_lost=True)
             if attempt.ordinal != len(starts) + 1:
                 raise ModelAttemptConflictError(ownership_lost=True)
+            if attempt.ordinal > 1:
+                previous = starts[-1]
+                previous_end = attempt_ends.get(
+                    str(previous.data.get("attempt_id", ""))
+                )
+                if (
+                    previous_end is None
+                    or previous_end.data.get("status") != "failed"
+                    or previous_end.data.get("failure_code") != retry_failure_code
+                    or previous_end.data.get("failure_category")
+                    != retry_failure_category
+                ):
+                    raise ModelAttemptConflictError(ownership_lost=True)
 
             pending: list[PendingEvent] = []
             if attempt.ordinal == 1:
@@ -293,6 +339,9 @@ class SessionService:
                 "reservation_id": reservation_id,
                 "provider": dispatch_request.provider,
                 "model": dispatch_request.model,
+                "retry_wait_milliseconds": retry_wait_milliseconds,
+                "retry_failure_code": retry_failure_code,
+                "retry_failure_category": retry_failure_category,
             }
             pending.append(
                 PendingEvent(

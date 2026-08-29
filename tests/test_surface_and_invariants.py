@@ -81,6 +81,9 @@ def attempt_start(
             "reservation_id": None,
             "provider": "scripted",
             "model": "model",
+            "retry_wait_milliseconds": 0 if ordinal == 1 else 1,
+            "retry_failure_code": None if ordinal == 1 else "provider-timeout",
+            "retry_failure_category": None if ordinal == 1 else "timeout",
         },
         event_id=event_id,
     )

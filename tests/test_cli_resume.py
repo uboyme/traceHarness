@@ -30,7 +30,8 @@ from traceh.cli.command_line import (
     render_powershell,
 )
 from traceh.cli.console import Console
-from traceh.cli.main import _configure_from_environment, build_parser
+from traceh.cli.main import _configure_from_environment, _model_retry_policy, build_parser
+from traceh.llm.retry import ModelRetryPolicy
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.session.event_store import InMemoryEventStore
@@ -75,6 +76,7 @@ def build_runtime(
     model: str = "qwen-plus",
     verification_command: str | None = None,
     max_steps: int = 20,
+    model_retry_policy: ModelRetryPolicy | None = None,
 ):
     return build_default_runtime(
         RuntimeConfig(
@@ -83,6 +85,18 @@ def build_runtime(
             model=model,
             max_steps=max_steps,
             verification_command=verification_command,
+            model_retry_policy=(
+                model_retry_policy
+                if model_retry_policy is not None
+                else ModelRetryPolicy(
+                    max_attempts=3,
+                    max_elapsed_seconds=30.0,
+                    base_delay_seconds=0.5,
+                    max_delay_seconds=4.0,
+                    retry_after_cap_seconds=8.0,
+                    jitter_ratio=0.2,
+                )
+            ),
         ),
         provider=(
             StubOpenAiCompatible()
@@ -489,6 +503,27 @@ def test_a_named_plugin_verifier_is_preserved_in_the_resume_command(
     assert resumed.plugins == ("verification.extension",)
 
 
+def test_model_retry_policy_is_preserved_in_the_resume_command(
+    tmp_path: Path,
+) -> None:
+    policy = ModelRetryPolicy(
+        max_attempts=2,
+        max_elapsed_seconds=12.5,
+        base_delay_seconds=0.25,
+        max_delay_seconds=2.0,
+        retry_after_cap_seconds=3.0,
+        jitter_ratio=0.1,
+    )
+    runtime = build_runtime(tmp_path, model_retry_policy=policy)
+    console = resume_lines(runtime, shell="posix")
+
+    argv = shlex.split(console.command_line())
+    resumed = build_parser().parse_args(argv[1:])
+    _configure_from_environment(resumed)
+
+    assert _model_retry_policy(resumed) == policy
+
+
 def test_a_scripted_session_is_not_told_about_an_api_key(tmp_path: Path) -> None:
     """Naming OPENAI_API_KEY for a scripted run is a misleading instruction."""
 
@@ -607,6 +642,8 @@ async def test_the_resume_command_reproduces_provider_and_model(
     env_file.write_text(
         "TRACEH_PROVIDER=scripted\nTRACEH_MODEL=custom-model\n", encoding="utf-8"
     )
+    monkeypatch.delenv("TRACEH_PROVIDER", raising=False)
+    monkeypatch.delenv("TRACEH_MODEL", raising=False)
 
     original = build_parser().parse_args(
         ["chat", str(workspace), "--env-file", str(env_file)]

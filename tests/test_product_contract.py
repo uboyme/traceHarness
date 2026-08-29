@@ -85,10 +85,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "c494de0c067b83cf9727ec6956d1133083ffee6d96eabce369659e6ea8d38fb6"
+        "a4a660307e770864175f98b59fb30c7bbe5f56ef968adaf2f588ff4b0019720e"
     ),
     "runtime/agent_runtime.py": (
-        "64f6f74f5ba2305d6aebe717687d33cf5a3f8e98d4a600841d2c89b8cf035e2a"
+        "ab66461f796b3fede5523bead9346f39f536d80749ab4a66120bc4ee6dabb797"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
@@ -102,7 +102,9 @@ PROTECTED_SOURCES = {
 These four own the v0.6 concurrency kernel. The product surface is built
 entirely above their public seams. v0.8-F0 changes ``AgentLoop`` only at its
 generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
-and failure-convergence seam; it gains no Product dependency or state.
+and failure-convergence seam. v0.8-F2 adds same-Step typed retry ownership there
+and passes an explicit retry policy through ``AgentRuntime`` composition; neither
+file gains Product state or a Product dependency.
 Normalizing line endings keeps the pin identical on every checkout, whatever
 ``core.autocrlf`` did locally.
 

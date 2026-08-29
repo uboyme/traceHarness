@@ -356,7 +356,7 @@ async def test_an_explicit_script_still_reports_exhaustion(tmp_path: Path) -> No
     assert await run_chat(runtime, console.console, workspace=tmp_path) == 0
 
     assert "assistant> only answer" in console.output
-    assert "error: ScriptExhaustedError" in console.output
+    assert "error: ProviderFailure: provider-failure-unclassified" in console.output
 
 
 # --- internal commands --------------------------------------------------------
@@ -409,7 +409,7 @@ async def test_turn_failure_is_reported_and_the_chat_continues(tmp_path: Path) -
 
     assert await run_chat(runtime, console.console, workspace=tmp_path) == 0
 
-    assert "error: RuntimeError: provider exploded" in console.output
+    assert "error: ProviderFailure: provider-failure-unclassified" in console.output
     assert "assistant> answer after the failure" in console.output
     session_id = (await runtime.sessions.list_sessions())[0]
     events = await runtime.sessions.read_session(session_id)

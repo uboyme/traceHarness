@@ -221,6 +221,11 @@ class TimelineRenderer:
             return "Model responded"
         if status is None:
             return "Model attempt ended"
+        failure_code = payload_text(data, "failure_code")
+        failure_category = payload_text(data, "failure_category")
+        if failure_code:
+            suffix = f" / {failure_category}" if failure_category else ""
+            return f"Model attempt {status} ({failure_code}{suffix})"
         error_type = payload_text(data, "error_type")
         if error_type:
             return f"Model attempt {status} ({error_type})"

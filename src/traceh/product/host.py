@@ -26,6 +26,7 @@ from traceh.budgets.supervision import (
     BudgetedAgentSupervisor,
     ProcessSlotAuthority,
 )
+from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.product.assembly import ProductAssemblyService
 from traceh.product.chat import (
     ConfirmProductTaskTool,
@@ -168,6 +169,7 @@ async def build_product_chat_host(
     approver_id: str,
     max_report_chars: int,
     actions: ProductTurnActions | None = None,
+    model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
 
@@ -195,6 +197,7 @@ async def build_product_chat_host(
         budgets,
         data_dir=data_dir,
         providers=providers,
+        retry_policy=model_retry_policy,
     )
     slots = ProcessSlotAuthority(budgets)
     process = ProcessAgentSupervisor(

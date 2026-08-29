@@ -43,22 +43,22 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | v0.8-F0/F1 未发布实现保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.33）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 已冻结 exact Provider/request/Attempt，仍不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider retry/fallback、Workflow retry、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | v0.8-F0–F2 未发布实现保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.34）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal，并仍不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
-| 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
+| 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat；不传 Product 配置时行为不变。显式 `--product-config` 后，模型只能建议 Proposal 或确认；当它建议确认时，宿主把精确 pending task 显示在独立终端提示中，只有用户输入固定 `START` 才能创建 ProductTask，其他输入/EOF 均不分配 task Budget、Workspace 或 Workflow。`/task inspect|approve|reject|cancel|abandon TASK_ID` 继续在模型前分派；开始后立即显示 task id，并沿用显式 heartbeat 间隔投影 durable Product/Workflow 进度。Approval 与 inspect 会显示固定节点、Agent Session/replay 命令、changed paths、有界 Patch 和 Verifier status/exit/evidence digest，证据缺失或被篡改时明确标为 unavailable。空闲提示符原有 `/plugins` 组合切换继续保留。它仍不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，旧数字不冒充当前工作树。v0.8-F1 当前 `collect-only = 2446`；SQLite/EventStore/Feed 直接组为 `100 passed, 2 skipped`，Session/Runtime/Agent 相邻组 `608 passed`，插件组合组 `184 passed`。Product/Workflow/Budget/Workspace/Artifact/Promotion/Evaluation 大组首次为 `692 passed, 2 failed, 2 skipped`，两项失败只因 F1 合法改动的 `AgentLoop`/`AgentRuntime` 保护摘要仍钉在 F0，更新这两个命名摘要后对应两文件 `90 passed`；Supervisor/PluginManager 摘要未变。CLI + comparison 首次为 `537 passed, 1 failed, 1 skipped`，失败夹具用 InMemory seed 后再让公开 replay 打开 SQLite，改为由夹具显式拥有同一本 SQLite 后聚焦组 `38 passed`。Release Stop A 两轮审查发现的三项 SQLite P1 已修复，review-fix 相邻组为 `155 passed, 2 skipped`，最终复审确认 P0/P1 清零；F1 按冻结计划未跑完整 pytest，compileall、Ruff、diff 与文档门禁见 20.33 |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，旧数字不冒充当前工作树。v0.8-F2 当前 `collect-only = 2479`；Release Stop B 最终独立复审为 P0/P1/P2 全零。第一次完整集成门禁只剩一条 CLI Activity 旧断言，修正后完整重跑得到 `2472 passed, 7 skipped`、退出码 0；最慢 L2 隔离验证为 `1097.00s`。F1、F2 的分层门禁与首次红灯见 20.33–20.34 |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前正式版本仍为 `v0.7.1`；v0.8-F0 已提交，F1 为未提交、未发布实现。v0.7.1 的复审、最终全量、
+当前正式版本仍为 `v0.7.1`；v0.8-F0/F1 已提交，F2 为未提交、未发布实现。v0.7.1 的复审、最终全量、
 干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见
 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。当前仍没有默认 Product Profile、OS 沙箱、跨进程
 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、
-MCP、TUI、流式输出或 Provider retry/fallback；F1 只替换事实存储及 owner，不提前实现 F2–F5。
+MCP、TUI、流式输出或 Provider/model fallback；F2 只实现同一冻结模型请求的有界 retry，不提前实现 F3–F5。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -126,11 +126,11 @@ traceharness/
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
 │   ├── cli/                          命令解析、.env 加载、交互式 chat 循环、Timeline 投影、Activity Heartbeat、Shell 命令渲染、插件 CLI 投影和终端编码
-│   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、descriptive 报告与唯一 Runner
+│   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、F2 retry/Provider-active 度量、descriptive 报告与唯一 Runner
 │   ├── evolution/                    L2 验证、L3 对比与 L4 人工批准/精确推广/回滚
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       四层 Service 与 Composition Overlay、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
-│   ├── llm/                          Provider 协议实现、注册表和调用边界
+│   ├── llm/                          Provider 协议实现、注册表、typed sanitized failure、显式 bounded retry policy/scheduler 与两阶段调用边界
 │   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
 │   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
 │   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、压缩、不变量和插件身份事实重建
@@ -239,7 +239,7 @@ flowchart TD
 | Inbox Message | 一次用户输入；先 accepted，再 claimed 到一个 Turn |
 | Turn | 一次用户唤醒后的完整工作轮次 |
 | Step | 一次冻结 Composition、构建请求、调用模型、可选执行工具的决策周期 |
-| Model Attempt | 一次 Provider 调用；为未来重试/Fallback 保留独立边界 |
+| Model Attempt | 一次取得 Session dispatch permit 的 Provider 调用；F2 的同请求 retry 是同一 Step 下的新 ordinal。它不是 fallback，Provider/model/request 都不变 |
 | Tool Invocation | 模型响应中的一个工具请求及其准入、Effect 和 Result |
 
 ### 5.2 正常执行
@@ -260,17 +260,27 @@ sequenceDiagram
     AL->>ES: inbox/accepted, inbox/claimed, turn/start
     loop 每个 Step
         AL->>ES: step/start, composition/snapshot
-        AL->>B: admit(composed request, fresh Attempt)
-        B->>ES: PENDING Attempt Token reservation（若 bounded）
-        B-->>AL: exact dispatch request + reservation handle
-        AL->>ES: CAS batch(request/snapshot + model/attempt-start)
-        AL->>B: admission.dispatch()
-        B->>ES: Token reservation STARTED
-        B->>M: exact dispatch ModelRequest
-        M-->>B: ModelResponse
-        B->>ES: Token reservation SETTLED
-        B-->>AL: ModelResponse
-        AL->>ES: assistant/chunk, assistant/message, model/attempt-end
+        loop 每个 Model Attempt ordinal（仅候选瞬时失败可继续）
+            AL->>B: admit(frozen request, fresh Attempt)
+            B->>ES: independent PENDING Token reservation（若 bounded）
+            B-->>AL: exact dispatch request + reservation handle
+            AL->>ES: ordinal 1 写 snapshot + start；后续只写绑定前次 failure 的 start
+            AL->>B: admission.dispatch()
+            B->>ES: Token reservation STARTED
+            B->>M: same Provider/model/exact request
+            alt typed retry candidate 且 count/elapsed/Budget 仍允许
+                M--xB: sanitized ProviderFailure
+                B->>ES: independent conservative/exact settlement
+                B-->>AL: stable code/category
+                AL->>ES: model/attempt-end failed
+                AL->>AL: bounded retry wait
+            else terminal outcome
+                M-->>B: ModelResponse / permanent failure
+                B->>ES: Token reservation SETTLED
+                B-->>AL: response / typed failure
+                AL->>ES: success 时写 assistant facts；总是写 terminal model/attempt-end
+            end
+        end
         alt 有 Tool Calls
             AL->>T: execute_batch
             T->>ES: tool/* 与 effect/*
@@ -683,10 +693,35 @@ START/SETTLE；它不再以 Step-scoped reservation 充当外部执行锁，见 
 - 请求为 `stream: false`，支持 messages、function tools、temperature、max tokens；
 - API Key 来自显式参数或命名环境变量，以 Bearer Header 发送；
 - 解析第一个 choice、文本、tool calls、finish reason 和 token usage；
-- HTTP/URL/响应结构错误转换为 `ProviderHttpError`。
+- HTTP/transport/响应结构错误转换为 exact `ProviderFailure` code/category；公开 message 只含稳定 code，
+  不复制 HTTP body/header、底层异常正文、秘密或本机路径；
+- 401/403、bad request/configuration、严格响应解析与未知失败不可重试；DNS、timeout/408、TLS EOF、
+  disconnect、429 与 500/502/503/504 才是 host policy 可进一步收窄的候选；
+- malformed usage 或 tool-call shape 是 protocol failure；完全缺失 usage 则保留 `UsageQuality.UNKNOWN`，
+  由 Budget 继续保守结算。
 
-当前没有流式读取、自动重试、Fallback、并发限流或厂商专属协议适配。
+当前没有流式读取、Provider 内部/SDK retry、Fallback、并发限流或厂商专属协议适配。
 取消语义：`urllib` 请求一旦发出就无法中止，因此 `complete()` 用 `asyncio.shield` 保护 Worker，取消时先用共享的 `await_worker_convergence()` 等它收敛再重新抛出原 `CancelledError`，重复取消不会提前返回。这样不会出现"Chat 已经宣布 interrupted、后台 HTTP Worker 仍在运行"的情况。代价必须说清楚：这是收敛而不是立即中止网络请求，最坏情况下要等到 `timeout_seconds`（默认 120 秒）到期。
+
+### 8.4 typed failure 与同请求 bounded retry
+
+完整决定见 [ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md)。Provider adapter
+只分类和清洗，不自行重试；`LlmAdmission` 把未遵守 typed 合同的 Provider/plugin 异常统一降为
+non-retryable `provider-failure-unclassified`。宿主的 `ModelRetryPolicy` 显式限制总 Attempt 数、整个
+retry window 的 monotonic elapsed、指数 backoff、单次 delay、numeric `Retry-After` cap、jitter 和候选
+category 子集。永久类别不能被 host 加回候选集，所有数值必须有限；`max_attempts=1` 是明确 no-retry。
+
+`AgentLoop` 每个 Step 只 build 一次 request。ordinal one 经 Budget shaping 后冻结 exact dispatch request；
+后续 ordinal 必须由同一 Composition lease 的同一个 Provider/model 原样 admit。AgentLoop 先做对象/DTO
+比较，`SessionService.start_model_attempt()` 再在 CAS owner 内比较 snapshot fingerprint，并要求后续 start
+绑定紧邻 failed Attempt 的稳定 code/category。两层任一不一致都在 Provider 调用前拒绝。
+
+每个 ordinal 都有新的 Attempt/reservation identity 和独立 reserve/start/settle。failure Usage 可信时同时
+进入 durable Attempt 与执行 Token；缺失/UNKNOWN 时执行 Token 明确 unavailable，Ledger 仍结算完整 hold。
+余额不足以完整预留 frozen request 时不降低输出上限换取调用。delay、reserve、start append、Provider、
+end append 或 settlement 任一窗口收到取消，都先让当前 owner 收敛并且不得生成下一 ordinal。Recovery
+只闭合 open Attempt，不持有 policy/scheduler，也不会继续 retry。严格 Router parse、Tool、Workflow、
+Verifier、EventStore 或 Promotion failure 都不属于本策略。
 
 ## 9. Tool Runtime 与内置工具
 
@@ -925,7 +960,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh plugins rollback` | 按显式当前/未完成推广 ID 恢复上一份精确 Wheel 或卸载首版；失败时退出码 10 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
 
-`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`eval` 只接受 `--output`、`--env-file` 与 provider 选择四项（`--provider`、`--model`、`--script`、`--base-url`、`--api-key-env`）：Benchmark 自己拥有数据目录、Verifier 和仓库，所以 `--data-dir`、`--verify-command`、`--plugin-verifier`、`--max-steps` 和 `--plugin` 是它无法兑现的参数，因此干脆不提供而不是接受后忽略。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
+`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`eval` 只接受 `--output`、`--env-file`、provider 选择（`--provider`、`--model`、`--script`、`--base-url`、`--api-key-env`）与六个 model-retry policy 参数；Benchmark 自己拥有数据目录、Verifier 和仓库，所以 `--data-dir`、`--verify-command`、`--plugin-verifier`、`--max-steps` 和 `--plugin` 是它无法兑现的参数，因此干脆不提供而不是接受后忽略。同一次 Eval 只解析一份 policy 并应用到所有 task/repetition/arm，报告也保存该 policy；它不改变 Product success 或 resolved-arm 归属。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
 
 除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，以及 Turn 运行期间的实时 Step/Tool Timeline（13.6）；但它仍是行式提示符：没有 token 流式输出、执行前审批，也不能在 Turn 运行期间继续输入。`run`/`resume` 本轮**没有**接 Timeline。
 
@@ -997,6 +1032,12 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 - `TRACEH_API_KEY_ENV`；
 - `TRACEH_DATA_DIR`；
 - `TRACEH_MAX_STEPS`；
+- `TRACEH_MODEL_RETRY_MAX_ATTEMPTS`；
+- `TRACEH_MODEL_RETRY_MAX_ELAPSED_SECONDS`；
+- `TRACEH_MODEL_RETRY_BASE_DELAY_SECONDS`；
+- `TRACEH_MODEL_RETRY_MAX_DELAY_SECONDS`；
+- `TRACEH_MODEL_RETRY_AFTER_CAP_SECONDS`；
+- `TRACEH_MODEL_RETRY_JITTER_RATIO`；
 - `TRACEH_VERIFY_COMMAND`；
 - `TRACEH_PLUGIN_VERIFIER`（必须同时显式启用插件，且与命令 Verifier 互斥）。
 
@@ -1011,6 +1052,10 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 | max tool output | 24,000 字符 |
 | verification timeout | 60 秒 |
 | max verification retries | 1 |
+| model retry max attempts | 3（包含第一次调用） |
+| model retry max elapsed | 30 秒 |
+| retry base / max delay | 0.5 / 4 秒 |
+| Retry-After cap / jitter ratio | 8 秒 / 0.2 |
 | data dir | `.traceh` |
 | provider/model | `scripted` / `scripted-model` |
 
@@ -1514,18 +1559,18 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 | 修改区域 | 必查代码/测试 | 必须同步的本文章节 |
 |---|---|---|
-| Agent Loop / Continuation | `runtime/agent_loop.py`、`continuation.py`、E2E/取消测试 | 4、5、10、11、15、16 |
+| Agent Loop / Continuation / model retry owner | `runtime/agent_loop.py`、`continuation.py`、`llm/retry.py`、`tests/test_model_retry.py`、E2E/取消测试、ADR-0035/0037 | 4、5、8.4、10、11、15、16、20.34 |
 | Event/Store/Session | `api/events.py`、`session/*`、event/invariant/recovery 测试 | 5、6、7、11、12、15、16 |
 | Event 所有权 / Store 返回值 | `api/events.py`（`detach_event`、`to_dict`、`from_dict`、`materialize`）、`session/event_store.py`、`session/sqlite.py`、`tests/test_event_store_contract.py`、`tests/test_sqlite_event_store.py` | 6.1、6.4–6.6、15、16 |
 | Event Feed / 发布顺序 | `session/event_feed.py`、`runtime/agent_runtime.py` 的装配、`tests/test_event_feed.py` | 4、6.1、6.4、6.7、15、16 |
 | Timeline / Chat 输出 | `cli/timeline.py`、`cli/chat.py`、`cli/main.py`、`tests/test_cli_timeline.py`、`tests/test_cli_chat.py`、README | 1、3、13.4、13.6、15、16 |
 | Heartbeat / 等待提示 | `cli/activity.py`、`cli/chat.py` 的显示装配、`cli/main.py`、`tests/test_cli_activity.py` | 1、3、13.6、13.7、15、16 |
 | Ctrl+C / 恢复信息 | `cli/chat.py`（`_interrupt_turn`、`_write_resume_block`、空闲中断）、`runtime/agent_runtime.py` 的 `cancel()`、取消与活动测试 | 5.3、11、13.8、15、16 |
-| Provider/Request | `api/llm.py`、`llm/*`、`request_builder.py` | 7、8、13、15、16 |
+| Provider/Request / typed failure | `api/llm.py`、`llm/failures.py`、`llm/openai_compatible.py`、`llm/runtime.py`、`request_builder.py`、`tests/test_openai_provider.py`、ADR-0037 | 7、8、13、15、16、20.34 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
 | Verifier | `verification.py` | 10、12、15、16 |
-| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033 | 1、3、12.4、13.1、15、16、20.29、20.30；改 Product host 装配、Workflow 拓扑、Promotion 回执字段或 Session 事件形状时必须同时核对本域的指标推导 |
+| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033/0037 | 1、3、8.4、12.4、13.1、15、16、20.29、20.30、20.34；改 Product host 装配、Workflow 拓扑、Promotion 回执字段、Session Attempt 事件形状或 retry 度量时必须同时核对本域的指标推导 |
 | 插件发现/启用/激活 | `plugins/*`、`api/plugins.py`、`api/prompts.py`、`kernel/activation.py`、`kernel/tasks.py`、`runtime/agent_runtime.py`、`tests/test_plugin_*.py` | 1、2、3、4、7.1、13、14、15、16、19 |
 | Runtime 关闭 / dispose | `runtime/agent_runtime.py`（`_shutdown`、`dispose`）、`plugins/manager.py` 的 `dispose`、`tests/test_runtime_dispose.py` | 5.3、5.5、15、16、19.8 |
 | 插件组合控制面 / Session 迁移 | `runtime/plugin_composition.py`、`runtime/agent_runtime.py` 门面、`tests/test_plugin_composition_coordinator.py`、Stage B/C 控制面测试 | 4、5.3、14、15、16、19.7–19.9 |
@@ -3432,7 +3477,8 @@ Catalog/Directory/Session identity 和 provider path 双向校验均不变。它
 2026-08-29 在已发布 `v0.7.1`、基线 `194f44fe84ecb9adb85fc1d48d182d364bb94f45`
 上完成多轮独立只读审查后，范围分别冻结为 [`v0.8` 阶段计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
 与 [`v0.9` 阶段计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。v0.8-F0 已实现并提交为 `4906590`；
-F1 已实现且 Release Stop A 最终复审确认 P0/P1 清零，F2-F5 和整个 v0.9 均未实现。F0/F1 没有升级版本、push、
+F1 已实现且 Release Stop A 最终复审确认 P0/P1 清零；这是 F1 停止点的实施记录，当时 F2-F5 和整个
+v0.9 均未实现，F2 的后续当前状态见 20.34。F0/F1 没有升级版本、push、
 tag、release、联网、调用真实 Provider 或读取秘密。
 
 F0 的基线反例确认，旧 `AgentLoop` 会在 `BudgetedLlmRuntime.invoke()` 准入前写
@@ -3556,9 +3602,11 @@ Release Stop A 已由最终独立复审确认 P0/P1 清零；F1 在此停止，�
 集成检查点；全量红灯后的根修与确认全量必须如实保留，不能用只跑失败项冒充。并发、取消、进程、
 SQLite 和 Git 测试不默认用 xdist，Wheel/L2-L4、联网与真实 Provider 也不进入无关阶段的日常门禁。
 
-F2 只做同 Provider/同模型/同冻结 dispatch request 的有界 retry；F3/F4 让 Line/TUI 共用一个 driver 和
+冻结计划中的 F2 只做同 Provider/同模型/同冻结 dispatch request 的有界 retry；它现已按 20.34 实现并
+等待 Release Stop B。F3/F4 让 Line/TUI 共用一个 driver 和
 ephemeral activity projection，并保持 Product/Workflow observation 纯读。唯一完整真实 Provider 网格
-只在 F5 作为发布证据运行。当前已是 SQLite，但仍无 retry、driver/TUI。
+只在 F5 作为发布证据运行。当前已是 SQLite 且有同请求 bounded retry，但仍无 Provider/model fallback、
+driver/TUI。
 
 v0.9 只有 v0.8 完成发布后才可重新核对和批准实施。trusted Plugin 在现有
 Activation/Generation/Lease 中贡献 typed Skill catalog，selection 不启用插件、不授予 Tool；Workspace
@@ -3567,3 +3615,106 @@ Input event，再追加 `composition/snapshot`，因此现有 `source_seq` 仍�
 基础检索，本地 embedding/reranker 仅可显式、离线、derived 启用。检索评测仍复用唯一 `traceh eval`；
 完整 corpus、人工 relevance judgment 与 evaluator 不进入 coder writable Workspace 或模型上下文，也不
 新增第二 Runner。
+
+### 20.34 v0.8-F2：typed Provider failure 与同冻结请求 bounded retry（通俗版 20.28）
+
+F2 的设计决定见
+[ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md)。它没有在 Provider 内部、
+`LlmRuntime.dispatch()` 里或 Benchmark 旁边增加隐藏 retry loop；唯一执行位置仍是既有 `AgentLoop` 的
+Step owner。这样一次真实 Provider 调用仍严格对应一条 durable Model Attempt 与一份独立 Budget
+reservation，而不是“Session 看见一次、网络实际付费多次”。F2 也没有改 Product success、固定 Workflow、
+人工 Approval、Promotion 或 Eval Runner 的身份和权限。
+
+[`llm/failures.py`](../../src/traceh/llm/failures.py) 定义 exact `ProviderFailure` 与枚举 category。异常公开
+文字只有稳定 kebab-case code；除有限 numeric `Retry-After` 与 typed Usage 外，不允许 HTTP body/header、
+`URLError` 正文、秘密或本机路径穿过 adapter。OpenAI-compatible adapter 按异常类型和 HTTP status
+分类：401 authentication、403 permission、常见 4xx invalid request、配置与严格 response parse 都永久
+失败；DNS、timeout/408、TLS EOF、disconnect、429 与 500/502/503/504 才是候选；未识别一律 unknown
+且不重试。malformed usage/tool call 是 protocol failure，完全缺失 usage 仍表示 UNKNOWN。stdlib
+`urllib` 没有第二层 SDK retry。插件或自定义 Provider 抛 raw exception 时，concrete `LlmAdmission`
+统一降为 `provider-failure-unclassified/unknown`，不把原文交给 Session、CLI 或报告。
+
+[`llm/retry.py`](../../src/traceh/llm/retry.py) 的 `ModelRetryPolicy` 由宿主显式持有 Attempt 总数、retry
+window monotonic elapsed、base/max delay、Retry-After cap、jitter 与候选 category 子集。永久类别不能
+由调用方加回，所有数值都必须有限；`NO_MODEL_RETRY` 是 `max_attempts=1`。`RetryScheduler` 把 monotonic
+clock、sleep 和 entropy 注入同一个 owner，生产用标准 monotonic/`asyncio.sleep`/本地 entropy，测试用
+Event/Gate 与假时钟，不靠任意 `sleep()` 猜时序。CLI `run`/`resume`/`chat`/`eval` 的 shipped 默认是最多
+3 个总 Attempt、30 秒 retry window、0.5 秒 base delay、4 秒单次上限、8 秒 Retry-After 上限和 0.2
+jitter；程序化 Runtime 默认为 no-retry，composition root 必须主动提供 policy。Product host 把同一份
+policy 交给 Router 和所有角色；一个 Eval run 也把同一份 policy 交给全部任务、重复与 arm。
+Chat 启动时打印的可恢复命令会携带这六个非秘密数值，重新解析后得到同一份 policy，不会在恢复时
+静默回到 shipped 默认。
+
+每个 Step 的 request 仍只构建一次。ordinal one 可以先被既有 Budget adapter 正向收紧
+`max_output_tokens`，之后这份 provider-bound request 即冻结；后续 ordinal 使用同一个 Composition lease、
+Provider 对象、model 和 exact request。AgentLoop 在 Session 写入前比较 request/指纹，Session CAS 再与
+唯一 snapshot 比较，并要求新 start 的 `retry_failure_code/category` 精确指向紧邻的 failed Attempt end。
+在同一个 Stream lock 内读取 fresh history 后，`SessionService.start_model_attempt()` 还会先复用
+`CoreInvariantChecker` 检查整条已有 Session；只要任何核心不变量已经破坏，就以 ownership conflict
+拒绝下一张 dispatch permit，不按 set/dict 折叠重复事实，也不修补或删除证据。任何历史非法或请求漂移
+都不调用 Provider。ordinal one 的 start 记录 retry wait 为 0、failure identity 为 null；后续 start
+记录上一失败与该次实际等待毫秒。每个 end 记录 Provider-active 毫秒；typed failure 只记录稳定
+code/category，以及 adapter 真能证明时的 Usage。
+
+Budget 继续是唯一余额事实源：每个 ordinal 用新的 Attempt 派生 reservation，独立
+reserve/start/settle。失败 Usage 可证明时按原 quality 结算；没有或不可信时结算完整 hold。第一次 unknown
+usage 把余额耗到不能完整购买同一 frozen request 时，后续 admission 直接 `BudgetExhaustedError`，不会
+偷偷降低输出上限。F2 修正了一个同层取消根因：Provider 已失败、调用方又在 settlement 等待中取消时，
+owned finalizer 先收敛 Ledger，再把 `CancelledError` 交回 AgentLoop；不能用旧 Provider failure 把取消
+包装成 `BaseExceptionGroup`，否则 Attempt/Step/Turn owner 根本接不到取消。delay、reservation commit、
+Attempt start commit、Provider、Attempt end commit 和 settlement 六个窗口均有确定性 Gate，调用方返回
+前没有下一 ordinal 或后台付费调用。Recovery 只给 open Attempt 追加终结事实，从不创建新 start。
+
+Evaluation 从经过 `CoreInvariantChecker` 的 Session facts 读取 Model Attempt count、retry wait、Provider
+active、failure categories、final model result 与 Usage。失败 Attempt 有 exact/estimated Usage 时计入
+execution/routing Tokens；没有可信 Usage 时该 Token 指标是 `unavailable`，不是 0，Ledger settled tokens
+仍给出保守权威支出。JSON 与 Markdown 都记录同一 policy，并在 routing、execution、quality-arm 描述和
+attempt 行中显示上述字段。backoff 计入 Step/wall，不计 Provider active。auto 仍归入实际 resolved arm；
+retry-assisted success 只能描述当前网络条件下的可靠性，不能说模型质量提升或形成第四个 arm。
+
+公开确定性矩阵覆盖：DNS/429 等候选失败后同请求成功；认证、协议、strict Router parse、unknown/raw
+异常一次即停；Attempt 数、elapsed、Retry-After cap；全部取消窗口；每 ordinal 独立 Budget；unknown
+usage 后余额不足；请求漂移；恢复只闭合；极大合法 ordinal 仍返回有限 cap；choice 缺少 message 与显式
+`usage: null` 均为 protocol failure；原始 body/header/异常/secret/path 不进入 durable event。四项
+反向验证都真实变红后恢复：移除 permanent-category gate 后认证/协议/unknown 直接执行第二次调用；让
+后续 ordinal 绕过 Budget admission 后 Provider 调用 2 次但 Ledger 只有 1 份 reservation；取消不再优先
+返回 owner 时出现嵌套 `BaseExceptionGroup` 与未闭合证据；同时移除 AgentLoop/Session snapshot 两层冻结
+检查后，改小输出上限的第二次 request 被 Provider 接受并完成。
+自审新增的三条公开反例也先在旧实现上分别得到 `OverflowError` 与两次 `DID NOT RAISE ProviderFailure`，
+修复后由同一 policy/adapter owner 稳定拒绝或返回有限 delay，没有按 ordinal/响应形态堆专用 fallback。
+
+Release Stop B 首轮独立审查又给出一条公开并发反例：第一次 transient failure 已写入 end、正在等待 retry
+时，同一公开 EventStore 被追加第二条 canonical `model/attempt-end`。旧许可路径用 set/dict 汇总 end，因而
+把重复事实折叠后仍发出 ordinal 2，得到 Provider 调用 2 次、start 2 条、end 3 条，同时 checker 已报告
+`single-attempt-end`。新增测试先在旧逻辑上确定性得到 `DID NOT RAISE ModelAttemptConflictError`，恢复上述
+完整历史 gate 后第二次调用不再发生，非法事实仍留在日志供审计。相邻 Recovery 测试也不再借
+dispatch-permit API 制造多条未闭合 Attempt，而是在 EventStore 测试接缝明确注入崩溃历史，再验证恢复按
+start 顺序只追加闭合事实。审查同时发现一条 Benchmark 旧断言：一次 exact Usage 后又遇到 unknown
+failure 时，Provider-reported Session 总 Token 依法为 `unavailable`，测试现同时核对该 unavailable 字段与
+Ledger `settled_tokens > 0`，没有为过时断言放宽生产计量。
+
+当前阶段仍为未发布 `0.7.1` 工作树。F2 没有读取 `.env`、联网或调用真实 Provider，没有 fallback、代理/
+TLS 放宽、第二 Event/Runner、F3 driver/TUI、F4 UI 或 v0.9 Skill/Memory。Release Stop B 最终独立复审
+已确认 P0/P1/P2 全零，F2 到此结束并允许下一步实现 F3，但本节没有提前实现 F3。本轮此前实际
+门禁为：F2/Provider/Admission/Invariant/Budget/Recovery/CLI 定向组 `416 passed`；Runtime/Session/
+Budget/取消/CLI 相邻组 `474 passed, 1 skipped`；Product/Workflow/Promotion/Benchmark 跨域组先得到
+`504 passed, 2 failed, 1 skipped`，两项都只是 F2 合法修改的 `AgentLoop`/`AgentRuntime` 保护摘要仍钉在
+F1，更新两个具名摘要后对应反例 `2 passed`；六条受影响的真实本地 Git Benchmark E2E 为 `6 passed`。
+全仓 `collect-only = 2478`，compileall、修改范围 Ruff（保留该文件既有 `ASYNC240` 例外）、
+`git diff --check`、新增行秘密/示例硬编码扫描及七份改动文档的章节、围栏、Mermaid、相对链接 QA 均
+通过。这里没有沿用 F1 或 v0.7.1 的旧基线冒充 F2 结果。
+
+首轮审查修复后，Retry/Admission/Invariant/Recovery/Budget 组 `90 passed`，受影响的真实本地 Git
+Benchmark E2E `7 passed`，Provider/Runtime/SQLite/Product 架构相邻组 `32 passed`，CLI Chat/Product
+合同/Benchmark 报告组 `131 passed`；合计 `260 passed`，各组不重叠。全仓 `collect-only = 2479`，
+compileall、四个本次修改 Python 文件的 Ruff、生产修复反示例硬编码扫描和 `git diff --check` 通过。
+这些在当时只是修复门禁，没有冒充随后实际运行的 Release Stop B 完整全量。
+
+Release Stop B 完整集成门禁使用全新、仓库外的短 pytest `basetemp`，避免已复核的 Windows 长临时路径
+在 Git Workspace 建立前产生无关 `workspace-git-failed`；没有筛选测试。第一次完整运行得到
+`2471 passed, 7 skipped, 1 failed`：唯一失败是 Activity 测试仍期待 raw
+`RuntimeError: provider exploded`，而 F2 已按合同把未分类 Provider 异常安全归一为
+`ProviderFailure: provider-failure-unclassified`。生命周期断言 `live_display_tasks() == empty` 没有失败，
+生产行为无需放宽。更新这条旧测试文字后，目标与两条既有 CLI 清洗反例 `3 passed`；随后从另一个全新
+短目录完整重跑，得到 **`2472 passed, 7 skipped`、退出码 0**。最慢用例是完整 L2 隔离验证
+`1097.00s`；这次必要重跑属于同一个失败后修复到绿的检查点，不是用 `--lf` 或局部结果冒充完整门禁。

@@ -26,6 +26,7 @@ from traceh.api.llm import (
     ModelAttemptIdentity,
     ModelRequest,
     ModelResponse,
+    Usage,
     UsageQuality,
     model_attempt_reservation_id,
 )
@@ -46,6 +47,7 @@ from traceh.budgets.errors import (
 from traceh.budgets.events import MAX_BUDGET_VALUE
 from traceh.budgets.service import BudgetLedgerService
 from traceh.concurrency import await_worker_convergence
+from traceh.llm.failures import ProviderFailure
 from traceh.llm.runtime import (
     LlmAdmission,
     LlmAdmissionAccounting,
@@ -209,6 +211,12 @@ async def _finish_owned(
 
     try:
         await _await_owned(coro, name=name)
+    except asyncio.CancelledError:
+        # The finalizer has already converged before _await_owned re-raises
+        # cancellation.  Let the lifecycle owner observe that cancellation so
+        # it can close Attempt -> Step -> Turn; wrapping it with an earlier
+        # provider outcome in BaseExceptionGroup would bypass that owner.
+        raise
     except BaseException as finalizer_error:
         if primary is None:
             raise
@@ -563,16 +571,23 @@ class _BudgetedLlmAccounting(LlmAdmissionAccounting):
             raise BudgetReservationStateError
         reserved = started.amounts.tokens
         if error is not None:
+            if type(error) is ProviderFailure and error.usage is not None:
+                tokens, quality = self._owner._usage_settlement(
+                    error.usage,
+                    reserved,
+                )
+            else:
+                tokens, quality = reserved, UsageQuality.UNKNOWN
             await self._owner._settle_after_outcome(
                 self._reservation_id,
-                reserved,
-                UsageQuality.UNKNOWN,
+                tokens,
+                quality,
                 error,
             )
             return
         assert response is not None
         try:
-            tokens, quality = self._owner._settlement(response, reserved)
+            tokens, quality = self._owner._usage_settlement(response.usage, reserved)
         except BaseException as settlement_error:
             await self._owner._settle_after_outcome(
                 self._reservation_id,
@@ -687,6 +702,11 @@ class BudgetedLlmRuntime(LlmRuntime):
         bounded_request, reservation_amount = self._bounded_request(
             request, remaining
         )
+        if attempt.ordinal > 1 and bounded_request != request:
+            # Ordinal one freezes the provider-bound request. A later Attempt
+            # either reserves that exact request or does not exist; it cannot
+            # buy another call by silently lowering the output ceiling.
+            raise BudgetExhaustedError("max_tokens")
         reserve_operation = budget_operation_id(
             "model-token-reserve", reservation_id=reservation_id
         )
@@ -753,11 +773,10 @@ class BudgetedLlmRuntime(LlmRuntime):
         output_limit = min(output_capacity, requested or output_capacity)
         return replace(request, max_output_tokens=output_limit), input_tokens + output_limit
 
-    def _settlement(
-        self, response: ModelResponse, reserved: int
+    def _usage_settlement(
+        self, usage: Usage, reserved: int
     ) -> tuple[int, UsageQuality]:
         try:
-            usage = response.usage
             input_tokens = usage.input_tokens
             output_tokens = usage.output_tokens
             quality = usage.quality

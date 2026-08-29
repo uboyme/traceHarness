@@ -48,6 +48,9 @@ _ATTEMPT_START_KEYS = frozenset(
         "reservation_id",
         "provider",
         "model",
+        "retry_wait_milliseconds",
+        "retry_failure_code",
+        "retry_failure_category",
     }
 )
 
@@ -77,6 +80,7 @@ class CoreInvariantChecker:
         attempt_starts: dict[str, _AttemptStart] = {}
         attempt_ends: set[str] = set()
         open_attempt: str | None = None
+        previous_attempt_end: dict[str, JsonValue] | None = None
         request_snapshots: dict[int, EventEnvelope] = {}
         snapshot_steps: dict[tuple[str, str], list[int]] = {}
         attempt_ordinals: dict[tuple[str, str], list[int]] = {}
@@ -277,6 +281,7 @@ class CoreInvariantChecker:
                         )
                     )
                 open_step = step_id
+                previous_attempt_end = None
             elif event.type == "model/attempt-start":
                 attempt_id = attempt_identity(event.data)
                 declared_turn = str(event.data.get("turn_id", ""))
@@ -285,6 +290,9 @@ class CoreInvariantChecker:
                 request_snapshot_seq = event.data.get("request_snapshot_seq")
                 dispatch_fingerprint = event.data.get("dispatch_fingerprint")
                 reservation_id = event.data.get("reservation_id")
+                retry_wait = event.data.get("retry_wait_milliseconds")
+                retry_code = event.data.get("retry_failure_code")
+                retry_category = event.data.get("retry_failure_category")
                 if set(event.data) != _ATTEMPT_START_KEYS:
                     violations.append(
                         InvariantViolation(
@@ -302,6 +310,41 @@ class CoreInvariantChecker:
                         )
                     )
                     ordinal = None
+                if type(retry_wait) is not int or retry_wait < 0:
+                    violations.append(
+                        InvariantViolation(
+                            "attempt-retry-wait-valid",
+                            "model attempt retry wait must be non-negative milliseconds",
+                            event.seq,
+                        )
+                    )
+                if ordinal == 1:
+                    if retry_wait != 0 or retry_code is not None or retry_category is not None:
+                        violations.append(
+                            InvariantViolation(
+                                "attempt-retry-binding",
+                                "first model attempt cannot claim retry evidence",
+                                event.seq,
+                            )
+                        )
+                elif ordinal is not None:
+                    if (
+                        not isinstance(retry_code, str)
+                        or not retry_code
+                        or not isinstance(retry_category, str)
+                        or not retry_category
+                        or previous_attempt_end is None
+                        or previous_attempt_end.get("status") != "failed"
+                        or previous_attempt_end.get("failure_code") != retry_code
+                        or previous_attempt_end.get("failure_category") != retry_category
+                    ):
+                        violations.append(
+                            InvariantViolation(
+                                "attempt-retry-binding",
+                                "retry attempt does not bind the preceding typed failure",
+                                event.seq,
+                            )
+                        )
                 if type(request_snapshot_seq) is not int:
                     violations.append(
                         InvariantViolation(
@@ -542,6 +585,7 @@ class CoreInvariantChecker:
                     attempt_ends.add(attempt_id)
                 if open_attempt == attempt_id:
                     open_attempt = None
+                previous_attempt_end = dict(event.data)
             elif event.type == "tool/call":
                 call_id = str(event.data.get("tool_call_id"))
                 calls[call_id] = (str(event.data.get("step_id")), event.seq)

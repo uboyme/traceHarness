@@ -30,10 +30,11 @@
 
 TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，修了四条真实边界（见 20.26）：模型不能替用户开工；AgentLoop 连续取消也要写完 Attempt/Step/Turn；L4 要用目标 venv 自己的 sysconfig scheme；嵌套 L2 下的 Workspace 身份不能把 Git for Windows 的内部管理路径顶爆。第四项仍保留完整 SHA-256，只把重复的 `workspace` 目录标签去掉。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
 
-当前未发布开发线又完成了 v0.8-F0/F1/F2：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
+当前未发布开发线又完成了 v0.8-F0–F3：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
 成为唯一派发许可证；F1 把所有生产事件切到一个 SQLite 数据库，并删除 JSONL compatibility；F2 只给
-同 Provider、同模型、同一份冻结请求增加有限的瞬时故障 retry。版本号仍是 `0.7.1`，这不是新 release，
-也还没有 Provider/model fallback、TUI、Skill 或 Memory。
+同 Provider、同模型、同一份冻结请求增加有限的瞬时故障 retry；F3 把行式聊天改为共用的无界面 Driver
+与 typed update，并让 Product 进度只读两条真实状态流。版本号仍是 `0.7.1`，这不是新 release，也还没有
+Provider/model fallback、TUI、Skill 或 Memory。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -62,7 +63,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 能修改代码吗 | 能，通过五个受控 Coding Tools |
 | 能验证修改吗 | 能，可配置外部命令 Verifier |
 | 能继续同一个会话吗 | 能，`resume` 会在同一个 Session 追加新 Turn |
-| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话，能实时打印每一步和每次工具调用，卡在慢操作上时还会每隔几秒报一次「还在跑」。Product 模型判断用户可能同意后，终端会再显示精确 task id；只有用户输入 `START` 才真正开工，其他输入不会创建 Product 资源。开始后会报告 durable 进度，到审批时显示节点、Session/replay、改动文件、有界 Patch 和固定检查结果。按一次 Ctrl+C 只取消当前这一轮、会话还在；重复取消也要等账本收尾完成。但它仍是行式提示符，不是流式 TUI |
+| 是交互式聊天 CLI 吗 | `traceh chat` 可以在一个会话里连续对话。Line 界面把输入交给不读 stdin、不写终端文案的共享 Driver，再显示它的 typed 进度；慢操作仍会定期报告。ProductTask 与 Workflow 暂时不一致时会把两条状态都显示出来，不靠 heartbeat 偷偷对账。终端 `START`、人工 Approval、节点/Session/Patch/检查证据和 Ctrl+C 收敛语义都保持不变。但它仍是行式提示符，不是流式 TUI |
 | 有插件系统吗 | **有**。装一个 Wheel 就能被发现，显式启用后它的 Tool、Prompt、Service、Provider、Policy、Middleware、命名 Verifier 都能走正常主线（第 19 节）；其中 Provider/Verifier 还要再明确选择 |
 | 能让 Agent 帮我写新插件吗 | L1 可以：显式启用 `traceh.plugin.creator` 后，它会读取打包在 Wheel 里的工作流、合同、模板和清单，把**源码候选**写进单独 Candidate Workspace。但结果必须标成“未验证”，不会自动 build/test/install/enable |
 | 能独立验证这份候选吗 | L2 可以：显式指定候选目录、可信核心 Git 仓库、新输出目录和依赖源后，`traceh plugins validate` 会跑 13 道宿主管控门禁。普通门禁失败只有完整报告；报告自己都写不完时连输出目录都不会留下；通过才发布精确哈希产物 |
@@ -77,7 +78,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个数据库吗 | 能。SQLite 事务和主键保护连续 seq；同库 writer（包括不同 Stream）会有界排队，默认 5 秒，超时明确失败。但“同一 Session 同时只跑一个 Turn”仍只是单进程规则 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。v0.8-F2 现在可收集 `2479` 项；Release Stop B 最终复审 P0/P1/P2 全零。第一次完整测试只剩一条 CLI 旧文字断言，修正后从全新短目录完整重跑得到 `2472 passed, 7 skipped`、退出码 0，最慢的 L2 隔离验证为 `1097.00s`；详细经过见 20.28 |
+| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。v0.8-F3 现在可收集 `2483` 项；Driver/Line/Product 观察核心组 `88 passed`，相邻 Product/Workflow/Promotion/Event Feed 合计 `504 passed, 1 skipped`，CLI Timeline 与插件组合迁移 `221 passed`。F3 没动共享底层，按阶段计划没有机械重跑 F2 已完成的完整全量；详细经过见 20.29 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -137,7 +138,8 @@ flowchart LR
 | 目录 | 通俗解释 | 典型入口 |
 |---|---|---|
 | `api/` | 各模块共同认可的合同和数据表格 | Event、ModelRequest、Tool、Plugin/Agent，以及当前已实现的 Budget/Workspace/Artifact/Promotion Protocol 与只读值 |
-| `cli/` | 把终端命令和 `.env` 翻译成 Runtime 配置，提供交互式聊天，把事件翻成屏幕上的时间线，在长时间等待时报告进度，并把恢复命令按目标 Shell 安全地渲染出来 | `main.py`、`chat.py`、`console.py`、`timeline.py`、`activity.py`、`command_line.py`、`env_file.py` |
+| `chat/` | 不依赖任何终端的聊天 Driver 和唯一临时活动投影：收 Turn、发 typed update、调用原 Runtime 取消 owner，但不保存第二份对话 | `ChatDriver`、`ActivityTracker`、`ActivityUpdate` |
+| `cli/` | 把终端命令和 `.env` 翻译成 Runtime 配置；Line adapter 把 typed Chat/Product update 变成安全的一行行文本，并把恢复命令按目标 Shell 渲染出来 | `main.py`、`chat.py`、`product.py`、`console.py`、`timeline.py`、`activity.py`、`command_line.py`、`env_file.py` |
 | `runtime/` | 运行时中枢：对外门面、插件组合控制面和真正的一轮执行各有自己的负责人 | `AgentRuntime`、`PluginCompositionCoordinator`、`AgentLoop` |
 | `session/` | SQLite 账本、事件广播喇叭、从账本算状态、恢复、检查和一致备份 | `SqliteEventStore`、`event_feed.py`、Projector、Recovery |
 | `concurrency.py` | 杀不掉的后台活儿（线程）取消后怎么等它收尾 | `await_worker_convergence()` |
@@ -157,7 +159,7 @@ flowchart LR
 | `artifacts/` | 把一个已完成消息对应的完整 Git 改动冻成不可变证据：Patch bytes 进内容寻址仓库，来源绑定进一条全局 Manifest 账 | `events.py`/`catalog.py`（Manifest 词汇与投影）、`git_patch.py`（临时 index 快照）、`cas.py`、`capture.py`、`reader.py`、`reporting.py` |
 | `promotion/` | 对那份不可变 Patch 做固定检查、记不可改的 Review、接收人工的精确批准，最后用 Git 分支的比较后交换推广出去 | `models.py`（身份与摘要）、`events.py`/`projection.py`（一条账与唯一投影）、`verification.py`（固定检查执行）、`local_git.py`（裸仓库解析、临时集成与 ref CAS）、`cleanup.py`（草稿地失败的统一组合）、`service.py`（review/approve/promote） |
 | `workflow/` | 用一张**固定**的流程图把上面这些公共服务串起来：跑 Agent、扇出、汇合、检查、等人签字；每次运行单独记一条编排账 | `models.py`（定义冻结、DAG 校验、派生身份）、`events.py`/`projection.py`（七类事实与唯一投影）、`execution.py`（五类节点各自怎么做）、`service.py`（单飞协调器） |
-| `product/` | 产品任务的薄控制层：F1 记唯一 ProductTask 账，F2 做严格路由与固定装配，F3 再把现有 Chat、Workflow、Budget、Workspace、Artifact 和 Promotion 串成可暂停、可按 task id 继续的产品主线；F5 的审批可读性只 fresh join 旧账，不加新状态 | `events.py`/`projection.py`/`service.py`（事实）、`router.py`/`registry.py`/`topology.py`/`assembly.py`（固定计划）、`chat.py`/`inspection.py`/`control.py`/`execution.py`/`resources.py`/`host.py`（宿主产品面与只读证据卡） |
+| `product/` | 产品任务的薄控制层：原主线继续记唯一 ProductTask 账、做严格路由和固定装配；v0.8-F3 把 typed 协调与 Line 文案分开，并 fresh join Product/Workflow/Directory/Artifact/Promotion，观察本身绝不写账 | `chat.py`（typed 协调）、`observation.py`（纯读双状态）、`inspection.py`/`control.py`/`execution.py`/`resources.py`/`host.py` |
 | `supervision/` | 把已接受的消息真的跑起来，并按 durable owner 关系管生命周期，再把它安全地交给模型调用；D0 把 Tool 权限和宿主开 child 决策从并发内核旁边拆成窄接缝 | `ProcessAgentSupervisor`、Delivery 账、`lifecycle.py`、`execution.py`、`authority.py`、`provisioning.py`，以及 `reports.py`（持久化运行报告）和 `tools.py`（五个绑定 owner 的 Tool） |
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 与 Stage C Workspace wrapper 都只面向这份公共合同。`WorkspaceProvider` 也已有真实 Git 实现和契约测试；`api/artifacts.py` 与 `api/promotion.py` 里的 Patch、Review、Approval、Promotion 值同样都有真实实现和测试，不是占位。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
@@ -858,7 +860,9 @@ assistant> Done reading.
 - 这一轮失败了也照样保留已经打出来的时间线（那通常正是最有用的部分），然后才打印原来那行 `error: ...`，聊天继续；
 - 退出、EOF、Ctrl+C、报错、取消，都会把订阅关掉，不留后台任务。
 
-它是纯界面：**不会进入模型看到的历史，不会改变请求指纹，也不写任何事件**。主循环压根不知道它存在——时间线的文案在 CLI 层，主循环里没有一句 `print`。
+它是纯界面：**不会进入模型看到的历史，不会改变请求指纹，也不写任何事件**。现在真正驱动 Turn 的
+`ChatDriver` 只发 typed update，没有一句终端文案；只有 Line adapter 和 Timeline renderer 知道怎样
+显示。`AgentLoop` 仍完全不知道时间线存在。
 
 完成的那一行还会带上耗时，比如 `[event 11] Model responded (23.4s)`。这个秒数是屏幕上量出来的（用不受系统时间调整影响的单调时钟），**不是**从事件内容里读出来的，也不是拿两个时间戳相减——所以它只是给人看的注解，不是对账本数据的断言。
 
@@ -867,6 +871,9 @@ assistant> Done reading.
 以前不知道，这是这一轮修掉的第二个问题。
 
 问题的根源很朴素：**时间线是"有事件才出声"的**。而模型调用开始（`model/attempt-start`）到结束（`model/attempt-end`）之间根本没有事件——中间那几十秒里，"Provider 很慢"和"程序卡死了"在屏幕上长得一模一样。
+
+现在会这样，而且等待状态只有一份：共享 `ActivityTracker` 根据真实 start/end Event 产生 typed update，
+Line adapter 负责最后的清洗和文字；未来 TUI 只能消费同一份，不会自己再猜一套。
 
 现在会这样：
 
@@ -1272,9 +1279,10 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发�
 | AgentLoop | Continuation、事件顺序、E2E、取消和恢复 | 一处顺序变化可能让整个生命周期不配对 |
 | Event 类型或字段 | Projector、Invariant、Recovery、Inspector、Replay | 所有消费者都依赖事件协议 |
 | 事件广播或发布顺序 | `session/event_feed.py`、Runtime 装配、Feed 契约测试 | 顺序或复印错了，界面就会对已发生的事撒谎 |
-| 时间线显示内容 | `cli/timeline.py`、`cli/chat.py`、`cli/main.py`、时间线测试、README | 它是唯一会把事件内容打到屏幕上的地方，等于一道泄漏面 |
-| 等待提示 | `cli/activity.py`、`cli/chat.py` 的显示装配、`cli/main.py`、活动测试 | 它也会把内容打到屏幕上，而且每隔几秒一次；同时容易被误当成事件 |
-| Ctrl+C 与恢复信息 | `cli/chat.py`（中断收敛、恢复信息、空闲中断）、Runtime 的 `cancel()`、取消与活动测试 | 顺序错了用户就看不到取消过程；恢复信息缺了 data 目录就找不回会话 |
+| Chat Driver / 时间线显示 | `chat/driver.py`、`cli/timeline.py`、`cli/chat.py`、`cli/main.py`、时间线/聊天测试、README | Driver 决定 typed 生命周期，Line renderer 是把不可信事件打到屏幕的泄漏边界 |
+| 等待提示 | `chat/activity.py` 的唯一投影、`cli/activity.py` 的 Line 渲染、Driver 与活动测试 | 不能让两个 UI 对同一 Event 猜出两套“正在做什么” |
+| Ctrl+C 与恢复信息 | `chat/driver.py` 的活跃 Turn 收敛、`cli/chat.py` 的恢复信息/空闲中断、Runtime `cancel()`、取消测试 | 顺序错了用户就看不到取消过程；恢复信息缺了 data 目录就找不回会话 |
+| Product 观察与操作 | `product/observation.py`、`product/chat.py`、`product/host.py`、`cli/product.py`、F3 测试 | 观察只能读两条状态；真正操作必须回原 control owner，不能让刷新替用户推进任务 |
 | 事件怎样被复制或交出去 | `detach_event()`、`to_dict()`/`from_dict()`、两个 Store 的返回路径、所有权契约测试 | 少复印一次，账本就可能被别人手里的副本改写 |
 | Request/Composition | Fingerprint 重建、Provider 测试、Replay | 必须还能证明模型当时看到了什么 |
 | ToolRuntime | Effect、Result 配对、Policy、Middleware、取消 | 工具是现实副作用入口 |
@@ -3274,9 +3282,9 @@ retry。
 看到认证/协议错误打第二次、Provider 2 次但 Ledger 只有 1 笔、嵌套异常留下不完整证据、漂移请求成功；
 全部恢复后 F2 反例集重新全绿。实现与完整状态见
 [ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md)。当前版本仍是未发布的
-`0.7.1` 工作树，没有联网、没有真实 Key、没有 fallback/代理/TLS 放宽，也没有提前做 driver/TUI。
-Release Stop B 最终复审已经清零 P0/P1/P2，完整 F1 SQLite + F2 retry 集成门禁也已通过；F2 到此结束，
-下一步可以进入 F3，但这里没有提前实现它。
+`0.7.1` 工作树；F2 自己没有联网、真实 Key、fallback/代理/TLS 放宽或 UI 工作。Release Stop B 最终
+复审已经清零 P0/P1/P2，完整 F1 SQLite + F2 retry 集成门禁也已通过；随后完成的 Driver/observation
+见 20.29，不能倒过来说成是 F2 做的。
 
 Release Stop B 首轮审查确实抓到上述“坏账仍发许可证”：第一次临时失败正在等待时，外部追加了第二条
 完全规范但重复的 Attempt end。旧代码把两条 end 折叠成一个，真的又调用了 Provider；结果是 2 条 start、
@@ -3307,3 +3315,60 @@ Retry/Session/Budget/Recovery、真实本地 Git Benchmark、Provider/Runtime/�
 本身没有失败，所以只改旧预期，不改生产代码。目标测试加两条已有 CLI 清洗反例 `3 passed` 后，又从
 另一个全新短目录完整跑一遍，最终是 **`2472 passed, 7 skipped`、退出码 0**；最慢的真实 L2 隔离验证
 耗时 `1097.00s`。这是同一个门禁首次跑红后修到全绿，不是用 `--lf` 或只跑失败项冒充全量。
+
+### 20.29 v0.8-F3：聊天先变成同一台“发动机”，界面只负责显示（正式版 20.35）
+
+F3 先解决的是“以后做 TUI 时，会不会把整套聊天和任务控制再写一遍”。现在答案是不会：新的
+`ChatDriver` 不知道 PowerShell、stdin、颜色或窗口长什么样。外面交给它一句话，它仍调用原来的
+`AgentRuntime.run_existing()`；过程中只发出“第几号持久事件到了”“哪个活动还在等”“这一轮完成/失败/
+被取消”这些 typed update。对话历史仍全部从 SQLite Session 账本算，Driver 和界面都没有第二份
+messages。当前的 Line CLI 是第一个 adapter，以后 Textual TUI 会是第二个 adapter，但两者下面是同一台
+发动机。
+
+等待提示也只剩一份算法。`chat/activity.py` 的 `ActivityTracker` 根据已有 model/tool 开始与结束事件，
+配上单调时钟，算出 typed waiting/completed update；Line CLI 最后才把它清洗并写成
+`[waiting 10s] ...`。它仍然不落账、不参与恢复。这样以后不会出现 Line 说“模型还在跑”，TUI 却因为
+自己猜了另一套状态而说“已经完成”。如果界面自己坏了，真实 Turn 继续收敛，界面故障不能改写账本
+结果。
+
+Product 也按同样方法拆开。`product/chat.py` 现在只负责纯命令解析和 typed 协调结果；真正问用户输入
+`START`、怎样显示 Proposal/Review/Patch/Verifier，都在唯一 `cli/product.py` Line adapter。开始、检查、
+批准、拒绝、取消和放弃仍交给原来的 Product control plane；模型手里的两个 Tool 仍然只能留一张当前
+Turn 的临时建议纸条，不能拿到 Review、批准摘要或推广能力。
+
+新 `product/observation.py` 是一双“只看、不动”的眼睛。它每次重新读 ProductTask、Workflow、Agent
+Directory、Artifact、Promotion 和 Patch evidence，而且把 ProductTask 状态与 Workflow 状态分开保留。
+所以真实崩溃窗口中，如果 Workflow 已经在等批准、ProductTask 还写着 started，界面会明确显示两条状态
+没有对上；它不会为了让屏幕好看就偷偷调用 inspect 或补写一条 Product 事件。只有用户真正执行
+inspect/approve/reject/cancel 时，原 control owner 才有权按原规则对账。
+
+实时通知只是“该重新读了”的门铃，不是事实。观察器先订阅已经知道的精确 Stream，再读账本；如果读出
+Router/角色 Session 这些新 Stream，就先订阅再重读，直到名单稳定。门铃 payload 完全不拿来算状态；
+即使 Feed 通知全丢了，周期刷新、用户动作前后刷新和结束前刷新仍会从 SQLite 得到同一个答案。关闭界面
+时，所有订阅、watcher、heartbeat 和原 owner 的工作都要收敛。如果观察器刚订阅完、第一次读账本就
+失败或被取消，它自己会立刻撤销全部订阅并等 watcher 结束；Line 界面的 finally 又从 start 之前就持有
+这次清理责任，重复关闭也不会出问题；已经关闭的观察器会在重新订阅前拒绝再次 start。Product host 也不能再凭空造一只没有接到 Store 的“假门铃”：
+必须显式传入同一个 `PublishingEventStore` 真正持有的 Feed，普通 Store、漏传或传错身份都会在装配任何
+Product 资源前直接拒绝。门铃仍然可以丢通知，最终答案仍只从 SQLite fresh read 得到。
+
+测试不是只看“好像还能聊天”。它证明没有 stdin 的 Driver 也能收进度和取消；普通 Chat、Proposal、
+精确 `START`、Approval、失败和 Ctrl+C 的 Line 行为不变；订阅/读取竞态不漏刚发现的 Session；完全丢掉
+Feed 后仍能看到 Product running；连续五次纯读不会改变任何相关 Stream head；Workflow/Product 状态
+分叉会一直如实保留，直到真实 Approval 动作才对账并推广。架构测试还禁止 UI-neutral 模块 import CLI，
+也禁止 observation 调 control 或 `_store.append()`。
+
+首轮独立审查确实找到了一个 P1：第一次读账本失败时留下五条订阅和后台 watcher；还找到一个 P2：公开
+host 的默认 Feed 与写入 Store 没有接上，表面可观察却永远没有实时通知。两项都已经按上面的 owner/身份
+规则修好，并增加 Line 真实失败、错误 Feed 组合拒绝和正确 Feed 即时唤醒反例。独立短复审随后确认
+`P0=0/P1=0/P2=0`；额外取消探针还证明原始取消会继续向外传播，同时五条初始订阅与全部 watcher 归零，
+已经关闭的观察器也不能重启。
+
+七次反向验证分别临时拆掉“发现新 Stream 后重读”“纯读不写”“周期 refresh”“唯一 ActivityTracker”，
+真实看到漏读、架构门禁失败、Feed 丢失后看不到 running、慢模型没有等待提示；又临时删掉失败启动
+回滚，五条订阅稳定留下；让 host 偷偷换成另一条 Feed，即时通知稳定超时；单独删掉 closed-start 入口
+守卫后，同一个失败观察器第二次 start 又留下五条订阅。全部恢复后核心组
+`93 passed`，直接相邻 Product/Workflow/Promotion/Evaluation/CLI 组 `739 passed, 1 skipped`，
+全仓 `2488 collected`。这阶段没有动 Runtime/Session/SQLite schema 或
+Provider 调用，所以按计划不机械重跑 F2 已通过的完整全量；也没有联网、读 `.env`、调用真实模型、
+打包、升级版本、push、tag 或发布。独立短复审已经确认 P0/P1/P2 清零，本提交完成 F3；F4 的 Textual
+TUI 还没有开始。

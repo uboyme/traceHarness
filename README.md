@@ -211,6 +211,13 @@ Timeline 只显示生命周期与结果：Turn/Step 起止、模型调用与答�
 
 Timeline 是纯界面投影：它不进入模型可见历史，不改变 Request Fingerprint，也不写入任何事件。它只在当前进程内可见——另一个进程写同一个 SQLite 数据库时不会实时出现在这里。
 
+v0.8-F3 已把这条行为拆成 UI-neutral `ChatDriver` 与第一个 Line adapter：Driver 异步接收 Turn 输入并
+发出 typed Session/activity/outcome update，不读 stdin、不含终端文案，也不保存第二份 messages。
+Product 进度同样 fresh read ProductTask/Workflow 两条状态，Feed 只提示刷新；两条流暂时不一致时如实
+并列显示，只有真正的 inspect/approve/reject/cancel 动作才调用原 control-plane owner 对账。观察建立期间
+任何 fresh-read 失败都会由 observer 自己回滚全部 subscription/watcher；Product host 只接受与同一
+`PublishingEventStore` 精确绑定的显式 Feed，缺失或身份不一致会在装配前拒绝，不能得到永久静默的假实时观察。
+
 当前 Chat 仍是行式提示符，不是流式 TUI：没有 Token Streaming、执行前审批，也不能在 Turn 运行期间继续输入。
 
 ### Windows 中文与其他非 ASCII 文本
@@ -686,14 +693,15 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
-  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0/F1/F2 已完成两阶段
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0–F3 已完成两阶段
   Model admission、SQLite 唯一生产 EventStore，以及 typed Provider failure + 同冻结请求有界 retry；F2
-  已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量，F3-F5 尚未开始；
+  已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量；F3 已完成共享 Chat Driver、
+  Line adapter 与只读 Product observation，等待独立审查，F4-F5 尚未开始；
   v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
   和可审计检索。当前已有 SQLite 与 bounded model retry，但仍没有 TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
   第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
-- Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
+- Activity Heartbeat 由 UI-neutral Driver 中唯一的 `ActivityTracker` 产生 typed update，Line/TUI 不各自推断；它仍只是屏幕状态，不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
 - 硬中断（`Ctrl+Break`、关闭控制台）没有任何收敛：不打印提示、不闭合生命周期，只能依赖启动时已打印的恢复命令与崩溃恢复；
 - Session Event Feed 只在同一进程内可见，没有跨进程实时观察；它的队列无上限，因此不对 Runtime 施加背压，但被遗弃的订阅者会占用内存，且尚无 Overflow 策略；它可丢失、不重放历史、不提升唯一 `SYNC` SQLite append 的保证，不能当作恢复证据；
 - Timeline 已对注入做了清洗，但形似结构标记的惰性文本仍可能出现在该行内部：保证是"不会产生第二行、行首为真实事件号"，不是"不会出现形似标记的字符"；

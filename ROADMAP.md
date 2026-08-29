@@ -1,9 +1,10 @@
 # Roadmap
 
 The order below preserves the current protocol and keeps orchestration
-boundaries narrow. v0.7.1 is released; v0.8-F0/F1 are implemented but not yet
-released, while the remaining frozen v0.8 and v0.9 stages describe future
-work. Product state remains outside `AgentLoop`.
+boundaries narrow. v0.7.1 is released; v0.8-F0-F3 are implemented but not yet
+released, and F3's independent short re-review cleared P0/P1/P2. The remaining
+frozen v0.8 and v0.9 stages describe future work. Product state remains outside
+`AgentLoop`.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -505,7 +506,7 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   regression, clean packaging, offline install, annotated tag and GitHub Release
   are complete.
 
-## v0.8: Reliable local ProductTask host — F0/F1 implemented, F2-F5 pending
+## v0.8: Reliable local ProductTask host — F0-F3 implemented, F4-F5 pending
 
 - F0 closes the terminal-error injection path and makes one durable Model
   Attempt correspond to one admitted Provider dispatch. Attempt-scoped cost
@@ -519,13 +520,17 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   attempts and Evolution comparison cases own explicit store scopes. Same-process
   multi-stream serialization, cross-process CAS, busy ownership, backup and close
   convergence are implemented and awaiting the Release Stop A review.
-- Add bounded retry only for the same Provider, model and frozen dispatch request,
+- ✅ Add bounded retry only for the same Provider, model and frozen dispatch request,
   with typed sanitized failures and independent per-Attempt Budget evidence. No
   Provider/model fallback is added.
-- Refactor the existing Line Chat into one UI-neutral driver and one ephemeral
-  activity projection, then add an optional Textual TUI. Product/Workflow
-  observation remains read-only and displays cross-stream divergence instead of
-  advancing facts from a heartbeat.
+- ✅ Refactor the existing Line Chat into one UI-neutral driver and one ephemeral
+  activity projection. The Line adapter now consumes typed updates;
+  Product/Workflow observation remains read-only and displays cross-stream
+  divergence instead of advancing facts from a heartbeat. Partial observation
+  startup rolls back its subscribers/watchers, and host assembly binds the
+  observer to the exact Feed owned by the injected Publishing EventStore.
+- Add the optional Textual TUI as another adapter over the same driver and
+  Product control/observation seams.
 - Keep `traceh eval` as the only benchmark path and run one full real-Provider grid
   only as final release evidence.
 

@@ -17,14 +17,17 @@ from promotion_fixtures import (
     verification_plan,
 )
 
+from traceh.agents.identity import AGENT_DIRECTORY_STREAM
 from traceh.api.budgets import (
     BudgetAccountStatus,
     BudgetLimits,
     BudgetReservationStatus,
     BudgetUsageReservationStatus,
 )
+from traceh.api.events import PendingEvent
 from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 from traceh.api.product import (
+    PRODUCT_TASK_AWAITING,
     ProductRoleProfile,
     ProductRouterProfile,
     ProductTaskProfile,
@@ -37,19 +40,23 @@ from traceh.api.promotion import VerifierCommand, VerifierOutcome
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.artifacts.catalog import PatchArtifactCatalogReader
+from traceh.artifacts.events import ARTIFACT_CATALOG_STREAM
 from traceh.budgets.projection import BudgetLedgerReader
-from traceh.cli.activity import Clock
+from traceh.chat.activity import Clock
 from traceh.cli.chat import run_chat
 from traceh.cli.console import Console
+from traceh.cli.product import LineProductAdapter
 from traceh.product.chat import (
     ConfirmProductTaskTool,
     ProductTurnActions,
     ProposeProductTaskTool,
 )
-from traceh.product.events import MAX_REASON_DISPLAY_CHARS
+from traceh.product.errors import ProductInputError
+from traceh.product.events import MAX_REASON_DISPLAY_CHARS, product_task_stream
 from traceh.product.host import ProductHostProfile, build_product_chat_host
 from traceh.product.projection import ProductTaskStreamReader
 from traceh.product.runtime import READ_TOOL_IDS, WRITE_TOOL_IDS
+from traceh.promotion.events import PROMOTION_LEDGER_STREAM
 from traceh.promotion.models import (
     expected_approval_digest,
     promotion_identity,
@@ -57,7 +64,9 @@ from traceh.promotion.models import (
 )
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.session.event_feed import PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
+from traceh.workflow.events import workflow_stream_id
 from traceh.workspaces.catalog import WorkspaceCatalogReader
 from traceh.workspaces.local_git import LocalGitWorkspaceProvider
 
@@ -87,6 +96,50 @@ class _Console:
     @property
     def output(self) -> str:
         return "\n".join(self.lines)
+
+
+class _FailFirstProductAwaitingStore(InMemoryEventStore):
+    """Leave the public Workflow/Product cross-stream crash window intact once."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.failed = False
+
+    async def append(
+        self,
+        stream_id: str,
+        *,
+        expected_seq: int,
+        events: tuple[PendingEvent, ...],
+        durability=None,
+    ):
+        if not self.failed and any(
+            event.type == PRODUCT_TASK_AWAITING for event in events
+        ):
+            self.failed = True
+            raise RuntimeError("injected product awaiting append failure")
+        return await super().append(
+            stream_id,
+            expected_seq=expected_seq,
+            events=events,
+            durability=durability,
+        )
+
+
+class _FailProductObservationReadStore(InMemoryEventStore):
+    """Fail only the Product stream read performed while observation starts."""
+
+    async def read(self, stream_id: str, *, from_seq: int = 1):
+        if stream_id.startswith("product-task:"):
+            raise RuntimeError("injected product observation read failure")
+        return await super().read(stream_id, from_seq=from_seq)
+
+
+class _DroppingSessionEventFeed(SessionEventFeed):
+    """Model an allowed lost-notification window without disconnecting the Store."""
+
+    def _publish(self, events) -> None:
+        del events
 
 
 class _ChatProvider:
@@ -289,6 +342,10 @@ async def _build_host(
     actions: ProductTurnActions,
     mode: RequestedTaskMode,
     product_provider: object | None = None,
+    *,
+    publishing_feed: SessionEventFeed | None = None,
+    observation_feed: SessionEventFeed | None = None,
+    line_adapter: bool = True,
 ):
     import sys
 
@@ -305,8 +362,10 @@ async def _build_host(
         ),
         plan_id="product-plan",
     )
-    return await build_product_chat_host(
-        store=store,
+    connected_feed = publishing_feed or SessionEventFeed()
+    host_store = PublishingEventStore(store, connected_feed)
+    host = await build_product_chat_host(
+        store=host_store,
         data_dir=tmp_path / "product-data",
         host_profile=ProductHostProfile(
             "product-profile", _profile(mode), plan
@@ -321,8 +380,12 @@ async def _build_host(
         capture_limits=capture_limits(),
         approver_id="local-human",
         max_report_chars=4_096,
+        event_feed=observation_feed or connected_feed,
         actions=actions,
     )
+    if line_adapter:
+        return LineProductAdapter(host, data_dir=tmp_path / "product-data")
+    return host
 
 
 def _chat_runtime(
@@ -1022,6 +1085,111 @@ async def test_ordinary_chat_creates_no_product_task(tmp_path: Path) -> None:
     assert await store.list_streams(prefix="product-task:") == ()
 
 
+async def test_line_observation_start_failure_leaves_no_subscription_or_watcher(
+    tmp_path: Path,
+) -> None:
+    source, base = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = _FailProductObservationReadStore()
+    feed = SessionEventFeed()
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        LocalArtifactCas(tmp_path / "cas"),
+        actions,
+        RequestedTaskMode.SINGLE,
+        publishing_feed=feed,
+    )
+    runtime = _chat_runtime(tmp_path, store, actions)
+    workspace = tmp_path / "chat-workspace"
+    workspace.mkdir()
+    console = _Console(("please add the accepted file", "yes, do it", "START"))
+
+    assert await run_chat(
+        runtime,
+        console.console,
+        workspace=workspace,
+        product=product,
+    ) == 0
+
+    task_id = _proposed_task_id(console.output)
+    assert "task operation failed: product-execution-failed" in console.output
+    assert await store.list_streams(prefix="product-task:") == ()
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    assert not any(
+        feed.subscriber_count(stream_id)
+        for stream_id in (
+            product_task_stream(task_id),
+            workflow_stream_id(task_id),
+            AGENT_DIRECTORY_STREAM,
+            ARTIFACT_CATALOG_STREAM,
+            PROMOTION_LEDGER_STREAM,
+        )
+    )
+    assert not any(
+        task.get_name() == f"traceh-product-observer-{task_id}"
+        for task in asyncio.all_tasks()
+        if task is not asyncio.current_task()
+    )
+
+
+async def test_product_host_uses_the_explicit_connected_observation_feed(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    feed = SessionEventFeed()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        LocalArtifactCas(tmp_path / "cas"),
+        ProductTurnActions(),
+        RequestedTaskMode.SINGLE,
+        publishing_feed=feed,
+        line_adapter=False,
+    )
+    task_id = "task-feed-probe"
+    observer = product.observe(task_id)
+    try:
+        await observer.start()
+        await product.observation.store.append(
+            product_task_stream(task_id),
+            expected_seq=0,
+            events=(PendingEvent(type="probe/changed", data={}),),
+        )
+        await asyncio.wait_for(observer.wait_dirty(), timeout=1)
+    finally:
+        await observer.aclose()
+        await product.aclose()
+    assert feed.subscriber_count(product_task_stream(task_id)) == 0
+
+
+async def test_product_host_rejects_a_feed_not_owned_by_its_store(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    with pytest.raises(ProductInputError) as raised:
+        await _build_host(
+            tmp_path,
+            InMemoryEventStore(),
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            ProductTurnActions(),
+            RequestedTaskMode.SINGLE,
+            publishing_feed=SessionEventFeed(),
+            observation_feed=SessionEventFeed(),
+        )
+    assert raised.value.code == "product-event-feed-mismatch"
+
+
 class _GatedProductProvider(_ProductProvider):
     def __init__(self) -> None:
         super().__init__()
@@ -1077,6 +1245,7 @@ async def test_interrupting_confirmation_converges_owned_work_without_promotion(
         actions,
         RequestedTaskMode.SINGLE,
         provider,
+        publishing_feed=_DroppingSessionEventFeed(),
     )
     runtime = _chat_runtime(tmp_path, store, actions)
     workspace = tmp_path / "chat-workspace"
@@ -1122,3 +1291,78 @@ async def test_interrupting_confirmation_converges_owned_work_without_promotion(
         }
         for item in ledger.usage_reservations
     )
+
+
+async def test_pure_observation_shows_workflow_approval_before_product_reconciliation(
+    tmp_path: Path,
+) -> None:
+    """The UI can see the real cross-stream crash window without repairing it."""
+
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = _FailFirstProductAwaitingStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    runtime = _chat_runtime(tmp_path, store, actions)
+    workspace = tmp_path / "chat-workspace"
+    workspace.mkdir()
+    console = _Console(
+        ("please add the accepted file", "yes, do it", "START", "/exit")
+    )
+    assert await run_chat(
+        runtime,
+        console.console,
+        workspace=workspace,
+        timeline=False,
+        product=product,
+    ) == 0
+    task_id = _proposed_task_id(console.output)
+    assert store.failed
+
+    before = await product.observation.load(task_id)
+    heads = before.stream_heads
+    assert before.product_status is ProductTaskStatus.STARTED
+    assert before.workflow_status is not None
+    assert before.workflow_status.value == "awaiting_approval"
+    assert before.streams_diverged
+
+    for _ in range(5):
+        current = await product.observation.load(task_id)
+        assert current.product_status is ProductTaskStatus.STARTED
+        assert current.workflow_status is not None
+        assert current.workflow_status.value == "awaiting_approval"
+        assert current.stream_heads == heads
+
+    # Only the existing control action is allowed to reconcile and promote.
+    next_actions = ProductTurnActions()
+    next_product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        next_actions,
+        RequestedTaskMode.SINGLE,
+    )
+    next_runtime = _chat_runtime(tmp_path, store, next_actions)
+    assert before.summary is not None
+    approval = _Console((f"/task approve {task_id}", "/exit"))
+    assert await run_chat(
+        next_runtime,
+        approval.console,
+        session_id=before.summary.origin_session_id,
+        timeline=False,
+        product=next_product,
+    ) == 0
+    settled = await ProductTaskStreamReader(store).load(task_id)
+    assert settled is not None
+    assert settled.status is ProductTaskStatus.COMPLETED

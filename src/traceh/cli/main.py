@@ -455,6 +455,7 @@ async def _chat(args: argparse.Namespace) -> int:
         from traceh.artifacts.cas import LocalArtifactCas
         from traceh.artifacts.errors import ArtifactError
         from traceh.budgets.errors import BudgetError
+        from traceh.cli.product import LineProductAdapter
         from traceh.product.chat import (
             ConfirmProductTaskTool,
             ProductTurnActions,
@@ -521,19 +522,23 @@ async def _chat(args: argparse.Namespace) -> int:
                     product_config.promotion_target_id: product_config.promotion_target,
                 }
             )
-            product_host = await build_product_chat_host(
-                store=runtime.sessions.store,
+            product_host = LineProductAdapter(
+                await build_product_chat_host(
+                    store=runtime.sessions.store,
+                    data_dir=Path(args.data_dir),
+                    host_profile=product_config.host_profile,
+                    providers={args.provider: provider},
+                    workspace_provider=workspace_provider,
+                    artifact_cas=LocalArtifactCas(product_config.cas_root),
+                    promotion_targets=promotion_targets,
+                    capture_limits=product_config.capture_limits,
+                    approver_id=product_config.approver_id,
+                    max_report_chars=product_config.max_report_chars,
+                    actions=actions,
+                    model_retry_policy=runtime.config.model_retry_policy,
+                    event_feed=runtime.events,
+                ),
                 data_dir=Path(args.data_dir),
-                host_profile=product_config.host_profile,
-                providers={args.provider: provider},
-                workspace_provider=workspace_provider,
-                artifact_cas=LocalArtifactCas(product_config.cas_root),
-                promotion_targets=promotion_targets,
-                capture_limits=product_config.capture_limits,
-                approver_id=product_config.approver_id,
-                max_report_chars=product_config.max_report_chars,
-                actions=actions,
-                model_retry_policy=runtime.config.model_retry_policy,
             )
         heartbeat_seconds = validate_heartbeat_seconds(
             args.heartbeat_seconds, timeline=args.timeline

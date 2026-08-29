@@ -15,18 +15,24 @@ import pytest
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.llm import ModelRequest, ModelResponse, ToolCall
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
-from traceh.cli.activity import (
-    DEFAULT_HEARTBEAT_SECONDS,
+from traceh.chat.activity import (
     ActivityTracker,
     Clock,
     default_clock,
+)
+from traceh.chat.driver import (
+    ChatDriver,
+    SessionEventUpdate,
+    TurnInterruptedUpdate,
+)
+from traceh.cli.activity import (
+    DEFAULT_HEARTBEAT_SECONDS,
+    render_activity_wait,
     validate_heartbeat_seconds,
 )
 from traceh.cli.chat import (
     INTERRUPTED_EXIT_CODE,
     INTERRUPTED_TURN_NOTICE,
-    ChatSession,
-    _interrupt_turn,
     run_chat,
 )
 from traceh.cli.console import Console
@@ -39,7 +45,7 @@ from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.projections import StateProjector
 
-TIMELINE_TASKS = ("traceh-chat-timeline", "traceh-chat-heartbeat")
+TIMELINE_TASKS = ("traceh-chat-driver-events", "traceh-chat-driver-heartbeat")
 
 
 class ManualClock:
@@ -278,6 +284,10 @@ async def test_the_manual_clock_honours_requested_deadlines() -> None:
 # -- tracker unit --------------------------------------------------------
 
 
+def _waiting_lines(tracker: ActivityTracker) -> tuple[str, ...]:
+    return tuple(render_activity_wait(update) for update in tracker.due_waits())
+
+
 def test_tracker_reports_each_crossed_interval_once() -> None:
     clock = ManualClock()
     tracker = ActivityTracker(interval_seconds=10.0, monotonic=clock.monotonic)
@@ -289,10 +299,10 @@ def test_tracker_reports_each_crossed_interval_once() -> None:
     clock.now = 9.9
     assert tracker.due_waits() == ()
     clock.now = 10.0
-    assert tracker.due_waits() == ("[waiting 10s] Model p/m is still working",)
+    assert _waiting_lines(tracker) == ("[waiting 10s] Model p/m is still working",)
     assert tracker.due_waits() == ()  # not repeated for the same threshold
     clock.now = 20.5
-    assert tracker.due_waits() == ("[waiting 20s] Model p/m is still working",)
+    assert _waiting_lines(tracker) == ("[waiting 20s] Model p/m is still working",)
 
 
 def test_tracker_reports_elapsed_time_when_an_activity_ends() -> None:
@@ -302,7 +312,8 @@ def test_tracker_reports_elapsed_time_when_an_activity_ends() -> None:
     clock.now = 23.4
 
     ended = tracker.observe(envelope("model/attempt-end", {"attempt_id": "a1"}))
-    assert ended == pytest.approx(23.4)
+    assert ended is not None
+    assert ended.elapsed_seconds == pytest.approx(23.4)
     assert tracker.pending_count() == 0
     assert tracker.due_waits() == ()
 
@@ -317,7 +328,7 @@ def test_tracker_keeps_parallel_tools_apart() -> None:
     assert tracker.pending_count() == 2
 
     clock.now = 10.0
-    lines = tracker.due_waits()
+    lines = _waiting_lines(tracker)
     assert len(lines) == 2
     assert any("read_file (call c1)" in line for line in lines)
     assert any("search_text (call c2)" in line for line in lines)
@@ -327,7 +338,7 @@ def test_tracker_keeps_parallel_tools_apart() -> None:
 
     tracker.observe(envelope("tool/result", {"tool_call_id": "c1", "tool_name": "read_file"}))
     clock.now = 20.0
-    remaining = tracker.due_waits()
+    remaining = _waiting_lines(tracker)
     assert remaining == (
         "[waiting 20s] Tool search_text (call c2) has not reported completion",
     )
@@ -363,7 +374,7 @@ def test_tracker_never_shows_tool_arguments() -> None:
         )
     )
     clock.now = 10.0
-    line = tracker.due_waits()[0]
+    line = _waiting_lines(tracker)[0]
 
     assert line == "[waiting 10s] Tool shell (call c1) has not reported completion"
     for fragment in ("deploy", "--key", "sk-proj", "FAKE", "secrets.txt"):
@@ -380,7 +391,7 @@ def test_tracker_sanitizes_hostile_labels() -> None:
         )
     )
     clock.now = 10.0
-    line = tracker.due_waits()[0]
+    line = _waiting_lines(tracker)[0]
 
     # Same guarantee - and same residual - as the timeline: the newline and ESC
     # are neutralised so no extra row or control sequence can be produced, while
@@ -412,7 +423,7 @@ def test_next_wait_is_scheduled_from_the_activity_not_the_tracker() -> None:
 
     clock.now = 20.1
     assert tracker.seconds_until_next_wait() == pytest.approx(0.0)
-    assert tracker.due_waits() == (
+    assert _waiting_lines(tracker) == (
         "[waiting 10s] Tool shell (call c1) has not reported completion",
     )
     # The next deadline moves on by one interval rather than staying due.
@@ -952,17 +963,18 @@ class StubRuntimeForConvergence:
 
 async def test_repeated_interrupts_cannot_shorten_convergence() -> None:
     stub = StubRuntimeForConvergence()
-    console = FakeConsole()
-    session = ChatSession("s1", Path("."))
-    turn: asyncio.Future = asyncio.get_running_loop().create_future()
-    turn.set_exception(asyncio.CancelledError())
+    async def consume(_update) -> None:
+        return None
 
-    async def interrupt() -> bool:
-        from traceh.cli.chat import _TurnDisplay
-
-        return await _interrupt_turn(stub, console.console, session, _TurnDisplay(), turn)
-
-    task = asyncio.create_task(interrupt())
+    driver = ChatDriver(
+        stub,  # type: ignore[arg-type]
+        "s1",
+        sink=consume,
+        timeline=False,
+        heartbeat_seconds=0.0,
+        clock=Clock(monotonic=lambda: 0.0, sleep=asyncio.sleep),
+    )
+    task = asyncio.create_task(driver.cancel(reason="test interrupt"))
     await asyncio.wait_for(stub.entered.wait(), timeout=5)
 
     for attempt in range(3):
@@ -972,11 +984,45 @@ async def test_repeated_interrupts_cannot_shorten_convergence() -> None:
         assert not task.done(), f"convergence released early on interrupt #{attempt + 1}"
 
     stub.release.set()
-    repeated = await asyncio.wait_for(task, timeout=5)
+    await asyncio.wait_for(task, timeout=5)
 
-    assert repeated is True, "extra interrupts must be reported so the chat can leave"
     assert stub.calls == 1, "cancel must not be re-issued per interrupt"
-    assert console.has(INTERRUPTED_TURN_NOTICE)
+
+
+async def test_driver_progress_and_cancel_need_no_stdin_adapter(tmp_path: Path) -> None:
+    provider = GatedProvider((ModelResponse(content="unused"),))
+    runtime = build_runtime(tmp_path, provider)
+    session_id = await runtime.create_session(tmp_path)
+    updates = []
+    progress = asyncio.Event()
+
+    async def consume(update) -> None:
+        updates.append(update)
+        if isinstance(update, SessionEventUpdate) and update.event.type == "model/attempt-start":
+            progress.set()
+
+    driver = ChatDriver(
+        runtime,
+        session_id,
+        sink=consume,
+        timeline=True,
+        heartbeat_seconds=0.0,
+        clock=Clock(monotonic=lambda: 0.0, sleep=asyncio.sleep),
+    )
+    running = asyncio.create_task(driver.run_turn("work without an input loop"))
+    await asyncio.wait_for(provider.started.wait(), timeout=5)
+    await asyncio.wait_for(progress.wait(), timeout=5)
+
+    await driver.aclose()
+    outcome = await asyncio.wait_for(running, timeout=5)
+    assert outcome.interrupted
+    assert any(isinstance(update, TurnInterruptedUpdate) for update in updates)
+    assert any(
+        isinstance(update, SessionEventUpdate)
+        and update.event.type == "runtime/cancel-requested"
+        for update in updates
+    )
+    await runtime.dispose()
 
 
 async def test_a_second_interrupt_leaves_the_chat_after_converging(tmp_path: Path) -> None:

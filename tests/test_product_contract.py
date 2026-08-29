@@ -336,10 +336,11 @@ def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
         for source in sorted((PACKAGE_ROOT / "cli").glob("*.py"))
         if "traceh.product" in source.read_text(encoding="utf-8")
     }
-    # F3's only product UI is the existing Chat command: ``main`` assembles the
-    # optional host and ``chat`` delegates rendering/commands to its surface.
-    # No second Product CLI or generic command module learns this authority.
-    assert cli_consumers == {"chat.py", "main.py"}
+    # F3's only Product UI remains the existing Chat command: ``main`` assembles
+    # the optional host, ``chat`` drives a UI-neutral Turn, and ``product`` is
+    # the one Line-terminal adapter. No second command or Product authority is
+    # introduced.
+    assert cli_consumers == {"chat.py", "main.py", "product.py"}
 
 
 def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:

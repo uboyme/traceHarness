@@ -143,6 +143,11 @@ PRODUCT_PROMOTION_IMPORTS = {
     "inspection.py": {
         "traceh.promotion.models": {"review_matches_verification_plan"},
     },
+    "observation.py": {
+        "traceh.promotion.events": {"PROMOTION_LEDGER_STREAM"},
+        "traceh.promotion.models": {"expected_approval_digest"},
+        "traceh.promotion.projection": {"PromotionLedgerReader"},
+    },
     "host.py": {
         "traceh.promotion.service": {"PatchPromotionService"},
     },
@@ -155,10 +160,10 @@ PRODUCT_PROMOTION_IMPORTS = {
 }
 """The exact F2/F3 Product-to-Promotion dependency surface.
 
-F2 reuses Promotion's identity rules instead of copying them. F3 adds exactly
-two orchestration consumers: the Product host constructs the service and the
-Product control plane reads/reviews/approves/promotes through it. Per-file
-symbol sets prevent that stage advance from becoming blanket domain access.
+F2 reuses Promotion's identity rules instead of copying them. v0.7 F3 adds the
+host and control-plane orchestration consumers; v0.8 F3 adds one pure ledger
+reader for UI observation. Per-file symbol sets prevent those seams from
+becoming blanket domain access.
 """
 
 

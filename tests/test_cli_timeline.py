@@ -16,15 +16,16 @@ import pytest
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
-from traceh.cli.chat import INTERRUPTED_EXIT_CODE, _drain_timeline, run_chat
+from traceh.cli.chat import INTERRUPTED_EXIT_CODE, run_chat
 from traceh.cli.console import Console
 from traceh.cli.main import build_parser
 from traceh.cli.text_safety import UNSAFE_LINE_CATEGORIES
 from traceh.cli.timeline import MAX_DETAIL_CHARS, TimelineRenderer, sanitize
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
-from traceh.session.event_feed import SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
+
+TIMELINE_TASKS = ("traceh-chat-driver-events", "traceh-chat-driver-heartbeat")
 
 
 class FakeConsole:
@@ -456,7 +457,7 @@ async def test_no_subscription_survives_a_finished_chat(tmp_path: Path) -> None:
     assert not [
         task
         for task in asyncio.all_tasks()
-        if task.get_name() == "traceh-chat-timeline" and not task.done()
+        if task.get_name() in TIMELINE_TASKS and not task.done()
     ]
 
 
@@ -492,7 +493,7 @@ async def test_no_subscription_survives_an_interrupted_chat(tmp_path: Path) -> N
     assert not [
         task
         for task in asyncio.all_tasks()
-        if task.get_name() == "traceh-chat-timeline" and not task.done()
+        if task.get_name() in TIMELINE_TASKS and not task.done()
     ]
 
 
@@ -750,73 +751,6 @@ async def test_a_hostile_tool_name_cannot_forge_console_rows(tmp_path: Path) -> 
     assert console.has("Tool nope")
 
 
-# -- drain convergence ---------------------------------------------------
-
-
-async def test_drain_waits_for_the_printer_through_repeated_cancellation() -> None:
-    """Cancelling the drain must not detach a printer that is still writing.
-
-    `asyncio.shield` protects the printer from cancellation but does not keep the
-    drain waiting, which is the same detached-worker shape already fixed for
-    store and provider workers. The printer signals that it is really running,
-    then blocks; the drain is cancelled repeatedly and must not return.
-    """
-
-    feed = SessionEventFeed()
-    subscription = feed.subscribe("session:drain")
-    entered = asyncio.Event()
-    release = asyncio.Event()
-
-    async def gated_printer() -> None:
-        entered.set()
-        await release.wait()
-
-    printer = asyncio.create_task(gated_printer(), name="traceh-chat-timeline")
-    await asyncio.wait_for(entered.wait(), timeout=5)
-
-    drain = asyncio.create_task(_drain_timeline(subscription, printer))
-    await asyncio.sleep(0)
-
-    for attempt in range(3):
-        drain.cancel()
-        # Give the loop real opportunities to run the drain to completion.
-        for _ in range(4):
-            await asyncio.sleep(0)
-        assert not drain.done(), f"drain escaped on cancel #{attempt + 1}"
-        assert not printer.done()
-
-    release.set()
-    with pytest.raises(asyncio.CancelledError):
-        await asyncio.wait_for(drain, timeout=5)
-
-    assert printer.done(), "printer was left detached"
-    assert feed.subscriber_count("session:drain") == 0
-    assert not [
-        task
-        for task in asyncio.all_tasks()
-        if task.get_name() == "traceh-chat-timeline" and not task.done()
-    ]
-
-
-async def test_drain_closes_the_subscription_before_waiting() -> None:
-    """The end marker must be queued, or a real printer would never finish."""
-
-    feed = SessionEventFeed()
-    subscription = feed.subscribe("session:drain")
-    printed: list[int] = []
-
-    async def printer_body() -> None:
-        async for event in subscription:
-            printed.append(event.seq)
-
-    printer = asyncio.create_task(printer_body(), name="traceh-chat-timeline")
-    await asyncio.sleep(0)
-
-    await asyncio.wait_for(_drain_timeline(subscription, printer), timeout=5)
-    assert printer.done()
-    assert feed.subscriber_count("session:drain") == 0
-
-
 async def test_a_failing_printer_does_not_change_the_turn_outcome(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -846,7 +780,7 @@ async def test_a_failing_printer_does_not_change_the_turn_outcome(
     assert not [
         task
         for task in asyncio.all_tasks()
-        if task.get_name() == "traceh-chat-timeline" and not task.done()
+        if task.get_name() in TIMELINE_TASKS and not task.done()
     ]
 
     # The event log is untouched by the observer's failure.

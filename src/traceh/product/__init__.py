@@ -60,6 +60,12 @@ from traceh.product.host import (
     ProductHostProfile,
     build_product_chat_host,
 )
+from traceh.product.observation import (
+    ObservedStreamHead,
+    ProductObservation,
+    ProductObservationReader,
+    ProductObservationSession,
+)
 from traceh.product.projection import (
     ProductTaskIssue,
     ProductTaskStreamReader,
@@ -110,6 +116,7 @@ __all__ = [
     "PRODUCT_MODE_ROLES",
     "PRODUCT_VERIFICATION_NODE",
     "MessageEvidence",
+    "ObservedStreamHead",
     "ProductAssembly",
     "ProductAssemblyResolver",
     "ProductAssemblyService",
@@ -119,6 +126,9 @@ __all__ = [
     "ProductInputError",
     "ProductHostProfile",
     "ProductModeRouter",
+    "ProductObservation",
+    "ProductObservationReader",
+    "ProductObservationSession",
     "ProductOperationConflictError",
     "ProductPreflight",
     "ProductProfileBinding",

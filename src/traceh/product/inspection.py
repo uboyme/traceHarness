@@ -124,6 +124,12 @@ class ProductInspectionEvidenceReader:
         self._workflow = WorkflowStreamReader(store)
         self._directory = AgentDirectoryReader(store)
 
+    @property
+    def store(self) -> EventStore:
+        """The durable log this pure reader joins."""
+
+        return self._store
+
     async def load(
         self,
         summary: ProductTaskSummary,

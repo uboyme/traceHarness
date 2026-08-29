@@ -1,11 +1,11 @@
 # TraceHarness v0.8 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现、完成最终全量并提交；F1 已实现并在 Release Stop A 独立复审清零 P0/P1；F2 已实现 typed Provider failure、同 Provider/同模型/同冻结请求的有界 retry、Attempt/Budget/Session 证据与 Benchmark 度量，Release Stop B 最终复审已清零 P0/P1/P2，F1+F2 完整集成门禁已通过；F2 到此结束，F3-F5 未开始。**
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F3 已实现，Release Stop A/B、F1+F2 完整集成门禁与 F3 独立短复审均已通过；F3 首轮审查的 observation 启动泄漏 P1 与断开 Feed P2 已根修，最终复审为 P0/P1/P2 全零；F4–F5 未开始。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD
 > `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
 >
-> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0/F1 外，不表示
+> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0–F3 外，不表示
 > 后续能力已经存在，也不授权
 > commit、push、tag、release、真实 Provider、外部网络或秘密读取。每个阶段开工前仍须重新核对
 > HEAD、两份上下文、ADR、源码与测试；真实代码始终高于本计划。
@@ -456,6 +456,12 @@ P0/P1 后运行一次覆盖 F1 SQLite 与 F2 retry 的集成全量，并附 `--d
 
 ## 8. v0.8-F3：UI-neutral Chat 驱动与只读 Product observation
 
+**当前实施状态（2026-08-30）**：已按本节实现。首轮独立审查发现 initial observation
+fresh read 失败后遗留 subscription/watcher 的 P1，以及公开 host 默认 Feed 未连接 Store 的 P2；当前均已
+在 owner 根修并完成确定性反例与反向验证，独立短复审确认 P0/P1/P2 全零。Line CLI 已迁移到共享 Driver/typed update；
+Product observation 只 fresh read 并保留 ProductTask/Workflow 双状态，Feed 只作 dirty hint。F3 没有
+实现 Textual、第二 UI 命令、第二状态机或任何 F4/F5 能力。
+
 ### 8.1 驱动边界
 
 - 外部 adapter 异步提交输入并消费 typed update；driver 不直接读取 stdin，也不渲染终端文本；
@@ -482,6 +488,10 @@ P0/P1 后运行一次覆盖 F1 SQLite 与 F2 retry 的集成全量，并附 `--d
 4. Feed 事件只把 view 标成 dirty，随后重新读取事实，不直接信任 payload；
 5. 每次用户动作后、周期 heartbeat、进入 Approval 前和 terminal 前都强制 durable refresh。
 
+实现还必须保证 handshake 部分建立失败时由 observation owner 回滚已经创建的全部 subscription/watcher；
+Product host 只能接受与同一 `PublishingEventStore` 精确绑定的显式 Feed，不能提供断开的默认 Feed，也不能
+把任意 Feed 与 Store 配成一对后假装具备实时通知。
+
 这样事件发生在“订阅之前”、Feed 丢失、adapter 暂停或 TUI 重启都不会改变最终 view。不得新增 wildcard
 全局 Event bus 或 replayable Feed。
 
@@ -497,6 +507,8 @@ P0/P1 后运行一次覆盖 F1 SQLite 与 F2 retry 的集成全量，并附 `--d
 - Line/TUI 对同一事件与 monotonic clock 得到同一 typed activity update，移除共享 tracker 后重复实现的
   差异反例必须变红；
 - UI 关闭时调用原 owner 的 cancel/close，不遗弃 ProductTask；
+- initial fresh read 失败或取消时，全部初始 subscription/watcher 在公开调用返回前归零；
+- host 拒绝普通 Store、缺失 Feed 或与 Publishing Store 身份不一致的 Feed，正确绑定后 dirty 通知可达；
 - 临时去掉 subscribe-before-read、周期 refresh 或 observation 纯读守卫，对应公开用例真实漏状态或产生
   非法写入。
 

@@ -211,6 +211,7 @@ async def _run_attempt_with_store(
             capture_limits=settings.capture_limits,
             approver_id=settings.approver_id,
             max_report_chars=settings.max_report_chars,
+            event_feed=runtime.events,
             model_retry_policy=retry_policy,
         )
     except BaseException as primary:

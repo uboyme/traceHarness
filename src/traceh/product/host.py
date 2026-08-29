@@ -36,12 +36,17 @@ from traceh.product.chat import (
     ProposeProductTaskTool,
 )
 from traceh.product.control import ProductTaskControlPlane
+from traceh.product.errors import ProductInputError
 from traceh.product.evidence import SessionEvidenceReader
 from traceh.product.execution import (
     ProductExecutionHost,
     ProductWorkflowBindingResolver,
 )
 from traceh.product.inspection import ProductInspectionEvidenceReader
+from traceh.product.observation import (
+    ProductObservationReader,
+    ProductObservationSession,
+)
 from traceh.product.registry import ProductProfileBinding, ProductProfileRegistry
 from traceh.product.resources import ManagedProductTaskProvisioner, ProductResourceBindings
 from traceh.product.router import ProductModeRouter, StrictTaskRoutingParser
@@ -52,6 +57,7 @@ from traceh.product.runtime import (
 )
 from traceh.product.service import ProductTaskService
 from traceh.promotion.service import PatchPromotionService
+from traceh.session.event_feed import EventFeed, PublishingEventStore
 from traceh.session.event_store import EventStore
 from traceh.supervision.supervisor import ProcessAgentSupervisor
 from traceh.workflow.execution import WorkflowServices
@@ -70,13 +76,15 @@ class ProductHostProfile:
 
 
 class ProductChatHost:
-    """The optional Chat surface plus the services it exclusively owns."""
+    """The UI-neutral Chat coordinator plus the services it exclusively owns."""
 
     __slots__ = (
         "_capture",
         "_closed",
         "_control",
+        "_event_feed",
         "_promotion",
+        "_observation",
         "_router",
         "_surface",
         "_tasks",
@@ -94,6 +102,8 @@ class ProductChatHost:
         capture: PatchCaptureService,
         promotion: PatchPromotionService,
         actions: ProductTurnActions,
+        observation: ProductObservationReader,
+        event_feed: EventFeed,
     ) -> None:
         self._surface = surface
         self._control = control
@@ -101,6 +111,8 @@ class ProductChatHost:
         self._router = router
         self._capture = capture
         self._promotion = promotion
+        self._observation = observation
+        self._event_feed = event_feed
         self.propose_tool = ProposeProductTaskTool(actions)
         self.confirm_tool = ConfirmProductTaskTool(actions)
         self._closed = False
@@ -113,26 +125,44 @@ class ProductChatHost:
     def control(self) -> ProductTaskControlPlane:
         """The host-side control plane this host already owns.
 
-        ``ProductChatSurface`` is the console rendering of these operations, not
-        a second authority over them.  A non-console host - the benchmark in
-        :mod:`traceh.evaluation` - drives the same object so there is one
-        confirm/approve/reject/cancel path rather than two.  Nothing model-facing
-        reaches it: the two Tools still hold only ``ProductTurnActions``.
+        ``ProductChatSurface`` coordinates typed operations without rendering
+        them and is not a second authority.  The Line adapter and a future TUI
+        both drive this same object, as does the non-interactive benchmark, so
+        there remains one confirm/approve/reject/cancel path.  Nothing
+        model-facing reaches it: the two Tools still hold only
+        ``ProductTurnActions``.
         """
 
         return self._control
 
+    @property
+    def observation(self) -> ProductObservationReader:
+        """Pure durable observation for Line/TUI adapters."""
+
+        return self._observation
+
+    def observe(self, task_id: str) -> ProductObservationSession:
+        """Open an exact-stream observation handshake for a UI adapter."""
+
+        return ProductObservationSession(self._observation, self._event_feed, task_id)
+
     async def prepare_turn(self, session_id: str, text: str) -> ProductChatTurn:
         return await self._surface.prepare_turn(session_id, text)
 
-    async def finish_turn(self, *args, **kwargs) -> None:
-        await self._surface.finish_turn(*args, **kwargs)
+    async def resolve_turn(self, *args, **kwargs):
+        return await self._surface.resolve_turn(*args, **kwargs)
+
+    async def start(self, *args, **kwargs):
+        return await self._surface.start(*args, **kwargs)
 
     async def discard_turn(self, *args, **kwargs) -> None:
         await self._surface.discard_turn(*args, **kwargs)
 
-    async def handle_command(self, *args, **kwargs) -> bool:
-        return await self._surface.handle_command(*args, **kwargs)
+    async def execute_command(self, *args, **kwargs):
+        return await self._surface.execute_command(*args, **kwargs)
+
+    async def inspect(self, *args, **kwargs):
+        return await self._surface.inspect(*args, **kwargs)
 
     async def aclose(self) -> None:
         if self._closed:
@@ -168,10 +198,18 @@ async def build_product_chat_host(
     capture_limits: PatchCaptureLimits,
     approver_id: str,
     max_report_chars: int,
+    event_feed: EventFeed,
     actions: ProductTurnActions | None = None,
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
+
+    if event_feed is None:
+        raise ProductInputError("product-event-feed-required", "event_feed")
+    if not isinstance(store, PublishingEventStore):
+        raise ProductInputError("product-event-store-not-publishing", "store")
+    if store.feed is not event_feed:
+        raise ProductInputError("product-event-feed-mismatch", "event_feed")
 
     resolver = BuiltinProductAssemblyResolver()
     registry = ProductProfileRegistry(
@@ -283,12 +321,16 @@ async def build_product_chat_host(
         promotion_target_id=resolved.profile.promotion_target_id,
         max_patch_chars=max_report_chars,
     )
+    observation = ProductObservationReader(
+        store,
+        evidence,
+        promotion_target_id=resolved.profile.promotion_target_id,
+    )
     surface = ProductChatSurface(
         control,
         actions,
         evidence,
         approver_id=approver_id,
-        data_dir=data_dir,
     )
     return ProductChatHost(
         surface=surface,
@@ -298,6 +340,8 @@ async def build_product_chat_host(
         capture=capture,
         promotion=promotion,
         actions=actions,
+        observation=observation,
+        event_feed=event_feed,
     )
 
 

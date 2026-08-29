@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+### v0.8-F3: UI-neutral Chat driver and read-only Product observation
+
+- Added one UI-neutral `ChatDriver` that submits Turns to the existing
+  `AgentRuntime` and emits typed Session event, activity and terminal outcome
+  updates. It never reads stdin, renders terminal text or stores conversation
+  state; cancellation still uses the Runtime owner and converges before return.
+- Moved the sole ephemeral `ActivityTracker` into `traceh.chat`. Line rendering
+  consumes those typed updates, so a future TUI cannot silently invent a second
+  in-flight interpretation. Timeline and heartbeat remain non-durable and do
+  not change model context or request fingerprints.
+- Split Product Chat coordination from the Line-terminal adapter. Proposal,
+  exact `START`, inspect/approve/reject/cancel/abandon and Promotion still call
+  the original control-plane owners; model Tools retain only their low-authority
+  ephemeral Turn actions.
+- Added pure Product observation that fresh-reads ProductTask, Workflow,
+  Directory, Artifact and Promotion facts, keeps Product/Workflow status
+  separate, and never reconciles or appends. Exact-stream subscribe-before-read
+  closes discovered-stream races; Feed payloads are only dirty hints, with
+  periodic, action and final durable refresh covering dropped notifications.
+- Closed the first independent review's observation-lifecycle P1: a failed
+  initial fresh read now rolls back every subscription and watcher inside the
+  observation owner, while the Line adapter also retains cleanup ownership
+  across partial start. Product host assembly now requires the exact Feed owned
+  by its `PublishingEventStore`; missing or mismatched Feed wiring fails before
+  any Product resources are assembled instead of creating a silent observer.
+- Independent short re-review found no P0, P1 or P2. Its cancellation probe
+  confirmed the original `CancelledError` propagates while all five initial
+  subscriptions and every watcher converge, and a closed observer cannot
+  restart.
+- Migrated the existing Line CLI and its tests without a compatibility alias for
+  removed private display helpers. Added deterministic no-stdin, Feed-loss,
+  stream-divergence, cancellation and architecture tests plus reverse
+  verification for re-read, periodic refresh, pure-read, shared-tracker,
+  failed-start rollback and Store/Feed identity protections. No TUI, second
+  Product state/command, Runtime, Event bus,
+  Provider call, version bump or release action is included.
+
 ### v0.8-F2: typed Provider failures and bounded same-request retry
 
 - Added stable, sanitized Provider failure codes/categories. The

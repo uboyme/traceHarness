@@ -16,12 +16,21 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from traceh.cli.activity import (
-    DEFAULT_HEARTBEAT_SECONDS,
-    ActivityTracker,
+from traceh.chat.activity import (
+    ActivityPhase,
+    ActivityUpdate,
     Clock,
     default_clock,
 )
+from traceh.chat.driver import (
+    ChatDriver,
+    ChatUpdate,
+    SessionEventUpdate,
+    TurnCompletedUpdate,
+    TurnFailedUpdate,
+    TurnInterruptedUpdate,
+)
+from traceh.cli.activity import DEFAULT_HEARTBEAT_SECONDS, render_activity_wait
 from traceh.cli.command_line import (
     Literal,
     UnsafeCommandValue,
@@ -34,13 +43,12 @@ from traceh.cli.console import Console, contains_undecodable_input, normalize_in
 from traceh.cli.env_file import is_env_var_name
 from traceh.cli.errors import CliConfigurationError
 from traceh.cli.timeline import TimelineRenderer, sanitize
-from traceh.concurrency import await_worker_convergence
 from traceh.runtime.agent_runtime import AgentRuntime
-from traceh.session.event_feed import EventSubscription
 from traceh.session.service import SessionNotFoundError
 
 if TYPE_CHECKING:
-    from traceh.product.chat import ProductChatSurface, ProductChatTurn
+    from traceh.cli.product import LineProductAdapter
+    from traceh.product.chat import ProductChatTurn
 
 PROMPT = "you> "
 ASSISTANT_PREFIX = "assistant> "
@@ -164,19 +172,6 @@ def _safe_base_url(value: str | None) -> tuple[str | None, str | None]:
     return value, None
 
 
-@dataclass(frozen=True, slots=True)
-class _TurnDisplay:
-    """The observation machinery for one turn, so it can be torn down as a unit.
-
-    Kept together because the failure mode of tracking these separately is a
-    task that outlives the turn and keeps writing to the console.
-    """
-
-    subscription: EventSubscription | None = None
-    printer: asyncio.Task[None] | None = None
-    heartbeat: asyncio.Task[None] | None = None
-
-
 def chat_target(workspace: Path | None, session_id: str | None) -> tuple[Path | None, str | None]:
     """Validate that exactly one of workspace / session id was requested."""
 
@@ -201,7 +196,7 @@ async def run_chat(
     heartbeat_seconds: float = DEFAULT_HEARTBEAT_SECONDS,
     clock: Clock | None = None,
     resume_environment: ResumeEnvironment | None = None,
-    product: ProductChatSurface | None = None,
+    product: LineProductAdapter | None = None,
 ) -> int:
     """Open or continue a session, then read turns until the user leaves."""
 
@@ -310,7 +305,7 @@ async def _chat_loop(
     heartbeat_seconds: float,
     clock: Clock,
     resume_environment: ResumeEnvironment,
-    product: ProductChatSurface | None = None,
+    product: LineProductAdapter | None = None,
 ) -> int:
     console.write("Type /help for commands, /exit to leave.")
     while True:
@@ -385,7 +380,7 @@ async def _handle_command(
     text: str,
     resume_environment: ResumeEnvironment,
     *,
-    product: ProductChatSurface | None = None,
+    product: LineProductAdapter | None = None,
 ) -> bool:
     """Handle one internal command. Returns True when the chat should end."""
 
@@ -452,22 +447,18 @@ async def _run_turn(
     timeline: bool,
     heartbeat_seconds: float,
     clock: Clock,
-    product: ProductChatSurface | None = None,
+    product: LineProductAdapter | None = None,
 ) -> bool:
-    """Run one turn, narrating it while it happens.
+    """Submit one Turn to the UI-neutral driver and render typed updates."""
 
-    Returns ``True`` when the user interrupted more than once, which the caller
-    reads as "leave after this".
-
-    The subscription opens before the turn starts and closes on every exit path,
-    so nothing is missed at the front and nothing is left registered at the back.
-    Only events published after this point arrive: continuing an old session does
-    not repaint its history.
-    """
-
-    display = _start_display(
-        runtime, console, session, timeline=timeline,
-        heartbeat_seconds=heartbeat_seconds, clock=clock,
+    adapter = _LineUpdateAdapter(console)
+    driver = ChatDriver(
+        runtime,
+        session.session_id,
+        sink=adapter.consume,
+        timeline=timeline,
+        heartbeat_seconds=heartbeat_seconds,
+        clock=clock,
     )
 
     prepared: ProductChatTurn | None = None
@@ -476,43 +467,12 @@ async def _run_turn(
         prepared = await product.prepare_turn(session.session_id, text)
         task_input = prepared.turn_input
 
-    # Shielded so an interrupt delivered here cannot detach the turn: the
-    # runtime keeps tracking it and can still cancel it through its own
-    # cancellation path.
-    turn = asyncio.ensure_future(
-        runtime.run_existing(session.session_id, task_input)
-    )
-    try:
-        result = await asyncio.shield(turn)
-    except asyncio.CancelledError:
-        # The interesting case, and the one that was previously broken. The
-        # cancellation lifecycle - runtime/cancel-requested, the cancelled model
-        # attempt, step/end and turn/end - is only appended *while*
-        # `runtime.cancel()` runs, so tearing the display down first published
-        # all of it to nobody. The display therefore stays open across
-        # convergence and is drained afterwards.
-        interrupted = await _interrupt_turn(
-            runtime, console, session, display, turn
-        )
+    outcome = await driver.run_turn(task_input)
+    if outcome.result is None:
         if product is not None:
             await product.discard_turn(session.session_id, None)
-        return interrupted
-    except Exception as error:
-        # AgentLoop already recorded runtime/error and closed the lifecycle.
-        # Draining first keeps the timeline that led up to the failure - it is
-        # the most useful part of it - ahead of the error line.
-        await _stop_display(display)
-        if product is not None:
-            await product.discard_turn(session.session_id, None)
-        error_type = sanitize(type(error).__name__) or "Error"
-        message = sanitize(str(error)) or "error"
-        console.write(f"error: {error_type}: {message}")
-        return False
-    except BaseException:
-        await _stop_display(display)
-        raise
-    await _stop_display(display)
-    _write_turn_result(console, result)
+        return outcome.leave_after_convergence
+    result = outcome.result
     if product is not None:
         assert prepared is not None
         await product.finish_turn(
@@ -523,7 +483,43 @@ async def _run_turn(
             heartbeat_seconds=heartbeat_seconds,
             clock=clock,
         )
-    return False
+    return outcome.leave_after_convergence
+
+
+class _LineUpdateAdapter:
+    """The first ChatDriver adapter: typed updates to existing Line output."""
+
+    __slots__ = ("_console", "_timeline")
+
+    def __init__(self, console: Console) -> None:
+        self._console = console
+        self._timeline = TimelineRenderer()
+
+    async def consume(self, update: ChatUpdate) -> None:
+        if isinstance(update, SessionEventUpdate):
+            elapsed = (
+                None
+                if update.completed_activity is None
+                else update.completed_activity.elapsed_seconds
+            )
+            line = self._timeline.render(update.event, elapsed_seconds=elapsed)
+            if line is not None:
+                self._console.write(line)
+            return
+        if isinstance(update, ActivityUpdate):
+            if update.phase is ActivityPhase.WAITING:
+                self._console.write(render_activity_wait(update))
+            return
+        if isinstance(update, TurnCompletedUpdate):
+            _write_turn_result(self._console, update.result)
+            return
+        if isinstance(update, TurnFailedUpdate):
+            error_type = sanitize(update.error_type) or "Error"
+            message = sanitize(update.message) or "error"
+            self._console.write(f"error: {error_type}: {message}")
+            return
+        if isinstance(update, TurnInterruptedUpdate):
+            self._console.write(INTERRUPTED_TURN_NOTICE)
 
 
 def _write_turn_result(console: Console, result) -> None:
@@ -532,185 +528,6 @@ def _write_turn_result(console: Console, result) -> None:
         f"[reason={result.reason} steps={result.steps} "
         f"tokens={result.usage.total_tokens} verification={result.verification_passed}]"
     )
-
-
-async def _interrupt_turn(
-    runtime: AgentRuntime,
-    console: Console,
-    session: ChatSession,
-    display: _TurnDisplay,
-    turn: asyncio.Future,
-) -> bool:
-    """Converge an interrupted turn with its narration still running.
-
-    Order matters and is the whole fix:
-
-    1. the display stays open, so cancellation events are actually observed;
-    2. ``runtime.cancel()`` appends `runtime/cancel-requested`, cancels the turn
-       and waits for the model, tools and subprocesses to converge;
-    3. only then is the display drained, so those events reach the console
-       before the notice;
-    4. the chat returns to its prompt with the session intact.
-
-    Repeated interrupts cannot shorten step 2. Convergence is delegated to the
-    shared `await_worker_convergence()`, which absorbs further cancellation and
-    keeps waiting for the same future rather than offering an early exit. A
-    second Ctrl+C is honoured *after* convergence, by leaving.
-    """
-
-    task = asyncio.current_task()
-    interrupts_before = task.cancelling() if task is not None else 0
-
-    convergence = asyncio.ensure_future(
-        runtime.cancel(session.session_id, reason="interrupted from the chat console")
-    )
-    await await_worker_convergence(convergence)
-
-    interrupts_after = task.cancelling() if task is not None else 0
-    # Clear our own cancellation state; the interrupt has been handled here and
-    # the loop is allowed to keep running. Without this the task stays flagged as
-    # cancelling and the next await would abort the session the user just kept.
-    if task is not None:
-        while task.uncancel() > 0:
-            pass
-
-    # Retrieve the turn's outcome so a cancelled or failed future cannot surface
-    # later as a never-retrieved exception.
-    outcome = (await asyncio.gather(turn, return_exceptions=True))[0]
-
-    await _stop_display(display)
-
-    if not isinstance(outcome, BaseException):
-        # The turn finished in the gap between the interrupt and the cancel; its
-        # result is real, so report it instead of claiming an interruption.
-        _write_turn_result(console, outcome)
-    else:
-        console.write(INTERRUPTED_TURN_NOTICE)
-    return interrupts_after > interrupts_before
-
-
-def _start_display(
-    runtime: AgentRuntime,
-    console: Console,
-    session: ChatSession,
-    *,
-    timeline: bool,
-    heartbeat_seconds: float,
-    clock: Clock,
-) -> _TurnDisplay:
-    """Subscribe and start the narration tasks for one turn."""
-
-    if not timeline:
-        return _TurnDisplay()
-    subscription = runtime.events.subscribe(
-        runtime.sessions.session_stream(session.session_id)
-    )
-    tracker = ActivityTracker(interval_seconds=heartbeat_seconds, monotonic=clock.monotonic)
-    printer = asyncio.create_task(
-        _print_timeline(subscription, console, tracker),
-        name="traceh-chat-timeline",
-    )
-    heartbeat = (
-        asyncio.create_task(
-            _emit_heartbeat(console, tracker, clock),
-            name="traceh-chat-heartbeat",
-        )
-        if tracker.enabled
-        else None
-    )
-    return _TurnDisplay(subscription=subscription, printer=printer, heartbeat=heartbeat)
-
-
-async def _print_timeline(
-    subscription: EventSubscription,
-    console: Console,
-    tracker: ActivityTracker,
-) -> None:
-    """Write one line per shown event, for as long as the subscription is open."""
-
-    renderer = TimelineRenderer()
-    async for event in subscription:
-        elapsed = tracker.observe(event)
-        line = renderer.render(event, elapsed_seconds=elapsed)
-        if line is not None:
-            console.write(line)
-
-
-async def _emit_heartbeat(console: Console, tracker: ActivityTracker, clock: Clock) -> None:
-    """Report waiting time while an activity is in flight.
-
-    Time-driven rather than event-driven, which is the point: the silence being
-    filled is precisely the absence of events. Nothing is written when nothing is
-    in flight, so a fast turn produces no heartbeat at all.
-
-    Each wake is scheduled from the *activity's* next threshold, not from a fixed
-    tick of its own. Sleeping one interval at a time would phase-lock the
-    heartbeat to whenever the turn started: a tool beginning at t=10.1 with a 10s
-    interval would be silent at the t=20 wake (only 9.9s elapsed) and first
-    reported at t=30, almost twenty seconds into the wait. With nothing in flight
-    there is no deadline to aim at, so it waits one interval and re-checks - which
-    is also what puts it in phase with an activity that starts meanwhile.
-    """
-
-    while True:
-        delay = tracker.seconds_until_next_wait()
-        if delay is None:
-            await clock.sleep(tracker.interval_seconds)
-        elif delay > 0:
-            await clock.sleep(delay)
-        # A due threshold is printed without sleeping first; this cannot spin,
-        # because emitting a line advances that activity past the threshold.
-        for line in tracker.due_waits():
-            console.write(line)
-
-
-async def _stop_display(display: _TurnDisplay) -> None:
-    """Tear the narration down as a unit, leaving no task behind."""
-
-    if display.heartbeat is not None:
-        display.heartbeat.cancel()
-        await await_worker_convergence(display.heartbeat)
-    await _drain_timeline(display.subscription, display.printer)
-
-
-async def _drain_timeline(
-    subscription: EventSubscription | None,
-    printer: asyncio.Task[None] | None,
-) -> None:
-    """Close the subscription and let the printer finish what is already queued.
-
-    Closing enqueues an end marker behind the events published so far, so
-    awaiting the printer prints all of them and then returns. That ordering is
-    what lets the caller promise the timeline appears before the final answer,
-    without polling or sleeping.
-
-    Cancellation converges rather than abandons. ``asyncio.shield`` alone would
-    not be enough: it protects the printer from being cancelled, but it does not
-    keep *this* coroutine waiting, so a cancelled drain would return while the
-    printer was still writing to the console - the same detached-worker shape
-    already fixed for store and provider workers. So a `CancelledError` is
-    caught, the printer is awaited to completion through the shared
-    `await_worker_convergence()` (which absorbs repeated cancellation instead of
-    treating it as an early exit), and only then is the original cancellation
-    re-raised. The chat's cancellation is never swallowed.
-
-    A printer that raises is a display bug, not a turn outcome: the exception is
-    dropped here so it can neither fail a turn that succeeded nor mask the
-    exception or cancellation the caller is already handling.
-    """
-
-    if subscription is not None:
-        subscription.close()
-    if printer is None:
-        return
-    try:
-        await asyncio.shield(printer)
-    except asyncio.CancelledError as cancellation:
-        await await_worker_convergence(printer)
-        raise cancellation
-    except Exception:
-        # An observer must not change what the runtime reported.
-        pass
 
 
 async def _converge_interrupted(

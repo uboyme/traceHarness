@@ -1,10 +1,10 @@
-"""Cross-process advisory file locking for local event streams.
+"""Cross-process advisory file locking for local filesystem operations.
 
-The JSONL event store needs a mutual exclusion primitive that is honoured by
-*independent operating system processes*, not only by tasks inside one Python
-interpreter. An ``asyncio.Lock`` guards a single event loop and a ``.lock`` file
-merely existing guards nothing at all, so both platforms must reach a real
-kernel-level lock:
+Git promotion and process-isolation tests need a mutual exclusion primitive
+honoured by *independent operating system processes*, not only by tasks inside
+one Python interpreter. An ``asyncio.Lock`` guards a single event loop and a
+``.lock`` file merely existing guards nothing at all, so both platforms must
+reach a real kernel-level lock:
 
 * POSIX uses ``fcntl.flock`` on the lock file descriptor.
 * Windows uses ``msvcrt.locking``, which maps to the Win32 ``LockFile`` API and

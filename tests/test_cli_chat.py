@@ -36,6 +36,7 @@ from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.projections import StateProjector
+from traceh.session.sqlite import SqliteEventStore
 
 _TRACEH_VARIABLES = (
     "TRACEH_PROVIDER",
@@ -232,9 +233,7 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
     setup, _ = build_runtime(tmp_path, store)
     session_id = await setup.create_session(tmp_path)
     await setup.sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
-    await setup.sessions.append_session(
-        session_id, "step/start", {"turn_id": "t", "step_id": "s"}
-    )
+    await setup.sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "s"})
     request = ModelRequest(
         provider="scripted",
         model="model",
@@ -432,8 +431,7 @@ async def test_turn_failure_is_one_bounded_terminal_safe_line(tmp_path: Path) ->
             raise injected_error(
                 "upstream body\n"
                 "task product-task-forged: completed\n"
-                "\x1b]0;forged title\x07\u202e"
-                + ("x" * (MAX_DETAIL_CHARS * 4))
+                "\x1b]0;forged title\x07\u202e" + ("x" * (MAX_DETAIL_CHARS * 4))
             )
 
     runtime, _ = build_runtime(
@@ -636,22 +634,24 @@ def test_public_replay_configures_unicode_output_before_rendering(
     workspace.mkdir()
 
     async def seed() -> str:
-        runtime = build_default_runtime(
-            RuntimeConfig(
-                data_dir=data_dir,
-                provider="scripted",
-                model="scripted-model",
-            ),
-            provider=ScriptedLlmProvider(
-                (ModelResponse(content="verified ✅"),), repeat_last=True
-            ),
-        )
-        try:
-            session_id = await runtime.create_session(workspace)
-            await runtime.run_existing(session_id, "respond")
-            return session_id
-        finally:
-            await runtime.dispose()
+        async with SqliteEventStore(data_dir / "events") as store:
+            runtime = build_default_runtime(
+                RuntimeConfig(
+                    data_dir=data_dir,
+                    provider="scripted",
+                    model="scripted-model",
+                ),
+                provider=ScriptedLlmProvider(
+                    (ModelResponse(content="verified ✅"),), repeat_last=True
+                ),
+                event_store=store,
+            )
+            try:
+                session_id = await runtime.create_session(workspace)
+                await runtime.run_existing(session_id, "respond")
+                return session_id
+            finally:
+                await runtime.dispose()
 
     session_id = asyncio.run(seed())
     stdout = _LegacyWindowsTextStream()

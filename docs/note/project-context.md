@@ -43,18 +43,22 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | `0.7.1` 维护候选保留 v0.7.0 的单进程多 Agent 与 ProductTask 主线（20.19–20.32）。`AgentLoop` 只新增通用取消 owner：一个 owned finalizer 顺序闭合当前 Attempt/Step/Turn，重复取消不能让公开调用提前返回；它仍不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、自动重试、Workflow 重试策略、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
-| 持久化 | 本地 Append-only JSONL Session Stream、Effect Stream、Agent Directory Stream、全局 Budget Ledger Stream、全局 Workspace Catalog Stream、全局 Patch Artifact Catalog Stream、全局 Patch Promotion Ledger Stream，每 Agent 的 Inbox Stream 与 Delivery Stream、每个 Workflow Run 一条的 Workflow Stream，以及每个 ProductTask 一条的产品事实流；Patch 原始 bytes 在显式内容寻址 CAS，不写入 Event Log |
+| 当前 Agent 模型 | v0.8-F0/F1 未发布实现保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.33）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 已冻结 exact Provider/request/Attempt，仍不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider retry/fallback、Workflow retry、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
+| 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互，Turn 运行期间实时打印 Step/Tool Timeline 与 Activity Heartbeat；不传 Product 配置时行为不变。显式 `--product-config` 后，模型只能建议 Proposal 或确认；当它建议确认时，宿主把精确 pending task 显示在独立终端提示中，只有用户输入固定 `START` 才能创建 ProductTask，其他输入/EOF 均不分配 task Budget、Workspace 或 Workflow。`/task inspect|approve|reject|cancel|abandon TASK_ID` 继续在模型前分派；开始后立即显示 task id，并沿用显式 heartbeat 间隔投影 durable Product/Workflow 进度。Approval 与 inspect 会显示固定节点、Agent Session/replay 命令、changed paths、有界 Patch 和 Verifier status/exit/evidence digest，证据缺失或被篡改时明确标为 unavailable。空闲提示符原有 `/plugins` 组合切换继续保留。它仍不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
-| 事件写入互斥 | JSONL Stream 在 POSIX 与 Windows 上均有操作系统级跨进程文件锁 |
-| 当前自动化测试 | `0.7.1` 的三个原始确定性公开路径反例覆盖宿主 `START` 授权、AgentLoop 重复取消收敛和 L4 目标 venv scheme；发布门禁新增第四条真实 Git for Windows 长路径反例，证明旧 `ws-workspace-<digest>` 在 nested L2 路径稳定得到 `fatal: '$GIT_DIR' too big`，当前 `ws-<完整 SHA-256>` provision/release 通过。四项保护均逐项反向验证。第一次发布全量的插件兼容红灯、首次远端 Linux 的两个夹具错误，以及其后 Windows L2 的不可诊断失败均按真实 owner 修复；`--tb=line` 让第三次 CI 显示 23 项 Benchmark 失败共享 `workspace-git-failed`，本地同版 Git 与等长路径反例随后把根因固定到身份目录长度，而非 Product/Evaluation。最终门禁数字见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。v0.7.0 的发布基线仍是 `2407 collected / 2402 passed / 5 skipped`，退出码 0；旧数字不冒充本轮结果。当前维护版有意更新 `AgentLoop` 保护摘要，因为修改的是通用取消收敛；另三个受保护核心文件仍未修改。五个本地既有 skip 是 Windows 上四处目录 symlink 权限边界和一处路径不能包含 NUL |
+| 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，旧数字不冒充当前工作树。v0.8-F1 当前 `collect-only = 2446`；SQLite/EventStore/Feed 直接组为 `100 passed, 2 skipped`，Session/Runtime/Agent 相邻组 `608 passed`，插件组合组 `184 passed`。Product/Workflow/Budget/Workspace/Artifact/Promotion/Evaluation 大组首次为 `692 passed, 2 failed, 2 skipped`，两项失败只因 F1 合法改动的 `AgentLoop`/`AgentRuntime` 保护摘要仍钉在 F0，更新这两个命名摘要后对应两文件 `90 passed`；Supervisor/PluginManager 摘要未变。CLI + comparison 首次为 `537 passed, 1 failed, 1 skipped`，失败夹具用 InMemory seed 后再让公开 replay 打开 SQLite，改为由夹具显式拥有同一本 SQLite 后聚焦组 `38 passed`。Release Stop A 两轮审查发现的三项 SQLite P1 已修复，review-fix 相邻组为 `155 passed, 2 skipped`，最终复审确认 P0/P1 清零；F1 按冻结计划未跑完整 pytest，compileall、Ruff、diff 与文档门禁见 20.33 |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前正式版本为 `v0.7.1`。它保留 v0.7.0 的全部 ProductTask/Benchmark 能力与真实网格历史（20.31），修复宿主启动授权、AgentLoop 重复取消收敛、目标 venv sysconfig scheme，以及发布门禁发现的 Git for Windows nested-worktree 身份长度边界（20.32）；发布门禁另补齐两个独立示例插件对 0.7 核心的真实 Wheel/Manifest 兼容元数据。其中 AgentLoop 改动只属于通用生命周期 owner，不引入任何 Product 依赖或状态；`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 没有本轮职责变化。当前仍没有默认 Product Profile、OS 沙箱、跨进程 lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、MCP、TUI、流式输出或 Provider retry/fallback。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
+当前正式版本仍为 `v0.7.1`；v0.8-F0 已提交，F1 为未提交、未发布实现。v0.7.1 的复审、最终全量、
+干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见
+[`validation-v0.7.1.md`](../validation-v0.7.1.md)。当前仍没有默认 Product Profile、OS 沙箱、跨进程
+Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、
+MCP、TUI、流式输出或 Provider retry/fallback；F1 只替换事实存储及 owner，不提前实现 F2–F5。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -191,8 +195,8 @@ flowchart TD
     TR --> SS
     SS --> PS["PublishingEventStore"]
     PS --> ES["EventStore"]
-    ES --> JL["JSONL Session / Effect Streams"]
-    PS -. "内层 append 按请求的 Durability 正常返回后发布（不等于 fsync）" .-> FEED["SessionEventFeed（进程内、只读订阅）"]
+    ES --> JL["SQLite：所有 append-only Streams"]
+    PS -. "内层唯一 SYNC append 正常返回后发布（不扩大 commit 保证）" .-> FEED["SessionEventFeed（进程内、只读订阅）"]
     FEED -. "只读观察" .-> UI["CLI Timeline"]
     REC["Recovery / Inspector / Invariants / Compaction"] --> SS
 ```
@@ -218,7 +222,7 @@ flowchart TD
 
 依赖规则：
 
-- `AgentLoop` 只编排生命周期，不导入具体工具、JSONL 文件或厂商 HTTP 逻辑；也**不导入 CLI、Console、颜色或 Timeline 文案**：Timeline 是订阅 Feed 的界面层投影，主循环不知道它存在；
+- `AgentLoop` 只编排生命周期，不导入具体工具、SQLite backend 或厂商 HTTP 逻辑；也**不导入 CLI、Console、颜色或 Timeline 文案**：Timeline 是订阅 Feed 的界面层投影，主循环不知道它存在；
 - **`AgentLoop` 同样不知道 `PluginManager` 存在**。插件位于装配层，它的 Tool、Prompt 和 Service 进入既有的 `ToolRegistry`、`PromptAssembler` 和 `ServiceRegistry`，因此**没有** `PluginToolRuntime`，也**没有** `PluginAgentLoop`。`agent_runtime.py` 里对 `PluginManager` 的 import 是函数内局部 import，正是为了让这条边界在依赖图上也成立；
 - `AgentRuntime` 是对外门面和默认依赖装配点，并继续拥有活跃 Turn 表、Turn admission 的最终线性化检查和唯一总关闭 Task。D0 把候选 prepare/publish/rollback、Session durable identity 校验与迁移、共享 Gate、replacement/admission 在途任务收敛集中到 `PluginCompositionCoordinator`；协调器只通过窄回调读取 Runtime 是否关闭、是否有活跃 Turn 和 current Generation 的外部插件身份，不拥有第二份可变身份事实。Stage B 的内部 `replace_plugin_composition()` 与 Stage C 的 Chat `/plugins` 控制面仍复用同一条候选→Generation→publish 主线，身份变化仍在共享 Gate 内追加 append-only 授权事件；插件 Tool/Prompt/Service、Activation 与 Owned Task 由对应 Generation 的 ActivationSet 持有；SessionService、EventStore、核心 Provider、内置 Tool 和基础配置是 borrowed core，不能被插件 cleanup 关闭。`dispose()` 先收敛 Turn，再收敛控制面在途任务，再 Drain 所有 Generation，最后仅清理 application-level legacy 资源；
 - Provider 与 Tool 通过公共协议进入 Runtime；
@@ -284,7 +288,7 @@ sequenceDiagram
 
 - `AgentRuntime` 用内存锁和 `_active` 表保证同一 Session 同时只有一个活跃 Turn；这是单进程保证。事件写入层（6.5）已有跨进程锁，但“同一 Session 只跑一个 Turn”仍未跨进程强制：两个进程同时 run 同一 Session 时，事件文件不会损坏，结果是事件交错或 `SessionService.append_event()` 抛出 `ConcurrencyConflict`，而不是被 Runtime 提前拒绝。
 - Turn admission 与 Stage C Session 迁移共用一把 Composition Gate：Turn 在 Gate 内完成 durable 身份校验并登记 active Turn；迁移在同一 Gate 内确认全局没有 active Turn、准备候选、执行授权 CAS 和 publish。迁移持 Gate 时，新的 Turn 只能等待，不能出现“检查时空闲、下一瞬间 Turn 已开始”的窗口。Gate 不是持久化事实；真正的 Session 身份仍来自事件。
-- `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。`JsonlEventStore` 的取消语义见 6.6：被取消的 Store 操作不会留下仍在后台写入的线程。
+- `cancel()` 先追加 `runtime/cancel-requested`，再取消 Task。`SqliteEventStore` 的取消语义见 6.6：被取消的 Store 操作不会留下仍在后台写入的线程。
 - `AgentLoop` 在取消/异常时 fresh read 当前 Attempt；只有 durable start 才补 Attempt End，然后依次关闭
   Step、Turn。admission 未取得 Session CAS permit 时先释放 PENDING reservation，不制造 Attempt；ToolRuntime
   尽量补齐未完成调用的 Tool Result。
@@ -410,7 +414,10 @@ v0.7-F1 起这九种事件有了真实写入路径。`interrupted` 仍然**不�
 
 #### Event 所有权契约
 
-这条契约写在 [`EventStore` Protocol](../../src/traceh/session/event_store.py) 及其 `append()`/`read()` 的 docstring 上，而不是只写在某个具体实现里：Store 是可替换后端，替换后端不能改变调用方能对事件做什么。任何实现都必须满足以下可观察语义，`InMemoryEventStore` 与 `JsonlEventStore` 对调用方完全一致：
+这条契约写在 [`EventStore` Protocol](../../src/traceh/session/event_store.py) 及其 `append()`/`read()` 的
+docstring 上，而不是只写在某个具体实现里：Store 是可替换后端，替换后端不能改变调用方能对事件做什么。
+任何实现都必须满足以下可观察语义，确定性测试替身 `InMemoryEventStore` 与唯一生产实现
+`SqliteEventStore` 对调用方完全一致：
 
 | 调用方持有的对象 | 修改它之后 |
 |---|---|
@@ -425,68 +432,89 @@ v0.7-F1 起这九种事件有了真实写入路径。`interrupted` 仍然**不�
 
 两种实现达到同一契约的方式不同，这是设计差异而不是实现不一致：
 
-- `JsonlEventStore` **不需要 Store 专属的 `detach_event()` 调用**，因为历史在文件里，读写两个方向都已经经过共享的 `EventEnvelope` 序列化边界，本轮无功能性改动。但不能因此写成“完全没有额外复制”：这个共享边界本身仍会重建 payload——`read()` 先 `json.loads()`，再由 `from_dict()` 规范化成全新的图；`append()` 则由 `to_dict()` 在序列化前重建 payload。复制是**通过序列化边界达成**的，不是被省掉了；
-- `InMemoryEventStore` 必须显式脱离——它保存自己返回的对象，所以 `append()` 与 `read()` 都通过 `detach_event()` 交出副本，绝不把 `_streams` 中的对象暴露给调用方。
+- `SqliteEventStore` 把完整 Envelope 保存为唯一 canonical JSON；`append()` 在编码前规范化，`read()` 从
+  JSON 重建新的对象图，并检查行身份、精确 key 集、时区和 canonical round trip；
+- `InMemoryEventStore` 保存 Python 对象，因此 `append()` 与 `read()` 都必须显式通过 `detach_event()`
+  交出副本，绝不暴露 `_streams` 中的对象。
 
-`head()` 不做任何复制，仍只返回序号。复制只发生在 Event API 边界（`materialize`、`to_dict`、`from_dict`、`detach_event`），单次复制的规模是**一个事件的 payload**；但一次 `read()` 返回多个事件时，总成本与它解析并返回的事件 payload 总量相关，不能说“一次 read 的成本只是一个 payload”。`JsonlEventStore.read()` 的 `from_seq` 是**过滤而不是定位**：先解析整条 Stream 再筛选，因此总成本对应整条 Stream——这是 JSONL 既有的全量扫描边界（见 16 节），不是脱离副本引入的新问题，本轮只如实记录，不做性能优化。
+`head()` 只返回序号，不涉及副本。一次 `read()` 的复制成本与实际返回事件的 payload 总量相关。
+SQLite 使用 `(stream_id, seq)` 索引从 `from_seq` 定位，不再先扫描并解析整条 Stream。没有引入 Event
+cache：缓存同一份对象会重新制造跨调用方共享引用。
 
-刻意不引入缓存：缓存意味着把同一份副本发给多个调用方，会重新制造共享引用。
+当前唯一生产 `SqliteEventStore` 的协议由
+[`ADR-0036`](../adr/0036-single-production-sqlite-event-store.md) 冻结：
 
-默认 `JsonlEventStore`：
+- 每个 Store root 只有 `events.sqlite3`；`application_id` 与 `user_version = 1` 共同标识 current schema；
+- `streams(stream_id, head_seq)` 与 `events(stream_id, seq, envelope_json)` 都是 `WITHOUT ROWID`，
+  `(stream_id, seq)` 唯一且 Event 行外键指向 Stream；
+- 打开时精确验证全部持久 schema 对象、规范化表 DDL、列、外键、`integrity_check`、每条 Stream 的
+  head/count/连续 seq，以及每个 Envelope 的 canonical JSON；额外 table/index/view/trigger 与
+  unknown/older/newer、空白、坏行、gap、非 canonical 内容全部拒绝，不修补；
+- 既有数据库先用 `mode=ro&immutable=1` 的无锁、无 journal recovery 连接只验证冻结 schema authority，
+  不读取 mutable history；只有通过后普通读写连接才有权执行 SQLite crash recovery，再做 integrity/history
+  校验并启用 WAL。未通过 schema authority 的数据库连 hot rollback journal 及其 bytes 也保持不变；
+- 每个操作在执行它的 Worker 线程内打开短连接；foreign keys 与 `synchronous=FULL` 是连接配置；
+- `Durability` 当前只有 `SYNC`，没有 flush-only 的 `BATCHED` 路径；
+- `build_default_runtime()`/`build_default_runtime_async()` 不再暗中创建 Store；Runtime 借用显式 Store，
+  CLI composition root、每个 Evaluation attempt 和每个 Evolution comparison case 分别拥有 open/close。
 
-- 一个事件一行 JSON，文件名由 Stream ID URL 编码；
-- 每个 Stream 有进程内 `asyncio.Lock`，作为同一事件循环内的快速路径；
-- 每个 Stream 有 `.lock` 文件上的操作系统级排他锁，跨进程有效（见 6.5）；
-- 写入可选 `SYNC` 或 `BATCHED` Durability；SYNC flush 后执行 `fsync`；
-- `head()` 从文件尾读取最后完整行，成本与末行大小相关，不扫描完整文件；
-- 尾部半行可自动截断到最后完整事件；
-- 中间坏行、Stream ID 不符或序号不连续会报 `CorruptEventStream`。
+发现旧 `.jsonl`/`.lock`、JSONL/SQLite 混合目录、非 current schema、链接 Store root 或链接数据库时
+fail closed。旧文件零读取、零移动、零删除、零自动转换，用户必须选择新 data dir；没有 compatibility
+reader、dual write 或 fallback。`backup()` 通过 SQLite backup API 写入事先不存在的目标，在 rename 前
+复用 schema/integrity/history 校验；`restore()` 先验证来源且绝不覆盖现有目标。
 
-### 6.5 跨进程 Stream 锁
+### 6.5 SQLite 跨进程 writer、CAS 与 busy
 
-[`session/file_lock.py`](../../src/traceh/session/file_lock.py) 提供 `exclusive_file_lock()` 上下文管理器，只使用标准库：
+SQLite WAL 允许 readers 与 writer 并存，但单个数据库同一时刻只有一个 writer；不同 Stream 不再拥有各自
+独立的生产文件锁。`SqliteEventStore` 在 Worker 线程内打开短连接，设置 5 秒默认 `busy_timeout`，然后用
+`BEGIN IMMEDIATE` 取得 writer：
 
-| 平台 | 原语 | 语义 |
+```mermaid
+flowchart LR
+    A["append expected_seq"] --> B["BEGIN IMMEDIATE：有界等待 writer"]
+    B --> C["读取 streams.head_seq"]
+    C --> D{"等于 expected_seq？"}
+    D -- 否 --> E["ROLLBACK + ConcurrencyConflict"]
+    D -- 是 --> F["整批 INSERT events + UPDATE head"]
+    F --> G["COMMIT"]
+    B -- 超过 busy timeout --> H["event-store-busy；不重试"]
+```
+
+数据库主键与同一事务共同形成跨线程、跨实例、跨进程线性化点。两个进程用同一 Head 写同一 Stream 时
+最多一组提交，另一个在拿到 writer 后读到新 Head 并得到 `ConcurrencyConflict`。两个进程写不同 Stream
+也会串行化：普通短竞争在 busy 上限内等待后提交；超过上限抛稳定 `EventStoreBusy`。Store 不做第二次
+append，Provider retry 也不消费这个错误。
+
+读操作使用参数化 SQL，按 seq 排序；`list_streams(prefix)` 用 literal `substr` 比较，`%`/`_` 不是通配符。
+打开 Store 时对整个 history 的 head/count/Envelope 校验位于同一个只读事务快照，避免合法并发提交落在
+两次 SELECT 之间而被误报为 corruption。进程崩溃会由 SQLite/操作系统释放 writer lock；测试证明随后
+可以重新打开并追加，但不把网络文件系统或任意断电设备的行为写成已验证事实。
+
+[`session/file_lock.py`](../../src/traceh/session/file_lock.py) 仍服务 Promotion 和相邻独立文件协议，不再是
+EventStore 的生产写入边界。
+
+### 6.6 EventStore 的取消、关闭与提交点
+
+SQLite 调用位于 `asyncio.to_thread()` Worker，而 Python 不能杀死已经开始的线程。`_run()` 以
+`asyncio.shield()` 保护确切 Worker；调用方取消后，先由共享
+[`await_worker_convergence()`](../../src/traceh/concurrency.py) 等到该 Worker 完成并取回异常，再重新抛出
+`CancelledError`。重复取消不会成为提前返回出口。
+
+因此取消结果必须按提交点解释：
+
+| 时刻 | 持久结果 | 调用方返回前保证 |
 |---|---|---|
-| POSIX | `fcntl.flock(fd, LOCK_EX)` | 无 timeout 且无取消令牌时在内核阻塞；否则用 `LOCK_NB` 轮询 |
-| Windows | `msvcrt.locking(fd, LK_NBLCK, 1)` | 锁定 `.lock` 文件偏移 0 起的 1 字节区间，轮询重试 |
+| Store coroutine 尚未取得执行机会 | 没有 Worker，也没有写入 | 无后台操作 |
+| Worker 在 `BEGIN IMMEDIATE`/事务内被调用方取消 | 可能回滚，也可能提交 | 同一 Worker 已完成；必须 fresh replay 判定 |
+| `COMMIT` 已发生、Python 结果尚未交回 | 已提交 | Worker 已完成；调用方仍看到 `CancelledError` |
 
-关键语义：
+这仍是 may-have-committed，不是 at-least-once。业务层按 `event_id`、correlation 或完整业务身份重读对账，
+不能把取消等同于未写，也不能只看可能由其他写入者推进的 Head。
 
-- 锁定前显式 `lseek` 到偏移 0，因为 `msvcrt.locking` 从当前文件指针开始锁定；
-- 允许锁定文件尾之后的区间，因此空 `.lock` 文件（每个 Stream 首次创建时的状态）也能锁定，不需要预写字节；
-- 轮询从 1ms 退避到 25ms 上限；`JsonlEventStore(lock_timeout=...)` 为 `None` 时无限等待，为数值时超时抛 `FileLockTimeout`；
-- 只有真正表示“区间被占用”的错误码（POSIX `EWOULDBLOCK`/`EACCES`，Windows `EACCES`/`EDEADLOCK`）才重试，其他 `OSError` 直接上抛；
-- 正常、异常、`ConcurrencyConflict` 和取消路径都在 `finally` 中解锁并关闭描述符；解锁失败被吞掉，因为关闭描述符本身就会释放锁，不能掩盖临界区的原始异常；
-- 进程崩溃或被杀死时，操作系统关闭描述符即释放锁，`.lock` 文件残留不会造成永久死锁。
-
-`append()`、`read()`、`head()` 的完整临界区（读取 Stream Head、尾部半行检查与截断、`expected_seq` 校验、写入与 flush/fsync）都在同一把锁内完成，因此两个独立 Python 进程操作同一 Stream 时会排队，而不是同时读到相同 Head 后各写一条相同序号的事件。
-
-`expected_seq` 仍然是必需的：锁只保证临界区互斥，调用方通常先 `head()` 再 `append()`，两次调用之间的 Head 可能已被另一个进程推进，此时第二个写入者会得到明确的 `ConcurrencyConflict`，而不是静默覆盖。
-
-该锁是本机文件锁：跨网络文件系统（NFS、SMB）的行为取决于具体实现，不在当前保证范围内。
-
-### 6.6 EventStore 的取消语义
-
-阻塞的锁等待和文件 I/O 在 Worker 线程上执行，而线程无法被杀死。因此 `_run_locked()` 把取消实现为两段式协作，绝不允许出现“调用方已经收到 `CancelledError`，后台线程稍后拿到锁又继续写 Stream”的脱缰操作：
-
-| 取消发生的时刻 | 行为 | 调用方看到 |
-|---|---|---|
-| 仍在等待 OS 锁 | 置位取消令牌，等待被 `Event.wait()` 立即唤醒，抛 `FileLockCancelled`，Stream 未被触碰 | `CancelledError`，无任何写入 |
-| 已拿到锁但临界区尚未开始 | 进入临界区前重新检查取消令牌，直接放弃 | `CancelledError`，无任何写入 |
-| 临界区已在执行 | 该段不可中断，按原子完成语义跑完并 flush/fsync | `CancelledError`，但事件已完整落盘 |
-
-实现要点：
-
-- Worker 通过 `asyncio.shield()` 提交，取消协程不会把它变成脱缰线程；
-- 协程捕获 `CancelledError` 后先置位 `cancel`，再显式等待 Worker 收敛，然后才向调用方重新抛出；因此 `append()`/`read()`/`head()` 返回时文件已经不再变化；
-- 收敛由共享的 [`await_worker_convergence()`](../../src/traceh/concurrency.py) 承担，它循环 `await asyncio.shield(future)` 直到 `future.done()`：**重复取消（第二次、第三次乃至更多次 `CancelledError`）被吸收后继续等待同一个 Worker**，不能被当作提前退出的出口；这里不使用 `suppress(BaseException)`。同一个函数也被 OpenAI-Compatible Provider 复用（见 8.3）；
-- Worker 自身的返回值、`FileLockCancelled`、`ConcurrencyConflict` 或其他异常在收敛结束时被显式取回，不会遗留"future exception was never retrieved"告警；
-- `signals.finished` 在锁释放之后置位，且必定早于 Future 完成，因此“调用方拿到 `CancelledError`”蕴含“锁已释放且 Worker 已收敛”；
-- `_StreamLockSignals` 的 `waiting`/`cancel`/`finished` 三个 `threading.Event` 让“线程确实开始等锁”和“线程确实已收敛”可被观测，而不是靠时序猜测；
-- 由于取消令牌的存在，POSIX 的无限等待从内核阻塞改为可中断轮询：等待仍然无限，但可被 asyncio 取消。
-
-第三行是**提交点边界（may-have-committed）**：取消恰好落在写入过程中时，调用方收到 `CancelledError`，事件却已经提交。这里没有任何自动重试机制，因此不应称为 at-least-once。调用方不能假设“收到取消 = 没有写入”；正确做法是重新读取 Stream，并按 `event_id`、correlation 或业务身份判断该操作是否已经落盘，而不是只看 Head 数值——Head 也可能是别的写入者推进的。
+`aclose()` 在一个进程内拥有明确线性化边界：先阻止新操作，再等待关闭开始前已经 admitted 的全部 Worker；
+重复 close 幂等。关闭本身被取消时同样先等 close Task 收敛，然后传播取消。CLI、Evaluation 和 Evolution
+owner 均先收敛/释放借用 Store 的 Runtime 或 Host，再 close Store；build、执行与 cleanup 同时失败时，
+原始错误和独立 cleanup 错误一起保留，不互相遮蔽。
 
 ### 6.7 进程内 Event Feed
 
@@ -495,18 +523,19 @@ v0.7-F1 起这九种事件有了真实写入路径。`interrupted` 仍然**不�
 | 维度 | Feed 的事实 |
 |---|---|
 | 新增持久化事实 | 否。不落盘、不参与恢复、不产生任何新事件类型 |
-| 额外的崩溃持久性 | 否。事件在内层 `append()` **按调用方请求的 `Durability` 正常返回之后**才发布。Feed 不把 `BATCHED` 升级成 `SYNC`，也不增加任何自己的保证：一条已发布事件能否在操作系统崩溃后存活，完全由 EventStore 原契约决定 |
+| 额外的崩溃持久性 | 否。事件只在内层唯一 `SYNC` append 正常返回之后发布；Feed 不增加 SQLite commit 之外的保证 |
 | 事实源 | 否。Runtime、`RecoveryService`、Inspector、不变量检查仍只读 `EventStore` |
 | 历史 | 否。订阅**不重放**历史；需要历史仍走 `EventStore.read()` |
 | 状态 | 否。Feed 不保存投影或缓存，不是第二份 State |
-| 跨进程 | 否。另一个进程直接写同一份 JSONL 时，本 Feed 收不到 |
-| 可丢失 | 是。append 返回之后、发布之前进程崩溃时，实时观察会漏；该事件的持久性仍然只由它请求的 `Durability` 决定，不会因此变差 |
+| 跨进程 | 否。另一个进程写同一个 SQLite 数据库时，本 Feed 收不到 |
+| 可丢失 | 是。append 返回之后、发布之前进程崩溃时，实时观察会漏；SQLite 中的事实不因此丢失 |
 
 #### 为什么边界选在 EventStore Decorator
 
 `PublishingEventStore` 是包装任意 `EventStore` 的装饰器，而不是 `SessionService` 里的钩子。理由有两条，都可核查：
 
-1. **后端无关**：包装 `InMemoryEventStore` 与 `JsonlEventStore` 的可观察语义完全相同，换 Store 不改变 Feed 语义；
+1. **后端无关**：包装测试 `InMemoryEventStore` 与生产 `SqliteEventStore` 的可观察语义完全相同，换
+   Store 不改变 Feed 语义；
 2. **“Store 已接受”正好在这里成立**：`src/traceh/session/service.py` 中的 `store.append()` 是整个 `src` 树里唯一的 append 调用点，所有写入者（`AgentLoop`、`ToolRuntime`、`RecoveryService`、`CompactionService`、`AgentRuntime.cancel()`）都经过它。因此“发布 Store 从未接受的事件”在这个边界上无法表达，也不需要每个写入者自己记得通知。
 
 `build_default_runtime()` 无条件包装 Store，并把 `SessionEventFeed` 暴露为 `AgentRuntime.events`。无订阅者时代价是每次 append 一把无竞争的锁。
@@ -517,7 +546,7 @@ v0.7-F1 起这九种事件有了真实写入路径。`interrupted` 仍然**不�
 flowchart LR
     W["写入者：AgentLoop / ToolRuntime / Recovery"] --> SS["SessionService.append_*"]
     SS --> PS["PublishingEventStore.append（每 Stream 一把锁）"]
-    PS --> ES["内层 EventStore：按请求的 Durability 追加"]
+    PS --> ES["内层 EventStore：唯一 SYNC append/commit"]
     ES -- "正常返回后，仍在锁内" --> FEED["SessionEventFeed（私有发布）"]
     ES -- "失败 / 冲突 / 取消：发布 0 条" --> NONE["不发布"]
     FEED --> SUB["每个 Subscriber 一份 detach_event() 副本"]
@@ -529,8 +558,12 @@ flowchart LR
 契约要点：
 
 - **先被 Store 接受，后发布**：`_publish()` 只在内层 `append()` 正常返回后调用，因此 `ConcurrencyConflict`、序列化失败或任何 append 异常都发布 0 条；取消同样发布 0 条，**包括** may-have-committed 那条路径——Feed 允许漏，日志不允许丢；
-- **是“接受”，不是额外持久性**：`durability` 原样透传，因此一次 `Durability.BATCHED` 追加会在 Store 从「已 flush 未 fsync」的写入返回时就被发布，这正是调用方所要求的。发布只表示“Store 已接受”，绝不表示“已 fsync”；`BATCHED` 通知是合法的，对应事件在操作系统崩溃时仍受 `BATCHED` 边界约束；
-- **按 seq 顺序发布**：每个 Stream 一把 `asyncio.Lock`，同时覆盖“append + publish”。若只在 append 之后发布，两个并发写入者会自由竞争：Store 已序列化写入，但调用方各自恢复执行，seq 10 的写入者可能被调度器挂起、在 seq 11 之后才发布。把锁跨到发布之上，使“按 seq 顺序”成为结构性质，而不是依赖当前调度巧合。不同 Stream 用不同锁，互不阻塞；
+- **是“接受”，不是额外持久性**：当前只有 `Durability.SYNC`，装饰器原样透传；发布只表示 SQLite
+  append 正常返回，不扩大 ADR-0036 对 WAL、文件系统和断电边界的陈述；
+- **按 seq 顺序发布**：每个 Stream 一把 `asyncio.Lock`，同时覆盖“append + publish”。若只在 append
+  之后发布，两个并发写入者会自由竞争：Store 已序列化写入，但调用方各自恢复执行，seq 10 的写入者
+  可能被调度器挂起、在 seq 11 之后才发布。不同 Stream 使用不同的 wrapper lock，但内层 SQLite writer
+  仍按 6.5 在整个数据库范围有界串行化；
 - **一批多条**按 seq 顺序发布；
 - **Stream 严格隔离**：Session Stream 的订阅者收不到别的 Session，也收不到 Effect Stream；
 - **每 Subscriber 一份**：见下节；
@@ -862,7 +895,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 
 输出位于要求尚不存在的 `--output` 目录：
 
-- `attempts/<NNN>/`：每次 attempt 自己的 `source`、`tgt.git`、`ev`（JSONL 事件）、`work`（managed worktree）、`cas`、`rt`/`rw`（requester Runtime 与工作区）、`pd`；
+- `attempts/<NNN>/`：每次 attempt 自己的 `source`、`tgt.git`、`ev/events.sqlite3`、`work`（managed worktree）、`cas`、`rt`/`rw`（requester Runtime 与工作区）、`pd`；
 - `report.json`；
 - `report.md`（由同一个 `to_dict()` 渲染，因此两份输出不可能对同一个数字给出不同答案）。
 
@@ -1256,7 +1289,7 @@ API Key 的**值**不被读取也不被打印，命令里只出现其**环境变
 
 `seq` 1-3 是 `session/created`、`inbox/accepted`、`inbox/claimed`——它们**确实被持久化了**，只是 Timeline 不显示，所以第一条可见事件通常是 `turn/start`，即 `[event 4]`。
 
-这里刻意**不重新编号、不引入假的显示序号**：真实 `seq` 才是审计与 JSONL 回查能力，把 4 显示成 1 会毁掉"这个号能在事件日志里查到"这个唯一有价值的性质。
+这里刻意**不重新编号、不引入假的显示序号**：真实 `seq` 才是审计与 EventStore 回查能力，把 4 显示成 1 会毁掉"这个号能在事件日志里查到"这个唯一有价值的性质。
 
 因此 Timeline 开启时，在启动阶段打印一次非事件说明：
 
@@ -1325,9 +1358,9 @@ L3 的 Wheelhouse 传递另有协议级反例：环境清洗只接受宿主生�
 L4 的 [`tests/test_candidate_promotion.py`](../../tests/test_candidate_promotion.py) 现有 29 项契约：canonical L3 parser 必须重建完整 Case 两臂、汇总、固定 Gate、分类和非空冻结 Wheel 集，骨架 JSON 与缺 Gate 报告不能签发摘要；`failure_codes`、`improvements`、`regressions` 中的非字符串 JSON 成员会成为稳定的结构化证据错误，不能泄漏裸 `TypeError`；review 保持零 Registry、零 pip，摘要绑定 Registry、证据、解释器、目标 receipt 与内容摘要；已知 regression、未比较依赖、未托管安装、目标内 output/Registry 和重复 Artifact 均拒绝。Apply 只安装 Registry 中的精确 Wheel，doctor 前后同时复核 Distribution receipt 与安装包目录内容；同版本文件改写、未列入 `RECORD` 的新文件会失败并回滚，可再生 `__pycache__` 不制造假漂移。并发测试用 Gate 证明两个 Registry、解释器别名和同 Distribution 的多个插件身份共享唯一 Owner/锁；新增目标级契约还证明不同 Distribution 不能在同一 venv 形成第二条受管变更链，只有当前 Distribution 完整回滚到未安装并释放 Owner 后才能移交。取消、报告提交失败和首版 rollback 都会在调用方返回前卸载；显式 rollback 既能恢复已落盘的 `installing`，也能接管首次 Owner/不可变记录已写但首个状态尚未写入的硬崩溃窗口，后者只有在精确首版记录与目标仍未安装相互印证时才重建前状态。真实 Target Probe 覆盖当前解释器和无 pip 独立 venv，在 `-I -S` 下从相邻 `pyvenv.cfg` 恢复 venv root，只读选定环境 metadata，不 import 候选或泄漏到 base Python。反向验证实际移除摘要、rollback、完整环境 receipt、canonical L3、内容漂移、目标路径、Owner 前状态恢复与目标派生协调目录守卫，并临时恢复 Distribution 级锁及先 `set(...)` 后校验元素类型的旧逻辑；对应测试均因各自根因失败，恢复后 29 项 L4 契约和全量门禁通过。仓库外公开链路还真实完成 L2→L3→L4 review/apply/doctor/rollback，review 前后零 Registry/零候选，apply 后目标发现并 doctor 通过，rollback 后候选 Distribution 不存在。
 
 - EventStore expected-seq、尾部恢复和读取；
-- EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
-- 进程内 Event Feed 契约（[`tests/test_event_feed.py`](../../tests/test_event_feed.py)，全部用例对 `InMemoryEventStore` 与 `JsonlEventStore` 参数化）：append 成功后才发布；`ConcurrencyConflict` 发布 0 条且 Head 不变；一批多条按 seq 顺序；三个真实竞争写入者（读 Head → append → 冲突重试）下发布顺序必须等于 Store 中的 seq 顺序；两个 Subscriber 都收到同一批逻辑事件；两个 Subscriber 的嵌套 payload 不共享；Subscriber 修改不污染 Store；先前 Subscriber 的修改不影响后来者；close 后不再投递且订阅计数归零；重复 close 安全；close 前已排队事件仍可 drain（这正是"Timeline 先于回答"的机制）；对已耗尽订阅再迭代返回空而不是死锁；完全不消费的订阅者不阻塞 20 次连续 append 且事件确实排队未丢；Session 与 Effect Stream 严格隔离；抛异常的消费者在自己的 Task 里失败、不影响该次 Store append，也不影响后续 append；发布不产生任何新事件类型；订阅不重放历史；装饰器完整代理 `read`/`head`/`list_streams`；
-- Feed 只读接口与连线：消费者接口上不存在任何公共 publish 方法，无法从公开观察面注入伪 Envelope（伪造的 Envelope 既到不了 Subscriber 也进不了日志）；`Durability` 由 Spy Store 证明原样透传，`BATCHED` 不被偷偷升级为 `SYNC` 且 `BATCHED` 追加照样会被发布；`AgentRuntime.events` 是必填参数（用签名断言）、且与 `PublishingEventStore` 发布目标是同一个对象；经 `runtime.sessions` 写入后 `runtime.events` 的订阅者确实收到事件；
+- EventStore 所有权契约（[`tests/test_event_store_contract.py`](../../tests/test_event_store_contract.py)，核心用例对 `InMemoryEventStore` 与 `SqliteEventStore` 参数化）：修改原始 `PendingEvent` 输入、修改 `append()` 返回值、修改 `read()` 返回值都不改写 Store 历史；两次 `read()` 不共享可变图；复用同一嵌套输入的多个事件互不影响；`to_dict()` 与 `from_dict()` 双向脱离；`from_dict()` 仍拒绝非对象 payload；`detach_event()` 保留全部元数据并在真实 Store 往返后仍是 `UUID`/`datetime` 而非字符串；`detach_event()` 对真正不受支持的值（`set`、任意对象）抛 `TypeError`，但对受支持的框架类型是**规范化而不是拒绝**（`Path` → 字符串、`tuple` → `list`，含嵌套与 `list` 内的 `tuple`），对 scalar 不做包装；两个 Store 并排跑同一组修改后观察到的历史必须逐字相同；`expected_seq`、`ConcurrencyConflict`、`head()` 与被拒绝写入后的流状态不因复制边界而改变。用例一律真实修改嵌套结构再重新读取，不满足于断言两个对象不是同一个；
+- 进程内 Event Feed 契约（[`tests/test_event_feed.py`](../../tests/test_event_feed.py)，全部用例对 `InMemoryEventStore` 与 `SqliteEventStore` 参数化）：append 成功后才发布；`ConcurrencyConflict` 发布 0 条且 Head 不变；一批多条按 seq 顺序；三个真实竞争写入者（读 Head → append → 冲突重试）下发布顺序必须等于 Store 中的 seq 顺序；两个 Subscriber 都收到同一批逻辑事件；两个 Subscriber 的嵌套 payload 不共享；Subscriber 修改不污染 Store；先前 Subscriber 的修改不影响后来者；close 后不再投递且订阅计数归零；重复 close 安全；close 前已排队事件仍可 drain（这正是"Timeline 先于回答"的机制）；对已耗尽订阅再迭代返回空而不是死锁；完全不消费的订阅者不阻塞 20 次连续 append 且事件确实排队未丢；Session 与 Effect Stream 严格隔离；抛异常的消费者在自己的 Task 里失败、不影响该次 Store append，也不影响后续 append；发布不产生任何新事件类型；订阅不重放历史；装饰器完整代理 `read`/`head`/`list_streams`；
+- Feed 只读接口与连线：消费者接口上不存在任何公共 publish 方法，无法从公开观察面注入伪 Envelope（伪造的 Envelope 既到不了 Subscriber 也进不了日志）；`Durability` 由 Spy Store 证明唯一 `SYNC` 原样透传；`AgentRuntime.events` 是必填参数（用签名断言）、且与 `PublishingEventStore` 发布目标是同一个对象；经 `runtime.sessions` 写入后 `runtime.events` 的订阅者确实收到事件；
 - Timeline 终端安全：10 种恶意 payload 值（`\n`、`\r`、`\x1b[2J`、`\b`、`\a`、`\0`、`\u202e`、`\u200b`，即换行、回车、清屏 ESC、退格、响铃、NUL、双向覆写、零宽字符，另加 ANSI 颜色序列与 500 字符超长值）× 13 个被插值字段（`tool_name`、`tool_call_id`、`provider`、`model`、`reason`、`status`、`error_type` 等）全部参数化，断言每行严格一行、无 `Cc`/`Cf`/`Cs`/`Co` 字符残留、无 ESC、长度有界；形如整行的伪造 `tool_name` 无法产生第二行且行首仍是真实事件号；6 种凭据形态的 Shell 命令（`sk-proj-`/`ghp_`/`xoxb-`/URL basic auth/环境变量赋值/连接串，全部为明确标注的 FAKE/FIXTURE 夹具）一律不显示，无害命令同样不显示；`runtime/error` 的 message 与 traceback 均不显示；`sanitize()` 幂等有界且不破坏正常中文；端到端一轮里模型选择的恶意工具名不会伪造 Console 行；
 - Timeline Drain 收敛：Gated Printer 自己点亮 `entered` 并阻塞，Drain 连续被取消 3 次、每次都让事件循环真正调度后断言 Drain **仍未结束**且 Printer 仍未结束，释放后 Drain 才重新抛出 `CancelledError`，并断言 Printer 已 done、订阅计数归零、无遗留 `traceh-chat-timeline` Task；Drain 必定先关闭订阅（否则真实 Printer 永不结束）；Renderer 主动抛异常时两轮 Turn 仍完成、两条最终回答都打印、Chat 继续、订阅与 Task 均清理，且事件日志未因观察者失败而出现 `runtime/error`；
 - Activity Heartbeat、Ctrl+C 生命周期与序号说明（[`tests/test_cli_activity.py`](../../tests/test_cli_activity.py)，全部用可注入的 `ManualClock` 推进时间，无真实等待）：每个跨过的阈值只报一次且 9.9s 不触发；结束时返回并显示实测耗时；并发两个 `tool_call_id` 各自计时（`ToolRuntime` 的 gather 组只有在整组完成后才追加各条 `tool/result`，因此“其一先完成”只能由 Tracker 层按事件序列驱动验证，不能声称真实 Feed 能观察到逐个完成）；缺少 `attempt_id`/`tool_call_id` 或类型不对时完全不跟踪；Heartbeat 绝不显示 arguments（含 `shell` 的 command 与假 Key 夹具）；恶意 `tool_name`/call id 无法伪造额外行或发出 ESC；`0` 关闭 Heartbeat 但保留 Timeline；`--no-timeline` 同时关闭 Timeline、Heartbeat 与序号说明；负数/NaN/±Infinity 明确报错；`--heartbeat-seconds` 解析默认值；默认 Clock 确实是 `time.monotonic` 而非墙钟；快速 Turn 不产生任何 waiting 行；活动结束后再推进 100 秒也不再输出；Heartbeat 期间事件总数不变且无 heartbeat 类事件、不变量为 0；Console 抛异常与 Turn 失败都不留 Heartbeat/Timeline Task；
@@ -1417,12 +1450,12 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
-| Stream 锁边界 | 已有 `fcntl`/`msvcrt` 跨进程锁，但只是同机 Advisory Lock：绕过 `JsonlEventStore` 直接写文件不受约束，网络文件系统行为未验证 | 需要更强隔离时改用 SQLite 或独立 Store |
+| SQLite writer 边界 | 同库 writer 跨 Stream 串行化；普通竞争在显式 5 秒 busy timeout 内等待，超时稳定失败。绕过 Store 直接改数据库仍不受领域协议保护，网络文件系统与任意断电设备未验证 | 继续保持本机 Store；若未来出现多主机写入需求，再选择独立数据库服务而不是伪装 SQLite 已分布式 |
 | Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
 | 子进程输出磁盘占用 | 捕获用的临时文件当前没有大小上限，失控命令可以写满临时目录；上层 Tool Result 截断只影响读出后的文本，不会减少读取前已经占用的磁盘 | 需要时在捕获层增加大小上限并在超限时截断 |
 | 临时文件删除延后 | 孙进程继承捕获句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭 | 与“不管理孙进程”是同一条边界，必要时由外部清理 |
 | Event payload 可变性 | Store 历史已由脱离副本保护（6.4），但 `EventEnvelope.data` 本身仍是普通可变 JSON 图：拿到副本的代码可以随意修改自己那一份，语言层面不阻止。契约由具体边界承担而非自动生效：同一个 Envelope 被交给两个消费者时，框架不会自动隔离它们 | 需要更强保证时才考虑不可变 JSON 容器类型，代价是公共 API 与全部 `event.data` 读取点都要改。已有的扇出（`SessionEventFeed`）按契约为每个 Subscriber 单独 detach；任何新增分发点必须同样处理 |
-| Event 复制成本 | 复制只在 Event API 边界发生，单次规模等于一个事件 payload；一次 `read()` 的总成本与它解析并返回的 payload 总量相关。`InMemoryEventStore.read()` 为每个返回事件重建一次 JSON 图；JSONL 侧则由共享序列化边界重建（`from_dict()` 读、`to_dict()` 写），且 `read()` 的 `from_seq` 是过滤而非定位，仍解析整条 Stream | 属于正确性的必要代价；刻意不加缓存，因为缓存会重新引入共享引用。全量扫描是 JSONL 既有边界（见本表 JSONL 扩展性一行），需要时应换 Store 或加 Checkpoint，而不是回退到共享引用 |
+| Event 复制成本 | 复制只在 Event API 边界发生，一次 `read()` 的总成本与返回 payload 总量相关。`InMemoryEventStore` 显式 detach；SQLite 从 canonical JSON 重建并可用索引从 `from_seq` 定位 | 属于正确性的必要代价；刻意不加共享 Event cache，因为会重新引入共享引用 |
 | 取消的提交点边界 | 取消恰好落在写入过程中时，调用方收到 `CancelledError` 但事件已提交（6.6）；无自动重试，因此不是 at-least-once | 调用方重新读取 Stream，按 `event_id`/correlation/业务身份判断是否已落盘 |
 | Model Attempt 证据上限 | 未闭合 Attempt 已按证据补 End（11.1），但 `unknown_after_crash` 只说明“无法证明”，且丢失的 `usage`/`finish_reason` 无法找回 | 需要精确计费时在 Provider 边界先落盘用量 |
 | CLI 体验 | `chat` 已支持会话内连续输入、实时 Timeline（13.6）、Activity Heartbeat（13.7）与可收敛的 Ctrl+C（13.8），但仍无 token 流式输出、Spinner、颜色、执行前审批，也不能在 Turn 运行期间输入；`run`/`resume` 尚未接 Timeline | 在不破坏 Runtime 边界下扩展 Surface/UI 层，复用同一 Feed 与 Formatter |
@@ -1435,9 +1468,9 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Heartbeat 是瞬时显示 | 它不是事件，不落盘、不可回查：日志里永远看不到"当时等了多久"。完成耗时只出现在屏幕上，不进入 payload | 需要可审计的时延就应在 Provider/Tool 边界落盘用量与耗时，而不是把 UI 状态写进日志 |
 | 硬中断仍无收敛 | Ctrl+Break、关闭控制台或被操作系统终止时没有任何 Python 代码运行，13.8 的收敛与提示都不发生 | 依赖启动时即打印的恢复信息与崩溃恢复；不承诺统一退出码 |
 | Timeline 注入的残余边界 | 所有 payload 文本已统一 `sanitize()`：控制/格式字符被中和、严格一行、长度有界，因此无法伪造第二行、无法发出终端控制序列。但形似结构标记的**惰性文本**仍会留在该行内（例如 `tool_name` 里的 `[event 999]`） | 保证是“不产生第二行、行首为真实事件号”；如需更强，代价是为每个字段加转义或引号，可读性下降 |
-| Feed 只在同进程可见 | `SessionEventFeed` 是进程内通道：另一个进程直接写同一份 JSONL 时本进程收不到，因此没有跨进程实时观察能力 | 需要时才考虑文件 Tail 或独立通知机制；本版本刻意不做 |
+| Feed 只在同进程可见 | `SessionEventFeed` 是进程内通道：另一个进程写同一个 SQLite 数据库时本进程收不到，因此没有跨进程实时观察能力 | 需要时才考虑 SQLite change observation 或独立通知机制；本版本刻意不做 |
 | Feed 无背压/溢出策略 | 队列无界：慢订阅者不会拖慢 Runtime，但被遗弃的订阅者会占内存，上限是该 Session 的事件量。Chat 在每条退出路径关闭订阅，因此随包消费者不泄漏 | 若改为有界队列，必须先定义明确 overflow 语义；静默丢事件会让 Timeline 说谎 |
-| Feed 可丢失，不是证据 | 内层 append 已正常返回、尚未发布时进程崩溃，Feed 通知会漏；Event Log 能否在操作系统崩溃后保留，仍由该次请求的 `Durability` 决定。Feed 不重放历史、不持久化 Offset | 恢复与审计继续只读 `EventStore`；需要历史用 `read()` |
+| Feed 可丢失，不是证据 | 内层唯一 SYNC append 已正常返回、尚未发布时进程崩溃，Feed 通知会漏；Feed 不重放历史、不持久化 Offset，也不扩大 SQLite commit 的平台保证 | 恢复与审计继续只读 `EventStore`；需要历史用 `read()` |
 | 中断退出码 | 退出码由宿主 Shell 和 Python 信号处理决定；硬中断（Ctrl+Break/关闭控制台）实测为 `3221225786`，不会运行收敛代码 | 依赖启动时打印的 session_id 与崩溃恢复，不承诺统一退出码 |
 | 模型调用中断 | 取消 OpenAI-Compatible 请求时会等待 HTTP Worker 收敛，最坏等到 `timeout_seconds` | 需要立即中止时改用可中断的 HTTP 客户端 |
 | Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |
@@ -1445,7 +1478,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Workspace 协调只在本进程 | `WorkspaceService` 以一把宿主锁串行 Catalog/Git mutation 并使用 Stream CAS，但没有跨进程/跨主机 worktree lease；外部 Git 或另一个 writer 可制造冲突 | 当前检测 identity/state 不一致后 fail closed 或 quarantine；分布式协调必须另行设计，不能把进程锁说成全局锁 |
 | Workspace cleanup 保守 | 只有 exact registered、HEAD 等于 base 且 clean 的 worktree 才删除；dirty、unsafe、Git/append 结果不明都 quarantine。Agent `dispose/aclose()` 刻意保留 worktree | 由后续 Artifact/Promotion 或人工检查决定 release；不得用 force/prune 清掉证据或用户改动 |
 | OpenAI Provider | 非流式、无重试/Fallback/限流 | 在 LlmRuntime/Provider 边界扩展 |
-| JSONL 扩展性 | read 仍全量扫描；非分布式 | Checkpoint、SQLite 或其他 EventStore |
+| SQLite 本地边界 | 当前打开 Store 会完整校验 schema/integrity/history，历史很大时启动成本线性；SQLite 仍非分布式服务 | 有真实规模证据后再设计 checkpoint/增量校验或独立 Store，不提前增加第二事实源 |
 | Patch 能力 | 精确文本替换，不解析 unified diff | 增加独立工具实现，不改变 Tool Runtime |
 | Benchmark | 仅一个确定性简单案例 | 增加真实 Provider、失败恢复、复杂仓库案例 |
 | 自动压缩 | 只有手动 Replacement | 未来 Context/Compaction Plugin |
@@ -1483,7 +1516,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 |---|---|---|
 | Agent Loop / Continuation | `runtime/agent_loop.py`、`continuation.py`、E2E/取消测试 | 4、5、10、11、15、16 |
 | Event/Store/Session | `api/events.py`、`session/*`、event/invariant/recovery 测试 | 5、6、7、11、12、15、16 |
-| Event 所有权 / Store 返回值 | `api/events.py`（`detach_event`、`to_dict`、`from_dict`、`materialize`）、`session/event_store.py`、`session/jsonl.py`、`tests/test_event_store_contract.py` | 6.1、6.4、15、16 |
+| Event 所有权 / Store 返回值 | `api/events.py`（`detach_event`、`to_dict`、`from_dict`、`materialize`）、`session/event_store.py`、`session/sqlite.py`、`tests/test_event_store_contract.py`、`tests/test_sqlite_event_store.py` | 6.1、6.4–6.6、15、16 |
 | Event Feed / 发布顺序 | `session/event_feed.py`、`runtime/agent_runtime.py` 的装配、`tests/test_event_feed.py` | 4、6.1、6.4、6.7、15、16 |
 | Timeline / Chat 输出 | `cli/timeline.py`、`cli/chat.py`、`cli/main.py`、`tests/test_cli_timeline.py`、`tests/test_cli_chat.py`、README | 1、3、13.4、13.6、15、16 |
 | Heartbeat / 等待提示 | `cli/activity.py`、`cli/chat.py` 的显示装配、`cli/main.py`、`tests/test_cli_activity.py` | 1、3、13.6、13.7、15、16 |
@@ -1903,7 +1936,10 @@ flowchart TD
 
 ### 20.6 验证基线
 
-当前 [`tests/test_agent_identity.py`](../../tests/test_agent_identity.py) 收集 `193` 项；v0.7-A 删除旧 Budget DTO/validator 的用例，并把 schema-v1 拒绝契约放进 Budget Ledger 测试。其余覆盖包括：全新 `JsonlEventStore` 重建、identity/Activation 分离、id/session/request 冲突、lineage/ownership 分离、畸形 payload、并发线性化、CAS、取消与 may-have-committed 三态、metadata 所有权和敌意容器/Envelope 边界。
+当前 Agent identity/Inbox 相邻回归已改为显式打开并关闭 `SqliteEventStore`，覆盖 fresh reopen、
+identity/Activation 分离、id/session/request 冲突、lineage/ownership 分离、畸形 payload、并发线性化、CAS、
+取消与 may-have-committed 三态、metadata 所有权和敌意容器/Envelope 边界；历史收集数字仍按各发布/阶段
+当时的验证记录解释，不冒充 F1 门禁结果。
 
 外部审查（Codex）在 v0.6 身份协议中曾发现 Budget 写入/回放不对称；v0.7-A 没有继续维护那条未执行路径，而是删除它并用 schema-v2 cutover test 证明旧 history 明确拒绝。仍属于 Agent identity 的三态重读、`BaseException` 传播、错 schema/错流/键集合 fail closed，以及六个 Directory 查询入口的 metadata detach 保证继续由本测试固定。
 
@@ -1983,7 +2019,9 @@ Stage B 这一层只回答四个问题：哪些消息已被持久接受、每条
 | `wakeup` | 严格 `bool`。truthiness 会把 `1`、`"false"`、`[]` 读成一个决定，而这个字段以后要决定是否启动 Activation |
 | `correlation_id`、`causation_id` | 可选标识符；**缺键**与显式 `null` 是两种事实，由精确键集合闸门保证缺键根本到不了解析处 |
 
-`content` 的 UTF-8 约束不是洁癖：孤立代理项能通过 `json.dumps`，随后在 `JsonlEventStore.append()` 内抛 `UnicodeEncodeError`。接受它等于写入方承认了 Store 无法持久化的内容，事务跑到一半才炸出一个非协议错误。事件一律以 `Durability.SYNC` 追加。
+`content` 的 UTF-8 约束不是洁癖：Event payload 的唯一 canonical JSON 与数据库 text 边界必须能编码同一
+Unicode 标量序列；接受孤立代理项会让领域层先承诺一段 Store 无法规范持久化的内容。事件一律以唯一
+`Durability.SYNC` 追加。
 
 #### 只读投影
 
@@ -3389,13 +3427,13 @@ Catalog/Directory/Session identity 和 provider path 双向校验均不变。它
 
 四项新增测试都走真实公开主线而非夹具导入失败：前三项分别覆盖否定消息不能授权 ProductTask、Attempt/Step/Turn owned finalizer 与真实 L4 target venv；第四项用真实 Git for Windows 构造 nested admin path。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`、恢复冗余 `ws-workspace-` 前缀，依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、`promotion-target-inspection-failed` 与 `WorkspaceGitError`。保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；首次远端 Linux 夹具问题、Windows L2 诊断缺口和最终 nested-worktree 平台缺陷也按各自 owner 修正。当前 collect-only 为 `2413`；只运行一次的最终完整 pytest 为 `2408 passed, 5 skipped`、退出码 0、耗时 `39:33`，真实 L2 包含在内。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
 
-### 20.33 v0.8/v0.9 冻结计划与 v0.8-F0 实现状态（通俗版 20.27）
+### 20.33 v0.8/v0.9 冻结计划与 v0.8-F0/F1 实现状态（通俗版 20.27）
 
-2026-08-29 在已发布 `v0.7.1`、HEAD `194f44fe84ecb9adb85fc1d48d182d364bb94f45`
+2026-08-29 在已发布 `v0.7.1`、基线 `194f44fe84ecb9adb85fc1d48d182d364bb94f45`
 上完成多轮独立只读审查后，范围分别冻结为 [`v0.8` 阶段计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
-与 [`v0.9` 阶段计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前 HEAD 仍是该发布提交，但未提交工作树
-已完成 v0.8-F0；F1-F5 和整个 v0.9 均未开始。计划与 F0 实现不构成 commit、push、tag、release、联网、
-真实 Provider 或秘密读取授权。
+与 [`v0.9` 阶段计划](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。v0.8-F0 已实现并提交为 `4906590`；
+F1 已实现且 Release Stop A 最终复审确认 P0/P1 清零，F2-F5 和整个 v0.9 均未实现。F0/F1 没有升级版本、push、
+tag、release、联网、调用真实 Provider 或读取秘密。
 
 F0 的基线反例确认，旧 `AgentLoop` 会在 `BudgetedLlmRuntime.invoke()` 准入前写
 `request/snapshot`/`model/attempt-start`，零 Token 时 Provider 调用数虽为 0，Session 仍虚构一次 Attempt；
@@ -3442,11 +3480,85 @@ Session owner/CAS 后同一 Step 的 Provider 调用从 1 变成 2；退回“�
 该测试定向通过后，修复确认全量按 `2426 collected` 口径运行到 100%、退出码 0，只有 5 个既有 skip
 标记。门禁未联网、未调用真实 Provider/API、未读 `.env`，也未另跑 Wheel/L2-L4 或 F1-F5。
 
-F1 才会使用 stdlib SQLite 作为唯一生产 EventStore，明确拒绝旧 JSONL 且无迁移/dual reader/fallback；
-CLI 各运行入口、Evaluation attempt 与 Evolution comparison case 都显式拥有 store scope。F2 只做同
-Provider/同模型/同冻结 dispatch request 的有界 retry；F3/F4 让 Line/TUI 共用一个 driver 和 ephemeral
-activity projection，并保持 Product/Workflow observation 纯读。唯一完整真实 Provider 网格只在 F5
-作为发布证据运行。当前仍是 JSONL、无 retry、无 driver/TUI。
+F1 由 [`ADR-0036`](../adr/0036-single-production-sqlite-event-store.md) 把 stdlib SQLite 冻结为唯一生产
+EventStore。`JsonlEventStore` 已从源码和公共导出删除，`Durability.BATCHED` 同时删除；旧 `.jsonl`/
+`.lock`、mixed 目录、未知/旧/新 schema、blank/linked/corrupt/non-canonical 数据全部 fail closed，旧 bytes
+不读取、不移动、不删除、不迁移。current schema 使用 `application_id` + `user_version = 1`，只有
+`streams`/`events` 两张 `WITHOUT ROWID` 表；完整 Envelope 保存为 canonical JSON。打开时检查全部持久
+schema 对象、规范化表 DDL、精确表列/外键、SQLite integrity、head/count/gap 与 Envelope round trip；
+额外 table/index/view/trigger 都会让 current schema 被拒绝。
+
+既有数据库先用 `mode=ro&immutable=1`、private cache 的 authority connection 只验证冻结 schema，跳过
+locking/change detection，因此不会触发 hot rollback journal 自动恢复。只有 schema authority 成立后，
+普通读写连接才有权让 SQLite 恢复本产品自己的 journal，然后重验 schema、integrity 与完整 history；
+最后才启用 WAL。TraceHarness 的 schema 创建后不再改变，因此并发合法 Event 写入不影响这次只读权限探测。
+未通过 schema authority 的数据库不会被改写 journal mode/bytes，也不会丢失 `-journal` 恢复证据；已经
+证明为 current 的数据库明确授权 crash recovery，恢复后若 integrity/history 仍坏则继续 fail closed，
+但不宣称这次已授权恢复是 byte-neutral。
+
+每个操作在 Worker 线程打开短连接，使用 foreign keys、`synchronous=FULL` 和显式 5 秒默认 busy timeout。
+`append(expected_seq)` 以 `BEGIN IMMEDIATE` 把 head 检查、整批 Event insert 和 head advance
+放在同一事务；同流竞争最多一组提交，异流 writer 也按 SQLite 单 writer 有界串行，超时稳定为
+`event-store-busy` 且不重试。取消在向调用方返回前等待同一 Worker 收敛，fresh replay 判定
+may-have-committed；`aclose()` 拒绝新操作、等待 active Worker、重复安全且被取消时仍先收敛。
+
+Runtime factory 缺少显式 Store 稳定失败并只借用 Store。CLI `run/resume`、只读/控制命令与 Chat，
+每个 Evaluation attempt、每个 Evolution comparison case 分别在 composition root 打开 Store，先 dispose
+Runtime/Host 再 close；主错误与独立 cleanup 错误都保留。Product 的子 Agent Runtime 继续借用宿主同一
+Store。Backup 使用 SQLite backup API 写入事先不存在的同级临时目录，复用 schema/integrity/history
+验证后 rename；restore 先验证且不覆盖目标。WAL/FULL 是正常 commit 的配置边界，定向测试没有把任意
+文件系统/电源故障宣传成已证明。
+
+F1 定向反例覆盖跨进程同 Head CAS、异流普通等待与 timeout、进程死亡释放 writer、24 条并发 Stream +
+Feed、commit 后取消、close/close-cancel、backup 与 active writer、restore/no-overwrite、literal prefix、
+legacy/mixed/schema/link/gap/non-canonical 拒绝，以及 CLI legacy 稳定提示；Session/Agent/Product/Evaluation/
+Plugin 相邻回归均走显式 Store。Release Stop A 前两轮独立审查共发现三项符合公开路径与现行合同的 P1，
+当前均已修复，最终复审确认 P0/P1 清零；F1 按冻结计划不在此处重跑完整 pytest，F1+F2 的集成全量统一位于
+Release Stop B。
+
+本轮实际 `collect-only = 2446`。SQLite/EventStore/Feed 直接组 `100 passed, 2 skipped`（本机无文件
+symlink 权限），Session/Runtime/Agent `608 passed`，插件组合 `184 passed`。跨域大组首次
+`692 passed, 2 failed, 2 skipped`；两项失败都是 Product 守卫仍钉着 F0 的 `AgentLoop`/`AgentRuntime`
+摘要，F1 分别只改 `BATCHED → SYNC` 与“删除默认 JSONL、要求显式 Store”，更新这两个命名摘要后对应
+两文件 `90 passed`，Supervisor/PluginManager 零 diff。CLI + comparison 首次
+`537 passed, 1 failed, 1 skipped`；唯一失败的公开 replay 夹具把事件写入 InMemory、再从 SQLite 读取，
+改为显式拥有同一 SQLite 后聚焦组 `38 passed`。另有 Benchmark 取消/Store cleanup 聚焦组 `4 passed`。
+
+首轮 Release Stop A 的两项 P1 都在 SQLite schema authority owner 根修：exact gate 现在比较全部持久
+schema 对象和规范化表 DDL，extra trigger/view/index 不再是隐式扩展点；初始化先验证 schema 与完整 history，
+再持久切换 WAL。新增测试证明成功 append 与同 Store/fresh reopen replay 一致，并证明拒绝 unknown
+DELETE-mode 数据库时 SHA、journal mode、原行及 sidecar 均不变。暂时退回只核对 table name 后，公开
+trigger 反例真实得到 `returned=1, head=1, replay=0`；把 WAL 提前到验证前后，拒绝测试真实以数据库 SHA
+变化失败。
+
+第二轮复审又证明，普通读写连接即使不显式设置 WAL，也会在首次读取前自动恢复 unknown 数据库的 hot
+rollback journal，改写主库并删除 sidecar。当前新增 authority connection，只读取 immutable frozen schema；
+真实子进程用 cache spill 后 `os._exit(9)` 留下 hot journal，unknown 库被拒绝后主库 SHA 与全部 bytes、
+journal bytes 都不变。相反，同样真实崩溃但 schema 已被证明是 current 的库，会在普通连接阶段恢复，
+fresh replay 仍得到崩溃前 64 条 canonical Event。临时删除 authority probe 后，同一 unknown 反例稳定因
+数据库 SHA 从预期值变化而失败。保护恢复后的 review-fix 相邻组为 `155 passed, 2 skipped`。
+
+连同此前六项，共九项反向验证均先真实变红再恢复：删除 expected-seq guard 后两个进程都提交；删除 legacy/schema gate
+后旧文件旁生成新库、错误版本被接受；删除取消等待后 append caller 在 Worker 未收敛时完成；删除 close
+gate 后关闭的 Store 仍可读取；把 busy 等待退回 0 后普通异流竞争稳定报 `event-store-busy`。保护恢复后
+SQLite 核心组重新通过。compileall 与全仓 collect-only 已通过；没有运行完整 pytest、联网、真实
+Provider/API、Wheel/L2-L4，也没有读取 `.env`。修改范围 Ruff（`AgentRuntime` 仅排除 HEAD 已存在的
+`ASYNC240`）、`git diff --check`、两版 0–20 章节对应、Markdown 围栏和相对链接检查均通过。
+Release Stop A 已由最终独立复审确认 P0/P1 清零；F1 在此停止，阶段计划允许下一步开始 F2，但本节没有
+把 F2 描述为已实现。最终完整全量仍留在 F2 的 Release Stop B。
+
+后续验证采用根目录 [`AGENTS.md`](../../AGENTS.md) 第 5 节定义的风险分层门禁，而不是每个小阶段机械
+运行完整 pytest。F1-F4 每阶段运行 compileall、当前 owner 的正向/关键反例/失败或取消定向测试、相邻
+回归、collect-only、修改范围 Ruff、diff 与文档 QA；F1 的 SQLite 广泛验证和 F2 的 retry 矩阵分别通过
+独立审查后，在 F2 Release Stop B 合并运行一次带 `--durations=30` 的集成全量。F3/F4 没有新的跨域
+触发时不重复全量；F5 全局复审清零 P0/P1 后再运行一次发布候选全量及打包/离线门禁。若某阶段真实
+改变共享 Runtime/Session/Store schema、Provider 外部副作用或审查证明存在跨域 P0/P1，可有据前移一次
+集成检查点；全量红灯后的根修与确认全量必须如实保留，不能用只跑失败项冒充。并发、取消、进程、
+SQLite 和 Git 测试不默认用 xdist，Wheel/L2-L4、联网与真实 Provider 也不进入无关阶段的日常门禁。
+
+F2 只做同 Provider/同模型/同冻结 dispatch request 的有界 retry；F3/F4 让 Line/TUI 共用一个 driver 和
+ephemeral activity projection，并保持 Product/Workflow observation 纯读。唯一完整真实 Provider 网格
+只在 F5 作为发布证据运行。当前已是 SQLite，但仍无 retry、driver/TUI。
 
 v0.9 只有 v0.8 完成发布后才可重新核对和批准实施。trusted Plugin 在现有
 Activation/Generation/Lease 中贡献 typed Skill catalog，selection 不启用插件、不授予 Tool；Workspace

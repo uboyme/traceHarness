@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+### v0.8-F1: single production SQLite EventStore
+
+- Replaced the production JSONL backend with one stdlib SQLite EventStore and
+  removed `JsonlEventStore` plus `Durability.BATCHED`. Runtime factories now
+  require an explicit borrowed Store; CLI commands, each Evaluation attempt and
+  each Evolution comparison case own and close their Store scope.
+- Added a version-1 schema with canonical full-envelope JSON, transactional
+  `expected_seq` CAS, cross-process primary-key enforcement, WAL,
+  `synchronous=FULL` and a documented five-second default busy timeout. Writers
+  across different Streams serialize within that bound; timeout is the stable
+  `event-store-busy` error and is never retried by the Store.
+- Made open/read fail closed on unknown, older or newer schema, integrity
+  failures, sequence gaps, malformed/non-canonical Envelopes and linked Store
+  paths. The exact-schema gate covers every persistent schema object and the
+  normalized table DDL, so extra triggers/views/indexes cannot alter accepted
+  appends. Existing databases first pass an immutable read-only exact-schema
+  authority probe that cannot recover a hot rollback journal; only a proven
+  current schema may be opened read-write for SQLite crash recovery, full
+  integrity/history validation and WAL setup. A database rejected by that
+  authority probe therefore keeps its original bytes, journal mode and rollback
+  journal evidence. Old `.jsonl`/`.lock` and mixed roots are refused without reading,
+  moving, deleting, importing or masking their evidence.
+- Added explicit idempotent close and cancellation convergence: new operations
+  are rejected once closing starts, admitted Worker threads finish before the
+  caller returns, and fresh replay remains the authority for a cancelled append
+  that may already have committed.
+- Preserve independent Runtime/attempt failures together with Store shutdown
+  failures at CLI, Evaluation and comparison ownership boundaries instead of
+  letting cleanup mask the primary error.
+- Added validated, non-overwriting SQLite backup/restore and deterministic tests
+  for same-stream cross-process CAS, different-stream bounded wait/timeout,
+  process death, authorized current-schema hot-journal recovery, refusal of an
+  unknown hot journal without evidence loss, concurrent Stream/Feed traffic, commit cancellation,
+  close-cancellation, backup during an active writer and all legacy/schema/data
+  refusal paths. No retry, Provider fallback, TUI or v0.9 capability is included.
+
 ### v0.8-F0: two-stage Model admission and dispatch evidence
 
 - Split the generic model boundary into side-effect-free admission and one-shot

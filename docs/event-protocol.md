@@ -62,19 +62,15 @@ The feed is not part of the persisted protocol: it introduces no event type, per
 nothing, replays no history and is visible only inside one process. Recovery, the inspector
 and the invariant checks read the store, never the feed.
 
-`JsonlEventStore` needs no store-specific `detach_event()` call, because its history lives
-in the file and both directions already pass through the shared `EventEnvelope`
-serialization boundary. That boundary still rebuilds the payload: `read()` runs
-`json.loads()` and then `from_dict()` normalizes the result into a fresh graph, and
-`append()` has `to_dict()` rebuild the payload before serializing it. So the copying is
-reached through serialization, not avoided. `InMemoryEventStore` keeps the objects it
-returns, so it detaches explicitly instead of exposing its internal list. `head()` copies
-nothing.
+`SqliteEventStore` reaches this contract through its canonical full-envelope JSON
+boundary: writes normalize before persistence and reads reconstruct a fresh graph while
+checking row identity and a canonical round trip. `InMemoryEventStore` keeps the objects
+it returns, so it detaches explicitly instead of exposing its internal list. `head()`
+copies nothing.
 
-Cost follows from this rather than from detachment: a copy is one event payload, so a
-`read()` returning many events costs the total payload of what it parses and returns. In
-`JsonlEventStore` that is the whole stream - `from_seq` filters after the full parse rather
-than seeking - which is the pre-existing JSONL full-scan boundary.
+Cost follows from this rather than from detachment: a `read()` returning many events costs
+the total payload it parses and returns. SQLite uses `(stream_id, seq)` to locate
+`from_seq`; opening a Store separately validates the full history.
 
 ## Session events
 
@@ -132,7 +128,7 @@ inventing them would corrupt the audit trail. See
 
 ## Core invariants
 
-- Sequence numbers are contiguous in the JSONL implementation.
+- Sequence numbers are contiguous in the SQLite implementation.
 - A Step exists inside an open Turn.
 - At most one Step is open in a Session.
 - A `tool/result` references an earlier call in the same Step.
@@ -171,11 +167,12 @@ open Step is not a violation.
 
 ## Versioning
 
-Every event has `schema_version`. v0.3 emits version 1. Later readers should upcast old
-payloads in memory rather than rewriting historical logs.
+Every event has `schema_version`. Current event payloads use their explicitly validated
+version. The pre-1.0 SQLite database has one current schema version and rejects unsupported
+history; it does not upcast or rewrite legacy data.
 
 ## Manual Surface compaction
 
 `traceh compact` appends `surface/replace` with the exact source event sequences and one
-replacement message. Original events remain in JSONL and request reconstruction uses the
+replacement message. Original events remain in SQLite and request reconstruction uses the
 new Surface projection for later Steps.

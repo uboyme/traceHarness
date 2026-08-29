@@ -31,6 +31,11 @@ class PingTool:
         return ToolOutput("pong")
 
 
+def test_factory_refuses_to_invent_a_store(tmp_path) -> None:
+    with pytest.raises(ValueError, match="event_store is required"):
+        build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+
+
 @pytest.mark.asyncio
 async def test_factory_accepts_custom_store_and_tools(tmp_path) -> None:
     provider = ScriptedLlmProvider(

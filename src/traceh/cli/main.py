@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import sys
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 
@@ -31,6 +32,7 @@ from traceh.cli.env_file import (
 )
 from traceh.cli.errors import CliConfigurationError
 from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
+from traceh.concurrency import combine_failures
 from traceh.evolution.artifacts import ArtifactContractError
 from traceh.evolution.candidate_comparison import (
     COMPARISON_EXIT_CODE,
@@ -67,6 +69,8 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime_async,
 )
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.session.event_store import EventStore
+from traceh.session.sqlite import EventStoreError, SqliteEventStore
 from traceh.version import __version__
 
 _PROVIDERS = ("scripted", "openai-compatible")
@@ -94,9 +98,7 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--provider",
         default=None,
-        help=(
-            "Built-in provider name, or an explicitly enabled plugin provider name"
-        ),
+        help=("Built-in provider name, or an explicitly enabled plugin provider name"),
     )
     parser.add_argument("--model", default=None)
     parser.add_argument("--script", type=Path)
@@ -156,13 +158,8 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
         return report
 
     args.provider = _from_environment(args, "provider", "TRACEH_PROVIDER", "scripted")
-    if (
-        not isinstance(args.provider, str)
-        or not _PLUGIN_CAPABILITY.fullmatch(args.provider)
-    ):
-        raise CliConfigurationError(
-            "TRACEH_PROVIDER / --provider must be a valid capability name"
-        )
+    if not isinstance(args.provider, str) or not _PLUGIN_CAPABILITY.fullmatch(args.provider):
+        raise CliConfigurationError("TRACEH_PROVIDER / --provider must be a valid capability name")
     if args.provider not in _PROVIDERS and not getattr(args, "plugins", ()):
         raise CliConfigurationError(
             "a plugin provider requires at least one explicit --plugin / TRACEH_PLUGINS id"
@@ -172,9 +169,7 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
     explicit_verify_command = getattr(args, "verify_command", None) is not None
     explicit_verifier_name = getattr(args, "verifier_name", None) is not None
     if explicit_verify_command and explicit_verifier_name:
-        raise CliConfigurationError(
-            "--plugin-verifier and --verify-command are mutually exclusive"
-        )
+        raise CliConfigurationError("--plugin-verifier and --verify-command are mutually exclusive")
     args.api_key_env = _from_environment(
         args,
         "api_key_env",
@@ -260,9 +255,7 @@ def _provider_and_model(args: argparse.Namespace):
         return provider, args.model or "scripted-model"
     if args.provider not in _PROVIDERS:
         if not args.model:
-            raise CliConfigurationError(
-                "a plugin provider requires --model or TRACEH_MODEL"
-            )
+            raise CliConfigurationError("a plugin provider requires --model or TRACEH_MODEL")
         return None, args.model
     if not args.base_url:
         raise CliConfigurationError(
@@ -282,13 +275,12 @@ def _provider_and_model(args: argparse.Namespace):
 async def _runtime(
     args: argparse.Namespace,
     *,
+    event_store: EventStore,
     provider_and_model=None,
     additional_tools: tuple[Tool, ...] = (),
 ):
     provider, model = (
-        _provider_and_model(args)
-        if provider_and_model is None
-        else provider_and_model
+        _provider_and_model(args) if provider_and_model is None else provider_and_model
     )
     config = RuntimeConfig(
         data_dir=args.data_dir,
@@ -301,19 +293,81 @@ async def _runtime(
     return await build_default_runtime_async(
         config,
         provider=provider,
+        event_store=event_store,
         verifier_name=args.verifier_name,
         additional_tools=additional_tools,
         enabled_plugins=getattr(args, "plugins", ()),
     )
 
 
-async def _run(args: argparse.Namespace) -> int:
-    runtime = await _runtime(args)
-    # Everything after a successful build belongs inside the guard. Creating the
-    # session can fail on its own - an unreadable workspace, a store error - and
-    # with that call outside the try, such a failure left the runtime (and any
-    # activated plugins) never disposed.
+@asynccontextmanager
+async def _runtime_scope(
+    args: argparse.Namespace,
+    *,
+    provider_and_model=None,
+    additional_tools: tuple[Tool, ...] = (),
+):
+    """Let one CLI command own its SQLite store outside the borrowed Runtime."""
+
+    store = SqliteEventStore(Path(args.data_dir) / "events")
+    runtime = None
+    primary: BaseException | None = None
     try:
+        runtime = await _runtime(
+            args,
+            event_store=store,
+            provider_and_model=provider_and_model,
+            additional_tools=additional_tools,
+        )
+        yield runtime
+    except BaseException as error:
+        primary = error
+    finally:
+        cleanup: BaseException | None = None
+        if runtime is not None:
+            try:
+                await runtime.dispose()
+            except BaseException as error:
+                cleanup = error
+        try:
+            await store.aclose()
+        except BaseException as error:
+            cleanup = combine_failures(cleanup, error, "CLI runtime/store shutdown failed")
+        combined = combine_failures(primary, cleanup, "CLI command and shutdown both failed")
+        if combined is not None:
+            raise combined
+
+
+@asynccontextmanager
+async def _plain_runtime_scope(args: argparse.Namespace):
+    """Own SQLite around a no-plugin, default-provider read/control command."""
+
+    store = SqliteEventStore(Path(args.data_dir) / "events")
+    runtime = None
+    primary: BaseException | None = None
+    try:
+        runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir), event_store=store)
+        yield runtime
+    except BaseException as error:
+        primary = error
+    finally:
+        cleanup: BaseException | None = None
+        if runtime is not None:
+            try:
+                await runtime.dispose()
+            except BaseException as error:
+                cleanup = error
+        try:
+            await store.aclose()
+        except BaseException as error:
+            cleanup = combine_failures(cleanup, error, "CLI runtime/store shutdown failed")
+        combined = combine_failures(primary, cleanup, "CLI command and shutdown both failed")
+        if combined is not None:
+            raise combined
+
+
+async def _run(args: argparse.Namespace) -> int:
+    async with _runtime_scope(args) as runtime:
         session_id = await runtime.create_session(args.workspace, metadata={"cli": True})
         print(f"session_id={session_id}")
         result = await runtime.run_existing(session_id, args.task)
@@ -323,8 +377,6 @@ async def _run(args: argparse.Namespace) -> int:
             f"tokens={result.usage.total_tokens} verification={result.verification_passed}"
         )
         return 0 if result.reason == "completed" else 2
-    finally:
-        await runtime.dispose()
 
 
 async def _chat(args: argparse.Namespace) -> int:
@@ -332,6 +384,7 @@ async def _chat(args: argparse.Namespace) -> int:
     product_config = None
     product_host = None
     actions = None
+    product_configuration_errors: tuple[type[BaseException], ...] = ()
     provider_and_model = _provider_and_model(args)
     additional_tools: tuple[Tool, ...] = ()
     if args.product_config is not None:
@@ -354,6 +407,14 @@ async def _chat(args: argparse.Namespace) -> int:
         from traceh.workspaces.errors import WorkspaceError
         from traceh.workspaces.local_git import LocalGitWorkspaceProvider
 
+        product_configuration_errors = (
+            ArtifactError,
+            BudgetError,
+            ProductError,
+            PromotionError,
+            WorkspaceError,
+        )
+
         try:
             product_config = load_product_host_file(args.product_config)
         except ProductError as error:
@@ -373,15 +434,21 @@ async def _chat(args: argparse.Namespace) -> int:
             ProposeProductTaskTool(actions),
             ConfirmProductTaskTool(actions),
         )
-    runtime = await _runtime(
-        args,
-        provider_and_model=provider_and_model,
-        additional_tools=additional_tools,
-    )
-    if product_config is not None:
-        provider, _ = provider_and_model
-        assert provider is not None
-        try:
+    store = SqliteEventStore(Path(args.data_dir) / "events")
+    runtime = None
+    handed_to_chat = False
+    result: int | None = None
+    primary: BaseException | None = None
+    try:
+        runtime = await _runtime(
+            args,
+            event_store=store,
+            provider_and_model=provider_and_model,
+            additional_tools=additional_tools,
+        )
+        if product_config is not None:
+            provider, _ = provider_and_model
+            assert provider is not None
             workspace_provider = LocalGitWorkspaceProvider(
                 managed_root=product_config.managed_workspace_root,
                 sources={
@@ -406,88 +473,89 @@ async def _chat(args: argparse.Namespace) -> int:
                 max_report_chars=product_config.max_report_chars,
                 actions=actions,
             )
-        except (
-            ArtifactError,
-            BudgetError,
-            ProductError,
-            PromotionError,
-            WorkspaceError,
-        ) as error:
-            await runtime.dispose()
-            code = getattr(error, "code", "product-host-configuration-invalid")
-            raise CliConfigurationError(code) from None
-        except BaseException:
-            await runtime.dispose()
-            raise
-    heartbeat_seconds = validate_heartbeat_seconds(
-        args.heartbeat_seconds, timeline=args.timeline
-    )
-    # Everything non-secret that the resume command needs but `RuntimeConfig`
-    # does not carry. The env file is only named when one was actually loaded, so
-    # the command never points at a file that had no effect.
-    report: EnvLoadReport | None = getattr(args, "env_report", None)
-    loaded = report is not None and report.loaded
-    resume_environment = ResumeEnvironment(
-        base_url=args.base_url,
-        api_key_env=args.api_key_env,
-        env_file=report.path if loaded else None,
-        script=args.script,
-        # Which variables the env file actually applied, so the block can say
-        # "reloaded for you" instead of "supply it again" only when that is true.
-        env_file_supplies=frozenset(report.applied_keys) if loaded else frozenset(),
-        verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
-        product_config=args.product_config,
-    )
-    return await run_chat(
-        runtime,
-        default_console(),
-        workspace=workspace,
-        session_id=session_id,
-        timeline=args.timeline,
-        heartbeat_seconds=heartbeat_seconds,
-        resume_environment=resume_environment,
-        product=product_host,
-    )
+        heartbeat_seconds = validate_heartbeat_seconds(
+            args.heartbeat_seconds, timeline=args.timeline
+        )
+        # Everything non-secret that the resume command needs but `RuntimeConfig`
+        # does not carry. The env file is only named when one was actually loaded, so
+        # the command never points at a file that had no effect.
+        report: EnvLoadReport | None = getattr(args, "env_report", None)
+        loaded = report is not None and report.loaded
+        resume_environment = ResumeEnvironment(
+            base_url=args.base_url,
+            api_key_env=args.api_key_env,
+            env_file=report.path if loaded else None,
+            script=args.script,
+            # Which variables the env file actually applied, so the block can say
+            # "reloaded for you" instead of "supply it again" only when that is true.
+            env_file_supplies=frozenset(report.applied_keys) if loaded else frozenset(),
+            verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
+            product_config=args.product_config,
+        )
+        handed_to_chat = True
+        result = await run_chat(
+            runtime,
+            default_console(),
+            workspace=workspace,
+            session_id=session_id,
+            timeline=args.timeline,
+            heartbeat_seconds=heartbeat_seconds,
+            resume_environment=resume_environment,
+            product=product_host,
+        )
+    except BaseException as error:
+        if product_configuration_errors and isinstance(error, product_configuration_errors):
+            primary = CliConfigurationError(
+                getattr(error, "code", "product-host-configuration-invalid")
+            )
+        else:
+            primary = error
+    finally:
+        cleanup: BaseException | None = None
+        if runtime is not None and not handed_to_chat:
+            try:
+                await runtime.dispose()
+            except BaseException as error:
+                cleanup = error
+        try:
+            await store.aclose()
+        except BaseException as error:
+            cleanup = combine_failures(cleanup, error, "chat store shutdown failed")
+        combined = combine_failures(primary, cleanup, "chat shutdown failed")
+        if combined is not None:
+            raise combined
+    assert result is not None
+    return result
 
 
 async def _resume(args: argparse.Namespace) -> int:
-    runtime = await _runtime(args)
-    try:
+    async with _runtime_scope(args) as runtime:
         recovery, result = await runtime.resume(args.session_id, instruction=args.instruction)
         print(json.dumps({"recovery": asdict(recovery)}, ensure_ascii=False, default=str, indent=2))
         print(result.final_text)
         print(f"reason={result.reason} steps={result.steps}")
         return 0
-    finally:
-        await runtime.dispose()
 
 
 async def _recover(args: argparse.Namespace) -> int:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir))
-    try:
+    async with _plain_runtime_scope(args) as runtime:
         report = await runtime.recovery.recover(args.session_id)
         print(json.dumps(asdict(report), ensure_ascii=False, default=str, indent=2))
         return 0
-    finally:
-        await runtime.dispose()
 
 
 async def _inspect(args: argparse.Namespace) -> int:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir))
-    try:
+    async with _plain_runtime_scope(args) as runtime:
         inspector = SessionInspector(runtime.sessions, runtime.surface)
         print(await inspector.render_text(args.session_id, include_events=not args.summary_only))
         if args.html:
             output = await inspector.render_html(args.session_id, args.html)
             print(f"html={output}")
         return 0
-    finally:
-        await runtime.dispose()
 
 
 async def _replay(args: argparse.Namespace) -> int:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir))
-    try:
+    async with _plain_runtime_scope(args) as runtime:
         inspector = SessionInspector(runtime.sessions, runtime.surface)
         print(await inspector.replay_text(args.session_id))
         violations = await verify_request_snapshots(
@@ -495,25 +563,19 @@ async def _replay(args: argparse.Namespace) -> int:
         )
         print(f"\nrequest_reconstruction_violations={len(violations)}")
         return 0 if not violations else 3
-    finally:
-        await runtime.dispose()
 
 
 async def _sessions(args: argparse.Namespace) -> int:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir))
-    try:
+    async with _plain_runtime_scope(args) as runtime:
         for session_id in await runtime.sessions.list_sessions():
             events = await runtime.sessions.read_session(session_id)
             workspace = await runtime.sessions.workspace_for(session_id)
             print(f"{session_id}\t{workspace}\t{len(events)} events")
         return 0
-    finally:
-        await runtime.dispose()
 
 
 async def _compact(args: argparse.Namespace) -> int:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=args.data_dir))
-    try:
+    async with _plain_runtime_scope(args) as runtime:
         summary = args.summary
         if args.summary_file is not None:
             summary = args.summary_file.read_text(encoding="utf-8")
@@ -524,8 +586,6 @@ async def _compact(args: argparse.Namespace) -> int:
         )
         print(json.dumps(asdict(report), ensure_ascii=False, indent=2))
         return 0
-    finally:
-        await runtime.dispose()
 
 
 #: `traceh eval` measured every attempt it ran, and every task stayed coherent.
@@ -549,13 +609,9 @@ async def _eval(args: argparse.Namespace) -> int:
 
     provider, model = _provider_and_model(args)
     if provider is None:
-        raise CliConfigurationError(
-            "eval requires a directly configured built-in provider"
-        )
+        raise CliConfigurationError("eval requires a directly configured built-in provider")
     if args.output.exists():
-        raise CliConfigurationError(
-            "eval --output must be a directory that does not exist yet"
-        )
+        raise CliConfigurationError("eval --output must be a directory that does not exist yet")
     try:
         runner = ProductBenchmarkRunner(
             args.benchmark, args.output, provider=provider, model_id=model
@@ -1077,6 +1133,7 @@ def main(argv: list[str] | None = None) -> None:
     except (
         CliConfigurationError,
         EnvFileError,
+        EventStoreError,
         PluginError,
         SessionPluginMismatchError,
     ) as error:

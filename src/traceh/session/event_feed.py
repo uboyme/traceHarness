@@ -7,18 +7,16 @@ and it is deliberately weaker than the log in every respect:
 * **Adds no persisted fact.** Nothing here is written, replayed or recovered
   from, and no new event type is introduced.
 * **No extra crash durability.** An event reaches the feed once the inner
-  ``append()`` returned normally *for the `Durability` the caller asked for*.
-  The feed neither upgrades `Durability.BATCHED` to `SYNC` nor adds any
-  guarantee of its own: whether a published event survives an OS crash is
-  decided entirely by the store's own contract. A crash between the append
-  returning and the publish loses the notification, and leaves the event exactly
-  as durable as its requested `Durability` made it.
+  ``append()`` returned normally. The only current durability mode is ``SYNC``;
+  whether a published event survives an OS or hardware failure is still the
+  store's contract. A crash between append return and publication can lose the
+  notification without changing the durable event.
 * **Not history.** Subscribing never replays the past. A subscriber sees events
   published after it subscribed; anything earlier comes from
   ``EventStore.read()`` as before.
 * **Not state.** No projection or cache is kept here. Subscribers that need
   state derive it themselves.
-* **Not cross-process.** Another process writing the same JSONL file publishes
+* **Not cross-process.** Another process writing the same SQLite database publishes
   nothing into this feed. Visibility is limited to one interpreter.
 
 Because of all that, `Recovery`, `Inspector`, invariants and the runtime keep
@@ -26,7 +24,7 @@ reading the store and never consult the feed.
 
 The publishing boundary is an `EventStore` decorator rather than a hook inside
 `SessionService`, for two reasons. It is backend-agnostic, so it behaves
-identically over `InMemoryEventStore` and `JsonlEventStore`; and it sits at the
+identically over `InMemoryEventStore` and `SqliteEventStore`; and it sits at the
 one place where "the store accepted this event" becomes true, so announcing
 something the store never accepted is not expressible.
 
@@ -225,11 +223,8 @@ class PublishingEventStore:
     the feed is allowed to miss events, and the log is not.
 
     This is *acceptance*, not extra durability. ``durability`` is passed through
-    unchanged, so a `Durability.BATCHED` append is announced once the store
-    returns from a flushed-but-not-fsynced write, exactly as its caller asked
-    for; how such an event fares in an OS crash is the store's contract, not the
-    feed's. The feed never upgrades `BATCHED` to `SYNC` and never makes an event
-    more durable than the writer requested.
+    unchanged; the only current value is ``SYNC``. The feed never adds a second
+    persistence guarantee or makes an event more durable than the store did.
 
     **Sequence order, not completion order.** Two appends racing on one stream
     would otherwise be free to publish in either order: the store serializes the
@@ -237,7 +232,8 @@ class PublishingEventStore:
     be descheduled and publish after the writer of seq 11. Holding the lock
     across both halves makes "published in seq order" structural rather than a
     hopeful consequence of how callers happen to be scheduled today. Different
-    streams take different locks and never wait on each other.
+    streams take different wrapper locks, although the inner SQLite store still
+    serializes database writers across streams with its bounded busy timeout.
 
     Publishing itself only puts objects on unbounded queues - it never awaits -
     so the lock is released promptly and no subscriber can extend it.

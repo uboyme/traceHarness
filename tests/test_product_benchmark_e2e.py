@@ -9,13 +9,16 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
 import sys
 from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import traceh.evaluation.attempt as attempt_module
 from traceh.api.events import PendingEvent
 from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 from traceh.api.product import (
@@ -37,7 +40,7 @@ from traceh.promotion.models import (
     verification_evidence_digest,
 )
 from traceh.promotion.projection import PromotionLedgerReader
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import DATABASE_FILENAME, SqliteEventStore
 
 PRODUCT_PROVIDER_ID = "benchmark-test-provider"
 PRODUCT_MODEL_ID = "benchmark-test-model"
@@ -48,6 +51,59 @@ _VERIFIER_ARGV = (
     "import pathlib,sys;sys.exit(0 if "
     "pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
 )
+
+
+def _read_stream_records(root: Path, stream_id: str) -> list[dict]:
+    connection = sqlite3.connect(root / DATABASE_FILENAME)
+    try:
+        rows = connection.execute(
+            "SELECT envelope_json FROM events WHERE stream_id = ? ORDER BY seq",
+            (stream_id,),
+        ).fetchall()
+        return [json.loads(row[0]) for row in rows]
+    finally:
+        connection.close()
+
+
+def _write_stream_records(root: Path, stream_id: str, records: list[dict]) -> None:
+    connection = sqlite3.connect(root / DATABASE_FILENAME, isolation_level=None)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        for record in records:
+            assert record["stream_id"] == stream_id
+            connection.execute(
+                "UPDATE events SET envelope_json = ? WHERE stream_id = ? AND seq = ?",
+                (
+                    json.dumps(
+                        record,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ),
+                    stream_id,
+                    record["seq"],
+                ),
+            )
+        connection.execute("COMMIT")
+    finally:
+        connection.close()
+
+
+def _replace_stream_value(
+    root: Path,
+    stream_id: str,
+    old: str,
+    new: str,
+    *,
+    required: bool = True,
+) -> None:
+    records = _read_stream_records(root, stream_id)
+    original = json.dumps(records, ensure_ascii=False, sort_keys=True)
+    if old not in original:
+        assert not required
+        return
+    rewritten = json.loads(original.replace(old, new))
+    _write_stream_records(root, stream_id, rewritten)
 
 
 class _ProductProvider:
@@ -531,6 +587,45 @@ async def test_the_two_reports_carry_the_same_values(tmp_path: Path) -> None:
 # --------------------------------------------------------- failure and cleanup
 
 
+async def test_attempt_retains_execution_and_store_close_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    execution_error = RuntimeError("attempt failed")
+    close_error = RuntimeError("store close failed")
+
+    class FailingCloseStore:
+        def __init__(self, root: Path) -> None:
+            self.root = root
+
+        async def aclose(self) -> None:
+            raise close_error
+
+    async def build_repositories(**_kwargs: object) -> object:
+        return object()
+
+    async def fail_attempt(*_args: object, **_kwargs: object) -> object:
+        raise execution_error
+
+    monkeypatch.setattr(attempt_module, "SqliteEventStore", FailingCloseStore)
+    monkeypatch.setattr(
+        attempt_module, "build_attempt_repositories", build_repositories
+    )
+    monkeypatch.setattr(attempt_module, "_run_attempt_with_store", fail_attempt)
+    request = SimpleNamespace(
+        directory=tmp_path / "attempt",
+        task=SimpleNamespace(initial_dir=tmp_path / "initial"),
+    )
+
+    with pytest.raises(BaseExceptionGroup) as caught:
+        await attempt_module.run_attempt(
+            request,
+            manifest=object(),
+            providers={},
+        )
+
+    assert caught.value.exceptions == (execution_error, close_error)
+
+
 async def test_a_router_failure_is_measured_and_its_owners_converge(
     tmp_path: Path,
 ) -> None:
@@ -582,7 +677,7 @@ async def test_interrupting_a_run_converges_before_it_propagates(
     # the interrupted attempt look clean.
     assert base.exists()
 
-    store = JsonlEventStore(attempt_dir / "ev")
+    store = SqliteEventStore(attempt_dir / "ev")
     (stream,) = await store.list_streams(prefix="product-task:")
     task_id = stream.removeprefix("product-task:")
     evidence = await collect_attempt_evidence(
@@ -724,7 +819,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
     report = await runner.run()
     (attempt,) = report.attempts
     assert attempt.evidence is not None
-    store = JsonlEventStore(tmp_path / "evidence" / attempt.directory / "ev")
+    store = SqliteEventStore(tmp_path / "evidence" / attempt.directory / "ev")
 
     with pytest.raises(BenchmarkEvidenceError) as unknown:
         await collect_attempt_evidence(
@@ -778,7 +873,7 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
     assert attempt.evidence is not None and attempt.success
     honest = attempt.evidence.execution.tokens
     assert honest is not None
-    store = JsonlEventStore(tmp_path / "evidence" / attempt.directory / "ev")
+    store = SqliteEventStore(tmp_path / "evidence" / attempt.directory / "ev")
 
     coder = attempt.evidence.execution.sessions[0]
     stream = f"session:{coder.session_id}"
@@ -832,18 +927,16 @@ async def test_a_review_the_workflow_never_produced_breaks_the_chain(
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
     events = tmp_path / "evidence" / attempt.directory / "ev"
-    stream = events / f"workflow%3A{attempt.evidence.task_id}.jsonl"
-    original = stream.read_text(encoding="utf-8")
     assert attempt.evidence.review_id is not None
-    assert attempt.evidence.review_id in original
-
-    stream.write_text(
-        original.replace(attempt.evidence.review_id, "review-somebody-elses-report"),
-        encoding="utf-8",
+    _replace_stream_value(
+        events,
+        f"workflow:{attempt.evidence.task_id}",
+        attempt.evidence.review_id,
+        "review-somebody-elses-report",
     )
     with pytest.raises(BenchmarkEvidenceError) as caught:
         await collect_attempt_evidence(
-            JsonlEventStore(events),
+            SqliteEventStore(events),
             task_id=attempt.evidence.task_id,
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
@@ -869,19 +962,16 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
     assert attempt.evidence is not None and attempt.success
 
     events = tmp_path / "evidence" / attempt.directory / "ev"
-    stream = events / "patch-promotions%3Aledger.jsonl"
-    event_store = JsonlEventStore(events)
+    event_store = SqliteEventStore(events)
     ledger = await PromotionLedgerReader(event_store).load()
+    await event_store.aclose()
     assert attempt.evidence.review_id is not None
     review = ledger.review(attempt.evidence.review_id)
     assert review is not None
     assert attempt.evidence.promotion_id is not None
     promotion = ledger.promotion(attempt.evidence.promotion_id)
     assert promotion is not None
-    records = [
-        json.loads(line)
-        for line in stream.read_text(encoding="utf-8").splitlines()
-    ]
+    records = _read_stream_records(events, "patch-promotions:ledger")
     recorded = next(
         record for record in records if record["type"] == "patch/review-recorded"
     )
@@ -908,36 +998,31 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
             record["data"]["approval_digest"] = approval_digest
         if record["type"] == "patch/promotion-committed":
             record["data"]["promotion_id"] = replacement_promotion_id
-    stream.write_text(
-        "".join(
-            json.dumps(
-                record,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-            + "\n"
-            for record in records
-        ),
-        encoding="utf-8",
-    )
+    _write_stream_records(events, "patch-promotions:ledger", records)
     # Keep the other durable domains internally consistent with the rewritten
     # ledger. Without the frozen-plan check the old collector therefore accepts
     # the attempt as a successful, fully chained measurement.
     for fact_stream in (
-        events / f"product-task%3A{attempt.evidence.task_id}.jsonl",
-        events / f"workflow%3A{attempt.evidence.task_id}.jsonl",
+        f"product-task:{attempt.evidence.task_id}",
+        f"workflow:{attempt.evidence.task_id}",
     ):
-        original = fact_stream.read_text(encoding="utf-8")
-        rewritten = original.replace(promotion.approval_digest, approval_digest)
-        rewritten = rewritten.replace(
-            promotion.promotion_id, replacement_promotion_id
+        _replace_stream_value(
+            events,
+            fact_stream,
+            promotion.approval_digest,
+            approval_digest,
         )
-        fact_stream.write_text(rewritten, encoding="utf-8")
+        _replace_stream_value(
+            events,
+            fact_stream,
+            promotion.promotion_id,
+            replacement_promotion_id,
+            required=False,
+        )
 
     with pytest.raises(BenchmarkEvidenceError) as caught:
         await collect_attempt_evidence(
-            JsonlEventStore(events),
+            SqliteEventStore(events),
             task_id=attempt.evidence.task_id,
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
@@ -969,17 +1054,16 @@ async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
     assert coder.session_id != evidence.routing.session_id
 
     events = tmp_path / "evidence" / attempt.directory / "ev"
-    stream = events / f"product-task%3A{evidence.task_id}.jsonl"
-    original = stream.read_text(encoding="utf-8")
-    assert evidence.routing.session_id in original
-    stream.write_text(
-        original.replace(evidence.routing.session_id, coder.session_id),
-        encoding="utf-8",
+    _replace_stream_value(
+        events,
+        f"product-task:{evidence.task_id}",
+        evidence.routing.session_id,
+        coder.session_id,
     )
 
     with pytest.raises(BenchmarkEvidenceError) as caught:
         await collect_attempt_evidence(
-            JsonlEventStore(events),
+            SqliteEventStore(events),
             task_id=evidence.task_id,
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
@@ -998,7 +1082,7 @@ async def test_success_requires_the_ref_to_hold_the_promoted_revision(
     report = await runner.run()
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
-    store = JsonlEventStore(tmp_path / "evidence" / attempt.directory / "ev")
+    store = SqliteEventStore(tmp_path / "evidence" / attempt.directory / "ev")
 
     for revision in (None, attempt.evidence.previous_revision):
         evidence = await collect_attempt_evidence(

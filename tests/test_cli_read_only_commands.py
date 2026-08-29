@@ -18,6 +18,7 @@ import pytest
 
 from traceh.cli.main import build_parser, main
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.session.sqlite import SqliteEventStore
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +50,8 @@ def session(tmp_path: Path) -> tuple[Path, str, int]:
     data_dir = tmp_path / "data"
 
     async def create() -> tuple[str, int]:
-        runtime = build_default_runtime(RuntimeConfig(data_dir=data_dir))
+        store = SqliteEventStore(data_dir / "events")
+        runtime = build_default_runtime(RuntimeConfig(data_dir=data_dir), event_store=store)
         try:
             result = await runtime.run(workspace, "say hello")
             assert result.reason == "completed"
@@ -58,6 +60,7 @@ def session(tmp_path: Path) -> tuple[Path, str, int]:
             return session_id, events[-1].seq
         finally:
             await runtime.dispose()
+            await store.aclose()
 
     session_id, last_seq = asyncio.run(create())
     return data_dir, session_id, last_seq
@@ -81,9 +84,7 @@ def test_inspect_reports_no_violations(session, capsys) -> None:
 def test_inspect_can_write_html(session, tmp_path: Path, capsys) -> None:
     data_dir, session_id, _ = session
     target = tmp_path / "report.html"
-    code = run_cli(
-        ["inspect", session_id, "--data-dir", str(data_dir), "--html", str(target)]
-    )
+    code = run_cli(["inspect", session_id, "--data-dir", str(data_dir), "--html", str(target)])
     assert code == 0
     assert f"html={target}" in capsys.readouterr().out
     assert target.exists() and target.read_text(encoding="utf-8").strip()
@@ -107,10 +108,14 @@ def test_compact_appends_a_surface_replacement(session, capsys) -> None:
     data_dir, session_id, last_seq = session
     code = run_cli(
         [
-            "compact", session_id,
-            "--data-dir", str(data_dir),
-            "--through-seq", str(last_seq),
-            "--summary", "Earlier turn summarised.",
+            "compact",
+            session_id,
+            "--data-dir",
+            str(data_dir),
+            "--through-seq",
+            str(last_seq),
+            "--summary",
+            "Earlier turn summarised.",
         ]
     )
     assert code == 0
@@ -126,3 +131,20 @@ def test_read_only_commands_do_not_accept_plugin_selection() -> None:
     for argv in (["sessions"], ["inspect", "sid"], ["replay", "sid"], ["recover", "sid"]):
         args = build_parser().parse_args(argv)
         assert not hasattr(args, "plugins")
+
+
+def test_legacy_event_directory_is_refused_without_touching_evidence(
+    tmp_path: Path, capsys
+) -> None:
+    data_dir = tmp_path / "legacy-data"
+    events = data_dir / "events"
+    events.mkdir(parents=True)
+    legacy = events / "session%3Alegacy.jsonl"
+    legacy.write_bytes(b"legacy-evidence")
+
+    assert run_cli(["sessions", "--data-dir", str(data_dir)]) == 2
+    error = capsys.readouterr().err
+    assert "event-store-legacy-jsonl-refused" in error
+    assert "choose a new data directory" in error
+    assert legacy.read_bytes() == b"legacy-evidence"
+    assert sorted(path.name for path in events.iterdir()) == [legacy.name]

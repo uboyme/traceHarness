@@ -6,7 +6,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 
 ## 已经包含什么
 
-- Append-only JSONL Session Stream 与 Effect Stream；
+- Append-only SQLite EventStore：一个 current-schema 数据库保存 Session、Effect 与各控制面 Stream；
 - Session / Turn / Step / Model Attempt / Tool Invocation 生命周期事件；
 - 薄异步 Agent Loop，把 Prompt、模型、工具和 Continuation 行为委托给独立服务；
 - 冻结的 Composition Snapshot，以及可以独立重建的模型请求；
@@ -15,7 +15,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 五个 Coding Tools：`list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；
 - Workspace 路径边界和子进程环境变量清洗；
 - Event/EventStore 所有权契约：调用方修改 `append()` 或 `read()` 返回事件的嵌套内容，不会反向改写已经保存的历史；
-- 进程内 Session Event Feed：`EventStore` 接受事件之后（按调用方请求的 `Durability`）按真实 `seq` 顺序发布给订阅者，每个订阅者拿到独立副本；消费者接口只能订阅、不能发布；它不新增任何持久化事实，也不提升崩溃持久性，不是事实源；
+- 进程内 Session Event Feed：`EventStore` 的唯一 `SYNC` append 正常返回之后按真实 `seq` 顺序发布给订阅者，每个订阅者拿到独立副本；消费者接口只能订阅、不能发布；它不新增任何持久化事实，也不提升 SQLite commit 的平台保证，不是事实源；
 - `traceh chat` 的实时 Tool Timeline：Turn 运行期间即时显示 Step、模型调用、工具生命周期和验证结果，可用 `--no-timeline` 关闭；
 - Activity Heartbeat：模型或工具长时间未结束时，按 `--heartbeat-seconds`（默认 10 秒）打印等待时长，完成行附带实测耗时；
 - 可收敛的 Ctrl+C：有任务在跑时首次 Ctrl+C 只取消当前 Turn 并保留 Session，取消生命周期会完整显示在 Timeline 上；
@@ -62,6 +62,14 @@ traceh chat --session-id <session-id> --data-dir "<data-dir>"
 ```
 
 **定位 Session** 需要两样东西：`--session-id` 和存放事件的 `--data-dir`（默认 `.traceh`，位置相对于当时的工作目录）。只有当你就在原来的工作目录、且当时用的是默认 data 目录时，才可以省略 `--data-dir`。
+
+v0.8-F1 是 pre-1.0 的单主线切换：生产事件现在位于 `<data-dir>/events/events.sqlite3`。发现 v0.7 的
+`.jsonl`/`.lock` 痕迹时会稳定拒绝并要求选择新 data dir；不会读取、迁移、删除旧证据，也没有 SQLite
+失败后回退 JSONL 的路径。一致备份/恢复只能使用宿主持有的 SQLite backup/restore API，并且目标必须
+事先不存在。打开现有数据库时会先用 immutable read-only connection 证明全部持久 schema authority；
+只有证明属于 TraceHarness 后才允许 SQLite 恢复 hot journal、验证完整历史并启用 WAL。未通过该 schema
+authority probe 的数据库不会先被改写 journal mode/bytes，也不会丢失 rollback journal 证据；已经证明
+属于本产品的库则明确授权 SQLite crash recovery，恢复后 integrity/history 仍可能继续 fail closed。
 
 **恢复它当时的行为**是另一件事，需要 Provider、Model 等配置——见下面的[Ctrl+C 与找回 Session](#ctrlc-与找回-session)。Chat 启动时就会把完整命令打印出来，直接复制即可。
 
@@ -189,7 +197,7 @@ Banner、`/session`、`/exit`、`/quit`、EOF 与中断都会显示这段信息�
 
 ### 为什么第一条是 `[event 4]`
 
-`seq` 1-3 是 `session/created`、`inbox/accepted`、`inbox/claimed`：它们**确实已持久化**，只是 Timeline 不显示，所以第一条可见事件通常是 `turn/start`。TraceHarness 刻意不重新编号——真实 `seq` 才能在 `traceh inspect` 和 JSONL 中查回。因此启动时会打印一次说明：
+`seq` 1-3 是 `session/created`、`inbox/accepted`、`inbox/claimed`：它们**确实已持久化**，只是 Timeline 不显示，所以第一条可见事件通常是 `turn/start`。TraceHarness 刻意不重新编号——真实 `seq` 才能在 `traceh inspect` 和 SQLite EventStore 中查回。因此启动时会打印一次说明：
 
 ```text
 Timeline shows selected persisted events.
@@ -200,7 +208,7 @@ Timeline 只显示生命周期与结果：Turn/Step 起止、模型调用与答�
 
 输出侧按不可信内容处理：所有来自事件 payload 的字符串都会先清洗（去除 ESC 与其他控制/格式字符、折叠为严格一行、统一限长），因此模型返回的工具名或任意异常类型无法伪造额外的 Timeline 行，也无法发出终端控制序列。`shell` 执行的命令**默认完全不显示**（只显示工具名与调用 ID），因为命令行最容易带上凭据，而关键词扫描无法覆盖所有秘密形态；`runtime/error` 只显示错误类型，不显示消息与 traceback。可显示的读取类工具路径仍会做凭据形态检查，命中即整段不显示；未知工具只显示工具名与调用 ID。
 
-Timeline 是纯界面投影：它不进入模型可见历史，不改变 Request Fingerprint，也不写入任何事件。它只在当前进程内可见——另一个进程写同一份 JSONL 时不会实时出现在这里。
+Timeline 是纯界面投影：它不进入模型可见历史，不改变 Request Fingerprint，也不写入任何事件。它只在当前进程内可见——另一个进程写同一个 SQLite 数据库时不会实时出现在这里。
 
 当前 Chat 仍是行式提示符，不是流式 TUI：没有 Token Streaming、执行前审批，也不能在 Turn 运行期间继续输入。
 
@@ -495,7 +503,7 @@ result = await runtime.run(Path("./workspace"), "Inspect the project")
 await runtime.dispose()
 ```
 
-`build_default_runtime()` 还可以接收自定义 `EventStore`、`ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler、Verifier，以及显式 `ScopedServiceBinding`、`ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`。同层替换或更近层覆盖祖先都必须写真正的布尔值 `replace=True`（字符串等 truthy 值会被拒绝）；Service 的 API Major 还必须一致。失败的四层装配不会把半成品写进调用方 Registry/Prompt。Tool、Prompt、Policy 会先解析成一份有效 Composition，再由 Generation/Step Lease 和 Snapshot 冻结；没有第二套 Scoped Runtime。需要更深度的定制时，可以向 Agent Loop 提供其他 `CompositionRuntime`，让一个 Step Lease 一套自洽的 Provider、Tool Set 和 Snapshot Generation。
+`build_default_runtime()` 现在要求调用方显式传入 `EventStore`，Runtime 只借用而不负责关闭；CLI、每个 Evaluation attempt 和每个 Evolution comparison case 各自在 composition root 打开/关闭唯一生产 `SqliteEventStore`。Factory 还可以接收自定义 `ContinuationRuntime`、额外的 `Tool`、Policy、Prompt Assembler、Verifier，以及显式 `ScopedServiceBinding`、`ScopedToolBinding`、`ScopedPromptBinding`、`ScopedPolicyBinding`。同层替换或更近层覆盖祖先都必须写真正的布尔值 `replace=True`（字符串等 truthy 值会被拒绝）；Service 的 API Major 还必须一致。失败的四层装配不会把半成品写进调用方 Registry/Prompt。Tool、Prompt、Policy 会先解析成一份有效 Composition，再由 Generation/Step Lease 和 Snapshot 冻结；没有第二套 Scoped Runtime。
 
 ## 架构
 
@@ -587,7 +595,7 @@ src/traceh/version.py   版本与核心身份的唯一事实源
 src/traceh/api          稳定协议、冻结 DTO 和扩展边界
 src/traceh/kernel       Scope、Activation、Hooks、可逆生命周期
 src/traceh/plugins      Entry Point 发现、显式启用、事务式 PluginManager
-src/traceh/session      EventStore、Projector、Recovery、不变量
+src/traceh/session      SQLite EventStore、Projector、Recovery、不变量
 src/traceh/runtime      AgentLoop、Composition Lease、Request、Continuation、Verification
 src/traceh/supervision  Agent Activation、durable claim/outcome、child-first 收敛、运行报告与子 Agent Tool
 src/traceh/budgets      单一层级 Budget Ledger 与宿主显式执行门
@@ -676,17 +684,18 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
-  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。v0.8-F0 已实现；F1-F5 与整个 v0.9 仍是
-  未开始的实施边界：v0.8 后续依次处理 SQLite、同 Provider 有界 retry、UI-neutral driver 与可选 TUI；
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0/F1 已完成两阶段
+  Model admission 与 SQLite 唯一生产 EventStore；F2-F5 仍依次处理同 Provider 有界 retry、
+  UI-neutral driver 与可选 TUI；
   v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
-  和可审计检索。当前仍没有 SQLite、retry、TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
+  和可审计检索。当前已有 SQLite，但仍没有 retry、TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
   第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
 - Activity Heartbeat 只是屏幕状态：不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；
 - 硬中断（`Ctrl+Break`、关闭控制台）没有任何收敛：不打印提示、不闭合生命周期，只能依赖启动时已打印的恢复命令与崩溃恢复；
-- Session Event Feed 只在同一进程内可见，没有跨进程实时观察；它的队列无上限，因此不对 Runtime 施加背压，但被遗弃的订阅者会占用内存，且尚无 Overflow 策略；它可丢失、不重放历史、不提升崩溃持久性（`SYNC`/`BATCHED` 语义仍由 `EventStore` 决定），不能当作恢复证据；
+- Session Event Feed 只在同一进程内可见，没有跨进程实时观察；它的队列无上限，因此不对 Runtime 施加背压，但被遗弃的订阅者会占用内存，且尚无 Overflow 策略；它可丢失、不重放历史、不提升唯一 `SYNC` SQLite append 的保证，不能当作恢复证据；
 - Timeline 已对注入做了清洗，但形似结构标记的惰性文本仍可能出现在该行内部：保证是"不会产生第二行、行首为真实事件号"，不是"不会出现形似标记的字符"；
-- JSONL 提供单机写入互斥与乐观并发控制，但不是分布式数据库；
+- SQLite 只解决本地事实存储：同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒；它不是跨主机数据库，打开时 exact schema/history 校验的成本随历史增长；额外持久 trigger/view/index 会被拒绝，未知数据库先经 immutable schema probe，因此在拒绝前不会触发 hot-journal recovery 或切换 WAL；
 - OpenAI-Compatible Adapter 非流式，且没有 Retry/Fallback Middleware；
 - `apply_patch` 执行精确文本替换，不解析 Unified Diff；
 - 默认 Shell Policy 是 Guardrail，不是安全沙箱；运行不可信 Agent 时应使用容器或远程 Sandbox；

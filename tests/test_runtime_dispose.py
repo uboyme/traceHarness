@@ -28,6 +28,7 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime,
     build_default_runtime_async,
 )
+from traceh.session.event_store import InMemoryEventStore
 
 
 @pytest.fixture
@@ -101,6 +102,7 @@ async def build_with_plugin(tmp_path: Path, plugin: ScriptedPlugin, provider=Non
         plugin_discovery=PluginDiscovery(
             entry_points_provider=provider_for(entry_point_for(plugin))
         ),
+        event_store=InMemoryEventStore(),
     )
 
 
@@ -229,9 +231,7 @@ async def test_dispose_after_a_cancelled_dispose_reuses_the_same_shutdown(
 # --------------------------------------------------------------------------
 
 
-async def test_active_turn_converges_before_plugins_unload(
-    tmp_path: Path, workspace: Path
-) -> None:
+async def test_active_turn_converges_before_plugins_unload(tmp_path: Path, workspace: Path) -> None:
     provider = GatedProvider()
     observed: list[str] = []
 
@@ -326,7 +326,9 @@ async def test_a_failed_shutdown_is_reported_again_rather_than_faked(
 
 
 async def test_dispose_without_plugins_is_idempotent(tmp_path: Path, workspace: Path) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     assert runtime.plugins == (CORE_PLUGIN_IDENTITY,)
 
     await runtime.dispose()
@@ -342,7 +344,9 @@ async def test_dispose_converges_a_running_turn_without_plugins(
 ) -> None:
     provider = GatedProvider()
     runtime = build_default_runtime(
-        RuntimeConfig(data_dir=tmp_path / "data"), provider=provider
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        provider=provider,
+        event_store=InMemoryEventStore(),
     )
     session_id = await runtime.create_session(workspace)
     turn = asyncio.create_task(runtime.run_existing(session_id, "work"))
@@ -358,7 +362,9 @@ async def test_normal_run_still_completes_and_disposes(tmp_path: Path, workspace
 
     provider = ScriptedLlmProvider((ModelResponse(content="all done"),))
     runtime = build_default_runtime(
-        RuntimeConfig(data_dir=tmp_path / "data"), provider=provider
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        provider=provider,
+        event_store=InMemoryEventStore(),
     )
     try:
         result = await runtime.run(workspace, "do the thing")

@@ -18,7 +18,7 @@ import pytest
 
 from traceh.api.events import EventEnvelope, PendingEvent, detach_event
 from traceh.session.event_store import ConcurrencyConflict, EventStore, InMemoryEventStore
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import SqliteEventStore
 
 STREAM = "session:contract"
 
@@ -39,11 +39,16 @@ def assert_pristine(data: dict) -> None:
     assert data == payload()
 
 
-@pytest.fixture(params=["in_memory", "jsonl"])
-def store(request: pytest.FixtureRequest, tmp_path) -> EventStore:
+@pytest.fixture(params=["in_memory", "sqlite"])
+async def store(request: pytest.FixtureRequest, tmp_path):
     if request.param == "in_memory":
-        return InMemoryEventStore()
-    return JsonlEventStore(tmp_path)
+        yield InMemoryEventStore()
+        return
+    sqlite = SqliteEventStore(tmp_path)
+    try:
+        yield sqlite
+    finally:
+        await sqlite.aclose()
 
 
 async def append_one(store: EventStore, data: dict, *, expected_seq: int = 0):
@@ -278,7 +283,7 @@ async def test_from_dict_still_rejects_a_non_object_payload() -> None:
         EventEnvelope.from_dict(raw)
 
 
-async def test_in_memory_and_jsonl_follow_the_same_detachment_contract(tmp_path) -> None:
+async def test_in_memory_and_sqlite_follow_the_same_detachment_contract(tmp_path) -> None:
     """The two stores must be indistinguishable to a caller that mutates its events.
 
     The other tests are parametrised, so each store is checked on its own. This
@@ -287,9 +292,10 @@ async def test_in_memory_and_jsonl_follow_the_same_detachment_contract(tmp_path)
     rather than as a differently-worded failure.
     """
 
+    sqlite = SqliteEventStore(tmp_path)
     stores: dict[str, EventStore] = {
         "in_memory": InMemoryEventStore(),
-        "jsonl": JsonlEventStore(tmp_path),
+        "sqlite": sqlite,
     }
     observed: dict[str, list[dict]] = {}
 
@@ -306,7 +312,8 @@ async def test_in_memory_and_jsonl_follow_the_same_detachment_contract(tmp_path)
         second = await candidate.read(STREAM)
         observed[name] = [event.data for event in second]
 
-    assert observed["in_memory"] == observed["jsonl"]
+    await sqlite.aclose()
+    assert observed["in_memory"] == observed["sqlite"]
     assert observed["in_memory"] == [payload()]
 
 

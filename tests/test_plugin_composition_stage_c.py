@@ -25,6 +25,7 @@ from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.plugin_identity import MIGRATION_EVENT_TYPE
 from traceh.session.service import SessionService
+from traceh.session.sqlite import SqliteEventStore
 
 
 class _Console:
@@ -90,6 +91,7 @@ async def _runtime(
         provider=provider,
         enabled_plugins=enabled,
         plugin_discovery=_discovery(*plugins),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
 
 
@@ -211,15 +213,18 @@ async def test_resume_hint_uses_durable_target_after_fail_closed_publish(
 
         console = _Console("/session", "/exit")
         session = ChatSession(session_id, tmp_path)
-        assert await _chat_loop(
-            runtime,
-            console,
-            session,
-            timeline=False,
-            heartbeat_seconds=0,
-            clock=default_clock(),
-            resume_environment=None,
-        ) == 0
+        assert (
+            await _chat_loop(
+                runtime,
+                console,
+                session,
+                timeline=False,
+                heartbeat_seconds=0,
+                clock=default_clock(),
+                resume_environment=None,
+            )
+            == 0
+        )
         resume_lines = [line for line in console.lines if "traceh chat" in line]
         assert resume_lines
         assert any("b.example" in line for line in resume_lines)
@@ -265,9 +270,7 @@ async def test_use_switches_generation_and_next_turn_persists_target_composition
     )
     session_id = await runtime.create_session(tmp_path)
     try:
-        replacement = await runtime.migrate_session_plugin_composition(
-            session_id, ("b.example",)
-        )
+        replacement = await runtime.migrate_session_plugin_composition(session_id, ("b.example",))
         assert replacement.migration_id
         await runtime.run_existing(session_id, "after switch")
         events = await runtime.sessions.read_session(session_id)
@@ -275,9 +278,7 @@ async def test_use_switches_generation_and_next_turn_persists_target_composition
         assert authorization.data["from_plugins"] == [
             {"plugin_id": "a.example", "version": "1.0.0"}
         ]
-        assert authorization.data["to_plugins"] == [
-            {"plugin_id": "b.example", "version": "2.0.0"}
-        ]
+        assert authorization.data["to_plugins"] == [{"plugin_id": "b.example", "version": "2.0.0"}]
         snapshot = [event for event in events if event.type == "composition/snapshot"][-1]
         assert snapshot.data["plugins"][-1] == {
             "plugin_id": "b.example",
@@ -500,6 +501,7 @@ async def test_migration_survives_restart_and_old_composition_is_rejected(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=_discovery(first, second),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     session_id = await runtime.create_session(tmp_path)
     await runtime.migrate_session_plugin_composition(session_id, ("b.example",))
@@ -510,19 +512,21 @@ async def test_migration_survives_restart_and_old_composition_is_rejected(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("b.example",),
         plugin_discovery=_discovery(ScriptedPlugin(manifest("b.example", "2.0.0"))),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     old = await build_default_runtime_async(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=_discovery(ScriptedPlugin(manifest("a.example", "1.0.0"))),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         await recovered.verify_session_plugins(session_id)
         with pytest.raises(SessionPluginMismatchError):
             await old.verify_session_plugins(session_id)
-        assert await verify_request_snapshots(
-            recovered.sessions, recovered.surface, session_id
-        ) == ()
+        assert (
+            await verify_request_snapshots(recovered.sessions, recovered.surface, session_id) == ()
+        )
         assert await recovered.check_invariants(session_id) == ()
     finally:
         await recovered.dispose()

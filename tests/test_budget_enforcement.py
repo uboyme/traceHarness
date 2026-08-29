@@ -258,9 +258,7 @@ async def test_unknown_or_untrusted_usage_is_conservative(
     expected: int,
 ) -> None:
     _, service = await root_context(root_limits=limits(max_tokens=10))
-    provider = CountingProvider(
-        ModelResponse(content="ok", usage=Usage(2, 1, quality))
-    )
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(2, 1, quality)))
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
@@ -277,9 +275,7 @@ async def test_unknown_or_untrusted_usage_is_conservative(
 
 async def test_token_counter_caps_output_without_using_character_count() -> None:
     _, service = await root_context(root_limits=limits(max_tokens=10))
-    provider = CountingProvider(
-        ModelResponse(content="ok", usage=Usage(4, 6, UsageQuality.EXACT))
-    )
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(4, 6, UsageQuality.EXACT)))
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
@@ -294,9 +290,7 @@ async def test_token_counter_caps_output_without_using_character_count() -> None
 
 async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> None:
     _, service = await root_context(root_limits=limits(max_tokens=10))
-    provider = CountingProvider(
-        ModelResponse(content="ok", usage=Usage(8, 5, UsageQuality.EXACT))
-    )
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(8, 5, UsageQuality.EXACT)))
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
@@ -315,9 +309,7 @@ async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> No
 
 async def test_competing_admissions_hold_independent_pending_reservations() -> None:
     _, service = await root_context(root_limits=limits(max_tokens=20))
-    provider = CountingProvider(
-        ModelResponse(content="ok", usage=Usage(2, 1, UsageQuality.EXACT))
-    )
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(2, 1, UsageQuality.EXACT)))
     runtime = BudgetedLlmRuntime(
         service,
         agent_id="agent-root",
@@ -338,16 +330,18 @@ async def test_competing_admissions_hold_independent_pending_reservations() -> N
 
     assert first.reservation_id != second.reservation_id
     assert provider.calls == 0
-    assert [
-        item.status for item in (await service.ledger()).usage_reservations
-    ] == [BudgetUsageReservationStatus.PENDING, BudgetUsageReservationStatus.PENDING]
+    assert [item.status for item in (await service.ledger()).usage_reservations] == [
+        BudgetUsageReservationStatus.PENDING,
+        BudgetUsageReservationStatus.PENDING,
+    ]
 
     await second.abort()
     await first.dispatch(provider=first.provider, request=first.request)
     assert provider.calls == 1
-    assert [
-        item.status for item in (await service.ledger()).usage_reservations
-    ] == [BudgetUsageReservationStatus.SETTLED, BudgetUsageReservationStatus.RELEASED]
+    assert [item.status for item in (await service.ledger()).usage_reservations] == [
+        BudgetUsageReservationStatus.SETTLED,
+        BudgetUsageReservationStatus.RELEASED,
+    ]
 
 
 async def test_provider_failure_consumes_the_whole_token_reservation() -> None:
@@ -396,9 +390,7 @@ async def test_provider_cancellation_settles_once_before_propagation() -> None:
         agent_id="agent-root",
         session_id="session-root",
     )
-    invocation = asyncio.create_task(
-        invoke(runtime, BlockingProvider(), request("step-cancelled"))
-    )
+    invocation = asyncio.create_task(invoke(runtime, BlockingProvider(), request("step-cancelled")))
     await entered.wait()
     invocation.cancel()
 
@@ -426,9 +418,7 @@ async def test_cancel_after_token_start_commit_settles_without_calling_provider(
         agent_id="agent-root",
         session_id="session-root",
     )
-    invocation = asyncio.create_task(
-        invoke(runtime, provider, request("step-start-cancelled"))
-    )
+    invocation = asyncio.create_task(invoke(runtime, provider, request("step-start-cancelled")))
     await store.committed.wait()
 
     invocation.cancel()
@@ -539,9 +529,7 @@ async def test_tool_admission_is_deterministic_and_only_counts_prepared_calls(
         ToolCall("third", "read", {}),
     )
 
-    results = await runtime.execute_batch(
-        calls, context=context, composition_revision="revision"
-    )
+    results = await runtime.execute_batch(calls, context=context, composition_revision="revision")
 
     assert [result.status for result in results] == [
         "invalid",
@@ -565,9 +553,7 @@ async def test_tool_admission_is_deterministic_and_only_counts_prepared_calls(
 async def test_inactive_tool_dimension_allows_calls_without_usage_facts(
     tmp_path: Path,
 ) -> None:
-    store, service = await root_context(
-        root_limits=limits(max_tool_calls=None)
-    )
+    store, service = await root_context(root_limits=limits(max_tool_calls=None))
     sessions = SessionService(store)
     registry = ToolRegistry()
     entered: list[str] = []
@@ -588,9 +574,7 @@ async def test_inactive_tool_dimension_allows_calls_without_usage_facts(
             ToolCall("call-one", "read", {}),
             ToolCall("call-two", "read", {}),
         ),
-        context=ToolExecutionContext(
-            "session-root", "turn", "step", "batch", tmp_path, tmp_path
-        ),
+        context=ToolExecutionContext("session-root", "turn", "step", "batch", tmp_path, tmp_path),
         composition_revision="revision",
     )
 
@@ -618,9 +602,7 @@ async def test_admitted_tool_failure_is_not_refunded(tmp_path: Path) -> None:
     )
     result = await runtime.execute_batch(
         (ToolCall("call-failed", "failing", {}),),
-        context=ToolExecutionContext(
-            "session-root", "turn", "step", "batch", tmp_path, tmp_path
-        ),
+        context=ToolExecutionContext("session-root", "turn", "step", "batch", tmp_path, tmp_path),
         composition_revision="revision",
     )
 
@@ -648,9 +630,7 @@ async def test_tool_admission_cancellation_converges_before_dispatch(
             del context
             gate_entered.set()
             await gate_release.wait()
-            return tuple(
-                ToolAdmissionDecision(call.tool_call_id, True) for call in calls
-            )
+            return tuple(ToolAdmissionDecision(call.tool_call_id, True) for call in calls)
 
     runtime = ToolRuntime(
         registry,
@@ -703,8 +683,7 @@ async def test_repeated_cancellation_waits_for_tool_outcome_finalizer(
             durability=Durability.SYNC,
         ):
             if any(
-                event.type == "effect/outcome"
-                and event.data.get("status") == "cancelled"
+                event.type == "effect/outcome" and event.data.get("status") == "cancelled"
                 for event in events
             ):
                 self.outcome_entered.set()
@@ -754,9 +733,7 @@ async def test_repeated_cancellation_waits_for_tool_outcome_finalizer(
     execution = asyncio.create_task(
         runtime.execute_batch(
             (ToolCall("call", "gated", {}),),
-            context=ToolExecutionContext(
-                "session", "turn", "step", "batch", tmp_path, tmp_path
-            ),
+            context=ToolExecutionContext("session", "turn", "step", "batch", tmp_path, tmp_path),
             composition_revision="revision",
         )
     )
@@ -889,9 +866,7 @@ async def test_wall_deadline_cancels_and_converges_the_real_turn(tmp_path: Path)
     )
     execution = enforcement.wrap(AgentRuntimeExecution(runtime, "session-root"))
 
-    turn = asyncio.create_task(
-        execution.run_turn(TurnInput("wait", "message-wall"))
-    )
+    turn = asyncio.create_task(execution.run_turn(TurnInput("wait", "message-wall")))
     await asyncio.wait_for(provider.entered.wait(), timeout=1)
     with pytest.raises(BudgetExhaustedError) as exhausted:
         await turn
@@ -902,10 +877,9 @@ async def test_wall_deadline_cancels_and_converges_the_real_turn(tmp_path: Path)
     assert account is not None
     assert account.charged.wall_milliseconds >= 1
     assert account.reserved.wall_milliseconds == 0
-    assert (
-        (await service.ledger()).usage_reservations[-1].status
-        is BudgetUsageReservationStatus.SETTLED
-    )
+    assert (await service.ledger()).usage_reservations[
+        -1
+    ].status is BudgetUsageReservationStatus.SETTLED
     await execution.dispose()
 
 
@@ -942,9 +916,7 @@ async def test_cancel_after_wall_start_commit_settles_without_starting_turn(
         limits=limits(max_wall_milliseconds=50),
     )
     execution = enforcement.wrap(AgentRuntimeExecution(runtime, "session-root"))
-    turn = asyncio.create_task(
-        execution.run_turn(TurnInput("wait", "message-start-cancelled"))
-    )
+    turn = asyncio.create_task(execution.run_turn(TurnInput("wait", "message-start-cancelled")))
     await store.committed.wait()
 
     turn.cancel()
@@ -998,6 +970,7 @@ async def test_runtime_factory_does_not_truth_test_an_injected_llm_runtime(
     runtime = build_default_runtime(
         RuntimeConfig(data_dir=tmp_path / "data"),
         llm_runtime=injected,
+        event_store=InMemoryEventStore(),
     )
 
     assert runtime.loop.llm_runtime is injected

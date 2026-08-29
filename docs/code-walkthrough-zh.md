@@ -77,7 +77,7 @@ flowchart TD
 | `RequestBuilder` | 从事件投影模型历史，并生成可校验的请求快照 | 把可变 `messages` 当永久事实 |
 | `LlmRuntime / Provider` | 把统一请求交给具体模型接口 | 直接修改文件或决定工具权限 |
 | `ToolRuntime` | 校验、Policy、调度、Middleware、执行和结果配对 | 决定整个 Turn 何时完成 |
-| `JsonlEventStore` | 追加事件、维护序号和并发边界 | 解释业务状态 |
+| `SqliteEventStore`（当前生产实现） | 追加事件、维护序号和事务并发边界 | 解释业务状态 |
 | `StateProjector / SurfaceProjector` | 从事件分别推导运行状态和模型可见历史 | 反向修改原始事件 |
 | `CommandVerifier` | 运行独立命令，用退出码和输出验证结果 | 因模型声称完成就直接通过 |
 | `RecoveryService` | 用追加新事件的方式收敛崩溃后的未闭合状态 | 删除或篡改旧事件、盲目重放副作用 |
@@ -95,7 +95,7 @@ flowchart TD
     AL --> CV["runtime/verification.py"]
     AL --> SS["session/service.py"]
     RB --> SP["session/surface.py"]
-    SS --> JS["session/jsonl.py"]
+    SS --> JS["session/sqlite.py"]
     REC["session/recovery.py"] --> SS
     INS["Inspector / Replay"] --> SS
 ```
@@ -393,7 +393,7 @@ Model Attempt 的收敛完全由证据决定，而不是乐观假设：
 
 1. [`runtime/agent_loop.py`](../src/traceh/runtime/agent_loop.py)：看主循环怎样串起一次 Turn。
 2. [`session/service.py`](../src/traceh/session/service.py)：看业务代码怎样追加 Session 与 Effect 事件。
-3. [`session/jsonl.py`](../src/traceh/session/jsonl.py)：看事件怎样真正落到 JSONL。
+3. [`session/sqlite.py`](../src/traceh/session/sqlite.py)：看当前事件怎样通过 SQLite 事务真正落盘；本文分析的 v0.3 Session 当时使用 JSONL，但旧 backend 已在 v0.8-F1 删除。
 4. [`session/surface.py`](../src/traceh/session/surface.py)：看事件怎样变回模型消息。
 5. [`runtime/request_builder.py`](../src/traceh/runtime/request_builder.py)：看请求怎样生成和重建。
 6. [`llm/runtime.py`](../src/traceh/llm/runtime.py) 与 [`llm/openai_compatible.py`](../src/traceh/llm/openai_compatible.py)：看统一模型边界和 OpenAI-Compatible 适配。

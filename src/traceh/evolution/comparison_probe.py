@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from traceh.api.plugins import PluginIdentity
+from traceh.concurrency import combine_failures
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import AgentRuntime, RuntimeConfig, build_default_runtime_async
 from traceh.runtime.request_builder import verify_request_snapshots
@@ -29,6 +30,7 @@ from traceh.session.plugin_identity import (
     parse_plugin_identities,
 )
 from traceh.session.projections import StateProjector
+from traceh.session.sqlite import SqliteEventStore
 
 PROBE_SCHEMA_VERSION = 1
 MAX_CASES = 20
@@ -123,25 +125,36 @@ async def _run_case(
     shutil.copytree(initial, workspace)
     provider = _scripted_provider(script, case_root)
     command, verifier_name, verifier_timeout = _verifier_selection(case, arm)
-    runtime = await build_default_runtime_async(
-        RuntimeConfig(
-            data_dir=case_root / ".traceh",
-            provider="scripted",
-            model="l3-host-script",
-            max_steps=int(case.get("max_steps", 20)),
-            verification_command=command,
-            verifier_name=verifier_name,
-            verification_timeout_seconds=verifier_timeout,
-            max_verification_retries=int(case.get("max_verification_retries", 0)),
-        ),
-        provider=provider,
-        enabled_plugins=(plugin_id,) if arm == "candidate" else (),
-    )
+    store = SqliteEventStore(case_root / ".traceh" / "events")
+    try:
+        runtime = await build_default_runtime_async(
+            RuntimeConfig(
+                data_dir=case_root / ".traceh",
+                provider="scripted",
+                model="l3-host-script",
+                max_steps=int(case.get("max_steps", 20)),
+                verification_command=command,
+                verifier_name=verifier_name,
+                verification_timeout_seconds=verifier_timeout,
+                max_verification_retries=int(case.get("max_verification_retries", 0)),
+            ),
+            provider=provider,
+            event_store=store,
+            enabled_plugins=(plugin_id,) if arm == "candidate" else (),
+        )
+    except BaseException as primary:
+        cleanup: BaseException | None = None
+        try:
+            await store.aclose()
+        except BaseException as error:
+            cleanup = error
+        combined = combine_failures(primary, cleanup, "comparison build/store shutdown failed")
+        assert combined is not None
+        raise combined from None
     started = time.perf_counter()
     session_id: str | None = None
-    expected_plugins = (
-        (PluginIdentity(plugin_id, plugin_version),) if arm == "candidate" else ()
-    )
+    expected_plugins = (PluginIdentity(plugin_id, plugin_version),) if arm == "candidate" else ()
+    interrupted: BaseException | None = None
     try:
         session_id = await runtime.create_session(
             workspace,
@@ -196,8 +209,25 @@ async def _run_case(
             "duration_seconds": round(time.perf_counter() - started, 3),
             **evidence,
         }
+    except BaseException as error:
+        interrupted = error
     finally:
-        await runtime.dispose()
+        cleanup: BaseException | None = None
+        try:
+            await runtime.dispose()
+        except BaseException as error:
+            cleanup = error
+        try:
+            await store.aclose()
+        except BaseException as error:
+            cleanup = combine_failures(cleanup, error, "comparison case shutdown failed")
+        combined = combine_failures(
+            interrupted, cleanup, "comparison case and shutdown both failed"
+        )
+        if combined is not None:
+            raise combined
+    assert interrupted is not None
+    raise interrupted
 
 
 async def _session_facts(
@@ -219,9 +249,7 @@ async def _session_facts(
         session_id,
     )
     tool_results = [event for event in events if event.type == "tool/result"]
-    verification_results = [
-        event for event in events if event.type == "verification/result"
-    ]
+    verification_results = [event for event in events if event.type == "verification/result"]
     verification = verification_results[-1] if verification_results else None
     projection = StateProjector().project(events)
     turn_starts = [event for event in events if event.type == "turn/start"]
@@ -229,9 +257,7 @@ async def _session_facts(
         raw_turn_id = turn_starts[0].data.get("turn_id")
         expected_turn_id = raw_turn_id if isinstance(raw_turn_id, str) else None
     matching_starts = [
-        event
-        for event in turn_starts
-        if event.data.get("turn_id") == expected_turn_id
+        event for event in turn_starts if event.data.get("turn_id") == expected_turn_id
     ]
     matching_ends = [
         event
@@ -276,8 +302,7 @@ async def _session_facts(
     snapshots = [
         event
         for event in events
-        if event.type == "composition/snapshot"
-        and turn_start_seq < event.seq < turn_end_seq
+        if event.type == "composition/snapshot" and turn_start_seq < event.seq < turn_end_seq
     ]
     expected_identity = comparable_plugin_identities(expected_plugins)
     plugin_identity_matches = bool(snapshots)

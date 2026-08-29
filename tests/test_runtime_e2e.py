@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from traceh.api.llm import ModelResponse, ToolCall
@@ -9,6 +7,7 @@ from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.runtime.verification import CommandVerifier
+from traceh.session.event_store import InMemoryEventStore
 
 
 @pytest.mark.asyncio
@@ -69,6 +68,7 @@ async def test_scripted_coding_agent_modifies_and_verifies_workspace(tmp_path) -
             model="test-model",
         ),
         provider=provider,
+        event_store=InMemoryEventStore(),
         verifier=CommandVerifier("python -m unittest -v"),
     )
     session_id = await runtime.create_session(workspace)

@@ -42,7 +42,6 @@ from traceh.session.compaction import CompactionService
 from traceh.session.event_feed import EventFeed, PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
-from traceh.session.jsonl import JsonlEventStore
 from traceh.session.plugin_identity import PLUGIN_METADATA_KEY
 from traceh.session.recovery import RecoveryReport, RecoveryService
 from traceh.session.service import SessionService
@@ -534,7 +533,9 @@ def _prepare_default_runtime(
         raise ValueError("runtime verifier selections disagree")
     selected_verifier_name = verifier_name or config.verifier_name
     data_dir = config.data_dir.resolve()
-    actual_event_store = event_store or JsonlEventStore(data_dir / "events")
+    if event_store is None:
+        raise ValueError("event_store is required")
+    actual_event_store = event_store
     # Wrapping is unconditional so that every writer - the loop, the tool
     # runtime, recovery, compaction - is observable through one boundary rather
     # than through whichever of them remembered to announce itself. With no

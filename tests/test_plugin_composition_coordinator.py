@@ -11,6 +11,7 @@ from traceh.runtime.agent_runtime import (
 )
 from traceh.runtime.composition_runtime import CompositionGeneration
 from traceh.runtime.plugin_composition import PluginCompositionCoordinator
+from traceh.session.event_store import InMemoryEventStore
 
 pytestmark = pytest.mark.asyncio
 
@@ -32,7 +33,9 @@ class _PublisherWithoutPoisoned:
 async def test_agent_runtime_does_not_own_plugin_control_plane_state(
     tmp_path: Path,
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     try:
         assert isinstance(runtime._plugin_compositions, PluginCompositionCoordinator)
         facade_state = vars(runtime)
@@ -52,7 +55,9 @@ async def test_runtime_shutdown_converges_control_plane_before_composition_drain
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     order: list[str] = []
     original_control_shutdown = runtime._plugin_compositions.shutdown_inflight
     original_composition_dispose = runtime.loop.compositions.dispose
@@ -80,7 +85,9 @@ async def test_runtime_shutdown_converges_control_plane_before_composition_drain
 async def test_custom_generation_publisher_does_not_need_a_poisoned_property(
     tmp_path: Path,
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     session_id = await runtime.create_session(tmp_path)
     runtime._plugin_compositions._compositions = _PublisherWithoutPoisoned(
         runtime.loop.compositions
@@ -97,7 +104,9 @@ async def test_reload_preserves_the_public_migration_dispatch_point(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     expected_plugin_ids = ("facade-dispatch.example",)
     expected = PluginCompositionReplacement(generation_id=37, plugins=())
     calls: list[tuple[str, tuple[str, ...]]] = []

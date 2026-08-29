@@ -1,27 +1,18 @@
-"""Standalone worker process used by ``tests/test_event_store_cross_process.py``.
-
-This file is deliberately *not* named ``test_*`` so pytest never collects it.
-Each command below runs in its own independent Python interpreter, which is the
-only way to prove that ``JsonlEventStore`` serializes real OS processes rather
-than just tasks inside one event loop.
-
-Processes coordinate through explicit handshake files instead of fixed sleeps:
-a worker signals readiness, then waits for the parent's start gate.
-"""
+"""Independent-process worker for the SQLite EventStore contract tests."""
 
 from __future__ import annotations
 
 import asyncio
 import json
 import os
+import sqlite3
 import sys
 import time
 from pathlib import Path
 
 from traceh.api.events import PendingEvent
 from traceh.session.event_store import ConcurrencyConflict
-from traceh.session.file_lock import exclusive_file_lock
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import DATABASE_FILENAME, SqliteEventStore
 
 HANDSHAKE_TIMEOUT_SECONDS = 60.0
 HANDSHAKE_POLL_SECONDS = 0.005
@@ -40,133 +31,100 @@ def wait_for(path: str, timeout: float = HANDSHAKE_TIMEOUT_SECONDS) -> None:
         time.sleep(HANDSHAKE_POLL_SECONDS)
 
 
-class WideWindowStore(JsonlEventStore):
-    """Store that stretches the read-head -> write window inside the lock.
-
-    The real race window between reading the stream head and writing the next
-    event is only microseconds wide, so two processes would almost never
-    collide by chance. Sleeping *inside* the critical section makes the overlap
-    deterministic: with a genuine cross-process lock the other process simply
-    waits its turn, without one it computes the same head and duplicates a seq.
-    """
-
-    def __init__(self, root: Path, hold_seconds: float) -> None:
-        super().__init__(root)
-        self.hold_seconds = hold_seconds
-
-    def _head_unlocked(self, stream_id: str) -> int:
-        head = super()._head_unlocked(stream_id)
-        time.sleep(self.hold_seconds)
-        return head
-
-
-async def append_loop(
-    root: str,
-    stream: str,
-    actor: str,
-    count: int,
-    hold_seconds: float,
-    ready: str,
-    start: str,
-) -> dict:
-    """Read head then append, ``count`` times, retrying on expected-seq conflicts."""
-
-    store = WideWindowStore(Path(root), hold_seconds)
-    signal(ready)
-    wait_for(start)
-
-    appended = 0
-    conflicts = 0
-    for index in range(count):
-        while True:
-            head = await store.head(stream)
-            try:
-                await store.append(
-                    stream,
-                    expected_seq=head,
-                    events=(PendingEvent("turn/start", {"actor": actor, "index": index}),),
-                )
-            except ConcurrencyConflict:
-                conflicts += 1
-                continue
-            appended += 1
-            break
-    return {"actor": actor, "appended": appended, "conflicts": conflicts}
-
-
-async def race_once(
-    root: str, stream: str, actor: str, hold_seconds: float, ready: str, start: str
-) -> dict:
-    """Read head, wait at the gate, then append with the now possibly stale head."""
-
-    store = WideWindowStore(Path(root), hold_seconds)
-    head = await store.head(stream)
-    signal(ready)
-    wait_for(start)
+async def race_once(root: str, stream: str, actor: str, ready: str, start: str) -> dict:
+    store = SqliteEventStore(Path(root))
     try:
-        await store.append(
-            stream,
-            expected_seq=head,
-            events=(PendingEvent("turn/start", {"actor": actor}),),
-        )
-    except ConcurrencyConflict as conflict:
+        head = await store.head(stream)
+        signal(ready)
+        wait_for(start)
+        try:
+            appended = await store.append(
+                stream,
+                expected_seq=head,
+                events=(PendingEvent("turn/start", {"actor": actor}),),
+            )
+        except ConcurrencyConflict:
+            return {"actor": actor, "outcome": "conflict", "expected_seq": head}
         return {
             "actor": actor,
+            "outcome": "appended",
             "expected_seq": head,
-            "outcome": "conflict",
-            "detail": str(conflict),
+            "seq": appended[0].seq,
         }
-    return {"actor": actor, "expected_seq": head, "outcome": "appended"}
+    finally:
+        await store.aclose()
 
 
-async def append_once(root: str, stream: str, actor: str) -> dict:
-    """Read head (repairing any partial tail) and append a single event."""
-
-    store = JsonlEventStore(Path(root))
-    head = await store.head(stream)
-    materialized = await store.append(
-        stream,
-        expected_seq=head,
-        events=(PendingEvent("turn/start", {"actor": actor}),),
-    )
-    return {"actor": actor, "head_before": head, "seq": materialized[0].seq}
-
-
-def hold_lock(lock_path: str, held: str, release: str) -> dict:
-    """Hold the OS lock on ``lock_path`` until the parent creates ``release``."""
-
-    with exclusive_file_lock(Path(lock_path)):
-        signal(held)
-        wait_for(release)
+def hold_write_lock(root: str, held: str, release: str, *, die: bool) -> dict:
+    connection = sqlite3.connect(Path(root) / DATABASE_FILENAME, isolation_level=None)
+    connection.execute("PRAGMA busy_timeout = 60000")
+    connection.execute("BEGIN IMMEDIATE")
+    signal(held)
+    if die:
+        sys.stdout.flush()
+        os._exit(9)
+    wait_for(release)
+    connection.execute("ROLLBACK")
+    connection.close()
     return {"held": True}
 
 
-def hold_lock_and_die(lock_path: str, held: str) -> dict:
-    """Acquire the lock and terminate without unlocking, simulating a crash."""
+def leave_hot_foreign_journal(database: str) -> None:
+    """Crash after cache spill so the copied public path owns a hot journal."""
 
-    descriptor_holder = exclusive_file_lock(Path(lock_path))
-    descriptor_holder.__enter__()
-    signal(held)
+    connection = sqlite3.connect(database, isolation_level=None)
+    connection.execute("PRAGMA journal_mode = DELETE")
+    connection.execute("PRAGMA synchronous = FULL")
+    connection.execute("PRAGMA cache_size = 4")
+    connection.execute("PRAGMA cache_spill = ON")
+    connection.execute("BEGIN IMMEDIATE")
+    connection.execute(
+        "UPDATE foreign_facts SET value = zeroblob(4096) WHERE fact_id = 1"
+    )
+    connection.executemany(
+        "INSERT INTO foreign_facts(value) VALUES (zeroblob(4096))",
+        [()] * 64,
+    )
+    journal = Path(f"{database}-journal")
+    if not journal.exists() or journal.stat().st_size <= 512:
+        raise RuntimeError("test fixture did not create a hot rollback journal")
+    sys.stdout.flush()
+    os._exit(9)
+
+
+def leave_hot_current_journal(database: str) -> None:
+    """Crash with only Event data dirty; the frozen schema remains authoritative."""
+
+    connection = sqlite3.connect(database, isolation_level=None)
+    connection.execute("PRAGMA journal_mode = DELETE")
+    connection.execute("PRAGMA synchronous = FULL")
+    connection.execute("PRAGMA cache_size = 4")
+    connection.execute("PRAGMA cache_spill = ON")
+    connection.execute("BEGIN IMMEDIATE")
+    connection.execute(
+        "UPDATE events SET envelope_json = CAST(zeroblob(4096) AS TEXT)"
+    )
+    journal = Path(f"{database}-journal")
+    if not journal.exists() or journal.stat().st_size <= 512:
+        raise RuntimeError("test fixture did not create a hot rollback journal")
     sys.stdout.flush()
     os._exit(9)
 
 
 def main(argv: list[str]) -> int:
     command, args = argv[1], argv[2:]
-    if command == "append-loop":
-        result = asyncio.run(
-            append_loop(args[0], args[1], args[2], int(args[3]), float(args[4]), args[5], args[6])
-        )
-    elif command == "race-once":
-        result = asyncio.run(
-            race_once(args[0], args[1], args[2], float(args[3]), args[4], args[5])
-        )
-    elif command == "append-once":
-        result = asyncio.run(append_once(args[0], args[1], args[2]))
-    elif command == "hold-lock":
-        result = hold_lock(args[0], args[1], args[2])
-    elif command == "hold-lock-and-die":
-        result = hold_lock_and_die(args[0], args[1])
+    if command == "race-once":
+        result = asyncio.run(race_once(*args))
+    elif command == "hold-write-lock":
+        result = hold_write_lock(*args, die=False)
+    elif command == "hold-write-lock-and-die":
+        result = hold_write_lock(args[0], args[1], "", die=True)
+    elif command == "leave-hot-foreign-journal":
+        leave_hot_foreign_journal(args[0])
+        raise AssertionError("crash worker returned")
+    elif command == "leave-hot-current-journal":
+        leave_hot_current_journal(args[0])
+        raise AssertionError("crash worker returned")
     else:
         raise SystemExit(f"unknown worker command: {command!r}")
     print(json.dumps(result))

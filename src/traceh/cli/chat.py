@@ -55,7 +55,7 @@ INTERRUPTED_TURN_NOTICE = "Turn interrupted. This session is still open."
 #: reads `[event 4]` and looks like something was lost; the real reason is that
 #: `session/created`, `inbox/accepted` and `inbox/claimed` are persisted but not
 #: displayed. Renumbering to 1 would destroy the property that makes the number
-#: useful - being the seq you can look up in the JSONL.
+#: useful - being the seq you can look up in the durable event log.
 #: Note the wording never *begins* with the bracket: a line starting with
 #: `[event ...]` is a timeline row, and an explanation that imitates one would be
 #: the first thing to confuse both a reader and a log filter.

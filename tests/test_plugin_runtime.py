@@ -26,6 +26,7 @@ from traceh.runtime.agent_runtime import (
 from traceh.runtime.composition_runtime import CompositionGeneration, CompositionResourceOwner
 from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.session.sqlite import SqliteEventStore
 from traceh.tools.registry import ToolRegistry
 from traceh.tools.runtime import ToolRuntime
 from traceh.version import __version__
@@ -59,6 +60,7 @@ async def build(tmp_path: Path, plugins=(), enabled=(), provider=None):
         provider=provider,
         enabled_plugins=enabled,
         plugin_discovery=discovery_for(*plugins) if plugins else None,
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
 
 
@@ -70,7 +72,10 @@ async def build(tmp_path: Path, plugins=(), enabled=(), provider=None):
 async def test_without_plugins_prompt_and_tools_are_unchanged(
     tmp_path: Path, workspace: Path
 ) -> None:
-    plain = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "plain"))
+    plain = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "plain"),
+        event_store=SqliteEventStore((tmp_path / "plain") / "events"),
+    )
     through = await build(tmp_path / "async")
 
     plain_composition = plain.loop.compositions
@@ -145,7 +150,10 @@ async def test_installed_but_not_enabled_plugin_changes_nothing(
     """Installation alone must not alter the default runtime in any way."""
 
     plugin = example_plugin()
-    plain = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "plain"))
+    plain = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "plain"),
+        event_store=SqliteEventStore((tmp_path / "plain") / "events"),
+    )
     runtime = await build(tmp_path / "with", plugins=(plugin,), enabled=())
 
     assert plugin.setup_calls == 0
@@ -176,9 +184,7 @@ async def test_enabled_plugin_tool_and_prompt_are_visible_to_the_model(
         await runtime.dispose()
 
 
-async def test_model_can_actually_call_the_plugin_tool(
-    tmp_path: Path, workspace: Path
-) -> None:
+async def test_model_can_actually_call_the_plugin_tool(tmp_path: Path, workspace: Path) -> None:
     tool = RecordingTool("plugin_tool", content="plugin tool output")
     plugin = ScriptedPlugin(
         manifest("a.example", version="2.0.0"),
@@ -276,9 +282,7 @@ async def test_reconstructed_composition_keeps_plugin_identities(
 # --------------------------------------------------------------------------
 
 
-async def test_session_records_external_plugin_identities(
-    tmp_path: Path, workspace: Path
-) -> None:
+async def test_session_records_external_plugin_identities(tmp_path: Path, workspace: Path) -> None:
     plugin = example_plugin()
     runtime = await build(tmp_path, plugins=(plugin,), enabled=("a.example",))
     try:
@@ -290,23 +294,23 @@ async def test_session_records_external_plugin_identities(
         await runtime.dispose()
 
 
-async def test_plugin_free_session_records_an_empty_list(
-    tmp_path: Path, workspace: Path
-) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+async def test_plugin_free_session_records_an_empty_list(tmp_path: Path, workspace: Path) -> None:
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.create_session(workspace)
     events = await runtime.sessions.read_session(session_id)
     assert events[0].data["metadata"]["traceh_plugins"] == []
 
 
-async def test_matching_composition_can_continue_a_session(
-    tmp_path: Path, workspace: Path
-) -> None:
+async def test_matching_composition_can_continue_a_session(tmp_path: Path, workspace: Path) -> None:
     data_dir = tmp_path / "data"
     first = await build_default_runtime_async(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(example_plugin()),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         session_id = await first.create_session(workspace)
@@ -318,6 +322,7 @@ async def test_matching_composition_can_continue_a_session(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(example_plugin()),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         await second.verify_session_plugins(session_id)
@@ -335,13 +340,16 @@ async def test_dropping_a_plugin_refuses_to_continue_the_session(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(example_plugin()),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         session_id = await first.create_session(workspace)
     finally:
         await first.dispose()
 
-    plain = build_default_runtime(RuntimeConfig(data_dir=data_dir))
+    plain = build_default_runtime(
+        RuntimeConfig(data_dir=data_dir), event_store=SqliteEventStore((data_dir) / "events")
+    )
     with pytest.raises(SessionPluginMismatchError) as info:
         await plain.run_existing(session_id, "continue")
     assert "a.example==2.0.0" in str(info.value)
@@ -352,13 +360,16 @@ async def test_adding_a_plugin_refuses_to_continue_the_session(
     tmp_path: Path, workspace: Path
 ) -> None:
     data_dir = tmp_path / "data"
-    plain = build_default_runtime(RuntimeConfig(data_dir=data_dir))
+    plain = build_default_runtime(
+        RuntimeConfig(data_dir=data_dir), event_store=SqliteEventStore((data_dir) / "events")
+    )
     session_id = await plain.create_session(workspace)
 
     with_plugin = await build_default_runtime_async(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(example_plugin()),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         with pytest.raises(SessionPluginMismatchError):
@@ -375,6 +386,7 @@ async def test_changed_plugin_version_refuses_to_continue_the_session(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(example_plugin()),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         session_id = await first.create_session(workspace)
@@ -390,6 +402,7 @@ async def test_changed_plugin_version_refuses_to_continue_the_session(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(upgraded),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         with pytest.raises(SessionPluginMismatchError) as info:
@@ -405,7 +418,10 @@ async def test_pre_v04_session_without_the_key_is_treated_as_plugin_free(
 ) -> None:
     """Sessions written before v0.4 have no key; that must read as 'no plugins'."""
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.sessions.create_session(workspace, metadata={"cli": True})
 
     await runtime.verify_session_plugins(session_id)
@@ -414,7 +430,10 @@ async def test_pre_v04_session_without_the_key_is_treated_as_plugin_free(
 
 
 async def test_malformed_plugin_metadata_is_rejected(tmp_path: Path, workspace: Path) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.sessions.create_session(
         workspace, metadata={"traceh_plugins": "not-a-list"}
     )
@@ -425,7 +444,10 @@ async def test_malformed_plugin_metadata_is_rejected(tmp_path: Path, workspace: 
 async def test_reserved_metadata_key_cannot_be_supplied_by_callers(
     tmp_path: Path, workspace: Path
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     with pytest.raises(ValueError, match="reserved"):
         await runtime.create_session(workspace, metadata={"traceh_plugins": [{"a": "b"}]})
 

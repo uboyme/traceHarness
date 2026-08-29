@@ -50,7 +50,7 @@ from traceh.session.event_store import (
     EventStore,
     InMemoryEventStore,
 )
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import SqliteEventStore
 
 SPEC = AgentSpec(preset="coder", workspace_id="workspace-1")
 
@@ -264,18 +264,18 @@ class FailingReadStore:
 
 
 async def test_an_accepted_message_is_rebuilt_from_a_fresh_projector(tmp_path):
-    store = JsonlEventStore(tmp_path / "data")
-    await register(store, "a1")
-    receipt = await AgentInboxService(store).accept(
-        "a1",
-        message(content="line one\nline two", correlation_id="c1", causation_id="k1"),
-        target=MessageTarget.NEXT_STEP,
-        wakeup=True,
-    )
+    async with SqliteEventStore(tmp_path / "data") as store:
+        await register(store, "a1")
+        receipt = await AgentInboxService(store).accept(
+            "a1",
+            message(content="line one\nline two", correlation_id="c1", causation_id="k1"),
+            target=MessageTarget.NEXT_STEP,
+            wakeup=True,
+        )
 
-    # A second store object over the same directory: only the files are shared.
-    reopened = JsonlEventStore(tmp_path / "data")
-    inbox = await read_inbox(reopened, "a1")
+    # A second store object over the same directory: only the database is shared.
+    async with SqliteEventStore(tmp_path / "data") as reopened:
+        inbox = await read_inbox(reopened, "a1")
 
     assert len(inbox) == 1
     accepted = inbox.get("m1")

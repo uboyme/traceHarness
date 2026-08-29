@@ -31,6 +31,7 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime,
     build_default_runtime_async,
 )
+from traceh.session.sqlite import SqliteEventStore
 
 
 @pytest.fixture
@@ -56,6 +57,7 @@ async def runtime_with(data_dir: Path, version: str):
         plugin_discovery=PluginDiscovery(
             entry_points_provider=provider_for(entry_point_for(plugin_at(version)))
         ),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
 
 
@@ -153,7 +155,10 @@ async def test_a_genuinely_missing_key_is_a_pre_v04_session(
 ) -> None:
     """No key at all is what a session written before v0.4 looks like."""
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     # Written through SessionService, below the runtime, so the reserved key is
     # genuinely absent rather than filled in by `create_session`.
     session_id = await runtime.sessions.create_session(workspace, metadata={"cli": True})
@@ -175,7 +180,10 @@ async def test_an_explicit_null_is_malformed_not_a_pre_v04_session(
     continue under a composition nobody recorded.
     """
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.sessions.create_session(
         workspace, metadata={"cli": True, "traceh_plugins": None}
     )
@@ -191,10 +199,11 @@ async def test_an_explicit_null_is_malformed_not_a_pre_v04_session(
 async def test_an_explicit_null_also_blocks_running_the_session(
     tmp_path: Path, workspace: Path
 ) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
-    session_id = await runtime.sessions.create_session(
-        workspace, metadata={"traceh_plugins": None}
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
+    session_id = await runtime.sessions.create_session(workspace, metadata={"traceh_plugins": None})
 
     with pytest.raises(SessionPluginMismatchError, match="malformed"):
         await runtime.run_existing(session_id, "continue")
@@ -219,10 +228,11 @@ async def test_an_explicit_empty_list_is_a_valid_plugin_free_record(
 ) -> None:
     """`[]` is what the runtime itself writes; it must stay acceptable."""
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
-    session_id = await runtime.sessions.create_session(
-        workspace, metadata={"traceh_plugins": []}
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
+    session_id = await runtime.sessions.create_session(workspace, metadata={"traceh_plugins": []})
 
     await runtime.verify_session_plugins(session_id)
 
@@ -233,7 +243,10 @@ async def test_invalid_recorded_version_is_still_rejected(
 ) -> None:
     """Equivalence must not become permissiveness: junk is still malformed."""
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.sessions.create_session(
         workspace, metadata={"traceh_plugins": [{"plugin_id": "a.example", "version": bad}]}
     )
@@ -242,10 +255,11 @@ async def test_invalid_recorded_version_is_still_rejected(
         await runtime.verify_session_plugins(session_id)
 
 
-async def test_duplicate_recorded_ids_are_still_rejected(
-    tmp_path: Path, workspace: Path
-) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+async def test_duplicate_recorded_ids_are_still_rejected(tmp_path: Path, workspace: Path) -> None:
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.sessions.create_session(
         workspace,
         metadata={
@@ -296,13 +310,19 @@ async def test_reserved_key_is_rejected_on_a_plugin_free_runtime_too(
 ) -> None:
     """With no plugins the expected value *is* `[]`; presence must still lose."""
 
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     with pytest.raises(ValueError, match="reserved"):
         await runtime.create_session(workspace, metadata={"traceh_plugins": supplied})
 
 
 async def test_rejected_session_is_not_created(tmp_path: Path, workspace: Path) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     with pytest.raises(ValueError, match="reserved"):
         await runtime.create_session(workspace, metadata={"traceh_plugins": []})
 
@@ -310,7 +330,10 @@ async def test_rejected_session_is_not_created(tmp_path: Path, workspace: Path) 
 
 
 async def test_other_metadata_is_still_stored(tmp_path: Path, workspace: Path) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.create_session(
         workspace,
         metadata={"cli": True, "operator": "alice", "nested": {"a": [1, 2]}},
@@ -333,17 +356,16 @@ async def test_other_metadata_is_stored_alongside_real_plugin_identities(
         events = await runtime.sessions.read_session(session_id)
         metadata = events[0].data["metadata"]
         assert metadata["cli"] is True
-        assert metadata["traceh_plugins"] == [
-            {"plugin_id": "a.example", "version": "2.0.0"}
-        ]
+        assert metadata["traceh_plugins"] == [{"plugin_id": "a.example", "version": "2.0.0"}]
     finally:
         await runtime.dispose()
 
 
-async def test_no_metadata_at_all_still_records_the_key(
-    tmp_path: Path, workspace: Path
-) -> None:
-    runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "data"))
+async def test_no_metadata_at_all_still_records_the_key(tmp_path: Path, workspace: Path) -> None:
+    runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
     session_id = await runtime.create_session(workspace)
 
     events = await runtime.sessions.read_session(session_id)

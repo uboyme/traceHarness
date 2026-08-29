@@ -6,6 +6,7 @@ from traceh.api.llm import ModelResponse
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.session.event_store import InMemoryEventStore
 
 
 @pytest.mark.asyncio
@@ -18,6 +19,7 @@ async def test_manual_compaction_changes_surface_without_deleting_history(tmp_pa
     runtime = build_default_runtime(
         RuntimeConfig(data_dir=tmp_path / "data", provider="scripted", model="demo"),
         provider=provider,
+        event_store=InMemoryEventStore(),
     )
     first = await runtime.run(workspace, "first question")
     original_events = await runtime.sessions.read_session(first.session_id)

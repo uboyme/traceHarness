@@ -31,6 +31,7 @@ from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.service import SessionService
+from traceh.session.sqlite import SqliteEventStore
 from traceh.tools.registry import ToolRegistry
 from traceh.tools.runtime import ToolRuntime
 
@@ -49,7 +50,10 @@ def discovery_for(*plugins: object) -> PluginDiscovery:
 
 
 async def build_plain(tmp_path: Path):
-    return await build_default_runtime_async(RuntimeConfig(data_dir=tmp_path / "data"))
+    return await build_default_runtime_async(
+        RuntimeConfig(data_dir=tmp_path / "data"),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
+    )
 
 
 async def build_with_plugin(tmp_path: Path, plugin: object, plugin_id: str = "a.example"):
@@ -57,6 +61,7 @@ async def build_with_plugin(tmp_path: Path, plugin: object, plugin_id: str = "a.
         RuntimeConfig(data_dir=tmp_path / "data"),
         enabled_plugins=(plugin_id,),
         plugin_discovery=discovery_for(plugin),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
 
 
@@ -106,9 +111,7 @@ async def test_legacy_replacement_activation_set_borrows_the_runtime_llm_registr
         prompt=PromptAssembler(),
         identities=current.plugins,
     )
-    runtime._plugin_compositions._plugin_builder = _LegacyReplacementBuilder(
-        activation_set
-    )
+    runtime._plugin_compositions._plugin_builder = _LegacyReplacementBuilder(activation_set)
     try:
         replacement = await runtime.replace_plugin_composition(())
         assert replacement.plugins == current.plugins
@@ -207,9 +210,7 @@ async def test_candidate_setup_cancellation_rolls_back_before_rethrowing(
     runtime = await build_plain(tmp_path)
     before = runtime.loop.compositions.current_generation
     replacement = asyncio.create_task(
-        runtime.replace_plugin_composition(
-            ("a.example",), plugin_discovery=discovery_for(plugin)
-        )
+        runtime.replace_plugin_composition(("a.example",), plugin_discovery=discovery_for(plugin))
     )
     await setup_entered.wait()
     replacement.cancel()
@@ -236,9 +237,7 @@ async def test_candidate_health_cancellation_rolls_back_before_rethrowing(
     runtime = await build_plain(tmp_path)
     before = runtime.loop.compositions.current_generation
     replacement = asyncio.create_task(
-        runtime.replace_plugin_composition(
-            ("a.example",), plugin_discovery=discovery_for(plugin)
-        )
+        runtime.replace_plugin_composition(("a.example",), plugin_discovery=discovery_for(plugin))
     )
     await health_entered.wait()
     replacement.cancel()
@@ -267,9 +266,7 @@ async def test_candidate_rollback_absorbs_repeated_cancellation(
     )
     runtime = await build_plain(tmp_path)
     replacement = asyncio.create_task(
-        runtime.replace_plugin_composition(
-            ("a.example",), plugin_discovery=discovery_for(plugin)
-        )
+        runtime.replace_plugin_composition(("a.example",), plugin_discovery=discovery_for(plugin))
     )
     await setup_entered.wait()
     replacement.cancel()
@@ -304,9 +301,7 @@ async def test_dispose_converges_an_inflight_replacement_before_return(
     )
     runtime = await build_plain(tmp_path)
     replacement = asyncio.create_task(
-        runtime.replace_plugin_composition(
-            ("a.example",), plugin_discovery=discovery_for(plugin)
-        )
+        runtime.replace_plugin_composition(("a.example",), plugin_discovery=discovery_for(plugin))
     )
     await setup_entered.wait()
     await plugin.owned_task_started.wait()
@@ -345,9 +340,7 @@ async def test_dispose_absorbs_repeated_cancellation_during_replacement_rollback
     )
     runtime = await build_plain(tmp_path)
     replacement = asyncio.create_task(
-        runtime.replace_plugin_composition(
-            ("a.example",), plugin_discovery=discovery_for(plugin)
-        )
+        runtime.replace_plugin_composition(("a.example",), plugin_discovery=discovery_for(plugin))
     )
     await setup_entered.wait()
     await plugin.owned_task_started.wait()
@@ -401,9 +394,7 @@ async def test_dispose_reports_inflight_replacement_rollback_failure(
 
     expected = [("plugin-rollback-failed", "b.broken")]
     assert [(item.code, item.plugin_id) for item in first.value.failures] == expected
-    assert [
-        (item.code, item.plugin_id) for item in replacement_failure.value.failures
-    ] == expected
+    assert [(item.code, item.plugin_id) for item in replacement_failure.value.failures] == expected
     assert [(item.code, item.plugin_id) for item in second.value.failures] == expected
     assert "FAKE-FIXTURE rollback secret" not in str(first.value)
     assert healthy.cleanup_calls == 1
@@ -421,9 +412,7 @@ async def test_generation_construction_failure_cleans_candidate_once_and_is_retr
     )
     try:
         builder = runtime._plugin_compositions._plugin_builder
-        candidate = await builder.prepare(
-            ("a.example",), discovery=discovery_for(plugin)
-        )
+        candidate = await builder.prepare(("a.example",), discovery=discovery_for(plugin))
         candidate_tools = ToolRuntime(
             candidate.tools,
             runtime.sessions,
@@ -450,9 +439,7 @@ async def test_generation_construction_failure_cleans_candidate_once_and_is_retr
             manifest("a.example"),
             tools=(RecordingTool("candidate_tool"),),
         )
-        retry = await builder.prepare(
-            ("a.example",), discovery=discovery_for(retry_plugin)
-        )
+        retry = await builder.prepare(("a.example",), discovery=discovery_for(retry_plugin))
         await retry.dispose()
         assert retry_plugin.cleanup_calls == 1
     finally:
@@ -606,6 +593,7 @@ class _ServicePlugin:
 
         context.add_cleanup(cleanup)
 
+
 async def test_old_lease_keeps_old_service_and_tool_until_exit(
     tmp_path: Path, workspace: Path
 ) -> None:
@@ -633,9 +621,7 @@ async def test_old_lease_keeps_old_service_and_tool_until_exit(
             ] == ["v1_tool"]
             output = await old.tools.registry.require("v1_tool").execute(
                 {},
-                ToolExecutionContext(
-                    "session", "turn", "step", "call", workspace, tmp_path
-                ),
+                ToolExecutionContext("session", "turn", "step", "call", workspace, tmp_path),
             )
             assert output.content == "v1"
         await runtime.loop.compositions.drain()
@@ -651,9 +637,7 @@ async def test_old_lease_keeps_old_service_and_tool_until_exit(
             assert current.snapshot.plugins[1].version == "2.0.0"
             output = await current.tools.registry.require("v2_tool").execute(
                 {},
-                ToolExecutionContext(
-                    "session", "turn-2", "step-2", "call", workspace, tmp_path
-                ),
+                ToolExecutionContext("session", "turn-2", "step-2", "call", workspace, tmp_path),
             )
             assert output.content == "v2"
     finally:
@@ -713,6 +697,7 @@ async def test_replacement_does_not_migrate_an_existing_session(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(first_plugin),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     session_id = await runtime.create_session(workspace)
     try:
@@ -750,6 +735,7 @@ async def test_replacement_does_not_migrate_an_existing_session(
                 tools=(RecordingTool("v2_tool"),),
             )
         ),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         await recovered.verify_session_plugins(replacement_session_id)
@@ -764,9 +750,8 @@ async def test_replacement_does_not_bypass_an_incompatible_session(
     incompatible = await build_default_runtime_async(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
-        plugin_discovery=discovery_for(
-            ScriptedPlugin(manifest("a.example", version="3.0.0"))
-        ),
+        plugin_discovery=discovery_for(ScriptedPlugin(manifest("a.example", version="3.0.0"))),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     session_id = await incompatible.create_session(workspace)
     await incompatible.dispose()
@@ -774,16 +759,13 @@ async def test_replacement_does_not_bypass_an_incompatible_session(
     runtime = await build_default_runtime_async(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
-        plugin_discovery=discovery_for(
-            ScriptedPlugin(manifest("a.example", version="1.0.0"))
-        ),
+        plugin_discovery=discovery_for(ScriptedPlugin(manifest("a.example", version="1.0.0"))),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         await runtime.replace_plugin_composition(
             ("a.example",),
-            plugin_discovery=discovery_for(
-                ScriptedPlugin(manifest("a.example", version="2.0.0"))
-            ),
+            plugin_discovery=discovery_for(ScriptedPlugin(manifest("a.example", version="2.0.0"))),
         )
         with pytest.raises(SessionPluginMismatchError):
             await runtime.verify_session_plugins(session_id)
@@ -807,6 +789,7 @@ async def test_publish_without_a_step_is_not_a_durable_session_switch(
         RuntimeConfig(data_dir=data_dir),
         enabled_plugins=("a.example",),
         plugin_discovery=discovery_for(first_plugin),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     session_id = await runtime.create_session(workspace)
     try:
@@ -826,6 +809,7 @@ async def test_publish_without_a_step_is_not_a_durable_session_switch(
                 tools=(RecordingTool("v1_tool"),),
             )
         ),
+        event_store=SqliteEventStore((data_dir) / "events"),
     )
     try:
         await old_runtime.verify_session_plugins(session_id)
@@ -845,6 +829,7 @@ async def test_replacement_cleanup_failure_does_not_skip_other_plugin_cleanup(
         RuntimeConfig(data_dir=tmp_path / "data"),
         enabled_plugins=("a.broken", "b.healthy"),
         plugin_discovery=discovery_for(broken, healthy),
+        event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
     try:
         with pytest.raises(CompositionDrainError) as caught:

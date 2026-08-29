@@ -21,6 +21,7 @@ from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginManifest
 from traceh.plugins.discovery import installed_traceh_version
 from traceh.plugins.manager import TRACEH_PLUGIN_API_VERSION
 from traceh.runtime.agent_runtime import build_default_runtime, build_default_runtime_async
+from traceh.session.event_store import InMemoryEventStore
 from traceh.version import DEFAULT_REQUIRES_TRACEH, DISTRIBUTION_NAME, __version__
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -76,13 +77,15 @@ def test_default_manifest_range_admits_the_current_version() -> None:
 def test_plain_and_plugin_runtimes_report_the_same_core_version(tmp_path: Path) -> None:
     """The exact divergence the candidate had: two builders, two core versions."""
 
-    plain = build_default_runtime(_config(tmp_path))
+    plain = build_default_runtime(_config(tmp_path), event_store=InMemoryEventStore())
     assert plain.plugins == (CORE_PLUGIN_IDENTITY,)
 
 
 async def test_async_builder_without_plugins_matches_the_sync_builder(tmp_path: Path) -> None:
-    plain = build_default_runtime(_config(tmp_path / "a"))
-    through_manager = await build_default_runtime_async(_config(tmp_path / "b"))
+    plain = build_default_runtime(_config(tmp_path / "a"), event_store=InMemoryEventStore())
+    through_manager = await build_default_runtime_async(
+        _config(tmp_path / "b"), event_store=InMemoryEventStore()
+    )
     assert plain.plugins == through_manager.plugins == (CORE_PLUGIN_IDENTITY,)
     assert through_manager.plugins[0].version == __version__
 
@@ -93,7 +96,9 @@ async def test_composition_snapshot_records_the_single_core_version(
 ) -> None:
     workspace = tmp_path / workspace_name
     workspace.mkdir()
-    runtime = await build_default_runtime_async(_config(tmp_path / "data"))
+    runtime = await build_default_runtime_async(
+        _config(tmp_path / "data"), event_store=InMemoryEventStore()
+    )
     try:
         await runtime.run(workspace, "hello")
         sessions = await runtime.sessions.list_sessions()

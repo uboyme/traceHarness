@@ -957,7 +957,7 @@ async def test_a_lost_compare_and_swap_retries_against_the_new_history() -> None
     original_append = store.append
     released = False
 
-    async def gated(stream_id, *, expected_seq, events, durability=Durability.BATCHED):
+    async def gated(stream_id, *, expected_seq, events, durability=Durability.SYNC):
         nonlocal released
         if stream_id.startswith("product-task:") and not released:
             released = True

@@ -235,7 +235,7 @@ class AgentLoop:
                                 "attempt_id": model_attempt_id,
                                 "content": delta,
                             },
-                            durability=Durability.BATCHED,
+                            durability=Durability.SYNC,
                             correlation_id=correlation_id,
                             composition_revision=revision,
                         )

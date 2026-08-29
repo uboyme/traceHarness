@@ -1,11 +1,11 @@
 # TraceHarness v0.8 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现并完成定向验证，F1-F5 未开始。**
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0 已实现、完成最终全量并提交；F1 已实现，Release Stop A 两轮独立审查发现的三项 P1 已按 SQLite owner 修复并完成反向验证，最终复审确认 P0/P1 清零；F2 已获准作为下一阶段但尚未实现，F3-F5 未开始。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD
 > `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
 >
-> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0 外，不表示
+> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0/F1 外，不表示
 > 后续能力已经存在，也不授权
 > commit、push、tag、release、真实 Provider、外部网络或秘密读取。每个阶段开工前仍须重新核对
 > HEAD、两份上下文、ADR、源码与测试；真实代码始终高于本计划。
@@ -262,16 +262,38 @@ F0 已按 [ADR-0035](../adr/0035-two-stage-model-admission-and-session-dispatch-
 收敛为 RELEASED。其余反向验证把 reservation 临时退回 Step-scoped 后第二次 admission 稳定冲突；把
 Session owner/CAS 守卫移除后同一 Step 真实调用 Provider 两次；把顺序退回“先记 Attempt、后做
 Budget”后零 Token 路径重新留下虚假 start 并触发 durable Budget evidence mismatch。保护均已恢复。
-F1 尚未开始，JSONL/SQLite、retry、driver/TUI 和 v0.9 能力均未改变。
+上述结论记录的是 F0 提交时的边界；F1 的 SQLite 破坏式切换见下一节，retry、driver/TUI 和 v0.9
+能力仍未改变。
 
 独立复审清零 P0/P1 后执行最终全量。第一次全量在 53% 处发现唯一确定性遗漏：
 `test_real_turn_keeps_one_generation_during_publish_and_rebuilds_requests` 仍读取已被 current schema 删除的
 `request/snapshot.provider/model/request` 顶层旧字段。没有为它恢复别名或 compatibility reader；测试改为
 同时核对唯一新格式的 `composed_request` 与 `dispatch_request`，定向通过。修复后的确认全量收集口径为
 `2426`，进度到 100%、退出码 0，只有 5 个既有 skip 标记。全程未联网、未调用真实 Provider/API、未读
-`.env`，也未另跑 Wheel/L2-L4 或 F1-F5。
+`.env`，也未另跑 Wheel/L2-L4；该次 F0 门禁时 F1-F5 尚未开始。
 
 ## 6. v0.8-F1：SQLite 唯一生产 EventStore
+
+> 实现状态：stdlib `SqliteEventStore` 已成为唯一生产 backend；Runtime factory 改为显式借用 Store，CLI、
+> Evaluation attempt 与 Evolution comparison case 各自拥有 open/close；旧 JSONL、mixed/schema/link/
+> corruption 均 fail closed，backup/restore、跨进程 CAS、异流 busy/有界等待和取消/关闭收敛已由确定性
+> 测试覆盖。设计决定见 [ADR-0036](../adr/0036-single-production-sqlite-event-store.md)。本阶段未实现 retry、
+> driver/TUI 或 v0.9 能力，也未运行计划留到 Release Stop B 的完整 pytest。
+
+本阶段门禁事实：`collect-only = 2446`；SQLite/EventStore/Feed 直接组 `100 passed, 2 skipped`，
+Session/Runtime/Agent `608 passed`，插件组合 `184 passed`。跨域大组首次 `692 passed, 2 failed, 2 skipped`，
+两项仅为 F1 合法修改的 `AgentLoop`/`AgentRuntime` 保护摘要仍钉在 F0，更新两个命名摘要后对应文件
+`90 passed`；CLI + comparison 首次 `537 passed, 1 failed, 1 skipped`，修正“内存 seed、SQLite replay”
+夹具后聚焦组 `38 passed`。Release Stop A 首轮复审发现额外持久 trigger 可让 append 返回成功却删除事实，
+以及未知 DELETE-mode 数据库会在拒绝前被切成 WAL；exact schema gate 现在核对全部持久对象与规范化 DDL，
+schema/history 也先于 WAL 配置验证。两条公开反例分别反向重现 `returned=1, head=1, replay=0` 和拒绝后
+数据库 SHA 改变。第二轮又发现普通读写验证连接会先自动恢复 unknown hot rollback journal；现在既有库
+先用 `mode=ro&immutable=1` 只证明 frozen exact schema，只有证明通过后才授权普通连接恢复、完整验证并
+启用 WAL。真实崩溃反例证明 unknown 主库与 journal bytes 全部不变，同时 current-schema hot journal 仍
+能恢复和 fresh replay。移除 authority probe 会稳定重现数据库 SHA 改变。保护恢复后的 review-fix 相邻组为
+`155 passed, 2 skipped`；连同既有六类保护共九项均逐项反向验证并恢复。compileall、修改范围 Ruff、diff
+与文档 QA 通过。未运行完整 pytest、联网、真实 Provider、Wheel/L2-L4，也未读取 `.env`。Release Stop A
+最终复审已清零 P0/P1，F1 到此结束并允许下一步实现 F2；完整全量仍留到 Release Stop B。
 
 ### 6.1 schema 与线性化合同
 
@@ -336,7 +358,8 @@ busy timeout、connection/thread 模型和是否需要进程内 writer gate 由�
 ### 6.5 Release Stop A
 
 F0+F1 完成后做一次独立 P0/P1 审查和 SQLite 真实多进程/备份验证。只有这条事实层清零，才能在其上
-增加 retry；停止点不自动意味着 tag 或公开版本。
+增加 retry；停止点不自动意味着 tag 或公开版本。F1 使用 SQLite/Session/Product/Evaluation/CLI 的广泛
+定向与相邻回归证明当前 owner，不在本停止点重复全量；F1 与 F2 的跨域集成全量统一放在 Release Stop B。
 
 ## 7. v0.8-F2：同 Provider/同模型的 bounded retry
 
@@ -387,7 +410,8 @@ headers、底层 `URLError` 正文、秘密或本机路径；`model/attempt-end`
 F2 先用确定性 Provider stub 完成 retry/error/cancel 全矩阵并独立审查。若用户另行授权，只做一次有界的
 真实 Provider smoke 来证明 adapter 接线，不跑完整 Benchmark 网格，也不把 smoke 当发布或质量证据。
 真实运行使用新输出目录、不补跑失败项、不 fallback、不覆盖历史报告、不打开/打印/记录 Key。清零
-P0/P1 后才进入 UI 重构；唯一完整发布网格留到 F5。
+P0/P1 后运行一次覆盖 F1 SQLite 与 F2 retry 的集成全量，并附 `--durations=30`；通过后才进入 UI 重构。
+唯一完整发布网格留到 F5。
 
 ## 8. v0.8-F3：UI-neutral Chat 驱动与只读 Product observation
 
@@ -459,11 +483,29 @@ P0/P1 后才进入 UI 重构；唯一完整发布网格留到 F5。
 
 ### 9.3 Release Stop C
 
-UI/TUI 完成后独立审查 UI 是否获得新 authority；清零 P0/P1 后才进入最终全量与打包。
+UI/TUI 完成后独立审查 UI 是否获得新 authority；F3/F4 各自只跑 driver、Line/TUI、Product observation、
+权限与生命周期的定向和相邻回归。清零 P0/P1 后才进入 F5 的最终全量与打包。
 
 ## 10. v0.8-F5：最终验证与发布候选
 
-### 10.1 门禁顺序
+### 10.1 风险分层门禁与 F5 顺序
+
+v0.8 不再把“一个小阶段”机械等同于“一次完整 pytest”。门禁分三层：
+
+| 层级 | 何时运行 | 必须证明什么 |
+|---|---|---|
+| 阶段门禁 | F1-F4 每次实现和修复 | compileall、当前 owner 的正向/关键反例/失败或取消定向测试、相邻回归、collect-only、修改范围 Ruff、diff 与文档 QA |
+| 集成检查点 | F2 独立审查清零 P0/P1 后一次 | F1 SQLite 唯一事实源与 F2 retry/Attempt/Budget 跨域组合；完整 pytest 附 `--durations=30` |
+| 发布门禁 | F5 全局独立审查清零 P0/P1 后一次 | 当前提交候选的最终完整 pytest、打包/离线安装、发布验证和另行授权的真实 Provider 网格 |
+
+若 F1-F4 意外改变共享 Runtime/Session/Store schema、Provider 外部副作用或其他不在当前 owner 内的跨域
+合同，或者独立审查证明存在真实跨域 P0/P1，可把一次完整 pytest 前移为新的集成检查点；该决定必须在
+报告中写清触发原因。已经前移并通过的检查点，不在下一个小阶段无新跨域改动时机械重跑。全量发现
+确定性失败后，根修并重新运行到绿色仍是同一检查点的必要确认。并发、取消、进程、SQLite 和真实 Git
+用例不默认启用 `pytest-xdist -n auto`；只允许并行已证明资源隔离的子集。Wheel、L2-L4、真实 Provider
+及联网门禁也不进入日常阶段门禁，除非当前改动直接拥有该边界。
+
+F5 的具体顺序是：
 
 1. compileall；
 2. F0 terminal safety/Attempt/Budget、F1 SQLite、F2 retry、F3 driver、F4 TUI 定向测试；
@@ -473,13 +515,15 @@ UI/TUI 完成后独立审查 UI 是否获得新 authority；清零 P0/P1 后才�
    ownership 验收；
 5. collect-only、修改范围 Ruff、`git diff --check`、链接/围栏/章节对应 QA；
 6. 每个 release stop 的 Finding 已关闭后，做一次最终独立 P0/P1 审查；
-7. 审查清零后只运行一次最终全量；
+7. 审查清零后运行一次最终全量并记录 `--durations=30`；若它暴露确定性缺陷，修复后必须重新全量确认，
+   两次均如实记录，不能把首次红灯抹掉；
 8. clean-input Wheel/sdist/source ZIP、archive audit、无 `[tui]` 与带 `[tui]` 的离线安装；
 9. 用户另行授权后只运行一次作为发布证据的完整真实 Provider acceptance：fresh SQLite data dir、fresh
    eval output、不重试旧报告、不 fallback、不打开/打印/记录 `.env` Key。F2 的可选 smoke 不与该网格
    合并、不补样本，也不宣称质量结论。
 
-停止点是审查边界，不要求每个小阶段都跑全量或发布版本。最终全量只在全局 P0/P1 清零后运行一次。
+停止点是审查边界，不要求每个小阶段都跑全量或发布版本。除有据可复核的前移触发外，F1/F2 合并一次
+集成全量，F5 再运行一次发布候选全量。
 
 ### 10.2 文档与完成定义
 
@@ -505,7 +549,8 @@ v0.8 完成必须证明：
   busy/durability/backup/legacy refusal 的 ADR。F3 采用本文已冻结的纯读双状态 view，因此不新增让
   heartbeat 写 Product 事实的 ADR；
 - 每个 release stop 只审查已经实现的当前阶段与相邻公开路径，不提前实现或用后续阶段测试掩盖前一层；
-- 全量测试、真实 Provider 完整网格、版本升级、打包、tag、push 与 release 只在 F5 且分别获得所需授权；
+- 完整 pytest 按 10.1 的风险分层执行；真实 Provider 完整网格、版本升级、打包、tag、push 与 release
+  仍只在 F5 且分别获得所需授权；
 - 如果真实源码证明某个准确类名或拆分不可行，可以选择更轻实现，但不得改变本计划的 owner、事实源、
   权限、唯一 Runner、无 compatibility reader 和失败收敛合同；需要改变这些冻结边界时必须由项目所有者
   重新批准，而不是实施者自行扩展。

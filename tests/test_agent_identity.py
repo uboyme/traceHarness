@@ -54,7 +54,7 @@ from traceh.session.event_store import (
     EventStore,
     InMemoryEventStore,
 )
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import SqliteEventStore
 
 SPEC = AgentSpec(preset="coder", workspace_id="workspace-1")
 
@@ -220,18 +220,18 @@ class YieldingStore:
 
 
 async def test_created_agent_is_rebuilt_from_a_fresh_projector(tmp_path):
-    store = JsonlEventStore(tmp_path / "data")
-    record = await AgentRegistrar(store).create_agent(
-        spec(forked_from_session_id="session-origin", capability_grants=("read",)),
-        request_id="request-1",
-        agent_id="agent-1",
-        session_id="session-1",
-    )
+    async with SqliteEventStore(tmp_path / "data") as store:
+        record = await AgentRegistrar(store).create_agent(
+            spec(forked_from_session_id="session-origin", capability_grants=("read",)),
+            request_id="request-1",
+            agent_id="agent-1",
+            session_id="session-1",
+        )
 
     # A second store object over the same directory: no shared Python state
-    # with the writer at all, only the files.
-    reopened = JsonlEventStore(tmp_path / "data")
-    directory = await read_directory(reopened)
+    # with the writer at all, only the database.
+    async with SqliteEventStore(tmp_path / "data") as reopened:
+        directory = await read_directory(reopened)
 
     assert [item.agent_id for item in directory] == ["agent-1"]
     rebuilt = directory.get("agent-1")

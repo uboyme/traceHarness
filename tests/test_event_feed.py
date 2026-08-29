@@ -21,18 +21,20 @@ from traceh.session.event_store import (
     EventStore,
     InMemoryEventStore,
 )
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import SqliteEventStore
 
 STREAM = "session:feed"
 OTHER_STREAM = "session:other"
 
 
-@pytest.fixture(params=["in_memory", "jsonl"])
-def store(request: pytest.FixtureRequest, tmp_path) -> PublishingEventStore:
+@pytest.fixture(params=["in_memory", "sqlite"])
+async def store(request: pytest.FixtureRequest, tmp_path):
     inner: EventStore = (
-        InMemoryEventStore() if request.param == "in_memory" else JsonlEventStore(tmp_path)
+        InMemoryEventStore() if request.param == "in_memory" else SqliteEventStore(tmp_path)
     )
-    return PublishingEventStore(inner, SessionEventFeed())
+    yield PublishingEventStore(inner, SessionEventFeed())
+    if isinstance(inner, SqliteEventStore):
+        await inner.aclose()
 
 
 def payload() -> dict:
@@ -401,7 +403,7 @@ async def test_a_forged_event_cannot_be_injected_through_the_feed(
 
 
 async def test_durability_is_passed_through_unchanged() -> None:
-    """The feed must not silently upgrade BATCHED to SYNC.
+    """The feed passes the one current SYNC durability value through unchanged.
 
     Publishing means "the store accepted this for the durability its caller
     asked for", not "this is fsynced". A spy records what the inner store
@@ -436,7 +438,7 @@ async def test_durability_is_passed_through_unchanged() -> None:
         STREAM,
         expected_seq=0,
         events=(PendingEvent("feed/event", payload()),),
-        durability=Durability.BATCHED,
+        durability=Durability.SYNC,
     )
     await store.append(
         STREAM,
@@ -445,8 +447,8 @@ async def test_durability_is_passed_through_unchanged() -> None:
         durability=Durability.SYNC,
     )
 
-    assert spy.seen == [Durability.BATCHED, Durability.SYNC]
-    # A BATCHED append is still announced - acceptance, not extra durability.
+    assert spy.seen == [Durability.SYNC, Durability.SYNC]
+    # Publication reports acceptance; it adds no second durability mode.
     assert [event.seq for event in await collect(subscription, limit=2)] == [1, 2]
     subscription.close()
 

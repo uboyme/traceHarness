@@ -18,6 +18,8 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
+from traceh.session.event_store import InMemoryEventStore
+
 
 async def main(scratch: Path) -> dict:
     from traceh.api.llm import ModelResponse, ToolCall
@@ -67,22 +69,16 @@ async def main(scratch: Path) -> dict:
         "list": list_plugins(json_output=False),
         "inspect-example": inspect_plugin("traceh.example.skill", json_output=False),
         "doctor-example": await doctor_plugins(["traceh.example.skill"], json_output=False),
-        "inspect-python-quality": inspect_plugin(
-            "traceh.python.quality", json_output=False
-        ),
-        "doctor-python-quality": await doctor_plugins(
-            ["traceh.python.quality"], json_output=False
-        ),
-        "inspect-plugin-creator": inspect_plugin(
-            "traceh.plugin.creator", json_output=False
-        ),
-        "doctor-plugin-creator": await doctor_plugins(
-            ["traceh.plugin.creator"], json_output=False
-        ),
+        "inspect-python-quality": inspect_plugin("traceh.python.quality", json_output=False),
+        "doctor-python-quality": await doctor_plugins(["traceh.python.quality"], json_output=False),
+        "inspect-plugin-creator": inspect_plugin("traceh.plugin.creator", json_output=False),
+        "doctor-plugin-creator": await doctor_plugins(["traceh.plugin.creator"], json_output=False),
     }
 
     # 4. A default runtime with no plugins must be unchanged.
-    plain = build_default_runtime(RuntimeConfig(data_dir=scratch / "plain"))
+    plain = build_default_runtime(
+        RuntimeConfig(data_dir=scratch / "plain"), event_store=InMemoryEventStore()
+    )
     report["plain_runtime"] = {
         "tools": list(plain.loop.compositions.tools.registry.names()),
         "plugins": [identity.to_dict() for identity in plain.plugins],
@@ -110,6 +106,7 @@ async def main(scratch: Path) -> dict:
         RuntimeConfig(data_dir=scratch / "data"),
         provider=provider,
         enabled_plugins=("traceh.example.skill",),
+        event_store=InMemoryEventStore(),
     )
     try:
         composition = runtime.loop.compositions
@@ -182,6 +179,7 @@ async def main(scratch: Path) -> dict:
         RuntimeConfig(data_dir=scratch / "creator-data"),
         provider=creator_provider,
         enabled_plugins=("traceh.plugin.creator",),
+        event_store=InMemoryEventStore(),
     )
     try:
         creator_result = await creator_runtime.run(
@@ -194,9 +192,7 @@ async def main(scratch: Path) -> dict:
         creator_calls = [event for event in creator_events if event.type == "tool/call"]
         creator_results = [event for event in creator_events if event.type == "tool/result"]
         creator_intents = [event for event in creator_effects if event.type == "effect/intent"]
-        creator_outcomes = [
-            event for event in creator_effects if event.type == "effect/outcome"
-        ]
+        creator_outcomes = [event for event in creator_effects if event.type == "effect/outcome"]
         creator_snapshots = [
             event for event in creator_events if event.type == "composition/snapshot"
         ]
@@ -268,16 +264,12 @@ async def main(scratch: Path) -> dict:
                     ToolCall(
                         id="blocked-shell",
                         name="shell",
-                        arguments={
-                            "command": "python -m pip uninstall quality-e2e -y"
-                        },
+                        arguments={"command": "python -m pip uninstall quality-e2e -y"},
                     ),
                 ),
             ),
             ModelResponse(
-                tool_calls=(
-                    ToolCall(id="project-info", name="python_project_info", arguments={}),
-                ),
+                tool_calls=(ToolCall(id="project-info", name="python_project_info", arguments={}),),
             ),
             ModelResponse(content="Python project evidence and tests are complete."),
         )
@@ -289,6 +281,7 @@ async def main(scratch: Path) -> dict:
         ),
         provider=quality_provider,
         enabled_plugins=("traceh.python.quality",),
+        event_store=InMemoryEventStore(),
     )
     try:
         quality_result = await quality_runtime.run(
@@ -298,9 +291,7 @@ async def main(scratch: Path) -> dict:
         quality_session = (await quality_runtime.sessions.list_sessions())[0]
         quality_events = await quality_runtime.sessions.read_session(quality_session)
         quality_effects = await quality_runtime.sessions.read_effects(quality_session)
-        quality_tool_results = [
-            event for event in quality_events if event.type == "tool/result"
-        ]
+        quality_tool_results = [event for event in quality_events if event.type == "tool/result"]
         quality_verifications = [
             event for event in quality_events if event.type == "verification/result"
         ]

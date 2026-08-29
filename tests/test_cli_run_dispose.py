@@ -21,6 +21,8 @@ import pytest
 from traceh.cli import main as cli_main
 from traceh.cli.main import main
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.session.event_store import EventStore
+from traceh.session.sqlite import SqliteEventStore
 
 _TRACEH_VARIABLES = (
     "TRACEH_PROVIDER",
@@ -110,9 +112,15 @@ def install_spy(
 
     created: list[DisposeSpy] = []
 
-    async def fake_runtime(args):
-        del args
-        runtime = build_default_runtime(RuntimeConfig(data_dir=data_dir))
+    async def fake_runtime(
+        args,
+        *,
+        event_store: EventStore,
+        provider_and_model=None,
+        additional_tools=(),
+    ):
+        del args, provider_and_model, additional_tools
+        runtime = build_default_runtime(RuntimeConfig(data_dir=data_dir), event_store=event_store)
         if create_session_error is not None:
 
             async def exploding(*_args, **_kwargs):
@@ -248,8 +256,8 @@ def test_dispose_runs_when_the_turn_itself_raises(
 
     real_runtime_factory = cli_main._runtime
 
-    async def patched(args):
-        wrapper = await real_runtime_factory(args)
+    async def patched(args, **kwargs):
+        wrapper = await real_runtime_factory(args, **kwargs)
         monkeypatch.setattr(wrapper._runtime, "run_existing", exploding)
         return wrapper
 
@@ -309,13 +317,15 @@ async def test_the_real_runtime_factory_builds_a_scripted_provider(tmp_path: Pat
     args = parser.parse_args(["run", str(tmp_path), "task", "--data-dir", str(tmp_path / "d")])
     cli_main._configure_from_environment(args)
 
-    runtime = await cli_main._runtime(args)
+    store = SqliteEventStore(Path(args.data_dir) / "events")
+    runtime = await cli_main._runtime(args, event_store=store)
     try:
         assert runtime.config.provider == "scripted"
         provider = runtime.loop.compositions.llms.require("scripted")
         assert isinstance(provider, ScriptedLlmProvider)
     finally:
         await runtime.dispose()
+        await store.aclose()
 
 
 def test_an_env_file_outside_the_repository_is_still_honoured(tmp_path: Path) -> None:
@@ -342,11 +352,17 @@ def test_normal_run_output_and_exit_code_are_unchanged(
 ) -> None:
     code = run_cli(
         [
-            "run", str(workspace), "say hello",
-            "--data-dir", str(tmp_path / "data"),
-            "--script", str(script),
-            "--provider", "scripted",
-            "--env-file", str(test_env_file),
+            "run",
+            str(workspace),
+            "say hello",
+            "--data-dir",
+            str(tmp_path / "data"),
+            "--script",
+            str(script),
+            "--provider",
+            "scripted",
+            "--env-file",
+            str(test_env_file),
         ]
     )
     output = capsys.readouterr().out
@@ -366,11 +382,17 @@ def test_session_id_is_still_printed_before_the_turn_result(
 ) -> None:
     run_cli(
         [
-            "run", str(workspace), "say hello",
-            "--data-dir", str(tmp_path / "data"),
-            "--script", str(script),
-            "--provider", "scripted",
-            "--env-file", str(test_env_file),
+            "run",
+            str(workspace),
+            "say hello",
+            "--data-dir",
+            str(tmp_path / "data"),
+            "--script",
+            str(script),
+            "--provider",
+            "scripted",
+            "--env-file",
+            str(test_env_file),
         ]
     )
     lines = capsys.readouterr().out.strip().splitlines()
@@ -390,9 +412,7 @@ def test_a_non_completed_run_still_exits_with_two(
             [
                 {
                     "content": "",
-                    "tool_calls": [
-                        {"id": f"c{index}", "name": "list_files", "arguments": {}}
-                    ],
+                    "tool_calls": [{"id": f"c{index}", "name": "list_files", "arguments": {}}],
                 }
                 for index in range(3)
             ]
@@ -402,12 +422,19 @@ def test_a_non_completed_run_still_exits_with_two(
 
     code = run_cli(
         [
-            "run", str(workspace), "keep going",
-            "--data-dir", str(tmp_path / "data"),
-            "--script", str(script),
-            "--provider", "scripted",
-            "--env-file", str(test_env_file),
-            "--max-steps", "2",
+            "run",
+            str(workspace),
+            "keep going",
+            "--data-dir",
+            str(tmp_path / "data"),
+            "--script",
+            str(script),
+            "--provider",
+            "scripted",
+            "--env-file",
+            str(test_env_file),
+            "--max-steps",
+            "2",
         ]
     )
     output = capsys.readouterr().out

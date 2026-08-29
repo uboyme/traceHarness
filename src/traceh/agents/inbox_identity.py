@@ -52,7 +52,7 @@ MAX_MESSAGE_CONTENT_CHARS = 1_048_576
 """Upper bound on one message's ``content``.
 
 The bound is a protocol fact, not a style preference. An event is persisted as
-a single JSONL line, so unbounded content is an unbounded line for every future
+a single durable event, so unbounded content is an unbounded row for every future
 reader, and the store offers no bound of its own. It is deliberately generous:
 this is a limit on what one event may carry, not an opinion about how people
 should write messages.
@@ -113,7 +113,7 @@ def is_message_content(value: object) -> bool:
     * a non-``str``;
     * longer than `MAX_MESSAGE_CONTENT_CHARS`;
     * un-encodable as UTF-8. A lone surrogate survives ``json.dumps`` and then
-      raises `UnicodeEncodeError` inside `JsonlEventStore.append()` - accepting
+      is refused by the EventStore serialization boundary - accepting
       it here would mean the writer admits content the store cannot persist,
       surfacing as a bare encoding error mid-transaction.
     """

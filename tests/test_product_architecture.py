@@ -38,10 +38,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "b53e5f5b9a1e59852ea21afa0f0af0ebc1423c736b37824bee3993bc1d418a60"
+        "c494de0c067b83cf9727ec6956d1133083ffee6d96eabce369659e6ea8d38fb6"
     ),
     "runtime/agent_runtime.py": (
-        "fc76d8a4eb6f953da4e61eb81140a0748ef1d4fc4e15c0fc876cfcc02e83ae92"
+        "64f6f74f5ba2305d6aebe717687d33cf5a3f8e98d4a600841d2c89b8cf035e2a"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"

@@ -13,12 +13,12 @@ Ownership rules for the envelopes themselves are in
 | Dimension | The feed |
 |---|---|
 | A persisted fact | No. Nothing is written here; no new event type is introduced |
-| Extra crash durability | No. An event is published once the inner `append()` returned normally **for the `Durability` its caller requested**. The feed never upgrades `BATCHED` to `SYNC`; whether a published event survives an OS crash is decided entirely by the store's contract |
+| Extra crash durability | No. An event is published once the inner, single `SYNC` append returns normally. The feed adds nothing to SQLite's commit contract |
 | A source of truth | No. Runtime, `RecoveryService`, Inspector and invariants read the `EventStore`, never the feed |
 | History | No. Subscribing replays nothing; use `EventStore.read()` for the past |
 | State | No projection and no cache is kept here |
-| Cross-process | No. Another process writing the same JSONL publishes nothing here |
-| Lossless | No. A crash between the append returning and the publish loses the notification, and leaves the event exactly as durable as its requested `Durability` made it |
+| Cross-process | No. Another process writing the same SQLite database publishes nothing here |
+| Lossless | No. A crash between the append returning and the publish loses the notification; persisted history remains authoritative |
 
 Because a notification can be lost, the feed is never evidence. "I saw it on the
 timeline" proves nothing; the event log does.
@@ -29,7 +29,7 @@ timeline" proves nothing; the event log does.
 `SessionService`, for two checkable reasons:
 
 1. **Backend-agnostic.** The observable semantics over `InMemoryEventStore` and
-   `JsonlEventStore` are identical, so swapping the backend cannot change what
+   `SqliteEventStore` are identical, so swapping the backend cannot change what
    subscribers see.
 2. **It is exactly where acceptance becomes true.** `store.append()` in
    `session/service.py` is the only append call site in `src/`; every writer -
@@ -44,7 +44,7 @@ timeline" proves nothing; the event log does.
 flowchart LR
     W["Writers: AgentLoop / ToolRuntime / Recovery"] --> SS["SessionService"]
     SS --> PS["PublishingEventStore (one lock per stream)"]
-    PS --> ES["Inner EventStore: append according to requested Durability"]
+    PS --> ES["Inner EventStore: one SYNC append/commit"]
     ES -- "on success, still holding the lock" --> FEED["SessionEventFeed (private publication)"]
     ES -- "conflict / failure / cancellation" --> NONE["publish nothing"]
     FEED --> SUB["one detach_event() copy per subscriber"]
@@ -57,12 +57,10 @@ flowchart LR
   other append error publishes exactly nothing. Cancellation publishes nothing
   either, *including* on the may-have-committed path where the event did land:
   the feed is allowed to miss events and the log is not.
-* **Acceptance, not extra durability.** `durability` is passed through unchanged,
-  so a `Durability.BATCHED` append is announced once the store returns from a
-  flushed-but-not-fsynced write - exactly what its caller asked for. Publication
-  says "the store accepted this", never "this is fsynced". A `BATCHED`
-  notification is legitimate, and the corresponding event remains bound by the
-  `BATCHED` boundary in an OS crash.
+* **Acceptance, not extra durability.** The only current value,
+  `Durability.SYNC`, is passed through unchanged. Publication says only that the
+  inner append returned normally; it does not strengthen ADR-0036's WAL,
+  filesystem or power-loss boundary.
 * **No additional persisted fact.** The feed writes nothing and defines no event
   type, so nothing downstream can treat a notification as evidence.
 * **Sequence order, not completion order.** One `asyncio.Lock` per stream spans
@@ -71,7 +69,8 @@ flowchart LR
   callers resume independently, so the writer of seq 10 can be descheduled and
   publish after the writer of seq 11. Holding the lock across both halves makes
   seq order structural instead of a lucky consequence of scheduling. Different
-  streams take different locks and never wait on each other.
+  streams take different wrapper locks, but the inner SQLite store still
+  serializes database writers with its bounded busy timeout.
 * **Batches** publish in seq order.
 * **Streams are isolated.** A session-stream subscriber receives nothing from
   another session and nothing from the effect stream.
@@ -132,7 +131,7 @@ yields nothing rather than waiting for a marker a previous pass consumed.
 
 ## Deliberately not built
 
-Cross-process file tailing, persisted subscription offsets, bounded queues with
+Cross-process SQLite change observation, persisted subscription offsets, bounded queues with
 an overflow policy, WebSocket or OpenTelemetry export, and replay-on-subscribe.
 Each would need its own semantics; none is required by the one consumer that
 exists today.

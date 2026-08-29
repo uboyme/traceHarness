@@ -23,6 +23,7 @@ from plugin_fixtures import (
 
 from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
 from traceh.plugins.discovery import PluginDiscovery
+from traceh.session.event_store import InMemoryEventStore
 
 MALICIOUS = [
     "line\nbreak",
@@ -73,8 +74,10 @@ def test_list_json_is_valid_and_sorted(capsys) -> None:
         "a.plugin",
         "z.plugin",
     ]
-    assert all(item["manifest"] == {"available": False, "requires_import": True}
-               for item in payload["plugins"])
+    assert all(
+        item["manifest"] == {"available": False, "requires_import": True}
+        for item in payload["plugins"]
+    )
 
 
 def test_list_with_nothing_installed(capsys) -> None:
@@ -274,5 +277,5 @@ async def test_doctor_uses_throwaway_registries(capsys) -> None:
     )
     capsys.readouterr()
 
-    runtime = build_default_runtime(RuntimeConfig())
+    runtime = build_default_runtime(RuntimeConfig(), event_store=InMemoryEventStore())
     assert "plugin_tool" not in runtime.loop.compositions.tools.registry.names()

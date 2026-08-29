@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from enum import Enum
+from enum import StrEnum
 from typing import Protocol
 
 from traceh.api.events import EventEnvelope, PendingEvent, detach_event
 
 
-class Durability(str, Enum):
+class Durability(StrEnum):
     SYNC = "sync"
-    BATCHED = "batched"
 
 
 class ConcurrencyConflict(RuntimeError):
@@ -66,11 +65,9 @@ class EventStore(Protocol):
         """
         ...
 
-    async def head(self, stream_id: str) -> int:
-        ...
+    async def head(self, stream_id: str) -> int: ...
 
-    async def list_streams(self, *, prefix: str | None = None) -> tuple[str, ...]:
-        ...
+    async def list_streams(self, *, prefix: str | None = None) -> tuple[str, ...]: ...
 
 
 class InMemoryEventStore:
@@ -80,9 +77,9 @@ class InMemoryEventStore:
     explicitly, because it is the case where the danger is real: history lives
     in ``_streams`` as the very objects it returns. Without `detach_event()` an
     event handed to a caller is a live handle into stored history, and a caller
-    editing its own payload silently rewrites the past. A JSONL store reaches
-    the same contract differently - its history is a file, so reads reconstruct
-    envelopes rather than expose them.
+    editing its own payload silently rewrites the past. The SQLite store reaches
+    the same contract through its canonical JSON boundary: reads reconstruct
+    envelopes rather than expose stored objects.
     """
 
     def __init__(self) -> None:

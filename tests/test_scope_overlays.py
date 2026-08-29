@@ -21,6 +21,7 @@ from traceh.plugins.errors import PluginActivationError
 from traceh.plugins.manager import PluginManager
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime_async
 from traceh.runtime.prompt import PromptAssembler
+from traceh.session.event_store import InMemoryEventStore
 from traceh.tools.registry import ToolRegistry
 
 
@@ -189,6 +190,7 @@ async def test_default_runtime_and_step_lease_use_the_effective_agent_scope(
             ScopedServiceBinding(ScopeKind.WORKSPACE, key, "workspace", replace=True),
             ScopedServiceBinding(ScopeKind.AGENT, key, "agent", replace=True),
         ),
+        event_store=InMemoryEventStore(),
     )
     try:
         assert runtime.scope is not None
@@ -224,6 +226,7 @@ async def test_replacement_publishes_a_new_scope_without_mutating_an_old_lease(
             ScopedServiceBinding(ScopeKind.APPLICATION, key, "application"),
             ScopedServiceBinding(ScopeKind.PRESET, key, "preset", replace=True),
         ),
+        event_store=InMemoryEventStore(),
     )
     try:
         lease = runtime.loop.compositions.lease(
@@ -257,9 +260,7 @@ async def test_application_plugin_cannot_read_a_nearer_workspace_override(
             seen.append(context.require(key))
 
     plugin = ApplicationPlugin()
-    discovery = PluginDiscovery(
-        entry_points_provider=provider_for(entry_point_for(plugin))
-    )
+    discovery = PluginDiscovery(entry_points_provider=provider_for(entry_point_for(plugin)))
     runtime = await build_default_runtime_async(
         RuntimeConfig(data_dir=tmp_path / "data"),
         enabled_plugins=("scope.observer",),
@@ -268,6 +269,7 @@ async def test_application_plugin_cannot_read_a_nearer_workspace_override(
             ScopedServiceBinding(ScopeKind.APPLICATION, key, "application"),
             ScopedServiceBinding(ScopeKind.WORKSPACE, key, "workspace", replace=True),
         ),
+        event_store=InMemoryEventStore(),
     )
     try:
         assert seen == ["application"]
@@ -280,15 +282,13 @@ async def test_two_runtime_agent_scopes_do_not_share_local_bindings(tmp_path: Pa
     key = ServiceKey[str]("scope.contract", 1)
     first = await build_default_runtime_async(
         RuntimeConfig(data_dir=tmp_path / "first"),
-        service_bindings=(
-            ScopedServiceBinding(ScopeKind.AGENT, key, "first-agent"),
-        ),
+        service_bindings=(ScopedServiceBinding(ScopeKind.AGENT, key, "first-agent"),),
+        event_store=InMemoryEventStore(),
     )
     second = await build_default_runtime_async(
         RuntimeConfig(data_dir=tmp_path / "second"),
-        service_bindings=(
-            ScopedServiceBinding(ScopeKind.AGENT, key, "second-agent"),
-        ),
+        service_bindings=(ScopedServiceBinding(ScopeKind.AGENT, key, "second-agent"),),
+        event_store=InMemoryEventStore(),
     )
     try:
         assert first.services.require(key) == "first-agent"
@@ -338,9 +338,7 @@ async def test_plugin_application_service_cannot_create_an_implicit_late_overrid
             await context.provide(key, "plugin-application")
 
     plugin = ServicePlugin()
-    discovery = PluginDiscovery(
-        entry_points_provider=provider_for(entry_point_for(plugin))
-    )
+    discovery = PluginDiscovery(entry_points_provider=provider_for(entry_point_for(plugin)))
 
     with pytest.raises(PluginActivationError) as caught:
         await build_default_runtime_async(
@@ -349,9 +347,8 @@ async def test_plugin_application_service_cannot_create_an_implicit_late_overrid
             plugin_discovery=discovery,
             # The application value does not exist until plugin publication.
             # Revalidation must still reject this implicit workspace shadow.
-            service_bindings=(
-                ScopedServiceBinding(ScopeKind.WORKSPACE, key, "workspace"),
-            ),
+            service_bindings=(ScopedServiceBinding(ScopeKind.WORKSPACE, key, "workspace"),),
+            event_store=InMemoryEventStore(),
         )
 
     assert caught.value.failures[0].code == "service-override-requires-replace"
@@ -370,9 +367,7 @@ async def test_explicit_workspace_override_can_target_a_plugin_service(
             await context.provide(key, "plugin-application")
 
     plugin = ServicePlugin()
-    discovery = PluginDiscovery(
-        entry_points_provider=provider_for(entry_point_for(plugin))
-    )
+    discovery = PluginDiscovery(entry_points_provider=provider_for(entry_point_for(plugin)))
     runtime = await build_default_runtime_async(
         RuntimeConfig(data_dir=tmp_path / "data"),
         enabled_plugins=("scope.provider",),
@@ -385,6 +380,7 @@ async def test_explicit_workspace_override_can_target_a_plugin_service(
                 replace=True,
             ),
         ),
+        event_store=InMemoryEventStore(),
     )
     try:
         assert runtime.services.require(key) == "workspace"
@@ -412,9 +408,7 @@ async def test_late_plugin_service_keeps_api_major_override_validation(
             await context.provide(application_key, "plugin-application")
 
     plugin = ServicePlugin()
-    discovery = PluginDiscovery(
-        entry_points_provider=provider_for(entry_point_for(plugin))
-    )
+    discovery = PluginDiscovery(entry_points_provider=provider_for(entry_point_for(plugin)))
 
     with pytest.raises(PluginActivationError) as caught:
         await build_default_runtime_async(
@@ -429,6 +423,7 @@ async def test_late_plugin_service_keeps_api_major_override_validation(
                     replace=True,
                 ),
             ),
+            event_store=InMemoryEventStore(),
         )
 
     assert caught.value.failures[0].code == "service-override-api-major-mismatch"
@@ -448,9 +443,7 @@ async def test_plugin_application_api_major_conflict_keeps_plugin_attribution(
             await context.provide(plugin_v2, "plugin-v2", replace=True)
 
     plugin = ServicePlugin()
-    discovery = PluginDiscovery(
-        entry_points_provider=provider_for(entry_point_for(plugin))
-    )
+    discovery = PluginDiscovery(entry_points_provider=provider_for(entry_point_for(plugin)))
 
     with pytest.raises(PluginActivationError) as caught:
         await build_default_runtime_async(
@@ -464,6 +457,7 @@ async def test_plugin_application_api_major_conflict_keeps_plugin_attribution(
                     "application-v1",
                 ),
             ),
+            event_store=InMemoryEventStore(),
         )
 
     assert len(caught.value.failures) == 1

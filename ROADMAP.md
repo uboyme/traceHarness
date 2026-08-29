@@ -1,9 +1,9 @@
 # Roadmap
 
 The order below preserves the current protocol and keeps orchestration
-boundaries narrow. v0.7.1 is released; the frozen v0.8 and v0.9 plans describe
-future work rather than current capability. Product state remains outside
-`AgentLoop`.
+boundaries narrow. v0.7.1 is released; v0.8-F0/F1 are implemented but not yet
+released, while the remaining frozen v0.8 and v0.9 stages describe future
+work. Product state remains outside `AgentLoop`.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -505,7 +505,7 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   regression, clean packaging, offline install, annotated tag and GitHub Release
   are complete.
 
-## v0.8: Reliable local ProductTask host — F0 implemented, F1-F5 pending
+## v0.8: Reliable local ProductTask host — F0/F1 implemented, F2-F5 pending
 
 - F0 closes the terminal-error injection path and makes one durable Model
   Attempt correspond to one admitted Provider dispatch. Attempt-scoped cost
@@ -514,11 +514,11 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   dispatch requests are frozen together under ADR-0035. The concrete admission
   must also bind the exact Composition Provider object and host Attempt; Budget
   accounting cannot override or substitute the actual dispatch.
-- Replace JSONL with one SQLite production EventStore and reject legacy data
+- F1 replaces JSONL with one SQLite production EventStore and rejects legacy data
   explicitly: no migration, dual reader or fallback. CLI commands, Evaluation
   attempts and Evolution comparison cases own explicit store scopes. Same-process
   multi-stream serialization, cross-process CAS, busy ownership, backup and close
-  convergence are release gates.
+  convergence are implemented and awaiting the Release Stop A review.
 - Add bounded retry only for the same Provider, model and frozen dispatch request,
   with typed sanitized failures and independent per-Attempt Budget evidence. No
   Provider/model fallback is added.

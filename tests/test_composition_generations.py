@@ -267,9 +267,7 @@ def _runtime_parts(
         model=f"model-{label}",
         plugins=(),
         resource_owner=(
-            _resource_owner(generation_cleanup)
-            if generation_cleanup is not None
-            else None
+            _resource_owner(generation_cleanup) if generation_cleanup is not None else None
         ),
         cleanup=generation_cleanup,
     )
@@ -353,9 +351,10 @@ async def test_initial_generation_lease_and_revision_is_content_based(tmp_path: 
         assert generation_id == 2
         async with _lease(runtime, tmp_path) as active:
             assert active.generation_id == 2
-            assert active.snapshot.revision == runtime.current_generation.snapshot(
-                workspace=tmp_path
-            ).revision
+            assert (
+                active.snapshot.revision
+                == runtime.current_generation.snapshot(workspace=tmp_path).revision
+            )
             assert active.snapshot.revision == initial_revision
     finally:
         await runtime.dispose()
@@ -512,9 +511,7 @@ async def test_repeated_generation_replacement_keeps_tool_adapter_flat(
     try:
         first_tool = runtime.current_generation.tools.registry.require(source_tool.name)
         for _ in range(1100):
-            await runtime.publish(
-                replace(runtime.current_generation, cleanup=None)
-            )
+            await runtime.publish(replace(runtime.current_generation, cleanup=None))
 
         async with _lease(runtime, tmp_path) as active:
             assert active.tools.registry.require(source_tool.name) is first_tool
@@ -616,9 +613,7 @@ async def test_cleaned_generations_are_removed_after_drain_and_dispose(
     runtime, _, sessions = _runtime_parts("retention")
     try:
         for index in range(10):
-            _, candidate, _ = _runtime_parts(
-                f"retention-{index}", sessions=sessions
-            )
+            _, candidate, _ = _runtime_parts(f"retention-{index}", sessions=sessions)
             await runtime.publish(candidate)
         await runtime.drain()
         assert tuple(runtime._records) == (11,)
@@ -649,9 +644,7 @@ async def test_publish_rejects_plugin_identity_migration(tmp_path: Path) -> None
 @pytest.mark.asyncio
 async def test_publish_rejects_foreign_session_service(tmp_path: Path) -> None:
     runtime, _, main_sessions = _runtime_parts("main-session")
-    foreign_runtime, foreign_generation, foreign_sessions = _runtime_parts(
-        "foreign-session"
-    )
+    foreign_runtime, foreign_generation, foreign_sessions = _runtime_parts("foreign-session")
     try:
         assert foreign_generation.tools.sessions is foreign_sessions
         assert foreign_generation.tools.sessions is not main_sessions
@@ -698,9 +691,7 @@ async def test_published_generation_cannot_be_republished_after_cleanup(
         nonlocal cleanup_calls
         cleanup_calls += 1
 
-    runtime, unclaimed_generation, sessions = _runtime_parts(
-        "one-shot-owner", cleanup=cleanup
-    )
+    runtime, unclaimed_generation, sessions = _runtime_parts("one-shot-owner", cleanup=cleanup)
     other_runtime, _, _ = _runtime_parts("other-owner", sessions=sessions)
     first_generation = runtime.current_generation
     candidate = replace(unclaimed_generation, cleanup=None)
@@ -748,12 +739,8 @@ async def test_cleanup_owner_rejects_unbindable_slotted_aliases(
         if shared_kind == "provider"
         else None
     )
-    shared_tool = (
-        _SlottedClosableTool("slotted-tool") if shared_kind == "tool" else None
-    )
-    shared_policy = (
-        _SlottedClosablePolicy("slotted-policy") if shared_kind == "policy" else None
-    )
+    shared_tool = _SlottedClosableTool("slotted-tool") if shared_kind == "tool" else None
+    shared_policy = _SlottedClosablePolicy("slotted-policy") if shared_kind == "policy" else None
 
     async def cleanup() -> None:
         if shared_provider is not None:
@@ -780,9 +767,7 @@ async def test_cleanup_owner_rejects_unbindable_slotted_aliases(
         return CompositionGeneration(
             llms=llms,
             tools=tools,
-            prompt=PromptAssembler(
-                (PromptSection(f"slotted.{shared_kind}", "slotted", 10),)
-            ),
+            prompt=PromptAssembler((PromptSection(f"slotted.{shared_kind}", "slotted", 10),)),
             provider=provider.name,
             model="slotted-model",
             plugins=(),
@@ -899,9 +884,7 @@ async def test_silent_binding_setter_cannot_hide_a_shared_resource(
                 policies=(policy,),
                 middlewares=(),
             ),
-            prompt=PromptAssembler(
-                (PromptSection(f"silent.{label}", label, 10),)
-            ),
+            prompt=PromptAssembler((PromptSection(f"silent.{label}", label, 10),)),
             provider=provider.name,
             model=f"silent-model-{label}",
             plugins=(),
@@ -1037,9 +1020,7 @@ async def test_policy_alias_propagates_resource_binding_to_new_tool_runtime(
     first_provider = _Provider("policy-first", "first")
     first_llms = LlmRegistry()
     first_llms.register(first_provider)
-    first_tools = ToolRuntime(
-        ToolRegistry(), sessions, policies=(policy,), middlewares=()
-    )
+    first_tools = ToolRuntime(ToolRegistry(), sessions, policies=(policy,), middlewares=())
     first_runtime = GenerationCompositionRuntime(
         llms=first_llms,
         tools=first_tools,
@@ -1051,9 +1032,7 @@ async def test_policy_alias_propagates_resource_binding_to_new_tool_runtime(
     second_provider = _Provider("policy-second", "second")
     second_llms = LlmRegistry()
     second_llms.register(second_provider)
-    second_tools = ToolRuntime(
-        ToolRegistry(), sessions, policies=(policy,), middlewares=()
-    )
+    second_tools = ToolRuntime(ToolRegistry(), sessions, policies=(policy,), middlewares=())
 
     async def cleanup() -> None:
         policy.closed = True
@@ -1264,9 +1243,7 @@ async def test_provider_lineage_survives_a_new_registry_wrapper(tmp_path: Path) 
             CompositionGeneration(
                 llms=candidate_llms,
                 tools=candidate_tools,
-                prompt=PromptAssembler(
-                    (PromptSection("wrapped-provider", "candidate", 10),)
-                ),
+                prompt=PromptAssembler((PromptSection("wrapped-provider", "candidate", 10),)),
                 provider=shared_provider.name,
                 model="candidate-model",
                 plugins=(),
@@ -1613,9 +1590,7 @@ async def test_cleanup_error_type_is_terminal_safe(tmp_path: Path) -> None:
             await runtime.drain()
         assert "\x1b" not in str(caught.value)
         assert "\n" not in str(caught.value)
-        assert caught.value.failures == (
-            GenerationCleanupFailure(1, "Bad__2J_Forged"),
-        )
+        assert caught.value.failures == (GenerationCleanupFailure(1, "Bad__2J_Forged"),)
     finally:
         with pytest.raises(CompositionDrainError):
             await runtime.dispose()
@@ -1919,9 +1894,7 @@ async def test_cleanup_failure_is_structured_and_does_not_skip_other_generations
         sessions=runtime.tools.sessions,
         generation_cleanup=successful,
     )
-    _, final_generation, _ = _runtime_parts(
-        "final", sessions=runtime.tools.sessions
-    )
+    _, final_generation, _ = _runtime_parts("final", sessions=runtime.tools.sessions)
     try:
         await runtime.publish(failing_generation)
         await runtime.publish(successful_generation)
@@ -2005,9 +1978,12 @@ async def test_publish_and_lease_race_has_one_lock_linearization(tmp_path: Path)
 
 @pytest.mark.asyncio
 async def test_default_sync_and_async_factories_use_generation_runtime(tmp_path: Path) -> None:
-    sync_runtime = build_default_runtime(RuntimeConfig(data_dir=tmp_path / "sync"))
+    sync_runtime = build_default_runtime(
+        RuntimeConfig(data_dir=tmp_path / "sync"), event_store=InMemoryEventStore()
+    )
     async_runtime = await build_default_runtime_async(
-        RuntimeConfig(data_dir=tmp_path / "async")
+        RuntimeConfig(data_dir=tmp_path / "async"),
+        event_store=InMemoryEventStore(),
     )
     try:
         assert isinstance(sync_runtime.loop.compositions, GenerationCompositionRuntime)
@@ -2033,9 +2009,8 @@ async def test_real_turn_keeps_one_generation_during_publish_and_rebuilds_reques
     runtime = build_default_runtime(
         RuntimeConfig(data_dir=tmp_path / "data", provider="scripted", model="old-model"),
         provider=old_provider,
-        prompt=PromptAssembler(
-            (PromptSection("generation.v1", "prompt-v1", 10),)
-        ),
+        prompt=PromptAssembler((PromptSection("generation.v1", "prompt-v1", 10),)),
+        event_store=InMemoryEventStore(),
     )
     new_provider = _Provider("scripted-v2", "new")
     new_llms = LlmRegistry()
@@ -2046,16 +2021,14 @@ async def test_real_turn_keeps_one_generation_during_publish_and_rebuilds_reques
         policies=(),
         middlewares=(),
     )
-    new_prompt = PromptAssembler(
-        (PromptSection("generation.v2", "prompt-v2", 10),)
-    )
+    new_prompt = PromptAssembler((PromptSection("generation.v2", "prompt-v2", 10),))
     new_generation = CompositionGeneration(
         llms=new_llms,
         tools=new_tools,
         prompt=new_prompt,
         provider="scripted-v2",
         model="new-model",
-            plugins=(CORE_PLUGIN_IDENTITY,),
+        plugins=(CORE_PLUGIN_IDENTITY,),
     )
     try:
         old_turn = asyncio.create_task(runtime.run(workspace, "old turn"))
@@ -2078,10 +2051,7 @@ async def test_real_turn_keeps_one_generation_during_publish_and_rebuilds_reques
                 assert isinstance(request_data, dict)
                 assert composition_event.data["provider"] == request_data["provider"]
                 assert composition_event.data["model"] == request_data["model"]
-                assert (
-                    composition_event.data["system_prompt"]
-                    == request_data["system_prompt"]
-                )
+                assert composition_event.data["system_prompt"] == request_data["system_prompt"]
             observed.append(
                 (
                     str(composition_event.data["model"]),
@@ -2092,9 +2062,9 @@ async def test_real_turn_keeps_one_generation_during_publish_and_rebuilds_reques
         prompts = {prompt for _, prompt in observed}
         assert all(marker in "\n".join(prompts) for marker in ("prompt-v1", "prompt-v2"))
         for session_id in sessions:
-            assert await verify_request_snapshots(
-                runtime.sessions, runtime.surface, session_id
-            ) == ()
+            assert (
+                await verify_request_snapshots(runtime.sessions, runtime.surface, session_id) == ()
+            )
     finally:
         release.set()
         await runtime.dispose()

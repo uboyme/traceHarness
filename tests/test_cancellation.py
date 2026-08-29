@@ -292,9 +292,7 @@ class _TerminalGateStore:
             durability=durability,
         )
 
-    async def read(
-        self, stream_id: str, *, from_seq: int = 1
-    ) -> tuple[EventEnvelope, ...]:
+    async def read(self, stream_id: str, *, from_seq: int = 1) -> tuple[EventEnvelope, ...]:
         return await self.inner.read(stream_id, from_seq=from_seq)
 
     async def head(self, stream_id: str) -> int:
@@ -339,6 +337,7 @@ async def test_cancel_closes_turn_and_reaches_quiescence(tmp_path) -> None:
     runtime = build_default_runtime(
         RuntimeConfig(data_dir=tmp_path / "data", provider="scripted", model="slow"),
         provider=provider,
+        event_store=InMemoryEventStore(),
     )
     session_id = await runtime.create_session(workspace)
     waiter = asyncio.create_task(runtime.run_existing(session_id, "wait"))
@@ -402,10 +401,10 @@ async def test_repeated_cancellation_waits_for_attempt_step_and_turn_facts(
         assert CoreInvariantChecker().check(events) == ()
         durable_ids = tuple(event.event_id for event in events)
         await asyncio.sleep(0)
-        assert tuple(
-            event.event_id
-            for event in await runtime.sessions.read_session(session_id)
-        ) == durable_ids
+        assert (
+            tuple(event.event_id for event in await runtime.sessions.read_session(session_id))
+            == durable_ids
+        )
     finally:
         for release in store.release.values():
             release.set()
@@ -529,9 +528,7 @@ async def test_repeated_cancellation_during_verifier_convergence(tmp_path, monke
     child = GatedChild(tmp_path)
     deaf_to_terminate(monkeypatch)
     converging = observe_converging(monkeypatch)
-    task = asyncio.create_task(
-        CommandVerifier(child.command, timeout_seconds=60).verify(workspace)
-    )
+    task = asyncio.create_task(CommandVerifier(child.command, timeout_seconds=60).verify(workspace))
     await wait_for_file(child.started)
 
     task.cancel()
@@ -951,9 +948,7 @@ async def test_cancelled_shell_tool_leaves_no_running_child(tmp_path) -> None:
         workspace=workspace,
         data_dir=tmp_path / "data",
     )
-    task = asyncio.create_task(
-        ShellTool().execute({"command": command, "timeout": 60}, context)
-    )
+    task = asyncio.create_task(ShellTool().execute({"command": command, "timeout": 60}, context))
     await wait_for_file(started)
 
     task.cancel()

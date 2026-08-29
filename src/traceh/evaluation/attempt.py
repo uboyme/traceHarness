@@ -50,6 +50,7 @@ from traceh.evaluation.manifest import (
 from traceh.evaluation.metrics import collect_attempt_evidence
 from traceh.evaluation.report import AttemptReport, PhaseTiming
 from traceh.evaluation.repositories import (
+    AttemptRepositories,
     build_attempt_repositories,
     read_target_revision,
 )
@@ -63,7 +64,7 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime,
 )
 from traceh.runtime.prompt import PromptAssembler
-from traceh.session.jsonl import JsonlEventStore
+from traceh.session.sqlite import SqliteEventStore
 from traceh.workspaces.local_git import LocalGitWorkspaceProvider
 
 REQUESTER_PROVIDER_ID = "traceh-benchmark-requester"
@@ -129,14 +130,48 @@ async def run_attempt(
 ) -> AttemptReport:
     """Execute one attempt and return what its durable facts support."""
 
-    settings = manifest.settings
     request.directory.mkdir(parents=True, exist_ok=False)
     repositories = await build_attempt_repositories(
         initial_dir=request.task.initial_dir,
         source=request.directory / "source",
         target=request.directory / "tgt.git",
     )
-    store = JsonlEventStore(request.directory / "ev")
+    store = SqliteEventStore(request.directory / "ev")
+    result: AttemptReport | None = None
+    primary: BaseException | None = None
+    try:
+        result = await _run_attempt_with_store(
+            request,
+            manifest=manifest,
+            providers=providers,
+            monotonic=monotonic,
+            repositories=repositories,
+            store=store,
+        )
+    except BaseException as error:
+        primary = error
+    cleanup: BaseException | None = None
+    try:
+        await store.aclose()
+    except BaseException as error:
+        cleanup = error
+    combined = combine_failures(primary, cleanup, "benchmark attempt/store shutdown failed")
+    if combined is not None:
+        raise combined from None
+    assert result is not None
+    return result
+
+
+async def _run_attempt_with_store(
+    request: AttemptRequest,
+    *,
+    manifest: BenchmarkManifest,
+    providers: Mapping[str, LlmProvider],
+    monotonic: Callable[[], float],
+    repositories: AttemptRepositories,
+    store: SqliteEventStore,
+) -> AttemptReport:
+    settings = manifest.settings
     runtime = build_default_runtime(
         RuntimeConfig(
             data_dir=request.directory / "rt",
@@ -173,13 +208,19 @@ async def run_attempt(
             approver_id=settings.approver_id,
             max_report_chars=settings.max_report_chars,
         )
-    except BaseException:
+    except BaseException as primary:
         # The Runtime exists from here on and owns a shutdown Task. Host assembly
         # can still fail - an unresolvable Profile, an unusable CAS root - and
         # leaving it undisposed would leak that owner for the rest of the grid.
         # This mirrors what ``cli/main._chat`` does at the same seam.
-        await runtime.dispose()
-        raise
+        cleanup: BaseException | None = None
+        try:
+            await runtime.dispose()
+        except BaseException as error:
+            cleanup = error
+        combined = combine_failures(primary, cleanup, "benchmark host assembly failed")
+        assert combined is not None
+        raise combined from None
     control = host.control
     task_id: str | None = None
     error_code: str | None = None

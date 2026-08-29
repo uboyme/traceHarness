@@ -157,9 +157,7 @@ async def test_zero_token_budget_never_records_or_dispatches_an_attempt(
 
     assert exhausted.value.dimension == "max_tokens"
     assert provider.calls == 0
-    event_types = {
-        event.type for event in await runtime.sessions.read_session("session-root")
-    }
+    event_types = {event.type for event in await runtime.sessions.read_session("session-root")}
     assert "request/snapshot" not in event_types
     assert "model/attempt-start" not in event_types
     await execution.dispose()
@@ -254,10 +252,9 @@ async def test_admission_cannot_rewrite_model_context_before_dispatch(
     events = await runtime.sessions.read_session("session-root")
     assert not any(event.type == "request/snapshot" for event in events)
     assert not any(event.type == "model/attempt-start" for event in events)
-    assert (
-        (await budgets.ledger()).usage_reservations[-1].status
-        is BudgetUsageReservationStatus.RELEASED
-    )
+    assert (await budgets.ledger()).usage_reservations[
+        -1
+    ].status is BudgetUsageReservationStatus.RELEASED
     await execution.dispose()
 
 
@@ -280,6 +277,7 @@ async def test_admission_cannot_swap_the_composition_provider_at_dispatch(
         ),
         provider=primary,
         llm_runtime=ProviderSwappingRuntime(),
+        event_store=InMemoryEventStore(),
     )
     await runtime.sessions.create_session(tmp_path, session_id="session-root")
     execution = AgentRuntimeExecution(runtime, "session-root")
@@ -323,6 +321,7 @@ async def test_admission_subclass_cannot_rewrite_the_request_during_dispatch(
         ),
         provider=provider,
         llm_runtime=DispatchRewritingRuntime(),
+        event_store=InMemoryEventStore(),
     )
     await runtime.sessions.create_session(tmp_path, session_id="session-root")
     execution = AgentRuntimeExecution(runtime, "session-root")
@@ -391,10 +390,9 @@ async def test_budget_releases_when_an_inner_runtime_forges_dispatch(
         events = await runtime.sessions.read_session("session-root")
         assert not any(event.type == "request/snapshot" for event in events)
         assert not any(event.type == "model/attempt-start" for event in events)
-        assert (
-            (await budgets.ledger()).usage_reservations[-1].status
-            is BudgetUsageReservationStatus.RELEASED
-        )
+        assert (await budgets.ledger()).usage_reservations[
+            -1
+        ].status is BudgetUsageReservationStatus.RELEASED
     finally:
         await execution.dispose()
 
@@ -424,9 +422,7 @@ async def test_session_cas_is_the_only_dispatch_permit_for_competing_owners(
 ) -> None:
     store = TwoReaderBarrierStore()
     sessions, budgets = await budget_context(store, tmp_path, max_tokens=20)
-    await sessions.append_session(
-        "session-root", "turn/start", {"turn_id": "turn-root"}
-    )
+    await sessions.append_session("session-root", "turn/start", {"turn_id": "turn-root"})
     await sessions.append_session(
         "session-root",
         "step/start",
@@ -496,9 +492,7 @@ async def test_session_cas_is_the_only_dispatch_permit_for_competing_owners(
     assert sum(event.type == "request/snapshot" for event in events) == 1
     assert sum(event.type == "model/attempt-start" for event in events) == 1
     assert not CoreInvariantChecker().check(events)
-    statuses = {
-        item.status for item in (await budgets.ledger()).usage_reservations
-    }
+    statuses = {item.status for item in (await budgets.ledger()).usage_reservations}
     assert statuses == {
         BudgetUsageReservationStatus.RELEASED,
         BudgetUsageReservationStatus.SETTLED,
@@ -510,9 +504,7 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
 ) -> None:
     store = InMemoryEventStore()
     sessions, budgets = await budget_context(store, tmp_path, max_tokens=20)
-    await sessions.append_session(
-        "session-root", "turn/start", {"turn_id": "turn-root"}
-    )
+    await sessions.append_session("session-root", "turn/start", {"turn_id": "turn-root"})
     await sessions.append_session(
         "session-root",
         "step/start",
@@ -570,17 +562,13 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
     assert provider.calls == 2
     assert sum(event.type == "request/snapshot" for event in events) == 1
     assert [start.data["ordinal"] for start in starts] == [1, 2]
-    assert starts[0].data["request_snapshot_seq"] == starts[1].data[
-        "request_snapshot_seq"
-    ]
-    assert starts[0].data["dispatch_fingerprint"] == starts[1].data[
-        "dispatch_fingerprint"
-    ]
+    assert starts[0].data["request_snapshot_seq"] == starts[1].data["request_snapshot_seq"]
+    assert starts[0].data["dispatch_fingerprint"] == starts[1].data["dispatch_fingerprint"]
     assert admissions[0].reservation_id != admissions[1].reservation_id
     assert not CoreInvariantChecker().check(events)
-    assert {
-        item.status for item in (await budgets.ledger()).usage_reservations
-    } == {BudgetUsageReservationStatus.SETTLED}
+    assert {item.status for item in (await budgets.ledger()).usage_reservations} == {
+        BudgetUsageReservationStatus.SETTLED
+    }
 
 
 class BeforeCommitGateStore(InMemoryEventStore):
@@ -616,9 +604,7 @@ async def test_cancel_before_attempt_commit_releases_the_pending_admission(
 ) -> None:
     store = BeforeCommitGateStore()
     sessions, budgets = await budget_context(store, tmp_path, max_tokens=10)
-    await sessions.append_session(
-        "session-root", "turn/start", {"turn_id": "turn-root"}
-    )
+    await sessions.append_session("session-root", "turn/start", {"turn_id": "turn-root"})
     await sessions.append_session(
         "session-root",
         "step/start",
@@ -718,10 +704,9 @@ async def test_unknown_attempt_commit_never_dispatches_and_turn_closes_it(
         await execution.run_turn(TurnInput("work", "message-unknown-commit"))
 
     assert provider.calls == 0
-    assert (
-        (await budgets.ledger()).usage_reservations[-1].status
-        is BudgetUsageReservationStatus.RELEASED
-    )
+    assert (await budgets.ledger()).usage_reservations[
+        -1
+    ].status is BudgetUsageReservationStatus.RELEASED
     events = await runtime.sessions.read_session("session-root")
     assert sum(event.type == "model/attempt-start" for event in events) == 1
     assert sum(event.type == "model/attempt-end" for event in events) == 1
@@ -737,9 +722,7 @@ async def test_replay_rejects_tampered_attempt_and_dispatch_bindings(
     store = InMemoryEventStore()
     sessions = SessionService(store)
     await sessions.create_session(tmp_path, session_id="session-root")
-    await sessions.append_session(
-        "session-root", "turn/start", {"turn_id": "turn-root"}
-    )
+    await sessions.append_session("session-root", "turn/start", {"turn_id": "turn-root"})
     await sessions.append_session(
         "session-root",
         "step/start",
@@ -797,28 +780,19 @@ async def test_replay_rejects_tampered_attempt_and_dispatch_bindings(
         provider="other",
         dispatch_fingerprint=rewritten_hash,
     )
-    coherent_rewrite[start_index] = replace(
-        coherent_rewrite[start_index], data=rewritten_start
-    )
+    coherent_rewrite[start_index] = replace(coherent_rewrite[start_index], data=rewritten_start)
     assert "request-dispatch-evidence" in {
-        item.name
-        for item in CoreInvariantChecker().check(tuple(coherent_rewrite))
+        item.name for item in CoreInvariantChecker().check(tuple(coherent_rewrite))
     }
     assert "attempt-ordinal-contiguous" in {
-        item.name
-        for item in CoreInvariantChecker().check(tamper(start_index, ordinal=2))
+        item.name for item in CoreInvariantChecker().check(tamper(start_index, ordinal=2))
     }
     assert "attempt-provider-model-binding" in {
-        item.name
-        for item in CoreInvariantChecker().check(
-            tamper(start_index, provider="other")
-        )
+        item.name for item in CoreInvariantChecker().check(tamper(start_index, provider="other"))
     }
     assert "attempt-reservation-binding" in {
         item.name
-        for item in CoreInvariantChecker().check(
-            tamper(start_index, reservation_id="wrong")
-        )
+        for item in CoreInvariantChecker().check(tamper(start_index, reservation_id="wrong"))
     }
 
 
@@ -827,9 +801,7 @@ async def test_budget_reconciliation_rejects_a_tampered_attempt_end_binding(
 ) -> None:
     store = InMemoryEventStore()
     sessions, budgets = await budget_context(store, tmp_path, max_tokens=10)
-    await sessions.append_session(
-        "session-root", "turn/start", {"turn_id": "turn-root"}
-    )
+    await sessions.append_session("session-root", "turn/start", {"turn_id": "turn-root"})
     await sessions.append_session(
         "session-root",
         "step/start",

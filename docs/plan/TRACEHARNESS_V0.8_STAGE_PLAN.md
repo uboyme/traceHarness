@@ -1,6 +1,6 @@
 # TraceHarness v0.8 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F3 已实现，Release Stop A/B、F1+F2 完整集成门禁与 F3 独立短复审均已通过；F3 首轮审查的 observation 启动泄漏 P1 与断开 Feed P2 已根修，最终复审为 P0/P1/P2 全零；F4–F5 未开始。**
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F4 已实现并提交，Release Stop A/B、F1+F2 完整集成门禁、F3 独立短复审与 F4 Release Stop C 均已通过；F4 非阻断周期 refresh P2 根修后局部复核确认 P0/P1/P2 全零；F5 未开始。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD
 > `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
@@ -513,6 +513,12 @@ Product host 只能接受与同一 `PublishingEventStore` 精确绑定的显式 
   非法写入。
 
 ## 9. v0.8-F4：可选 Textual TUI
+
+> 实现状态（2026-08-30）：`traceh chat --tui` 已接入同一 Driver、Session open/recovery、Product host 与
+> durable observation；Textual 保持 optional extra，权限/markup/关闭收敛的确定性 Pilot 与反向验证已
+> 通过。Release Stop C 已确认 `P0=0/P1=0`；其唯一非阻断 P2 是跨进程无 Feed 时缺少周期 fresh read，
+> 当前已复用宿主单调时钟根修并完成反向验证；局部复核再次确认 `P0=0/P1=0/P2=0`。F4 已提交但
+> 尚未发布，不能提前进入 F5。
 
 ### 9.1 最小产品面
 

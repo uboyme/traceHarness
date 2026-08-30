@@ -41,25 +41,26 @@
 | 当前版本 | 最新正式发布是 annotated tag `v0.7.1`。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此新构建的 Wheel metadata 与被导入的包不可能不一致；源码 ZIP 默认文件名也从该属性派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
-| 运行时依赖 | `packaging>=24.0,<27`——v0.4 引入的**第一个**第三方运行时依赖，用于 PEP 440 解析（见 1.1）。其余仍只用标准库 |
+| 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | v0.8-F0–F3 未发布实现保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.35）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3 又把既有 Chat 调用重构为 UI-neutral Driver，但 Driver 仍只借用 `AgentRuntime`，不持有 Product、Budget、Workspace、Artifact、Promotion 或 Workflow 状态。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | v0.8-F0–F4 未发布实现保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.36）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry、默认 Product Profile 或模型可见的 approve/promote/workflow Tool；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
 | Coding Tools | `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`；插件可增加更多 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 提供同一 Session 内的连续多轮行式交互；Line adapter 把输入交给 UI-neutral `ChatDriver`，再渲染它的 typed Session/activity/outcome update，Driver 不读 stdin、不含终端文案。显式 `--product-config` 后，模型仍只能建议 Proposal 或确认；独立终端 `START`、`/task inspect|approve|reject|cancel|abandon TASK_ID` 和原人工 Approval 权限不变。执行中 Product observation fresh join ProductTask 与 Workflow 两条状态流：两者暂时不一致时并列显示，不由 heartbeat 对账；Feed 只触发 fresh refresh，动作后、周期和 terminal 前也强制刷新。Approval 与 inspect 继续显示固定节点、Agent Session/replay、changed paths、有界 Patch 与 Verifier 证据。空闲提示符原有 `/plugins` 组合切换继续保留。它仍是 Line CLI，不是流式 TUI；其他命令仍一次执行一个 Turn。插件命令 `list/inspect/doctor/validate/compare/promote/rollback` 中后四者构成 Runtime 外 L2–L4 控制面 |
+| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery；TUI 从 durable Surface 重建对话，并以 Feed dirty hint + 有界周期 fresh Product observation 显示当前未终结任务、固定节点、Review/Verifier、target/digest 与 Approval/Reject/Cancel。模型确认只产生 typed start request，TUI 必须再收到独立 START button gesture；Approval button 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；首版 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，旧数字不冒充当前工作树。v0.8-F3 当前 `collect-only = 2483`；F3 Driver/Line/Product observation 核心组 `88 passed`，Product/Workflow/Promotion/Event Feed 相邻组修正一条具名 F3 CLI allowlist 后合计 `504 passed, 1 skipped`，CLI Timeline 与插件组合迁移 `221 passed`。F3 没有改变 Runtime/Session/Store schema 或 Provider 副作用，因此按冻结计划没有重复 Release Stop B 已完成的完整全量；F1+F2 集成全量仍为 `2472 passed, 7 skipped`。详细见 20.33–20.35 |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，旧数字不冒充当前工作树。v0.8-F4 core-only collect 为 `2496`，安装 `tui` extra 后为 `2503`；Textual headless Pilot `7 passed`，core-only optional/presentation `7 passed`，Line/Session/Product observation 相邻组与架构门禁均已通过。F4 没有改变 Runtime/Session/Store schema 或 Provider 副作用，因此按冻结计划没有重复 Release Stop B 已完成的完整全量；F1+F2 集成全量仍为 `2472 passed, 7 skipped`。详细见 20.33–20.36 |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-当前正式版本仍为 `v0.7.1`；v0.8-F0/F1/F2 已提交，F3 为未提交、未发布实现。v0.7.1 的复审、最终全量、
+当前正式版本仍为 `v0.7.1`；v0.8-F0–F4 已提交但尚未发布。Release Stop C 与局部修复复核已清零
+P0/P1/P2；F5 尚未开始。v0.7.1 的复审、最终全量、
 干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见
 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。当前仍没有默认 Product Profile、OS 沙箱、跨进程
 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、
-MCP、TUI、流式输出或 Provider/model fallback；F2 只实现同一冻结模型请求的有界 retry，F3 只实现
-UI-neutral Driver、Line adapter 与纯读 observation，没有提前实现 F4–F5。
+MCP、流式输出或 Provider/model fallback；F2 只实现同一冻结模型请求的有界 retry，F3/F4 只实现
+共享 Driver、Line/Textual adapter 与纯读 observation，没有提前实现 F5。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -104,7 +105,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - Docker、远程沙箱或操作系统级安全隔离；
 - 分布式 Event Store；
 - 完整流式模型输出、重试、Fallback 与限流中间件；
-- 类似 Codex/Claude Code 的富交互终端界面：`traceh chat` 已有实时 Tool Timeline 与 Activity Heartbeat（见 13.6、13.7），但仍是行式提示符，没有 token 流式输出、Spinner、颜色、可交互 TUI 和执行前审批。
+- 完整 Codex/Claude Code 式终端工作台：F4 已提供最小可交互 Textual TUI，但没有 token streaming、完整历史 Dashboard、拖拽 DAG、Turn 执行中的并发输入或新的“执行前审批”权限；START/Approval 仍是 Product 主线原有的人机边界。
 
 ## 3. 仓库目录与职责
 
@@ -121,7 +122,8 @@ traceharness/
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
 │   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3/F5 的宿主控制面、Chat 表面、durable evidence 只读审批投影、schema-1 配置解析与显式装配
-│   ├── chat/                         v0.8-F3 UI-neutral Chat Driver、typed activity/update 与唯一 ephemeral ActivityTracker；不读 stdin、不渲染终端、不保存第二份对话历史
+│   ├── chat/                         v0.8-F3/F4 UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ephemeral ActivityTracker；不读 stdin、不渲染终端、不保存第二份对话历史
+│   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded plain-text presentation、对话/Product 面板、原 START/Approval/Cancel owner 接线与生命周期收敛
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
@@ -200,7 +202,7 @@ flowchart TD
     ES --> JL["SQLite：所有 append-only Streams"]
     PS -. "内层唯一 SYNC append 正常返回后发布（不扩大 commit 保证）" .-> FEED["SessionEventFeed（进程内、只读订阅）"]
     FEED -. "dirty hint / Session events" .-> DRIVER["UI-neutral Chat Driver / Product Observation"]
-    DRIVER -. "typed updates" .-> UI["Line CLI；未来可选 TUI"]
+    DRIVER -. "typed updates" .-> UI["Line CLI / 可选 Textual TUI"]
     REC["Recovery / Inspector / Invariants / Compaction"] --> SS
 ```
 
@@ -1116,10 +1118,11 @@ Timeline 由两部分组成，职责分开：
 | [`session/event_feed.py`](../../src/traceh/session/event_feed.py) | 通用、后端无关的进程内 Feed（6.7），不含任何终端文案 |
 | [`chat/driver.py`](../../src/traceh/chat/driver.py) | 订阅当前 Session、驱动既有 Runtime Turn、发出 typed event/activity/outcome update 并收敛取消；不读 stdin、不渲染文本 |
 | [`cli/timeline.py`](../../src/traceh/cli/timeline.py) | 纯展示投影：`EventEnvelope` → 一行文本或 `None`，不打印、不写入、不改事件 |
-| [`cli/chat.py`](../../src/traceh/cli/chat.py) | 第一个 Line adapter：读取终端、分派宿主命令、把 typed update 渲染为既有 Timeline/assistant/error 行 |
+| [`cli/chat.py`](../../src/traceh/cli/chat.py) | 默认 Line adapter：读取终端、分派宿主命令、把 typed update 渲染为既有 Timeline/assistant/error 行 |
+| [`tui/app.py`](../../src/traceh/tui/app.py) | 可选 Textual adapter：消费同一 typed update，并把 Product fresh observation 渲染为 bounded plain-text widgets；没有新的 control authority |
 
 `ChatDriver` 在 Turn 开始前订阅 Session Stream，结束或取消时先关闭订阅并等待 observer 收敛，再发出
-terminal outcome update；Line adapter 只决定这些 typed 值如何显示。adapter 渲染失败不会改变 durable
+terminal outcome update；Line/Textual adapter 只决定这些 typed 值如何显示。adapter 渲染失败不会改变 durable
 Turn 结果，也不会让 Driver 保存第二份状态。
 
 行为事实：
@@ -1208,7 +1211,7 @@ Timeline 每行还可带完成耗时，例如 `[event 11] Model responded (23.4s
 
 它是**启动参数**，不是 Chat 内部命令；`/help` 与 README 都如此说明。
 
-**当前覆盖范围的边界：Verifier 仍然静默。** Heartbeat 只能跟踪 Model Attempt 与已准入的 Tool，因为只有这两类有明确的"开始"事件。`CommandVerifier` 没有"开始"事件——协议里只有 `verification/result`，它在验证命令**结束之后**才追加。因此一个跑很久的验证命令（例如整套 `python -m pytest`）在屏幕上依旧完全安静。本轮**刻意不**用"模型没有 Tool Call、所以大概要开始验证了"这类 UI 侧推测去猜它是否启动：那是把界面猜测当成事实。是否新增 `verification/start` 协议事件属于事件协议变更，留给后续独立设计。当前只输出普通文本行，没有 Spinner、颜色、`\r` 原地刷新或 TUI。
+**当前覆盖范围的边界：Verifier 仍然静默。** Heartbeat 只能跟踪 Model Attempt 与已准入的 Tool，因为只有这两类有明确的"开始"事件。`CommandVerifier` 没有"开始"事件——协议里只有 `verification/result`，它在验证命令**结束之后**才追加。因此一个跑很久的验证命令（例如整套 `python -m pytest`）在屏幕上依旧完全安静。本轮**刻意不**用"模型没有 Tool Call、所以大概要开始验证了"这类 UI 侧推测去猜它是否启动：那是把界面猜测当成事实。是否新增 `verification/start` 协议事件属于事件协议变更，留给后续独立设计。Line 仍只输出普通文本行；F4 TUI 也只消费现有 typed update，不用 Spinner、`\r` 或 UI 推测伪造 Verifier 活动。
 
 ### 13.8 Ctrl+C 生命周期与恢复信息
 
@@ -1546,6 +1549,7 @@ Windows Job 是为跨进程文件锁新增的最小覆盖：该平台走 `msvcrt
 | Session 插件身份与迁移 | 当前身份由共享事件解析器按 `session/created`、合法 `composition/snapshot` 和 `composition/migration-authorized` 顺序重建；身份变化必须在全局 Gate 内以 `source_seq`/Session head CAS 追加授权。授权已落盘而 publish 失败时 fail-closed；不会自动迁移所有 Session。版本按 PEP 440 等价判定 | 仍没有 Session 自动迁移、批量迁移或跨进程迁移协调；每次授权仍由用户命令显式触发，Generation identity 不持久化 |
 | 后台任务失败不被上报为运行结果 | `OwnedTaskSet` 取回插件后台任务的异常（因此不会再出现 `Task exception was never retrieved`）但**不保留**它——早期版本把每个失败对象存进一个无界列表，而该列表没有任何主线消费者；每个异常都持有 traceback，进而持有每一帧的局部变量，为无人读的数据保留不受信任的插件状态是一种内存泄漏兼泄漏面。它也不重启任务、不把失败升级成 Runtime 故障。一个插件的后台任务静默死掉时，Turn 仍会照常完成 | 需要观测语义时必须先有真实主线消费者，且采用有界、结构化、脱敏的记录，不能保留原始异常与 traceback；需要监督语义（重启、退避、上报）时另行设计并明确授权，见 19.12 |
 | 依赖 `packaging` | 运行时不再只依赖标准库；离线安装必须自行准备该 Wheel | 这是守信任边界的必要代价，见 1.1 |
+| Textual 只属于可选 UI | 核心/Line/Eval 不 import Textual；`--tui` 缺 extra 明确失败。首版 TUI 不复制 Line 的 `/plugins` 热切换，也没有 token streaming、完整历史 Dashboard 或执行中并发输入 | F5 必须分别验证无 `[tui]` 与带 `[tui]` 的 clean-input/离线安装；不能为了方便把 Textual 变成核心依赖或缺失时静默 fallback |
 | Agent identity 只是身份，不是运行 | `AgentRecord` 只记录“存在哪些 Agent、各自拥有哪个 Session”。运行由 Stage C 的 `ProcessAgentSupervisor` 负责，且只在本进程内；`AgentRegistrar` 仍不创建该 Agent 的 Session，只声明这个 `session_id` 归它所有 | 一条 `AgentRecord` 不等于“一个正在运行的子 Agent”；Stage E 模型 Tool 能请求 spawn，但只有宿主显式装配并由 D0 provisioning policy 批准后才会进入同一个 Supervisor |
 | Inbox 只记录 accepted | Inbox Stream 本身仍只回答“收到了什么、什么顺序”。是否被 claim、是否执行完毕由**独立的** Delivery Stream 回答（20.11），Stage B 的单事件类型合同没有被破坏 | 两条流分开是刻意的；读取任何一条都不能单独得出“这条消息处理完了” |
 | Supervisor 只在本进程内 | Stage C 的 `ProcessAgentSupervisor` 只管理**自己创建或显式 resume 的** Activation。进程启动后不会自动扫描全部 Agent，不会接管别的进程留下的 claim，也没有自动重试 | 冷恢复需要 attempt identity 与重试策略；在此之前，崩溃后留下的“已 claim 未 terminal”只能由人查看 Delivery Stream |
@@ -3617,7 +3621,8 @@ SQLite 和 Git 测试不默认用 xdist，Wheel/L2-L4、联网与真实 Provider
 冻结计划中的 F2 已按 20.34 完成同 Provider/同模型/同冻结 dispatch request 的有界 retry；F3 又已按
 20.35 让 Line 与未来 TUI 共用一个 Driver 和 ephemeral activity projection，并保持 Product/Workflow
 observation 纯读。唯一完整真实 Provider 网格只在 F5 作为发布证据运行。当前已是 SQLite、有同请求
-bounded retry 和 UI-neutral Driver，但仍无 Provider/model fallback 或 TUI。
+bounded retry、UI-neutral Driver 与可选最小 Textual TUI，但仍无 Provider/model fallback、token streaming
+或完整历史 Dashboard。
 
 v0.9 只有 v0.8 完成发布后才可重新核对和批准实施。trusted Plugin 在现有
 Activation/Generation/Lease 中贡献 typed Skill catalog，selection 不启用插件、不授予 Tool；Workspace
@@ -3791,4 +3796,68 @@ Evaluation/CLI 组 `739 passed, 1 skipped`；全仓 `2488 collected`。compileal
 collect-only 已通过。F3 没有改变
 Runtime/Session/SQLite schema 或 Provider 副作用，所以按冻结计划不重复 F2 已完成的完整全量；也没有
 联网、真实 Provider/API、读取 `.env`、Wheel/L2-L4、版本升级、push、tag 或 release。独立短复审已确认
-P0/P1/P2 清零，本提交完成 F3；F4 Textual TUI 尚未开始。
+P0/P1/P2 清零，本提交完成 F3；F4 的当前实现见 20.36。
+
+### 20.36 v0.8-F4：同一 `traceh chat` 的可选 Textual adapter（通俗版 20.30）
+
+F4 没有新增第二条 Chat/Product 命令、Runtime、Event bus、ProductTask 状态或控制面。唯一入口仍是
+`traceh chat`；`--tui` 只选择第二个 presentation adapter。新
+[`chat/session.py`](../../src/traceh/chat/session.py) 把“新建 Session”与“核对冻结插件身份后恢复旧
+Session”抽成 UI-neutral opening boundary，Line 与 Textual 都在接受用户输入前调用它。对话重启显示由
+现有 `SurfaceProjector` fresh replay SQLite Session facts 得到，widget 内容不参与下一次请求、恢复或
+事实判断。
+
+Textual 位于新的 [`traceh/tui/`](../../src/traceh/tui/) 包。包的 `__init__` 与 core-only presentation
+不 import Textual；`pyproject.toml` 只在 `tui` extra 声明 `textual>=8.2.8,<9`。CLI 在装配 Store、
+Runtime、Product 或创建 Session **之前**检查 optional dependency，缺失时给出安装提示并停止，不静默
+切回 Line。`runner.py` 只拥有 adapter lifecycle：App 退出后先收敛 Product host，再 dispose Runtime；
+SQLite Store 仍由 CLI composition root 关闭。F5 才负责无 extra/有 extra 的 clean-input Wheel 与离线
+安装门禁，本节没有提前打包或升级版本。
+
+最小 App 只有对话、当前 ProductTask、固定 Workflow、Review/Verifier 摘要和 START/Inspect/Approve/
+Reject/Cancel。Chat Turn 仍交给 F3 唯一 `ChatDriver`，Timeline 与 heartbeat 仍来自同一个
+`ActivityTracker`；TUI 没有 token streaming，也不允许执行中并发提交第二轮。重启时
+`ProductTaskStreamReader.current_for_session()` 扫描唯一 ProductTask Stream 前缀并完整 replay，只接受
+与当前 Chat Session 绑定的唯一未终结任务；终态不是“当前任务”，多个 live 候选明确报 ambiguous，绝不
+按 widget、时间戳或字符串顺序猜一个。随后 `ProductObservationSession` 仍以 Feed dirty hint + fresh
+durable read 更新面板，Feed payload 不是状态。TUI watcher 同时等待 dirty 与宿主单调时钟周期，任一先到
+都重新读取 durable facts；正数 heartbeat 配置复用其周期，活动 heartbeat 被 `--no-timeline` 或 `0`
+关闭时，Product correctness refresh 仍使用既有默认 10 秒，不会被一起关闭。因而另一进程写同一 SQLite、
+进程内 Feed 永不通知时，面板与按钮也只会延迟一个有界周期，不会一直停在旧 widget state。
+
+模型的确认 Tool 仍只能产生 F3 typed `ProductStartRequest`。TUI 先显示 task、requirement 与 mode，只有
+用户点击独立 `START task` 才把**同一个 request 对象**交给 `ProductChatHost.start()`；没有点击不会写
+ProductTask。Approval button 只有 fresh observation 同时证明 Product/Workflow 已对账、Product status
+awaiting approval、Review、固定 Workflow evidence 和 expected digest 都存在，且尚无 Approval/Promotion
+receipt 时才启用；按钮只构造既有
+`ProductCommand(APPROVE, task_id)`，不接收、不保存也不让模型提供 digest。真正 approve/promote 仍由
+Promotion/Product owner fresh 重算并走既有 idempotency/CAS。App 自己把操作串行化以免双击制造并发
+噪声，但这不替代底层重复/stale digest 保护。
+
+所有模型回答、requirement、路径、Patch preview、失败 code 与 durable identity 都进入
+`safe_display_block()`：只保留 literal LF，控制/format/bidi 字符使用现有 terminal safety 转义，每行、
+行数与整块都有上限。`RichLog` 和全部 untrusted `Static` 明确 `markup=False`，所以 `[bold]` 等字符串按
+字面显示，不能执行 Rich/Textual 标记；错误只显示稳定 code/type，不显示 raw Provider/exception 正文。
+关闭、EOF/terminal teardown 与 Ctrl+C 都取消并等待 App 自己持有的 operation，普通 Turn 继续走 Runtime
+cancel owner，Product start 的 caller cancellation 继续走 Product control owner，最后关闭 observer、
+subscription 与 watcher。Windows resize 只触发布局，不改变任何 durable state。
+
+F4 当前 core-only collect 为 `2496`，安装临时隔离 `tui` extra 后为 `2503`。core-only optional/parser/
+presentation `7 passed`；Textual 8.2.8 headless Pilot `7 passed`，覆盖 resize、普通 durable Turn、active
+Ctrl+C、Line/TUI exact start identity、START 越权反例、durable restart、Approval evidence、双击串行化
+、真实 SQLite 无 Feed 通知的周期 fresh refresh 与 markup 安全。Product observation 当前任务发现也加入 public reader
+测试；Line/恢复/Product/F3 真实本地 Git/Promotion 定向与相邻门禁共 `352 passed, 1 skipped`，架构相邻
+回归保持绿色；该 skip 是既有 Windows
+目录 symlink 权限边界。反向验证临时把确认路径改成自动 `start()` 后，Pilot 在点击前真实看到
+一次 start 并失败；恢复独立按钮后通过。第二次临时把 Product `Static` 改成 `markup=True`，公开 render
+从 `[bold]plain[/bold]` 变成 `plain` 并失败；第三次用未连接 Feed 的真实 SQLite 写入模拟另一进程，先
+确认 observer 没有 dirty，再移除 periodic waiter，Pilot 因根本没有定时 sleeper 而超时失败。三项保护
+恢复后七项 Pilot 全绿。
+
+F4 没有修改 Runtime、Session SQLite schema、Provider dispatch、Agent/Supervisor、Workflow、Budget、
+Workspace、Artifact、Promotion 或 Evaluation owner，也没有联网、读取 `.env`、调用真实 Provider、运行
+完整全量、Wheel/L2-L4、升级版本、commit、push、tag 或 release。Release Stop C 首轮独立审查确认
+`P0=0/P1=0`，并发现上述不阻断提交的周期 refresh P2；该 P2 已按 frozen observation 合同根修并完成确定性
+反例与反向验证。局部短复核随后确认 `P0=0/P1=0/P2=0`，并运行 `302 passed` 的不重叠离线回归；复核
+解释器没有安装 Textual，因此没有冒充重复执行实施侧 7 条 Pilot。F4 已提交；完整全量、Wheel、真实
+Provider 与 F5 仍未开始。

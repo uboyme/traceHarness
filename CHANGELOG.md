@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### v0.8-F4: optional Textual adapter on the existing Chat/Product mainline
+
+- Added `traceh chat --tui` as an optional presentation adapter, not a second
+  command or Product path. Line and Textual now share UI-neutral Session
+  opening/recovery, the existing `ChatDriver`, SQLite conversation facts and
+  the same Product host/control plane.
+- Added the `tui` extra (`textual>=8.2.8,<9`). Core imports, Line Chat and Eval
+  remain independent of Textual; selecting `--tui` without the extra fails
+  before Store/Runtime/Session assembly and never silently falls back to Line.
+- Added a bounded two-column interface for conversation/activity and the
+  current ProductTask, fixed Workflow nodes, Review/Verifier evidence,
+  target/digest plus START/Inspect/Approve/Reject/Cancel. Restart reconstructs
+  conversation and the unique unsettled task from durable facts, never widget
+  state; ambiguous live tasks fail closed.
+- Preserved human authority: model confirmation only exposes the exact typed
+  start request, and a separate START button is required. Approval is enabled
+  only for reconciled fresh durable Review/evidence with no existing receipt
+  and sends the existing task-id command to the original owner; digest
+  calculation, idempotency, stale protection and
+  Promotion remain outside the UI and model context.
+- Rendered every model/Patch/path/error-derived value as bounded plain text,
+  with terminal-control escaping and Textual/Rich markup disabled. App close,
+  Ctrl+C and terminal teardown cancel and await the existing Runtime/Product
+  owners before observer and watcher cleanup.
+- Added a bounded periodic durable refresh beside the process-local Feed dirty
+  hint. Positive heartbeat configuration supplies its interval; disabling the
+  activity heartbeat still preserves the default 10-second Product refresh, so
+  another process cannot leave the TUI permanently stale.
+- Added core-only optional-dependency/presentation tests and Textual headless
+  Pilot tests for resize, durable turns, active cancellation, Line/TUI start
+  identity, START/Approval authority, duplicate clicks, durable restart and
+  markup/control/Unicode bounds, plus refresh without any Feed notification.
+  Reverse verification proved automatic start, enabled markup and removal of
+  the periodic waiter are caught. No F5 full suite, package/release,
+  version bump, real Provider, fallback, token streaming or second fact source
+  is included.
+- Release Stop C and its focused periodic-refresh re-review both completed with
+  no remaining P0/P1/P2. The focused review ran 302 offline checks; its
+  core-only interpreter did not install Textual and did not claim to repeat the
+  separately recorded seven headless Pilot tests.
+
 ### v0.8-F3: UI-neutral Chat driver and read-only Product observation
 
 - Added one UI-neutral `ChatDriver` that submits Turns to the existing

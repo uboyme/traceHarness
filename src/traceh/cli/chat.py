@@ -30,6 +30,7 @@ from traceh.chat.driver import (
     TurnFailedUpdate,
     TurnInterruptedUpdate,
 )
+from traceh.chat.session import ChatSession, open_chat_session
 from traceh.cli.activity import DEFAULT_HEARTBEAT_SECONDS, render_activity_wait
 from traceh.cli.command_line import (
     Literal,
@@ -97,12 +98,6 @@ _HELP_LINES = (
     "  --no-timeline          silence live activity output",
     "  --heartbeat-seconds N  seconds between waiting notices (0 disables)",
 )
-
-
-@dataclass(frozen=True, slots=True)
-class ChatSession:
-    session_id: str
-    workspace: Path
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,38 +250,21 @@ async def _open_session(
     timeline: bool,
     resume_environment: ResumeEnvironment,
 ) -> ChatSession:
-    if session_id is None:
-        if workspace is None:  # pragma: no cover - chat_target already rejects this
-            raise CliConfigurationError("chat needs a workspace to start a new session")
-        try:
-            created = await runtime.create_session(workspace, metadata={"cli": "chat"})
-        except NotADirectoryError as error:
-            raise CliConfigurationError(f"workspace is not a directory: {error}") from error
-        # Read it back so the banner shows the workspace exactly as persisted.
-        session = ChatSession(created, await runtime.sessions.workspace_for(created))
-        await _write_session_banner(runtime, console, session, resume_environment)
-        _write_seq_note(console, timeline=timeline)
-        return session
-
     try:
-        resolved_workspace = await runtime.sessions.workspace_for(session_id)
+        opened = await open_chat_session(
+            runtime,
+            workspace=workspace,
+            session_id=session_id,
+        )
+    except NotADirectoryError as error:
+        raise CliConfigurationError(f"workspace is not a directory: {error}") from error
     except SessionNotFoundError as error:
         raise CliConfigurationError(f"session not found: {session_id}") from error
-    session = ChatSession(session_id, resolved_workspace)
-
-    # Converge whatever the previous process left open before the user can add
-    # anything new. No turn is started and no instruction is injected: the next
-    # turn is the one the user types.
-    #
-    # Checked before recovery, because recovery appends events: a session created
-    # under a different plugin set must be refused, not repaired and continued.
-    await runtime.verify_session_plugins(session_id)
-    report = await runtime.recovery.recover(session_id)
+    session = opened.session
     await _write_session_banner(runtime, console, session, resume_environment)
-    # Continuing a session needs this note more, not less: the first new event
-    # can be seq 40 or 400 with nothing before it on screen.
     _write_seq_note(console, timeline=timeline)
-    if report.changed:
+    report = opened.recovery
+    if report is not None and report.changed:
         console.write(
             "recovered: "
             f"model_attempts={report.closed_model_attempts} "

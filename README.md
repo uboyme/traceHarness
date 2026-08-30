@@ -19,6 +19,7 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - 进程内 Session Event Feed：`EventStore` 的唯一 `SYNC` append 正常返回之后按真实 `seq` 顺序发布给订阅者，每个订阅者拿到独立副本；消费者接口只能订阅、不能发布；它不新增任何持久化事实，也不提升 SQLite commit 的平台保证，不是事实源；
 - `traceh chat` 的实时 Tool Timeline：Turn 运行期间即时显示 Step、模型调用、工具生命周期和验证结果，可用 `--no-timeline` 关闭；
 - Activity Heartbeat：模型或工具长时间未结束时，按 `--heartbeat-seconds`（默认 10 秒）打印等待时长，完成行附带实测耗时；
+- 可选 Textual TUI：`traceh chat --tui` 复用同一 Session、ChatDriver 与 Product control/observation，显示对话、当前任务、固定节点、Review/Verifier 与 START/Approval/Reject/Cancel；
 - 可收敛的 Ctrl+C：有任务在跑时首次 Ctrl+C 只取消当前 Turn 并保留 Session，取消生命周期会完整显示在 Timeline 上；
 - 启动即打印的恢复命令：Banner 直接给出含解析后 `--data-dir` 的可复制命令，硬中断也能从屏幕历史找回 Session；
 - Effect Intent / Dispatch / Outcome 记录，用于判断崩溃时间窗中的副作用；
@@ -75,6 +76,32 @@ authority probe 的数据库不会先被改写 journal mode/bytes，也不会丢
 **恢复它当时的行为**是另一件事，需要 Provider、Model 等配置——见下面的[Ctrl+C 与找回 Session](#ctrlc-与找回-session)。Chat 启动时就会把完整命令打印出来，直接复制即可。
 
 继续会话前会先执行崩溃恢复。只有确实修复了未闭合状态时才会打印一行简短的 `recovered: ...`；在你主动输入前不会创建 Turn，也不会替你注入隐藏指令。
+
+### 可选 Textual 界面
+
+核心与 Line Chat 不依赖 Textual。需要双栏交互界面时安装可选 extra：
+
+```powershell
+python -m pip install -e ".[tui]"
+traceh chat . --tui
+```
+
+继续旧会话仍用同一个命令，只增加 adapter 选择：
+
+```powershell
+traceh chat --session-id <session-id> --data-dir "<data-dir>" --tui
+```
+
+TUI 左侧显示从 SQLite Session facts 重建的对话和同一 `ChatDriver` 的活动，右侧显示当前未终结
+ProductTask、固定 Workflow 节点、Review/Verifier、target 与 approval digest。模型确认 Proposal 后只会
+出现独立的 **START task** 按钮；不点击就不会开始。Approve/Reject/Cancel 也调用 Line 命令背后的同一
+宿主 control plane，TUI 不保存或接收 approval digest。所有模型、Patch、路径和错误文字都按 plain text
+转义并有界，Rich/Textual markup 被禁用。Feed 仍只是进程内 dirty 提示；TUI 还会按宿主单调时钟周期
+fresh read SQLite，因此另一进程更新任务时不会永久停留在旧面板。
+
+首版不做 token streaming、完整历史 Dashboard、拖拽 DAG、执行中并发输入或 TUI 内插件组合管理；插件
+选择仍可用启动参数，空闲期 `/plugins` 切换仍属于 Line adapter。没有安装 extra 却使用 `--tui` 时会在
+创建 Store/Session 前明确报错，不会静默切回 Line。
 
 以下内部命令只有在整行完全匹配时才生效：
 
@@ -218,7 +245,8 @@ Product 进度同样 fresh read ProductTask/Workflow 两条状态，Feed 只提�
 任何 fresh-read 失败都会由 observer 自己回滚全部 subscription/watcher；Product host 只接受与同一
 `PublishingEventStore` 精确绑定的显式 Feed，缺失或身份不一致会在装配前拒绝，不能得到永久静默的假实时观察。
 
-当前 Chat 仍是行式提示符，不是流式 TUI：没有 Token Streaming、执行前审批，也不能在 Turn 运行期间继续输入。
+默认 Chat 仍是行式提示符；F4 的 `--tui` 是可选最小 Textual adapter。两者都没有 Token Streaming，
+也不能在 Turn 运行期间继续输入；TUI 的 START/Approval 是既有 Product 人工边界，不是新增模型权限。
 
 ### Windows 中文与其他非 ASCII 文本
 
@@ -265,7 +293,9 @@ v0.4 引入了本项目的**第一个运行时第三方依赖**：[`packaging`](
 
 它被用来解析 PEP 440：Plugin Manifest 的 `requires_traceh` 兼容范围、插件之间的依赖版本区间，以及插件 Distribution 声明的 `traceharness-py` 依赖。这三处都位于信任边界上，自己实现一个不完整的 PEP 440 解析器风险更大，所以选择依赖标准实现。
 
-除此之外运行时仍然只使用 Python 标准库；`pytest`、`pytest-asyncio`、`ruff` 只是开发依赖。项目使用 `setuptools` 作为构建后端，正常的 `pip` Build Isolation 会自动安装它。
+核心安装除此之外仍然只使用 Python 标准库；`pytest`、`pytest-asyncio`、`ruff` 只是开发依赖。可选
+`tui` extra 另行声明 `textual>=8.2.8,<9`，Line/Eval/core import 不依赖它。项目使用 `setuptools` 作为
+构建后端，正常的 `pip` Build Isolation 会自动安装它。
 
 > 注意：v0.3 及更早文档中"运行时只依赖标准库"的说法从 v0.4 起不再成立。
 
@@ -693,12 +723,14 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
-  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0–F3 已完成两阶段
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前未发布的 v0.8-F0–F4 已完成两阶段
   Model admission、SQLite 唯一生产 EventStore，以及 typed Provider failure + 同冻结请求有界 retry；F2
   已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量；F3 已完成共享 Chat Driver、
-  Line adapter 与只读 Product observation，等待独立审查，F4-F5 尚未开始；
+  Line adapter、只读 Product observation 与同一 `traceh chat --tui` Textual adapter；Release Stop C
+  首轮清零 F4 的 P0/P1，审查发现的非阻断周期 refresh P2 已根修，局部复核再确认 P0/P1/P2 全零；F4
+  已提交但尚未发布，F5 尚未开始；
   v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
-  和可审计检索。当前已有 SQLite 与 bounded model retry，但仍没有 TUI、Skill/Memory、OS sandbox、Provider/model fallback 或
+  和可审计检索。当前已有 SQLite、bounded model retry 与最小 TUI，但仍没有 Skill/Memory、OS sandbox、Provider/model fallback 或
   第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
 - Activity Heartbeat 由 UI-neutral Driver 中唯一的 `ActivityTracker` 产生 typed update，Line/TUI 不各自推断；它仍只是屏幕状态，不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；

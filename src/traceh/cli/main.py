@@ -442,6 +442,15 @@ async def _run(args: argparse.Namespace) -> int:
 
 async def _chat(args: argparse.Namespace) -> int:
     workspace, session_id = chat_target(args.workspace, args.session_id)
+    tui_runner = None
+    if args.tui:
+        # The optional dependency is checked before Store/Runtime/Product
+        # assembly, so a missing TUI never creates durable state and never
+        # silently falls back to the Line adapter.
+        from traceh.tui.runner import require_textual, run_tui
+
+        require_textual()
+        tui_runner = run_tui
     product_config = None
     product_host = None
     actions = None
@@ -522,23 +531,20 @@ async def _chat(args: argparse.Namespace) -> int:
                     product_config.promotion_target_id: product_config.promotion_target,
                 }
             )
-            product_host = LineProductAdapter(
-                await build_product_chat_host(
-                    store=runtime.sessions.store,
-                    data_dir=Path(args.data_dir),
-                    host_profile=product_config.host_profile,
-                    providers={args.provider: provider},
-                    workspace_provider=workspace_provider,
-                    artifact_cas=LocalArtifactCas(product_config.cas_root),
-                    promotion_targets=promotion_targets,
-                    capture_limits=product_config.capture_limits,
-                    approver_id=product_config.approver_id,
-                    max_report_chars=product_config.max_report_chars,
-                    actions=actions,
-                    model_retry_policy=runtime.config.model_retry_policy,
-                    event_feed=runtime.events,
-                ),
+            product_host = await build_product_chat_host(
+                store=runtime.sessions.store,
                 data_dir=Path(args.data_dir),
+                host_profile=product_config.host_profile,
+                providers={args.provider: provider},
+                workspace_provider=workspace_provider,
+                artifact_cas=LocalArtifactCas(product_config.cas_root),
+                promotion_targets=promotion_targets,
+                capture_limits=product_config.capture_limits,
+                approver_id=product_config.approver_id,
+                max_report_chars=product_config.max_report_chars,
+                actions=actions,
+                model_retry_policy=runtime.config.model_retry_policy,
+                event_feed=runtime.events,
             )
         heartbeat_seconds = validate_heartbeat_seconds(
             args.heartbeat_seconds, timeline=args.timeline
@@ -559,17 +565,33 @@ async def _chat(args: argparse.Namespace) -> int:
             verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
             product_config=args.product_config,
         )
-        handed_to_chat = True
-        result = await run_chat(
-            runtime,
-            default_console(),
-            workspace=workspace,
-            session_id=session_id,
-            timeline=args.timeline,
-            heartbeat_seconds=heartbeat_seconds,
-            resume_environment=resume_environment,
-            product=product_host,
-        )
+        if tui_runner is not None:
+            handed_to_chat = True
+            result = await tui_runner(
+                runtime,
+                workspace=workspace,
+                session_id=session_id,
+                timeline=args.timeline,
+                heartbeat_seconds=heartbeat_seconds,
+                product=product_host,
+            )
+        else:
+            line_product = (
+                None
+                if product_host is None
+                else LineProductAdapter(product_host, data_dir=Path(args.data_dir))
+            )
+            handed_to_chat = True
+            result = await run_chat(
+                runtime,
+                default_console(),
+                workspace=workspace,
+                session_id=session_id,
+                timeline=args.timeline,
+                heartbeat_seconds=heartbeat_seconds,
+                resume_environment=resume_environment,
+                product=line_product,
+            )
     except BaseException as error:
         if product_configuration_errors and isinstance(error, product_configuration_errors):
             primary = CliConfigurationError(
@@ -579,11 +601,18 @@ async def _chat(args: argparse.Namespace) -> int:
             primary = error
     finally:
         cleanup: BaseException | None = None
+        if product_host is not None and not handed_to_chat:
+            try:
+                await product_host.aclose()
+            except BaseException as error:
+                cleanup = error
         if runtime is not None and not handed_to_chat:
             try:
                 await runtime.dispose()
             except BaseException as error:
-                cleanup = error
+                cleanup = combine_failures(
+                    cleanup, error, "chat runtime shutdown failed"
+                )
         try:
             await store.aclose()
         except BaseException as error:
@@ -976,6 +1005,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--session-id",
         default=None,
         help="Continue an existing session; its workspace comes from the event log",
+    )
+    chat.add_argument(
+        "--tui",
+        action="store_true",
+        help="Use the optional Textual interface (install traceharness-py[tui])",
     )
     chat.add_argument(
         "--no-timeline",

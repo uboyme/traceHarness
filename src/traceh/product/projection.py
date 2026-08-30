@@ -37,6 +37,7 @@ from traceh.api.product import (
     PRODUCT_TASK_REJECTED,
     PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_STARTED,
+    PRODUCT_TASK_STREAM_PREFIX,
     ProductTaskStatus,
     ProductTaskSummary,
     RequestedTaskMode,
@@ -46,7 +47,7 @@ from traceh.api.product import (
     product_required_values,
     product_transition_allowed,
 )
-from traceh.product.errors import ProductProtocolError
+from traceh.product.errors import ProductProtocolError, ProductStateError
 from traceh.product.events import (
     ParsedProductEvent,
     parse_product_event,
@@ -55,6 +56,7 @@ from traceh.product.events import (
     protocol_display_text,
     protocol_identifier,
     require_product_identifier,
+    task_id_from_stream,
 )
 from traceh.session.event_store import EventStore
 
@@ -318,6 +320,26 @@ class ProductTaskStreamReader:
 
     async def load(self, task_id: str) -> ProductTaskSummary | None:
         return rebuild_product_task(task_id, await self.read_events(task_id))
+
+    async def current_for_session(self, session_id: str) -> str | None:
+        """Return the one unsettled task tied to a Chat Session, if any."""
+
+        session_id = require_product_identifier(session_id, field="session_id")
+        matches: list[str] = []
+        streams = await self._store.list_streams(prefix=PRODUCT_TASK_STREAM_PREFIX)
+        for stream_id in streams:
+            task_id = task_id_from_stream(stream_id)
+            summary = await self.load(task_id)
+            if summary is None or summary.settled:
+                continue
+            if session_id in {
+                summary.origin_session_id,
+                summary.confirmation_session_id,
+            }:
+                matches.append(task_id)
+        if len(matches) > 1:
+            raise ProductStateError("product-observation-session-ambiguous")
+        return None if not matches else matches[0]
 
 
 async def validate_product_task(

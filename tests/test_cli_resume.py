@@ -19,7 +19,8 @@ from pathlib import Path
 import pytest
 
 from traceh.api.llm import ModelResponse
-from traceh.cli.chat import ChatSession, ResumeEnvironment, _safe_base_url, _write_resume_block
+from traceh.chat.session import ChatSession
+from traceh.cli.chat import ResumeEnvironment, _safe_base_url, _write_resume_block
 from traceh.cli.command_line import (
     Literal,
     UnsafeCommandValue,

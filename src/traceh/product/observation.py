@@ -130,6 +130,17 @@ class ProductObservationReader:
     def store(self) -> EventStore:
         return self._store
 
+    async def current_task_id(self, session_id: str) -> str | None:
+        """Find the one unsettled ProductTask owned by this Chat Session.
+
+        This is a fresh scan of the authoritative ProductTask streams, used
+        only when an adapter starts or resumes.  Terminal history is not a
+        "current task" and multiple live matches are refused rather than
+        resolved by widget order, timestamps or an arbitrary stream name.
+        """
+
+        return await self._tasks.current_for_session(session_id)
+
     async def load(self, task_id: str) -> ProductObservation:
         task_id = require_product_identifier(task_id, field="task_id")
         summary = await self._tasks.load(task_id)

@@ -8,6 +8,7 @@ import inspect
 from pathlib import Path
 
 import pytest
+from product_fixtures import ORIGIN_SESSION, build_assembly, opened
 
 import traceh.chat.driver as chat_driver_module
 import traceh.cli.chat as line_chat_module
@@ -29,6 +30,7 @@ from traceh.product.observation import (
     ProductObservation,
     ProductObservationSession,
 )
+from traceh.product.projection import ProductTaskStreamReader
 from traceh.promotion.events import PROMOTION_LEDGER_STREAM
 from traceh.session.event_feed import PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
@@ -126,6 +128,30 @@ async def test_failed_start_rolls_back_every_partial_subscription() -> None:
             PROMOTION_LEDGER_STREAM,
         )
     )
+
+
+async def test_current_product_task_is_rebuilt_from_durable_streams() -> None:
+    assembly = await build_assembly()
+    reader = ProductTaskStreamReader(assembly.store)
+    try:
+        assert await reader.current_for_session(ORIGIN_SESSION) is None
+        await opened(assembly, task_id="task-current")
+        assert await reader.current_for_session(ORIGIN_SESSION) == "task-current"
+
+        await assembly.service.cancel_task(
+            task_id="task-current",
+            operation_id="task-current-cancel",
+            reason_code="test-cancelled",
+        )
+        assert await reader.current_for_session(ORIGIN_SESSION) is None
+
+        await opened(assembly, task_id="task-live-one")
+        await opened(assembly, task_id="task-live-two")
+        with pytest.raises(ProductStateError) as ambiguous:
+            await reader.current_for_session(ORIGIN_SESSION)
+        assert ambiguous.value.code == "product-observation-session-ambiguous"
+    finally:
+        await assembly.aclose()
     assert not any(
         task.get_name() == "traceh-product-observer-task-failed-start"
         for task in asyncio.all_tasks()

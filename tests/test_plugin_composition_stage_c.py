@@ -11,7 +11,8 @@ from plugin_fixtures import RecordingTool, ScriptedPlugin, entry_point_for, mani
 from traceh.api.llm import ModelResponse
 from traceh.api.prompts import PromptSection
 from traceh.chat.activity import default_clock
-from traceh.cli.chat import ChatSession, _chat_loop, run_chat
+from traceh.chat.session import ChatSession
+from traceh.cli.chat import _chat_loop, run_chat
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import (
     AgentAlreadyRunningError,

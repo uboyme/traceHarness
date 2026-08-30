@@ -24,6 +24,7 @@ from traceh.chat.driver import (
     TurnFailedUpdate,
     TurnInterruptedUpdate,
 )
+from traceh.chat.session import ChatSession, OpenedChatSession, open_chat_session
 
 __all__ = [
     "DEFAULT_HEARTBEAT_SECONDS",
@@ -33,11 +34,14 @@ __all__ = [
     "ActivityUpdate",
     "Clock",
     "ChatDriver",
+    "ChatSession",
     "ChatTurnOutcome",
     "ChatUpdate",
+    "OpenedChatSession",
     "SessionEventUpdate",
     "TurnCompletedUpdate",
     "TurnFailedUpdate",
     "TurnInterruptedUpdate",
     "default_clock",
+    "open_chat_session",
 ]

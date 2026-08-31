@@ -1,10 +1,21 @@
 # Roadmap
 
 The order below preserves the current protocol and keeps orchestration
-boundaries narrow. v0.7.1 is released; v0.8-F0-F4 are implemented but not yet
-released, F3's independent short re-review cleared P0/P1/P2, and Release Stop C
-cleared F4 P0/P1. Its non-blocking periodic-refresh P2 was fixed and the focused
-re-review cleared P0/P1/P2. The remaining
+boundaries narrow. v0.7.1 is released; v0.8-F0-F4 are implemented and F5 is
+assembling the unreleased 0.8.0 candidate. A release-candidate usability pass
+directly replaced the first F4 TUI presentation, so the earlier Release Stop C
+and final-full results remain historical but do not certify the current TUI.
+The replacement findings were cleared; later real use drove focused root repairs
+for pre-START Product Chat authority, an eager-cleanup deadlock, task identity
+handoff, schema-gated multiline Tool arguments, truthful leaf-failure display,
+and Textual gate focus handoff. A fresh real TUI ProductTask then completed
+through one-shot Promotion; Provider, TUI, failure-evidence, and cross-owner
+re-reviews were clear with no P0/P1/P2, and the latest adjacent-owner gate was
+`251 passed`. After two recorded red gates and their root fixes, that candidate
+completed `2555 passed, 7 skipped` with exit 0. The same TUI subsequently gained
+fresh role-conversation/full-identity views and restored Review evidence, so the
+full result is now historical and a renewed focused review/final full gate is
+required before packaging. The remaining
 frozen v0.8 and v0.9 stages describe future work. Product state remains outside
 `AgentLoop`.
 
@@ -508,7 +519,7 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   regression, clean packaging, offline install, annotated tag and GitHub Release
   are complete.
 
-## v0.8: Reliable local ProductTask host — F0-F4 implemented, F5 pending
+## v0.8: Reliable local ProductTask host — F0-F4 implemented, F5 in progress
 
 - F0 closes the terminal-error injection path and makes one durable Model
   Attempt correspond to one admitted Provider dispatch. Attempt-scoped cost
@@ -534,11 +545,56 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 - ✅ Add `traceh chat --tui` as an optional Textual adapter over the same driver,
   Session open/recovery and Product control/observation seams. It keeps START
   and Approval host-owned, reconstructs current state from durable facts, and
-  combines process-local dirty hints with bounded periodic durable refresh.
-  Release Stop C and the focused refresh re-review have no remaining P0/P1/P2;
-  F4 is committed but not yet released.
+  combines process-local dirty hints with bounded periodic durable refresh. The
+  current single light-theme implementation separates transient operations, durable facts
+  and model self-report; renders only legal typed-confirmation gates; shows
+  task-bound stream/operation ages and visible shutdown; keeps Cancel reachable
+  while START is converging; recovers initial observation reads on a bounded
+  cadence; top-aligns the Product summary,
+  bottom-anchors the legal gate, fixes fact columns and short-chat growth; and has no legacy TUI
+  branch. Its renewed review found two P1s and two P2s; all four are fixed with
+  deterministic reverse checks and cleared by short re-review. Later real TUI
+  use found the Product-configured requester Chat could still dirty the source
+  before START through ordinary coding Tools. The one CLI composition now
+  exposes only read/proposal/confirmation Tools and monotonically denies
+  declared effectful plugin Tools; real Git Line/Textual counter-examples pass,
+  and the correction passes its focused evidence. A later real Provider response
+  exposed non-JSON double-triple-quoted multiline Tool strings; ADR-0038 now permits
+  only exact schema-declared top-level string normalization and rejects neighboring
+  malformed forms, including `NaN` and positive/negative `Infinity`. Widths below
+  110 columns use the single-column layout so the fixed 52-column facts row cannot
+  wrap. Failure inspection binds Agent/Session/create-request and the deterministic
+  Workflow message, then reads only that Turn's stable leaf code beside the Workflow
+  wrapper; a later unrelated Turn cannot replace it. One fresh real `qwen-plus` TUI
+  ProductTask completed Proposal, typed START, Review, typed Approval and bare-target
+  Promotion with clean source and converged Session/Budget/Workspace owners; the
+  Provider, TUI, failure-evidence, and cross-owner re-reviews are clear with no
+  P0/P1/P2; the latest adjacent-owner gate is `251 passed`. The current single
+  adapter subsequently gained the missing output view in place: `Ctrl+T` fresh
+  reads Product observation and exact Router/fixed-role Sessions, validates each
+  Session before `SurfaceProjector`, groups roles without caching or writes, and
+  reports unknown Usage as unavailable while hiding shell arguments and tool
+  result bodies. `Ctrl+P` fresh reads full identities and offers explicit copy/
+  temporary-file fallback. The Review block again shows bounded changed paths,
+  verifier evidence and patch preview. `Ctrl+I`/`Ctrl+R` are not current TUI
+  commands; reconciliation remains on the existing Line control path.
 - Keep `traceh eval` as the only benchmark path and run one full real-Provider grid
   only as final release evidence.
+- F5 has switched the single version source to `0.8.0`, aligned the two independent
+  example plugin Wheels with their tested v0.8 SDK ranges, and completed the frozen
+  pre-review gates. The global independent review cleared P0/P1, and its two
+  non-blocking stale-context P2s were corrected. The pre-replacement candidate's
+  full gate was `2496 passed, 7 skipped`, but the TUI replacement and its repaired
+  review findings reopened Release Stop C and the current-candidate full gate.
+  The replacement candidate subsequently completed `2555 passed, 7 skipped` in
+  `3078.80s`, exit 0. The later output-visibility work materially changed the
+  same TUI and therefore makes that full result historical rather than the
+  current final gate. The output-visibility scope now has `47` focused TUI tests,
+  `215` adjacent-owner tests and `2575` collected tests green, and its independent
+  short review is clear with no P0/P1/P2. User acceptance and one final full run, clean-input
+  archives, core/`[tui]` offline installs, the
+  separately authorized real-Provider grid, tag and release remain pending until
+  their own checkpoints clear.
 
 See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 

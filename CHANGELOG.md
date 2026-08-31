@@ -2,6 +2,194 @@
 
 ## Unreleased
 
+### v0.8-F5: v0.8.0 release candidate integration
+
+- Advanced the single package/core/plugin-API version source to `0.8.0` without
+  changing any durable protocol version. Distribution metadata, package export,
+  `traceh.core` identity, CLI banner and source-archive naming remain derived
+  from `traceh.version.__version__`.
+- Advanced the independent Plugin Creator and Python Quality example
+  distributions to `0.2.2`. Their Distribution dependencies and runtime
+  Manifests now explicitly admit the tested v0.8 SDK while retaining their
+  earlier lower bounds; the Creator authoring template generates the current
+  `traceharness-py>=0.8,<0.9` candidate contract. Core discovery and validation
+  rules were not relaxed.
+- Updated the public plugin-author contract for v0.8 and configured all three
+  CI matrix jobs to install the optional `tui` extra so Textual Pilot coverage is
+  not silently skipped. The release gate still proves core-only and `[tui]`
+  installs separately from clean offline inputs.
+- Completed the frozen F5 pre-review gates and global independent review. The
+  review found no P0/P1; its two non-blocking stale-context P2s were corrected
+  in the formal and plain-language project contexts. That candidate passed a
+  full-pytest gate (`2496 passed, 7 skipped`, exit 0), but the TUI replacement
+  below materially changed the candidate afterward, so the historical result
+  no longer counts as the current final gate. Renewed independent review and
+  the replacement-era full run are recorded below; clean-input Wheel/sdist/
+  source ZIP audit, offline installs, the separately authorized real-Provider
+  grid, commit, tag and release remain pending and are not claimed by this
+  entry.
+- Replaced the first F4 TUI presentation in place, with no legacy layout or
+  compatibility switch. The one current adapter separates transient host work,
+  durable Product/Workflow/Session facts and model self-report; renders only
+  legal typed-confirmation gates; reports operation and per-stream ages; keeps
+  reconciliation explicitly write-labelled; offers compact narrow-terminal and
+  full-identity views; and shows owner-by-owner shutdown convergence.
+- Completed the same TUI's missing output-visibility surface without adding a
+  second adapter or fact source. `Ctrl+T` now opens a fresh, read-only snapshot
+  grouped by exact Router and fixed Workflow role Sessions. Router ownership is
+  checked through Agent Directory; fixed roles retain their deterministic
+  Agent/Session/create-request binding. Every Session passes
+  `CoreInvariantChecker` before one canonical-sequence pass combines user/model
+  speech with paired Tool call/result rows. Tool rows expose only bounded safe
+  labels, statuses and exact sequence ranges; unknown Usage is unavailable
+  rather than zero, and shell arguments, Tool-result bodies and raw payloads
+  stay hidden. The projection scans no streams, caches nothing and writes no
+  facts.
+- Closed the post-approval feedback gap found during hands-on acceptance. After
+  approve, reject, cancel or abandon returns and the existing observation is
+  freshly read, the left conversation now renders the typed operation and
+  durable Product status as a host notice. The notice is process-local UI only:
+  it is not appended to the Chat Session, SQLite or any model request.
+- Made `Ctrl+P` fresh-read the current Product observation before showing full
+  identities and explicit copy actions; clipboard failure exports only the
+  selected value to a named temporary text file and reports its path. The
+  default Review block again shows bounded changed paths, verifier status and
+  patch preview from existing inspection evidence. `Ctrl+I` and `Ctrl+R` are
+  not advertised or implemented in this round; exact reconciliation remains
+  available through the existing Line `/task inspect` path.
+- Verified the current output-visibility and host-feedback surface with `54`
+  focused TUI/optional tests,
+  `215` adjacent Product/Chat tests and `2575` collected tests. A separate
+  short review before the host-feedback repair found no P0/P1/P2; removing the Router Agent-to-Session binding
+  makes the tampered unrelated-Session counter-example fail with `DID NOT
+  RAISE`, and restoring the binding returns it to green. The earlier
+  `2555 passed, 7 skipped` full run remains historical; user acceptance and the
+  new final full gate are still pending. The host-feedback counter-example also
+  fails precisely when its single render call is absent while the right pane is
+  already completed; restoring it returns the test to green without adding a
+  Session event. A short re-review of that small repair remains pending.
+- Serialized Product observation refreshes so a slower old read cannot overwrite
+  newer facts. A real deterministic TUI path using the actual Product host, auto
+  Router, fixed multi topology, managed local Git, Verifier and Review reached
+  the Approval barrier and caught a stale transient Proposal suppressing the
+  valid Approval gate. Counter-examples also reproduce missing START feedback,
+  out-of-order observation overwrite and the former Textual `_closing` collision.
+- Fixed the renewed TUI review findings without adding another UI or control
+  path. A START caller that is still active no longer hides typed Cancel after
+  durable Product/Workflow facts prove RUNNING; the App first converges that
+  caller and then invokes the existing Product cancel command. Initial
+  observation failures are shown honestly and retried on the bounded refresh
+  cadence, while a successful fresh read clears only the observation error.
+  Task age ignores global-stream events that cannot be bound to the current
+  task, and details visibility now stays synchronized with narrow-layout
+  expansion across toggles and resize.
+- Added deterministic coverage for a real Product host reaching durable
+  CANCELLED from an in-flight START, initial observation recovery, stale-error
+  clearing, cross-task age isolation and bidirectional details layout. Six
+  reverse checks each reproduced its root defect before restoring the
+  protection. The focused replacement group was 38 passed and the short
+  independent re-review cleared those findings; the later Product Chat
+  authority correction below reopened only its focused review and the
+  current-candidate full gate at that checkpoint.
+- Closed a real pre-START authority leak found during TUI use. A
+  Product-configured requester Chat no longer inherits `apply_patch` or `shell`:
+  its complete core surface is workspace reads plus Product proposal/confirmation,
+  and a monotonic policy denies any registered effectful Tool by declared
+  `EffectKind`. Plain Coding Chat and the Product coder remain unchanged. A real
+  Git counter-example using the configured source as the Chat workspace now
+  reaches Approval without dirtying source; removing the boundary reproduces
+  `workspace-source-invalid`, and a registered write probe is denied without an
+  Effect.
+- Closed the actual START-path deadlock at the plugin ActivationSet lifecycle
+  boundary. `PluginActivationSet` previously called `asyncio.create_task()`
+  while holding its non-reentrant ownership lock. Under Python 3.12 eager task
+  scheduling, used by the Textual path, an empty/core cleanup could run
+  synchronously and re-enter that same lock before `create_task()` returned,
+  blocking the entire event-loop thread. Line Chat normally used lazy task
+  scheduling, which explained the misleading mode-specific symptom.
+- Disposal now freezes `disposing` under the synchronous ownership lock, starts
+  cleanup only after releasing it, and uses one async start lock to preserve the
+  existing exactly-once Task and repeated-cancellation contract. Router cleanup
+  remains on its original Supervisor path; the earlier responder-local removal
+  was reverted because it treated a symptom as an ownership change. A
+  deterministic eager-task counter-example turns same-thread lock re-entry into
+  an immediate failure: the old implementation fails through real Runtime
+  disposal, while the corrected implementation and Textual Product path
+  converge normally.
+- Fixed the single Product pane's task-identity handoff after a terminal task.
+  A newly offered or confirmed proposal now closes and awaits the old observer,
+  clears only its in-memory projection, and selects the exact new task before
+  rendering its START gate. Old terminal evidence remains durable but can no
+  longer mix with the new requirement or suppress its authorization. Removing
+  the handoff reproduces the public "new title + old failure + no START"
+  counter-example; the restored path and the 17-test Textual Pilot pass.
+- Replaced the presentation in place with the one current light-theme layout;
+  no old-TUI or theme compatibility path remains. The Product summary starts at
+  the top, only the legal gate stays at the bottom, typed confirmation preserves
+  the summary, gate buttons use one outlined accent, facts have an exact fixed
+  width, short conversations grow upward from the input, and model prose uses a
+  compact dim/italic `模型 ·` marker. Real screenshot verification caught and
+  corrected a 58-column facts row being rendered in a 52-column pane; 100–109
+  columns now use the single-column layout, and 110 columns is the first width
+  that proves the complete facts row fits.
+- Completed the first readability batch without changing Product authority,
+  observation or masking. The task-conversation page now uses one ordered event
+  pass for speech and Tool activity, reports Tool sequence ranges and explicit
+  omitted counts, and is four physical lines smaller across its reader and
+  screen rendering. The main conversation uses three stable left edges (user,
+  teal host and indented dim/italic model), while the Product pane uses exactly
+  four semantic groups separated by three rules and Chinese evidence headings.
+  The direct Textual/presentation/conversation group passes 47 tests, its
+  adjacent Product/CLI owners pass 161 tests, and the repository collects 2575
+  tests. R4/R5 role navigation and patch-preview cleanup remain intentionally
+  pending.
+- Project stable leaf failure evidence only from the exact failed Workflow
+  message Turn after Agent/Session/create-request binding and core invariant
+  validation. Identity-conflict nodes never adopt a foreign Directory record.
+  The Workflow message/Turn is unique, its single runtime error must belong to
+  the Turn actually open at that event and the Turn must end as failed; later
+  unrelated or forged Turns cannot replace the original failure. Missing
+  reliable evidence is explicit `unavailable`. The TUI distinguishes that
+  code/category/type from the Workflow wrapper without displaying raw Provider
+  bodies, headers, exception messages or tracebacks.
+- Closed the repeated real-provider failure at the existing OpenAI-compatible
+  response boundary. Strict JSON remains first; only a top-level double-triple-
+  quoted value whose exact frozen Tool schema declares it as a string may be
+  lexically normalized, and the complete result must still parse as a JSON
+  object. Nearby malformed forms remain non-retryable protocol failures; there
+  is no JSON5/eval/fallback or model, task, file or Tool-name hardcoding. One
+  strict decoder also rejects Python's non-JSON `NaN` and positive/negative
+  `Infinity` extensions before any Tool can run. See ADR-0038.
+- Completed one targeted real `qwen-plus` TUI acceptance from Proposal through
+  typed START, auto-resolved single execution, Review, typed Approval and
+  one-shot bare-target Promotion. The source stayed clean, four promoted tests
+  passed, and all measured Session, Budget and Workspace owners converged. This
+  focused acceptance does not replace the still-pending 18-attempt grid or a
+  complete full-suite release gate.
+- Cleared the Provider, TUI, failure-evidence, and final cross-owner re-reviews
+  with no P0/P1/P2. The latest adjacent-owner regression is `251 passed`; the
+  renewed current-candidate full suite then ran as described below.
+- Fixed the Textual gate focus handoff at its presentation owner. A gate Button
+  click can finish its own focus processing after the handler; immediate
+  `focus()` could therefore be overwritten and swallow a user's following
+  typed confirmation. The single current App now uses Textual's public
+  `call_after_refresh(field.focus)` without adding state, authority or a second
+  path. Pilot confirmation flows wait for and assert real `Input.has_focus`
+  rather than guessing one event-loop pause.
+- Kept both complete red gates as evidence. The first was
+  `2553 passed, 7 skipped, 2 failed` and exposed a legal transient/durable START
+  observation race plus the production focus handoff. The second was
+  `2554 passed, 7 skipped, 1 failed` and exposed two remaining Pilot assertions
+  that read state before queued click handling. After the focused test passed
+  in 10 independent processes, three complete TUI runs each passed 34 tests,
+  and independent re-review cleared P0/P1/P2, a fresh complete run finished
+  **`2555 passed, 7 skipped in 3078.80s (0:51:18)`**, exit 0. The subsequent
+  output-visibility change above materially changed the TUI and tests, so this
+  full run is retained as historical evidence rather than claimed as the
+  current final gate. A renewed focused review and final full run, clean-input
+  archives/offline installs and the separately authorized real-Provider grid
+  remain pending.
+
 ### v0.8-F4: optional Textual adapter on the existing Chat/Product mainline
 
 - Added `traceh chat --tui` as an optional presentation adapter, not a second
@@ -12,10 +200,10 @@
   remain independent of Textual; selecting `--tui` without the extra fails
   before Store/Runtime/Session assembly and never silently falls back to Line.
 - Added a bounded two-column interface for conversation/activity and the
-  current ProductTask, fixed Workflow nodes, Review/Verifier evidence,
-  target/digest plus START/Inspect/Approve/Reject/Cancel. Restart reconstructs
-  conversation and the unique unsettled task from durable facts, never widget
-  state; ambiguous live tasks fail closed.
+  current ProductTask. Restart reconstructs conversation and the unique
+  unsettled task from durable facts, never widget state; ambiguous live tasks
+  fail closed. The original fixed-button presentation recorded here has since
+  been replaced in place by the current F5 usability correction above.
 - Preserved human authority: model confirmation only exposes the exact typed
   start request, and a separate START button is required. Approval is enabled
   only for reconciled fresh durable Review/evidence with no existing receipt

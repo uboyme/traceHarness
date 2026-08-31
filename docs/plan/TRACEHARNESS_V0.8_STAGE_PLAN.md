@@ -1,11 +1,11 @@
 # TraceHarness v0.8 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F4 已实现并提交，Release Stop A/B、F1+F2 完整集成门禁、F3 独立短复审与 F4 Release Stop C 均已通过；F4 非阻断周期 refresh P2 根修后局部复核确认 P0/P1/P2 全零；F5 未开始。**
+> 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F4 原实现已提交并通过既有停止点。F5 曾对当时候选完成全局独立审查与 `2496 passed, 7 skipped` 全量，但发布前真实体验随后直接替换了 F4 TUI presentation，旧 Release Stop C 与全量只保留为历史证据。replacement 审查 Finding、Product requester START 前权限、Plugin ActivationSet eager-cleanup 死锁和终态任务→新 Proposal 身份交接都已在原 owner 根修。2026-08-31 的重复真实失败又由 SQLite + exact request replay 定位为 OpenAI-compatible Tool arguments 使用非 JSON 双三引号 multiline；现有 Provider 边界已按 ADR-0038 增加受冻结 Tool schema 约束的唯一 lexical normalization，并严格拒绝 `NaN`/正负 `Infinity`。TUI 失败投影同时绑定 exact Agent/Session/create-request/message 与实际 open Turn，只接受唯一 runtime error 和 `reason=failed` terminal；100–109 列现统一使用单栏，110 列才进入 52 列 facts 双栏。浅色 D1–D7 布局已直接替换旧 presentation，没有兼容分支。修复后已从全新目录亲自走通一次真实 `qwen-plus` TUI Proposal → START → auto/single → Review → Approval → bare Promotion，推广后的 4 项 unittest 通过且 Session/Budget/Workspace 全收敛。Provider、TUI、失败证据与跨 owner 复审曾清零 P0/P1/P2，最新相邻 owner 回归 `251 passed`；Textual gate 焦点交接也已在原 presentation owner 根修。随后同一 TUI 又原地补齐 fresh `Ctrl+T` 角色对话、fresh `Ctrl+P` 完整身份与 Review evidence，没有旧路径或兼容层。此前 `2555 passed, 7 skipped`、退出码 0、耗时 `3078.80s (51:18)` 的完整全量因此只保留为该补齐前的历史证据。用户继续体验发现批准完成后左栏没有宿主结果反馈的 P2，现已在同一 adapter 消费 typed `ProductCommandResult.advance` 根修，UI 提示不写 Session/SQLite；旧逻辑反例精确失败、恢复后转绿。当前 `54` 项 TUI、`215` 项相邻回归、`2575` 项 collect-only 已通过；前一轮独立短复审为 `P0=0/P1=0/P2=0`，本次小修尚待短复审。复审与用户确认后才运行唯一最终全量，之后才可进入 clean-input 打包、双形态离线安装、完整真实 Provider 网格、tag 与 release。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD
 > `194f44fe84ecb9adb85fc1d48d182d364bb94f45`。
 >
-> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0–F3 外，不表示
+> 本文是 v0.8 的唯一阶段计划。冻结只批准本文范围与阶段顺序；除明确标为已实现的 F0–F4 外，不表示
 > 后续能力已经存在，也不授权
 > commit、push、tag、release、真实 Provider、外部网络或秘密读取。每个阶段开工前仍须重新核对
 > HEAD、两份上下文、ADR、源码与测试；真实代码始终高于本计划。
@@ -514,20 +514,58 @@ Product host 只能接受与同一 `PublishingEventStore` 精确绑定的显式 
 
 ## 9. v0.8-F4：可选 Textual TUI
 
-> 实现状态（2026-08-30）：`traceh chat --tui` 已接入同一 Driver、Session open/recovery、Product host 与
-> durable observation；Textual 保持 optional extra，权限/markup/关闭收敛的确定性 Pilot 与反向验证已
-> 通过。Release Stop C 已确认 `P0=0/P1=0`；其唯一非阻断 P2 是跨进程无 Feed 时缺少周期 fresh read，
-> 当前已复用宿主单调时钟根修并完成反向验证；局部复核再次确认 `P0=0/P1=0/P2=0`。F4 已提交但
-> 尚未发布，不能提前进入 F5。
+> 实现状态（2026-08-31）：`traceh chat --tui` 仍接入同一 Driver、Session open/recovery、Product host 与
+> durable observation；Textual 仍是 optional extra。发布前体验确认旧 fixed-button TUI 缺少即时反馈、
+> 事实年龄和可见关闭过程，因此已在同一路径原地替换，没有旧 TUI compatibility。新版定向反例与真实
+> local-Git Product Pilot 已通过。replacement 独立审查发现的两项 P1 与两项 P2 已按现有 owner 修复并
+> 完成确定性反向验证并经短复审清零；随后 Product Chat START 前权限根修已通过真实 Git/Line/Textual
+> 反例。后续多轮真实体验的 Router/coder terminal 停滞由 native-thread traceback 统一定位为
+> `PluginActivationSet` 在非重入 ownership lock 内启动 eager cleanup Task 导致 event-loop 自锁。当前只在
+> 该插件生命周期 owner 内把同步 `disposing` 认领与锁外 cleanup Task 启动分开，原 Router/Supervisor/
+> Product/Workflow cleanup 主线已恢复，并用 eager-task Runtime 反例、SQLite 主线和 Textual Pilot 覆盖。
+> 后续用户体验又发现旧终态 task observation 遮蔽下一项已确认 Proposal/START；现已在唯一 App observation
+> owner 按 exact task id 收敛旧 observer 并切换新 pending task，反向验证可稳定恢复“新标题 + 旧失败 +
+> 无 START”。当前又按 D1–D7 原地换成唯一浅色布局：右栏顶部摘要/底部闸门、固定宽事实表、确认区不
+> 隐藏摘要、短对话底锚和短 `模型 ·` 标记；100–109 列使用单栏，失败面板从 exact Workflow message
+> 所属 Turn 显示稳定叶子错误。一次真实 `qwen-plus` TUI ProductTask 已从 Proposal 走到 bare Promotion。
+> Provider/TUI/失败证据与跨 owner 最终复审均已清零，最新相邻 owner 回归 `251 passed`；不得拿
+> 替换前的 F5 全量直接进入打包/发布。其后的产出可见性工作又在同一个 adapter 原地实现 fresh
+> `Ctrl+T` 角色对话、fresh `Ctrl+P` 完整身份，并恢复 Review evidence；没有旧 TUI 或兼容分支。这批改动
+> 发生在 `2555 passed, 7 skipped` 全量之后，因此该数字现在也只作历史证据。用户体验又发现批准完成后
+> 左栏没有宿主反馈的 P2，现已在同一 adapter 根修并反向验证。当前 `54` 项 TUI、`215` 项相邻回归、
+> `2575` 项 collect-only 已通过；前一轮独立短复审为 `P0=0/P1=0/P2=0`，本次小修尚待短复审。复审与
+> 用户确认后再运行唯一最终全量。
 
 ### 9.1 最小产品面
 
 - 仍使用 `traceh chat --tui`，不新增第二 Product Chat 命令；
 - Textual 是可选依赖；核心安装、Line CLI、Eval 和离线 Wheel 不依赖它；
-- 最小界面包含对话、当前 ProductTask、固定 Workflow 角色/节点进度、Review/Verifier 摘要、
-  Approval/Reject/Cancel 与错误状态；
+- 默认界面明确分开 transient Proposal/START/operation、durable Product/Workflow/Session/Review/
+  Promotion facts 与模型自述；模型文字不得成为任务状态；
+- 只有一套浅色 presentation：右栏从顶部起排、闸门固定在底部，确认只替换闸门区；事实表列宽与容器
+  算术一致，短对话贴近输入框向上生长，模型文字只用暗色斜体 `模型 ·`；不保留旧主题或旧布局；
+- 只渲染当前合法闸门；START/Approve/Reject/Cancel 均需 typed confirmation，未知状态组合 fail closed；
+- operation 等待时长和每条相关 durable 流的 latest event/age 必须可见，停滞只陈述“无新事实”；
+- START caller 在途但 durable Workflow 已 RUNNING 时，正常 typed Cancel 必须仍可达并走原 control owner；
+- initial observation 失败必须诚实显示并有界重试；任务年龄不得被无法绑定当前 task 的全局流刷新；
+- 一个终态任务之后收到新 Proposal/START request 时，唯一 Product pane 必须按 exact task id 关闭旧 observer
+  并切到新 pending task；旧 durable 证据保留为历史，但不得混入新任务或遮蔽其 START；
+- Product/Workflow 分歧并列展示；本轮 TUI 不提供 `Ctrl+I`/`Ctrl+R`，只提示既有 Line
+  `/task inspect <task-id>`，普通 refresh 不得调用 inspect；
+- 默认身份短而可读；`Ctrl+P` 每次打开 fresh observation 后显示完整身份与显式复制，剪贴板失败只把
+  选定值写入独立临时文本文件并报告路径；小于 110 列仍折成单栏摘要；
+- `Ctrl+T` 每次打开 fresh Product observation，只从 exact Router Agent/Session 与固定 Workflow role
+  Agent/Session/create-request binding 发现角色；每条 Session 先过 `CoreInvariantChecker`，再由现有
+  `SurfaceProjector` 按角色展示。该视图无 Store scan、缓存、订阅、写入口或实时 tail；Usage 不可靠时明确
+  unavailable，shell 参数、tool result 正文和 raw payload 保持遮蔽；
+- Review 区显示既有 evidence 的 bounded changed paths、Verifier 摘要与 Patch preview，截断和替换必须
+  明示，不能声称提供完整 diff；
+- 关闭过程逐 owner 可见，退出前仍按原 lifecycle owner 收敛；
 - 首版不做完整历史 Dashboard、Web UI、拖拽 DAG 或模型 token streaming；
 - 所有模型文字、Patch preview、路径和失败展示都按不可信内容转义并有界；
+- Workflow 包装失败之外，必须沿失败 node → Agent Directory → exact Agent/Session/create-request/message →
+  invariant-checked message Turn `runtime/error` 显示可验证的稳定叶子 code/category/type；不得采纳 identity
+  conflict 的外来 Agent，也不得让同 Session 后续无关 Turn 覆盖原失败；不显示 raw Provider/exception 内容；
 - Approval 前显示 review/target/digest 的安全摘要，按钮仍调用同一 control-plane 幂等操作。
 
 ### 9.2 F4 必测
@@ -538,7 +576,36 @@ Product host 只能接受与同一 `PublishingEventStore` 精确绑定的显式 
 - restart 只靠 durable observation 恢复，不依赖 widget state；
 - 未安装 TUI extra 时给出明确提示，不静默切换成不同语义；
 - markup、控制字符、超长 Unicode 和二进制摘要不能执行 UI 标记或破坏布局；
-- Windows 终端 resize、Ctrl+C、EOF 和后台任务关闭走原 owner 收敛。
+- Windows 终端 resize、`Ctrl+T`/`Ctrl+P` 全宽视图、Ctrl+C、EOF 和后台任务关闭走原 owner 收敛。
+- START operation 在 observer 尚未返回时也必须立即反馈；并发 refresh 不得让旧 projection 覆盖新 facts；
+- START 在途 Cancel 必须通过真实 Product host 到达 durable CANCELLED；初始 observation 错误后周期恢复；
+- restored 终态任务之后依次收到另一 task 的 Proposal 与 confirmation，必须先显示新提案、再显示属于该
+  task 的 START；临时移除身份交接时反例应真实恢复旧终态污染和 START 消失；
+- `Ctrl+T` 在宽/窄屏都必须切到任务对话页；上下键、Enter、Esc 都有可观察效果，打开/翻页/折叠不能
+  append 事实，外部 append 后重新打开必须 fresh 可见；
+- multi 对话页必须显示 router/parent/reviewer/coder 的精确 Session；Router/Directory 或固定角色
+  session/request identity 被替换、Session invariant 失败时必须 fail closed；unknown Usage 不能显示为 0；
+- `Ctrl+P` 必须 fresh 读取完整身份，复制失败降级不能写 Product/Session facts；状态栏不得宣传未实现的
+  `Ctrl+I`/`Ctrl+R`；
+- Review changed paths、Verifier 与 Patch preview 的行数上限和遗漏提示必须有纯 presentation 测试；
+- 当 Chat Workspace 与 Product source 是同一真实 Git 仓库时，confirmation 后到宿主 START 前不得出现
+  Workspace 写入、进程或外部事务；Product-configured requester 只暴露 read/proposal/confirmation Tool，
+  声明为 effectful 的插件 Tool 也必须由同一单调 Policy 拒绝。临时恢复普通 Chat 工具面时，反例必须真实
+  弄脏 source 并由原 Workspace gate 报 `workspace-source-invalid`，不能用工具未注册或夹具失败冒充；
+- 至少一条确定性 Pilot 使用真实 Product host、auto Router、managed local Git、Verifier 与 Review 到达
+  awaiting approval 或 durable terminal。
+- Python 3.12 eager task factory 下，插件 ActivationSet cleanup 不得在持有其非重入 ownership lock 时启动；
+  真实 Runtime dispose 必须收敛，且同线程重入反例在恢复旧“锁内 create_task”逻辑时确定性失败；
+- Router、single coder 与 multi 角色仍通过原 Supervisor/Generation cleanup 主线收敛；生产 SQLite 与
+  Textual Product 主线在角色 terminal/failure 后必须继续写出 Workflow/Product terminal 或 Approval，不能
+  用移除局部 cleanup、UI 假进度或 Provider 未调用冒充修复。
+- OpenAI-compatible Tool arguments 仍以严格 JSON 为主；若允许 multiline 扩展，只能由 exact frozen Tool
+  schema 证明顶层字段为 string，并在转换后重新通过严格 object 解析。`NaN`/正负 `Infinity`、未知/
+  非字符串/嵌套/表达式等邻近
+  malformed 输入必须稳定拒绝，不能用 JSON5、eval、retry/fallback 或模型/任务硬编码换取 demo 成功；
+- 至少一条真实 TUI acceptance 从聊天 Proposal 经过 typed START、Router、coder、Verifier/Review、typed
+  Approval 到一次性 bare Promotion，并核对 source clean、目标 ref、推广后测试及 Session/Budget/Workspace
+  收敛；确定性 Provider 与 Pilot 仍是日常门禁，不能冒充这条真实验收。
 
 ### 9.3 Release Stop C
 
@@ -546,6 +613,17 @@ UI/TUI 完成后独立审查 UI 是否获得新 authority；F3/F4 各自只跑 d
 权限与生命周期的定向和相邻回归。清零 P0/P1 后才进入 F5 的最终全量与打包。
 
 ## 10. v0.8-F5：最终验证与发布候选
+
+> 当前实施状态（2026-08-31）：唯一版本源已切到 `0.8.0`；插件版本/范围和作者模板已同步。替换前候选
+> 的第 6 步审查和 `2496 passed, 7 skipped` 第 7 步全量已真实完成但现为历史证据。TUI replacement 重新
+> 打开 Release Stop C、当前候选全量和后续第 8/9 步；最新浅色布局、叶子失败投影与 ADR-0038 Provider
+> 根修已经一次真实 TUI ProductTask 完成路径验证。Provider/TUI/失败证据与跨 owner 最终复审均已清零
+> P0/P1/P2，最新相邻 owner 回归 `251 passed`。Textual gate 点击后的焦点交接也已在当前 presentation
+> owner 根修并经短复审清零。两次完整红灯及测试同步根因均保留在验证记录，最终完整全量为
+> `2555 passed, 7 skipped`、退出码 0、耗时 `3078.80s (51:18)`。随后同一 TUI 的产出可见性代码与测试
+> 又发生实质变化，因此这次全量现只作历史证据；当前必须先完成该范围的定向/相邻验证与独立审查，再
+> 运行一次新的唯一最终全量。全量绿色前不能进入 clean-input 打包与双形态离线安装，也不得声称资产、
+> 真实 Provider 网格、tag 或发布门禁已经通过。
 
 ### 10.1 风险分层门禁与 F5 顺序
 

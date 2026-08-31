@@ -30,12 +30,23 @@
 
 TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，修了四条真实边界（见 20.26）：模型不能替用户开工；AgentLoop 连续取消也要写完 Attempt/Step/Turn；L4 要用目标 venv 自己的 sysconfig scheme；嵌套 L2 下的 Workspace 身份不能把 Git for Windows 的内部管理路径顶爆。第四项仍保留完整 SHA-256，只把重复的 `workspace` 目录标签去掉。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
 
-当前未发布开发线又完成了 v0.8-F0–F4：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
+当前开发线已经进入 v0.8-F5：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
 成为唯一派发许可证；F1 把所有生产事件切到一个 SQLite 数据库，并删除 JSONL compatibility；F2 只给
 同 Provider、同模型、同一份冻结请求增加有限的瞬时故障 retry；F3 把行式聊天改为共用的无界面 Driver
-与 typed update，并让 Product 进度只读两条真实状态流；F4 再给同一主线接上可选 Textual TUI。版本号
-仍是 `0.7.1`，这不是新 release，也还没有 Provider/model fallback、Skill 或 Memory。Release Stop C
-和周期刷新局部复核已经把 F4 的 P0/P1/P2 全部清零，F4 已提交但还没有发布；F5 仍未开始。
+与 typed update，并让 Product 进度只读两条真实状态流；F4 再给同一主线接上可选 Textual TUI。旧 F4
+确实提交并通过过 Release Stop C，F5 也对当时那版跑过最终全量；但发布前自己体验时发现界面太黑盒，
+所以现在已经在同一个 `traceh chat --tui` 入口直接换掉旧 presentation，没有留两套。新版定向和真实
+本地 Product 主线已经通过；replacement 首轮 Finding、Product Chat 在 START 前可污染 source、Plugin
+cleanup 死锁、旧终态任务遮蔽新提案、Provider 多行 Tool 参数、失败证据归错消息和窄屏事实表折行，都已
+按各自原 owner 根修并做反向验证。一次新的真实 TUI ProductTask 已经从提议走到一次性裸仓库合入；
+Provider、TUI、失败证据和跨 owner 最终复审都曾清零 P0/P1/P2，候选全量也曾重跑到绿色；但后来同一
+TUI 又补齐了 fresh 角色对话、完整身份和 Review evidence，所以旧全量现在只是历史证据。用户继续体验时
+又发现批准已经完成、右栏已经显示 completed，但左栏仍停在 awaiting approval 的 P2；现已在原 TUI
+adapter 根修并做反向验证。当前 `54` 项 TUI、`215` 项相邻回归和 `2575` 项全仓收集通过，尚待这项小修的
+短复审；清零后再跑唯一最终全量。干净打包、双形态离线安装、tag 和发布也都还没完成，
+所以最新正式发布仍是 `v0.7.1`。
+当前仍没有 Provider/model fallback、
+Skill 或 Memory。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -61,10 +72,10 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 |---|---|
 | 能用真实大模型吗 | 能，只要平台兼容 OpenAI `/chat/completions` |
 | 能不用 Key 演示吗 | 能，Scripted Provider 会按预设脚本返回 |
-| 能修改代码吗 | 能，通过五个受控 Coding Tools |
+| 能修改代码吗 | 能。普通 Coding Chat 有五个受控 Tool；Product 模式下 START 前的请求者 Chat 只有读和提议/确认，真正改代码的是 START 后 managed Workspace 里的 coder |
 | 能验证修改吗 | 能，可配置外部命令 Verifier |
 | 能继续同一个会话吗 | 能，`resume` 会在同一个 Session 追加新 Turn |
-| 是交互式聊天 CLI 吗 | 是。默认 Line 界面不变；安装可选 `tui` extra 后，`traceh chat --tui` 会打开 Textual 双栏界面。两者用同一个 Driver、SQLite Session、Product control 和只读 observation。TUI 会显示对话、当前任务、固定节点、Review/Verifier、target/digest 和 START/Approve/Reject/Cancel；Feed 只作进程内 dirty 提示，另有周期 fresh read 兜住跨进程更新。当前仍没有 token streaming、完整历史 Dashboard 或执行中并发输入 |
+| 是交互式聊天 CLI 吗 | 是。默认 Line 界面不变；安装可选 `tui` extra 后，`traceh chat --tui` 会打开 Textual 界面。两者用同一个 Driver、SQLite Session、Product control 和只读 observation。TUI 把宿主临时操作、durable facts 和模型自述分开，只显示当前合法动作并要求输入固定确认词；还会显示事实年龄、等待时长、状态分歧和退出收敛。Feed 只作进程内 dirty 提示，周期 fresh read 兜住跨进程更新，刷新不会自动对账。当前仍没有 token streaming、完整历史 Dashboard 或执行中并发输入 |
 | 有插件系统吗 | **有**。装一个 Wheel 就能被发现，显式启用后它的 Tool、Prompt、Service、Provider、Policy、Middleware、命名 Verifier 都能走正常主线（第 19 节）；其中 Provider/Verifier 还要再明确选择 |
 | 能让 Agent 帮我写新插件吗 | L1 可以：显式启用 `traceh.plugin.creator` 后，它会读取打包在 Wheel 里的工作流、合同、模板和清单，把**源码候选**写进单独 Candidate Workspace。但结果必须标成“未验证”，不会自动 build/test/install/enable |
 | 能独立验证这份候选吗 | L2 可以：显式指定候选目录、可信核心 Git 仓库、新输出目录和依赖源后，`traceh plugins validate` 会跑 13 道宿主管控门禁。普通门禁失败只有完整报告；报告自己都写不完时连输出目录都不会留下；通过才发布精确哈希产物 |
@@ -79,7 +90,7 @@ TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`�
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个数据库吗 | 能。SQLite 事务和主键保护连续 seq；同库 writer（包括不同 Stream）会有界排队，默认 5 秒，超时明确失败。但“同一 Session 同时只跑一个 Turn”仍只是单进程规则 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。F4 core-only 可收集 `2496` 项，安装 `tui` extra 后为 `2503`；Textual headless Pilot `7 passed`，optional/parser/安全显示 `7 passed`，Line/恢复/Product observation 与架构相邻回归通过。F4 没改共享底层，所以没有机械重跑 F2 的完整全量；详细见 20.30 |
+| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。F5 在替换前候选上得到的 `2503 collected / 2496 passed / 7 skipped`，以及后续 Provider/retry、旧 TUI/presentation、相邻 owner 和 `2555 passed, 7 skipped` 的完整全量，都只证明各自当时的代码树。当前 fresh 角色对话、完整身份和批准后左栏反馈补齐后，TUI 聚焦组 `54 passed`、Product/Chat 等相邻 owner `215 passed`，全仓 collect-only 为 `2575`；compileall、修改范围 Ruff、diff 与文档 QA 通过。批准回显反例在旧逻辑下精确失败，恢复保护后转绿，且 Session 事件没有写入该进程内宿主文案。当前仍待这项小修的短复审与用户确认，之后才运行新的唯一最终全量。详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 与 20.31 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -515,7 +526,14 @@ Fingerprint 不是加密秘密保护，它主要是稳定内容校验：相同�
 
 它把统一 Request 翻译成 `/chat/completions` 请求，包含 system/user/assistant/tool 消息和 Function Tool Schemas。API Key 只在发 HTTP 时从指定环境变量读取，作为 Bearer Header 发送。
 
-当前只取响应中的第一个 choice，解析文本、Tool Calls、finish reason 和 usage。异常会变成明确的 `ProviderHttpError`。
+当前只取响应中的第一个 choice，解析文本、Tool Calls、finish reason 和 usage。HTTP、网络与协议异常会
+变成稳定、不会携带原始正文或秘密的 typed Provider failure。
+
+Tool 参数仍以严格 JSON 为第一规则。真实 Endpoint 已经出现过一种很窄的兼容形态：模型把顶层多行
+字符串写成双三引号。标准解析失败后，只有冻结 Tool schema 明确声明为顶层 string 的字段才允许做这一次
+词法规范化，而且整份结果仍须重新通过标准 JSON object 解析；其他坏格式继续拒绝。它不执行 Python，
+没有 JSON5、通用“修 JSON”、retry 或 fallback，也不会看模型名、任务名、文件名或 Tool 名决定放行。
+详细决定见 [ADR-0038](../adr/0038-schema-gated-multiline-tool-arguments.md)。
 
 “OpenAI-Compatible”表示协议格式兼容，不表示只支持 OpenAI，也不表示所有第三方平台细节完全相同。Base URL、Model 和 Key 环境变量名必须由配置明确提供。
 
@@ -1187,7 +1205,7 @@ Wheelhouse 这条边界也真的调用了 pip：测试把 Wheel 放进带空格�
 
 取消相关的三项测试尤其严格。它们不靠 `asyncio.sleep(0)` 猜后台线程有没有启动，而是让线程自己在开始等锁时点亮一个信号灯，测试等到这盏灯亮了才按下取消；随后立刻断言“线程已经收敛”这盏灯也是亮的——这直接证明了 `CancelledError` 是在后台工作结束之后才交给调用方的。最关键的一条断言是：外部进程放锁之后，那条被取消的事件**始终没有出现在文件里**。还有一项专门连按六次取消，确认调用方在后台线程真正干完之前一次也逃不掉。
 
-GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装开发包、编译、跑核心测试，再分别跑 Python Quality 与 Plugin Creator 两个独立插件自己的测试，最后执行 doctor；Windows 上用 Python 3.12 跑同样的步骤。加 Windows Job 的原因很具体：Windows 走的是 `msvcrt` 而不是 `fcntl`，这条代码路径只有在真的 Windows 机器上跑才算验证过。把两个外部插件测试接进同一套 CI，也避免“本机报告过 17/10 项，但远程从来没人守”的能力岛。
+GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装 `.[dev,tui]`、编译、跑核心测试，再分别跑 Python Quality 与 Plugin Creator 两个独立插件自己的测试，最后执行 doctor；Windows 上用 Python 3.12 跑同样的步骤。Windows Job 已经不是为了守早已删除的 JSONL 文件锁，而是让当前 SQLite、Git 子进程、终端、路径长度和 Textual 生命周期等平台相关行为真的在受支持的 Windows 上执行。Linux 与 Windows 都装 TUI 依赖，避免可选界面只在开发机上通过。把两个外部插件测试接进同一套 CI，也避免“本机报告过 17/10 项，但远程从来没人守”的能力岛。
 
 还有一个很朴素但容易被本机环境掩盖的规则：`tests/` 本身不是一个 Python 包，所以共用夹具要按 `plugin_fixtures` 这种“测试目录里的顶层模块”来导入，不能写成 `tests.plugin_fixtures`。后一种写法有时会在开发机上碰巧成功，但干净机器若装过另一个同名 `tests` 包，pytest 会在收集阶段直接找错地方。因此最终门禁不只在当前工作目录跑，还要用只包含 Git 已跟踪文件的干净检出再跑一遍。
 
@@ -1435,7 +1453,7 @@ Stage A 已让同步和异步默认 Runtime 都经过同一个 Generation-backed
 
 `publish()` 在锁保护的线性化点安装新 Generation。Generation 构造时就把 Prompt sections、Tool schemas、Provider lookup 等模型可见来源捕获下来，之后原注册表再怎么改也不会改变这一代；Tool 的四个模型/执行元数据字段由真正只读的扁平适配器保存，嵌套 Schema 也不能改，Provider、Policy、Middleware 名称不再从活对象重读。Generation identity 的一次性发布认领和资源 cleanup ownership 分开：Stage A 的 capability-wide cleanup 用显式 `CompositionResourceOwner`，Stage B 的插件 cleanup 用显式 `PluginActivationSet`。SessionService、EventStore、内置能力和没有被插件注册的核心 Provider 是 borrowed core；插件 Activation、全部插件贡献、Owned Task 和 cleanup callback 是 generation-owned。一个 ActivationSet 不能被两个 Generation 或两个 Runtime 接受，PluginManager 也不能保留第二个 cleanup owner。
 
-Stage A 的 raw capability binding 仍不使用全局 `id()` catalog、对象图扫描或调用方口头保证；冻结/重包装只传播显式 binding，无法动态保存 binding 的裸 slotted Provider、Tool、Policy、Middleware 会被拒绝。Generation 会先做 Provider lookup 和冻结投影，最后才提交 binding；构造失败不会污染 Owner 或 raw capability，同一 Owner 和修正后的 Provider 可以重试。旧 Lease 保存旧代的完整 Provider、Prompt、ToolRuntime、Policy/Middleware、Service 和 Snapshot；新 Lease 只能拿新代。旧代 retired 后，只有最后一个 Lease 释放才触发一次 ActivationSet cleanup；cleanup 先取消并等待 Owned Task，再按依赖逆序撤销 Service、Tool、Prompt。Drain 会等所有旧代和 cleanup 收敛。反复取消 Drain 不能提前返回，失败会在其他插件和代继续清理后以有界结构化结果报告，并把 Runtime 标为 poisoned、拒绝后续 publish。内部 generation identity 只用于生命周期，Snapshot revision 仍是模型可见内容 fingerprint；同内容可以同 revision。Stage C 另用 Session 的 append-only 迁移授权记录身份变化，不把 generation identity 写进事件。
+Stage A 的 raw capability binding 仍不使用全局 `id()` catalog、对象图扫描或调用方口头保证；冻结/重包装只传播显式 binding，无法动态保存 binding 的裸 slotted Provider、Tool、Policy、Middleware 会被拒绝。Generation 会先做 Provider lookup 和冻结投影，最后才提交 binding；构造失败不会污染 Owner 或 raw capability，同一 Owner 和修正后的 Provider 可以重试。旧 Lease 保存旧代的完整 Provider、Prompt、ToolRuntime、Policy/Middleware、Service 和 Snapshot；新 Lease 只能拿新代。旧代 retired 后，只有最后一个 Lease 释放才触发一次 ActivationSet cleanup；普通 ownership lock 只核对 owner 并把状态冻结为 `disposing`，随后由 async start lock 在普通锁外发布唯一 cleanup Task，所以 lazy/eager task scheduling 都不会让清理协程同线程重入非重入锁。cleanup 先取消并等待 Owned Task，再按依赖逆序撤销 Service、Tool、Prompt。Drain 会等所有旧代和 cleanup 收敛。反复取消 Drain 不能提前返回，失败会在其他插件和代继续清理后以有界结构化结果报告，并把 Runtime 标为 poisoned、拒绝后续 publish。内部 generation identity 只用于生命周期，Snapshot revision 仍是模型可见内容 fingerprint；同内容可以同 revision。Stage C 另用 Session 的 append-only 迁移授权记录身份变化，不把 generation identity 写进事件。
 
 资源绑定现在有两层“不能糊弄”：第一，标记直接写进对象真正的存储位置并回读确认，自定义 setter 假装成功也没用；第二，一批对象绑定到一半失败时，每个对象都会退回精确的原状态，不会留下丢字段的半成品。Runtime 自己也先从已经冻结的初始 Generation 建好兼容视图，再让 Owner 正式归它所有；因此不会出现“Owner 已签字，第二次读取 Prompt 却失败，最后没人负责 cleanup”的窗口。
 
@@ -1543,7 +1561,7 @@ v0.4 之前建的老会话根本没有这个字段，等于"没有插件"，照�
 
 ### 19.10.1 L1 的 Plugin Creator 为什么只教、不代替主线写文件
 
-[`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 本身就是一个外部 Wheel。你必须明确启用 `traceh.plugin.creator`；它只注册一段短提示和一个叫 `traceh_plugin_creator_guide` 的纯读取工具。工具按需返回四份 Wheel 内文档：怎么做、v0.6 插件合同、标准目录模板、最后检查清单。它不读工作区、不读 `.env`、不联网，也没有自己的写文件工具。
+[`traceh-plugin-creator-skill-plugin`](../../examples/plugins/traceh-plugin-creator-skill-plugin/) 本身就是一个外部 Wheel。它最早随 v0.6 发布，但当前 Wheel 中的作者资源已经同步到 v0.8 合同；你必须明确启用 `traceh.plugin.creator`，它只注册一段短提示和一个叫 `traceh_plugin_creator_guide` 的纯读取工具。工具按需返回四份 Wheel 内文档：怎么做、当前 v0.8 插件合同、标准目录模板、最后检查清单；新候选模板明确写的是 `traceharness-py>=0.8,<0.9`。它不读工作区、不读 `.env`、不联网，也没有自己的写文件工具。
 
 真正写候选时，Agent 还是调用原来的 `apply_patch` 等 Coding Tool，所以写入的 Effect、工作区边界和事件证据都没有第二条路。更重要的是，使用者要把 TraceHarness 核心和 Candidate Workspace 分开；如果模型发现自己正站在 `traceharness-py` 核心仓库里，技能要求它停下来。开始写之前，能力目标、plugin id、Distribution、import package、entry class、版本、贡献类型和权限都要显式确认，不能拿 Python Quality 或 Memory 这些例子当默认。
 
@@ -1605,7 +1623,9 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 
 20.26 讲 v0.7.1 的宿主授权、取消收敛与平台修复（正式版 20.32），20.27 讲 v0.8/v0.9 冻结边界和
 v0.8-F0/F1 当前实现（正式版 20.33；ADR 是 [ADR-0035](../adr/0035-two-stage-model-admission-and-session-dispatch-permit.md)
-与 [ADR-0036](../adr/0036-single-production-sqlite-event-store.md)）。
+与 [ADR-0036](../adr/0036-single-production-sqlite-event-store.md)），20.28 讲 bounded retry（正式版 20.34，
+[ADR-0037](../adr/0037-typed-provider-failures-and-bounded-model-retry.md)），20.29 讲 UI-neutral Driver/observation（正式版 20.35），20.30 讲可选 Textual adapter、真实失败投影与 Provider multiline Tool arguments 根修
+（正式版 20.36，[ADR-0038](../adr/0038-schema-gated-multiline-tool-arguments.md)），20.31 讲 `0.8.0` 发布候选整合与门禁（正式版 20.37）。
 
 ### 20.1 先说清楚 Stage A 当时**没有**做什么
 
@@ -3340,11 +3360,22 @@ Product 也按同样方法拆开。`product/chat.py` 现在只负责纯命令解
 批准、拒绝、取消和放弃仍交给原来的 Product control plane；模型手里的两个 Tool 仍然只能留一张当前
 Turn 的临时建议纸条，不能拿到 Review、批准摘要或推广能力。
 
+开启 `--product-config` 后，请求者 Chat 现在也不再是一个能直接改代码的 Coding Agent。它只看得到
+`list_files`、`read_file`、`search_text` 和“提议/确认”两个 Tool；默认的 `apply_patch`、`shell` 不会进入
+模型工具表。就算已启用插件贡献了别的 Tool，只要它按合同声明为写文件、起进程、写网络或外部事务，
+`ProductChatSideEffectPolicy` 就会拒绝，后面的 allow 规则不能翻案。这里仍不是 OS 沙箱，可信插件必须
+如实声明 effect kind；但正式工具面保证宿主 `START` 前只读。真正的 coder 仍在 START 后由原 Product
+Workflow 获得独立 managed Workspace 和写权限。不传 Product 配置的普通 Coding Chat 完全保留原来的
+五个默认 Tool。
+
 新 `product/observation.py` 是一双“只看、不动”的眼睛。它每次重新读 ProductTask、Workflow、Agent
 Directory、Artifact、Promotion 和 Patch evidence，而且把 ProductTask 状态与 Workflow 状态分开保留。
 所以真实崩溃窗口中，如果 Workflow 已经在等批准、ProductTask 还写着 started，界面会明确显示两条状态
 没有对上；它不会为了让屏幕好看就偷偷调用 inspect 或补写一条 Product 事件。只有用户真正执行
 inspect/approve/reject/cancel 时，原 control owner 才有权按原规则对账。
+现在每个 Stream head 还会一起带回事件类型和账本里的发生时间。Product/Workflow 精确绑定生成当前状态的
+那一个 seq，其他相关流取 fresh latest，所以并发新写入不能出现“旧状态配未来事件”；账本说 head 存在
+却读不到那条事件时直接失败，不拿 0 或估算糊弄。
 
 实时通知只是“该重新读了”的门铃，不是事实。观察器先订阅已经知道的精确 Stream，再读账本；如果读出
 Router/角色 Session 这些新 Stream，就先订阅再重读，直到名单稳定。门铃 payload 完全不拿来算状态；
@@ -3390,49 +3421,282 @@ Textual，所以 Line、Eval 和普通 Python import 都能在没装 extra 时�
 缺失时，CLI 会在开数据库、造 Runtime 或 Session 之前给出明确安装提示并停止，绝不会悄悄换回 Line、
 让人以为自己测试了另一套交互。
 
-首版画面故意小：左边是对话与当前活动，右边是当前 ProductTask、固定 Workflow 节点、Review/
-Verifier、target 和 approval digest，底下只有 START、Inspect、Approve、Reject、Cancel。没有完整历史
-Dashboard、拖拽流程图、Web、token streaming，也不能在一轮还没收尾时继续塞第二轮。窗口 resize 只
-重新排版；它不写事件，也不改变任务。
+现在的画面已经**直接替换** F4 最初那排五个固定按钮，没有保留一个“旧 TUI 模式”。左边还是聊天和
+同一套 Chat 活动，右边把三种东西分开说：提案、精确 START 请求和当前宿主操作只是这次进程里的临时
+状态；Product、Workflow、Review、Promotion 和相关 Session 最后一条事件才是 durable facts；模型在
+左边说的话用短短的 `模型 ·` 加暗色斜体表示“这不是宿主证据”。这样模型说得再像真的，也不会变成完成、
+失败或已合入。没有完整历史 Dashboard、拖拽流程图、Web、token streaming，也不能在一轮还没收尾时
+继续塞第二轮。
 
 “当前任务”也不是 TUI 自己记的。启动或重启时，Product reader 扫描唯一 `product-task:` 前缀并完整
 重放，只找与这个 Chat Session 绑定且尚未终结的任务。终态历史不算当前任务；如果账上异常地出现两个
 live 候选，就报 ambiguous，不按创建时间、名字或某个 widget 顺序猜。找到以后仍使用 F3 的 observer：
 Feed 只按门铃提示 fresh read，真正状态只来自 durable ProductTask/Workflow/Review/Promotion 事实。
+Agent Directory、Artifact Catalog 和 Promotion Ledger 这种全局账本仍会显示证据摘要，但另一项任务也会
+写它们，所以不能拿它们算“当前任务最后一次有进展”。事实年龄和停滞提示只看能唯一绑定当前任务的
+Product/Workflow 与实际 Session 等 heads。
 这个门铃不跨进程，所以 TUI 还会同时等一个宿主单调时钟。门铃响了或周期到了，谁先发生都重新读
 SQLite；正数 heartbeat 配置决定周期，而 `--no-timeline` 或 `0` 只关闭“仍在工作”的活动提示，不能顺便
 关闭状态正确性刷新，此时继续使用既有默认 10 秒。这样另一个进程改完任务，即使本进程一条 Feed 通知
-也收不到，最迟一个周期后面板与按钮也会追上 durable facts。
+也收不到，最迟一个周期后面板与按钮也会追上 durable facts。第一次找任务或建立 observer 如果只遇到
+一次普通读取错误，界面会明确说“任务状态暂不可读”、显示稳定错误码和恢复建议，而不是假装“没有任务”；
+随后按同一周期重新发现。重新读成功时只清掉这个读取错误，不会顺手吞掉另一个宿主操作错误。
 
 最重要的是按钮没有偷到新权限。模型确认 Proposal 后，界面只拿到原来的 typed start request，先把
-task、requirement 和 mode 显示出来；用户不点独立的 **START task**，就不会调用 host start，也不会写
-第一条 ProductTask 事实。Approval 只有在 fresh view 同时读到 Product/Workflow 已对账、awaiting approval、
-Review、固定 Workflow 证据和 digest，而且还没有 Approval/Promotion 回执时才亮。点击后只把
+短需求名、mode 和“临时 ┊ durable”生命周期显示出来；用户不点独立的 **START**、再完整输入
+`START`，就不会调用 host start，也不会写第一条 ProductTask 事实。批准、驳回和取消也要输入完整固定词，
+鼠标误触、焦点移动和双击都不算授权。界面不再永远摆着五个灰按钮，而是用一个纯状态表只显示眼下合法
+的动作；遇到没列过的 Product/Workflow 组合就把两个状态原样摆出来，什么按钮都不给。Product 已 started、
+Workflow 已到 awaiting approval 时只显示“未对账”，并提示可回到 Line 界面执行精确
+`/task inspect <task-id>`；这一轮 TUI 不提供会写事实的 `Ctrl+I`，也不提供 `Ctrl+R` 原始事件页，普通刷新
+绝不会偷偷调用 inspect。Approval 只有在 fresh view 同时读到 Product/Workflow 已对账、awaiting approval、
+Review、固定 Workflow 证据和 digest，而且还没有 Approval/Promotion 回执时才出现。点击后只把
 `APPROVE + task_id` 送回原 control plane，TUI 不接受用户填 digest，
 更不会把 digest 交给模型；Promotion owner 仍从 fresh Review 重算并执行原来的幂等/CAS。界面把一次
 操作串行化，双击不会并发发两次，但底层重复和 stale digest 防线仍然保留，不能拿 UI 防抖冒充事实安全。
+还有一个容易忽略的正常路径：START 调用本身还没返回，但 durable facts 已经证明任务正在 RUNNING 时，
+Cancel 仍然必须出现。用户完整输入确认后，TUI 先取消并等自己的 START caller 按原 owner 收敛，再把同一
+task id 的原有 Cancel command 交给 Product host；TUI 不直接写“已取消”，也不要求用户退出整个界面。
+
+真实体验还抓到了一个比按钮更早的权限 bug：如果聊天 Workspace 恰好就是配置中的 Product source，模型
+调用 confirmation Tool 后仍可能继续使用普通 Chat 继承来的 `apply_patch`/`shell`。它会先把 source 弄脏，
+等用户真的点 START 时，Workspace owner 反而只能正确报 `workspace-source-invalid`。修复没有删掉脏证据、
+没有放宽 Git 干净检查，也没有给 TUI 写一条特殊通路；上面那套 Product Chat 只读工具表和 Policy 就是
+根修。确定性反例让模型故意继续请求两个旧 Tool，现在只会得到可复核的 `UnknownTool`，source 仍 clean，
+任务正常跑到 Approval；一个真的已经注册的通用写 Tool 则得到 `ToolDenied`，连 Effect 都不会产生。
+Textual Pilot 也直接拿同一个真实 source 同时当聊天 Workspace，auto→multi 仍走到 Review/Approval。
+临时拿掉这两层保护时，同一个测试真实改坏 `tracked.txt`，随后精确复现
+`failed/workspace-source-invalid`；恢复后重新通过。
+
+用户按下 START 的同一时刻，右栏就会先写“宿主已接受 · 等待返回”，哪怕 observer 第一次读取也被卡住，
+500 ms 反例仍能看到反馈。之后面板会列出每条相关 durable 流最后一条事件和“几秒前”，宿主操作本身也
+显示已经等了多久。20 秒没有新事实，只会如实说“无新 durable 事实”，不会编造“模型还在思考”。Feed、
+周期刷新和按钮后的读取共用一把只负责排序的 UI 锁，所以先开始但后返回的旧读取不能把新状态盖回去；
+这把锁不保存事实。Router Session 已结束、Product 还没写 routing 时，也只说这两个可核对的症状，不擅自
+归因，更不自动 fallback。
+
+后来实际点击批准还发现了一处更小但很直接的反馈缺口：右边已经从 Product/Workflow/Promotion 的 fresh
+账本读到 completed，左边却还留着 START 返回时写下的 awaiting approval，好像批准根本没发生。两边本来
+就不是同一份投影：左边主要是 requester 的聊天 Session，右边才是任务事实，所以 SQLite、Promotion 和
+权限其实都没有不同步。真正漏掉的是 TUI 执行批准、驳回、取消或放弃后，只刷新了右边，没有把控制面
+已经返回的 typed `advance.summary` 告诉左边。现在只有在操作成功、fresh observation 也读成功以后，才在
+左边追加一行“批准已完成；ProductTask 已到达 durable 状态：completed”。这行只是当前窗口的宿主提示，
+不会写进 Session、不会重启后冒充历史，也不会喂给模型。确定性 Pilot 真正点击批准并输入 `APPROVE`；
+旧代码右栏完成而左栏断言失败，恢复保护后两边都有可理解反馈，同时 replay 仍证明聊天事实没有多出这行。
+
+后面三轮体验证明这不只是 Router 的一处等待问题：有时 Router 已结束却不写 routing，有时 coder 已写
+failed `turn/end`，Workflow 却不写 node-failed 和终态；Line 界面用同一主线又能正常收尾。第四轮在真实
+Textual 进程里加了一个不依赖 asyncio 的 native thread，它连续打印出完全相同的 Python 栈：Runtime 正在
+清理 Composition，Generation 正在清理插件 ActivationSet，最后自己卡在同一把 `_claim_lock`。连 asyncio
+自己的 watchdog 都停了，所以不是右栏没刷新，而是整个事件循环线程真的死锁。
+
+根因是旧插件清理代码在拿着普通 `threading.Lock` 时调用 `asyncio.create_task()`，默认以为新协程总会等
+当前代码释放锁以后才跑。但 Python 3.12 支持 eager task factory；Textual 路径会让新清理协程在
+`create_task()` 返回前就开始。core/empty ActivationSet 很快走到“写 disposed 状态”，又想拿同一把非重入
+锁，于是同一个线程把自己永远锁住。Line CLI 通常是 lazy scheduling，所以看起来像“只有 TUI 坏了”；
+Router、coder 或 Provider 错误只是不同触发点，底下其实是同一个插件生命周期 bug。
+
+现在只改这个 owner：锁内核对 Generation 身份并把状态冻结成 `disposing`，释放同步锁以后才真正创建
+cleanup Task；另一个 async start lock 保证两个 dispose caller 仍只会得到同一项清理工作。没有简单换成
+`RLock` 让插件代码继续在身份锁里跑，也没有给 TUI、Router 或 Workflow 各打一块补丁。前面为了症状删除的
+Router 本地 dispose 已恢复，原 Supervisor/ProductTask/Workflow 清理关系不变。
+
+新反例在真实 Runtime dispose 路径启用 `asyncio.eager_task_factory`，并用一把“同线程重入就立刻报错”的
+测试锁把死锁变成确定性失败。旧实现精确从 Composition Drain 失败，正确实现转绿；插件生命周期相邻回归、
+生产 SQLite auto ProductTask 和完整 Textual Pilot 也继续通过。这样验证的是“清理必须在锁外启动”这个
+根因，不是拿 Provider 没调用、UI 多画一行或超时没发生来冒充成功。
+
+同一个 Textual 8.2.8 环境重跑完整 Pilot 时，还抓到三处“测试点得太快”：`click()`/`press()` 后没有先让
+Textual 处理一轮消息，就去读确认框或 operation；单跑通常绿，整组会偶尔读到上一次状态。现在只在测试
+交互边界补 `pilot.pause()`，生产 TUI 没有增加 sleep 或改行为；START→auto→Approval、运行中 typed Cancel
+和完整 16 项 Pilot 随后都通过。
+
+接着真实用户在同一个窗口里遇到了更直观的问题：上一项任务已经失败，重新提议并确认下一项任务后，
+左边明明已经显示新提案和精确 START，右边却还盯着旧失败任务，最后连 START 按钮都没有。原因不是用户
+少说了一句，也不是 ProductTask 没生成，而是 TUI 只问“右栏有没有某个 durable task”，没有再核对这个
+task id 是否正好等于新提案的 task id。于是一个窗口里出现“新标题 + 旧失败原因”的混合身份，旧终态还
+把新任务本来合法的 START 闸门关掉了。
+
+现在仍然只保留一个 Product 面板：收到 Proposal 或 START request 时先比较精确 task id；如果换了任务，
+App 会关闭并等旧 observer 真正收尾，清掉的只是旧任务在内存里的显示投影和读取错误，再把面板指向新
+pending task。SQLite 里的旧失败任务和证据一条也不删；新任务没 START 时也不会假装已经有 durable 事实。
+新 Pilot 从一个恢复出来的 FAILED 任务开始，依次收到新提案和确认，证明旧 observer 已关、旧错误不再
+混进右栏，而且 START 只在确认后出现。临时拿掉这两次身份切换，同一路径会稳定恢复“新标题、旧错误、
+无 START”；保护恢复后完整 Pilot 增为 17 项并通过。
+
+默认右栏仍用短需求把手和截断的 Review/target/patch/digest，但内容现在只分四组：任务头与生命周期、最近
+durable 事实、证据、闸门或终态，四组之间恰好三条暗色横线。证据里的标题统一写成“审批 / 改动 / 校验 /
+补丁”，不再中英混杂；inspection 已经证明的最多八个 changed paths、Verifier 的 command
+id/status/exit/argv digest 和最多十二行 Patch preview 仍保留。有更多文件、Patch 被截断或 UTF-8 字节被
+替换时都会明写，绝不会让用户误以为看到了完整 diff。
+
+`Ctrl+T` 现在在宽屏和窄屏都会进入同一个全宽“任务对话”页，不再只是把窄屏右栏拉高。每次打开都会先
+从 SQLite fresh 读取当前 ProductTask，再精确找到它自己的 Agent Session：Router 必须由 Agent Directory
+证明 agent/session 配对；multi 的 parent/reviewer/coder 和 single 的 coder 则从固定 Workflow node 推导，
+再核对 Directory 里的 session 和 create request。它不会扫描所有 stream、按名字猜角色，也没有缓存、
+订阅、第二状态机或任何写事实能力。每条 Session 都先过核心不变量检查，然后只按 canonical seq 走一遍
+user/model/tool 事件；不再先让 `SurfaceProjector` 把所有发言聚到一起，又单独读一遍事件补工具。一次工具
+请求和结果合成一行，右侧显示真实 seq 区间；一屏放不下时会写清还剩多少次工具调用和多少段发言。页面按
+角色分段，最近活跃的一段默认展开；上下键换角色、Enter 展开/折叠、Esc 返回。模型文字仍标成非宿主证据。
+Token 只在每次调用都有可靠 Usage 时相加，遇到 unknown、缺失或畸形数据就写 `unavailable`，不会填 0 或
+只算一部分。工具仍复用原来的安全摘要规则：shell 参数只显示遮蔽后的字节数，工具结果正文、文件内容、
+stdout 和 raw payload 都不显示。它是打开时快照，不做实时 tail；关闭后再打开会重新读当前事实，删掉这层
+显示也不会损失信息。负责这条路径的代码从 494 个物理行降到 490 个，没有新加类层次。
+
+`Ctrl+P` 会进入另一个全宽页。任务已经落盘时，它也先 fresh 读取 Product observation；读不到就诚实写
+unavailable，不拿旧内存快照冒充当前值。页面完整列出 task、Chat/origin/confirmation/router/各固定角色
+Session、Workflow、source、Review、target、Patch、approval digest 和已建立的回执，并允许按明确字母复制
+指定字段。剪贴板不可用时才把该值写入独立临时文本文件并把路径显示给用户；这个导出文件不会进入
+SQLite、模型上下文或 Product 事实。终端窄于 110 列仍是单栏两行摘要加独立闸门，不用水平滚动。现在
+只有这一套 TUI；旧 details panel、旧的 `Ctrl+T` 展开 class 和兼容分支都不存在。
 
 所有可能来自模型、Patch、路径或错误的文字都当作不可信输入。`safe_display_block()` 只保留普通换行，
 ESC、CR、NUL、双向控制等字符显示为转义文字；单行、总行数和整块都有上限。对话日志和 Product 面板都
 显式关闭 markup，所以模型写 `[bold]` 只会看到这几个字符，不会执行 Rich/Textual 标记。错误只显示
 稳定 code/type，不把 Provider 原始正文、header、traceback 或本机路径塞进屏幕。
 
-关闭窗口、终端 EOF/teardown 或 Ctrl+C 时，App 会先取消并等待自己持有的 operation。普通 Turn 仍由
-Runtime owner 取消；Product start 的 caller cancellation 仍由 Product control owner 收敛；最后才关闭
-observer、subscription 和 watcher。没有“窗口关了但后台还在跑一份付费任务”的第二生命周期。
+关闭窗口、终端 EOF/teardown 或 Ctrl+C 时，App 会先切到看得见的 closing 画面，逐项显示 operation、
+Chat driver、observer、Product host 和 Runtime 是否已经关闭；然后才等待各自原 owner 收敛。普通 Turn
+仍由 Runtime owner 取消，Product start 的 caller cancellation 仍由 Product control owner 收敛。UI 的
+关闭标记现在与 Textual 自己的内部 `_closing` 分开，不能再出现“资源其实关完了，最终退出消息却被自己
+挡住”的 PowerShell 卡死。若终端已经强制拆掉 widget，剩余显示更新可以放弃，但资源关闭不能放弃。
 
-当前 core-only collect 是 `2496`，安装仓库外隔离的 Textual 8.2.8 后是 `2503`。安全显示与 optional
-边界 `7 passed`，headless Pilot `7 passed`，还跑过 Line、Session 恢复、Product observation、真实本地
-Git Product/Promotion；定向与相邻门禁共 `352 passed, 1 skipped`，唯一 skip 是既有 Windows 目录 symlink
-权限边界，架构相邻回归也通过。反向验证把确认路径临时改成自动 start 后，点击前真实多出一次 start，测试
-按预期变红；恢复按钮边界后通过。再把 Product 面板临时打开 markup，`[bold]plain[/bold]` 真被解释成
-`plain`，公开 render 测试变红；最后用一条未连接 Feed 的真实 SQLite 写入模拟另一进程，先确认 observer
-没有 dirty，再临时删掉 periodic waiter，该用例因为根本等不到定时 sleeper 而超时失败。三项保护全部
-恢复后七项 Pilot 全绿。
+现在只有一套浅色界面，没有旧主题开关。左边的用户消息顶格、默认色、正常字重；宿主消息也顶格，但用
+真正的 teal `#008080`；模型回复缩进两个空格，加暗色竖线并保持暗色斜体，多行回复的每一行都有同一条
+左边缘。右边的任务摘要从顶部开始排，只有当前闸门留在底部；进入打字确认时只替换闸门区域，任务头、
+生命周期轨和事实表不会消失；START、批准和驳回都用同一套轻量描边，不再出现一大块饱和色。整个色板
+仍只有默认、暗色、宿主 teal、一个强调色、danger 和 warning。事实表的流名、事件、年龄三列总宽度严格
+等于右栏内容宽度；真实截图还抓住了最初把 18/22/12 三个数据宽度和两个分隔空格算成 58、实际容器只有
+52 列的问题，现在每个“秒”不会再被挤到下一行。100–109 列的双栏实际上只能给 facts 47–51 列，所以
+现在小于 110 列统一用单栏；110 列才进入恰好能容纳 52 列事实表的双栏。短聊天从输入框向上长，长聊天
+仍会自动滚动。
 
-这阶段没有动 Runtime、SQLite schema、Provider dispatch、Agent/Supervisor、Workflow、Budget、
-Workspace、Artifact、Promotion 或 Eval，也没有读 `.env`、调用真实模型、跑完整全量、打 Wheel、升级
-版本、commit、push、tag 或发布。Release Stop C 第一轮确认 `P0=0/P1=0`，同时找到了上面这个不阻止
-提交的周期刷新 P2；P2 按冻结合同根修并做完正反验证后，局部短复核又确认 `P0=0/P1=0/P2=0`，并跑过
-`302 passed` 的不重叠离线回归。复核环境没有安装 Textual，所以没有假装重复跑实施侧 7 条 Pilot。F4
-已经随 F4 提交；完整全量、Wheel、真实 Provider 和 F5 仍留在后面。
+右边失败时也不再只说一层 `workflow-node-failed`。只读 inspection 会从失败节点重算 exact
+Agent/Session/create-request/message，再核对 Directory；如果 Workflow 已说是 identity conflict，就不会
+把碰巧占住可预测 id 的外来 Agent 当成当前节点。只有 agent-message failure 才会在同一个 SQLite 重放
+Session、先跑核心不变量检查，然后只看 `turn/start.message_id` 与 deterministic Workflow message 相等的
+那个 Turn。这个 message/Turn 只能出现一次，里面也只能有一条 runtime error；error 必须属于当时真的
+open 的 Turn，而且该 Turn 必须以 failed 结束。后来用公开 `resume` 跑出的无关失败，或者在 payload 里冒充
+旧 Turn 的错误，都不能覆盖原节点的叶子 code/category/type。Workflow 包装错误仍保留，方便顺着证据链
+复核；如果证据不可靠就明确写 `unavailable`，绝不
+把 Provider 原始正文、header、异常消息或 traceback 贴到屏幕。
+
+R1/R3/R2 可读性批次用 Textual 8.2.8 跑了任务对话、presentation 和完整 TUI 三个测试文件，当前共
+**47 passed**；紧邻的 Product observation、inspection、F3、合同、架构和 CLI Chat 又是
+**161 passed**，全仓只收集是 **2575 tests**。这些都来自当前代码，但不是最终全量。测试不仅
+点按钮，还故意让 observer 和 START 卡住、让事实 20 秒不动、让两次读取乱序、让 Product/Workflow 分歧、
+让 Ctrl+C 在资源关闭一半时停住，并验证窄屏折叠与 typed confirmation。另有一条完全确定性的真实本地链：
+真实 Product host、auto Router、固定 multi 三角色、managed Git、Verifier、Review 一直跑到
+`awaiting_approval`。这条链实际抓到了“任务已经 durable，但旧 proposal 还压着状态表，导致 Review 齐全
+也没有批准入口”的 bug。分别拿掉 operation 启动时的立即刷新、拿掉读取排序锁、恢复旧 proposal 抢占时，
+对应反例都会按根因变红；恢复保护后通过。
+
+replacement 的第一次独立审查随后找到两项 P1 和两项 P2：START 在途时 Cancel 被忙碌状态挡住；第一次
+observation 失败被说成没有任务而且永不重试；别的任务写全局账本会把当前任务年龄刷成 0 秒；details 与
+窄屏展开状态会打架。这四项都在现有显示、observer 和 Product control 接缝修掉，没有再造状态机。新增
+测试既走纯状态表，也走真实 Product host，把 RUNNING 任务通过 typed Cancel 变成 durable CANCELLED；还
+覆盖初始错误后周期恢复、成功读取清旧错误、跨任务年龄和两次开关/resize。六次反向验证逐一拿掉保护，
+六条测试都按各自根因变红，恢复后 `38 passed`。短独立复审随后确认这四项 `P0/P1/P2` 清零；之后的真实
+体验先发现并修复上述 Product Chat 越过 START 前副作用边界，后续多轮又用 native-thread traceback 定位并
+修复 Plugin ActivationSet eager-cleanup 死锁，同一轮体验又补上了上面的终态任务→新提案精确身份交接。
+
+之后用户仍然在真实流程中看到 `workflow-node-failed`。这次没有再猜 TUI：直接读 SQLite 和复放 exact
+冻结请求后，证据表明 Router、Workspace、Git、预算和界面都正常，coder 也已经 list/read；Endpoint 返回
+HTTP 200 和 `apply_patch` Tool Call，但 `function.arguments` 把多行 old/new text 写成 Python 双三引号，
+而不是严格 JSON，所以 Provider parser 在同一字符位置失败，后面才被 Agent/Workflow 包成节点失败。
+这也解释了为什么换界面、重开目录或重试网络都治不好：它不是 TLS/DNS，也还没真正调用 patch。
+
+根修只放在原 OpenAI-compatible Provider 边界，并写进 ADR-0038。平常仍先走标准 JSON；只有失败时，才
+允许 tokenizer 找到顶层双三引号值，而且冻结 Tool schema 必须明确说这个字段是字符串。转换后整个参数
+仍须按 RFC JSON 严格解析成 object。Python 默认 decoder 会接受、但 JSON 标准不接受的 `NaN` 和正负
+`Infinity` 也明确拒绝；未知字段、非字符串/嵌套字段、单三引号、表达式、注释、尾逗号、没闭合或有
+歧义的内容继续拒绝；没有 eval、JSON5、fallback，也没有 qwen、库存、文件名或某个 Tool 名的硬编码。
+
+这次修好后不是只跑假 Provider：本窗口亲自从全新的仓库外目录，用已有 `.env` loader 和真实
+`qwen-plus` 走了一遍 TUI：提议、确认、START、auto→single、coder 修改、测试、Review、人工批准和一次性
+bare target 合入全部完成。源仓库保持 clean，推广后的 checkout 跑 4 个 unittest 全过；4 个 Session 没有
+核心不变量错误，Budget reservation 全部结算、账户全关、Workspace 全释放。Key 没有被打开、打印或写进
+记录，进程代理已显式清空。这是一条真实定向验收，不冒充 18-attempt Benchmark 或统计结论。
+
+布局替换没有动 AgentRuntime/AgentLoop、SQLite schema、Agent/Supervisor、Workflow、Budget、Workspace、
+Artifact、Promotion 或 Eval；这次 F5 RC repair 只改原 Provider parser 和 Product inspection 的只读投影。
+定向真实验收通过 loader 使用 `.env`，但没有打开、打印或记录 Key；没有真实远端 Git、打 Wheel、commit、
+push、tag 或发布。旧 F4 审查和 F5 的 `2496 passed, 7 skipped` 只证明替换前候选，不能拿来给当前代码盖章。
+因此 Provider、TUI、失败证据和跨 owner 最终复审都已清零 P0/P1/P2。后续还找到一个真实的 TUI
+焦点交接竞态：按钮 handler 里立刻 focus，会被点击动作最后的焦点处理抢回去，用户紧接着输入的 START/
+CANCEL 可能被吞。现在只用 Textual 的 `call_after_refresh` 在刷新后把焦点交给确认框；没有加第二个状态
+或第二条控制面。对应 Pilot 也必须真的看到输入框持有焦点后再模拟键入，不能只 pause 一次猜时序。
+随后上面这轮产出可见性又改了同一个 TUI 和测试，所以那次完整全量现在只算真实历史证据。本轮继续修复
+批准后左栏无反馈的体验 P2；当前包含 optional 边界的 `54` 项 TUI、`215` 项相邻回归和 `2575` 项
+collect-only 通过。临时拿掉 Router/Session 绑定时，合法但无关的 Session 会被错误接受，反例明确报
+`DID NOT RAISE`；这次旧审批路径也精确复现“右栏 completed、左栏无完成提示”，恢复保护后转绿且没有
+写 Session。前一轮独立短复审已清零 P0/P1/P2，本次小修尚待短复审；之后才跑唯一最终全量。
+进度见正式版 20.37 和 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。
+
+### 20.31 v0.8-F5：把前五段能力装进同一个 `0.8.0` 发布候选（正式版 20.37）
+
+F5 不是再加一个功能，而是回答“现在仓库里已经有的 F0–F4，能不能作为同一个版本被重新审查、完整
+测试、干净打包和离线安装”。它不会顺手加第二套数据库、第二个聊天、fallback、Skill 或 Memory。
+版本号仍只准写在 `traceh/version.py` 一个地方；当前工作树已经切到 `0.8.0`，Wheel metadata、Python
+导入的版本、核心插件身份、插件 API、CLI 标题和源码 ZIP 名字都继续从这里读取。不过这只是候选：最终
+门禁和 tag 还没完成，所以对外最新正式版仍是 `v0.7.1`。
+
+切版本时还发现一个很实际的问题：Plugin Creator 和 Python Quality 是两个真的独立 Wheel，它们在
+v0.7.1 发布时故意只承诺 `<0.8`。如果核心现在变成 0.8.0，而插件元数据不动，pip 和插件管理器就应该
+拒绝安装——这不是误报。F5 没有放宽守门规则，而是让两个插件各自升到 `0.2.2`，把安装依赖和运行时
+Manifest 一起改成实际能覆盖 0.8 的范围。Creator 自己兼容 0.6–0.8，Quality 兼容 0.5–0.8；但 Creator
+教 Agent **新写**插件时只生成当前 `>=0.8,<0.9`，不替未来 0.9 做保证。它们的自身测试会同时核对
+Distribution 版本、依赖范围和 Manifest，最终还要用真实四 Wheel 离线共存安装证明，不靠文字宣布兼容。
+
+CI 的三个 matrix job 也会安装 `dev,tui` extras，让日常测试真正收集 Textual Pilot，而不是因为没装 optional extra
+一直跳过。与此同时，核心“不装 Textual 也能 import、跑 Line/Eval”的合同不会靠这个 CI 环境冒充：
+F5 最后要从干净提交分别建两个全新离线环境，一个只装核心，一个安装 `[tui]`，两边都通过才算数。
+
+门禁顺序不能倒过来。现在先跑 F0–F4 定向、Session/Product/Workflow/Budget/Workspace/Artifact/
+Promotion/Evaluation 相邻回归、SQLite 多进程/备份/旧数据拒绝、所有真正开数据库的 CLI/Eval/Evolution
+入口，再做收集、Ruff、diff 和文档检查。然后必须停下来做一次全局独立 P0/P1 审查；审查清零后才跑
+唯一一次 `pytest --durations=30` 最终全量，再从已提交的干净输入做 Wheel/sdist/source ZIP 和双形态离线
+安装。真实模型 18 次网格、commit、push、tag、GitHub Release 都需要各自授权，不能因为用户说“开始
+F5”就自动发生。
+
+独立审查前门禁已经通过：版本/Product pin `12 passed`，Creator/Quality 自身
+`10 + 18 passed`；F0/F1 `106 passed, 2 skipped`，F2/F3 `103 passed`，F4 `14 passed`；
+Session/Runtime/Product `313 passed`，Workflow/Budget/Workspace/Artifact/Promotion/Evaluation
+`455 passed, 3 skipped`，全部 CLI 与 Evolution comparison `538 passed, 1 skipped`。核心不装 Textual
+收集 `2496` 项，隔离 `[tui]` 收集 `2503` 项；compileall、Ruff、diff、415 个相对链接、围栏、章节映射、
+秘密/本机路径和示例硬编码扫描都通过，四个受保护核心文件没改。上面这些组有重复，不能加起来冒充全量。
+
+全局独立审查最后是 `P0=0/P1=0/P2=2`。两个 P2 都不是程序错误，而是这两份上下文前面的 CI 和
+Creator 说明没跟上真实代码；现在已经先改正式版、再同步本通俗版。随后唯一最终全量使用真正装有
+Textual 8.2.8 的开发环境和全新的仓库外短临时目录，收集 2503 项，得到 `2496 passed, 7 skipped`、
+退出码 0、耗时 35:33。最慢的完整 L2 候选验证用了 1089.38 秒，解释了中间长时间没输出的原因；七个
+skip 都是既有 Windows 平台边界。现在可以进入从 clean committed input 打包和双形态离线安装，但这些
+资产、真实 Provider、提交、tag 和正式发布仍不能写成“通过”。真实结果统一记在
+[`validation-v0.8.0.md`](../validation-v0.8.0.md)，不会拿 F4 或 v0.7.1 的旧数字充数。
+
+这段全量数字是换 TUI **之前**真的跑出来的，不能删，但也不能继续说它证明现在这份代码。发布前体验
+随后直接替换了同一个 TUI，当前实现见 20.30，所以 Release Stop C、当前候选全量和后面的干净资产门禁
+都重新打开。replacement 原定向组 `38 passed`，第一次审查的两项 P1 与两项 P2 已修、完成六次反向
+验证并经短复审清零；真实体验随后发现 Product Chat 权限缺陷与 Plugin ActivationSet eager-cleanup 死锁。
+后者的旧逻辑反例已确定性失败，正确逻辑下更宽插件生命周期 `200 passed`、Product/Observation/Contract/
+Architecture `118 passed`、presentation/observation/activity/timeline `256 passed`、Textual Pilot `17 passed`；
+core-only 与隔离 `[tui]` 当时分别收集 `2508` 与 `2525` 项。其后新增的浅色布局、叶子失败投影和受 schema
+约束的 Provider 解析已经由一次真实 `qwen-plus` TUI ProductTask 从提议走到合入；产出可见性补齐前的
+core-only 与隔离 `[tui]` collect-only 为 `2540` 与 `2562`，Provider/TUI/失败证据和跨 owner 最终复审当时
+均已清零 P0/P1/P2。
+
+当前候选的最终全量没有“一次红了就只补跑失败项”。第一次完整运行是
+`2553 passed, 7 skipped, 2 failed in 3106.78s (51:46)`：一个测试只认短暂 START 状态，却合法地先看见
+durable task opened；另一个测试真实暴露上面的焦点交接竞态。生产改成 refresh 后 focus，测试接受两个都能
+证明 START 已进入宿主的合法观察点。随后短复审发现测试自己还会在焦点真正到位前直接塞值并发 Enter；
+因此中止了一次尚未完成的试跑（不算全量证据），统一让确认 Pilot 等待 `Input.has_focus`。第二次完整
+运行仍得到 `2554 passed, 7 skipped, 1 failed in 3076.66s (51:16)`，证明还有两处点击后立即读取内部状态
+的测试同步错误。移到同一焦点同步点后，原失败用例在 10 个独立进程全过，完整 TUI/presentation 又连续
+三轮 `34 passed`，短复审清零 P0/P1/P2。
+
+最后从另一个全新短临时目录再次完整运行，得到 **`2555 passed, 7 skipped in 3078.80s (51:18)`、
+退出码 0**，总共 2562 项。最慢的完整 L2 候选验证用时 `1403.74s`，不是卡死；7 个 skip 仍是既有
+Windows/optional 平台边界。但它发生在 20.30 的角色对话和完整身份补齐之前，所以现在只能证明当时那棵
+代码，不能拿来给当前工作树盖章。新增页面完成定向/相邻回归、独立审查和一次新的最终全量以前，不能
+进入 clean committed input 的 Wheel/sdist/source ZIP、归档审计或不带/带 `[tui]` 的两套离线安装；真实
+18-attempt 网格、commit、tag、push、release 也仍需各自授权。

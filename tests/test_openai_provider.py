@@ -123,6 +123,301 @@ async def test_openai_compatible_provider_serializes_tools_and_parses_calls() ->
 
 
 @pytest.mark.asyncio
+async def test_provider_normalizes_only_triple_quoted_tool_string_values() -> None:
+    """Some compatible models use Python multiline delimiters in JSON arguments."""
+
+    arguments = (
+        '{"path": "module.py", "old_text": """'
+        '\\"\\"\\"before\\"\\"\\"\\nvalue = 1\\n'
+        '""", "new_text": """'
+        '\\"\\"\\"after\\"\\"\\"\\nvalue = 2\\n'
+        '"""}'
+    )
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            body = json.dumps(
+                {
+                    "id": "response-multiline",
+                    "choices": [
+                        {
+                            "finish_reason": "tool_calls",
+                            "message": {
+                                "content": "",
+                                "tool_calls": [
+                                    {
+                                        "id": "call-multiline",
+                                        "type": "function",
+                                        "function": {
+                                            "name": "apply_patch",
+                                            "arguments": arguments,
+                                        },
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 7, "completion_tokens": 3},
+                }
+            ).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        response = await provider.complete(
+            ModelRequest(
+                provider=provider.name,
+                model="test-model",
+                messages=(ModelMessage("user", "update it"),),
+                tools=(
+                    ToolSchema(
+                        "apply_patch",
+                        "replace text",
+                        {
+                            "type": "object",
+                            "properties": {
+                                "path": {"type": "string"},
+                                "old_text": {"type": "string"},
+                                "new_text": {"type": "string"},
+                            },
+                        },
+                    ),
+                ),
+            )
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert response.tool_calls[0].name == "apply_patch"
+    assert response.tool_calls[0].arguments == {
+        "path": "module.py",
+        "old_text": '"""before"""\nvalue = 1\n',
+        "new_text": '"""after"""\nvalue = 2\n',
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        '{"path": "unterminated}',
+        '{"unknown": """value"""}',
+        '{"count": """1"""}',
+        '{"payload": {"text": """value"""}}',
+        "{'path': '''value'''}",
+        '{"path": """value""",}',
+        '{"path": """value""", "new_text": make_value()}',
+        '{"path": """unterminated}',
+        '{"path": "value", "count": NaN}',
+        '{"path": """value""", "count": NaN}',
+        '{"path": """value""", "count": Infinity}',
+        '{"path": """value""", "count": -Infinity}',
+    ],
+    ids=(
+        "truncated-json",
+        "undeclared-property",
+        "non-string-property",
+        "nested-property",
+        "single-quoted-python",
+        "trailing-comma",
+        "expression",
+        "unterminated-triple-quote",
+        "strict-json-nan",
+        "normalized-json-nan",
+        "normalized-json-positive-infinity",
+        "normalized-json-negative-infinity",
+    ),
+)
+async def test_other_malformed_tool_arguments_still_fail_closed(
+    arguments: str,
+) -> None:
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            body = json.dumps(
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "tool_calls",
+                            "message": {
+                                "content": "",
+                                "tool_calls": [
+                                    {
+                                        "id": "call-broken",
+                                        "type": "function",
+                                        "function": {
+                                            "name": "apply_patch",
+                                            "arguments": arguments,
+                                        },
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+                }
+            ).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        with pytest.raises(ProviderFailure) as caught:
+            await provider.complete(
+                ModelRequest(
+                    provider=provider.name,
+                    model="test-model",
+                    messages=(ModelMessage("user", "update it"),),
+                    tools=(
+                        ToolSchema(
+                            "apply_patch",
+                            "replace text",
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "path": {"type": "string"},
+                                    "old_text": {"type": "string"},
+                                    "new_text": {"type": "string"},
+                                    "count": {"type": "integer"},
+                                    "payload": {
+                                        "type": "object",
+                                        "properties": {
+                                            "text": {"type": "string"}
+                                        },
+                                    },
+                                },
+                            },
+                        ),
+                    ),
+                )
+            )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert caught.value.code == "provider-tool-arguments-invalid"
+    assert caught.value.category is ProviderFailureCategory.PROTOCOL
+
+
+@pytest.mark.asyncio
+async def test_runtime_executes_a_normalized_multiline_tool_call(tmp_path) -> None:
+    requests = 0
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            nonlocal requests
+            self.rfile.read(int(self.headers["Content-Length"]))
+            requests += 1
+            if requests == 1:
+                arguments = (
+                    '{"path": "module.py", "old_text": """before\\n""", '
+                    '"new_text": """after\\n"""}'
+                )
+                body = json.dumps(
+                    {
+                        "id": "response-edit",
+                        "choices": [
+                            {
+                                "finish_reason": "tool_calls",
+                                "message": {
+                                    "content": "",
+                                    "tool_calls": [
+                                        {
+                                            "id": "call-edit",
+                                            "type": "function",
+                                            "function": {
+                                                "name": "apply_patch",
+                                                "arguments": arguments,
+                                            },
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 5, "completion_tokens": 2},
+                    }
+                ).encode("utf-8")
+            else:
+                body = json.dumps(
+                    {
+                        "id": "response-done",
+                        "choices": [
+                            {
+                                "finish_reason": "stop",
+                                "message": {"content": "done"},
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 6, "completion_tokens": 1},
+                    }
+                ).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    target = workspace / "module.py"
+    target.write_text("before\n", encoding="utf-8")
+    server, thread = serve(Handler)
+    provider = OpenAICompatibleProvider(
+        f"http://127.0.0.1:{server.server_port}/v1",
+        api_key="test-key",
+    )
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "data",
+            provider=provider.name,
+            model="test-model",
+            max_steps=3,
+        ),
+        provider=provider,
+        event_store=InMemoryEventStore(),
+    )
+    session_id = await runtime.create_session(workspace)
+    execution = AgentRuntimeExecution(runtime, session_id)
+    try:
+        result = await execution.run_turn(TurnInput("update the file", "message-root"))
+        events = await runtime.sessions.read_session(session_id)
+    finally:
+        await execution.dispose()
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert result.reason == "completed"
+    assert target.read_text(encoding="utf-8") == "after\n"
+    assert [event.type for event in events].count("tool/call") == 1
+    assert [event.type for event in events].count("tool/result") == 1
+
+
+@pytest.mark.asyncio
 async def test_cancelling_a_request_waits_for_the_http_worker(monkeypatch) -> None:
     """A cancelled model call must not leave an HTTP worker running.
 

@@ -8,6 +8,7 @@ guesses: a retired generation must remain usable until its Lease exits.
 from __future__ import annotations
 
 import asyncio
+import threading
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,27 @@ async def build_with_plugin(tmp_path: Path, plugin: object, plugin_id: str = "a.
         plugin_discovery=discovery_for(plugin),
         event_store=SqliteEventStore((tmp_path / "data") / "events"),
     )
+
+
+class _SameThreadReentryErrorLock:
+    """Turn a same-thread lock re-entry into evidence instead of a hung test."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._owner: int | None = None
+
+    def __enter__(self) -> _SameThreadReentryErrorLock:
+        owner = threading.get_ident()
+        if self._owner == owner:
+            raise RuntimeError("activation claim lock was re-entered by cleanup")
+        self._lock.acquire()
+        self._owner = owner
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        del args
+        self._owner = None
+        self._lock.release()
 
 
 class _LegacyReplacementActivationSet:
@@ -148,6 +170,25 @@ async def test_default_runtime_and_startup_plugin_use_one_owned_activation_set(
     assert plain_set.state == "disposed"
     assert plugin_set.state == "disposed"
     assert plugin.cleanup_calls == 1
+
+
+async def test_runtime_dispose_starts_activation_cleanup_outside_the_claim_lock(
+    tmp_path: Path,
+) -> None:
+    runtime = await build_plain(tmp_path)
+    activation_set = runtime.loop.compositions.current_activation_set
+    assert isinstance(activation_set, PluginActivationSet)
+    activation_set._claim_lock = _SameThreadReentryErrorLock()
+    loop = asyncio.get_running_loop()
+    previous_factory = loop.get_task_factory()
+    loop.set_task_factory(asyncio.eager_task_factory)
+
+    try:
+        await runtime.dispose()
+    finally:
+        loop.set_task_factory(previous_factory)
+
+    assert activation_set.state == "disposed"
 
 
 async def test_setup_failure_keeps_current_generation_and_rolls_back_candidate(

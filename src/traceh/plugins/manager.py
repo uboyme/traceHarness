@@ -275,6 +275,7 @@ class PluginActivationSet:
         self.notices = tuple(notices)
         self._activations = tuple(activations)
         self._claim_lock = threading.Lock()
+        self._dispose_start_lock = asyncio.Lock()
         self._claimed_by: object | None = None
         self._state = "candidate"
         self._dispose_task: asyncio.Task[None] | None = None
@@ -439,7 +440,8 @@ class PluginActivationSet:
 
     @property
     def disposed(self) -> bool:
-        task = self._dispose_task
+        with self._claim_lock:
+            task = self._dispose_task
         return task is not None and task.done()
 
     def _ensure_claimable(self, generation_owner: object) -> None:
@@ -468,16 +470,56 @@ class PluginActivationSet:
     async def _dispose_for_generation(self, generation_owner: object) -> None:
         """Dispose only through the Generation that claimed this set."""
 
-        with self._claim_lock:
-            if self._claimed_by is not generation_owner:
-                raise ValueError("plugin ActivationSet is not owned by this Generation")
-            if self._dispose_task is None:
-                self._dispose_task = asyncio.create_task(
+        task = await self._get_or_start_dispose_task(
+            generation_owner=generation_owner,
+        )
+        await _await_cleanup_task(task)
+
+    async def _get_or_start_dispose_task(
+        self,
+        *,
+        generation_owner: object = _MISSING,
+    ) -> asyncio.Task[None]:
+        """Publish one cleanup task without starting async work under the claim lock."""
+
+        async with self._dispose_start_lock:
+            with self._claim_lock:
+                if generation_owner is _MISSING:
+                    if self._claimed_by is not None:
+                        raise ValueError(
+                            "a Generation-owned ActivationSet must be disposed by its "
+                            "Generation"
+                        )
+                elif (
+                    self._claimed_by is None
+                    or self._claimed_by is not generation_owner
+                ):
+                    raise ValueError(
+                        "plugin ActivationSet is not owned by this Generation"
+                    )
+                if self._dispose_task is not None:
+                    return self._dispose_task
+                previous_state = self._state
+                self._state = "disposing"
+
+            # A task factory may eagerly enter the coroutine before create_task()
+            # returns.  Starting it while _claim_lock is held would therefore let
+            # _dispose_body() synchronously re-enter a non-reentrant threading.Lock
+            # and block the whole event-loop thread.  The async start lock keeps the
+            # task singleton while the ownership lock remains purely synchronous.
+            try:
+                task = asyncio.create_task(
                     self._dispose_body(),
                     name="traceh-plugin-activation-set-dispose",
                 )
-            task = self._dispose_task
-        await _await_cleanup_task(task)
+            except BaseException:
+                with self._claim_lock:
+                    if self._dispose_task is None and self._state == "disposing":
+                        self._state = previous_state
+                raise
+            with self._claim_lock:
+                self._dispose_task = task
+            return task
 
     async def _dispose_body(self) -> None:
         failures: list[PluginFailure] = []
@@ -529,17 +571,7 @@ class PluginActivationSet:
     async def dispose(self) -> None:
         """Converge reverse cleanup exactly once, absorbing repeat cancellation."""
 
-        with self._claim_lock:
-            if self._claimed_by is not None:
-                raise ValueError(
-                    "a Generation-owned ActivationSet must be disposed by its Generation"
-                )
-            if self._dispose_task is None:
-                self._dispose_task = asyncio.create_task(
-                    self._dispose_body(),
-                    name="traceh-plugin-activation-set-dispose",
-                )
-            task = self._dispose_task
+        task = await self._get_or_start_dispose_task()
         await _await_cleanup_task(task)
 
 

@@ -18,7 +18,7 @@ L1.
       version match the approved specification.
 - [ ] Entry Point group is `traceh.plugins` and its name exactly equals
       `PluginManifest.plugin_id`.
-- [ ] Runtime dependency declares `traceharness-py>=0.7,<0.8`.
+- [ ] Runtime dependency declares `traceharness-py>=0.8,<0.9`.
 - [ ] Package discovery uses the `src` layout and all required package resources
       are declared explicitly.
 
@@ -32,7 +32,7 @@ L1.
 - [ ] Every effect has an honest `EffectKind`; cleanup and background tasks use
       activation-owned APIs.
 - [ ] Setup contributions close before health; health does not add capabilities.
-- [ ] Unsupported v0.7 plugin features are stated as limits, not simulated or claimed.
+- [ ] Unsupported v0.8 plugin features are stated as limits, not simulated or claimed.
 
 ## Reviewability
 

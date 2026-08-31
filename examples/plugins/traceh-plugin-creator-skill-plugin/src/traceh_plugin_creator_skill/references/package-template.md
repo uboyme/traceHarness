@@ -34,7 +34,7 @@ name = "<distribution-name>"
 version = "<version>"
 description = "<approved-summary>"
 requires-python = ">=3.12"
-dependencies = ["traceharness-py>=0.7,<0.8"]
+dependencies = ["traceharness-py>=0.8,<0.9"]
 
 [project.entry-points."traceh.plugins"]
 "<plugin.id>" = "<import_package>:<EntryClass>"
@@ -66,7 +66,7 @@ class <EntryClass>:
     manifest = PluginManifest(
         plugin_id=PLUGIN_ID,
         version=PLUGIN_VERSION,
-        requires_traceh=">=0.7,<0.8",
+        requires_traceh=">=0.8,<0.9",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=(<explicit-capability-ids>,),

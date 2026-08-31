@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import inspect
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -57,6 +58,9 @@ class _RaceReader:
                 events=(PendingEvent(type="probe/accepted", data={}),),
             )
         head = await self.store.head(related)
+        latest = None
+        if head:
+            latest = (await self.store.read(related, from_seq=head))[-1]
         return ProductObservation(
             task_id=task_id,
             summary=None,
@@ -66,7 +70,16 @@ class _RaceReader:
             approval=None,
             promotion=None,
             approval_digest=None,
-            stream_heads=(ObservedStreamHead(related, head),),
+            stream_heads=(
+                ObservedStreamHead(
+                    related,
+                    head,
+                    None if latest is None else latest.type,
+                    None if latest is None else latest.occurred_at,
+                    True,
+                ),
+            ),
+            observed_at=datetime.now(UTC),
         )
 
 
@@ -86,9 +99,9 @@ async def test_subscribe_before_read_re_reads_every_discovered_exact_stream() ->
 
     assert reader.calls == 2
     assert "session:related-agent" in observer.subscribed_streams
-    assert observation.stream_heads == (
-        ObservedStreamHead("session:related-agent", 1),
-    )
+    assert observation.stream_heads[0].stream_id == "session:related-agent"
+    assert observation.stream_heads[0].seq == 1
+    assert observation.stream_heads[0].event_type == "probe/accepted"
 
     await store.append(
         "session:related-agent",
@@ -97,9 +110,8 @@ async def test_subscribe_before_read_re_reads_every_discovered_exact_stream() ->
     )
     await observer.wait_dirty()
     refreshed = await observer.refresh()
-    assert refreshed.stream_heads == (
-        ObservedStreamHead("session:related-agent", 2),
-    )
+    assert refreshed.stream_heads[0].seq == 2
+    assert refreshed.stream_heads[0].event_type == "probe/finished"
     await observer.aclose()
     assert feed.subscriber_count("session:related-agent") == 0
 

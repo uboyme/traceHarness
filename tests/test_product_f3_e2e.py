@@ -37,6 +37,7 @@ from traceh.api.product import (
     TaskModeSource,
 )
 from traceh.api.promotion import VerifierCommand, VerifierOutcome
+from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.artifacts.catalog import PatchArtifactCatalogReader
@@ -45,17 +46,20 @@ from traceh.budgets.projection import BudgetLedgerReader
 from traceh.chat.activity import Clock
 from traceh.cli.chat import run_chat
 from traceh.cli.console import Console
-from traceh.cli.product import LineProductAdapter
-from traceh.product.chat import (
-    ConfirmProductTaskTool,
-    ProductTurnActions,
-    ProposeProductTaskTool,
+from traceh.cli.product import (
+    LineProductAdapter,
+    product_chat_runtime_policies,
+    product_chat_runtime_tools,
 )
+from traceh.product.chat import ProductTurnActions
 from traceh.product.errors import ProductInputError
 from traceh.product.events import MAX_REASON_DISPLAY_CHARS, product_task_stream
 from traceh.product.host import ProductHostProfile, build_product_chat_host
 from traceh.product.projection import ProductTaskStreamReader
-from traceh.product.runtime import READ_TOOL_IDS, WRITE_TOOL_IDS
+from traceh.product.runtime import (
+    READ_TOOL_IDS,
+    WRITE_TOOL_IDS,
+)
 from traceh.promotion.events import PROMOTION_LEDGER_STREAM
 from traceh.promotion.models import (
     expected_approval_digest,
@@ -66,6 +70,7 @@ from traceh.promotion.projection import PromotionLedgerReader
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.session.event_feed import PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
+from traceh.session.sqlite import SqliteEventStore
 from traceh.workflow.events import workflow_stream_id
 from traceh.workspaces.catalog import WorkspaceCatalogReader
 from traceh.workspaces.local_git import LocalGitWorkspaceProvider
@@ -200,6 +205,114 @@ class _ChatProvider:
         return _response("ordinary chat answer")
 
 
+class _SideEffectAttemptingChatProvider:
+    """Try to keep coding after confirmation instead of yielding to START."""
+
+    name = "scripted"
+
+    def __init__(self, requests: list[ModelRequest]) -> None:
+        self.requests = requests
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        self.requests.append(request)
+        last_user_index = max(
+            index
+            for index, message in enumerate(request.messages)
+            if message.role == "user"
+        )
+        last_user = request.messages[last_user_index].content
+        tool_results = tuple(
+            message
+            for message in request.messages[last_user_index + 1 :]
+            if message.role == "tool"
+        )
+        if last_user == "propose controlled work":
+            if not tool_results:
+                return _response(
+                    "",
+                    ToolCall(
+                        id="propose-before-side-effect",
+                        name="propose_product_task",
+                        arguments={"requirement": "add the accepted file"},
+                    ),
+                )
+            return _response("proposal recorded")
+        if last_user == "confirm controlled work":
+            if not tool_results:
+                return _response(
+                    "",
+                    ToolCall(
+                        id="confirm-before-side-effect",
+                        name="confirm_product_task",
+                        arguments={},
+                    ),
+                )
+            if len(tool_results) == 1:
+                return _response(
+                    "",
+                    ToolCall(
+                        id="write-before-start",
+                        name="apply_patch",
+                        arguments={
+                            "path": "tracked.txt",
+                            "old_text": "base\n",
+                            "new_text": "changed before START\n",
+                        },
+                    ),
+                )
+            if len(tool_results) == 2:
+                return _response(
+                    "",
+                    ToolCall(
+                        id="process-before-start",
+                        name="shell",
+                        arguments={"command": "python -c pass"},
+                    ),
+                )
+            return _response("confirmation recorded without changing the source")
+        return _response("ordinary chat answer")
+
+
+class _EffectfulProbeTool:
+    name = "effectful_probe"
+    description = "A generic test Tool that would leave a marker if dispatched."
+    input_schema = {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": False,
+    }
+    effect_kind = EffectKind.WORKSPACE_WRITE
+
+    def __init__(self, marker: Path) -> None:
+        self.marker = marker
+
+    async def execute(
+        self,
+        arguments: dict,
+        context: ToolExecutionContext,
+    ) -> ToolOutput:
+        del arguments, context
+        self.marker.write_text("dispatched", encoding="utf-8")
+        return ToolOutput("dispatched")
+
+
+class _EffectfulProbeProvider:
+    name = "scripted"
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        if any(message.role == "tool" for message in request.messages):
+            return _response("done")
+        return _response(
+            "",
+            ToolCall(
+                id="effectful-probe-call",
+                name="effectful_probe",
+                arguments={},
+            ),
+        )
+
+
 class _ProductProvider:
     name = "product-provider"
 
@@ -265,6 +378,28 @@ class _ContractAwareRouterProvider(_ProductProvider):
             )
             return _response(f'{{"mode":"single","reason":"{reason}"}}')
         return await super().complete(request)
+
+
+class _ThreadedProductProvider(_ProductProvider):
+    """Match the production adapter's completed worker-thread boundary."""
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        if request.system_prompt and "routing classifier" in request.system_prompt:
+            response = _response(
+                '{"mode":"single","reason":"Task is a focused, linear debugging '
+                'and verification activity requiring sequential execution: inspect '
+                'code, fix reserve_stock logic, then run existing tests without '
+                'modification."}'
+            )
+        else:
+            response = await super().complete(request)
+        def complete_in_worker() -> ModelResponse:
+            import time
+
+            time.sleep(1.2)
+            return response
+
+        return await asyncio.get_running_loop().run_in_executor(None, complete_in_worker)
 
 
 def _response(content: str, *calls: ToolCall) -> ModelResponse:
@@ -403,10 +538,9 @@ def _chat_runtime(
         ),
         provider=provider or _ChatProvider(),
         event_store=store,
-        additional_tools=(
-            ProposeProductTaskTool(actions),
-            ConfirmProductTaskTool(actions),
-        ),
+        additional_tools=product_chat_runtime_tools(actions),
+        policies=product_chat_runtime_policies(),
+        include_default_tools=False,
     )
 
 
@@ -542,6 +676,33 @@ async def test_auto_router_receives_the_complete_reason_contract(
     assert summary.resolved_mode is ResolvedTaskMode.SINGLE
 
 
+async def test_auto_product_mainline_converges_with_the_production_sqlite_store(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = SqliteEventStore(tmp_path / "events")
+    try:
+        task_id, _, _ = await asyncio.wait_for(
+            _run_to_barrier(
+                tmp_path,
+                store,
+                source,
+                target,
+                LocalArtifactCas(tmp_path / "cas"),
+                RequestedTaskMode.AUTO,
+                _ThreadedProductProvider(),
+            ),
+            timeout=30,
+        )
+        summary = await ProductTaskStreamReader(store).load(task_id)
+        assert summary is not None
+        assert summary.resolved_mode is ResolvedTaskMode.SINGLE
+        assert summary.status is ProductTaskStatus.AWAITING_APPROVAL
+    finally:
+        await store.aclose()
+
+
 async def test_model_confirmation_cannot_start_without_explicit_host_authorization(
     tmp_path: Path,
 ) -> None:
@@ -594,6 +755,148 @@ async def test_model_confirmation_cannot_start_without_explicit_host_authorizati
         for request in chat_requests
         for message in request.messages
     )
+
+
+async def test_product_chat_cannot_dirty_its_configured_source_before_start(
+    tmp_path: Path,
+) -> None:
+    source, base = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    requests: list[ModelRequest] = []
+    runtime = _chat_runtime(
+        tmp_path,
+        store,
+        actions,
+        _SideEffectAttemptingChatProvider(requests),
+    )
+    console = _Console(
+        ("propose controlled work", "confirm controlled work", "START", "/exit")
+    )
+
+    assert await run_chat(
+        runtime,
+        console.console,
+        workspace=source,
+        timeline=False,
+        product=product,
+    ) == 0
+
+    task_id = _proposed_task_id(console.output)
+    session_match = re.search(r"session_id=([^ ]+)", console.output)
+    assert session_match is not None
+    session_id = session_match.group(1)
+    summary = await ProductTaskStreamReader(store).load(task_id)
+    assert summary is not None
+    assert summary.status is ProductTaskStatus.AWAITING_APPROVAL
+    assert summary.failure_code is None
+    assert git("status", "--porcelain", cwd=source) == ""
+    assert (source / "tracked.txt").read_text(encoding="utf-8") == "base\n"
+    assert requests
+    assert all(
+        {tool.name for tool in request.tools}
+        == {
+            "list_files",
+            "read_file",
+            "search_text",
+            "propose_product_task",
+            "confirm_product_task",
+        }
+        for request in requests
+    )
+    events = await store.read(f"session:{session_id}")
+    blocked_results = {
+        str(event.data.get("tool_call_id")): event
+        for event in events
+        if event.type == "tool/result"
+        and event.data.get("tool_call_id")
+        in {"write-before-start", "process-before-start"}
+    }
+    assert set(blocked_results) == {"write-before-start", "process-before-start"}
+    assert {
+        event.data.get("error_type") for event in blocked_results.values()
+    } == {"UnknownTool"}
+
+    next_actions = ProductTurnActions()
+    next_product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        next_actions,
+        RequestedTaskMode.SINGLE,
+    )
+    rejection = _Console((f"/task reject {task_id}", "/exit"))
+    assert await run_chat(
+        _chat_runtime(tmp_path, store, next_actions),
+        rejection.console,
+        session_id=session_id,
+        timeline=False,
+        product=next_product,
+    ) == 0
+    assert f"task {task_id}: rejected" in rejection.output
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    assert git("status", "--porcelain", cwd=source) == ""
+
+
+async def test_product_chat_policy_denies_a_registered_effectful_tool(
+    tmp_path: Path,
+) -> None:
+    store = InMemoryEventStore()
+    actions = ProductTurnActions()
+    marker = tmp_path / "effect-marker"
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "data",
+            provider="scripted",
+            model="chat-model",
+            max_steps=3,
+        ),
+        provider=_EffectfulProbeProvider(),
+        event_store=store,
+        additional_tools=(
+            *product_chat_runtime_tools(actions),
+            _EffectfulProbeTool(marker),
+        ),
+        policies=product_chat_runtime_policies(),
+        include_default_tools=False,
+    )
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    try:
+        session_id = await runtime.create_session(workspace)
+        result = await runtime.run_existing(session_id, "attempt an effect")
+        events = await runtime.sessions.read_session(session_id)
+        effects = await runtime.sessions.read_effects(session_id)
+    finally:
+        await runtime.dispose()
+
+    assert result.reason == "completed"
+    assert not marker.exists()
+    denied = next(
+        event
+        for event in events
+        if event.type == "tool/result"
+        and event.data.get("tool_call_id") == "effectful-probe-call"
+    )
+    assert denied.data.get("status") == "denied"
+    assert denied.data.get("error_type") == "ToolDenied"
+    assert denied.data.get("data") == {
+        "policy": "product-chat-side-effect-boundary"
+    }
+    assert not effects
 
 
 async def test_router_failure_releases_resources_and_returns_the_durable_task(

@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,tui]"
       - run: python -m compileall -q src
       - run: pytest
       - name: Test Python Quality plugin distribution
@@ -27,9 +27,8 @@ jobs:
         working-directory: examples/plugins/traceh-plugin-creator-skill-plugin
       - run: traceh doctor --data-dir /tmp/traceh-ci
 
-  # Minimal Windows coverage: the JSONL event store uses a different OS locking
-  # primitive there (msvcrt instead of fcntl), so the cross-process tests must
-  # run on a real Windows runner.
+  # Windows remains an explicit matrix because SQLite/Git subprocess, terminal,
+  # path-length and Textual lifecycle behavior must run on the supported OS.
   test-windows:
     runs-on: windows-latest
     steps:
@@ -37,7 +36,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,tui]"
       - run: python -m compileall -q src
       - run: pytest
       - name: Test Python Quality plugin distribution

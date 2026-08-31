@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from traceh.agents.directory import AgentDirectoryReader
 from traceh.agents.identity import AGENT_DIRECTORY_STREAM
@@ -55,6 +56,9 @@ SESSION_STREAM_PREFIX = "session:"
 class ObservedStreamHead:
     stream_id: str
     seq: int
+    event_type: str | None
+    occurred_at: datetime | None
+    task_bound: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +74,7 @@ class ProductObservation:
     promotion: PatchPromotion | None
     approval_digest: str | None
     stream_heads: tuple[ObservedStreamHead, ...]
+    observed_at: datetime
 
     @property
     def product_status(self) -> ProductTaskStatus | None:
@@ -210,10 +215,27 @@ class ProductObservationReader:
                 for node in evidence.nodes
                 if node.session_id is not None
             )
+        projected_heads = {
+            product_task_stream(task_id): 0 if summary is None else summary.head_seq,
+            workflow_stream_id(task_id): 0 if workflow is None else workflow.head_seq,
+        }
         heads_list: list[ObservedStreamHead] = []
+        global_streams = {
+            AGENT_DIRECTORY_STREAM,
+            ARTIFACT_CATALOG_STREAM,
+            PROMOTION_LEDGER_STREAM,
+        }
         for stream_id in sorted(streams):
+            projected_seq = projected_heads.get(stream_id)
+            task_bound = stream_id not in global_streams
             heads_list.append(
-                ObservedStreamHead(stream_id, await self._store.head(stream_id))
+                await self._stream_head(stream_id, task_bound=task_bound)
+                if projected_seq is None
+                else await self._stream_at(
+                    stream_id,
+                    projected_seq,
+                    task_bound=task_bound,
+                )
             )
         heads = tuple(heads_list)
         return ProductObservation(
@@ -228,6 +250,64 @@ class ProductObservationReader:
                 None if review is None else expected_approval_digest(review)
             ),
             stream_heads=heads,
+            observed_at=datetime.now(UTC),
+        )
+
+    async def _stream_head(
+        self,
+        stream_id: str,
+        *,
+        task_bound: bool,
+    ) -> ObservedStreamHead:
+        """Read the latest durable fact needed by a UI without caching it.
+
+        ``head()`` keeps the normal empty-stream path cheap.  A non-empty
+        stream is then read from that exact sequence.  A concurrent append may
+        make the returned event newer than the first head; using the last event
+        is both safe and more current.  Missing evidence for a reported head is
+        corruption, never a reason to invent an event type or timestamp.
+        """
+
+        head = await self._store.head(stream_id)
+        if head == 0:
+            return ObservedStreamHead(stream_id, 0, None, None, task_bound)
+        events = await self._store.read(stream_id, from_seq=head)
+        if not events or events[0].seq != head:
+            raise ProductStateError(
+                "product-observation-stream-head-missing", stream_id
+            )
+        latest = events[-1]
+        return ObservedStreamHead(
+            stream_id,
+            latest.seq,
+            latest.type,
+            latest.occurred_at,
+            task_bound,
+        )
+
+    async def _stream_at(
+        self,
+        stream_id: str,
+        seq: int,
+        *,
+        task_bound: bool,
+    ) -> ObservedStreamHead:
+        """Bind a status projection to the event version that produced it."""
+
+        if seq == 0:
+            return ObservedStreamHead(stream_id, 0, None, None, task_bound)
+        events = await self._store.read(stream_id, from_seq=seq)
+        if not events or events[0].seq != seq:
+            raise ProductStateError(
+                "product-observation-stream-head-missing", stream_id
+            )
+        projected = events[0]
+        return ObservedStreamHead(
+            stream_id,
+            projected.seq,
+            projected.type,
+            projected.occurred_at,
+            task_bound,
         )
 
 

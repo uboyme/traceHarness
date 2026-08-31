@@ -11,11 +11,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.agents.directory import AgentDirectoryReader
+from traceh.api.events import EventEnvelope
 from traceh.api.product import ProductRole, ProductTaskSummary
 from traceh.api.promotion import PatchReviewReport, VerificationPlan
 from traceh.api.workflow import NodeOutcome, NodeStatus
 from traceh.artifacts.reader import PatchArtifactReader
 from traceh.cli.command_line import escape_for_display
+from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.topology import (
     PRODUCT_APPROVAL_NODE,
@@ -25,8 +27,21 @@ from traceh.product.topology import (
 )
 from traceh.promotion.models import review_matches_verification_plan
 from traceh.session.event_store import EventStore
+from traceh.session.invariants import CoreInvariantChecker
 from traceh.workflow.models import agent_identity, node_kind
 from traceh.workflow.projection import WorkflowStreamReader
+
+_SESSION_STREAM_PREFIX = "session:"
+_SESSION_CREATED_KEYS = frozenset({"session_id", "workspace", "metadata"})
+_RUNTIME_ERROR_KEYS = frozenset(
+    {"turn_id", "step_id", "error_type", "message", "traceback"}
+)
+_PROVIDER_RUNTIME_ERROR_KEYS = _RUNTIME_ERROR_KEYS | frozenset(
+    {"failure_code", "failure_category"}
+)
+_STABLE_RUNTIME_ERROR_CHARACTERS = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +54,16 @@ class ProductNodeEvidence:
     agent_id: str | None
     session_id: str | None
     failure_code: str | None
+    leaf_failure_code: str | None = None
+    leaf_failure_category: str | None = None
+    leaf_error_type: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _SessionLeafFailure:
+    failure_code: str | None = None
+    failure_category: str | None = None
+    error_type: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,23 +180,50 @@ class ProductInspectionEvidenceReader:
             agent_id = None
             session_id = None
             failure_code = None if outcome is None else outcome.failure_code
+            leaf_failure = _SessionLeafFailure()
             if node.node_id in role_nodes and outcome is not None:
-                expected_agent, expected_session, _, _ = agent_identity(
-                    summary.workflow_run_id, node.node_id
-                )
+                (
+                    expected_agent,
+                    expected_session,
+                    expected_request,
+                    expected_message,
+                ) = agent_identity(summary.workflow_run_id, node.node_id)
                 if outcome.agent_id is not None and outcome.agent_id != expected_agent:
                     raise ProductStateError(
                         "product-inspection-agent-identity-mismatch", summary.task_id
                     )
                 record = directory.get(expected_agent)
                 if record is not None:
-                    if record.session_id != expected_session:
+                    session_matches = record.session_id == expected_session
+                    request_matches = record.request_id == expected_request
+                    identity_conflict = (
+                        status is NodeStatus.FAILED
+                        and failure_code == "workflow-agent-identity-conflict"
+                    )
+                    if status is NodeStatus.COMPLETED and not session_matches:
                         raise ProductStateError(
                             "product-inspection-session-identity-mismatch",
                             summary.task_id,
                         )
-                    agent_id = expected_agent
-                    session_id = record.session_id
+                    if status is NodeStatus.COMPLETED and not request_matches:
+                        raise ProductStateError(
+                            "product-inspection-agent-identity-mismatch",
+                            summary.task_id,
+                        )
+                    if session_matches and request_matches and not identity_conflict:
+                        agent_id = expected_agent
+                        session_id = record.session_id
+                    if (
+                        status is NodeStatus.FAILED
+                        and failure_code == "workflow-agent-message-failed"
+                        and session_matches
+                        and request_matches
+                    ):
+                        leaf_failure = await self._session_leaf_failure(
+                            summary.task_id,
+                            record.session_id,
+                            expected_message,
+                        )
                 elif status is NodeStatus.COMPLETED:
                     raise ProductStateError(
                         "product-inspection-agent-record-missing", summary.task_id
@@ -184,6 +236,9 @@ class ProductInspectionEvidenceReader:
                     agent_id=agent_id,
                     session_id=session_id,
                     failure_code=failure_code,
+                    leaf_failure_code=leaf_failure.failure_code,
+                    leaf_failure_category=leaf_failure.failure_category,
+                    leaf_error_type=leaf_failure.error_type,
                 )
             )
 
@@ -197,6 +252,36 @@ class ProductInspectionEvidenceReader:
             nodes=tuple(nodes),
             review=review_evidence,
         )
+
+    async def _session_leaf_failure(
+        self,
+        task_id: str,
+        session_id: str,
+        expected_message_id: str,
+    ) -> _SessionLeafFailure:
+        try:
+            events = await self._store.read(
+                f"{_SESSION_STREAM_PREFIX}{session_id}"
+            )
+        except Exception:
+            raise ProductStateError(
+                "product-inspection-session-unreadable", task_id
+            ) from None
+        try:
+            # This is the executable Session lifecycle contract.  The read
+            # model never trusts a leaf-looking payload before the complete
+            # associated Session has passed it.
+            if CoreInvariantChecker().check(events):
+                raise ValueError("invalid Session lifecycle")
+            return _message_leaf_failure(
+                events,
+                session_id,
+                expected_message_id,
+            )
+        except Exception:
+            raise ProductStateError(
+                "product-inspection-session-invalid", task_id
+            ) from None
 
     async def _review_evidence(
         self,
@@ -287,6 +372,129 @@ def _patch_preview(content: bytes, limit: int) -> tuple[str, bool, bool]:
         else:
             pieces.append("…")
     return "".join(pieces), truncated, replaced
+
+
+def _message_leaf_failure(
+    events: tuple[EventEnvelope, ...],
+    session_id: str,
+    expected_message_id: str,
+) -> _SessionLeafFailure:
+    if not events:
+        return _SessionLeafFailure()
+
+    stream_id = f"{_SESSION_STREAM_PREFIX}{session_id}"
+    open_turn_id: str | None = None
+    target_turn_id: str | None = None
+    target_failure = _SessionLeafFailure()
+    target_failure_count = 0
+    target_terminal_reason: str | None = None
+    for expected_seq, event in enumerate(events, start=1):
+        if (
+            type(event.stream_id) is not str
+            or event.stream_id != stream_id
+            or type(event.seq) is not int
+            or event.seq != expected_seq
+            or type(event.schema_version) is not int
+            or event.schema_version != 1
+            or type(event.type) is not str
+            or type(event.data) is not dict
+        ):
+            raise ValueError("invalid Session envelope")
+        data = event.data
+        if expected_seq == 1:
+            if (
+                event.type != "session/created"
+                or set(data) != _SESSION_CREATED_KEYS
+                or _plain_text(data.get("session_id")) != session_id
+                or type(data.get("workspace")) is not str
+                or type(data.get("metadata")) is not dict
+            ):
+                raise ValueError("invalid Session identity")
+        elif event.type == "session/created":
+            raise ValueError("duplicate Session identity")
+
+        if event.type == "turn/start":
+            turn_id = _required_plain_text(data.get("turn_id"))
+            message_id = _required_plain_text(data.get("message_id"))
+            if open_turn_id is not None:
+                raise ValueError("overlapping Session turns")
+            open_turn_id = turn_id
+            if message_id == expected_message_id:
+                if target_turn_id is not None:
+                    raise ValueError("duplicate Workflow message turn")
+                target_turn_id = turn_id
+        elif event.type == "runtime/error":
+            error_turn_id = _required_plain_text(data.get("turn_id"))
+            if open_turn_id is None or error_turn_id != open_turn_id:
+                raise ValueError("runtime error is outside its declared Turn")
+            if open_turn_id == target_turn_id:
+                target_failure_count += 1
+                if target_failure_count != 1:
+                    raise ValueError("Workflow message Turn has multiple runtime errors")
+                target_failure = _runtime_error_leaf(data)
+        elif event.type == "turn/end":
+            end_turn_id = _required_plain_text(data.get("turn_id"))
+            if open_turn_id is None or end_turn_id != open_turn_id:
+                raise ValueError("Turn end does not close the open Turn")
+            if end_turn_id == target_turn_id:
+                target_terminal_reason = _required_plain_text(data.get("reason"))
+            open_turn_id = None
+    if target_failure_count and target_terminal_reason != "failed":
+        raise ValueError("Workflow message failure has no failed Turn terminal")
+    return target_failure
+
+
+def _runtime_error_leaf(
+    data: dict[str, object],
+) -> _SessionLeafFailure:
+    keys = set(data)
+    if keys not in {_RUNTIME_ERROR_KEYS, _PROVIDER_RUNTIME_ERROR_KEYS}:
+        raise ValueError("invalid runtime error payload")
+    _required_plain_text(data.get("turn_id"))
+    _required_plain_text(data.get("step_id"))
+    error_type = _stable_runtime_error_type(data.get("error_type"))
+    if type(data.get("message")) is not str or type(data.get("traceback")) is not str:
+        raise ValueError("invalid runtime error text")
+    if keys == _PROVIDER_RUNTIME_ERROR_KEYS:
+        if error_type != "ProviderFailure":
+            raise ValueError("invalid provider runtime error type")
+        code, category = _provider_failure(
+            data.get("failure_code"), data.get("failure_category")
+        )
+        return _SessionLeafFailure(code, category, None)
+    if error_type == "ProviderFailure":
+        raise ValueError("provider runtime error has no typed failure")
+    return _SessionLeafFailure(None, None, error_type)
+
+
+def _provider_failure(code: object, category: object) -> tuple[str, str]:
+    if type(code) is not str or type(category) is not str:
+        raise ValueError("invalid provider failure")
+    parsed_category = ProviderFailureCategory(category)
+    ProviderFailure(code, parsed_category)
+    return code, parsed_category.value
+
+
+def _stable_runtime_error_type(value: object) -> str:
+    if (
+        type(value) is not str
+        or not value
+        or len(value) > 128
+        or any(character not in _STABLE_RUNTIME_ERROR_CHARACTERS for character in value)
+    ):
+        raise ValueError("invalid runtime error type")
+    return value
+
+
+def _required_plain_text(value: object) -> str:
+    text = _plain_text(value)
+    if text is None or not text:
+        raise ValueError("missing Session identity")
+    return text
+
+
+def _plain_text(value: object) -> str | None:
+    return value if type(value) is str else None
 
 
 __all__ = [

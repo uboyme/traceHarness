@@ -72,6 +72,7 @@ from traceh.runtime.agent_runtime import (
 from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_store import EventStore
 from traceh.session.sqlite import EventStoreError, SqliteEventStore
+from traceh.tools.policy import ToolPolicy
 from traceh.version import __version__
 
 _PROVIDERS = ("scripted", "openai-compatible")
@@ -338,6 +339,8 @@ async def _runtime(
     event_store: EventStore,
     provider_and_model=None,
     additional_tools: tuple[Tool, ...] = (),
+    policies: tuple[ToolPolicy, ...] | None = None,
+    include_default_tools: bool = True,
 ):
     provider, model = (
         _provider_and_model(args) if provider_and_model is None else provider_and_model
@@ -357,6 +360,8 @@ async def _runtime(
         event_store=event_store,
         verifier_name=args.verifier_name,
         additional_tools=additional_tools,
+        policies=policies,
+        include_default_tools=include_default_tools,
         enabled_plugins=getattr(args, "plugins", ()),
     )
 
@@ -457,6 +462,8 @@ async def _chat(args: argparse.Namespace) -> int:
     product_configuration_errors: tuple[type[BaseException], ...] = ()
     provider_and_model = _provider_and_model(args)
     additional_tools: tuple[Tool, ...] = ()
+    runtime_policies: tuple[ToolPolicy, ...] | None = None
+    include_default_tools = True
     if args.product_config is not None:
         # Keep the default CLI surface light: none of Product, Workspace, CAS or
         # Promotion is imported merely because another command imported this
@@ -464,12 +471,12 @@ async def _chat(args: argparse.Namespace) -> int:
         from traceh.artifacts.cas import LocalArtifactCas
         from traceh.artifacts.errors import ArtifactError
         from traceh.budgets.errors import BudgetError
-        from traceh.cli.product import LineProductAdapter
-        from traceh.product.chat import (
-            ConfirmProductTaskTool,
-            ProductTurnActions,
-            ProposeProductTaskTool,
+        from traceh.cli.product import (
+            LineProductAdapter,
+            product_chat_runtime_policies,
+            product_chat_runtime_tools,
         )
+        from traceh.product.chat import ProductTurnActions
         from traceh.product.config import load_product_host_file
         from traceh.product.errors import ProductError
         from traceh.product.host import build_product_chat_host
@@ -501,10 +508,9 @@ async def _chat(args: argparse.Namespace) -> int:
                 "Product Chat currently requires a directly configured built-in provider"
             )
         actions = ProductTurnActions()
-        additional_tools = (
-            ProposeProductTaskTool(actions),
-            ConfirmProductTaskTool(actions),
-        )
+        additional_tools = product_chat_runtime_tools(actions)
+        runtime_policies = product_chat_runtime_policies()
+        include_default_tools = False
     store = SqliteEventStore(Path(args.data_dir) / "events")
     runtime = None
     handed_to_chat = False
@@ -516,6 +522,8 @@ async def _chat(args: argparse.Namespace) -> int:
             event_store=store,
             provider_and_model=provider_and_model,
             additional_tools=additional_tools,
+            policies=runtime_policies,
+            include_default_tools=include_default_tools,
         )
         if product_config is not None:
             provider, _ = provider_and_model

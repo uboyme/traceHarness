@@ -94,7 +94,7 @@ PROTECTED_SOURCES = {
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
     "plugins/manager.py": (
-        "b09c23e0a2f9a76cf359187785463fd032d3204f8f5d8b8b6c79e601b5ab6eb9"
+        "b87312a7f6cf19b863f9a1a946f8ca8478e1ed19b9751daecd44b95eb55e1230"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
@@ -370,10 +370,10 @@ def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
         assert getattr(value, "__slots__", None) is not None, name
 
 
-def test_the_package_version_is_the_v071_release() -> None:
-    """The maintenance release keeps the single v0.7 version source."""
+def test_the_package_version_is_the_v080_release() -> None:
+    """The v0.8 release keeps the single package version source."""
 
-    assert __version__ == "0.7.1"
+    assert __version__ == "0.8.0"
 
 
 # --------------------------------------------------- authority boundaries

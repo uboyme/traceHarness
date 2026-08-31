@@ -1,15 +1,17 @@
-"""Line-terminal adapter for the UI-neutral Product Chat coordination."""
+"""Product Chat CLI composition and its line-terminal adapter."""
 
 from __future__ import annotations
 
 import asyncio
 from pathlib import Path
 
+from traceh.api.llm import ToolCall
 from traceh.api.product import (
     ProductTaskStatus,
     ProductTaskView,
     RequestedTaskMode,
 )
+from traceh.api.tools import EffectKind, Tool, ToolExecutionContext
 from traceh.chat.activity import Clock, default_clock
 from traceh.cli.command_line import (
     Literal,
@@ -20,10 +22,13 @@ from traceh.cli.command_line import (
 from traceh.cli.console import Console, contains_undecodable_input, normalize_input
 from traceh.concurrency import await_worker_convergence
 from traceh.product.chat import (
+    ConfirmProductTaskTool,
     ProductChatTurn,
     ProductCommandResult,
     ProductInspectionResult,
     ProductStartRequest,
+    ProductTurnActions,
+    ProposeProductTaskTool,
     parse_product_command,
 )
 from traceh.product.control import PendingProductProposal, ProductAdvanceResult, ProductInspection
@@ -31,6 +36,52 @@ from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductChatHost
 from traceh.product.inspection import ProductTaskEvidence
 from traceh.product.observation import ProductObservation, ProductObservationSession
+from traceh.tools.builtins import ListFilesTool, ReadFileTool, SearchTextTool
+from traceh.tools.policy import (
+    AllowByDefaultPolicy,
+    DecisionKind,
+    ToolDecision,
+    ToolPolicy,
+)
+
+
+class ProductChatSideEffectPolicy:
+    """Keep requester Chat observational until the host authorizes START."""
+
+    name = "product-chat-side-effect-boundary"
+
+    async def check(
+        self,
+        call: ToolCall,
+        tool: Tool,
+        context: ToolExecutionContext,
+    ) -> ToolDecision:
+        del call, context
+        if tool.effect_kind in {EffectKind.PURE_READ, EffectKind.WORKSPACE_READ}:
+            return ToolDecision(DecisionKind.DEFER, policy=self.name)
+        return ToolDecision(
+            DecisionKind.DENY,
+            "Product Chat side effects require an authorized ProductTask START",
+            self.name,
+        )
+
+
+def product_chat_runtime_tools(actions: ProductTurnActions) -> tuple[Tool, ...]:
+    """Return the complete requester-Chat tool surface for Product mode."""
+
+    return (
+        ListFilesTool(),
+        ReadFileTool(),
+        SearchTextTool(),
+        ProposeProductTaskTool(actions),
+        ConfirmProductTaskTool(actions),
+    )
+
+
+def product_chat_runtime_policies() -> tuple[ToolPolicy, ...]:
+    """Deny every effectful core or plugin Tool before Product execution."""
+
+    return (ProductChatSideEffectPolicy(), AllowByDefaultPolicy())
 
 
 class LineProductAdapter:

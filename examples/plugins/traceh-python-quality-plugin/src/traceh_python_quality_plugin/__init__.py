@@ -36,7 +36,7 @@ from traceh.plugins import (
 )
 
 PLUGIN_ID = "traceh.python.quality"
-PLUGIN_VERSION = "0.2.1"
+PLUGIN_VERSION = "0.2.2"
 VERIFIER_NAME = "python-tests"
 CONFIG_TABLE = "traceh-python-quality"
 MAX_CONFIG_BYTES = 1_000_000
@@ -369,7 +369,7 @@ class PythonQualityPlugin:
     manifest = PluginManifest(
         plugin_id=PLUGIN_ID,
         version=PLUGIN_VERSION,
-        requires_traceh=">=0.5,<0.8",
+        requires_traceh=">=0.5,<0.9",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=(

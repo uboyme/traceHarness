@@ -20,7 +20,7 @@ including ``traceh.api``, can depend on it without a cycle.
 
 from __future__ import annotations
 
-__version__ = "0.7.1"
+__version__ = "0.8.0"
 """Version of both the ``traceharness-py`` distribution and the ``traceh`` package.
 
 ``pyproject.toml`` reads this attribute, so the installed wheel's metadata and

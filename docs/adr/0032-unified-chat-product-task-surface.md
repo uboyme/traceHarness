@@ -43,6 +43,16 @@ Product controller starts the fixed Workflow, pauses at its Approval barrier,
 and only a later host command may call Promotion. Restart continuation begins
 from a task id and fresh domain replays, not from the old Chat process.
 
+The v0.8 TUI usability pass exposed one missing consequence of that authority
+decision: a Product-configured requester Chat must not also be a coding Agent.
+Its host composition now exposes only workspace reads plus the two ephemeral
+Product suggestion Tools, and monotonically denies any registered Tool whose
+declared effect writes a workspace, starts a process, writes a network or
+performs an external transaction. The coder's write surface remains inside the
+fixed Product Workflow after `START`. Plain Chat without Product configuration
+retains the ordinary coding tools. This is a trusted Tool-effect contract, not
+an OS sandbox.
+
 The `traceh eval` benchmark rework this ADR anticipated in section 15 is now
 implemented in v0.7-F4 and recorded in
 [ADR-0033](0033-product-task-benchmark-as-the-single-eval-path.md).
@@ -88,6 +98,25 @@ Ordinary conversation produces a Session and nothing else. No ProductTask, no
 Workflow run, no Workspace, no task Budget account. This is not an optimisation:
 it is what keeps the expensive, side-effecting machinery attached to an explicit
 human decision rather than to whatever the model inferred from a question.
+
+When `--product-config` is present, the conversation before `START` is a
+requester/control conversation, not the execution workspace. Its complete core
+Tool surface is `list_files`, `read_file`, `search_text`,
+`propose_product_task` and `confirm_product_task`; `apply_patch` and `shell` are
+absent. A monotonic Product Chat policy also denies effectful plugin Tools by
+their declared `EffectKind`, so a later allow decision cannot restore
+pre-`START` side effects. This rule applies equally to Line and Textual because
+it belongs to the one CLI Runtime composition, not to a widget. The actual
+Product coder still receives the Profile-owned writable Tool set in its managed
+Git worktree after the host authorizes `START`.
+
+The distinction matters even when a caller naturally selects the same Git
+directory as both Chat workspace and configured Product source. Before this
+clarification, a model could call the confirmation Tool and then continue with
+the ordinary Chat `apply_patch` or `shell`; the later Product start correctly
+failed `workspace-source-invalid` because the source was already dirty. The
+fix is not to clean that evidence or weaken the Workspace gate. It removes the
+authority from the requester composition where it never belonged.
 
 The seam already exists. `cli/chat.py` dispatches `/exit`, `/help`, `/session`
 and `/plugins ...` in `_handle_command` **before** the model sees the input, so a

@@ -47,7 +47,7 @@ PROTECTED_SOURCES = {
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
     "plugins/manager.py": (
-        "b09c23e0a2f9a76cf359187785463fd032d3204f8f5d8b8b6c79e601b5ab6eb9"
+        "b87312a7f6cf19b863f9a1a946f8ca8478e1ed19b9751daecd44b95eb55e1230"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
@@ -107,10 +107,10 @@ def test_the_four_protected_files_are_byte_identical() -> None:
         assert hashlib.sha256(raw).hexdigest() == expected, relative
 
 
-def test_the_package_version_is_the_v071_release() -> None:
-    """The maintenance release still has one package version source."""
+def test_the_package_version_is_the_v080_release() -> None:
+    """The v0.8 release still has one package version source."""
 
-    assert __version__ == "0.7.1"
+    assert __version__ == "0.8.0"
 
 
 def test_no_existing_owner_learns_about_the_product_domain() -> None:

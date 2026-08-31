@@ -1,11 +1,11 @@
-# Writing and running TraceHarness plugins (v0.7.1)
+# Writing and running TraceHarness plugins (v0.8.0)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
 [ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
 ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
-page is the author- and operator-facing contract for the `0.7.1` SDK, carried forward
+page is the author- and operator-facing contract for the `0.8.0` SDK, carried forward
 from the public surface introduced in v0.6. The
 source-authoring, validation, comparison and promotion control planes are recorded in
 [ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md),
@@ -55,7 +55,7 @@ Declare an entry point in the `traceh.plugins` group and depend on `traceharness
 [project]
 name = "my-traceh-plugin"
 version = "0.1.0"
-dependencies = ["traceharness-py>=0.7,<0.8"]
+dependencies = ["traceharness-py>=0.8,<0.9"]
 
 [project.entry-points."traceh.plugins"]
 "my.plugin.id" = "my_traceh_plugin:MyPlugin"
@@ -77,7 +77,7 @@ class MyPlugin:
     manifest = PluginManifest(
         plugin_id="my.plugin.id",
         version="0.1.0",
-        requires_traceh=">=0.7,<0.8",
+        requires_traceh=">=0.8,<0.9",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=("my.capability",),
@@ -414,7 +414,7 @@ messages are written by this repository.
 | `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.7.1
+## 9. Limits of v0.8.0
 
 - Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
   Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to

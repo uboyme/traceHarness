@@ -11,7 +11,7 @@ TraceHarness 的“插件创建技能”L1 实现。它本身是一个独立 Whe
 | Topic | 内容 |
 |---|---|
 | `workflow` | Candidate Workspace、安全边界和源码生成步骤 |
-| `contract` | v0.7 公开 SDK、生命周期和禁止越界事项 |
+| `contract` | v0.8 公开 SDK、生命周期和禁止越界事项 |
 | `template` | 独立 Distribution 的标准目录与结构模板 |
 | `checklist` | 交付前的静态核对清单 |
 

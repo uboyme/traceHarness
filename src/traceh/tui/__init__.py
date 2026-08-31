@@ -5,6 +5,18 @@ Core, Line Chat and Evaluation installations therefore remain independent of
 the optional ``tui`` extra.
 """
 
-from traceh.tui.presentation import product_observation_text, safe_display_block
+from traceh.tui.presentation import (
+    ProductGateAction,
+    TransientProductState,
+    product_compact_text,
+    resolve_gate,
+    safe_display_block,
+)
 
-__all__ = ["product_observation_text", "safe_display_block"]
+__all__ = [
+    "ProductGateAction",
+    "TransientProductState",
+    "product_compact_text",
+    "resolve_gate",
+    "safe_display_block",
+]

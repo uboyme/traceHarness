@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import http.client
+import io
 import json
 import os
 import socket
 import ssl
+import tokenize
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -93,11 +95,149 @@ def _transport_failure(error: BaseException) -> ProviderFailure:
     return ProviderFailure("provider-transport-unknown", ProviderFailureCategory.UNKNOWN)
 
 
-def _protocol_failure() -> ProviderFailure:
+def _protocol_failure(
+    code: str = "provider-response-invalid",
+) -> ProviderFailure:
     return ProviderFailure(
-        "provider-response-invalid",
+        code,
         ProviderFailureCategory.PROTOCOL,
     )
+
+
+def _reject_non_json_constant(value: str) -> None:
+    del value
+    raise ValueError("non-JSON numeric constant")
+
+
+def _strict_json_loads(value: str | bytes) -> Any:
+    """Parse RFC JSON without Python's NaN/Infinity extension."""
+
+    return json.loads(value, parse_constant=_reject_non_json_constant)
+
+
+def _line_offsets(source: str) -> tuple[int, ...]:
+    offsets = [0]
+    for line in source.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    return tuple(offsets)
+
+
+def _source_offset(offsets: tuple[int, ...], position: tuple[int, int]) -> int:
+    row, column = position
+    if row < 1 or row > len(offsets):
+        raise ValueError("token position is outside source")
+    return offsets[row - 1] + column
+
+
+def _declared_string_properties(
+    schema: dict[str, Any] | None,
+) -> frozenset[str]:
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        return frozenset()
+    properties = schema.get("properties")
+    if not isinstance(properties, dict):
+        return frozenset()
+    return frozenset(
+        str(name)
+        for name, definition in properties.items()
+        if isinstance(definition, dict) and definition.get("type") == "string"
+    )
+
+
+def _normalize_triple_quoted_arguments(
+    raw: str,
+    schema: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Normalize one bounded provider dialect, then return strict JSON.
+
+    Some OpenAI-compatible models emit a JSON object whose top-level string
+    values use Python ``\"\"\"`` delimiters for multiline tool arguments. The
+    rest of the object must remain strict JSON, and the affected property must
+    be declared as a string by the exact Tool schema frozen in the request.
+    This is deliberately not a general JSON repair or Python-literal parser.
+    """
+
+    allowed = _declared_string_properties(schema)
+    if not allowed or '"""' not in raw:
+        return None
+    try:
+        tokens = tuple(tokenize.generate_tokens(io.StringIO(raw).readline))
+    except (IndentationError, tokenize.TokenError):
+        return None
+
+    offsets = _line_offsets(raw)
+    stack: list[str] = []
+    significant: list[tokenize.TokenInfo] = []
+    replacements: list[tuple[int, int, str]] = []
+    ignored = {
+        tokenize.ENCODING,
+        tokenize.ENDMARKER,
+        tokenize.INDENT,
+        tokenize.DEDENT,
+        tokenize.NEWLINE,
+        tokenize.NL,
+    }
+    for token in tokens:
+        if token.type in ignored:
+            continue
+        if token.type == tokenize.STRING and token.string.startswith('"""'):
+            if stack != ["{"] or len(significant) < 2:
+                return None
+            key_token, colon_token = significant[-2:]
+            if key_token.type != tokenize.STRING or colon_token.string != ":":
+                return None
+            if not token.string.endswith('"""') or len(token.string) < 6:
+                return None
+            try:
+                key = _strict_json_loads(key_token.string)
+                value = _strict_json_loads(f'"{token.string[3:-3]}"')
+            except (json.JSONDecodeError, ValueError):
+                return None
+            if type(key) is not str or key not in allowed or type(value) is not str:
+                return None
+            try:
+                start = _source_offset(offsets, token.start)
+                end = _source_offset(offsets, token.end)
+            except ValueError:
+                return None
+            replacements.append((start, end, json.dumps(value, ensure_ascii=False)))
+
+        if token.type == tokenize.OP:
+            if token.string in {"{", "["}:
+                stack.append(token.string)
+            elif token.string in {"}", "]"}:
+                expected = "{" if token.string == "}" else "["
+                if not stack or stack.pop() != expected:
+                    return None
+        significant.append(token)
+
+    if not replacements or stack:
+        return None
+    normalized = raw
+    for start, end, replacement in reversed(replacements):
+        normalized = normalized[:start] + replacement + normalized[end:]
+    try:
+        parsed = _strict_json_loads(normalized)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _parse_tool_arguments(
+    raw: object,
+    schema: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if isinstance(raw, dict):
+        return raw
+    if not isinstance(raw, str):
+        raise _protocol_failure("provider-tool-arguments-invalid")
+    try:
+        parsed = _strict_json_loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        parsed = _normalize_triple_quoted_arguments(raw, schema)
+    if not isinstance(parsed, dict):
+        raise _protocol_failure("provider-tool-arguments-invalid")
+    return parsed
 
 
 @dataclass(slots=True)
@@ -202,8 +342,8 @@ class OpenAICompatibleProvider:
             ) from None
 
         try:
-            raw = json.loads(body.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError):
+            raw = _strict_json_loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
             raise _protocol_failure() from None
 
         choices = raw.get("choices") if isinstance(raw, dict) else None
@@ -225,6 +365,7 @@ class OpenAICompatibleProvider:
         raw_calls = message.get("tool_calls", [])
         if not isinstance(raw_calls, list):
             raise _protocol_failure() from None
+        tool_schemas = {tool.name: tool.input_schema for tool in request.tools}
         for item in raw_calls:
             if not isinstance(item, dict):
                 raise _protocol_failure() from None
@@ -236,16 +377,7 @@ class OpenAICompatibleProvider:
             raw_arguments = function.get("arguments", "{}")
             if not isinstance(call_id, str) or not call_id or not isinstance(name, str) or not name:
                 raise _protocol_failure() from None
-            try:
-                arguments = (
-                    json.loads(raw_arguments)
-                    if isinstance(raw_arguments, str)
-                    else raw_arguments
-                )
-            except json.JSONDecodeError:
-                raise _protocol_failure() from None
-            if not isinstance(arguments, dict):
-                raise _protocol_failure() from None
+            arguments = _parse_tool_arguments(raw_arguments, tool_schemas.get(name))
             tool_calls.append(
                 ToolCall(
                     id=call_id,

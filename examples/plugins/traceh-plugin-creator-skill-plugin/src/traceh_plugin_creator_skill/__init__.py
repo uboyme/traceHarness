@@ -26,7 +26,7 @@ from traceh.plugins import (
 )
 
 PLUGIN_ID = "traceh.plugin.creator"
-PLUGIN_VERSION = "0.2.1"
+PLUGIN_VERSION = "0.2.2"
 GUIDE_TOOL_NAME = "traceh_plugin_creator_guide"
 
 _GUIDE_RESOURCES = MappingProxyType(
@@ -104,7 +104,7 @@ class PluginCreatorSkillPlugin:
     manifest = PluginManifest(
         plugin_id=PLUGIN_ID,
         version=PLUGIN_VERSION,
-        requires_traceh=">=0.6,<0.8",
+        requires_traceh=">=0.6,<0.9",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=("plugin.authoring.skill",),

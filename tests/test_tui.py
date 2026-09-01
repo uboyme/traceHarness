@@ -8,6 +8,7 @@ from dataclasses import fields, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from unicodedata import category
 from uuid import uuid4
 
 import pytest
@@ -43,6 +44,14 @@ from traceh.api.turns import TurnInput
 from traceh.api.workflow import WorkflowStatus
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.artifacts.events import ARTIFACT_CATALOG_STREAM
+from traceh.artifacts.unified_diff import (
+    PatchLineKind,
+    UnifiedDiff,
+    UnifiedDiffFile,
+    UnifiedDiffFileSummary,
+    UnifiedDiffLine,
+    UnifiedDiffSummary,
+)
 from traceh.budgets import BUDGET_LEDGER_STREAM
 from traceh.chat.activity import DEFAULT_HEARTBEAT_SECONDS, Clock, default_clock
 from traceh.chat.session import open_chat_session
@@ -60,7 +69,7 @@ from traceh.product.control import (
     PendingProductProposal,
     ProductAdvanceResult,
 )
-from traceh.product.inspection import ProductTaskEvidence
+from traceh.product.inspection import ProductPatchEvidence, ProductTaskEvidence
 from traceh.product.observation import (
     ObservedStreamHead,
     ProductObservation,
@@ -76,7 +85,11 @@ from traceh.session.sqlite import SqliteEventStore
 from traceh.tui.app import TracehTuiApp
 from traceh.tui.presentation import ProductGateAction
 from traceh.tui.runner import run_tui
-from traceh.tui.screens import ProductIdentityScreen, TaskConversationScreen
+from traceh.tui.screens import (
+    ProductChangesScreen,
+    ProductIdentityScreen,
+    TaskConversationScreen,
+)
 from traceh.tui.task_conversation import (
     TaskConversationRole,
     TaskConversationSnapshot,
@@ -138,6 +151,81 @@ async def _opened_app(tmp_path: Path, provider: _Provider, *, product=None):
         clock=default_clock(),
     )
     return app, runtime, store, opened
+
+
+def _patch_evidence(*, first_file_lines: int = 3) -> ProductPatchEvidence:
+    first_summary = UnifiedDiffFileSummary(
+        path="src/core.py",
+        status="modified",
+        additions=first_file_lines,
+        deletions=1,
+        binary=False,
+    )
+    second_summary = UnifiedDiffFileSummary(
+        path="tests/test_core.py",
+        status="added",
+        additions=2,
+        deletions=0,
+        binary=False,
+    )
+    first_lines = (
+        UnifiedDiffLine(PatchLineKind.DELETION, 7, None, "old-value"),
+        *(
+            UnifiedDiffLine(
+                PatchLineKind.ADDITION,
+                None,
+                7 + index,
+                f"new-value-{index:03d}",
+            )
+            for index in range(first_file_lines)
+        ),
+    )
+    second_lines = (
+        UnifiedDiffLine(PatchLineKind.ADDITION, None, 1, "first-test-line"),
+        UnifiedDiffLine(PatchLineKind.ADDITION, None, 2, "second-test-line"),
+    )
+    diff = UnifiedDiff(
+        summary=UnifiedDiffSummary(
+            files=(first_summary, second_summary),
+            additions=first_file_lines + 2,
+            deletions=1,
+            complete=True,
+        ),
+        files=(
+            UnifiedDiffFile(
+                summary=first_summary,
+                old_path="src/core.py",
+                new_path="src/core.py",
+                lines=first_lines,
+            ),
+            UnifiedDiffFile(
+                summary=second_summary,
+                old_path=None,
+                new_path="tests/test_core.py",
+                lines=second_lines,
+            ),
+        ),
+    )
+    exact = (
+        b"diff --git a/src/core.py b/src/core.py\n"
+        b"index 1111111..2222222 100644\n"
+        b"--- a/src/core.py\n"
+        b"+++ b/src/core.py\n"
+        b"@@ -7 +7,3 @@\n-old-value\n+new-value-000\n"
+        b"diff --git a/tests/test_core.py b/tests/test_core.py\n"
+        b"new file mode 100644\n"
+        b"index 0000000..3333333\n"
+        b"--- /dev/null\n"
+        b"+++ b/tests/test_core.py\n"
+        b"@@ -0,0 +1,2 @@\n+first-test-line\n+second-test-line\n"
+    )
+    return ProductPatchEvidence(
+        artifact_id="artifact-ui-patch",
+        patch_sha256="a" * 64,
+        patch_size_bytes=len(exact),
+        content=exact,
+        diff=diff,
+    )
 
 
 async def test_tui_uses_the_shared_driver_and_durable_session(tmp_path: Path) -> None:
@@ -229,6 +317,7 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
                 line.startswith("宿主 › ") or line.startswith(" " * 7)
                 for line in initial_lines
             )
+            await pilot.pause()
             visible_rows = [
                 row
                 for row in range(log.size.height)
@@ -365,7 +454,7 @@ async def test_conversation_rewraps_when_dual_pane_narrows_the_log(
         del store
 
 
-async def test_identity_and_task_conversation_are_real_full_width_screens(
+async def test_identity_changes_and_task_conversation_are_full_width_screens(
     tmp_path: Path,
 ) -> None:
     provider = _Provider()
@@ -375,6 +464,11 @@ async def test_identity_and_task_conversation_are_real_full_width_screens(
             home = app.screen
             await pilot.press("ctrl+p")
             assert isinstance(app.screen, ProductIdentityScreen)
+            await pilot.press("escape")
+            assert app.screen is home
+
+            await pilot.press("ctrl+d")
+            assert isinstance(app.screen, ProductChangesScreen)
             await pilot.press("escape")
             assert app.screen is home
 
@@ -389,6 +483,262 @@ async def test_identity_and_task_conversation_are_real_full_width_screens(
     finally:
         await runtime.dispose()
         del store
+
+
+async def test_changes_screen_is_fresh_complete_navigable_and_exactly_exportable() -> None:
+    evidence = _patch_evidence(first_file_lines=225)
+
+    class _PatchReader:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        async def load_patch(self, task_id: str) -> ProductPatchEvidence:
+            self.calls.append(task_id)
+            return evidence
+
+    reader = _PatchReader()
+    screen = ProductChangesScreen(
+        observation_reader=reader,  # type: ignore[arg-type]
+        task_id="task-changes-view",
+    )
+    app = App[None]()
+    exported: Path | None = None
+
+    try:
+        async with app.run_test(size=(120, 32)) as pilot:
+            home = app.screen
+            await app.push_screen(screen)
+            for _ in range(20):
+                await pilot.pause()
+                if reader.calls:
+                    break
+
+            assert reader.calls == ["task-changes-view"]
+            log = screen.query_one("#changes-log", RichLog)
+            for _ in range(20):
+                await pilot.pause()
+                if log.lines:
+                    break
+            rendered = "\n".join(line.text for line in log.lines)
+            assert "▾ src/core.py · 修改 · +225 −1" in rendered
+            assert "new-value-000" in rendered
+            assert "new-value-224" in rendered
+            assert "first-test-line" not in rendered
+            assert "…" not in rendered
+            assert not any(
+                line.text and set(line.text) <= {"─"}
+                for line in log.lines
+            )
+            assert log.max_lines is None
+            assert log.auto_scroll is False
+            await pilot.pause()
+            await pilot.pause()
+            assert log.scroll_y == 0
+            visible = "\n".join(
+                log.render_line(row).text for row in range(log.size.height)
+            )
+            assert "src/core.py · 修改" in visible
+            for metadata in (
+                "diff --git",
+                "new file mode",
+                "index ",
+                "--- ",
+                "+++ ",
+                "@@ ",
+            ):
+                assert metadata not in rendered
+
+            await pilot.press("down")
+            await pilot.pause()
+            await pilot.pause()
+            assert log.scroll_y > 0
+            visible = "\n".join(
+                log.render_line(row).text for row in range(log.size.height)
+            )
+            assert "tests/test_core.py · 新增" in visible
+            await pilot.press("enter")
+            rendered = "\n".join(line.text for line in log.lines)
+            assert "▾ tests/test_core.py · 新增 · +2 −0" in rendered
+            assert "first-test-line" in rendered
+            assert "second-test-line" in rendered
+
+            await pilot.press("up")
+            await pilot.press("enter")
+            rendered = "\n".join(line.text for line in log.lines)
+            assert "new-value-000" not in rendered
+            assert "first-test-line" in rendered
+
+            await pilot.press("ctrl+e")
+            await pilot.pause()
+            exported = screen.export_path
+            assert exported is not None
+            assert exported.read_bytes() == evidence.content
+            status = str(screen.query_one("#changes-status", Static).content)
+            assert status == str(exported)
+            assert "diff --git" not in status
+
+            await pilot.press("escape")
+            assert app.screen is home
+
+            second = ProductChangesScreen(
+                observation_reader=reader,  # type: ignore[arg-type]
+                task_id="task-changes-view",
+            )
+            await app.push_screen(second)
+            for _ in range(20):
+                await pilot.pause()
+                if len(reader.calls) == 2:
+                    break
+            assert reader.calls == ["task-changes-view", "task-changes-view"]
+            await pilot.press("escape")
+    finally:
+        if exported is not None:
+            exported.unlink(missing_ok=True)
+
+
+async def test_changes_screen_escapes_every_unsafe_terminal_category() -> None:
+    unsafe = (
+        "esc\x1b[31m\u2028rtl\u202eprivate\ue000"
+        "surrogate\ud800surrogateescape\udcff\u2029"
+    )
+    evidence = _patch_evidence(first_file_lines=1)
+    first = evidence.diff.files[0]
+    unsafe_file = replace(
+        first,
+        lines=(
+            UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, unsafe),
+        ),
+    )
+    unsafe_diff = replace(
+        evidence.diff,
+        files=(unsafe_file, evidence.diff.files[1]),
+    )
+    unsafe_evidence = replace(evidence, diff=unsafe_diff)
+
+    class _PatchReader:
+        async def load_patch(self, task_id: str) -> ProductPatchEvidence:
+            assert task_id == "task-unsafe-display"
+            return unsafe_evidence
+
+    screen = ProductChangesScreen(
+        observation_reader=_PatchReader(),  # type: ignore[arg-type]
+        task_id="task-unsafe-display",
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(110, 28)) as pilot:
+        await app.push_screen(screen)
+        log = screen.query_one("#changes-log", RichLog)
+        for _ in range(20):
+            await pilot.pause()
+            if log.lines:
+                break
+        lines = [line.text for line in log.lines]
+        rendered = "".join(lines)
+        assert "\\x1b" in rendered
+        assert "\\u2028" in rendered
+        assert "\\u202e" in rendered
+        assert "\\ue000" in rendered
+        assert "\\ud800" in rendered
+        assert "\\udcff" in rendered
+        assert "\\u2029" in rendered
+        assert not any(
+            category(character) in {"Cc", "Cf", "Cs", "Co", "Zl", "Zp"}
+            for line in lines
+            for character in line
+        )
+        await pilot.press("escape")
+
+
+async def test_changes_screen_prewraps_long_diff_lines_with_stable_indent() -> None:
+    body = "long-change-content-" * 12
+    evidence = _patch_evidence(first_file_lines=1)
+    first = evidence.diff.files[0]
+    wrapped_file = replace(
+        first,
+        lines=(
+            UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, body),
+        ),
+    )
+    wrapped_evidence = replace(
+        evidence,
+        diff=replace(
+            evidence.diff,
+            files=(wrapped_file, evidence.diff.files[1]),
+        ),
+    )
+
+    class _PatchReader:
+        async def load_patch(self, task_id: str) -> ProductPatchEvidence:
+            assert task_id == "task-long-diff-line"
+            return wrapped_evidence
+
+    screen = ProductChangesScreen(
+        observation_reader=_PatchReader(),  # type: ignore[arg-type]
+        task_id="task-long-diff-line",
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(50, 26)) as pilot:
+        await app.push_screen(screen)
+        log = screen.query_one("#changes-log", RichLog)
+        for _ in range(20):
+            await pilot.pause()
+            if any("tests/test_core.py" in line.text for line in log.lines):
+                break
+
+        first_header = next(
+            index
+            for index, line in enumerate(log.lines)
+            if "src/core.py" in line.text
+        )
+        second_header = next(
+            index
+            for index, line in enumerate(log.lines)
+            if "tests/test_core.py" in line.text
+        )
+        physical = log.lines[first_header + 1 : second_header]
+        assert len(physical) > 1
+        available = log.scrollable_content_region.width
+        assert all(line.cell_length <= available for line in physical)
+        assert re.match(r"^\s{4}7 \+ ", physical[0].text)
+        assert all(line.text.startswith(" " * 8) for line in physical[1:])
+        restored = physical[0].text[8:] + "".join(
+            line.text[8:] for line in physical[1:]
+        )
+        assert restored == body
+        await pilot.press("escape")
+
+
+async def test_changes_screen_fails_closed_without_exposing_exception_text() -> None:
+    class _PatchReadError(RuntimeError):
+        code = "patch-read-unavailable"
+
+    class _FailingReader:
+        async def load_patch(self, task_id: str) -> ProductPatchEvidence:
+            assert task_id == "task-failed-patch-read"
+            raise _PatchReadError("private artifact path must stay hidden")
+
+    screen = ProductChangesScreen(
+        observation_reader=_FailingReader(),  # type: ignore[arg-type]
+        task_id="task-failed-patch-read",
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(100, 26)) as pilot:
+        await app.push_screen(screen)
+        log = screen.query_one("#changes-log", RichLog)
+        for _ in range(20):
+            await pilot.pause()
+            if log.lines:
+                break
+        rendered = "\n".join(line.text for line in log.lines)
+        assert "patch-read-unavailable" in rendered
+        assert "private artifact path" not in rendered
+        assert "返回后重试" in str(
+            screen.query_one("#changes-status", Static).content
+        )
+        await pilot.press("escape")
 
 
 async def test_task_conversation_wraps_and_uses_warning_for_nonzero_exit() -> None:
@@ -439,13 +789,12 @@ async def test_task_conversation_wraps_and_uses_warning_for_nonzero_exit() -> No
         assert all(line.cell_length <= width for line in indented)
         assert not any(re.search(r"13–15$", line.text) for line in log.lines)
         tool = next(line for line in log.lines if "工具 · shell" in line.text)
-        assert tool._segments[0].text == "    ▏ "
+        assert tool._segments[0].text == "  ▏ "
         assert tool._segments[0].style is not None
         assert tool._segments[0].style.color == Color.parse("blue")
         assert tool._segments[1].style == Style()
-        model = next(
-            line for line in log.lines if "模型自述（非宿主证据）" in line.text
-        )
+        model = next(line for line in log.lines if "模型 · " in line.text)
+        assert "模型自述" not in model.text
         assert model._segments[0].style is not None
         assert model._segments[0].style.dim
         assert model._segments[1].style is not None
@@ -462,6 +811,261 @@ async def test_task_conversation_wraps_and_uses_warning_for_nonzero_exit() -> No
         await pilot.press("escape")
 
 
+async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
+    long_session_id = "wf-session-" + "9" * 64
+    tool_messages = tuple(
+        (
+            "tool",
+            f"operation-{index:02d}\t{index * 3 + 1}–{index * 3 + 3}\n成功",
+        )
+        for index in range(20)
+    )
+    model_content = "alpha\n\n\n\n\n\nbeta\n\n\ngamma"
+    input_content = "long-input-content-" * 14
+    router = TaskConversationRole(
+        role="router",
+        agent_id="agent-router",
+        session_id="wf-session-router-" + "8" * 48,
+        turns_started=1,
+        turns_completed=1,
+        tool_calls=0,
+        usage_tokens=120,
+        usage_quality="exact",
+        usage_state="available",
+        last_fact_age_seconds=8,
+        messages=(),
+    )
+    coder = TaskConversationRole(
+        role="coder",
+        agent_id="agent-coder",
+        session_id=long_session_id,
+        turns_started=1,
+        turns_completed=1,
+        tool_calls=20,
+        usage_tokens=9_876,
+        usage_quality="exact",
+        usage_state="available",
+        last_fact_age_seconds=1,
+        messages=tool_messages
+        + (
+            ("model", model_content),
+            ("input", input_content),
+        ),
+    )
+    snapshot = TaskConversationSnapshot(
+        task_id="task-full-conversation",
+        roles=(router, coder),
+        observed_at=datetime.now(UTC),
+    )
+    screen = TaskConversationScreen(
+        reader=SimpleNamespace(),  # type: ignore[arg-type]
+        observation_reader=None,
+        task_id=None,
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(120, 40)) as pilot:
+        await app.push_screen(screen)
+        screen._snapshot = snapshot
+        screen._selected = 1
+        screen._expanded = {1}
+        screen._render_snapshot()
+        await pilot.pause()
+        await pilot.pause()
+
+        log = screen.query_one("#task-conversation-log", RichLog)
+        rendered_lines = [line.text for line in log.lines]
+        rendered = "\n".join(rendered_lines)
+        width = log.scrollable_content_region.width
+
+        router_header = next(line for line in log.lines if "router ─" in line.text)
+        coder_header = next(line for line in log.lines if "coder ─" in line.text)
+        assert router_header.cell_length == width
+        assert coder_header.cell_length == width
+        assert router_header._segments[0].style is not None
+        assert router_header._segments[0].style.dim
+        assert not router_header._segments[0].style.reverse
+        assert coder_header._segments[0].style is not None
+        assert coder_header._segments[0].style.color == Color.parse("blue")
+        assert coder_header._segments[0].style.bold
+        assert not coder_header._segments[0].style.reverse
+        assert not any(
+            line.text.strip() and set(line.text.strip()) == {"─"}
+            for line in log.lines
+        )
+
+        for index in range(20):
+            assert f"工具 · operation-{index:02d}" in rendered
+        assert "…还有" not in rendered
+        assert log.max_lines is None
+        assert log.auto_scroll is False
+
+        short_session_id = long_session_id[:19] + "…"
+        assert f"  {short_session_id}" in rendered_lines
+        assert long_session_id not in rendered
+        wrongly_indented = [
+            line
+            for line in rendered_lines
+            if ("▏ 工具 · " in line or "▏ 模型 · " in line)
+            and not line.startswith("  ▏ ")
+        ]
+        assert not wrongly_indented, wrongly_indented
+        assert "模型自述" not in rendered
+
+        alpha_index = next(
+            index
+            for index, line in enumerate(rendered_lines)
+            if "模型 · alpha" in line
+        )
+        beta_index = next(
+            index
+            for index, line in enumerate(rendered_lines)
+            if "beta" in line and index > alpha_index
+        )
+        assert sum(
+            line.strip() == "▏"
+            for line in rendered_lines[alpha_index + 1 : beta_index]
+        ) == 1
+
+        input_index = next(
+            index
+            for index, line in enumerate(rendered_lines)
+            if "输入 · " in line
+        )
+        input_lines = rendered_lines[input_index:]
+        first_prefix = "    输入 · "
+        continuation = " " * cell_len(first_prefix)
+        assert input_lines[0].startswith(first_prefix)
+        assert len(input_lines) > 1
+        assert all(line.startswith(continuation) for line in input_lines[1:])
+        assert all(cell_len(line) <= width for line in input_lines)
+        restored = input_lines[0].removeprefix(first_prefix) + "".join(
+            line.removeprefix(continuation) for line in input_lines[1:]
+        )
+        assert restored == input_content
+
+        title = screen.query_one("#task-conversation-title", Static)
+        title_text = str(title.render())
+        assert title_text.startswith("ProductTask 任务对话")
+        assert title_text.endswith("打开时快照 · 不实时 tail")
+        assert cell_len(title_text) == title.content_region.width
+        assert not list(screen.query("#task-conversation-status"))
+        visible = "\n".join(
+            log.render_line(row).text for row in range(log.size.height)
+        )
+        assert "coder" in visible
+
+        await pilot.resize_terminal(44, 40)
+        for _ in range(20):
+            await pilot.pause()
+            narrow_width = log.scrollable_content_region.width
+            narrow_headers = [
+                line
+                for line in log.lines
+                if line.text.startswith(("▸ router", "▾ coder"))
+            ]
+            if len(narrow_headers) == 2 and all(
+                line.cell_length == narrow_width for line in narrow_headers
+            ):
+                break
+        assert len(narrow_headers) == 2
+        assert all(line.cell_length == narrow_width for line in narrow_headers)
+        narrow_lines = list(log.lines)
+        router_header_index = narrow_lines.index(narrow_headers[0])
+        coder_header_index = narrow_lines.index(narrow_headers[1])
+        session_index = next(
+            index
+            for index, line in enumerate(
+                narrow_lines[coder_header_index + 1 :],
+                coder_header_index + 1,
+            )
+            if short_session_id in line.text
+        )
+        router_header_rows = narrow_lines[router_header_index:coder_header_index]
+        coder_header_rows = narrow_lines[coder_header_index:session_index]
+        assert all(line.cell_length <= narrow_width for line in router_header_rows)
+        assert all(line.cell_length <= narrow_width for line in coder_header_rows)
+        router_facts = re.sub(
+            r"\s+", " ", "".join(line.text for line in router_header_rows)
+        )
+        coder_facts = re.sub(
+            r"\s+", " ", "".join(line.text for line in coder_header_rows)
+        )
+        assert "1/1 turns" in router_facts
+        assert "0 工具" in router_facts
+        assert "120 tok" in router_facts
+        assert "8 秒前" in router_facts
+        assert "1/1 turns" in coder_facts
+        assert "20 工具" in coder_facts
+        assert "9876 tok" in coder_facts
+        assert "1 秒前" in coder_facts
+        assert log.max_scroll_x == 0
+        narrow_title = str(title.render())
+        assert narrow_title.startswith("ProductTask 任务对话")
+        assert narrow_title.endswith("快照 · 非实时")
+        assert "\n" not in narrow_title
+        assert cell_len(narrow_title) <= title.content_region.width
+
+        await pilot.press("escape")
+
+
+async def test_task_conversation_keeps_more_than_two_thousand_rows_scrollable() -> None:
+    messages = tuple(
+        ("model", f"retained-message-{index:04d}") for index in range(2_105)
+    )
+    role = TaskConversationRole(
+        role="coder",
+        agent_id="agent-coder",
+        session_id="wf-session-many-rows",
+        turns_started=1,
+        turns_completed=1,
+        tool_calls=0,
+        usage_tokens=10,
+        usage_quality="exact",
+        usage_state="available",
+        last_fact_age_seconds=0,
+        messages=messages,
+    )
+    snapshot = TaskConversationSnapshot(
+        task_id="task-many-conversation-rows",
+        roles=(role,),
+        observed_at=datetime.now(UTC),
+    )
+    screen = TaskConversationScreen(
+        reader=SimpleNamespace(),  # type: ignore[arg-type]
+        observation_reader=None,
+        task_id=None,
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(100, 30)) as pilot:
+        await app.push_screen(screen)
+        screen._snapshot = snapshot
+        screen._selected = 0
+        screen._expanded = {0}
+        screen._render_snapshot()
+        await pilot.pause()
+        await pilot.pause()
+
+        log = screen.query_one("#task-conversation-log", RichLog)
+        rendered = "\n".join(line.text for line in log.lines)
+        assert log.max_lines is None
+        assert log.auto_scroll is False
+        assert "retained-message-0000" in rendered
+        assert "retained-message-2104" in rendered
+        assert log.scroll_y == 0
+
+        log.focus()
+        await pilot.press("end")
+        await pilot.wait_for_scheduled_animations()
+        visible = "\n".join(
+            log.render_line(row).text for row in range(log.size.height)
+        )
+        assert "retained-message-2104" in visible
+
+        await pilot.press("escape")
+
+
 def test_footer_advertises_only_implemented_global_actions() -> None:
     visible = {
         binding.key: (binding.action, binding.description)
@@ -473,6 +1077,7 @@ def test_footer_advertises_only_implemented_global_actions() -> None:
         "ctrl+c": ("leave", "退出"),
         "ctrl+q": ("leave", "退出"),
         "ctrl+p": ("identity", "完整身份"),
+        "ctrl+d": ("changes", "改动"),
         "ctrl+t": ("task_conversation", "任务对话"),
     }
 
@@ -1174,7 +1779,8 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
                 await asyncio.wait_for(asyncio.shield(confirmation_turn), timeout=5)
             assert app.query_one("#gate-primary", Button).display
             assert str(app.query_one("#gate-primary", Button).label) == "START"
-            await pilot.click("#gate-primary")
+            await pilot.pause()
+            assert await pilot.click("#gate-primary")
             confirmation = app.query_one("#confirmation-input", Input)
             await _wait_for_confirmation_focus(pilot, confirmation)
             confirmation.value = "START"
@@ -1240,7 +1846,8 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             rendered_roles = "\n".join(line.text for line in conversation_log.lines)
             for role in ("router", "parent", "reviewer", "coder"):
                 assert role in rendered_roles
-            assert "模型自述（非宿主证据）" in rendered_roles
+            assert "模型 ·" in rendered_roles
+            assert "模型自述" not in rendered_roles
             assert "▏" in rendered_roles
             assert "│" not in rendered_roles
             sequenced_tools = [
@@ -1592,7 +2199,11 @@ async def test_running_start_keeps_typed_cancel_reachable(tmp_path: Path) -> Non
             assert app._operation_name == "start"
             assert app._gate_actions == (ProductGateAction.CANCEL,)
             assert not cancel.disabled
-            await pilot.click("#gate-primary")
+            # ``Pilot.click`` computes its coordinates before its first internal
+            # pause.  Let the dynamic START -> Cancel layout settle, and prove the
+            # real mouse path actually hit the button before waiting on focus.
+            await pilot.pause()
+            assert await pilot.click(cancel)
             confirmation = app.query_one("#confirmation-input", Input)
             await _wait_for_confirmation_focus(pilot, confirmation)
             assert app._confirmation_action is ProductGateAction.CANCEL

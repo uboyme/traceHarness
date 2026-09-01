@@ -327,9 +327,9 @@ Session 的模型文字和工具活动不可见。修复没有增加第二 TUI�
 - `Ctrl+P` 对 durable task 同样 fresh read observation，再显示 task、Chat/origin/confirmation/router/固定
   角色 Session、Workflow、source、Review、target、Patch、digest/receipt 等已经建立的完整身份。复制只取
   选定原值；剪贴板失败时才写独立临时文本文件并显示路径，该导出不进入 SQLite 或模型上下文。
-- 默认 Review 区恢复现有 inspection evidence 的 changed paths（最多八项并标余数）、Verifier command
-  id/status/exit/argv digest 和最多十二行 Patch preview；截断与 UTF-8 replacement 明示，不冒充完整 diff。
-- 当前状态栏只提供真实存在的退出、`Ctrl+T` 和 `Ctrl+P`。本轮不提供 `Ctrl+I` 写入型 reconcile 或
+- 该检查点的默认 Review 区恢复 inspection evidence 的 changed paths（最多八项并标余数）、Verifier command
+  id/status/exit/argv digest 和最多十二行 Patch preview；后续 N10–N11 已按 4.10 用完整 Artifact 摘要取代 preview。
+- 该检查点状态栏只提供退出、`Ctrl+T` 和 `Ctrl+P`；后续 4.10 增加已实现的 `Ctrl+D`。仍不提供 `Ctrl+I` 写入型 reconcile 或
   `Ctrl+R` raw events；分歧时提示使用既有 Line `/task inspect <task-id>`，普通 refresh 仍绝不写事实。
 - 用户实际批准后又发现左栏仍停在此前 `awaiting_approval` 提示，而右栏已从 fresh facts 显示 completed。
   根因不是 Store 或 Promotion 不一致，而是 TUI `_execute_product()` 丢弃了既有 typed
@@ -358,9 +358,9 @@ auto→multi Product host 到达 Approval 后在 `Ctrl+T` 显示 router/parent/r
 实际体验并据此发现上述 P2；该小修尚待短复审，新的唯一最终全量仍未运行，也未进入 clean-input 打包或
 发布门禁。
 
-首批可读性改造只完成 R1、R3、R2，并在截图确认前显式停止：`Ctrl+T` reader/screen 从 494 行降到 490 行；
+首批可读性改造只完成 R1、R3、R2，并在当时的截图确认前显式停止：`Ctrl+T` reader/screen 从 494 行降到 490 行；
 主对话使用用户默认、宿主 teal、模型逐行缩进低饱和紫色斜体三种左边缘；Product pane 固定为任务头、最近 durable
-事实、证据、临时操作/终态四组，组间恰好三条分隔线。角色导航与补丁预览精简属于 R4/R5，尚未实现。
+事实、证据、临时操作/终态四组，组间恰好三条分隔线。该时点尚未实现后续改动页。
 
 随后按第四轮工单只完成第一组 N1–N4，并再次停止。主聊天和 `Ctrl+T` 不再把长正文交给 Textual 猜测
 换行，而是按 terminal cell 宽度扣除稳定前缀后预折行；跨 110 列断点时，主聊天只重排 RichLog 已有
@@ -402,8 +402,8 @@ ProductTask owner 的 durable 所有权子树只累计 `charged` Token、Step �
   **`P0=0 / P1=0 / P2=0`**，并另行运行 observation/presentation **`28 passed`** 与真实 Product
   host/Approval TUI 路径 **`2 passed`**。
 
-本检查点未运行新的完整 pytest、联网、真实 Provider/API、Wheel、离线安装或发布门禁；N10–N12 与 R4
-没有提前实现。N7–N9 的真实 Textual 截图在本停止点生成，等待用户确认后才进入下一批。
+本检查点未运行新的完整 pytest、联网、真实 Provider/API、Wheel、离线安装或发布门禁；当时 N10–N12 与 R4
+没有提前实现。N7–N9 的真实 Textual 截图在该停止点生成并经用户确认，随后才进入 4.10。
 
 ### 4.8 replacement 后、产出可见性补齐前的完整全量
 
@@ -575,6 +575,79 @@ format-5 当前门禁：
 本轮仍未运行完整 pytest、联网、真实 Provider/API、Wheel、离线安装、commit、tag、push 或 release；也不把
 确定性的请求内容断言冒充外部模型必然遵从。当前修复明确允许自然总结和合理推断，只要求区分宿主事实、
 推断与未提供的细节；历史对话也完整保留。修复只能减少上下文冲突，不能保证外部模型百分百遵从。
+
+### 4.10 N10–N11：完整 Patch 摘要与按需改动页
+
+默认 Product observation 原先只暴露有界 Patch preview，不能用它计算完整 `+/-`，否则截断后的数字会看起来
+真实却是错误证据。N10–N11 没有放宽这个 preview，也没有把完整 bytes 塞进长期 observation；实现复用既有
+`PatchArtifactReader.load()`：从 Review 精确绑定 Artifact，fresh 重放 `artifacts:catalog`，再从内容寻址 CAS
+读取原始 bytes 并校验 sha256/size。SQLite/EventStore 仍是身份与生命周期的唯一事实源，CAS 仍只保存既有
+不可变 Patch 内容；没有新增缓存、durable 写入、状态机或第二 reader 主线。
+
+统一 diff parser 从完整 bytes 生成只读 summary：总字节、文件数、逐文件新增/修改/删除/重命名、二进制标记
+与可靠的 `+/-`。默认右栏只显示 summary，不再显示 diff 正文。畸形 Patch fail soft：manifest 文件身份仍可
+显示，无法证明的状态/计数为 unknown/`?`；二进制不冒充文本行统计。parser 还保留 mode、无末尾换行与 Git
+C-style quoted path 等 metadata，不能因为界面精简而丢证据。
+
+`Ctrl+D` 每次打开都调用 `ProductObservationReader.load_patch()` fresh 重走 task/Review/Workflow/Artifact
+校验链，展示完整 Patch：默认展开第一个文件，上下键选择、Enter 展开/折叠、Esc 返回；hunk header 转为
+旧/新行号，新增/删除/上下文/metadata 使用既有七色以内的语义。页面没有 diff 行数上限；每个物理行先走
+terminal-safe 转义，再按当前 Rich cell width 手工换行，续行保留八列前缀。`Ctrl+E` 写出的具名临时
+`.patch` 与校验后的 CAS bytes 逐字节相同，导出文件不进入 SQLite、observation、模型上下文或状态机。
+读取、解析或导出失败只显示稳定错误，不展示 raw exception。
+
+当前定向门禁：
+
+- `tests/test_tui.py` + `tests/test_tui_presentation.py`：**`50 passed`**；
+- `tests/test_unified_diff.py`、Product observation、inspection leaf、TUI optional 与 Product architecture：
+  **`56 passed`**；
+- 安装 Textual 8.2.8 的解释器全仓 collect-only：**`2634 tests`**；
+- `python -m compileall -q src tests`、修改范围 Ruff、anti-hardcoding production scan 与
+  `git diff --check`：通过；
+- 独立只读复审在关闭 malformed observation、首帧 auto-scroll、重复快捷提示、metadata 保留、长行续行与
+  文件标题横线二次折行缺口后，
+  结论为 **`P0=0 / P1=0 / P2=0`**。
+
+一次较宽的组合 Pilot 在两个不同运行中各观察到一项既有 Textual 调度时序断言（跨双栏重排、短日志首帧
+bottom anchor）；前者随后五个独立进程全部通过，后者的根因是 `RichLog.lines` 已建立但下一帧尚未绘制，
+测试在读取 `render_line()` 前增加一次 Textual idle-frame 同步，不改生产 auto-scroll。
+重复真实 auto Product host Pilot 还定位到一条测试同步缺口：业务 confirmation Turn 已结束、按钮
+`display=True` 时，下一帧布局可能尚未分配 region；旧测试先冻结 `(0,0)` 坐标再点击，并忽略
+`pilot.click()` 的 `False` 返回值，随后才误报确认框未获焦点。修复只在该测试点击前等待 Textual idle frame
+并断言点击成功；生产 Button/focus 路径零 diff。修后该公开路径连续十个独立进程及完整直接组均通过。
+这里不把测试调度说成生产通过证据，也没有为同步增加产品状态。当前未运行完整 pytest、联网、真实
+Provider/API、Wheel、离线安装或发布门禁；本批曾停在真实截图确认点，随后用户确认后才进入 4.11。
+
+### 4.11 N12 + R4：任务对话完整出口与最终分区
+
+N12 关闭的是三层同根截断：screen 不再取 `role.messages[:12]` 或显示遗漏数量，`RichLog` 删除固定
+`max_lines`，`TaskConversationReader` 对 user/assistant message 调用同一 `safe_display_block()` 时显式关闭
+字符、行数与单行宽度限制。安全函数的默认参数仍然有界；只有明确的“看全部”出口使用无界值，并继续把
+ESC、CR、NUL、bidi 与 U+2028/U+2029 等不安全字符转成可见转义。Reader 仍只 fresh read observation 已
+绑定的 Session/Effect streams，screen 只消费一次 snapshot，没有缓存、全 Store 扫描、第二 reader、写事实
+或新状态机。
+
+R4 把角色段头改成全宽横线内嵌角色与 turns/tools/tokens/age，当前段使用既有强调色、其他段 dim，不使用
+反色背景。正常宽度保持一行；44 列放不下时，统计按 Rich cell width 手工折到后续行，完整字段仍保留且
+`max_scroll_x=0`。展开内容缩进两格，需求正文缩进四格并预折行；模型统一为 `模型 ·`，连续多个空行压成
+一个。默认 Session id 使用短把手，完整值仍来自既有 `Ctrl+P` 身份页。重复底部说明与固定分隔线删除，
+标题右侧说明“打开时快照 · 不实时 tail”，44 列使用等义短句“快照 · 非实时”。
+
+定向反例覆盖 20 次工具调用全部可见且没有“还有 N 条”、65 行末尾哨兵、超过 4000 字符的模型行、危险
+Unicode/control 转义、窄屏完整统计无水平滚动、连续空行压缩、四格需求折行、短 Session handle，以及
+2105 条消息保留首尾并可按 End 滚到底部。2105 条 Pilot 的 call 阶段约 **1.47 秒**，因此没有证据要求实现
+工单只在真实卡顿时才允许的增量渲染；也没有退回任何截断。
+
+当前最终定向门禁为：TUI/presentation/task-conversation **`65 passed`**，统一 diff、Product observation、
+inspection leaf、TUI optional 与 Product architecture 相邻组 **`56 passed`**，全仓 collect-only
+**`2638 tests`**；`python -m compileall -q src tests`、修改范围 Ruff 和 `git diff --check` 通过。production
+anti-hardcoding scan 仅命中 `ChatDriver` 的导入和构造两处；它是 UI-neutral 的通用架构类型，经人工分类
+不是任务、fixture、模型或本机路径硬编码。一次整组重跑曾在动态 START→Cancel 布局后丢弃
+`Pilot.click()` 的未命中返回值，因而误等焦点；产品闸门与 focus 代码未改，测试改为先等待一帧并断言真实
+鼠标命中。该用例随后连续 **`12/12`**，完整 65 项重跑通过。独立只读复审为
+**`P0=0 / P1=0 / P2=0`**。
+
+完整 pytest、联网、真实 Provider/API、Wheel、离线安装和发布门禁仍不属于本次 M1 提交。
 
 ## 5. 真实 Provider 与秘密边界
 

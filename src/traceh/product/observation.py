@@ -45,6 +45,7 @@ from traceh.product.events import product_task_stream, require_product_identifie
 from traceh.product.execution import product_task_owner_id
 from traceh.product.inspection import (
     ProductInspectionEvidenceReader,
+    ProductPatchEvidence,
     ProductTaskEvidence,
 )
 from traceh.product.projection import ProductTaskStreamReader
@@ -278,6 +279,17 @@ class ProductObservationReader:
             stream_heads=heads,
             observed_at=datetime.now(UTC),
             usage=_product_usage(budget_ledger, directory, task_id),
+        )
+
+    async def load_patch(self, task_id: str) -> ProductPatchEvidence | None:
+        """Fresh-read the exact Patch for this task, when a Review exists."""
+
+        observation = await self.load(task_id)
+        if observation.summary is None or observation.review is None:
+            return None
+        return await self._evidence.load_patch(
+            observation.summary,
+            observation.review,
         )
 
     async def _stream_head(

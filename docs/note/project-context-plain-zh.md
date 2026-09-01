@@ -103,7 +103,7 @@ Skill 或 Memory。
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个数据库吗 | 能。SQLite 事务和主键保护连续 seq；同库 writer（包括不同 Stream）会有界排队，默认 5 秒，超时明确失败。但“同一 Session 同时只跑一个 Turn”仍只是单进程规则 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。F5 在替换前候选上得到的 `2503 collected / 2496 passed / 7 skipped`，以及后续 Provider/retry、旧 TUI/presentation、相邻 owner 和 `2555 passed, 7 skipped` 的完整全量，都只证明各自当时的代码树。当前 N1–N9 的 TUI/presentation/Product observation 直接组为 `55 passed`，N7–N9 选择的 observation/presentation/inspection/F3 相邻组为 `66 passed`，Product/TUI 架构与 optional 边界为 `23 passed`，安装 Textual 8.2.8 的解释器 collect-only 为 `2605 tests`；此前 N1–N6 的 `54 passed`、更宽相邻组 `365 passed` 与 `[tui]` collect-only `2584` 都是历史检查点。20.32 的 format-1/2/3/4 检查数字也只作历史证据；当前 format-5 的冲突/protocol/F3/Compaction/Provider focused 组为 `17 passed`，Product context、Compaction、完整 F3、OpenAI-compatible、Surface/Core invariants 与 Product architecture 合并组为 `111 passed`，当前解释器 collect-only 为 `2620 tests`。compileall、修改范围 Ruff、anti-hardcoding scan 和 `git diff --check` 通过；新的唯一最终全量还没运行。详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 与 20.31/20.32 |
+| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。F5 在替换前候选上得到的 `2503 collected / 2496 passed / 7 skipped`，以及后续 Provider/retry、旧 TUI/presentation、相邻 owner 和 `2555 passed, 7 skipped` 的完整全量，都只证明各自当时的代码树。完成 N12/R4 后，当前 Textual/presentation/task-conversation 直接组为 `65 passed`，统一 diff/Product observation/inspection/optional/architecture 相邻组为 `56 passed`，安装 Textual 8.2.8 的解释器 collect-only 为 `2638 tests`；此前 N10–N11 的 `50 passed / 2634 tests`、N1–N9 的 `55/66/23 passed / 2605 tests`、N1–N6 的 `54 passed`、更宽相邻组 `365 passed` 与 `[tui]` collect-only `2584` 都是历史检查点。20.32 的 format-1/2/3/4 检查数字也只作历史证据；当前 format-5 的冲突/protocol/F3/Compaction/Provider focused 组为 `17 passed`，Product context、Compaction、完整 F3、OpenAI-compatible、Surface/Core invariants 与 Product architecture 合并组为 `111 passed`。compileall、修改范围 Ruff 和 `git diff --check` 通过；anti-hardcoding production scan 只命中通用类型 `ChatDriver`，人工确认不是示例硬编码；新的唯一最终全量还没运行。详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 与 20.31/20.32 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -852,7 +852,8 @@ Registry 记着上一份精确 Wheel，第一版则记着“以前没有”。�
 
 如果目标身份和 Session 当前身份不同，Runtime 会先准备完整候选，再用 Session head 的 CAS 追加 `composition/migration-authorized`；同身份 reload 不追加迁移事件。命令期间 Turn admission 和迁移共用一把 Gate，失败或重复取消都必须先回滚并收敛。
 
-`Ctrl+D`（Windows 上是 `Ctrl+Z` 再回车）等于 `/exit`。
+这里说的是 Line adapter：EOF（Unix 常用 `Ctrl+D`，Windows 是 `Ctrl+Z` 再回车）等于 `/exit`。Textual
+adapter 会自己接管 `Ctrl+D` 打开完整改动页，不走这一条 stdin EOF 规则。
 
 `Ctrl+C` 的完整说明见后面"按 Ctrl+C 会发生什么"。一句话版本：**有任务在跑时按一次，只取消这一轮，会话还在，你回到提示符继续聊**；空着的时候按才是真的离开（内部返回 130，但 Shell 最终显示什么由宿主决定，这不是能打包票的数字）；收敛过程中再按也不能提前放行；硬中断（Ctrl+Break、直接关窗口）则完全没有 Python 代码会跑，实测退出码 `3221225786`，只能靠启动时就已经打在屏幕上的恢复信息加崩溃恢复。
 
@@ -3560,10 +3561,12 @@ durable 事实、证据、闸门或终态，四组之间恰好三条暗色横线
 这个 task 的 durable Agent 所有权子树隔离，只加已经 `charged` 的量；别的任务、预留额度和下放给孩子的
 额度都不算。账户或某个预算维度还没建立时就显示 `—`；模型 Usage 是 unknown，或 Token/Wall 预留还没
 结算时，对应项也显示 `—`，绝不把保守扣款、局部和或本地等待时间说成真实用量。Budget 流只负责提醒
-observer 重新读账，并标记为全局流，不会把“当前任务最近事实”错误刷年轻。inspection 已经证明的最多
-八个 changed paths、Verifier 的 command
-id/status/exit/argv digest 和最多十二行 Patch preview 仍保留。有更多文件、Patch 被截断或 UTF-8 字节被
-替换时都会明写，绝不会让用户误以为看到了完整 diff。完整身份提示只保留一次；任务完成后只说
+observer 重新读账，并标记为全局流，不会把“当前任务最近事实”错误刷年轻。inspection 仍从 Review 找到
+唯一 Artifact，再由 Artifact reader 重放 catalog、读取内容寻址 CAS 并核对哈希和大小，所以摘要不是拿
+截断 preview 猜的。默认右栏只显示已经证明的 changed paths、Verifier 的 command id/status/exit/argv
+digest，以及从完整 Patch bytes 算出的总字节数、文件数、逐文件新增/修改/删除/重命名和 `+/-` 数字；不再
+塞 diff 正文。遇到二进制、畸形或不能可靠归属的内容，就显示“二进制”“状态未知”或 `?`，不能造一个看似
+精确的数字。完整出口只保留一行：`Ctrl+D` 看完整改动，`Ctrl+P` 看完整身份。任务完成后只说
 “已合入 · Promotion receipt 已记录”，不会在底部再重复“已经到达终态”。任务一旦进入任一终态，只有
 生命周期整条轨变暗，证据和最终结果不会一起变灰。
 
@@ -3574,14 +3577,19 @@ id/status/exit/argv digest 和最多十二行 Patch preview 仍保留。有更�
 订阅、第二状态机或任何写事实能力。每条 Session 都先过核心不变量检查，然后只按 canonical seq 走一遍
 user/model/tool 事件；不再先让 `SurfaceProjector` 把所有发言聚到一起，又单独读一遍事件补工具。一次工具
 请求和结果合成一行；当前宽度够用时，真实 seq 区间用暗色贴齐右边，宽度不够就省略，不能把摘要挤坏。
-一屏放不下时会写清还剩多少次工具调用和多少段发言。页面按
-角色分段，最近活跃的一段默认展开；上下键换角色、Enter 展开/折叠、Esc 返回。模型文字仍标成非宿主证据。
+展开以后会把这个 Session 的全部发言和工具活动都画出来：不再只看前 12 条，单条消息不再卡 4000 字符或
+40 行，日志本身也没有 4000 行上限。内容再多也只交给滚动条，不会又冒出“还有 N 条”或偷偷保留一个旧
+阈值。页面按角色分段，最近活跃的一段默认展开；上下键换角色、Enter 展开/折叠、Esc 返回。模型文字仍标成非宿主证据。
 Token 只在每次调用都有可靠 Usage 时相加，遇到 unknown、缺失或畸形数据就写 `unavailable`，不会填 0 或
 只算一部分。工具仍复用原来的安全摘要规则：shell 参数只显示遮蔽后的 canonical JSON 字节数；其他工具
 只显示白名单允许的安全 path/query，像空参数 `list_files` 这样没有目标的调用只显示工具名，不能假装有
 秘密被遮蔽。shell 退出码是 0 才写成功，非零只写 warning `完成 · exit=N`，不能出现“成功 · exit=1”。
-工具结果正文、文件内容、stdout 和 raw payload 都不显示。它是打开时快照，不做实时 tail；关闭后再打开会重新读当前事实，删掉这层
-显示也不会损失信息。负责这条路径的代码从 494 个物理行降到 490 个，没有新加类层次。
+工具结果正文、文件内容、stdout 和 raw payload 都不显示。每个角色头现在是一条完整横线：角色名在左，
+turns、工具数、Token 和事实年龄在右；选中的用已有强调色，其他的变暗，不再反色。窄屏放不下时程序自己
+把完整统计折到下一行，不会横向滚动或删字段。展开内容缩进两格，需求正文缩进四格；模型统一写 `模型 ·`，
+连续空行最多保留一个。长 Session id 默认只露短把手，完整值仍能在 `Ctrl+P` 看。底部那句重复操作说明已经
+删除；标题说明这是打开时快照、不会实时 tail，44 列时用短句“快照 · 非实时”。关闭后再打开会重新读当前
+事实，删掉这层显示也不会损失信息；没有新加类层次、缓存或事实源。
 
 `Ctrl+P` 会进入另一个全宽页。任务已经落盘时，它也先 fresh 读取 Product observation；读不到就诚实写
 unavailable，不拿旧内存快照冒充当前值。页面完整列出 task、Chat/origin/confirmation/router/各固定角色
@@ -3590,8 +3598,17 @@ Session、Workflow、source、Review、target、Patch、approval digest 和已�
 SQLite、模型上下文或 Product 事实。终端窄于 110 列仍是单栏两行摘要加独立闸门，不用水平滚动。现在
 只有这一套 TUI；旧 details panel、旧的 `Ctrl+T` 展开 class 和兼容分支都不存在。
 
+`Ctrl+D` 是第三个全宽只读页。每次打开都重新核对当前 task、Review、Workflow 和 Artifact 身份，再从同一
+CAS 取得精确原始 Patch bytes；不会拿默认摘要、上次页面或内存缓存冒充完整内容。页面按文件展示状态和
+行号，默认展开第一个文件；上下键选文件，Enter 展开/折叠，Esc 返回。模式变化、二进制和“文件末尾没有
+换行”等 metadata 也会保留。很长的一行先按终端 cell 宽度自己切分，续行留出相同的八列前缀，不会被
+Textual 再从最左边折一次。这里故意不设 diff 行数上限，每个物理行仍先做 terminal-safe 转义；`Ctrl+E`
+把已经校验过的同一份 exact bytes 写到具名临时 `.patch` 文件。这个导出不进入 SQLite、模型上下文或状态机。
+
 所有可能来自模型、Patch、路径或错误的文字都当作不可信输入。`safe_display_block()` 只保留普通换行，
-ESC、CR、NUL、双向控制等字符显示为转义文字；单行、总行数和整块都有上限。对话日志和 Product 面板都
+ESC、CR、NUL、双向控制等字符显示为转义文字。默认摘要、主聊天和身份页仍有各自上限；显式打开的
+`Ctrl+D` 完整改动页与 `Ctrl+T` 任务对话页才取消内容行数/字符上限，每行照样安全转义和自行折行，不会
+静默漏掉 diff、发言或工具活动。安全函数的默认行为仍是有界的，其他界面不会被顺带改成无界。对话日志和 Product 面板都
 显式关闭 markup，所以模型写 `[bold]` 只会看到这几个字符，不会执行 Rich/Textual 标记。错误只显示
 稳定 code/type，不把 Provider 原始正文、header、traceback 或本机路径塞进屏幕。
 
@@ -3624,10 +3641,13 @@ open 的 Turn，而且该 Turn 必须以 failed 结束。后来用公开 `resume
 把 Provider 原始正文、header、异常消息或 traceback 贴到屏幕。
 
 R1/R3/R2 可读性批次用 Textual 8.2.8 跑了任务对话、presentation 和完整 TUI 三个测试文件，当时是
-**47 passed**；N1–N6 检查点是 **54 passed**。N7–N9 完成后，当前 Product observation、presentation
-和完整 TUI 直接组是 **55 passed**，选择的 observation/presentation/inspection/F3 相邻组是
-**66 passed**，Product/TUI 架构与 optional 边界是 **23 passed**，全仓只收集是 **2605 tests**。
-这些都来自当前代码，但不是最终全量。现在聊天文字会先按终端真实 cell 宽度减去固定
+**47 passed**；N1–N6 是 **54 passed**，N7–N9 的 **55/66/23 passed** 和 **2605 tests** 都只保留为
+历史检查点。N10–N11 当前 TUI/presentation 直接组是 **50 passed**，统一 diff、Product observation、
+inspection leaf、TUI optional 和 Product architecture 相邻组是 **56 passed**，全仓只收集是
+**2634 tests**。完成 N12/R4 后，完整 TUI、presentation 与任务对话三个直接文件是 **65 passed**，最终
+collect-only 为 **2638 tests**；一条
+2105 条模型消息的 Pilot 保留了第一条和最后一条，也能按 End 滚到底部，call 阶段约 **1.47 秒**，所以没有
+证据要求再造增量加载状态机。这些都来自当前代码，但不是最终全量。现在聊天文字会先按终端真实 cell 宽度减去固定
 前缀，再逐行加回同一个左边缘。窗口从单栏跨到 110 列双栏、聊天列反而变窄时，只重排屏幕上已有的
 RichLog 行；任务对话只用打开时已经取得的 snapshot 重画，没有缓存、重新扫库或第二事实源。
 真实截图还抓到首帧布局宽度尚未算好时会按 1 列逐字换行；现在 Session/Workspace 与已有 durable 对话先
@@ -3639,10 +3659,11 @@ RichLog 行；任务对话只用打开时已经取得的 snapshot 重画，没�
 工具名和安全参数使用普通文字色，seq 仍暗显，非零退出仍是 warning。整个浅色界面目前只用了六种前景
 语义色，danger 只是第七个预留位置；没有为不存在的深色主题再造另一套颜色。这里只改 Rich 的显示段，
 没有动折行文字、遮蔽、任务快照、SQLite 或控制权。N1–N4、N5–N6 和 N7–N9 三次短复审都是
-**P0=0 / P1=0 / P2=0**。N7–N9 沿原 presentation 和 Product observation 补完终态/身份提示去重、
-durable Budget 用量行和终态生命周期弱化，没有增加新快捷键、新颜色、控制面或第二事实源；独立复审又跑过
-observation/presentation `28 passed` 和两条真实 Product host/Approval TUI 路径 `2 passed`。现在停下来
-等用户截图确认，不进入 N10/N11。测试不仅
+**P0=0 / P1=0 / P2=0**。N10–N11 独立复审也得到 **P0=0 / P1=0 / P2=0**，并实际抓住 malformed Patch
+拖垮普通 observation、页面首帧滚到底、重复 `^p`、mode/no-newline metadata 丢失、长 diff 续行跑回第
+0 列和文件标题横线二次折行等问题后逐一关闭。它没有增加控制面、durable 写入、缓存或第二事实源。用户
+确认截图后，N12/R4 又删除了任务对话里屏幕、单条消息和 RichLog 三层固定截断，并完成上述分区；同一
+EventStore→精确 Session→snapshot 主线没有改变。最终复审为 **P0=0 / P1=0 / P2=0**，提交门禁记在验证文档。测试不仅
 点按钮，还故意让 observer 和 START 卡住、让事实 20 秒不动、让两次读取乱序、让 Product/Workflow 分歧、
 让 Ctrl+C 在资源关闭一半时停住，并验证窄屏折叠与 typed confirmation。另有一条完全确定性的真实本地链：
 真实 Product host、auto Router、固定 multi 三角色、managed Git、Verifier、Review 一直跑到

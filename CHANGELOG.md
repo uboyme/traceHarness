@@ -84,10 +84,12 @@
   E2E. The current final full gate is still pending.
 - Made `Ctrl+P` fresh-read the current Product observation before showing full
   identities and explicit copy actions; clipboard failure exports only the
-  selected value to a named temporary text file and reports its path. The
-  default Review block again shows bounded changed paths, verifier status and
-  patch preview from existing inspection evidence. `Ctrl+I` and `Ctrl+R` are
-  not advertised or implemented in this round; exact reconciliation remains
+  selected value to a named temporary text file and reports its path. The default
+  Review block now shows exact full-Artifact-derived per-file summaries instead
+  of a bounded diff preview. `Ctrl+D` fresh-validates the Review-to-CAS identity
+  chain and opens a full-width, line-numbered change view with file navigation,
+  terminal-safe manual wrapping and byte-exact `Ctrl+E` export. `Ctrl+I` and
+  `Ctrl+R` remain unadvertised and unimplemented; exact reconciliation remains
   available through the existing Line `/task inspect` path.
 - Recorded the earlier output-visibility and host-feedback checkpoint with `54`
   focused TUI/optional tests, `215` adjacent Product/Chat tests and `2575`
@@ -182,8 +184,17 @@
   four semantic groups separated by three rules and Chinese evidence headings.
   The direct Textual/presentation/conversation group passes 47 tests, its
   adjacent Product/CLI owners pass 161 tests, and the repository collects 2575
-  tests. R4/R5 role navigation and patch-preview cleanup remain intentionally
-  pending.
+  tests. Follow-up N10/N11 now replace the default patch preview with a summary
+  parsed from exact validated Artifact bytes and add the fresh, read-only
+  `Ctrl+D` change page without a cache, second fact source or durable write.
+  N12/R4 then complete the same read-only task-conversation path: expanded
+  roles no longer have screen, message or RichLog content caps; all retained
+  text remains terminal-safe and scrollable. Role headers now use an inline
+  full-width hierarchy without reverse video, preserve complete facts through
+  manual narrow-width wrapping, shorten only the displayed Session handle,
+  collapse redundant model blank lines, and remove duplicate instructions.
+  A 2,105-message Pilot retained both ends and remained scrollable without an
+  incremental-rendering state machine.
 - Project stable leaf failure evidence only from the exact failed Workflow
   message Turn after Agent/Session/create-request binding and core invariant
   validation. Identity-conflict nodes never adopt a foreign Directory record.

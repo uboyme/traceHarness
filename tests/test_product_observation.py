@@ -8,6 +8,7 @@ import inspect
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 from product_fixtures import ORIGIN_SESSION, build_assembly, opened
@@ -23,7 +24,11 @@ from traceh.api.agents import AgentSpec
 from traceh.api.budgets import BudgetAmounts, BudgetLimits
 from traceh.api.events import PendingEvent
 from traceh.api.llm import UsageQuality
+from traceh.api.product import ProductTaskSummary
+from traceh.api.promotion import PatchReviewReport
+from traceh.artifacts.errors import ArtifactCasError
 from traceh.artifacts.events import ARTIFACT_CATALOG_STREAM
+from traceh.artifacts.unified_diff import UnifiedDiff, UnifiedDiffSummary
 from traceh.budgets import BUDGET_LEDGER_STREAM, BudgetLedgerService
 from traceh.product.chat import (
     ProductCommandOperation,
@@ -33,6 +38,7 @@ from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.events import product_task_stream
 from traceh.product.execution import product_task_owner_id
 from traceh.product.host import build_product_chat_host
+from traceh.product.inspection import ProductPatchEvidence
 from traceh.product.observation import (
     ObservedStreamHead,
     ProductObservation,
@@ -97,6 +103,48 @@ class _FailingReader:
         raise RuntimeError("observation read failed")
 
 
+class _PatchEvidenceReader:
+    def __init__(
+        self,
+        store: InMemoryEventStore,
+        result: ProductPatchEvidence | BaseException,
+    ) -> None:
+        self.store = store
+        self.result = result
+        self.calls: list[tuple[ProductTaskSummary, PatchReviewReport]] = []
+
+    async def load_patch(
+        self,
+        summary: ProductTaskSummary,
+        review: PatchReviewReport,
+    ) -> ProductPatchEvidence:
+        self.calls.append((summary, review))
+        if isinstance(self.result, BaseException):
+            raise self.result
+        return self.result
+
+
+class _FixedObservationReader(ProductObservationReader):
+    __slots__ = ("_fixed",)
+
+    def __init__(
+        self,
+        store: InMemoryEventStore,
+        evidence: _PatchEvidenceReader,
+        observation: ProductObservation,
+    ) -> None:
+        super().__init__(
+            store,
+            evidence,  # type: ignore[arg-type]
+            promotion_target_id="observation-target",
+        )
+        self._fixed = observation
+
+    async def load(self, task_id: str) -> ProductObservation:
+        assert task_id == self._fixed.task_id
+        return self._fixed
+
+
 async def test_subscribe_before_read_re_reads_every_discovered_exact_stream() -> None:
     feed = SessionEventFeed()
     store = PublishingEventStore(InMemoryEventStore(), feed)
@@ -149,6 +197,74 @@ async def test_failed_start_rolls_back_every_partial_subscription() -> None:
             PROMOTION_LEDGER_STREAM,
         )
     )
+
+
+def _fixed_patch_observation(
+    summary: ProductTaskSummary | None,
+    review: PatchReviewReport | None,
+) -> ProductObservation:
+    return ProductObservation(
+        task_id="task-patch",
+        summary=summary,
+        workflow=None,
+        evidence=None,
+        review=review,
+        approval=None,
+        promotion=None,
+        approval_digest=None,
+        stream_heads=(),
+        observed_at=datetime.now(UTC),
+    )
+
+
+async def test_load_patch_delegates_only_after_a_fresh_review_observation() -> None:
+    store = InMemoryEventStore()
+    summary = cast(ProductTaskSummary, object())
+    review = cast(PatchReviewReport, object())
+    patch = ProductPatchEvidence(
+        artifact_id="patch-artifact",
+        patch_sha256="a" * 64,
+        patch_size_bytes=0,
+        content=b"",
+        diff=UnifiedDiff(UnifiedDiffSummary((), 0, 0, True), ()),
+    )
+    evidence = _PatchEvidenceReader(store, patch)
+    reader = _FixedObservationReader(
+        store,
+        evidence,
+        _fixed_patch_observation(summary, review),
+    )
+
+    assert await reader.load_patch("task-patch") is patch
+    assert evidence.calls == [(summary, review)]
+
+    no_review = _FixedObservationReader(
+        store,
+        evidence,
+        _fixed_patch_observation(summary, None),
+    )
+    assert await no_review.load_patch("task-patch") is None
+    assert evidence.calls == [(summary, review)]
+
+
+async def test_load_patch_does_not_hide_fresh_artifact_failure() -> None:
+    store = InMemoryEventStore()
+    summary = cast(ProductTaskSummary, object())
+    review = cast(PatchReviewReport, object())
+    evidence = _PatchEvidenceReader(
+        store,
+        ArtifactCasError("artifact-cas-digest-mismatch"),
+    )
+    reader = _FixedObservationReader(
+        store,
+        evidence,
+        _fixed_patch_observation(summary, review),
+    )
+
+    with pytest.raises(ArtifactCasError) as failed:
+        await reader.load_patch("task-patch")
+    assert failed.value.code == "artifact-cas-digest-mismatch"
+    assert evidence.calls == [(summary, review)]
 
 
 def _usage_limits(**overrides: int | None) -> BudgetLimits:

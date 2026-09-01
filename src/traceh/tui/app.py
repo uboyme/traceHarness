@@ -59,7 +59,11 @@ from traceh.tui.presentation import (
     resolve_gate,
     safe_display_block,
 )
-from traceh.tui.screens import ProductIdentityScreen, TaskConversationScreen
+from traceh.tui.screens import (
+    ProductChangesScreen,
+    ProductIdentityScreen,
+    TaskConversationScreen,
+)
 from traceh.tui.task_conversation import TaskConversationReader
 
 _GATE_LABELS = {
@@ -105,6 +109,7 @@ class TracehTuiApp(App[int]):
         Binding("ctrl+c", "leave", "退出", priority=True),
         Binding("ctrl+q", "leave", "退出", priority=True),
         Binding("ctrl+p", "identity", "完整身份", priority=True),
+        Binding("ctrl+d", "changes", "改动", priority=True),
         Binding("ctrl+t", "task_conversation", "任务对话", priority=True),
         Binding("escape", "cancel_confirmation", "取消确认", show=False),
     ]
@@ -937,6 +942,19 @@ class TracehTuiApp(App[int]):
                 chat_session_id=self._session.session_id,
                 proposal=self._proposal,
                 start_request=self._start_request,
+                observation_reader=observation_reader,
+                task_id=self._task_id,
+            )
+        )
+
+    async def action_changes(self) -> None:
+        if self._ui_closing:
+            return
+        observation_reader = (
+            None if self._product is None else self._product.observation
+        )
+        await self.push_screen(
+            ProductChangesScreen(
                 observation_reader=observation_reader,
                 task_id=self._task_id,
             )

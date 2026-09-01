@@ -49,9 +49,9 @@
 | Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation，并单调拒绝声明为 effectful 的插件 Tool。Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
+| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 对 replacement 前候选完成的 `2503 collected / 2496 passed / 7 skipped` 只作历史证据。发布前真实体验随后根修 Product Chat START 前权限、Plugin ActivationSet eager-cleanup 死锁、终态任务→新 Proposal 身份交接、OpenAI-compatible multiline Tool arguments、失败叶子的 exact message/open Turn 归属、100–109 列 facts 折行，以及 Textual gate 点击后的真实焦点交接。此前最终 `2555 passed, 7 skipped`（退出码 0，`3078.80s`）也发生在 fresh 角色对话/完整身份补齐之前，只认证当时工作树。当前 N1–N9 的 TUI/presentation/Product observation 直接组为 `55 passed`，N7–N9 选择的 observation/presentation/inspection/F3 相邻组为 `66 passed`，Product/TUI 架构与 optional 边界为 `23 passed`，安装 Textual 8.2.8 的解释器 collect-only 为 `2605 tests`；此前 N1–N6 的 `54 passed`、更宽 Product/Chat/Timeline 相邻组 `365 passed` 与 `[tui]` collect-only `2584` 都只保留为各自检查点历史。一次全新目录的真实 TUI ProductTask 曾从 Proposal 走到 bare Promotion；本轮确定性真实本地 Git auto→multi Pilot 又到达 Approval 并在 `Ctrl+T` 显示 Router/parent/reviewer/coder。N7–N9 只在既有 observation/presentation 接缝增加 durable Budget 用量投影、终态文案去重与生命周期弱化，不改 owner、控制面或 durable 写入。20.38 的 format-1/2/3/4 检查数字只作历史证据；当前 format-5 的冲突/protocol/F3/Compaction/Provider focused 组为 `17 passed`，Product context、Compaction、完整 F3、OpenAI-compatible、Surface/Core invariants 与 Product architecture 合并组为 `111 passed`，当前解释器全仓 collect-only 为 `2620 tests`。compileall、修改范围 Ruff、anti-hardcoding scan 与 `git diff --check` 通过；新的唯一最终全量仍未运行。详细见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 对 replacement 前候选完成的 `2503 collected / 2496 passed / 7 skipped` 只作历史证据。发布前真实体验随后根修 Product Chat START 前权限、Plugin ActivationSet eager-cleanup 死锁、终态任务→新 Proposal 身份交接、OpenAI-compatible multiline Tool arguments、失败叶子的 exact message/open Turn 归属、100–109 列 facts 折行，以及 Textual gate 点击后的真实焦点交接。此前最终 `2555 passed, 7 skipped`（退出码 0，`3078.80s`）也发生在 fresh 角色对话/完整身份补齐之前，只认证当时工作树。完成 N12/R4 后，当前 Textual/presentation/task-conversation 直接组为 `65 passed`，统一 diff/Product observation/inspection/optional/architecture 相邻组为 `56 passed`，安装 Textual 8.2.8 的解释器 collect-only 为 `2638 tests`；此前 N10–N11 的 `50 passed / 2634 tests`、N1–N9 的 `55/66/23 passed / 2605 tests`、N1–N6 的 `54 passed`、更宽 Product/Chat/Timeline 相邻组 `365 passed` 与 `[tui]` collect-only `2584` 都只保留为各自检查点历史。一次全新目录的真实 TUI ProductTask 曾从 Proposal 走到 bare Promotion；本轮确定性真实本地 Git auto→multi Pilot 又到达 Approval 并在 `Ctrl+T` 显示 Router/parent/reviewer/coder。N10–N11 只在既有 Patch Artifact reader、Product observation 与 presentation 接缝增加完整 bytes 的 fail-soft 解析、默认摘要和按需只读改动页，不改 owner、控制面、observation 状态或 durable 写入；N12/R4 删除任务对话固定截断并重排同一 snapshot。20.38 的 format-1/2/3/4 检查数字只作历史证据；当前 format-5 的冲突/protocol/F3/Compaction/Provider focused 组为 `17 passed`，Product context、Compaction、完整 F3、OpenAI-compatible、Surface/Core invariants 与 Product architecture 合并组为 `111 passed`。compileall、修改范围 Ruff 与 `git diff --check` 通过；anti-hardcoding production scan 仅命中通用架构类型 `ChatDriver`，人工分类为非示例硬编码；新的唯一最终全量仍未运行。详细见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 最新正式发布仍为 `v0.7.1`；当前工作树是未提交、未发布的 `0.8.0` F5 候选。F0–F4 原提交和旧停止点
@@ -3975,11 +3975,13 @@ ProductTask durable Agent ownership 子树，只累计各账户的 `charged` Tok
 不累计 delegated/reserved，不读取 App 单调时钟，也不会把别的 task 账户算进来。任一相关账户或预算维度
 尚未建立时，该项显示 `—`；Token Usage 为 unknown、Token/Wall reservation 尚未终结时，对应项同样显示
 `—`，不会用保守预留额或局部和冒充精确用量。`budgets:ledger` 是 observation 的全局 dirty-hint 流并绑定
-本次 ledger projection head，但不参与当前任务事实年龄。它继续显示现有
-`ProductInspectionEvidenceReader` 已证明的 changed paths（最多八项并
-标明余数）、Verifier command id/status/exit/argv digest，以及最多十二行、明确标注截断和 UTF-8 replacement
-的 inert Patch preview；这只是已有 evidence 的有界展示，不读取完整 diff，也不把 preview 当成 Patch
-Artifact 本身。Review digest 后只保留一处 `Ctrl+P` 完整身份出口；completed 时面板只显示
+本次 ledger projection head，但不参与当前任务事实年龄。`ProductInspectionEvidenceReader` 仍从 Review
+精确绑定 Artifact，并由 `PatchArtifactReader.load()` fresh 重放 `artifacts:catalog`、读取内容寻址 CAS、核对
+sha256 与 size 后取得完整 Patch bytes。默认右栏不再显示 diff 正文，而是只保留已证明的 changed paths、
+Verifier command id/status/exit/argv digest，以及从这份完整 bytes 单遍解析出的总字节数、文件数、逐文件
+新增/修改/删除/重命名状态和精确 `+/-` 统计。畸形、二进制或无法可靠归属的 Patch fail soft：文件身份仍尽量
+来自 manifest，状态或计数显示 unknown/`?`，绝不从截断 preview 猜一个貌似精确的数字。Review digest 后的
+完整出口合并为一处 `Ctrl+D` 改动与 `Ctrl+P` 身份提示；completed 时面板只显示
 “已合入 · Promotion receipt 已记录”，空闸门不再重复一条通用终态说明。所有 Product 终态都只把完整
 生命周期轨施加现有 `dim` 样式，证据与终态摘要仍保持默认色。
 
@@ -3992,16 +3994,21 @@ Router 必须经 Agent Directory 证明 `router_agent_id` 拥有 `routing_sessio
 投影前 fresh read Session/Effect streams 并通过 `CoreInvariantChecker`，随后按 canonical seq 单遍遍历
 `user/message`、`assistant/message`、`tool/call` 与 `tool/result`，不再先用 `SurfaceProjector` 聚合发言、再用
 第二遍事件循环补工具活动。call/result 合成一条工具行；真实 seq 区间只有当前宽度容得下时才以暗色贴齐
-右缘，否则省略而不挤乱摘要。一屏上限之外会明确报告还有
-多少次工具调用和多少段发言，不静默截断。视图按 router/parent/reviewer/coder 分段，默认展开最近活跃角色；
-模型文字仍明确为非宿主证据。Token 只在所有 Attempt 都有可信 Usage 时聚合，任何
+右缘，否则省略而不挤乱摘要。展开角色会渲染该 Session 的全部可见发言与工具活动：screen 不再只取前
+12 条，`RichLog` 不设总行数上限，reader 也不再对单条 user/assistant message 使用 4000 字符、40 行或
+单行宽度上限。安全转义仍逐物理行执行；超出视口只靠滚动，不再显示“还有 N 条”或保留旧阈值开关。
+视图按 router/parent/reviewer/coder 分段，默认展开最近活跃角色；模型文字仍明确为非宿主证据。Token 只在所有 Attempt 都有可信 Usage 时聚合，任何
 unknown/malformed/missing Usage 都显示 `unavailable`，绝不填零或保留部分和。工具摘要继续复用现有
 Timeline 的 allowlist：`shell` 参数只显示遮蔽后的 canonical JSON UTF-8 字节数；其他工具只显示 allowlist
 允许的安全 path/query，空参数没有目标时只保留工具名，不再伪称“已遮蔽”。shell 的 exact `exit_code=0`
 显示成功，非零退出显示 warning `完成 · exit=N`，不能把 `exit=1` 写成成功。tool result 正文、文件内容、
-stdout 和 raw payload 均不显示。上下键选择角色、Enter 展开/折叠、Esc 返回；这是打开时快照而非实时 tail，
-关闭再打开会重新读取当前 facts，删除该 projection 不损失任何信息。R1 所属 reader 与 screen 路径由
-494 个物理行降为 490 个，没有新增类层次。
+stdout 和 raw payload 均不显示。角色段头改为“折叠符 + 角色 + 全宽横线 + turns/tools/tokens/age”，当前段
+使用既有强调色、其他段 dim，绝不使用反色背景；窄屏放不下时按 terminal cell width 手工把完整统计折到
+后续行，不能产生水平滚动或静默丢字段。展开内容以两格形成层级，需求正文以四格自行折行；模型前缀统一为
+`模型 ·`，连续多个空行压成一个。默认只显示 `wf-session-…` 短把手，精确 Session identity 仍在 `Ctrl+P`。
+上下键选择角色、Enter 展开/折叠、Esc 返回；重复的底部说明已删除，标题右侧在正常宽度写
+“打开时快照 · 不实时 tail”，44 列使用等义短句“快照 · 非实时”。关闭再打开会重新读取当前 facts，删除该
+projection 不损失任何信息；没有新增类层次、缓存、读取路径或状态机。
 
 `Ctrl+P` 同样打开一个全宽身份视图；若 task 已 durable，它会先 fresh read `ProductObservation`，失败时明确
 unavailable，不回退旧内存快照。视图完整显示 task、Chat/origin/confirmation/router/固定角色 Session、
@@ -4012,9 +4019,20 @@ Workflow、source、Review、target、Patch、approval digest 与 receipt 等已
 identity 从未被缩短、改写或由 widget state 决定。终端宽度小于 110 列仍使用单栏两行摘要加独立闸门，
 不做水平滚动；当前只有这一套 Textual TUI，没有旧 details panel、旧 `product-expanded` 行为或兼容分支。
 
-所有模型回答、requirement、路径、Patch preview、失败 code 与 durable identity 都进入
-`safe_display_block()`：只保留 literal LF，控制/format/bidi 字符使用现有 terminal safety 转义，每行、
-行数与整块都有上限。`RichLog` 和全部 untrusted `Static` 明确 `markup=False`，所以 `[bold]` 等字符串按
+`Ctrl+D` 打开同一 TUI 的全宽只读“完整改动”页。它不复用默认右栏的摘要，也不缓存上次结果，而是每次调用
+`ProductObservationReader.load_patch()`，重新核对 exact task/Review/Workflow/Artifact identity 并读取上面的
+CAS 原始 bytes。统一 diff parser 保留文件级新增/修改/删除/重命名、二进制/模式/无末尾换行等 metadata，
+把 hunk header 转成旧/新行号；默认展开第一个文件，上下键选文件、Enter 展开或折叠、Esc 返回。新增、删除、
+上下文与 metadata 使用现有七色以内的语义；长行按当前 Rich cell width 自行切分，续行保持八列前缀空位，
+不交给 Textual 在第 0 列二次折行。页面没有行数上限：每个物理行先走同一 terminal-safe 转义再渲染，
+`Ctrl+E` 只把已经完成身份校验的 exact `content` bytes 写入具名临时 `.patch` 文件。导出路径是用户请求的
+临时结果，不进入 EventStore、模型上下文、observation 或任何状态机。
+
+所有模型回答、requirement、路径、Patch 文字、失败 code 与 durable identity 都进入
+`safe_display_block()`：只保留 literal LF，控制/format/bidi 字符使用现有 terminal safety 转义。默认摘要、
+主聊天和身份页继续有各自的展示上限；显式打开的 `Ctrl+D` 完整改动页与 `Ctrl+T` 任务对话页取消内容
+行数/字符上限，并逐物理行安全转义与自行折行，不跳过或静默截断 diff、发言或工具活动。默认参数仍保持
+有界，只有这两个明确的“看全部”出口传入无界值。`RichLog` 和全部 untrusted `Static` 明确 `markup=False`，所以 `[bold]` 等字符串按
 字面显示，不能执行 Rich/Textual 标记；错误只显示稳定 code/type，不显示 raw Provider/exception 正文。
 关闭、EOF/terminal teardown 与 Ctrl+C 先进入可见 closing 视图，逐项显示 operation、Driver、observer、
 Product host 与 Runtime 的真实关闭状态；App 才取消并等待自己持有的 operation。普通 Turn 继续走 Runtime
@@ -4048,11 +4066,13 @@ TUI 在失败摘要中先显示这条叶子证据，再保留 Workflow
 traceback，也不复制、改写任何 durable fact。
 
 本次替换后的 TUI/纯 presentation 与 Textual 8.2.8 Pilot 在 R1/R3/R2 可读性批次曾为 **47 passed**；
-N1–N6 折行、左边缘、seq、工具结果语义及视觉层级检查点曾为 **54 passed**。N7–N9 完成后，当前
-Product observation/presentation/TUI 直接组为 **55 passed**，选择的 observation/presentation/inspection/F3
-相邻组为 **66 passed**，Product/TUI 架构与 optional 边界为 **23 passed**，全仓 collect-only 为
-**2605 tests**。这些数字来自当前树，但不冒充最终全量；直接组对应 `test_product_observation.py`、
-`test_tui_presentation.py` 与 `test_tui.py`。
+N1–N6 折行、左边缘、seq、工具结果语义及视觉层级检查点曾为 **54 passed**，N7–N9 的
+`55/66/23 passed` 与 **2605 tests** 也只保留为历史检查点。N10–N11 检查点的
+`test_tui.py` + `test_tui_presentation.py` 为 **50 passed**；统一 diff、Product observation、inspection leaf、
+TUI optional 与 Product architecture 相邻组为 **56 passed**。完成 N12/R4 后，`test_tui.py`、
+`test_tui_presentation.py` 与 `test_tui_task_conversation.py` 直接组为 **65 passed**；2105 条消息的单独 Pilot
+保留首尾并能滚到底部，call 阶段约 **1.47 秒**，没有达到需要引入增量渲染的证据门槛。全仓 collect-only
+为 **2638 tests**；这些定向数字不冒充最终全量。
 N1 先按 Rich terminal cell 宽度扣除稳定前缀，再把同一左边缘加回每个物理行；主聊天跨过 110 列布局
 断点、实际聊天列反而变窄时，只重排现有 RichLog 可见行，`Ctrl+T` 则只从已经打开的只读 snapshot 重绘，
 没有消息缓存、Store 重读或第二事实源。真实 Textual 截图还发现 mount handler 内布局宽度尚未建立；
@@ -4065,10 +4085,13 @@ dim 样式右对齐，窄屏直接省略。N4 继续只遮蔽 shell canonical ar
 使用既有强调蓝，工具名与安全参数回到默认文字色，seq 仍为 dim，非零结果仍为 warning。这样前景语义
 只有默认、dim、teal、purple、emphasis、warning 六种，danger 仍只是第七个预留槽；没有深色主题分支或
 第二种紫色。样式拆段不改变折行字符串、cell 宽度、遮蔽规则、snapshot 或 durable 读取。
-N1–N4、N5–N6 与 N7–N9 的独立只读短复审均确认 **P0=0 / P1=0 / P2=0**。N7–N9 在原 presentation
-与 Product observation 接缝完成终态/身份提示去重、durable Budget 用量行和终态生命周期弱化，没有新增
-快捷键、颜色、控制面或事实源；独立复审另行运行 observation/presentation `28 passed` 与两条真实 Product
-host/Approval TUI 路径 `2 passed`。本批停在用户截图确认点，不进入 N10/N11。
+N1–N4、N5–N6 与 N7–N9 的独立只读短复审均确认 **P0=0 / P1=0 / P2=0**。N10–N11 独立复审也确认
+**P0=0 / P1=0 / P2=0**；复审实际抓住并关闭 malformed Patch 破坏正常 observation、RichLog 首帧滚到底、
+重复 `^p`、mode/no-newline metadata 丢失、长 diff 续行回到第 0 列及文件标题横线二次折行等实现缺口。
+N10–N11 没有改变 owner、
+闸门、ProductObservation 状态语义、遮蔽规则、durable 写入或事实源。用户确认截图后完成的 N12/R4 也只
+删除任务对话投影的固定截断并重排同一 snapshot；安全转义、Session identity 绑定和单一 EventStore 事实链
+保持不变。最终独立复审为 **P0=0 / P1=0 / P2=0**，提交门禁记录于验证文档。
 Pilot 覆盖精确 START/Approval typed confirmation、挂起 operation 即时反馈、durable stream age/stall、
 分歧不显示 Approval、显式 reconcile、窄屏折叠、可见 closing、active Provider 取消、跨进程无 Feed 周期
 refresh 以及并发 refresh 不倒退。另有一条确定性真实边界 Pilot 使用真实 `ProductChatHost`、auto Router、

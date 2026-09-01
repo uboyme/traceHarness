@@ -230,7 +230,10 @@ class TaskConversationReader:
         for event in events:
             if event.type in {"user/message", "assistant/message"}:
                 content = safe_display_block(
-                    event.data.get("content", ""), limit=4_000, max_lines=40
+                    event.data.get("content", ""),
+                    limit=None,
+                    max_lines=None,
+                    line_limit=None,
                 )
                 if content:
                     kind = "model" if event.type == "assistant/message" else "input"

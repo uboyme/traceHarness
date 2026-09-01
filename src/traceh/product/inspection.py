@@ -11,11 +11,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.agents.directory import AgentDirectoryReader
+from traceh.api.artifacts import PatchArtifact
 from traceh.api.events import EventEnvelope
 from traceh.api.product import ProductRole, ProductTaskSummary
 from traceh.api.promotion import PatchReviewReport, VerificationPlan
 from traceh.api.workflow import NodeOutcome, NodeStatus
 from traceh.artifacts.reader import PatchArtifactReader
+from traceh.artifacts.unified_diff import (
+    UnifiedDiff,
+    UnifiedDiffSummary,
+    parse_unified_diff,
+)
 from traceh.cli.command_line import escape_for_display
 from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.product.errors import ProductInputError, ProductStateError
@@ -88,6 +94,18 @@ class ProductReviewEvidence:
     patch_preview_truncated: bool
     patch_utf8_replaced: bool
     verifiers: tuple[ProductVerifierEvidence, ...]
+    patch_summary: UnifiedDiffSummary | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProductPatchEvidence:
+    """Fresh exact Patch bytes plus their fail-closed inspection projection."""
+
+    artifact_id: str
+    patch_sha256: str
+    patch_size_bytes: int
+    content: bytes
+    diff: UnifiedDiff
 
 
 @dataclass(frozen=True, slots=True)
@@ -253,6 +271,37 @@ class ProductInspectionEvidenceReader:
             review=review_evidence,
         )
 
+    async def load_patch(
+        self,
+        summary: ProductTaskSummary,
+        review: PatchReviewReport,
+    ) -> ProductPatchEvidence:
+        """Fresh-read the exact Patch linked by one ProductTask Review."""
+
+        if type(summary) is not ProductTaskSummary:
+            raise ProductInputError("product-summary-invalid", "summary")
+        if type(review) is not PatchReviewReport:
+            raise ProductInputError("product-review-invalid", "review")
+        if summary.resolved_mode is None:
+            raise ProductStateError(
+                "product-observation-workflow-unbound", summary.task_id
+            )
+        definition = product_workflow_definition(
+            summary.resolved_mode,
+            promotion_target_id=self._promotion_target_id,
+        )
+        workflow = (await self._workflow.load(summary.workflow_run_id)).run(definition)
+        outcomes = {outcome.node_id: outcome for outcome in workflow.outcomes}
+        artifact = await self._validated_review_artifact(summary, review, outcomes)
+        manifest = artifact.manifest
+        return ProductPatchEvidence(
+            artifact_id=manifest.artifact_id,
+            patch_sha256=manifest.blob.sha256,
+            patch_size_bytes=manifest.blob.size_bytes,
+            content=artifact.content,
+            diff=_parsed_patch(artifact),
+        )
+
     async def _session_leaf_failure(
         self,
         task_id: str,
@@ -289,6 +338,41 @@ class ProductInspectionEvidenceReader:
         review: PatchReviewReport,
         outcomes: dict[str, NodeOutcome],
     ) -> ProductReviewEvidence:
+        artifact = await self._validated_review_artifact(summary, review, outcomes)
+        commands = {command.command_id: command for command in self._verification_plan.commands}
+        verifiers = tuple(
+            ProductVerifierEvidence(
+                command_id=result.command_id,
+                executable=commands[result.command_id].argv[0],
+                argument_count=len(commands[result.command_id].argv) - 1,
+                argv_digest=result.argv_digest,
+                status=result.status,
+                exit_code=result.exit_code,
+            )
+            for result in review.results
+        )
+
+        manifest = artifact.manifest
+        preview, truncated, replaced = _patch_preview(
+            artifact.content, self._max_patch_chars
+        )
+        patch_summary = _parsed_patch(artifact).summary
+        return ProductReviewEvidence(
+            changed_paths=manifest.changed_paths,
+            patch_size_bytes=manifest.blob.size_bytes,
+            patch_preview=preview,
+            patch_preview_truncated=truncated,
+            patch_utf8_replaced=replaced,
+            verifiers=verifiers,
+            patch_summary=patch_summary,
+        )
+
+    async def _validated_review_artifact(
+        self,
+        summary: ProductTaskSummary,
+        review: PatchReviewReport,
+        outcomes: dict[str, NodeOutcome],
+    ) -> PatchArtifact:
         verification = outcomes.get(PRODUCT_VERIFICATION_NODE)
         coder = outcomes.get(product_role_node_id(ProductRole.CODER))
         if (
@@ -317,19 +401,6 @@ class ProductInspectionEvidenceReader:
             raise ProductStateError(
                 "product-inspection-verifier-mismatch", summary.task_id
             )
-        commands = {command.command_id: command for command in self._verification_plan.commands}
-        verifiers = tuple(
-            ProductVerifierEvidence(
-                command_id=result.command_id,
-                executable=commands[result.command_id].argv[0],
-                argument_count=len(commands[result.command_id].argv) - 1,
-                argv_digest=result.argv_digest,
-                status=result.status,
-                exit_code=result.exit_code,
-            )
-            for result in review.results
-        )
-
         artifact = await self._artifacts.load(review.artifact_id)
         manifest = artifact.manifest
         if (
@@ -340,17 +411,14 @@ class ProductInspectionEvidenceReader:
             raise ProductStateError(
                 "product-inspection-artifact-mismatch", summary.task_id
             )
-        preview, truncated, replaced = _patch_preview(
-            artifact.content, self._max_patch_chars
-        )
-        return ProductReviewEvidence(
-            changed_paths=manifest.changed_paths,
-            patch_size_bytes=manifest.blob.size_bytes,
-            patch_preview=preview,
-            patch_preview_truncated=truncated,
-            patch_utf8_replaced=replaced,
-            verifiers=verifiers,
-        )
+        return artifact
+
+
+def _parsed_patch(artifact: PatchArtifact) -> UnifiedDiff:
+    return parse_unified_diff(
+        artifact.content,
+        expected_paths=artifact.manifest.changed_paths,
+    )
 
 
 def _patch_preview(content: bytes, limit: int) -> tuple[str, bool, bool]:
@@ -500,6 +568,7 @@ def _plain_text(value: object) -> str | None:
 __all__ = [
     "ProductInspectionEvidenceReader",
     "ProductNodeEvidence",
+    "ProductPatchEvidence",
     "ProductReviewEvidence",
     "ProductTaskEvidence",
     "ProductVerifierEvidence",

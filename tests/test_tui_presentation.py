@@ -16,6 +16,10 @@ from traceh.api.product import (
     ProductTaskSummary,
 )
 from traceh.api.workflow import WorkflowStatus
+from traceh.artifacts.unified_diff import (
+    UnifiedDiffFileSummary,
+    UnifiedDiffSummary,
+)
 from traceh.product.chat import ProductStartRequest
 from traceh.product.control import PendingProductProposal
 from traceh.product.inspection import (
@@ -659,10 +663,38 @@ def test_failed_message_without_reliable_leaf_is_explicitly_unavailable() -> Non
     assert "unavailable" in compact
 
 
-def test_review_evidence_is_bounded_without_hiding_omission() -> None:
-    changed_paths = tuple(f"src/package/file-{index:02d}.py" for index in range(1, 11))
-    preview_lines = tuple(f"patch line {index:02d}" for index in range(1, 15))
+def test_review_evidence_renders_complete_file_summary_without_diff_body() -> None:
+    changed_paths = ("src/core.py", "tests/test_core.py")
+    preview_lines = (
+        "diff --git a/src/core.py b/src/core.py",
+        "index 1111111..2222222 100644",
+        "--- a/src/core.py",
+        "+++ b/src/core.py",
+        "@@ -1 +1,2 @@",
+        "+preview-body-must-not-render",
+    )
     verifier_digest = "e" * 64
+    patch_summary = UnifiedDiffSummary(
+        files=(
+            UnifiedDiffFileSummary(
+                path=changed_paths[0],
+                status="modified",
+                additions=4,
+                deletions=1,
+                binary=False,
+            ),
+            UnifiedDiffFileSummary(
+                path=changed_paths[1],
+                status="added",
+                additions=6,
+                deletions=0,
+                binary=False,
+            ),
+        ),
+        additions=10,
+        deletions=1,
+        complete=True,
+    )
     review_evidence = ProductReviewEvidence(
         changed_paths=changed_paths,
         patch_size_bytes=12_345,
@@ -679,6 +711,7 @@ def test_review_evidence_is_bounded_without_hiding_omission() -> None:
                 exit_code=0,
             ),
         ),
+        patch_summary=patch_summary,
     )
     observation = replace(
         _observation(
@@ -705,20 +738,19 @@ def test_review_evidence_is_bounded_without_hiding_omission() -> None:
         observation_error=None,
     )
 
-    for path in changed_paths[:8]:
+    for path in changed_paths:
         assert path in rendered
-    assert changed_paths[8] not in rendered
-    assert changed_paths[9] not in rendered
-    assert "其余 2 个文件" in rendered
     assert "unit-tests · passed · exit=0" in rendered
     assert verifier_digest[:12] in rendered
-    for line in preview_lines[:12]:
-        assert line in rendered
-    assert preview_lines[12] not in rendered
-    assert preview_lines[13] not in rendered
-    assert "补丁    12345 bytes" in rendered
+    assert "补丁    12345 bytes · 2 文件 · +10 −1" in rendered
+    assert "src/core.py · 修改 · +4 −1" in rendered
+    assert "tests/test_core.py · 新增 · +6 −0" in rendered
+    for line in preview_lines:
+        assert line not in rendered
     assert rendered.count("^p 查看完整身份") == 1
-    assert "预览已截断" in rendered
+    assert rendered.count("^d 查看完整改动") == 1
+    assert "预览已截断" not in rendered
+    assert "本轮不提供" not in rendered
     lines = rendered.splitlines()
     separators = [
         index
@@ -738,6 +770,60 @@ def test_review_evidence_is_bounded_without_hiding_omission() -> None:
         "Patch preview",
     ):
         assert old_heading not in rendered
+
+
+def test_review_evidence_never_invents_counts_without_a_complete_summary() -> None:
+    incomplete_summary = UnifiedDiffSummary(
+        files=(
+            UnifiedDiffFileSummary(
+                path="src/module.py",
+                status="unknown",
+                additions=None,
+                deletions=None,
+                binary=False,
+            ),
+        ),
+        additions=None,
+        deletions=None,
+        complete=False,
+    )
+    evidence = ProductReviewEvidence(
+        changed_paths=("src/module.py",),
+        patch_size_bytes=321,
+        patch_preview="+a-line-that-must-not-be-counted",
+        patch_preview_truncated=True,
+        patch_utf8_replaced=False,
+        verifiers=(),
+        patch_summary=incomplete_summary,
+    )
+    observation = replace(
+        _observation(
+            ProductTaskStatus.AWAITING_APPROVAL,
+            WorkflowStatus.AWAITING_APPROVAL,
+            approval_ready=True,
+        ),
+        evidence=ProductTaskEvidence(
+            WorkflowStatus.AWAITING_APPROVAL.value,
+            (),
+            evidence,
+        ),
+    )
+
+    rendered = product_panel_text(
+        product_enabled=True,
+        proposal=None,
+        start_request=None,
+        observation=observation,
+        transient=TransientProductState("none"),
+        now_monotonic=0.0,
+        observation_received_at=None,
+        operation_error=None,
+        observation_error=None,
+    )
+
+    assert "补丁    321 bytes · 1 文件 · +? −?" in rendered
+    assert "src/module.py · 状态未知 · +? −?" in rendered
+    assert "+a-line-that-must-not-be-counted" not in rendered
 
 
 def test_full_identity_fields_are_exact_and_copy_keys_are_stable() -> None:

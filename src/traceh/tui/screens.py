@@ -12,8 +12,14 @@ from textual.events import Resize
 from textual.screen import Screen
 from textual.widgets import Footer, RichLog, Static
 
+from traceh.artifacts.unified_diff import (
+    PatchLineKind,
+    UnifiedDiffFile,
+    UnifiedDiffLine,
+)
 from traceh.product.chat import ProductStartRequest
 from traceh.product.control import PendingProductProposal
+from traceh.product.inspection import ProductPatchEvidence
 from traceh.product.observation import ProductObservationReader
 from traceh.tui.presentation import (
     MODEL_SELF_REPORT_COLOR,
@@ -41,7 +47,6 @@ class TaskConversationScreen(Screen[None]):
     TaskConversationScreen { layout: vertical; }
     #task-conversation-title { height: 3; padding: 1 2; background: $panel; }
     #task-conversation-log { height: 1fr; padding: 1 3; }
-    #task-conversation-status { height: 2; padding: 0 2; color: $text-muted; }
     """
 
     def __init__(
@@ -59,18 +64,18 @@ class TaskConversationScreen(Screen[None]):
         self._expanded: set[int] = set()
 
     def compose(self) -> ComposeResult:
-        yield Static("ProductTask 任务对话 · 打开时 fresh snapshot", id="task-conversation-title")
+        yield Static("ProductTask 任务对话", id="task-conversation-title")
         yield RichLog(
             id="task-conversation-log",
             markup=False,
             highlight=False,
             wrap=True,
-            max_lines=4_000,
+            auto_scroll=False,
         )
-        yield Static("正在读取当前 durable facts…", id="task-conversation-status")
         yield Footer()
 
     async def on_mount(self) -> None:
+        self.call_after_refresh(self._render_title)
         observation_reader = self._observation_reader
         task_id = self._task_id
         if observation_reader is None or task_id is None:
@@ -96,6 +101,7 @@ class TaskConversationScreen(Screen[None]):
 
     async def on_resize(self, event: Resize) -> None:
         del event
+        self.call_after_refresh(self._render_title)
         if self._snapshot is not None:
             self.call_after_refresh(self._render_snapshot)
 
@@ -103,9 +109,7 @@ class TaskConversationScreen(Screen[None]):
         log = self.query_one("#task-conversation-log", RichLog)
         log.clear()
         log.write(safe_display_block(message))
-        self.query_one("#task-conversation-status", Static).update(
-            "这是只读失败；未写入、未猜测、未回退到其他 Session。"
-        )
+        log.write(Text("返回后重试。", style="dim"))
 
     def _render_snapshot(self) -> None:
         snapshot = self._snapshot
@@ -115,34 +119,31 @@ class TaskConversationScreen(Screen[None]):
             return
         if not snapshot.roles:
             log.write("本任务尚未建立 Router 或执行角色 Session。")
+        header_rows: dict[int, int] = {}
         for index, role in enumerate(snapshot.roles):
-            selected = "›" if index == self._selected else " "
-            expanded = "▾" if index in self._expanded else "▸"
-            header = Text(
-                f"{selected} {expanded} {role.role} · "
-                f"{role.turns_started}/{role.turns_completed} turns · "
-                f"{role.tool_calls} 工具调用 · {_usage_text(role)} · "
-                f"{_age_text(role)}"
+            width = max(
+                1,
+                log.content_region.width - log.styles.scrollbar_size_vertical,
             )
-            if index == self._selected:
-                header.stylize("bold reverse")
-            else:
-                header.stylize("bold")
-            log.write(header)
+            header_rows[index] = len(log.lines)
+            headers = _role_header_lines(
+                role,
+                expanded=index in self._expanded,
+                selected=index == self._selected,
+                width=width,
+            )
+            for header in headers:
+                log.write(header, width=max(1, header.cell_len))
             if index in self._expanded:
-                log.write(Text(f"    Session · {role.session_id}", style="dim"))
-                visible, omitted = role.messages[:12], role.messages[12:]
-                for kind, content in visible:
+                log.write(
+                    Text(f"  {_short_identifier(role.session_id)}", style="dim")
+                )
+                for kind, content in role.messages:
                     if kind == "tool":
                         first, result = content.split("\n", 1)
                         label, suffix = first.rsplit("\t", 1)
-                        marker = "    ▏ "
+                        marker = "  ▏ "
                         label_prefix = "工具 · "
-                        width = max(
-                            1,
-                            log.content_region.width
-                            - log.styles.scrollbar_size_vertical,
-                        )
                         wrapped = prefixed_display_lines(
                             label,
                             width=width,
@@ -189,15 +190,11 @@ class TaskConversationScreen(Screen[None]):
                                 width=max(1, result_line.cell_len),
                             )
                         continue
-                    width = max(
-                        1,
-                        log.content_region.width - log.styles.scrollbar_size_vertical,
-                    )
                     if kind == "model":
-                        marker = "    ▏ "
-                        label = "模型自述（非宿主证据） · "
+                        marker = "  ▏ "
+                        label = "模型 · "
                         lines = prefixed_display_lines(
-                            content,
+                            _collapse_model_blank_lines(content),
                             width=width,
                             first_prefix=marker + label,
                             continuation_prefix=(
@@ -220,18 +217,27 @@ class TaskConversationScreen(Screen[None]):
                     ):
                         line = Text(prefix + segment)
                         log.write(line, width=max(1, line.cell_len))
-                if omitted:
-                    tools = sum(kind == "tool" for kind, _content in omitted)
-                    speeches = len(omitted) - tools
-                    log.write(
-                        Text(f"    …还有 {tools} 次工具调用与 {speeches} 段发言", style="dim")
-                    )
                 if not role.messages:
-                    log.write(Text("    尚无可见对话或工具活动。", style="dim"))
-            log.write(Text("─" * 72, style="dim"))
-        self.query_one("#task-conversation-status", Static).update(
-            "打开时快照 · ↑/↓ 选择角色 · Enter 展开/折叠 · Esc 返回 · 不实时 tail"
+                    log.write(Text("  尚无可见对话或工具活动。", style="dim"))
+        target = header_rows.get(self._selected, 0)
+        self.call_after_refresh(
+            lambda: log.scroll_to(y=target, animate=False)
         )
+
+    def _render_title(self) -> None:
+        title = self.query_one("#task-conversation-title", Static)
+        left = "ProductTask 任务对话"
+        right = "打开时快照 · 不实时 tail"
+        width = max(1, title.content_region.width)
+        gap = width - Text(left).cell_len - Text(right).cell_len
+        if gap < 1:
+            right = "快照 · 非实时"
+            gap = width - Text(left).cell_len - Text(right).cell_len
+        rendered = Text(left)
+        if gap >= 1:
+            rendered.append(" " * gap)
+            rendered.append(right, style="dim")
+        title.update(rendered)
 
     async def action_previous_role(self) -> None:
         snapshot = self._snapshot
@@ -408,6 +414,203 @@ class ProductIdentityScreen(Screen[None]):
         await self.dismiss()
 
 
+class ProductChangesScreen(Screen[None]):
+    """Fresh, read-only view of one exact CAS-backed patch artifact."""
+
+    BINDINGS = [
+        Binding("up", "previous_file", "上一文件", priority=True),
+        Binding("down", "next_file", "下一文件", priority=True),
+        Binding("enter", "toggle_file", "展开/折叠", priority=True),
+        Binding("ctrl+e", "export_patch", "导出", priority=True),
+        Binding("escape", "back", "返回", priority=True),
+    ]
+    CSS = """
+    ProductChangesScreen { layout: vertical; }
+    #changes-title { height: 3; padding: 1 2; background: $panel; }
+    #changes-log { height: 1fr; padding: 1 3; }
+    #changes-status { height: 2; padding: 0 2; color: $text-muted; }
+    """
+
+    def __init__(
+        self,
+        *,
+        observation_reader: ProductObservationReader | None,
+        task_id: str | None,
+    ) -> None:
+        super().__init__()
+        self._observation_reader = observation_reader
+        self._task_id = task_id
+        self._patch: ProductPatchEvidence | None = None
+        self._selected = 0
+        self._expanded: set[int] = set()
+        self._export_path: Path | None = None
+
+    @property
+    def export_path(self) -> Path | None:
+        return self._export_path
+
+    def compose(self) -> ComposeResult:
+        yield Static("ProductTask 完整改动 · 打开时快照", id="changes-title")
+        yield RichLog(
+            id="changes-log",
+            markup=False,
+            highlight=False,
+            wrap=True,
+            auto_scroll=False,
+            max_lines=None,
+        )
+        yield Static("正在读取完整补丁证据…", id="changes-status")
+        yield Footer()
+
+    async def on_mount(self) -> None:
+        reader = self._observation_reader
+        task_id = self._task_id
+        if reader is None or task_id is None:
+            self._show_unavailable("当前没有已建立的 durable ProductTask。")
+            return
+        try:
+            patch = await reader.load_patch(task_id)
+        except Exception as error:
+            code = getattr(error, "code", type(error).__name__)
+            self._show_unavailable(
+                "完整改动证据不可用 · "
+                f"{safe_display_block(code, limit=120, max_lines=1)}"
+            )
+            return
+        if patch is None:
+            self._show_unavailable("当前任务尚未建立补丁证据。")
+            return
+        self._patch = patch
+        if patch.diff.files:
+            self._expanded = {0}
+        self.call_after_refresh(self._render_patch)
+
+    async def on_resize(self, event: Resize) -> None:
+        del event
+        if self._patch is not None:
+            self.call_after_refresh(self._render_patch)
+
+    def _show_unavailable(self, message: str) -> None:
+        log = self.query_one("#changes-log", RichLog)
+        log.clear()
+        log.write(safe_display_block(message))
+        self.query_one("#changes-status", Static).update(
+            "无法读取完整改动；请返回后重试。"
+        )
+
+    def _render_patch(self) -> None:
+        patch = self._patch
+        log = self.query_one("#changes-log", RichLog)
+        log.clear()
+        if patch is None:
+            return
+        files = patch.diff.files
+        if not files:
+            log.write("完整补丁无法按文件显示；仍可按 Ctrl+E 导出。")
+        header_rows: dict[int, int] = {}
+        for index, file in enumerate(files):
+            header_rows[index] = len(log.lines)
+            header = self._file_header(file, index, log)
+            log.write(header, width=max(1, header.cell_len))
+            if index in self._expanded:
+                if file.summary.binary and not file.lines:
+                    log.write(Text("    二进制改动", style="dim"))
+                for line in file.lines:
+                    width = max(
+                        1,
+                        log.content_region.width
+                        - log.styles.scrollbar_size_vertical,
+                    )
+                    for rendered in _patch_line_texts(line, width=width):
+                        log.write(rendered, width=max(1, rendered.cell_len))
+        summary = patch.diff.summary
+        counts = (
+            "统计不可用"
+            if summary.additions is None or summary.deletions is None
+            else f"+{summary.additions} −{summary.deletions}"
+        )
+        self.query_one("#changes-status", Static).update(
+            f"{len(summary.files)} 文件 · {patch.patch_size_bytes} bytes · {counts}"
+        )
+        target = header_rows.get(self._selected, 0)
+        self.call_after_refresh(
+            lambda: log.scroll_to(y=target, animate=False)
+        )
+
+    def _file_header(
+        self,
+        file: UnifiedDiffFile,
+        index: int,
+        log: RichLog,
+    ) -> Text:
+        expanded = "▾" if index in self._expanded else "▸"
+        summary = file.summary
+        path = _safe_full_line(summary.path)
+        status = _patch_status_text(summary.status)
+        counts = (
+            "二进制"
+            if summary.binary
+            else _patch_counts(summary.additions, summary.deletions)
+        )
+        label = f"{expanded} {path} · {status} · {counts} "
+        width = max(
+            1,
+            log.content_region.width - log.styles.scrollbar_size_vertical,
+        )
+        line = Text(label)
+        if line.cell_len < width:
+            line.append("─" * (width - line.cell_len))
+        line.stylize("bold blue" if index == self._selected else "dim")
+        return line
+
+    async def action_previous_file(self) -> None:
+        patch = self._patch
+        if patch is None or not patch.diff.files:
+            return
+        self._selected = (self._selected - 1) % len(patch.diff.files)
+        self._render_patch()
+
+    async def action_next_file(self) -> None:
+        patch = self._patch
+        if patch is None or not patch.diff.files:
+            return
+        self._selected = (self._selected + 1) % len(patch.diff.files)
+        self._render_patch()
+
+    async def action_toggle_file(self) -> None:
+        patch = self._patch
+        if patch is None or not patch.diff.files:
+            return
+        if self._selected in self._expanded:
+            self._expanded.remove(self._selected)
+        else:
+            self._expanded.add(self._selected)
+        self._render_patch()
+
+    async def action_export_patch(self) -> None:
+        patch = self._patch
+        status = self.query_one("#changes-status", Static)
+        if patch is None:
+            status.update("当前没有可导出的完整补丁。")
+            return
+        try:
+            with NamedTemporaryFile(
+                mode="wb",
+                prefix="traceh-patch-",
+                suffix=".patch",
+                delete=False,
+            ) as handle:
+                handle.write(patch.content)
+                self._export_path = Path(handle.name)
+        except Exception:
+            status.update("完整补丁导出失败。")
+            return
+        status.update(_safe_full_line(str(self._export_path)))
+
+    async def action_back(self) -> None:
+        await self.dismiss()
+
+
 def _usage_text(role: TaskConversationRole) -> str:
     if role.usage_state == "not_started":
         return "尚无模型调用"
@@ -417,9 +620,142 @@ def _usage_text(role: TaskConversationRole) -> str:
     return f"{prefix}{role.usage_tokens} tok"
 
 
+def _role_header_lines(
+    role: TaskConversationRole,
+    *,
+    expanded: bool,
+    selected: bool,
+    width: int,
+) -> tuple[Text, ...]:
+    left = f"{'▾' if expanded else '▸'} {_safe_full_line(role.role)} "
+    left_width = Text(left).cell_len
+    facts = " · ".join(
+        (
+            f"{role.turns_started}/{role.turns_completed} turns",
+            f"{role.tool_calls} 工具",
+            _usage_text(role),
+            _age_text(role),
+        )
+    )
+    right = " " + facts
+    style = "bold blue" if selected else "dim"
+    if left_width + Text(right).cell_len + 1 <= width:
+        separator = "─" * (width - left_width - Text(right).cell_len)
+        header = Text(left + separator + right, style=style)
+        return (header,)
+
+    role_rows = prefixed_display_lines(
+        _safe_full_line(role.role),
+        width=width,
+        first_prefix=f"{'▾' if expanded else '▸'} ",
+        continuation_prefix="  ",
+    )
+    rendered: list[Text] = []
+    for prefix, segment in role_rows:
+        row = Text(prefix + segment, style=style)
+        if row.cell_len < width:
+            row.append("─" * (width - row.cell_len), style=style)
+        rendered.append(row)
+    for prefix, segment in prefixed_display_lines(
+        facts,
+        width=width,
+        first_prefix="  ",
+        continuation_prefix="  ",
+    ):
+        rendered.append(Text(prefix + segment, style=style))
+    return tuple(rendered)
+
+
+def _short_identifier(value: str, *, max_chars: int = 20) -> str:
+    rendered = _safe_full_line(value)
+    if len(rendered) <= max_chars:
+        return rendered
+    return rendered[: max_chars - 1] + "…"
+
+
+def _collapse_model_blank_lines(content: str) -> str:
+    rendered: list[str] = []
+    previous_blank = False
+    for line in content.split("\n"):
+        blank = not line.strip()
+        if blank and previous_blank:
+            continue
+        rendered.append("" if blank else line)
+        previous_blank = blank
+    return "\n".join(rendered)
+
+
 def _age_text(role: TaskConversationRole) -> str:
     age = role.last_fact_age_seconds
     return "最后事实不可用" if age is None else f"{format_age(age)}前"
 
 
-__all__ = ["ProductIdentityScreen", "TaskConversationScreen"]
+def _safe_full_line(value: str) -> str:
+    limit = max(1, len(value) * 8 + 1)
+    return safe_display_block(
+        value,
+        limit=limit,
+        max_lines=1,
+        line_limit=limit,
+    )
+
+
+def _patch_status_text(status: str) -> str:
+    return {
+        "added": "新增",
+        "modified": "修改",
+        "deleted": "删除",
+        "renamed": "重命名",
+    }.get(status, "状态未知")
+
+
+def _patch_counts(additions: int | None, deletions: int | None) -> str:
+    added = "?" if additions is None else str(additions)
+    deleted = "?" if deletions is None else str(deletions)
+    return f"+{added} −{deleted}"
+
+
+def _patch_line_texts(
+    line: UnifiedDiffLine,
+    *,
+    width: int,
+) -> tuple[Text, ...]:
+    number = line.new_line
+    marker = " "
+    style = "dim"
+    if line.kind is PatchLineKind.ADDITION:
+        marker = "+"
+        style = "green"
+        number = line.new_line
+    elif line.kind is PatchLineKind.DELETION:
+        marker = "-"
+        style = "red"
+        number = line.old_line
+    number_text = "     " if number is None else f"{number:>5}"
+    first_prefix = f"{number_text} {marker} "
+    continuation = " " * Text(first_prefix).cell_len
+    rendered: list[Text] = []
+    for index, (prefix, segment) in enumerate(
+        prefixed_display_lines(
+            _safe_full_line(line.text),
+            width=width,
+            first_prefix=first_prefix,
+            continuation_prefix=continuation,
+        )
+    ):
+        physical = Text()
+        if index == 0:
+            physical.append(prefix[:5], style="dim")
+            physical.append(prefix[5:], style=style)
+        else:
+            physical.append(prefix, style="dim")
+        physical.append(segment, style=style)
+        rendered.append(physical)
+    return tuple(rendered)
+
+
+__all__ = [
+    "ProductChangesScreen",
+    "ProductIdentityScreen",
+    "TaskConversationScreen",
+]

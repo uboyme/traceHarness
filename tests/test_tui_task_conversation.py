@@ -529,6 +529,29 @@ async def _heads(store: StrictReadStore, session_ids: dict[str, str]) -> dict[st
     return {stream: await store.head(stream) for stream in streams}
 
 
+async def _append_coder_turn(
+    fixture: ConversationFixture,
+    *,
+    suffix: str,
+    input_text: str,
+    model_text: str,
+) -> None:
+    session_id = fixture.sessions["coder"]
+    stream = SessionService.session_stream(session_id)
+    head = await fixture.store.head(stream)
+    await fixture.store.append(
+        stream,
+        expected_seq=head,
+        events=_turn_events(
+            session_id,
+            suffix=suffix,
+            base_seq=head,
+            input_text=input_text,
+            model_text=model_text,
+        ),
+    )
+
+
 async def test_projects_exact_router_and_fixed_multi_roles() -> None:
     fixture = await _build_fixture()
 
@@ -550,6 +573,69 @@ async def test_projects_exact_router_and_fixed_multi_roles() -> None:
         assert [kind for kind, _content in role.messages] == ["input", "model"]
         assert role.messages[-1][1] == f"model-output-for-{role.role}"
     assert fixture.store.list_stream_calls == 0
+
+
+async def test_user_and_assistant_messages_have_no_projection_size_caps() -> None:
+    fixture = await _build_fixture()
+    input_lines = [
+        f"release-readiness item {number}: preserve the recorded decision"
+        for number in range(64)
+    ]
+    final_line = "FINAL-RELEASE-DECISION: retain the complete durable explanation"
+    input_text = "\n".join((*input_lines, final_line))
+    model_text = (
+        "Dependency audit result: "
+        + "verified-without-a-regression;" * 350
+        + " all requested checks completed."
+    )
+    assert len(input_text.split("\n")) > 40
+    assert len(model_text) > 4_000
+
+    await _append_coder_turn(
+        fixture,
+        suffix="complete-large-messages",
+        input_text=input_text,
+        model_text=model_text,
+    )
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+
+    assert coder.messages[-2:] == (
+        ("input", input_text),
+        ("model", model_text),
+    )
+    assert coder.messages[-2][1].split("\n")[-1] == final_line
+    assert "more lines omitted" not in coder.messages[-2][1]
+    assert not coder.messages[-1][1].endswith("…")
+
+
+async def test_complete_messages_escape_unsafe_characters_without_truncation() -> None:
+    fixture = await _build_fixture()
+    input_text = "review\x1b[31m\rstatus\x00\u2028paragraph\u2029override\u202eend"
+    model_text = "result-before\x1b[32m\u202e-result-after"
+
+    await _append_coder_turn(
+        fixture,
+        suffix="complete-sanitized-messages",
+        input_text=input_text,
+        model_text=model_text,
+    )
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+
+    assert coder.messages[-2:] == (
+        (
+            "input",
+            "review\\x1b[31m\\rstatus\\0\\u2028paragraph"
+            "\\u2029override\\u202eend",
+        ),
+        ("model", "result-before\\x1b[32m\\u202e-result-after"),
+    )
+    rendered = "\n".join(content for _kind, content in coder.messages[-2:])
+    for unsafe in ("\x1b", "\r", "\x00", "\u2028", "\u2029", "\u202e"):
+        assert unsafe not in rendered
 
 
 async def test_router_session_must_belong_to_the_recorded_router_agent() -> None:

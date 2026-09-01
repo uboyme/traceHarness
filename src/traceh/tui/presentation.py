@@ -77,22 +77,31 @@ class ProductIdentityField:
 def safe_display_block(
     value: object,
     *,
-    limit: int = MAX_BLOCK_CHARS,
-    max_lines: int = MAX_BLOCK_LINES,
+    limit: int | None = MAX_BLOCK_CHARS,
+    max_lines: int | None = MAX_BLOCK_LINES,
+    line_limit: int | None = MAX_LINE_CHARS,
 ) -> str:
-    """Render an untrusted value as bounded plain text."""
+    """Render an untrusted value as safe plain text with optional bounds."""
 
     text = value if type(value) is str else str(value)
     lines = text.split("\n")
-    truncated_lines = len(lines) > max_lines
+    visible_lines = lines if max_lines is None else lines[:max_lines]
+    truncated_lines = max_lines is not None and len(lines) > max_lines
     rendered = [
-        escape_for_display(line, limit=MAX_LINE_CHARS)
-        for line in lines[:max_lines]
+        escape_for_display(
+            line,
+            limit=(
+                line_limit
+                if line_limit is not None
+                else max(1, len(line) * 8 + 1)
+            ),
+        )
+        for line in visible_lines
     ]
     if truncated_lines:
         rendered.append("… (more lines omitted)")
     block = "\n".join(rendered)
-    if len(block) <= limit:
+    if limit is None or len(block) <= limit:
         return block
     return block[: limit - 1] + "…"
 
@@ -791,21 +800,15 @@ def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
     lines.extend(
         (
         f"  审批    {review_id}…  →  {_short_ref(review.target_ref)} @ {revision}…",
-        f"          patch {patch}… · digest {digest_text} · ^p 查看完整身份",
+        f"          patch {patch}… · digest {digest_text}",
         )
     )
     evidence = None if observation.evidence is None else observation.evidence.review
     if evidence is None:
         return tuple(lines)
 
-    visible_paths = evidence.changed_paths[:8]
-    paths = " · ".join(
-        safe_display_block(path, limit=300, max_lines=1) for path in visible_paths
-    )
+    paths = " · ".join(_safe_full_label(path) for path in evidence.changed_paths)
     lines.append(f"  改动    {paths or '无'}")
-    remaining_paths = len(evidence.changed_paths) - len(visible_paths)
-    if remaining_paths:
-        lines.append(f"          其余 {remaining_paths} 个文件")
 
     for index, verifier in enumerate(evidence.verifiers):
         exit_code = "unavailable" if verifier.exit_code is None else str(verifier.exit_code)
@@ -819,17 +822,59 @@ def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
     if not evidence.verifiers:
         lines.append("  校验    未记录")
 
-    preview_lines = evidence.patch_preview.splitlines()
-    lines.append(f"  补丁    {evidence.patch_size_bytes} bytes")
-    lines.extend(
-        f"  {safe_display_block(line, limit=600, max_lines=1)}"
-        for line in preview_lines[:12]
+    summary = evidence.patch_summary
+    file_count = len(evidence.changed_paths)
+    additions = deletions = None
+    if summary is not None:
+        file_count = len(summary.files)
+        additions = summary.additions
+        deletions = summary.deletions
+    lines.append(
+        f"  补丁    {evidence.patch_size_bytes} bytes · {file_count} 文件 · "
+        f"{_change_count('+', additions)} {_change_count('−', deletions)}"
     )
-    if len(preview_lines) > 12 or evidence.patch_preview_truncated:
-        lines.append("  预览已截断；完整 diff 本轮不提供")
-    if evidence.patch_utf8_replaced:
-        lines.append("  预览包含无法解码并已替换的 UTF-8 字节")
+    if summary is None:
+        for path in evidence.changed_paths:
+            lines.append(
+                "          "
+                f"{_safe_full_label(path)}"
+                " · 状态未知"
+            )
+    else:
+        for file in summary.files:
+            path = _safe_full_label(file.path)
+            status = _patch_status_text(file.status)
+            counts = (
+                "二进制"
+                if file.binary
+                else f"{_change_count('+', file.additions)} {_change_count('−', file.deletions)}"
+            )
+            lines.append(f"          {path} · {status} · {counts}")
+    lines.append("          ^d 查看完整改动 · ^p 查看完整身份")
     return tuple(lines)
+
+
+def _change_count(marker: str, value: int | None) -> str:
+    return f"{marker}{'?' if value is None else value}"
+
+
+def _safe_full_label(value: str) -> str:
+    limit = max(1, len(value) * 8 + 1)
+    return safe_display_block(
+        value,
+        limit=limit,
+        max_lines=1,
+        line_limit=limit,
+    )
+
+
+def _patch_status_text(status: str) -> str:
+    return {
+        "added": "新增",
+        "modified": "修改",
+        "deleted": "删除",
+        "renamed": "重命名",
+    }.get(status, "状态未知")
 
 
 def _terminal_line(status: ProductTaskStatus, failure_code: str | None) -> str:

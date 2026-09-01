@@ -245,7 +245,10 @@ class TaskConversationReader:
                     if detail.startswith(" (call "):
                         detail = ""
                     arguments = event.data.get("arguments")
-                    if not detail and isinstance(arguments, dict):
+                    if (
+                        event.data.get("tool_name") == "shell"
+                        and isinstance(arguments, dict)
+                    ):
                         size = len(canonical_json(arguments).encode("utf-8"))
                         detail = f" <已遮蔽 · 参数 {size} 字节>"
                     pending_tools[call_id] = (event.seq, f"{label or '工具'}{detail}")
@@ -254,15 +257,18 @@ class TaskConversationReader:
                 call = pending_tools.pop(call_id, None)
                 if call is not None:
                     first_seq, label = call
-                    status = {
-                        "succeeded": "成功",
-                        "failed": "失败",
-                        "cancelled": "已取消",
-                    }.get(event.data.get("status"), "状态不可用")
                     data = event.data.get("data")
                     exit_code = data.get("exit_code") if isinstance(data, dict) else None
                     if type(exit_code) is int:
-                        status += f" · exit={exit_code}"
+                        status = (
+                            "成功" if exit_code == 0 else f"完成 · exit={exit_code}"
+                        )
+                    else:
+                        status = {
+                            "succeeded": "成功",
+                            "failed": "失败",
+                            "cancelled": "已取消",
+                        }.get(event.data.get("status"), "状态不可用")
                     entries.append(
                         (first_seq, ("tool", f"{label}\t{first_seq}–{event.seq}\n{status}"))
                     )

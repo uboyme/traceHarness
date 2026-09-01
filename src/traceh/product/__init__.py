@@ -8,8 +8,10 @@ and the fixed Workflow definition a receipt is taken from.
 
 F3 adds a thin host assembly over the existing Workflow, Agent, Budget,
 Workspace, Artifact and Promotion services.  It does not move those facts or
-lifecycles into this package; the only model-visible actions create an
-ephemeral proposal/confirmation note which the host verifies after Turn close.
+lifecycles into this package. Model-visible actions create an ephemeral
+proposal/confirmation note which the host verifies after Turn close; a separate
+Session snapshot records only the canonical Product status the requester model
+was shown, never control authority.
 """
 
 from traceh.product.assembly import (
@@ -20,7 +22,12 @@ from traceh.product.assembly import (
     product_routing_operation_id,
     require_assemblable,
 )
+from traceh.product.context import (
+    MAX_PRODUCT_CONTEXT_APPEND_ATTEMPTS,
+    ProductModelContext,
+)
 from traceh.product.errors import (
+    ProductContextError,
     ProductError,
     ProductEvidenceError,
     ProductInputError,
@@ -65,6 +72,7 @@ from traceh.product.observation import (
     ProductObservation,
     ProductObservationReader,
     ProductObservationSession,
+    ProductUsage,
 )
 from traceh.product.projection import (
     ProductTaskIssue,
@@ -110,6 +118,7 @@ from traceh.product.topology import (
 
 __all__ = [
     "MAX_APPEND_ATTEMPTS",
+    "MAX_PRODUCT_CONTEXT_APPEND_ATTEMPTS",
     "MAX_REASON_DISPLAY_CHARS",
     "MAX_ROUTER_SUMMARY_CHARS",
     "PRODUCT_APPROVAL_NODE",
@@ -121,14 +130,17 @@ __all__ = [
     "ProductAssemblyResolver",
     "ProductAssemblyService",
     "ProductChatHost",
+    "ProductContextError",
     "ProductError",
     "ProductEvidenceError",
     "ProductInputError",
     "ProductHostProfile",
     "ProductModeRouter",
+    "ProductModelContext",
     "ProductObservation",
     "ProductObservationReader",
     "ProductObservationSession",
+    "ProductUsage",
     "ProductOperationConflictError",
     "ProductPreflight",
     "ProductProfileBinding",

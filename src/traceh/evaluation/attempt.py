@@ -192,6 +192,7 @@ async def _run_attempt_with_store(
     try:
         host = await build_product_chat_host(
             store=runtime.sessions.store,
+            sessions=runtime.sessions,
             data_dir=request.directory / "pd",
             host_profile=settings.host_profile,
             providers=providers,

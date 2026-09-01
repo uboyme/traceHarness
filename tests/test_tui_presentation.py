@@ -8,7 +8,9 @@ from types import SimpleNamespace
 from unicodedata import combining, east_asian_width
 
 from product_fixtures import ORIGIN_SESSION, preflight, proposal
+from rich.cells import cell_len
 
+from traceh.api.llm import UsageQuality
 from traceh.api.product import (
     ProductTaskStatus,
     ProductTaskSummary,
@@ -22,19 +24,42 @@ from traceh.product.inspection import (
     ProductTaskEvidence,
     ProductVerifierEvidence,
 )
-from traceh.product.observation import ObservedStreamHead, ProductObservation
+from traceh.product.observation import (
+    ObservedStreamHead,
+    ProductObservation,
+    ProductUsage,
+)
 from traceh.tui.presentation import (
     OperationErrorView,
     ProductGateAction,
     TransientProductState,
+    prefixed_display_lines,
     product_compact_text,
     product_identity_fields,
     product_panel_text,
+    product_state_text,
     resolve_gate,
     task_handle,
 )
 
 NOW = datetime(2026, 8, 30, 8, 0, tzinfo=UTC)
+
+
+def test_prefixed_display_lines_wraps_cells_before_reapplying_indent() -> None:
+    lines = prefixed_display_lines(
+        "库存预留abcdefghijk\n第二行",
+        width=18,
+        first_prefix="  ▏ 模型 · ",
+        continuation_prefix="  ▏        ",
+    )
+
+    assert len(lines) >= 3
+    assert lines[0][0] == "  ▏ 模型 · "
+    assert all(prefix == "  ▏        " for prefix, _content in lines[1:])
+    assert all(cell_len(prefix + content) <= 18 for prefix, content in lines)
+    assert "".join(content for _prefix, content in lines) == (
+        "库存预留abcdefghijk第二行"
+    )
 
 
 def _summary(status: ProductTaskStatus) -> ProductTaskSummary:
@@ -216,34 +241,140 @@ def test_start_wait_is_immediate_and_age_advances_without_fake_progress() -> Non
 
 def test_gate_instruction_is_rendered_once_outside_the_summary() -> None:
     request = _start_request()
-    cases = (
-        (TransientProductState("start_request"), None),
-        (
-            TransientProductState("none"),
-            _observation(ProductTaskStatus.COMPLETED, WorkflowStatus.COMPLETED),
+    transient = TransientProductState("start_request")
+    rendered = product_panel_text(
+        product_enabled=True,
+        proposal=request.pending,
+        start_request=request,
+        observation=None,
+        transient=transient,
+        now_monotonic=0.0,
+        observation_received_at=None,
+        operation_error=None,
+        observation_error=None,
+    )
+    gate = resolve_gate(transient, None)
+    assert gate.message
+    assert gate.message not in rendered
+
+    completed = _observation(
+        ProductTaskStatus.COMPLETED,
+        WorkflowStatus.COMPLETED,
+    )
+    completed_panel = product_panel_text(
+        product_enabled=True,
+        proposal=request.pending,
+        start_request=request,
+        observation=completed,
+        transient=TransientProductState("none"),
+        now_monotonic=0.0,
+        observation_received_at=None,
+        operation_error=None,
+        observation_error=None,
+    )
+    completed_gate = resolve_gate(TransientProductState("none"), completed)
+    assert completed_gate.actions == ()
+    assert completed_gate.message == ""
+    assert completed_panel.count("已合入 · Promotion receipt 已记录") == 1
+    assert "任务已经到达 durable 终态" not in completed_panel
+    assert "完成：Promotion receipt 已记录" not in completed_panel
+
+
+def test_durable_usage_is_rendered_without_a_local_clock_estimate() -> None:
+    observation = replace(
+        _observation(
+            ProductTaskStatus.AWAITING_APPROVAL,
+            WorkflowStatus.AWAITING_APPROVAL,
+        ),
+        usage=ProductUsage(
+            tokens=34_840,
+            token_quality=UsageQuality.EXACT,
+            steps=2,
+            wall_milliseconds=192_000,
         ),
     )
-    for transient, observation in cases:
-        rendered = product_panel_text(
+
+    rendered = []
+    for now in (0.0, 99_999.0):
+        rendered.append(
+            product_panel_text(
+                product_enabled=True,
+                proposal=None,
+                start_request=None,
+                observation=observation,
+                transient=TransientProductState("none"),
+                now_monotonic=now,
+                observation_received_at=0.0,
+                operation_error=None,
+                observation_error=None,
+            )
+        )
+    usage_line = "用量   34840 tok · 2 步 · 用时 3 分 12 秒"
+    assert all(usage_line in panel for panel in rendered)
+
+    unavailable = product_panel_text(
+        product_enabled=True,
+        proposal=None,
+        start_request=None,
+        observation=replace(observation, usage=None),
+        transient=TransientProductState("none"),
+        now_monotonic=0.0,
+        observation_received_at=None,
+        operation_error=None,
+        observation_error=None,
+    )
+    assert "用量   — tok · — 步 · 用时 —" in unavailable
+    assert "用量   0 tok" not in unavailable
+
+
+def test_terminal_lifecycle_track_alone_is_muted() -> None:
+    for status in (
+        ProductTaskStatus.COMPLETED,
+        ProductTaskStatus.REJECTED,
+        ProductTaskStatus.CANCELLED,
+        ProductTaskStatus.FAILED,
+        ProductTaskStatus.ABANDONED,
+    ):
+        panel = product_panel_text(
             product_enabled=True,
-            proposal=request.pending,
-            start_request=request,
-            observation=observation,
-            transient=transient,
+            proposal=None,
+            start_request=None,
+            observation=_observation(status, None),
+            transient=TransientProductState("none"),
             now_monotonic=0.0,
             observation_received_at=None,
             operation_error=None,
             observation_error=None,
         )
-        gate = resolve_gate(transient, observation)
-        assert gate.message
-        assert gate.message not in rendered
-        visible_lines = [
-            line
-            for line in (*rendered.splitlines(), *gate.message.splitlines())
-            if line.strip() and set(line.strip()) != {"─"}
-        ]
-        assert len(visible_lines) == len(set(visible_lines))
+        rendered = product_state_text(panel, terminal=True)
+        assert len(rendered.spans) == 1
+        span = rendered.spans[0]
+        assert span.style == "dim"
+        assert rendered.plain[span.start : span.end].startswith("进程内 ")
+        assert "┊ durable " in rendered.plain[span.start : span.end]
+        assert not (
+            span.start
+            <= rendered.plain.index("证据")
+            < span.end
+        )
+        if status is not ProductTaskStatus.COMPLETED:
+            assert "已合入 · Promotion receipt 已记录" not in rendered.plain
+
+    active = product_panel_text(
+        product_enabled=True,
+        proposal=None,
+        start_request=None,
+        observation=_observation(
+            ProductTaskStatus.STARTED,
+            WorkflowStatus.RUNNING,
+        ),
+        transient=TransientProductState("none"),
+        now_monotonic=0.0,
+        observation_received_at=None,
+        operation_error=None,
+        observation_error=None,
+    )
+    assert product_state_text(active, terminal=False).spans == []
 
 
 def test_recent_fact_columns_are_fixed_and_product_role_prefix_is_shortened() -> None:
@@ -586,6 +717,7 @@ def test_review_evidence_is_bounded_without_hiding_omission() -> None:
     assert preview_lines[12] not in rendered
     assert preview_lines[13] not in rendered
     assert "补丁    12345 bytes" in rendered
+    assert rendered.count("^p 查看完整身份") == 1
     assert "预览已截断" in rendered
     lines = rendered.splitlines()
     separators = [

@@ -16,6 +16,10 @@ from traceh.api.llm import (
     model_attempt_reservation_id,
 )
 from traceh.session.plugin_identity import validate_plugin_identity_events
+from traceh.session.product_context import (
+    PRODUCT_CONTEXT_SNAPSHOT,
+    parse_product_context_snapshot,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +88,7 @@ class CoreInvariantChecker:
         request_snapshots: dict[int, EventEnvelope] = {}
         snapshot_steps: dict[tuple[str, str], list[int]] = {}
         attempt_ordinals: dict[tuple[str, str], list[int]] = {}
+        product_contexts: dict[tuple[int, int], str] = {}
 
         for event in session_events:
             if event.seq != expected_seq:
@@ -96,6 +101,30 @@ class CoreInvariantChecker:
                 )
                 expected_seq = event.seq
             expected_seq += 1
+
+            if event.type == PRODUCT_CONTEXT_SNAPSHOT:
+                try:
+                    context = parse_product_context_snapshot(event)
+                except (TypeError, ValueError):
+                    violations.append(
+                        InvariantViolation(
+                            "product-context-snapshot",
+                            "model-visible Product context is not canonical",
+                            event.seq,
+                        )
+                    )
+                else:
+                    previous = product_contexts.setdefault(
+                        context.order_key, context.context_id
+                    )
+                    if previous != context.context_id:
+                        violations.append(
+                            InvariantViolation(
+                                "product-context-order-unique",
+                                "one Product context order names conflicting heads",
+                                event.seq,
+                            )
+                        )
 
             if event.type == "surface/replace":
                 raw_source_seqs = event.data.get("source_seqs", [])

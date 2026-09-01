@@ -19,6 +19,7 @@ from traceh.api.json_types import JsonValue
 from traceh.api.product import RequestedTaskMode
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.turns import TurnInput
+from traceh.product.context import ProductModelContext
 from traceh.product.control import (
     PendingProductProposal,
     ProductAdvanceResult,
@@ -243,6 +244,7 @@ class ProductChatSurface:
         "_approver_id",
         "_control",
         "_evidence",
+        "_model_context",
     )
 
     def __init__(
@@ -250,6 +252,7 @@ class ProductChatSurface:
         control: ProductTaskControlPlane,
         actions: ProductTurnActions,
         evidence: ProductInspectionEvidenceReader,
+        model_context: ProductModelContext,
         *,
         approver_id: str,
     ) -> None:
@@ -259,12 +262,19 @@ class ProductChatSurface:
             raise ProductInputError("product-approver-invalid", "approver_id")
         if type(evidence) is not ProductInspectionEvidenceReader:
             raise ProductInputError("product-inspection-invalid", "evidence")
+        if type(model_context) is not ProductModelContext:
+            raise ProductInputError("product-context-invalid", "model_context")
         self._control = control
         self._actions = actions
         self._evidence = evidence
+        self._model_context = model_context
         self._approver_id = approver_id
 
     async def prepare_turn(self, session_id: str, text: str) -> ProductChatTurn:
+        # Freeze the latest canonical ProductTask head before AgentLoop records
+        # the new Turn. RequestBuilder and recovery can then reconstruct the
+        # exact model Surface without a request-time cross-stream join.
+        await self._model_context.synchronize(session_id)
         pending = await self._control.pending_proposal(session_id)
         return ProductChatTurn(
             TurnInput(content=text, message_id=str(uuid4()), source="user"),

@@ -11,17 +11,26 @@ from dataclasses import dataclass
 from enum import StrEnum
 from unicodedata import combining, east_asian_width
 
+from rich.cells import cell_len, chop_cells, set_cell_size
+from rich.text import Text
+
+from traceh.api.llm import UsageQuality
 from traceh.api.product import ProductTaskStatus, RequestedTaskMode
 from traceh.api.workflow import WorkflowStatus
 from traceh.cli.command_line import escape_for_display
 from traceh.product.chat import ProductStartRequest
 from traceh.product.control import PendingProductProposal
-from traceh.product.observation import ObservedStreamHead, ProductObservation
+from traceh.product.observation import (
+    ObservedStreamHead,
+    ProductObservation,
+    ProductUsage,
+)
 
 MAX_BLOCK_CHARS = 12_000
 MAX_BLOCK_LINES = 160
 MAX_LINE_CHARS = 800
 STALL_WARNING_SECONDS = 20
+MODEL_SELF_REPORT_COLOR = "#7d6bab"
 _GROUP_SEPARATOR = "─" * 44
 
 
@@ -86,6 +95,38 @@ def safe_display_block(
     if len(block) <= limit:
         return block
     return block[: limit - 1] + "…"
+
+
+def prefixed_display_lines(
+    content: str,
+    *,
+    width: int,
+    first_prefix: str,
+    continuation_prefix: str | None = None,
+) -> tuple[tuple[str, str], ...]:
+    """Wrap plain text to terminal cells before applying stable prefixes."""
+
+    continuation = (
+        " " * cell_len(first_prefix)
+        if continuation_prefix is None
+        else continuation_prefix
+    )
+    requested_prefix_width = max(
+        cell_len(first_prefix),
+        cell_len(continuation),
+    )
+    content_width = max(1, width - requested_prefix_width)
+    prefix_width = max(0, width - content_width)
+    first = set_cell_size(first_prefix, prefix_width)
+    following = set_cell_size(continuation, prefix_width)
+
+    rendered: list[tuple[str, str]] = []
+    for physical_line in content.split("\n"):
+        segments = chop_cells(physical_line, content_width) or [""]
+        for segment in segments:
+            prefix = first if not rendered else following
+            rendered.append((prefix, segment))
+    return tuple(rendered)
 
 
 def resolve_gate(
@@ -155,7 +196,7 @@ def resolve_gate(
         ProductTaskStatus.FAILED,
         ProductTaskStatus.ABANDONED,
     }:
-        return GateDecision(message="任务已经到达 durable 终态。")
+        return GateDecision()
     return _unknown_gate(transient, product, workflow)
 
 
@@ -221,7 +262,7 @@ def product_panel_text(
         _lifecycle(pending, start_request, observation, transient),
     ]
     facts = ["最近 durable 事实"]
-    evidence = ["证据", "  尚未建立"]
+    evidence = list(_review_lines(observation))
     terminal: list[str] = []
 
     if transient.kind == "operation_pending":
@@ -277,9 +318,6 @@ def product_panel_text(
                     "对账是显式写操作，不会由刷新偷偷执行。",
                 )
             )
-        review_lines = _review_lines(observation)
-        if review_lines:
-            evidence = list(review_lines)
         summary = observation.summary
         if summary is not None and summary.settled:
             leaf = _leaf_failure_line(observation)
@@ -290,6 +328,19 @@ def product_panel_text(
         facts.append("  尚无 durable 事实")
 
     return _panel_groups(header, facts, evidence, terminal)
+
+
+def product_state_text(content: object, *, terminal: bool) -> Text:
+    """Return safe Product text with only a terminal lifecycle track muted."""
+
+    rendered = safe_display_block(content)
+    text = Text(rendered)
+    if not terminal:
+        return text
+    span = _lifecycle_span(rendered)
+    if span is not None:
+        text.stylize("dim", *span)
+    return text
 
 
 def _panel_groups(*groups: list[str]) -> str:
@@ -721,10 +772,13 @@ def _find_head(
     )
 
 
-def _review_lines(observation: ProductObservation) -> tuple[str, ...]:
-    review = observation.review
+def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
+    usage = None if observation is None else observation.usage
+    lines = ["证据", _usage_line(usage)]
+    review = None if observation is None else observation.review
     if review is None:
-        return ()
+        lines.append("  尚未建立")
+        return tuple(lines)
     digest = observation.approval_digest
     review_id = safe_display_block(review.review_id[:12], limit=24)
     revision = safe_display_block(review.expected_revision[:12], limit=24)
@@ -734,11 +788,12 @@ def _review_lines(observation: ProductObservation) -> tuple[str, ...]:
         if digest is None
         else safe_display_block(digest[:12], limit=24) + "…"
     )
-    lines = [
-        "证据",
+    lines.extend(
+        (
         f"  审批    {review_id}…  →  {_short_ref(review.target_ref)} @ {revision}…",
         f"          patch {patch}… · digest {digest_text} · ^p 查看完整身份",
-    ]
+        )
+    )
     evidence = None if observation.evidence is None else observation.evidence.review
     if evidence is None:
         return tuple(lines)
@@ -765,7 +820,7 @@ def _review_lines(observation: ProductObservation) -> tuple[str, ...]:
         lines.append("  校验    未记录")
 
     preview_lines = evidence.patch_preview.splitlines()
-    lines.append(f"  补丁    {evidence.patch_size_bytes} bytes · ^p 查看完整身份")
+    lines.append(f"  补丁    {evidence.patch_size_bytes} bytes")
     lines.extend(
         f"  {safe_display_block(line, limit=600, max_lines=1)}"
         for line in preview_lines[:12]
@@ -779,7 +834,7 @@ def _review_lines(observation: ProductObservation) -> tuple[str, ...]:
 
 def _terminal_line(status: ProductTaskStatus, failure_code: str | None) -> str:
     if status is ProductTaskStatus.COMPLETED:
-        return "完成：Promotion receipt 已记录。"
+        return "已合入 · Promotion receipt 已记录"
     if status is ProductTaskStatus.FAILED:
         code = failure_code or "product-task-failed"
         return (
@@ -787,6 +842,46 @@ def _terminal_line(status: ProductTaskStatus, failure_code: str | None) -> str:
             "查看证据后创建新任务。"
         )
     return f"任务终态：{status.value}。"
+
+
+def _usage_line(usage: ProductUsage | None) -> str:
+    tokens = "—"
+    steps = "—"
+    elapsed = "—"
+    if usage is not None:
+        if usage.tokens is not None:
+            prefix = "约 " if usage.token_quality is UsageQuality.ESTIMATED else ""
+            tokens = f"{prefix}{usage.tokens}"
+        if usage.steps is not None:
+            steps = str(usage.steps)
+        if usage.wall_milliseconds is not None:
+            elapsed = _format_duration(usage.wall_milliseconds)
+    return f"  用量   {tokens} tok · {steps} 步 · 用时 {elapsed}"
+
+
+def _format_duration(milliseconds: int) -> str:
+    if milliseconds == 0:
+        return "0 秒"
+    if milliseconds < 1_000:
+        return "<1 秒"
+    return format_age(milliseconds // 1_000)
+
+
+def _lifecycle_span(rendered: str) -> tuple[int, int] | None:
+    lines = rendered.splitlines(keepends=True)
+    if len(lines) >= 4:
+        lifecycle = lines[3].rstrip("\r\n")
+        if lifecycle.startswith("进程内 ") and "┊ durable " in lifecycle:
+            start = sum(len(line) for line in lines[:3])
+            return start, start + len(lifecycle)
+    if lines:
+        first = lines[0].rstrip("\r\n")
+        marker = " · 进程内 "
+        marker_at = first.rfind(marker)
+        if marker_at >= 0 and "┊ durable " in first[marker_at:]:
+            start = marker_at + len(" · ")
+            return start, len(first)
+    return None
 
 
 def _leaf_failure_line(observation: ProductObservation | None) -> str:
@@ -878,6 +973,7 @@ __all__ = [
     "MAX_BLOCK_CHARS",
     "MAX_BLOCK_LINES",
     "MAX_LINE_CHARS",
+    "MODEL_SELF_REPORT_COLOR",
     "STALL_WARNING_SECONDS",
     "GateDecision",
     "OperationErrorView",
@@ -891,5 +987,6 @@ __all__ = [
     "product_panel_text",
     "resolve_gate",
     "safe_display_block",
+    "prefixed_display_lines",
     "task_handle",
 ]

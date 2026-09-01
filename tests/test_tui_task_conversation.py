@@ -109,6 +109,9 @@ def _turn_events(
     model_text: str,
     usage_quality: str = "exact",
     with_shell: bool = False,
+    with_list_files: bool = False,
+    with_search_text: bool = False,
+    shell_exit_code: int | None = None,
 ) -> tuple[PendingEvent, ...]:
     turn_id = f"turn-{suffix}"
     step_id = f"step-{suffix}"
@@ -128,6 +131,22 @@ def _turn_events(
                 "arguments": {
                     "command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"
                 },
+            }
+        )
+    if with_list_files:
+        tool_calls.append(
+            {
+                "id": f"call-list-files-{suffix}",
+                "name": "list_files",
+                "arguments": {},
+            }
+        )
+    if with_search_text:
+        tool_calls.append(
+            {
+                "id": f"call-search-text-{suffix}",
+                "name": "search_text",
+                "arguments": {"query": "reservation_handler", "path": "src"},
             }
         )
     events = [
@@ -205,6 +224,11 @@ def _turn_events(
         ),
     ]
     if with_shell:
+        result_data = (
+            {}
+            if shell_exit_code is None
+            else {"data": {"exit_code": shell_exit_code}}
+        )
         events.extend(
             (
                 PendingEvent(
@@ -228,6 +252,62 @@ def _turn_events(
                         "tool_name": "shell",
                         "status": "succeeded",
                         "content": "SECRET-IN-RESULT\x1b[32m\u2028\u202e",
+                        **result_data,
+                    },
+                ),
+            )
+        )
+    if with_list_files:
+        events.extend(
+            (
+                PendingEvent(
+                    "tool/call",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": step_id,
+                        "tool_call_id": f"call-list-files-{suffix}",
+                        "tool_name": "list_files",
+                        "arguments": {},
+                    },
+                ),
+                PendingEvent(
+                    "tool/result",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": step_id,
+                        "tool_call_id": f"call-list-files-{suffix}",
+                        "tool_name": "list_files",
+                        "status": "succeeded",
+                        "content": "[]",
+                    },
+                ),
+            )
+        )
+    if with_search_text:
+        events.extend(
+            (
+                PendingEvent(
+                    "tool/call",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": step_id,
+                        "tool_call_id": f"call-search-text-{suffix}",
+                        "tool_name": "search_text",
+                        "arguments": {
+                            "query": "reservation_handler",
+                            "path": "src",
+                        },
+                    },
+                ),
+                PendingEvent(
+                    "tool/result",
+                    {
+                        "turn_id": turn_id,
+                        "step_id": step_id,
+                        "tool_call_id": f"call-search-text-{suffix}",
+                        "tool_name": "search_text",
+                        "status": "succeeded",
+                        "content": "src/module.py:1: reservation_handler",
                     },
                 ),
             )
@@ -281,6 +361,9 @@ async def _append_session(
     role: str,
     usage_quality: str = "exact",
     with_shell: bool = False,
+    with_list_files: bool = False,
+    with_search_text: bool = False,
+    shell_exit_code: int | None = None,
 ) -> None:
     stream = SessionService.session_stream(session_id)
     await store.append(
@@ -309,6 +392,9 @@ async def _append_session(
             model_text=f"model-output-for-{role}",
             usage_quality=usage_quality,
             with_shell=with_shell,
+            with_list_files=with_list_files,
+            with_search_text=with_search_text,
+            shell_exit_code=shell_exit_code,
         ),
     )
 
@@ -317,6 +403,9 @@ async def _build_fixture(
     *,
     coder_usage_quality: str = "exact",
     coder_shell: bool = False,
+    coder_list_files: bool = False,
+    coder_search_text: bool = False,
+    coder_shell_exit_code: int | None = None,
 ) -> ConversationFixture:
     store = StrictReadStore()
     identities = {
@@ -343,6 +432,17 @@ async def _build_fixture(
                 coder_usage_quality if role == ProductRole.CODER.value else "exact"
             ),
             with_shell=coder_shell and role == ProductRole.CODER.value,
+            with_list_files=(
+                coder_list_files and role == ProductRole.CODER.value
+            ),
+            with_search_text=(
+                coder_search_text and role == ProductRole.CODER.value
+            ),
+            shell_exit_code=(
+                coder_shell_exit_code
+                if role == ProductRole.CODER.value
+                else None
+            ),
         )
 
     summary = ProductTaskSummary(
@@ -545,6 +645,53 @@ async def test_shell_arguments_and_tool_result_content_are_never_exposed() -> No
     assert "\x1b" not in rendered
     assert "\u2028" not in rendered
     assert "\u202e" not in rendered
+
+
+async def test_empty_non_shell_arguments_do_not_claim_sensitive_masking() -> None:
+    fixture = await _build_fixture(coder_list_files=True)
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+    rendered = "\n".join(content for _kind, content in coder.messages)
+
+    assert "list_files\t9–10\n成功" in rendered
+    assert "已遮蔽" not in rendered
+
+
+async def test_search_text_keeps_its_safe_query_in_the_task_summary() -> None:
+    fixture = await _build_fixture(coder_search_text=True)
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+    rendered = "\n".join(content for _kind, content in coder.messages)
+
+    assert "search_text reservation_handler\t9–10\n成功" in rendered
+    assert "path" not in rendered
+
+
+@pytest.mark.parametrize(
+    ("exit_code", "expected", "forbidden"),
+    (
+        (0, "\n成功", "成功 · exit=0"),
+        (1, "\n完成 · exit=1", "成功 · exit=1"),
+    ),
+)
+async def test_shell_exit_code_controls_truthful_result_wording(
+    exit_code: int,
+    expected: str,
+    forbidden: str,
+) -> None:
+    fixture = await _build_fixture(
+        coder_shell=True,
+        coder_shell_exit_code=exit_code,
+    )
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+    rendered = "\n".join(content for _kind, content in coder.messages)
+
+    assert expected in rendered
+    assert forbidden not in rendered
 
 
 async def test_unrelated_sessions_are_not_scanned_or_projected() -> None:

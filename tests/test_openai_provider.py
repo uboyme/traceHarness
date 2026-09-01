@@ -96,7 +96,11 @@ async def test_openai_compatible_provider_serializes_tools_and_parses_calls() ->
                 provider=provider.name,
                 model="test-model",
                 system_prompt="system",
-                messages=(ModelMessage("user", "read it"),),
+                messages=(
+                    ModelMessage("system", "current host state"),
+                    ModelMessage("assistant", "outdated conversation state"),
+                    ModelMessage("user", "read it"),
+                ),
                 tools=(
                     ToolSchema(
                         "read_file",
@@ -116,7 +120,12 @@ async def test_openai_compatible_provider_serializes_tools_and_parses_calls() ->
         server.server_close()
 
     assert captured["model"] == "test-model"
-    assert captured["messages"][0] == {"role": "system", "content": "system"}  # type: ignore[index]
+    assert captured["messages"] == [
+        {"role": "system", "content": "system"},
+        {"role": "system", "content": "current host state"},
+        {"role": "assistant", "content": "outdated conversation state"},
+        {"role": "user", "content": "read it"},
+    ]
     assert captured["tools"][0]["function"]["name"] == "read_file"  # type: ignore[index]
     assert response.tool_calls[0].arguments == {"path": "a.py"}
     assert response.usage.total_tokens == 14

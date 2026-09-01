@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.events import Resize
 from textual.screen import Screen
 from textual.widgets import Footer, RichLog, Static
 
@@ -15,8 +16,10 @@ from traceh.product.chat import ProductStartRequest
 from traceh.product.control import PendingProductProposal
 from traceh.product.observation import ProductObservationReader
 from traceh.tui.presentation import (
+    MODEL_SELF_REPORT_COLOR,
     ProductIdentityField,
     format_age,
+    prefixed_display_lines,
     product_identity_fields,
     safe_display_block,
 )
@@ -89,7 +92,12 @@ class TaskConversationScreen(Screen[None]):
         if default is not None:
             self._selected = default
             self._expanded = {default}
-        self._render_snapshot()
+        self.call_after_refresh(self._render_snapshot)
+
+    async def on_resize(self, event: Resize) -> None:
+        del event
+        if self._snapshot is not None:
+            self.call_after_refresh(self._render_snapshot)
 
     def _show_unavailable(self, message: str) -> None:
         log = self.query_one("#task-conversation-log", RichLog)
@@ -128,18 +136,90 @@ class TaskConversationScreen(Screen[None]):
                     if kind == "tool":
                         first, result = content.split("\n", 1)
                         label, suffix = first.rsplit("\t", 1)
-                        line = Text(f"    │ 工具 · {label}", style="blue")
-                        line.append(
-                            " " * max(1, self.size.width - line.cell_len - len(suffix) - 7)
+                        marker = "    ▏ "
+                        label_prefix = "工具 · "
+                        width = max(
+                            1,
+                            log.content_region.width
+                            - log.styles.scrollbar_size_vertical,
                         )
-                        line.append(suffix, style="dim")
-                        log.write(line)
-                        log.write(Text(f"    │      └ {result}", style="dim"))
+                        wrapped = prefixed_display_lines(
+                            label,
+                            width=width,
+                            first_prefix=marker + label_prefix,
+                            continuation_prefix=(
+                                marker + " " * Text(label_prefix).cell_len
+                            ),
+                        )
+                        for line_index, (prefix, segment) in enumerate(wrapped):
+                            line = Text()
+                            line.append(marker, style="blue")
+                            line.append(prefix[len(marker) :] + segment)
+                            suffix_width = Text(suffix).cell_len
+                            if (
+                                line_index == 0
+                                and len(wrapped) == 1
+                                and line.cell_len + 1 + suffix_width <= width
+                            ):
+                                line.append(" " * (width - line.cell_len - suffix_width))
+                                line.append(suffix, style="dim")
+                            log.write(line, width=max(1, line.cell_len))
+                        result_prefix = "     └ "
+                        for prefix, segment in prefixed_display_lines(
+                            result,
+                            width=width,
+                            first_prefix=marker + result_prefix,
+                            continuation_prefix=(
+                                marker + " " * Text(result_prefix).cell_len
+                            ),
+                        ):
+                            result_line = Text()
+                            result_line.append(marker, style="blue")
+                            result_line.append(prefix[len(marker) :], style="dim")
+                            result_line.append(
+                                segment,
+                                style=(
+                                    "yellow"
+                                    if result.startswith("完成 · exit=")
+                                    else "dim"
+                                ),
+                            )
+                            log.write(
+                                result_line,
+                                width=max(1, result_line.cell_len),
+                            )
                         continue
-                    prefix = "    模型自述（非宿主证据） · " if kind == "model" else "    输入 · "
-                    log.write(
-                        Text.assemble(prefix, (content, "dim italic" if kind == "model" else ""))
+                    width = max(
+                        1,
+                        log.content_region.width - log.styles.scrollbar_size_vertical,
                     )
+                    if kind == "model":
+                        marker = "    ▏ "
+                        label = "模型自述（非宿主证据） · "
+                        lines = prefixed_display_lines(
+                            content,
+                            width=width,
+                            first_prefix=marker + label,
+                            continuation_prefix=(
+                                marker + " " * Text(label).cell_len
+                            ),
+                        )
+                        for prefix, segment in lines:
+                            line = Text()
+                            line.append(prefix[: len(marker)], style="dim")
+                            line.append(
+                                prefix[len(marker) :] + segment,
+                                style=f"italic {MODEL_SELF_REPORT_COLOR}",
+                            )
+                            log.write(line, width=max(1, line.cell_len))
+                        continue
+                    for prefix, segment in prefixed_display_lines(
+                        content,
+                        width=width,
+                        first_prefix="    输入 · ",
+                    ):
+                        line = Text(prefix + segment)
+                        log.write(line, width=max(1, line.cell_len))
                 if omitted:
                     tools = sum(kind == "tool" for kind, _content in omitted)
                     speeches = len(omitted) - tools

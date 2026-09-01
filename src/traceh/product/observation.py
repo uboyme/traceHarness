@@ -18,8 +18,13 @@ import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from traceh.agents.directory import AgentDirectoryReader
+from traceh.agents.directory import AgentDirectory
 from traceh.agents.identity import AGENT_DIRECTORY_STREAM
+from traceh.api.budgets import (
+    BudgetAccount,
+    BudgetUsageReservationStatus,
+)
+from traceh.api.llm import UsageQuality
 from traceh.api.product import (
     PRODUCT_TASK_COHERENT_WORKFLOW,
     ProductTaskStatus,
@@ -29,9 +34,15 @@ from traceh.api.promotion import PatchApproval, PatchPromotion, PatchReviewRepor
 from traceh.api.workflow import WorkflowRun, WorkflowStatus
 from traceh.artifacts.catalog import PatchArtifactCatalogReader
 from traceh.artifacts.events import ARTIFACT_CATALOG_STREAM
+from traceh.budgets.projection import (
+    BUDGET_LEDGER_STREAM,
+    BudgetLedger,
+    BudgetLedgerReader,
+)
 from traceh.concurrency import await_worker_convergence, combine_failures
 from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.events import product_task_stream, require_product_identifier
+from traceh.product.execution import product_task_owner_id
 from traceh.product.inspection import (
     ProductInspectionEvidenceReader,
     ProductTaskEvidence,
@@ -46,6 +57,7 @@ from traceh.promotion.models import expected_approval_digest
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.session.event_feed import EventFeed, EventSubscription
 from traceh.session.event_store import EventStore
+from traceh.supervision.lifecycle import AgentOwnershipGraph
 from traceh.workflow.events import workflow_stream_id
 from traceh.workflow.projection import WorkflowStreamReader
 
@@ -62,6 +74,16 @@ class ObservedStreamHead:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductUsage:
+    """Durable Budget usage for one ProductTask ownership subtree."""
+
+    tokens: int | None
+    token_quality: UsageQuality | None
+    steps: int | None
+    wall_milliseconds: int | None
+
+
+@dataclass(frozen=True, slots=True)
 class ProductObservation:
     """One fresh UI read with Product and Workflow states kept separate."""
 
@@ -75,6 +97,7 @@ class ProductObservation:
     approval_digest: str | None
     stream_heads: tuple[ObservedStreamHead, ...]
     observed_at: datetime
+    usage: ProductUsage | None = None
 
     @property
     def product_status(self) -> ProductTaskStatus | None:
@@ -102,7 +125,7 @@ class ProductObservationReader:
 
     __slots__ = (
         "_artifacts",
-        "_directory",
+        "_budgets",
         "_evidence",
         "_promotion_target_id",
         "_promotions",
@@ -127,7 +150,7 @@ class ProductObservationReader:
         )
         self._tasks = ProductTaskStreamReader(store)
         self._workflow = WorkflowStreamReader(store)
-        self._directory = AgentDirectoryReader(store)
+        self._budgets = BudgetLedgerReader(store)
         self._artifacts = PatchArtifactCatalogReader(store)
         self._promotions = PromotionLedgerReader(store)
 
@@ -153,7 +176,7 @@ class ProductObservationReader:
         # These global readers are intentionally fresh even when this task has
         # not reached the corresponding phase.  A corrupt related fact source
         # is unavailable, not something the UI may hide until a button is used.
-        await self._directory.load()
+        budget_ledger, directory = await self._budgets.load_context()
         await self._artifacts.load()
         ledger = await self._promotions.load()
 
@@ -202,6 +225,7 @@ class ProductObservationReader:
             workflow_stream_id(task_id),
             AGENT_DIRECTORY_STREAM,
             ARTIFACT_CATALOG_STREAM,
+            BUDGET_LEDGER_STREAM,
             PROMOTION_LEDGER_STREAM,
         }
         if summary is not None:
@@ -218,11 +242,13 @@ class ProductObservationReader:
         projected_heads = {
             product_task_stream(task_id): 0 if summary is None else summary.head_seq,
             workflow_stream_id(task_id): 0 if workflow is None else workflow.head_seq,
+            BUDGET_LEDGER_STREAM: budget_ledger.head_seq,
         }
         heads_list: list[ObservedStreamHead] = []
         global_streams = {
             AGENT_DIRECTORY_STREAM,
             ARTIFACT_CATALOG_STREAM,
+            BUDGET_LEDGER_STREAM,
             PROMOTION_LEDGER_STREAM,
         }
         for stream_id in sorted(streams):
@@ -251,6 +277,7 @@ class ProductObservationReader:
             ),
             stream_heads=heads,
             observed_at=datetime.now(UTC),
+            usage=_product_usage(budget_ledger, directory, task_id),
         )
 
     async def _stream_head(
@@ -441,8 +468,113 @@ def _initial_streams(task_id: str) -> tuple[str, ...]:
         workflow_stream_id(task_id),
         AGENT_DIRECTORY_STREAM,
         ARTIFACT_CATALOG_STREAM,
+        BUDGET_LEDGER_STREAM,
         PROMOTION_LEDGER_STREAM,
     )
+
+
+def _product_usage(
+    ledger: BudgetLedger,
+    directory: AgentDirectory,
+    task_id: str,
+) -> ProductUsage:
+    """Project usage only from the task's durable ownership/Budget subtree."""
+
+    members = AgentOwnershipGraph(directory).subtree_postorder(
+        product_task_owner_id(task_id)
+    )
+    accounts = tuple(ledger.account(agent_id) for agent_id in members)
+    if not members or any(account is None for account in accounts):
+        return ProductUsage(None, None, None, None)
+    complete_accounts = tuple(
+        account for account in accounts if account is not None
+    )
+    member_ids = frozenset(members)
+
+    tokens = _charged_dimension(
+        complete_accounts,
+        limit_field="max_tokens",
+        amount_field="tokens",
+    )
+    token_quality: UsageQuality | None = None
+    if tokens is not None:
+        token_qualities: list[UsageQuality] = []
+        unavailable = False
+        for charge in ledger.charges:
+            if charge.agent_id not in member_ids or not charge.amounts.tokens:
+                continue
+            quality = charge.usage_quality
+            if quality in {None, UsageQuality.UNKNOWN}:
+                unavailable = True
+                break
+            token_qualities.append(quality)
+        if not unavailable:
+            for reservation in ledger.usage_reservations:
+                if (
+                    reservation.agent_id not in member_ids
+                    or not reservation.amounts.tokens
+                ):
+                    continue
+                if reservation.status in {
+                    BudgetUsageReservationStatus.PENDING,
+                    BudgetUsageReservationStatus.STARTED,
+                }:
+                    unavailable = True
+                    break
+                if reservation.status is BudgetUsageReservationStatus.RELEASED:
+                    continue
+                quality = reservation.usage_quality
+                if (
+                    reservation.settled_amounts is None
+                    or quality in {None, UsageQuality.UNKNOWN}
+                ):
+                    unavailable = True
+                    break
+                token_qualities.append(quality)
+        if unavailable:
+            tokens = None
+        else:
+            token_quality = (
+                UsageQuality.ESTIMATED
+                if UsageQuality.ESTIMATED in token_qualities
+                else UsageQuality.EXACT
+            )
+
+    steps = _charged_dimension(
+        complete_accounts,
+        limit_field="max_steps",
+        amount_field="steps",
+    )
+    wall_milliseconds = _charged_dimension(
+        complete_accounts,
+        limit_field="max_wall_milliseconds",
+        amount_field="wall_milliseconds",
+    )
+    if wall_milliseconds is not None and any(
+        reservation.agent_id in member_ids
+        and reservation.amounts.wall_milliseconds
+        and reservation.status
+        in {
+            BudgetUsageReservationStatus.PENDING,
+            BudgetUsageReservationStatus.STARTED,
+        }
+        for reservation in ledger.usage_reservations
+    ):
+        wall_milliseconds = None
+    return ProductUsage(tokens, token_quality, steps, wall_milliseconds)
+
+
+def _charged_dimension(
+    accounts: tuple[BudgetAccount, ...],
+    *,
+    limit_field: str,
+    amount_field: str,
+) -> int | None:
+    if not accounts or any(
+        getattr(account.limits, limit_field) is None for account in accounts
+    ):
+        return None
+    return sum(getattr(account.charged, amount_field) for account in accounts)
 
 
 __all__ = [
@@ -450,4 +582,5 @@ __all__ = [
     "ProductObservation",
     "ProductObservationReader",
     "ProductObservationSession",
+    "ProductUsage",
 ]

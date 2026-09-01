@@ -265,7 +265,7 @@ failure 且零 Tool/Effect；恢复保护后完成 Turn、落盘 Tool Call/Resul
 用户提供的外部 `TUI_LAYOUT_FIX_ORDER.md` 只作为本轮验收输入，没有进入仓库资产、链接或运行时默认。
 实现按 D1–D7 原地替换同一个 Textual adapter：唯一 `textual-light`
 主题；Product 摘要顶部起排、gate 底部；摘要不重复 gate 指令；typed confirmation 只替换 gate；START/
-批准/驳回为同一透明描边；facts 固定列宽；短对话底锚；模型正文以暗色斜体 `模型 ·` 显示。没有旧 TUI、
+批准/驳回为同一透明描边；facts 固定列宽；短对话底锚；模型正文以低饱和紫色斜体 `模型 ·` 显示。没有旧 TUI、
 兼容开关、第二 widget 状态机或 owner/control/observation 写入变化。
 
 18 条 Textual Pilot 与 10 条纯 presentation 合同最初为 **28 passed**。随后真实截图暴露 facts 内宽为 52，
@@ -359,8 +359,51 @@ auto→multi Product host 到达 Approval 后在 `Ctrl+T` 显示 router/parent/r
 发布门禁。
 
 首批可读性改造只完成 R1、R3、R2，并在截图确认前显式停止：`Ctrl+T` reader/screen 从 494 行降到 490 行；
-主对话使用用户默认、宿主 teal、模型逐行缩进暗斜体三种左边缘；Product pane 固定为任务头、最近 durable
+主对话使用用户默认、宿主 teal、模型逐行缩进低饱和紫色斜体三种左边缘；Product pane 固定为任务头、最近 durable
 事实、证据、临时操作/终态四组，组间恰好三条分隔线。角色导航与补丁预览精简属于 R4/R5，尚未实现。
+
+随后按第四轮工单只完成第一组 N1–N4，并再次停止。主聊天和 `Ctrl+T` 不再把长正文交给 Textual 猜测
+换行，而是按 terminal cell 宽度扣除稳定前缀后预折行；跨 110 列断点时，主聊天只重排 RichLog 已有
+可见行，任务页只从打开时 snapshot 重画。两条路径都没有新增缓存、Store reader 或事实源。模型与工具
+左缘改为 `▏`。工具 seq 区间仅在单行可容纳时以 dim 右对齐，窄屏省略。shell 继续只显示 canonical
+arguments 的 UTF-8 字节数；其他工具只复用 Timeline 安全 allowlist，`search_text` 显示必填 `query`，
+敏感 query/path 与未知工具继续 fail closed。精确整数 exit 0 显示成功，非零以 warning 显示
+`完成 · exit=N`。
+
+第一次真实 Textual SVG 截图还发现 mount handler 运行时 RichLog 尚无有效布局宽度，Session/Workspace 会
+按 1 列逐字预折行。根修先读取 durable surface，再用 `call_after_refresh` 在首个真实布局上一次性绘制系统
+信息与已有 conversation；确定性 Pilot 等待首帧并断言稳定宿主前缀，截图重新生成后不再竖排。
+
+用户确认 N1–N4 截图后，第二组只实现 N5–N6：模型自述正文统一为唯一浅色主题的低饱和紫色
+`#7d6bab`，保留斜体、取消 dim 继承且不加粗；marker 继续 dim。任务对话的工具行拆成独立 Rich
+segments，只有左侧 `▏` 使用既有强调蓝，工具名与安全参数保持默认色，seq dim、成功结果 dim、非零
+exit warning 均不变。实现中发现 Rich `Text` 的 base style 会被后续 segment 继承，因此改为从空 `Text`
+逐段 append；这是一条渲染根因修复，不改变任何字符串、cell 宽度、遮蔽、owner、闸门、snapshot 或
+durable reader。当前前景语义为默认、dim、teal、purple、emphasis、warning 六种，danger 仍为第七个
+预留槽；没有深色主题分支或第二种紫色。
+
+N7–N9 随后只收尾右栏：`^p 查看完整身份` 只保留在 digest 行；completed 终态只保留精确
+`已合入 · Promotion receipt 已记录`；生命周期轨在任一 ProductTask durable 终态只对该轨使用 dim，证据和
+终态结论不随之变暗。证据首行从同一 EventStore fresh 重建 Agent Directory 与 Budget Ledger，按当前
+ProductTask owner 的 durable 所有权子树只累计 `charged` Token、Step 与 wall milliseconds；其他任务的
+账户不混入，缺失、未知或尚未 settlement 的维度显示 `—`，没有本地计时器估算。Budget 全局 Stream 只
+触发 refresh，仍被排除在当前任务事实年龄之外。没有新增 durable 写入、控制面、快捷键、颜色或第二事实源。
+
+当前验证结果：
+
+- N7–N9 Product observation/presentation/TUI 直接组：**`55 passed`**；
+- Product observation/presentation/inspection/F3 选择相邻组：**`66 passed`**；
+- Product/TUI architecture 与 optional 边界：**`23 passed`**；
+- 全仓 collect-only：**`2605`**；
+- `python -m compileall -q src tests`、修改范围 Ruff、`git diff --check`：通过；
+- 示例硬编码扫描在 N7–N9 修改的生产文件无命中，没有把库存、文件名、模型、任务 id 或本机路径写入默认；
+- N1–N4 与 N5–N6 两次独立只读短复审：均为 **`P0=0 / P1=0 / P2=0`**；后者另行重跑直接三文件
+  **`54 passed`**，确认 base style 继承根因关闭、六色前景语义成立；N7–N9 独立只读复审同样为
+  **`P0=0 / P1=0 / P2=0`**，并另行运行 observation/presentation **`28 passed`** 与真实 Product
+  host/Approval TUI 路径 **`2 passed`**。
+
+本检查点未运行新的完整 pytest、联网、真实 Provider/API、Wheel、离线安装或发布门禁；N10–N12 与 R4
+没有提前实现。N7–N9 的真实 Textual 截图在本停止点生成，等待用户确认后才进入下一批。
 
 ### 4.8 replacement 后、产出可见性补齐前的完整全量
 
@@ -414,6 +457,124 @@ C:\traceh-tui-dev\Scripts\python.exe -m pytest -q --durations=30 -o addopts='' -
 - `traceharness-py-v0.8.0-source.zip`。
 
 提交、annotated tag、push 与 GitHub Release 也尚未执行。
+
+### 4.9 requester Product status context 根修
+
+2026-08-31 的后续真实体验出现一条上下文反例：Product/Workflow/Promotion 已 durable 完成，TUI 右栏
+显示 completed，但下一轮 requester 模型仍声称任务未执行。第一版修复增加 status-only context；2026-09-01
+的再次体验证明请求已经含 `status: completed`，模型仍把 requester 自己没有写 Tool 调用和 requester
+Workspace 未变误当成 ProductTask 未执行。根因因此收敛为 canonical bridge 的关系/actor/status 语义不完整，
+不是 TUI、SQLite、Provider、Compaction 或并发缺陷。
+
+format-3 历史检查点保留同一条 host-owned `product/context-snapshot`，把 envelope schema 1 内的 message protocol
+硬切到 format 3。ProductTask 仍是状态权威；Session 事件冻结 task/head/status，以及固定 same-requester-Session、
+条件式 host-managed Agent/managed Workspace、逐 status meaning、明细省略范围、response rule 和非授权说明。
+`started` 只证明 ProductTask 已接受 START，不把 Product 事实夸成 Workflow run-start 事实；`completed` 只证明
+ProductTask durable terminal 且携带 Promotion reference，说明正常控制路径在 promotion 后记录该状态，同时
+明确 bounded Product-only context 不独立重验/暴露 receipt、不得再次要求 START。失败/取消等状态不冒充成功。
+它仍不含 Review/Promotion id、Patch、digest、revision、路径、Verifier 或失败正文；Product control plane 从不
+读取它。请求仍只凭 Session `source_seq` 重建，没有 request-time cross-stream join。
+旧 status-only format 1 与旧跨 owner 文案 format 2 都明确拒绝且零改写，无多版本 parser、迁移或 fallback。
+
+后续真实体验证明 format-3 已经把最新 completed 正确交给模型，但模型又把一个 selected task 推成完整任务
+inventory、把 requester Workspace 路径推成 Product 执行路径并复述 XML wrapper。当前 format 4 因此移除
+provider-visible XML wrapper，新增 selected-not-inventory 与 Workspace/明细省略范围，并明确允许自然总结和
+合理推断，只要求区分宿主事实、推断和未提供的具体信息。旧 format 1/2/3 全部明确拒绝；事实源、owner、
+控制权限、selection 算法、Session replay 与 `2048` 字符上限均未改变。
+
+本检查点实际运行：
+
+- context protocol + Surface：**`30 passed`**；
+- Product context + manual Compaction：**`15 passed`**；
+- Product observation/config/CLI 相邻合并组（含上组）：**`121 passed, 1 skipped`**；
+- 完整 `tests/test_product_f3_e2e.py`：**`24 passed`**；
+- Product Benchmark 真实本地 Git 主线与模型敏感值反例：**`2 passed`**；
+- Model admission + Recovery：**`26 passed`**；
+- 当前解释器（未收集 optional Textual Pilot module）全仓 collect-only：**`2573`**；
+- `python -m compileall -q src tests`、修改范围 Ruff、`git diff --check`：通过；
+- 独立审查先发现 `format_version=True` 可利用 Python `True == 1` 穿过 exact parser 的 P2；修复为类型/值
+  双重精确检查并补反例后，复审为 **`P0=0 / P1=0 / P2=0`**。
+
+定向反例还覆盖 no-task、completed/failed、restart idempotency、新 task/head 覆盖、旧 head 晚 append、
+非 canonical payload、JSON 类型敏感 commit reconciliation、Session CAS、普通 Store read failure、取消前
+未写、append 已提交未返回，以及一次/二次 manual Compaction 后宿主状态证据仍在 Surface 且 request
+snapshot 可重建。真实本地 Git next-request E2E 证明批准到 completed 后下一份 Provider request
+正好包含一条安全 status context，并通过 `verify_request_snapshots()`。
+
+本轮未运行完整 pytest、联网、真实 Provider/API、Wheel、离线安装、commit、tag、push 或 release；上节
+历史全量仍不能认证当前工作树。
+
+语义跟进检查先把新断言跑在旧 status-only 逻辑上，得到预期 **5 failed**：completed/failed/cancelled 都缺少
+关系和执行主体，真实本地 Git 的下一份 `ModelRequest` 也缺少 completed 语义，format 1 仍会被接受。补齐
+语义后的 format 2 随后被短复审发现 STARTED/COMPLETED 跨 owner 过度声明；收窄 canonical message 后，协议
+复查又证明继续复用 format 2 会让旧合法 event 与新 context id 别名并破坏 replay，因此当前版本硬切为 format 3。
+
+- 完整 Product model context + manual Compaction + 完整 Product F3 E2E：**`50 passed`**；
+- Surface/Core invariants + Product architecture：**`33 passed`**；
+- 全仓 collect-only：**`2589 tests collected`**；当前解释器仍未收集 optional `tests/test_tui.py`；
+- `python -m compileall -q src tests`、修改范围 Ruff、anti-hardcoding scan、`git diff --check`：通过；
+- scanner 在两个生产文件中没有发现 demo/example term；非 demo 的 256 字符 task identity 覆盖所有九种
+  status 并保持 canonical message 不超过 2048 字符。
+
+独立短复审随后发现两项不会改变权限或持久事实、但会夸大 Product-only 证据的 P2：STARTED 被写成 Workflow
+已经 durable start，COMPLETED 被写成 bridge 已经解析 Promotion receipt；另有文档把“请求明确携带语义”写成
+“模型必然遵从”。实现和文档已统一收窄到上面的证据边界，新增断言禁止这两种跨 owner 过度声明。修后结果
+见本节最终门禁，不以真实 Provider 行为冒充确定性测试结果。
+
+上面的 `30/15/121/24/...` 数字只证明 format-1 检查点，`50/33/2589` 只证明被替换的 format-2 检查点，
+都不能冒充后续 format-3/4 候选认证。本轮仍未运行
+完整 pytest、联网、真实 Provider/API、Wheel、离线安装、commit、tag、push 或 release。
+
+format-3 修后历史门禁：
+
+- Product context + manual Compaction + 完整 Product F3 E2E：**`51 passed`**；
+- Surface/Core invariants + Product architecture：**`33 passed`**；
+- 全仓 collect-only：**`2590 tests collected`**；当前解释器仍未收集 optional `tests/test_tui.py`；
+- `python -m compileall -q src tests`、修改范围 Ruff、anti-hardcoding scan、`git diff --check`：通过；
+- 最大合法 identity 下，completed/started canonical message 分别为 `1752/1614` 字符，均小于 `2048`；
+- 三处旧跨 owner 文案的反向验证为预期 **`3 failed`**；临时把协议版本退回 2 时，legacy format-2
+  identity 隔离反例为预期 **`1 failed`**。恢复 Product-only 语义和 format 3 后上述门禁全绿。
+
+这组数字在 format-4 表达边界修复后只保留为历史证据。
+
+format-4 当前门禁：
+
+- Product context + manual Compaction + 完整 Product F3 E2E 首次运行发现一处只匹配旧
+  `status: completed` 文案的测试断言；同步为新自然语言消息后完整重跑：**`52 passed`**；
+- Surface/Core invariants + Product architecture：**`33 passed`**；
+- 全仓 collect-only：**`2591 tests collected`**；当前解释器仍未收集 optional `tests/test_tui.py`；
+- `python -m compileall -q src tests`、修改范围 Ruff、anti-hardcoding scan 与 `git diff --check`：通过；
+- 最大合法 identity 下，completed/started canonical message 分别为 `1886/1748` 字符，均小于 `2048`；
+- 临时移除 selected-not-inventory 说明时九种状态合同得到预期 **`9 failed`**；临时把新文案错误保留为
+  format 3 时，旧合法 format-3 event 与新消息得到相同 context id，identity 隔离反例得到预期
+  **`1 failed`**。恢复完整语义和 format 4 后上述门禁全绿。
+
+format-5 当前门禁：
+
+- 真实冻结请求审计确认 format-4 completed context 已进入请求，但位于旧 assistant “waiting START”之后；
+  模型随后复述旧状态。durable Product head、bridge、request snapshot 与 Provider dispatch 均正确，根因是
+  Surface 对当前宿主事实和历史模型自述没有结构化优先级；
+- 修复前先加入冲突 unit 与真实 Product F3 首项反例，两项都按预期失败；修复后 canonical Product system
+  message 成为 `ModelRequest.messages[0]`，其余 conversation 内容和内部顺序不变；
+- OpenAI-compatible HTTP capture 证明 wire 依次保留既有 composition system、当前 Product system、旧
+  assistant 与当前 user；adapter 没有合并、删除或改写消息；
+- focused conflict/protocol/F3/Compaction/Provider 组：**`17 passed`**；Product context、两次 Compaction、
+  完整 Product F3、OpenAI-compatible、Surface/Core invariant 与 Product architecture 六模块合并组：
+  **`111 passed`**；
+- format 5 参与 context identity，旧 format 1/2/3/4 全部 fail closed、零迁移、零 fallback；两次人工
+  Compaction 后 canonical context 仍为 Surface 第一项，request snapshot 可精确重建；
+- 最大 256 字符 task identity 与 SQLite 最大有符号 64-bit `source_seq` 下，completed canonical message 为
+  **`2008/2048`** 字符；协议不会生成自己拒绝的合法边界消息；
+- `python -m compileall -q src tests`、修改范围 Ruff、anti-hardcoding production scan 与
+  `git diff --check`：通过；当前解释器全仓 collect-only 为 **`2620 tests`**；正式/通俗版编号章节均为
+  `0..20`，本轮文档围栏闭合且相对链接存在。
+- 三路独立只读短复审分别检查事实源/replay/Compaction、Provider-neutral request/wire 合同和
+  legacy/长度/伪绿边界，结论一致为 **`P0=0 / P1=0 / P2=0`**；其中 Provider 复审独立复跑四条公开路径为
+  **`4 passed`**。复审确认当前没有证据要求在 OpenAI-compatible adapter 合并两个 leading system message。
+
+本轮仍未运行完整 pytest、联网、真实 Provider/API、Wheel、离线安装、commit、tag、push 或 release；也不把
+确定性的请求内容断言冒充外部模型必然遵从。当前修复明确允许自然总结和合理推断，只要求区分宿主事实、
+推断与未提供的细节；历史对话也完整保留。修复只能减少上下文冲突，不能保证外部模型百分百遵从。
 
 ## 5. 真实 Provider 与秘密边界
 

@@ -35,6 +35,7 @@ from traceh.product.chat import (
     ProductTurnActions,
     ProposeProductTaskTool,
 )
+from traceh.product.context import ProductModelContext
 from traceh.product.control import ProductTaskControlPlane
 from traceh.product.errors import ProductInputError
 from traceh.product.evidence import SessionEvidenceReader
@@ -59,6 +60,8 @@ from traceh.product.service import ProductTaskService
 from traceh.promotion.service import PatchPromotionService
 from traceh.session.event_feed import EventFeed, PublishingEventStore
 from traceh.session.event_store import EventStore
+from traceh.session.service import SessionService
+from traceh.supervision.execution import durable_log_identity
 from traceh.supervision.supervisor import ProcessAgentSupervisor
 from traceh.workflow.execution import WorkflowServices
 from traceh.workflow.service import WorkflowService
@@ -189,6 +192,7 @@ class ProductChatHost:
 async def build_product_chat_host(
     *,
     store: EventStore,
+    sessions: SessionService,
     data_dir: Path,
     host_profile: ProductHostProfile,
     providers: Mapping[str, LlmProvider],
@@ -210,6 +214,11 @@ async def build_product_chat_host(
         raise ProductInputError("product-event-store-not-publishing", "store")
     if store.feed is not event_feed:
         raise ProductInputError("product-event-feed-mismatch", "event_feed")
+    if (
+        type(sessions) is not SessionService
+        or durable_log_identity(sessions.store) is not durable_log_identity(store)
+    ):
+        raise ProductInputError("product-context-store-mismatch", "sessions")
 
     resolver = BuiltinProductAssemblyResolver()
     registry = ProductProfileRegistry(
@@ -285,9 +294,10 @@ async def build_product_chat_host(
         PatchArtifactCatalogReader(store),
     )
     execution = ProductExecutionHost(workflow, workflow_resolver, provisioner)
+    session_evidence = SessionEvidenceReader(store)
     tasks = ProductTaskService(
         store,
-        sessions=SessionEvidenceReader(store),
+        sessions=session_evidence,
         workflow=workflow,
         ownership=execution,
     )
@@ -330,6 +340,7 @@ async def build_product_chat_host(
         control,
         actions,
         evidence,
+        ProductModelContext(sessions, store),
         approver_id=approver_id,
     )
     return ProductChatHost(

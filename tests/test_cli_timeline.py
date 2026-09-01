@@ -257,6 +257,39 @@ def test_a_shown_path_is_suppressed_when_it_looks_like_a_credential() -> None:
     assert "call c9" in line
 
 
+def test_search_text_shows_its_safe_required_query() -> None:
+    renderer = TimelineRenderer()
+    line = renderer.render(
+        envelope(
+            "tool/call",
+            {
+                "tool_name": "search_text",
+                "tool_call_id": "c10",
+                "arguments": {"query": "reservation_handler", "path": "src"},
+            },
+        )
+    )
+
+    assert line == "[event 7] Tool search_text requested reservation_handler"
+
+
+def test_a_sensitive_search_query_is_suppressed() -> None:
+    renderer = TimelineRenderer()
+    line = renderer.render(
+        envelope(
+            "tool/call",
+            {
+                "tool_name": "search_text",
+                "tool_call_id": "c11",
+                "arguments": {"query": "api_key_FAKE_FIXTURE"},
+            },
+        )
+    )
+
+    assert line == "[event 7] Tool search_text requested (call c11)"
+    assert "FAKE_FIXTURE" not in line
+
+
 def test_unknown_tool_shows_only_its_name_and_call_id() -> None:
     renderer = TimelineRenderer()
     line = renderer.render(

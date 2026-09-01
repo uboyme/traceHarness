@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from traceh.api.events import EventEnvelope
 from traceh.api.llm import ModelMessage, ToolCall
+from traceh.session.product_context import latest_product_context
 
 
 class SurfaceProjector:
@@ -13,7 +14,11 @@ class SurfaceProjector:
         *,
         through_seq: int | None = None,
     ) -> tuple[ModelMessage, ...]:
-        selected = tuple(event for event in events if through_seq is None or event.seq <= through_seq)
+        selected = tuple(
+            event
+            for event in events
+            if through_seq is None or event.seq <= through_seq
+        )
         hidden: set[int] = set()
         replacements: list[tuple[int, ModelMessage]] = []
 
@@ -33,7 +38,12 @@ class SurfaceProjector:
                 continue
             if event.type == "user/message":
                 output.append(
-                    (event.seq, ModelMessage(role="user", content=str(event.data.get("content", ""))))
+                    (
+                        event.seq,
+                        ModelMessage(
+                            role="user", content=str(event.data.get("content", ""))
+                        ),
+                    )
                 )
             elif event.type == "assistant/message":
                 raw_calls = event.data.get("tool_calls", [])
@@ -67,4 +77,12 @@ class SurfaceProjector:
 
         output.extend(pair for pair in replacements if pair[0] not in hidden)
         output.sort(key=lambda pair: pair[0])
-        return tuple(message for _, message in output)
+        conversation = tuple(message for _, message in output)
+        product_context = latest_product_context(selected)
+        if product_context is None:
+            return conversation
+        # Current host evidence is an instruction about the conversation, not
+        # another chronological utterance.  Keep the complete history in its
+        # original order, but place the one canonical Product context ahead of
+        # it so stale assistant prose cannot outrank the durable task head.
+        return (product_context[1].message, *conversation)

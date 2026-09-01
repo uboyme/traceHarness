@@ -50,7 +50,7 @@ MAX_DETAIL_CHARS = 60
 _TOOL_DETAIL_ARGUMENT = {
     "list_files": "path",
     "read_file": "path",
-    "search_text": "path",
+    "search_text": "query",
     "apply_patch": "path",
 }
 

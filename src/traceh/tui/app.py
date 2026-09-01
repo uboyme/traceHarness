@@ -46,13 +46,16 @@ from traceh.product.observation import ProductObservation, ProductObservationSes
 from traceh.runtime.agent_runtime import AgentRuntime
 from traceh.session.surface import SurfaceProjector
 from traceh.tui.presentation import (
+    MODEL_SELF_REPORT_COLOR,
     OperationErrorView,
     ProductGateAction,
     TransientProductState,
     format_age,
     operation_error_view,
+    prefixed_display_lines,
     product_compact_text,
     product_panel_text,
+    product_state_text,
     resolve_gate,
     safe_display_block,
 )
@@ -79,6 +82,18 @@ _PRODUCT_OPERATION_LABELS = {
 }
 _NARROW_TERMINAL_COLUMNS = 110
 _HOST_TEAL = "#008080"
+_USER_PREFIX = "你 › "
+_USER_CONTINUATION = " " * Text(_USER_PREFIX).cell_len
+_HOST_PREFIX = "宿主 › "
+_HOST_CONTINUATION = " " * Text(_HOST_PREFIX).cell_len
+_MODEL_MARKER = "  ▏ "
+_MODEL_LABEL = "模型 · "
+_MODEL_PREFIX = _MODEL_MARKER + _MODEL_LABEL
+_MODEL_CONTINUATION = _MODEL_MARKER + " " * Text(_MODEL_LABEL).cell_len
+
+
+def _available_log_width(log: RichLog) -> int:
+    return max(1, log.content_region.width - log.styles.scrollbar_size_vertical)
 
 
 class TracehTuiApp(App[int]):
@@ -243,39 +258,57 @@ class TracehTuiApp(App[int]):
 
     async def on_mount(self) -> None:
         self._set_narrow(self.size.width < _NARROW_TERMINAL_COLUMNS)
-        self._write_system(
+        initial_system = [
             f"Session {self._session.session_id}\nWorkspace {self._session.workspace}"
-        )
+        ]
         if self._opened.recovery is not None and self._opened.recovery.changed:
             report = self._opened.recovery
-            self._write_system(
+            initial_system.append(
                 "Recovered durable work: "
                 f"model_attempts={report.closed_model_attempts}; "
                 f"tool_results={report.synthesized_tool_results}; "
                 f"step={report.closed_step}; turn={report.closed_turn}"
             )
-        await self._restore_conversation()
+        restored = await self._restore_conversation()
         if self._product is not None:
             await self._restore_product()
             self._pulse_task = asyncio.create_task(
                 self._pulse(), name="traceh-tui-presentation-pulse"
             )
         self._refresh_product_view()
-        self.query_one("#chat-input", Input).focus()
+        self.call_after_refresh(
+            self._render_initial_conversation,
+            tuple(initial_system),
+            restored,
+        )
 
     async def on_resize(self, event: Resize) -> None:
         self._set_narrow(event.size.width < _NARROW_TERMINAL_COLUMNS)
+        self.call_after_refresh(self._rewrap_conversation)
 
     def _set_narrow(self, enabled: bool) -> None:
         screen = self.screen
         if screen.has_class("narrow") != enabled:
             screen.set_class(enabled, "narrow")
 
-    async def _restore_conversation(self) -> None:
+    async def _restore_conversation(self) -> tuple[tuple[str, object], ...]:
         events = await self._runtime.sessions.read_session(self._session.session_id)
-        for message in SurfaceProjector().project(events):
-            if message.role in {"user", "assistant"} and message.content:
-                self._write_conversation(message.role, message.content)
+        return tuple(
+            (message.role, message.content)
+            for message in SurfaceProjector().project(events)
+            if message.role in {"user", "assistant"} and message.content
+        )
+
+    def _render_initial_conversation(
+        self,
+        system_messages: tuple[str, ...],
+        restored: tuple[tuple[str, object], ...],
+    ) -> None:
+        for message in system_messages:
+            self._write_system(message)
+        for role, content in restored:
+            self._write_conversation(role, content)
+        self.query_one("#chat-input", Input).focus()
 
     async def _restore_product(self) -> None:
         await self._retry_product_observation()
@@ -686,6 +719,8 @@ class TracehTuiApp(App[int]):
             # is best-effort at that point; lifecycle convergence is not.
             return
         transient = self._transient_state()
+        summary = None if self._observation is None else self._observation.summary
+        terminal = summary is not None and summary.settled
         if self._ui_closing:
             self._set_product_text(self._closing_text(transient.waiting_seconds))
         elif self.screen.has_class("narrow"):
@@ -700,7 +735,8 @@ class TracehTuiApp(App[int]):
                     observation_received_at=self._observation_received_at,
                     operation_error=self._operation_error,
                     observation_error=self._observation_error,
-                )
+                ),
+                terminal=terminal,
             )
         else:
             self._set_product_text(
@@ -714,7 +750,8 @@ class TracehTuiApp(App[int]):
                     observation_received_at=self._observation_received_at,
                     operation_error=self._operation_error,
                     observation_error=self._observation_error,
-                )
+                ),
+                terminal=terminal,
             )
         self._refresh_gate(transient)
 
@@ -782,31 +819,101 @@ class TracehTuiApp(App[int]):
     def _write_conversation(self, role: str, content: object) -> None:
         log = self.query_one("#conversation", RichLog)
         body = safe_display_block(content)
-        if role == "user":
-            log.write(Text(f"你 › {body}"))
-            return
-        message = Text()
-        for index, line in enumerate(body.split("\n")):
-            if index:
-                message.append("\n")
-            message.append("  │ ", style="dim")
-            prefix = "模型 · " if index == 0 else "       "
-            message.append(prefix + line, style="dim italic")
-        log.write(message)
+        self._write_role_lines(log, role, body, labeled=True)
 
     def _write_system(self, content: object) -> None:
         body = safe_display_block(content)
-        self.query_one("#conversation", RichLog).write(
-            Text(f"宿主 › {body}", style=_HOST_TEAL)
-        )
+        log = self.query_one("#conversation", RichLog)
+        self._write_role_lines(log, "host", body, labeled=True)
+
+    def _write_role_lines(
+        self,
+        log: RichLog,
+        role: str,
+        body: str,
+        *,
+        labeled: bool,
+    ) -> None:
+        if role == "user":
+            first_prefix = _USER_PREFIX if labeled else _USER_CONTINUATION
+            continuation_prefix = _USER_CONTINUATION
+        elif role == "host":
+            first_prefix = _HOST_PREFIX if labeled else _HOST_CONTINUATION
+            continuation_prefix = _HOST_CONTINUATION
+        else:
+            first_prefix = _MODEL_PREFIX if labeled else _MODEL_CONTINUATION
+            continuation_prefix = _MODEL_CONTINUATION
+
+        for prefix, line in prefixed_display_lines(
+            body,
+            width=_available_log_width(log),
+            first_prefix=first_prefix,
+            continuation_prefix=continuation_prefix,
+        ):
+            if role == "host":
+                rendered = Text(prefix + line, style=_HOST_TEAL)
+            elif role == "user":
+                rendered = Text(prefix + line)
+            else:
+                rendered = Text()
+                rendered.append(_MODEL_MARKER, style="dim")
+                rendered.append(
+                    prefix[len(_MODEL_MARKER) :] + line,
+                    style=f"italic {MODEL_SELF_REPORT_COLOR}",
+                )
+            log.write(rendered, width=max(1, rendered.cell_len))
+
+    def _rewrap_conversation(self) -> None:
+        try:
+            log = self.query_one("#conversation", RichLog)
+        except NoMatches:
+            return
+        width = _available_log_width(log)
+        if not log.lines or all(line.cell_length <= width for line in log.lines):
+            return
+
+        lines = tuple(line.text for line in log.lines)
+        log.clear()
+        current_role: str | None = None
+        for text in lines:
+            labeled = True
+            if text.startswith(_USER_PREFIX):
+                current_role = "user"
+                body = text[len(_USER_PREFIX) :]
+            elif text.startswith(_HOST_PREFIX):
+                current_role = "host"
+                body = text[len(_HOST_PREFIX) :]
+            elif text.startswith(_MODEL_PREFIX):
+                current_role = "assistant"
+                body = text[len(_MODEL_PREFIX) :]
+            elif current_role == "user" and text.startswith(_USER_CONTINUATION):
+                labeled = False
+                body = text[len(_USER_CONTINUATION) :]
+            elif current_role == "host" and text.startswith(_HOST_CONTINUATION):
+                labeled = False
+                body = text[len(_HOST_CONTINUATION) :]
+            elif current_role == "assistant" and text.startswith(_MODEL_CONTINUATION):
+                labeled = False
+                body = text[len(_MODEL_CONTINUATION) :]
+            else:
+                current_role = "host"
+                body = text
+            self._write_role_lines(
+                log,
+                current_role,
+                body,
+                labeled=labeled,
+            )
 
     def _set_activity(self, content: object) -> None:
         self.query_one("#activity", Static).update(
             safe_display_block(content, limit=500)
         )
 
-    def _set_product_text(self, content: object) -> None:
-        self.query_one("#product-state", Static).update(safe_display_block(content))
+    def _set_product_text(self, content: object, *, terminal: bool = False) -> None:
+        self.query_one("#product-state", Static).update(
+            product_state_text(content, terminal=terminal)
+        )
 
     def _topbar_text(self) -> str:
         workspace = self._session.workspace.name or str(self._session.workspace)

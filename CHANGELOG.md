@@ -50,6 +50,38 @@
   freshly read, the left conversation now renders the typed operation and
   durable Product status as a host notice. The notice is process-local UI only:
   it is not appended to the Chat Session, SQLite or any model request.
+- Closed the separate requester-context gap exposed by the next Chat Turn.
+  Before a Product-configured requester model is dispatched, the host now
+  fresh-selects the canonical ProductTask head and freezes one exact, bounded
+  `product/context-snapshot` in that requester Session. The event records what
+  the model was shown, so request snapshots remain replayable; ProductTask,
+  Workflow and Promotion streams remain the only control authorities. The
+  current format-5 message contains task/head/status plus fixed same-requester-
+  Session, host-managed execution-owner, per-status meaning, selection scope,
+  Workspace/evidence limits and non-authorization semantics. A `started`
+  ProductTask is not presented as an
+  independently resolved Workflow start, and `completed` is presented as a
+  durable Product terminal carrying a Promotion reference, not as a newly
+  resolved or exposed Promotion receipt. The next request explicitly says not
+  to treat that terminal as waiting for START; deterministic tests prove this
+  request contract, not external-model compliance. Review, Promotion, Patch,
+  digest, revision, path, verifier and failure identities/details remain
+  excluded. The provider-visible message no longer carries the old XML wrapper;
+  it explicitly permits natural summaries and reasonable inferences while
+  requiring the model to distinguish host facts from inference. After a later
+  frozen request proved that stale assistant prose could still conflict with
+  the current completed evidence, the Surface now places the one canonical
+  current-state instruction before the complete, otherwise unchanged
+  conversation and states that earlier status claims cannot override it. This
+  is request conflict handling, not response filtering or a new fact source;
+  external-model compliance remains best effort. The earlier status-only
+  format 1, cross-owner format 2, underspecified XML format 3 and missing-
+  precedence format 4 are rejected without migration or fallback. The version
+  participates in the context identity, preventing a changed canonical message from aliasing an old
+  durable event. Deterministic coverage includes restart idempotence, new-task
+  supersession, stale append order, strict bool/int protocol rejection, CAS,
+  read failure, may-have-committed cancellation and a real local-Git next-request
+  E2E. The current final full gate is still pending.
 - Made `Ctrl+P` fresh-read the current Product observation before showing full
   identities and explicit copy actions; clipboard failure exports only the
   selected value to a named temporary text file and reports its path. The
@@ -57,17 +89,26 @@
   patch preview from existing inspection evidence. `Ctrl+I` and `Ctrl+R` are
   not advertised or implemented in this round; exact reconciliation remains
   available through the existing Line `/task inspect` path.
-- Verified the current output-visibility and host-feedback surface with `54`
-  focused TUI/optional tests,
-  `215` adjacent Product/Chat tests and `2575` collected tests. A separate
-  short review before the host-feedback repair found no P0/P1/P2; removing the Router Agent-to-Session binding
+- Recorded the earlier output-visibility and host-feedback checkpoint with `54`
+  focused TUI/optional tests, `215` adjacent Product/Chat tests and `2575`
+  collected tests. A separate short review before the host-feedback repair
+  found no P0/P1/P2; removing the Router Agent-to-Session binding
   makes the tampered unrelated-Session counter-example fail with `DID NOT
   RAISE`, and restoring the binding returns it to green. The earlier
-  `2555 passed, 7 skipped` full run remains historical; user acceptance and the
-  new final full gate are still pending. The host-feedback counter-example also
+  `2555 passed, 7 skipped` full run remains historical. The host-feedback counter-example also
   fails precisely when its single render call is absent while the right pane is
   already completed; restoring it returns the test to green without adding a
-  Session event. A short re-review of that small repair remains pending.
+  Session event. This checkpoint predates the requester-context bridge and is
+  no longer current release evidence. The first status-only format-1 bridge
+  checkpoint had `30` protocol/Surface tests, `15` context/Compaction tests,
+  `24` Product F3 E2E tests and `2573` collected tests; those numbers and its
+  review conclusion are historical. The format-3 checkpoint's `51` Product
+  context/Compaction/F3 E2E tests and `2590` collected tests are historical too.
+  The format-4 checkpoint's `52` Product context/Compaction/F3 E2E tests, `33`
+  Surface/Core-invariant/Product-architecture tests and `2591` collected tests
+  are now historical as well. Current format-5 validation is recorded in the
+  validation document. User acceptance and the new
+  final full gate are still pending.
 - Serialized Product observation refreshes so a slower old read cannot overwrite
   newer facts. A real deterministic TUI path using the actual Product host, auto
   Router, fixed multi topology, managed local Git, Verifier and Review reached

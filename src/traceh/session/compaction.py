@@ -20,7 +20,16 @@ class CompactionReport:
 
 
 class CompactionService:
-    _surface_types = {"user/message", "assistant/message", "tool/result", "surface/replace"}
+    # ``product/context-snapshot`` is deliberately absent. Manual summaries may
+    # replace conversation prose, not host-recorded status evidence; the
+    # Surface projector independently selects one logical latest Product
+    # snapshot, so older snapshots do not accumulate on the model Surface.
+    _surface_types = {
+        "user/message",
+        "assistant/message",
+        "tool/result",
+        "surface/replace",
+    }
 
     def __init__(self, sessions: SessionService) -> None:
         self.sessions = sessions

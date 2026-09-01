@@ -125,6 +125,15 @@ class ProductWriteError(ProductError):
         super().__init__(message)
 
 
+class ProductContextError(ProductError):
+    """The host could not freeze trustworthy Product status for a model Turn."""
+
+    def __init__(self, code: str, *, committed: bool | None = False) -> None:
+        self.code = code
+        self.committed = committed
+        super().__init__("the model-visible product context could not be established")
+
+
 class ProductServiceClosedError(ProductError):
     code = "product-service-closed"
 
@@ -134,6 +143,7 @@ class ProductServiceClosedError(ProductError):
 
 __all__ = [
     "ProductError",
+    "ProductContextError",
     "ProductEvidenceError",
     "ProductInputError",
     "ProductOperationConflictError",

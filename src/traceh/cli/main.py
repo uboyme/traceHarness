@@ -541,6 +541,7 @@ async def _chat(args: argparse.Namespace) -> int:
             )
             product_host = await build_product_chat_host(
                 store=runtime.sessions.store,
+                sessions=runtime.sessions,
                 data_dir=Path(args.data_dir),
                 host_profile=product_config.host_profile,
                 providers={args.provider: provider},

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import fields, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -10,7 +11,9 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from rich.cells import cell_len
 from rich.color import Color
+from rich.style import Style
 
 pytest.importorskip("textual")
 
@@ -22,6 +25,7 @@ from test_product_f3_e2e import (
     _GatedProductProvider,
     _SideEffectAttemptingChatProvider,
 )
+from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, RichLog, Static
 
@@ -39,6 +43,7 @@ from traceh.api.turns import TurnInput
 from traceh.api.workflow import WorkflowStatus
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.artifacts.events import ARTIFACT_CATALOG_STREAM
+from traceh.budgets import BUDGET_LEDGER_STREAM
 from traceh.chat.activity import DEFAULT_HEARTBEAT_SECONDS, Clock, default_clock
 from traceh.chat.session import open_chat_session
 from traceh.cli.console import Console
@@ -72,6 +77,10 @@ from traceh.tui.app import TracehTuiApp
 from traceh.tui.presentation import ProductGateAction
 from traceh.tui.runner import run_tui
 from traceh.tui.screens import ProductIdentityScreen, TaskConversationScreen
+from traceh.tui.task_conversation import (
+    TaskConversationRole,
+    TaskConversationSnapshot,
+)
 
 
 async def _wait_for_confirmation_focus(
@@ -206,7 +215,20 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
             log = app.query_one("#conversation", RichLog)
             activity = app.query_one("#activity", Static)
             chat_input = app.query_one("#chat-input", Input)
-            await pilot.pause()
+            for _ in range(20):
+                await pilot.pause()
+                if log.lines:
+                    break
+            initial_lines = [line.text for line in log.lines]
+            assert initial_lines
+            assert initial_lines[0].startswith("宿主 › Session ")
+            assert any(
+                line.startswith(" " * 7 + "Workspace ") for line in initial_lines
+            )
+            assert all(
+                line.startswith("宿主 › ") or line.startswith(" " * 7)
+                for line in initial_lines
+            )
             visible_rows = [
                 row
                 for row in range(log.size.height)
@@ -231,18 +253,59 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
             assert host_line.text == "宿主 › authoritative host fact"
             assert host_line._segments[0].style is not None
             assert host_line._segments[0].style.color == Color.parse("#008080")
-            assert model_line.text == "  │ 模型 · compact model answer"
+            assert model_line.text == "  ▏ 模型 · compact model answer"
             assert "模型自述" not in model_line.text
-            assert model_line._segments[0].text == "  │ "
+            assert model_line._segments[0].text == "  ▏ "
+            assert model_line._segments[0].style is not None
+            assert model_line._segments[0].style.dim
             assert model_line._segments[1].style is not None
-            assert model_line._segments[1].style.dim
+            assert model_line._segments[1].style.color == Color.parse("#7d6bab")
+            assert not model_line._segments[1].style.dim
             assert model_line._segments[1].style.italic
+            assert not model_line._segments[1].style.bold
             app._write_conversation("assistant", "first line\nsecond line")
             await pilot.pause()
             assert [line.text for line in log.lines[-2:]] == [
-                "  │ 模型 · first line",
-                "  │        second line",
+                "  ▏ 模型 · first line",
+                "  ▏        second line",
             ]
+
+            width = log.content_region.width - log.styles.scrollbar_size_vertical
+            long_text = "库存预留需要在并发请求下保持原子性和输入不变性。" * 4
+            before = len(log.lines)
+            app._write_conversation("user", long_text)
+            user_lines = log.lines[before:]
+            assert len(user_lines) > 1
+            assert user_lines[0].text.startswith("你 › ")
+            assert all(line.text.startswith(" " * 5) for line in user_lines[1:])
+            assert all(cell_len(line.text) <= width for line in user_lines)
+
+            before = len(log.lines)
+            app._write_system(long_text)
+            host_lines = log.lines[before:]
+            assert len(host_lines) > 1
+            assert host_lines[0].text.startswith("宿主 › ")
+            assert all(line.text.startswith(" " * 7) for line in host_lines[1:])
+            assert all(cell_len(line.text) <= width for line in host_lines)
+
+            before = len(log.lines)
+            app._write_conversation("assistant", long_text)
+            model_lines = log.lines[before:]
+            assert len(model_lines) > 1
+            assert model_lines[0].text.startswith("  ▏ 模型 · ")
+            assert all(
+                line.text.startswith("  ▏        ") for line in model_lines[1:]
+            )
+            assert all(cell_len(line.text) <= width for line in model_lines)
+            assert all(
+                line._segments[0].style is not None
+                and line._segments[0].style.dim
+                and line._segments[1].style is not None
+                and line._segments[1].style.color == Color.parse("#7d6bab")
+                and line._segments[1].style.italic
+                and not line._segments[1].style.bold
+                for line in model_lines
+            )
 
             for index in range(120):
                 app._write_system(f"long line {index:03d}")
@@ -253,6 +316,50 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
             assert not log.region.overlaps(activity.region)
             assert log.region.bottom <= activity.region.y
             app.exit(0)
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_conversation_rewraps_when_dual_pane_narrows_the_log(
+    tmp_path: Path,
+) -> None:
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    message = "reservation-handler-keeps-every-request-atomic-without-partial-writes"
+    try:
+        async with app.run_test(size=(100, 30)) as pilot:
+            log = app.query_one("#conversation", RichLog)
+            app._write_conversation("assistant", message)
+            await pilot.pause()
+            model_lines = [line for line in log.lines if line.text.startswith("  ▏")]
+            assert len(model_lines) == 1
+
+            await pilot.resize_terminal(110, 30)
+            for _ in range(20):
+                await pilot.pause()
+                width = max(
+                    1,
+                    log.content_region.width - log.styles.scrollbar_size_vertical,
+                )
+                model_lines = [
+                    line for line in log.lines if line.text.startswith("  ▏")
+                ]
+                if len(model_lines) > 1 and all(
+                    line.cell_length <= width for line in model_lines
+                ):
+                    break
+
+            assert len(model_lines) > 1
+            assert all(line.text.startswith("  ▏") for line in model_lines)
+            assert all(line.cell_length <= width for line in model_lines)
+            assert log.max_scroll_x == 0
+            restored = "".join(
+                line.text.removeprefix("  ▏ 模型 · ").removeprefix("  ▏        ")
+                for line in model_lines
+            )
+            assert restored == message
+            await pilot.press("ctrl+c")
     finally:
         await runtime.dispose()
         del store
@@ -282,6 +389,77 @@ async def test_identity_and_task_conversation_are_real_full_width_screens(
     finally:
         await runtime.dispose()
         del store
+
+
+async def test_task_conversation_wraps_and_uses_warning_for_nonzero_exit() -> None:
+    role = TaskConversationRole(
+        role="coder",
+        agent_id="agent-coder",
+        session_id="wf-session-coder",
+        turns_started=1,
+        turns_completed=1,
+        tool_calls=1,
+        usage_tokens=42,
+        usage_quality="exact",
+        usage_state="available",
+        last_fact_age_seconds=2,
+        messages=(
+            (
+                "tool",
+                "shell <已遮蔽 · 参数 128 字节>\t13–15\n完成 · exit=1",
+            ),
+            ("model", "long-model-message-" * 4),
+            ("input", "long-user-requirement-" * 4),
+        ),
+    )
+    snapshot = TaskConversationSnapshot(
+        task_id="task-readability",
+        roles=(role,),
+        observed_at=datetime.now(UTC),
+    )
+    screen = TaskConversationScreen(
+        reader=SimpleNamespace(),  # type: ignore[arg-type]
+        observation_reader=None,
+        task_id=None,
+    )
+    app = App[None]()
+
+    async with app.run_test(size=(44, 28)) as pilot:
+        await app.push_screen(screen)
+        screen._snapshot = snapshot
+        screen._selected = 0
+        screen._expanded = {0}
+        screen._render_snapshot()
+        await pilot.pause()
+
+        log = screen.query_one("#task-conversation-log", RichLog)
+        width = log.scrollable_content_region.width
+        indented = [line for line in log.lines if "▏" in line.text]
+        assert indented
+        assert all(line.cell_length <= width for line in indented)
+        assert not any(re.search(r"13–15$", line.text) for line in log.lines)
+        tool = next(line for line in log.lines if "工具 · shell" in line.text)
+        assert tool._segments[0].text == "    ▏ "
+        assert tool._segments[0].style is not None
+        assert tool._segments[0].style.color == Color.parse("blue")
+        assert tool._segments[1].style == Style()
+        model = next(
+            line for line in log.lines if "模型自述（非宿主证据）" in line.text
+        )
+        assert model._segments[0].style is not None
+        assert model._segments[0].style.dim
+        assert model._segments[1].style is not None
+        assert model._segments[1].style.color == Color.parse("#7d6bab")
+        assert model._segments[1].style.italic
+        assert not model._segments[1].style.bold
+        assert not model._segments[1].style.dim
+        warning = next(line for line in log.lines if "完成 · exit=1" in line.text)
+        assert warning._segments[0].style is not None
+        assert warning._segments[0].style.color == Color.parse("blue")
+        assert warning._segments[-1].style is not None
+        assert warning._segments[-1].style.color == Color.parse("yellow")
+
+        await pilot.press("escape")
 
 
 def test_footer_advertises_only_implemented_global_actions() -> None:
@@ -1034,6 +1212,7 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             for stream_id in (
                 AGENT_DIRECTORY_STREAM,
                 ARTIFACT_CATALOG_STREAM,
+                BUDGET_LEDGER_STREAM,
                 PROMOTION_LEDGER_STREAM,
             ):
                 assert not heads[stream_id].task_bound
@@ -1044,18 +1223,64 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
                 not in {
                     AGENT_DIRECTORY_STREAM,
                     ARTIFACT_CATALOG_STREAM,
+                    BUDGET_LEDGER_STREAM,
                     PROMOTION_LEDGER_STREAM,
                 }
             )
             await pilot.press("ctrl+t")
             assert isinstance(app.screen, TaskConversationScreen)
+            await pilot.pause()
             conversation_log = app.screen.query_one(
                 "#task-conversation-log", RichLog
             )
+            for _ in range(20):
+                if conversation_log.lines:
+                    break
+                await pilot.pause()
             rendered_roles = "\n".join(line.text for line in conversation_log.lines)
             for role in ("router", "parent", "reviewer", "coder"):
                 assert role in rendered_roles
             assert "模型自述（非宿主证据）" in rendered_roles
+            assert "▏" in rendered_roles
+            assert "│" not in rendered_roles
+            sequenced_tools = [
+                line
+                for line in conversation_log.lines
+                if re.search(r"\d+–\d+$", line.text)
+            ]
+            assert sequenced_tools
+            sequence_widths = [cell_len(line.text) for line in sequenced_tools]
+            assert all(
+                cell_len(line.text)
+                == conversation_log.scrollable_content_region.width
+                for line in sequenced_tools
+            ), (sequence_widths, conversation_log.scrollable_content_region.width)
+            assert all(
+                line._segments[-1].style is not None
+                and line._segments[-1].style.dim
+                for line in sequenced_tools
+            )
+            wide_sequence_count = len(sequenced_tools)
+            await pilot.resize_terminal(44, 38)
+            for _ in range(20):
+                await pilot.pause()
+                sequenced_tools = [
+                    line
+                    for line in conversation_log.lines
+                    if re.search(r"\d+–\d+$", line.text)
+                ]
+                if len(sequenced_tools) < wide_sequence_count:
+                    break
+            assert len(sequenced_tools) < wide_sequence_count
+            available_width = conversation_log.scrollable_content_region.width
+            indented_message_lines = [
+                line for line in conversation_log.lines if "▏" in line.text
+            ]
+            assert indented_message_lines
+            assert all(
+                line.cell_length <= available_width
+                for line in indented_message_lines
+            )
             await pilot.press("escape")
             await pilot.press("ctrl+c")
     finally:
@@ -1601,13 +1826,17 @@ async def test_approval_button_requires_durable_review_and_serializes_clicks(
             await asyncio.wait_for(asyncio.shield(operation), timeout=2)
             await pilot.pause()
             panel = str(app.query_one("#product-state", Static).content)
-            assert "完成：Promotion receipt 已记录。" in panel
+            gate = str(app.query_one("#gate-message", Static).content)
+            combined = f"{panel}\n{gate}"
+            assert combined.count("已合入 · Promotion receipt 已记录") == 1
+            assert "完成：Promotion receipt 已记录" not in combined
+            assert "任务已经到达 durable 终态" not in combined
             conversation = "\n".join(
                 line.text for line in app.query_one("#conversation", RichLog).lines
             )
             assert (
                 "宿主 › 批准已完成；ProductTask 已到达 durable 状态：completed。"
-                in conversation
+                in conversation.replace("\n       ", "")
             )
             events = await runtime.sessions.read_session(session_id)
             assert all("批准已完成" not in str(event.data) for event in events)

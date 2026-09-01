@@ -82,6 +82,12 @@ class SessionEvidenceReader:
         messages, _, _ = await self._facts(session_id)
         return messages.get(message_id)
 
+    async def messages(self, session_id: str) -> tuple[MessageEvidence, ...]:
+        """All durable user-message evidence, in Session acceptance order."""
+
+        messages, _, _ = await self._facts(session_id)
+        return tuple(messages.values())
+
     async def turn_start_seq(self, session_id: str, turn_id: str) -> int | None:
         """The durable start position of one Turn, after a fresh replay."""
 

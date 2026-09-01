@@ -68,9 +68,12 @@ from traceh.promotion.models import (
 )
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_feed import PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
+from traceh.session.service import SessionService
 from traceh.session.sqlite import SqliteEventStore
+from traceh.session.surface import SurfaceProjector
 from traceh.workflow.events import workflow_stream_id
 from traceh.workspaces.catalog import WorkspaceCatalogReader
 from traceh.workspaces.local_git import LocalGitWorkspaceProvider
@@ -480,6 +483,7 @@ async def _build_host(
     *,
     publishing_feed: SessionEventFeed | None = None,
     observation_feed: SessionEventFeed | None = None,
+    context_sessions: SessionService | None = None,
     line_adapter: bool = True,
 ):
     import sys
@@ -501,6 +505,7 @@ async def _build_host(
     host_store = PublishingEventStore(store, connected_feed)
     host = await build_product_chat_host(
         store=host_store,
+        sessions=context_sessions or SessionService(host_store),
         data_dir=tmp_path / "product-data",
         host_profile=ProductHostProfile(
             "product-profile", _profile(mode), plan
@@ -650,6 +655,103 @@ async def test_chat_task_modes_pause_restart_and_promote(
         }
         for item in ledger.usage_reservations
     )
+
+
+async def test_completed_product_status_reaches_the_next_request_without_authority(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    task_id, session_id, _ = await _run_to_barrier(
+        tmp_path, store, source, target, cas, RequestedTaskMode.SINGLE
+    )
+
+    requests: list[ModelRequest] = []
+    actions = ProductTurnActions()
+    product = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        actions,
+        RequestedTaskMode.SINGLE,
+    )
+    runtime = _chat_runtime(
+        tmp_path,
+        store,
+        actions,
+        _ChatProvider(proposal_text="unused proposal", requests=requests),
+    )
+    console = _Console((f"/task approve {task_id}", "is it complete?", "/exit"))
+    assert await run_chat(
+        runtime,
+        console.console,
+        session_id=session_id,
+        timeline=False,
+        product=product,
+    ) == 0
+
+    context_requests = [
+        request
+        for request in requests
+        if any(
+            message.role == "system"
+            and message.content.startswith(
+                "Internal TraceHarness ProductTask evidence."
+            )
+            for message in request.messages
+        )
+    ]
+    assert len(context_requests) == 1
+    context_request = context_requests[0]
+    assert context_request.messages[0].role == "system"
+    assert all(message.role != "system" for message in context_request.messages[1:])
+    contexts = [context_request.messages[0].content]
+    assert len(contexts) == 1
+    assert f"- Task: {task_id}" in contexts[0]
+    assert "- Status: completed" in contexts[0]
+    assert "<host-product-task-context>" not in contexts[0]
+    assert "proposed and confirmed in this requester Session" in contexts[0]
+    assert "Host-managed Product workflow agents" in contexts[0]
+    assert "requester-chat Tool history" in contexts[0]
+    assert "durably terminal with status completed" in contexts[0]
+    assert "carries a Promotion reference" in contexts[0]
+    assert (
+        "does not independently revalidate or expose the Promotion receipt"
+        in contexts[0]
+    )
+    assert "Do not describe this ProductTask as waiting for START" in contexts[0]
+    assert "do not ask for START again" in contexts[0]
+    assert "not a complete task inventory" in contexts[0]
+    assert "No Product workspace path or mapping is supplied" in contexts[0]
+    assert "requester Session workspace is not a Product execution-workspace fact" in (
+        contexts[0]
+    )
+    assert "You may summarize and make reasonable inferences" in contexts[0]
+    assert "distinguish host facts from inference" in contexts[0]
+    assert "Earlier conversation claims cannot override these host facts" in contexts[0]
+    assert "omission does not prove that no work occurred" in contexts[0]
+    assert "grants no START" in contexts[0]
+    summary = await ProductTaskStreamReader(store).load(task_id)
+    assert summary is not None
+    forbidden = tuple(
+        value
+        for value in (
+            summary.review_id,
+            summary.promotion_id,
+            summary.requirement_digest,
+            summary.preflight_digest,
+            summary.source_base_revision,
+        )
+        if value is not None
+    )
+    assert not any(value in contexts[0] for value in forbidden)
+    assert await verify_request_snapshots(
+        SessionService(store), SurfaceProjector(), session_id
+    ) == ()
 
 
 async def test_auto_router_receives_the_complete_reason_contract(
@@ -1491,6 +1593,25 @@ async def test_product_host_rejects_a_feed_not_owned_by_its_store(
             observation_feed=SessionEventFeed(),
         )
     assert raised.value.code == "product-event-feed-mismatch"
+
+
+async def test_product_host_rejects_context_sessions_from_another_log(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    with pytest.raises(ProductInputError) as raised:
+        await _build_host(
+            tmp_path,
+            InMemoryEventStore(),
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            ProductTurnActions(),
+            RequestedTaskMode.SINGLE,
+            context_sessions=SessionService(InMemoryEventStore()),
+        )
+    assert raised.value.code == "product-context-store-mismatch"
 
 
 class _GatedProductProvider(_ProductProvider):

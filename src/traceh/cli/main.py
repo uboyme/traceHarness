@@ -459,6 +459,8 @@ async def _chat(args: argparse.Namespace) -> int:
     product_config = None
     product_host = None
     actions = None
+    artifact_cas = None
+    read_models = None
     product_configuration_errors: tuple[type[BaseException], ...] = ()
     provider_and_model = _provider_and_model(args)
     additional_tools: tuple[Tool, ...] = ()
@@ -479,7 +481,10 @@ async def _chat(args: argparse.Namespace) -> int:
         from traceh.product.chat import ProductTurnActions
         from traceh.product.config import load_product_host_file
         from traceh.product.errors import ProductError
-        from traceh.product.host import build_product_chat_host
+        from traceh.product.host import (
+            build_product_chat_host,
+            build_product_read_models,
+        )
         from traceh.promotion.errors import PromotionError
         from traceh.promotion.local_git import LocalBareGitPromotionTargets
         from traceh.workspaces.errors import WorkspaceError
@@ -508,7 +513,6 @@ async def _chat(args: argparse.Namespace) -> int:
                 "Product Chat currently requires a directly configured built-in provider"
             )
         actions = ProductTurnActions()
-        additional_tools = product_chat_runtime_tools(actions)
         runtime_policies = product_chat_runtime_policies()
         include_default_tools = False
     store = SqliteEventStore(Path(args.data_dir) / "events")
@@ -517,6 +521,18 @@ async def _chat(args: argparse.Namespace) -> int:
     result: int | None = None
     primary: BaseException | None = None
     try:
+        if product_config is not None:
+            assert actions is not None
+            artifact_cas = LocalArtifactCas(product_config.cas_root)
+            read_models = build_product_read_models(
+                store=store,
+                host_profile=product_config.host_profile,
+                artifact_cas=artifact_cas,
+                max_report_chars=product_config.max_report_chars,
+            )
+            additional_tools = product_chat_runtime_tools(
+                actions, read_models.memory
+            )
         runtime = await _runtime(
             args,
             event_store=store,
@@ -528,6 +544,8 @@ async def _chat(args: argparse.Namespace) -> int:
         if product_config is not None:
             provider, _ = provider_and_model
             assert provider is not None
+            assert artifact_cas is not None
+            assert read_models is not None
             workspace_provider = LocalGitWorkspaceProvider(
                 managed_root=product_config.managed_workspace_root,
                 sources={
@@ -539,6 +557,16 @@ async def _chat(args: argparse.Namespace) -> int:
                     product_config.promotion_target_id: product_config.promotion_target,
                 }
             )
+            # The requester evidence Tool was frozen against the same durable
+            # log before Runtime construction. UI observation and automatic
+            # context use the Runtime's connected PublishingEventStore so their
+            # feed remains live; both are stateless fresh readers over one log.
+            read_models = build_product_read_models(
+                store=runtime.sessions.store,
+                host_profile=product_config.host_profile,
+                artifact_cas=artifact_cas,
+                max_report_chars=product_config.max_report_chars,
+            )
             product_host = await build_product_chat_host(
                 store=runtime.sessions.store,
                 sessions=runtime.sessions,
@@ -546,12 +574,13 @@ async def _chat(args: argparse.Namespace) -> int:
                 host_profile=product_config.host_profile,
                 providers={args.provider: provider},
                 workspace_provider=workspace_provider,
-                artifact_cas=LocalArtifactCas(product_config.cas_root),
+                artifact_cas=artifact_cas,
                 promotion_targets=promotion_targets,
                 capture_limits=product_config.capture_limits,
                 approver_id=product_config.approver_id,
                 max_report_chars=product_config.max_report_chars,
                 actions=actions,
+                read_models=read_models,
                 model_retry_policy=runtime.config.model_retry_policy,
                 event_feed=runtime.events,
             )

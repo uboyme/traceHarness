@@ -5,6 +5,17 @@
 - Amended: 2026-09-01
 - Stage: v0.8-F5 release-candidate repair
 
+> **Partially superseded by
+> [ADR-0040](0040-session-scoped-product-task-history-context.md) and
+> [ADR-0041](0041-session-scoped-product-task-evidence-memory.md).** ADR-0040
+> historically replaced the format-5 single selected-task projection with the
+> format-6 atomic current-focus and bounded recent-task projection. ADR-0041
+> replaces that format with format 7's minimal execution summary and adds a
+> separate, same-Session pure-read evidence Tool. This ADR remains the decision
+> record for host-owned ProductTask status authority, leading Surface
+> precedence, fresh replay, CAS convergence and compaction preservation; its
+> rejection of requester control Tools still applies.
+
 ## Context
 
 ProductTask, Workflow and Promotion already had one canonical append-only fact

@@ -29,12 +29,14 @@ from traceh.product.chat import (
     ProductStartRequest,
     ProductTurnActions,
     ProposeProductTaskTool,
+    ReadProductTaskEvidenceTool,
     parse_product_command,
 )
 from traceh.product.control import PendingProductProposal, ProductAdvanceResult, ProductInspection
 from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductChatHost
 from traceh.product.inspection import ProductTaskEvidence
+from traceh.product.memory import ProductTaskMemoryReader
 from traceh.product.observation import ProductObservation, ProductObservationSession
 from traceh.tools.builtins import ListFilesTool, ReadFileTool, SearchTextTool
 from traceh.tools.policy import (
@@ -66,7 +68,10 @@ class ProductChatSideEffectPolicy:
         )
 
 
-def product_chat_runtime_tools(actions: ProductTurnActions) -> tuple[Tool, ...]:
+def product_chat_runtime_tools(
+    actions: ProductTurnActions,
+    memory: ProductTaskMemoryReader,
+) -> tuple[Tool, ...]:
     """Return the complete requester-Chat tool surface for Product mode."""
 
     return (
@@ -75,6 +80,7 @@ def product_chat_runtime_tools(actions: ProductTurnActions) -> tuple[Tool, ...]:
         SearchTextTool(),
         ProposeProductTaskTool(actions),
         ConfirmProductTaskTool(actions),
+        ReadProductTaskEvidenceTool(memory),
     )
 
 

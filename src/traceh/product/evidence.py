@@ -29,7 +29,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.api.events import EventEnvelope
-from traceh.api.product import ProductTaskProposal, ProposalConfirmation
+from traceh.api.product import (
+    ProductTaskProposal,
+    ProductTaskSummary,
+    ProposalConfirmation,
+)
 from traceh.product.errors import ProductEvidenceError
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
@@ -54,8 +58,17 @@ class MessageEvidence:
     session_id: str
     message_id: str
     turn_id: str
+    content: str
     accepted_seq: int
     claimed_seq: int
+
+
+@dataclass(frozen=True, slots=True)
+class ProductTaskSessionRelation:
+    """Durable requester messages that bind one ProductTask to one Session."""
+
+    origin: MessageEvidence
+    confirmation: MessageEvidence
 
 
 class SessionEvidenceReader:
@@ -100,6 +113,50 @@ class SessionEvidenceReader:
         _, _, turn_ends = await self._facts(session_id)
         return turn_ends.get(turn_id)
 
+    async def task_relation(
+        self,
+        session_id: str,
+        summary: ProductTaskSummary,
+    ) -> ProductTaskSessionRelation:
+        """Prove that one ProductTask belongs to this requester Session.
+
+        The Product stream carries Session, Turn and message identities, but it
+        cannot prove those identities exist.  Context projection and the
+        model's read-only evidence Tool share this one fresh Session replay so
+        neither grows a weaker, task-id-only authorization rule.
+        """
+
+        if type(session_id) is not str or type(summary) is not ProductTaskSummary:
+            raise ProductEvidenceError("product-task-relation-invalid")
+        if (
+            summary.origin_session_id != session_id
+            or summary.confirmation_session_id != session_id
+        ):
+            raise ProductEvidenceError("product-task-session-mismatch")
+        messages, turn_starts, turn_ends = await self._facts(session_id)
+        origin = messages.get(summary.origin_message_id)
+        if origin is None:
+            raise ProductEvidenceError("product-task-origin-missing")
+        if (
+            origin.turn_id != summary.origin_turn_id
+            or summary.origin_turn_id not in turn_starts
+        ):
+            raise ProductEvidenceError("product-task-origin-mismatch")
+        confirmation = messages.get(summary.confirmation_message_id)
+        if confirmation is None:
+            raise ProductEvidenceError("product-task-confirmation-missing")
+        if (
+            confirmation.turn_id != summary.confirmation_turn_id
+            or summary.confirmation_turn_id not in turn_starts
+        ):
+            raise ProductEvidenceError("product-task-confirmation-mismatch")
+        proposed_end_seq = turn_ends.get(summary.origin_turn_id)
+        if proposed_end_seq is None:
+            raise ProductEvidenceError("product-task-origin-incomplete")
+        if confirmation.accepted_seq <= proposed_end_seq:
+            raise ProductEvidenceError("product-task-confirmation-order-invalid")
+        return ProductTaskSessionRelation(origin=origin, confirmation=confirmation)
+
     async def _facts(
         self, session_id: str
     ) -> tuple[dict[str, MessageEvidence], dict[str, int], dict[str, int]]:
@@ -120,7 +177,7 @@ def _scan_session(
         created = False
         accepted_ids: set[str] = set()
         claimed_ids: set[str] = set()
-        user_acceptances: dict[str, int] = {}
+        user_acceptances: dict[str, tuple[int, str]] = {}
         claims: dict[str, tuple[str, int]] = {}
         claimed_turns: dict[str, str] = {}
         turn_starts: dict[str, int] = {}
@@ -201,7 +258,7 @@ def _scan_session(
                     raise ValueError("invalid message acceptance")
                 accepted_ids.add(candidate_id)
                 if source == "user":
-                    user_acceptances[candidate_id] = event.seq
+                    user_acceptances[candidate_id] = (event.seq, content)
             else:
                 if candidate_id not in accepted_ids or candidate_id in claimed_ids:
                     raise ValueError("invalid message claim order")
@@ -226,10 +283,11 @@ def _scan_session(
             session_id=session_id,
             message_id=message_id,
             turn_id=turn_id,
+            content=content,
             accepted_seq=accepted_seq,
             claimed_seq=claimed_seq,
         )
-        for message_id, accepted_seq in user_acceptances.items()
+        for message_id, (accepted_seq, content) in user_acceptances.items()
         if (claim := claims.get(message_id)) is not None
         for turn_id, claimed_seq in (claim,)
     }
@@ -313,6 +371,7 @@ __all__ = [
     "TURN_ENDED",
     "TURN_STARTED",
     "MessageEvidence",
+    "ProductTaskSessionRelation",
     "SessionEvidenceReader",
     "require_confirmation_evidence",
 ]

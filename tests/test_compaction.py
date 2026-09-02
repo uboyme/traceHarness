@@ -5,15 +5,42 @@ from uuid import uuid4
 import pytest
 
 from traceh.api.llm import ModelResponse
-from traceh.api.product import ProductTaskStatus
+from traceh.api.product import ProductTaskStatus, RequestedTaskMode, ResolvedTaskMode
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.product_context import (
     PRODUCT_CONTEXT_SNAPSHOT,
+    ProductContextExecutionSummary,
+    ProductContextTask,
     product_context_snapshot_data,
 )
+
+
+def _context_task(task_id: str = "task-compaction") -> ProductContextTask:
+    return ProductContextTask(
+        task_id=task_id,
+        source_stream_id=f"product-task:{task_id}",
+        source_seq=1,
+        source_event_id=uuid4(),
+        task_order_seq=6,
+        status=ProductTaskStatus.COMPLETED,
+        requested_mode=RequestedTaskMode.SINGLE,
+        resolved_mode=ResolvedTaskMode.SINGLE,
+        requirement_digest="a" * 64,
+        origin_message_id=f"origin-{task_id}",
+        source_excerpt="earlier requirement",
+        source_excerpt_truncated=False,
+        execution_summary=ProductContextExecutionSummary(
+            workflow_status=None,
+            managed_tool_call_count=1,
+            changed_path_count=1,
+            verification_passed=True,
+            verifier_count=1,
+            promotion_recorded=True,
+        ),
+    )
 
 
 @pytest.mark.asyncio
@@ -73,21 +100,17 @@ async def test_manual_compaction_preserves_product_status_evidence(tmp_path) -> 
         event_store=InMemoryEventStore(),
     )
     first = await runtime.run(workspace, "first question")
-    events = await runtime.sessions.read_session(first.session_id)
-    source_event_id = uuid4()
+    task = _context_task()
     context_event = await runtime.sessions.append_session(
         first.session_id,
         PRODUCT_CONTEXT_SNAPSHOT,
         product_context_snapshot_data(
             session_id=first.session_id,
-            task_id="task-compaction",
-            source_stream_id="product-task:task-compaction",
-            source_seq=1,
-            task_order_seq=events[-1].seq,
-            status=ProductTaskStatus.COMPLETED,
-            source_event_id=source_event_id,
+            focus=task,
+            tasks=(task,),
+            total_tasks=1,
         ),
-        causation_id=source_event_id,
+        causation_id=task.source_event_id,
     )
 
     report = await runtime.compaction.replace_through(
@@ -97,10 +120,11 @@ async def test_manual_compaction_preserves_product_status_evidence(tmp_path) -> 
     )
     assert context_event.seq not in report.source_seqs
     surface = runtime.surface.project(await runtime.sessions.read_session(first.session_id))
-    assert surface[0].role == "system"
+    assert tuple(message.role for message in surface[:2]) == ("system", "user")
     assert "- Status: completed" in surface[0].content
     assert any("<compacted-summary>" in message.content for message in surface)
     assert sum("- Status: completed" in message.content for message in surface) == 1
+    assert any("Historical ProductTask reference" in message.content for message in surface)
 
     second_compaction = await runtime.compaction.replace_through(
         first.session_id,
@@ -109,7 +133,7 @@ async def test_manual_compaction_preserves_product_status_evidence(tmp_path) -> 
     )
     assert context_event.seq not in second_compaction.source_seqs
     surface = runtime.surface.project(await runtime.sessions.read_session(first.session_id))
-    assert surface[0].role == "system"
+    assert tuple(message.role for message in surface[:2]) == ("system", "user")
     assert "- Status: completed" in surface[0].content
     assert sum("- Status: completed" in message.content for message in surface) == 1
 

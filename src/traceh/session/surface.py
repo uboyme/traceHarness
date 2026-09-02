@@ -81,8 +81,8 @@ class SurfaceProjector:
         product_context = latest_product_context(selected)
         if product_context is None:
             return conversation
-        # Current host evidence is an instruction about the conversation, not
-        # another chronological utterance.  Keep the complete history in its
-        # original order, but place the one canonical Product context ahead of
-        # it so stale assistant prose cannot outrank the durable task head.
-        return (product_context[1].message, *conversation)
+        # Current host evidence and its bounded historical reference describe
+        # the conversation rather than adding chronological utterances.  Keep
+        # them atomically ahead of the original history so stale assistant prose
+        # cannot outrank the durable current task head.
+        return (*product_context[1].messages, *conversation)

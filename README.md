@@ -20,7 +20,8 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - `traceh chat` 的实时 Tool Timeline：Turn 运行期间即时显示 Step、模型调用、工具生命周期和验证结果，可用 `--no-timeline` 关闭；
 - Activity Heartbeat：模型或工具长时间未结束时，按 `--heartbeat-seconds`（默认 10 秒）打印等待时长，完成行附带实测耗时；
 - 可选 Textual TUI：`traceh chat --tui` 复用同一 Session、ChatDriver 与 Product control/observation，把临时宿主操作、durable facts 与模型自述分层显示，只呈现当前合法且需输入确认的 Product 闸门，并提供 fresh、只读的分角色任务对话和完整身份视图；
-- Product 请求者权限隔离：启用 `--product-config` 后，START 前的 Chat 只拥有 workspace 读取与 Proposal/Confirmation Tool；`apply_patch`/`shell` 不进入工具表，声明为写入、进程或外部事务的插件 Tool 也被单调 Policy 拒绝。真正代码副作用只在 START 后由 Product coder 的 managed Workspace owner 执行；不启用 Product 配置的普通 Coding Chat 保持原工具面；
+- 同 Session ProductTask 任务记忆：每轮 requester 请求前从同一 EventStore fresh 投影一条原子 format-7 收据，以 system 当前事实加 user 历史参考携带 focus 在内最多六项任务及准确总数/省略数；对需要解释执行结果的当前 focus 只加入最小执行摘要，详细证据按需读取。它不是第二份 Product 状态、Workspace Memory、RAG 或新控制权限；
+- Product 请求者权限隔离：启用 `--product-config` 后，START 前的 Chat 只拥有 workspace 读取、Proposal/Confirmation 与只读 `read_product_task_evidence` Tool；后者只能读取由 durable origin/confirmation 证明属于同一 requester Session 的精确 task id。`apply_patch`/`shell` 不进入工具表，声明为写入、进程或外部事务的插件 Tool 也被单调 Policy 拒绝。真正代码副作用只在 START 后由 Product coder 的 managed Workspace owner 执行；不启用 Product 配置的普通 Coding Chat 保持原工具面；
 - 可收敛的 Ctrl+C：有任务在跑时首次 Ctrl+C 只取消当前 Turn 并保留 Session，取消生命周期会完整显示在 Timeline 上；
 - 启动即打印的恢复命令：Banner 直接给出含解析后 `--data-dir` 的可复制命令，硬中断也能从屏幕历史找回 Session；
 - Effect Intent / Dispatch / Outcome 记录，用于判断崩溃时间窗中的副作用；
@@ -130,9 +131,36 @@ writer，并沿原有 `finally` 路径等待 Supervisor dispose Router child；�
 失败/取消和宿主关闭仍沿既有 owner 收敛，没有后台遗弃 Agent、第二套生命周期或 TUI 特例。
 
 传入 `--product-config` 时，左侧请求者 Chat 即使和配置中的 Product source 指向同一个目录，也只能
-`list/read/search` 和提议/确认，不能在 START 前直接 `apply_patch` 或运行 `shell`。因此点击 START 前不会
-先把 source 弄脏；真正写代码的是 START 后固定 Workflow 中拥有独立 managed Git worktree 的 coder。
-这是共享 Product Chat Runtime 的权限规则，Line 与 TUI 完全一致，不靠界面隐藏按钮实现。
+`list/read/search`、提议/确认，以及按精确 task id 调用纯读 `read_product_task_evidence`；不能在 START 前
+直接 `apply_patch` 或运行 `shell`。证据 Tool 只接受由 Product origin/confirmation 与 requester Session
+事件共同证明属于当前 Session 的任务；不存在、属于其他 Session 或任一关联证据不可读/损坏时，都返回同一
+`product-task-evidence-unavailable` 结果，不成为 task-id 探针。真正写代码的是 START 后固定 Workflow 中
+拥有独立 managed Git worktree 的 coder。这是共享 Product Chat Runtime 的权限规则，Line 与 TUI 完全一致，
+不靠界面隐藏按钮实现。
+
+同一 Product-configured requester Session 的下一轮模型请求会先从现有 ProductTask 与 Session 事件 fresh
+投影一张有界任务目录：当前 focus 在内最多六项，并带准确总数和省略数。当前状态作为宿主 `system` 事实，
+历史 source request 作为明确标注的 `user` 参考；后者不是当前指令、canonical requirement 或 START/审批/
+推广授权。format 7 只为当前 focus 的 `awaiting_approval`、`completed`、`rejected`、`cancelled` 或 `failed`
+状态加入六项宿主验证的执行摘要：Workflow 状态、managed Tool 调用数、changed-path 数、校验结论、
+Verifier 数与 Promotion 是否记录；历史任务和其他状态不复制摘要。changed path、Tool 结果元数据、Verifier、
+Review 与 Promotion 的详细身份仍不默认占用上下文，模型确有需要时再调用
+`read_product_task_evidence`。该 Tool fresh 连接既有 Product/Workflow/Session/Agent/Artifact/Review/
+Approval/Promotion/Budget 事实并返回有界 JSON；不暴露原始 Patch、Tool 参数/输出、模型散文或 Product
+workspace 路径，也不授予任何控制权限。活动投影只接受 Runtime/Recovery 当前会落盘的七种结果状态；
+未知 durable 状态明确拒绝，`pending` 只表示尚未配对结果的在途 Tool 调用。
+
+CLI 为 requester Tool 与 host context/observation 分别构造两份 stateless `ProductReadModels` reader bundle：
+它们不是同一组 Python 实例；前者在 Runtime 冻结 Tool 表前绑定原 Store，后者在 Runtime 建立后绑定带
+进程内 Feed 的 Store wrapper。CLI 对两次构造传入同一原始 durable log、Profile、CAS、VerificationPlan、
+Promotion target 与报告上界，因此当前生产入口按构造保证两者同源同配置；host 不跨实例比较这两份
+bundle，只校验传给自己的第二份 bundle 与 host 及其内部 reader chain 一致。所有结果仍从同一 EventStore
+fresh 重建；
+`product/context-snapshot` 记录模型当时看见的两条精确消息及其重放/身份元数据，
+Product/Workflow/Promotion 原流仍是控制权威，普通
+Tool 调用/结果仅按既有 Session Tool 生命周期留痕。没有新增 Memory stream、缓存、RAG 或跨 Session 记忆。
+旧 format 1–6 不兼容，需使用新的 data 目录，不会自动迁移或回退。设计边界见
+[ADR-0041](docs/adr/0041-session-scoped-product-task-evidence-memory.md)。
 
 `Ctrl+C` / `Ctrl+Q` 不会立刻留下一个黑屏等待：右栏会先显示 operation、Driver、observer、Product host
 和 Runtime 的实际收敛状态，全部结束后再退出。
@@ -688,7 +716,7 @@ src/traceh/artifacts    immutable Patch Manifest、Git capture、SHA-256 CAS 与
 src/traceh/promotion    固定 Verifier、Review/Approval/Promotion Ledger 与 Git ref compare-and-swap
 src/traceh/workflow     固定 Typed DAG：AgentTask/Map/Join/Verification/Approval 与一条编排账
 src/traceh/api/product  v0.7-F0 冻结的统一 Chat 产品面合同（纯协议、无 I/O）
-src/traceh/product      v0.7-F1–F3 ProductTask 事实、固定装配与可选 Chat 产品控制面
+src/traceh/product      v0.7-F1–F3 / v0.8-F5 ProductTask 事实、固定装配、fresh activity/memory read models 与可选 Chat 产品控制面
 src/traceh/llm          Provider Registry、Adapter、typed failure 与 bounded retry policy
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
@@ -742,11 +770,14 @@ P0/P1/P2，最新相邻 owner 回归为 `251 passed`；Textual gate 焦点交接
 其后的产出可见性工作又在**同一个 TUI** 中增加 fresh `Ctrl+T` 角色对话、fresh `Ctrl+P` 完整身份，并
 恢复 Review evidence，没有旧路径或兼容层。此前 `2555 passed, 7 skipped`、退出码 0、耗时
 `3078.80s (51:18)` 的完整全量因此只保留为该改动前的历史证据，不能认证当前工作树。用户体验随后发现
-批准完成后左栏没有宿主反馈的 P2，已在原 adapter 根修并反向验证；当前 `54` 项 TUI、`215` 项相邻回归和
-`2575` 项 collect-only 通过，本次小修尚待短复审，且不得冒充已经完成新的最终全量。下一门禁是短复审与
-用户确认后重跑唯一最终全量，再做 clean-input
-Wheel/sdist/source ZIP、无 `[tui]`/带 `[tui]` 离线安装、真实 Provider 网格、
-commit、push、tag 与 GitHub Release。未完成前不把候选写成已发布。
+批准完成后左栏没有宿主反馈的 P2，已在原 adapter 根修并反向验证。其后的 M1 已完成完整 Patch/任务对话
+出口并通过 `65` 项 TUI 与 `56` 项相邻测试、`2638` 项带 Textual 的 collect-only；这些仍只是 M1 检查点。
+M2 又把单任务 format-5 投影升级为 format-7 同 Session 有界任务目录、当前 focus 最小执行摘要和按需
+`read_product_task_evidence`，未增加 Memory 域或第二事实源；format 6 只保留为历史协议。当前 M2 的
+九模块定向组 `172 passed`、完整 TUI 组 `82 passed`、Product F3 E2E `26 passed`、collect-only `2665`
+项；仓库外精确候选提交通过真实 L2 后，唯一最终全量为 `2658 passed, 7 skipped`、退出码 0。完整证据见
+[`docs/validation-v0.8.0.md`](docs/validation-v0.8.0.md)。clean-input Wheel/sdist/source ZIP、无 `[tui]`/
+带 `[tui]` 离线安装、真实 Provider 网格、commit、push、tag 与 GitHub Release 仍未执行；候选尚未发布。
 
 v0.8.0 候选只整合已有主线：SQLite 是唯一生产 EventStore，旧 JSONL 明确拒绝；retry 不换 Provider、
 模型或冻结请求，也没有 fallback；Line/TUI 共享同一 Driver、Product control/observation 与人工
@@ -806,10 +837,14 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
   Product Pilot；replacement 独立审查的两项 P1 与两项 P2、后续 Product Chat START 前权限、Plugin
   eager-cleanup、task identity handoff、Provider multiline、exact-message 失败投影、110 列断点与 gate
   焦点交接均已根修；Provider/TUI/失败证据与跨 owner 最终复审清零 P0/P1/P2，最新相邻 owner 回归
-  `251 passed`，其后完整全量 `2555 passed, 7 skipped`；这些结果均早于 fresh 角色对话/完整身份补齐，当前
-  projection/screens 仍需重新完成定向与相邻回归、独立审查和唯一最终全量；F5 发布候选尚未发布；
-  v0.9 在 v0.8 发布后重新批准，沿现有 Plugin/EventStore 主线实现 Skill、Workspace Memory、渐进披露
-  和可审计检索。当前已有 SQLite、bounded model retry 与最小 TUI，但仍没有 Skill/Memory、OS sandbox、Provider/model fallback 或
+  `251 passed`，其后完整全量 `2555 passed, 7 skipped`；这些结果均早于 fresh 角色对话/完整身份补齐。
+  M1 已在唯一 TUI 主线完成完整 Patch 与不截断任务对话出口，M2 已把 requester Product context 升级为
+  format-7 同 Session 有界任务目录、当前 focus 最小执行摘要和同 Session 按需证据 Tool；它仍不是 Workspace
+  Memory 或第二事实源。M2 独立复审与唯一最终全量已经通过，结果见验证记录；clean-input 资产、双形态
+  离线安装、真实 Provider 网格及发布仍未执行，F5 候选尚未发布。v0.9 在 v0.8 发布后重新批准，沿现有
+  Plugin/EventStore 主线实现 Skill、Workspace Memory、
+  渐进披露和可审计检索。当前 M2 的 Session task history 不是 Workspace Memory；系统仍没有 Skill/Memory、
+  OS sandbox、Provider/model fallback 或
   第二 Benchmark Runner；
 - `traceh chat` 是行式交互：已有实时 Tool Timeline、Activity Heartbeat、ProductTask durable 进度/审批证据和可收敛的 Ctrl+C，但没有 Token Streaming、Spinner、颜色，也不能在 Turn 运行期间输入；`traceh run`/`resume` 尚未接入 Timeline。所有 CLI 命令在解析和输出前统一尝试切换 UTF-8，Windows 旧代码页不再让合法的持久 Unicode 文本使 `replay`/`inspect` 崩溃；
 - Activity Heartbeat 由 UI-neutral Driver 中唯一的 `ActivityTracker` 产生 typed update，Line/TUI 不各自推断；它仍只是屏幕状态，不写 Event Log、不可事后回查，完成耗时也不进入 payload；需要可审计的时延应在 Provider/Tool 边界落盘；

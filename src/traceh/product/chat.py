@@ -1,11 +1,9 @@
-"""UI-neutral Product Chat coordination and low-authority model actions.
+"""UI-neutral Product Chat coordination and low-authority model Tools.
 
-The two model Tools only leave a process-local note about the current Turn.
-They cannot open a ProductTask, choose a mode, inspect a Review, approve or
-promote.  After the Turn is durably closed, the chat host combines that note
-with the user message identity it supplied; a confirmation suggestion must
-then cross a separate exact-task adapter authorization before the host invokes
-the control plane. Terminal rendering lives in ``traceh.cli.product``.
+The proposal and confirmation Tools only leave a process-local note about the
+current Turn.  The evidence Tool performs a fresh, Session-scoped read.  None
+can open, start, approve, reject, cancel or promote a ProductTask.  Terminal
+rendering lives in :mod:`traceh.cli.product`.
 """
 
 from __future__ import annotations
@@ -15,7 +13,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import uuid4
 
-from traceh.api.json_types import JsonValue
+from traceh.api.json_types import JsonValue, canonical_json
 from traceh.api.product import RequestedTaskMode
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.turns import TurnInput
@@ -27,10 +25,12 @@ from traceh.product.control import (
     ProductTaskControlPlane,
 )
 from traceh.product.errors import ProductInputError
+from traceh.product.events import require_product_identifier
 from traceh.product.inspection import (
     ProductInspectionEvidenceReader,
     ProductTaskEvidence,
 )
+from traceh.product.memory import ProductTaskMemoryReader, product_task_evidence_data
 from traceh.product.router import MAX_ROUTER_SUMMARY_CHARS
 
 
@@ -236,6 +236,64 @@ class ConfirmProductTaskTool:
         )
 
 
+class ReadProductTaskEvidenceTool:
+    """Read bounded durable evidence for one task related to this Session."""
+
+    name = "read_product_task_evidence"
+    description = (
+        "Read verified execution evidence for an exact ProductTask id already "
+        "shown in the host ProductTask context. Use this when the user asks "
+        "which files changed, which managed tools ran, how verification ended, "
+        "or what was promoted. It is read-only and grants no control authority."
+    )
+    effect_kind = EffectKind.PURE_READ
+    input_schema: dict[str, JsonValue] = {
+        "type": "object",
+        "properties": {
+            "task_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+            }
+        },
+        "required": ["task_id"],
+        "additionalProperties": False,
+    }
+
+    __slots__ = ("_memory",)
+
+    def __init__(self, memory: ProductTaskMemoryReader) -> None:
+        if type(memory) is not ProductTaskMemoryReader:
+            raise ProductInputError("product-memory-reader-invalid", "memory")
+        self._memory = memory
+
+    async def execute(
+        self, arguments: dict[str, JsonValue], context: ToolExecutionContext
+    ) -> ToolOutput:
+        if set(arguments) != {"task_id"}:
+            raise ProductInputError("product-evidence-arguments-invalid", "arguments")
+        task_id = require_product_identifier(arguments.get("task_id"), field="task_id")
+        try:
+            memory = await self._memory.load(context.session_id, task_id)
+            data = product_task_evidence_data(memory)
+        except Exception:
+            # Missing, foreign and unreadable tasks deliberately have one public
+            # result.  A requester must not use this read Tool as an id oracle.
+            unavailable: dict[str, JsonValue] = {
+                "available": False,
+                "code": "product-task-evidence-unavailable",
+            }
+            return ToolOutput(
+                "ProductTask evidence is unavailable for this requester Session.",
+                data=unavailable,
+            )
+        return ToolOutput(
+            "Verified ProductTask evidence from the durable log:\n"
+            + canonical_json(data),
+            data={"available": True, "task_id": task_id},
+        )
+
+
 class ProductChatSurface:
     """Typed Product coordination shared by Line and future TUI adapters."""
 
@@ -392,5 +450,6 @@ __all__ = [
     "ProductTurnResolution",
     "ProductTurnActions",
     "ProposeProductTaskTool",
+    "ReadProductTaskEvidenceTool",
     "parse_product_command",
 ]

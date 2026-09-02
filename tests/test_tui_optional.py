@@ -71,6 +71,26 @@ def test_importing_core_tui_boundary_does_not_import_textual() -> None:
     assert probe.returncode == 0
 
 
+def test_core_tui_boundary_and_safe_display_do_not_require_optional_packages() -> None:
+    probe = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            "import sys; "
+            "sys.modules['rich'] = None; "
+            "sys.modules['rich.cells'] = None; "
+            "sys.modules['rich.text'] = None; "
+            "sys.modules['textual'] = None; "
+            "import traceh.tui; "
+            "from traceh.tui.presentation import safe_display_block; "
+            "raise SystemExit(0 if safe_display_block('ok') == 'ok' else 1)",
+        ),
+        cwd=Path(__file__).parents[1],
+        check=False,
+    )
+    assert probe.returncode == 0
+
+
 def test_textual_is_an_optional_bounded_dependency() -> None:
     project = tomllib.loads(
         (Path(__file__).parents[1] / "pyproject.toml").read_text(encoding="utf-8")

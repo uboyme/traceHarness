@@ -149,6 +149,10 @@ PRODUCT_PROMOTION_IMPORTS = {
         "traceh.promotion.projection": {"PromotionLedgerReader"},
     },
     "host.py": {
+        "traceh.promotion.models": {
+            "freeze_verification_plan",
+            "verifier_definition_digest",
+        },
         "traceh.promotion.service": {"PatchPromotionService"},
     },
     "registry.py": {

@@ -159,6 +159,14 @@ class ProductObservationReader:
     def store(self) -> EventStore:
         return self._store
 
+    @property
+    def evidence_reader(self) -> ProductInspectionEvidenceReader:
+        return self._evidence
+
+    @property
+    def promotion_target_id(self) -> str:
+        return self._promotion_target_id
+
     async def current_task_id(self, session_id: str) -> str | None:
         """Find the one unsettled ProductTask owned by this Chat Session.
 
@@ -220,6 +228,12 @@ class ProductObservationReader:
             promotion = ledger.promotion(summary.promotion_id)
             if promotion is None:
                 raise ProductStateError("product-promotion-missing", task_id)
+            if (
+                review is None
+                or promotion.review_id != review.review_id
+                or promotion.target_id != self._promotion_target_id
+            ):
+                raise ProductStateError("product-promotion-chain-broken", task_id)
 
         streams = {
             product_task_stream(task_id),

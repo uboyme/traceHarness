@@ -26,6 +26,7 @@ from traceh.api.product import (
     TaskModeSource,
 )
 from traceh.product.errors import ProductStateError
+from traceh.product.execution import product_task_owner_id
 from traceh.product.inspection import ProductNodeEvidence, ProductTaskEvidence
 from traceh.product.observation import (
     ObservedStreamHead,
@@ -112,6 +113,7 @@ def _turn_events(
     with_list_files: bool = False,
     with_search_text: bool = False,
     shell_exit_code: int | None = None,
+    shell_status: str = "succeeded",
 ) -> tuple[PendingEvent, ...]:
     turn_id = f"turn-{suffix}"
     step_id = f"step-{suffix}"
@@ -250,7 +252,7 @@ def _turn_events(
                         "step_id": step_id,
                         "tool_call_id": f"call-{suffix}",
                         "tool_name": "shell",
-                        "status": "succeeded",
+                        "status": shell_status,
                         "content": "SECRET-IN-RESULT\x1b[32m\u2028\u202e",
                         **result_data,
                     },
@@ -331,6 +333,7 @@ async def _append_agent(
     session_id: str,
     request_id: str,
     role: str,
+    owner_agent_id: str | None = None,
 ) -> None:
     head = await store.head(AGENT_DIRECTORY_STREAM)
     await store.append(
@@ -346,6 +349,7 @@ async def _append_agent(
                     spec=AgentSpec(
                         preset=role,
                         workspace_id=f"workspace-{role}",
+                        owner_agent_id=owner_agent_id,
                     ),
                 ),
                 schema_version=AGENT_EVENT_SCHEMA_VERSION,
@@ -364,6 +368,7 @@ async def _append_session(
     with_list_files: bool = False,
     with_search_text: bool = False,
     shell_exit_code: int | None = None,
+    shell_status: str = "succeeded",
 ) -> None:
     stream = SessionService.session_stream(session_id)
     await store.append(
@@ -395,6 +400,7 @@ async def _append_session(
             with_list_files=with_list_files,
             with_search_text=with_search_text,
             shell_exit_code=shell_exit_code,
+            shell_status=shell_status,
         ),
     )
 
@@ -406,8 +412,27 @@ async def _build_fixture(
     coder_list_files: bool = False,
     coder_search_text: bool = False,
     coder_shell_exit_code: int | None = None,
+    coder_shell_status: str = "succeeded",
+    foreign_owner_role: str | None = None,
 ) -> ConversationFixture:
     store = StrictReadStore()
+    owner_id = product_task_owner_id(TASK_ID)
+    await _append_agent(
+        store,
+        agent_id=owner_id,
+        session_id=f"product-owner-session-{TASK_ID}",
+        request_id=f"product-owner-create-{TASK_ID}",
+        role="traceh-product-owner",
+    )
+    foreign_owner_id = "foreign-product-owner"
+    if foreign_owner_role is not None:
+        await _append_agent(
+            store,
+            agent_id=foreign_owner_id,
+            session_id="foreign-product-owner-session",
+            request_id="foreign-product-owner-create",
+            role="traceh-product-owner",
+        )
     identities = {
         "router": (ROUTER_AGENT_ID, ROUTER_SESSION_ID, "router-request"),
     }
@@ -423,6 +448,9 @@ async def _build_fixture(
             session_id=session_id,
             request_id=request_id,
             role=role,
+            owner_agent_id=(
+                foreign_owner_id if role == foreign_owner_role else owner_id
+            ),
         )
         await _append_session(
             store,
@@ -442,6 +470,11 @@ async def _build_fixture(
                 coder_shell_exit_code
                 if role == ProductRole.CODER.value
                 else None
+            ),
+            shell_status=(
+                coder_shell_status
+                if role == ProductRole.CODER.value
+                else "succeeded"
             ),
         )
 
@@ -670,6 +703,18 @@ async def test_router_session_must_belong_to_the_recorded_router_agent() -> None
     assert raised.value.code == "product-conversation-router-session-mismatch"
 
 
+@pytest.mark.parametrize("role", ("router", "coder"))
+async def test_projected_agents_must_belong_to_the_product_owner_subtree(
+    role: str,
+) -> None:
+    fixture = await _build_fixture(foreign_owner_role=role)
+
+    with pytest.raises(ProductStateError) as raised:
+        await TaskConversationReader(fixture.store).load(fixture.observation)
+
+    assert raised.value.code == "product-conversation-agent-owner-mismatch"
+
+
 async def test_invalid_session_lifecycle_is_rejected_before_surface_projection() -> None:
     fixture = await _build_fixture(coder_shell=True)
     coder_session = fixture.sessions["coder"]
@@ -778,6 +823,35 @@ async def test_shell_exit_code_controls_truthful_result_wording(
 
     assert expected in rendered
     assert forbidden not in rendered
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    (
+        ("succeeded", "成功"),
+        ("failed", "失败"),
+        ("cancelled", "已取消"),
+        ("invalid", "无效"),
+        ("denied", "已拒绝"),
+        ("aborted_before_dispatch", "派发前中止"),
+        ("unknown_after_crash", "结果未知"),
+    ),
+)
+async def test_all_durable_tool_result_statuses_remain_projectable(
+    status: str,
+    expected: str,
+) -> None:
+    fixture = await _build_fixture(
+        coder_shell=True,
+        coder_shell_status=status,
+    )
+
+    snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
+    coder = next(role for role in snapshot.roles if role.role == "coder")
+
+    assert coder.tool_calls == 1
+    assert coder.messages[-1][0] == "tool"
+    assert coder.messages[-1][1].endswith(f"\n{expected}")
 
 
 async def test_unrelated_sessions_are_not_scanned_or_projected() -> None:

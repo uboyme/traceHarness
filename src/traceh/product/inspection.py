@@ -173,6 +173,22 @@ class ProductInspectionEvidenceReader:
 
         return self._store
 
+    @property
+    def artifact_reader(self) -> PatchArtifactReader:
+        return self._artifacts
+
+    @property
+    def verification_plan_digest(self) -> str:
+        return self._verification_plan_digest
+
+    @property
+    def promotion_target_id(self) -> str:
+        return self._promotion_target_id
+
+    @property
+    def max_patch_chars(self) -> int:
+        return self._max_patch_chars
+
     async def load(
         self,
         summary: ProductTaskSummary,
@@ -338,6 +354,10 @@ class ProductInspectionEvidenceReader:
         review: PatchReviewReport,
         outcomes: dict[str, NodeOutcome],
     ) -> ProductReviewEvidence:
+        if review.target_id != self._promotion_target_id:
+            raise ProductStateError(
+                "product-inspection-promotion-target-mismatch", summary.task_id
+            )
         artifact = await self._validated_review_artifact(summary, review, outcomes)
         commands = {command.command_id: command for command in self._verification_plan.commands}
         verifiers = tuple(

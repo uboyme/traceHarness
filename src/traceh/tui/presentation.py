@@ -9,10 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from unicodedata import combining, east_asian_width
-
-from rich.cells import cell_len, chop_cells, set_cell_size
-from rich.text import Text
 
 from traceh.api.llm import UsageQuality
 from traceh.api.product import ProductTaskStatus, RequestedTaskMode
@@ -25,6 +23,9 @@ from traceh.product.observation import (
     ProductObservation,
     ProductUsage,
 )
+
+if TYPE_CHECKING:
+    from rich.text import Text
 
 MAX_BLOCK_CHARS = 12_000
 MAX_BLOCK_LINES = 160
@@ -114,6 +115,8 @@ def prefixed_display_lines(
     continuation_prefix: str | None = None,
 ) -> tuple[tuple[str, str], ...]:
     """Wrap plain text to terminal cells before applying stable prefixes."""
+
+    from rich.cells import cell_len, chop_cells, set_cell_size
 
     continuation = (
         " " * cell_len(first_prefix)
@@ -341,6 +344,8 @@ def product_panel_text(
 
 def product_state_text(content: object, *, terminal: bool) -> Text:
     """Return safe Product text with only a terminal lifecycle track muted."""
+
+    from rich.text import Text
 
     rendered = safe_display_block(content)
     text = Text(rendered)

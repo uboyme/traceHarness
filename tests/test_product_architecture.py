@@ -307,6 +307,36 @@ def test_the_f3_model_tools_hold_only_ephemeral_turn_actions() -> None:
         assert forbidden not in source
 
 
+def test_the_m2_evidence_tool_holds_only_the_pure_shared_reader() -> None:
+    """Detailed memory is a read capability, never a Product control handle."""
+
+    from traceh.api.tools import EffectKind
+    from traceh.product.chat import ReadProductTaskEvidenceTool
+
+    assert ReadProductTaskEvidenceTool.__slots__ == ("_memory",)
+    assert ReadProductTaskEvidenceTool.effect_kind is EffectKind.PURE_READ
+    for filename in ("activity.py", "memory.py"):
+        path = PRODUCT_ROOT / filename
+        source = path.read_text(encoding="utf-8")
+        imports = _imports(path)
+        assert "traceh.product.control" not in imports
+        tree = ast.parse(source)
+        assert not any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "append"
+            and isinstance(node.func.value, ast.Attribute)
+            and node.func.value.attr == "_store"
+            for node in ast.walk(tree)
+        )
+        for forbidden in (
+            "ProductTaskControlPlane",
+            "PatchPromotionService",
+            "WorkflowService",
+        ):
+            assert forbidden not in source
+
+
 def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
     """No handle reaches the router *through* the seam - it is handed a string."""
 

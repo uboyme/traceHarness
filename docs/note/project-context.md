@@ -43,15 +43,15 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前把 canonical ProductTask head 冻成一条严格白名单 Session 上下文证据，并明确同一 requester Session 关系、host-managed 执行主体及每种 durable Product status 的固定含义。当前 format 5 还明确“被选中的一项任务不等于完整任务清单”、requester Workspace 不是 Product 执行路径证据；Surface 完整保留旧对话，但把最新宿主证据置于 requester 对话历史之前，并声明旧聊天的冲突说法不能覆盖当前事实。模型仍可自然总结和合理推断，但需区分宿主事实与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。Product/Workflow/Promotion 原流仍不直接进入请求，也没有模型可见的 approve/promote/workflow Tool。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；严格 JSON 解析失败时，只允许按冻结 Tool schema 对顶层 `type=string` 字段的双三引号 multiline lexical form 做一次有界规范化，结果仍须通过标准 JSON object 解析，其他 malformed response 继续 fail closed。CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
-| Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation，并单调拒绝声明为 effectful 的插件 Tool。Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
+| Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation + `read_product_task_evidence`，并单调拒绝声明为 effectful 的插件 Tool。证据 Tool 只按同 Session 精确任务关系读取有界元数据，不是控制 Tool；Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 对 replacement 前候选完成的 `2503 collected / 2496 passed / 7 skipped` 只作历史证据。发布前真实体验随后根修 Product Chat START 前权限、Plugin ActivationSet eager-cleanup 死锁、终态任务→新 Proposal 身份交接、OpenAI-compatible multiline Tool arguments、失败叶子的 exact message/open Turn 归属、100–109 列 facts 折行，以及 Textual gate 点击后的真实焦点交接。此前最终 `2555 passed, 7 skipped`（退出码 0，`3078.80s`）也发生在 fresh 角色对话/完整身份补齐之前，只认证当时工作树。完成 N12/R4 后，当前 Textual/presentation/task-conversation 直接组为 `65 passed`，统一 diff/Product observation/inspection/optional/architecture 相邻组为 `56 passed`，安装 Textual 8.2.8 的解释器 collect-only 为 `2638 tests`；此前 N10–N11 的 `50 passed / 2634 tests`、N1–N9 的 `55/66/23 passed / 2605 tests`、N1–N6 的 `54 passed`、更宽 Product/Chat/Timeline 相邻组 `365 passed` 与 `[tui]` collect-only `2584` 都只保留为各自检查点历史。一次全新目录的真实 TUI ProductTask 曾从 Proposal 走到 bare Promotion；本轮确定性真实本地 Git auto→multi Pilot 又到达 Approval 并在 `Ctrl+T` 显示 Router/parent/reviewer/coder。N10–N11 只在既有 Patch Artifact reader、Product observation 与 presentation 接缝增加完整 bytes 的 fail-soft 解析、默认摘要和按需只读改动页，不改 owner、控制面、observation 状态或 durable 写入；N12/R4 删除任务对话固定截断并重排同一 snapshot。20.38 的 format-1/2/3/4 检查数字只作历史证据；当前 format-5 的冲突/protocol/F3/Compaction/Provider focused 组为 `17 passed`，Product context、Compaction、完整 F3、OpenAI-compatible、Surface/Core invariants 与 Product architecture 合并组为 `111 passed`。compileall、修改范围 Ruff 与 `git diff --check` 通过；anti-hardcoding production scan 仅命中通用架构类型 `ChatDriver`，人工分类为非示例硬编码；新的唯一最终全量仍未运行。详细见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 replacement 前的 `2496 passed, 7 skipped`、后续 `2555 passed, 7 skipped` 以及 M1 的定向数字均只认证各自历史工作树；20.38 的 format 1–6 数字也全部是历史证据。当前 M2 format-7 的 Product memory/model-context/Compaction/observation/inspection/architecture/service/task-conversation 九模块为 `172 passed`，完整 TUI/optional/presentation/task-conversation 为 `82 passed`，Product F3 E2E 为 `26 passed`，安装 Textual 8.2.8 的解释器全仓收集 `2665 tests`。独立代码与最终文档复审修正后为 `P0=0 / P1=0 / P2=0`；仓库外、33 文件逐项匹配的临时候选提交通过独立真实 L2 `1 passed`，随后无筛选最终全量得到 `2658 passed, 7 skipped`、退出码 0、耗时 `3226.49s (53:46)`。compileall、修改范围 Ruff、`git diff --check`、anti-hardcoding、受保护核心零 diff和文档门禁均通过，详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 最新正式发布仍为 `v0.7.1`；当前工作树是未提交、未发布的 `0.8.0` F5 候选。F0–F4 原提交和旧停止点
@@ -67,10 +67,11 @@ status-only format-1 的 `30/15/24` 与 collect-only `2573` 同样只作历史�
 status 语义，但短复审发现 STARTED/COMPLETED 跨 owner 过度声明，收窄 canonical message 后硬切为 format 3。
 最新真实体验证明状态时效已经恢复，同时暴露 format-3 没有说明 selected-not-inventory、Workspace mapping
 缺失与事实/推断边界；自然语言证据块修复后协议先硬切为 format 4。随后请求内旧聊天与当前宿主事实的
-优先级冲突由 Surface 前置规则根修，协议继续单线硬切为 format 5，旧 1/2/3/4 都明确拒绝。当前 format-5
-的最新定向数字见 20.38 与验证记录；唯一
-最终全量仍待用户体验确认后运行，随后才是 clean-input 打包、双形态离线安装与另行授权的
-真实 Provider 网格。v0.7.1 的复审、最终全量、
+优先级冲突由 Surface 前置规则根修并硬切为 format 5。M2 先以 format 6 加入同 Session 有界任务目录，
+随后以 format 7 为当前 focus 增加最小执行摘要与按需证据 Tool；旧 1–6 都明确拒绝。当前 format-7 的最新
+定向、独立审查、真实 L2 与唯一最终全量均已通过，见 20.38 与验证记录；随后才是另行授权的 clean-input
+打包、双形态离线安装与真实 Provider 网格。本轮没有执行这些发布门禁，也没有提交、push、tag 或 release。
+v0.7.1 的复审、最终全量、
 干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见
 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。当前仍没有默认 Product Profile、OS 沙箱、跨进程
 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、
@@ -114,7 +115,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、固定 Workflow、Review/Approval 与 Promotion；v0.7.1（20.32）把模型的确认 Tool 降为提示建议，真正启动必须由终端用户对当前精确 task 输入固定 `START`。启用 Product 配置时，请求者 Chat 只暴露 `list_files/read_file/search_text` 与 proposal/confirmation Tool，并以单调 Policy 拒绝所有声明为写入、进程或外部事务的 core/plugin Tool；代码副作用只能在 `START` 后由 Product Workflow 的隔离 Workspace owner 执行。20.38 只在后续 requester Turn 前提供 host-owned、bounded、非授权的 Product status Session 证据，不开放任何新控制 Tool。未启用配置的普通 Coding Chat 仍保留默认工具。`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile。F4（20.30）的 `traceh eval` 是同一条主线的另一个 composition root：它复用同一个 `ProductChatHost` 与同一个控制面，但由 manifest 而不是模型提供需求与模式，并自己创建一次性本地仓库；
+- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、固定 Workflow、Review/Approval 与 Promotion；v0.7.1（20.32）把模型的确认 Tool 降为提示建议，真正启动必须由终端用户对当前精确 task 输入固定 `START`。启用 Product 配置时，请求者 Chat 只暴露 `list_files/read_file/search_text`、proposal/confirmation 与纯读 `read_product_task_evidence`，并以单调 Policy 拒绝所有声明为写入、进程或外部事务的 core/plugin Tool；代码副作用只能在 `START` 后由 Product Workflow 的隔离 Workspace owner 执行。20.38 在后续 requester Turn 前提供 host-owned、bounded、非授权的当前 Product 摘要与同 Session 任务历史，并允许模型对精确 task id 按需 fresh 读取同 Session 的受限执行证据；它不开放 START/Approve/Promote 或 Workflow 控制能力。未启用配置的普通 Coding Chat 仍保留默认工具。`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile。F4（20.30）的 `traceh eval` 是同一条主线的另一个 composition root：它复用同一个 `ProductChatHost` 与同一个控制面，但由 manifest 而不是模型提供需求与模式，并自己创建一次性本地仓库；
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
@@ -137,7 +138,7 @@ traceharness/
 │   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
-│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3/F5 的宿主控制面、Chat 表面、durable evidence 只读审批投影、schema-1 配置解析与显式装配；`context.py` 在 requester Turn 前 fresh 冻结安全 Product 状态语义证据
+│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3/F5 的宿主控制面、Chat 表面、durable evidence 只读审批投影、schema-1 配置解析与显式装配；`context.py` 在 requester Turn 前 fresh 冻结安全 Product 状态语义证据，`activity.py`/`memory.py` 从同一 EventStore fresh join task-owned Agent Session 与 Product/Workflow/Review/Promotion 证据
 │   ├── chat/                         v0.8-F3/F4 UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ephemeral ActivityTracker；不读 stdin、不渲染终端、不保存第二份对话历史
 │   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded plain-text presentation、对话/Product 面板、原 START/Approval/Cancel owner 接线与生命周期收敛
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
@@ -408,7 +409,7 @@ flowchart LR
 | Workflow Run Stream | `workflow:<run_id>` | 每个 Workflow Run 一条的编排事实：run/node 生命周期、Map 展开与 Approval 等待；只保存指向其它事实源的身份，不复制 Agent 报告、Patch bytes、Review 证据或 Approval（20.25） |
 | ProductTask Stream | `product-task:<task_id>` | 每个产品任务一条的产品事实：产品身份、宿主控制决定、digest 与指向其它域的引用；不保存 Agent 报告、会话用量、Patch bytes、Review 证据或 Approval（20.27） |
 
-v0.7-F1 起 `product-task:<task_id>` **确实会被写入**，由 `traceh.product` 的宿主服务写、由它的唯一投影器读。raw ProductTask 事件仍不直接进入 Model Surface、Session Recovery 或 Request Fingerprint；20.38 新增的 host bridge 会在下一次 requester Turn 前 fresh 读取 canonical head，把严格白名单的 `product/context-snapshot` 写进 requester Session。后者只证明模型看见了什么，不反向成为 ProductTask 权威。
+v0.7-F1 起 `product-task:<task_id>` **确实会被写入**，由 `traceh.product` 的宿主服务写、由它的唯一投影器读。raw ProductTask 事件仍不直接进入 Model Surface、Session Recovery 或 Request Fingerprint；20.38 的 host bridge 会在下一次 requester Turn 前 fresh 读取 canonical head，把严格白名单的 `product/context-snapshot` 写进 requester Session。format 7 的最小执行摘要和按需证据读取都从同一 EventStore fresh 重建；前者只证明模型当时看见了什么，后者只是普通 ToolRuntime 中的纯读结果，两者都不反向成为 ProductTask 权威。
 
 前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。其余均为各域自己的控制面流：Directory、Budget Ledger、Workspace Catalog、Patch Artifact Catalog 与 Patch Promotion Ledger 每个 Store 各一条，Inbox 与 Delivery 每个 Agent 各一条，Workflow 与 ProductTask 分别每个 run/task 各一条；这些 raw 控制事件都不直接进入 Model Surface、Session Recovery 或 Request Fingerprint。唯一窄例外是 Product host 写回 Session 的 bounded status-semantics observation；Artifact 原始 bytes 位于显式 SHA-256 CAS，由 Manifest 引用并在读取时重新校验。
 
@@ -421,7 +422,7 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | Session/Inbox | `session/created`、`inbox/accepted`、`inbox/claimed` |
 | Composition control | `composition/migration-authorized`（只记录外部插件身份迁移授权，不进入 Model Surface） |
 | Turn/Step | `turn/start`、`turn/end`、`step/start`、`step/end` |
-| 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 5、exact key/message、Product head causation；只记录模型看到的安全状态、关系、固定含义、冲突优先级与回答证据边界，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
+| 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 7、exact key/messages、当前 Product head causation；原子记录当前 focus 在内最多六项任务、精确总数/省略数、固定状态语义、有界历史 source-request 摘录，并只为稳定检查点 focus 记录最小执行摘要；formats 1–6 拒绝，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
 | 模型 | `model/attempt-start`、`assistant/chunk`、`assistant/message`、`model/attempt-end` |
 | 工具 | `tool/call`、`tool/admitted`、`tool/result` |
 | 验证 | `verification/result` |
@@ -656,8 +657,8 @@ Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-
 - `user/message` → user；
 - `assistant/message` → assistant，保留 tool calls；
 - `tool/result` → tool；
-- validated `product/context-snapshot` → 至多一条 system 状态语义证据；按
-  `(confirmation inbox/accepted seq, Product head seq)` 选择逻辑最新，而不是按跨 Stream 时间戳或 append 竞态；
+- validated `product/context-snapshot` → 逻辑最新的一张快照所冻结的两条有序消息：system 当前事实 + user 历史参考；按
+  `(confirmation inbox/accepted seq, Product head seq)` 选择，而不是按跨 Stream 时间戳或 append 竞态；
 - `surface/replace` → 替换指定旧 Surface 事件的摘要消息。
 
 原始事件仍保留。多次 Replacement 通过 source seq 遮蔽旧对话视图，而不是删除历史；它不能遮蔽
@@ -674,8 +675,12 @@ request。首个 Attempt 的 Session CAS batch 只写一条 current-schema `requ
 
 ```mermaid
 flowchart LR
-    PROD["canonical ProductTask head"] --> BRIDGE["ProductModelContext: bounded status semantics"]
+    LOG["唯一 EventStore durable log"] --> READ["stateless Product read models / fresh join"]
+    READ --> BRIDGE["ProductModelContext: format-7 catalog + minimal summary"]
+    READ --> TOOL["read_product_task_evidence: same-Session bounded metadata"]
     BRIDGE --> EV
+    TOOL --> TR["普通 ToolRuntime audit"]
+    TR --> EV
     EV["Session Events through source_seq"] --> SU["SurfaceProjector"]
     SU --> MSG["Model-visible Messages"]
     CO["Composition Snapshot"] --> REQ["ModelRequest"]
@@ -1605,7 +1610,7 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 | Activity / 等待提示 | `chat/activity.py`（唯一 projector）、`cli/activity.py`（Line renderer）、`chat/driver.py`、`tests/test_cli_activity.py` | 1、3、13.6、13.7、15、16、20.35 |
 | Ctrl+C / 恢复信息 | `chat/driver.py`（活跃 Turn 取消/收敛）、`cli/chat.py`（恢复信息、空闲中断）、Runtime 的 `cancel()`、取消与活动测试 | 5.3、11、13.8、15、16、20.35 |
 | Product UI observation | `product/observation.py`、`product/chat.py`、`product/host.py`、`cli/product.py`、`tests/test_product_observation.py`、`tests/test_product_f3_e2e.py` | 1、3、6.7、13、15、16、20.29、20.35 |
-| Product requester 模型上下文 | `product/context.py`、`session/product_context.py`、`product/chat.py`、`product/host.py`、`session/surface.py`、`session/invariants.py`、`session/compaction.py`、`tests/test_product_model_context.py`、Product F3 E2E、ADR-0039 | 1、3、6.2–6.3、7.2–7.3、12.1–12.2、15、16、20.38 |
+| Product requester 模型上下文 | `product/context.py`、`session/product_context.py`、`product/chat.py`、`product/host.py`、`session/surface.py`、`session/invariants.py`、`session/compaction.py`、`tests/test_product_model_context.py`、Product F3 E2E、ADR-0039/0040 | 1、3、6.2–6.3、7.2–7.3、12.1–12.2、15、16、20.38 |
 | Provider/Request / typed failure | `api/llm.py`、`llm/failures.py`、`llm/openai_compatible.py`、`llm/runtime.py`、`request_builder.py`、`tests/test_openai_provider.py`、ADR-0037/0038 | 7、8、13、15、16、20.34、20.36 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
@@ -3433,7 +3438,7 @@ JSON 与 Markdown 的 18 行、两个 quality arm 和 routing 聚合已逐项核
 
 同一次 single 体验还给出 Token 反例：Coder 已完成修改与测试，11 个 provider response 记录 `38454` exact tokens，但当时角色累计账户只有 `32768`，最后仅用于总结的下一次调用被 Budget 拒绝。provider 的单次请求上限与 Agent 整个生命周期的累计 Token authority 不是同一个量。当前 [ADR-0034](../adr/0034-separate-product-token-budget-and-request-output-limit.md) 因而给每个 role/router 增加必填 `max_output_tokens`，由 [`ProductResourceBindings`](../../src/traceh/product/resources.py) 带入既有 `RuntimeConfig`；`budget.max_tokens` 仍由 append-only Ledger 累计 charge/settle。旧 schema 不兼容、不默认、不迁移。shipped benchmark 当前为 parent/reviewer 累计 `60000`、coder `120000`、三角色每请求 `8192`，Router 累计 `8000`/每请求 `256`，task 总额 `500000`，三种 arm 仍完全相同。
 
-Chat 可读性修复复用现有事实：确认接受后立即显示 task id/requested mode，已有 `--heartbeat-seconds` 的 host monotonic clock 在长执行中 fresh replay status；Approval 与 `/task inspect` 通过新的 [`ProductInspectionEvidenceReader`](../../src/traceh/product/inspection.py) 读取固定 Workflow、Agent Directory、Artifact CAS 与 Review，展示 node/Session/replay、changed paths、控制字符惰性且按 host report bound 截断的 Patch、Verifier executable/argument count/argv digest/status/exit。Patch CAS 被改写的确定性反例会显示 `artifact-cas-collision` 与 do-not-approve，不会显示伪造 preview。Verifier argv 参数不直接回显，避免宿主错误地把可能含秘密的参数写到 Console；完整命令仍由冻结 host 配置拥有。这些 inspection/display 值仍不进入模型请求；20.38 后只有 task id、canonical Product head handle、公开 status，以及固定的同会话关系、host-managed 执行主体、状态含义、明细省略范围与非授权说明进入独立的 bounded Session context。
+Chat 可读性修复复用现有事实：确认接受后立即显示 task id/requested mode，已有 `--heartbeat-seconds` 的 host monotonic clock 在长执行中 fresh replay status；Approval 与 `/task inspect` 通过新的 [`ProductInspectionEvidenceReader`](../../src/traceh/product/inspection.py) 读取固定 Workflow、Agent Directory、Artifact CAS 与 Review，展示 node/Session/replay、changed paths、控制字符惰性且按 host report bound 截断的 Patch、Verifier executable/argument count/argv digest/status/exit。Patch CAS 被改写的确定性反例会显示 `artifact-cas-collision` 与 do-not-approve，不会显示伪造 preview。Verifier argv 参数不直接回显，避免宿主错误地把可能含秘密的参数写到 Console；完整命令仍由冻结 host 配置拥有。这些 inspection/display 值不会被 TUI 自动复制进模型请求；20.38 的 format-7 snapshot 默认只放 task handle、公开 status、固定关系/执行主体、最小执行摘要、明细省略范围与非授权说明。模型显式调用同 Session `read_product_task_evidence` 时，受限 path/Tool outcome/Verifier/Promotion 元数据才作为普通 audited Tool result 进入该 Session；原始 Patch、参数/输出和 Workspace 路径仍不提供。
 
 冻结计划绑定也不是 Chat 专用显示规则。Promotion owner 的同一 `review_matches_verification_plan()` 同时保护 Review 重用、approve、promote 与 Product inspection；F4 [`collect_attempt_evidence()`](../../src/traceh/evaluation/metrics.py) 现在必须接收 manifest 的 frozen `VerificationPlan` 并在读取 `review.passed` 前复用该规则。确定性反例同步改写 Review、Approval、Promotion、ProductTask 与 Workflow 的关联摘要和身份，使 durable 链条保持内部及跨域一致，但把结果 `argv_digest` 换成冻结计划之外的值；移除 matcher 后 collector 会把该 attempt 接受为成功，恢复后稳定拒绝为 `benchmark-verifier-evidence-mismatch`。
 
@@ -3783,12 +3788,13 @@ Line adapter 消费 Driver update，再复用原 `TimelineRenderer`、assistant/
 Product 侧同样把协调与显示拆开。[`product/chat.py`](../../src/traceh/product/chat.py) 只解析纯
 `ProductCommand` 并返回 typed proposal/start/inspection/action 结果；[`cli/product.py`](../../src/traceh/cli/product.py)
 是唯一 Line renderer 和精确 `START` 输入 owner。所有 confirm/inspect/approve/reject/cancel/abandon 写动作
-仍进入原 `ProductTaskControlPlane`，Benchmark 仍驱动同一个 control；两个模型 Tool 继续只持有
-`ProductTurnActions`，看不到 evaluator、Review、approval digest 或 Promotion capability。
+仍进入原 `ProductTaskControlPlane`，Benchmark 仍驱动同一个 control；proposal/confirmation 两个模型 Tool
+只持有 `ProductTurnActions`。20.38 后新增的 `read_product_task_evidence` 只持有 pure read model，能读取
+同 Session 的受限 Review/Promotion/Activity 元数据，但看不到 evaluator 或任何 approval/promotion 控制能力。
 
 当前 `--product-config` composition 也把请求者 Chat 与真正执行代码的 Product Agent 分开：Chat Runtime
-关闭默认 Coding Tool 集，只重新装配 `list_files`、`read_file`、`search_text` 以及 proposal/confirmation
-两个 Tool。`ProductChatSideEffectPolicy` 对所有声明为 `WORKSPACE_WRITE`、`PROCESS`、`NETWORK_WRITE` 或
+关闭默认 Coding Tool 集，只重新装配 `list_files`、`read_file`、`search_text`、proposal/confirmation
+和 `read_product_task_evidence`。`ProductChatSideEffectPolicy` 对所有声明为 `WORKSPACE_WRITE`、`PROCESS`、`NETWORK_WRITE` 或
 `EXTERNAL_TRANSACTION` 的 core/plugin Tool 单调 `DENY`，后面的 allow policy 不能覆盖；声明为 pure/read
 的 Tool 仍按插件的可信 effect-kind 合同工作。这不是 OS sandbox，但保证正式工具面不会在宿主 `START`
 前修改 source、运行进程或执行外部事务。没有 `--product-config` 的普通 Coding Chat 仍使用原五个默认
@@ -3846,8 +3852,9 @@ Session”抽成 UI-neutral opening boundary，Line 与 Textual 都在接受用�
 现有 `SurfaceProjector` fresh replay SQLite Session facts 得到，widget 内容不参与下一次请求、恢复或
 事实判断。
 
-Textual 位于新的 [`traceh/tui/`](../../src/traceh/tui/) 包。包的 `__init__` 与 core-only presentation
-不 import Textual；`pyproject.toml` 只在 `tui` extra 声明 `textual>=8.2.8,<9`。CLI 在装配 Store、
+Textual 位于新的 [`traceh/tui/`](../../src/traceh/tui/) 包。包的 `__init__` 不 import Textual 或 Rich；
+presentation 只在真正需要 Rich cell/Text 的函数内局部 import Rich，core-only 的 safe display 与任务对话
+投影不需要 optional package。`pyproject.toml` 只在 `tui` extra 声明 `textual>=8.2.8,<9`。CLI 在装配 Store、
 Runtime、Product 或创建 Session **之前**检查 optional dependency，缺失时给出安装提示并停止，不静默
 切回 Line。`runner.py` 只拥有 adapter lifecycle：App 退出后先收敛 Product host，再 dispose Runtime；
 SQLite Store 仍由 CLI composition root 关闭。F5 才负责无 extra/有 extra 的 clean-input Wheel 与离线
@@ -4148,8 +4155,8 @@ ActivationSet eager-cleanup、Provider multiline Tool arguments、失败证据�
 Provider/TUI/失败证据与跨 owner 最终复审清零 P0/P1/P2。随后本节记录的产出可见性又实质修改了同一
 TUI 及测试，所以该轮完整全量现在只作历史证据。本轮 `47` 项 TUI、`215` 项相邻回归、`2575` 项
 collect-only 已通过，独立短复审为 `P0=0/P1=0/P2=0`；Router/Directory 保护的反向验证在移除绑定后
-确定性得到 `DID NOT RAISE`，恢复后转绿。当前先让用户实际体验，再运行唯一最终全量，而不是直接打包。过程状态见
-20.37 与 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。
+确定性得到 `DID NOT RAISE`，恢复后转绿。该历史检查点先让用户实际体验、没有直接打包；后续 M2
+当前候选的唯一最终全量结果见 20.38 与 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。
 
 ### 20.37 v0.8-F5：`0.8.0` 发布候选整合与门禁（通俗版 20.31）
 
@@ -4161,9 +4168,10 @@ Distribution metadata、`traceh.__version__`、`traceh.core` identity、插件 A
 ZIP 文件名继续从它派生。工作树已经把该值切到 `0.8.0`，但在最终门禁、提交、tag 和发布完成前，最新
 正式版本仍是 `v0.7.1`。
 
-发布前真实体验随后产生的候选修复不属于这条“只整合”声明：特别是 20.38 新增 envelope schema-1、
-当前 message format-5 `product/context-snapshot`，只记录 requester 模型看见的安全 Product status、固定语义、冲突优先级与回答证据边界，并不成为 Product、Workflow
-或 Promotion 的第二权威。当前能力应同时阅读本节与 20.38，不能拿原始 F5 边界否定后续已实现修复。
+发布前真实体验随后产生的候选修复不属于这条“只整合”声明：特别是 20.38 当前 envelope schema-1、
+message format-7 `product/context-snapshot` 记录 requester 模型看见的当前 Product 状态语义、同 Session
+有界近期任务参考与 focus 最小执行摘要，并提供一个同 Session 纯读证据 Tool；它们都不成为 Product、
+Workflow 或 Promotion 的第二权威。当前能力应同时阅读本节与 20.38，不能拿原始 F5 边界否定后续已实现修复。
 
 F5 核对版本切换时发现两个独立示例插件仍按 v0.7.1 发布时的谨慎边界显式声明 `<0.8`。核心 discovery
 与 validator 没有放宽：拥有这些元数据的 Plugin Creator 与 Python Quality 自己升为补丁版 `0.2.2`，
@@ -4223,11 +4231,11 @@ Contract/Architecture `118 passed`、presentation/observation/activity/timeline 
 最终从另一个全新目录完整重跑，得到 **`2555 passed, 7 skipped in 3078.80s (0:51:18)`、退出码 0**；
 总口径为 `2562` 项。最慢项仍是完整 L2 候选验证 `1403.74s`，不是挂起；七个 skip 仍是既有 Windows/
 optional 平台边界。该结果发生在 20.36 的 `Ctrl+T`/`Ctrl+P` 产出可见性补齐之前，现只保留为真实历史
-门禁，不能认证当前工作树。当前必须先完成新增 projection/screens 的定向与相邻回归、独立审查和一次新的
-最终全量；在此之前不能进入 clean committed input 的 Wheel/sdist/source ZIP、archive audit 与双形态离线
-安装。上述资产、另行授权的完整真实 Provider 网格、commit、tag、push 与 release 均未由本段宣称完成。
+门禁，不能认证当前工作树。在该历史检查点，新增 projection/screens 的定向与相邻回归、独立审查和一次
+新的最终全量都仍待完成；当前 M2 结果见 20.38。clean committed input 的 Wheel/sdist/source ZIP、archive
+audit、双形态离线安装、另行授权的完整真实 Provider 网格、commit、tag、push 与 release 仍未执行。
 
-### 20.38 v0.8-F5：requester 模型的 host-owned Product 状态上下文（通俗版 20.32）
+### 20.38 v0.8-F5：requester 模型的 host-owned Product 状态与任务记忆（通俗版 20.32）
 
 真实 TUI 体验先证明右栏 Product/Workflow/Promotion 事实与下一轮 requester 模型可能同时给出相反结论：
 右栏已经 fresh replay 到 `product/task-completed` 和 Promotion receipt，模型却说任务“尚未实际执行”。第一版
@@ -4256,31 +4264,43 @@ bridge，而不是让 Textual/Line adapter 拼提示或让通用 RequestBuilder 
 
 修复位于 Product Chat 与 Session Surface 的已有边界，不在 Textual 或 Line adapter 拼提示。
 [`ProductModelContext`](../../src/traceh/product/context.py) 在每个 requester Turn 开始前使用同一个
-EventStore fresh replay ProductTask 与 Session 确认证据。task 跨 Stream 的先后只认确认消息的 durable
-`inbox/accepted.seq`：若有且只有一个 live task，它优先；否则选择 confirmation seq 最大且唯一的 terminal
-task。task id、Product stream head seq、`occurred_at` 和 `list_streams()` 顺序都不是跨 Stream 时钟；多个
-live task、同序冲突、缺失确认或 origin/confirmation Session 混合都 fail closed。宿主装配要求 bridge 的
+EventStore fresh replay ProductTask 与 Session origin/确认证据，并为所有合法关联任务建立一次性候选目录。
+task 跨 Stream 的先后只认确认消息的 durable `inbox/accepted.seq`：若有且只有一个 live task，它作为
+focus；否则 confirmation seq 最大且唯一的 terminal task 作为 focus。其余候选按 confirmation seq 降序，
+连同 focus 最多保留六项，并同时记录准确总数与省略数。task id、Product stream head seq、`occurred_at` 和
+`list_streams()` 顺序都不是跨 Stream 时钟；多个 live task、同序冲突、缺失 origin/确认、Turn 不匹配或
+origin/confirmation Session 混合都 fail closed。宿主装配要求 bridge 的
 `SessionService` 与 Product Store 具有同一 durable-log identity，不能拿两本账字段对得上就冒充同源。
 
-选中 canonical Product head 后，bridge 只在 head 改变时向 requester `session:<session_id>` append 一条
-envelope schema-1、message format-5 `product/context-snapshot`。[`session/product_context.py`](../../src/traceh/session/product_context.py)
-规定 exact key 集、built-in 类型、Product stream/head、confirmation order、causation event id、deterministic
-context id 与 exact system message；parser 重建全部 payload 后才允许进入 Surface。format 参与 context id，
-status-only format 1、旧跨 owner 文案 format 2、旧 XML/证据范围文案 format 3 与缺少冲突优先级的 format 4
-都明确拒绝并要求使用新 data-dir；没有多版本 parser、
-迁移、静默改写或 fallback。
+目录改变后，bridge 向 requester `session:<session_id>` append **一条** envelope schema-1、message format-7
+`product/context-snapshot`。[`session/product_context.py`](../../src/traceh/session/product_context.py) 规定 exact
+key 集、built-in 类型、focus task id、准确总数/省略数、每项 Product stream/head/event、confirmation order、
+status/mode、requirement digest、origin message id、有界 source-request 摘录及其截断标记，以及仅属于 focus
+稳定检查点的可选最小执行摘要；focus Product head
+event id 是整条 Session event 的 causation。deterministic context id 覆盖完整目录，parser 重建全部 payload
+和两条消息后才允许进入 Surface。format 参与 context id，format 1–6 全部明确拒绝并要求使用新 data-dir；
+没有多版本 parser、迁移、静默改写或 fallback。
 
-format-5 的有界消息白名单包含 task id、durable Product head handle、公开 `ProductTaskStatus`，以及由已验证
-关系和该 status 固定生成的自然语言 `Facts / Limits / Use` 语义：同一 requester Session 关系、条件式
-host-managed Product Workflow Agent 执行主体、逐 status 含义、选择覆盖范围、Workspace/明细省略范围、
-回答证据边界与非授权边界。它明确这只是为当前请求选中的一项相关任务，不是完整 task inventory；没有提供
-Product 执行 Workspace path/mapping，requester Session Workspace 也不能因此被冒充为 Product 执行路径。
-内部 XML wrapper 已从 provider-visible 文本删除，模型被要求自然回答而不是复述内部 block/label。
+format-7 在**同一事件**内冻结两条有顺序的模型消息。第一条是 system-role 当前事实：focus task id、
+durable Product head、公开 `ProductTaskStatus`、requested/resolved mode、整个有界目录中每项任务的
+task/head/status/mode，以及由已验证关系和 status 固定生成的当前状态、同 Session 关系、host-managed
+Product Workflow Agent 执行主体、Workspace/明细省略范围、回答证据边界与非授权边界。第二条是 user-role
+历史参考：准确的 shown/total/omitted 数字，以及每项任务的 task id 和 source request 有界摘录。摘录先按
+canonical JSON 表示限制在 320 字符内并显式记录是否截断，再作为 JSON string 写入历史参考，所以换行、
+引号或类似内部标题的文本不能伪造额外消息或字段。
+system 消息明确说明这些摘录只是历史 requester 原文，不是 canonical requirement、当前用户指令或任何控制
+授权；任务头、状态和 mode 才是宿主派生事实。两条消息各自最多 8192 字符。内部 XML wrapper 仍不进入
+provider-visible 文本，模型被要求自然回答而不是复述内部 block/label。
+format 7 只在 focus 为 `awaiting_approval`、`completed`、`rejected`、`cancelled` 或 `failed` 时加入
+`execution_summary`，字段固定为 `workflow_status`、`managed_tool_call_count`、`changed_path_count`、
+`verification_passed`、`verifier_count` 与 `promotion_recorded`。历史目录项没有该摘要；其他非稳定 focus
+也没有。`completed` 必须有 Promotion，其他这些稳定状态不得借一条 Promotion 冒充自己的结果。摘要提供
+“是否、多少”的最小可靠信号，不放入 path、Tool 名、Verifier 身份、Review/Promotion id 或 Patch 内容。
 `started` 只证明这个 ProductTask 已在
 宿主接受 START 后 durable 进入 STARTED；Product-only context 不声称 `workflow/run-started` 已经落盘，执行
-仍可能处于跨 owner 启动/对账窗口。`completed` 只证明这个精确 ProductTask 已 durable terminal，并携带一个
-Promotion reference；正常控制路径在 promotion 后写入该状态，但该 bounded context 不独立重验或暴露
-Promotion receipt。它要求不得把 completed 当成仍在等 START，也不得再次要求 START。`awaiting_approval`
+仍可能处于跨 owner 启动/对账窗口。`completed` 只证明这个精确 ProductTask 已 durable terminal；format 7
+通过 fresh evidence join 额外要求 `promotion_recorded=true`，但仍不暴露 receipt 身份。它要求不得把
+completed 当成仍在等 START，也不得再次要求 START。`awaiting_approval`
 只陈述到达人审屏障；failed/cancelled/rejected/abandoned 均不冒充成功。requester 模型自己的 Tool 历史和
 requester Workspace 不能反证 ProductTask 进度；路径、Patch、Review/Promotion id 等细节没进入也不等于
 没发生工作。消息仍不声称某个文件一定变化，因为合法 completed 可以是 no-op。它没有禁止推理：明确允许
@@ -4288,13 +4308,44 @@ requester Workspace 不能反证 ProductTask 进度；路径、Patch、Review/Pr
 输出编造成 durable 事实。它同时明确：较早聊天中关于当前 task status 的冲突说法不能覆盖这些宿主事实，
 但旧消息仍作为历史保留，既不删除也不改写。
 
-requirement、模型报告、路径、Patch bytes、Review/Promotion id、digest、revision、Verifier、failure detail 与
-Provider 数据都不进入；raw Product/Workflow/Promotion 事件也仍不直接进入模型请求。内容上限从 format-1 的
-1024 字符随协议一起切为 2048 字符，最大合法 task identity 的 canonical message 仍在界内。
+canonical requirement、模型报告、路径明细、Patch bytes、Review/Promotion id、revision、Verifier 身份、
+failure detail 与 Provider 数据都不进入默认 snapshot；每项只保留 Product 自身已经记录的 requirement digest
+和有界 origin source request 摘录，两者不能被等同。raw Product/Workflow/Promotion 事件也仍不直接进入
+默认 Surface。历史任务只在默认窗口外省略，不从 EventStore 删除，也不由 LLM 总结；跨 Session/Workspace
+检索、FTS、embedding、RAG 与自动压缩仍未实现。
+
+需要比默认摘要更具体的证据时，Product requester 可调用
+[`ReadProductTaskEvidenceTool`](../../src/traceh/product/chat.py) 的 `read_product_task_evidence`。它只接受 exact
+`{"task_id": ...}`，并由 [`ProductTaskMemoryReader`](../../src/traceh/product/memory.py) 对同一 EventStore
+fresh join ProductTask、Workflow/node、task-owned Agent Session activity、Review、Approval、Promotion 与
+Usage；[`ProductTaskActivityReader`](../../src/traceh/product/activity.py) 要求 Router 和固定角色 Agent 都在
+当前 `product_task_owner_id(task_id)` 子树，并校验各自 Directory/Session/request 身份及 Session 核心不变量。
+它只接受 Tool Runtime/Recovery 当前会持久化的七种结果状态：`succeeded`、`failed`、`cancelled`、
+`invalid`、`denied`、`aborted_before_dispatch` 与 `unknown_after_crash`；其他 durable 值 fail closed。
+`pending` 不是第八种 durable 结果，只用于表示尚未配对 `tool/result` 的开放调用。
+origin 与 confirmation 必须来自调用者同一 Session 的精确 message/turn/order；missing、foreign、损坏或读取
+失败统一返回 `product-task-evidence-unavailable`，不能把 Tool 当 task-id oracle。Product head 在 join 前后
+变化会整次重试，不能把旧目录状态和新执行证据拼成一张快照。
+
+成功结果是白名单 JSON：changed paths 最多 8 项并报告 shown/omitted，每个角色只保留最新 8 次 Tool
+name/status/seq/exit 并报告 shown/omitted；Verifier 最多 8 项并报告 shown/total。总 JSON 最多 20,000
+字符。它不返回原始 Patch、Tool 参数或
+输出、模型 prose、Product Workspace 路径，也没有 START/Approve/Reject/Cancel/Promote 权限。Tool 本体是
+`PURE_READ`、不写 Product/control facts；经正常 `ToolRuntime` 调用时，既有 requester Session 的
+`tool/call`/`tool/result` 审计仍照常落盘。
+
+CLI 因 Tool Registry 冻结与 connected Feed 的生命周期边界构造两份无状态 reader bundle：冻结前 bundle
+让 evidence Tool 读取 raw durable log；Runtime 建成后的 bundle 绑定其 `PublishingEventStore`，供
+Product host/context/UI 使用。CLI 对两次构造传入同一原始 durable-log identity、CAS、Verifier plan、target
+与报告上限，因此生产装配按构造保证它们同源同配置，不是两本账、缓存或第二事实源。两份 bundle 不由
+host 跨实例比较；host 只逐层校验交给自己的第二份 bundle 中 artifact/evidence/observation/memory 的
+store、对象链和配置，拒绝该 bundle 内部混合。TUI 任务对话复用同一 `ProductTaskActivityReader` 规则，
+不保留平行活动投影。
 
 [`SurfaceProjector`](../../src/traceh/session/surface.py) 按
-`(confirmation inbox/accepted seq, Product head seq)` 只选择逻辑最新的一条 system message；它先按原 seq
-完整投影并排序 conversation，再把这条 canonical current-state instruction 放到 conversation 之前。因此
+`(focus confirmation inbox/accepted seq, focus Product head seq)` 只选择逻辑最新的一条 format-7 snapshot；
+它先按原 seq 完整投影并排序 conversation，再把同一 snapshot 的 system 当前事实和 user 历史参考一起放到
+conversation 之前。因此
 旧 reader 晚 append 不能把完成状态倒退成 opened，旧 assistant 自述也不能在结构上排到当前宿主事实之前；
 conversation 内容和内部顺序均不变。`surface/replace` 不得隐藏这类宿主证据，Compaction 不把它列为
 可替换来源。事件在当前 Turn 的 `user/message` 之前落盘，既有 `request/snapshot.source_seq`、fingerprint
@@ -4304,25 +4355,30 @@ conversation 内容和内部顺序均不变。`surface/replace` 不得隐藏这�
 写入继续走原 `SessionService` 的 `expected_seq` CAS。冲突后必须重新 fresh 选择 Product head 与 Session，
 不能重试旧 payload；同一 head 在重启后幂等。取消会先等待 append worker 收敛再原样传播；普通失败用
 完整、JSON 类型敏感的 payload 与 causation 对账，未知 commit outcome 仍是 unknown。协议 parser 同样
-拒绝 Python 会宽松比较的 `format_version=True`，不能让 bool 冒充协议整数 `5`。
+拒绝 Python 会宽松比较的 `format_version=True`，不能让 bool 冒充协议整数 `7`。
 
-对应设计决定是
-[`ADR-0039`](../adr/0039-host-owned-product-status-in-model-context.md)。确定性测试覆盖九种 status 的固定含义与
-最大 identity 内容界、允许总结/合理推断的正向合同、selected-not-inventory 与 Workspace/明细边界、
-provider-visible 文本不含旧 XML wrapper、completed/failed/cancelled 不互相冒充、format-1/2/3/4 fail-closed 且零改写、无 task、
-restart idempotency、新 task/head 覆盖、旧 head 晚写、非法 payload 与 bool-version、Session CAS、
-普通 read failure、取消前未写、append 已提交未返回和两次 manual Compaction 后 request snapshot 精确重建；
-真实本地 Git Product E2E 又证明批准到 completed 后
-下一份 Provider request 正好包含一条 format-5 语义 context，且该 context 是 `ModelRequest.messages` 中先于
-旧 conversation 的第一项；它明确 same-session、条件式 host-managed 执行、
-ProductTask durable completed、Promotion reference 与“不再 START”，同时明确 bounded Product-only context
-不重验/暴露 receipt、selected-not-inventory、Workspace mapping 未提供、允许合理推断但需区分宿主事实，
-且不含任何 Review/Promotion/digest/revision 身份，并通过 request snapshot 重建。
-恢复旧 status-only 逻辑时语义断言稳定失败；把改写后的 canonical message 错留在 format 2 时，legacy-format
-隔离反例稳定失败；移除 selected-not-inventory 边界时九态断言稳定失败，把新文案错留在 format 3 时旧
-format-3 context identity 与新消息发生别名。新增冲突反例在旧 Surface 排序下使 unit 与真实 Product F3
-两处首项断言稳定失败；恢复 leading Surface 与 format 5 后转绿。OpenAI-compatible capture 另行证明最终
-wire 顺序是既有 composition system、当前 Product system、完整旧 assistant/user 对话，没有 adapter 合并或
-后处理。当前 focused 组为 `17 passed`，六个直接/相邻模块合并组为 `111 passed`，全仓 collect-only 为
-`2620 tests`；三路独立短复审均为 `P0=0/P1=0/P2=0`。该修复没有新增 Product 状态、TUI 状态机、mutable cache、第二 Store 或模型可见的
-approve/promote/workflow Tool；当前完整全量、Wheel、真实 Provider、commit/tag/release 仍未由本段宣称完成。
+format 1–5 的历史设计理由见
+[`ADR-0039`](../adr/0039-host-owned-product-status-in-model-context.md)，format-6 有界多任务投影见
+[`ADR-0040`](../adr/0040-session-scoped-product-task-history-context.md)；当前 format 7、最小执行摘要与同 Session
+按需证据读取见 [`ADR-0041`](../adr/0041-session-scoped-product-task-evidence-memory.md)。这些修订没有改变
+owner、Surface 前置、重放和控制权限决定。确定性测试保留九种 status、最长 identity、
+read failure、Session CAS、JSON 类型敏感对账、取消前未写和 append 已提交未返回等既有反例，并新增多个
+terminal task、唯一 live focus、跨 Session 排除、稳定目录顺序、六项上限、准确 omitted count、source excerpt
+JSON 转义/截断标记、formats 1–6 fail-closed、双消息原子投影、head-change 整体重试、同 Session ACL、
+missing/foreign/corrupt 同形、输出上限、Agent owner-subtree、混合 reader bundle 拒绝，以及两次 manual
+Compaction 后 request snapshot 精确重建。当前直接九模块为 **`172 passed`**，完整
+TUI/optional/presentation/task-conversation 为 **`82 passed`**，Product F3 E2E 为 **`26 passed`**，安装
+Textual 8.2.8 的解释器收集 **`2665 tests`**。
+
+第一次无筛选全量暴露两项真实候选门禁缺口：core-only L2 会被 `traceh.tui`/presentation 的 eager Rich
+import 破坏，Promotion 架构测试对白名单中新接入的两个纯 VerificationPlan 函数仍停在旧合同。根修让 TUI
+包入口不 import Rich/Textual、presentation 只在实际 Rich 路径局部 import，并同步精确 Promotion seam；反向
+探针证明恢复 eager Rich import 时新的 core-only 反例会失败。由于真实 L2 只认证 Git HEAD，而本轮未获授权
+提交，最终验收在仓库外构造了唯一父节点为当前 HEAD、33 个候选 Git blob 逐项一致的临时提交。该快照的
+独立真实 L2 为 **`1 passed in 1487.10s (24:47)`**；随后唯一最终全量无筛选、无 `--lf`，得到
+**`2665 collected / 2658 passed / 7 skipped`**、退出码 0、耗时 **`3226.49s (53:46)`**，其中内嵌 L2
+为 `1583.65s`。最终代码与文档复审修正后均为 **`P0=0 / P1=0 / P2=0`**；compileall、修改范围 Ruff、
+`git diff --check`、anti-hardcoding、文档 QA 与受保护核心零 diff 也通过。完整命令与第一次红灯证据见
+[`validation-v0.8.0.md`](../validation-v0.8.0.md)。该修复没有新增 Product 状态、TUI 状态机、mutable cache、
+第二 Store、Memory Stream 或模型可见的 approve/promote/workflow 控制 Tool；Wheel、离线安装、真实
+Provider、commit、push、tag 与 release 仍未由本段宣称完成。

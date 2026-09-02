@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from dataclasses import replace
 from pathlib import Path
@@ -25,6 +26,7 @@ from traceh.api.budgets import (
     BudgetUsageReservationStatus,
 )
 from traceh.api.events import PendingEvent
+from traceh.api.json_types import canonical_json
 from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 from traceh.api.product import (
     PRODUCT_TASK_AWAITING,
@@ -51,16 +53,27 @@ from traceh.cli.product import (
     product_chat_runtime_policies,
     product_chat_runtime_tools,
 )
-from traceh.product.chat import ProductTurnActions
-from traceh.product.errors import ProductInputError
+from traceh.product.activity import ProductToolActivity
+from traceh.product.chat import ProductTurnActions, ReadProductTaskEvidenceTool
+from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.events import MAX_REASON_DISPLAY_CHARS, product_task_stream
-from traceh.product.host import ProductHostProfile, build_product_chat_host
+from traceh.product.host import (
+    ProductHostProfile,
+    build_product_chat_host,
+    build_product_read_models,
+)
+from traceh.product.memory import (
+    MAX_PRODUCT_EVIDENCE_CONTENT_CHARS,
+    ProductTaskMemory,
+    ProductTaskMemoryReader,
+    product_task_evidence_data,
+)
 from traceh.product.projection import ProductTaskStreamReader
 from traceh.product.runtime import (
     READ_TOOL_IDS,
     WRITE_TOOL_IDS,
 )
-from traceh.promotion.events import PROMOTION_LEDGER_STREAM
+from traceh.promotion.events import PATCH_REVIEW_RECORDED, PROMOTION_LEDGER_STREAM
 from traceh.promotion.models import (
     expected_approval_digest,
     promotion_identity,
@@ -150,6 +163,41 @@ class _DroppingSessionEventFeed(SessionEventFeed):
         del events
 
 
+class _PromotionReadOverrideStore:
+    """Read-only fault injection over one existing durable log."""
+
+    def __init__(self, inner, *, event_type: str, overrides: dict) -> None:
+        self.inner = inner
+        self.event_type = event_type
+        self.overrides = overrides
+
+    async def append(self, stream_id, *, expected_seq, events, durability=None):
+        kwargs = {} if durability is None else {"durability": durability}
+        return await self.inner.append(
+            stream_id,
+            expected_seq=expected_seq,
+            events=events,
+            **kwargs,
+        )
+
+    async def read(self, stream_id: str, *, from_seq: int = 1):
+        events = await self.inner.read(stream_id, from_seq=from_seq)
+        if stream_id != PROMOTION_LEDGER_STREAM:
+            return events
+        return tuple(
+            replace(event, data={**event.data, **self.overrides})
+            if event.type == self.event_type
+            else event
+            for event in events
+        )
+
+    async def head(self, stream_id: str) -> int:
+        return await self.inner.head(stream_id)
+
+    async def list_streams(self, *, prefix: str | None = None) -> tuple[str, ...]:
+        return await self.inner.list_streams(prefix=prefix)
+
+
 class _ChatProvider:
     name = "scripted"
 
@@ -206,6 +254,37 @@ class _ChatProvider:
                 ),
             )
         return _response("ordinary chat answer")
+
+
+class _EvidenceReadingChatProvider:
+    name = "scripted"
+
+    def __init__(self, task_id: str) -> None:
+        self.task_id = task_id
+        self.evidence: dict | None = None
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        last_user_index = max(
+            index
+            for index, message in enumerate(request.messages)
+            if message.role == "user"
+        )
+        tool_results = tuple(
+            message
+            for message in request.messages[last_user_index + 1 :]
+            if message.role == "tool"
+        )
+        if not tool_results:
+            return _response(
+                "",
+                ToolCall(
+                    id="read-product-evidence",
+                    name="read_product_task_evidence",
+                    arguments={"task_id": self.task_id},
+                ),
+            )
+        self.evidence = json.loads(tool_results[-1].content.split("\n", 1)[1])
+        return _response("completed evidence read")
 
 
 class _SideEffectAttemptingChatProvider:
@@ -471,21 +550,7 @@ def _profile(mode: RequestedTaskMode) -> ProductTaskProfile:
     )
 
 
-async def _build_host(
-    tmp_path: Path,
-    store: InMemoryEventStore,
-    source: Path,
-    target: Path,
-    cas: LocalArtifactCas,
-    actions: ProductTurnActions,
-    mode: RequestedTaskMode,
-    product_provider: object | None = None,
-    *,
-    publishing_feed: SessionEventFeed | None = None,
-    observation_feed: SessionEventFeed | None = None,
-    context_sessions: SessionService | None = None,
-    line_adapter: bool = True,
-):
+def _host_profile(mode: RequestedTaskMode) -> ProductHostProfile:
     import sys
 
     plan = verification_plan(
@@ -501,15 +566,38 @@ async def _build_host(
         ),
         plan_id="product-plan",
     )
+    return ProductHostProfile("product-profile", _profile(mode), plan)
+
+
+async def _build_host(
+    tmp_path: Path,
+    store: InMemoryEventStore,
+    source: Path,
+    target: Path,
+    cas: LocalArtifactCas,
+    actions: ProductTurnActions,
+    mode: RequestedTaskMode,
+    product_provider: object | None = None,
+    *,
+    publishing_feed: SessionEventFeed | None = None,
+    observation_feed: SessionEventFeed | None = None,
+    context_sessions: SessionService | None = None,
+    line_adapter: bool = True,
+):
     connected_feed = publishing_feed or SessionEventFeed()
     host_store = PublishingEventStore(store, connected_feed)
+    host_profile = _host_profile(mode)
+    read_models = build_product_read_models(
+        store=host_store,
+        host_profile=host_profile,
+        artifact_cas=cas,
+        max_report_chars=4_096,
+    )
     host = await build_product_chat_host(
         store=host_store,
         sessions=context_sessions or SessionService(host_store),
         data_dir=tmp_path / "product-data",
-        host_profile=ProductHostProfile(
-            "product-profile", _profile(mode), plan
-        ),
+        host_profile=host_profile,
         providers={"product-provider": product_provider or _ProductProvider()},
         workspace_provider=LocalGitWorkspaceProvider(
             managed_root=tmp_path / "managed",
@@ -522,6 +610,7 @@ async def _build_host(
         max_report_chars=4_096,
         event_feed=observation_feed or connected_feed,
         actions=actions,
+        read_models=read_models,
     )
     if line_adapter:
         return LineProductAdapter(host, data_dir=tmp_path / "product-data")
@@ -534,6 +623,11 @@ def _chat_runtime(
     actions: ProductTurnActions,
     provider: _ChatProvider | None = None,
 ):
+    class _UnusedObservationReader:
+        def __init__(self) -> None:
+            self.store = store
+
+    memory = ProductTaskMemoryReader(store, _UnusedObservationReader())
     return build_default_runtime(
         RuntimeConfig(
             data_dir=tmp_path / "chat-data",
@@ -543,7 +637,7 @@ def _chat_runtime(
         ),
         provider=provider or _ChatProvider(),
         event_store=store,
-        additional_tools=product_chat_runtime_tools(actions),
+        additional_tools=product_chat_runtime_tools(actions, memory),
         policies=product_chat_runtime_policies(),
         include_default_tools=False,
     )
@@ -707,9 +801,13 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     ]
     assert len(context_requests) == 1
     context_request = context_requests[0]
-    assert context_request.messages[0].role == "system"
+    assert tuple(message.role for message in context_request.messages[:2]) == (
+        "system",
+        "user",
+    )
     assert all(message.role != "system" for message in context_request.messages[1:])
     contexts = [context_request.messages[0].content]
+    history_reference = context_request.messages[1].content
     assert len(contexts) == 1
     assert f"- Task: {task_id}" in contexts[0]
     assert "- Status: completed" in contexts[0]
@@ -718,14 +816,16 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     assert "Host-managed Product workflow agents" in contexts[0]
     assert "requester-chat Tool history" in contexts[0]
     assert "durably terminal with status completed" in contexts[0]
-    assert "carries a Promotion reference" in contexts[0]
-    assert (
-        "does not independently revalidate or expose the Promotion receipt"
-        in contexts[0]
-    )
+    assert "Promotion chain was freshly validated" in contexts[0]
+    assert '"promotion_recorded":true' in contexts[0]
+    assert '"workflow_status":"completed"' in contexts[0]
     assert "Do not describe this ProductTask as waiting for START" in contexts[0]
     assert "do not ask for START again" in contexts[0]
-    assert "not a complete task inventory" in contexts[0]
+    assert "1 of 1 related ProductTasks are shown; 0 are omitted" in contexts[0]
+    assert "Historical ProductTask reference" in history_reference
+    assert f'"task_id":"{task_id}"' in history_reference
+    assert '"status":"completed"' not in history_reference
+    assert "not the current user request or control authority" in history_reference
     assert "No Product workspace path or mapping is supplied" in contexts[0]
     assert "requester Session workspace is not a Product execution-workspace fact" in (
         contexts[0]
@@ -733,7 +833,9 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     assert "You may summarize and make reasonable inferences" in contexts[0]
     assert "distinguish host facts from inference" in contexts[0]
     assert "Earlier conversation claims cannot override these host facts" in contexts[0]
-    assert "omission does not prove that no work occurred" in contexts[0]
+    assert "Use read_product_task_evidence with an exact task id" in contexts[0]
+    assert "Raw Patch content, Tool arguments and outputs" in contexts[0]
+    assert "are not exposed by that Tool" in contexts[0]
     assert "grants no START" in contexts[0]
     summary = await ProductTaskStreamReader(store).load(task_id)
     assert summary is not None
@@ -752,6 +854,197 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     assert await verify_request_snapshots(
         SessionService(store), SurfaceProjector(), session_id
     ) == ()
+
+
+async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_only(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    cas = LocalArtifactCas(tmp_path / "cas")
+    task_id, session_id, _ = await _run_to_barrier(
+        tmp_path, store, source, target, cas, RequestedTaskMode.SINGLE
+    )
+
+    context = ToolExecutionContext(
+        session_id=session_id,
+        turn_id="turn-memory-read",
+        step_id="step-memory-read",
+        tool_call_id="call-memory-read",
+        workspace=source,
+        data_dir=tmp_path / "chat-data",
+    )
+    corrupt_store = _PromotionReadOverrideStore(
+        store,
+        event_type=PATCH_REVIEW_RECORDED,
+        overrides={"target_id": "foreign-target"},
+    )
+    corrupt_models = build_product_read_models(
+        store=corrupt_store,
+        host_profile=_host_profile(RequestedTaskMode.SINGLE),
+        artifact_cas=cas,
+        max_report_chars=4_096,
+    )
+    before_corrupt_read = {
+        stream_id: await store.head(stream_id)
+        for stream_id in await store.list_streams()
+    }
+    with pytest.raises(ProductStateError) as corrupt_review:
+        await corrupt_models.observation.load(task_id)
+    assert (
+        corrupt_review.value.code
+        == "product-inspection-promotion-target-mismatch"
+    )
+    unavailable_from_corrupt = await ReadProductTaskEvidenceTool(
+        corrupt_models.memory
+    ).execute({"task_id": task_id}, context)
+    assert unavailable_from_corrupt.data == {
+        "available": False,
+        "code": "product-task-evidence-unavailable",
+    }
+    assert {
+        stream_id: await store.head(stream_id)
+        for stream_id in await store.list_streams()
+    } == before_corrupt_read
+
+    host = await _build_host(
+        tmp_path,
+        store,
+        source,
+        target,
+        cas,
+        ProductTurnActions(),
+        RequestedTaskMode.SINGLE,
+        line_adapter=False,
+    )
+    try:
+        advance = await host.control.approve(task_id, approver_id="local-human")
+        assert advance.summary.status is ProductTaskStatus.COMPLETED
+    finally:
+        await host.aclose()
+
+    read_models = build_product_read_models(
+        store=store,
+        host_profile=_host_profile(RequestedTaskMode.SINGLE),
+        artifact_cas=cas,
+        max_report_chars=4_096,
+    )
+    tool = ReadProductTaskEvidenceTool(read_models.memory)
+    streams = await store.list_streams()
+    before = {stream_id: await store.head(stream_id) for stream_id in streams}
+
+    output = await tool.execute({"task_id": task_id}, context)
+    data = json.loads(output.content.split("\n", 1)[1])
+    assert output.data == {"available": True, "task_id": task_id}
+    assert data["product"]["status"] == "completed"
+    assert data["review"]["passed"] is True
+    assert data["review"]["changed_paths"] == ["added.txt"]
+    assert data["promotion"]["target_id"] == "product-target"
+    assert data["activity"]["tool_call_count"] > 0
+    assert any(
+        role["role"] == "coder" and role["tool_call_count"] > 0
+        for role in data["activity"]["roles"]
+    )
+    serialized = canonical_json(data)
+    for forbidden in ('"arguments"', '"content"', '"output"', '"workspace"'):
+        assert forbidden not in serialized
+
+    foreign = await tool.execute(
+        {"task_id": task_id}, replace(context, session_id="session-foreign")
+    )
+    missing = await tool.execute(
+        {"task_id": "product-task-missing"}, context
+    )
+    assert foreign == missing
+    assert foreign.data == {
+        "available": False,
+        "code": "product-task-evidence-unavailable",
+    }
+    assert {stream_id: await store.head(stream_id) for stream_id in streams} == before
+
+    memory = await read_models.memory.load(session_id, task_id)
+    assert memory.observation.evidence is not None
+    assert memory.observation.evidence.review is not None
+    assert memory.activity.roles
+    review_evidence = memory.observation.evidence.review
+    expanded_review = replace(
+        review_evidence,
+        changed_paths=tuple(f"module-{index}.py" for index in range(11)),
+        verifiers=tuple(
+            replace(review_evidence.verifiers[0], command_id=f"check-{index}")
+            for index in range(11)
+        ),
+    )
+    expanded_evidence = replace(memory.observation.evidence, review=expanded_review)
+    expanded_role = replace(
+        memory.activity.roles[0],
+        tools=tuple(
+            ProductToolActivity(
+                name=f"tool-{index}",
+                call_seq=100 + index * 2,
+                result_seq=101 + index * 2,
+                status="succeeded",
+                exit_code=0,
+            )
+            for index in range(11)
+        ),
+    )
+    bounded = product_task_evidence_data(
+        ProductTaskMemory(
+            head=memory.head,
+            observation=replace(
+                memory.observation,
+                evidence=expanded_evidence,
+            ),
+            activity=replace(memory.activity, roles=(expanded_role,)),
+        )
+    )
+    assert bounded["review"]["shown_changed_paths"] == 8
+    assert bounded["review"]["omitted_changed_paths"] == 3
+    assert bounded["review"]["shown_verifiers"] == 8
+    assert bounded["review"]["verifier_count"] == 11
+    bounded_role = bounded["activity"]["roles"][0]
+    assert bounded_role["shown_tool_calls"] == 8
+    assert bounded_role["omitted_tool_calls"] == 3
+    assert [item["name"] for item in bounded_role["tools"]] == [
+        f"tool-{index}" for index in range(3, 11)
+    ]
+    bounded_json = canonical_json(bounded)
+    assert len(bounded_json) <= MAX_PRODUCT_EVIDENCE_CONTENT_CHARS
+    for forbidden in (
+        '"agent_id"',
+        '"arguments"',
+        '"content"',
+        '"output"',
+        '"session_id"',
+        '"tool_call_id"',
+        '"workspace"',
+    ):
+        assert forbidden not in bounded_json
+
+    provider = _EvidenceReadingChatProvider(task_id)
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "evidence-runtime",
+            provider="scripted",
+            model="chat-model",
+        ),
+        provider=provider,
+        event_store=store,
+        additional_tools=product_chat_runtime_tools(
+            ProductTurnActions(), read_models.memory
+        ),
+        policies=product_chat_runtime_policies(),
+        include_default_tools=False,
+    )
+    try:
+        result = await runtime.run_existing(session_id, "summarize the completed task")
+    finally:
+        await runtime.dispose()
+    assert result.final_text == "completed evidence read"
+    assert provider.evidence is not None
+    assert provider.evidence["product"]["status"] == "completed"
 
 
 async def test_auto_router_receives_the_complete_reason_contract(
@@ -911,10 +1204,11 @@ async def test_product_chat_cannot_dirty_its_configured_source_before_start(
         == {
             "list_files",
             "read_file",
-            "search_text",
-            "propose_product_task",
-            "confirm_product_task",
-        }
+                "search_text",
+                "propose_product_task",
+                "confirm_product_task",
+                "read_product_task_evidence",
+            }
         for request in requests
     )
     events = await store.read(f"session:{session_id}")
@@ -958,6 +1252,11 @@ async def test_product_chat_policy_denies_a_registered_effectful_tool(
 ) -> None:
     store = InMemoryEventStore()
     actions = ProductTurnActions()
+    class _UnusedObservationReader:
+        def __init__(self) -> None:
+            self.store = store
+
+    memory = ProductTaskMemoryReader(store, _UnusedObservationReader())
     marker = tmp_path / "effect-marker"
     runtime = build_default_runtime(
         RuntimeConfig(
@@ -969,7 +1268,7 @@ async def test_product_chat_policy_denies_a_registered_effectful_tool(
         provider=_EffectfulProbeProvider(),
         event_store=store,
         additional_tools=(
-            *product_chat_runtime_tools(actions),
+            *product_chat_runtime_tools(actions, memory),
             _EffectfulProbeTool(marker),
         ),
         policies=product_chat_runtime_policies(),
@@ -1612,6 +1911,56 @@ async def test_product_host_rejects_context_sessions_from_another_log(
             context_sessions=SessionService(InMemoryEventStore()),
         )
     assert raised.value.code == "product-context-store-mismatch"
+
+
+async def test_product_host_rejects_a_mixed_read_model_chain(
+    tmp_path: Path,
+) -> None:
+    source, _ = build_source_repository(tmp_path / "source")
+    target = make_bare_target(source, tmp_path / "target.git")
+    store = InMemoryEventStore()
+    feed = SessionEventFeed()
+    host_store = PublishingEventStore(store, feed)
+    profile = _host_profile(RequestedTaskMode.SINGLE)
+    host_cas = LocalArtifactCas(tmp_path / "host-cas")
+    valid = build_product_read_models(
+        store=host_store,
+        host_profile=profile,
+        artifact_cas=host_cas,
+        max_report_chars=4_096,
+    )
+    other = build_product_read_models(
+        store=host_store,
+        host_profile=profile,
+        artifact_cas=LocalArtifactCas(tmp_path / "other-cas"),
+        max_report_chars=4_096,
+    )
+    mixed_bundles = (
+        replace(valid, evidence=other.evidence, observation=other.observation),
+        replace(valid, memory=other.memory),
+    )
+
+    for read_models in mixed_bundles:
+        with pytest.raises(ProductInputError) as raised:
+            await build_product_chat_host(
+                store=host_store,
+                sessions=SessionService(host_store),
+                data_dir=tmp_path / "product-data",
+                host_profile=profile,
+                providers={"product-provider": _ProductProvider()},
+                workspace_provider=LocalGitWorkspaceProvider(
+                    managed_root=tmp_path / "managed",
+                    sources={"product-source": source},
+                ),
+                artifact_cas=host_cas,
+                promotion_targets=promotion_targets("product-target", target),
+                capture_limits=capture_limits(),
+                approver_id="local-human",
+                max_report_chars=4_096,
+                event_feed=feed,
+                read_models=read_models,
+            )
+        assert raised.value.code == "product-read-models-mismatch"
 
 
 class _GatedProductProvider(_ProductProvider):

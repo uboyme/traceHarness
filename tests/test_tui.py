@@ -12,14 +12,14 @@ from unicodedata import category
 from uuid import uuid4
 
 import pytest
-from rich.cells import cell_len
-from rich.color import Color
-from rich.style import Style
 
 pytest.importorskip("textual")
 
 from product_fixtures import ORIGIN_SESSION, preflight, proposal
 from promotion_fixtures import build_source_repository, git, make_bare_target
+from rich.cells import cell_len
+from rich.color import Color
+from rich.style import Style
 from test_product_f3_e2e import (
     _build_host,
     _chat_runtime,

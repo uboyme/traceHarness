@@ -29,11 +29,9 @@ from traceh.budgets.supervision import (
 from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.product.assembly import ProductAssemblyService
 from traceh.product.chat import (
-    ConfirmProductTaskTool,
     ProductChatSurface,
     ProductChatTurn,
     ProductTurnActions,
-    ProposeProductTaskTool,
 )
 from traceh.product.context import ProductModelContext
 from traceh.product.control import ProductTaskControlPlane
@@ -44,6 +42,7 @@ from traceh.product.execution import (
     ProductWorkflowBindingResolver,
 )
 from traceh.product.inspection import ProductInspectionEvidenceReader
+from traceh.product.memory import ProductTaskMemoryReader
 from traceh.product.observation import (
     ProductObservationReader,
     ProductObservationSession,
@@ -57,6 +56,7 @@ from traceh.product.runtime import (
     ProductRouterAgentResponder,
 )
 from traceh.product.service import ProductTaskService
+from traceh.promotion.models import freeze_verification_plan, verifier_definition_digest
 from traceh.promotion.service import PatchPromotionService
 from traceh.session.event_feed import EventFeed, PublishingEventStore
 from traceh.session.event_store import EventStore
@@ -78,6 +78,71 @@ class ProductHostProfile:
     verification_plan: VerificationPlan
 
 
+@dataclass(frozen=True, slots=True)
+class ProductReadModels:
+    """One immutable pure-reader bundle over an explicitly supplied store."""
+
+    store: EventStore
+    artifact_reader: PatchArtifactReader
+    evidence: ProductInspectionEvidenceReader
+    observation: ProductObservationReader
+    memory: ProductTaskMemoryReader
+    verification_plan_digest: str
+    promotion_target_id: str
+    max_report_chars: int
+
+
+def build_product_read_models(
+    *,
+    store: EventStore,
+    host_profile: ProductHostProfile,
+    artifact_cas: ArtifactCas,
+    max_report_chars: int,
+) -> ProductReadModels:
+    """Build one internally bound chain of stateless, fresh-read projections."""
+
+    if (
+        type(host_profile) is not ProductHostProfile
+        or type(host_profile.profile) is not ProductTaskProfile
+    ):
+        raise ProductInputError("product-host-profile-invalid", "host_profile")
+    try:
+        plan = freeze_verification_plan(host_profile.verification_plan)
+    except Exception:
+        raise ProductInputError(
+            "product-verification-plan-invalid", "verification_plan"
+        ) from None
+    if plan.plan_id != host_profile.profile.verification_plan_id:
+        raise ProductInputError(
+            "product-verification-plan-mismatch", "verification_plan"
+        )
+    digest = verifier_definition_digest(plan)
+    artifact_reader = PatchArtifactReader(store, artifact_cas)
+    evidence = ProductInspectionEvidenceReader(
+        store,
+        artifact_reader,
+        verification_plan=plan,
+        verification_plan_digest=digest,
+        promotion_target_id=host_profile.profile.promotion_target_id,
+        max_patch_chars=max_report_chars,
+    )
+    observation = ProductObservationReader(
+        store,
+        evidence,
+        promotion_target_id=host_profile.profile.promotion_target_id,
+    )
+    return ProductReadModels(
+        store=store,
+        artifact_reader=artifact_reader,
+        evidence=evidence,
+        observation=observation,
+        memory=ProductTaskMemoryReader(store, observation),
+        verification_plan_digest=digest,
+        promotion_target_id=host_profile.profile.promotion_target_id,
+        max_report_chars=max_report_chars,
+    )
+
+
 class ProductChatHost:
     """The UI-neutral Chat coordinator plus the services it exclusively owns."""
 
@@ -91,8 +156,6 @@ class ProductChatHost:
         "_router",
         "_surface",
         "_tasks",
-        "confirm_tool",
-        "propose_tool",
     )
 
     def __init__(
@@ -104,7 +167,6 @@ class ProductChatHost:
         router: ProductModeRouter,
         capture: PatchCaptureService,
         promotion: PatchPromotionService,
-        actions: ProductTurnActions,
         observation: ProductObservationReader,
         event_feed: EventFeed,
     ) -> None:
@@ -116,24 +178,18 @@ class ProductChatHost:
         self._promotion = promotion
         self._observation = observation
         self._event_feed = event_feed
-        self.propose_tool = ProposeProductTaskTool(actions)
-        self.confirm_tool = ConfirmProductTaskTool(actions)
         self._closed = False
-
-    @property
-    def tools(self) -> tuple[object, object]:
-        return (self.propose_tool, self.confirm_tool)
 
     @property
     def control(self) -> ProductTaskControlPlane:
         """The host-side control plane this host already owns.
 
         ``ProductChatSurface`` coordinates typed operations without rendering
-        them and is not a second authority.  The Line adapter and a future TUI
+        them and is not a second authority.  The Line adapter and TUI
         both drive this same object, as does the non-interactive benchmark, so
         there remains one confirm/approve/reject/cancel path.  Nothing
-        model-facing reaches it: the two Tools still hold only
-        ``ProductTurnActions``.
+        model-facing reaches it: requester Tools hold only ephemeral Turn
+        actions or the pure read model.
         """
 
         return self._control
@@ -204,6 +260,7 @@ async def build_product_chat_host(
     max_report_chars: int,
     event_feed: EventFeed,
     actions: ProductTurnActions | None = None,
+    read_models: ProductReadModels | None = None,
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
@@ -234,6 +291,40 @@ async def build_product_chat_host(
         assemblies=resolver,
     )
     resolved = await registry.resolve(host_profile.profile_id)
+    if read_models is None:
+        read_models = build_product_read_models(
+            store=store,
+            host_profile=host_profile,
+            artifact_cas=artifact_cas,
+            max_report_chars=max_report_chars,
+        )
+    if (
+        type(read_models) is not ProductReadModels
+        or read_models.store is not store
+        or durable_log_identity(read_models.artifact_reader.store)
+        is not durable_log_identity(store)
+        or read_models.artifact_reader.cas is not artifact_cas
+        or durable_log_identity(read_models.evidence.store)
+        is not durable_log_identity(store)
+        or read_models.evidence.artifact_reader is not read_models.artifact_reader
+        or read_models.observation.store is not store
+        or read_models.observation.evidence_reader is not read_models.evidence
+        or durable_log_identity(read_models.memory.store)
+        is not durable_log_identity(store)
+        or read_models.memory.observation_reader is not read_models.observation
+        or read_models.evidence.verification_plan_digest
+        != resolved.verification_plan_digest
+        or read_models.evidence.promotion_target_id
+        != resolved.profile.promotion_target_id
+        or read_models.observation.promotion_target_id
+        != resolved.profile.promotion_target_id
+        or read_models.evidence.max_patch_chars != max_report_chars
+        or read_models.verification_plan_digest
+        != resolved.verification_plan_digest
+        or read_models.promotion_target_id != resolved.profile.promotion_target_id
+        or read_models.max_report_chars != max_report_chars
+    ):
+        raise ProductInputError("product-read-models-mismatch", "read_models")
     bindings = ProductResourceBindings()
     workspaces = WorkspaceService(store, workspace_provider)
     budgets = BudgetLedgerService(store)
@@ -267,7 +358,7 @@ async def build_product_chat_host(
         artifact_cas,
         limits=capture_limits,
     )
-    artifact_reader = PatchArtifactReader(store, artifact_cas)
+    artifact_reader = read_models.artifact_reader
     promotion = PatchPromotionService(
         store,
         artifact_reader,
@@ -323,24 +414,13 @@ async def build_product_chat_host(
         profile_id=host_profile.profile_id,
     )
     actions = ProductTurnActions() if actions is None else actions
-    evidence = ProductInspectionEvidenceReader(
-        store,
-        artifact_reader,
-        verification_plan=resolved.verification_plan,
-        verification_plan_digest=resolved.verification_plan_digest,
-        promotion_target_id=resolved.profile.promotion_target_id,
-        max_patch_chars=max_report_chars,
-    )
-    observation = ProductObservationReader(
-        store,
-        evidence,
-        promotion_target_id=resolved.profile.promotion_target_id,
-    )
+    evidence = read_models.evidence
+    observation = read_models.observation
     surface = ProductChatSurface(
         control,
         actions,
         evidence,
-        ProductModelContext(sessions, store),
+        ProductModelContext(sessions, store, read_models.memory),
         approver_id=approver_id,
     )
     return ProductChatHost(
@@ -350,7 +430,6 @@ async def build_product_chat_host(
         router=router,
         capture=capture,
         promotion=promotion,
-        actions=actions,
         observation=observation,
         event_feed=event_feed,
     )
@@ -359,5 +438,7 @@ async def build_product_chat_host(
 __all__ = [
     "ProductChatHost",
     "ProductHostProfile",
+    "ProductReadModels",
     "build_product_chat_host",
+    "build_product_read_models",
 ]

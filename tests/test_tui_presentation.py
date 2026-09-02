@@ -7,6 +7,10 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unicodedata import combining, east_asian_width
 
+import pytest
+
+pytest.importorskip("rich")
+
 from product_fixtures import ORIGIN_SESSION, preflight, proposal
 from rich.cells import cell_len
 

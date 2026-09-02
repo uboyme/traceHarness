@@ -53,10 +53,11 @@
 - Closed the separate requester-context gap exposed by the next Chat Turn.
   Before a Product-configured requester model is dispatched, the host now
   fresh-selects the canonical ProductTask head and freezes one exact, bounded
-  `product/context-snapshot` in that requester Session. The event records what
-  the model was shown, so request snapshots remain replayable; ProductTask,
+  `product/context-snapshot` in that requester Session. The event records the
+  exact model-visible messages plus replay/identity metadata, so request
+  snapshots remain replayable; ProductTask,
   Workflow and Promotion streams remain the only control authorities. The
-  current format-5 message contains task/head/status plus fixed same-requester-
+  superseded format-5 message contains task/head/status plus fixed same-requester-
   Session, host-managed execution-owner, per-status meaning, selection scope,
   Workspace/evidence limits and non-authorization semantics. A `started`
   ProductTask is not presented as an
@@ -65,9 +66,10 @@
   resolved or exposed Promotion receipt. The next request explicitly says not
   to treat that terminal as waiting for START; deterministic tests prove this
   request contract, not external-model compliance. Review, Promotion, Patch,
-  digest, revision, path, verifier and failure identities/details remain
-  excluded. The provider-visible message no longer carries the old XML wrapper;
-  it explicitly permits natural summaries and reasonable inferences while
+  revision, path, verifier and failure identities/details remain excluded;
+  the requirement digest stays in the replayable receipt identity but is not
+  rendered into the provider-visible messages. Those messages no longer carry
+  the old XML wrapper; they explicitly permit natural summaries and reasonable inferences while
   requiring the model to distinguish host facts from inference. After a later
   frozen request proved that stale assistant prose could still conflict with
   the current completed evidence, the Surface now places the one canonical
@@ -81,7 +83,55 @@
   durable event. Deterministic coverage includes restart idempotence, new-task
   supersession, stale append order, strict bool/int protocol rejection, CAS,
   read failure, may-have-committed cancellation and a real local-Git next-request
-  E2E. The current final full gate is still pending.
+  E2E. At that format-5 checkpoint, the renewed full gate was still pending;
+  the later format-7 M2 result is recorded below.
+- Extended that host-owned requester context in place to format 6 so later
+  turns retain a bounded memory of ProductTasks from the same requester
+  Session. One atomic `product/context-snapshot` now carries the current focus,
+  up to five additional recent tasks, exact total/omitted counts and two
+  ordered model messages: authoritative current facts as `system`, followed by
+  a clearly historical `user` reference. Source-request excerpts are copied
+  from validated Session evidence, JSON-escaped and bounded; they are not
+  canonical requirements, current instructions or control authorization.
+  ProductTask streams and Session events remain the only durable authorities;
+  no Memory stream, cache, RAG, cross-Session recall or model-authored summary
+  was added. Format 1 through 5 are rejected without migration or fallback.
+- Advanced the same Session-scoped projection to format 7 and completed M2's
+  progressive-disclosure path. The default context keeps the atomic six-task
+  catalog and adds only a verified execution summary for a current focus in
+  `awaiting_approval`, `completed`, `rejected`, `cancelled` or `failed`:
+  Workflow status, managed Tool-call count, changed-path count, verification
+  result, verifier count and whether Promotion is recorded. Historical tasks,
+  `opened`/`routed`/`started` and `abandoned` do not receive an execution
+  summary. Detailed paths, bounded Tool outcomes, verifier results, Review and
+  Promotion identities remain out of the default request.
+- Added the `PURE_READ` requester Tool `read_product_task_evidence`. It accepts
+  exactly one ProductTask id already related to the calling requester Session,
+  freshly proves both Product origin and confirmation against that Session,
+  and returns bounded Product, Workflow/node, role/Tool, Review, approval,
+  Promotion and Budget usage evidence. Missing, foreign, corrupt and unreadable
+  tasks deliberately share one `product-task-evidence-unavailable` result.
+  Raw Patch content, Tool arguments/output, model prose and Product workspace
+  paths are never exposed, and the Tool grants no lifecycle or approval power.
+  Its ordinary Session Tool call/result events use the existing Runtime path;
+  the evidence reader itself writes no Product or control facts.
+- Kept the shared Product activity projection aligned with every durable Tool
+  Runtime/Recovery result: `succeeded`, `failed`, `cancelled`, `invalid`,
+  `denied`, `aborted_before_dispatch` and `unknown_after_crash`. Unknown durable
+  values still fail closed; `pending` remains only the projection of an
+  unpaired in-flight call.
+- The CLI constructs two separate stateless `ProductReadModels` bundles: one
+  before Runtime construction for the frozen requester Tool surface, and one
+  over the Runtime's publishing Store wrapper for host context/observation.
+  They are not the same Python instances. The CLI supplies both constructions
+  with the same underlying durable log and the same Profile/CAS/
+  VerificationPlan/target/report-bound inputs, so the production composition
+  guarantees those properties by construction. The host does not compare the
+  two bundle instances; it validates only the second bundle against the host
+  and rejects an internally mixed reader chain. All projections remain fresh
+  joins over existing EventStore streams, with no Memory stream, cache, RAG or
+  second fact source.
+  Formats 1 through 6 are rejected without migration, fallback or dual reader.
 - Made `Ctrl+P` fresh-read the current Product observation before showing full
   identities and explicit copy actions; clipboard failure exports only the
   selected value to a named temporary text file and reports its path. The default
@@ -108,9 +158,15 @@
   context/Compaction/F3 E2E tests and `2590` collected tests are historical too.
   The format-4 checkpoint's `52` Product context/Compaction/F3 E2E tests, `33`
   Surface/Core-invariant/Product-architecture tests and `2591` collected tests
-  are now historical as well. Current format-5 validation is recorded in the
-  validation document. User acceptance and the new
-  final full gate are still pending.
+  are now historical as well. Superseded format-5 and format-6 validation is
+  recorded in the validation document. M2's current format-7 candidate passes
+  the 172-test direct/adjacent Product group, the 82-test complete TUI group,
+  the 26-test Product F3 E2E module and 2665-test collection. A repository-
+  external, 33-file exact candidate commit passed the real L2 gate, then the
+  unfiltered final suite completed with `2658 passed, 7 skipped` (exit 0) in
+  `3226.49s`. Independent code and corrected-document review ended at
+  `P0=0 / P1=0 / P2=0`. Release asset, offline-install, real-Provider, commit,
+  push, tag and release gates remain unrun.
 - Serialized Product observation refreshes so a slower old read cannot overwrite
   newer facts. A real deterministic TUI path using the actual Product host, auto
   Router, fixed multi topology, managed local Git, Verifier and Review reached
@@ -136,9 +192,10 @@
   current-candidate full gate at that checkpoint.
 - Closed a real pre-START authority leak found during TUI use. A
   Product-configured requester Chat no longer inherits `apply_patch` or `shell`:
-  its complete core surface is workspace reads plus Product proposal/confirmation,
-  and a monotonic policy denies any registered effectful Tool by declared
-  `EffectKind`. Plain Coding Chat and the Product coder remain unchanged. A real
+  its complete core surface is workspace reads, Product proposal/confirmation
+  and the same-Session `PURE_READ` ProductTask evidence Tool above; a monotonic
+  policy denies any registered effectful Tool by declared `EffectKind`. Plain
+  Coding Chat and the Product coder remain unchanged. A real
   Git counter-example using the configured source as the Chat workspace now
   reaches Approval without dirtying source; removing the boundary reproduces
   `workspace-source-invalid`, and a registered write probe is denied without an
@@ -215,9 +272,10 @@
 - Completed one targeted real `qwen-plus` TUI acceptance from Proposal through
   typed START, auto-resolved single execution, Review, typed Approval and
   one-shot bare-target Promotion. The source stayed clean, four promoted tests
-  passed, and all measured Session, Budget and Workspace owners converged. This
-  focused acceptance does not replace the still-pending 18-attempt grid or a
-  complete full-suite release gate.
+  passed, and all measured Session, Budget and Workspace owners converged. At
+  that checkpoint this focused acceptance did not replace either the still-
+  pending 18-attempt grid or a current full-suite gate; the later format-7 M2
+  full result is recorded above.
 - Cleared the Provider, TUI, failure-evidence, and final cross-owner re-reviews
   with no P0/P1/P2. The latest adjacent-owner regression is `251 passed`; the
   renewed current-candidate full suite then ran as described below.
@@ -238,7 +296,8 @@
   **`2555 passed, 7 skipped in 3078.80s (0:51:18)`**, exit 0. The subsequent
   output-visibility change above materially changed the TUI and tests, so this
   full run is retained as historical evidence rather than claimed as the
-  current final gate. A renewed focused review and final full run, clean-input
+  current final gate. At that checkpoint a renewed focused review and final full
+  run were pending; the later format-7 M2 result is recorded above. Clean-input
   archives/offline installs and the separately authorized real-Provider grid
   remain pending.
 

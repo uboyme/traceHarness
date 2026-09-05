@@ -85,10 +85,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "a4a660307e770864175f98b59fb30c7bbe5f56ef968adaf2f588ff4b0019720e"
+        "ac0b95b902933ed662e89c2387b23db8bc963fa5849607a87227f3516d27a44f"
     ),
     "runtime/agent_runtime.py": (
-        "ab66461f796b3fede5523bead9346f39f536d80749ab4a66120bc4ee6dabb797"
+        "cc4573ca592133162b09f6992ea3004bdd1206fcfad521cadcf2a48fa8ed1ef7"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
@@ -105,6 +105,12 @@ generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
 and failure-convergence seam. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; neither
 file gains Product state or a Product dependency.
+
+M3 changes both pins again, deliberately. ``AgentLoop`` invokes the Session
+compaction owner before a Turn opens and treats compaction failure as non-fatal;
+``AgentRuntime`` owns the explicit policy, summarizer and single shared
+``CompactionService`` guard. Neither change introduces Product state, a model
+call or a Provider dependency into these protected files.
 Normalizing line endings keeps the pin identical on every checkout, whatever
 ``core.autocrlf`` did locally.
 

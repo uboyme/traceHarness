@@ -31,8 +31,10 @@ from traceh.runtime.continuation import (
 )
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CompletionVerifier
+from traceh.session.compaction import CompactionError, CompactionService
 from traceh.session.event_store import Durability
 from traceh.session.service import ModelAttemptConflictError, SessionService
+from traceh.session.surface_replacement import SURFACE_COMPACTION_FAILED
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +68,7 @@ class AgentLoop:
         hooks: HookDispatcher | None = None,
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
         retry_scheduler: RetryScheduler | None = None,
+        compaction: CompactionService | None = None,
     ) -> None:
         self.sessions = sessions
         self.compositions = compositions
@@ -79,6 +82,9 @@ class AgentLoop:
         self.hooks = hooks or HookDispatcher()
         self.retry_policy = retry_policy
         self.retry_scheduler = retry_scheduler or RetryScheduler.real()
+        #: The one compaction owner, shared with `AgentRuntime`. It is consulted
+        #: before a Turn opens and never during one.
+        self.compaction = compaction
 
     async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
         # A plain ``str`` keeps the historical behaviour exactly - a fresh id
@@ -88,6 +94,11 @@ class AgentLoop:
         turn_input = TurnInput.from_task(task)
         await self.sessions.ensure_session(session_id)
         workspace = await self.sessions.workspace_for(session_id)
+        # The only safe linearization point for automatic compaction: this owner
+        # already holds the single active Turn for the Session, no Turn is open
+        # yet, and the replacement therefore lands before this Turn's user
+        # message and before every request this Turn will freeze.
+        await self._compact_before_turn(session_id)
         turn_id = str(uuid4())
         message_id = turn_input.message_id
         correlation_id = uuid4()
@@ -614,6 +625,39 @@ class AgentLoop:
                 assert combined is not None
                 raise combined from None
             raise
+
+    async def _compact_before_turn(self, session_id: str) -> None:
+        """Run host maintenance without letting it decide the Turn's fate.
+
+        A failed compaction changes nothing: the history is exactly what it was
+        and this Turn proceeds with the full conversation, which is no worse
+        than before automatic compaction existed. Refusing the user's Turn over
+        a maintenance hiccup would be the larger harm. The reason is still
+        durable, short and free of history, so the user sees it and can compact
+        manually or try again.
+        """
+
+        if self.compaction is None or not self.compaction.automatic:
+            return
+        try:
+            await self.compaction.compact_before_turn(session_id)
+            return
+        except asyncio.CancelledError:
+            raise
+        except CompactionError as error:
+            code, committed = error.code, error.committed
+        try:
+            await self.sessions.append_session(
+                session_id,
+                SURFACE_COMPACTION_FAILED,
+                {"method": "automatic", "code": code, "committed": committed},
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # A Store that cannot record this notice will fail the Turn itself a
+            # moment later; the notice must not become the reported failure.
+            pass
 
     async def _close_open_attempt(
         self,

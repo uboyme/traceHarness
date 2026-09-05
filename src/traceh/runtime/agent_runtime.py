@@ -39,7 +39,12 @@ from traceh.runtime.plugin_composition import (
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CommandVerifier, CompletionVerifier
-from traceh.session.compaction import CompactionService
+from traceh.session.compaction import (
+    BoundedHistorySummarizer,
+    CompactionPolicy,
+    CompactionService,
+    SessionSummarizer,
+)
 from traceh.session.event_feed import EventFeed, PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
@@ -102,6 +107,10 @@ class RuntimeConfig:
     verification_timeout_seconds: float = 60.0
     max_verification_retries: int = 1
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY
+    #: Automatic Surface compaction. ``None`` means the feature is off, which is
+    #: the only thing an absent configuration may mean: a partially configured
+    #: policy is rejected by `CompactionPolicy` rather than completed by guess.
+    compaction: CompactionPolicy | None = None
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -116,6 +125,8 @@ class RuntimeConfig:
             raise ValueError("max_verification_retries cannot be negative")
         if type(self.model_retry_policy) is not ModelRetryPolicy:
             raise TypeError("model_retry_policy must be ModelRetryPolicy")
+        if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
+            raise TypeError("compaction must be CompactionPolicy")
 
 
 class AgentRuntime:
@@ -146,6 +157,11 @@ class AgentRuntime:
         self.surface = surface
         self.invariants = invariants
         self.hooks = hooks
+        # One compaction owner per Runtime. The loop compacts before a Turn and
+        # the facade exposes the manual command; two instances would mean two
+        # policies and two summarizers writing the same protocol.
+        if loop.compaction is not None and loop.compaction is not compaction:
+            raise ValueError("the Agent loop and Runtime must share one CompactionService")
         self.compaction = compaction
         #: Read-only subscription surface for events this runtime's store has
         #: accepted (see `session/event_feed.py`). A user interface may subscribe
@@ -506,6 +522,7 @@ class _PreparedRuntime:
     llm_runtime: LlmRuntime
     tool_admission_gate: ToolAdmissionGate | None
     retry_scheduler: RetryScheduler
+    summarizer: SessionSummarizer
 
 
 def _prepare_default_runtime(
@@ -528,6 +545,7 @@ def _prepare_default_runtime(
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
     policy_bindings: Sequence[ScopedPolicyBinding] = (),
+    summarizer: SessionSummarizer | None = None,
     allow_plugin_provider: bool = False,
 ) -> _PreparedRuntime:
     config = config or RuntimeConfig()
@@ -620,6 +638,10 @@ def _prepare_default_runtime(
         llm_runtime=LlmRuntime() if llm_runtime is None else llm_runtime,
         tool_admission_gate=tool_admission_gate,
         retry_scheduler=retry_scheduler or RetryScheduler.real(),
+        # Deterministic and model-free, so the default is neither a hidden
+        # provider call nor a hidden cost. It is only consulted when a host has
+        # explicitly configured an automatic compaction policy.
+        summarizer=summarizer or BoundedHistorySummarizer(),
     )
 
 
@@ -651,6 +673,11 @@ def _finish_default_runtime(
     )
     request_builder = RequestBuilder(prepared.sessions, prepared.surface)
     hooks = HookDispatcher()
+    compaction = CompactionService(
+        prepared.sessions,
+        policy=config.compaction,
+        summarizer=prepared.summarizer,
+    )
     composition_runtime = GenerationCompositionRuntime(
         llms=activation_set.llms or prepared.llms,
         tools=tool_runtime,
@@ -679,6 +706,7 @@ def _finish_default_runtime(
         hooks=hooks,
         retry_policy=config.model_retry_policy,
         retry_scheduler=prepared.retry_scheduler,
+        compaction=compaction,
     )
     return AgentRuntime(
         config=config,
@@ -688,7 +716,7 @@ def _finish_default_runtime(
         surface=prepared.surface,
         invariants=CoreInvariantChecker(),
         hooks=hooks,
-        compaction=CompactionService(prepared.sessions),
+        compaction=compaction,
         events=prepared.event_feed,
         plugins=activation_set.identities,
         plugin_manager=plugin_manager,
@@ -720,6 +748,7 @@ def build_default_runtime(
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
     policy_bindings: Sequence[ScopedPolicyBinding] = (),
+    summarizer: SessionSummarizer | None = None,
 ) -> AgentRuntime:
     """Build the no-plugin runtime synchronously through the Generation path."""
 
@@ -742,6 +771,7 @@ def build_default_runtime(
         tool_bindings=tool_bindings,
         prompt_bindings=prompt_bindings,
         policy_bindings=policy_bindings,
+        summarizer=summarizer,
     )
     from traceh.plugins.manager import PluginGenerationBuilder
 
@@ -787,6 +817,7 @@ async def build_default_runtime_async(
     tool_bindings: Sequence[ScopedToolBinding] = (),
     prompt_bindings: Sequence[ScopedPromptBinding] = (),
     policy_bindings: Sequence[ScopedPolicyBinding] = (),
+    summarizer: SessionSummarizer | None = None,
     enabled_plugins: Sequence[str] = (),
     plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
     plugin_discovery: PluginDiscovery | None = None,
@@ -817,6 +848,7 @@ async def build_default_runtime_async(
         tool_bindings=tool_bindings,
         prompt_bindings=prompt_bindings,
         policy_bindings=policy_bindings,
+        summarizer=summarizer,
         allow_plugin_provider=bool(enabled_plugins),
     )
     from traceh.plugins.manager import PluginGenerationBuilder

@@ -185,7 +185,7 @@ def test_runtime_and_recovery_events_render() -> None:
         "user/message",
         "inbox/accepted",
         "session/created",
-        "surface/replace",
+        "product/context-snapshot",
         "effect/intent",
         "some/future-event",
     ],
@@ -196,6 +196,44 @@ def test_noisy_and_unknown_events_render_nothing(event_type: str) -> None:
     renderer = TimelineRenderer()
     secret = {"request": {"messages": [{"content": "sk-not-a-real-key"}]}, "content": "x" * 500}
     assert renderer.render(envelope(event_type, secret)) is None
+
+
+def test_compaction_lines_show_counts_and_never_payload_content() -> None:
+    """Compaction changes what the model sees, so it is shown - but only its shape."""
+
+    renderer = TimelineRenderer()
+    secret = {"request": {"messages": [{"content": "sk-not-a-real-key"}]}, "content": "x" * 500}
+    degraded = renderer.render(envelope("surface/replace", secret))
+    assert degraded == "[event 7] Context compacted"
+
+    line = renderer.render(
+        envelope(
+            "surface/replace",
+            {
+                "method": "automatic",
+                "source_seqs": [4, 5, 6],
+                "kept_recent_turns": 2,
+                "summary": "sk-not-a-real-key",
+                "replacement": {"role": "user", "content": "sk-not-a-real-key"},
+                "source_digest": "d" * 64,
+            },
+        )
+    )
+    assert line == (
+        "[event 7] Context compacted (3 messages -> 1 summary, kept 2 recent turns)"
+    )
+    assert "sk-not-a-real-key" not in line
+    assert "d" * 64 not in line
+
+    failed = renderer.render(
+        envelope(
+            "surface/compaction-failed",
+            {"method": "automatic", "code": "compaction-write-unknown\nforged"},
+        )
+    )
+    assert failed is not None
+    assert len(failed.splitlines()) == 1
+    assert "forged" in failed and "\n" not in failed
 
 
 def test_renderer_survives_missing_and_wrongly_typed_fields() -> None:

@@ -660,6 +660,25 @@ def _write_resume_block(
         str(retry.jitter_ratio),
     ]
 
+    # Automatic compaction changes what a resumed Session may still show the
+    # model, and it has no built-in default to fall back on. Omitting it would
+    # silently turn the feature off for anyone who copied the command - the same
+    # class of drift that made the provider/model tokens necessary. Every value
+    # is a non-negative integer or a fixed literal, so nothing here can carry a
+    # credential.
+    compaction = config.compaction
+    if compaction is not None and compaction.enabled:
+        restore += [
+            Literal("--auto-compact"),
+            Literal("on"),
+            Literal("--auto-compact-bytes"),
+            str(compaction.trigger_utf8_bytes),
+            Literal("--auto-compact-summary-bytes"),
+            str(compaction.max_summary_utf8_bytes),
+            Literal("--auto-compact-keep-turns"),
+            str(compaction.keep_recent_turns),
+        ]
+
     if config.verifier_name is not None:
         restore += [Literal("--plugin-verifier"), config.verifier_name]
 

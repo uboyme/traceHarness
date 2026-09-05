@@ -1,10 +1,12 @@
 # TraceHarness v0.9 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结为 v0.9 路线；尚未实现，也未获开工授权。**
+> 状态：**已于 2026-08-29 冻结为 v0.9 路线；2026-09-05 补入 M3 压缩历史证据的按需披露合同；
+> 尚未实现，也未获开工授权。**
 >
 > 前置：只有 v0.8 按当时真实源码完成、独立审查和发布后，才允许重新核对并批准本计划。
 >
-> 本文冻结 Skill、Memory、渐进式披露与 RAG 的单一产品主线，防止 v0.8 实施期间范围漂移。
+> 本文冻结 Skill、Memory、M3 压缩历史证据、渐进式披露与 RAG 的单一 Context Input 主线，防止
+> v0.8 实施期间范围漂移。
 > 它不表示当前已有这些能力，也不授权 commit、push、tag、release、联网或真实模型运行。
 
 ## 1. 单一产品目标
@@ -12,28 +14,34 @@
 v0.9 的统一目标是：**让宿主持有的长期上下文，通过渐进式披露和可审计检索，安全、准确、可重放地
 进入每次 Model Request。**
 
-这条主线包含两类 canonical 内容：
+这条主线新增两类 canonical 内容，并复用一类已经存在的 canonical 证据：
 
 - **Skill**：已启用 trusted plugin 贡献的、可选择的工作方法与只读参考资源；
-- **Workspace Memory**：由宿主批准、对当前 Workspace 长期有效的事实。
+- **Workspace Memory**：由宿主批准、对当前 Workspace 长期有效的事实；
+- **History Evidence**：M3 从未删除的当前 Session 原始 Surface 事件，以及 format-2
+  `surface/replace` 已绑定的来源链。它不是新 Memory 或第三事实源，只回答“当时模型看见过什么”。
 
-二者共用“资格过滤 → 检索 → 渐进披露 → 上下文预算 → request snapshot”基础设施，但不共用 authority：
-Plugin/Generation 决定 Skill catalog，Memory stream 决定哪些 Memory active。检索只发现候选，永远不
-创造事实、不启用插件、不批准 Memory、不给 Tool 或 Promotion 授权。
+三类输入共用“资格过滤 → 检索/精确引用 → 渐进披露 → 上下文预算 → request snapshot”基础设施，但不
+共用 authority：Plugin/Generation 决定 Skill catalog，Memory stream 决定哪些 Memory active，Session
+EventStore 与 M3 replacement provenance 决定可展开的 History block。检索和展开只读取已有事实，永远不
+创造事实、不启用插件、不批准 Memory、不给 Tool 或 Promotion 授权。历史证据只证明过去，不证明当前
+Workspace、ProductTask 或测试状态。
 
 建议阶段顺序：
 
 ```text
 Context Input 合同
+  + History Evidence identity / 时效 / Step-scope 合同
   -> typed Skill contribution
   -> Skill 检索与渐进披露
   -> Workspace Memory authority
-  -> Memory 检索与统一上下文编排
+  -> Memory 检索、历史证据按需披露与统一上下文编排
   -> 治理 UI、冻结评测与发布
 ```
 
-Skill 与 Memory 保留独立审查停止点。它们可以属于同一个 v0.9 产品主题，但不能为了同一个版本号把
-两个状态机揉成一个万能 `context` blob，也不能用 feature flag 长期保留半套双合同。
+Skill 与 Memory 保留独立审查停止点。History Evidence 没有新的 active 状态机，只是已有 Session 事件的
+只读、可验证投影。三者可以属于同一个 v0.9 产品主题，但不能为了同一个版本号把不同 authority 揉成一个
+万能 `context` blob，也不能用 feature flag 长期保留半套双合同。
 
 ## 2. 冻结修订结论
 
@@ -81,6 +89,29 @@ Skill contribution 也不得复用现有 `PluginContext.register_prompt`：那�
 Skill 使用现有 Activation transaction 内的独立 typed candidate catalog；只有当前 Step 被宿主选中并检索
 到的 bytes 才能进入请求专用参考上下文。
 
+### 2.5 M3 原始历史可达，但不在 Prompt 中常驻
+
+M3 的 `surface/replace` 只改变当前 Surface，原始 `user/message`、`assistant/message` 与合法
+`tool/result` 仍在同一个 Session EventStore。v0.9 利用这条既有 provenance 提供按需 History Evidence，
+但明确区分“永久可审计”和“每轮都喂给模型”：
+
+- 默认只给有界目录与 M3 摘要；原文只有用户或模型引用宿主已经披露的 exact `block_id` 后才进入一个
+  Step 的 Context Input；模型不能提交任意 seq 范围或获得 EventStore handle；
+- 多次压缩时由宿主递归展开 replacement 来源链，每层 fresh 校验 Session identity、source seq/digest、
+  闭合 Turn 边界与允许披露的 Surface 事件类型；无法证明完整来源时 fail closed；
+- History request 若以只读 Tool 形态暴露，普通 `tool/result` 只返回小型 receipt；原始历史 bytes 由下一
+  Step 的 Context Input event/request snapshot 冻结，不作为普通 Surface 消息遗留到后续 Turn；
+- 每个历史 block 带 `observed_through_seq`、来源时间/identity、可得时的 Workspace revision、freshness
+  (`matched`/`stale`/`unknown`) 与 digest。`matched` 只表示所有已记录的相关 identity 仍匹配，不把环境依赖
+  或非确定工具结果升级成当前验证；缺失当前身份时必须显示 unknown，不能把旧工具成功冒充当前验证；
+- 当前 fresh Product/Workflow/Promotion/Workspace 事实优先于历史证据。History Evidence 只回答过去，
+  当前状态问题仍由对应 owner fresh 读取，代码或测试是否仍成立则针对当前 revision 重新验证；
+- 一次披露只影响被授权的当前 Step。后续 Step 若仍需要，必须重新选择并重新冻结；不得靠 widget cache、
+  mutable Session state、普通 Surface replay 或超长 `tool/result` 让原文永久驻留。
+
+首版只允许当前 Session 的压缩历史块。跨 Session 的稳定结论走 Workspace Memory；跨 Session 原始聊天搜索
+会扩大 scope、隐私与预算边界，不在 v0.9 默认范围。
+
 ## 3. Authority 与生命周期矩阵
 
 | 对象 | canonical owner | 允许变化的入口 | 不是它的 owner |
@@ -91,6 +122,7 @@ Skill 使用现有 Activation transaction 内的独立 typed candidate catalog�
 | Skill eligibility/selection | host context policy + durable selection facts | 用户/Workspace 宿主动作 | PluginManager / 模型文字 |
 | Memory proposal | Memory domain | 模型或人可提出 bounded candidate | PromptAssembler |
 | Active Memory | Memory service + append-only stream | 宿主对 exact proposal digest 批准/替代/撤销 | 模型 / plugin / retriever |
+| Session History Evidence | Session EventStore + M3 replacement provenance | 当前 Session exact block 的宿主只读展开 | 模型 / Memory / retrieval index |
 | Retrieval index | derived index owner | 从 canonical Skill/Memory 重建 | EventStore 事实源 |
 | Candidate ranking | host retrieval policy | 显式算法/config/version | Memory authority / Tool policy |
 | 最终注入 bytes | ContextInputSnapshot | 每个 Step admission 冻结一次 | 当前数据库 latest state |
@@ -105,11 +137,11 @@ Skill 使用现有 Activation transaction 内的独立 typed candidate catalog�
 
 - 当前 Workspace/Session/Step identity 与 leased Generation identity；
 - canonical query 的来源身份和 digest；
-- 每个 Skill/Memory block 的 kind、id、version/digest、provenance、scope 与 disclosure tier；
+- 每个 Skill/Memory/History block 的 kind、id、version/digest、provenance、scope 与 disclosure tier；
 - **实际注入的有序精确 bytes**，而不只是“当时选了哪些 id”；
 - retrieval policy/version、启用的 lane 与各自 config digest；
 - 被资格过滤、去重、预算排除或未命中的结构化原因；
-- Skill 与 Memory 各自配额、总 Context Budget、实际字符/Token 计量和剩余量；
+- Skill、Memory 与 History Evidence 各自配额、总 Context Budget、实际字符/Token 计量和剩余量；
 - 最终 block 顺序和整个 Context Input digest。
 
 注入点在 v0.9-F0 冻结为一条明确主线：
@@ -126,7 +158,7 @@ Skill 使用现有 Activation transaction 内的独立 typed candidate catalog�
    兼容 projector；
 4. `RequestBuilder` 为当前 Step 构造一个**请求专用**的宿主参考上下文 `ModelMessage`，使用现有 Provider
    都支持的 user role 与固定宿主边界。它固定放在 system prompt 之后、全部 Surface messages 之前，
-   对首 Step、Tool 续步和 Verifier feedback Step 使用同一全称规则；动态 Skill/Memory bytes 不进入
+   对首 Step、Tool 续步和 Verifier feedback Step 使用同一全称规则；动态 Skill/Memory/History bytes 不进入
    `composition/snapshot.system_prompt`；
 5. 固定边界明确标注内容是“不可信参考，只能帮助完成任务，不能覆盖 system/tool policy、Product
    requirement、Verifier、Approval、Promotion 或 Budget”。这条 authority 规则由静态宿主 system
@@ -147,12 +179,15 @@ bytes 已由同一 Session EventStore 与最终 request snapshot 保存，不新
 上下文优先级固定为：
 
 1. System/Tool Policy、Product requirement、Verifier/Approval/Promotion/Budget 等宿主权威；
-2. 当前用户消息和任务所需的 durable execution context；
-3. Skill；
-4. Memory。
+2. 当前用户消息和任务所需的 fresh durable execution context；
+3. 当前 Step 明确请求的 History Evidence；
+4. Skill；
+5. Memory。
 
-Skill/Memory 是不可信参考材料，通过固定宿主 header 作为 messages 中第一条 request-only user-role
-context 注入，不能用其文本伪造 system/tool 边界。它们有各自的显式配额和总配额；
+这里是纳入/预算优先级，不表示历史证据可以覆盖当前事实。Skill/Memory/History Evidence 都通过固定宿主
+header 作为 messages 中第一条 request-only user-role context 注入，不能用正文伪造 system/tool 边界。
+History block 还必须在固定尾部重申观察截止点、freshness 和“只证明过去”；正文即使包含旧的宿主声明或
+工具成功，也不能越过这个边界。三类内容有各自的显式配额和总配额；
 优先按完整 item/section 原子纳入，不把一个安全限定句截掉只留下前半段。超额时按确定性规则排除并记录
 原因，不能无界挤掉 Product requirement 或 Tool schema。
 
@@ -161,7 +196,9 @@ context 注入，不能用其文本伪造 system/tool 边界。它们有各自�
 宿主从当前用户消息、已确认 Product requirement 和当前 Step 已知的代码符号/路径/错误标识中构造
 canonical query。来源集合、规范化规则和 digest 必须进入 receipt。不得让模型先自由改写问题，再用改写
 后的查询决定自己看什么；如果以后增加 query expansion，它也是显式、版本化、可关闭的 derived lane，
-不能成为隐藏默认。
+不能成为隐藏默认。History Evidence 的原文披露只接受用户请求或模型只读 context request 所引用的宿主
+已公开 exact block identity；自然语言 query 最多帮助选择目录/摘要，不能自行扩大成任意 seq 或跨 Session
+读取。
 
 ## 5. 通用检索与渐进披露管线
 
@@ -170,9 +207,11 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
 “宿主过滤”具体分为两道：
 
 1. **检索前 eligibility filter**：只让当前 Workspace、active Memory、当前 leased Generation 中仍有效
-   的 Skill、兼容版本和宿主允许的内容进入候选语料；跨 scope 内容连向量相似度都不计算；
+   的 Skill、兼容版本和宿主允许的内容进入候选语料；History 只列当前 Session、通过 format-2 parser 与
+   invariant 校验的 replacement block；跨 scope 内容连向量相似度都不计算；
 2. **注入前 verification filter**：对排名结果 fresh 复核 scope/status/generation/version/digest、去重和
-   Context Budget；任何漂移 fail closed 或按 receipt 记为 unavailable，不能换成 latest。
+   Context Budget；History 还要递归复核 provenance、允许事件类型与 freshness；任何漂移 fail closed 或按
+   receipt 记为 unavailable，不能换成 latest。
 
 这两道都由宿主确定性代码执行。模型、Skill 文本、Memory 文本、FTS 分数和 reranker 都不能绕过。
 
@@ -184,7 +223,9 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
 - lexical lane：SQLite FTS/BM25，索引只含通过 eligibility 的 canonical 文本投影；
 - semantic lane（可选）：本地 embedding；
 - rerank lane（可选）：只对融合后的有界 top candidates 使用本地 reranker；
-- deterministic fusion：明确版本的融合/排序规则，稳定 tie-breaker，不依赖数据库偶然行序。
+- deterministic fusion：明确版本的融合/排序规则，稳定 tie-breaker，不依赖数据库偶然行序；
+- history disclosure lane：从 M3 replacement 投影有界目录/摘要，只对 exact block identity + cursor 做递归
+  原文展开。首版不把全部原始聊天加入 FTS/vector，也不允许检索得分自动注入整块原文。
 
 具体 embedding/reranker 模型、维度、chunking、top-k、权重和融合公式都不得成为 demo 名称或代码隐藏
 默认；它们来自显式 config，进入 digest/receipt，并经冻结 benchmark 决定是否值得启用。核心安装在没有
@@ -200,10 +241,12 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
 1. **目录**：有界 id/title/type/source/cost，帮助宿主和用户知道有什么；
 2. **摘要**：候选的短摘要和匹配理由；
 3. **正文片段**：按稳定 section/chunk identity 选中的原文；
-4. **关联资源**：只有 descriptor 显式声明、digest 匹配且预算允许的只读资源片段。
+4. **关联资源/有界原文**：Skill 只有 descriptor 显式声明、digest 匹配且预算允许的只读资源片段；History
+   只有 exact block/cursor、provenance 校验与预算都通过的原始 Surface 消息页。
 
 每次请求只注入需要的级别。目录不等于正文，命中 Skill 名字也不自动加载全部 Wheel；Memory 相关也不
-等于把整个 Workspace history 塞进 prompt。
+等于把整个 Workspace history 塞进 prompt；命中历史摘要也不自动把整段旧对话塞回 Surface。History 原文
+是 request-only、Step-scoped 输入，用完即退；EventStore 永久保留不等于 Prompt 永久驻留。
 
 ## 6. 明确不做
 
@@ -218,6 +261,8 @@ v0.9 不实现：
 - 用 Memory 替代 Session Event、projection checkpoint 或源码；
 - 让 Skill/Memory 改写 requirement、VerificationPlan、evaluator、Approval、Promotion、Budget；
 - 第二 PluginManager、第二 PromptAssembler、第二 EventStore、第二 eval 命令或 Benchmark Runner；
+- 把所有压缩历史自动注入每轮请求，允许模型任意读取 EventStore seq，或默认跨 Session 搜索原始聊天；
+- 把展开的历史原文作为普通 Surface `tool/result` 长期携带，或把旧 revision 的工具结果当成当前验证；
 - OS sandbox。若需求变成运行不受信社区内容，先停止并另立 sandbox hardening 阶段。
 
 ## 7. v0.9-F0：Context Input、检索与 authority 决策
@@ -230,6 +275,9 @@ v0.9 不实现：
 - Skill eligibility/selection 的 durable identity、scope 与写入 owner；
 - Memory proposal/approval/supersede/revoke 的状态机和来源证据；
 - query source、exact/FTS lane、filter、budget 和 progressive disclosure 的确定性合同；
+- M3 History block 的稳定 identity、嵌套 replacement 递归展开、允许事件白名单、freshness 与分页合同；
+- 模型只读 History context request、最小 Tool receipt 和下一 Step request-only bytes 的唯一接线；原文不得
+  进入普通 Surface，当前状态不得由旧历史推断；
 - derived index 的 schema/version/rebuild 规则，以及 optional local model config/receipt；
 - RequestBuilder 在 authority tier 之间的顺序、固定不可信内容边界和 atomic item policy；
 - UI、模型 proposal Tool 与真正宿主 writer 的权限分离。
@@ -239,11 +287,17 @@ v0.9 不实现：
 - 同一 canonical facts/query/config 两次得到字节一致的 ContextInputSnapshot；
 - host Context Input service 只能读取 canonical sources 并返回不可变 snapshot；临时授予它 Session append
   能力或让它直接写 selection/Memory/context event 时，owner 边界测试必须变红；
-- 当前 Memory/Skill 在 snapshot 后变化，不改变历史 request reconstruction；
+- 当前 Memory/Skill 或 History source 在 snapshot 后变化，不改变历史 request reconstruction；
 - 连续两个 Step 分别检索不同内容时，第二个 request 只含自己的 Context Input；Surface replay 不含任一
   Context Input event，历史 reconstruction 仍逐字节相同；
 - 上述连续 Step 至少一个必须是 Tool Call 后没有新 `user/message` 的真实续步；Context message 在两次
   request 中都位于全部 Surface messages 之前，不能落到 Tool result 后面；
+- 模型请求一个已披露 History block 时，普通 Tool result 只出现有界 receipt，下一 Step 的 Context Input
+  才包含精确原文；Turn 结束后的 Surface 与再下一 Step 均不自动携带该原文；
+- 一层和多层 `surface/replace` 都能按原逻辑顺序、分页边界与 digest 重建允许披露的原始 Surface 消息；
+  篡改 source、循环/向未来引用、非闭合边界、隐藏事件类型或跨 Session block 均在注入前拒绝；
+- 同一旧工具结果分别绑定相同、不同和缺失 Workspace revision 时，freshness 稳定为 matched、stale、unknown；
+  stale/unknown 文案和结构化 receipt 均不得宣称当前测试或当前代码状态；
 - 篡改 Context Input event、request snapshot 或二者 binding/digest 任一侧时 reconstruction fail closed；
 - 同一 Step 出现零条/两条 Context Input event、event 晚于 composition snapshot，或 event 的 Generation
   identity 与随后的 composition 不一致时，build/reconstruction 都稳定拒绝；
@@ -251,7 +305,7 @@ v0.9 不实现：
   identity/bytes，不能生成额外 ModelMessage 或改变后续真实用户消息；
 - 跨 Workspace、revoked Memory、retired Generation Skill 和 digest 漂移均不能进入候选；
 - 检索索引全部删除后可重建，canonical history 零变化；
-- prompt 超额时 protected authority 不被 Skill/Memory 挤掉；
+- prompt 超额时 protected authority 不被 Skill/Memory/History Evidence 挤掉；
 - secrets/approval/evaluator 形态扫描和明确拒绝规则不依赖模型自觉。
 
 ### 7.2 F0 退出条件
@@ -341,6 +395,12 @@ proposed -> active -> superseded | revoked
 Approval/Promotion authority、Budget 内部凭据、Verifier/evaluator 冻结输入和整段大文件副本。拒绝规则必须
 由 host 执行；“提示模型别记”不是控制。
 
+首版允许的语义类别至少覆盖：长期目标、持续约束、项目术语、已确认架构决策、已完成的重要里程碑、
+当前获批阶段和已经批准的后续路线。它们仍是 bounded facts，不是项目管理数据库；“正在修改某文件”“某次
+测试目前跑到哪里”“某个 ProductTask 正在等待 Approval”等瞬时执行状态继续由原 Session/Product/Workflow
+owner 回答。阶段、路线或决定变化时追加 supersede/revoke，不原地改写，也不让两个互相冲突的版本同时 active。
+所谓“长期用户偏好”只允许当前 Workspace scope，不能自动升级成用户级全局偏好。
+
 ### 10.3 必测与反向验证
 
 - proposal 未经 exact digest 宿主批准，后续 Step 不可见；
@@ -356,15 +416,32 @@ Approval/Promotion authority、Budget 内部凭据、Verifier/evaluator 冻结�
 
 Memory authority 独立 P0/P1 审查清零后，才允许把它交给 RAG。检索质量不能补救错误 authority。
 
-## 11. v0.9-F4：Memory 检索与统一 Context Orchestration
+## 11. v0.9-F4：Memory 检索、History Evidence 与统一 Context Orchestration
 
 ### 11.1 统一但不混同
 
 Skill 和 Memory 在这一层共同实现：query receipt、两道 filter、exact/FTS、可选 semantic/reranker、
-deterministic fusion、渐进披露、分项/总预算和 ContextInputSnapshot。它们仍保留不同 source reader、scope
-规则和 provenance，不压成无法审计的通用文本列表。
+deterministic fusion、渐进披露、分项/总预算和 ContextInputSnapshot。History Evidence 复用同一个预算、
+framing 与 snapshot，但只走当前 Session replacement directory + exact block/cursor 的只读披露，不把全部
+原始聊天加入默认 RAG。三类输入仍保留不同 source reader、scope、authority、temporal validity 与
+provenance，不压成无法审计的通用文本列表。
 
-### 11.2 必测
+### 11.2 History Evidence 的请求生命周期
+
+- 当前 Context 默认只显示压缩历史目录、摘要、原始大小和可用 block identity；
+- 用户可显式请求，模型也可调用受现有 Tool policy 约束的只读 context request；它只选择宿主已披露的
+  exact block/tier/cursor，不接受任意 seq、SQL、路径或跨 Session identity；
+- context request 的普通 Tool result 只确认 accepted/rejected、block identity、可用字节和稳定错误码；
+  原始历史由 host Context Input service 为紧随其后的一个 Step 返回，并由 AgentLoop 写入该 Step 唯一
+  Context Input event；
+- RequestBuilder 把有界原文放进 request-only host reference block。该 block 首尾都由宿主标明 provenance、
+  observation boundary、freshness 和历史证据语义；正文不能闭合或伪造边界；
+- 当前 Step 完成后不缓存、不写入普通 Surface、不自动带到未来 Step。需要再次查看时重新 fresh 校验并生成
+  新 snapshot；历史 request reconstruction 只读当时已冻结 bytes，不重新展开 replacement；
+- 当前 authoritative state 与历史内容冲突时，host receipt 明确标记 superseded/stale；无法比较 revision 或
+  current head 时标记 unknown。模型可以解释历史，但不能据此宣称当前验证仍成立。
+
+### 11.3 必测
 
 - exact symbol/path/error 标识、普通 lexical、需要 semantic 的同义表达、zero-hit 与 hard-negative；
 - cross-workspace、revoked/superseded、retired generation 全部零泄漏；
@@ -373,7 +450,12 @@ deterministic fusion、渐进披露、分项/总预算和 ContextInputSnapshot�
 - optional model 未配置/依赖未安装时明确使用 exact+FTS，不静默下载或联网；
 - config/model/chunking/ranking version 变化会改变 receipt，只影响未来 Step；
 - 当前 DB 内容变化不改变历史 request；
-- injected bytes 与 request snapshot/context digest 逐字节一致。
+- injected bytes 与 request snapshot/context digest 逐字节一致；
+- History 目录不会泄漏跨 Session block；exact block 的一层/嵌套展开、分页续读和 zero-result 确定一致；
+- 展开后的原文只出现在被授权 Step 的 Context Input/request snapshot，普通 Surface 与后续 Step 零残留；
+- 旧 revision 工具成功被稳定标为 stale，身份不足时为 unknown，当前 Product/Workflow/Workspace 投影不被
+  历史正文覆盖；
+- 删除 History derived directory 后能从 `surface/replace` 和原始 Session 事件重建，canonical history 零变化。
 
 ## 12. v0.9-F5：治理体验、冻结检索评测与发布
 
@@ -386,6 +468,8 @@ deterministic fusion、渐进披露、分项/总预算和 ContextInputSnapshot�
 - 在插件 enable 发生前，复用 Manifest `provides` 与 activation receipt 清楚展示这次 enable 同时授予的
   Tool/Provider/Policy/Verifier/Service 等能力；不能让“为了一个 Skill”掩盖真正的插件权限面；
 - 查看 Memory proposal、source、scope、正文/digest，并显式 approve/supersede/revoke；
+- 查看 M3 压缩历史目录、摘要、source digest、原始大小和 disclosure receipt；用户可以按 block/page 展开，
+  UI 必须同时显示观察截止点与 freshness，不能把旧工具结果标成当前事实；
 - 查看当前 Step 实际 ContextInputSnapshot：query 来源、命中、排除原因、预算和最终 blocks；
 - 重建后继续读取同一事实，不依赖 widget cache。
 
@@ -427,11 +511,11 @@ EventStore。
 冻结选择是保留该评测，而不是默认延期；但若实现时无法由现有 `run_attempt` 在上述边界内装载语料，
 评测整体延后，不以交付压力为理由新增平行 Runner。核心 deterministic retrieval tests 始终是实现门禁。
 
-### 12.3 最终门禁
+### 12.3 Release Stop C 与最终门禁
 
 1. compileall；
-2. Context snapshot/reconstruction、Plugin Skill lifecycle、selection、Memory authority、retrieval/index、
-   Composition/RequestBuilder、Line/TUI 定向测试；
+2. Context snapshot/reconstruction、Plugin Skill lifecycle、selection、Memory authority、History Evidence
+   展开/Step-scope/freshness、retrieval/index、Composition/RequestBuilder、Line/TUI 定向测试；
 3. Plugin Activation/Generation/Lease/Drain、Session/Request、Budget、Product/Workflow/Review/Approval/
    Promotion/Evaluation 相邻回归；
 4. SQLite derived index rebuild、fresh data dir、无 semantic extras 与带本地 extras 的离线安装；
@@ -448,6 +532,8 @@ v0.9 完成必须证明：
 - Skill 是现有 trusted Plugin/Generation 生命周期的 typed catalog，不是第二插件系统；
 - Skill selection 只影响未来 ContextInput，不 publish/drain Generation、不授予 Tool；
 - Memory 是同一 EventStore 中 host-approved、Workspace-scoped、append-only facts；
+- M3 History Evidence 只从当前 Session 的原始 Surface 事件与 format-2 replacement provenance 重建；它
+  request-only、Step-scoped、可分页且带 freshness，不成为 Memory、第二 EventStore 或普通 Surface 常驻内容；
 - exact/FTS 与可选本地 semantic/reranker 都只是 derived retrieval，索引可重建；
 - 两道 host filter、渐进披露和 Context Budget 阻止 scope/authority 泄漏与无界 prompt；
 - 历史 Step 从 `source_seq` 内唯一 Context Input event 的精确 injected bytes 重建，不重跑 RAG、不读
@@ -466,20 +552,39 @@ v0.9 完成必须证明：
    `source_seq` 完整界定；
 5. 专用 projector/reader 无法从当时 event 重建 exact bytes，必须污染 Surface/system prompt、重跑 RAG
    或读取 latest；
-6. optional local semantic lane 需要联网、外部数据库或隐藏模型默认；
-7. 真实需求扩大成运行未审计社区 Skill，必须先完成独立 sandbox hardening。
+6. History Evidence 无法在不允许任意 seq、跨 Session 读取、永久 Surface 驻留或把旧结果冒充当前事实的
+   前提下实现；
+7. optional local semantic lane 需要联网、外部数据库或隐藏模型默认；
+8. 真实需求扩大成运行未审计社区 Skill，必须先完成独立 sandbox hardening。
 
 ## 14. 冻结后的重新批准与停止规则
 
-- 最终独立计划审查已经结束；不再为同一基线启动第五轮开放式审查。本文保持 Skill + Memory 同一
-  v0.9 主题和三个 release stop，不因范围观感拆成两套注入主线；
+- 最终独立计划审查已经结束；2026-09-05 经项目所有者确认的唯一范围修订是把 M3 History Evidence
+  纳入同一 Context Input 主线。本文保持 Skill + Memory + History Evidence 同一 v0.9 主题和三个 release
+  stop，不因范围观感拆成两套注入主线；
 - v0.9 只有在 v0.8 完成并发布后才能按当时真实 HEAD 重新核对。重新核对用于发现代码事实变化，
   不是默认推翻已经冻结的产品目标；任何实现仍需项目所有者明确开工授权；
-- F0 必须先证明 Context event/source boundary、Tool 续步位置和历史 reconstruction；F1/F2 必须先证明
-  Generation/Lease/resource owner；F3 必须先证明 Memory authority。后阶段不得掩盖前阶段 owner 缺口；
+- F0 必须先证明 Context event/source boundary、Tool 续步位置、历史 request reconstruction，以及 M3
+  History 原文不会常驻 Surface；F1/F2 必须先证明 Generation/Lease/resource owner；F3 必须先证明 Memory
+  authority。后阶段不得掩盖前阶段 owner 缺口；
 - retrieval quality 继续由唯一 `traceh eval` 度量，语料由现有 attempt runner 装载。若该 owner 在真实
   实现中不可行，延期整个质量评测，不新增第二 Runner；
 - trusted-only Plugin 是本版本接受的边界。sandbox 仍是独立 hardening；不得为了声称支持不可信 Skill
   在 v0.9 内实现半套隔离或静默降级；
 - 如果准确类名、SQL 表或排名公式需要调整，可以选择更轻实现；改变 canonical owner、事实源、权限、
   source boundary、唯一 Runner 或无联网/外部向量库合同，必须重新由项目所有者批准。
+
+## 15. 完整执行总表
+
+| 顺序 | 阶段 | 主要产出 | 阶段停止条件 |
+|---:|---|---|---|
+| 0 | v0.8 前置 | M3+M4 联合门禁、提交、发布，以发布 HEAD 重新核对本文 | v0.8 未发布则 v0.9 不开工 |
+| 1 | F0 | ContextInputSnapshot、authority/budget、query/filter、History identity/Step-scope/freshness、重放 ADR | exact bytes 可重建，History 原文不进入后续 Surface |
+| 2 | F1 | 现有 Plugin Generation/Lease 上的 typed Skill catalog 与只读资源 owner | 半发布、identity/digest、reload/drain 反例全绿 |
+| 3 | F2 | Skill durable selection、exact+FTS、四级披露、可选本地 semantic/reranker 接口 | Release Stop A：Plugin/selection/Request P0/P1 清零 |
+| 4 | F3 | Workspace Memory proposal/active/superseded/revoked append-only authority | Release Stop B：Memory authority P0/P1 清零 |
+| 5 | F4 | Skill+Memory 统一检索编排；M3 History exact block 按需展开；统一预算和 snapshot | scope、时效、重放、索引重建与 context-rot 反例全绿 |
+| 6 | F5 | Line/TUI 治理、上下文/历史披露透明度、冻结检索评测、打包与发布 | Release Stop C、最终独立审查、唯一最终全量和发布门禁 |
+
+最终产品行为应同时满足：默认上下文短而新，Workspace 长期事实可治理，Skill 按需披露，M3 原文随时可
+追溯但不会长期驻留；用户和模型都能知道“有什么、为什么命中、实际注入了什么、它在什么时刻有效”。

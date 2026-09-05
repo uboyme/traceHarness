@@ -97,6 +97,7 @@ runtime/cancel-requested
 runtime/error
 runtime/recovered
 surface/replace
+surface/compaction-failed
 ```
 
 ## Effect events
@@ -171,8 +172,38 @@ Every event has `schema_version`. Current event payloads use their explicitly va
 version. The pre-1.0 SQLite database has one current schema version and rejects unsupported
 history; it does not upcast or rewrite legacy data.
 
-## Manual Surface compaction
+## Surface compaction
 
-`traceh compact` appends `surface/replace` with the exact source event sequences and one
-replacement message. Original events remain in SQLite and request reconstruction uses the
-new Surface projection for later Steps.
+`surface/replace` uses message format 2 and one exact key set: `format_version`, `method`
+(`manual` or `automatic`), `cut_seq`, `source_seqs`, `source_digest`, `source_utf8_bytes`,
+`history_utf8_bytes`, `kept_recent_turns`, `policy_digest`, `summarizer`, `summary`,
+`summary_truncated` and `replacement`. An `automatic` replacement must bind both the
+compaction policy digest and the summarizer identity; a `manual` one must bind neither.
+The parser rebuilds the whole payload, including the message, and requires canonical
+equality. Format 1 is rejected: this pre-1.0 cutover has no second parser, migration or
+fallback, and older data requires a new data directory.
+
+A cut boundary is always the sequence of a `turn/end` that really closed an open Turn, so
+the current user message, an open Turn, a Step and an assistant Tool call together with its
+`tool/result` are never split. `product/context-snapshot` is not a model-visible
+conversation type and can never be a source.
+
+`source_seqs` is ascending by sequence and the digest is taken over that same order, while
+selection itself is by logical position; the two orders differ whenever an earlier summary
+was appended after messages a wider cut now also covers.
+
+A replacement is projected at the smallest logical position among its sources, computed
+recursively, rather than at its own sequence. Original events remain in SQLite: a
+`request/snapshot` frozen before a compaction still reconstructs the original history, and
+a later one reconstructs the summarized history.
+
+`CoreInvariantChecker` recomputes `source_seqs`, `source_digest`, `source_utf8_bytes` and
+`history_utf8_bytes` from the history preceding the replacement and requires exact
+equality, so a canonical-looking event cannot bind fabricated derived facts.
+
+`surface/compaction-failed` records that one automatic compaction did not happen. It
+carries `method`, a stable `code` and `committed` (`true`, `false` or `null` for unknown),
+never history, and never reaches the model Surface. Only an exact `false` may be presented
+as "history unchanged"; unknown stays unknown.
+
+See [ADR-0042](adr/0042-host-owned-automatic-surface-compaction.md).

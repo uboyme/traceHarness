@@ -44,12 +44,23 @@ from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductChatHost
 from traceh.product.observation import ProductObservation, ProductObservationSession
 from traceh.runtime.agent_runtime import AgentRuntime
+from traceh.session.product_context import PRODUCT_CONTEXT_SNAPSHOT
 from traceh.session.surface import SurfaceProjector
+from traceh.session.surface_replacement import (
+    SURFACE_COMPACTION_FAILED,
+    SURFACE_REPLACE,
+)
+from traceh.tui.context_inspection import (
+    ContextInspectionReader,
+    ContextSnapshot,
+)
 from traceh.tui.presentation import (
     MODEL_SELF_REPORT_COLOR,
     OperationErrorView,
     ProductGateAction,
     TransientProductState,
+    compaction_notice_text,
+    context_status_line,
     format_age,
     operation_error_view,
     prefixed_display_lines,
@@ -60,6 +71,7 @@ from traceh.tui.presentation import (
     safe_display_block,
 )
 from traceh.tui.screens import (
+    ContextScreen,
     ProductChangesScreen,
     ProductIdentityScreen,
     TaskConversationScreen,
@@ -85,6 +97,20 @@ _PRODUCT_OPERATION_LABELS = {
     ProductCommandOperation.ABANDON: "放弃",
 }
 _NARROW_TERMINAL_COLUMNS = 110
+#: Session events that change model-visible history or the latest frozen
+#: request. Only these trigger a Context refresh; everything else would just be
+#: a redundant read.
+_CONTEXT_EVENT_TYPES = frozenset(
+    {
+        "user/message",
+        "assistant/message",
+        "tool/result",
+        PRODUCT_CONTEXT_SNAPSHOT,
+        "request/snapshot",
+        SURFACE_REPLACE,
+        SURFACE_COMPACTION_FAILED,
+    }
+)
 _HOST_TEAL = "#008080"
 _USER_PREFIX = "你 › "
 _USER_CONTINUATION = " " * Text(_USER_PREFIX).cell_len
@@ -111,11 +137,13 @@ class TracehTuiApp(App[int]):
         Binding("ctrl+p", "identity", "完整身份", priority=True),
         Binding("ctrl+d", "changes", "改动", priority=True),
         Binding("ctrl+t", "task_conversation", "任务对话", priority=True),
+        Binding("ctrl+x", "context", "上下文", priority=True),
         Binding("escape", "cancel_confirmation", "取消确认", show=False),
     ]
     CSS = """
     Screen { layout: vertical; }
     #topbar { height: 3; padding: 1 2; background: $panel; }
+    #context-bar { height: 1; padding: 0 2; color: $text-muted; }
     #main { height: 1fr; }
     #conversation-column { width: 1fr; min-width: 38; }
     #product-column { width: 1.05fr; min-width: 38; border-left: solid $primary; }
@@ -192,6 +220,20 @@ class TracehTuiApp(App[int]):
         )
         self._product = product
         self._task_conversation = TaskConversationReader(runtime.sessions.store)
+        self._context_reader = ContextInspectionReader(
+            runtime.sessions,
+            policy=runtime.compaction.policy,
+        )
+        # A discardable display snapshot for the status row only. The detail
+        # screen always re-reads the Session; nothing here is a fact source.
+        #
+        # Deliberately not named ``_context``: ``textual.app.App`` already owns
+        # that name as a method, and shadowing it stops the application from
+        # ever starting.
+        self._context_snapshot: ContextSnapshot | None = None
+        self._context_error: str | None = None
+        self._context_refreshing = False
+        self._context_refresh_pending = False
         self._clock = clock
         self._chat_driver = ChatDriver(
             runtime,
@@ -236,6 +278,7 @@ class TracehTuiApp(App[int]):
 
     def compose(self) -> ComposeResult:
         yield Static(self._topbar_text(), id="topbar", markup=False)
+        yield Static("", id="context-bar", markup=False)
         with Horizontal(id="main"):
             with Vertical(id="conversation-column"):
                 yield Static("", id="conversation-spacer")
@@ -274,6 +317,7 @@ class TracehTuiApp(App[int]):
                 f"tool_results={report.synthesized_tool_results}; "
                 f"step={report.closed_step}; turn={report.closed_turn}"
             )
+        await self._refresh_context()
         restored = await self._restore_conversation()
         if self._product is not None:
             await self._restore_product()
@@ -290,11 +334,15 @@ class TracehTuiApp(App[int]):
     async def on_resize(self, event: Resize) -> None:
         self._set_narrow(event.size.width < _NARROW_TERMINAL_COLUMNS)
         self.call_after_refresh(self._rewrap_conversation)
+        # The status row picks its rendering from the width it actually has, so
+        # it has to be recomposed once the new layout is known.
+        self.call_after_refresh(self._render_context_bar)
 
     def _set_narrow(self, enabled: bool) -> None:
         screen = self.screen
         if screen.has_class("narrow") != enabled:
             screen.set_class(enabled, "narrow")
+        self._render_context_bar()
 
     async def _restore_conversation(self) -> tuple[tuple[str, object], ...]:
         events = await self._runtime.sessions.read_session(self._session.session_id)
@@ -479,6 +527,10 @@ class TracehTuiApp(App[int]):
         prepared = None
         if self._product is not None:
             prepared = await self._product.prepare_turn(self._session.session_id, text)
+            # ``prepare_turn`` may append ``product/context-snapshot`` before the
+            # ChatDriver subscribes, so that event never reaches the feed. This
+            # is the host call boundary that owns it.
+            await self._refresh_context()
         outcome = await self._chat_driver.run_turn(
             prepared.turn_input if prepared is not None else text
         )
@@ -503,6 +555,63 @@ class TracehTuiApp(App[int]):
             self._proposal = resolution.start_request.pending
             self._task_id = resolution.start_request.pending.task_id
             self._render_start_request(resolution.start_request)
+
+    async def _refresh_context(self) -> None:
+        """Re-read the Session once and re-render the status row.
+
+        Concurrent refreshes are coalesced rather than raced: while one read is
+        in flight a second request only sets a flag, and the follow-up read runs
+        afterwards, so a slower older read can never overwrite a newer head.
+        There is no polling task and no second feed; every call is driven by a
+        host boundary that already knows the Session changed.
+        """
+
+        if self._context_refreshing:
+            self._context_refresh_pending = True
+            return
+        self._context_refreshing = True
+        try:
+            while True:
+                self._context_refresh_pending = False
+                try:
+                    snapshot = await self._context_reader.load(
+                        self._session.session_id
+                    )
+                except Exception as error:
+                    # Context is a read-only view. Its failure must never reach
+                    # the Turn, the ProductTask or shutdown.
+                    self._context_snapshot = None
+                    self._context_error = _safe_error_code(
+                        error, "context-inspection-unavailable"
+                    )
+                else:
+                    self._context_snapshot = snapshot
+                    self._context_error = None
+                if not self._context_refresh_pending:
+                    break
+        finally:
+            self._context_refreshing = False
+        self._render_context_bar()
+
+    def _render_context_bar(self) -> None:
+        if not self.is_mounted:
+            return
+        try:
+            bar = self.query_one("#context-bar", Static)
+        except NoMatches:
+            return
+        # The row is measured against the cells it really has, not the terminal
+        # column count: ``#context-bar`` has horizontal padding. Before the first
+        # layout ``content_region`` is still empty, so fall back to the screen
+        # width minus that padding rather than rendering unmeasured.
+        available = bar.content_region.width or max(1, self.size.width - 4)
+        bar.update(
+            context_status_line(
+                self._context_snapshot,
+                error_code=self._context_error,
+                width=available,
+            )
+        )
 
     async def _focus_pending_task(self, pending: PendingProductProposal) -> None:
         """Move the single Product pane from old durable history to ``pending``."""
@@ -529,6 +638,14 @@ class TracehTuiApp(App[int]):
             )
             if line is not None:
                 self._set_activity(line)
+            # Compaction changes what the model may still see, so it also lands
+            # in the conversation column instead of scrolling past in the
+            # transient activity line. Same durable event, no second state.
+            notice = compaction_notice_text(update.event)
+            if notice is not None:
+                self._write_system(notice)
+            if update.event.type in _CONTEXT_EVENT_TYPES:
+                await self._refresh_context()
             return
         if isinstance(update, ActivityUpdate):
             phase = "仍在工作" if update.phase is ActivityPhase.WAITING else "已完成"
@@ -958,6 +1075,13 @@ class TracehTuiApp(App[int]):
                 observation_reader=observation_reader,
                 task_id=self._task_id,
             )
+        )
+
+    async def action_context(self) -> None:
+        if self._ui_closing:
+            return
+        await self.push_screen(
+            ContextScreen(self._context_reader, self._session.session_id)
         )
 
     async def action_cancel_confirmation(self) -> None:

@@ -20,6 +20,14 @@ from traceh.session.product_context import (
     PRODUCT_CONTEXT_SNAPSHOT,
     parse_product_context_snapshot,
 )
+from traceh.session.surface_replacement import (
+    SURFACE_MESSAGE_TYPES,
+    SURFACE_REPLACE,
+    SurfaceToolLinks,
+    parse_surface_replacement,
+    split_tool_calls,
+    surface_prefix,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,8 +97,15 @@ class CoreInvariantChecker:
         snapshot_steps: dict[tuple[str, str], list[int]] = {}
         attempt_ordinals: dict[tuple[str, str], list[int]] = {}
         product_contexts: dict[tuple[int, int], str] = {}
+        # Logical conversation position of every model-visible event, so a
+        # replacement can be checked against where its sources really sit
+        # rather than against the order in which it happened to be appended.
+        surface_positions: dict[int, int] = {}
+        hidden_sources: set[int] = set()
+        closed_turns: set[int] = set()
+        tool_links = SurfaceToolLinks({}, {})
 
-        for event in session_events:
+        for index, event in enumerate(session_events):
             if event.seq != expected_seq:
                 violations.append(
                     InvariantViolation(
@@ -126,53 +141,31 @@ class CoreInvariantChecker:
                             )
                         )
 
-            if event.type == "surface/replace":
-                raw_source_seqs = event.data.get("source_seqs", [])
-                if not isinstance(raw_source_seqs, list) or not raw_source_seqs:
-                    violations.append(
-                        InvariantViolation(
-                            "surface-replacement-sources",
-                            "surface replacement must reference at least one source event",
-                            event.seq,
-                        )
+            if event.type in SURFACE_MESSAGE_TYPES:
+                surface_positions[event.seq] = event.seq
+            elif event.type == SURFACE_REPLACE:
+                violations.extend(
+                    self._check_surface_replacement(
+                        event,
+                        prior_events=session_events[:index],
+                        seen_seqs=seen_seqs,
+                        surface_positions=surface_positions,
+                        hidden_sources=hidden_sources,
+                        closed_turns=closed_turns,
+                        tool_links=tool_links,
                     )
-                else:
-                    try:
-                        source_seqs = [int(item) for item in raw_source_seqs]
-                    except (TypeError, ValueError):
-                        source_seqs = []
-                        violations.append(
-                            InvariantViolation(
-                                "surface-replacement-seq-format",
-                                "surface replacement source sequences must be integers",
-                                event.seq,
-                            )
-                        )
-                    if len(source_seqs) != len(set(source_seqs)):
-                        violations.append(
-                            InvariantViolation(
-                                "surface-replacement-unique",
-                                "surface replacement contains duplicate source sequences",
-                                event.seq,
-                            )
-                        )
-                    missing = [seq for seq in source_seqs if seq not in seen_seqs]
-                    if missing:
-                        violations.append(
-                            InvariantViolation(
-                                "surface-replacement-earlier",
-                                f"surface replacement references unknown or future seqs: {missing}",
-                                event.seq,
-                            )
-                        )
-                if not isinstance(event.data.get("replacement"), dict):
-                    violations.append(
-                        InvariantViolation(
-                            "surface-replacement-payload",
-                            "surface replacement must contain one message object",
-                            event.seq,
-                        )
-                    )
+                )
+
+            if event.type == "assistant/message":
+                raw_calls = event.data.get("tool_calls", [])
+                if isinstance(raw_calls, list):
+                    for item in raw_calls:
+                        if isinstance(item, dict) and isinstance(item.get("id"), str):
+                            tool_links.calls.setdefault(item["id"], event.seq)
+            elif event.type == "tool/result":
+                raw_call_id = event.data.get("tool_call_id")
+                if isinstance(raw_call_id, str):
+                    tool_links.results.setdefault(raw_call_id, event.seq)
 
             seen_seqs.add(event.seq)
 
@@ -679,6 +672,8 @@ class CoreInvariantChecker:
                             event.seq,
                         )
                     )
+                else:
+                    closed_turns.add(event.seq)
                 open_turn = None
                 open_attempt = None
 
@@ -750,4 +745,138 @@ class CoreInvariantChecker:
                             )
                         )
 
+        return tuple(violations)
+
+    def _check_surface_replacement(
+        self,
+        event: EventEnvelope,
+        *,
+        prior_events: tuple[EventEnvelope, ...],
+        seen_seqs: set[int],
+        surface_positions: dict[int, int],
+        hidden_sources: set[int],
+        closed_turns: set[int],
+        tool_links: SurfaceToolLinks,
+    ) -> tuple[InvariantViolation, ...]:
+        """Check one replacement against the history it claims to replace.
+
+        Every rule here protects something the model would otherwise see: a
+        summary appearing after the conversation it summarizes, host Product
+        evidence disappearing behind a summary, a Tool call separated from its
+        result, or a cut landing inside a Turn that had not finished.
+
+        The payload's derived facts are **recomputed**, not trusted. A format-2
+        replacement claims to bind an exact source set, a content digest and
+        exact byte counts; a checker that only inspected the shape of those
+        fields would let a canonical-looking event hide an arbitrary subset of
+        history behind a fabricated digest and still reach the model Surface.
+        """
+
+        try:
+            replacement = parse_surface_replacement(event)
+        except (TypeError, ValueError):
+            return (
+                InvariantViolation(
+                    "surface-replacement-protocol",
+                    "surface replacement is not a canonical current-format event",
+                    event.seq,
+                ),
+            )
+        violations: list[InvariantViolation] = []
+        unknown = [
+            seq
+            for seq in replacement.source_seqs
+            if seq not in seen_seqs or seq >= event.seq
+        ]
+        if unknown:
+            violations.append(
+                InvariantViolation(
+                    "surface-replacement-earlier",
+                    f"surface replacement references unknown or future seqs: {unknown}",
+                    event.seq,
+                )
+            )
+        # A source that exists but is not model-visible is the dangerous case:
+        # ``product/context-snapshot`` is host status evidence, and a summary
+        # may never hide it (ADR-0039/0041).
+        foreign = [
+            seq
+            for seq in replacement.source_seqs
+            if seq in seen_seqs and seq not in surface_positions
+        ]
+        if foreign:
+            violations.append(
+                InvariantViolation(
+                    "surface-replacement-source-type",
+                    "surface replacement references events that are not model-visible "
+                    f"conversation: {foreign}",
+                    event.seq,
+                )
+            )
+        if replacement.cut_seq not in closed_turns:
+            violations.append(
+                InvariantViolation(
+                    "surface-replacement-closed-turn",
+                    "surface replacement boundary is not the end of a closed Turn",
+                    event.seq,
+                )
+            )
+        # One recomputation answers "is this the complete, contiguous, still
+        # visible prefix through that boundary" - which subsumes re-replacing
+        # already hidden events and including history past the cut.
+        try:
+            expected = surface_prefix(prior_events, cut_seq=replacement.cut_seq)
+        except (TypeError, ValueError):
+            expected = None
+        if expected is None or expected.source_seqs != replacement.source_seqs:
+            violations.append(
+                InvariantViolation(
+                    "surface-replacement-prefix",
+                    "surface replacement is not the complete visible conversation "
+                    "prefix through its cut boundary",
+                    event.seq,
+                )
+            )
+        else:
+            for name, recorded, actual in (
+                ("digest", replacement.source_digest, expected.source_digest),
+                (
+                    "source byte count",
+                    replacement.source_utf8_bytes,
+                    expected.source_utf8_bytes,
+                ),
+                (
+                    "history byte count",
+                    replacement.history_utf8_bytes,
+                    expected.history_utf8_bytes,
+                ),
+            ):
+                if recorded != actual:
+                    violations.append(
+                        InvariantViolation(
+                            "surface-replacement-derivation",
+                            f"surface replacement {name} does not match the history "
+                            "it replaced",
+                            event.seq,
+                        )
+                    )
+        split = split_tool_calls(
+            tool_links, replacement.source_seqs, hidden=hidden_sources
+        )
+        if split:
+            violations.append(
+                InvariantViolation(
+                    "surface-replacement-tool-pairs",
+                    f"surface replacement splits Tool calls from results: {list(split)}",
+                    event.seq,
+                )
+            )
+        known = [
+            surface_positions[seq]
+            for seq in replacement.source_seqs
+            if seq in surface_positions
+        ]
+        if known:
+            surface_positions[event.seq] = min(known)
+        hidden_sources.update(replacement.source_seqs)
         return tuple(violations)

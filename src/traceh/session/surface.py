@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from traceh.api.events import EventEnvelope
-from traceh.api.llm import ModelMessage, ToolCall
+from traceh.api.llm import ModelMessage
 from traceh.session.product_context import latest_product_context
+from traceh.session.surface_replacement import surface_conversation
 
 
 class SurfaceProjector:
@@ -19,65 +20,14 @@ class SurfaceProjector:
             for event in events
             if through_seq is None or event.seq <= through_seq
         )
-        hidden: set[int] = set()
-        replacements: list[tuple[int, ModelMessage]] = []
-
-        for event in selected:
-            if event.type != "surface/replace":
-                continue
-            source_seqs = event.data.get("source_seqs", [])
-            if isinstance(source_seqs, list):
-                hidden.update(int(seq) for seq in source_seqs)
-            replacement = event.data.get("replacement")
-            if isinstance(replacement, dict):
-                replacements.append((event.seq, ModelMessage.from_dict(replacement)))
-
-        output: list[tuple[int, ModelMessage]] = []
-        for event in selected:
-            if event.seq in hidden:
-                continue
-            if event.type == "user/message":
-                output.append(
-                    (
-                        event.seq,
-                        ModelMessage(
-                            role="user", content=str(event.data.get("content", ""))
-                        ),
-                    )
-                )
-            elif event.type == "assistant/message":
-                raw_calls = event.data.get("tool_calls", [])
-                calls = tuple(
-                    ToolCall.from_dict(item)
-                    for item in raw_calls
-                    if isinstance(raw_calls, list) and isinstance(item, dict)
-                )
-                output.append(
-                    (
-                        event.seq,
-                        ModelMessage(
-                            role="assistant",
-                            content=str(event.data.get("content", "")),
-                            tool_calls=calls,
-                        ),
-                    )
-                )
-            elif event.type == "tool/result":
-                output.append(
-                    (
-                        event.seq,
-                        ModelMessage(
-                            role="tool",
-                            content=str(event.data.get("content", "")),
-                            tool_call_id=str(event.data.get("tool_call_id", "")),
-                            name=str(event.data.get("tool_name", "")) or None,
-                        ),
-                    )
-                )
-
-        output.extend(pair for pair in replacements if pair[0] not in hidden)
-        output.sort(key=lambda pair: pair[0])
-        conversation = tuple(message for _, message in output)
+        # A replacement is appended after the history it replaces, so it is
+        # projected at that history's logical position rather than at its own
+        # sequence. Ordering by append order would put a summary of old turns
+        # behind newer conversation - including behind the current user
+        # message - and describe a conversation that never happened.
+        conversation = tuple(
+            entry.message for entry in surface_conversation(selected)
+        )
         product_context = latest_product_context(selected)
         if product_context is None:
             return conversation

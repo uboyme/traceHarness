@@ -807,3 +807,169 @@ SQLite data dir 和全新 eval output，一次完成，不补跑失败项、不 
 搜索、打印、复制或记录 Key；进程代理显式置空；只使用本地 source 与一次性 bare target，没有真实远端
 Git。它不替代本节仍为 NOT RUN 的完整 18-attempt 网格。用户未跟踪笔记、缓存与审查目录不进入候选提交
 或 source ZIP。
+
+## 6. M3：宿主自动上下文压缩与精确重放（另行授权的后续阶段）
+
+本节只认证 M3 工作树，不覆盖或替代上面的 v0.8.0 候选证据。设计决定见
+[ADR-0042](adr/0042-host-owned-automatic-surface-compaction.md)，当前事实见
+[`project-context.md`](note/project-context.md) 的 12.2 与 20.39。
+
+### 6.1 已执行并通过
+
+```powershell
+python -m compileall -q src tests
+python -m pytest tests/test_compaction.py -q -o addopts='' -p no:cacheprovider
+python -m pytest tests/test_surface_and_invariants.py tests/test_cli_timeline.py `
+  tests/test_cli_read_only_commands.py tests/test_cli_env.py -q -o addopts='' -p no:cacheprovider
+python -m pytest --collect-only -q -o addopts='' -p no:cacheprovider
+python -m ruff check <修改范围文件>
+git diff --check
+```
+
+- 定向组（`tests/` 中 `test_compaction.py`、`test_surface_and_invariants.py`、`test_cli_timeline.py`、`test_cli_read_only_commands.py`、`test_cli_env.py`、`test_product_architecture.py`、`test_cli_resume.py`、`test_cli_resume_safety.py` 八个文件）：**`470 passed, 1 skipped`**；唯一 skip 是
+  `test_cli_resume_safety.py` 的 “a path cannot contain NUL”，属既有 Windows 平台边界。
+  其中 `tests/test_compaction.py` 单独为 **`41 passed`**。覆盖未达阈值零新增事件、显式禁用、部分配置被拒、
+  只压缩闭合且保留最近 Turn 的前缀、开放 Turn 不入 source、tool call/result 同进同出、format-7 Product
+  context 永不入 source、多次压缩只剩一条摘要、摘要不越过当前用户消息、压缩前后请求逐字节重建、replay 不
+  调用摘要器、摘要期间 head 变化与 CAS 冲突、摘要器失败/写入失败/取消收敛、摘要器无 Tool 与控制权限、
+  敌意与中文摘要的限长与转义、Line/TUI 同源展示且不泄漏正文、手动压缩同协议与拒绝 Turn 内切口，以及
+  四条不变量反例（非闭合 Turn 切口、遮蔽 Product 证据、拆开 tool 配对、旧 format 1）。
+- 相邻 owner 回归组（Product model-context/memory/observation/F3 E2E、recovery、inspector、runtime
+  e2e/factory/dispose、budget enforcement/supervision、TUI 四套、CLI chat/run-dispose/activity、cancellation、
+  event feed、event store contract、model attempt admission/retry、plugin runtime、composition generations、
+  agent supervisor 共二十六个文件）：**`526 passed, 1 skipped`**。唯一 skip 是 `test_tui.py` 的模块级
+  `importorskip("textual")`：本机解释器没有安装可选 `tui` extra。这是环境边界，不能写成平台边界。
+- `pytest --collect-only`：**M3 检查点当时**本机 **`2681 tests`**，装有 `tui` extra 的解释器
+  **`2714 tests`**。两个数字都正确，差额完全来自上面那条模块级 `importorskip`；本文件引用收集数时一律
+  注明解释器是否安装该 extra。**这两个数只认证 M3 检查点**：M4 之后又新增了 Context 透明度用例，当前工作树
+  的收集数见 7.1。
+- **修改范围 Ruff**（`git diff --name-only` 的 `.py` 文件加新增的 `session/surface_replacement.py`）只有
+  **一条** `ASYNC240`，位于 `runtime/agent_runtime.py` 中本轮未触碰的既有代码，并在干净 `HEAD` 上
+  `git stash` 后独立复现，属既有基线。按整包目录扫描另会带出 `runtime/continuation.py` 的 `E501` 与
+  `session/projections.py` 的 `UP042`，但这两个文件本轮没有改动，不计入修改范围。
+- `tests/test_product_architecture.py` 的受保护核心 pin 中，`runtime/agent_loop.py` 与
+  `runtime/agent_runtime.py` 两条按该文件自身的约定在同一次改动中更新，并在其 docstring 中写明原因
+  （Turn 前压缩线性化点、非致命失败处理、显式 CompactionPolicy/summarizer 装配与单一 owner 守卫）。
+
+### 6.2 反向验证
+
+依次临时破坏以下保护，确认对应测试按各自根因变红，然后逐一恢复并重新跑绿：
+
+| 临时移除的保护 | 变红的测试 |
+|---|---|
+| 闭合 Turn/Step 边界（cut 取任意 seq） | 8 项，含只压闭合前缀、Product 证据、逻辑位置、请求重建、head 竞争、摘要器可见范围、UI 展示、手动拒绝 |
+| Product context 排除（把该类型加入模型可见集合 + 去掉不变量检查） | 3 项，含 `surface-replacement-source-type` 反例 |
+| request reconstruction 的历史 `source_seq` | 4 项，含压缩前后逐字节比较 |
+| Session CAS（`expected_seq` 改为 `None`） | 1 项，摘要器只被调用 1 次而不是 2 次 |
+| 逻辑位置排序（改回按 append seq） | 1 项，摘要跑到当前用户消息之后 |
+| tool call/result 配对规则 | 1 项，`surface-replacement-tool-pairs` 反例 |
+| 摘要器能力边界（`SummaryRequest` 增加 `tools` 字段） | 1 项 |
+| 写入顺序改回逻辑顺序（P1-1 根因） | 2 项，手动与自动两条扩大 cut 的路径都报 `compaction-payload-invalid` |
+| 不变量对派生事实的重算（P1-2 根因） | 2 项，含完整前缀反例与伪造 digest/字节数反例 |
+| `committed` 三态折叠成一句话（P1-3 根因） | 3 项，含 `true`/`null` 与 `0`/`"false"`/缺失 |
+| 恢复命令携带压缩策略（P2-1） | 1 项 |
+| 手动切口必须精确命中闭合 Turn（P2-2） | 1 项 |
+
+复审中另发现一处“摘要完成后再读一次 head 与选择时比较”的保护与 Store CAS 完全重复：移除它时没有任何测试
+变红，也答不出“删掉后哪条公开合同会被破坏”。按最小保护原则删除，改由 `expected_seq` 单独承担该不变量，
+随后按上表重新对 CAS 做反向验证。
+
+### 6.3 独立复审 Finding 的处置
+
+第一轮独立复审给出 P0=0、P1=3、P2=2，全部按各自 owner 根修并补了确定性反例：
+
+| Finding | 根因与根修位置 | 反向验证 |
+|---|---|---|
+| P1-1 二次扩展压缩稳定失败 | 选择按逻辑顺序而协议要求 seq 升序；`surface_prefix()` 现在把“交给摘要器的逻辑顺序”与“写入及 digest 的升序”分开 | 2 项 |
+| P1-2 format-2 精确绑定未被验证 | `CoreInvariantChecker` 现用同一个 `surface_prefix()` 重算完整前缀、digest 与两个字节数并逐项比对，新增 `surface-replacement-prefix` 与 `surface-replacement-derivation` | 2 项，另有一条“诚实派生零违规”的正向断言 |
+| P1-3 unknown/committed 被说成“历史未改变” | `cli/timeline.py` 与 `tui/presentation.py` 按三态分别渲染，只有精确布尔 `False` 才是“未改变” | 3 项 |
+| P2-1 恢复命令静默关闭压缩 | `cli/chat.py` 的 resume token 列表补齐四项非秘密整数 | 1 项 |
+| P2-2 人工 cut 合同自相矛盾 | 统一为“必须精确命中闭合 Turn”，新增 `compaction-boundary-not-closed-turn`；代码、CLI、README、CHANGELOG、ADR 与测试同步 | 1 项 |
+
+### 6.4 本轮 NOT RUN
+
+完整 `python -m pytest -q`、Wheel/sdist/source ZIP、双形态离线安装、真实 Provider/API、L2–L4 递归门禁，
+以及 commit、push、tag、release，均未在本阶段执行，也不由本节宣称。M3 引入的是破坏式 `surface/replace`
+format 2 协议切换，旧 format-1 数据必须使用新的数据目录。
+
+## 7. M4：上下文透明度与最终体验（另行授权的后续阶段）
+
+本节只认证 M4 工作树，不覆盖第 6 节的 M3 证据，也不认证任何发布门禁。工程事实见
+[`project-context.md`](note/project-context.md) 的 12.3 与 20.40。M4 是纯展示层改动，没有新增
+durable 协议，因此不新增 ADR。
+
+### 7.1 解释器边界
+
+`tests/test_tui.py` 顶部是模块级 `pytest.importorskip("textual")`。本机默认解释器没有安装可选 `tui`
+extra，因此 TUI 相关门禁一律在已安装 Textual 8.2.8 的 `C:\traceh-tui-dev` 解释器上运行，并在下面逐条标明。
+两个解释器的全仓收集数因此不同，这是环境差异而不是缺陷：
+
+- 默认解释器（无 `tui` extra）：`--collect-only` **`2719 tests`**；
+- `C:\traceh-tui-dev`（Textual 8.2.8）：`--collect-only` **`2765 tests`**。
+
+### 7.2 已执行并通过
+
+```powershell
+python -m compileall -q src tests
+python -m pytest tests/test_compaction.py tests/test_surface_and_invariants.py `
+  tests/test_product_model_context.py tests/test_model_attempt_admission.py `
+  tests/test_model_retry.py tests/test_recovery.py -q -o addopts='' -p no:cacheprovider
+C:\traceh-tui-dev\Scripts\python.exe -m pytest tests/test_tui.py tests/test_tui_presentation.py `
+  tests/test_tui_task_conversation.py tests/test_tui_optional.py `
+  tests/test_tui_context_inspection.py -q -o addopts='' -p no:cacheprovider
+python -m pytest --collect-only -q -o addopts='' -p no:cacheprovider
+python -m ruff check <修改范围文件>
+git diff --check
+```
+
+- **TUI 定向组 + M4 新增**（`test_tui.py`、`test_tui_presentation.py`、`test_tui_task_conversation.py`、
+  `test_tui_optional.py`、`test_tui_context_inspection.py`，在 `C:\traceh-tui-dev` 上）：
+  **`133 passed`**。其中新增的 `tests/test_tui_context_inspection.py` 为 **`38 passed`**，
+  `tests/test_tui.py` 新增 13 项 Pilot 用例（含窄屏错误态与详情页折行）。
+- **Context/M3 相邻回归**（`test_compaction.py`、`test_surface_and_invariants.py`、
+  `test_product_model_context.py`、`test_model_attempt_admission.py`、`test_model_retry.py`、
+  `test_recovery.py`，默认解释器）：**`144 passed`**。
+- **修改范围 Ruff**（`git diff --name-only` 的 `.py` 文件加新增的
+  `session/surface_replacement.py`、`tui/context_inspection.py`、`tests/test_tui_context_inspection.py`）：
+  只有一条 `ASYNC240`，位于 `runtime/agent_runtime.py` 中本轮未触碰的既有代码，属既有基线。
+- `compileall` 与 `git diff --check` 通过；文档相对链接、代码围栏与两版章节对应检查通过。
+
+覆盖范围包括：空 Session、压缩关闭、压缩开启（精确策略与字节分母）、单次/多次/扩大 cut 的压缩、manual 与
+automatic 区分、历史策略 digest 不冒充当前策略、压缩失败三态（含 `0`/`"false"`/缺失都算 unknown）、
+Product context focus/shown/total/omitted、历史请求按自身 `source_seq` 选 Product context、最近合法
+`request/snapshot` 的 composed/dispatch 字节与 fingerprint 与 output ceiling、后续压缩不改变旧请求展示、
+Store 读失败/畸形 replacement/畸形 request snapshot 全部 fail closed、只读不写入（多次刷新后事件数不变）、
+宽窄屏一行、Ctrl+X 从聊天输入获得焦点时可打开、Esc 返回后输入可用、Footer 只显示已实现按键、自动压缩后
+无需重启即更新、`prepare_turn()` 写入后能更新、样式不继承、敌意摘要不破坏排版。
+
+### 7.3 反向验证
+
+依次临时破坏以下保护，确认对应测试按各自根因变红，然后逐一恢复并重新跑绿（恢复后 `114 passed`）：
+
+| 临时移除的保护 | 变红的测试 |
+|---|---|
+| 历史请求的 Product context 边界改用当前 head | 3 项，含 `test_a_frozen_request_keeps_the_product_context_of_its_own_boundary` |
+| 用 durable 压缩次数冒充当前可见摘要数 | 1 项 `test_durable_compaction_count_is_separate_from_visible_summaries` |
+| 把 UTF-8 字节标成 token 与通用 context 百分比 | 6 项，含状态条文案合同与 Pilot 用例 |
+| 详情页样式不再按 span 限定（标题 bold 继承） | 2 项，含纯投影与真实 RichLog 两层 |
+| 最近冻结请求改用当前 Surface 重算 | 1 项 `test_the_frozen_request_is_read_not_recomputed` |
+
+### 7.4 独立复审两项窄屏 P2 的处置
+
+第一轮独立复审为 P0=0、P1=0、P2=2，两项都属展示层可读性，已按各自 owner 根修并补确定性反例：
+
+| Finding | 根因与根修 | 反向验证 |
+|---|---|---|
+| P2-1 窄屏状态条仍被静默裁断 | 44 列终端下状态条实际只有 40 cells，错误态 51 cells、"压缩失败 + 任务计数" 46 cells 都会被 Textual 裁断。把 `narrow` 布尔换成显式可用 cell 数与逐个测量的候选阶梯；`app.py` 传入真实 `content_region.width`（首次布局前回退到屏宽减 padding），resize 后重新组合；错误态里稳定 code 最后才被牺牲 | 移除 width 拟合后 **14 项**变红（含 8 项纯投影参数化与窄屏 Pilot 错误态） |
+| P2-2 详情页 `wrap=True` 未按视口折行 | `log.write(row, width=row.cell_len)` 钉死虚拟行宽，且 `RichLog` 默认 `min_width=78`；44 列下内容宽 36 却排到 60，产生 Footer 未提示的横向溢出。去掉显式 `width=` 并设 `min_width=1` | 恢复默认 `min_width` 后 **1 项**变红（`test_the_context_detail_page_wraps_instead_of_overflowing`） |
+
+新增覆盖：状态条在 110/80/60/44/40/30/20/12 cells 下均 `cell_len <= width` 且严格一行；错误码在
+110/60/44/40/34/30 下保持完整；宽度极端不足时显式加省略号；Pilot 在 110/72/44 列验证错误态完整可读，
+并在 44 列验证详情页 `virtual_size.width <= content_region.width` 且每行不超过视口宽度。
+
+### 7.5 本轮 NOT RUN
+
+完整无筛选 `python -m pytest -q`、Wheel/sdist/source ZIP、双形态离线安装、真实 Provider/API、L2–L4 递归
+门禁，以及 commit、push、tag、release，均未执行，也不由本节宣称。按阶段计划，M3+M4 的唯一一次最终全量
+应在独立审查清零 P0/P1 之后运行；由于 `test_tui.py` 的模块级 `importorskip`，最终全量应在安装了 `tui`
+extra 的解释器上执行，否则会静默跳过全部 TUI 覆盖。

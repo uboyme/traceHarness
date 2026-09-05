@@ -14,6 +14,8 @@ from traceh.cli.main import (
     build_parser,
 )
 from traceh.llm.openai_compatible import OpenAICompatibleProvider
+from traceh.session.compaction import CompactionPolicy
+from traceh.session.surface_replacement import MAX_SURFACE_SUMMARY_UTF8_BYTES
 
 _TRACEH_VARIABLES = (
     "TRACEH_PROVIDER",
@@ -25,6 +27,10 @@ _TRACEH_VARIABLES = (
     "TRACEH_VERIFY_COMMAND",
     "TRACEH_PLUGIN_VERIFIER",
     "TRACEH_PLUGINS",
+    "TRACEH_AUTO_COMPACT",
+    "TRACEH_AUTO_COMPACT_BYTES",
+    "TRACEH_AUTO_COMPACT_SUMMARY_BYTES",
+    "TRACEH_AUTO_COMPACT_KEEP_TURNS",
 )
 
 
@@ -346,3 +352,134 @@ def test_env_loader_does_not_override_existing_process_value(tmp_path, monkeypat
     assert report.loaded
     assert "SERVICE_KEY" not in report.applied_keys
     assert os.environ["SERVICE_KEY"] == "process-secret"
+
+
+def _compaction_args(monkeypatch: pytest.MonkeyPatch, tmp_path, *flags: str):
+    _clear_traceh_environment(monkeypatch)
+    return build_parser().parse_args(
+        [
+            "run",
+            str(tmp_path),
+            "task",
+            "--env-file",
+            str(tmp_path / "absent.env"),
+            *flags,
+        ]
+    )
+
+
+def test_automatic_compaction_is_off_unless_it_is_configured(
+    tmp_path, monkeypatch
+) -> None:
+    """Absent configuration means off. It never means a guessed threshold."""
+
+    args = _compaction_args(monkeypatch, tmp_path)
+    _configure_from_environment(args)
+    assert args.compaction is None
+
+
+def test_automatic_compaction_requires_every_threshold(tmp_path, monkeypatch) -> None:
+    args = _compaction_args(monkeypatch, tmp_path, "--auto-compact", "on")
+    with pytest.raises(CliConfigurationError) as failure:
+        _configure_from_environment(args)
+    assert "--auto-compact-bytes" in str(failure.value)
+
+    args = _compaction_args(
+        monkeypatch,
+        tmp_path,
+        "--auto-compact",
+        "on",
+        "--auto-compact-bytes",
+        "4000",
+        "--auto-compact-summary-bytes",
+        "800",
+    )
+    with pytest.raises(CliConfigurationError) as partial:
+        _configure_from_environment(args)
+    assert "--auto-compact-keep-turns" in str(partial.value)
+
+
+def test_thresholds_without_an_explicit_switch_are_refused(tmp_path, monkeypatch) -> None:
+    args = _compaction_args(monkeypatch, tmp_path, "--auto-compact-bytes", "4000")
+    with pytest.raises(CliConfigurationError) as failure:
+        _configure_from_environment(args)
+    assert "--auto-compact on|off" in str(failure.value)
+
+
+def test_switching_compaction_off_rejects_leftover_thresholds(
+    tmp_path, monkeypatch
+) -> None:
+    args = _compaction_args(
+        monkeypatch, tmp_path, "--auto-compact", "off", "--auto-compact-bytes", "4000"
+    )
+    with pytest.raises(CliConfigurationError):
+        _configure_from_environment(args)
+
+    args = _compaction_args(monkeypatch, tmp_path, "--auto-compact", "off")
+    _configure_from_environment(args)
+    assert args.compaction is None
+
+
+def test_a_fully_configured_compaction_policy_is_accepted(tmp_path, monkeypatch) -> None:
+    args = _compaction_args(
+        monkeypatch,
+        tmp_path,
+        "--auto-compact",
+        "on",
+        "--auto-compact-bytes",
+        "4000",
+        "--auto-compact-summary-bytes",
+        "800",
+        "--auto-compact-keep-turns",
+        "0",
+    )
+    _configure_from_environment(args)
+    assert args.compaction == CompactionPolicy(
+        enabled=True,
+        trigger_utf8_bytes=4000,
+        max_summary_utf8_bytes=800,
+        keep_recent_turns=0,
+    )
+
+
+def test_compaction_can_be_configured_from_the_environment(
+    tmp_path, monkeypatch
+) -> None:
+    _clear_traceh_environment(monkeypatch)
+    monkeypatch.setenv("TRACEH_AUTO_COMPACT", "on")
+    monkeypatch.setenv("TRACEH_AUTO_COMPACT_BYTES", "12000")
+    monkeypatch.setenv("TRACEH_AUTO_COMPACT_SUMMARY_BYTES", "1500")
+    monkeypatch.setenv("TRACEH_AUTO_COMPACT_KEEP_TURNS", "2")
+    args = build_parser().parse_args(
+        ["run", str(tmp_path), "task", "--env-file", str(tmp_path / "absent.env")]
+    )
+    _configure_from_environment(args)
+    assert args.compaction is not None
+    assert args.compaction.trigger_utf8_bytes == 12_000
+    assert args.compaction.keep_recent_turns == 2
+
+
+def test_an_out_of_range_summary_bound_is_refused(tmp_path, monkeypatch) -> None:
+    args = _compaction_args(
+        monkeypatch,
+        tmp_path,
+        "--auto-compact",
+        "on",
+        "--auto-compact-bytes",
+        "4000",
+        "--auto-compact-summary-bytes",
+        str(MAX_SURFACE_SUMMARY_UTF8_BYTES + 1),
+        "--auto-compact-keep-turns",
+        "1",
+    )
+    with pytest.raises(CliConfigurationError):
+        _configure_from_environment(args)
+
+
+def test_read_only_commands_do_not_offer_compaction_flags() -> None:
+    """`compact` is a manual human decision; it has no automatic policy."""
+
+    args = build_parser().parse_args(
+        ["compact", "sid", "--through-seq", "9", "--summary", "s"]
+    )
+    assert not hasattr(args, "auto_compact")

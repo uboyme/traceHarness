@@ -620,13 +620,49 @@ See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 v0.9 must be rechecked and explicitly authorized after v0.8 is released. See the
 [frozen v0.9 stage plan](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md).
 
-## v1.0: Stable plugin platform
+## v0.10: Host-owned Sandbox
 
-- Freeze `traceh.api` and `traceh.sdk` compatibility policy.
-- Add the migration/upcaster and projection-checkpoint policy required by a stable
-  post-1.0 compatibility promise; pre-1.0 v0.8 intentionally provides no JSONL
-  migration reader.
-- Add isolated process plugin host and capability grants.
-- Add OpenTelemetry plugin, a real streaming provider protocol and explicit
-  Provider/model fallback policy beyond v0.8's same-provider bounded retry.
-- Publish migration guide and third-party contract test kit.
+- Add a real, fail-closed execution boundary for filesystem, network, secrets,
+  resources, output and process-tree convergence.
+- Route effectful Tools and isolated local processes through one host-owned
+  Sandbox contract and durable receipt; a missing backend must never silently
+  degrade to an ordinary subprocess.
+- Keep `READ_ONLY`, virtual environments, temporary directories and Git
+  worktrees honest: they remain useful policies or isolation units, but are not
+  advertised as an OS Sandbox.
+
+## v0.11: Official MCP Client plugin
+
+- Implement TraceHarness as an MCP client through an independent official
+  plugin owned by the existing Activation/Generation/Lease/Drain lifecycle.
+- Map MCP Tools, Resources and Prompts into the existing Tool/resource/typed
+  Skill boundaries; server annotations never grant effects or authority.
+- Apply host Policy, Budget, Sandbox/network controls, redaction and EventStore
+  audit to every external call. MCP server mode is outside the v1.0 scope.
+
+## v0.12: Controlled dynamic concurrent Workflow
+
+- Let models select host-approved templates first, then propose a restricted DAG
+  inside a frozen capability envelope.
+- Reuse the existing DAG/Map/Join scheduler and ready-node concurrency while
+  giving each child Agent an independent identity, Session, Context and worktree.
+- Add immutable child artifacts, deterministic Join/Merge and integrated
+  Verification plus post-code Review before human Approval and Git CAS Promotion.
+- Do not accept arbitrary executable workflow code or allow models to bypass the
+  mandatory safety tail.
+
+## v1.0: Stable local coding-agent host
+
+- Freeze a deliberately small compatibility policy for public API/SDK, plugins,
+  persistent protocols and CLI; decide migration versus explicit pre-1.0 data
+  rejection per protocol instead of promising a universal upcaster.
+- Run the combined context/memory, Sandbox, MCP, dynamic Workflow, replay,
+  packaging and supported-platform release gates without adding new features.
+- Publish the migration guide and third-party Plugin/MCP contract test kit.
+- Keep OpenTelemetry productization, real-time token streaming, silent
+  Provider/model fallback, multi-host runtime and cloud/multi-user control planes
+  outside the v1.0 completion boundary.
+
+The authoritative sequencing, ownership boundaries, stage stops and acceptance
+journeys are defined in the
+[v1.0 master plan](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md).

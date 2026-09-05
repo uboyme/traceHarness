@@ -2,6 +2,112 @@
 
 ## Unreleased
 
+### M4: Context transparency in the optional Textual TUI
+
+- Added a full-width Context status row under the topbar and a read-only
+  `Ctrl+X` detail screen. Both answer "how much can the model see, how close is
+  it to being compacted, and what was actually frozen into the last request".
+- Added `traceh.tui.context_inspection`, a stateless read-only projector. It
+  re-reads the requester Session once and derives everything with the existing
+  owners' parsers (`surface_conversation`, `parse_surface_replacement`,
+  `latest_product_context`, `ModelRequest.from_dict`,
+  `dispatch_request_matches_composed`, `CoreInvariantChecker`). No durable
+  event, fact source, cache, index or state machine is added, and no model
+  message, prompt, fingerprint or ProductTask behaviour changes.
+- **Bytes are shown as bytes.** With no trusted general tokenizer and no
+  canonical per-model input ceiling, a context-window percentage cannot be
+  computed honestly, so none is shown. The only denominator used is the
+  configured compaction trigger, and only while compaction is enabled; the
+  detail page labels it explicitly as a share of that threshold.
+- The current projection and the latest frozen request are reported separately.
+  The frozen request is read from `request/snapshot` rather than recomputed, and
+  the Product context it carried is selected within its own `source_seq`, so a
+  newer ProductTask head can never rewrite what an older request contained.
+- Durable compaction count and currently visible summaries are reported as two
+  different numbers, and a historical replacement is only described as matching
+  the current policy when its stored `policy_digest` actually matches.
+- Read failures, malformed replacements and malformed request snapshots fail
+  closed with a stable code; the Context view never blocks a Turn, a ProductTask
+  or shutdown.
+- The status row is fitted to the cells it actually has rather than left to
+  Textual's clipping: candidate renderings are measured from richest to
+  shortest and the first that fits is used. In the failure state the stable
+  code is the payload, so it is the last thing dropped.
+- The detail screen wraps to the viewport. `RichLog` lays out at
+  `max(min_width, viewport)` and defaults `min_width` to 78, so a narrow
+  terminal previously overflowed horizontally with no Footer key to scroll it.
+- Fixed two real defects found while building this: naming the display snapshot
+  `self._context` shadowed `textual.app.App._context`, which stopped the app
+  from ever starting and hung every TUI test instead of raising; and passing an
+  explicit `width=` to `RichLog.write` pinned the virtual line width and
+  disabled `wrap=True`.
+
+### M3: host-owned automatic Surface compaction and exact replay
+
+- **Breaking (pre-1.0): `surface/replace` uses format 2 only.** Format 1 is
+  rejected explicitly, with no second parser, migration, alias, dual projector,
+  fallback or silent rewrite; older data requires a new data directory. The new
+  exact key set binds the source sequences, a content digest, the cut boundary,
+  the method, the compaction policy digest, the summarizer identity and the
+  exact replacement bytes, and the parser requires canonical equality before a
+  replacement may reach the Surface. `session/surface_replacement.py` is the one
+  place that protocol is defined; the projector, the compaction service and the
+  invariant checker all read it.
+- **Breaking: a replacement is projected at the logical position of the history
+  it replaced**, not at its own append sequence. A summary of older turns can no
+  longer appear behind newer conversation, including behind the current user
+  message. Repeated compaction converges into one summary instead of stacking.
+- **Breaking: `traceh compact --through-seq` must now be exactly the sequence of
+  a closed Turn's `turn/end`.** A sequence inside a Turn, or past the end of the
+  log, is refused with exit code 3 and one stable code rather than silently
+  sliding back to an earlier Turn and compacting a range the caller did not ask
+  for.
+- Added host-owned automatic compaction. `AgentLoop` consults the single
+  `CompactionService` once before a Turn opens - the only point with one Turn
+  owner, no open Turn and a replacement still preceding every request the Turn
+  will freeze. A failed compaction leaves history untouched, records a
+  `surface/compaction-failed` notice carrying only a stable code, and lets the
+  Turn proceed.
+- The trigger is `history_utf8_bytes`, the canonical UTF-8 size of model-visible
+  conversation. It is a byte count, not a token count: this runtime has no
+  trusted general tokenizer. Enabling compaction requires stating all four
+  values explicitly (`--auto-compact on|off`, `--auto-compact-bytes`,
+  `--auto-compact-summary-bytes`, `--auto-compact-keep-turns`, or their
+  `TRACEH_AUTO_COMPACT*` variables); a partial configuration is refused before
+  any Runtime or Session exists, and an absent configuration means off.
+- `product/context-snapshot` remains impossible to compact, now enforced by the
+  invariant checker as well as by selection (ADR-0039/0041 unchanged).
+- Summaries are untrusted history: scrubbed, byte-bounded with an explicit
+  truncation flag, and embedded as a JSON string, so a summary cannot forge a
+  header, a closing tag or a second message. The `<compacted-summary>` XML
+  wrapper is gone.
+- **No model-backed summarizer ships, deliberately.** The only auditable,
+  budgeted and cancellable model dispatch is the Session dispatch permit, and
+  every `request/snapshot` must reconstruct as the Surface projection - which a
+  summarization request is not. The default `BoundedHistorySummarizer` is
+  deterministic and model-free; a host may inject its own, under the same rule.
+  A `SummaryRequest` carries no Store, Session service, Tool registry, Runtime
+  or approval handle. See
+  [ADR-0042](docs/adr/0042-host-owned-automatic-surface-compaction.md).
+- Selection, summarizing and the append are one compare-and-swap: the head
+  observed during selection is the append's `expected_seq`, a conflict re-reads
+  and re-selects instead of resubmitting a stale payload, cancellation converges
+  the owned append worker and reconciles a may-have-committed write, and unknown
+  commit status stays unknown.
+- `CoreInvariantChecker` recomputes a replacement's `source_seqs`,
+  `source_digest`, `source_utf8_bytes` and `history_utf8_bytes` from the history
+  preceding it and requires exact equality, so a canonical-looking event cannot
+  bind fabricated derived facts or hide part of a prefix. `source_seqs` is
+  ascending by sequence while selection is by logical position; the two orders
+  differ once an earlier summary is appended after messages a wider cut covers.
+- Line and the Textual adapter render the same durable event and keep no
+  compaction state: counts and provenance only, never the summary body, the
+  replaced messages, the digests or a prompt. The failure notice reports all
+  three commit answers separately - only an exact `false` is shown as "history
+  unchanged", and an unknown commit stays unknown.
+- The printed resume command carries `--auto-compact` and its three thresholds
+  when a policy is enabled, so copying it cannot silently disable compaction.
+
 ### v0.8-F5: v0.8.0 release candidate integration
 
 - Advanced the single package/core/plugin-API version source to `0.8.0` without

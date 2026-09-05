@@ -123,6 +123,36 @@ def test_compact_appends_a_surface_replacement(session, capsys) -> None:
     assert payload["session_id"] == session_id
     assert payload["source_seqs"], "compaction must record which messages it replaced"
     assert payload["replacement_seq"] > last_seq
+    assert payload["method"] == "manual"
+    assert payload["kept_recent_turns"] == 0
+    assert payload["summary_truncated"] is False
+
+
+def test_compact_reports_a_refused_boundary_without_a_traceback(
+    session, capsys
+) -> None:
+    """A boundary that is not a closed Turn is refused with one stable code."""
+
+    data_dir, session_id, _ = session
+    code = run_cli(
+        [
+            "compact",
+            session_id,
+            "--data-dir",
+            str(data_dir),
+            "--through-seq",
+            "2",
+            "--summary",
+            "cutting inside the first Turn",
+        ]
+    )
+    assert code == 3
+    captured = capsys.readouterr()
+    assert captured.err.strip() == (
+        "compaction failed: compaction-boundary-not-closed-turn"
+    )
+    assert "Traceback" not in captured.err
+    assert captured.out == ""
 
 
 def test_read_only_commands_do_not_accept_plugin_selection() -> None:

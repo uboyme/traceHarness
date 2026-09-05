@@ -33,6 +33,10 @@ import re
 
 from traceh.api.events import EventEnvelope
 from traceh.cli.text_safety import is_unsafe_character
+from traceh.session.surface_replacement import (
+    SURFACE_COMPACTION_FAILED,
+    SURFACE_REPLACE,
+)
 
 #: Upper bound for any payload-derived fragment. Long values are cut rather than
 #: wrapped, because one event must stay one line.
@@ -268,6 +272,37 @@ class TimelineRenderer:
     def _cancel_requested(self, data: dict) -> str:
         return "Cancellation requested"
 
+    def _surface_replace(self, data: dict) -> str:
+        # Counts and provenance only. The summary text, the replaced messages
+        # and the digests stay out of the terminal: a compaction notice exists
+        # to say that history was shortened, not to reprint it.
+        method = payload_text(data, "method")
+        sources = data.get("source_seqs")
+        kept = data.get("kept_recent_turns")
+        if method not in ("manual", "automatic") or not isinstance(sources, list):
+            return "Context compacted"
+        shape = f"{len(sources)} messages -> 1 summary"
+        if method == "automatic" and isinstance(kept, int) and not isinstance(kept, bool):
+            return f"Context compacted ({shape}, kept {kept} recent turns)"
+        return f"Context compacted ({method}: {shape})"
+
+    def _compaction_failed(self, data: dict) -> str:
+        # ``committed`` has three real answers and they must not be collapsed.
+        # Saying "history unchanged" when the store never confirmed the write
+        # would turn a may-have-committed append into a claim that nothing
+        # happened - the exact reading the reconciliation protocol exists to
+        # prevent. Anything that is not exactly ``True`` or ``False`` - absent,
+        # null, or the wrong type - is unknown.
+        code = payload_text(data, "code") or "unknown"
+        committed = data.get("committed")
+        if committed is False:
+            outcome = "history unchanged"
+        elif committed is True:
+            outcome = "a replacement was committed but could not be read back"
+        else:
+            outcome = "commit status unknown; check the session with inspect"
+        return f"Automatic context compaction failed ({code}); {outcome}"
+
     def _recovered(self, data: dict) -> str:
         parts = []
         for key, label in (
@@ -283,8 +318,13 @@ class TimelineRenderer:
 
 #: Only these types produce output. Everything else - `composition/snapshot`,
 #: `request/snapshot`, `assistant/*`, `user/message`, `inbox/*`,
-#: `session/created`, `surface/replace`, every effect event and anything added
-#: later - renders as nothing until someone decides how to show it safely.
+#: `session/created`, `product/context-snapshot`, every effect event and
+#: anything added later - renders as nothing until someone decides how to show
+#: it safely.
+#:
+#: `surface/replace` is shown because compaction silently changes what the model
+#: can see, and a user who is never told would have no way to explain a later
+#: answer. Only its counts are rendered, never its summary.
 _HANDLERS = {
     "turn/start": TimelineRenderer._turn_start,
     "turn/end": TimelineRenderer._turn_end,
@@ -299,4 +339,6 @@ _HANDLERS = {
     "runtime/error": TimelineRenderer._runtime_error,
     "runtime/cancel-requested": TimelineRenderer._cancel_requested,
     "runtime/recovered": TimelineRenderer._recovered,
+    SURFACE_REPLACE: TimelineRenderer._surface_replace,
+    SURFACE_COMPACTION_FAILED: TimelineRenderer._compaction_failed,
 }

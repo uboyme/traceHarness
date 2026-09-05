@@ -86,6 +86,7 @@ from traceh.tui.app import TracehTuiApp
 from traceh.tui.presentation import ProductGateAction
 from traceh.tui.runner import run_tui
 from traceh.tui.screens import (
+    ContextScreen,
     ProductChangesScreen,
     ProductIdentityScreen,
     TaskConversationScreen,
@@ -1079,7 +1080,11 @@ def test_footer_advertises_only_implemented_global_actions() -> None:
         "ctrl+p": ("identity", "完整身份"),
         "ctrl+d": ("changes", "改动"),
         "ctrl+t": ("task_conversation", "任务对话"),
+        "ctrl+x": ("context", "上下文"),
     }
+    # Every advertised action must really exist on the app.
+    for action, _ in visible.values():
+        assert hasattr(TracehTuiApp, f"action_{action}"), action
 
 
 async def test_ctrl_q_runs_the_visible_shutdown_path(tmp_path: Path) -> None:
@@ -2536,5 +2541,323 @@ async def test_leave_renders_closing_owners_before_the_app_exits(
             host.close_release.set()
     finally:
         host.close_release.set()
+        await runtime.dispose()
+        del store
+
+
+# -- M4 Context transparency -------------------------------------------------
+
+
+async def _compacting_app(tmp_path: Path, provider: _Provider, *, trigger: int = 1):
+    from traceh.session.compaction import CompactionPolicy
+
+    store = InMemoryEventStore()
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "runtime",
+            provider=provider.name,
+            model="tui-model",
+            compaction=CompactionPolicy(
+                enabled=True,
+                trigger_utf8_bytes=trigger,
+                max_summary_utf8_bytes=400,
+                keep_recent_turns=0,
+            ),
+        ),
+        provider=provider,
+        event_store=store,
+    )
+    opened = await open_chat_session(runtime, workspace=tmp_path, session_id=None)
+    app = TracehTuiApp(
+        runtime,
+        opened,
+        timeline=True,
+        heartbeat_seconds=10.0,
+        product=None,
+        clock=default_clock(),
+    )
+    return app, runtime, store, opened
+
+
+def _context_bar(app: TracehTuiApp) -> str:
+    return str(app.query_one("#context-bar", Static).render())
+
+
+async def test_context_bar_reports_history_without_claiming_tokens(
+    tmp_path: Path,
+) -> None:
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(110, 30)) as pilot:
+            await pilot.pause()
+            bar = _context_bar(app)
+            assert "自动压缩关闭" in bar
+            assert "压缩 0 次" in bar
+            assert "token" not in bar.lower()
+            assert "%" not in bar
+            assert len(bar.splitlines()) == 1
+            # The row must not push the conversation column, the Product pane
+            # or the input off the screen.
+            screen_height = app.screen.size.height
+            for selector in ("#conversation-column", "#product-state", "#chat-input"):
+                widget = app.query_one(selector)
+                assert widget.size.height > 0, selector
+                assert widget.region.bottom <= screen_height, selector
+            assert app.query_one("#context-bar", Static).size.height == 1
+    finally:
+        await runtime.dispose()
+        del store
+
+
+@pytest.mark.parametrize("size", ((110, 30), (72, 24), (44, 20)))
+async def test_context_bar_stays_one_row_at_every_width(
+    tmp_path: Path, size: tuple[int, int]
+) -> None:
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=size) as pilot:
+            await pilot.pause()
+            assert app.query_one("#context-bar", Static).size.height == 1
+            text = _context_bar(app)
+            assert len(text.splitlines()) == 1
+            assert cell_len(text) <= size[0]
+            await pilot.resize_terminal(size[0], size[1])
+            await pilot.pause()
+            bar = app.query_one("#context-bar", Static)
+            assert bar.size.height == 1
+            # Measured against the cells the row really has, not the terminal
+            # column count: the row is padded.
+            assert cell_len(_context_bar(app)) <= bar.content_region.width
+            assert app.query_one("#chat-input", Input).size.height > 0
+    finally:
+        await runtime.dispose()
+        del store
+
+
+@pytest.mark.parametrize("width", (110, 72, 44))
+async def test_a_context_failure_code_is_readable_at_every_width(
+    tmp_path: Path, width: int
+) -> None:
+    """The row a user needs most must not be the one that gets clipped."""
+
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+
+    class _BrokenReader:
+        async def load(self, session_id: str):
+            raise RuntimeError("boom")
+
+    app._context_reader = _BrokenReader()
+    try:
+        async with app.run_test(size=(width, 24)) as pilot:
+            await pilot.pause()
+            await app._refresh_context()
+            await pilot.pause()
+            bar = app.query_one("#context-bar", Static)
+            text = _context_bar(app)
+            assert cell_len(text) <= bar.content_region.width
+            assert len(text.splitlines()) == 1
+            # The stable code stays whole at every width this terminal offers.
+            assert "context-inspection-unavailable" in text
+            assert "boom" not in text
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_the_context_detail_page_wraps_instead_of_overflowing(
+    tmp_path: Path,
+) -> None:
+    """A narrow terminal must fold the rows, not hide them behind a scrollbar."""
+
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(44, 24)) as pilot:
+            await pilot.pause()
+            await pilot.press("ctrl+x")
+            screen = app.screen
+            assert isinstance(screen, ContextScreen)
+            log = screen.query_one("#context-log", RichLog)
+            for _ in range(20):
+                await pilot.pause()
+                if log.lines:
+                    break
+            assert log.wrap is True
+            # No horizontal overflow: everything is reachable by scrolling down
+            # only, which is the sole scroll the Footer implies.
+            assert log.virtual_size.width <= log.content_region.width
+            for line in log.lines:
+                assert cell_len(line.text) <= log.content_region.width
+            await pilot.press("escape")
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_context_screen_opens_from_the_chat_input_and_returns(
+    tmp_path: Path,
+) -> None:
+    provider = _Provider()
+    app, runtime, store, opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(110, 32)) as pilot:
+            await pilot.pause()
+            home = app.screen
+            # Focus really is on the chat input, which is where a user presses.
+            app.query_one("#chat-input", Input).focus()
+            await pilot.pause()
+            assert app.focused is app.query_one("#chat-input", Input)
+            await pilot.press("ctrl+x")
+            await pilot.pause()
+            assert isinstance(app.screen, ContextScreen)
+            log = app.screen.query_one("#context-log", RichLog)
+            for _ in range(20):
+                await pilot.pause()
+                if log.lines:
+                    break
+            rendered = "\n".join(line.text for line in log.lines)
+            assert "当前投影" in rendered
+            assert opened.session.session_id in rendered
+            assert "最近冻结请求" in rendered
+            assert log.max_lines is None
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is home
+            app.query_one("#chat-input", Input).focus()
+            await pilot.pause()
+            assert app.focused is app.query_one("#chat-input", Input)
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_context_bar_updates_after_an_automatic_compaction(
+    tmp_path: Path,
+) -> None:
+    """No restart needed: the durable compaction shows up in the same session."""
+
+    provider = _Provider()
+    app, runtime, store, opened = await _compacting_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(110, 32)) as pilot:
+            await pilot.pause()
+            assert "压缩 0 次" in _context_bar(app)
+
+            for text in ("first question", "second question"):
+                provider.started = asyncio.Event()
+                app.query_one("#chat-input", Input).value = text
+                await pilot.press("enter")
+                await asyncio.wait_for(provider.started.wait(), timeout=5)
+                for _ in range(40):
+                    await pilot.pause()
+                    if not app._busy:
+                        break
+
+            for _ in range(40):
+                await pilot.pause()
+                if "压缩 0 次" not in _context_bar(app):
+                    break
+            bar = _context_bar(app)
+            events = await runtime.sessions.read_session(opened.session.session_id)
+            durable = sum(1 for event in events if event.type == "surface/replace")
+            assert durable >= 1
+            assert f"压缩 {durable} 次" in bar
+            assert "阈值" in bar
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_context_read_failure_shows_a_code_and_leaves_the_turn_alone(
+    tmp_path: Path,
+) -> None:
+    provider = _Provider()
+    app, runtime, store, opened = await _opened_app(tmp_path, provider)
+
+    class _BrokenReader:
+        async def load(self, session_id: str):
+            raise RuntimeError("boom")
+
+    app._context_reader = _BrokenReader()
+    try:
+        async with app.run_test(size=(110, 30)) as pilot:
+            await pilot.pause()
+            await app._refresh_context()
+            await pilot.pause()
+            bar = _context_bar(app)
+            assert "上下文状态暂不可读" in bar
+            assert "boom" not in bar
+            assert len(bar.splitlines()) == 1
+
+            # A broken Context view must not stop a Turn from running.
+            app.query_one("#chat-input", Input).value = "still works"
+            await pilot.press("enter")
+            await asyncio.wait_for(provider.started.wait(), timeout=5)
+            for _ in range(40):
+                await pilot.pause()
+                if not app._busy:
+                    break
+        events = await runtime.sessions.read_session(opened.session.session_id)
+        assert any(event.type == "assistant/message" for event in events)
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_opening_the_context_screen_writes_no_events(tmp_path: Path) -> None:
+    provider = _Provider()
+    app, runtime, store, opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(110, 32)) as pilot:
+            await pilot.pause()
+            before = await runtime.sessions.read_session(opened.session.session_id)
+            for _ in range(3):
+                await pilot.press("ctrl+x")
+                await pilot.pause()
+                await pilot.press("escape")
+                await pilot.pause()
+            await app._refresh_context()
+            after = await runtime.sessions.read_session(opened.session.session_id)
+            assert len(after) == len(before)
+            assert after[-1].seq == before[-1].seq
+    finally:
+        await runtime.dispose()
+        del store
+
+
+async def test_context_detail_rows_do_not_leak_style_into_later_rows(
+    tmp_path: Path,
+) -> None:
+    provider = _Provider()
+    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    try:
+        async with app.run_test(size=(110, 32)) as pilot:
+            await pilot.pause()
+            await pilot.press("ctrl+x")
+            screen = app.screen
+            assert isinstance(screen, ContextScreen)
+            log = screen.query_one("#context-log", RichLog)
+            for _ in range(20):
+                await pilot.pause()
+                if log.lines:
+                    break
+            heading = next(
+                index
+                for index, line in enumerate(log.lines)
+                if line.text.strip() == "当前投影"
+            )
+            following = log.lines[heading + 1]
+            # The row after a bold heading must not inherit bold.
+            assert all(
+                not segment.style.bold
+                for segment in following._segments
+                if segment.style is not None
+            )
+            assert log.markup is False
+            await pilot.press("escape")
+    finally:
         await runtime.dispose()
         del store

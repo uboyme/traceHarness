@@ -70,6 +70,7 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime_async,
 )
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.session.compaction import CompactionError, CompactionPolicy
 from traceh.session.event_store import EventStore
 from traceh.session.sqlite import EventStoreError, SqliteEventStore
 from traceh.tools.policy import ToolPolicy
@@ -108,6 +109,7 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
     _add_model_retry_arguments(parser)
+    _add_compaction_arguments(parser)
     parser.add_argument("--verify-command")
     parser.add_argument(
         "--plugin-verifier",
@@ -138,6 +140,115 @@ def _add_model_retry_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--model-retry-jitter-ratio", type=float, default=None)
 
 
+def _add_compaction_arguments(parser: argparse.ArgumentParser) -> None:
+    """Automatic Surface compaction is opt-in and fully explicit.
+
+    There is no inferred threshold and no partially configured policy: turning
+    it on requires stating the byte trigger, the summary bound and how many
+    recent Turns stay untouched, because a guessed value here silently changes
+    what the model is allowed to remember.
+    """
+
+    parser.add_argument(
+        "--auto-compact",
+        choices=("on", "off"),
+        default=None,
+        help=(
+            "Enable automatic Surface compaction before each Turn. Requires "
+            "--auto-compact-bytes, --auto-compact-summary-bytes and "
+            "--auto-compact-keep-turns."
+        ),
+    )
+    parser.add_argument(
+        "--auto-compact-bytes",
+        type=int,
+        default=None,
+        metavar="BYTES",
+        help=(
+            "Compact once model-visible conversation reaches this many canonical "
+            "UTF-8 bytes. This is a byte count, not a token count."
+        ),
+    )
+    parser.add_argument(
+        "--auto-compact-summary-bytes", type=int, default=None, metavar="BYTES"
+    )
+    parser.add_argument(
+        "--auto-compact-keep-turns", type=int, default=None, metavar="TURNS"
+    )
+
+
+#: Each automatic-compaction threshold and the environment variable that may
+#: supply it. Nothing here has a built-in default.
+_COMPACTION_SETTINGS = (
+    ("auto_compact_bytes", "TRACEH_AUTO_COMPACT_BYTES", "--auto-compact-bytes"),
+    (
+        "auto_compact_summary_bytes",
+        "TRACEH_AUTO_COMPACT_SUMMARY_BYTES",
+        "--auto-compact-summary-bytes",
+    ),
+    (
+        "auto_compact_keep_turns",
+        "TRACEH_AUTO_COMPACT_KEEP_TURNS",
+        "--auto-compact-keep-turns",
+    ),
+)
+
+
+def _compaction_policy(args: argparse.Namespace) -> CompactionPolicy | None:
+    mode = _from_environment(args, "auto_compact", "TRACEH_AUTO_COMPACT")
+    supplied = {
+        attribute: _from_environment(args, attribute, variable)
+        for attribute, variable, _ in _COMPACTION_SETTINGS
+    }
+    configured = [
+        flag
+        for attribute, _, flag in _COMPACTION_SETTINGS
+        if supplied[attribute] is not None
+    ]
+    if mode is None:
+        if configured:
+            raise CliConfigurationError(
+                "--auto-compact on|off (TRACEH_AUTO_COMPACT) is required when "
+                f"{', '.join(configured)} is configured"
+            )
+        return None
+    if mode not in ("on", "off"):
+        raise CliConfigurationError("TRACEH_AUTO_COMPACT must be on or off")
+    if mode == "off":
+        if configured:
+            raise CliConfigurationError(
+                "--auto-compact off cannot be combined with "
+                f"{', '.join(configured)}"
+            )
+        return None
+    missing = [
+        flag
+        for attribute, _, flag in _COMPACTION_SETTINGS
+        if supplied[attribute] is None
+    ]
+    if missing:
+        raise CliConfigurationError(
+            f"--auto-compact on requires {', '.join(missing)}"
+        )
+    try:
+        return CompactionPolicy(
+            enabled=True,
+            trigger_utf8_bytes=_positive_integer(
+                supplied["auto_compact_bytes"], variable="TRACEH_AUTO_COMPACT_BYTES"
+            ),
+            max_summary_utf8_bytes=_positive_integer(
+                supplied["auto_compact_summary_bytes"],
+                variable="TRACEH_AUTO_COMPACT_SUMMARY_BYTES",
+            ),
+            keep_recent_turns=_nonnegative_integer(
+                supplied["auto_compact_keep_turns"],
+                variable="TRACEH_AUTO_COMPACT_KEEP_TURNS",
+            ),
+        )
+    except ValueError as error:
+        raise CliConfigurationError(f"invalid compaction policy: {error}") from None
+
+
 def _from_environment(args: argparse.Namespace, attribute: str, variable: str, default=None):
     current = getattr(args, attribute, None)
     if current is not None:
@@ -152,6 +263,16 @@ def _positive_integer(value: object, *, variable: str) -> int:
         raise CliConfigurationError(f"{variable} must be an integer") from error
     if parsed < 1:
         raise CliConfigurationError(f"{variable} must be at least 1")
+    return parsed
+
+
+def _nonnegative_integer(value: object, *, variable: str) -> int:
+    try:
+        parsed = int(str(value))
+    except ValueError as error:
+        raise CliConfigurationError(f"{variable} must be an integer") from error
+    if parsed < 0:
+        raise CliConfigurationError(f"{variable} cannot be negative")
     return parsed
 
 
@@ -235,6 +356,8 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
                     variable=variable,
                 ),
             )
+    if hasattr(args, "auto_compact"):
+        args.compaction = _compaction_policy(args)
     if hasattr(args, "verify_command"):
         # The two verifier selectors are mutually exclusive, but a selector
         # explicitly written on the command line still outranks the other
@@ -353,6 +476,7 @@ async def _runtime(
         verification_command=args.verify_command,
         verifier_name=args.verifier_name,
         model_retry_policy=_model_retry_policy(args),
+        compaction=getattr(args, "compaction", None),
     )
     return await build_default_runtime_async(
         config,
@@ -708,16 +832,27 @@ async def _sessions(args: argparse.Namespace) -> int:
         return 0
 
 
+#: A refused compaction is not a crash: the caller gets the stable code and the
+#: history is exactly what it was.
+COMPACTION_FAILED_EXIT_CODE = 3
+
+
 async def _compact(args: argparse.Namespace) -> int:
     async with _plain_runtime_scope(args) as runtime:
         summary = args.summary
         if args.summary_file is not None:
             summary = args.summary_file.read_text(encoding="utf-8")
-        report = await runtime.compaction.replace_through(
-            args.session_id,
-            through_seq=args.through_seq,
-            summary=summary,
-        )
+        try:
+            report = await runtime.compaction.replace_through(
+                args.session_id,
+                through_seq=args.through_seq,
+                summary=summary,
+            )
+        except CompactionError as error:
+            # Only the stable code: history, summary text and store detail never
+            # reach the terminal from a failure path.
+            print(f"compaction failed: {error.code}", file=sys.stderr)
+            return COMPACTION_FAILED_EXIT_CODE
         print(json.dumps(asdict(report), ensure_ascii=False, indent=2))
         return 0
 

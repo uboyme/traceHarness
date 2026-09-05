@@ -12,6 +12,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from unicodedata import combining, east_asian_width
 
+from traceh.api.events import EventEnvelope
 from traceh.api.llm import UsageQuality
 from traceh.api.product import ProductTaskStatus, RequestedTaskMode
 from traceh.api.workflow import WorkflowStatus
@@ -23,6 +24,11 @@ from traceh.product.observation import (
     ProductObservation,
     ProductUsage,
 )
+from traceh.session.surface_replacement import (
+    SURFACE_COMPACTION_FAILED,
+    SURFACE_REPLACE,
+)
+from traceh.tui.context_inspection import ContextSnapshot
 
 if TYPE_CHECKING:
     from rich.text import Text
@@ -430,6 +436,361 @@ def product_identity_fields(
         else observation.promotion.promotion_id,
     )
     return tuple(rows)
+
+
+def format_utf8_bytes(value: int) -> str:
+    """Render a byte count as bytes. Never as tokens, never as a window share.
+
+    This runtime has no trusted general tokenizer and no canonical per-model
+    context-window size, so "62% of context" cannot be computed honestly here.
+    The only denominator that exists is the configured compaction trigger, and
+    `context_status_line()` uses it only when compaction is actually enabled.
+    """
+
+    if type(value) is not int or value < 0:
+        return "不可用"
+    if value < 1024:
+        return f"{value} B"
+    kib = value / 1024
+    if kib < 1024:
+        return f"{kib:.1f} KiB"
+    return f"{kib / 1024:.1f} MiB"
+
+
+def short_identity(value: str, *, keep: int = 12) -> str:
+    """Shorten an identity for one status row; the detail page shows it whole."""
+
+    rendered = safe_display_block(value, limit=256, max_lines=1, line_limit=256)
+    if len(rendered) <= keep:
+        return rendered
+    return rendered[:keep] + "…"
+
+
+def context_status_line(
+    snapshot: ContextSnapshot | None,
+    *,
+    error_code: str | None = None,
+    width: int | None = None,
+) -> str:
+    """One deterministic row describing model-visible history.
+
+    ``width`` is the number of terminal **cells** actually available, not the
+    terminal's column count: the row has horizontal padding, and CJK labels are
+    two cells wide. Every rendering is composed explicitly and measured, then the
+    richest one that fits is returned. Letting Textual clip instead would drop
+    whatever happens to be last - the task counts, or the very failure code the
+    user needs most - without saying so.
+
+    With no ``width`` the richest rendering is returned unmeasured, which is what
+    a pure projection test wants.
+    """
+
+    if error_code is not None or snapshot is None:
+        code = safe_display_block(
+            error_code or "context-inspection-unavailable",
+            limit=120,
+            max_lines=1,
+        )
+        # The stable code is the payload here, so it is the last thing dropped.
+        return _first_fitting(
+            (
+                f"上下文状态暂不可读 · {code}",
+                f"上下文不可读 · {code}",
+                f"不可读 · {code}",
+                code,
+            ),
+            width,
+        )
+
+    size = format_utf8_bytes(snapshot.conversation_utf8_bytes)
+    policy = snapshot.policy
+    enabled = policy is not None and policy.enabled
+    threshold = format_utf8_bytes(policy.trigger_utf8_bytes) if enabled else ""
+    wide_head = (
+        f"历史 {size} / {threshold} 阈值" if enabled else f"历史 {size} · 自动压缩关闭"
+    )
+    short_head = f"{size}/{threshold}" if enabled else f"{size} · 压缩关闭"
+
+    count = snapshot.compaction_count
+    failures = snapshot.failure_count
+    product = snapshot.product
+
+    def row(*, head: str, verbose: bool, task: str) -> str:
+        parts = [head, f"压缩 {count} 次" if verbose else f"压缩 {count}"]
+        if failures:
+            parts.append(f"失败 {failures} 次" if verbose else f"失败 {failures}")
+        if task:
+            parts.append(task)
+        return " · ".join(parts)
+
+    if product is None:
+        full_task, plain_task, bare_task = "无任务上下文", "无任务", ""
+    else:
+        counts = f"{product.shown}/{product.total}"
+        full_task = f"任务 {short_identity(product.focus_task_id)} · {counts}"
+        plain_task = f"任务 {counts}"
+        bare_task = counts
+
+    return _first_fitting(
+        (
+            row(head=wide_head, verbose=True, task=full_task),
+            row(head=wide_head, verbose=True, task=plain_task),
+            row(head=short_head, verbose=False, task=plain_task),
+            row(head=short_head, verbose=False, task=bare_task),
+            row(head=short_head, verbose=False, task=""),
+            short_head,
+        ),
+        width,
+    )
+
+
+def _first_fitting(candidates: tuple[str, ...], width: int | None) -> str:
+    """The richest candidate that fits, measured in terminal cells."""
+
+    from rich.cells import cell_len
+
+    rendered = [
+        safe_display_block(candidate, limit=400, max_lines=1)
+        for candidate in candidates
+    ]
+    if width is None or width <= 0:
+        return rendered[0]
+    for candidate in rendered:
+        if cell_len(candidate) <= width:
+            return candidate
+    # Nothing fits even at its shortest. Cut explicitly with an ellipsis rather
+    # than letting the terminal decide where the row ends.
+    last = rendered[-1]
+    while last and cell_len(last) + 1 > width:
+        last = last[:-1]
+    return f"{last}…"
+
+
+def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
+    """Full Context evidence as independently styled rows.
+
+    Every row is its own `Text` and every style is scoped to the exact span it
+    was appended with, so a section heading can never bleed its style into the
+    plain rows that follow it.
+    """
+
+    from rich.cells import cell_len
+    from rich.text import Text as _Text
+
+    rows: list[Text] = []
+
+    def heading(label: str) -> None:
+        if rows:
+            rows.append(_Text(""))
+        rows.append(_Text(label, style="bold"))
+
+    def field(label: str, value: object, *, style: str | None = None) -> None:
+        # Padded by terminal cells, not by character count: a CJK label is two
+        # cells wide, so character padding would leave the value column ragged.
+        padding = " " * max(1, 22 - cell_len(label))
+        row = _Text()
+        row.append(f"  {label}{padding}", style="dim")
+        row.append(
+            safe_display_block(value, limit=1200, max_lines=1, line_limit=1200),
+            style=style,
+        )
+        rows.append(row)
+
+    heading("当前投影")
+    field("Session", snapshot.session_id)
+    field("Session head", f"seq {snapshot.head_seq}")
+    field(
+        "可见对话",
+        f"{snapshot.conversation_messages} messages · "
+        f"{snapshot.conversation_utf8_bytes} bytes "
+        f"（{format_utf8_bytes(snapshot.conversation_utf8_bytes)}）",
+    )
+    field("可见摘要", f"{snapshot.visible_summaries}")
+    ratio = snapshot.trigger_ratio
+    if ratio is not None:
+        # Explicitly a share of the compaction threshold. It is not a model
+        # context-window percentage and must never be labelled as one.
+        field("占压缩阈值", f"{ratio * 100:.0f}%")
+    product = snapshot.product
+    if product is None:
+        field("Product context", "无")
+    else:
+        field("Product context", f"snapshot seq {product.snapshot_seq}")
+        field(
+            "任务",
+            f"shown {product.shown} / total {product.total} / "
+            f"omitted {product.omitted}",
+        )
+        field("focus", f"{product.focus_task_id} · {product.focus_status}")
+        field(
+            "context 消息",
+            f"{product.messages} messages · {product.utf8_bytes} bytes",
+        )
+
+    heading("自动压缩")
+    policy = snapshot.policy
+    if policy is None or not policy.enabled:
+        field("当前策略", "关闭（未配置或显式关闭）")
+    else:
+        field("当前策略", "enabled")
+        field("触发阈值", f"{policy.trigger_utf8_bytes} bytes")
+        field("摘要上限", f"{policy.max_summary_utf8_bytes} bytes")
+        field("保留最近对话", f"{policy.keep_recent_turns} turns")
+        field("policy digest", policy.digest)
+    field("成功记录", f"{snapshot.compaction_count}")
+    field("失败记录", f"{snapshot.failure_count}")
+
+    heading("最近冻结请求")
+    request = snapshot.request
+    if request is None:
+        field("状态", "本 Session 尚无 request/snapshot")
+    else:
+        field("request seq", f"{request.seq}")
+        field("source seq", f"{request.source_seq}")
+        field("composition", request.composition_revision)
+        field("provider/model", f"{request.provider}/{request.model}")
+        field(
+            "composed",
+            f"{request.composed_utf8_bytes} bytes · {request.composed_fingerprint}",
+        )
+        field(
+            "dispatch",
+            f"{request.dispatch_utf8_bytes} bytes · {request.dispatch_fingerprint}",
+        )
+        field("system prompt", f"{request.system_prompt_utf8_bytes} bytes")
+        field(
+            "Product context",
+            f"{request.product_context_messages} messages · "
+            f"{request.product_context_utf8_bytes} bytes",
+        )
+        field(
+            "conversation",
+            f"{request.conversation_messages} messages · "
+            f"{request.conversation_utf8_bytes} bytes",
+        )
+        field(
+            "tools",
+            f"{request.tool_schemas} schemas · {request.tool_utf8_bytes} bytes",
+        )
+        field(
+            "output ceiling",
+            f"composed {request.composed_max_output_tokens} / "
+            f"dispatch {request.dispatch_max_output_tokens}",
+        )
+        field(
+            "dispatch 来源",
+            "是" if request.dispatch_matches_composed else "否",
+        )
+        rows.append(
+            _Text(
+                "  已冻结并授权的 provider-bound 请求；不证明远端 Provider 已收到。",
+                style="dim",
+            )
+        )
+
+    heading("任务记忆")
+    if product is None:
+        field("状态", "当前 Surface 没有 Product context")
+    else:
+        field("focus", product.focus_task_id)
+        field(
+            "shown / total / omitted",
+            f"{product.shown} / {product.total} / {product.omitted}",
+        )
+        for task in product.tasks:
+            resolved = task.resolved_mode or "pending"
+            field(
+                f"· {short_identity(task.task_id)}",
+                f"{task.status} · {task.requested_mode}/{resolved}",
+            )
+
+    heading(f"压缩记录（{snapshot.compaction_count}）")
+    if not snapshot.compactions:
+        field("状态", "尚无 surface/replace")
+    for record in snapshot.compactions:
+        policy_note = (
+            "策略与当前一致"
+            if record.matches_current_policy
+            else f"policy {short_identity(record.policy_digest or '无', keep=12)}"
+        )
+        field(
+            f"event {record.seq}",
+            f"{record.method} · cut {record.cut_seq} · "
+            f"sources {record.source_count} · {policy_note}",
+        )
+    if snapshot.failures:
+        heading(f"压缩失败记录（{snapshot.failure_count}）")
+        for failure in snapshot.failures:
+            field(f"event {failure.seq}", f"{failure.code} · {_committed_text(failure.committed)}")
+
+    latest = snapshot.latest_compaction
+    if latest is not None:
+        heading("最近一次压缩")
+        field("replacement seq", f"{latest.seq}")
+        field("method / cut", f"{latest.method} · cut {latest.cut_seq}")
+        field("source events", f"{latest.source_count}")
+        field("source bytes", f"{latest.source_utf8_bytes}")
+        field("history bytes", f"{latest.history_utf8_bytes}")
+        field("summary bytes", f"{latest.summary_utf8_bytes}")
+        field("summary truncated", "是" if latest.summary_truncated else "否")
+        field("kept recent turns", f"{latest.kept_recent_turns}")
+        field("policy digest", latest.policy_digest or "无（manual）")
+        if latest.summarizer_name is None:
+            field("summarizer", "无（manual）")
+        else:
+            field(
+                "summarizer",
+                f"{latest.summarizer_name}/{latest.summarizer_version} · "
+                f"{latest.summarizer_config_digest}",
+            )
+        rows.append(_Text("  摘要正文（不可信历史摘要，非宿主事实）", style="dim"))
+        for line in safe_display_block(latest.summary).split("\n"):
+            rows.append(_Text(f"    {line}"))
+    return tuple(rows)
+
+
+def _committed_text(committed: bool | None) -> str:
+    if committed is False:
+        return "历史未改变"
+    if committed is True:
+        return "已写入但读回失败"
+    return "是否已写入未知"
+
+
+def compaction_notice_text(event: EventEnvelope) -> str | None:
+    """One short Chinese notice for one durable Surface compaction fact.
+
+    It reads the same durable event the Line timeline reads, so the two
+    adapters cannot disagree and the TUI keeps no compaction state of its own.
+    Only counts and a stable failure code are shown: the summary body, the
+    replaced messages and the digests never reach the screen.
+    """
+
+    data = event.data if isinstance(event.data, dict) else {}
+    if event.type == SURFACE_COMPACTION_FAILED:
+        code = escape_for_display(str(data.get("code", "")), limit=80) or "unknown"
+        # Three distinct answers. "历史未改变" is only true when the store
+        # proved the append is absent; an unknown commit outcome must stay
+        # unknown rather than be reported as "nothing happened".
+        committed = data.get("committed")
+        if committed is False:
+            outcome = "历史未改变，可手动 compact 或重试"
+        elif committed is True:
+            outcome = "摘要已写入但读回失败，请用 inspect 核对历史"
+        else:
+            outcome = "是否已写入未知，请用 inspect 核对历史"
+        return f"自动上下文压缩未完成 · {code} · {outcome}"
+    if event.type != SURFACE_REPLACE:
+        return None
+    sources = data.get("source_seqs")
+    kept = data.get("kept_recent_turns")
+    method = data.get("method")
+    if not isinstance(sources, list) or method not in ("manual", "automatic"):
+        return "上下文已压缩"
+    shape = f"{len(sources)} 段历史 → 1 段摘要"
+    if method == "automatic" and isinstance(kept, int) and not isinstance(kept, bool):
+        return f"上下文已压缩 · {shape} · 保留最近 {kept} 个对话"
+    return f"上下文已压缩（人工）· {shape}"
 
 
 def product_compact_text(
@@ -1030,7 +1391,12 @@ __all__ = [
     "ProductGateAction",
     "ProductIdentityField",
     "TransientProductState",
+    "compaction_notice_text",
+    "context_detail_lines",
+    "context_status_line",
     "format_age",
+    "format_utf8_bytes",
+    "short_identity",
     "operation_error_view",
     "product_compact_text",
     "product_identity_fields",

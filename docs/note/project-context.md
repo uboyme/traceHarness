@@ -49,9 +49,10 @@
 | Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation + `read_product_task_evidence`，并单调拒绝声明为 effectful 的插件 Tool。证据 Tool 只按同 Session 精确任务关系读取有界元数据，不是控制 Tool；Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
+| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 replacement 前的 `2496 passed, 7 skipped`、后续 `2555 passed, 7 skipped` 以及 M1 的定向数字均只认证各自历史工作树；20.38 的 format 1–6 数字也全部是历史证据。当前 M2 format-7 的 Product memory/model-context/Compaction/observation/inspection/architecture/service/task-conversation 九模块为 `172 passed`，完整 TUI/optional/presentation/task-conversation 为 `82 passed`，Product F3 E2E 为 `26 passed`，安装 Textual 8.2.8 的解释器全仓收集 `2665 tests`。独立代码与最终文档复审修正后为 `P0=0 / P1=0 / P2=0`；仓库外、33 文件逐项匹配的临时候选提交通过独立真实 L2 `1 passed`，随后无筛选最终全量得到 `2658 passed, 7 skipped`、退出码 0、耗时 `3226.49s (53:46)`。compileall、修改范围 Ruff、`git diff --check`、anti-hardcoding、受保护核心零 diff和文档门禁均通过，详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
+| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 replacement 前的 `2496 passed, 7 skipped`、后续 `2555 passed, 7 skipped` 以及 M1 的定向数字均只认证各自历史工作树；20.38 的 format 1–6 数字也全部是历史证据。当前 M2 format-7 的 Product memory/model-context/Compaction/observation/inspection/architecture/service/task-conversation 九模块为 `172 passed`，完整 TUI/optional/presentation/task-conversation 为 `82 passed`，Product F3 E2E 为 `26 passed`，安装 Textual 8.2.8 的解释器全仓收集 `2665 tests`。独立代码与最终文档复审修正后为 `P0=0 / P1=0 / P2=0`；仓库外、33 文件逐项匹配的临时候选提交通过独立真实 L2 `1 passed`，随后无筛选最终全量得到 `2658 passed, 7 skipped`、退出码 0、耗时 `3226.49s (53:46)`。compileall、修改范围 Ruff、`git diff --check`、anti-hardcoding、受保护核心零 diff和文档门禁均通过，详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。以上全部只认证各自历史工作树。当前工作树的 M3 证据见 20.39：定向八文件 `470 passed, 1 skipped`、相邻 owner 二十六文件 `526 passed, 1 skipped`、全仓 `--collect-only` `2719 tests`（本机未安装 `tui` extra；装有该 extra 的解释器为 `2765 tests`，差额来自 `test_tui.py` 的模块级 `importorskip("textual")`）；本轮未运行完整全量、Wheel、离线安装、真实 Provider 与 L2–L4 |
+| Surface 压缩 | M3 起 `CompactionService` 同时拥有手动与自动 replacement；`surface_prefix()` 是选择与全部派生事实的唯一来源，不变量重算它。`AgentLoop` 在 Turn 打开前触发一次；只压缩闭合 Turn 前缀，保留配置数量的最近 Turn，永不触碰 `product/context-snapshot`，也不拆 Step 或 tool call/result。durable 协议为 format 2，绑定 exact source seq/digest、cut boundary、method、policy digest 与摘要器身份；format 1 明确拒绝。摘要按逻辑位置投影，因此不会跑到当前用户消息之后，历史 `request/snapshot` 仍逐字节重建；手动 `--through-seq` 必须精确命中闭合 Turn。触发指标是 canonical UTF-8 字节，**不是 token**；四项配置必须全部显式给出，缺失即关闭。默认摘要器确定性、无模型：当前架构没有可让摘要调用合法复用的可审计模型调用主线（20.39、ADR-0042）。原始事件仍可由宿主审计，但当前模型没有通用压缩历史展开能力；v0.9 计划已冻结一条 current-Session、exact-block、request-only、Step-scoped 的 History Evidence 披露路线，尚未实现 |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 最新正式发布仍为 `v0.7.1`；当前工作树是未提交、未发布的 `0.8.0` F5 候选。F0–F4 原提交和旧停止点
@@ -154,7 +155,7 @@ traceharness/
 │   ├── llm/                          Provider 协议实现、注册表、typed sanitized failure、显式 bounded retry policy/scheduler 与两阶段调用边界
 │   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
 │   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
-│   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、压缩、不变量、插件身份与 exact `product/context-snapshot` 事实重建
+│   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、不变量、插件身份、exact `product/context-snapshot` 事实重建，以及 `surface_replacement.py` 的唯一 Surface replacement 协议与 `compaction.py` 的手动/自动压缩 owner
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具
 ├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
@@ -433,7 +434,7 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | Artifact control plane（只在 `artifacts:catalog`） | `artifact/patch-captured`；只记录不可变 Manifest 与 CAS 引用，Patch bytes 不进入 Event Log，报告关联由 `(agent_id, message_id)` fresh replay 重建（20.23） |
 | Promotion control plane（只在 `patch-promotions:ledger`） | `patch/review-recorded`、`patch/approval-recorded`、`patch/promotion-committed`；只记录固定验证结论、精确 approval digest 与已完成的 ref compare-and-swap，不进入 Model Surface，也不保存路径或 verifier 输出（20.24） |
 | Workflow control plane（只在 `workflow:<run_id>`） | `workflow/run-started`、`workflow/node-started`、`workflow/map-expanded`、`workflow/node-completed`、`workflow/node-failed`、`workflow/approval-awaited`、`workflow/run-finished`；只记录编排，不进入 Model Surface，也不复制其它域的状态（20.25） |
-| Surface | `surface/replace` |
+| Surface | `surface/replace`（schema 1、message format 2、exact key 集；绑定 exact source seq/digest、cut boundary、method、policy digest、摘要器身份与 exact replacement bytes；format 1 拒绝）、`surface/compaction-failed`（宿主证据，只含 method/稳定 code/committed，不进入 Model Surface） |
 | Effect | `effect/intent`、`effect/dispatched`、`effect/outcome`、`effect/reconciled` |
 
 | Product control plane（只在 `product-task:<task_id>`） | `product/task-opened`、`product/task-routed`、`product/task-started`、`product/task-awaiting`、`product/task-completed`、`product/task-rejected`、`product/task-cancelled`、`product/task-failed`、`product/task-abandoned`；schema 1，key 集精确，终态后不可追加；raw 事件不直接进入 Model Surface（20.27、20.38） |
@@ -659,11 +660,17 @@ Stage A 已进入同步/异步默认 Runtime 主线，Stage B 又把 Generation-
 - `tool/result` → tool；
 - validated `product/context-snapshot` → 逻辑最新的一张快照所冻结的两条有序消息：system 当前事实 + user 历史参考；按
   `(confirmation inbox/accepted seq, Product head seq)` 选择，而不是按跨 Stream 时间戳或 append 竞态；
-- `surface/replace` → 替换指定旧 Surface 事件的摘要消息。
+- validated format-2 `surface/replace` → 替换指定旧 Surface 事件的一条有界摘要消息。
 
 原始事件仍保留。多次 Replacement 通过 source seq 遮蔽旧对话视图，而不是删除历史；它不能遮蔽
 `product/context-snapshot`，Compaction 也不会把后者列为可替换来源。旧 Product 快照继续留在 append-only
 Session 中，但当前 Surface 只投影逻辑最新一条。
+
+对话按**逻辑位置**排序，不按 append 顺序：普通消息的逻辑位置是自身 seq，`surface/replace` 的逻辑位置是其
+全部 source 逻辑位置的最小值（递归求得，因此“摘要的摘要”保留最初位置）。replacement 总是在被替换历史
+之后才 append，若按 seq 排序，摘要会跑到更新的对话——甚至当前用户消息——之后，描述一段从未发生过的顺序。
+该规则由 `surface_conversation()` 一处定义，`SurfaceProjector`、`CompactionService` 与不变量检查共用。
+非法或旧格式的 replacement 会让投影 fail closed 抛出，而不是被静默忽略（12.2）。
 
 ### 7.3 Request Snapshot 与 Fingerprint
 
@@ -947,11 +954,140 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 - `CoreInvariantChecker` 检查序号、生命周期嵌套、Model Attempt 身份/配对/真实作用域、Tool Call/Result、Effect、Composition 与 exact Product context snapshot 等协议关系；Product context 必须 canonical，且同一逻辑 `(task_order_seq, source_seq)` 不能命名两个 head；检查按事件流中真正开放的 Turn/Step 判断，不采信 payload 自报的作用域；
 - 投影和检查不修改事件。
 
-### 12.2 手动 Surface 压缩
+### 12.2 Surface 压缩：手动与自动（ADR-0042）
 
-`CompactionService.replace_through()` 要求非空摘要和合法边界，收集边界内可替换的对话 Surface 事件序号，追加 `surface/replace`。`product/context-snapshot` 明确排除：人工摘要可以替换对话 prose，不能擦掉宿主记录的模型状态感知证据。当前没有自动摘要器；CLI 调用者负责提供摘要文本。
+[`session/compaction.py`](../../src/traceh/session/compaction.py) 是本 Runtime **唯一**的 Surface
+replacement owner，手动与自动共用同一条选择、限长、排序与 durable 写入主线；
+[`session/surface_replacement.py`](../../src/traceh/session/surface_replacement.py) 是该协议的唯一定义处，
+被 `SurfaceProjector`、`CompactionService` 与 `CoreInvariantChecker` 共同使用。原始事件永不删除。
 
-### 12.3 Inspector 与 Replay
+#### 触发与线性化点
+
+`AgentLoop.run_turn()` 在 `ensure_session()` 之后、`inbox/accepted` 之前调用一次
+`CompactionService.compact_before_turn()`。这是唯一同时满足三条的位置：`AgentRuntime` 在此已保证同
+Session 只有一个活跃 Turn owner；没有开放 Turn，可压缩前缀无歧义；replacement 落盘早于本轮
+`user/message` 和本轮全部 `request/snapshot`。压缩**不属于**该 Turn：失败时历史零改动，本轮继续使用完整
+对话（不比 M3 之前更差），不会因宿主维护失败拒绝用户的 Turn。
+
+触发指标是 `history_utf8_bytes` —— 模型可见**对话**消息 canonical JSON 的 UTF-8 字节数（不含 format-7
+Product context 两条宿主消息，它们本就不可压缩）。**它是字节数，不是 token 数**：当前生产代码没有可信的
+通用 TokenCounter，把字节说成 token 是伪造数字。
+
+#### 安全边界
+
+cut boundary 只能是真正闭合过某个开放 Turn 的 `turn/end` 序号，因此当前用户消息、开放 Turn、Step，以及
+assistant tool call 与其 `tool/result` 都不可能被拆开；自动压缩再从候选边界中去掉最近
+`keep_recent_turns` 个闭合 Turn。手动 `--through-seq` 必须**精确命中**某个闭合 Turn 的 `turn/end`：把调用者
+给的序号悄悄前移到更早的 Turn，等于压缩了一段他没有要求的范围，因此拒绝（`compaction-boundary-not-closed-turn`）
+而不是猜测。`product/context-snapshot` 不是模型可见对话类型，因此永远不会成为
+source；ADR-0039/0041 的“摘要可以替换对话 prose、不能遮蔽宿主状态证据”现在同时由选择逻辑和不变量检查
+强制。选择按**逻辑位置**而不是 seq 进行，所以上一条 replacement 会连同其后新增的旧历史一起收敛成一条
+摘要，不会无限堆积；自动压缩在没有新增历史时是 no-op。**逻辑顺序只用于选择和交给摘要器的消息顺序**：
+写进 `source_seqs` 和参与 digest 的必须按 seq 升序，因为一条较晚追加的旧摘要的 seq 会大于此次一并纳入的
+较新历史，按逻辑顺序写入会产生降序并被协议拒绝。选择、digest 与字节统计由
+`surface_prefix()` 一处派生，`CompactionService` 写它、`CoreInvariantChecker` 重算它。
+
+#### durable 协议（format 2，破坏式切换）
+
+`surface/replace` 的 key 集精确：`format_version`、`method`（`manual`/`automatic`）、`cut_seq`、
+`source_seqs`、`source_digest`、`source_utf8_bytes`、`history_utf8_bytes`、`kept_recent_turns`、
+`policy_digest`、`summarizer`、`summary`、`summary_truncated`、`replacement`。automatic 必须同时绑定
+`CompactionPolicy` digest 与摘要器身份（`name`/`version`/`config_digest`）；manual 两者都必须为 `null`
+且不得声称保留 Turn。parser 重建完整 payload（含消息本身）并要求 canonical 相等后才允许进入 Surface。
+摘要是**不可信历史**：先清洗 `Cc`/`Cf`/`Cs`/`Co`/`Zl`/`Zp`（保留换行），按 canonical UTF-8 字节截断并显式
+记录 `summary_truncated`，再以 JSON string 嵌入固定 header，所以伪 XML 闭合标签、伪 header 和换行都无法
+伪造第二条消息或宿主事实。format 1 明确拒绝，没有第二 parser、迁移器、别名、双 Projector 或 fallback，
+旧数据必须换新 data 目录。
+
+派生事实由不变量**重算而不是采信**：`CoreInvariantChecker` 用 `surface_prefix()` 对该 replacement 之前的
+历史重新推导，要求 `source_seqs` 恰好等于该 cut 之前完整、连续、当前仍可见的对话前缀
+（`surface-replacement-prefix`），并要求 `source_digest`、`source_utf8_bytes`、`history_utf8_bytes` 与真实历史
+逐项相等（`surface-replacement-derivation`）。只检查字段形状而不重算，等于允许一条 canonical 形状正确、
+语义伪造的 replacement 遮蔽任意子集历史后进入模型 Surface。
+
+#### 逻辑位置与重放
+
+replacement 的逻辑位置 = 其全部 source 逻辑位置的最小值（普通消息的逻辑位置是自身 seq，replacement 递归
+求得），Surface 按该位置而非 append 顺序排序，因此摘要停在被替换历史的位置，绝不会跑到当前用户消息之后。
+由于投影仍只读到记录的 `source_seq`，压缩之前冻结的 `request/snapshot` 仍逐字节重建原始历史，之后的请求
+重建摘要后的历史；replay 不调用摘要器、不调用 Provider、不读取任何 latest 状态。
+
+#### 摘要器边界
+
+`SessionSummarizer` 收到的 `SummaryRequest` 只有 `session_id`、被替换的精确消息、字节上限和保留 Turn 数——
+没有 Store、SessionService、Tool registry、Runtime 或 Approval handle，因此它不能选择压缩范围、不能读取其它
+历史、不能产生任何副作用；它抛出的异常会变成稳定的 compaction code，不会逃逸到 Turn owner。默认
+`BoundedHistorySummarizer` 是确定性、无模型的有界转录摘要。
+
+**当前不提供模型摘要器，这是一项决定而不是遗漏。** 本 Runtime 唯一可审计、可计费、可取消并能收敛的模型
+调用主线是 Session dispatch permit：`start_model_attempt()` 必须先冻结 `request/snapshot` 与
+`model/attempt-start`（ADR-0035），Budget 也正是拿这些 Session 事件对账；而
+`verify_request_snapshots()` 要求每条 `request/snapshot.composed_request` 等于
+`SurfaceProjector.project(events, through_seq=source_seq)` 加 Composition。摘要请求按构造不是该投影，因此
+把它记进主线会让所有压缩过的 Session 请求重放失败；绕过 permit 直接调 Provider 则是未审计、未计费的裸调用。
+详见 [ADR-0042](../adr/0042-host-owned-automatic-surface-compaction.md)。
+
+#### 并发、失败与取消
+
+选择时观察到的 Session head 直接作为 append 的 `expected_seq`，Store 的 CAS 就是线性化点：摘要期间
+Session 变化会让写入被拒，有界重试从 fresh read 重新选择，绝不重投旧 payload。取消先收敛 owned append
+worker，再对 may-have-committed 写入做 JSON 类型敏感的对账后原样传播；普通失败同样对账并如实报告
+`True`/`False`/unknown。失败不删历史、不留半条 replacement、不伪装成功，并追加一条
+`surface/compaction-failed`（只含 `method`、稳定 `code`、`committed`，不含历史），用户仍可手动 compact 或重试。
+`committed` 的三种取值必须原样呈现：只有精确 `False` 才允许说"历史未改变"，`True` 说明摘要已写入但读回失败，
+其余（含 `null`、缺失、类型不对）一律显示为"是否写入未知"。把 unknown 折叠成"没发生"正是提交点对账协议要
+禁止的读法。
+
+#### 透明度
+
+Line 与 TUI 消费**同一条 durable 事件**，不增加第二套状态：[`cli/timeline.py`](../../src/traceh/cli/timeline.py)
+渲染 `[event N] Context compacted (18 messages -> 1 summary, kept 2 recent turns)`，
+[`tui/presentation.py`](../../src/traceh/tui/presentation.py) 的 `compaction_notice_text()` 渲染
+`上下文已压缩 · 18 段历史 → 1 段摘要 · 保留最近 2 个对话`。两者都只显示数量与来源，绝不显示摘要正文、
+被替换消息、digest 或 Prompt；失败通知只显示稳定 code。
+
+### 12.3 TUI 上下文透明度（M4）
+
+M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓存、索引或状态机。
+[`tui/context_inspection.py`](../../src/traceh/tui/context_inspection.py) 的 `ContextInspectionReader`
+对 requester Session 做一次 fresh read，然后复用既有 owner 的 parser 与 projector 派生一份可丢弃的展示
+快照 `ContextSnapshot`：`surface_conversation()`/`surface_utf8_bytes()` 给出当前可见对话与字节数，
+`parse_surface_replacement()` 给出压缩记录，`latest_product_context()` 给出任务目录，
+`ModelRequest.from_dict()`/`dispatch_request_matches_composed()` 给出最近冻结请求，
+`runtime.compaction.policy` 给出当前策略。TUI 中保存的只是这份快照；详情页每次打开都重新读取。
+
+必须分清的四条边界：
+
+1. **当前投影 ≠ 最近一次冻结请求。** 请求冻结之后 Surface 仍会继续变化（新的 `assistant/message`、
+   `tool/result`、`product/context-snapshot`、`surface/replace`）。因此"模型上次实际看到什么"只能从
+   `request/snapshot` 的 `composed_request`/`dispatch_request` **读出**，不能用今天的 Surface 重算。
+2. **历史请求的 Product context 必须取自它自己的 `source_seq` 边界内**，不能拿今天更新的 ProductTask
+   head 反向改写模型当时看见的状态。主界面右侧 Product 面板描述的是当前 durable Product 状态，上下文页
+   描述的是模型上下文事实，两者不同时如实分别显示。
+3. **durable 压缩次数 ≠ 当前可见摘要数。** 前者是 `surface/replace` 事件数，后者由当前 Surface 投影决定；
+   扩大 cut 会把旧摘要折进新摘要，所以事件累积而可见摘要通常仍是一条。
+4. **历史策略 ≠ 当前策略。** replacement 只保存 `policy_digest`，不保存历史阈值数值。只有 digest 与
+   `runtime.compaction.policy.digest` 相等时才显示"策略与当前一致"，否则只显示历史 digest。
+
+**没有 context-window 百分比。** 当前没有可信通用 tokenizer，也没有 canonical 的每模型输入上限，因此不
+显示"上下文 62%""用了 32k token"这类没有分母的数字。唯一分母是已配置的压缩阈值，且只在压缩启用时使用；
+详情页的"占压缩阈值"明确是阈值比例，不是模型窗口占用率。所有数字都是 canonical UTF-8 **字节**。
+
+读取失败、协议不合法、`surface/replace` 或 `request/snapshot` 畸形都 fail closed，只显示稳定 code，不显示
+半真半假的数字，也不泄漏 raw exception；Context 的失败绝不影响 Turn、ProductTask 或 shutdown。
+
+**窄屏按实际 cell 数选择文案，不交给终端裁断。** `context_status_line()` 接收调用方**实际可用的 cell 数**
+（状态条有左右各 2 的 padding，CJK 标签又是双宽，所以不能用终端列数），把从最丰富到最精简的候选文案依次
+测量，返回第一个放得下的：完整任务 id → 只留任务计数 → 紧凑词汇 → 去掉"任务"标签 → 去掉任务计数 → 只留
+历史/阈值。错误态同理，但稳定 code 是这一行的载荷，因此最后才被牺牲（`上下文状态暂不可读 · <code>` →
+`上下文不可读 · <code>` → `不可读 · <code>` → 只有 `<code>`）。只有连最精简候选都放不下时才显式加省略号
+截断，而不是让终端决定这一行在哪里结束。
+
+上下文详情页的 `RichLog` 显式设置 `min_width=1`。Textual 的 `RichLog` 按 `max(min_width, viewport)` 排版且
+默认 `min_width=78`，沿用默认会让窄终端下的行比视口更宽、退化成需要横向滚动，而 Footer 并没有提供横向
+滚动入口；写入时也不再传 `width=`，否则会钉死虚拟行宽、使 `wrap=True` 失效。
+
+### 12.4 Inspector 与 Replay
 
 - `inspect` 输出 Workspace、状态、事件数、Turn/Step 数、不变量和请求重建违规，可选事件明细；
 - `inspect --html` 生成包含 Session/Effect 事件和摘要的静态 HTML；
@@ -959,7 +1095,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 - `sessions` 列出持久化 Session；
 - `recover` 只恢复，不调用模型。
 
-### 12.4 Benchmark
+### 12.5 Benchmark
 
 `ProductBenchmarkRunner` 读取 `<benchmark>/benchmark.json`（schema 1、精确键集），按 `tasks × arms × repetitions` 走一遍网格。每次 attempt 走的是 20.30 的完整 ProductTask 主线：自建一次性源仓库与一次性本地 bare target、真实确认、固定 Workflow、managed worktree、不可变 Patch Artifact、冻结 Verifier、Review、宿主立即批准与 Git ref compare-and-swap。
 
@@ -983,7 +1119,7 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 | `traceh recover` | 只执行恢复，不调用模型 |
 | `traceh inspect` | 状态、不变量、请求重建和事件检查，可导出 HTML |
 | `traceh replay` | 重放模型 Surface 并检查请求重建 |
-| `traceh compact` | 手动追加 Surface Replacement |
+| `traceh compact` | 手动追加 Surface Replacement；`--through-seq` 必须**精确等于**某个闭合 Turn 的 `turn/end` 序号，否则以退出码 3 报出稳定 code（`compaction-boundary-not-closed-turn` / `compaction-no-closed-history`），不会静默前移到更早的 Turn |
 | `traceh sessions` | 列出 Session |
 | `traceh eval` | 运行 `benchmark.json` 定义的 ProductTask Benchmark；`--output` 必须尚不存在，度量不完整时退出码 4 |
 | `traceh plugins list` | 列出已安装插件的元数据，**不 import 任何插件** |
@@ -1073,8 +1209,16 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 - `TRACEH_MODEL_RETRY_MAX_DELAY_SECONDS`；
 - `TRACEH_MODEL_RETRY_AFTER_CAP_SECONDS`；
 - `TRACEH_MODEL_RETRY_JITTER_RATIO`；
+- `TRACEH_AUTO_COMPACT`（`on`/`off`）；
+- `TRACEH_AUTO_COMPACT_BYTES`；
+- `TRACEH_AUTO_COMPACT_SUMMARY_BYTES`；
+- `TRACEH_AUTO_COMPACT_KEEP_TURNS`；
 - `TRACEH_VERIFY_COMMAND`；
 - `TRACEH_PLUGIN_VERIFIER`（必须同时显式启用插件，且与命令 Verifier 互斥）。
+
+自动压缩没有任何内置默认值：四项必须一起显式给出（`--auto-compact on` 加三个阈值），只给阈值不给开关、
+`off` 却带阈值、缺任一阈值都在创建 Runtime 与 Session **之前**抛 `CliConfigurationError`；全部缺失表示
+关闭。`run`/`chat`/`resume` 接受这四个参数，只读命令（含 `compact`）不接受。
 
 `.env` 不覆盖已有进程环境变量；OpenAI-Compatible 模式必须显式提供 Base URL 和 Model，不内置某个厂商作为隐藏默认。真实 `.env` 被 Git 忽略，`.env.example` 只包含占位值。
 
@@ -1093,6 +1237,7 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 | Retry-After cap / jitter ratio | 8 秒 / 0.2 |
 | data dir | `.traceh` |
 | provider/model | `scripted` / `scripted-model` |
+| 自动 Surface 压缩 | 关闭；启用时四项阈值必须全部显式配置，无内置数值 |
 
 ### 13.4 `traceh chat` 交互循环
 
@@ -1568,7 +1713,8 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 | SQLite 本地边界 | 当前打开 Store 会完整校验 schema/integrity/history，历史很大时启动成本线性；SQLite 仍非分布式服务 | 有真实规模证据后再设计 checkpoint/增量校验或独立 Store，不提前增加第二事实源 |
 | Patch 能力 | 精确文本替换，不解析 unified diff | 增加独立工具实现，不改变 Tool Runtime |
 | Benchmark | 仅一个确定性简单案例 | 增加真实 Provider、失败恢复、复杂仓库案例 |
-| 自动压缩 | 只有手动 Replacement | 未来 Context/Compaction Plugin |
+| 自动压缩仍不带模型摘要器 | M3 已有宿主自动触发、format-2 durable 协议、逻辑位置投影与精确重放，但默认 `BoundedHistorySummarizer` 是确定性的有界转录摘要，不是模型总结。原因是硬约束而非省事：唯一可审计/可计费/可取消的模型调用主线是 Session dispatch permit，而 `verify_request_snapshots()` 要求每条 `request/snapshot` 等于 Surface 投影，摘要请求按构造不是该投影（12.2、ADR-0042） | 需要模型摘要必须先单独设计并授权一条“非 Turn 但同样可审计、可计费、可取消”的模型调用协议；在此之前不得增加裸 Provider 调用 |
+| 字节不是 token | 触发指标是 canonical UTF-8 字节，不代表任何 Provider 的实际 token 用量；不同 tokenizer 的比值差异很大 | 有可信通用 TokenCounter 之前不引入 token 估算；伪造的 token 数比诚实的字节数更糟 |
 | 插件切换的代码边界 | Stage C 的 `traceh chat` 已有 `/plugins`、`/plugins reload`、`/plugins use ...` 和 `--none`；它只重做当前进程可发现的 Entry Point 激活，不重新导入已在 `sys.modules` 中的模块，也不安装/卸载 Wheel | 后续若需要动态安装、module reload 或文件监听，必须另设安全与所有权设计 |
 | 插件不是沙箱 | v0.4 只有 trusted、进程内插件。`isolated` 可声明但被明确拒绝。一个被启用的插件与 Harness 同进程、同权限运行，能做任何 Python 能做的事 | 真正的隔离需要进程边界、每次 context 调用的序列化契约与子进程崩溃失败模型；在此之前，“启用插件”等于“信任其作者” |
 | L1 候选创建不是审批或沙箱 | `traceh.plugin.creator` 只提供 Prompt 与只读指南；“专用 Candidate Workspace”“不执行候选”是工作流合同，不是操作系统隔离。`CANDIDATE.md` 也只是待审卡片，不是安全或质量证据 | L2 起在独立验证环境构建和运行，并由候选之外的门禁产生测试证据；L3–L4 再做比较与人工批准，不能让候选自行宣告通过 |
@@ -1611,11 +1757,13 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 | Ctrl+C / 恢复信息 | `chat/driver.py`（活跃 Turn 取消/收敛）、`cli/chat.py`（恢复信息、空闲中断）、Runtime 的 `cancel()`、取消与活动测试 | 5.3、11、13.8、15、16、20.35 |
 | Product UI observation | `product/observation.py`、`product/chat.py`、`product/host.py`、`cli/product.py`、`tests/test_product_observation.py`、`tests/test_product_f3_e2e.py` | 1、3、6.7、13、15、16、20.29、20.35 |
 | Product requester 模型上下文 | `product/context.py`、`session/product_context.py`、`product/chat.py`、`product/host.py`、`session/surface.py`、`session/invariants.py`、`session/compaction.py`、`tests/test_product_model_context.py`、Product F3 E2E、ADR-0039/0040 | 1、3、6.2–6.3、7.2–7.3、12.1–12.2、15、16、20.38 |
+| TUI 上下文透明度 | `tui/context_inspection.py`（只读投影）、`tui/presentation.py`（纯格式化）、`tui/screens.py`（详情 Screen）、`tui/app.py`（装配/刷新/快捷键）、`tests/test_tui_context_inspection.py`、`tests/test_tui.py` | 1、3、12.3、13、15、16、17、20.40；只允许复用既有 parser/projector，不得复制第二套解析、不得新增 durable 事件或缓存，不得显示没有分母的 context-window 百分比 |
+| Surface 压缩 / replacement 协议 | `session/surface_replacement.py`（协议唯一定义处）、`session/compaction.py`、`session/surface.py`、`session/invariants.py`、`runtime/agent_loop.py`（Turn 前线性化点）、`runtime/agent_runtime.py`（policy/summarizer 装配）、`cli/main.py`（四项显式配置与 `compact`）、`cli/timeline.py`、`tui/presentation.py`、`tui/app.py`、`tests/test_compaction.py`、`tests/test_surface_and_invariants.py`、`tests/test_cli_timeline.py`、`tests/test_cli_env.py`、`tests/test_cli_read_only_commands.py`、ADR-0042 | 1、3、6.3、7.2、7.3、12.1、12.2、13.1–13.3、13.6、15、16、17、20.39；改动 replacement 形状必须同时更新 parser、投影、不变量与两套 UI 投影，不得新增第二 parser 或第二 Projector |
 | Provider/Request / typed failure | `api/llm.py`、`llm/failures.py`、`llm/openai_compatible.py`、`llm/runtime.py`、`request_builder.py`、`tests/test_openai_provider.py`、ADR-0037/0038 | 7、8、13、15、16、20.34、20.36 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
 | Verifier | `verification.py` | 10、12、15、16 |
-| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033/0037 | 1、3、8.4、12.4、13.1、15、16、20.29、20.30、20.34；改 Product host 装配、Workflow 拓扑、Promotion 回执字段、Session Attempt 事件形状或 retry 度量时必须同时核对本域的指标推导 |
+| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033/0037 | 1、3、8.4、12.5、13.1、15、16、20.29、20.30、20.34；改 Product host 装配、Workflow 拓扑、Promotion 回执字段、Session Attempt 事件形状或 retry 度量时必须同时核对本域的指标推导 |
 | 插件发现/启用/激活 | `plugins/*`、`api/plugins.py`、`api/prompts.py`、`kernel/activation.py`、`kernel/tasks.py`、`runtime/agent_runtime.py`、`tests/test_plugin_*.py` | 1、2、3、4、7.1、13、14、15、16、19 |
 | Runtime 关闭 / dispose | `runtime/agent_runtime.py`（`_shutdown`、`dispose`）、`plugins/manager.py` 的 `dispose`、`tests/test_runtime_dispose.py` | 5.3、5.5、15、16、19.8 |
 | 插件组合控制面 / Session 迁移 | `runtime/plugin_composition.py`、`runtime/agent_runtime.py` 门面、`tests/test_plugin_composition_coordinator.py`、Stage B/C 控制面测试 | 4、5.3、14、15、16、19.7–19.9 |
@@ -3530,6 +3678,14 @@ F1 已实现且 Release Stop A 最终复审确认 P0/P1 清零；这是 F1 停�
 v0.9 均未实现，F2 的后续当前状态见 20.34。F0/F1 没有升级版本、push、
 tag、release、联网、调用真实 Provider 或读取秘密。
 
+2026-09-05 又把已经讨论清楚的后续边界收敛进
+[`v1.0` 总路线](../plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)：顺序固定为 v0.8 M3+M4 收口、v0.9
+Context/Skill/Workspace Memory/History Evidence、v0.10 host-owned Sandbox、v0.11 独立官方 MCP Client
+Plugin、v0.12 受控动态并发 Product Workflow，最后才是 v1.0 RC 与发布。该文档只是阶段计划，不代表这些能力
+已经实现或获得开工授权；当前源码仍没有 Workspace Memory、真实 Sandbox、MCP Client 或动态 Product DAG。
+后续实现必须继续复用同一 EventStore、现有 Plugin Generation/Lease、Workflow DAG/Map/Join 与 Product
+Verification/Review/Approval/Promotion 安全尾部，不能增加第二事实源、第二编排器或模型自授权路径。
+
 F0 的基线反例确认，旧 `AgentLoop` 会在 `BudgetedLlmRuntime.invoke()` 准入前写
 `request/snapshot`/`model/attempt-start`，零 Token 时 Provider 调用数虽为 0，Session 仍虚构一次 Attempt；
 旧 snapshot 也只描述 composed request，不能证明 Budget 裁剪后真正发送的 request。另一个独立公开路径
@@ -3663,7 +3819,12 @@ Memory 由宿主按 exact digest 批准并 append-only。每个 Step 在 Composi
 Input event，再追加 `composition/snapshot`，因此现有 `source_seq` 仍界定完整请求。exact/SQLite FTS 是
 基础检索，本地 embedding/reranker 仅可显式、离线、derived 启用。检索评测仍复用唯一 `traceh eval`；
 完整 corpus、人工 relevance judgment 与 evaluator 不进入 coder writable Workspace 或模型上下文，也不
-新增第二 Runner。
+新增第二 Runner。2026-09-05 的范围修订把 M3 History Evidence 纳入同一 Context Input 主线：原始
+Surface 事件和 format-2 replacement provenance 仍是唯一来源，默认只披露目录/摘要；用户或模型只能引用
+宿主已公开的当前 Session exact block，宿主递归校验来源链、分页、revision/freshness 与预算后，把原文只
+冻结到紧随其后的一个 Step。普通 Tool result 只保留小型 receipt，原文不进入 Surface、不自动留给后续
+Step；旧工具结果只证明过去，不能覆盖 current Product/Workflow/Workspace 事实。这不是第三 Memory、
+第二 EventStore 或跨 Session 原始聊天 RAG，且仍属尚未实现、未获开工授权的 v0.9 计划。
 
 ### 20.34 v0.8-F2：typed Provider failure 与同冻结请求 bounded retry（通俗版 20.28）
 
@@ -4312,7 +4473,8 @@ canonical requirement、模型报告、路径明细、Patch bytes、Review/Promo
 failure detail 与 Provider 数据都不进入默认 snapshot；每项只保留 Product 自身已经记录的 requirement digest
 和有界 origin source request 摘录，两者不能被等同。raw Product/Workflow/Promotion 事件也仍不直接进入
 默认 Surface。历史任务只在默认窗口外省略，不从 EventStore 删除，也不由 LLM 总结；跨 Session/Workspace
-检索、FTS、embedding、RAG 与自动压缩仍未实现。
+检索、FTS、embedding、RAG 仍未实现。自动 Surface 压缩已由 M3 实现（12.2、20.39），但它压缩的是对话 prose，
+绝不触碰这条 Product context 宿主证据。
 
 需要比默认摘要更具体的证据时，Product requester 可调用
 [`ReadProductTaskEvidenceTool`](../../src/traceh/product/chat.py) 的 `read_product_task_evidence`。它只接受 exact
@@ -4382,3 +4544,150 @@ import 破坏，Promotion 架构测试对白名单中新接入的两个纯 Verif
 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。该修复没有新增 Product 状态、TUI 状态机、mutable cache、
 第二 Store、Memory Stream 或模型可见的 approve/promote/workflow 控制 Tool；Wheel、离线安装、真实
 Provider、commit、push、tag 与 release 仍未由本段宣称完成。
+
+### 20.39 M3：宿主自动上下文压缩与精确重放（通俗版 20.33）
+
+长 Session 此前只能靠人注意到并手动跑 `traceh compact`，否则模型请求会无限增长。M3 把这条能力交给宿主，
+同时把 v0.3 的 replacement 协议换成能承载“自动决定”的 format 2。完整设计原因见
+[ADR-0042](../adr/0042-host-owned-automatic-surface-compaction.md)，当前工程事实见 7.2 与 12.2。
+
+**根因不只是“缺一个定时器”，还有两处旧协议缺陷。** 旧 format 1 只记录 `source_seqs`、一条自由格式消息和
+`through_seq`：既没有内容 digest、policy、摘要器身份，也没有 cut 语义，durable 事件无法回答“谁在什么规则下
+针对哪段精确历史做了这次压缩”；它还用 `<compacted-summary>` XML 包裹摘要，而不可信摘要可以自己闭合该标签
+逃逸出去。旧 `SurfaceProjector` 又按 replacement 自身 append seq 排序，而 replacement 必然晚于被替换历史，
+于是摘要会排到更新的对话后面——手动压缩通常一次压完整段历史所以掩盖了这一点，自动压缩若每轮触发则会把
+摘要固定放到当前用户消息之后。
+
+**线性化点。** `AgentLoop.run_turn()` 在 `ensure_session()` 之后、`inbox/accepted` 之前调用一次
+`compact_before_turn()`：`AgentRuntime` 在此已保证同 Session 单 Turn owner，没有开放 Turn，且 replacement
+早于本轮 `user/message` 与全部 `request/snapshot`。压缩不属于该 Turn——失败时历史零改动、本轮照常用完整
+对话运行，并追加一条只含 `method`/稳定 `code`/`committed` 的 `surface/compaction-failed`。用维护失败去拒绝
+用户的 Turn 才是更大的伤害。
+
+**安全边界与协议。** cut boundary 只能是真正闭合过开放 Turn 的 `turn/end` 序号，因此当前消息、开放 Turn、
+Step 与 assistant tool call/`tool/result` 都不可拆；自动压缩再排除最近 `keep_recent_turns` 个闭合 Turn。
+`product/context-snapshot` 不是模型可见对话类型，永远不会成为 source，该排除现在同时由选择逻辑和不变量
+（`surface-replacement-source-type`）强制。format 2 的 key 集精确，automatic 必须绑定 policy digest 与
+摘要器身份，manual 两者必须为 `null`；parser 重建整份 payload 并要求 canonical 相等。摘要按 UTF-8 字节
+限长、清洗控制/格式/行分隔字符、以 JSON string 嵌入固定 header，因此伪 XML、伪 header 与换行都无法伪造
+结构。format 1 明确拒绝，无第二 parser、迁移器或 fallback。
+
+**逻辑位置与重放。** replacement 的逻辑位置取其全部 source 逻辑位置的最小值（递归），Surface 按逻辑位置
+排序，因此摘要停在被替换历史的位置，多次压缩收敛成一条摘要而不是堆叠。投影仍只读到记录的 `source_seq`，
+所以压缩前冻结的请求仍逐字节重建原始历史、压缩后的请求重建摘要后的历史；replay 不调用摘要器、不调用
+Provider、不读 latest 状态。确定性测试直接比较 `request/snapshot.composed_request` 的 canonical JSON 与
+一次 fresh `reconstruct_request()`。
+
+**摘要器边界与一项明确的架构限制。** `SummaryRequest` 只有 `session_id`、被替换的精确消息、字节上限与保留
+Turn 数，没有 Store、SessionService、Tool、Runtime 或 Approval handle。**M3 不提供模型摘要器**：唯一
+可审计、可计费、可取消并能收敛的模型调用主线是 Session dispatch permit（ADR-0035），而
+`verify_request_snapshots()` 要求每条 `request/snapshot.composed_request` 等于
+`SurfaceProjector.project(events, through_seq=source_seq)` 加 Composition。摘要请求按构造不是该投影，把它
+记进主线会让所有压缩过的 Session 请求重放确定性失败；绕过 permit 直接调 Provider 则是未审计、未计费的
+裸调用，`budgets/enforcement.py` 也正是拿这些 Session 事件对账。因此默认
+`BoundedHistorySummarizer` 是确定性、无模型的有界转录摘要，宿主可显式注入自己的摘要器但受同一约束。
+
+**并发、失败与透明度。** 选择时观察到的 head 直接作为 append 的 `expected_seq`，Store CAS 就是线性化点；
+摘要期间 Session 变化会让写入被拒，有界重试从 fresh read 重新选择，绝不重投旧 payload。取消先收敛 owned
+append worker 再对账 may-have-committed 后原样传播；普通失败同样对账并如实报告 `True`/`False`/unknown。
+Line 与 TUI 消费同一条 durable 事件（`[event N] Context compacted (18 messages -> 1 summary, kept 2 recent
+turns)` 与 `上下文已压缩 · 18 段历史 → 1 段摘要 · 保留最近 2 个对话`），都只显示数量与来源，不显示摘要正文、
+被替换消息、digest 或 Prompt。
+
+**验证。** 三组数字下面各自给出精确文件范围，避免同一份文档出现互不对应的计数。
+
+- **定向组**（`tests/` 中 `test_compaction.py`、`test_surface_and_invariants.py`、`test_cli_timeline.py`、`test_cli_read_only_commands.py`、`test_cli_env.py`、`test_product_architecture.py`、`test_cli_resume.py`、`test_cli_resume_safety.py` 八个文件）：**`470 passed, 1 skipped`**。
+  唯一 skip 是 `test_cli_resume_safety.py` 的 “a path cannot contain NUL”，属既有 Windows 平台边界。
+  其中 `test_compaction.py` 单独为 **`41 passed`**。
+- **相邻 owner 回归组**（Product model-context/memory/observation/F3 E2E、recovery、inspector、runtime
+  e2e/factory/dispose、budget enforcement/supervision、TUI 四套、CLI chat/run-dispose/activity、cancellation、
+  event feed、event store contract、model attempt admission/retry、plugin runtime、composition generations、
+  agent supervisor 共二十六个文件）：**`526 passed, 1 skipped`**。唯一 skip 是 `test_tui.py` 的模块级
+  `importorskip("textual")`，因为本机解释器没有安装可选 `tui` extra——这是环境边界，不是平台边界。
+- **全仓收集**：本机（无 `tui` extra）**`2719 tests`**，装有该 extra 的解释器 **`2765 tests`**。两者都正确，
+  差额完全来自 `test_tui.py` 的模块级 `importorskip("textual")`。引用收集数时必须同时说明解释器是否装了
+  该 extra。
+
+`python -m compileall -q src tests` 与 `git diff --check` 通过。**修改范围 Ruff**（对 `git diff --name-only`
+列出的 `.py` 文件加新增的 `session/surface_replacement.py`）只有一条 `ASYNC240`，位于
+`runtime/agent_runtime.py` 一段本轮未触碰的既有代码，并已在干净 `HEAD` 上 `git stash` 独立复现，属既有基线。
+按整个包目录扫描还会带出 `runtime/continuation.py` 的 `E501` 与 `session/projections.py` 的 `UP042`，但那两个
+文件本轮没有改动，不属于修改范围。受保护核心的两条 pin
+（`runtime/agent_loop.py`、`runtime/agent_runtime.py`）按 `tests/test_product_architecture.py` 的约定在同一次
+改动中更新并说明原因。反向验证依次临时移除闭合 Turn 边界（8 项变红）、Product context 排除（3 项）、
+request reconstruction 的历史 `source_seq`（4 项）、Session CAS（1 项）、逻辑位置排序（1 项）、tool call/result
+配对规则（1 项）与摘要器能力边界（1 项），确认各自按预期根因失败后全部恢复。审查中还发现一处“摘要后再读
+head 比较”与 Store CAS 完全重复、删掉也不破坏任何公开合同，已按最小保护原则移除，改由 `expected_seq` 单独
+承担。
+
+**独立复审提出的三项 P1 与两项 P2 已全部根修并各自反向验证。** ① 扩大 cut 时 `source_seqs` 按逻辑顺序
+生成而协议要求升序，导致“较晚执行的部分人工压缩再扩大范围”稳定报 `compaction-payload-invalid`，其后的自动
+压缩也会每轮失败；根修是把选择顺序与写入顺序分开（逻辑顺序只交给摘要器，写入与 digest 按 seq 升序），并
+新增覆盖手动与自动两条路径扩大 cut 的用例。② 不变量只检查 replacement 的字段形状，不重算 `source_seqs`
+覆盖范围、`source_digest` 与两个字节数，因此一条 canonical 形状正确但语义伪造的 replacement 可以只遮蔽
+assistant、保留对应 user 后进入 Surface；根修是让检查器用同一个 `surface_prefix()` 重算并逐项比对，新增完整
+前缀反例与三项伪造派生事实反例，并用一条“诚实派生必须零违规”的正向断言防止检查器退化成永远报错。
+③ Line/TUI 无条件显示“历史未改变”，把 `committed=null/true` 折叠成“没发生”；根修是三态分别渲染，并把只
+接受精确布尔的规则写进测试（`0`、`"false"`、字段缺失都算 unknown）。④ 恢复命令不携带 `--auto-compact*`，
+复制粘贴会静默关闭自动压缩；根修是把四项非秘密整数按既有 token 渲染写回恢复命令。⑤ 手动 `--through-seq`
+的实现是“前移到最近闭合 Turn”而文档写的是“切在 Turn 内拒绝”，且 `through_seq` 远超 head 时也会成功；按
+“缺失或歧义时明确失败”改为必须精确命中闭合 Turn，代码、CLI、README、CHANGELOG、ADR 与测试同步为同一条合同。
+
+本轮未运行完整 `python -m pytest -q`、Wheel/离线安装、真实 Provider 或 L2–L4 门禁，也没有 commit、
+push、tag 或 release。
+
+### 20.40 M4：上下文透明度与最终体验（通俗版 20.34）
+
+M3 让宿主可以自动压缩，但用户看不到"现在模型能看见多少""离阈值还有多远""哪些历史被压缩了""上次冻结的
+请求到底由什么组成"。M4 只补这一层**只读展示**：不新增 durable 事件、不新增事实源、不改变模型看到的消息、
+不改变 request fingerprint、不碰压缩触发与 CAS 语义。
+
+**架构判断。** 所需事实全部已经存在于同一个 EventStore，因此不需要任何协议改动：当前 Surface 来自
+`surface_conversation()`，压缩记录来自 `surface/replace`，失败来自 `surface/compaction-failed`，任务目录来自
+`product/context-snapshot`，最近冻结请求来自 `request/snapshot`，当前策略来自 `runtime.compaction.policy`。
+新增的 [`tui/context_inspection.py`](../../src/traceh/tui/context_inspection.py) 只是一个无状态只读
+projector，复用既有 parser（`parse_surface_replacement()`、`latest_product_context()`、
+`ModelRequest.from_dict()`、`dispatch_request_matches_composed()`、`CoreInvariantChecker`），不复制第二套解析
+逻辑。工程细节与四条边界见 12.3。
+
+**主界面。** topbar 下方增加一行全宽 Context 状态条（不放进右侧 Product 面板：它描述整个 requester
+Session，Product 未启用时 Surface 压缩依然可能发生）。候选文案按**实际可用 cell 数**逐个测量后选出最丰富
+的那一个，不依赖 Textual 静默裁断（12.3）：
+
+```text
+110 列  历史 28.4 KiB / 64.0 KiB 阈值 · 压缩 0 次 · 失败 1 次 · 任务 task-a798123… · 6/9
+ 60 列  28.4 KiB/64.0 KiB · 压缩 0 · 失败 1 · 任务 6/9
+ 44 列  28.4 KiB/64.0 KiB · 压缩 0 · 失败 1
+关闭     历史 68 B · 自动压缩关闭 · 压缩 0 次 · 无任务上下文
+失败宽   上下文状态暂不可读 · context-inspection-read-failed
+失败窄   不可读 · context-inspection-read-failed
+```
+
+主界面不显示摘要正文、完整 digest 或 source seq 列表；task id 缩短显示，详情页给完整值。
+
+**详情页。** 新增 `Ctrl+X`（Footer 显示"上下文"），沿用 `screens.py` 既有的全屏只读 Screen 模式，Esc 返回后
+聊天输入可继续使用。分组为：当前投影、自动压缩、最近冻结请求、任务记忆、压缩记录、（有失败时）压缩失败
+记录、最近一次压缩（含明确标注为"不可信历史摘要"的正文）。所有文本经既有 `safe_display_block()`；RichLog
+`markup=False`，每一行是独立 `Text`、样式按 span 明确限定，标题的 bold 不会继承到后续普通行。压缩记录列表
+不设 `max_lines`，不做静默截断。
+
+**刷新。** mount 时、打开详情页时，以及会改变上下文的事件到达时各 fresh 读一次。相关事件为 `user/message`、
+`assistant/message`、`tool/result`、`product/context-snapshot`、`request/snapshot`、`surface/replace`、
+`surface/compaction-failed`。注意 `ProductChatHost.prepare_turn()` 会在 ChatDriver 订阅**之前**写
+`product/context-snapshot`，该事件永远不会经过 Feed，因此 `_run_turn()` 在这个宿主调用边界补一次 refresh。
+没有新增轮询器、后台 task 或第二个 EventFeed；并发刷新用一个合并标志收敛，旧结果不会覆盖新 head。Context
+读取失败只影响这一层展示，不会让 Turn、ProductTask 或 shutdown 失败。
+
+**独立复审提出的两项窄屏 P2 已修并各自反向验证。** ① 44 列终端下状态条实际只有 40 cells，而错误态 51
+cells、"压缩失败 + 任务计数"46 cells，都会被 Textual 静默裁断——最需要诊断时反而看不全稳定 code。根修是把
+`narrow` 布尔换成显式可用 cell 数 + 逐个测量的候选阶梯，`app.py` 传入真实 `content_region.width`（首次
+布局前回退到屏宽减 padding），并在 resize 后重新组合。② 详情页 `log.write(row, width=row.cell_len)` 钉死了
+虚拟行宽，加上 `RichLog` 默认 `min_width=78`，44 列下内容宽 36 却排到 60，产生 Footer 未提示的横向溢出。
+根修是去掉显式 `width=` 并设置 `min_width=1`，让 `wrap=True` 真正折行到视口。
+
+**实现中发现并修复的另一个真实缺陷。** 最初把展示快照命名为 `self._context`，而 `textual.app.App` 已经拥有
+同名方法；赋值后 `App.run_test()` 在 `app._context()` 上抛 `TypeError: 'NoneType' object is not callable`，
+应用永远无法就绪，全部 TUI 测试挂死而不是报错。已重命名为 `_context_snapshot` 并在代码中写明原因；这也是
+"新增属性必须避开框架基类命名空间"的一条具体证据。
+
+**验证。** 见 20.40 验证段与 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 7 节。

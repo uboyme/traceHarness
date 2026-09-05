@@ -21,9 +21,11 @@ from traceh.product.chat import ProductStartRequest
 from traceh.product.control import PendingProductProposal
 from traceh.product.inspection import ProductPatchEvidence
 from traceh.product.observation import ProductObservationReader
+from traceh.tui.context_inspection import ContextInspectionReader, ContextSnapshot
 from traceh.tui.presentation import (
     MODEL_SELF_REPORT_COLOR,
     ProductIdentityField,
+    context_detail_lines,
     format_age,
     prefixed_display_lines,
     product_identity_fields,
@@ -262,6 +264,96 @@ class TaskConversationScreen(Screen[None]):
         else:
             self._expanded.add(self._selected)
         self._render_snapshot()
+
+    async def action_back(self) -> None:
+        await self.dismiss()
+
+
+class ContextScreen(Screen[None]):
+    """Fresh, read-only evidence for what the model can currently see.
+
+    It re-reads the Session on mount rather than rendering whatever the status
+    row last held, so opening this page after a restart, a compaction or a new
+    Turn always shows the durable log rather than a stale display snapshot.
+    """
+
+    BINDINGS = [
+        Binding("escape", "back", "返回", priority=True),
+    ]
+    CSS = """
+    ContextScreen { layout: vertical; }
+    #context-title { height: 3; padding: 1 2; background: $panel; }
+    #context-log { height: 1fr; padding: 1 3; }
+    #context-status { height: 2; padding: 0 2; color: $text-muted; }
+    """
+
+    def __init__(
+        self,
+        reader: ContextInspectionReader,
+        session_id: str,
+    ) -> None:
+        super().__init__()
+        self._reader = reader
+        self._session_id = session_id
+        self._snapshot: ContextSnapshot | None = None
+
+    @property
+    def snapshot(self) -> ContextSnapshot | None:
+        return self._snapshot
+
+    def compose(self) -> ComposeResult:
+        yield Static("上下文详情 · 打开时快照", id="context-title")
+        yield RichLog(
+            id="context-log",
+            markup=False,
+            highlight=False,
+            wrap=True,
+            auto_scroll=False,
+            # ``RichLog`` renders at ``max(min_width, viewport)`` and defaults
+            # min_width to 78, which would keep laying rows out wider than a
+            # narrow terminal and push them behind a horizontal scroll the
+            # Footer never offers. Wrapping to the viewport is the whole point
+            # of ``wrap=True`` here.
+            min_width=1,
+            # Deliberately unbounded: the compaction record list must never be
+            # silently cut. Any bound here would hide durable evidence without
+            # telling the reader how much was hidden.
+            max_lines=None,
+        )
+        yield Static("Esc 返回", id="context-status")
+        yield Footer()
+
+    async def on_mount(self) -> None:
+        log = self.query_one("#context-log", RichLog)
+        try:
+            snapshot = await self._reader.load(self._session_id)
+        except Exception as error:
+            code = getattr(error, "code", type(error).__name__)
+            log.write(
+                safe_display_block(
+                    "上下文证据不可用 · "
+                    f"{safe_display_block(code, limit=120, max_lines=1)}"
+                )
+            )
+            self.query_one("#context-status", Static).update(
+                "这是只读失败；没有使用旧快照，也没有写入任何 durable fact。"
+            )
+            return
+        self._snapshot = snapshot
+        for row in context_detail_lines(snapshot):
+            # No explicit width: passing one pins the virtual line width and
+            # stops ``wrap=True`` from folding to the viewport, which turns a
+            # narrow terminal into horizontal overflow the Footer never offers
+            # a way to scroll.
+            log.write(row)
+        self.query_one("#context-status", Static).update(
+            safe_display_block(
+                f"Esc 返回 · Session head seq {snapshot.head_seq} · "
+                "只读投影，不是事实源",
+                limit=200,
+                max_lines=1,
+            )
+        )
 
     async def action_back(self) -> None:
         await self.dismiss()
@@ -755,6 +847,7 @@ def _patch_line_texts(
 
 
 __all__ = [
+    "ContextScreen",
     "ProductChangesScreen",
     "ProductIdentityScreen",
     "TaskConversationScreen",

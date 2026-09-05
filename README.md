@@ -27,7 +27,8 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - Effect Intent / Dispatch / Outcome 记录，用于判断崩溃时间窗中的副作用；
 - Append-only 崩溃恢复：闭合孤立的 Model Attempt、Tool Call、Step 和 Turn，不盲目重放结果不明的副作用；
 - 通过可选外部命令 Verifier 实现 Evidence-Driven Completion；
-- Request 重建检查、协议不变量、Replay、手动 Surface 压缩和静态 HTML Inspector；
+- 可选 Textual TUI 的 Context 透明度：顶部一行状态条显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数；`Ctrl+X` 打开只读详情页，区分“当前投影”与“最近一次冻结请求”。显示的是 canonical UTF-8 字节，不是 token，也不显示模型 context-window 百分比（没有可信 tokenizer 与canonical 输入上限）；
+- Request 重建检查、协议不变量、Replay、手动与宿主自动 Surface 压缩，以及静态 HTML Inspector。自动压缩默认关闭且没有内置数值，启用需一次性显式给出开关与三个阈值；触发指标是 canonical UTF-8 字节数，不是 token；
 - 确定性的 Benchmark Runner 和无需 API Key 的 Demo；
 - **插件系统（v0.4 新增、v0.5 完成 Generation 化）**：`traceh.plugins` Entry Point 发现、显式启用、事务式激活；插件的 Tool、Prompt Section、Service、Provider、Policy、Middleware 和命名 Verifier 进入既有主线，没有独立的插件 Tool Runtime 或插件 AgentLoop；
 - **Plugin Creator Skill（v0.6 L1）**：以独立 Wheel 提供候选编写 Prompt 和 `PURE_READ` 指南；只在专用 Workspace 生成未验证源码，不自动 build/test/install/enable；
@@ -731,11 +732,14 @@ tests                   契约、恢复、取消、插件和端到端测试
 ```text
 traceh run
 traceh chat            # 支持 --no-timeline / --heartbeat-seconds；--product-config 显式启用产品面
+                       # --tui 下顶部有一行 Context 状态条，Ctrl+X 打开上下文详情
+                       # 自动压缩需一起给出 --auto-compact on --auto-compact-bytes N
+                       # --auto-compact-summary-bytes N --auto-compact-keep-turns N
 traceh resume
 traceh recover
 traceh inspect
 traceh replay
-traceh compact
+traceh compact          # 手动 Surface 压缩；--through-seq 必须精确等于某个闭合 Turn 的 turn/end 序号
 traceh sessions
 traceh eval             # ProductTask Benchmark；--output 必须尚不存在，度量不完整时退出码 4
 traceh plugins list     # 只读元数据，不 import 插件
@@ -829,7 +833,9 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - 人工审批不会只信一份 Review“内部摘要算得通”：持有冻结 VerificationPlan 的 Promotion owner 会在复用 Review、approve 与 promote 前逐项重验 command id/顺序/`argv_digest`、evidence digest 和 passed；`/task inspect` 与 F4 evidence collector 复用同一规则。即使有人同步重算被篡改 Review 的内部 evidence/approval digest 并让各域身份彼此一致，界面和 Benchmark 仍会 fail closed，直接 `/task approve` 也会在 bare ref 改动前拒绝；Promotion 已落盘但 Product terminal 未写的恢复分支也必须先幂等重入 `promote()`，不能只查 ledger 就补成功；
 - v0.7 的阶段顺序、不可偏离原则与最终产品效果统一记录在 [v0.7 总阶段计划](docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)；该计划不替代源码、测试、ADR 或两份项目上下文的事实源地位；
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
-  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)。当前 `0.8.0` 候选的 F0–F4 已完成两阶段
+  [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)；v0.8 收口至 v1.0 的版本列车、Sandbox、
+  MCP Client 与受控动态并发 Workflow 边界统一记录在
+  [v1.0 总路线](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)。当前 `0.8.0` 候选的 F0–F4 已完成两阶段
   Model admission、SQLite 唯一生产 EventStore，以及 typed Provider failure + 同冻结请求有界 retry；F2
   已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量；F3 已完成共享 Chat Driver、
   Line adapter、只读 Product observation 与同一 `traceh chat --tui` Textual adapter；旧 F4 停止点曾
@@ -902,6 +908,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [v0.8.0 发布候选验证记录](docs/validation-v0.8.0.md)
 - [v0.8 冻结阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
 - [v0.9 冻结阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)
+- [v1.0 总路线：记忆、隔离、互操作与受控并发](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)
 - [ADR](docs/adr/)，其中 [ADR-0007](docs/adr/0007-transactional-plugin-activation.md) 记录 v0.4 插件激活，[ADR-0013](docs/adr/0013-scoped-tool-prompt-policy-overlays.md) 记录 D2 四层 Composition Overlay 的设计原因
 
 ## 项目来源说明

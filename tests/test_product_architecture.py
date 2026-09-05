@@ -38,10 +38,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "a4a660307e770864175f98b59fb30c7bbe5f56ef968adaf2f588ff4b0019720e"
+        "ac0b95b902933ed662e89c2387b23db8bc963fa5849607a87227f3516d27a44f"
     ),
     "runtime/agent_runtime.py": (
-        "ab66461f796b3fede5523bead9346f39f536d80749ab4a66120bc4ee6dabb797"
+        "cc4573ca592133162b09f6992ea3004bdd1206fcfad521cadcf2a48fa8ed1ef7"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
@@ -59,6 +59,15 @@ capability back to the host-resolved Provider/Attempt, and converge open
 Attempts on generic failure. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; no
 Product state or dependency enters either file.
+
+M3 changes both pins again, deliberately. ``AgentLoop`` gains one call to the
+Session compaction owner before a Turn opens - the only point where a single
+Turn owner exists, no Turn is open and a replacement still precedes every
+request this Turn will freeze - plus the non-fatal handling that keeps a failed
+compaction from refusing the user's Turn. ``AgentRuntime`` gains the explicit
+`CompactionPolicy`, the injected summarizer and the guard that the loop and the
+facade share exactly one `CompactionService`. No Product state, model call or
+provider dependency enters either file.
 Changing any pin is a real architectural decision: update it in the same
 commit and say why, rather than deleting the guard.
 """

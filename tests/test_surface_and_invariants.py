@@ -7,6 +7,7 @@ from traceh.api.json_types import fingerprint
 from traceh.api.llm import ModelMessage, ModelRequest
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.surface import SurfaceProjector
+from traceh.session.surface_replacement import surface_prefix, surface_replacement_data
 
 
 def materialize(events: list[PendingEvent]) -> tuple[EventEnvelope, ...]:
@@ -17,29 +18,48 @@ def materialize(events: list[PendingEvent]) -> tuple[EventEnvelope, ...]:
 
 
 def test_surface_projects_messages_and_replacement() -> None:
+    history = [
+        PendingEvent("session/created", {"session_id": "s"}),
+        PendingEvent("turn/start", {"turn_id": "t"}),
+        PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
+        PendingEvent("user/message", {"content": "old", "step_id": "a"}),
+        PendingEvent(
+            "assistant/message",
+            {"content": "answer", "tool_calls": [], "step_id": "a"},
+        ),
+        PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
+        PendingEvent("turn/end", {"turn_id": "t"}),
+    ]
+    # Derived from the real history rather than invented: the invariant checker
+    # recomputes the digest and both byte counts.
+    prefix = surface_prefix(materialize(history), cut_seq=7)
+    assert prefix is not None and prefix.source_seqs == (4, 5)
     events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("user/message", {"content": "old", "step_id": "a"}),
-            PendingEvent(
-                "assistant/message",
-                {"content": "answer", "tool_calls": [], "step_id": "a"},
-            ),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
+        history
+        + [
             PendingEvent(
                 "surface/replace",
-                {
-                    "source_seqs": [4, 5],
-                    "replacement": {"role": "user", "content": "summary"},
-                },
+                surface_replacement_data(
+                    method="manual",
+                    cut_seq=prefix.cut_seq,
+                    source_seqs=prefix.source_seqs,
+                    source_digest=prefix.source_digest,
+                    source_utf8_bytes=prefix.source_utf8_bytes,
+                    history_utf8_bytes=prefix.history_utf8_bytes,
+                    kept_recent_turns=0,
+                    policy_digest=None,
+                    summarizer=None,
+                    summary="summary",
+                    summary_truncated=False,
+                ),
             ),
-            PendingEvent("turn/end", {"turn_id": "t"}),
         ]
     )
     messages = SurfaceProjector().project(events)
-    assert [(message.role, message.content) for message in messages] == [("user", "summary")]
+    assert [message.role for message in messages] == ["user"]
+    assert messages[0].content.startswith("Compacted earlier conversation")
+    assert '"summary":"summary"' in messages[0].content
+    assert not CoreInvariantChecker().check(events)
 
 
 def test_invariants_detect_unmatched_tool_result() -> None:

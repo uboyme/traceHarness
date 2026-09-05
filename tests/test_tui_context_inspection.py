@@ -11,6 +11,9 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+
+pytest.importorskip("rich")
+
 from rich.cells import cell_len
 
 from traceh.api.events import PendingEvent

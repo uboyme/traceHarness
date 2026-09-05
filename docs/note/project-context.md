@@ -38,7 +38,7 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | 最新正式发布仍是 annotated tag `v0.7.1`；当前工作树已在 v0.8-F5 把候选版本切到 `0.8.0`，尚未 tag 或发布。唯一事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`；`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此新构建的 Wheel metadata 与被导入的包不可能不一致；源码 ZIP 默认文件名也从该属性派生 |
+| 当前版本 | `v0.8.0` 已完成发布门禁；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
@@ -51,34 +51,22 @@
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
-| 当前自动化测试 | `0.7.1` 的发布证据仍见 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。F5 replacement 前的 `2496 passed, 7 skipped`、后续 `2555 passed, 7 skipped` 以及 M1 的定向数字均只认证各自历史工作树；20.38 的 format 1–6 数字也全部是历史证据。当前 M2 format-7 的 Product memory/model-context/Compaction/observation/inspection/architecture/service/task-conversation 九模块为 `172 passed`，完整 TUI/optional/presentation/task-conversation 为 `82 passed`，Product F3 E2E 为 `26 passed`，安装 Textual 8.2.8 的解释器全仓收集 `2665 tests`。独立代码与最终文档复审修正后为 `P0=0 / P1=0 / P2=0`；仓库外、33 文件逐项匹配的临时候选提交通过独立真实 L2 `1 passed`，随后无筛选最终全量得到 `2658 passed, 7 skipped`、退出码 0、耗时 `3226.49s (53:46)`。compileall、修改范围 Ruff、`git diff --check`、anti-hardcoding、受保护核心零 diff和文档门禁均通过，详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md)。以上全部只认证各自历史工作树。当前工作树的 M3 证据见 20.39：定向八文件 `470 passed, 1 skipped`、相邻 owner 二十六文件 `526 passed, 1 skipped`、全仓 `--collect-only` `2719 tests`（本机未安装 `tui` extra；装有该 extra 的解释器为 `2765 tests`，差额来自 `test_tui.py` 的模块级 `importorskip("textual")`）；本轮未运行完整全量、Wheel、离线安装、真实 Provider 与 L2–L4 |
+| 当前自动化测试 | v0.8.0 最终候选在安装 Textual 8.2.8 的解释器上收集 `2765 tests`；公开真实 L2 独立得到 `1 passed in 1398.14s`，最终无筛选全量得到 `2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。收口期间 L2 先后真实暴露 core-only 环境硬导入 Rich、以及 `test_product_contract.py` 未同步 M3 两个受保护 Runtime pin；两项均在原测试 owner 根修并由公开 L2 反向证明。compileall、修改范围 Ruff、`git diff --check`、文档 QA、Wheel E2E、clean-input 资产预检、core/`[tui]` 离线安装与完整 18-attempt Provider 网格均已执行；详细边界与结果见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节 |
 | Surface 压缩 | M3 起 `CompactionService` 同时拥有手动与自动 replacement；`surface_prefix()` 是选择与全部派生事实的唯一来源，不变量重算它。`AgentLoop` 在 Turn 打开前触发一次；只压缩闭合 Turn 前缀，保留配置数量的最近 Turn，永不触碰 `product/context-snapshot`，也不拆 Step 或 tool call/result。durable 协议为 format 2，绑定 exact source seq/digest、cut boundary、method、policy digest 与摘要器身份；format 1 明确拒绝。摘要按逻辑位置投影，因此不会跑到当前用户消息之后，历史 `request/snapshot` 仍逐字节重建；手动 `--through-seq` 必须精确命中闭合 Turn。触发指标是 canonical UTF-8 字节，**不是 token**；四项配置必须全部显式给出，缺失即关闭。默认摘要器确定性、无模型：当前架构没有可让摘要调用合法复用的可审计模型调用主线（20.39、ADR-0042）。原始事件仍可由宿主审计，但当前模型没有通用压缩历史展开能力；v0.9 计划已冻结一条 current-Session、exact-block、request-only、Step-scoped 的 History Evidence 披露路线，尚未实现 |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-最新正式发布仍为 `v0.7.1`；当前工作树是未提交、未发布的 `0.8.0` F5 候选。F0–F4 原提交和旧停止点
-仍保留，但发布前体验已直接替换 TUI presentation，因此 Release Stop C 与当前候选最终全量重新打开。
-新版定向/Pilot/真实本地 Product 主线已通过；replacement 独立审查的两项 P1 与两项 P2、后续 Product
-Chat 权限、Plugin eager-cleanup、终态 task identity handoff、Provider multiline、失败证据 message 归属与
-窄屏断点都已按原 owner 根修并完成反向验证。一次真实 TUI ProductTask 已从 Proposal 走到 Promotion；
-这些修复完成聚焦短复审并清零 P0/P1/P2，候选完整全量也曾在两次红灯根修后重跑到绿色；但其后同一
-TUI 又补齐 fresh 角色对话、完整身份和 Review evidence，因此旧全量仅作历史证据。后续用户体验发现的
-“批准完成后左栏缺少宿主反馈”P2 已在原 TUI adapter 根修并反向验证；当时的 `54` 项 TUI、`215` 项相邻
-回归和 `2575` 项 collect-only 只记录那个历史 checkpoint，不再充当当前候选认证。20.38 第一版
-status-only format-1 的 `30/15/24` 与 collect-only `2573` 同样只作历史证据；随后 format-2 补齐关系/actor/
-status 语义，但短复审发现 STARTED/COMPLETED 跨 owner 过度声明，收窄 canonical message 后硬切为 format 3。
-最新真实体验证明状态时效已经恢复，同时暴露 format-3 没有说明 selected-not-inventory、Workspace mapping
-缺失与事实/推断边界；自然语言证据块修复后协议先硬切为 format 4。随后请求内旧聊天与当前宿主事实的
-优先级冲突由 Surface 前置规则根修并硬切为 format 5。M2 先以 format 6 加入同 Session 有界任务目录，
-随后以 format 7 为当前 focus 增加最小执行摘要与按需证据 Tool；旧 1–6 都明确拒绝。当前 format-7 的最新
-定向、独立审查、真实 L2 与唯一最终全量均已通过，见 20.38 与验证记录；随后才是另行授权的 clean-input
-打包、双形态离线安装与真实 Provider 网格。本轮没有执行这些发布门禁，也没有提交、push、tag 或 release。
-v0.7.1 的复审、最终全量、
-干净打包、离线安装、annotated tag 与 GitHub Release 已完成，详见
-[`validation-v0.7.1.md`](../validation-v0.7.1.md)。当前仍没有默认 Product Profile、OS 沙箱、跨进程
-Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用 Workflow DSL、
-MCP、流式输出或 Provider/model fallback；F2 只实现同一冻结模型请求的有界 retry，F3/F4 只实现
-共享 Driver、Line/Textual adapter 与纯读 observation。20.37 所述原始 F5 只是发布候选整合；其后的
-20.38 是一项明确的候选修复，新增一类严格白名单 Session 感知事件，但没有新增 Product 权威或控制能力。
+最新正式发布为 `v0.8.0`。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
+Provider retry 只复用同一冻结请求，Line/Textual 共用 Driver 与 Product control/observation，format-7
+ProductTask context 提供同 Session 有界目录与按需证据，M3 用 append-only `surface/replace` 自动压缩
+Surface，M4 只读解释当前投影和最近冻结请求。Product/Workflow/Promotion 原流仍是唯一权威；没有第二
+Runtime、第二 Product 状态、第二 EventStore、缓存或 RAG。
+
+最终候选的独立真实 L2 与无筛选全量均已通过；完整 Provider 网格、clean-input 资产及 core/`[tui]`
+离线安装也已执行。发布收口中 L2 暴露的两个真实契约遗漏（core-only 环境硬导入 Rich、第二份受保护
+Runtime pin 未同步）已在测试 owner 根修并保留反向证据。详细数字见上表与
+[`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节。当前仍没有默认 Product Profile、OS 沙箱、
+跨进程 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用
+Workflow DSL、MCP、流式输出或 Provider/model fallback；这些属于 v0.9 及之后的冻结路线。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -4691,3 +4679,24 @@ cells、"压缩失败 + 任务计数"46 cells，都会被 Textual 静默裁断�
 "新增属性必须避开框架基类命名空间"的一条具体证据。
 
 **验证。** 见 20.40 验证段与 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 7 节。
+
+### 20.41 v0.8.0 发布收口（通俗版 20.35）
+
+M3+M4 的联合发布候选以 `1d09acc` 为代码/测试基线完成公开真实 L2 和一次无筛选全量：L2 为
+`1 passed in 1398.14s (23:18)`；全量为 `2758 passed, 7 skipped`、退出码 0、耗时
+`2712.46s (45:12)`，最慢项正是其内部独立 L2（`1388.01s`）。安装 Textual 8.2.8 的解释器
+collect-only 为 `2765 tests`。
+
+发布前 L2 两次真实红灯均作为反向证据保留：第一条证明 core-only 候选环境不能导入可选 Rich；
+`tests/test_tui_context_inspection.py` 现以模块级 `importorskip("rich")` 保持核心 Wheel 边界，TUI
+解释器上的该文件仍为 `38 passed`。第二条在核心回归跑到 `2653 passed, 11 skipped` 后证明
+`tests/test_product_contract.py` 的受保护核心 pin 没有随 M3 更新；现在它与
+`tests/test_product_architecture.py` 共同绑定相同的 `AgentLoop`/`AgentRuntime` LF-normalized SHA-256，
+完整 Product contract 为 `73 passed`。两项修复都没有改变生产代码或放宽保护。
+
+同一生产源码的完整真实 Provider 网格从全新输出目录完成 `18/18 measured`、`complete=true`；严格
+Product 成功 `11/18`，single `8/11`、multi `3/6`，auto Router `5/6` 可解析且全部解析为 single。
+七条未成功样本及 `tls_eof`/`protocol`/unresolved 证据原样保留；“网格完成”只表示所有样本都有
+durable 结果，不表示 18 条质量成功。clean-input Wheel/sdist/source ZIP、Wheel E2E 与无/有 `[tui]`
+双形态离线安装在仓库外预检通过，最终资产只接受含本记录的发布提交重新构建的字节。SHA-256 属发布
+外部元数据，不写回 source ZIP 制造自引用。

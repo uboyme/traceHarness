@@ -28,39 +28,22 @@
 
 ## 1. 项目现在处于什么阶段
 
-TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布是 **`v0.7.1`**。它保留 v0.7.0 的全部 ProductTask、Benchmark 与真实网格历史，修了四条真实边界（见 20.26）：模型不能替用户开工；AgentLoop 连续取消也要写完 Attempt/Step/Turn；L4 要用目标 venv 自己的 sysconfig scheme；嵌套 L2 下的 Workspace 身份不能把 Git for Windows 的内部管理路径顶爆。第四项仍保留完整 SHA-256，只把重复的 `workspace` 目录标签去掉。发布门禁还补齐两个独立示例插件对 0.7 核心的真实 Wheel 和 Manifest 兼容元数据。只有第二项改了 `AgentLoop`，而且只改它本来就拥有的通用取消收尾，没有塞入 Product 状态；`AgentRuntime`、Supervisor 与 `PluginManager` 职责不变。v0.7.1 的复审、最终全量、干净打包、离线安装、annotated tag 和 GitHub Release 都已完成。
+TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布为 **`v0.8.0`**。
+这一版把 v0.8 的整条主线收口：模型请求先冻结再获 Session CAS 派发许可证；SQLite 是唯一生产账本；
+瞬时 Provider 重试不换模型、不改请求；Line 和 Textual 用同一个聊天 Driver；ProductTask、Workflow、
+Review、Promotion 仍从同一本账投影。M2 让下一轮 requester 能看到同 Session 的有界任务目录和最小
+执行摘要，并按需读取受限证据；M3 在不删除原始事件的前提下自动压缩太长的聊天 Surface；M4 让用户能
+看到当前投影、压缩记录和上一份真正冻结的请求。它们都没有另造第二份状态、缓存或 RAG。
 
-当前开发线已经进入 v0.8-F5：F0 把“模型调用准备”和“真正派发”拆开，让 Session CAS
-成为唯一派发许可证；F1 把所有生产事件切到一个 SQLite 数据库，并删除 JSONL compatibility；F2 只给
-同 Provider、同模型、同一份冻结请求增加有限的瞬时故障 retry；F3 把行式聊天改为共用的无界面 Driver
-与 typed update，并让 Product 进度只读两条真实状态流；F4 再给同一主线接上可选 Textual TUI。旧 F4
-确实提交并通过过 Release Stop C，F5 也对当时那版跑过最终全量；但发布前自己体验时发现界面太黑盒，
-所以现在已经在同一个 `traceh chat --tui` 入口直接换掉旧 presentation，没有留两套。新版定向和真实
-本地 Product 主线已经通过；replacement 首轮 Finding、Product Chat 在 START 前可污染 source、Plugin
-cleanup 死锁、旧终态任务遮蔽新提案、Provider 多行 Tool 参数、失败证据归错消息和窄屏事实表折行，都已
-按各自原 owner 根修并做反向验证。一次新的真实 TUI ProductTask 已经从提议走到一次性裸仓库合入；
-Provider、TUI、失败证据和跨 owner 最终复审都曾清零 P0/P1/P2，候选全量也曾重跑到绿色；但后来同一
-TUI 又补齐了 fresh 角色对话、完整身份和 Review evidence，所以旧全量现在只是历史证据。用户继续体验时
-又发现批准已经完成、右栏已经显示 completed，但左栏仍停在 awaiting approval 的 P2；现已在原 TUI
-adapter 根修并做反向验证。随后又发现更深一层的上下文断层：右栏和账本都已证明 ProductTask completed，
-下一轮 requester 模型却仍说“还没真正执行”，因为它的请求只重放聊天 Session，看不到 Product 状态。
-当前修复没有把 TUI 文案硬塞给模型，而是在下一轮 Turn 前 fresh 读取同一本 EventStore，把 task id、
-canonical Product head 和公开 status 冻成一条 exact Session 证据；Review、Promotion、Patch、digest、路径和
-失败正文仍然不可见，Product 控制面也从不把这条证据当权威。协议定向、请求重建和真实本地 Git 下一请求
-E2E 已通过；后续复审又把 STARTED/COMPLETED 两处跨 owner 说过头的文案收窄到 Product 流确实证明的边界。
-再一次真实体验已经证明 completed 时效恢复，却暴露模型会把“选中的一个 task”说成“只有一个 task”、把
-requester Workspace 路径说成 Product 执行路径，并复述内部 XML 标签。canonical 文案因此改用自然语言
-事实/边界/使用方式。再后一次体验证明同一请求里的旧 assistant 说法仍可能和当前宿主事实冲突；当前
-Surface 完整保留历史，但把最新宿主证据放到 conversation 前面，并声明旧说法不能覆盖当前事实。M2 又把
-“只看见最新一项任务”升级为同一 requester Session 的有界任务目录；M2 完成版又把 focus 在稳定检查点
-的最小执行摘要放进默认收据，并增加同 Session、精确 task id 的纯读证据 Tool。协议单线硬切到 format 7，
-旧 format 1–6 都要求新 data-dir。这个 Tool 只给受限 path/Tool outcome/Verifier/Promotion 元数据，不给原始
-Patch、Tool 参数/输出、模型文字或 Workspace 路径，也没有 START/批准/推广权限。
-模型仍可总结和合理推断，只需区分宿主事实、历史原文与推断；测试只证明请求内容，不保证
-外部模型必然照做。当前 M2 的定向、真实 L2、独立复审和唯一最终全量结果见下面表格与 20.32。干净
-打包、双形态离线安装、真实 Provider 网格、commit、push、tag 和发布仍未执行，
-所以最新正式发布仍是 `v0.7.1`。
-当前仍没有 Provider/model fallback、自动摘要、RAG 或第二套 Memory 事实源。
+最终候选在装有 Textual 8.2.8 的解释器上收集 `2765 tests`，公开真实 L2 独立通过，最终全量为
+`2758 passed, 7 skipped`、退出码 0、耗时 `45:12`。完整 18 次真实 Provider 网格全部得到可审计结果，
+其中 11 次 ProductTask 严格成功；外部 TLS/协议失败没有被补跑或藏掉。干净打包和不带/带 `[tui]` 的
+离线安装也进入发布门禁。收口时 L2 找到的两处真实遗漏——核心安装不该硬依赖 Rich、两份核心文件哈希
+必须一起更新——都在原测试 owner 修好，并保留了会失败的反向证据。具体数字见 20.35 和
+[`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节。
+
+当前仍没有 Provider/model fallback、自动模型摘要、Workspace Memory、RAG、OS 沙箱、MCP 或受控动态
+Workflow；这些是 v0.9 及之后的冻结路线，不属于 v0.8.0 已发布能力。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
 
@@ -105,7 +88,7 @@ Patch、Tool 参数/输出、模型文字或 Workspace 路径，也没有 START/
 | 有安全沙箱吗 | 没有，Workspace 边界和 Policy 只是防护层 |
 | 两个 traceh 进程能同时写同一个数据库吗 | 能。SQLite 事务和主键保护连续 seq；同库 writer（包括不同 Stream）会有界排队，默认 5 秒，超时明确失败。但“同一 Session 同时只跑一个 Turn”仍只是单进程规则 |
 | Agent 的身份存在哪里 | 存在账本里，不在内存对象里。一个 `AgentRuntime` 只是「活的实例」，可以停掉再建；停掉它不会让这个 Agent 消失，也不会让它变成另一个 Agent（第 20 节） |
-| 当前测试数 | v0.7.1 的发布数字仍见正式版 20.32 和 [`validation-v0.7.1.md`](../validation-v0.7.1.md)，不能拿来冒充当前工作树。F5 replacement 前的 `2496 passed, 7 skipped`、后续 `2555 passed, 7 skipped` 与 M1 定向数字都只证明各自历史代码树；format 1–6 的数字也全部是历史证据。当前 M2 format-7 的 Product memory/model-context/Compaction/observation/inspection/architecture/service/task-conversation 九模块为 `172 passed`，完整 TUI/optional/presentation/task-conversation 为 `82 passed`，Product F3 E2E 为 `26 passed`，安装 Textual 8.2.8 的解释器收集 `2665 tests`。独立代码和最终文档复审修正后均为 `P0=0 / P1=0 / P2=0`；仓库外 33 文件逐项匹配的临时候选提交通过真实 L2 后，无筛选最终全量得到 `2658 passed, 7 skipped`、退出码 0、耗时 `3226.49s (53:46)`。compileall、Ruff、diff、anti-hardcoding、受保护核心零 diff 和文档门禁均通过，详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) |
+| 当前测试数 | v0.8.0 最终候选在装有 Textual 8.2.8 的解释器上收集 `2765 tests`。公开真实 L2 独立得到 `1 passed in 1398.14s`；最终无筛选全量得到 `2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。收口时公开 L2 先后真实抓到 core-only 环境硬导入 Rich、以及另一份受保护 Runtime 哈希没同步；两处都在原测试 owner 修好且没有改生产代码。compileall、Ruff、diff、文档 QA、Wheel E2E、干净资产预检、core/`[tui]` 离线安装和完整 18 次 Provider 网格也已执行；详见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节 |
 
 ### 运行时依赖变了，这条必须改口
 
@@ -4181,3 +4164,23 @@ M3 之后宿主会自己压缩历史，但用户看不见三件事：现在模�
 报错。改名成 `_context_snapshot` 就好了，代码里也写清了原因。
 
 **验证。** 见正式版 20.40 与验证记录第 7 节。
+
+### 20.35 v0.8.0 是怎样真正收口的（正式版 20.41）
+
+最终候选以 `1d09acc` 为代码和测试基线，同时启动一条公开真实 L2 和整仓全量。L2 用了 23 分 18 秒，
+完整通过；全量用了 45 分 12 秒，结果是 `2758 passed, 7 skipped`。全量里最慢的一项就是它自己再跑的
+独立 L2，所以这不是把同一次结果抄了两遍，而是两个不同临时环境都走过同一套候选门禁。
+
+发版前 L2 确实抓到了两个遗漏。第一次，新增的 TUI Context 测试在文件最上面直接 import Rich，导致只装
+核心 Wheel 的 L2 连测试都收集不了；现在没装 Rich 时整份可选测试会明确 skip，装了 TUI 的解释器上仍然
+`38 passed`。第二次，M3 合法修改了 `AgentLoop` 和 `AgentRuntime`，一份架构守卫的哈希更新了，另一份
+Product contract 里的哈希却还是旧值；核心回归跑到最后才红。现在两份守卫绑定同一组真实字节，完整
+Product contract 是 `73 passed`。这两个修复都只改测试边界，没有为了过门禁改生产逻辑或删守卫。
+
+真实模型网格也从新目录完整跑了 18 次，每次都有 durable 结果。11 次 ProductTask 严格成功：single 是
+8/11，multi 是 3/6；auto Router 有 5/6 能按协议解析，而且这 5 次都选 single。其余样本留下了 TLS EOF、
+一次协议失败和一次未解析事实。这里的 `18/18 measured` 意思是“18 次都有证据”，不是“18 次全成功”。
+
+最后的包只从包含本验证记录的发布提交重新构建。Wheel、sdist、与 Git tracked files 精确一致的 source
+ZIP 都要做内容审计；核心和 `[tui]` 两种安装都要在全新、无 `.env` 的 venv 里用 `--no-index` 验证。
+最终 SHA-256 放在 GitHub Release 的外部元数据里，不写回 source ZIP 让它的哈希永远自我改变。

@@ -1,17 +1,12 @@
-# TraceHarness Py v0.8.0 发布候选验证记录
+# TraceHarness Py v0.8.0 发布验证记录
 
 验证开始日期：2026-08-30
 
-状态：**F5 实施中；真实体验后的 Product Chat、Plugin cleanup、TUI identity/layout/focus、Provider
-multiline 与失败证据归属均已按根因修复。一次真实 TUI ProductTask 已从 Proposal 走到 Promotion；
-Provider、TUI、失败证据与跨 owner 复审曾清零 P0/P1/P2。随后同一 TUI 又补齐 fresh 角色对话、fresh
-完整身份和 Review evidence；M1 随后完成完整 Patch/任务对话出口，M2 又把 requester Product context
-升级为同 Session 有界 format-7 任务目录、当前 focus 最小执行摘要和同 Session 按需证据 Tool。代码与
-测试均发生了实质变化，因此此前 `2555 passed, 7 skipped` 只保留为历史证据。M2 当前候选已经通过
-独立代码/文档复审、真实 L2 与新的唯一最终全量：`2665 collected / 2658 passed / 7 skipped`、退出码 0。
-clean-input 资产、双形态离线安装、真实 Provider 网格、commit、push、tag 与发布仍未执行。**
+状态：**v0.8.0 最终发布门禁已完成。M3+M4 联合候选通过公开真实 L2 与最终无筛选全量：
+`2765 collected / 2758 passed / 7 skipped`、退出码 0；完整 18-attempt Provider 网格、Wheel E2E、
+clean-input 资产预检和 core/`[tui]` 双形态离线安装均已执行。两次真实 L2 红灯及根修保留在第 8 节。**
 
-本记录描述从已发布 `v0.7.1` 到当前 `0.8.0` 候选的发布整合。F0–F4 的阶段事实、反例和停止点仍见
+本记录描述从已发布 `v0.7.1` 到 `v0.8.0` 的发布整合。F0–F4 的阶段事实、反例和停止点仍见
 [`TRACEHARNESS_V0.8_STAGE_PLAN.md`](plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)；本文只记录 F5 实际运行的
 全局审查、最终全量、资产、离线安装和另行授权的真实 Provider 证据。未运行项必须继续写成未运行，
 不能用 F4 或 v0.7.1 的历史数字替代。
@@ -973,3 +968,78 @@ Store 读失败/畸形 replacement/畸形 request snapshot 全部 fail closed、
 门禁，以及 commit、push、tag、release，均未执行，也不由本节宣称。按阶段计划，M3+M4 的唯一一次最终全量
 应在独立审查清零 P0/P1 之后运行；由于 `test_tui.py` 的模块级 `importorskip`，最终全量应在安装了 `tui`
 extra 的解释器上执行，否则会静默跳过全部 TUI 覆盖。
+
+## 8. v0.8.0 最终发布门禁
+
+### 8.1 公开 L2 暴露的两项真实发布契约遗漏
+
+最终门禁按用户要求一开始就并行运行公开真实 L2、无筛选全量、真实 Provider 网格和仓库外打包预检。
+L2 的两次确定性红灯没有被跳过或覆盖：
+
+1. 候选提交 `e09fcfd` 的 core-only 回归在收集 `tests/test_tui_context_inspection.py` 时因顶层
+   `from rich.cells import cell_len` 报 `ModuleNotFoundError`。这是核心 Wheel 明确不依赖可选 TUI/Rich、
+   而新增测试破坏该安装边界。`b269f30` 在该测试模块顶层加入 `pytest.importorskip("rich")`；安装
+   Textual/Rich 的解释器上该文件仍为 `38 passed`。原公开 L2 是直接反向证据。
+2. 候选提交 `b269f30` 的 L2 已把 clean-core 回归跑到 `2653 passed, 11 skipped`，随后
+   `tests/test_product_contract.py::test_the_four_protected_files_are_byte_identical` 因
+   `runtime/agent_loop.py` 的旧 pin 失败。M3 曾合法修改 `AgentLoop`/`AgentRuntime` 并更新
+   `tests/test_product_architecture.py`，但第二份守卫未同步。`1d09acc` 让两份测试共同绑定同一组
+   LF-normalized SHA-256，并在 docstring 记录 M3 的受控边界；没有删除守卫或改变生产代码。两条守卫
+   定向为 `2 passed`，完整 `tests/test_product_contract.py` 为 `73 passed`。失败的公开 L2 是该修复的
+   反向证据。
+
+另有一次重跑命令把 `--basetemp` 指向尚不存在的父目录，pytest 在 setup 前得到 Windows
+`FileNotFoundError`；创建仓库外父目录后原命令正常执行。该次属于命令环境错误，不是源码或测试 Finding，
+不计作候选门禁结果。
+
+### 8.2 最终 L2、全量与静态门禁
+
+代码/测试基线为 `1d09acc`；最终发布文档只改变说明文字，不改变生产源码或测试集合。
+
+```powershell
+C:\traceh-tui-dev\Scripts\python.exe -m pytest `
+  tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate `
+  -q -o addopts='' -p no:cacheprovider
+C:\traceh-tui-dev\Scripts\python.exe -m pytest -q --durations=30 `
+  -o addopts='' -p no:cacheprovider
+```
+
+- 公开真实 L2：**`1 passed in 1398.14s (0:23:18)`**，退出码 0；
+- 安装 Textual 8.2.8 的解释器 collect-only：**`2765 tests`**；
+- 最终无筛选全量：**`2758 passed, 7 skipped in 2712.46s (0:45:12)`**，退出码 0；
+- 全量最慢项是其内部独立真实 L2：`1388.01s`；没有使用 `--lf`、缓存结果或只跑失败项代替全量；
+- `python -m compileall -q src tests`、受保护 Product 架构/合同、修改范围 Ruff、`git diff --check`
+  与文档链接/围栏/章节对应 QA 均通过。修改范围 Ruff 仍只有已在干净基线复现的
+  `runtime/agent_runtime.py` `ASYNC240`，不是本轮新增。
+
+七个 skip 是现有且已记录的跳过；没有把可选 TUI 模块静默跳过，因为最终解释器已经安装 TUI extra。
+
+### 8.3 完整真实 Provider 网格
+
+唯一 `traceh eval` 从全新输出目录完成 **`18/18 measured`**、`complete=true`，命令退出码 0。运行基线
+为 `e09fcfd`；其后的 `b269f30` 与 `1d09acc` 只修改测试和 Markdown，生产源码逐字节不变，因此该网格
+直接认证最终生产实现，不重复消耗真实 Provider 样本。
+
+- 严格 ProductTask 成功：**`11/18`**；
+- resolved single：`8/11`，requested mode 为 single 6 次、auto 5 次；
+- resolved multi：`3/6`，requested mode 为 multi 6 次；
+- auto Router：`5/6` 严格解析，五次全部选择 single；另一次 unresolved；
+- 七条未成功样本原样保留；质量臂出现 `tls_eof`，multi 另有一次 `protocol`。没有补跑失败项、fallback、
+  覆盖报告或把不可用指标写成零。
+
+`18/18 measured` 只表示每个计划样本都有最终 durable 报告，不表示 18 个 ProductTask 全部成功；质量
+结果仍是小样本描述，不作显著性或 Provider SLA 结论。运行只通过既有配置 loader 使用秘密，没有打开、
+打印、复制或写入文档中的 Key。
+
+### 8.4 打包与离线安装
+
+发布前并行预检已通过：`tests/test_plugin_wheel_e2e.py` 为 **`18 passed in 45.37s`**；从干净 clone 构建
+`traceharness_py-0.8.0-py3-none-any.whl`、`traceharness_py-0.8.0.tar.gz` 与
+`traceharness-py-v0.8.0-source.zip`，source ZIP 与 `git ls-files` 的 436 个条目逐字节一致，含 6 个
+非 ASCII 文件名且没有 `#Uxxxx` 转义。全新 core venv 和 `[tui]` venv 均使用本地 wheelhouse 与
+`--no-index` 安装成功；核心安装不带 Rich/Textual 仍可导入 `traceh.tui`，TUI 安装含 Textual 8.2.8
+并可导入 `traceh.tui.app`，两者的 metadata/module 版本和 `traceh --help` 均为 `0.8.0`。
+
+预检资产不能冒充发布资产。最终 Wheel/sdist/source ZIP 必须从包含本节的干净发布提交重新构建，并再次
+执行 archive audit 与双形态离线安装；其最终 SHA-256 写入仓库外 `SHA256SUMS.txt` 与 GitHub Release，
+不写回 source ZIP 产生自引用。三个用户原有未跟踪路径不进入 commit 或 source ZIP。

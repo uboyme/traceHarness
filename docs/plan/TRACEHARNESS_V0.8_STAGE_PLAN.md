@@ -1,5 +1,9 @@
 # TraceHarness v0.8 冻结阶段计划
 
+> 当前状态：**v0.8.0 已于 2026-09-05 完成发布门禁。M3+M4 联合候选通过公开真实 L2 与
+> `2758 passed, 7 skipped` 最终全量；完整 Provider 网格、clean-input 资产和 core/`[tui]` 离线安装
+> 均已执行。下面的长状态段保留发布前收口历史，不再代表当前待办。**
+>
 > 状态：**已于 2026-08-29 冻结阶段目标、顺序与边界；F0–F4 原实现已提交并通过既有停止点。F5 曾对当时候选完成全局独立审查与 `2496 passed, 7 skipped` 全量，但发布前真实体验随后直接替换了 F4 TUI presentation，旧 Release Stop C 与全量只保留为历史证据。replacement 审查 Finding、Product requester START 前权限、Plugin ActivationSet eager-cleanup 死锁和终态任务→新 Proposal 身份交接都已在原 owner 根修。2026-08-31 的重复真实失败又由 SQLite + exact request replay 定位为 OpenAI-compatible Tool arguments 使用非 JSON 双三引号 multiline；现有 Provider 边界已按 ADR-0038 增加受冻结 Tool schema 约束的唯一 lexical normalization，并严格拒绝 `NaN`/正负 `Infinity`。TUI 失败投影同时绑定 exact Agent/Session/create-request/message 与实际 open Turn，只接受唯一 runtime error 和 `reason=failed` terminal；100–109 列现统一使用单栏，110 列才进入 52 列 facts 双栏。浅色 D1–D7 布局已直接替换旧 presentation，没有兼容分支。修复后已从全新目录亲自走通一次真实 `qwen-plus` TUI Proposal → START → auto/single → Review → Approval → bare Promotion，推广后的 4 项 unittest 通过且 Session/Budget/Workspace 全收敛。Provider、TUI、失败证据与跨 owner 复审曾清零 P0/P1/P2，最新相邻 owner 回归 `251 passed`；Textual gate 焦点交接也已在原 presentation owner 根修。随后同一 TUI 又原地补齐 fresh `Ctrl+T` 角色对话、fresh `Ctrl+P` 完整身份与 Review evidence，没有旧路径或兼容层。此前 `2555 passed, 7 skipped`、退出码 0、耗时 `3078.80s (51:18)` 的完整全量因此只保留为该补齐前的历史证据。用户继续体验发现批准完成后左栏没有宿主结果反馈的 P2，现已在同一 adapter 消费 typed `ProductCommandResult.advance` 根修，UI 提示不写 Session/SQLite；旧逻辑反例精确失败、恢复后转绿。当前 `54` 项 TUI、`215` 项相邻回归、`2575` 项 collect-only 已通过；前一轮独立短复审为 `P0=0/P1=0/P2=0`，本次小修尚待短复审。复审与用户确认后才运行唯一最终全量，之后才可进入 clean-input 打包、双形态离线安装、完整真实 Provider 网格、tag 与 release。**
 >
 > 冻结基线：已发布 `v0.7.1`，HEAD

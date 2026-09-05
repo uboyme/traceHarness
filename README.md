@@ -1,4 +1,4 @@
-# TraceHarness Py v0.8.0 release candidate
+# TraceHarness Py v0.8.0
 
 TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线；v0.8 再把唯一生产 EventStore 切到 SQLite，加入同 Provider/同模型/同冻结请求的有界 retry、UI-neutral Chat Driver、纯读 Product observation 与可选 Textual TUI。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
@@ -756,34 +756,20 @@ traceh doctor
 
 使用 `traceh <command> --help` 查看详细参数。
 
-## v0.8.0 发布候选状态
+## v0.8.0 发布状态
 
-当前工作树已经进入 v0.8-F5，并把唯一版本事实源切到 `0.8.0`；最新正式发布仍是
-`v0.7.1`。F0–F4 原实现和各 Release Stop 已完成，F5 也曾对当时候选完成全局审查与一次
-`2496 passed, 7 skipped` 全量；但发布前真实体验随后直接替换了旧 TUI presentation，该历史全量不能
-认证当前代码。新版 TUI 已按单一浅色标准直接替换，确定性 Pilot 与真实本地 Git Product 主线已通过；replacement 独立审查发现的
-两项 P1 与两项 P2 已按根因修复、反向验证并经短复审清零；后续真实体验发现的 Product Chat START 前
-权限问题、Plugin ActivationSet eager-cleanup 死锁和旧终态任务遮蔽下一项 START 的精确身份交接问题也都
-已按各自 owner 根修并完成确定性反例/反向验证。其后真实 `qwen-plus` 流程暴露的 multiline Tool arguments
-严格 JSON 失败，已在原 Provider 边界以 schema-gated parser 根修；严格 decoder 同时拒绝非 JSON 的
-`NaN`/正负 `Infinity`。失败面板也会从 exact Workflow message Turn 投影稳定叶子错误。修复后已亲自从
-全新目录走通 Proposal → typed START → auto/single → Review → typed
-Approval → bare target Promotion，推广后的 4 个 unittest 通过，Session/Budget/Workspace 全部收敛。
-这条定向真实验收不替代 18-attempt 网格。Provider、TUI、失败证据与跨 owner 复审曾清零
-P0/P1/P2，最新相邻 owner 回归为 `251 passed`；Textual gate 焦点交接也已在原 presentation owner 根修。
-其后的产出可见性工作又在**同一个 TUI** 中增加 fresh `Ctrl+T` 角色对话、fresh `Ctrl+P` 完整身份，并
-恢复 Review evidence，没有旧路径或兼容层。此前 `2555 passed, 7 skipped`、退出码 0、耗时
-`3078.80s (51:18)` 的完整全量因此只保留为该改动前的历史证据，不能认证当前工作树。用户体验随后发现
-批准完成后左栏没有宿主反馈的 P2，已在原 adapter 根修并反向验证。其后的 M1 已完成完整 Patch/任务对话
-出口并通过 `65` 项 TUI 与 `56` 项相邻测试、`2638` 项带 Textual 的 collect-only；这些仍只是 M1 检查点。
-M2 又把单任务 format-5 投影升级为 format-7 同 Session 有界任务目录、当前 focus 最小执行摘要和按需
-`read_product_task_evidence`，未增加 Memory 域或第二事实源；format 6 只保留为历史协议。当前 M2 的
-九模块定向组 `172 passed`、完整 TUI 组 `82 passed`、Product F3 E2E `26 passed`、collect-only `2665`
-项；仓库外精确候选提交通过真实 L2 后，唯一最终全量为 `2658 passed, 7 skipped`、退出码 0。完整证据见
-[`docs/validation-v0.8.0.md`](docs/validation-v0.8.0.md)。clean-input Wheel/sdist/source ZIP、无 `[tui]`/
-带 `[tui]` 离线安装、真实 Provider 网格、commit、push、tag 与 GitHub Release 仍未执行；候选尚未发布。
+`v0.8.0` 已完成 M3 宿主自动 Surface 压缩、M4 上下文透明度及全部既定 v0.8 能力的联合收口。最终候选在
+安装 Textual 8.2.8 的解释器上收集 `2765` 项；公开真实 L2 独立通过，最终无筛选全量为
+`2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。L2 在收口中真实暴露并根修了两项发布契约
+遗漏：core-only 环境不应硬依赖 Rich，以及两份受保护 Runtime 哈希必须同步。两项红灯、修复和反向证据均
+保留在 [`docs/validation-v0.8.0.md`](docs/validation-v0.8.0.md)。
 
-v0.8.0 候选只整合已有主线：SQLite 是唯一生产 EventStore，旧 JSONL 明确拒绝；retry 不换 Provider、
+完整真实 Provider 网格从全新输出目录完成 `18/18 measured`、`complete=true`；其中 ProductTask 严格成功
+`11/18`（single `8/11`、multi `3/6`），auto Router `5/6` 可解析且全部选择 single。其余样本如实记录
+`tls_eof`、一次 `protocol` 和一条 unresolved，不以“网格完成”冒充“全部质量成功”。最终发行资产从含本
+记录的干净提交构建并审计，核心与 `[tui]` 两种离线安装均通过。
+
+v0.8.0 的 F5 只整合已有主线：SQLite 是唯一生产 EventStore，旧 JSONL 明确拒绝；retry 不换 Provider、
 模型或冻结请求，也没有 fallback；Line/TUI 共享同一 Driver、Product control/observation 与人工
 START/Approval/Promotion 权限。Plugin Creator 和 Python Quality 独立 Wheel 各升为 `0.2.2`，它们自己
 的 Distribution/Manifest 明确覆盖 0.8；Creator 为新候选生成 `traceharness-py>=0.8,<0.9`，核心
@@ -791,7 +777,7 @@ validator 没有被放宽。过程证据见 [v0.8.0 验证记录](docs/validatio
 
 ## v0.7.1 维护版与 v0.7 已发布能力
 
-最新已发布版本是 `v0.7.1`。这个维护版只修三条已复现边界：ProductTask 开始前必须由终端用户
+上一正式发布版本是 `v0.7.1`。这个维护版只修三条已复现边界：ProductTask 开始前必须由终端用户
 对屏幕上精确 task 输入 `START`，模型的确认 Tool Call 只能请求这次宿主提示；
 AgentLoop 的取消收尾由一个 owned Task 顺序写完 Attempt/Step/Turn，重复 Ctrl+C
 不能让调用方提前返回；L4 在 `-I -S` 下检查目标 venv 时显式使用 `venv`
@@ -835,7 +821,7 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
 - v0.8 与 v0.9 的范围已经分别冻结在 [v0.8 阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md) 和
   [v0.9 阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)；v0.8 收口至 v1.0 的版本列车、Sandbox、
   MCP Client 与受控动态并发 Workflow 边界统一记录在
-  [v1.0 总路线](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)。当前 `0.8.0` 候选的 F0–F4 已完成两阶段
+  [v1.0 总路线](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)。已发布的 `0.8.0` 在 F0–F4 完成两阶段
   Model admission、SQLite 唯一生产 EventStore，以及 typed Provider failure + 同冻结请求有界 retry；F2
   已在 Release Stop B 独立复审清零 P0/P1/P2，并完成 F1+F2 集成全量；F3 已完成共享 Chat Driver、
   Line adapter、只读 Product observation 与同一 `traceh chat --tui` Textual adapter；旧 F4 停止点曾
@@ -846,8 +832,8 @@ sysconfig scheme，并拒绝逃出目标前缀的包目录。发布门禁还修�
   `251 passed`，其后完整全量 `2555 passed, 7 skipped`；这些结果均早于 fresh 角色对话/完整身份补齐。
   M1 已在唯一 TUI 主线完成完整 Patch 与不截断任务对话出口，M2 已把 requester Product context 升级为
   format-7 同 Session 有界任务目录、当前 focus 最小执行摘要和同 Session 按需证据 Tool；它仍不是 Workspace
-  Memory 或第二事实源。M2 独立复审与唯一最终全量已经通过，结果见验证记录；clean-input 资产、双形态
-  离线安装、真实 Provider 网格及发布仍未执行，F5 候选尚未发布。v0.9 在 v0.8 发布后重新批准，沿现有
+  Memory 或第二事实源。M3/M4 又补齐自动 Surface 压缩与上下文透明度；最终真实 L2、全量、clean-input
+  资产、双形态离线安装和真实 Provider 网格均已完成。v0.9 在 v0.8 发布后重新批准，沿现有
   Plugin/EventStore 主线实现 Skill、Workspace Memory、
   渐进披露和可审计检索。当前 M2 的 Session task history 不是 Workspace Memory；系统仍没有 Skill/Memory、
   OS sandbox、Provider/model fallback 或
@@ -905,7 +891,7 @@ python -m pytest -o addopts='' -q -m "not slow"
 - [v0.6.0 验证记录](docs/validation-v0.6.0.md)
 - [v0.7.0 发布验证记录](docs/validation-v0.7.0.md)
 - [v0.7.1 发布验证记录](docs/validation-v0.7.1.md)
-- [v0.8.0 发布候选验证记录](docs/validation-v0.8.0.md)
+- [v0.8.0 发布验证记录](docs/validation-v0.8.0.md)
 - [v0.8 冻结阶段计划](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
 - [v0.9 冻结阶段计划](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md)
 - [v1.0 总路线：记忆、隔离、互操作与受控并发](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)

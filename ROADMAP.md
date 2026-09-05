@@ -1,23 +1,12 @@
 # Roadmap
 
 The order below preserves the current protocol and keeps orchestration
-boundaries narrow. v0.7.1 is released; v0.8-F0-F4 are implemented and F5 is
-assembling the unreleased 0.8.0 candidate. A release-candidate usability pass
-directly replaced the first F4 TUI presentation, so the earlier Release Stop C
-and final-full results remain historical but do not certify the current TUI.
-The replacement findings were cleared; later real use drove focused root repairs
-for pre-START Product Chat authority, an eager-cleanup deadlock, task identity
-handoff, schema-gated multiline Tool arguments, truthful leaf-failure display,
-and Textual gate focus handoff. A fresh real TUI ProductTask then completed
-through one-shot Promotion; Provider, TUI, failure-evidence, and cross-owner
-re-reviews were clear with no P0/P1/P2, and the latest adjacent-owner gate was
-`251 passed`. After two recorded red gates and their root fixes, that candidate
-completed `2555 passed, 7 skipped` with exit 0. The same TUI subsequently gained
-fresh role-conversation/full-identity views and restored Review evidence, so the
-full result is now historical and a renewed focused review/final full gate is
-required before packaging. The remaining
-frozen v0.8 and v0.9 stages describe future work. Product state remains outside
-`AgentLoop`.
+boundaries narrow. v0.8.0 is released: M3 host-owned Surface compaction and M4
+context transparency close the v0.8 line without moving Product state into
+`AgentLoop` or adding a second fact source. The final candidate passed the public
+real L2 gate and `2758 passed, 7 skipped` full suite; its complete real-Provider
+grid measured all 18 attempts and reports quality failures separately from gate
+completion. The remaining v0.9+ stages describe future work.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -587,14 +576,12 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   full gate was `2496 passed, 7 skipped`, but the TUI replacement and its repaired
   review findings reopened Release Stop C and the current-candidate full gate.
   The replacement candidate subsequently completed `2555 passed, 7 skipped` in
-  `3078.80s`, exit 0. The later output-visibility work materially changed the
-  same TUI and therefore makes that full result historical rather than the
-  current final gate. The output-visibility scope now has `47` focused TUI tests,
-  `215` adjacent-owner tests and `2575` collected tests green, and its independent
-  short review is clear with no P0/P1/P2. User acceptance and one final full run, clean-input
-  archives, core/`[tui]` offline installs, the
-  separately authorized real-Provider grid, tag and release remain pending until
-  their own checkpoints clear.
+  `3078.80s`, exit 0; later output-visibility, M2 task memory, M3 compaction and
+  M4 transparency work made that result historical. The final v0.8.0 candidate
+  collected `2765` tests with Textual, passed the public real L2 gate, and
+  completed `2758 passed, 7 skipped` in `2712.46s`, exit 0. Clean-input archives,
+  core/`[tui]` offline installs and the separately authorized 18-attempt Provider
+  grid also completed; v0.8.0 is released.
 
 See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 

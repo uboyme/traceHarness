@@ -39,6 +39,7 @@ from typing import Any, cast
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
+from traceh.api.json_types import canonical_json, fingerprint
 from traceh.api.llm import LlmProvider
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
@@ -49,6 +50,12 @@ from traceh.api.plugins import (
 )
 from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
+from traceh.api.skills import (
+    SkillContribution,
+    SkillDescriptor,
+    SkillPolicy,
+    validate_skill_catalog,
+)
 from traceh.api.tools import Tool
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.activation import Activation
@@ -72,6 +79,7 @@ from traceh.plugins.errors import (
     PluginValidationError,
 )
 from traceh.plugins.selection import is_plugin_id
+from traceh.plugins.skills import FrozenSkill, freeze_skill
 from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.verification import CompletionVerifier
 from traceh.tools.middleware import ToolMiddleware
@@ -237,6 +245,7 @@ class PluginActivationSet:
         activations: tuple[Activation, ...],
         statuses: tuple[PluginStatus, ...] = (),
         notices: tuple[PluginNotice, ...] = (),
+        skills: tuple[FrozenSkill, ...] = (),
     ) -> None:
         self.tools = tools
         self.prompt = prompt
@@ -245,6 +254,14 @@ class PluginActivationSet:
         self.middlewares = tuple(middlewares)
         self.verifier = verifier
         self.identities = tuple(identities)
+        self._skills = tuple(skills)
+        self._skill_identities = self._skills
+        validate_skill_catalog(self.skill_catalog, self.identities)
+        for skill in self._skills:
+            skill.verify()
+            if not any(skill._activation is owner for owner in activations):
+                raise ValueError("skill-activation-owner-mismatch")
+        self._skill_receipt = fingerprint([item.to_dict() for item in self.skill_catalog])
         # The manager's contribution records are intentionally discarded when
         # ownership transfers to this set.  Preserve an immutable receipt of
         # the candidate at that exact boundary so a public caller may await
@@ -279,6 +296,10 @@ class PluginActivationSet:
         self._claimed_by: object | None = None
         self._state = "candidate"
         self._dispose_task: asyncio.Task[None] | None = None
+
+    @property
+    def skill_catalog(self) -> tuple[SkillDescriptor, ...]:
+        return tuple(skill.descriptor for skill in self._skills)
 
     @staticmethod
     def _capture_registry_identities(
@@ -348,6 +369,16 @@ class PluginActivationSet:
         frozen Generation projection.
         """
 
+        if (
+            len(self._skills) != len(self._skill_identities)
+            or any(
+                a is not b for a, b in zip(self._skills, self._skill_identities, strict=True)
+            )
+            or fingerprint([item.to_dict() for item in self.skill_catalog]) != self._skill_receipt
+        ):
+            raise ValueError("skill-receipt-invalid")
+        for skill in self._skills:
+            skill.verify()
         valid = (
             self.tools is self._tools_identity
             and tools is self._tools_identity
@@ -596,6 +627,7 @@ class PluginGenerationBuilder:
         policy_bindings: Sequence[ScopedPolicyBinding] = (),
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+        skill_policy: SkillPolicy | None = None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
@@ -618,6 +650,7 @@ class PluginGenerationBuilder:
         )
         self.discovery = discovery
         self.plugin_configs = plugin_configs
+        self.skill_policy = skill_policy
 
     def _candidate_application(
         self,
@@ -692,6 +725,7 @@ class PluginGenerationBuilder:
             verifier_name=self.verifier_name,
             provider_name=self.provider_name,
             composition_overlays=children,
+            skill_policy=self.skill_policy,
             discovery=discovery if discovery is not None else self.discovery,
             plugin_configs=(
                 plugin_configs if plugin_configs is not None else self.plugin_configs
@@ -725,6 +759,23 @@ class PluginGenerationBuilder:
             raise
 
 
+class _SkillRegistration:
+    """Setup-only withdrawal; cleanup ownership stays with Activation."""
+
+    def __init__(self, owned: CallbackRegistration, require_setup) -> None:
+        self._owned = owned
+        self._require_setup = require_setup
+
+    @property
+    def disposed(self) -> bool:
+        return self._owned.disposed
+
+    async def dispose(self) -> None:
+        if not self._owned.disposed:
+            self._require_setup()
+            await self._owned.dispose()
+
+
 class _PluginContext:
     """Concrete :class:`~traceh.api.plugins.PluginContext` bound to one Activation.
 
@@ -738,6 +789,9 @@ class _PluginContext:
         self,
         *,
         plugin_id: str,
+        plugin_identity: PluginIdentity,
+        skill_policy: SkillPolicy | None,
+        staged_skills: dict[str, FrozenSkill],
         activation: Activation,
         staged_tools: ToolRegistry,
         staged_prompt: PromptAssembler,
@@ -750,6 +804,10 @@ class _PluginContext:
         config: Mapping[str, object],
     ) -> None:
         self.plugin_id = plugin_id
+        self._plugin_identity = plugin_identity
+        self._skill_policy = skill_policy
+        self._staged_skills = staged_skills
+        self.skills: list[FrozenSkill] = []
         self.activation = activation
         self._staged_tools = staged_tools
         self._staged_prompt = staged_prompt
@@ -885,6 +943,47 @@ class _PluginContext:
                 self.tools.remove(contribution)
 
         return self.activation.own(CallbackRegistration(cleanup))
+
+    def register_skill(self, contribution: SkillContribution) -> Registration:
+        self._ensure_contributions_open()
+        if self._skill_policy is None:
+            raise ValueError("skill-policy-required")
+        if type(contribution) is not SkillContribution:
+            raise ValueError("skill-contribution-invalid")
+        descriptor = contribution.descriptor
+        if descriptor.skill_id in self._staged_skills:
+            raise ValueError("skill-id-conflict")
+        catalog = sorted(
+            [*(item.descriptor for item in self._staged_skills.values()), descriptor],
+            key=lambda item: item.skill_id,
+        )
+        limits = self._skill_policy.limits
+        catalog_bytes = len(canonical_json([item.to_dict() for item in catalog]).encode("utf-8"))
+        content_bytes = sum(item.content_bytes for item in self._staged_skills.values()) + sum(
+            item.content_bytes for item in (*descriptor.sections, *descriptor.resources)
+        )
+        if (
+            len(catalog) > limits.max_skills
+            or catalog_bytes > limits.max_catalog_bytes
+            or content_bytes > limits.max_content_bytes
+        ):
+            raise ValueError("skill-catalog-resource-limit")
+        skill = freeze_skill(
+            contribution, self._plugin_identity, self._skill_policy, self.activation
+        )
+        self._staged_skills[descriptor.skill_id] = skill
+        self.skills.append(skill)
+
+        async def cleanup() -> None:
+            self._staged_skills.pop(descriptor.skill_id, None)
+            if skill in self.skills:
+                self.skills.remove(skill)
+            await skill.close()
+
+        owned = self.activation.own(CallbackRegistration(cleanup))
+        # Only the original Activation may close a published resource. The
+        # plugin-facing handle can withdraw its contribution during setup.
+        return _SkillRegistration(owned, self._ensure_contributions_open)
 
     def register_prompt(self, section: PromptSection) -> Registration:
         self._ensure_contributions_open()
@@ -1244,6 +1343,7 @@ class PluginManager:
         composition_overlays: CompositionOverlayPlan | None = None,
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
+        skill_policy: SkillPolicy | None = None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
@@ -1261,6 +1361,9 @@ class PluginManager:
             )
         self._composition_overlays = composition_overlays or CompositionOverlayPlan()
         self.discovery = discovery or PluginDiscovery()
+        if skill_policy is not None and type(skill_policy) is not SkillPolicy:
+            raise ValueError("skill-policy-invalid")
+        self.skill_policy = skill_policy
         self._configs = {
             plugin_id: copy.deepcopy(dict(config))
             for plugin_id, config in (plugin_configs or {}).items()
@@ -1683,6 +1786,9 @@ class PluginManager:
         self,
         order: Sequence[str],
     ) -> None:
+        for plugin_id in order:
+            for skill in self._contexts[plugin_id].skills:
+                skill.verify()
         failures = self._contribution_identity_failures(order)
         if failures:
             raise PluginValidationError(failures)
@@ -1826,6 +1932,10 @@ class PluginManager:
             policies=self._effective_composition.policies,
             middlewares=self._candidate_middlewares(self._order),
             verifier=self._candidate_verifier(self._order),
+            skills=tuple(sorted(
+                (skill for plugin_id in self._order for skill in self._contexts[plugin_id].skills),
+                key=lambda skill: skill.descriptor.skill_id,
+            )),
             identities=self._identities,
             activation_order=self._order,
             activations=tuple(self._activations),
@@ -1865,6 +1975,7 @@ class PluginManager:
             policy_bindings=self._composition_overlays.policy_bindings,
             discovery=self.discovery,
             plugin_configs=self._configs,
+            skill_policy=self.skill_policy,
         )
         return await builder.prepare(enabled_plugin_ids)
 
@@ -1954,6 +2065,7 @@ class PluginManager:
         staged_policies: dict[str, ToolPolicy] = {}
         staged_middlewares: dict[str, ToolMiddleware] = {}
         staged_verifiers: dict[str, CompletionVerifier] = {}
+        staged_skills: dict[str, FrozenSkill] = {}
         setup_failure: PluginFailure | None = None
         try:
             # Phase 1: private staged setup.
@@ -1962,6 +2074,9 @@ class PluginManager:
                 self._activations.append(activation)
                 context = _PluginContext(
                     plugin_id=plugin_id,
+                    plugin_identity=PluginIdentity(plugin_id, loaded[plugin_id].manifest.version),
+                    skill_policy=self.skill_policy,
+                    staged_skills=staged_skills,
                     activation=activation,
                     staged_tools=staged_tools,
                     staged_prompt=staged_prompt,

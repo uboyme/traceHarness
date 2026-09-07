@@ -17,6 +17,17 @@ from traceh.api.plugins import (
 )
 from traceh.api.prompts import PromptSection
 from traceh.api.services import Registration, ServiceKey
+from traceh.api.skills import (
+    SkillChunk,
+    SkillContribution,
+    SkillDescriptor,
+    SkillLimits,
+    SkillPolicy,
+    SkillResource,
+    SkillResourceRoot,
+    SkillSection,
+    SkillSectionContent,
+)
 from traceh.api.tools import EffectKind, Tool, ToolExecutionContext, ToolOutput
 from traceh.plugins.discovery import (
     ENTRY_POINT_GROUP,
@@ -80,6 +91,15 @@ __all__ = [
     "PromptSection",
     "Registration",
     "ServiceKey",
+    "SkillChunk",
+    "SkillContribution",
+    "SkillDescriptor",
+    "SkillLimits",
+    "SkillPolicy",
+    "SkillResource",
+    "SkillResourceRoot",
+    "SkillSection",
+    "SkillSectionContent",
     "Tool",
     "ToolCall",
     "ToolCallNext",

@@ -531,7 +531,65 @@ class LocalGitWorkspaceProvider:
         ):
             raise WorkspacePathError
 
+    async def project_fingerprint(self, source_id: str, workspace: Path | None) -> str:
+        """Read-only proof of the current mapping and an exact registered checkout.
+
+        Dirty source/checkout contents do not change project identity. Directory
+        moves, clones, copied or swapped .git markers and unregistered paths do.
+        This does not provision a workspace or create the managed root.
+        """
+        if workspace is not None and not workspace.is_absolute():
+            raise WorkspaceSourceError
+        source, common = await self._inspect_source(source_id)
+        entries = await self._worktree_entries(source)
+        # The configured source can itself be linked. Mapping-only evidence must
+        # prove its registration too, before any consumer inherits this identity.
+        await self._require_project_registration(source, common, entries)
+        if workspace is not None and _path_key(workspace) != _path_key(source):
+            if (
+                not workspace.is_absolute()
+                or not workspace.is_dir()  # noqa: ASYNC240 - bounded local identity inspection
+                or _has_reparse_component(workspace)
+            ):
+                raise WorkspaceSourceError
+            top = await self._capture_path(
+                self._command("-C", str(workspace), "rev-parse", "--show-toplevel"), cwd=workspace,
+            )
+            if _path_key(top) != _path_key(workspace):
+                raise WorkspaceSourceError
+            observed_common = await self._capture_path(self._command(
+                "-C", str(workspace), "rev-parse", "--path-format=absolute", "--git-common-dir",
+            ), cwd=workspace)
+            if _path_key(observed_common) != _path_key(common):
+                raise WorkspaceSourceError
+            await self._require_project_registration(workspace, common, entries)
+        return self._fingerprint(common)
+
+    async def _require_project_registration(
+        self, checkout: Path, common: Path, entries: dict[str, str],
+    ) -> None:
+        key = _path_key(checkout)
+        if key not in entries:
+            raise WorkspaceSourceError
+        # Git lists the main worktree first; _worktree_entries preserves that
+        # order. A configured path or even a marker pointing at common is not
+        # evidence that a linked checkout is the main worktree.
+        registered = (
+            common if key == next(iter(entries))
+            else self._registered_admin_directory(common, checkout)
+        )
+        actual = await self._capture_path(self._command(
+            "-C", str(checkout), "rev-parse", "--absolute-git-dir",
+        ), cwd=checkout)
+        if _path_key(actual) != _path_key(registered):
+            raise WorkspaceSourceError
+
     async def _source_context(self, source_id: str) -> tuple[Path, Path]:
+        source, common = await self._inspect_source(source_id)
+        self._prepare_managed_root(source)
+        return source, common
+
+    async def _inspect_source(self, source_id: str) -> tuple[Path, Path]:
         source = self._sources.get(source_id)
         if source is None or not source.exists() or not source.is_dir():
             raise WorkspaceSourceError
@@ -555,7 +613,6 @@ class LocalGitWorkspaceProvider:
         )
         if not common.exists() or _has_reparse_component(common):
             raise WorkspaceSourceError
-        self._prepare_managed_root(source)
         return source, common
 
     async def _worktree_entries(self, source: Path) -> dict[str, str]:

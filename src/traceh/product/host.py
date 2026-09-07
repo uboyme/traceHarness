@@ -262,6 +262,7 @@ async def build_product_chat_host(
     actions: ProductTurnActions | None = None,
     read_models: ProductReadModels | None = None,
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+    project_scope=None,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
 
@@ -327,6 +328,19 @@ async def build_product_chat_host(
         raise ProductInputError("product-read-models-mismatch", "read_models")
     bindings = ProductResourceBindings()
     workspaces = WorkspaceService(store, workspace_provider)
+    project_binding = None
+    if project_scope is not None:
+        from traceh.product.project_scope import ProductProjectBinding
+        from traceh.projects.service import ProjectScopeService
+
+        if (
+            type(project_scope) is not ProjectScopeService
+            or project_scope.sessions is not sessions
+            or durable_log_identity(project_scope.store) is not durable_log_identity(store)
+            or project_scope.resolver is not workspace_provider
+        ):
+            raise ProductInputError("product-project-owner-mismatch", "project_scope")
+        project_binding = ProductProjectBinding(project_scope, workspaces, actor_id=approver_id)
     budgets = BudgetLedgerService(store)
     runtime_factory = ProductAgentRuntimeFactory(
         store,
@@ -346,6 +360,7 @@ async def build_product_chat_host(
         process,
         workspaces,
         workspace_policy=bindings,
+        project_binding=project_binding,
     )
     supervisor = BudgetedAgentSupervisor(
         workspace_supervisor,

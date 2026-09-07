@@ -1,6 +1,6 @@
 # TraceHarness v1.0 总路线：记忆、隔离、互操作与受控并发
 
-> 状态：v0.8.0 已发布，v0.9-F0-A/B/C 本轮授权实现及限定门禁已收口；F1 未开工，未执行 v0.9 发布级全量或 L2
+> 状态：v0.8.0 已发布，v0.9-F0-A/B/C 本轮授权实现及限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露完成限定验证；F3 项目归属与 Memory authority 已实现并通过定向验证，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；Release Stop A 独立审查 P0/P1 清零，2 项 P2 已修复并完成定向确认，未执行 v0.9 发布级全量或 L2
 >
 > 编制日期：2026-09-05；最近修订：2026-09-07（仅文档改动，19 项现有接缝定向通过；未运行全量／L2／构建／真实服务）
 >
@@ -187,7 +187,7 @@ v0.8.0 已发布，M3/M4、SQLite、同请求 Provider retry、共用 Line/TUI D
 `1100 passed, 4 skipped in 31.98s`，含新 History 81 项（37/12/16/16，不再相加）。四项 skip 为 Windows
 SQLite 两个文件符号链接、Tools 一个目录符号链接权限及 CLI NUL 路径边界。编译、40 Python Ruff、
 19 生产文件反硬编码扫描和两分区独立审查通过，七组反向保护均按预期失败后恢复，未运行全量／L2。
-F0-A/B/C 本轮授权实现收口；F1–F5 未开工，三个 Release Stop 保留原顺序，不能声称发布通过。
+F0-A/B/C 本轮授权实现收口；F1/F2 已实现，F3 authority 已接入、B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），F4–F5 未开工，Release Stop A 独立审查已通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认，三个 Release Stop 保留原顺序，不能声称发布通过。
 
 ## 6. v0.9：统一上下文与项目级记忆
 
@@ -197,12 +197,13 @@ v0.9 的阶段、owner 与 release stop 以
 
 ### 6.1 统一 Context Composer
 
-F0-B 已实现下面主线的最小子集。F0-C 已在同一主线上接入原文分页与请求授权，唯一切换到
-Session `context_protocol=2`、`f0-c-context-policy-v1` 和 `context-json-v2`；拒绝 F0-B 的协议，不迁移。
-policy 原七项加 nullable history，HistoryReadPolicy 七项上限全部显式给出；默认空策略，启用原文
-必须先启用 directory/summary，不提供 raw-only 模式。Context outer format 1、Request 十字段、
-Composition 空 catalog/digest 与 SQLite schema 1 保留。完整检索、排名、Skill/Memory 仍属后续阶段；
-本轮只读 reader 和授权接线复用原 Session/Runtime/Tool owner，已通过限定验证，F1 未开工。
+F0-B 最小主线与 F0-C 原文分页／授权已实现。F2 当前唯一协议为 Session `context_protocol=3`、
+Context format 2、`f2-context-policy-v1` 和 `context-json-v3`；旧版本明确拒绝，不迁移。
+policy 原八项加 nullable skills，HistoryReadPolicy 七项上限全部显式给出；默认空策略，启用 History 原文
+必须先启用 directory/summary，不提供 raw-only 模式。Request 十字段保留，
+Composition 既有 catalog/digest 字段由 F1 接入真实目录；SQLite 已切到 schema 2。
+F2 Skill 选择／exact+FTS 排名／模型披露已实现；Memory authority 已由 F3 实现，Memory 与跨来源通用检索留到 F4；
+本轮只读 reader 和授权接线复用原 Session/Runtime/Tool owner，已通过限定验证，F1 Skill 贡献已完成限定验证。
 
 建立唯一 request-scoped Context Input 主线，与既有 Surface 和 Product 事实投影共同构建请求；分别
 说明事实权威、控制权限和纳入预算，不把它们揉成一张“谁的文字优先”排名：
@@ -231,11 +232,19 @@ Context，检索失败／取消／预算拒绝可以留下合法不完整前缀�
 - 临时进度、模型自评、某次工具输出和未确认推断不进入权威长期记忆；
 - 多个 ProductTask 的完成事实保留在各自记录中，Workspace Memory 只提炼跨任务仍有效的项目事实与阶段关系。
 - 长期项目 scope 由宿主持久绑定 requester、后续 Session 和派生 worktree；当前临时 `workspace_id`、
-  目录路径或同名 source 不能单独证明归属。具体 binding owner／schema 在 F0 冻结，F3 接入；
+  目录路径或同名 source 不能单独证明归属。具体 binding owner／schema 在 F0 冻结，F3 已接入；
 - 每个宿主确认的事实槽只有一个 active；替代／撤销绑定 exact predecessor/digest/head，通过 CAS
   追加。跨事实槽的自然语言矛盾交宿主审核，不要求检索器自动证明所有文字互不冲突。
 
 ### 6.3 Skill 与检索
+
+F1 已完成 typed contribution、显式 SkillPolicy／资源 root 绑定、有界资源快照与 exact Lease 读取。
+目录参与 Composition revision，Context 绑定 digest；插件启用本身不注入正文、不授予 Tool。
+资源仍由原 Activation/Generation cleanup 释放；F2 由宿主 selection 流选择，按 eligible corpus
+exact+FTS/BM25/RRF 与预算冻结引用，原 Store 单事务重建索引，模型只申请下一 Step 的精确披露。
+F1 定向与相邻 31 文件 764 通过、3 项 Windows 权限跳过；F2 的 40 文件 893 通过、3 项跳过，
+六组反向保护已验证。没有全量或 L2，详情见阶段计划 §8.3、§9.4。Release Stop A 已独立审查通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认；
+范围、公开反例与本轮实测见 [审查记录](TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
 
 - Skill 是现有 trusted Plugin Generation/Lease 上的 typed contribution，不是另一套插件系统；
 - exact + SQLite FTS 是核心离线路径；本地 embedding/reranker 只能显式启用且仍为可重建派生索引；

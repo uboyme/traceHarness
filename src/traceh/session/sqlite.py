@@ -19,12 +19,13 @@ from uuid import uuid4
 
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.concurrency import await_worker_convergence
+from traceh.session import context_index
 from traceh.session.event_store import ConcurrencyConflict, Durability
 
 _T = TypeVar("_T")
 
 DATABASE_FILENAME = "events.sqlite3"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 APPLICATION_ID = 0x54524838  # "TRH8"
 DEFAULT_BUSY_TIMEOUT_SECONDS = 5.0
 
@@ -97,6 +98,14 @@ class LegacyEventStoreError(EventStoreError):
 
 class EventStorePathError(EventStoreError):
     code = "event-store-path-invalid"
+
+
+class ContextIndexWriteError(EventStoreError):
+    code = "context-index-write-failed"
+
+    def __init__(self, *, published: bool | None) -> None:
+        self.published = published
+        super().__init__()
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,8 +289,7 @@ class SqliteEventStore:
             application_id = int(connection.execute("PRAGMA application_id").fetchone()[0])
             version = int(connection.execute("PRAGMA user_version").fetchone()[0])
             has_schema_objects = (
-                connection.execute("SELECT 1 FROM sqlite_schema LIMIT 1").fetchone()
-                is not None
+                connection.execute("SELECT 1 FROM sqlite_schema LIMIT 1").fetchone() is not None
             )
             if application_id == APPLICATION_ID and version == SCHEMA_VERSION:
                 connection.execute("COMMIT")
@@ -290,6 +298,12 @@ class SqliteEventStore:
                 raise EventStoreSchemaError("database is not current schema")
             connection.execute(_CREATE_STREAMS_SQL)
             connection.execute(_CREATE_EVENTS_SQL)
+            for ddl in (
+                context_index.CREATE_MANIFEST,
+                context_index.CREATE_ITEMS,
+                context_index.CREATE_FTS,
+            ):
+                connection.execute(ddl)
             connection.execute(f"PRAGMA application_id = {APPLICATION_ID}")
             connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
             connection.execute("COMMIT")
@@ -337,8 +351,7 @@ class SqliteEventStore:
                     " ".join(str(row[3]).split()),
                 )
                 for row in connection.execute(
-                    "SELECT type, name, tbl_name, sql FROM sqlite_schema "
-                    "ORDER BY type, name"
+                    "SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY type, name"
                 )
             )
             expected_objects = tuple(
@@ -359,10 +372,19 @@ class SqliteEventStore:
                     )
                 )
             )
-            if objects != expected_objects:
-                raise EventStoreSchemaError(
-                    "database schema objects do not match current schema"
+            expected_objects = tuple(
+                sorted(
+                    (
+                        *expected_objects,
+                        *(
+                            ("table", name, name, " ".join(ddl.split()))
+                            for name, ddl in context_index.INDEX_DDL.items()
+                        ),
+                    )
                 )
+            )
+            if objects != expected_objects:
+                raise EventStoreSchemaError("database schema objects do not match current schema")
             stream_columns = tuple(
                 (str(row[1]), str(row[2]), int(row[3]), int(row[5]))
                 for row in connection.execute("PRAGMA table_info(streams)")
@@ -454,6 +476,8 @@ class SqliteEventStore:
 
     def _translate_database_error(self, error: sqlite3.Error) -> EventStoreError:
         message = str(error).lower()
+        if "no such module: fts5" in message:
+            return EventStoreUnavailable("context-index-fts5-unavailable")
         if "locked" in message or "busy" in message:
             return EventStoreBusy()
         if isinstance(error, sqlite3.IntegrityError):
@@ -472,6 +496,58 @@ class SqliteEventStore:
         except asyncio.CancelledError as cancellation:
             await await_worker_convergence(task)
             raise cancellation
+
+    def _context_index_sync(self, corpus, *, terms=None, probe=False):
+        connection = self._connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE" if terms is None and not probe else "BEGIN")
+            if probe:
+                result = context_index.matches(connection, corpus, require_current_sources=False)
+            elif terms is None:
+                context_index.rebuild(connection, corpus)
+                result = corpus.key
+            else:
+                result = context_index.query(connection, corpus, terms)
+            connection.execute("COMMIT")
+            return result
+        except BaseException as error:
+            if connection.in_transaction:
+                connection.execute("ROLLBACK")
+            if isinstance(error, sqlite3.Error):
+                raise self._translate_database_error(error) from None
+            raise
+        finally:
+            connection.close()
+
+    async def rebuild_context_index(self, corpus: context_index.ContextCorpus) -> str:
+        try:
+            return await self._run(lambda: self._context_index_sync(corpus))
+        except (asyncio.CancelledError, Exception) as primary:
+            # _run has already converged the mutation worker. A second owned
+            # read proves whether this exact complete derived snapshot exists;
+            # it never retries the mutation or edits a canonical event.
+            task = asyncio.create_task(
+                self._run(lambda: self._context_index_sync(corpus, probe=True))
+            )
+            try:
+                published = await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await await_worker_convergence(task)
+                try:
+                    published = task.result()
+                except (asyncio.CancelledError, Exception):
+                    published = None
+            except Exception:
+                published = None
+            failure = ContextIndexWriteError(published=published)
+            if isinstance(primary, asyncio.CancelledError):
+                raise primary from failure
+            raise failure from primary
+
+    async def query_context_index(
+        self, corpus: context_index.ContextCorpus, terms: tuple[str, ...]
+    ):
+        return await self._run(lambda: self._context_index_sync(corpus, terms=terms))
 
     def _append_sync(
         self,

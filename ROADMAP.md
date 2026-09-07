@@ -9,7 +9,7 @@ grid measured all 18 attempts and reports quality failures separately from gate
 completion. The working tree now implements the v0.9-F0-B minimal Context request
 path and completed its targeted gates. F0-C History disclosure and its final
 targeted gates are also complete; F0-A/B/C's authorized implementation is closed,
-while F1-F5 have not started. This is not a v0.9 release gate.
+while F1 Skill contributions are complete and F2-F5 have not started. This is not a v0.9 release gate.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -588,14 +588,14 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 
 See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 
-## v0.9: Host-owned long context — F0-A/B/C complete, F1 not started
+## v0.9: Host-owned long context — F0-A/B/C, F1 and F2 implemented; Stop A reviewed and both P2 findings fixed
 
 - F0-B implements one request-scoped Context Input path on the existing
   Session/Lease/Request owners. Each Step freezes Context before Composition and
   reuses it for same-request retry. Its one user reference message precedes all
   Surface messages, including an empty wrapper under the explicit empty policy.
   Context is durable and exactly reconstructable, never projected into Surface.
-- F0-C explicitly cuts over to Session `context_protocol=2`,
+- F0-C introduced Session `context_protocol=2`,
   `f0-c-context-policy-v1` and renderer `context-json-v2`; old F0-B Sessions are
   rejected without migration or fallback. The narrow policy retains seven fields
   and adds nullable `history`, whose seven explicit limits govern the pure reader.
@@ -611,18 +611,43 @@ See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 - F0-C fixes Workspace observation to null and freshness to unknown: existing
   base revisions are not execution-time revision facts bound to historical Tool
   results. Real matched/stale observations belong to F3/F4 source integration.
-  Full retrieval configuration, ranking, Skill, Memory and governance UI remain
-  later-stage work; F0-C implementation and its final targeted gates are complete.
-- Add typed Skill contributions to the existing trusted
-  Activation/Generation/Lease lifecycle. Selection does not enable a plugin,
-  publish a Generation or grant a Tool; associated resources remain owned by the
-  leased Generation.
-- Add host-approved, Workspace-scoped, append-only Memory in the same EventStore.
+  F2 adds Skill selection/disclosure and exact+FTS ranking; Memory, cross-source configuration and
+  governance UI remain later-stage work. F0-C implementation and its final targeted gates are complete.
+- F1 implements typed Skill contributions on the existing trusted
+  Activation/Generation/Lease lifecycle. Explicit host limits and identity-bound
+  roots govern bounded immutable resource snapshots. Catalog metadata/digest enter
+  Composition revisions; Context binds the exact catalog without injecting Skill
+  messages or granting Tools. Old Leases retain old bytes through reload; existing
+  Activation cleanup releases retired resources. F2 owns durable selection,
+  retrieval and model disclosure.
+- F2 implements host-only durable selection, eligible-corpus BM25 and exact-lane RRF,
+  atomic reference budgets, and receipt-only four-tier disclosure for the immediate next Step.
+  Index rebuild uses the existing Store worker/transaction/close/backup owner. Historical requests
+  reconstruct without consulting current indexes or resources; same-Step retries never retrieve again.
+  The current unique protocol is Session 3, Context 2, f2-context-policy-v1, context-json-v3 and
+  SQLite schema 2. Old versions are refused; no migration. Local semantic/reranker work remains deferred.
+  The 40-file targeted gate passed 893 cases with 3 Windows symlink skips; six reverse guards passed.
+  Release Stop A independently cleared P0/P1; both P2 findings have since been fixed. Context uses the
+  shared tier-aware Skill identity, and exact matching preserves complete literal paths with identifier
+  boundaries. The 12-file repair gate passed all 273 cases, including 19 new cases; restoring the old
+  implementations reproduced eight expected failures before the fixes were restored. See the
+  [review record](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md). No full suite or L2 was run.
+- **F3 authority implemented; B-P1-01 closed, Stop B re-review passed:** host-approved, project-scoped,
+  append-only Memory now shares the existing EventStore.
   Models may propose bounded candidates but cannot approve, supersede or revoke
   them. Host-owned durable project bindings connect requester Sessions, later
   Sessions and derived worktrees; temporary workspace ids or matching paths are
   not project authority. Each host-confirmed fact slot has at most one active
-  value, with exact-predecessor CAS for replacement and revocation.
+  value, with exact-predecessor CAS for replacement and revocation. Runtime host decisions
+  borrow the existing Lease; Product worktrees bind after attachment and before dispatch.
+  Historical evidence survives workspace release without reviving access. No Memory Context
+  injection, retrieval, new SQLite schema, migration or governance UI is included in F3.
+  B-P1-01 is fixed: source, consumer and mapping-only reads now share Git registry/admin
+  validation. Linked source marker swaps fail before Memory reads or approvals; valid primary
+  consumers no longer depend on which checkout is configured as source. Thirteen new cases
+  pass; the fix-stage 11-file gate reports 189 passed / 1 skipped. Post-fix independent
+  review found P0=0/P1=0/P2=0; the 11 repository files plus four independent probes
+  report 193 passed / 1 skipped. Stop B passed; F4 has not started. See the [Stop B review](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
 - Use exact and SQLite FTS retrieval as the core path, with progressive disclosure,
   two host filters and explicit Context Budget. Local embeddings/rerankers remain
   optional, offline and derived.
@@ -648,7 +673,7 @@ checks are design evidence. F0-B's final 36-file targeted gate collected 1079 ca
 and finished with `1076 passed, 3 skipped in 20.22s`; the three Windows skips are
 two symlink privilege cases and one invalid NUL path. Its 59 new Context/protocol/
 Runtime cases (24/24/11) are included in that result, not added to it. That stage
-introduced `context_protocol=1`; F0-C now replaces it with 2 while keeping Context
+introduced `context_protocol=1`; F0-C replaced it with 2 at that stage while keeping Context
 outer format 1, the empty Composition catalog/digest, ten Request snapshot fields
 and SQLite schema 1. F0-C's final 38-file gate collected 1104 cases and finished
 with `1100 passed, 4 skipped in 31.98s`. Its 81 new History cases (reader 37,
@@ -658,15 +683,24 @@ case and one CLI invalid NUL path. Compileall, changed-Python Ruff (40 files),
 bounded hardcoding checks (19 production files) and two independent review
 partitions passed; seven reverse-protection checks failed for the intended causes
 before restoring the guards. F0-A/B/C's authorized implementation is closed,
-F1 has not started, and release-level full-suite/L2 gates have not run.
+F1 and F2 are also implemented with targeted validation; Stop A independently cleared P0/P1 and both recorded P2 findings are now fixed.
+Release-level full-suite/L2 gates have not run.
 Tests ran from an isolated empty temporary working directory without loading the
 repository's real `.env`. Compileall, changed-Python Ruff and bounded independent
 reviews passed; the existing TUI inspector now counts Context reference separately
 from Product and conversation using the shared request rebuild. No full suite, L2,
-build, network or real Provider ran for this stage. F1-F5 and the
+build, network or real Provider ran for this stage. F2-F5 and the
 three release stops remain in order. Daily owner checks do not automatically run full/L2 gates;
 an unfiltered final suite already includes real L2. See the
 [frozen v0.9 stage plan](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md).
+
+F1's final explicit 31-file related gate collected 767 cases and finished with
+`764 passed, 3 skipped in 32.06s`; the skips were Windows symlink privilege limits.
+Discovery/list/inspect now explicitly reports Skill visibility after successful activation,
+without importing disabled plugins. Five inverse checks verified prompt isolation, catalog
+receipts, resource digests, Lease validity and refusal of Tool grant fields. Compileall and
+changed-file Ruff passed; no full/L2 gate, wheel build, network or real Provider ran.
+See the [F1 contract and evidence](docs/plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md#13-f1-实现与限定验证证据).
 
 ## v0.10: Host-owned Sandbox
 

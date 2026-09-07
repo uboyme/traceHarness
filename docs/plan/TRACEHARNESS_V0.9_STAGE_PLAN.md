@@ -2,7 +2,7 @@
 
 > 状态：**2026-08-29 冻结产品路线，2026-09-05 纳入 M3 History Evidence；2026-09-07 按 v0.8.0
 > 发布基线修订身份、失败前缀、索引、评测与阶段合同；同日完成获授权的 F0-A ADR／设计冻结。
-> F0-A/B/C 本轮授权实现与最终限定门禁已收口；F1–F5 未开工，未执行发布级全量或 L2。**
+> F0-A/B/C 本轮授权实现与最终限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露已实现并完成限定验证；F3 项目归属与 Memory authority 已实现；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认，未执行发布级全量或 L2。**
 >
 > 前置：v0.8.0 已完成发布，源码版本、发布 tag 与记录已核对。F0-A 仅交付设计文档；19 项现有接缝
 > 定向测试通过，不代表新协议实现。F0-B 的 59 项新主线已包含在最终 36 文件门禁中：
@@ -12,12 +12,12 @@
 >
 > 本文冻结 Skill、Memory、M3 压缩历史证据、渐进式披露与 RAG 的单一 Context Input 主线，区分
 > 已发布基线、计划合同与尚待验证的实现；版本目标和三个 Release Stop 保持不变。
-> 它不表示当前已有这些能力，也不授权 commit、push、tag、release、联网或真实模型运行。
+> 它不表示 F4–F5 能力已实现或 v0.9 已发布；Release Stop B 修复后独立复审已通过，也不授权 commit、push、tag、release、联网或真实模型运行。
 
 F0-A 的决定与字段合同已冻结为 [ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)、
 [ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md) 和
 [F0 设计合同](TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md)。本计划维护阶段与验收依赖，详细字段以该合同
-为唯一规范；F0 整体仍须 F0-B/C 真实主线验证通过。
+为唯一规范；F0-A/B/C 已完成真实主线验证，F1 的实现证据见 §8.3。
 
 ## 1. 单一产品目标
 
@@ -373,7 +373,7 @@ catalog 必须为空；receipt 明确记录 Session 范围，不虚构尚未建�
 不为原型创建另一 Runtime、假 Memory authority 或私有 pending 缓存。F0-C 验证同一主线
 的历史披露边界，不提前做完整治理 UI。
 
-F0-C 的详细字段以设计合同 §2–5 为准：Session 唯一切到 `context_protocol=2`，拒绝 F0-B 的 1；
+以下是 F0-C 历史切换记录；当前 F2 唯一版本见设计合同 §2–5、§14：Session 唯一切到 `context_protocol=2`，拒绝 F0-B 的 1；
 outer Context format 仍为 1，policy 为 `f0-c-context-policy-v1`，config 原七项加 nullable `history`。
 HistoryReadPolicy 恰七项显式资源／分页／请求上限；只支持关闭、目录／摘要参考、目录／摘要加 reader，
 没有 raw-only 模式。renderer 唯一为 `context-json-v2`；默认仍注入一条空 wrapper 的 request-only
@@ -436,11 +436,11 @@ ADR-0043 已覆盖共同 Context Input/Retrieval/Skill/History，ADR-0044 独立
 获授权主线验证证明 source boundary、重建、失败前缀及 History 失效正确后才可进入 F1。不能用文档审阅
 代替原型通过，也不能因后续 owner 尚未实现就在 F0 堆齐全部 v0.9 功能。
 
-## 8. v0.9-F1：现有插件主线上的 typed Skill contribution
+## 8. v0.9-F1：现有插件主线上的 typed Skill contribution（已完成）
 
 ### 8.1 实现范围
 
-- 在公共 Plugin SDK 增加最小 Skill descriptor/contribution；准确名字由实现决定；
+- 公共 Plugin SDK 已增加 SkillDescriptor/SkillContribution、section/resource/chunk DTO 和 SkillPolicy；
 - contribution 只含稳定 metadata、prompt/reference section、资源 digest、贡献 plugin identity 与兼容
   条件，不含 Tool grant；
 - setup 写入候选私有 registry，经现有 conflict/health/receipt 后随 ActivationSet 原子发布；
@@ -449,7 +449,7 @@ ADR-0043 已覆盖共同 Context Input/Retrieval/Skill/History，ADR-0044 独立
 - Generation 捕获 immutable Skill catalog，Lease 期间 reload 不改变 catalog bytes；
 - discovery 仍 metadata-only、不 import 未启用插件。若安全元数据不足，UI 显示“启用后可见”，不偷 import；
 - Activation transaction 负责验证 resource descriptor、相对路径、root containment 与 digest；成功发布后，
-  Composition Generation 拥有不可变 descriptor/只读 root handle，Lease 保证读取期间不被 drain cleanup
+  Composition Generation 拥有不可变 descriptor/有界 bytes 的只读 root snapshot，Lease 保证读取期间不被 drain cleanup
   抽走，最终仍由现有 Generation owner 收敛；
 - resource 读取只通过 leased contribution 接口，路径不能逃出已验证的 Wheel/resource root；不得让
   retriever、Skill selector 或插件私有缓存成为第二 resource owner。
@@ -463,12 +463,32 @@ ADR-0043 已覆盖共同 Context Input/Retrieval/Skill/History，ADR-0044 独立
 - old Lease 看旧 catalog，new Lease 看新 catalog，cleanup 不抽走在用资源；
 - resource read 与 reload/drain 并发时，旧 Lease 读到旧 digest bytes，新 Lease 读新 Generation；所有
   Lease 释放前 root 不关闭，释放后 cleanup 恰好一次；
-- 选择 Skill 不启用插件、不发布 Generation，也不获得该插件另行贡献的 Tool；
+- F1 的 Skill 注册不自动调用 Prompt 或 Tool 注册、不注入模型；持久选择及“选择不赋权”的验证属于 F2；
 - enabled 但未选择/未命中的 Skill，其正文在 `composition/snapshot.system_prompt`、Surface messages 和
   最终 request messages 中均不存在；临时改成 `register_prompt` 时该反例必须稳定泄漏并变红；
 - 临时移除 catalog receipt、resource digest 或 no-tool-grant 守卫，公开路径按根因变红。
 
-## 9. v0.9-F2：Skill 选择、检索与渐进披露
+### 8.3 已完成的实现与证据
+
+实际 owner 为 `api/skills.py`、`plugins/skills.py`、既有 PluginContext/Manager/ActivationSet、
+Generation/Lease 与 Composition/Context reader。宿主显式提供 SkillPolicy 五项正整数上限和
+exact PluginIdentity→absolute root 绑定；默认 None 拒绝 Skill 注册，缺失资源 root 不猜路径。
+注册时校验原始 UTF-8／SHA-256 并捕获有界只读资源快照，Registration 只允许 setup 撤销，
+发布后由原 Activation 唯一清理。新旧 Lease 在源文件覆盖／删除后仍各读自己的 bytes。
+
+Composition 持久化真实 catalog/digest 并纳入 revision；Context 绑定 exact digest，非空目录记
+not-selected，Skill blocks/预算仍为零。Session marker=2、Context outer=1、renderer=v2 和 SQLite=1
+不变。未新增选择、检索、Tool grant、自动 Prompt、资源任务、持久流或第二事实源。
+
+最终同一组 **31 文件 `767 collected / 764 passed / 3 skipped in 32.06s`**。三项为 Windows 符号链接
+权限跳过；两个新 Skill 文件为 51 通过、1 跳过，已计入总数。五组反向验证证明 prompt 泄漏、candidate
+receipt、resource digest、Lease 有效性和 SDK Tool grant 字段拒绝，之后逐字节恢复源码。
+compileall、修改范围 23 Python 文件 Ruff、文档与反硬编码检查见设计合同 §13。元数据 list/inspect 明确
+显示成功激活后才可见 Skill，仍不 import 未启用插件。未运行全量、L2、Wheel、联网或真实 API，没有
+提交／推送／发布。
+F2 已接入持久选择和模型披露（§9.4）；Release Stop A 已在 F1/F2 之后完成独立审查（§9.3），不由局部门禁代替。
+
+## 9. v0.9-F2：Skill 选择、检索与渐进披露（实现与限定验证完成）
 
 ### 9.1 选择与 retrieval
 
@@ -494,7 +514,59 @@ ADR-0043 已覆盖共同 Context Input/Retrieval/Skill/History，ADR-0044 独立
 F1/F2 独立审查 Plugin/Generation/selection/Request 边界。P0/P1 清零后才进入 Memory authority；无需为
 停止点反复跑全量或提前发布，但不能用未来 Memory 测试掩盖 Skill lifecycle 缺陷。
 
+2026-09-07 首轮独立审查为 **P0=0/P1=0/P2=2**，符合 Stop A 门槛；随后两项 P2 均已修复并定向确认，
+当前已登记 Finding 全部关闭。Context 去重统一到既有 Skill 内容身份；exact 匹配保留完整字面量和标识边界。
+新增 19 项覆盖正常请求、重复拒绝和近似反例；恢复旧逻辑时 8 项按根因失败，随后逐字节恢复修复代码。
+最终限定 12 文件 **273 collected / 273 passed in 54.98s**，包含新增项；首审与修复的分开证据、
+具体测试文件见 [Release Stop A 记录](TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
+本次只修复两项 P2，未提前开始 F3，未运行全量或 L2。
+
+### 9.4 F2 实现与本轮限定门禁
+
+已接入宿主 `runtime.skill_context.select/rebuild_index`、同 Store 的 selection 事件流、
+eligible exact+FTS/BM25/RRF、四级披露及紧邻下一 Step 的 receipt。
+Context 与索引的详细当前字段只在设计合同 §14 定义：Session 3、Context 2、
+f2-context-policy-v1/context-json-v3、SQLite 2；拒绝旧版本，无自动迁移。
+SkillRetrievalPolicy 全部十五项由宿主明确配置，semantic/reranker 未实现，不自动装包；
+跨来源 Memory/History 通用配置留到 F4。未新增 CLI/TUI 治理（F5）。
+
+本轮使用隔离空临时 cwd、绝对测试路径、独立 cache/basetemp，不读取真实 .env。
+显式 40 文件集合共 **896 项，893 passed / 3 skipped in 50.33s**；
+Windows 符号链接权限跳过三项。六组反向保护均由真正进入主线的反例证明，随后恢复原文件。
+未跑全量、L2、Wheel、联网或真实 Provider，未提交、推送、发布。随后 Release Stop A 独立审查结果见 §9.3；
+以下保留实现阶段的原始验证集合，不当作本轮审查新执行，也不授权 F3 开工。
+
+以下均位于 tests/；collect-only 与执行使用同一集合，不扫描完整 tests 目录：
+
+- `test_skill_selection.py`、`test_skill_retrieval.py`、`test_context_index.py`、`test_skill_context_failures.py`；
+- `test_skill_contributions.py`、`test_skill_resources.py`、`test_context_input.py`、`test_context_runtime.py`；
+- `test_context_request_protocol.py`、`test_history_reader.py`、`test_history_requests.py`、`test_history_runtime.py`；
+- `test_history_tool.py`、`test_sqlite_event_store.py`、`test_sqlite_event_store_architecture.py`、`test_event_store.py`；
+- `test_event_store_contract.py`、`test_event_store_cross_process.py`、`test_recovery.py`、`test_surface_and_invariants.py`；
+- `test_model_retry.py`、`test_composition_generations.py`、`test_composition_scope_overlays.py`、`test_plugin_composition_coordinator.py`；
+- `test_plugin_activation_sets.py`、`test_plugin_cancellation.py`、`test_plugin_runtime.py`、`test_plugin_manager.py`；
+- `test_plugin_extended_contributions.py`、`test_plugin_selection.py`、`test_session_plugin_identity.py`、`test_product_architecture.py`；
+- `test_product_contract.py`、`test_product_model_context.py`、`test_tui_context_inspection.py`、`test_plugin_sdk.py`；
+- `test_plugin_discovery.py`、`test_cli_plugins.py`、`test_cli_plugin_selection.py`、`test_plugin_composition_stage_c.py`；
+
+
+另对共享 Session 协议切换的 CLI／Inspector／Product 只读入口补查五个不重叠文件：
+`test_cli_read_only_commands.py`、`test_cli_resume_safety.py`、`test_cli_resume.py`、`test_inspector.py`、`test_product_inspection_leaf_failure.py`。
+同集合 collect-only **184 项**，执行 **183 passed, 1 skipped in 3.10s**（Windows NUL 路径边界）。
+两批合计 **45 文件、1080 collected、1076 passed、4 skipped**，不是一次全量运行；
+反向保护恢复后的八文件确认另得 **161 passed, 2 skipped**，与上述集合重叠，不再加总。
+
+`compileall -q src tests`、40 个修改 Python 文件 Ruff、23 个生产文件反硬编码扫描与当前
+测试示例词扫描均通过。八份文档 QA 检查了 463 个相对链接、30 个闭合 Mermaid 块、两份上下文
+0–20 编号对应关系和新增秘密／编码损坏，均无问题；`git diff --check` 通过。
+
 ## 10. v0.9-F3：Workspace Memory append-only authority
+
+当前实现：ProjectScopeService / projects:catalog 与 MemoryService / memory:project_id 已接入，
+包括 Runtime 的 proposal-only Tool、借原 Lease 的人工决策门面、Product/Workspace 的首次执行前
+归属继承和取消收敛；没有 Memory 检索、Context 注入或治理 UI。实际模块、配置、来源和生命周期
+边界见[正式上下文 7.6](../note/project-context.md#76-f3项目归属与-append-only-memory-authority)。
+Release Stop B 首审保留于 §10.6，修复定向确认见 §10.7；修复后独立复审已通过，B-P1-01 关闭（§10.8）。
 
 ### 10.1 状态与 scope
 
@@ -515,8 +587,8 @@ proposed -> active -> superseded | revoked
 
 当前 [`SessionService.create_session`](../../src/traceh/session/service.py) 只保存解析后的目录；
 [`workspace_identity`](../../src/traceh/workspaces/service.py) 按 provision operation/request 生成
-单个 managed worktree 身份。它们不是现成的长期项目 identity。F0 必须选定同一 EventStore 中 scope
-binding 的唯一宿主写入／读取 owner；F3 把它与 Memory authority 接通，并证明：
+单个 managed worktree 身份。它们不是现成的长期项目 identity。F0 已选定同一 EventStore 中 scope
+binding 的唯一宿主写入／读取 owner；F3 已由 ProjectScopeService 与 MemoryService 接通以下关系：
 
 - requester、后续 Session、派生 Agent/worktree 的关联都来自明确的宿主配置／动作及 durable binding；
   路径相同、`source_id` 同名或模型 payload 相同不能单独证明同项目；
@@ -543,13 +615,13 @@ owner 回答。阶段、路线或决定变化时追加 supersede/revoke，不原
 
 ### 10.3 必测与反向验证
 
-- proposal 未经 exact digest 宿主批准，后续 Step 不可见；
+- proposal 未经 exact digest 宿主批准不可 active；F3 后续 Step 不注入 Memory，active 检索／注入由 F4 接通；
 - 同 request id 不同内容、错误 source/scope/digest、重复 active identity fail closed；同事实槽不同
   proposal 竞争 active、过期 predecessor/head 的替代或撤销均拒绝；
 - 跨 Workspace approval/proposal/source 引用在 append 前零写入拒绝；
 - 同项目两个 Session 和合法派生 worktree 读取同一 active Memory；同名 source／同路径但没有正确
   binding 的另一项目不能读取或批准；scope 创建／绑定中途失败不留下可被误认的授权；
-- revoke/supersede 后新 Step 不再选旧版本，历史 snapshot/reconstruction 保留；
+- revoke/supersede 后 fresh active view 不再含旧版本，历史 snapshot/reconstruction 保留；新 Step 选择旧版的拒绝由 F4 接入验证；
 - unknown schema/event/order、篡改 source、敌意 payload fail closed；
 - append cancel/unknown 三态对账不重复激活，close 前 owned worker 收敛；
 - plugin/Skill/model 没有 writer/EventStore 句柄；
@@ -557,7 +629,78 @@ owner 回答。阶段、路线或决定变化时追加 supersede/revoke，不原
 
 ### 10.4 Release Stop B
 
+修复后独立复审 P0=0/P1=0/P2=0，B-P1-01 已关闭，Stop B 通过；F4 未开始。
+
 Memory authority 独立 P0/P1 审查清零后，才允许把它交给 RAG。检索质量不能补救错误 authority。
+
+### 10.5 F3 实现验证记录
+
+F3 初次实现新增六文件 100 项通过：核心五文件 94 passed in 4.86s；真实本地 Product/Git 六项
+6 passed in 34.09s。字段、错误 source/scope/digest/head、同槽竞争、重复操作、未知提交、重复取消、
+重开 SQLite、released 历史证据与当前访问隔离、model-only proposal、Store/Session/resolver owner
+错配均覆盖。释放后的历史来源不撤销或复活现有事实；F4 的 Context 选择尚未接入。
+
+明确限定以下 27 文件，不扩展为全量：
+
+`test_memory_authority.py`, `test_memory_convergence.py`, `test_memory_runtime.py`
+`test_memory_product.py`, `test_memory_sources.py`, `test_project_scope.py`
+`test_local_git_workspaces.py`, `test_workspace_supervision.py`, `test_workspace_catalog.py`
+`test_workspace_architecture.py`, `test_product_f3_e2e.py`, `test_product_service.py`
+`test_product_contract.py`, `test_product_architecture.py`, `test_product_observation.py`
+`test_history_reader.py`, `test_history_runtime.py`, `test_history_tool.py`
+`test_runtime_factory.py`, `test_runtime_e2e.py`, `test_runtime_dispose.py`
+`test_context_runtime.py`, `test_skill_context_failures.py`, `test_skill_selection.py`
+`test_event_store_contract.py`, `test_sqlite_event_store.py`, `test_sqlite_event_store_architecture.py`
+
+首轮 491 collected，486 passed / 3 skipped / 2 failed in 459.83s。Product 顺序断言在干净
+HEAD 22799a3 独立复现 1 failed in 23.32s；现按 F0 Context 在前的合同精确比较持久 wrapper，
+不改生产消息顺序。架构守卫将 project-inherit: operation id 误认成流，现注明用途并验证 bridge
+只调用 ProjectScopeService、不直接 append。两处改动后的 18 项确认通过（20.72s）。
+
+随后内容规则补充原始字符串／JSON 引号和大小写的已识别凭据检查，并补齐同底层 Store 的 foreign
+Session 与 resolver 反例，均在上述 100 个新增用例中重新验证。最终限定收集为 496；去重覆盖为
+493 passed + 3 skipped，来自首轮和对应 owner 的修订复验，不冒充一次 496 项运行。三项 skip 是
+Windows 下 Git dangling symlink 与 SQLite 两种 database symlink 权限边界。
+
+两组反向测试：移除未绑定 Session 拒绝产生 3 项预期失败，移除固定内容规则产生 2 项秘密写入
+拒绝失败；逐字节恢复后 5 passed。compileall、29 文件 Ruff、19 生产文件反硬编码、限定 collect、
+文档 QA、git diff --check 通过。未运行全量、L2–L4、Wheel、联网或真实 Provider；未提交、推送。
+以上保留 F3 实现验证口径；随后 Stop B 首审未通过，不能用这些测试替代 §10.6 的审查结论。
+
+### 10.6 Release Stop B 首审记录
+
+2026-09-07：P0=0、P1=1、P2=0，未通过。configured source 为 linked worktree 时会跳过
+双向管理目录核对；真实 marker 交换后 Memory read/approve 仍成功，新增 active，登记 B-P1-01。
+上述是首审时的缺陷证据；用户随后授权的修复与定向确认见 §10.7。
+修复归属为 LocalGitWorkspaceProvider，不增加第二 scope 或 Workspace 生命周期。
+
+本轮核心六文件 100 项、相邻五文件 134 项全部通过；同一具名 11 文件收集 234 项。29 个 F3
+Python 文件 Ruff、19 个生产文件反硬编码检查通过，源码/仓库测试不变。正式反例、文件清单和
+未运行门禁见 [Stop B 审查记录](TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md)。未跑全量、
+L2–L4、Wheel、联网、真实 Provider，也未提交。修复与定向复审清零 P0/P1 后再决定进入 F4。
+
+### 10.7 B-P1-01 修复与定向确认
+
+LocalGitWorkspaceProvider 统一 source/consumer/mapping-only 的 Git 注册和实际 admin 核对，
+主 checkout 由 Git 列表首项证明，linked checkout 必须满足双向指针；不按 source 路径或
+指向 common 的 marker 豁免。仅 provider 和对应项目 scope 测试变更，未新增协议、事实源或生命周期。
+新增 13 项全部通过；最终明确 11 文件 190 collected，189 passed / 1 skipped in 135.26s，
+唯一 skip 为 Windows 目录符号链接权限。临时恢复旧 provider 后 8 failed / 1 passed，
+按原字节恢复后完成最终限定验证。compileall、修改范围 Ruff、反硬编码通过，详见
+[审查记录 §7](TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
+该阶段修复与定向确认不替代独立复审；后续复审见 §10.8，F4 未开始。没有全量、L2–L4、Wheel、
+联网、真实 Provider、commit/push/tag/release。
+
+### 10.8 Release Stop B 修复后独立复审
+
+当前 P0=0/P1=0/P2=0，B-P1-01 关闭，Stop B 通过。基于修复源码重新核查公开生产路径，
+29 个 F3 Python 文件保持不变且 Ruff 通过；同一明确 11 个仓库文件与 1 个仓库外探针文件，
+194 collected / 193 passed / 1 skipped in 170.52s。4 个独立探针验证坏 source 阻止正常消费方
+read/直接 approve/历史取证，拒绝时事实流不变、恢复后 exact approve 成功；Windows 符号链接
+权限跳过与修复阶段一致。完整清单、反向证据核查、已验证事实和边界见
+[复审记录 §8](TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#8-修复后独立复审)。
+当前停止点不再有已登记未关闭 Finding；未跑全量、L2–L4、Wheel、联网或真实 Provider，
+不因此宣称发布门禁完成。本轮只更新文档，没有提交或进入 F4。
 
 ## 11. v0.9-F4：Memory 检索、History Evidence 与统一 Context Orchestration
 
@@ -750,7 +893,7 @@ v0.9 完成必须证明：
   History Evidence 同一 v0.9 主题、三个 release stop 或唯一注入主线；
 - v0.8 发布前置已满足，F0-A ADR／设计合同与 F0-B 最小请求主线／限定门禁已完成。最终 36 文件
   `1076 passed, 3 skipped`，其中包括 59 项新主线；F0-C 随后完成最终 38 文件 `1100 passed, 4 skipped`，
-  含新 History 81 项。F0-A/B/C 授权实现收口，F1 未开工，不声称发布或后续能力已验证；
+  含新 History 81 项。F0-A/B/C 授权实现收口，F1 已完成限定验证，不声称发布或后续能力已验证；
 - F0 必须先证明 Context event/source boundary、Tool 续步位置、历史 request reconstruction，以及 M3
   History 原文不会常驻 Surface；F1/F2 必须先证明 Generation/Lease/resource owner；F3 必须先证明 Memory
   authority。后阶段不得掩盖前阶段 owner 缺口；
@@ -766,9 +909,9 @@ v0.9 完成必须证明：
 | 顺序 | 阶段 | 主要产出 | 阶段停止条件 |
 |---:|---|---|---|
 | 0 | v0.8 前置（已完成） | 已发布 v0.8.0；按发布基线重新核对并修订计划 | 不为重新核对重复 v0.8 全量／L2；功能开工另行授权 |
-| 1 | F0-A（已完成）→ F0-B（已完成）→ F0-C（已完成） | 唯一 Context 主线、当前 Session 原文分页及 typed/Tool 请求均已接入 | 38 文件 1100 passed / 4 skipped、两分区无 P0/P1；本轮实现收口，F1 未开工，不代替发布级全量 |
-| 2 | F1 | 现有 Plugin Generation/Lease 上的 typed Skill catalog 与只读资源 owner | 半发布、identity/digest、reload/drain 反例全绿 |
-| 3 | F2 | Skill durable selection、exact+FTS、四级披露、可选本地 semantic/reranker 接口 | Release Stop A：Plugin/selection/Request P0/P1 清零 |
+| 1 | F0-A（已完成）→ F0-B（已完成）→ F0-C（已完成） | 唯一 Context 主线、当前 Session 原文分页及 typed/Tool 请求均已接入 | 38 文件 1100 passed / 4 skipped、两分区无 P0/P1；本轮实现收口，F1 已完成限定验证，不代替发布级全量 |
+| 2 | F1（已完成） | 现有 Plugin Generation/Lease 上的 typed Skill catalog 与只读资源 owner | 定向及相邻 31 文件 764 passed / 3 skipped；五组反向保护已验证；不代替 F2 或 Release Stop A |
+| 3 | F2（实现与限定验证完成） | Skill durable selection、exact+FTS、四级披露；semantic/reranker 留待增益评测 | 40 文件 893 passed / 3 skipped；六组反向保护；Release Stop A P0/P1 清零，2 项 P2 已修复并完成定向确认（§9.3） |
 | 4 | F3 | Workspace Memory proposal/active/superseded/revoked append-only authority | Release Stop B：Memory authority P0/P1 清零 |
 | 5 | F4 | Skill+Memory 统一检索编排；M3 History exact block 按需展开；统一预算和 snapshot | scope、时效、重放、索引重建与 context-rot 反例全绿 |
 | 6 | F5 | Line/TUI 治理、上下文/历史披露透明度、冻结检索评测、打包与发布 | Release Stop C、最终独立审查、唯一最终全量和发布门禁 |

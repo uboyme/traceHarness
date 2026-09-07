@@ -82,6 +82,7 @@ from traceh.promotion.models import (
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.session.context_input import parse_context_input, render_context_message
 from traceh.session.event_feed import PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.service import SessionService
@@ -801,13 +802,22 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     ]
     assert len(context_requests) == 1
     context_request = context_requests[0]
-    assert tuple(message.role for message in context_request.messages[:2]) == (
+    context_event = next(
+        event for event in await runtime.sessions.read_session(session_id)
+        if event.type == "context/input"
+        and event.data["step_id"] == context_request.metadata["step_id"]
+    )
+    assert context_request.messages[0] == render_context_message(
+        parse_context_input(context_event.data)
+    )
+    assert tuple(message.role for message in context_request.messages[:3]) == (
+        "user",
         "system",
         "user",
     )
-    assert all(message.role != "system" for message in context_request.messages[1:])
-    contexts = [context_request.messages[0].content]
-    history_reference = context_request.messages[1].content
+    assert all(message.role != "system" for message in context_request.messages[2:])
+    contexts = [context_request.messages[1].content]
+    history_reference = context_request.messages[2].content
     assert len(contexts) == 1
     assert f"- Task: {task_id}" in contexts[0]
     assert "- Status: completed" in contexts[0]

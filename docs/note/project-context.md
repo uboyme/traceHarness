@@ -43,13 +43,13 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前开发阶段 | v0.9-F0-A/B/C 本轮授权实现与限定门禁已收口；F1 未开工。版本仍为 `0.8.0`，未运行发布级全量或 L2，不能宣称 v0.9 已发布 |
-| Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；默认空 wrapper user message 始终在全部 Surface 前且不进入 Surface。F0-C 已接入并验证显式原文分页与 typed/Tool 请求；自动选择仍只限目录／摘要，没有检索排名、Skill 或 Memory（7.4） |
+| 当前开发阶段 | v0.9-F0-A/B/C、F1 Skill 贡献与 F2 持久选择／检索／渐进披露已实现；限定验证见 15.1。F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工；Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认（15.1、16）。版本仍为 `0.8.0`，未运行发布级全量或 L2，不能宣称 v0.9 已发布 |
+| Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；默认空 wrapper user message 始终在全部 Surface 前且不进入 Surface。F0-C 已接入并验证显式原文分页与 typed/Tool 请求；自动选择限目录／摘要；F2 接入宿主持久选择、eligible exact+FTS 与按请求的 section/chunk，Memory authority 已实现但未注入 Context；见 7.4–7.6、19.16 |
 | 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；严格 JSON 解析失败时，只允许按冻结 Tool schema 对顶层 `type=string` 字段的双三引号 multiline lexical form 做一次有界规范化，结果仍须通过标准 JSON object 解析，其他 malformed response 继续 fail closed。CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
 | Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation + `read_product_task_evidence`，并单调拒绝声明为 effectful 的插件 Tool。证据 Tool 只按同 Session 精确任务关系读取有界元数据，不是控制 Tool；Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
-| 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面 |
+| 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面；v0.9-F1 新增 typed Skill 目录与受 Lease 保护的资源，见 19.16 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
 | CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
@@ -73,9 +73,9 @@ Workflow DSL、MCP、流式输出或 Provider/model fallback；这些属于 v0.9
 2026-09-07 已完成 v0.9-F0-A ADR／设计冻结，并将 F0-B 最小 Context 请求链接入现有生产 owner（20.33）。
 F0-A 的 19 项检查只证明旧接缝；F0-B 新增 Context 24、Request protocol 24、Runtime 11 项，共 59 项
 已通过并包含在最终限定门禁中：36 文件 `1079 collected / 1076 passed / 3 skipped`，耗时 20.22 秒。
-F0-C 已将 Session 唯一切到 `context_protocol=2`，明确拒绝 F0-B 的 1，不补写或迁移；outer Context
+F0-C 当时将 Session 唯一切到 `context_protocol=2`，明确拒绝 F0-B 的 1，不补写或迁移；outer Context
 format 和 SQLite schema 仍为 1。最终 38 文件 1104 collected、`1100 passed, 4 skipped in 31.98s`，
-包含新 History 四文件 81 项。F0-A/B/C 本轮授权实现收口，F1–F5 未开工，不表示发布门禁完成。
+包含新 History 四文件 81 项。F0-A/B/C 本轮授权实现收口，F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，不表示发布门禁完成。
 本轮未运行全量、L2、构建、联网或真实模型；上述 v0.8.0 数字仅是发布基线。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
@@ -133,6 +133,8 @@ traceharness/
 │   ├── version.py                    版本、Distribution 名、核心 plugin id 与默认兼容范围的唯一来源
 │   ├── agents/                       多 Agent 控制面事实层：Agent identity、创建事务、只读 Directory 投影，以及每 Agent 的 Inbox 接受协议、投影与事务
 │   ├── budgets/                      v0.7 单一层级 Budget 事件/投影/写入，以及 create/model/Step/Tool/process 薄执行适配器
+│   ├── projects/                     F3：同 Store 项目归属事件、唯一纯投影与宿主 ProjectScopeService（7.6）
+│   ├── memory/                       F3：短事实 policy、来源证明、唯一 Memory projector/service（7.6）；检索待 F4
 │   ├── workspaces/                   v0.7-C Workspace Catalog、Git Provider、取消收敛服务、Supervisor 包装器与只读 Tool Policy
 │   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
@@ -141,7 +143,7 @@ traceharness/
 │   ├── chat/                         UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ActivityTracker；F0-C 透传 TurnInput.history_requests；不从正文赋权、不保存第二份对话
 │   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded presentation、对话/Product 面板与原控制 owner；F0-B 的 `context_inspection.py` 复用请求重建并分开统计 Context reference、Product 和 conversation
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
-│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`；F0-C `history.py` 的 policy/cursor/page request DTO）
+│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`；F0-C `history.py` 的 policy/cursor/page request DTO；F1 `skills.py` 的 descriptor/contribution 与宿主资源策略；F2 `retrieval.py` 显式检索策略）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
@@ -149,12 +151,12 @@ traceharness/
 │   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、F2 retry/Provider-active 度量、descriptive 报告与唯一 Runner
 │   ├── evolution/                    L2 验证、L3 对比与 L4 人工批准/精确推广/回滚
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
-│   ├── kernel/                       四层 Service 与 Composition Overlay、含空 Skill catalog/digest 的严格快照与 revision、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
+│   ├── kernel/                       四层 Service 与 Composition Overlay、含真实 Skill catalog/digest 的严格快照与 revision、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表、typed sanitized failure、显式 bounded retry policy/scheduler 与两阶段调用边界
-│   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
-│   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
-│   ├── session/                      EventStore、Event Feed、锁、投影、恢复、不变量与事实重建；`protocol.py` 唯一 Session 协议，`context_input.py` 窄策略／只读冻结／renderer／重建；F0-C `history.py` 纯展开分页、`history_requests.py` 唯一授权及目标派生，写入仍由 SessionService owned/CAS；M3 owner 保留
-│   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具；F0-C `history.py` 普通 PURE_READ `request_history_page` 仅返回 receipt
+│   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder；`skills.py` 校验和冻结资源，提供仅限有效 Lease 的读取
+│   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier；F2 `skill_context.py` 借用既有 owner 的选择／重建门面
+│   ├── session/                      EventStore、Event Feed、锁、投影、恢复、不变量与事实重建；`protocol.py` 唯一 Session 协议，`context_input.py` 窄策略／只读冻结／renderer／重建；F0-C `history.py` 纯展开分页、`history_requests.py` 唯一授权及目标派生，写入仍由 SessionService owned/CAS；F2 skill_selection/skill_retrieval/skill_requests/context_index 分别负责选择事实、检索、次步披露和 Store 派生索引；M3 owner 保留
+│   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具；F0-C `history.py` 与 F2 `skill.py` 的普通 PURE_READ 披露工具仅返回 receipt
 ├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
 │   └── plugins/                      三个可独立构建安装的外部插件 Distribution（示例、Python Quality、Plugin Creator Skill）
@@ -207,7 +209,11 @@ flowchart TD
     CLI["CLI / SDK / Evaluator"] --> AR["AgentRuntime"]
     AR --> AL["AgentLoop"]
     AL --> CR["GenerationCompositionRuntime / Lease"]
-    AL --> CI["ContextInputService：同 Lease，只读当前 Session"]
+    AL --> CI["ContextInputService：同 Lease，只读来源与索引"]
+    AR --> SC["SkillContextControl：宿主选择 / 显式重建"]
+    SC --> SS
+    CI --> SK["skill_selection / skill_retrieval / skill_requests"]
+    SK --> SS
     CI --> HR["History 纯 reader：来源 / 闭合 Turn 分页"]
     CI --> HQ["history_requests：durable 授权 / 目标 Step 派生"]
     CI --> SS
@@ -415,6 +421,7 @@ flowchart LR
 | Stream | ID 形式 | 用途 |
 |---|---|---|
 | Session Stream | `session:<session_id>` | 生命周期、消息、模型、工具结果、验证和恢复事实 |
+| Skill Selection Stream | `context-selection:<session_id>` | 宿主选择的 exact catalog/id/version 与 CAS 操作事实；只影响未来 Step（7.5） |
 | Effect Stream | `effects:<session_id>` | 现实副作用的 Intent、Dispatch、Outcome 与 Reconciliation |
 | Agent Directory Stream | `agents:directory` | 持久化 Agent identity：哪些 Agent 存在、各自拥有哪个 Session（20 节） |
 | Agent Inbox Stream | `agent-inbox:<agent_id>` | 每个 Agent 已**接受**的消息及其 FIFO 顺序（20.8）。accepted 不等于 claimed/processed |
@@ -432,6 +439,10 @@ v0.7-F1 起 `product-task:<task_id>` **确实会被写入**，由 `traceh.produc
 
 Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-session 流，边界必须写准：Session Stream 记录“一个 Agent 运行时发生了什么”，Directory Stream 记录“存在哪些 Agent”。二者不合并，因为枚举 Agent 不应要求读遍每个 Session，而且一个 Agent 的执行历史不得断言另一个 Agent 的事实；二者也不分库，因为 `expected_seq`、跨进程文件锁、取消/提交点语义和事件所有权契约正是创建事务需要的东西。它**不进入 Model Surface、不参与 Session Recovery、不影响 Request Fingerprint**，`SessionService.list_sessions()` 按 `session:` 前缀过滤，因此看不到它。
 
+F3 新增同 Store 的 `projects:catalog`（每 Store 一条）和 `memory:<project_id>`（每项目一条）。
+前者只决定项目归属，后者只决定提议与人工决策；当前均不进入 Surface、Session Recovery 或 Context，
+不新增 SQLite 表或迁移。具体 owner、字段和历史证据边界见 7.6。
+
 ### 6.3 当前事件类型
 
 | 类别 | 事件 |
@@ -439,7 +450,10 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | Session/Inbox | `session/created`、`inbox/accepted`、`inbox/claimed` |
 | Composition control | `composition/migration-authorized`（只记录外部插件身份迁移授权，不进入 Model Surface） |
 | Turn/Step | `turn/start`、`turn/end`、`step/start`、`step/end` |
-| Step reference input | `context/input`（format 1，绑定当前 Session/Turn/Step、观察截止点、同 Lease Composition/catalog、窄 policy、query、exact blocks/exclusions 与渲染预算；只供 Request，不进入 Surface） |
+| Step reference input | `context/input`（format 2，绑定当前 Session/Turn/Step、观察截止点、同 Lease Composition/catalog、窄 policy、query、exact blocks/exclusions 与渲染预算；只供 Request，不进入 Surface） |
+| Project association control | `project/created`、`project/source-bound`、`project/session-bound`；projects:catalog，schema/format 1（7.6） |
+| Memory authority control | `memory/proposed`、`memory/approved`、`memory/superseded`、`memory/revoked`；memory:project_id，schema/format 1（7.6） |
+| Skill selection control | `skill/selection-set`（format 1，独立 context-selection 流；宿主写，模型不可写，7.5） |
 | History host request | `history/requested`（format 1；typed 用户输入绑定本 Turn 首 Step 与真实 user/message；原 SessionService 写入，不进入 Surface，不能由 source/text 伪造） |
 | 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 7、exact key/messages、当前 Product head causation；原子记录当前 focus 在内最多六项任务、精确总数/省略数、固定状态语义、有界历史 source-request 摘录，并只为稳定检查点 focus 记录最小执行摘要；formats 1–6 拒绝，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
 | 模型 | `model/attempt-start`、`assistant/chunk`、`assistant/message`、`model/attempt-end` |
@@ -495,9 +509,10 @@ cache：缓存同一份对象会重新制造跨调用方共享引用。
 当前唯一生产 `SqliteEventStore` 的协议由
 [`ADR-0036`](../adr/0036-single-production-sqlite-event-store.md) 冻结：
 
-- 每个 Store root 只有 `events.sqlite3`；`application_id` 与 `user_version = 1` 共同标识 current schema；
+- 每个 Store root 只有 `events.sqlite3`；`application_id` 与 `user_version = 2` 共同标识 current schema；
 - `streams(stream_id, head_seq)` 与 `events(stream_id, seq, envelope_json)` 都是 `WITHOUT ROWID`，
   `(stream_id, seq)` 唯一且 Event 行外键指向 Stream；
+- F2 的三个派生表和五个 FTS shadow 表也属于同一精确 schema；列、DDL 与失效／重建边界见 7.5；
 - 打开时精确验证全部持久 schema 对象、规范化表 DDL、列、外键、`integrity_check`、每条 Stream 的
   head/count/连续 seq，以及每个 Envelope 的 canonical JSON；额外 table/index/view/trigger 与
   unknown/older/newer、空白、坏行、gap、非 canonical 内容全部拒绝，不修补；
@@ -655,7 +670,7 @@ flowchart LR
 - plugin identities；
 - policy 和 middleware 名称；
 - temperature、max output tokens；
-- `skill_catalog=[]` 与 `skill_catalog_digest=H([])`；F0-B 明确拒绝非空 catalog；
+- 按 skill_id 排序的 typed `skill_catalog` 与 `skill_catalog_digest=H(catalog)`；F1 校验描述符、贡献插件身份与 digest，空目录仍为 `[]`／`H([])`；
 - 基于内容生成的 revision。
 
 `plugin identities` 从 v0.4 起是**真实数据**，不再是占位：它等于 `traceh.core`（版本来自 1.2 的唯一来源）加上本次激活的每个外部插件的真实 `plugin_id` 与 `version`。无插件运行时该列表只有一项。
@@ -664,7 +679,7 @@ flowchart LR
 
 当前实现是 Generation-backed `CompositionRuntime`：每个 Runtime 始终只有一个 current Generation；Runtime 初始化时固定主 `ToolRuntime.sessions` 对象，Step 进入 `lease()` 时在 `asyncio.Lock` 保护下原子绑定它，并从同一代取得 Provider、ToolRuntime、Prompt、Plugin Identity、Policy/Middleware 和 Snapshot。`publish()` 在同一把锁内把旧代标为 retired、安装新代；旧 Lease 继续持有旧记录，新 Lease 只能拿新代。候选若引用另一个 `SessionService` 会在这个线性化点前被拒绝，避免 `tool/call` 或 `tool/result` 写入另一份 EventStore。每个 Generation 对象只能被一个 Runtime 认领一次；已 retired/cleaned 的 Generation 不能重新发布。资源 cleanup 由独立的一次性 `CompositionResourceOwner` handle 负责：装配层把同一个 handle 显式绑定到 `LlmRegistry`、`ToolRuntime`、`PromptAssembler` 及 Provider/Tool/Policy/Middleware 组件，冻结 Generation、扁平适配器和兼容性投影只传播这个 handle/binding，不扫描对象图，也不使用全局 `id()` 身份目录。binding 直接写入实例字典或声明过的 slot，并验证写入后的真实状态，因此自定义 `__setattr__` 不能静默吞掉所有权标记；提交若在中途失败，会逐项恢复每个组件原来“字段不存在”或“字段存在且为 `None`”的精确状态，Owner 也保持可重试。无法承载这种可验证 binding 的裸 slotted Provider、Tool、Policy 或 Middleware 不能进入 cleanup-bearing Generation；它们必须先经过可绑定的受控装配，或者只能留在没有 Generation cleanup ownership 的 application-level 路径。这样同一个 slotted 原始能力被放进两个新容器时不会被两个 Owner/Runtime 同时接受。多层 `replace()`、把冻结能力重新放进新注册表、从冻结能力构造 Runtime、以及同一 raw capability 再构造 cleanup Generation，都会在 Runtime 初始化或 publish 的共同认领入口被拒绝；没有资源级引用计数时，cleanup-bearing Generation 必须拥有尚未认领的显式 owner，并且不能和旧 Lease 或旧代共享会被 cleanup 关闭的资源。
 
-Generation identity 是内部生命周期编号，只用于引用计数、retire、cleanup 和诊断，不写入事件或 Request Fingerprint。`CompositionSnapshot.revision` 仍是模型可见内容的 fingerprint；因此两个模型可见内容完全相同的 Generation 可以有不同 identity，但 revision 相同。Generation 构造时还会冻结 Tool 的 name、description、input_schema、effect_kind，并用真正只读、扁平、幂等的适配器把执行委托给原 Tool；嵌套 Schema 也不能改写，连续从冻结 Generation 构造无 cleanup 候选不会递归套适配器。Policy/Middleware 名称在构造时捕获，兼容性检查投影与当前 Generation 分离。Runtime 初始化会先从已经冻结的初始 Generation 构造全部兼容性视图，再一次性认领资源；认领后不再调用调用方可变的 Prompt/Registry 来源，因此第二次读取失败不会留下已认领但无 Runtime 接管的资源。Generation 被 retired 后，仍有 Lease 时绝不 cleanup；最后一个 Lease 释放才创建一次 cleanup Task。`drain()` 等待所有 retired Generation 的 Lease 归零并等待 cleanup 真正完成，cleanup 失败会在所有其他 Generation 都尝试后以有界的结构化 `CompositionDrainError.failures` 报告，并把 Runtime 标为 poisoned、拒绝后续 `publish()`。等待期间重复取消由共享内部 Task 和 `await_worker_convergence()` 吸收，收敛后再抛最初的 `CancelledError`。
+Generation identity 是内部生命周期编号，只用于引用计数、retire、cleanup 和诊断，不写入事件或 Request Fingerprint。`CompositionSnapshot.revision` 是 Composition 全部内容（含 Skill 目录元数据）的 fingerprint；目录本身不会自动进入 prompt/messages。两代 Composition 内容完全相同时，内部 identity 可以不同而 revision 相同。Generation 构造时还会冻结 Tool 的 name、description、input_schema、effect_kind，并用真正只读、扁平、幂等的适配器把执行委托给原 Tool；嵌套 Schema 也不能改写，连续从冻结 Generation 构造无 cleanup 候选不会递归套适配器。Policy/Middleware 名称在构造时捕获，兼容性检查投影与当前 Generation 分离。Runtime 初始化会先从已经冻结的初始 Generation 构造全部兼容性视图，再一次性认领资源；认领后不再调用调用方可变的 Prompt/Registry 来源，因此第二次读取失败不会留下已认领但无 Runtime 接管的资源。Generation 被 retired 后，仍有 Lease 时绝不 cleanup；最后一个 Lease 释放才创建一次 cleanup Task。`drain()` 等待所有 retired Generation 的 Lease 归零并等待 cleanup 真正完成，cleanup 失败会在所有其他 Generation 都尝试后以有界的结构化 `CompositionDrainError.failures` 报告，并把 Runtime 标为 poisoned、拒绝后续 `publish()`。等待期间重复取消由共享内部 Task 和 `await_worker_convergence()` 吸收，收敛后再抛最初的 `CancelledError`。
 
 Stage B 的插件 cleanup 不再使用上述 capability-wide owner 推断插件所有权：`PluginActivationSet` 显式持有插件 Activation、插件 Tool/Prompt/Service、Owned Task 与 cleanup，SessionService、EventStore、核心 Provider 和内置 Tool 只是 borrowed core。候选只在私有注册表中 setup，成功 publish 后由 Generation 接管；旧 Lease 结束前旧 set 不会被卸载。
 
@@ -730,18 +745,18 @@ Request，并独立验证两份 fingerprint。dispatch 除正向收紧输出上�
 Core invariant 另行核对 Attempt ordinal、snapshot seq、dispatch fingerprint、provider/model 与
 reservation binding；Budget reconciliation 再把 non-null reservation 与唯一 ledger 交叉验证。
 
-### 7.4 F0-C：当前唯一 Context Input 与 History 接缝
+### 7.4 当前唯一 Context Input 与 F0-C History 接缝
 
-[`ContextInputService`](../../src/traceh/session/context_input.py) 只获得 `SessionService.read_session`
+[`ContextInputService`](../../src/traceh/session/context_input.py) 只获得 `SessionService.read_session`、selection/index 只读
 回调与宿主配置；没有 Store writer、Provider、Plugin manager 或后台任务。`AgentLoop` 在同一 Step Lease
 内取得 Composition，读取来源并冻结 Context，由原 `SessionService.append_context_input()` 用观察到的
 Session head 做 CAS；成功后才追加 Composition。retry 位于冻结之后，复用同一 Context、source_seq 和请求。
 
 F0-B 的请求冻结基础与 F0-C 原文披露均已通过本轮限定验证（15.1）。当前唯一策略切换为
-`f0-c-context-policy-v1`，配置为 13.3.1 的原七项加 nullable history。默认使用具名空策略：query、blocks
-为空，明确记录 Skill/Memory 来源未提供及 History 未选择，预算恰容纳空 wrapper。自动目录／摘要仍
+`f2-context-policy-v1`，配置为 13.3.1 的原八项加 nullable skills。默认使用具名空策略：query、blocks
+为空；空 Skill 目录记录 source-unavailable，非空目录记录 not-selected；Memory 来源未提供、History 未选择，预算恰容纳空 wrapper。自动目录／摘要仍
 只从当前 Session 可见 M3 replacement 按原逻辑顺序取块；查询只冻结本 Turn 首条真实 user/message，
-不参与排名。仅额外显式配置 History reader 才能请求原文；不提供 raw-only 或跨 Session 读取。
+History 不参与排名；Skill 排名见 7.5。仅额外显式配置 History reader 才能请求原文；不提供 raw-only 或跨 Session 读取。
 
 [`api/history.py`](../../src/traceh/api/history.py) 定义 `HistoryReadPolicy`、`HistoryCursor` 与
 `HistoryPageRequest`；DTO 本身不证明授权。[`session/history.py`](../../src/traceh/session/history.py)
@@ -768,9 +783,9 @@ Workspace 也可为 DIRTY，不能拿基线相同冒充当前状态。F3/F4 接�
 `surface_conversation()`。`ContextInputSnapshot` 只持有 canonical 字符串，`to_dict()` 返回独立 JSON 图。
 reader 按 `observed_session_seq` 重建旧来源，不用后来的摘要；精确核对本 Step 身份、唯一 Context、
 随后 Composition、catalog、query、正文与预算。原文另核 request_ref、cursor、page/leaf_refs 和目标
-Step，未授权 raw、非空 catalog、Skill/Memory、跨 scope 均拒绝。
+Step，未授权 raw、无效或错配 catalog、Memory blocks、跨 scope 均拒绝；Skill 使用 7.5 的独立来源验证。
 
-唯一 `context-json-v2` renderer 把正文放入 canonical JSON 字符串，由固定宿主头尾声明参考不授予权限；
+唯一 `context-json-v3` renderer 把正文放入 canonical JSON 字符串，由固定宿主头尾声明参考不授予权限；
 history_notice.cursor 在目录／摘要为首 cursor，在原文为 page.next_cursor。默认空 wrapper 仍是一条
 user message。先为本 Step 获授权的原文页分配预算，再选择自动目录／摘要。每个块和 History 配额按完整
 渲染 item 的 UTF-8 计量，包含转义、provenance 和尾注；总额再计 wrapper 与数组分隔符。超限整块排除，
@@ -782,15 +797,186 @@ user message。先为本 Step 获授权的原文页分配预算，再选择自�
 identity 与 canonical JSON 对账 committed true/false/unknown；unknown 不重投、不派发。Recovery
 不补造 Context 或 Attempt。History accepted/eligible/consumed/expired 从原持久事件与 Step 顺序派生；
 目标超预算、失败、未发生、max_steps、取消或恢复均不顺延，无新增 writer、Lease 或 pending 状态机。
-`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=2`；
+`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=3`；
 共同 Session reader、invariant、open/recover/inspect/replay/Request 路径拒绝旧 Session，只有列表可列身份。
-EventEnvelope schema、SQLite user_version 仍为 1，M3 format 仍为 2；未来配置／协议切换必须显式版本化，
-明确拒绝 F0-B 的 1，没有旧协议兼容 reader 或自动修补。F0-C 本轮已收口；F1 Skill、F2 检索、
-F3 Memory 与 F5 治理 UI 不在本轮范围。
+EventEnvelope schema 仍为 1、M3 format 仍为 2；F2 将 Context outer format 与 SQLite user_version
+唯一切到 2，以保存检索收据和同库派生索引。Session marker 1/2、旧 Context/policy/renderer 和物理
+schema 1 明确拒绝，无兼容 reader、自动修补或迁移。F3 Memory authority 已实现（7.6），Memory 检索和 F5 治理 UI 尚未实现。
 
 Product 的 Session 证据与叶失败读取也调用同一 `require_session_protocol()`，不再维护两份旧
 `session/created` 字段白名单；新 Session 可读、旧 Session 拒绝。`ModelRequest.from_dict()` 保留合法的
 空字符串 system prompt，不再把它转换为 `None`，保证冻结请求重建字节一致。
+
+### 7.5 F2：持久选择、eligible 检索与 Skill 渐进披露
+
+Release Stop A 的两项 P2 已修复。Context 去重复用 `skill_retrieval.block_identity()` 的完整内容身份，
+包含 tier；同一 Skill 的 directory 与 summary 可以在目标 Step 共存，相同请求仍沿原 receipt 规则合并，
+持久 Context 中真正重复的块仍拒绝。exact matcher 对规范化后的完整标识做字面量匹配，保留内部空格、
+转义正则特殊字符，并沿用标识边界，防止前缀、后缀或更长路径误命中；支持路径单独出现或被引号包围。
+现行 eligibility、预算、FTS 元数据范围与冻结重放合同不变，修复及反向证据见
+[Stop A 记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
+
+F2 已接入原请求链。宿主通过 [SkillContextControl](../../src/traceh/runtime/skill_context.py)
+的 `runtime.skill_context.select()` 显式选择，通过 `rebuild_index()` 显式重建派生索引。
+两项都借用同一 Runtime 的 Composition Lease，核对其 ToolRuntime 的 SessionService owner；
+相同 Session id 的另一个 Store 不被接受。选择不 publish/drain Generation，不迁移插件身份，不增加 Tool grant。
+
+`session/skill_selection.py` 只在同一 Store 的 `context-selection:<session_id>` 追加
+`skill/selection-set`：exact format-1 payload 是
+`{format,session_id,operation_id,expected_head,actor_id,catalog_digest,skills}`；
+skills 是按 id 排序的 `{skill_id,version}`。同 operation id 仅 exact payload 重入返回原事件，
+其他变更做 CAS；显式清空也写事实。取消／异常先等原 append 收敛，再对账 committed true/false/unknown；
+不盲目重写。catalog digest 改变后旧选择为 stale-selection，必须由宿主重新确认。
+
+`session/skill_retrieval.py` 从同一 Lease 的 enabled catalog 与持久选择交集构造候选。
+query 只取本 Turn 首条真实 user/message，保留 EventRef；只对检索文本做 NFKC+casefold，
+冻结运行时 Unicode 版本，正文不规范化。`traceh-lexical-v1` 把汉字分为单字与相邻双字，
+其余字母数字组成连续词；FTS query 是 UTF-8 hex token 的引用 OR，不接受原始 FTS 语法。
+自动候选仅为 directory 或 summary；索引只含已选目录元数据的词频，没有 section/resource 原文。
+exact lane 按配置字段优先级匹配 id/tag/path/symbol/error；FTS5 取候选，
+`eligible-bm25-v1` 只用本 eligible corpus 的 N/avgdl/df/tf 算分，不用全库 bm25。
+加权 RRF 用有理数融合，按稳定内容身份打破并列；其他 Session 或未选择项不参与统计。
+
+`session/context_index.py` 持有精确 DDL 与不可变 ContextCorpus，SqliteEventStore 是连接、
+事务、Worker、关闭与 backup 的唯一 owner。schema 2 增加
+`context_index_manifest(corpus_key,manifest_json)`（WITHOUT ROWID）、
+`context_index_items(rowid,corpus_key,item_json)`、`context_fts(terms)`（FTS5 unicode61）
+以及五个精确白名单 shadow 表：config/content/data/docsize/idx；不按名称前缀放行。
+corpus key 绑定 scope/catalog/selection head/tokenizer/ranker/config digest；
+manifest 另存 corpus digest、item 数和 bytes。查询核对 manifest、canonical item、词频／FTS 行与
+当前 source head；已知派生行损坏返回 index-unavailable，unknown schema／缺 shadow 在开库前拒绝。
+FTS5 不可用明确失败，不装包或自动换实现。显式 rebuild 在同一 BEGIN IMMEDIATE 事务重新核对
+selection head，整批替换 manifest/items/FTS，清理孤立派生行；失败回滚，事件不改写。
+Store 的原 Worker/close 收敛规则同样适用。失败后只读探测完整快照是否存在，
+`ContextIndexWriteError.published` 为 true/false/unknown；true 也可能是旧的相同完整快照，
+不能据此断言本次操作提交。备份／恢复包含这些派生表，仍不覆盖现有目标。
+
+`session/skill_requests.py` 复用 History 的真实 Step／已派发 Request 证明，
+由普通 PURE_READ [request_skill_reference](../../src/traceh/tools/skill.py) 接受
+`{skill_id,version,catalog_digest,requested_tier,section_id,resource_id,chunk_id}`，未适用字段必须 null。
+只能请求本 Step 实际已披露且仍被宿主选择的 Skill；directory/summary 使用冻结 descriptor，
+section 使用完整具名 section，chunk 使用贡献方声明的完整资源片段。
+Tool 只返回有界 skill_receipt 和可用 section/resource/chunk id，不返回正文。
+成功 receipt 绑定原 Context EventRef、实际 Tool call、policy digest 与 immediate-next-step；
+仅同 Turn 紧邻后继 Step 可消费。最后一步、取消、恢复、目标失败／超预算均不顺延到别的 Step/Turn，
+没有 pending 流。实际读取只经同一 active Lease，版本、插件身份、section/chunk digest 错配明确拒绝。
+
+Context 先分配 History，再处理 Skill 精确披露请求和自动检索候选；按完整渲染 item 分配
+item/kind/total/block 上限，超限整块排除。冻结前再次读取选择 head，变化则记录 source-unavailable，
+不偷偷替换成最新选择。已冻结的 Step 与重试不再检索。Context format 2 的必填
+`retrieval` 为 null 或 `{format,corpus_key,corpus_digest,eligible_count,lanes,fusion}`；
+lanes 记录 exact/FTS 状态与稳定 identity/score 排名，fusion 保存分子／分母。
+Request 重建只核对冻结 receipt、原 selection 前缀与随后 Composition 的元数据、正文和预算，
+不查询当前索引或资源；每个 Skill block 必须来自冻结融合结果或精确披露请求。
+这些引用不进入 Surface，不增加权限；EventStore、selection 和已冻结 Context 分别记录各自事实。
+
+```mermaid
+flowchart TD
+    H["宿主显式选择"] --> S["同一 Store：context-selection 事件流"]
+    P["原 Plugin Generation / Step Lease"] --> C["已启用冻结目录与资源"]
+    S --> E["Context：资格交集与来源 head"]
+    C --> E
+    H --> R["显式 rebuild：Store 单事务"]
+    E -. "规范元数据" .-> R
+    R --> I["同库 FTS 派生索引"]
+    E --> Q["exact + eligible BM25 → RRF"]
+    I --> Q
+    T["已派发请求中的 Skill Tool"] --> A["tool/result：仅一次性 receipt"]
+    A --> D["下一 Step：同 Lease 精确披露"]
+    C --> D
+    Q --> B["预算与选择 head 复核"]
+    D --> B
+    B --> F["context/input → composition/snapshot"]
+    F --> M["唯一 RequestBuilder → dispatch permit"]
+    M --> N["Provider；同 Step retry 复用冻结请求"]
+```
+
+### 7.6 F3：项目归属与 append-only Memory authority
+
+F3 已接入真实生产入口；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），Memory 检索／Context 注入留在 F4。
+[`ProjectScopeService`](../../src/traceh/projects/service.py) 借用原 SessionService 和 EventStore，
+[`projects/projection.py`](../../src/traceh/projects/projection.py) 是项目关联的唯一纯 projector。
+宿主 create/bind_source/bind_session 分别追加 `project/created`、`project/source-bound`、
+`project/session-bound` 到同 Store 唯一 `projects:catalog`，全部 schema/format=1，exact 字段沿用
+设计合同 §6。全流 expected_head CAS；同 operation/type/完整 payload 返回同一回执，不同 payload 冲突。
+不同 operation 重复绑定同一归属只返回既有事实。一项目一个不可变 source，规范身份
+`{source_id,repository_fingerprint}` 不能被另一项目占用，一个 Session 只绑定一次。
+
+普通 Session 仍只有目录，归属由独立 catalog 证明。当前读取 `resolve()` 每次 fresh 验证同 Store
+Session 创建引用、当前宿主 source mapping 和真实 checkout。LocalGitWorkspaceProvider 的
+`project_fingerprint()` 复用原 Git runner，只读核对 source root/common-dir、Git 注册及管理目录，
+允许脏文件，不创建 managed root。source 自身、不同消费方及 workspace=null 的 mapping-only
+读取共用 `_require_project_registration()`：Git worktree list 的首项标识主 checkout，其实际
+admin 必须等于 common-dir；其它注册项必须匹配唯一 worktrees/*/gitdir 反向指针与实际 admin。
+不再按“路径等于 configured source”或“marker 指向 common”豁免 linked checkout；主 source、
+linked source 与同仓库主／linked 消费方均按真实身份验证，损坏 source 在 read/approve/历史证据
+及新 source binding 前拒绝。无法由 Git registry 证明的路径（包括所测 separate-git-dir 主目录）
+明确不可用，不加路径推断。B-P1-01 已修复，证据见
+[Stop B 审查记录 §7](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
+common-dir 路径摘要不是永久仓库 UUID，不承诺识别同路径重建仓库；没有自动项目默认值、迁移或 rebind。
+
+[`ProductProjectBinding`](../../src/traceh/product/project_scope.py) 由原 Product host 装配：
+必须与 requester 使用同一个 SessionService、同一底层 Store、同一 Workspace Provider/resolver 实例。
+从原 ProductTask opening、requester binding、Directory owner 祖先和 Workspace attached 事实证明
+child 归属；不读 Agent metadata 猜项目。Workspace Supervisor 在真实 attach 后、create 返回前绑定，
+resume/send 再验证，绑定失败／取消复用原 dispose 收敛。无 requester binding 的 Product 工作仍限
+Session scope。关联不授予 Tool/Budget 权限，也不接管 Workspace 生命周期。
+
+[`MemoryService`](../../src/traceh/memory/service.py) 与
+[`memory/projection.py`](../../src/traceh/memory/projection.py) 是唯一 Memory writer/projector。
+每项目只写 `memory:<project_id>`：proposed 不生效；宿主 approve 消费 exact proposal_ref/digest
+并激活空 fact_slot；supersede 用一条事件退出 exact predecessor 并激活新 proposal；revoke 只退出
+exact active。proposal_id、memory_id 各自唯一，proposal 只消费一次，同槽最多一个 active，旧身份不复活。
+decision_digest 覆盖除自身外的完整 data；predecessor_digest 是旧 proposal_digest，EventRef.digest
+则是 whole-envelope digest，二者不混用。所有事件只追加，不新增表、active flag 或可变缓存。
+
+[`memory/sources.py`](../../src/traceh/memory/sources.py) 只接受三种来源：当前项目已绑定 Session 的
+闭合 Turn 叶事件 user/message、assistant/message、tool/result；原 ProductTask 的 completed/failed/
+cancelled/rejected/abandoned 终态事实；由 host declare 入口捕获的人工 statement。
+Session 叶与闭合 Turn 的对应复用 `history.closed_turn_membership`；observed_head 绑定实际闭合前缀，
+refs/digest、来源数、事件数、前缀字节都验证。模型不能提供 host-declaration，也不能引用其他 Session。
+宿主可引用同项目历史证据，引用不构成通用原文披露权。`resolve_evidence()` 复用同一归属证明与当前
+source mapping，允许保留已释放工作区的持久证据；当前访问仍须 `resolve()`，不复活资源或授予访问权。
+每次 read 重放并交付 detached snapshot，验证来源后复核 Memory head；变化明确 source-unavailable。
+这些观察不组成跨流原子快照，已批准文字的跨槽语义一致性仍由人判断。
+
+[`api/memory.py`](../../src/traceh/api/memory.py) 的 ProjectScopeLimits 必填
+max_catalog_events/max_label_bytes；MemoryPolicy 必填 max_body_bytes/max_sources/max_source_events/
+max_source_bytes/max_memory_events 和非空 denied_patterns。数值须为正整数，正则须合法。
+[`memory/policy.py`](../../src/traceh/memory/policy.py) 将固定秘密／私有输入／瞬时状态形态检查与宿主
+显式规则合并，超限或命中拒绝写入；不声称穷尽自然语言秘密或语义冲突。长期目标、约束、术语、
+决策、重要里程碑、当前获批阶段与批准路线仍可作为短事实。
+
+RuntimeConfig.memory 为 null 或完整 ProjectMemoryConfig(project_limits,memory_policy,source_resolver)。
+默认构建只在显式配置且 include_default_tools=True 时注册
+[`propose_workspace_memory`](../../src/traceh/tools/memory.py)，它沿原 ToolRuntime 的
+EXTERNAL_TRANSACTION 路径运行，只收 proposal_id/body/source_event_ids，返回 proposed 回执。
+模型须已获得准确的本 Session 原始事件 ID；F3 不添加来源目录、任意事件查询或自动来源猜测。
+运行期派生 operation/actor 绑定真实 Session/Turn/Step/Tool call；模型不能传项目、槽、批准、替代或撤销。
+原来的 Tool 授权保持有效，配置本身不改变 include_default_tools=False 的行为。
+宿主 `runtime.memory.read/declare/propose/approve/supersede/revoke` 通过
+[`MemoryControl`](../../src/traceh/runtime/memory_control.py) 借同一 Lease，核对 exact Session owner，
+由原 Drain 等待收敛。`runtime.project_scope` 与独立 MemoryService 一样是 Store-owned 宿主服务，
+其生命周期不同于 Runtime 门面的 Lease；没有把 writer/Store 注册到 Plugin service 或模型 context。
+append 失败或取消先收敛 owned task，再按完整 payload 对账 true/false/unknown；取消保留原异常，
+committed 放在 AuthorityWriteError cause，unknown 不自动重投。并发相同操作返回同一已提交回执。
+
+```mermaid
+flowchart TD
+    H["宿主显式项目与 source"] --> P["ProjectScopeService：projects:catalog"]
+    S["真实 Session / Git checkout"] --> P
+    W["原 Product / Directory / Workspace attach"] --> P
+    P --> G["当前 scope 与历史来源证明"]
+    T["模型 proposal-only Tool"] --> M["MemoryService：bounded proposed"]
+    D["宿主 declare / propose"] --> M
+    G --> M
+    M --> E["同一 Store：memory:project_id"]
+    A["宿主 exact approve / supersede / revoke"] --> E
+    G --> A
+    E --> R["唯一 projector：fresh detached active view"]
+    R --> C["来源复核与 head 复核"]
+    C --> V["宿主读取；F4 尚未接 Context"]
+```
 
 ## 8. 模型层
 
@@ -853,6 +1039,9 @@ Verifier、EventStore 或 Promotion failure 都不属于本策略。
 
 ## 9. Tool Runtime 与内置工具
 
+F3 的 opt-in `propose_workspace_memory` 是 EXTERNAL_TRANSACTION，只提出候选，不提供决策能力；
+来源身份、注册开关、policy 和 host-only 门面见 7.6。
+
 ### 9.1 执行管线
 
 ```mermaid
@@ -897,6 +1086,9 @@ flowchart LR
 | `shell` | PROCESS | `shlex.split` 后用 `create_subprocess_exec` 执行 | 不使用 `shell=True`；清洗秘密环境变量；超时/取消收敛子进程 |
 
 所有路径读写通过 `resolve_workspace_path()` 解析后检查 Workspace 边界。默认 `DangerousShellPolicy` 屏蔽一组明显危险的可执行文件名，但它只是 Guardrail，不是安全沙箱。
+
+F2 显式开启 skills 策略且启用默认工具时，增加 PURE_READ `request_skill_reference`；
+只返回下一 Step 的受限披露收据，不返回正文、不改变选择。精确参数与时效见 7.5。
 
 ### 9.4 插件 Tool 走同一条管线
 
@@ -1209,6 +1401,9 @@ M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓�
 
 ## 13. CLI、配置与日常运行
 
+F3 目前通过 typed Python 宿主 API 配置 RuntimeConfig.memory / ProjectMemoryConfig；所有限额与
+resolver 都显式给出，完整字段见 7.6。未新增 CLI 参数、自然语言批准解析或治理 UI。
+
 ### 13.1 命令
 
 | 命令 | 当前用途 |
@@ -1339,11 +1534,14 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 | provider/model | `scripted` / `scripted-model` |
 | 自动 Surface 压缩 | 关闭；启用时四项阈值必须全部显式配置，无内置数值 |
 | Step Context | `RuntimeConfig.context_input=None`：具名空策略，仍冻结空 Context 并渲染一条 request-only user wrapper；没有默认历史选择 |
+| Skill 贡献 | `RuntimeConfig.skill_policy=None`：不接受 Skill 注册；启用需显式 `SkillPolicy` 五项正整数上限，资源还需宿主绑定 exact PluginIdentity 的绝对 root。负责目录和 leased reader；选择／检索另由 context_input.skills 和宿主 API 开启（7.5、19.16） |
 
-#### 13.3.1 F0-C 程序化 Context 配置
+#### 13.3.1 F2 程序化 Context 配置
 
 `RuntimeConfig.context_input` 接受 `ContextInputPolicy` 或 `None`；原文宿主请求经 typed TurnInput/ChatDriver，
-没有 Skill/Memory/检索治理入口。`f0-c-context-policy-v1` 的 exact config 为以下八项，启用值全部显式给出：
+Skill 选择／索引重建通过 `runtime.skill_context` 的宿主 Python API；尚无 Memory 或检索治理界面。
+Skill 激活资源策略由独立 `RuntimeConfig.skill_policy` 提供。`f2-context-policy-v1` 的 exact config
+为以下九项，启用值全部显式给出：
 
 | 字段 | 当前含义与约束 |
 |---|---|
@@ -1355,9 +1553,10 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 | `max_exclusions` | 整数且至少 3，排除记录上限；超过则明确失败 |
 | `max_query_bytes` | 非负整数，本 Turn 第一条真实用户输入的 UTF-8 上限；超限拒绝，不截断 |
 | `history` | null 或 `HistoryReadPolicy` exact 七字段；null 不开放原文分页 |
+| `skills` | null 或 `SkillRetrievalPolicy` exact 十五字段；null 不开启 Skill 检索／披露 |
 
-`history_tier=None` 时 history 必须为 null，`history_bytes/item_bytes/max_blocks/max_query_bytes` 全为 0。
-只允许关闭、directory/summary 仅参考、directory/summary 加显式 reader 三种模式，不实现 raw-only。
+`history_tier=None` 时 history 必须为 null；只有 skills 也为 null 时，
+history_bytes/item_bytes/max_blocks/max_query_bytes 才必须全为 0。History 仍无 raw-only 模式；Skill 可独立启用。
 空策略的 `total_bytes` 由固定 wrapper 的真实 bytes 派生，`max_exclusions=3` 对应三个来源的明确状态。
 HistoryReadPolicy 的七项全部为显式正整数：
 
@@ -1373,8 +1572,13 @@ HistoryReadPolicy 的七项全部为显式正整数：
 
 分页 policy digest 为 `H({version:"history-turn-pages-v1",config:七项})`，cursor 绑定该 digest；
 DTO 不制造披露权限。`include_default_tools=False` 不自动授予 History Tool。没有缺值补全的启用策略。
-设计合同 §5.2 的通用 ranking/lane/FTS 配置属于后续阶段，当前 parser 不接受；已明确替换 F0-B policy，
-未来再扩展仍必须显式切版本并拒绝旧配置，不保留双 reader 或隐藏 fallback。
+`SkillRetrievalPolicy` 的十五项为：unicode_version（须匹配运行时）、default_tier（directory/summary）、
+match_fields（id/symbol/path/error/tag 的显式优先序）、k1（正有限数）、b（0–1 有限数）、
+rrf_constant/exact_weight/fts_weight（正整数）、skill_bytes（非负渲染配额）、
+max_catalog_bytes/max_terms/max_corpus_items/max_corpus_bytes/max_candidates/max_requests（正整数）。
+无数值默认；缺值、未知字段和 semantic/reranker 配置拒绝。各限制分别约束目录、query 词数、
+候选 corpus、排名和披露请求，不是模型 token 预算。`include_default_tools=False` 不自动授予 Skill Tool。
+设计合同 §5.2 的跨来源通用配置保留为 F4 目标；当前 F2 子集的版本化细化见合同 §14。
 
 ### 13.4 `traceh chat` 交互循环
 
@@ -1704,6 +1908,98 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 ### 15.1 本地标准检查
 
+**Release Stop B 修复后独立复审：P0=0、P1=0、P2=0，B-P1-01 关闭，停止点通过。**
+以修复后的真实源码、公开入口、Git 本机官方文档和新运行证据重新核查，未直接采用修复完成报告作结论。
+source/consumer/mapping-only 共用的注册证明、主／linked 分类、直接审批前置读取及原 runner 的
+spawn/wait 取消收敛符合当前合同；没有新增事实源、缓存或 Workspace 生命周期。
+11 个具名仓库测试文件加 1 个仓库外独立探针文件，**194 collected / 193 passed / 1 skipped in 170.52s**；
+4 项独立探针保持主／兄弟消费方不变，只损坏 linked source，read、直接 approve、resolve_evidence
+都拒绝且两条事实流逐事件不变；恢复 marker 后同一 exact approve 成功，head 3→4、active 1→2。
+唯一 skip 仍为 Windows 无目录符号链接创建权限。29 个 F3 Python 文件 Ruff 通过，复审前后逐字节不变；
+修复阶段反向日志的 8 项预期失败与正确源码恢复已核查，不算本轮重新执行。完整范围与证据见
+[复审记录第 8 节](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#8-修复后独立复审)。本轮只更新文档，不进入 F4；未运行全量、L2–L4、Wheel、联网或真实 Provider，未提交。
+文档 QA 通过：10 份文档、522 个有效相对链接、32 个闭合 Mermaid 块，两份上下文 0–20 章节对应，
+配置字段和阶段测试清单一致，无新增秘密形态或编码损坏；git diff --check 通过。
+
+**B-P1-01 修复阶段定向确认（历史）：**只修改 LocalGitWorkspaceProvider 与 test_project_scope.py，
+新增 13 项覆盖正常主／linked source 组合、注册缺失拒绝、两类 marker 替换后的直接 read/approve
+零写入、mapping-only/历史来源/首次 source binding，以及真实子进程 spawn/wait 阶段的重复取消收敛。
+最终同一明确 11 文件 **190 collected / 189 passed / 1 skipped in 135.26s**；新增 13 项全部通过，
+唯一 skip 是 Windows 无目录符号链接创建权限。collect-only 0.71s，不是全量。
+临时逐字节恢复旧 provider 后，9 项中 **8 failed / 1 passed**（28.17s）；失败均为真实身份误拒
+或越权路径未拒绝，随后逐字节恢复修复代码。compileall src/tests、两文件 Ruff、生产文件
+反硬编码扫描通过。完整文件清单、夹具修订原因与当前边界见
+[审查记录 §7](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
+该阶段只完成修复与定向确认；后续独立复审结果见本节开头。F4 未开始。未跑全量、L2–L4、
+Wheel、联网或真实 Provider；未提交、推送、发布。
+
+**v0.9 Release Stop B 首审历史（修复前）：P0=0、P1=1、P2=0，未通过。** B-P1-01 通过临时真实 Git
+的 ProjectScopeService → MemoryService read/approve 路径复现，损坏的 linked source 身份
+仍新增 active。11 个具名文件分两批执行：F3 核心 100 项全通过，相邻 134 passed in 2.91s；
+两批不重叠，同集合 collect-only 234 项（0.71s）。这些绿色用例未覆盖该 source 配置，不能抵消 P1。
+29 个 F3 Python 文件 Ruff 与 19 个生产文件反硬编码检查通过；源码和仓库测试逐字节未改。
+文档 QA 通过：10 份文档、514 个有效相对链接、32 个闭合 Mermaid 块，两版 0–20 章节对应，
+Memory 配置与阶段测试清单一致；无新增秘密形态或编码损坏，git diff --check 通过。
+完整范围、真实反例、探针首稿错误与未运行门禁见
+[Stop B 审查记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md)。本轮只登记文档，
+未重跑 compileall/修复反向验证；未运行全量、L2–L4、Wheel、联网、真实 Provider，未提交。
+
+**v0.9-F3 初次实现与定向验证：**新增 6 个测试文件共 **100 项通过**：核心／来源／Runtime／并发／
+项目 5 文件 94 passed in 4.86s，真实本地 Product/Git 与失败收敛 6 passed in 34.09s。没有真实模型。
+相邻范围显式限定 27 文件：初次 491 collected，486 passed / 3 skipped / 2 failed in 459.83s。
+其中 Product 消息顺序断言在干净 HEAD `22799a3` 独立复现（1 failed in 23.32s）：F0 已要求 Context
+wrapper 排在 Product 消息之前，旧断言未同步；现按真实 Context 事件重建并精确比较 wrapper，保留
+后续全部 Product authority 断言。另一处架构检查把 project-inherit: 操作 id 当成新 Stream；现识别
+其用途，并验证 Product bridge 只调用 scope owner、没有直接 Store append。两处修订后
+**18 passed in 20.72s**。这不是源码 P0/P1 或独立审查结论。
+
+最终同一 27 文件 collect-only 为 **496 项**（新增完整 JSON 秘密与三种 foreign owner 反例）；
+覆盖口径为去重 493 通过、3 项 Windows 符号链接权限跳过，来自上述首轮和相关修订复验，**不是
+一次 496 项执行，更不是全量**。精确清单见[阶段计划 10.5](../plan/TRACEHARNESS_V0.9_STAGE_PLAN.md#105-f3-实现验证记录)。
+反向验证临时允许未绑定 Session 借他人项目，3 个公开访问／写入反例失败；临时去掉固定内容规则，
+普通／JSON 形式秘密的 2 个拒绝反例失败；恢复后 5 passed，源码逐字节恢复。
+`compileall -q src tests`、29 个改动 Python 文件 Ruff、19 个生产文件反硬编码扫描、限定 collect-only
+与 git diff --check 通过。9 份文档 QA 验证 500 个相对链接、32 个闭合 Mermaid 块、两份上下文
+0–20 章节对应与 Memory 配置字段，无问题。未运行全量、L2–L4、Wheel、联网或真实 Provider；未提交／推送。
+F3 实现与限定验证已完成，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），F4 未开始。
+
+
+**Release Stop A 两项 P2 修复验证：**仅修改 Context 去重、exact matcher 与对应两份测试；
+同一明确 12 文件集合 **273 collected / 273 passed in 54.98s**，无跳过，文件清单见
+[审查记录 §7](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。新增 19 项包含在这 273 项中，
+不另加总：两种混合层级顺序、相同请求合并、真正重复块拒绝，以及三类路径的完整／引号查询和近似反例。
+临时恢复两处旧实现后，8 项公开路径按原根因失败、10 项保持通过，随后逐字节恢复修复代码。
+`compileall -q src tests`、本轮四个 Python 文件 Ruff、两生产文件反硬编码与新夹具词扫描通过。
+未运行全量、L2–L4、Wheel、联网或真实 Provider；该 P2 修复阶段未提交、未进入 F3；后续授权 F3 实现见 7.6。
+
+**v0.9 Release Stop A 首轮独立审查：**当时 P0=0/P1=0/P2=2，符合阶段计划 §9.3 的通过门槛；
+随后两项 P2 修复证据见上段，不改写首审结论。首审三个独立分区实测分别为
+Plugin/Generation **205 passed / 1 skipped**、selection/Store **40 passed / 2 skipped**、
+retrieval/Request **79 passed**（同集合 collect-only 79）；主审相邻回归 **119 passed**，
+另有三个真实 Runtime/SQLite 生命周期与并发探针 **3 passed**。集合重叠，不相加为去重总数。
+首审主审独立复现了两项 P2；40 个改动 Python 文件 Ruff 通过，首审前后生产与测试 SHA-256 不变。
+首审只登记文档，未重跑实现阶段 compileall／反向保护；未运行全量、L2–L4、Wheel、联网或真实 Provider。
+完整范围、文件集合、反例及未运行边界见
+[Stop A 审查记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
+
+**v0.9-F2 定向／相邻门禁：**同一显式 40 文件集合执行 **893 passed, 3 skipped in 50.33s**，
+共 896 项，精确集合见阶段计划 §9.4。三项为 Windows 符号链接权限跳过。覆盖 F2 新主线与 F0/F1、
+SQLite 跨进程、Session/Request/Recovery、Plugin/Generation、Product/TUI 相邻 owner。
+六组关键反向保护已按公开路径预期失败并逐字节恢复：孤立 FTS 行清理、operation payload、Skill 配额、
+section digest、Store owner、冻结融合收据。以上是实现阶段证据；独立审查结果单独列于本节开头。
+未运行全量、L2、Wheel、联网或真实 API，未提交／推送／发布。技术与文档静态检查见合同 §14.4。
+
+另对共享 Session 协议切换的 CLI／Inspector／Product 只读入口补查五个不重叠文件：
+`test_cli_read_only_commands.py`、`test_cli_resume_safety.py`、`test_cli_resume.py`、`test_inspector.py`、`test_product_inspection_leaf_failure.py`。
+同集合 collect-only **184 项**，执行 **183 passed, 1 skipped in 3.10s**（Windows NUL 路径边界）。
+两批合计 **45 文件、1080 collected、1076 passed、4 skipped**，不是一次全量运行；
+反向保护恢复后的八文件确认另得 **161 passed, 2 skipped**，与上述集合重叠，不再加总。
+
+`compileall -q src tests`、40 个修改 Python 文件 Ruff、23 个生产文件反硬编码扫描与当前
+测试示例词扫描均通过。八份文档 QA 检查了 463 个相对链接、30 个闭合 Mermaid 块、两份上下文
+0–20 编号对应关系和新增秘密／编码损坏，均无问题；`git diff --check` 通过。
+
+
 **v0.9-F0-B 最终定向／相邻门禁：**限定 36 个测试文件，collect-only **1079 项**，同集合最终
 **1076 passed, 3 skipped in 20.22s**。三项 skip 均为 Windows 边界：两项文件符号链接权限不足
 （`WinError 1314`）、一项 NUL 路径不合法。新 `test_context_input.py` 24、`test_context_request_protocol.py`
@@ -1718,6 +2014,17 @@ TUI 反向验证临时恢复旧 offset 后，两项反例按真实 Product misma
 成功，30 个改动 Python 文件 Ruff 通过，13 个生产文件反硬编码扫描无命中。这些是 F0-B 已完成的
 阶段证据；该轮未运行全量、L2、构建、联网或真实 Provider。
 
+**v0.9-F1 最终定向／相邻门禁：**同一显式 **31 文件**集合 collect-only **767 项**，执行
+**764 passed, 3 skipped in 32.06s**。两个新 Skill 文件为 **51 passed, 1 skipped**，已包含在总数；
+三项 skip 均为 Windows 符号链接权限不足（Skill 一项、SQLite 两项）。范围包括 SDK、metadata-only
+Discovery/CLI、激活回滚／取消、重复 id、身份／兼容性／资源摘要、整候选上限、exact Lease、重载旧
+字节、清理一次、Composition/Context/History、TUI inspector、协议拒绝和 Product 架构保护。
+精确清单见设计合同 §13。五组反向验证临时引入 prompt 泄漏、移除 candidate receipt、资源 digest、
+Lease 有效性、SDK Tool grant 字段拒绝，均因目标根因变红后逐字节恢复生产文件，不另加测试数量。
+`compileall -q src tests` 与本轮 **23 个 Python 文件 Ruff** 通过。测试使用隔离空临时 cwd、绝对路径和
+独立 cache/basetemp，不读取真实 `.env`。本轮未运行全量、L2、Wheel、联网或真实 API；未提交、推送
+或发布。该 F1 检查点尚未实现 F3–F5；当前 F3 实现见 7.6，完整门禁仍待各自授权检查点。
+
 **v0.9-F0-C 最终定向／相邻门禁：**同一组 **38 文件 collect-only 1104 项，1100 passed, 4 skipped
 in 31.98s**。新 History 四文件 **81 项**（reader 37、requests 12、Tool 16、Runtime 16）已包含在 1100，
 不另相加。四项 skip 是 Windows 边界：SQLite 两项文件符号链接权限不足（WinError 1314）、Tools 一项
@@ -1728,7 +2035,7 @@ in 31.98s**。新 History 四文件 **81 项**（reader 37、requests 12、Tool 
 重建；两分区独立有限审查均无 P0/P1。七组反向保护证据覆盖紧邻后继、reader 顺序／M3 来源、请求 owner
 页面／请求来源／重复取消，均按预期根因变红后恢复，不作为测试数追加。compileall `src tests` 成功，
 40 个改动 Python 文件 Ruff 通过，19 个生产文件反硬编码扫描无命中。测试从隔离空临时 cwd 调用绝对
-tests 路径，未加载真实 `.env`。F0-A/B/C 本轮授权实现已收口，F1 未开工；没有全量、L2、构建、联网、
+tests 路径，未加载真实 `.env`。F0-A/B/C 本轮授权实现已收口，F1 已完成限定验证；没有全量、L2、构建、联网、
 真实 API 或提交，不声称发布通过。以下长门禁历史不是本轮执行要求。
 
 ```powershell
@@ -1844,10 +2151,15 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
-F0-C 当前 Session 原文分页／请求已通过限定验证；没有排名、FTS、typed Skill、Workspace
-Memory、raw-only 模式、跨 Session 原文或实时 Workspace revision 观察。freshness 固定 unknown，
+**B-P1-01 已经修复后独立复审关闭；Stop B 已通过，P0=0/P1=0/P2=0。** source 与消费方共用 Git 注册／
+admin 规则，损坏 linked marker 零写入拒绝，合法主 checkout 不再因 source 是 linked 而误拒。
+Git registry 无法证明的布局仍不可用，不猜路径；common-dir 指纹仍不是永久 UUID，不新增跨流
+原子快照或 Workspace 生命周期。F4 未开始，证据见
+[Stop B 审查](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md)。
+
+F0-C 当前 Session 原文分页／请求已通过限定验证；F1 已提供 typed Skill catalog 与 leased resource reader；F2 已接入 Skill 选择／注入、排名和 FTS；F3 已提供 Workspace Memory authority（7.6），B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；仍没有 Memory 检索／Context 注入、raw-only 模式、跨 Session 原文或实时 Workspace revision 观察。freshness 固定 unknown，
 原文只进授权 Step 的 Context，不驻留 Surface。未配置仍有空 wrapper；未新增治理 UI，字节预算不是
-token 窗口。Session 必须为 `context_protocol=2`；F0-B 的 1 和无标记旧 Session 均拒绝，不迁移（7.4）。
+token 窗口。Session 必须为 `context_protocol=3`；1/2 和无标记旧 Session、物理 schema 1 均拒绝，不迁移（7.4）。
 
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
@@ -1913,12 +2225,19 @@ token 窗口。Session 必须为 `context_protocol=2`；F0-B 的 1 和无标记�
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
 | API 稳定性 | Alpha，协议可能演进 | 每次协议切换明确旧数据拒绝入口；仅在另获迁移授权时设计迁移，v1.0 冻结支持范围，不预设通用 Upcaster |
 
-v0.9-F0-A 已冻结设计，但跨 Session 项目绑定、Context／catalog 协议和 FTS schema 仍未实现，真实
-Sandbox、isolated Plugin 与多 coder 集成也未提前开始。20.33 与相应阶段计划规定 owner 和停止点；
-现有接缝的 19 项定向通过不能证明新协议，不能把新设计当成现有保护。后续全量／L2 仍按明确授权和
-所属检查点执行，本轮均未运行。
+v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 3、Context 2、context-json-v3、SQLite 2 与 Skill exact/FTS
+主线见第 7 节。F3 已实现跨 Session 项目绑定与 Memory authority，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；Memory 检索、真实 Sandbox、isolated Plugin 与多 coder 集成未实现。
+Release Stop A 首审未发现 P0/P1，两项 P2 已在现有 owner 修复并定向确认（15.1）：
+A-P2-01 统一 Skill 内容身份，允许不同层级共存而拒绝真正重复；A-P2-02 保留完整路径字面量和标识边界。
+原始反例与修复证据保存在 [审查记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
+exact 仍不提供模糊路径、别名、路径自动修正或越过 selection 的访问；正文不加入 FTS。
+请求仍仅供同 Turn 紧邻后继 Step，失败／取消／预算不足不顺延。P2 修复阶段未提前实现 F3；随后授权的 F3 实现与验证见 7.6、15.1。
+后续全量／L2 仍按明确授权和所属检查点执行，本轮均未运行。
 
 ## 17. 变更影响矩阵
+
+F3 项目／Memory 变更须联查 projects、memory、api/memory、Runtime facade、proposal Tool、
+ProductProjectBinding、Workspace Supervisor/Git 与闭合 History 来源；同步 1、3、6、7.6、9、13、15–17 及计划合同。
 
 | 修改区域 | 必查代码/测试 | 必须同步的本文章节 |
 |---|---|---|
@@ -1991,7 +2310,7 @@ flowchart LR
 - 示例只作为示例，秘密未进入 Git；
 - 最终交付说明变更、验证、文档同步和剩余边界。
 
-## 19. 插件系统（v0.4 / Stage A–D3）
+## 19. 插件系统（v0.4 / Stage A–D3 / v0.9-F1）
 
 作者与运维契约见 [`docs/plugins.md`](../plugins.md)，v0.4 事务原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)，Stage B 所有权决定见 [ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)，Stage C Session 迁移决定见 [ADR-0010](../adr/0010-session-plugin-composition-migration.md)，D0 控制面所有权拆分见 [ADR-0011](../adr/0011-plugin-composition-control-plane-coordinator.md)。本节记录工程事实。
 
@@ -2005,6 +2324,8 @@ flowchart LR
 | [`plugins/manager.py`](../../src/traceh/plugins/manager.py) | Manifest 校验、依赖解析、事务式激活，以及 `PluginActivationSet` / `PluginGenerationBuilder` 的候选所有权转交 |
 | [`cli/plugins.py`](../../src/traceh/cli/plugins.py) | `list`/`inspect`/`doctor` 的安全投影 |
 | [`api/plugins.py`](../../src/traceh/api/plugins.py) | `PluginManifest`、`PluginContext`、`Plugin`、`CORE_PLUGIN_IDENTITY` |
+| [`api/skills.py`](../../src/traceh/api/skills.py) | 冻结 Skill DTO、严格 descriptor reader、host SkillLimits/Policy/ResourceRoot；SDK 从 `traceh.plugins` 与 `traceh.api` 导出相同类型 |
+| [`plugins/skills.py`](../../src/traceh/plugins/skills.py) | 有界 UTF-8 资源校验、原 Activation 所有的 FrozenSkill、exact Lease 内只读接口 |
 | [`api/prompts.py`](../../src/traceh/api/prompts.py) | `PromptSection`，从 `runtime/prompt.py` 移出，使 SDK 不必导入装配层 |
 
 ### 19.2 Discovery 只读元数据
@@ -2225,6 +2546,70 @@ D3 没有给四类能力另建“插件 Runtime”。`PluginContext.register_pro
 `PluginActivationSet` 现在随 Tool/Prompt/Service/Policy 一起持有候选 LLM Registry、Middleware tuple 与有效 Verifier。`CompositionGeneration` 对选中 Provider、Policy、Middleware 和 Verifier 都做对象身份守卫；ToolRuntime 不能换成名称相同、行为不同的对象。若 ActivationSet 显式提供 LLM Registry，所选 Provider 必须存在于该 Registry，且必须与 Runtime 使用的对象逐项 `is` 相同；“候选里没有，但另一个 Registry 里恰好有同名 Provider”不是回退条件。为保持 D0 的自定义 ActivationSet 替换合同，只有完全没有 `llms` 属性（或明确为 `None`）的旧式对象，协调器才借用自身已有核心 Registry；显式提供 D3 Registry 的候选绝不会走这个兼容分支。`ActiveComposition` 把 Verifier 带进 Step Lease，AgentLoop 的验证阶段已移动到 `async with compositions.lease(...)` 内：模型响应、ToolRuntime 和验证器由同一个 Generation 冻结。发布新 Generation 时，正在验证的旧 Step 仍用旧 Verifier，旧插件 Activation 要等该 Lease 退出后才 cleanup。Snapshot 已记录 Provider、Policy/Middleware 名称和插件身份；Verifier 不影响发给模型的 Request，因此不新增 Request Fingerprint 字段，其真实结果仍由 `verification/result` 持久化。
 
 EventStore 刻意没有加入 `PluginContext`。它是 SessionService、Recovery、Inspector 和所有事件写入共同借用的**进程级事实源**，而当前插件 ActivationSet 会随 Step Generation retire。若让 `/plugins` 切换卸载 Store 插件，旧 Session 会继续握着已经被 cleanup 的账本实现，或者同一 Runtime 出现两本账。真正开放前必须先设计独立于 Generation 的 process-lifetime/pinned Activation 所有权、Store 构造与关闭顺序、旧 Session 兼容和合同测试；当前仍只能在 Runtime 构造时直接注入 EventStore。这个收窄记录在 [ADR-0014](../adr/0014-generation-scoped-plugin-execution-capabilities.md)。
+
+### 19.16 v0.9-F1：Skill 贡献、冻结目录与资源（通俗版 19.12）
+
+Discovery 仍只读 Distribution 元数据，`skills={available:false,requires_activation:true}` 明确表示
+目录需成功激活后才可见；`plugins list/inspect` 的文本输出同样提示，不 import 未启用插件。
+
+公共 SDK 的 `SkillContribution` 只包含 `SkillDescriptor` 和显式 `SkillSectionContent` tuple；
+`PluginContext.register_skill()` 只在 setup 期间可用，不调用 `register_prompt()`、不注册 Tool。
+Descriptor exact 字段、canonical digest 和排序以 [设计合同 §3.2](../plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md#32-catalog-和选择)
+为准：Skill id 在候选全局唯一，sections/resources 分别按 id 排序，tags 去重排序；section tier 当前固定
+为 `section`。`SkillResource` 的 chunks 保留作者声明的 byte 顺序，id 唯一、区间互不重叠；宿主验证
+UTF-8 半开范围与各级 SHA-256／content_bytes。正文按原始 UTF-8 bytes 验证，不改写 CRLF 或其他内容。
+Descriptor 不接受 Tool grant、执行对象或绝对路径。插件身份必须等于实际激活 Manifest 的 id/version，
+requires_traceh 必须兼容当前唯一版本。
+
+`RuntimeConfig.skill_policy`、`PluginGenerationBuilder.skill_policy` 与 `PluginManager.skill_policy`
+接收同一冻结 `SkillPolicy`，默认 None 表示注册明确失败，不提供隐藏上限或本机路径。宿主必须显式配置：
+
+| SkillLimits 字段 | 生效范围 |
+|---|---|
+| max_skills | 整个候选 Skill 数 |
+| max_catalog_bytes | 整个排序目录 canonical JSON 的 UTF-8 bytes |
+| max_summary_bytes | 每个 summary 的 UTF-8 bytes |
+| max_content_bytes | 整个候选的 section 与资源正文 bytes 合计 |
+| max_resource_bytes | 每个资源文件的声明大小和实际有界读取 |
+
+五项都是正整数。只有含资源的贡献才需要 `SkillResourceRoot(plugin, path)`；path 必须是宿主显式给定的
+绝对路径，每个 plugin id 只有一个绑定，并匹配 exact PluginIdentity。没有、错版本或歧义的 root 都拒绝。
+贡献只提供规范的可移植相对路径；拒绝绝对／上跳／非规范路径、Windows 设备名／流、符号链接和 reparse
+point、非普通文件、越界、变动或超限文件；`.git`、`.env*` 名称在读取前拒绝。它仍是 trusted 进程内
+Plugin 合同，不声称是抵御同权限恶意进程的 OS sandbox。当前仅程序化配置这些上限和 root，未新增 CLI
+选择命令、文件 watcher、Wheel 替换或旧示例插件自动转换。
+
+```mermaid
+flowchart LR
+    HOST["宿主 SkillPolicy / exact PluginIdentity root"] --> SETUP["现有 setup 私有暂存 / 有界校验冻结 bytes"]
+    SETUP --> CHECK["冲突 / health / receipt"]
+    CHECK --> SET["原 ActivationSet 转交唯一所有权"]
+    SET --> GEN["Generation 冻结 catalog / digest / revision"]
+    GEN --> LEASE["现有 Lease / ActiveComposition.skills"]
+    LEASE --> READ["按 skill + section/resource/chunk id 读原 bytes"]
+    GEN --> CTX["Context 绑定 catalog digest / Skill not-selected"]
+    LEASE --> END["retired 且最后一个 Lease 释放"]
+    END --> CLOSE["原 Activation 清理一次 / 清空资源快照"]
+```
+
+`plugins/skills.py` 在注册时捕获有界、不可变的 section/resource bytes，作为已验证 root 的只读快照，
+不保留会被新磁盘内容改变的延迟读取。原 Activation 的注册清理是唯一释放入口，未新增资源计数器、
+后台 Task、持久流或 retriever 缓存。插件拿到的 Registration 只能在 setup 中撤销；setup 结束后不能
+靠这个句柄关闭在用资源。失败和取消由现有事务逆序收敛。ActivationSet 同时核对资源原 Activation
+归属与目录收据，Generation 转交再校验 receipt，禁止借用另一 Activation 的资源。
+
+`ActiveComposition.skills` 提供 catalog 与 `read_section/read_resource/read_chunk`，读取参数是声明的
+id，返回不可变 bytes；不接受任意文件路径。每次读取核验 exact Lease 仍有效，退出或释放开始后拒绝。
+重载在既有 publish 线性化点切代；旧 Lease 保留旧目录与 bytes，新 Lease 只拿新代，源文件覆盖或删除
+不影响已冻结内容。旧代最后一个 Lease 释放后才清理；重复释放、重复取消和邻近 cleanup 失败仍沿原
+ActivationSet／Drain owner 收敛，不提前返回或增加第二个生命周期。
+
+Composition 只持久化有界 descriptor manifest/digest，不保存 section/resource 正文或 host root。
+Context 绑定 exact catalog digest；默认未配置 F2 时，空目录记 source-unavailable，非空目录记 not-selected，
+Skill blocks 与配额仍为零。插件启用不自动注入；F2 经过宿主持久选择、检索与预算才逐级披露（7.5）。
+当前 Session context_protocol=3、Context format=2、context-json-v3、SQLite schema=2，旧版本拒绝。
+F1/F2 的限定验证与 Release Stop A 独立审查分别记录于 15.1；后者 P0/P1 清零，2 项 P2 已修复并完成定向确认。
+停止点通过不代表 v0.9 发布通过；F1 的五组反向验证也不代替本轮审查。
 
 ## 20. 多 Agent 控制面（Stage A 身份 + Stage B Inbox + Stage C 执行 + Stage D 生命周期 + Stage E 模型 Tool）
 
@@ -3857,7 +4242,8 @@ tag、release、联网、调用真实 Provider 或读取秘密。
 M3+M4 前置已完成，不再作为当前待办；后续依次为 v0.9 Context/Skill/Workspace Memory/History Evidence、
 v0.10 host-owned Sandbox、v0.11 官方 MCP Client Plugin、v0.12 受控动态并发 Product Workflow、v1.0 RC。
 计划修订后已完成 F0-A ADR／设计冻结，F0-B 最小请求主线与最终定向／相邻门禁随后完成。
-F0-C History 接缝与最终限定门禁已完成，F0-A/B/C 本轮授权实现收口；F1–F5 未开工，三个 Release Stop 保持不变。
+F0-C History 接缝与最终限定门禁已完成，F0-A/B/C 本轮授权实现收口；F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，三个 Release Stop 保持原顺序。
+Release Stop A 已独立审查通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认，范围与证据见 15.1、16。
 
 总路线分别定义事实权威、控制权限和预算：当前执行状态由 Product/Workflow/Promotion/Workspace 原流
 的 owner fresh 读取，approved Memory 只证明长期项目事实，Skill／History 作为参考；它们不改写当前
@@ -3920,7 +4306,7 @@ Session owner/CAS 后同一 Step 的 Provider 调用从 1 变成 2；退回“�
 F1 由 [`ADR-0036`](../adr/0036-single-production-sqlite-event-store.md) 把 stdlib SQLite 冻结为唯一生产
 EventStore。`JsonlEventStore` 已从源码和公共导出删除，`Durability.BATCHED` 同时删除；旧 `.jsonl`/
 `.lock`、mixed 目录、未知/旧/新 schema、blank/linked/corrupt/non-canonical 数据全部 fail closed，旧 bytes
-不读取、不移动、不删除、不迁移。current schema 使用 `application_id` + `user_version = 1`，只有
+不读取、不移动、不删除、不迁移。v0.8-F1 当时的 schema 使用 `application_id` + `user_version = 1`，只有
 `streams`/`events` 两张 `WITHOUT ROWID` 表；完整 Envelope 保存为 canonical JSON。打开时检查全部持久
 schema 对象、规范化表 DDL、精确表列/外键、SQLite integrity、head/count/gap 与 Envelope round trip；
 额外 table/index/view/trigger 都会让 current schema 被拒绝。
@@ -4004,7 +4390,7 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
 [ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)（Context/Skill/History/检索）和
 [ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md)（项目绑定/Memory authority）；
 [F0 设计合同](../plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md) 是新字段、事件、状态、schema、配置、
-评测规格和 owner 验收表的唯一详细定义。以下区分已完成 F0-B/C 与后续目标：
+评测规格和 owner 验收表的唯一详细定义。以下区分已完成 F0-B/C/F1 与后续目标：
 
 - **Skill 与资源 owner**：typed catalog 进入现有 trusted Plugin Activation/Generation/Lease；selection
   不启用插件、不 publish/drain、不授予 Tool。运行期 exact Lease 校验资源归属；持久 Context 绑定
@@ -4013,8 +4399,8 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   Context 保存关联与选中 exact bytes，历史重建校验 catalog 成员，不加载当前 Wheel。四级披露按
   manifest metadata/summary/section/chunk 的确定规则匹配，资源 chunk 具有显式 byte range/digest。
   F2 selection 使用同 Store 的 Session-scoped 流，只影响未来 Step；catalog 变化后不静默改绑旧选择。
-  F0-B 已在 Composition 接入空 catalog/digest 并纳入 revision；非空贡献仍留给 F1。
-- **项目 Memory**：当前普通 Session 只有目录，managed workspace identity 是一次 provision 的 worktree
+  F1 已由 typed SkillContribution 接入非空 catalog/digest 和有界资源快照；实现、限制和唯一 cleanup owner 见 19.16。F2 选择／检索与模型披露已接入，见 7.5；治理界面仍待 F5。
+- **项目 Memory（F3 authority 已实现，7.6）**：当前普通 Session 只有目录，managed workspace identity 是一次 provision 的 worktree
   身份。ADR-0044 冻结唯一 ProjectScopeService 与同 Store 的 `projects:catalog`，以全流 CAS 记录
   created/source-bound/session-bound；一 Session 只绑一个项目，不从 metadata 或路径猜归属。
   requester 的实际 workspace 须经宿主 resolver 核对 source，child 经原 Product/Directory/Workspace
@@ -4023,15 +4409,16 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   事件，由宿主按 exact proposal digest 批准；同一 scope
   的宿主事实槽至多一个 active，替代／撤销绑定 exact predecessor/digest/head，经 CAS 追加。跨槽自然
   语言冲突交宿主审核，不让检索器猜测。scope binding 不另建 Workspace 生命周期或用户全局记忆。
-  Memory 为短事实，目录从固定 metadata 派生，summary/section 保留完整批准正文；不截断限定句，
+  F4 待接入的检索合同：Memory 为短事实，目录从固定 metadata 派生，summary/section 保留完整批准正文；不截断限定句，
   首版没有额外资源 chunk，更不因 source 引用开放跨 Session 原文。批准全文与实际 block 的摘要分开核对。
 - **Context 与合法失败前缀（F0-B 已实现）**：进入请求构建的 Step 在同一 Lease 内先追加唯一 Context，再追加 Composition，
   沿用 `source_seq`。成功零命中仍记录空 blocks；检索／Lease 失败可以零 Context，Context／Composition
   已提交而预算拒绝可以没有 Request/Attempt。append 失败／取消先收敛再对账 True/False/unknown；
   Recovery 不补造 Context 或模型调用。同 Step Provider retry 复用原 Context/source_seq，旧格式缺少
-  Context 不静默合成。F0-C 把 F0-B 的 Session 标记 1 唯一切换到 `context_protocol=2`，共同 reader、
-  invariant、open/recover/inspect/replay/Request 均拒绝无标记和 F0-B 旧 Session；EventEnvelope 与 M3
-  format 2 不变。当前只有 Session 来源，窄策略／空 wrapper／精确旧请求重建见 7.4；没有跨流 latest 保证。
+  Context 不静默合成。F2 当前唯一 Session 标记为 `context_protocol=3`，共同 reader、invariant、
+  open/recover/inspect/replay/Request 拒绝旧 1/2 和无标记 Session；EventEnvelope 1、M3 format 2 不变。
+  Context outer/SQLite schema 为 2，policy 原八项加 skills；来源仍为 Session scope，精确重建见 7.4–7.5，
+  没有跨流 latest 保证。
 - **History（F0-C 已完成）**：同 Session 原始 Surface 与 format-2
   replacement provenance 是唯一来源。当前默认空策略，不默认选历史；显式选择时读取有界目录／摘要。
   显式 reader 配置后 exact block/cursor 经来源、分页、授权与预算核对才展开；已披露的旧 block 被新
@@ -4043,12 +4430,12 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   同按闭合 Turn/Tool 组切分，超大 Turn 的 slot 稳定且整页拒绝，无 accepted receipt；原文预算优先于
   自动参考。观察时间来自持久 cut boundary；workspace_observation=null、freshness=unknown 严格固定，
   Workspace base_revision 无历史 ToolResult 执行时绑定，matched/stale 推迟 F3/F4 真实 owner 接入。
-- **索引／计量**：exact+FTS 是 F2 后续目标，当前没有检索排名或索引。F0-B 保持物理 schema 1，F2 再一次切为 2；对象精确为
+- **索引／计量**：exact+FTS 已在 F2 实现，只以 eligible corpus 计算排名，见 7.5。物理 schema 已唯一切为 2；对象精确为
   streams/events、manifest/items 两张派生表、contentful FTS5 与五张 shadow 表，拒绝未知对象／旧库。
   Store 持有连接、worker、事务、重建、关闭与一致 backup/restore；插件无 writer。已知派生行逻辑
   缺失／过期可 unavailable，DDL/shadow 缺失或物理损坏仍拒绝，重建只改派生行。
   FTS 先按资格召回，BM25 只使用 eligible corpus 词频，避免全库统计串项目；RRF/稳定 tie-break、
-  中文单字/双字与代码 exact lane、各资源上限都在合同中版本化，具体质量仍待 F2/F5。
+  中文单字/双字与代码 exact lane、各资源上限都在合同中版本化，F2 已完成确定性合同验证，检索质量评测仍待 F5。
   Context 每块与每类按完整渲染 UTF-8 item 计费，总 wrapper 计总额；原文 bytes 另报。无显式可验证 counter
   时 token unavailable。可选本地 semantic/reranker 保持离线、derived，先证明预定收益与资源成本。
 - **评测**：复用唯一 `traceh eval`。同一 attempt 内先创建 Store/受控 Runtime、requester Session/项目
@@ -4058,13 +4445,13 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   Step 计样（retry 不重复）、角色／attempt 汇总、K、tier relevance、失败分母和计量；F5 在 candidate
   结果前冻结语料／阈值。包含中文、英文、混合代码标识和跨 Session 项目问答；scope 泄漏必须为 0，
   其他阈值缺失只算测量。History 不因评测或 Memory 引用变成跨 Session 原文读取。
-- **实施／验证**：F0-A 设计、F0-B 请求主线与 F0-C History 本轮授权实现均已收口，F1–F5 未开工。F0 不提前造
+- **实施／验证**：F0-A 设计、F0-B 请求主线与 F0-C History 本轮授权实现均已收口，F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工。F0 不提前造
   Skill/Memory authority 或完整 UI；仅使用 Session 历史时 receipt 记录 Session 范围，不虚构项目 binding
   或 Memory 读取资格，后续 owner 各自证明真实路径。F0-A 的 19 项现有接缝测试与文档 QA 是设计依据，
   不冒充新协议验证。F0-B 三个新模块的 59 项包含在最终 36 文件 `1076 passed, 3 skipped` 中，详见 15.1；本轮没有
   全量、L2、构建或联网证据。F0-C 最终 38 文件 1100 passed / 4 skipped（1104 collected，含新 History 81），
-  两分区无 P0/P1，详见 15.1。当前 policy 为原七项加 nullable history，完整检索
-  配置仍待后续显式版本切换。Release Stop
+  两分区无 P0/P1，详见 15.1。F2 当前 policy 为原八项加 nullable skills，内含十五项显式
+  Skill 检索配置（13.3.1）；跨来源通用配置留到 F4。Release Stop
   不自动触发全量。无筛选全量本就含
   真实 L2，最终检查点须明确授权和长门禁构成，避免无意重复；禁止全量／L2 时如实记录未运行。
 
@@ -4844,7 +5231,7 @@ turns)` 与 `上下文已压缩 · 18 段历史 → 1 段摘要 · 保留最近 
 - **相邻 owner 回归组**（Product model-context/memory/observation/F3 E2E、recovery、inspector、runtime
   e2e/factory/dispose、budget enforcement/supervision、TUI 四套、CLI chat/run-dispose/activity、cancellation、
   event feed、event store contract、model attempt admission/retry、plugin runtime、composition generations、
-  agent supervisor 共二十六个文件）：**`526 passed, 1 skipped`**。唯一 skip 是 `test_tui.py` 的模块级
+  agent supervisor 共二十五个文件）：**`526 passed, 1 skipped`**。唯一 skip 是 `test_tui.py` 的模块级
   `importorskip("textual")`，因为本机解释器没有安装可选 `tui` extra——这是环境边界，不是平台边界。
 - **全仓收集**：本机（无 `tui` extra）**`2719 tests`**，装有该 extra 的解释器 **`2765 tests`**。两者都正确，
   差额完全来自 `test_tui.py` 的模块级 `importorskip("textual")`。引用收集数时必须同时说明解释器是否装了

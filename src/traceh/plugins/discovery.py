@@ -70,6 +70,7 @@ class DiscoveredPlugin:
                 "available": False,
                 "requires_import": True,
             },
+            "skills": {"available": False, "requires_activation": True},
             "issues": [issue.to_dict() for issue in self.issues],
         }
 

@@ -27,3 +27,15 @@ def test_plugin_sdk_exports_execution_capability_protocols() -> None:
     assert ToolMiddleware
     assert ToolPolicy
     assert VerificationResult
+
+
+def test_plugin_sdk_exports_the_same_typed_skill_contract() -> None:
+    import traceh.api as api
+    import traceh.plugins as sdk
+
+    for name in (
+        "SkillChunk", "SkillContribution", "SkillDescriptor", "SkillLimits", "SkillPolicy",
+        "SkillResource", "SkillResourceRoot", "SkillSection", "SkillSectionContent",
+    ):
+        assert getattr(sdk, name) is getattr(api, name)
+    assert callable(sdk.PluginContext.register_skill)

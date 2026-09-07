@@ -25,6 +25,12 @@ from traceh.api.llm import (
     dispatch_request_matches_composed,
     model_attempt_reservation_id,
 )
+from traceh.api.memory import (
+    MemoryPolicy,
+    ProjectMemoryConfig,
+    ProjectScopeLimits,
+    ProjectSourceResolver,
+)
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
     Plugin,
@@ -46,7 +52,19 @@ from traceh.api.promotion import (
     VerifierOutcome,
 )
 from traceh.api.prompts import PromptSection
+from traceh.api.retrieval import SkillRetrievalPolicy
 from traceh.api.services import Registration, ServiceKey
+from traceh.api.skills import (
+    SkillChunk,
+    SkillContribution,
+    SkillDescriptor,
+    SkillLimits,
+    SkillPolicy,
+    SkillResource,
+    SkillResourceRoot,
+    SkillSection,
+    SkillSectionContent,
+)
 from traceh.api.tools import (
     EffectKind,
     PreparedToolCall,
@@ -78,6 +96,10 @@ __all__ = [
     "EffectKind",
     "EventEnvelope",
     "LlmProvider",
+    "MemoryPolicy",
+    "ProjectMemoryConfig",
+    "ProjectScopeLimits",
+    "ProjectSourceResolver",
     "ModelAttemptIdentity",
     "ModelMessage",
     "ModelRequest",
@@ -102,6 +124,16 @@ __all__ = [
     "PromptSection",
     "Registration",
     "ServiceKey",
+    "SkillChunk",
+    "SkillContribution",
+    "SkillDescriptor",
+    "SkillLimits",
+    "SkillPolicy",
+    "SkillRetrievalPolicy",
+    "SkillResource",
+    "SkillResourceRoot",
+    "SkillSection",
+    "SkillSectionContent",
     "Tool",
     "ToolAdmissionDecision",
     "ToolAdmissionGate",

@@ -45,6 +45,7 @@ def test_discovery_reports_metadata_without_manifest() -> None:
     assert payload["distribution"] == {"name": "example-dist", "version": "1.0.0"}
     # Stated, not implied: the manifest genuinely was not read.
     assert payload["manifest"] == {"available": False, "requires_import": True}
+    assert payload["skills"] == {"available": False, "requires_activation": True}
     assert payload["issues"] == []
 
 

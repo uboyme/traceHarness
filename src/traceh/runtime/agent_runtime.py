@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING
 
 from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
+from traceh.api.memory import ProjectMemoryConfig
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
+from traceh.api.skills import SkillPolicy
 from traceh.api.tools import Tool, ToolAdmissionGate
 from traceh.api.turns import TurnInput
 from traceh.concurrency import await_worker_convergence
@@ -88,6 +90,7 @@ __all__ = [
 #: created under. Reserved: callers may not set it themselves.
 _PLUGIN_METADATA_KEY = PLUGIN_METADATA_KEY
 
+
 #: Sentinel for "the key is genuinely absent", which is what a pre-v0.4 session
 #: looks like. It exists because `dict.get()` returns `None` both for an absent
 #: key and for a key explicitly recorded as `null` - two different facts that
@@ -115,6 +118,10 @@ class RuntimeConfig:
     #: Explicit, bounded current-Session directory/summary selection. Absent
     #: means a frozen empty Context receipt, never an implicit retrieval policy.
     context_input: ContextInputPolicy | None = None
+    #: Explicit activation limits and host-owned resource roots; no selection.
+    skill_policy: SkillPolicy | None = None
+    #: Explicit project resolver and all authority limits. None disables both domains.
+    memory: ProjectMemoryConfig | None = None
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -133,6 +140,10 @@ class RuntimeConfig:
             raise TypeError("compaction must be CompactionPolicy")
         if self.context_input is not None and type(self.context_input) is not ContextInputPolicy:
             raise TypeError("context_input must be ContextInputPolicy")
+        if self.skill_policy is not None and type(self.skill_policy) is not SkillPolicy:
+            raise TypeError("skill_policy must be SkillPolicy")
+        if self.memory is not None and type(self.memory) is not ProjectMemoryConfig:
+            raise TypeError("memory must be ProjectMemoryConfig")
 
 
 class AgentRuntime:
@@ -155,10 +166,33 @@ class AgentRuntime:
         assembly_llms: LlmRegistry | None = None,
         assembly_policies: tuple[ToolPolicy, ...] = (),
         assembly_middlewares: tuple[ToolMiddleware, ...] = (),
+        memory_authority=None,
     ) -> None:
         self.config = config
         self.sessions = sessions
         self.loop = loop
+        from traceh.runtime.skill_context import SkillContextControl
+
+        self.skill_context = SkillContextControl(
+            sessions,
+            loop.compositions,
+            config.context_input.skills if config.context_input else None,
+        )
+        from traceh.runtime.memory_control import MemoryControl
+
+        if (config.memory is None) != (memory_authority is None):
+            raise ValueError("memory-context-config-mismatch")
+        if memory_authority is not None and (
+            memory_authority.scope.sessions is not sessions
+            or memory_authority.scope.resolver is not config.memory.source_resolver
+            or memory_authority.scope.limits != config.memory.project_limits
+            or memory_authority.policy != config.memory.memory_policy
+        ):
+            raise ValueError("memory-context-owner-mismatch")
+        # Like SessionService, the association service is Store-owned. Memory host
+        # operations below additionally borrow this Runtime's Drain/Lease owner.
+        self.project_scope = memory_authority.scope if memory_authority is not None else None
+        self.memory = MemoryControl(sessions, loop.compositions, memory_authority)
         self.recovery = recovery
         self.surface = surface
         self.invariants = invariants
@@ -529,6 +563,7 @@ class _PreparedRuntime:
     tool_admission_gate: ToolAdmissionGate | None
     retry_scheduler: RetryScheduler
     summarizer: SessionSummarizer
+    memory_authority: object | None
 
 
 def _prepare_default_runtime(
@@ -576,6 +611,17 @@ def _prepare_default_runtime(
     # callers a feed that never receives anything.
     event_feed = SessionEventFeed()
     sessions = SessionService(PublishingEventStore(actual_event_store, event_feed))
+    memory_authority = None
+    if config.memory is not None:
+        from traceh.memory.service import MemoryService
+        from traceh.projects.service import ProjectScopeService
+
+        memory_authority = MemoryService(
+            ProjectScopeService(
+                sessions, config.memory.source_resolver, config.memory.project_limits,
+            ),
+            config.memory.memory_policy,
+        )
     surface = SurfaceProjector()
 
     llms = LlmRegistry()
@@ -586,9 +632,7 @@ def _prepare_default_runtime(
         repeat_last=True,
     )
     llms.register(actual_provider)
-    if actual_provider.name != config.provider and not (
-        allow_plugin_provider and provider is None
-    ):
+    if actual_provider.name != config.provider and not (allow_plugin_provider and provider is None):
         raise ValueError(
             f"configured provider {config.provider!r} does not match provider object "
             f"{actual_provider.name!r}"
@@ -614,19 +658,29 @@ def _prepare_default_runtime(
         selected_tools += (
             HistoryDisclosureTool(sessions.read_session, policy=config.context_input.history),
         )
+    if include_default_tools and config.context_input and config.context_input.skills:
+        from traceh.tools.skill import SkillDisclosureTool
+
+        selected_tools += (
+            SkillDisclosureTool(
+                sessions.read_session,
+                sessions.read_skill_selection,
+                policy=config.context_input.skills,
+            ),
+        )
     for tool in selected_tools:
         tool_registry.register(tool)
+    if include_default_tools and memory_authority is not None:
+        from traceh.tools.memory import MemoryProposalTool
+
+        tool_registry.register(MemoryProposalTool(memory_authority.propose_model))
 
     effective_policies = policies or (DangerousShellPolicy(), AllowByDefaultPolicy())
     effective_verifier = verifier
     if verifier is not None and selected_verifier_name is not None:
-        raise ValueError(
-            "a direct verifier and a named plugin verifier are mutually exclusive"
-        )
+        raise ValueError("a direct verifier and a named plugin verifier are mutually exclusive")
     if selected_verifier_name is not None and config.verification_command:
-        raise ValueError(
-            "a verifier command and a named plugin verifier are mutually exclusive"
-        )
+        raise ValueError("a verifier command and a named plugin verifier are mutually exclusive")
     if effective_verifier is None and config.verification_command:
         effective_verifier = CommandVerifier(
             config.verification_command,
@@ -636,6 +690,7 @@ def _prepare_default_runtime(
         config=config,
         data_dir=data_dir,
         sessions=sessions,
+        memory_authority=memory_authority,
         surface=surface,
         event_feed=event_feed,
         llms=llms,
@@ -742,6 +797,7 @@ def _finish_default_runtime(
         assembly_llms=prepared.llms,
         assembly_policies=prepared.policies,
         assembly_middlewares=prepared.tool_middlewares,
+        memory_authority=prepared.memory_authority,
     )
 
 
@@ -803,6 +859,7 @@ def build_default_runtime(
         verifier=prepared.verifier,
         verifier_name=prepared.verifier_name,
         provider_name=prepared.config.provider,
+        skill_policy=prepared.config.skill_policy,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,
@@ -881,6 +938,7 @@ async def build_default_runtime_async(
         verifier=prepared.verifier,
         verifier_name=prepared.verifier_name,
         provider_name=prepared.config.provider,
+        skill_policy=prepared.config.skill_policy,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,

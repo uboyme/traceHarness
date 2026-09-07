@@ -252,7 +252,7 @@ def read_history(
 
     if check_surface_replacement_sources(prefix):
         raise HistoryReadError("history-source-invalid")
-    turn_ends = _turn_membership(prefix)
+    turn_ends = closed_turn_membership(prefix)
     depths: dict[int, int] = {}
     nodes: list[_Node] = []
     roots: list[_Root] = []
@@ -301,7 +301,8 @@ def read_history(
     return HistorySnapshot(policy, tuple(nodes), tuple(roots), visible)
 
 
-def _turn_membership(events: tuple[EventEnvelope, ...]) -> dict[int, int]:
+def closed_turn_membership(events: tuple[EventEnvelope, ...]) -> dict[int, int]:
+    """Map original Surface leaves to their real closing Turn, shared by evidence readers."""
     result: dict[int, int] = {}
     open_turn: str | None = None
     leaves: list[int] = []

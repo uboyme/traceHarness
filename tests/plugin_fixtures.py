@@ -15,6 +15,7 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
+from traceh.api.skills import SkillContribution
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.plugins import PluginContext, PluginManifest, PromptSection
 from traceh.plugins.discovery import ENTRY_POINT_GROUP
@@ -117,6 +118,7 @@ class ScriptedPlugin:
         *,
         tools: tuple[RecordingTool, ...] = (),
         prompts: tuple[PromptSection, ...] = (),
+        skills: tuple[SkillContribution, ...] = (),
         services: tuple[tuple[Any, Any], ...] = (),
         providers: tuple[Any, ...] = (),
         policies: tuple[Any, ...] = (),
@@ -139,6 +141,8 @@ class ScriptedPlugin:
         self.manifest = manifest
         self._tools = tools
         self._prompts = prompts
+        self._skills = skills
+        self.skill_registrations = []
         self._services = services
         self._providers = providers
         self._policies = policies
@@ -181,6 +185,8 @@ class ScriptedPlugin:
             context.register_tool(tool)
         for section in self._prompts:
             context.register_prompt(section)
+        for skill in self._skills:
+            self.skill_registrations.append(context.register_skill(skill))
         for key, value in self._services:
             await context.provide(key, value)
         for provider in self._providers:

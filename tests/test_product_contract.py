@@ -85,16 +85,16 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "8edb133431232d371882aec7876df91e711490a3966f7028942304f0e139ab2e"
+        "17076c64650d24cba5c0c28733b45877086962abd947b68964e47796f9b21e18"
     ),
     "runtime/agent_runtime.py": (
-        "0178ab60d681f9b4c50ba98481ce2407ffe1d4d0f1a44993dba541834aa4293d"
+        "d2e9b572562b836bc48ada05825d9b2b4f306040c6a32898d1d4220f90b109f2"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
     "plugins/manager.py": (
-        "b87312a7f6cf19b863f9a1a946f8ca8478e1ed19b9751daecd44b95eb55e1230"
+        "30a524258d42dcaad8f4b5919e3235927b5868092c3ae775b0df4854dfc6608e"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
@@ -105,6 +105,18 @@ generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
 and failure-convergence seam. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; neither
 file gains Product state or a Product dependency.
+
+v0.9-F3 adds explicit ProjectMemoryConfig, a proposal-only Tool callback and a
+host Memory control facade borrowing the existing Lease. No Product import,
+authority state machine, Store ownership or lifecycle enters AgentRuntime.
+
+v0.9-F2 passes the exact Skill lease and same-Store read callbacks into Context,
+plus a host selection/index facade and an opt-in receipt-only Tool. No Plugin
+or SQLite implementation enters AgentLoop; no Product state is introduced.
+
+v0.9-F1 adds SkillPolicy to host assembly and typed Skill registrations to
+PluginManager. Catalog/resource receipts follow the existing ActivationSet,
+Generation and Lease; no Product dependency or extra lifecycle is introduced.
 
 v0.9-F0-C adds typed host History requests through the same Turn and Session
 append owner, plus explicit opt-in registration of a receipt-only PURE_READ

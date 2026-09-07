@@ -59,6 +59,9 @@ def _emit(result: dict[str, object], *, json_output: bool) -> None:
             dist_name = distribution.get("name") if isinstance(distribution, dict) else None
             dist_version = distribution.get("version") if isinstance(distribution, dict) else None
             print(f"  {plugin_id}: {state} ({dist_name or 'unknown'} {dist_version or 'unknown'})")
+            skills = item.get("skills")
+            if isinstance(skills, dict) and skills.get("requires_activation") is True:
+                print("    skills: available after successful activation")
             issues = item.get("issues") or []
             if isinstance(issues, list):
                 for issue in issues:

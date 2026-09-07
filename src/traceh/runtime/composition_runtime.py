@@ -19,12 +19,14 @@ from typing import Any, Protocol
 from traceh.api.llm import LlmProvider, ToolSchema
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
 from traceh.api.prompts import PromptSection
+from traceh.api.skills import SkillDescriptor, validate_skill_catalog
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.composition import CompositionSnapshot, RuntimeComposition
 from traceh.kernel.registry import ServiceView
 from traceh.kernel.scope import Scope
 from traceh.llm.registry import LlmRegistry
 from traceh.plugins.errors import PluginDisposeError
+from traceh.plugins.skills import FrozenSkill, LeasedSkillReader
 from traceh.runtime.prompt import PromptAssembler
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.service import SessionService
@@ -1093,6 +1095,8 @@ class CompositionGeneration:
     # Compatibility input only: InitVar ensures the callback is validated
     # against the handle but is never stored on the Generation itself.
     cleanup: InitVar[CleanupCallback | None] = None
+    _skills: tuple[FrozenSkill, ...] = field(init=False, compare=False, repr=False)
+    _skill_catalog: tuple[SkillDescriptor, ...] = field(init=False, compare=False, repr=False)
     _provider: LlmProvider = field(init=False, compare=False, repr=False)
     _tool_schemas: tuple[ToolSchema, ...] = field(init=False, compare=False, repr=False)
     _policy_names: tuple[str, ...] = field(init=False, compare=False, repr=False)
@@ -1110,6 +1114,7 @@ class CompositionGeneration:
     )
 
     def __post_init__(self, cleanup: CleanupCallback | None) -> None:
+        activation_skills: tuple[FrozenSkill, ...] = ()
         activation_policy_names: tuple[str, ...] | None = None
         activation_middleware_names: tuple[str, ...] | None = None
         if cleanup is not None:
@@ -1269,9 +1274,12 @@ class CompositionGeneration:
                     middlewares=tuple(self.tools.middlewares),
                     verifier=self.verifier,
                 )
+            activation_skills = tuple(getattr(self.activation_set, "_skills", ()))
         else:
             activation_scope = None
             activation_services = None
+        skill_catalog = tuple(skill.descriptor for skill in activation_skills)
+        validate_skill_catalog(skill_catalog, tuple(self.plugins))
 
         # An ActivationSet is the Stage B ownership boundary.  Its candidate
         # registries may intentionally contain borrowed core objects, so do
@@ -1347,6 +1355,8 @@ class CompositionGeneration:
             object.__setattr__(self, "resource_owner", resource_binding.owner)
         object.__setattr__(self, "_publication_state", publication_state)
         object.__setattr__(self, "_resource_binding", resource_binding)
+        object.__setattr__(self, "_skills", activation_skills)
+        object.__setattr__(self, "_skill_catalog", skill_catalog)
         object.__setattr__(self, "_provider", provider_instance)
         object.__setattr__(self, "_tool_schemas", tool_schemas)
         object.__setattr__(self, "_prompt_sections", prompt_sections)
@@ -1374,6 +1384,7 @@ class CompositionGeneration:
                 for schema in self._tool_schemas
             ),
             plugins=self.plugins,
+            skill_catalog=self._skill_catalog,
             policies=self._policy_names,
             tool_middlewares=self._middleware_names,
             temperature=self.temperature,
@@ -1427,6 +1438,7 @@ class ActiveComposition:
     provider: LlmProvider
     tools: ToolRuntime
     generation_id: int = 0
+    skills: LeasedSkillReader | None = None
     scope: Scope | None = None
     services: ServiceView | None = None
     verifier: CompletionVerifier | None = None
@@ -1943,6 +1955,12 @@ class _GenerationLease:
             scope=record.generation.scope,
             services=record.generation.services,
             verifier=record.generation.verifier,
+            skills=LeasedSkillReader(
+                record.generation._skills,
+                active=lambda: (
+                    self._record is record and not self._released and self._release_task is None
+                ),
+            ),
         )
 
     async def _release_once(self, *, suppress_cancellation: bool = False) -> None:

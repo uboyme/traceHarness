@@ -89,7 +89,8 @@ def test_mixed_sqlite_and_jsonl_is_refused_without_touching_either(tmp_path) -> 
 
 
 @pytest.mark.parametrize(
-    "application_id,version", [(APPLICATION_ID, 0), (APPLICATION_ID, 2), (7, 1)]
+    "application_id,version",
+    [(APPLICATION_ID, 0), (APPLICATION_ID, 1), (APPLICATION_ID, 3), (7, 2)],
 )
 def test_unknown_older_and_newer_schema_are_all_refused(tmp_path, application_id, version) -> None:
     root = tmp_path / f"schema-{application_id}-{version}"
@@ -304,7 +305,7 @@ async def test_backup_and_restore_are_validated_and_never_overwrite(tmp_path) ->
     await _append(store, "session:one", value=7)
     backup = tmp_path / "backup"
     receipt = await store.backup(backup)
-    assert receipt.schema_version == 1
+    assert receipt.schema_version == 2
     assert receipt.database_filename == DATABASE_FILENAME
     await store.aclose()
 
@@ -354,7 +355,7 @@ async def test_backup_observes_committed_history_while_append_worker_converges(
     backup = tmp_path / "backup"
     try:
         receipt = await store.backup(backup)
-        assert receipt.schema_version == 1
+        assert receipt.schema_version == 2
     finally:
         store.release.set()
         await append_task

@@ -39,6 +39,15 @@ class AgentWorkspacePolicy(Protocol):
         ...
 
 
+class AgentProjectBinding(Protocol):
+    @property
+    def store(self) -> EventStore: ...
+
+    async def bind_agent(self, agent_id: str) -> None:
+        """Prove durable host association after attachment and before dispatch."""
+        ...
+
+
 class WorkspaceManagedAgentSupervisor:
     """Bind one Supervisor create saga to one managed workspace lifecycle.
 
@@ -55,6 +64,7 @@ class WorkspaceManagedAgentSupervisor:
         "_lock",
         "_policy",
         "_service",
+        "_project_binding",
     )
 
     def __init__(
@@ -63,12 +73,20 @@ class WorkspaceManagedAgentSupervisor:
         service: WorkspaceService,
         *,
         workspace_policy: AgentWorkspacePolicy,
+        project_binding: AgentProjectBinding | None = None,
     ) -> None:
         if durable_log_identity(inner.store) is not durable_log_identity(service.store):
             raise WorkspaceDirectoryMismatchError
         self._inner = inner
         self._service = service
         self._policy = workspace_policy
+        if (
+            project_binding is not None
+            and durable_log_identity(project_binding.store)
+            is not durable_log_identity(service.store)
+        ):
+            raise WorkspaceDirectoryMismatchError
+        self._project_binding = project_binding
         self._lock = asyncio.Lock()
         self._closed = False
         self._close_task: asyncio.Task[None] | None = None
@@ -151,6 +169,8 @@ class WorkspaceManagedAgentSupervisor:
                     provision_operation_id=operation_id,
                     primary=None,
                 )
+                if self._project_binding is not None:
+                    await self._project_binding.bind_agent(handle.agent_id)
             except BaseException as error:
                 try:
                     await converge_workspace_operation(
@@ -176,6 +196,8 @@ class WorkspaceManagedAgentSupervisor:
             handle = await self._inner.resume(session_id)
             try:
                 await self._service.resolve_for_agent(handle.agent_id)
+                if self._project_binding is not None:
+                    await self._project_binding.bind_agent(handle.agent_id)
             except BaseException as error:
                 try:
                     await converge_workspace_operation(
@@ -204,6 +226,8 @@ class WorkspaceManagedAgentSupervisor:
             if self._closed:
                 raise SupervisorDisposedError
             await self._service.resolve_for_agent(agent_id)
+            if self._project_binding is not None:
+                await self._project_binding.bind_agent(agent_id)
             return await self._inner.send(
                 agent_id, message, target=target, wakeup=wakeup
             )
@@ -268,4 +292,4 @@ class WorkspaceManagedAgentSupervisor:
             await self._inner.aclose()
 
 
-__all__ = ["AgentWorkspacePolicy", "WorkspaceManagedAgentSupervisor"]
+__all__ = ["AgentProjectBinding", "AgentWorkspacePolicy", "WorkspaceManagedAgentSupervisor"]

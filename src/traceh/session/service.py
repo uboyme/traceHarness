@@ -75,9 +75,7 @@ class SessionService:
     ) -> EventEnvelope:
         async with self._lock(stream_id):
             actual_expected_seq = (
-                await self.store.head(stream_id)
-                if expected_seq is None
-                else expected_seq
+                await self.store.head(stream_id) if expected_seq is None else expected_seq
             )
             appended = await self.store.append(
                 stream_id,
@@ -281,13 +279,20 @@ class SessionService:
             if not events:
                 raise SessionNotFoundError(session_id)
             payloads = validate_user_requests(
-                events, session_id=session_id, turn_id=turn_id, step_id=step_id,
-                user_message_ref=user_message_ref, requests=requests, policy=policy,
+                events,
+                session_id=session_id,
+                turn_id=turn_id,
+                step_id=step_id,
+                user_message_ref=user_message_ref,
+                requests=requests,
+                policy=policy,
             )
             expected_seq = events[-1].seq
             pending = tuple(
                 PendingEvent(
-                    type="history/requested", data=payload, event_id=uuid4(),
+                    type="history/requested",
+                    data=payload,
+                    event_id=uuid4(),
                     correlation_id=correlation_id,
                 )
                 for payload in payloads
@@ -318,7 +323,9 @@ class SessionService:
 
             task = asyncio.create_task(
                 self.store.append(
-                    stream_id, expected_seq=expected_seq, events=pending,
+                    stream_id,
+                    expected_seq=expected_seq,
+                    events=pending,
                     durability=Durability.SYNC,
                 ),
                 name="traceh-history-request-append",
@@ -372,10 +379,7 @@ class SessionService:
             "composition_revision": composition_revision,
         }
         for request in (composed_request, dispatch_request):
-            if any(
-                request.metadata.get(key) != value
-                for key, value in expected_metadata.items()
-            ):
+            if any(request.metadata.get(key) != value for key, value in expected_metadata.items()):
                 raise ModelAttemptConflictError
         if fingerprint(composed_request.to_dict()) != composed_fingerprint:
             raise ModelAttemptConflictError
@@ -483,17 +487,11 @@ class SessionService:
 
             if open_turn != attempt.turn_id or open_step != attempt.step_id:
                 raise ModelAttemptConflictError(ownership_lost=True)
-            if any(
-                str(event.data.get("attempt_id", "")) not in ended
-                for event in starts
-            ):
+            if any(str(event.data.get("attempt_id", "")) not in ended for event in starts):
                 raise ModelAttemptConflictError(ownership_lost=True)
             if attempt.attempt_id in all_attempt_ids:
                 raise ModelAttemptConflictError(ownership_lost=True)
-            if any(
-                event.data.get("ordinal") == attempt.ordinal
-                for event in starts
-            ):
+            if any(event.data.get("ordinal") == attempt.ordinal for event in starts):
                 raise ModelAttemptConflictError(ownership_lost=True)
             ordinals = [event.data.get("ordinal") for event in starts]
             if ordinals != list(range(1, len(starts) + 1)):
@@ -502,15 +500,12 @@ class SessionService:
                 raise ModelAttemptConflictError(ownership_lost=True)
             if attempt.ordinal > 1:
                 previous = starts[-1]
-                previous_end = attempt_ends.get(
-                    str(previous.data.get("attempt_id", ""))
-                )
+                previous_end = attempt_ends.get(str(previous.data.get("attempt_id", "")))
                 if (
                     previous_end is None
                     or previous_end.data.get("status") != "failed"
                     or previous_end.data.get("failure_code") != retry_failure_code
-                    or previous_end.data.get("failure_category")
-                    != retry_failure_category
+                    or previous_end.data.get("failure_category") != retry_failure_category
                 ):
                     raise ModelAttemptConflictError(ownership_lost=True)
 
@@ -544,10 +539,8 @@ class SessionService:
                     raise ModelAttemptConflictError
                 snapshot = snapshots[0]
                 if (
-                    snapshot.data.get("composed_fingerprint")
-                    != composed_fingerprint
-                    or snapshot.data.get("dispatch_fingerprint")
-                    != dispatch_fingerprint
+                    snapshot.data.get("composed_fingerprint") != composed_fingerprint
+                    or snapshot.data.get("dispatch_fingerprint") != dispatch_fingerprint
                 ):
                     raise ModelAttemptConflictError
                 request_snapshot_seq = snapshot.seq
@@ -609,7 +602,91 @@ class SessionService:
     async def read_session(self, session_id: str) -> tuple[EventEnvelope, ...]:
         events = await self.store.read(self.session_stream(session_id))
         require_session_protocol(events, session_id=session_id)
+        contexts = [e for e in events if e.type == "context/input"]
+        if contexts:
+            from traceh.session.skill_selection import head_ref, project_selection, validate_head
+
+            selections = await self.read_skill_selection(session_id)
+            for event in contexts:
+                from traceh.session.context_input import parse_context_input
+                from traceh.session.skill_retrieval import receipt_skill_ids
+
+                data = parse_context_input(event.data).to_dict()
+                reference = data.get("selection_head")
+                validate_head(reference, session_id)
+                prefix = selections[: reference["head_seq"]]
+                if head_ref(session_id, prefix) != reference:
+                    raise ValueError("context-selection-binding-mismatch")
+                selection = project_selection(prefix, session_id)
+                if data["retrieval"] is not None:
+                    from traceh.kernel.composition import CompositionSnapshot
+                    from traceh.session.context_input import _parse_policy
+                    from traceh.session.skill_retrieval import prepare_corpus
+
+                    following = []
+                    for following_event in events[event.seq :]:
+                        if following_event.type in {"step/end", "step/start", "turn/end"}:
+                            break
+                        if following_event.type == "composition/snapshot":
+                            following.append(following_event)
+                    if len(following) == 1:
+                        composition = CompositionSnapshot.from_dict(following[0].data)
+                        corpus = prepare_corpus(
+                            composition, prefix, session_id, _parse_policy(data["policy"]).skills
+                        )[0]
+                        import json
+
+                        manifest = json.loads(corpus.manifest_json)
+                        if (
+                            data["retrieval"]["corpus_key"] != corpus.key
+                            or data["retrieval"]["corpus_digest"] != manifest["corpus_digest"]
+                            or data["retrieval"]["eligible_count"] != manifest["item_count"]
+                        ):
+                            raise ValueError("context-retrieval-source-mismatch")
+                for skill_id, version in receipt_skill_ids(data["retrieval"]):
+                    if (
+                        selection is None
+                        or selection["catalog_digest"] != data["skill_catalog_digest"]
+                        or {"skill_id": skill_id, "version": version} not in selection["skills"]
+                    ):
+                        raise ValueError("context-skill-selection-mismatch")
+                for block in data.get("blocks", []):
+                    if block["kind"] == "skill" and (
+                        selection is None
+                        or selection["catalog_digest"] != data["skill_catalog_digest"]
+                        or {"skill_id": block["id"], "version": block["version"]}
+                        not in selection["skills"]
+                    ):
+                        raise ValueError("context-skill-selection-mismatch")
         return events
+
+    async def read_skill_selection(self, session_id):
+        from traceh.session.skill_selection import project_selection
+
+        events = await self.store.read(f"context-selection:{session_id}")
+        project_selection(events, session_id)
+        return events
+
+    def _context_index_backend(self):
+        from traceh.session.event_feed import PublishingEventStore
+        from traceh.session.sqlite import SqliteEventStore
+
+        store = self.store
+        while isinstance(store, PublishingEventStore):
+            store = store.inner
+        return store if isinstance(store, SqliteEventStore) else None
+
+    async def query_context_index(self, corpus, terms):
+        backend = self._context_index_backend()
+        if backend is None:
+            return None
+        return await backend.query_context_index(corpus, terms)
+
+    async def rebuild_context_index(self, corpus):
+        backend = self._context_index_backend()
+        if backend is None:
+            raise ValueError("context-index-unavailable")
+        return await backend.rebuild_context_index(corpus)
 
     async def read_effects(self, session_id: str) -> tuple[EventEnvelope, ...]:
         return await self.store.read(self.effect_stream(session_id))

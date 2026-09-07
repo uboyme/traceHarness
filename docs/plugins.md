@@ -1,4 +1,4 @@
-# Writing and running TraceHarness plugins (v0.8.0)
+# Writing and running TraceHarness plugins (v0.8.0 + unreleased v0.9-F1)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
@@ -30,6 +30,7 @@ Three working, independently buildable distributions live under `examples/plugin
 |---|---|---|
 | Tool | `context.register_tool(tool)` | the existing `ToolRegistry` |
 | Prompt section | `context.register_prompt(section)` | the existing `PromptAssembler` |
+| Skill | `context.register_skill(contribution)` | a typed Generation catalog and leased resources; no automatic prompt or Tool grant |
 | Service | `await context.provide(key, value)` | the existing `ServiceRegistry` |
 | LLM provider | `context.register_provider(provider)` | the candidate `LlmRegistry`; explicit selection required |
 | Tool policy | `context.register_policy(policy)` | the existing ToolRuntime admission chain |
@@ -46,6 +47,143 @@ is admitted, scheduled, wrapped by middleware, and recorded as `tool/call`, `too
 `ToolRegistry` or `PromptAssembler` object. Everything a plugin registers is reversible and
 owned by its activation. EventStore is excluded because it is the process-lifetime Session
 fact source, not a Step Generation capability.
+
+### 1.1 Typed Skill contributions (v0.9-F1, unreleased)
+
+Metadata-only discovery reports `skills={available:false,requires_activation:true}`.
+`plugins list/inspect` says the catalog is available after successful activation; neither
+command imports a disabled plugin to inspect its Skill bodies.
+
+Import `SkillDescriptor`, `SkillContribution`, `SkillSection`, `SkillSectionContent`,
+`SkillResource` and `SkillChunk` from `traceh.plugins`. The descriptor is immutable and has
+exact fields: `skill_id`, `version`, `plugin`, `title`, `summary`, `tags`, `requires_traceh`,
+`sections`, `resources`. The plugin identity must equal the activated Manifest id/version;
+the compatibility specifier must admit the running core version. Skill ids are unique across
+the candidate, sections/resources are sorted by id, and tags are unique and sorted.
+Unknown fields, including Tool grants, are rejected. Section tier is currently `section`.
+
+Example only: all metadata and body values below are explicit author inputs, not host defaults.
+The section id is supplied by the author; the body digest covers the exact UTF-8 bytes.
+
+```python
+from hashlib import sha256
+from traceh.plugins import SkillContribution, SkillDescriptor, SkillSection, SkillSectionContent
+
+
+def contribute_section(context, *, skill_id, version, plugin, title, summary,
+                       tags, requires_traceh, section_id, body):
+    encoded = body.encode("utf-8")
+    descriptor = SkillDescriptor(
+        skill_id=skill_id, version=version, plugin=plugin, title=title, summary=summary,
+        tags=tags, requires_traceh=requires_traceh,
+        sections=(SkillSection(section_id, "section", sha256(encoded).hexdigest(), len(encoded)),),
+        resources=(),
+    )
+    return context.register_skill(
+        SkillContribution(descriptor, (SkillSectionContent(section_id, body),))
+    )
+```
+
+Registration is allowed only during setup. The returned handle may withdraw a contribution
+while setup remains open; after setup only the original Activation cleanup may release it.
+Skill registration never calls `register_prompt` or `register_tool`. Conflicts and failures
+roll back through the existing transaction before any new Generation is observable.
+
+The host must supply `RuntimeConfig.skill_policy` (or the same `skill_policy` argument on
+`PluginGenerationBuilder` / `PluginManager`). `None` rejects Skill registration. `SkillPolicy`
+contains `SkillLimits` with five explicit positive integers: `max_skills` (candidate count),
+`max_catalog_bytes` (whole canonical UTF-8 catalog), `max_summary_bytes` (each summary),
+`max_content_bytes` (all candidate section/resource bytes) and `max_resource_bytes` (each file).
+There are no implicit resource bounds. Resource-bearing contributions also need a host-owned
+`SkillResourceRoot(plugin, absolute_path)` in `SkillPolicy.resource_roots`. Each plugin id has
+one root binding, matching the exact plugin version. Section-only contributions need no root.
+The plugin cannot supply a trusted root through its descriptor or config contribution.
+
+A resource has exact `resource_id`, `relative_path`, `content_digest`, `content_bytes`, `chunks`
+fields. Each chunk names `chunk_id`, `byte_start`, `byte_end`, `content_digest`, `content_bytes`;
+these are authored nonoverlapping, ordered UTF-8 half-open ranges, not arbitrary byte cuts.
+No chunks means no chunk read. Relative paths must be portable and canonical. Absolute paths,
+parent traversal, Windows devices/streams, symlinks/reparse points, non-files, containment or
+size violations, and `.git` / `.env*` names are rejected before publishing. Exact UTF-8 bytes
+must match every declared size/digest; newline normalization is not performed.
+
+Activation reads bounded bytes once and owns the resulting read-only root snapshot through
+its existing registration. The ActivationSet verifies ownership and receipts before transfer.
+A Step's `ActiveComposition.skills` exposes a frozen catalog and
+`read_section(skill_id, section_id)`, `read_resource(skill_id, resource_id)` and
+`read_chunk(skill_id, resource_id, chunk_id)`, returning immutable bytes. Every call requires
+that exact Lease to remain active. No arbitrary path or unleased resource reader is exposed.
+Reload preserves the old Lease's bytes even if source files change or disappear. Only the
+retired Generation's last Lease release permits cleanup, through the original Activation;
+there is no new resource refcount, background worker, persistent stream or cache owner.
+
+Composition persists the bounded catalog and its digest, and includes them in its revision.
+Enabling a plugin alone adds no Skill messages or Tool grants. Without an explicit F2 policy
+and host selection, Context records the empty/unselected state. The existing resource
+Activation/Generation lifecycle is unchanged.
+
+### F2: host selection, retrieval and progressive disclosure
+
+The host supplies `RuntimeConfig.context_input` with a `ContextInputPolicy` whose nullable
+`skills` is a [SkillRetrievalPolicy](../src/traceh/api/retrieval.py). Its fifteen fields are
+explicit: unicode_version, default_tier, match_fields, k1, b, rrf_constant, exact_weight,
+fts_weight, skill_bytes, max_catalog_bytes, max_terms, max_corpus_items, max_corpus_bytes,
+max_candidates and max_requests. Unicode must match the runtime; automatic tiers are
+directory/summary. Match fields are an ordered subset of id/symbol/path/error/tag. Numeric
+limits have no implicit enabled defaults; semantic/reranker/embedding fields are rejected.
+The surrounding Context policy supplies total, item, block, exclusion and query bounds.
+
+The following is a host integration example; every identity, operation and selection comes
+from the caller, and none is a system default. `selected` contains sorted, unique
+`{"skill_id": ..., "version": ...}` dictionaries from the enabled catalog.
+
+```python
+async def select_references(
+    runtime, session_id, *, operation_id, expected_head, actor_id, selected
+):
+    event = await runtime.skill_context.select(
+        session_id,
+        operation_id=operation_id,
+        expected_head=expected_head,
+        actor_id=actor_id,
+        skills=selected,
+    )
+    # Empty selection is a durable fact; there is no corpus to rebuild.
+    if selected:
+        await runtime.skill_context.rebuild_index(session_id)
+    return event
+```
+
+Selection is recorded in `context-selection:<session_id>` on the same Store. Exact repeated
+operation payloads return the original event; other changes use head CAS. Catalog changes
+make old selections stale until the host reconfirms. The control checks the actual
+SessionService/Store owner while borrowing the existing Runtime Lease. It never publishes
+a Generation, migrates Plugin identity or grants a Tool.
+
+Each Step filters enabled Skills by that selection, matches exact identifiers and FTS terms,
+computes BM25 statistics only inside the eligible corpus and freezes weighted RRF results.
+The Store owns the schema-2 index, short worker connections, atomic rebuild, close and
+backup/restore. Missing or damaged derived rows report index-unavailable; the explicitly
+configured exact lane can still work. Rebuild rechecks source heads inside its write
+transaction and never rewrites canonical events. Failure reports whether the exact complete
+index exists, or unknown; it does not silently retry.
+
+When Skill retrieval and default tools are explicitly enabled, the ordinary PURE_READ
+`request_skill_reference` Tool can request a previously disclosed, still selected Skill.
+It requires exact skill_id/version/catalog_digest/requested_tier and nullable
+section_id/resource_id/chunk_id. Directory/summary use canonical metadata; section/chunk
+use exact declared sources through the next Step's active Lease. The Tool returns only a
+receipt and declared IDs. Only the immediate next Step in the same Turn can inject the
+original body; cancellation, recovery, a missing successor or budget rejection never
+carry it into another Turn. Raw references never become Surface history.
+
+The current unique protocol is Session marker 3, Context outer format 2, renderer
+context-json-v3, policy f2-context-policy-v1 and SQLite schema 2. Old versions are refused
+without migration; use a new data directory. Historical requests validate their frozen
+receipts and original selection/Composition evidence without consulting current indexes,
+resource files or installed Wheels. There is no Skill governance CLI/UI yet, no Wheel reload
+mechanism, and no automatic conversion of old Prompt/Tool examples. Trusted in-process
+plugins retain the host's process privileges; this API is not an OS sandbox.
 
 ## 2. Packaging
 
@@ -353,7 +491,7 @@ flowchart TD
     FREEZE --> CONF["Phase 2: full conflict check vs core registries"]
     CONF --> HEALTH["Phase 3: health_check()"]
     HEALTH --> PUB["Phase 4: atomic publish into a new Composition Generation"]
-    PUB --> RUN["New Steps use the new Generation; old Leases retain the old set"]
+    PUB --> RUN["New Steps use the new Generation; old Leases retain the old set and Skill bytes"]
     SETUP -. "failure or cancellation" .-> RB["Reverse-order rollback of every activation"]
     CONF -. "conflict" .-> RB
     HEALTH -. "failure or cancellation" .-> RB
@@ -414,7 +552,7 @@ messages are written by this repository.
 | `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
 
-## 9. Limits of v0.8.0
+## 9. Current limits (including unreleased F1)
 
 - Plugin setup remains application scope, trusted and in-process only. D1/D2 add programmatic
   Application → Workspace → Preset → Agent Service, Tool, Prompt and Policy bindings to

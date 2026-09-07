@@ -81,7 +81,7 @@ async def dispatch_permit(sessions, session_id, composition, built):
     )
 
 
-@pytest.mark.parametrize("marker", [None, True, 0, 1, CONTEXT_PROTOCOL + 1, "2"])
+@pytest.mark.parametrize("marker", [None, True, 0, 1, 2, CONTEXT_PROTOCOL + 1, "2"])
 async def test_old_session_is_refused_by_read_recovery_inspection_without_writes(tmp_path, marker):
     store = InMemoryEventStore()
     data = {"session_id": "old-session", "workspace": str(tmp_path), "metadata": {}}
@@ -137,7 +137,7 @@ async def test_request_replay_cannot_borrow_equal_revision_from_another_step(tmp
 
 
 @pytest.mark.parametrize("change", ["old-format", "catalog", "catalog-digest", "revision"])
-async def test_composition_reader_rejects_unsupported_catalog_and_content_drift(tmp_path, change):
+async def test_composition_reader_rejects_invalid_catalog_and_content_drift(tmp_path, change):
     _, _, _, _, source, _ = await frozen(tmp_path)
     data = dict(source.data)
     if change == "old-format":
@@ -151,11 +151,11 @@ async def test_composition_reader_rejects_unsupported_catalog_and_content_drift(
     else:
         data["system_prompt"] = "Changed recorded instructions"
     if change != "revision":
-        # An internally consistent hash cannot authorize a future catalog or
+        # An internally consistent hash cannot authorize an invalid catalog or
         # silently turn the old Composition format into the current protocol.
         data["revision"] = fingerprint({k: v for k, v in data.items() if k != "revision"})
     forged = replace(source, data=data, composition_revision=data["revision"])
-    with pytest.raises(ValueError, match="composition-"):
+    with pytest.raises(ValueError, match="composition-|skill-descriptor-"):
         composition_from_event(forged)
 
 

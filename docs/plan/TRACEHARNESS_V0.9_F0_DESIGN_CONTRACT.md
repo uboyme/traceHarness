@@ -3,8 +3,8 @@
 > 状态：2026-09-07，F0-A 设计与 F0-B 最小请求主线／最终限定门禁已完成。
 > 依据：[`ADR-0043`](../adr/0043-step-scoped-context-input-and-retrieval.md)、
 > [`ADR-0044`](../adr/0044-host-owned-project-scope-and-memory-authority.md)；推进顺序见
-> [`v0.9 阶段计划`](TRACEHARNESS_V0.9_STAGE_PLAN.md)。F0-C History 接缝及最终限定门禁已完成，F0-A/B/C 本轮授权实现收口；F1–F5 未开工，未执行发布级全量或 L2。
-> §2–5 冻结本轮 F0-C 唯一协议切换，实施状态见 §12；F0-B 已通过的证据保留在 §11，不能替代 F0-C 验收。§5.2 仍是后续通用检索目标。
+> [`v0.9 阶段计划`](TRACEHARNESS_V0.9_STAGE_PLAN.md)。F0-C History 接缝及最终限定门禁已完成，F0-A/B/C 本轮授权实现收口；F1 Skill 贡献与 F2 选择／检索／披露已实现；F3 authority 已实现；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，Release Stop A 独立审查 P0/P1 清零，2 项 P2 已修复并完成定向确认，未执行发布级全量或 L2。
+> §2–5 已同步 F2 当前协议，细化与验证见 §14；§11–13 保留 F0-B/C、F1 的历史阶段证据。§5.2 仍是 F4 通用检索目标。
 
 ## 1. 范围、规范层级与现有 owner
 
@@ -17,7 +17,7 @@ canonical owner、权限、source boundary 或旧数据拒绝须同步 ADR／合
 | [`AgentLoop.run_turn`](../../src/traceh/runtime/agent_loop.py) | 同一 Lease 内，Composition 前调用只读 Context service、追加一次 Context | Runtime / F0-B |
 | [`SessionService`](../../src/traceh/session/service.py) | Session 协议读写、Context append 对账；保留首 snapshot+Attempt 原子派发许可 | Session / F0-B |
 | [`RequestBuilder`](../../src/traceh/runtime/request_builder.py)、[`SurfaceProjector`](../../src/traceh/session/surface.py) | 单一 Context reader/renderer；Surface 白名单保持独立 | Request / F0-B |
-| [`RuntimeComposition`](../../src/traceh/kernel/composition.py)、[`CompositionGeneration`](../../src/traceh/runtime/composition_runtime.py) | catalog descriptor/digest 与 exact Lease 同源 | Composition / F0-B 空 catalog，F1 真实 contribution |
+| [`RuntimeComposition`](../../src/traceh/kernel/composition.py)、[`CompositionGeneration`](../../src/traceh/runtime/composition_runtime.py) | catalog descriptor/digest 与 exact Lease 同源 | Composition / F1 typed catalog 与资源已完成 |
 | [`PluginManager`](../../src/traceh/plugins/manager.py)、[`PluginContext`](../../src/traceh/api/plugins.py) | Activation transaction 中 typed Skill candidate 与资源清理 | Plugin / F1 |
 | [`surface_replacement`](../../src/traceh/session/surface_replacement.py)、[`CoreInvariantChecker`](../../src/traceh/session/invariants.py) | 复用 format-2 来源与逻辑顺序；递归展开、receipt、Step 时效 | Session / F0-C |
 | `api/history.py`、`session/history.py`、`session/history_requests.py` | typed DTO、纯 History reader、唯一请求授权与派生消费规则；不新增 writer 或生命周期 | Session / F0-C 已完成 |
@@ -27,7 +27,7 @@ canonical owner、权限、source boundary 或旧数据拒绝须同步 ADR／合
 | [`evaluation/attempt`](../../src/traceh/evaluation/attempt.py)、[`metrics`](../../src/traceh/evaluation/metrics.py) | 原 attempt 装载语料和收敛；读取 Context 计量 | Evaluation / F5 |
 
 下图是 F0-B/C 已接入的唯一请求链与 History 来源／授权入口。只有显式配置才开放
-当前 Session 的分页读取；Skill、Memory 与 ranking 不属于本轮：
+当前 Session 的分页读取。F1 接入目录与资源，F2 接入宿主选择、索引与披露，详见 §14；Memory 仍属于后续阶段：
 
 ```mermaid
 flowchart LR
@@ -40,7 +40,11 @@ flowchart LR
     HR --> Q
     Q --> R[Context service 只读选择]
     S --> R
+    SC[同库持久 Skill 选择] --> SR[eligible exact / FTS 与次步披露]
+    SI[Store 派生索引] --> SR
+    SR --> R
     L[同一 Step Lease] --> R
+    L --> SR
     R --> A[AgentLoop 追加 context/input]
     A --> C[追加 composition/snapshot]
     L --> C
@@ -65,44 +69,44 @@ surrogate。复用 [`canonical_json/fingerprint`](../../src/traceh/api/json_type
 - `HeadRef = {stream_id,head_seq,head_event_id,head_digest}`；空流 head_seq=0，后两项 null。
 - 检索规范化只用于 query 和 derived index，绝不规范化或 sanitize 实际选中正文。UI 的安全显示是独立投影。
 
-| 对象 | v0.8.0 已发布格式 | F0-C 本轮唯一切换（已完成） |
+| 对象 | v0.8.0 已发布格式 | F2 当前唯一协议（细化见 §14） |
 |---|---|---|
-| `session/created` data | session_id/workspace/metadata | 必填整数 `context_protocol=2`；总字段仍恰为四项。拒绝缺失标记及 F0-B 的 1，不迁移、不双读 |
+| `session/created` data | session_id/workspace/metadata | 必填整数 `context_protocol=3`；总字段仍恰为四项。拒绝缺失标记及旧 1/2，不迁移、不双读 |
 | `composition/snapshot` data | 原 Composition 字段（不含 catalog） | F0-B 已增必填 `skill_catalog`、`skill_catalog_digest`，revision 重算包含二者 |
 | `request/snapshot` data | 原 `REQUEST_SNAPSHOT_KEYS` 的八项 | F0-B 已增 `context_input_seq`、`context_input_digest`，当前 exact 十项，保留 composed/dispatch 全部原校验 |
-| `context/input` / renderer / policy | 尚无 Context | outer `format=1` 不变；唯一 `context-json-v2` / `f0-c-context-policy-v1`，config 见 §5.1；拒绝 F0-B 版本 |
+| `context/input` / renderer / policy | 尚无 Context | outer `format=2`；唯一 `context-json-v3` / `f2-context-policy-v1`，config 见 §5.1/§14；拒绝旧版本 |
 | EventEnvelope `schema_version` | 1 | 仍为 1，不冒充 Session Context 协议版本 |
 | M3 `surface/replace` | format 2 | 不变；format 1 继续拒绝 |
-| SQLite `user_version` | 1，streams/events | F0-B/C 仍为 1；F2 一次切到 2，精确对象见 §7，旧目录拒绝 |
+| SQLite `user_version` | 1，streams/events | F2 已唯一切到 2，精确对象见 §7/§14，旧目录拒绝 |
 
 SessionService 的共同读取边界、ensure/open/resume/recover/inspect/replay、Request 构建／重建和
 直接消费 Session events 的 invariant checker 都须验证首事件标记。`list_sessions` 可列 identity，
 但详情或运行不能绕过拒绝。对旧 Session 不写补丁、不合成空 Context；旧数据仅用旧发行版读取或新建
 数据目录。F2 的物理开库拒绝先于写入。F0-A 当时只冻结设计；F0-B 已实现 Session marker、Context 与
-Composition/Request parser，F0-C 在同一 reader 显式切换至 2，包版本仍为 `0.8.0`。Product Session 证据和叶失败读取也复用
+Composition/Request parser，F2 在同一 reader 显式切换至 Session 3，包版本仍为 `0.8.0`。Product Session 证据和叶失败读取也复用
 `require_session_protocol()`，不保留自己的旧字段副本。
 
 ## 3. Context、catalog 与 Request 绑定
 
 ### 3.1 唯一 `context/input` payload
 
-F0-C 保持下表的 Session-only 子集：scope.kind=session、project_binding=null，空 Skill catalog、
-selection head=0、source_heads=[]；自动选择只可为 history directory/summary，section/chunk 必须由
-§4 的精确请求授权。policy 使用 §5.1 唯一版本；query.normalization=`identity-v1`，自动历史选择绑定
-本 Turn 第一条真实用户输入，明确空策略时 text/refs 皆空。没有 ranking/query expansion。
-Skill/Memory/project variants 仍由所属后续阶段接入；本轮 reader 必须拒绝，不能按外观猜测兼容。
+当前仍为 Session-only 子集：scope.kind=session、project_binding=null，source_heads=[]。
+F2 的 selection_head 绑定真实选择前缀；自动 History/Skill 仅 directory/summary，section/chunk 必须
+有 §4 或 §14.3 的精确授权。query 绑定本 Turn 首条真实输入；Skill 开启时规范化形态见 §14.1，
+仅 History 时为 identity-v1，空策略 text/refs 皆空。Skill 排名见 §14.2；Memory/project variants 仍拒绝。
 
 | 字段 | 值与约束 |
 |---|---|
-| `format` | 1 |
+| `format` | 2 |
 | `session_id, turn_id, step_id` | 当前打开的真实身份，逐项与 Session/Step/Composition 核对 |
 | `observed_session_seq` | 读取本次来源的 Session 截止点；小于 Context event seq |
 | `scope` | `{kind,session_id,project_binding}`；kind 为 `session` 或 `project`，前者 binding=null，后者为 §6 的绑定 EventRef |
 | `composition_revision, skill_catalog_digest` | 同一 Lease 生成的 Composition 引用，必须等于随后同 Step 快照 |
 | `selection_head` | 当前 Session selection 的 HeadRef；F0 空来源为 head_seq=0 |
 | `query` | `{normalization,source_refs,text,digest}`；refs 是有序 EventRef，digest=H(其余三项) |
-| `policy` | `{version,config,config_digest}`，本轮 config 是 §5.1 的 exact 八项（原七项加 nullable history），digest=H(config)；§5.2 通用配置留待后续显式版本切换 |
+| `policy` | `{version,config,config_digest}`，本轮 config 是 §5.1 的 exact 九项（原八项加 nullable skills），digest=H(config)；§5.2 通用配置留待后续显式版本切换 |
 | `source_heads` | 有序 HeadRef 集，标出实际读取的 Memory/项目等流；Session 截止点另以上项标明 |
+| `retrieval` | null 或 §14.2 的 exact corpus/lane/fusion 收据 |
 | `blocks` | 有序 Block 数组；零命中为空数组，不省略 event |
 | `exclusions` | 有界 `{kind,id,digest,reason}` 数组；只包含已获资格的 identity，未知 id/digest 为 null |
 | `budget` | `{total_limit,kind_limits,kind_bytes,body_bytes,rendered_bytes,remaining_bytes,token_measurement}` |
@@ -151,15 +155,39 @@ revision 对包含 manifest/digest 的其余字段重算。directory body 固定
 匹配 section digest，chunk body 匹配具名 resource/chunk 的范围/digest；这些规则都由相同 descriptor
 重算，不能把摘要或任意截取正文假称为完整 resource 的 digest。
 
-F0-B/C 冻结空数组，F1 才接真实贡献。F2 的 `context-selection:<session_id>` 流只接受宿主
+F0-B/C 的空数组仍是合法子集，F1 已接真实贡献。F2 的 `context-selection:<session_id>` 流只接受宿主
 `skill/selection-set`，字段为 `{format,session_id,operation_id,expected_head,actor_id,catalog_digest,skills}`；
 format=1，skills 为排序的 `{skill_id,version}` 集。同一 operation 只允许 exact payload 对账；其他
 变化 CAS 追加，影响未来 Step。不提供模型 `load_skill` 绕过入口。catalog 改变后旧选择记 stale，
 宿主重新确认才建立新选择；显式选空也是事实。Session 无选择时不默认选中任意示例 Skill。
 
+F1 的元数据发现明确返回 `skills={available:false,requires_activation:true}`，list/inspect 文本同样提示
+成功激活后可见，不 import 未启用插件。F1 实现使用 `SkillDescriptor`、`SkillSection`、`SkillResource`、`SkillChunk` 的冻结 DTO，
+`SkillContribution(descriptor, sections)` 携带 `SkillSectionContent(section_id, body)`；唯一入口为
+`PluginContext.register_skill()`。sections/resources 按 id 排序，tags 唯一且排序，section tier 当前仅为
+section；chunk 按不重叠 byte range 排列，名称唯一。公开 DTO 与 descriptor reader 拒绝未知字段，
+包括 Tool grant。兼容条件验证当前 core 版本，plugin id/version 必须等于实际激活 Manifest。
+
+宿主通过 RuntimeConfig／PluginGenerationBuilder／PluginManager 的 `skill_policy` 提供同一 SkillPolicy；
+None 明确拒绝 Skill 注册。SkillLimits 的五项正整数全部显式：max_skills（整候选数）、max_catalog_bytes
+（整目录 canonical UTF-8 bytes）、max_summary_bytes（单摘要）、max_content_bytes（整候选所有 section／
+资源 bytes）、max_resource_bytes（单文件声明与实际读取）。含资源时，宿主在 resource_roots 提供
+`SkillResourceRoot(plugin, absolute_path)`；每 plugin id 唯一且 exact version 匹配，缺失或歧义失败。
+插件只提交规范相对路径，不能自报可信 root；拒绝上跳、绝对路径、Windows 设备／流、链接／reparse
+point、非普通文件、越界、变动、超限，以及读取前的 `.git`／`.env*` 名称。
+
+注册时冻结经 UTF-8／原始 bytes／各级 SHA-256 校验的有界资源快照，不规范化换行。原 Activation 的
+registration 是唯一 cleanup owner，plugin 返回句柄只允许 setup 撤销；health 后与候选转交再验 receipt
+及原 Activation 归属。Generation 冻结 catalog；ActiveComposition.skills 的 read_section/read_resource/
+read_chunk 只接受声明 id 并每次核验 exact Lease 有效，返回不可变 bytes。源文件覆盖或删除不改变
+旧 Lease；最后一份旧 Lease 释放后原 owner 清理一次。没有第二资源计数、后台任务、缓存 owner 或新流。
+这是可信进程内插件的路径／来源合同，不是 OS sandbox；当前没有 Skill 选择 CLI、Wheel 热替换或
+旧 Prompt/Tool 示例自动转换。没有 F2 配置或宿主选择时，Context 仍不自动把 metadata／summary／body 加进请求。
+F2 的选择、排名和披露规则见 §14，Skill 注册本身不提供选择或 Tool 授权。
+
 ### 3.3 渲染、预算与合法前缀
 
-F0-C renderer 版本唯一为 `context-json-v2`：固定宿主头 + canonical JSON 数组（body 作为转义字符串，携带
+当前 renderer 版本唯一为 `context-json-v3`：固定宿主头 + canonical JSON 数组（body 作为转义字符串，携带
 kind/id/tier/length/digest/provenance）+ 固定宿主尾。宿主文本声明参考不能覆盖权限／当前事实；History
 每块另有宿主生成的观察边界与 freshness 尾注；`history_notice.cursor` 在目录／摘要为首 cursor，
 在原文为 page.next_cursor，只逐页披露，不发送全页目录。常量由 `session/context_input.py` 的唯一 renderer
@@ -264,11 +292,11 @@ matched 仍不代替当前代码、测试或环境的 fresh 验证。本轮不�
 
 ## 5. 检索、披露与显式配置
 
-### 5.1 F0-C 当前唯一配置：`f0-c-context-policy-v1`
+### 5.1 F2 当前唯一配置：`f2-context-policy-v1`
 
 当前 `RuntimeConfig.context_input` 接受 [`ContextInputPolicy`](../../src/traceh/session/context_input.py)
-或 `None`。None 使用具名空策略；不是默认历史检索。`policy.config` exact 键恰为原七项加 `history`，
-`policy.version` 唯一切换为 `f0-c-context-policy-v1`，config_digest=H(config)，不双读 F0-B policy：
+或 `None`。None 使用具名空策略；不是默认历史检索。`policy.config` exact 键恰为原八项加 `skills`，
+`policy.version` 唯一为 `f2-context-policy-v1`，config_digest=H(config)，不双读 F0 policy：
 
 | 字段 | 当前 parser 与执行语义 |
 |---|---|
@@ -280,9 +308,10 @@ matched 仍不代替当前代码、测试或环境的 fresh 验证。本轮不�
 | `max_exclusions` | 整数且至少 3；超过排除记录上限时失败，不静默截断 |
 | `max_query_bytes` | 非负整数，本 Turn 首条真实用户输入的 UTF-8 上限；超限拒绝 |
 | `history` | null，或显式 `HistoryReadPolicy` 的 exact 七项；null 不开放原文分页 |
+| `skills` | null，或 §14.1 的 exact 十五项 SkillRetrievalPolicy；null 不开启 Skill 检索 |
 
-`history_tier=None` 要求 history=null，且 history_bytes/item_bytes/max_blocks/max_query_bytes 全为 0。
-只允许三种配置：全部关闭；directory/summary 仅参考；directory/summary 加显式 History reader。
+`history_tier=None` 要求 history=null；只有 skills 也为 null 时，history_bytes/item_bytes/max_blocks/
+max_query_bytes 才须全为 0。History 可关闭、仅目录／摘要、加显式 reader；Skill 可独立启用。
 不实现没有自动目录的 raw-only 模式。`HistoryReadPolicy` 七项全部为显式正整数；其 digest 为
 `H({version:"history-turn-pages-v1",config:七项})`，cursor 绑定同一 digest：
 
@@ -297,14 +326,14 @@ matched 仍不代替当前代码、测试或环境的 fresh 验证。本轮不�
 | `max_requests` | 单次请求接线接受的 History 页请求数上限 |
 
 `ContextInputPolicy.empty()` 的 total_bytes 由空 wrapper 实际 bytes 派生，max_exclusions=3，记录
-Skill/Memory source-unavailable 与 History not-selected；query 和 blocks 为空，history=null。启用策略所有字段
+空 Skill catalog 与 Memory 记 source-unavailable；非空 Skill catalog 与 History 记 not-selected；query 和 blocks 为空，history=null。启用策略所有字段
 必须显式给出，禁止从示例或部分配置补默认。宿主选择经 typed TurnInput/ChatDriver；本轮不新增治理 UI。
 
 启用历史时按 `surface_conversation()` 当前可见 replacement 的原逻辑顺序取块，复用 M3 来源验证，
 不做排名；本 Step 合法请求的原文页先于自动目录／摘要分配预算，每块超预算整块 budget-excluded，
 超过块数则 resource-limit。无块记 no-hit，来源不可得明确排除；请求失败不转为 accepted，也不把整页
-原文塞入普通 Tool result。Skill catalog 只能为空、Memory 来源为空；token_measurement 固定 unavailable。
-本轮没有项目 scope、Skill/Memory、FTS、semantic 或 reranker 实现。
+原文塞入普通 Tool result。F2 支持选择后的 Skill blocks 与 eligible exact+FTS，见 §14；Memory 来源为空，token_measurement
+固定 unavailable。F3 已实现项目 scope 与 Memory authority（§15）；当前 Context 没有 Memory lane、semantic 或 reranker 实现。
 
 ### 5.2 后续目标：通用检索配置（当前 parser 不接受）
 
@@ -312,7 +341,7 @@ Skill/Memory source-unavailable 与 History not-selected；query 和 blocks 为�
 要求 F0-B/C 提前填充未实现 lane。实际扩展必须在对应阶段显式冻结新 policy 版本并进行唯一协议切换，
 拒绝旧格式；不得双读、猜测降级、自动迁移或用相同版本改变 config 的含义。
 
-F0-C 仍只扩展当前 Session History；Skill catalog 和 Memory 来源为空，保留真实空原因。F2/F4 按同一
+F0-C 的 History 仍只限当前 Session；F1 增加 Skill catalog，Memory 来源为空，保留真实未选择／来源为空原因。F2/F4 按同一
 接口接入领域；不为原型造假 Memory authority。检索先进行 scope/status/catalog 资格过滤，再匹配、
 排序、去重、预算，在最终来源复核时核对头与 digest；变化就 unavailable，不换 latest。每个来源以
 最后成功复核为其选择观察边界；该点后、Context append 前的变化不被冒称已观察，不要求跨流原子读写。
@@ -375,6 +404,11 @@ ProjectScopeService 的 create/bind-source/bind-session 是宿主能力，模型
 之前禁止项目 Memory；无绑定仍可按 Session-only 合同运行普通请求。事实源损坏/未知归属明确失败。
 source mapping 或路径 fingerprint 变化拒绝；新目录不自动继承，也不自动移动、迁移或删旧数据。
 解析已经存在的绑定时也须 fresh 核对当前宿主 source resolver，不能只在第一次写绑定时检查一次。
+
+F3 当前读取区分消费方当前访问与历史来源引用：`resolve()` 必须证明当前真实 checkout；
+`resolve_evidence()` 复用同一 catalog/references/原 Product-Directory-Workspace 证明，fresh 核对当前
+source mapping，以持久 attachment 解释历史归属，不要求已经释放的 checkout 复活。这不会授予旧
+Session 当前 Memory 访问权，也不改变原 Workspace release 事实；两类检查共用一个 projector。
 
 ### 6.2 memory:<project_id>
 
@@ -490,7 +524,7 @@ F5 在首次 candidate 结果前冻结并摘要：具体语料/人工答案、K�
 ## 9. 分阶段验收与停止条件
 
 以下是各阶段验收义务，实际证据单列在 §10–12。F0-A/B/C 本轮授权实现及限定门禁已收口，
-F1–F5 尚未开工；不得把旧接缝或 F0-B 测试当作 F0-C 功能验证。公共入口必须真正到达被验证的 owner，
+F1/F2 已实现，F3 authority 已实现；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 尚未开工；不得把旧接缝或 F0-B 测试当作 F0-C 功能验证。公共入口必须真正到达被验证的 owner，
 并发用 Event/Gate 等确定信号；关键保护在所属实现阶段做反向验证，避免私有字段或未启动操作的空证明。
 
 | 阶段 | 正向路径 | 关键反例 | 失败／取消 | 退出条件 |
@@ -581,7 +615,7 @@ Provider，未提交、推送或发布。
 
 ## 12. F0-C 当前实施与验证状态
 
-**F0-C 已完成，F0-A/B/C 本轮授权实现收口；F1 未开工。**本轮在既有 Session/Runtime/Tool/Driver
+**F0-C 阶段历史证据：F0-A/B/C 授权实现已收口；随后 F1 证据见 §13。**F0-C在既有 Session/Runtime/Tool/Driver
 owner 中接入 §4 的有界原文披露与 typed 请求，唯一协议／policy／renderer 切换见 §2/§5.1。
 没有新 writer、Lease、pending 状态机，不扩展 F1–F5。
 
@@ -614,3 +648,203 @@ compileall `src tests` 成功，40 个改动 Python 文件 Ruff 通过，19 个�
 使用 `python -m pytest -o addopts= -q --tb=short -rs`，逐项传入上表 38 个文件的绝对路径，从隔离
 TemporaryDirectory cwd 执行；collect-only 为同一集合加 `--collect-only`。不使用整仓目录、默认目标、
 `--lf` 或另一批次缓存代替。本表记录实际定向门禁，不新增脚本或自动执行授权。
+
+## 13. F1 实现与限定验证证据
+
+F1 的当前实现合同见 §3.2；PluginContext/SDK、ActivationSet/Generation、exact Lease 资源和
+Composition/Context reader 沿原生产主线接通；本节记录 F1 当时的验证边界，后续 F2 的
+selection／retrieval／模型披露实现与当前协议见 §14。
+没有修改 ADR 历史决定；本次细化的是已有 owner 下的有界只读资源快照。
+
+最终同一组显式 **31 文件** collect-only **767 项**，执行 **764 passed, 3 skipped in 32.06s**。
+两个新 Skill 文件 **51 passed / 1 skipped** 已包含在总数，不能再加。三项跳过都是 Windows 符号链接
+权限不足：Skill 一项、SQLite 两项。没有全量、L2、Wheel、联网包索引或真实 Provider/API；未读取
+真实 `.env`，没有提交、推送、tag 或发布。
+
+最终文件集合（均在 `tests/`）：
+
+```text
+test_skill_contributions.py
+test_skill_resources.py
+test_plugin_manager.py
+test_plugin_activation_sets.py
+test_plugin_cancellation.py
+test_plugin_extended_contributions.py
+test_composition_generations.py
+test_plugin_composition_coordinator.py
+test_plugin_composition_stage_c.py
+test_plugin_discovery.py
+test_plugin_sdk.py
+test_plugin_manifest.py
+test_plugin_selection.py
+test_composition_scope_overlays.py
+test_context_runtime.py
+test_context_input.py
+test_context_request_protocol.py
+test_session_plugin_identity.py
+test_surface_and_invariants.py
+test_event_store_contract.py
+test_sqlite_event_store.py
+test_future_protocols.py
+test_product_architecture.py
+test_product_contract.py
+test_plugin_runtime.py
+test_history_reader.py
+test_history_requests.py
+test_history_tool.py
+test_history_runtime.py
+test_tui_context_inspection.py
+test_cli_plugins.py
+```
+
+测试从隔离空临时目录通过绝对测试文件路径运行，同时将 cache_dir 与 basetemp 指向该临时目录，
+避免 CLI 相邻测试加载工作区真实 `.env`。可使用以下等价调用形式，files 必须显式选取上述列表：
+
+```python
+with tempfile.TemporaryDirectory(prefix="traceh-f1-check-") as work:
+    subprocess.run(
+        [sys.executable, "-X", "utf8", "-m", "pytest", "-o", "addopts=", "-q",
+         *[str(repo / "tests" / name) for name in files],
+         "-o", f"cache_dir={work}/cache", "--basetemp", f"{work}/pytest"],
+        cwd=work, check=True,
+    )
+```
+
+这些 repo/files 变量是操作者显式输入；示例不提供隐含本机目录或全量快捷命令。collect-only 仅针对
+同一显式集合。编译执行 `python -m compileall -q src tests`；修改范围 Ruff 覆盖 23 个 Python 文件。
+
+五组真实源码反向验证分别：register_skill 临时改走 register_prompt（请求前就观察到正文泄漏）；
+移除 ActivationSet catalog receipt（错配候选被接受）；移除资源 digest 校验（错误资源被发布）；
+移除 exact Lease guard（退出后仍能读取）；SDK 静默丢弃 tools 字段（不再拒绝 Tool grant 形状）。
+每组都因目标根因失败，而非导入／夹具错误，随后逐字节恢复生产文件，并在恢复后执行上述最终门禁。
+
+文档同步覆盖正式版 1/2/7/13/15/16/19.16/20.33 与通俗版对应章节（新 19.12 对应正式 19.16）。
+目录、资源所有权／限制、Context 空原因、协议边界、Mermaid、相对链接和反硬编码检查一并核对。
+F1 阶段当时尚未完成 F2–F5、Release Stop A 和最终发布门禁，不把这次限定回归当作发布或检索质量证据。
+
+## 14. F2 当前实现细化与限定验收
+
+本节把 §3/§5/§7 的阶段接缝冻结为当前生产形态，不改变 ADR 的事实源、权限或生命周期决定。
+为保存可重放的排名收据，Context outer format 唯一升到 2，Session 标记升到 3，
+policy 为 `f2-context-policy-v1`，renderer 为 `context-json-v3`，SQLite schema 为 2。
+旧 Session 1/2、Context 1、F0 policy/renderer、物理 schema 1 都明确拒绝；无迁移、别名或双 reader。
+EventEnvelope 1、M3 format 2 与 Request 十字段不变；包版本仍为 0.8.0。
+
+### 14.1 当前配置与查询
+
+F2 保留现有 History 配置语义，只在 §5.1 的原八项中增加 nullable `skills`，共九项。
+`skills` 的 exact parser 是 [SkillRetrievalPolicy](../../src/traceh/api/retrieval.py)，十五项全显式：
+unicode_version、default_tier、match_fields、k1、b、rrf_constant、exact_weight、fts_weight、
+skill_bytes、max_catalog_bytes、max_terms、max_corpus_items、max_corpus_bytes、max_candidates、max_requests。
+unicode_version 必须等于运行时 Unicode 数据版本；default_tier 为 directory/summary；
+match_fields 是 id/symbol/path/error/tag 的无重复有序子集。
+k1 正且有限，b 有限且在 0–1；skill_bytes 为非负整数，其他数值上限及融合参数为正整数。
+所有预算计 canonical UTF-8 bytes，token_measurement 仍 unavailable。
+
+只启用 Skill 时允许 history_tier/history 为 null；无 History 自动选择。不启用两者时保持具名空策略。
+Skill query 绑定本 Turn 首条真实 user/message，normalization exact 为
+`{id:"nfkc-casefold-v1",unicode_version}`；只启用 History 时仍为 identity-v1。
+无隐式 query expansion、模型选择、embedding 下载或 semantic/reranker。§5.2 的跨来源通用配置形状
+留到 F4；当前子集通过新版本明确区分，避免在 F2 提前实现 Memory 或第二种解析主线。
+
+### 14.2 排名与索引证据
+
+`retrieval=null` 表示未配置／未选择／来源变化等未形成有效 Skill corpus 的情况；已有 corpus 时为
+`{format:1,corpus_key,corpus_digest,eligible_count,lanes,fusion}`。lanes 固定顺序 exact、fts：
+每项 exact `{id,status,ranking}`，status 为 available/index-unavailable/resource-limit，
+ranking 项为 `{identity,score}`。融合项 exact 为 `{identity,numerator,denominator}`，
+权重除以 rrf_constant+一基排名后用 Fraction 求和，稳定降序、内容身份升序。
+identity 是 canonical JSON 数组
+`[kind,id,version,tier,section_id,resource_id,chunk_id,content_digest]`；自动层级后三个来源 id 为 null。
+Context 中 Skill 块去重也复用这一身份，因此不同 tier 可共存，真正重复块拒绝；相同 Tool 请求仍由原 receipt 规则合并。
+exact lane 在 NFKC+casefold 后对完整字段值做字面量匹配，保留内部空格并转义正则特殊字符，
+两侧沿用标识字符边界以拒绝前缀、后缀或更长路径误命中；FTS 的语料范围不变。
+这是既有身份和 exact 合同的缺陷修复，不增加协议字段或兼容模式；旧请求仍按原冻结证据重放。
+receipt 校验排名次序、资格身份、完整有理数融合；每个注入块必须在 fusion 中或有精确请求证明。
+排名超过 max_candidates 时整 lane 排除；融合并集超限也整批排除，记录 resource-limit。
+FTS 不可用明确记录 index-unavailable，已显式配置的 exact lane 仍可独立命中，不冒充 FTS 成功。
+
+[context_index.py](../../src/traceh/session/context_index.py) 是精确物理 DDL 定义：
+manifest 两列 corpus_key TEXT PRIMARY KEY NOT NULL、manifest_json TEXT NOT NULL，WITHOUT ROWID；
+items 三列 rowid INTEGER PRIMARY KEY、corpus_key TEXT NOT NULL、item_json TEXT NOT NULL；
+FTS5 为 `context_fts(terms, tokenize=unicode61)`，五个 shadow 名称与 DDL 逐项比对，不按前缀放行。
+manifest JSON exact 为 scope/catalog_digest/source_heads/tokenizer/ranker/config_digest/corpus_key/
+corpus_digest/item_count/item_bytes；tokenizer=traceh-lexical-v1，ranker=eligible-bm25-v1。
+item JSON exact 为 identity/kind/id/version/tier/scope/source_refs/content_digest/tf/length/terms。
+语料只含已选目录元数据；tf/length 由同一 tokenizer 派生，FTS terms 是加 t 前缀的 UTF-8 hex token。
+BM25 的 N/avgdl/df/tf 仅取本语料，其他 scope 和未选择内容不影响统计。
+
+rebuild 持同一 Runtime Lease，在原 Store Worker 的 BEGIN IMMEDIATE 内复核原 selection head，
+清理孤立派生行并原子替换 manifest/items/FTS；失败回滚，不改事件。重复取消和 close 等 Worker 收敛。
+失败后的 `ContextIndexWriteError.published` 仅报告 exact 完整快照是否存在（true/false/unknown），
+不证明本次调用提交，因为以前可能已有相同快照。探测失败保留 unknown，绝不自动重做写操作。
+backup/restore 包含同库派生索引；缺派生行可显式重建，未知物理 schema 在任何 recovery 写入前拒绝。
+历史 Request 重建只核冻结 Context、原 selection 前缀与原 Composition 元数据，不访问当前索引或资源。
+
+### 14.3 宿主与模型入口
+
+宿主 `runtime.skill_context.select(session_id, operation_id, expected_head, actor_id, skills)`
+按 §3.2 写 selection；`rebuild_index(session_id)` 明确建立对应派生语料。
+实际 Python 参数除 session_id 外为关键字参数。两者核对 exact SessionService/Store owner；
+same-id foreign Store 不可借另一 Runtime 的 Lease。目录或配置不合法均在写入前失败。
+选择／索引操作不 publish Generation、不做 Session plugin migration、不授予 Tool。
+
+模型工具 `request_skill_reference` 使用 §3 的四级 body 规则；参数 exact 为
+`{skill_id,version,catalog_digest,requested_tier,section_id,resource_id,chunk_id}`。
+普通 tool/result 的 data 中只有 skill_receipt 与 available 的 section/resource/chunk id，不含原文。
+skill_receipt exact 为 `{format,session_id,turn_id,source_step_id,tool_call_id,context_ref,
+request,policy_digest,target_rule}`，format=1，target_rule=immediate-next-step。
+只接受实际派发请求中已经披露且宿主仍选择的 Skill；需匹配实际 Tool call、原目录及来源 descriptor。
+只有 succeeded receipt 能在同轮紧邻后继 Step 使用；取消／恢复／最后一步／目标失败／超预算不顺延。
+同一 active Lease 读取并复核原文字节，历史 replay 只读冻结证据。不存在模型 selection writer 或 pending 流。
+
+### 14.4 本轮验证与边界
+
+限定 40 文件共 896 项；执行 **893 passed, 3 skipped in 50.33s**。
+三项 skip 是 Windows 符号链接权限边界。覆盖 selection 幂等／CAS／三态对账／重复取消，
+exact+中文 FTS、其他 Session 排名隔离、四级披露与次步时效、失败 receipt、预算整块排除、
+catalog/reload/资源漂移、原请求 retry、历史重建、schema 拒绝、索引回滚／重建／关闭／备份，
+以及 F0/F1、Plugin/Composition、Session/Request/Recovery、Product 和 TUI 相邻 owner。
+六组真实反向验证临时移除孤立 FTS 清理、operation exact payload、Skill 配额、section digest、
+Store owner 与冻结 fusion 保护，均因预期公开路径失败，随后逐字节恢复。
+精确测试集合由阶段计划 §9.4 给出；同集合 collect-only 为 896 项。
+
+另对共享 Session 协议切换的 CLI／Inspector／Product 只读入口补查五个不重叠文件：
+`test_cli_read_only_commands.py`、`test_cli_resume_safety.py`、`test_cli_resume.py`、`test_inspector.py`、`test_product_inspection_leaf_failure.py`。
+同集合 collect-only **184 项**，执行 **183 passed, 1 skipped in 3.10s**（Windows NUL 路径边界）。
+两批合计 **45 文件、1080 collected、1076 passed、4 skipped**，不是一次全量运行；
+反向保护恢复后的八文件确认另得 **161 passed, 2 skipped**，与上述集合重叠，不再加总。
+
+`compileall -q src tests`、40 个修改 Python 文件 Ruff、23 个生产文件反硬编码扫描与当前
+测试示例词扫描均通过。八份文档 QA 检查了 463 个相对链接、30 个闭合 Mermaid 块、两份上下文
+0–20 编号对应关系和新增秘密／编码损坏，均无问题；`git diff --check` 通过。
+未运行全量、L2、Wheel、联网或真实 Provider；未提交、推送或发布。
+以上实现验证不代替独立审查。随后 Release Stop A 已完成 P0=0/P1=0/P2=2 的独立审查，
+按计划通过停止点；两项 P2 随后已修复，限定 12 文件 273 项通过并完成两处反向验证。具体公开反例与实测见
+[审查记录](TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。现行合同不因缺陷放宽；
+F3 authority 已实现，实际边界见 §15；F4–F5、semantic/reranker 和检索质量评测未实现。
+
+## 15. F3 当前实现边界
+
+§6 exact 事件已由 projects 与 memory 的唯一 projector/service 实现，均在原 EventStore 中只追加。
+RuntimeConfig.memory 为 null 或完整 ProjectMemoryConfig；ProjectScopeLimits 的两项正整数、
+MemoryPolicy 的五项正整数与非空 denied_patterns、ProjectSourceResolver 必须显式装配，缺项拒绝。
+模型 Tool 只收 proposal_id/body/source_event_ids，并以真实调用身份派生操作 id；只允许本 Session
+已闭合原始叶证据，不能选择项目、槽、人工声明或决策。其普通返回是 proposed 回执，副作用由原
+ToolRuntime 管理。include_default_tools=False 不会因配置存在而自动授予 Tool。
+
+宿主 declare 实际捕获声明；approve/supersede/revoke 用 exact refs/digests/head。Runtime 门面
+借原 Lease/Drain，Store-owned 独立服务不另建 Runtime 生命周期；Product host 装配验证 exact
+SessionService、底层 Store 和 Workspace Provider/resolver。实际继承在 attach 后、首次执行前完成，
+失败由原 dispose 收敛。Memory read 每次 fresh replay、验证来源、复核 head，交付 detached view。
+未知提交状态不重投；同操作并发竞争只返回同一已提交事实。内容检查是明确规则，非穷尽语义识别。
+
+Memory 检索、Context 注入、来源目录与治理 UI 仍待 F4/F5；原 Context 只选择 History/Skill，格式与
+SQLite schema 不在 F3 改版。释放工作区后的历史来源边界见 §6.1。实现验证记录归阶段计划与正式
+上下文 15.1。B-P1-01 已在 LocalGitWorkspaceProvider 修复：source、自身或其它消费方、
+mapping-only 共用 Git 注册与实际 admin 核对。主 checkout 来自 Git 列表首项，linked checkout
+来自唯一反向指针；不能按 configured source 路径或指向 common 的 marker 豁免。Git 注册无法
+证明的目录仍拒绝，不推断布局。§6.1 的协议和 owner 未改变，定向与反向证据见
+[Stop B 审查 §7](TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
+修复后独立复审 P0=0/P1=0/P2=0，Stop B 已通过，F4 未开始，见审查记录第 8 节。
+没有发布级全量、L2 或发布结论。

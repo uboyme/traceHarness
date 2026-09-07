@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint, to_json_value
 from traceh.api.llm import ToolSchema
 from traceh.api.plugins import PluginIdentity
+from traceh.api.skills import SkillDescriptor, validate_skill_catalog
 
 EMPTY_SKILL_CATALOG_DIGEST = fingerprint([])
 
@@ -43,15 +44,14 @@ class CompositionSnapshot:
     tool_middlewares: tuple[str, ...] = ()
     temperature: float | None = None
     max_output_tokens: int | None = None
+    skill_catalog: tuple[SkillDescriptor, ...] = ()
 
-    @property
-    def skill_catalog(self) -> tuple[()]:
-        """F0-B has no Skill contribution owner; nonempty catalogs are refused."""
-        return ()
+    def __post_init__(self) -> None:
+        validate_skill_catalog(self.skill_catalog, self.plugins)
 
     @property
     def skill_catalog_digest(self) -> str:
-        return EMPTY_SKILL_CATALOG_DIGEST
+        return fingerprint([skill.to_dict() for skill in self.skill_catalog])
 
     def to_dict(self) -> dict[str, JsonValue]:
         return {
@@ -65,7 +65,7 @@ class CompositionSnapshot:
             "tool_middlewares": list(self.tool_middlewares),
             "temperature": self.temperature,
             "max_output_tokens": self.max_output_tokens,
-            "skill_catalog": [],
+            "skill_catalog": [skill.to_dict() for skill in self.skill_catalog],
             "skill_catalog_digest": self.skill_catalog_digest,
         }
 
@@ -93,9 +93,10 @@ class CompositionSnapshot:
         if type(value) is not dict or set(value) != keys:
             raise ValueError("composition-snapshot-keys-invalid")
         _require_json(value)
-        if type(value["skill_catalog"]) is not list or value["skill_catalog"]:
-            raise ValueError("composition-skill-catalog-unsupported")
-        if value["skill_catalog_digest"] != EMPTY_SKILL_CATALOG_DIGEST:
+        if type(value["skill_catalog"]) is not list:
+            raise ValueError("composition-skill-catalog-invalid")
+        catalog = tuple(SkillDescriptor.from_dict(item) for item in value["skill_catalog"])
+        if value["skill_catalog_digest"] != fingerprint(value["skill_catalog"]):
             raise ValueError("composition-skill-catalog-digest-mismatch")
         for name in ("revision", "provider", "model", "system_prompt"):
             if type(value[name]) is not str:
@@ -132,6 +133,7 @@ class CompositionSnapshot:
             tool_middlewares=tuple(value["tool_middlewares"]),
             temperature=temperature,
             max_output_tokens=output_limit,
+            skill_catalog=catalog,
         )
         if canonical_json(snapshot.to_dict()) != canonical_json(value):
             raise ValueError("composition-snapshot-invalid")
@@ -152,6 +154,10 @@ class RuntimeComposition:
     tool_middlewares: tuple[str, ...] = ()
     temperature: float | None = None
     max_output_tokens: int | None = None
+    skill_catalog: tuple[SkillDescriptor, ...] = ()
+
+    def __post_init__(self) -> None:
+        validate_skill_catalog(self.skill_catalog, self.plugins)
 
     def snapshot(self) -> CompositionSnapshot:
         payload: dict[str, object] = {
@@ -164,8 +170,8 @@ class RuntimeComposition:
             "tool_middlewares": list(self.tool_middlewares),
             "temperature": self.temperature,
             "max_output_tokens": self.max_output_tokens,
-            "skill_catalog": [],
-            "skill_catalog_digest": EMPTY_SKILL_CATALOG_DIGEST,
+            "skill_catalog": [skill.to_dict() for skill in self.skill_catalog],
+            "skill_catalog_digest": fingerprint([skill.to_dict() for skill in self.skill_catalog]),
         }
         return CompositionSnapshot(
             revision=fingerprint(payload),
@@ -178,4 +184,5 @@ class RuntimeComposition:
             tool_middlewares=self.tool_middlewares,
             temperature=self.temperature,
             max_output_tokens=self.max_output_tokens,
+            skill_catalog=self.skill_catalog,
         )

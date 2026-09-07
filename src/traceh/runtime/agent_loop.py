@@ -90,7 +90,11 @@ class AgentLoop:
         self.context_policy = context_policy or ContextInputPolicy.empty()
         # Only this Session's read capability reaches the source service. The
         # loop retains the append owner, and retries remain below this freeze.
-        self.context_inputs = ContextInputService(sessions.read_session, policy=self.context_policy)
+        self.context_inputs = ContextInputService(
+            sessions.read_session, policy=self.context_policy,
+            read_selection=sessions.read_skill_selection,
+            query_index=sessions.query_context_index,
+        )
 
     async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
         # A plain ``str`` keeps the historical behaviour exactly - a fresh id
@@ -205,6 +209,7 @@ class AgentLoop:
                         turn_id=turn_id,
                         step_id=current_step_id,
                         composition=composition,
+                        active_composition=active_composition,
                     )
                     context_data = context.to_dict()
                     await self.sessions.append_context_input(

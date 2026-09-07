@@ -21,6 +21,7 @@ from traceh.api.tools import Tool
 from traceh.version import CORE_PLUGIN_ID, DEFAULT_REQUIRES_TRACEH, __version__
 
 if TYPE_CHECKING:
+    from traceh.api.skills import SkillContribution
     from traceh.runtime.verification import CompletionVerifier
     from traceh.tools.middleware import ToolMiddleware
     from traceh.tools.policy import ToolPolicy
@@ -97,6 +98,10 @@ class PluginContext(Protocol):
         ...
 
     def register_prompt(self, section: PromptSection) -> Registration:
+        ...
+
+    def register_skill(self, contribution: SkillContribution) -> Registration:
+        """Stage data for the leased Skill catalog; grants no prompt or Tools."""
         ...
 
     def register_provider(self, provider: LlmProvider) -> Registration:

@@ -207,7 +207,7 @@ async def test_wire_parser_rejects_tampering_even_after_rehash(tmp_path, change)
     elif change == "scope":
         data["scope"]["project_binding"] = {"pretend": "project authority"}
     elif change == "catalog":
-        data["skill_catalog_digest"] = "a" * 64
+        data["skill_catalog_digest"] = "invalid-digest"
     elif change == "query":
         data["query"]["source_refs"][0]["stream_id"] = "session:foreign"
     else:
@@ -216,6 +216,24 @@ async def test_wire_parser_rejects_tampering_even_after_rehash(tmp_path, change)
         _redigest(data)
     with pytest.raises(ValueError):
         parse_context_input(data)
+
+
+async def test_catalog_digest_must_match_exact_composition_even_after_context_rehash(tmp_path):
+    sessions, kwargs = await _fixture(tmp_path)
+    snapshot = await ContextInputService(sessions.read_session).freeze(**kwargs)
+    events, through_seq = await _persist(sessions, kwargs, snapshot)
+    data = snapshot.to_dict()
+    data["skill_catalog_digest"] = "a" * 64
+    next(item for item in data["exclusions"] if item["kind"] == "skill")["reason"] = "not-selected"
+    forged = parse_context_input(_redigest(data))
+    # F1 admits nonempty catalogs syntactically. Exact Composition binding,
+    # rather than a hard-coded empty digest, rejects the forged Context receipt.
+    changed = tuple(
+        replace(event, data=forged.to_dict()) if event.type == "context/input" else event
+        for event in events
+    )
+    with pytest.raises(ValueError, match="context-input-binding-mismatch"):
+        read_context_input(changed, through_seq=through_seq, **kwargs)
 
 
 @pytest.mark.parametrize("change", ["query-ref", "cut-ref", "source-digest"])

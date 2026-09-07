@@ -2,6 +2,75 @@
 
 ## Unreleased
 
+### v0.9 F3: durable project scope and Memory authority
+
+- Added host-owned project association in projects:catalog and append-only
+  Memory proposals, exact approval, supersession and revocation in memory:project_id.
+  One projector per domain, one active value per fact slot, no extra canonical table.
+- Added explicit host policies, source validation, fresh detached reads and
+  true/false/unknown commit reconciliation. Historical evidence survives resource
+  release without granting current access to a released workspace.
+- Added an opt-in proposal-only Tool and a host decision facade borrowing the
+  existing Runtime Lease. Product/Workspace association is proven after attachment
+  and before first execution, using the original ownership and cleanup chain.
+- All 100 new F3 tests passed; final targeted collection spans 27 files / 496 cases.
+  Two stale adjacent assertions were corrected and passed their 18-case confirmation.
+  Five reverse guard cases failed as intended, then passed after byte-exact restoration.
+- Fixed Stop B finding B-P1-01 in LocalGitWorkspaceProvider: source, consumer and
+  mapping-only reads share Git registry/admin validation. A configured linked source
+  no longer bypasses backpointer proof, and valid main consumers are accepted.
+  Unregistered layouts remain unavailable; no path guesses, new protocol or lifecycle.
+- Added 13 regression cases including actual Memory read/approve refusal, source evidence
+  and child-process cancellation. Restoring the old provider produced eight expected
+  failures; the final 11-file gate passed 189 cases with one platform skip.
+  Post-fix independent review found P0=0/P1=0/P2=0 and closed B-P1-01.
+  The 11 repository test files plus four independent probes passed with
+  193 passed / 1 skipped; Stop B passed and F4 has not started. See the [review record](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
+  No full suite, L2, package build, network or real Provider was run.
+
+### v0.9 F2: durable Skill selection, retrieval and progressive disclosure
+
+- Added host-owned selection events with exact operation idempotency, CAS and
+  commit reconciliation. Selection changes future Steps without changing Plugin
+  identity, Generation lifecycle or Tool permissions.
+- Added selected-corpus exact/FTS retrieval, eligible BM25, deterministic weighted
+  RRF and complete-item byte budgets. The existing SQLite Store owns schema 2,
+  atomic index rebuild, cancellation, shutdown and backup/restore.
+- Added a receipt-only Skill Tool for directory/summary/section/chunk disclosure
+  in the immediate next Step. Original bytes remain outside Surface; historical
+  reconstruction and same-Step retries never query current indexes/resources.
+- **Breaking, pre-1.0:** current Session context_protocol=3, Context format=2,
+  f2-context-policy-v1, context-json-v3 and SQLite schema=2. Older versions are
+  rejected without migration. EventEnvelope 1 and M3 format 2 are unchanged.
+- Validated 40 related files: 893 passed, 3 Windows symlink privilege skips.
+  Six public-path reverse guards failed as intended and were restored. No full
+  suite, L2, wheel build, network or real Provider was run. Stop A independent
+  review subsequently cleared P0/P1. Both recorded P2 findings are fixed: Context deduplication
+  reuses the tier-aware Skill content identity, and exact matching preserves complete literal
+  paths while rejecting identifier prefixes and suffixes. The targeted repair gate collected
+  and passed 273 cases in 12 files, including 19 new cases; two reverse checks reproduced
+  eight failures with the old implementations. See the
+  [review and repair record](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md).
+  Memory, governance UI and semantic/reranker are deferred.
+
+### v0.9 F1: typed Skill contributions and leased resources
+
+- Added a separate Skill contribution API to the existing Plugin activation
+  transaction. Immutable catalog metadata and its digest enter Composition
+  revisions; enabling a Skill never grants Tools or adds prompt/model messages.
+- Added explicit host limits and exact plugin identity/resource-root bindings.
+  Activation validates canonical paths, UTF-8 sizes, SHA-256 and chunk ranges,
+  then freezes bounded bytes. Old Leases retain their original resources across
+  reload; only the existing Activation/Generation cleanup releases them.
+- Bound Context receipts to nonempty catalogs without introducing a second
+  resource lifecycle or fact source. Durable Skill selection, retrieval and model
+  disclosure were added by F2 above; F1 itself did not change Session/SQLite protocol versions.
+- Metadata-only plugin list/inspect now marks Skills as visible after successful
+  activation without importing disabled plugins.
+- Validated 31 related files: 767 collected, 764 passed, 3 Windows symlink
+  privilege skips. Five reverse-protection checks, compileall and changed-file Ruff
+  passed. No full suite, L2, wheel build, network or real Provider was run.
+
 ### v0.9 F0: frozen Context requests and bounded History disclosure
 
 - Added one Step-scoped Context receipt before the existing Composition and
@@ -12,13 +81,13 @@
   `request_history_page` Tool returns only a receipt for the immediate next Step;
   typed host requests use `TurnInput.history_requests` and the existing Session
   append owner. Raw pages never become persistent Surface conversation.
-- **Breaking, pre-1.0:** the current Session marker is `context_protocol=2`,
+- **Breaking, pre-1.0:** F0-C introduced Session marker `context_protocol=2`,
   with `f0-c-context-policy-v1` and `context-json-v2`. Older Sessions and the
   interim F0-B protocol are rejected without migration or rewriting; use a new
   data directory. SQLite and EventEnvelope schema 1 and M3 format 2 are unchanged.
 - Historical workspace freshness remains `unknown` until a later stage supplies
-  verifiable execution-time revision evidence. Skill, Memory and retrieval UI
-  remain outside this implementation.
+  verifiable execution-time revision evidence. F2 adds Skill model disclosure;
+  Memory and retrieval UI remain later-stage work.
 
 ## 0.8.0 - 2026-09-05
 

@@ -58,6 +58,7 @@ def test_list_reports_discovered_plugins(capsys) -> None:
     assert code == 0
     assert "a.plugin: discovered" in output
     assert "example-dist 1.0.0" in output
+    assert "skills: available after successful activation" in output
     assert "ok=true" in output
 
 
@@ -70,6 +71,10 @@ def test_list_json_is_valid_and_sorted(capsys) -> None:
     assert code == 0
     assert payload["command"] == "list"
     assert payload["safe_discovery_only"] is True
+    assert all(
+        item["skills"] == {"available": False, "requires_activation": True}
+        for item in payload["plugins"]
+    )
     assert [item["entry_point"]["name"] for item in payload["plugins"]] == [
         "a.plugin",
         "z.plugin",

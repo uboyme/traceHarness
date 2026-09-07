@@ -7,14 +7,17 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from traceh.api.events import EventEnvelope, PendingEvent
-from traceh.api.json_types import JsonValue, fingerprint
+from traceh.api.history import HistoryPageRequest, HistoryReadPolicy
+from traceh.api.json_types import JsonValue, canonical_json, fingerprint
 from traceh.api.llm import (
     ModelAttemptIdentity,
     ModelRequest,
     dispatch_request_matches_composed,
     model_attempt_reservation_id,
 )
+from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import ConcurrencyConflict, Durability, EventStore
+from traceh.session.protocol import CONTEXT_PROTOCOL, require_session_protocol
 
 
 class SessionNotFoundError(LookupError):
@@ -29,6 +32,16 @@ class ModelAttemptConflictError(RuntimeError):
     def __init__(self, *, ownership_lost: bool = False) -> None:
         super().__init__(self.code)
         self.ownership_lost = ownership_lost
+
+
+class ContextInputWriteError(RuntimeError):
+    """The Context append failed, with an explicitly reconciled commit state."""
+
+    code = "context-input-write-failed"
+
+    def __init__(self, *, committed: bool | None) -> None:
+        super().__init__(self.code)
+        self.committed = committed
 
 
 class SessionService:
@@ -102,7 +115,9 @@ class SessionService:
                 "session_id": session_id,
                 "workspace": str(workspace.resolve()),  # noqa: ASYNC240
                 "metadata": metadata or {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
+            expected_seq=0,
         )
         return session_id
 
@@ -124,6 +139,7 @@ class SessionService:
         causation_id: UUID | None = None,
         composition_revision: str | None = None,
     ) -> EventEnvelope:
+        await self.ensure_session(session_id)
         return await self._append(
             self.session_stream(session_id),
             event_type,
@@ -135,6 +151,187 @@ class SessionService:
             causation_id=causation_id,
             composition_revision=composition_revision,
         )
+
+    async def append_context_input(
+        self,
+        session_id: str,
+        data: dict[str, JsonValue],
+        *,
+        expected_seq: int,
+        correlation_id: UUID | None = None,
+    ) -> EventEnvelope:
+        """Freeze this open Step's one Context before its Composition.
+
+        The append is owned until it converges even on repeated cancellation.
+        A may-have-committed result is reconciled, never automatically retried.
+        """
+
+        from traceh.agents.commit_reconciliation import committed_after_failure
+        from traceh.session.context_input import (
+            parse_context_input,
+            validate_context_input_sources,
+        )
+
+        snapshot = parse_context_input(data)
+        frozen = snapshot.to_dict()
+        if (
+            type(expected_seq) is not int
+            or expected_seq < 1
+            or frozen["session_id"] != session_id
+            or frozen["observed_session_seq"] > expected_seq
+        ):
+            raise ValueError("context-input-binding-mismatch")
+        stream_id = self.session_stream(session_id)
+        revision = frozen["composition_revision"]
+        canonical_payload = canonical_json(frozen)
+        async with self._lock(stream_id):
+            events = await self.read_session(session_id)
+            if not events:
+                raise SessionNotFoundError(session_id)
+            if events[-1].seq != expected_seq:
+                raise ConcurrencyConflict("context source boundary changed")
+            validate_context_input_sources(snapshot, events)
+            open_turn: str | None = None
+            open_step: str | None = None
+            step_start_seq: int | None = None
+            has_input_or_composition = False
+            for event in events:
+                if event.type == "turn/start":
+                    open_turn = event.data.get("turn_id")
+                elif event.type == "turn/end":
+                    open_turn = None
+                elif event.type == "step/start":
+                    open_step = event.data.get("step_id")
+                    step_start_seq = event.seq
+                    has_input_or_composition = False
+                elif event.type == "step/end":
+                    open_step = None
+                elif event.type in {"context/input", "composition/snapshot"}:
+                    has_input_or_composition = True
+            if (
+                open_turn != frozen["turn_id"]
+                or open_step != frozen["step_id"]
+                or step_start_seq is None
+                or frozen["observed_session_seq"] < step_start_seq
+                or has_input_or_composition
+            ):
+                raise ValueError("context-input-binding-mismatch")
+            pending = PendingEvent(
+                type="context/input",
+                data=frozen,
+                correlation_id=correlation_id,
+                composition_revision=revision,
+            )
+            task = asyncio.create_task(
+                self.store.append(
+                    stream_id,
+                    expected_seq=expected_seq,
+                    events=(pending,),
+                    durability=Durability.SYNC,
+                ),
+                name="traceh-context-input-append",
+            )
+            try:
+                return (await asyncio.shield(task))[0]
+            except (asyncio.CancelledError, Exception) as primary:
+                await await_worker_convergence(task)
+                committed = await committed_after_failure(
+                    lambda: self.read_session(session_id),
+                    lambda event: (
+                        event.type == "context/input"
+                        and event.stream_id == stream_id
+                        and event.seq == expected_seq + 1
+                        and event.correlation_id == correlation_id
+                        and event.composition_revision == revision
+                        and canonical_json(event.data) == canonical_payload
+                    ),
+                )
+                failure = ContextInputWriteError(committed=committed)
+                if isinstance(primary, asyncio.CancelledError):
+                    raise primary from failure
+                raise failure from primary
+
+    async def append_history_requests(
+        self,
+        session_id: str,
+        *,
+        turn_id: str,
+        step_id: str,
+        user_message_ref: dict[str, JsonValue],
+        requests: tuple[HistoryPageRequest, ...],
+        policy: HistoryReadPolicy,
+        correlation_id: UUID | None = None,
+    ) -> tuple[EventEnvelope, ...]:
+        """Atomically record explicit host requests before the first Context.
+
+        The Turn owner supplies typed inputs. This owner validates their prior
+        disclosure, owns the entire append through cancellation, and reports an
+        exact batch commit state without resubmitting an uncertain operation.
+        """
+
+        from traceh.agents.commit_reconciliation import committed_after_failure
+        from traceh.session.history_requests import (
+            HistoryRequestWriteError,
+            validate_user_requests,
+        )
+
+        stream_id = self.session_stream(session_id)
+        async with self._lock(stream_id):
+            events = await self.read_session(session_id)
+            if not events:
+                raise SessionNotFoundError(session_id)
+            payloads = validate_user_requests(
+                events, session_id=session_id, turn_id=turn_id, step_id=step_id,
+                user_message_ref=user_message_ref, requests=requests, policy=policy,
+            )
+            expected_seq = events[-1].seq
+            pending = tuple(
+                PendingEvent(
+                    type="history/requested", data=payload, event_id=uuid4(),
+                    correlation_id=correlation_id,
+                )
+                for payload in payloads
+            )
+            canonical_payloads = tuple(canonical_json(item.data) for item in pending)
+
+            async def read_batch() -> tuple[EventEnvelope, ...]:
+                observed = await self.read_session(session_id)
+                found: list[EventEnvelope] = []
+                for offset, item in enumerate(pending, 1):
+                    seq = expected_seq + offset
+                    if seq > len(observed):
+                        continue
+                    candidate = observed[seq - 1]
+                    if (
+                        candidate.event_id == item.event_id
+                        and candidate.stream_id == stream_id
+                        and candidate.seq == seq
+                        and candidate.type == "history/requested"
+                        and candidate.correlation_id == correlation_id
+                        and candidate.composition_revision is None
+                        and canonical_json(candidate.data) == canonical_payloads[offset - 1]
+                    ):
+                        found.append(candidate)
+                if found and len(found) != len(pending):
+                    raise ValueError("history-request-partial-batch")
+                return tuple(found)
+
+            task = asyncio.create_task(
+                self.store.append(
+                    stream_id, expected_seq=expected_seq, events=pending,
+                    durability=Durability.SYNC,
+                ),
+                name="traceh-history-request-append",
+            )
+            try:
+                return await asyncio.shield(task)
+            except (asyncio.CancelledError, Exception) as primary:
+                await await_worker_convergence(task)
+                committed = await committed_after_failure(read_batch, lambda event: True)
+                failure = HistoryRequestWriteError(committed=committed)
+                if isinstance(primary, asyncio.CancelledError):
+                    raise primary from failure
+                raise failure from primary
 
     async def start_model_attempt(
         self,
@@ -211,6 +408,7 @@ class SessionService:
             events = await self.store.read(stream_id)
             if not events or events[0].type != "session/created":
                 raise SessionNotFoundError(session_id)
+            require_session_protocol(events, session_id=session_id)
             # Import at the ownership boundary rather than module import time:
             # the invariant checker also validates plugin identity and that
             # dependency graph reaches ToolRuntime, which itself uses this
@@ -225,6 +423,29 @@ class SessionService:
             head = events[-1].seq
             if source_seq > head:
                 raise ModelAttemptConflictError
+            from traceh.runtime.request_builder import build_request_from_events
+            from traceh.session.surface import SurfaceProjector
+
+            try:
+                rebuilt = build_request_from_events(
+                    events,
+                    SurfaceProjector(),
+                    session_id=session_id,
+                    turn_id=attempt.turn_id,
+                    step_id=attempt.step_id,
+                    through_seq=source_seq,
+                )
+                if (
+                    rebuilt.request.metadata["composition_revision"] != composition_revision
+                    or rebuilt.fingerprint != composed_fingerprint
+                    or canonical_json(rebuilt.request.to_dict())
+                    != canonical_json(composed_request.to_dict())
+                ):
+                    raise ValueError("request-context-binding-mismatch")
+            except (KeyError, TypeError, ValueError):
+                raise ModelAttemptConflictError(ownership_lost=True) from None
+            context_input_seq = rebuilt.request.metadata["context_input_seq"]
+            context_input_digest = rebuilt.request.metadata["context_input_digest"]
 
             open_turn: str | None = None
             open_step: str | None = None
@@ -303,6 +524,8 @@ class SessionService:
                     "step_id": attempt.step_id,
                     "source_seq": source_seq,
                     "composition_revision": composition_revision,
+                    "context_input_seq": context_input_seq,
+                    "context_input_digest": context_input_digest,
                     "composed_fingerprint": composed_fingerprint,
                     "dispatch_fingerprint": dispatch_fingerprint,
                     "composed_request": composed_request.to_dict(),
@@ -384,7 +607,9 @@ class SessionService:
         )
 
     async def read_session(self, session_id: str) -> tuple[EventEnvelope, ...]:
-        return await self.store.read(self.session_stream(session_id))
+        events = await self.store.read(self.session_stream(session_id))
+        require_session_protocol(events, session_id=session_id)
+        return events
 
     async def read_effects(self, session_id: str) -> tuple[EventEnvelope, ...]:
         return await self.store.read(self.effect_stream(session_id))

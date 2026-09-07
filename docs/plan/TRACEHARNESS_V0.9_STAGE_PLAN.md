@@ -1,13 +1,23 @@
 # TraceHarness v0.9 冻结阶段计划
 
-> 状态：**已于 2026-08-29 冻结为 v0.9 路线；2026-09-05 补入 M3 压缩历史证据的按需披露合同；
-> 尚未实现，也未获开工授权。**
+> 状态：**2026-08-29 冻结产品路线，2026-09-05 纳入 M3 History Evidence；2026-09-07 按 v0.8.0
+> 发布基线修订身份、失败前缀、索引、评测与阶段合同；同日完成获授权的 F0-A ADR／设计冻结。
+> F0-A/B/C 本轮授权实现与最终限定门禁已收口；F1–F5 未开工，未执行发布级全量或 L2。**
 >
-> 前置：只有 v0.8 按当时真实源码完成、独立审查和发布后，才允许重新核对并批准本计划。
+> 前置：v0.8.0 已完成发布，源码版本、发布 tag 与记录已核对。F0-A 仅交付设计文档；19 项现有接缝
+> 定向测试通过，不代表新协议实现。F0-B 的 59 项新主线已包含在最终 36 文件门禁中：
+> `1079 collected / 1076 passed / 3 skipped in 20.22s`；三项跳过均为 Windows 权限／NUL 路径边界。
+> F0-C 最终 38 文件 `1104 collected / 1100 passed / 4 skipped in 31.98s`，包含新 History 四文件 81 项。
+> 四项 skip 均为 Windows 符号链接权限／NUL 路径边界。本轮未运行全量、L2、构建、联网或真实模型。
 >
-> 本文冻结 Skill、Memory、M3 压缩历史证据、渐进式披露与 RAG 的单一 Context Input 主线，防止
-> v0.8 实施期间范围漂移。
+> 本文冻结 Skill、Memory、M3 压缩历史证据、渐进式披露与 RAG 的单一 Context Input 主线，区分
+> 已发布基线、计划合同与尚待验证的实现；版本目标和三个 Release Stop 保持不变。
 > 它不表示当前已有这些能力，也不授权 commit、push、tag、release、联网或真实模型运行。
+
+F0-A 的决定与字段合同已冻结为 [ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)、
+[ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md) 和
+[F0 设计合同](TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md)。本计划维护阶段与验收依赖，详细字段以该合同
+为唯一规范；F0 整体仍须 F0-B/C 真实主线验证通过。
 
 ## 1. 单一产品目标
 
@@ -95,15 +105,15 @@ M3 的 `surface/replace` 只改变当前 Surface，原始 `user/message`、`assi
 `tool/result` 仍在同一个 Session EventStore。v0.9 利用这条既有 provenance 提供按需 History Evidence，
 但明确区分“永久可审计”和“每轮都喂给模型”：
 
-- 默认只给有界目录与 M3 摘要；原文只有用户或模型引用宿主已经披露的 exact `block_id` 后才进入一个
+- 默认明确选空；显式配置才给有界目录或 M3 摘要，另配置 History reader 后，原文只有用户或模型引用宿主已经披露的 exact `block_id`/cursor 才进入一个
   Step 的 Context Input；模型不能提交任意 seq 范围或获得 EventStore handle；
 - 多次压缩时由宿主递归展开 replacement 来源链，每层 fresh 校验 Session identity、source seq/digest、
   闭合 Turn 边界与允许披露的 Surface 事件类型；无法证明完整来源时 fail closed；
 - History request 若以只读 Tool 形态暴露，普通 `tool/result` 只返回小型 receipt；原始历史 bytes 由下一
   Step 的 Context Input event/request snapshot 冻结，不作为普通 Surface 消息遗留到后续 Turn；
-- 每个历史 block 带 `observed_through_seq`、来源时间/identity、可得时的 Workspace revision、freshness
-  (`matched`/`stale`/`unknown`) 与 digest。`matched` 只表示所有已记录的相关 identity 仍匹配，不把环境依赖
-  或非确定工具结果升级成当前验证；缺失当前身份时必须显示 unknown，不能把旧工具成功冒充当前验证；
+- 每个历史 block 带 `observed_through_seq`、来源时间/identity 与 digest。F0-C 严格固定
+  `workspace_observation=null`、`freshness=unknown`：现有 Workspace base_revision 没有与历史 ToolResult
+  的执行时状态绑定。真实 matched/stale 由 F3/F4 接入可核对宿主版本事实后再验证，不能伪造当前验证；
 - 当前 fresh Product/Workflow/Promotion/Workspace 事实优先于历史证据。History Evidence 只回答过去，
   当前状态问题仍由对应 owner fresh 读取，代码或测试是否仍成立则针对当前 revision 重新验证；
 - 一次披露只影响被授权的当前 Step。后续 Step 若仍需要，必须重新选择并重新冻结；不得靠 widget cache、
@@ -125,7 +135,7 @@ M3 的 `surface/replace` 只改变当前 Surface，原始 `user/message`、`assi
 | Session History Evidence | Session EventStore + M3 replacement provenance | 当前 Session exact block 的宿主只读展开 | 模型 / Memory / retrieval index |
 | Retrieval index | derived index owner | 从 canonical Skill/Memory 重建 | EventStore 事实源 |
 | Candidate ranking | host retrieval policy | 显式算法/config/version | Memory authority / Tool policy |
-| 最终注入 bytes | ContextInputSnapshot | 每个 Step admission 冻结一次 | 当前数据库 latest state |
+| 最终注入 bytes | ContextInputSnapshot | 每个进入请求构建的 Step 冻结一次；失败前缀见 4.4 | 当前数据库 latest state |
 
 跨边界时必须验证两侧 identity 和 owner，不能因为字段都叫 `skill_id` 或 `memory_id` 就默认属于同一事实。
 
@@ -135,24 +145,27 @@ M3 的 `surface/replace` 只改变当前 Surface，原始 `user/message`、`assi
 
 准确类型名实现时可调整，但每个 Step 必须在 Provider 调用前冻结一个结构化上下文 receipt，至少覆盖：
 
-- 当前 Workspace/Session/Step identity 与 leased Generation identity；
+- 实际来源的 scope binding、Workspace/Session/Turn/Step identity，以及同一 Lease 的持久内容绑定（见 4.5）；
+  Memory 输入必须证明项目 binding；仅当前 Session 的 History 不据此声称拥有项目 Memory 读取资格；
 - canonical query 的来源身份和 digest；
 - 每个 Skill/Memory/History block 的 kind、id、version/digest、provenance、scope 与 disclosure tier；
 - **实际注入的有序精确 bytes**，而不只是“当时选了哪些 id”；
 - retrieval policy/version、启用的 lane 与各自 config digest；
 - 被资格过滤、去重、预算排除或未命中的结构化原因；
-- Skill、Memory 与 History Evidence 各自配额、总 Context Budget、实际字符/Token 计量和剩余量；
+- Skill、Memory 与 History Evidence 各自配额、总 Context Budget、canonical UTF-8 字节计量和剩余量；
+  Token 计量只有显式配置可验证的 counter/model identity 才能报告，缺失记 unavailable，不用字节伪造 token；
 - 最终 block 顺序和整个 Context Input digest。
 
 注入点在 v0.9-F0 冻结为一条明确主线：
 
 1. `AgentLoop` 取得当前 Composition Generation Lease 后，调用注入的 host Context Input service。该
    service 只通过只读 canonical source readers 检索并返回不可变 receipt/blocks，不拥有 Session append
-   权限；`AgentLoop` 仍是唯一 Session event writer，并追加**恰好一条**当前 Turn/Step 的 Context Input
-   event。它保存 receipt 与有序精确 bytes，只属于当前 Step，不是新的 `user/message`；
+   权限；`AgentLoop` 拥有此执行路径的 Context Input 写入，并在进入请求构建前追加**恰好一条**当前
+   Turn/Step 的 Context Input event。成功选择为空也写有原因的空 blocks；失败前缀按 4.4 处理。
+   event 保存 receipt 与有序精确 bytes，只属于当前 Step，不是新的 `user/message`；
 2. 随后才追加 `composition/snapshot`。该 event 的 seq 必须小于 composition event，现有
-   `source_seq = composition_event.seq` 因而继续界定生成请求的全部输入；重复、缺失、顺序颠倒或
-   Generation identity 不匹配均 fail closed，不把 source boundary 改成额外 digest 猜测；
+   `source_seq = composition_event.seq` 因而继续界定生成请求的全部输入；请求构建／重建时重复、缺失、
+   顺序颠倒或同一 Lease 的持久内容绑定不匹配均 fail closed，不把 source boundary 改成额外 digest 猜测；
 3. 专用 Context Input projector/reader 只从 `events[..source_seq]` 选择当前 Step 的唯一 event。现有
    `SurfaceProjector` 白名单天然忽略该类型；这里新增的是回归断言，不是第二次修改 Surface 或增加
    兼容 projector；
@@ -174,9 +187,17 @@ bytes 已由同一 Session EventStore 与最终 request snapshot 保存，不新
 使这一合同不可行，应先停止并重新裁剪内容预算或拆阶段，而不是把 bytes 外置给插件、向量索引或另一
 存储系统。
 
-### 4.2 authority 优先级与预算
+### 4.2 事实权威、控制权限与预算
 
-上下文优先级固定为：
+事实权威由对应领域 owner 决定：当前 Product/Workflow/Promotion/Workspace 状态从原流 fresh 读取；
+approved Memory 只证明宿主确认过的长期项目事实；Skill 和 History 是工作参考与过去的证据。Memory
+不能覆盖当前执行状态、当前用户请求或已冻结 requirement。用户要求修改已冻结任务或长期约束时，走
+相应的宿主控制入口，不能仅凭新消息或检索文本原地改写批准、预算和验证计划。
+
+START、Memory approve/supersede/revoke、Tool grant、Approval 与 Promotion 各由原控制面授权；任何
+上下文内容都不获得这些控制权限。此规则不取决于检索排名或模型是否遵从提示。
+
+在上述边界内，纳入／预算优先级固定为：
 
 1. System/Tool Policy、Product requirement、Verifier/Approval/Promotion/Budget 等宿主权威；
 2. 当前用户消息和任务所需的 fresh durable execution context；
@@ -200,6 +221,38 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
 已公开 exact block identity；自然语言 query 最多帮助选择目录/摘要，不能自行扩大成任意 seq 或跨 Session
 读取。
 
+### 4.4 合法失败前缀与重试
+
+当前 [`AgentLoop`](../../src/traceh/runtime/agent_loop.py) 先写 `step/start`，再取 Lease、构建请求和
+申请模型预算；因此“恰好一条”是请求构建／重建的条件，不是每个已打开 Step 都必须完成的写入。
+下表只统计当前 Step 的成功落盘事实，不包括它之前的用户／工具消息：
+
+| 停止位置 | Context Input | Composition | Request Snapshot / Attempt Start | 后续规则 |
+|---|---:|---:|---|---|
+| Lease／Context 读取失败或取消，Context 尚未提交 | 0 | 0 | 0 / 0 | 收敛 owner，按既有规则闭合中断 Step／Turn |
+| Context 已提交，Composition 尚未提交 | 1 | 0 | 0 / 0 | 保留证据，不补造 Composition 或模型调用 |
+| Composition 已提交，构建失败或模型准入拒绝 | 1 | 1 | 0 / 0 | 保留 Context，结清可能存在的准入资源 |
+| 首 Attempt 派发许可证已提交 | 1 | 1 | 1 / 1 | 原请求按现有执行／取消／对账主线收敛 |
+| 同 Step 的后续 Provider Attempt | 同一条 | 同一条 | 同一条 snapshot / 新 ordinal start | 复用 exact Context、source_seq 和冻结请求，不重跑检索 |
+
+append 取消或失败可能已提交时，先收敛 owned worker，再按精确身份和 payload fresh 对账为
+True/False/unknown；unknown 不能猜成 0、重新写一份 Context 或派发 Provider。Recovery 只处理已发生的
+事实并闭合合法前缀，不重新检索、不补造 Context/Attempt，也不消费旧 Turn 的 History 请求。
+F0-A 已在设计合同 §2 冻结 Context／Request 协议切换与旧 Session 拒绝入口；不为旧格式静默合成空 Context。
+
+### 4.5 Lease 身份与持久内容绑定
+
+当前 [`CompositionGeneration`](../../src/traceh/runtime/composition_runtime.py) 的 `generation_id`
+是进程内生命周期编号，不写持久 Composition 或 Request fingerprint。继续保留这一边界：
+
+- 运行期用 exact Lease 校验 Provider、Tool 与 Skill 资源 owner；不能用 digest 相等代替资源所有权；
+- durable Context 绑定同 Step 的 composition revision、plugin provenance 与 immutable Skill catalog
+  内容 digest；它们来自同一 Lease，不能重新读取 current Generation；
+- ADR-0043 已决定由 Composition 持久化有界 catalog descriptor manifest 与其 digest，并纳入 revision；
+  Context 只交叉绑定与核对成员。当前源码尚无这些字段，不得把进程序号当作跨进程 catalog identity；
+- 历史重建核对当时的关联与精确 bytes，不加载当前插件或 catalog。同内容的不同运行期 Generation
+  不应仅因生命周期编号不同而改变模型请求 fingerprint。
+
 ## 5. 通用检索与渐进披露管线
 
 ### 5.1 两次宿主过滤
@@ -213,7 +266,9 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
    Context Budget；History 还要递归复核 provenance、允许事件类型与 freshness；任何漂移 fail closed 或按
    receipt 记为 unavailable，不能换成 latest。
 
-这两道都由宿主确定性代码执行。模型、Skill 文本、Memory 文本、FTS 分数和 reranker 都不能绕过。
+这两道都由宿主确定性代码执行。每个来源最后一次成功复核是其选择观察边界；之后的变化影响后续
+fresh 选择，不声称 Session Context append 与各领域读取是跨流原子事务。模型、Skill 文本、Memory
+文本、FTS 分数和 reranker 都不能绕过。
 
 ### 5.2 检索 lanes
 
@@ -248,6 +303,24 @@ canonical query。来源集合、规范化规则和 digest 必须进入 receipt�
 等于把整个 Workspace history 塞进 prompt；命中历史摘要也不自动把整段旧对话塞回 Surface。History 原文
 是 request-only、Step-scoped 输入，用完即退；EventStore 永久保留不等于 Prompt 永久驻留。
 
+### 5.4 派生索引与 SQLite owner
+
+当前 [`SqliteEventStore`](../../src/traceh/session/sqlite.py) 严格校验 schema 中只有 `streams` 与
+`events`。FTS 不能直接加表后继续使用原开库合同。F0-A 已在设计合同 §7 决定 F2 使用同库 schema 2、
+精确 FTS5/shadow 对象与 Store-owned 生命周期；以下是所属阶段的实现义务：
+
+- 同库 schema/version cutover、FTS 虚表及其派生对象的精确集合；未知版本／对象仍拒绝，旧数据按
+  pre-1.0 政策明确拒绝，未经授权不迁移、不自动改写或删除；
+- Store 拥有连接、写入任务和关闭收敛；宿主 index service 通过受控接口维护 derived 内容，不把 SQL
+  连接或 EventStore writer 暴露给插件、模型、Context Input reader；
+- 索引绑定 canonical source identity/head/digest、作用范围、tokenizer 与排序版本；缺失、过期或损坏
+  的已知索引如何被识别、由哪个显式宿主入口重建，以及不可用时的拒绝／receipt 行为。不得放宽任意
+  schema 校验来实现“可删除重建”，也不得让索引恢复修改 canonical events；
+- 查询 eligibility、同库 writer 竞争、取消、部分重建、backup/restore 与 fresh-open 使用同一套规则；
+  optional semantic extras 不得改变核心事实源，重建期间不把半成品当有效候选。
+
+先以 exact+FTS 建立离线基线；可选本地模型只有达到 12.2 的质量与资源门槛后才进入验收范围。
+
 ## 6. 明确不做
 
 v0.9 不实现：
@@ -267,7 +340,8 @@ v0.9 不实现：
 
 ## 7. v0.9-F0：Context Input、检索与 authority 决策
 
-进入代码前至少冻结：
+F0 分为设计冻结和获授权后的最小主线原型。2026-09-07 已完成 F0-A 的 ADR 与设计合同，下列决定均在
+设计合同中有对应定义；它不是原型通过记录，也不等于 F0 整体已完成：
 
 - `ContextInputSnapshot` 与现有 Composition/Request Snapshot/Fingerprint 的唯一绑定；
 - Context Input event 必须先于当前 `composition/snapshot`，并由现有 `source_seq` 包含；专用
@@ -280,14 +354,52 @@ v0.9 不实现：
   进入普通 Surface，当前状态不得由旧历史推断；
 - derived index 的 schema/version/rebuild 规则，以及 optional local model config/receipt；
 - RequestBuilder 在 authority tier 之间的顺序、固定不可信内容边界和 atomic item policy；
-- UI、模型 proposal Tool 与真正宿主 writer 的权限分离。
+- UI、模型 proposal Tool 与真正宿主 writer 的权限分离；
+- 跨 Session 项目 scope 的唯一宿主 binding、requester／managed child 继承、重绑定拒绝，以及 Memory
+  事实槽和 exact predecessor CAS（10.1）；
+- 4.4 的合法失败前缀、4.5 的 Lease／durable catalog 身份区分、11.2 的 History 请求失效规则；
+- 5.4 的 SQLite schema／重建／关闭／备份合同，以及 12.2 的评测单位、计量、阈值与 seeding 顺序。
 
-### 7.1 F0 必测原型
+### 7.1 F0 实施批次与定向原型（A/B/C 已完成）
 
-- 同一 canonical facts/query/config 两次得到字节一致的 ContextInputSnapshot；
+| 批次 | 产出与 owner | 停止条件 |
+|---|---|---|
+| F0-A 设计冻结（已完成） | ADR-0043/0044 与 F0 设计合同：身份／状态、事件绑定、失败前缀、schema、评测和 owner 验收 | 现有接缝定向 19 项通过；只作为设计依据 |
+| F0-B 最小请求主线（已完成） | 现有 AgentLoop／Session／RequestBuilder 中的 Context 冻结、确定性 renderer 与 reconstruction；现有 TUI 统计适配 | 最终限定 36 文件 `1079 collected / 1076 passed / 3 skipped`，含新主线 59 项；两轮有界审查及 TUI 复审无 P0/P1，不宣称 F0 整体完成 |
+| F0-C History 接缝（已完成） | format-2 有界展开、逐页 cursor、typed 用户请求与 Tool receipt 到同 Turn 紧邻后继 Step；协议显式切换 | 最终 38 文件 1100 passed / 4 skipped，含新 History 81 项；两分区无 P0/P1，七组反向证据；freshness 只为 unknown，原文不遗留 |
+
+F0-B 只接一条可继续演进的生产请求主线：用已存在的 Session 历史作为证据来源，尚未实现的 Skill／Memory
+catalog 必须为空；receipt 明确记录 Session 范围，不虚构尚未建立的项目 binding 或 Memory 读取资格。
+不为原型创建另一 Runtime、假 Memory authority 或私有 pending 缓存。F0-C 验证同一主线
+的历史披露边界，不提前做完整治理 UI。
+
+F0-C 的详细字段以设计合同 §2–5 为准：Session 唯一切到 `context_protocol=2`，拒绝 F0-B 的 1；
+outer Context format 仍为 1，policy 为 `f0-c-context-policy-v1`，config 原七项加 nullable `history`。
+HistoryReadPolicy 恰七项显式资源／分页／请求上限；只支持关闭、目录／摘要参考、目录／摘要加 reader，
+没有 raw-only 模式。renderer 唯一为 `context-json-v2`；默认仍注入一条空 wrapper 的 request-only
+user message，先于全部 Surface。Request 十字段、Composition 空 catalog/digest 与物理 schema 1 保留。
+不双读、不迁移，不提前实现通用检索、Skill/Memory、项目绑定或实时 Git 观察。
+
+`session/history.py` 是纯 reader，`api/history.py` 定义 typed DTO，`session/history_requests.py`
+集中处理请求资格／目标派生。Tool `request_history_page` 为普通 PURE_READ，仅把 receipt 放在事件
+`data["data"]["history_receipt"]`；`include_default_tools=False` 不自动授予它。用户请求经显式
+`TurnInput.history_requests` tuple/ChatDriver 透传，由原 SessionService 在首 Step user/message 后
+owned/CAS 批量追加 `history/requested`，source/text 不赋权。不新增 writer、Lease 或 pending 状态机。
+原文页先于自动目录／摘要占用原子预算；section/chunk 同按闭合 Turn 分页，超大 Turn 整页拒绝并
+保留稳定 slot，不造 accepted receipt。只披露首 cursor 和当前页的 next_cursor，不给全页目录。
+本 Session 已披露但后来被更宽 replacement 隐藏的旧 block 仍可按精确身份请求。
+
+F0-B 三个新模块共 59 项包含在其最终 36 文件的 `1076 passed, 3 skipped` 中；证据集中维护在正式上下文
+15.1 和设计合同 §11，不重复相加不同测试集合。现有 TUI 通过同一纯请求重建，分别统计 reference、
+Product 与 conversation，未新增 F5 治理 UI。F0-C 最终证据见设计合同 §12：1104 collected、1100 passed、
+4 skipped；新 History 81 项已包含，不复用或另加 F0-B 计数。
+以下是 F0 必须证明的行为：
+
+- 同一 identity、观察边界、canonical facts/query/config 两次得到字节一致的 ContextInputSnapshot；不同 Step 的整体 digest 不要求相同；
 - host Context Input service 只能读取 canonical sources 并返回不可变 snapshot；临时授予它 Session append
   能力或让它直接写 selection/Memory/context event 时，owner 边界测试必须变红；
-- 当前 Memory/Skill 或 History source 在 snapshot 后变化，不改变历史 request reconstruction；
+- 当前 History source 在 snapshot 后变化，不改变历史 request reconstruction；Skill／Memory 的真实
+  变化在 F1/F2、F3/F4 按相同合同接入后验证，不用替身提前声称这些 owner 已成立；
 - 连续两个 Step 分别检索不同内容时，第二个 request 只含自己的 Context Input；Surface replay 不含任一
   Context Input event，历史 reconstruction 仍逐字节相同；
 - 上述连续 Step 至少一个必须是 Tool Call 后没有新 `user/message` 的真实续步；Context message 在两次
@@ -296,22 +408,33 @@ v0.9 不实现：
   才包含精确原文；Turn 结束后的 Surface 与再下一 Step 均不自动携带该原文；
 - 一层和多层 `surface/replace` 都能按原逻辑顺序、分页边界与 digest 重建允许披露的原始 Surface 消息；
   篡改 source、循环/向未来引用、非闭合边界、隐藏事件类型或跨 Session block 均在注入前拒绝；
-- 同一旧工具结果分别绑定相同、不同和缺失 Workspace revision 时，freshness 稳定为 matched、stale、unknown；
-  stale/unknown 文案和结构化 receipt 均不得宣称当前测试或当前代码状态；
+- F0-C 原文与目录／摘要的 workspace_observation 均为 null、freshness 均为 unknown；伪造 matched/stale
+  稳定拒绝，宿主文案和 receipt 不宣称当前测试或代码状态。同／不同／缺失真实 revision 的三态验收
+  移至 F3/F4 的来源 owner 接入阶段；不能用构造 fixture 冒称当前主线已有版本观察；
+- 未披露 cursor、越过超大 Turn 的重编号、跨 Session block 拒绝；合法披露后被新 replacement 隐藏的
+  旧 block 仍可读取。Tool grant 与 typed 用户入口分别验证，source="user" 或正文不能伪造权限；
 - 篡改 Context Input event、request snapshot 或二者 binding/digest 任一侧时 reconstruction fail closed；
-- 同一 Step 出现零条/两条 Context Input event、event 晚于 composition snapshot，或 event 的 Generation
-  identity 与随后的 composition 不一致时，build/reconstruction 都稳定拒绝；
+- 进入 build/reconstruction 的同一 Step 出现零条/两条 Context Input event、event 晚于 composition，
+  或持久内容绑定不一致时稳定拒绝；4.4 的零 Context／无 Request 合法失败前缀仍可检查和恢复；
+- Context append 前后取消、may-have-committed、Composition 失败、Budget 拒绝不补造模型调用；同 Step
+  的后续 Attempt 不重新检索，保持同一 Context/source_seq；
+- History receipt accepted 后触发 max_steps、取消或恢复时，后续 Turn 不消费这份请求、不包含对应原文；
 - block 正文包含伪 system/user header、边界标记、控制字符或嵌套引用时，renderer 仍保持同一 block
   identity/bytes，不能生成额外 ModelMessage 或改变后续真实用户消息；
-- 跨 Workspace、revoked Memory、retired Generation Skill 和 digest 漂移均不能进入候选；
-- 检索索引全部删除后可重建，canonical history 零变化；
 - prompt 超额时 protected authority 不被 Skill/Memory/History Evidence 挤掉；
 - secrets/approval/evaluator 形态扫描和明确拒绝规则不依赖模型自觉。
 
+F0-A 同时登记后续 owner 的必测项：F1/F2 验证 retired Skill、Lease/resource identity 与 selection；
+F2 验证 exact/FTS 排序和 schema/rebuild；F3 验证跨项目 scope、事实槽竞争、revoke/supersede；F3/F4 接入
+真实 Workspace identity/revision 与历史 ToolResult 的持久绑定后验证 freshness 三态，F4 验证三类输入
+共同过滤、预算和时效；F5 验证治理与真实 attempt seeding。它们仍是所属阶段门禁，不要求 F0 提前实现。
+
 ### 7.2 F0 退出条件
 
-需要一份覆盖共同 Context Input/Retrieval 的 ADR；Skill lifecycle 与 Memory authority 若理由独立，可各有
-一份 ADR。不得为普通 SQL 表或类拆分滥建 ADR。未能证明历史 reconstruction 不重跑 RAG 时不得进入 F1。
+ADR-0043 已覆盖共同 Context Input/Retrieval/Skill/History，ADR-0044 独立解释项目绑定与 Memory authority；
+详细字段只在 F0 设计合同维护。设计、代码原型和执行证据分别标状态；只有 F0-B/F0-C 的
+获授权主线验证证明 source boundary、重建、失败前缀及 History 失效正确后才可进入 F1。不能用文档审阅
+代替原型通过，也不能因后续 owner 尚未实现就在 F0 堆齐全部 v0.9 功能。
 
 ## 8. v0.9-F1：现有插件主线上的 typed Skill contribution
 
@@ -375,8 +498,8 @@ F1/F2 独立审查 Plugin/Generation/selection/Request 边界。P0/P1 清零后�
 
 ### 10.1 状态与 scope
 
-在同一个 EventStore/SQLite 中新增一个独立 Memory 领域和唯一 projector/service。精确事件名由 ADR
-冻结，语义至少区分：
+在同一个 EventStore/SQLite 中新增一个独立 Memory 领域和唯一 projector/service。ADR-0044 与设计合同
+§6 已冻结 exact 事件与 CAS 规则，语义区分：
 
 ```text
 proposed -> active -> superseded | revoked
@@ -384,10 +507,27 @@ proposed -> active -> superseded | revoked
 
 - proposal 不是 active；模型只能提交 bounded candidate，不能批准；
 - host approval 必须绑定 exact proposal digest、source evidence 和当前 Workspace scope；
-- Workspace scope 从当前 Session/Workspace durable facts 由宿主推导，不能由模型/plugin payload 自报；
+- Workspace Memory 的 scope 是宿主持久绑定的长期项目范围，当前 Session／managed Workspace 必须
+  通过该 binding 解析，不能由模型/plugin payload 自报，也不直接等同于一个临时 worktree id；
 - supersede/revoke 追加新事实，不更新/删除旧 row；
 - active view fresh replay、detached、fail closed，不缓存第二份 mutable truth；
 - source 可指向人工输入、Session/ProductTask 等 durable evidence；未经证实的模型猜测不能冒充用户事实。
+
+当前 [`SessionService.create_session`](../../src/traceh/session/service.py) 只保存解析后的目录；
+[`workspace_identity`](../../src/traceh/workspaces/service.py) 按 provision operation/request 生成
+单个 managed worktree 身份。它们不是现成的长期项目 identity。F0 必须选定同一 EventStore 中 scope
+binding 的唯一宿主写入／读取 owner；F3 把它与 Memory authority 接通，并证明：
+
+- requester、后续 Session、派生 Agent/worktree 的关联都来自明确的宿主配置／动作及 durable binding；
+  路径相同、`source_id` 同名或模型 payload 相同不能单独证明同项目；
+- child 只能通过宿主已批准的父任务／项目关系继承 scope；缺失、歧义或跨项目绑定在读取和批准前拒绝；
+- 项目移动、重新绑定或 source mapping 变化的接受／拒绝条件必须明确，不静默继承旧目录的 Memory；
+- binding 是项目归属事实，不是第二 Workspace lifecycle、全局用户记忆或对外部资源的权限授予。
+
+Memory 的每个 `fact_slot` 由宿主确认，字段规则已由 F0-A 冻结。同一 scope、同一槽至多一个 active；
+approve 绑定当前槽为空或精确前任，supersede/revoke 绑定 exact predecessor identity/digest 和观察到的
+stream head，经 CAS 追加原子事实。竞争者重新读取后明确失败，不能 last-write-wins 或激活两个版本。
+不同自然语言事实间的语义冲突交宿主审核，不承诺 FTS／模型自动证明所有 active 文本互不矛盾。
 
 ### 10.2 内容边界
 
@@ -404,8 +544,11 @@ owner 回答。阶段、路线或决定变化时追加 supersede/revoke，不原
 ### 10.3 必测与反向验证
 
 - proposal 未经 exact digest 宿主批准，后续 Step 不可见；
-- 同 request id 不同内容、错误 source/scope/digest、重复 active identity fail closed；
+- 同 request id 不同内容、错误 source/scope/digest、重复 active identity fail closed；同事实槽不同
+  proposal 竞争 active、过期 predecessor/head 的替代或撤销均拒绝；
 - 跨 Workspace approval/proposal/source 引用在 append 前零写入拒绝；
+- 同项目两个 Session 和合法派生 worktree 读取同一 active Memory；同名 source／同路径但没有正确
+  binding 的另一项目不能读取或批准；scope 创建／绑定中途失败不留下可被误认的授权；
 - revoke/supersede 后新 Step 不再选旧版本，历史 snapshot/reconstruction 保留；
 - unknown schema/event/order、篡改 source、敌意 payload fail closed；
 - append cancel/unknown 三态对账不重复激活，close 前 owned worker 收敛；
@@ -434,6 +577,12 @@ provenance，不压成无法审计的通用文本列表。
 - context request 的普通 Tool result 只确认 accepted/rejected、block identity、可用字节和稳定错误码；
   原始历史由 host Context Input service 为紧随其后的一个 Step 返回，并由 AgentLoop 写入该 Step 唯一
   Context Input event；
+- Tool 请求绑定 source Session/Turn/Step/tool-call 与披露 identity，仅可由**同 Turn 的直接后继 Step**
+  消费；消费资格从 durable Tool receipt 和 Step 顺序派生，最终 Context event 记录该来源。不得新建
+  mutable pending cache，也不得跳过一个 Step 延迟到以后消费；
+- accepted 只说明选择已接受，不保证下一 Step 一定发生。max_steps、Turn 结束、失败、取消或恢复使
+  未消费请求失效；新 Turn 必须重新请求。用户显式请求绑定本轮真实 user message 和目标 Step，亦不跨
+  Turn 遗留；同一 Step 的 Provider retry 只复用已冻结披露，不算重新选择；
 - RequestBuilder 把有界原文放进 request-only host reference block。该 block 首尾都由宿主标明 provenance、
   observation boundary、freshness 和历史证据语义；正文不能闭合或伪造边界；
 - 当前 Step 完成后不缓存、不写入普通 Surface、不自动带到未来 Step。需要再次查看时重新 fresh 校验并生成
@@ -453,6 +602,8 @@ provenance，不压成无法审计的通用文本列表。
 - injected bytes 与 request snapshot/context digest 逐字节一致；
 - History 目录不会泄漏跨 Session block；exact block 的一层/嵌套展开、分页续读和 zero-result 确定一致；
 - 展开后的原文只出现在被授权 Step 的 Context Input/request snapshot，普通 Surface 与后续 Step 零残留；
+- accepted 后没有后继 Step、后继 Step 冻结前后失败／取消、恢复后开启新 Turn，均不会把旧请求原文
+  带入新 Turn；不能通过工具 receipt 冒充已经向 Provider 披露成功；
 - 旧 revision 工具成功被稳定标为 stale，身份不足时为 unknown，当前 Product/Workflow/Workspace 投影不被
   历史正文覆盖；
 - 删除 History derived directory 后能从 `surface/replace` 和原始 Session 事件重建，canonical history 零变化。
@@ -484,10 +635,15 @@ provenance，不压成无法审计的通用文本列表。
 不得新增 `traceh rag-eval`、第二 Runner 或模型自评。若 manifest 需要扩展，进行一次唯一 schema cutover，
 同步 shipped benchmark 并明确拒绝旧 schema，不保留双 reader。
 
-冻结语料的唯一装载 owner 是现有 `evaluation/attempt.py::run_attempt` 主线：每个 attempt 在创建自己的
-SQLite store 之后、构造 Product Chat host 之前，按 exact-key manifest 和内容 digest 使用生产
-Plugin/Memory service
-装载本 attempt 的宿主冻结 Skill/Memory 输入。所有相对资源都必须解析在 manifest root 内；完整 corpus
+冻结语料的唯一装载 owner 是现有 `evaluation/attempt.py::run_attempt` 主线。当前代码先构造 Product
+host，再在 `_prepare()` 创建 requester Session；不能直接在 host 前插 seeding 就声称已有合法 scope。
+F0-A 已冻结以下顺序，F5 在同一 attempt owner 内实现：创建 SQLite store 和受控 Runtime → 创建 requester
+Session／宿主项目 scope binding → 按 exact-key manifest/digest 使用生产 Plugin/Memory service 完成
+seeding → 构造 Product host → 通过同一 Session 发起请求。tool-free requester 使用 attempt source
+repository 作为 workspace，由宿主 resolver 核对真实项目关联，不从独立 `rw` 目录伪造 scope。
+后续 coder Session/worktree 由生产宿主绑定
+继承同一项目 scope；manifest/source id 不能自报授权。各创建、绑定、seed 和 host 装配失败／取消都由
+既有 attempt 的关闭主线收敛，不引入第二个 prepare Runner。所有相对资源都必须解析在 manifest root 内；完整 corpus
 不复制进 source repository 或 coder writable Workspace。人工 relevance judgments 与 evaluator 规则只由
 Runner 持有，不进入 store 中模型可检索的 canonical 内容；只有正常检索选中的 reference blocks 会按
 Context Input 合同进入 ModelRequest。不得在 `run_attempt` 外增加语料准备 Runner、旁路 registry 或第二
@@ -508,6 +664,21 @@ EventStore。
   unavailable/unproven；
 - n=1 明确标注 single observation，不声称统计显著；模型不能批准 evaluator 或自评“更聪明”。
 
+指标清单还必须有可执行的通过标准。F0-A 已冻结评测规格，F5 在看 candidate 结果前冻结具体语料、配置和
+阈值，不能跑完后调整题目或成功线：
+
+- 以唯一 Step 的 ContextInputSnapshot 为注入观测单位，同 Step Provider retry 不重复计样；按角色、
+  query 与 attempt 分层汇总，明确失败、unavailable、unproven 的分母，不能只统计成功请求；
+- K、候选排序与实际注入的区别、tier/section/chunk 到 relevance judgment 的映射、重复命中处理和
+  zero-hit 定义均进入 evaluator digest；
+- 覆盖中文、英文和代码符号／路径／错误标识混合输入，以及换 Session 后询问项目目标／阶段的用户旅程；
+  当前 Session History 披露另按 exact identity/provenance 验收，不能扩大为跨 Session 原文检索；
+- exact+FTS 先有冻结 baseline。scope-isolation violations 必须为 0，其他 Recall/MRR/precision/zero-hit
+  的最低值、容许退化和资源上限须显式给出；阈值缺失时只报告测量，不声称通过质量门禁；
+- 记录 Context 字节成本、检索延迟、索引规模／重建成本及明确的环境和语料规模。本地 semantic/reranker
+  只有在同条件比较达到预定增益、关键类别不越过退化线且成本不超限后才可启用；未证明收益时保持可选
+  lane 关闭，不妨碍达标的 exact+FTS 核心路径交付。
+
 冻结选择是保留该评测，而不是默认延期；但若实现时无法由现有 `run_attempt` 在上述边界内装载语料，
 评测整体延后，不以交付压力为理由新增平行 Runner。核心 deterministic retrieval tests 始终是实现门禁。
 
@@ -518,12 +689,27 @@ EventStore。
    展开/Step-scope/freshness、retrieval/index、Composition/RequestBuilder、Line/TUI 定向测试；
 3. Plugin Activation/Generation/Lease/Drain、Session/Request、Budget、Product/Workflow/Review/Approval/
    Promotion/Evaluation 相邻回归；
-4. SQLite derived index rebuild、fresh data dir、无 semantic extras 与带本地 extras 的离线安装；
+4. SQLite derived index rebuild、fresh data dir、核心离线安装；只有纳入该版本交付的本地 extras 才要求对应安装与质量门禁；
 5. collect-only、Ruff、diff-check、链接/围栏/章节 QA、secrets/本机路径/archive scan；
 6. 每个 release stop 的 Finding 已关闭后做最终独立 P0/P1 审查；
-7. 清零后只运行一次最终全量；
+7. 清零后在明确的最终检查点运行一次从头开始的无筛选全量；确定性失败修复后重跑到绿色属于同一检查点，不能用 `--lf` 代替；
 8. clean-input Wheel/sdist/source ZIP、外部示例 Skill Wheel、无 TUI/semantic extras 的 core 安装；
 9. 授权真实模型 acceptance 只证明 receipt 注入、权限未扩大和生命周期闭合，不让模型自评质量。
+
+### 12.4 门禁触发与本轮限制
+
+| 工作阶段 | 允许／要求的验证 | 不自动触发 |
+|---|---|---|
+| F0-A 文档工作 | 文档 QA；按本轮授权对现有接缝做精确 nodeid collect-only／定向测试 | 整仓全量、L2、compileall、构建和联网；不把基线通过称新功能通过 |
+| 获授权的 F0-B/F0-C、F1–F4 实现批次 | compileall、受影响 owner 的正向／反例／失败取消和必要反向验证、相邻回归、collect-only、修改范围 Ruff／diff-check | 整仓全量、真实 L2-L4、Wheel、包索引和真实 Provider |
+| Release Stop A/B | 对所属 owner 独立审查、修复后定向确认 | 不因到达停止点就重跑全量或 L2 |
+| 明确获授权的集成／F5 发布检查点 | 12.3 的最终全量及属于交付范围的长门禁 | 不以“计划已批准”推导真实服务或重复长门禁授权 |
+
+实施批次开始前按当时 HEAD 写出具体测试文件／nodeid 与相邻 owner，检查选中项是否包含 `slow`／构建／
+联网。当前 `test_real_candidate_validation_runs_every_l2_gate` 属 `slow` 且会被无筛选全量选中；不能
+把整份候选验证文件或整仓 pytest 当作普通快速回归。最终检查点应明确全量包含哪些长门禁，避免另跑
+独立 L2 后又无意在全量内重复。确需独立 L2 的发布证据时，必须明确记录原因与授权。
+用户禁止全量／L2 时保持禁止，报告相应门禁未运行；不得把有筛选结果称为最终无筛选全量。
 
 ## 13. 完成定义与拆版规则
 
@@ -559,11 +745,12 @@ v0.9 完成必须证明：
 
 ## 14. 冻结后的重新批准与停止规则
 
-- 最终独立计划审查已经结束；2026-09-05 经项目所有者确认的唯一范围修订是把 M3 History Evidence
-  纳入同一 Context Input 主线。本文保持 Skill + Memory + History Evidence 同一 v0.9 主题和三个 release
-  stop，不因范围观感拆成两套注入主线；
-- v0.9 只有在 v0.8 完成并发布后才能按当时真实 HEAD 重新核对。重新核对用于发现代码事实变化，
-  不是默认推翻已经冻结的产品目标；任何实现仍需项目所有者明确开工授权；
+- 2026-09-07 按已发布 v0.8.0 完成只读可行性核对后，经项目所有者授权修订本计划。此次澄清项目 scope、
+  Lease／catalog identity、失败前缀、History 失效、FTS owner、评测和门禁；不改变 Skill + Memory +
+  History Evidence 同一 v0.9 主题、三个 release stop 或唯一注入主线；
+- v0.8 发布前置已满足，F0-A ADR／设计合同与 F0-B 最小请求主线／限定门禁已完成。最终 36 文件
+  `1076 passed, 3 skipped`，其中包括 59 项新主线；F0-C 随后完成最终 38 文件 `1100 passed, 4 skipped`，
+  含新 History 81 项。F0-A/B/C 授权实现收口，F1 未开工，不声称发布或后续能力已验证；
 - F0 必须先证明 Context event/source boundary、Tool 续步位置、历史 request reconstruction，以及 M3
   History 原文不会常驻 Surface；F1/F2 必须先证明 Generation/Lease/resource owner；F3 必须先证明 Memory
   authority。后阶段不得掩盖前阶段 owner 缺口；
@@ -578,8 +765,8 @@ v0.9 完成必须证明：
 
 | 顺序 | 阶段 | 主要产出 | 阶段停止条件 |
 |---:|---|---|---|
-| 0 | v0.8 前置 | M3+M4 联合门禁、提交、发布，以发布 HEAD 重新核对本文 | v0.8 未发布则 v0.9 不开工 |
-| 1 | F0 | ContextInputSnapshot、authority/budget、query/filter、History identity/Step-scope/freshness、重放 ADR | exact bytes 可重建，History 原文不进入后续 Surface |
+| 0 | v0.8 前置（已完成） | 已发布 v0.8.0；按发布基线重新核对并修订计划 | 不为重新核对重复 v0.8 全量／L2；功能开工另行授权 |
+| 1 | F0-A（已完成）→ F0-B（已完成）→ F0-C（已完成） | 唯一 Context 主线、当前 Session 原文分页及 typed/Tool 请求均已接入 | 38 文件 1100 passed / 4 skipped、两分区无 P0/P1；本轮实现收口，F1 未开工，不代替发布级全量 |
 | 2 | F1 | 现有 Plugin Generation/Lease 上的 typed Skill catalog 与只读资源 owner | 半发布、identity/digest、reload/drain 反例全绿 |
 | 3 | F2 | Skill durable selection、exact+FTS、四级披露、可选本地 semantic/reranker 接口 | Release Stop A：Plugin/selection/Request P0/P1 清零 |
 | 4 | F3 | Workspace Memory proposal/active/superseded/revoked append-only authority | Release Stop B：Memory authority P0/P1 清零 |

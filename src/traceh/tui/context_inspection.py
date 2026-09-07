@@ -33,10 +33,12 @@ from traceh.api.llm import (
     ModelRequest,
     dispatch_request_matches_composed,
 )
+from traceh.runtime.request_builder import build_request_from_events
 from traceh.session.compaction import CompactionPolicy
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.product_context import latest_product_context
 from traceh.session.service import SessionService
+from traceh.session.surface import SurfaceProjector
 from traceh.session.surface_replacement import (
     SURFACE_COMPACTION_FAILED,
     SURFACE_REPLACE,
@@ -125,6 +127,8 @@ class ContextRequestView:
     composed_fingerprint: str
     dispatch_fingerprint: str
     system_prompt_utf8_bytes: int
+    context_input_messages: int
+    context_input_utf8_bytes: int
     product_context_messages: int
     product_context_utf8_bytes: int
     conversation_messages: int
@@ -411,6 +415,16 @@ class ContextInspectionReader:
                 or not isinstance(dispatch_fingerprint, str)
             ):
                 raise ValueError
+            rebuilt = build_request_from_events(
+                events,
+                SurfaceProjector(),
+                session_id=snapshot.stream_id.removeprefix("session:"),
+                turn_id=data["turn_id"],
+                step_id=data["step_id"],
+                through_seq=source_seq,
+            )
+            if canonical_json(rebuilt.request.to_dict()) != canonical_json(raw_composed):
+                raise ValueError
         except (KeyError, TypeError, ValueError):
             raise ContextInspectionError("context-inspection-request-invalid") from None
 
@@ -418,12 +432,16 @@ class ContextInspectionReader:
         # source boundary. Today's ProductTask head may be newer, and using it
         # would rewrite what the model saw when this request was frozen.
         historical = self._product(events, through_seq=source_seq)
+        # The shared request builder proves one request-only Context message
+        # before the complete historical Surface. It is neither Product nor
+        # conversation, and must not inflate either count in the existing UI.
+        context_message, *surface_messages = composed.messages
         leading = 0
         product_bytes = 0
         if historical is not None:
             expected = self._product_messages(events, source_seq)
-            if len(composed.messages) < len(expected) or any(
-                composed.messages[index] != message
+            if len(surface_messages) < len(expected) or any(
+                surface_messages[index] != message
                 for index, message in enumerate(expected)
             ):
                 raise ContextInspectionError(
@@ -431,7 +449,7 @@ class ContextInspectionReader:
                 )
             leading = len(expected)
             product_bytes = surface_utf8_bytes(expected)
-        conversation = composed.messages[leading:]
+        conversation = surface_messages[leading:]
         return ContextRequestView(
             seq=snapshot.seq,
             source_seq=source_seq,
@@ -445,6 +463,8 @@ class ContextInspectionReader:
             system_prompt_utf8_bytes=len(
                 (dispatch.system_prompt or "").encode("utf-8")
             ),
+            context_input_messages=1,
+            context_input_utf8_bytes=surface_utf8_bytes((context_message,)),
             product_context_messages=leading,
             product_context_utf8_bytes=product_bytes,
             conversation_messages=len(conversation),

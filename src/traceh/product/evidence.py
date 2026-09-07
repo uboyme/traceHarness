@@ -37,6 +37,7 @@ from traceh.api.product import (
 from traceh.product.errors import ProductEvidenceError
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
+from traceh.session.protocol import require_session_protocol
 
 SESSION_STREAM_PREFIX = "session:"
 SESSION_CREATED = "session/created"
@@ -46,7 +47,6 @@ TURN_STARTED = "turn/start"
 TURN_ENDED = "turn/end"
 SESSION_SCHEMA_VERSION = 1
 
-_SESSION_CREATED_KEYS = frozenset({"session_id", "workspace", "metadata"})
 _INBOX_ACCEPTED_KEYS = frozenset({"message_id", "source", "content", "target"})
 _INBOX_CLAIMED_KEYS = frozenset({"message_id", "turn_id"})
 
@@ -174,6 +174,7 @@ def _scan_session(
     events: tuple[EventEnvelope, ...], session_id: str
 ) -> tuple[dict[str, MessageEvidence], dict[str, int], dict[str, int]]:
     try:
+        require_session_protocol(events, session_id=session_id)
         created = False
         accepted_ids: set[str] = set()
         claimed_ids: set[str] = set()
@@ -202,7 +203,7 @@ def _scan_session(
             if type(data) is not dict:
                 raise ValueError("invalid Session payload")
             if event_type == SESSION_CREATED:
-                if created or event.seq != 1 or set(data) != _SESSION_CREATED_KEYS:
+                if created or event.seq != 1:
                     raise ValueError("invalid Session creation")
                 if (
                     _text(data.get("session_id")) != session_id

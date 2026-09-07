@@ -45,6 +45,7 @@ from traceh.session.compaction import (
     CompactionService,
     SessionSummarizer,
 )
+from traceh.session.context_input import ContextInputPolicy
 from traceh.session.event_feed import EventFeed, PublishingEventStore, SessionEventFeed
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
@@ -111,6 +112,9 @@ class RuntimeConfig:
     #: the only thing an absent configuration may mean: a partially configured
     #: policy is rejected by `CompactionPolicy` rather than completed by guess.
     compaction: CompactionPolicy | None = None
+    #: Explicit, bounded current-Session directory/summary selection. Absent
+    #: means a frozen empty Context receipt, never an implicit retrieval policy.
+    context_input: ContextInputPolicy | None = None
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -127,6 +131,8 @@ class RuntimeConfig:
             raise TypeError("model_retry_policy must be ModelRetryPolicy")
         if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
             raise TypeError("compaction must be CompactionPolicy")
+        if self.context_input is not None and type(self.context_input) is not ContextInputPolicy:
+            raise TypeError("context_input must be ContextInputPolicy")
 
 
 class AgentRuntime:
@@ -256,7 +262,7 @@ class AgentRuntime:
         metadata: dict[str, JsonValue] | None = None,
         session_id: str | None = None,
     ) -> str:
-        workspace = workspace.resolve()
+        workspace = workspace.resolve()  # noqa: ASYNC240
         if not workspace.exists() or not workspace.is_dir():
             raise NotADirectoryError(workspace)
         actual_metadata = dict(metadata or {})
@@ -598,6 +604,16 @@ def _prepare_default_runtime(
         ShellTool(),
     )
     selected_tools = (default_tools if include_default_tools else ()) + additional_tools
+    if (
+        include_default_tools
+        and config.context_input is not None
+        and config.context_input.history is not None
+    ):
+        from traceh.tools.history import HistoryDisclosureTool
+
+        selected_tools += (
+            HistoryDisclosureTool(sessions.read_session, policy=config.context_input.history),
+        )
     for tool in selected_tools:
         tool_registry.register(tool)
 
@@ -707,6 +723,7 @@ def _finish_default_runtime(
         retry_policy=config.model_retry_policy,
         retry_scheduler=prepared.retry_scheduler,
         compaction=compaction,
+        context_policy=config.context_input,
     )
     return AgentRuntime(
         config=config,

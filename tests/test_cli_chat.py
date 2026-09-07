@@ -31,8 +31,10 @@ from traceh.cli.main import (
 )
 from traceh.cli.text_safety import is_unsafe_character
 from traceh.cli.timeline import MAX_DETAIL_CHARS
+from traceh.kernel.composition import RuntimeComposition
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+from traceh.session.context_input import ContextInputService
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.projections import StateProjector
@@ -234,17 +236,29 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
     session_id = await setup.create_session(tmp_path)
     await setup.sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
     await setup.sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "s"})
-    request = ModelRequest(
-        provider="scripted",
-        model="model",
-        messages=(),
-        metadata={
-            "session_id": session_id,
-            "turn_id": "t",
-            "step_id": "s",
-            "composition_revision": "revision",
-        },
+    composition = RuntimeComposition(
+        provider="scripted", model="model", system_prompt="", tools=()
+    ).snapshot()
+    context = await ContextInputService(setup.sessions.read_session).freeze(
+        session_id=session_id, turn_id="t", step_id="s", composition=composition
     )
+    await setup.sessions.append_context_input(
+        session_id, context.to_dict(), expected_seq=context.to_dict()["observed_session_seq"]
+    )
+    source = await setup.sessions.append_session(
+        session_id,
+        "composition/snapshot",
+        composition.to_dict(),
+        composition_revision=composition.revision,
+    )
+    built = await setup.loop.request_builder.build(
+        session_id=session_id,
+        turn_id="t",
+        step_id="s",
+        composition=composition,
+        through_seq=source.seq,
+    )
+    request = built.request
     await setup.sessions.start_model_attempt(
         session_id,
         attempt=ModelAttemptIdentity(
@@ -254,8 +268,8 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
             attempt_id="a",
             ordinal=1,
         ),
-        source_seq=3,
-        composition_revision="revision",
+        source_seq=built.source_seq,
+        composition_revision=composition.revision,
         composed_request=request,
         composed_fingerprint=fingerprint(request.to_dict()),
         dispatch_request=request,

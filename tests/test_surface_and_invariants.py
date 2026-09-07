@@ -1,13 +1,31 @@
 from __future__ import annotations
 
-from uuid import UUID, uuid4
+from dataclasses import replace
+from uuid import uuid4
 
 from traceh.api.events import EventEnvelope, PendingEvent
-from traceh.api.json_types import fingerprint
-from traceh.api.llm import ModelMessage, ModelRequest
+from traceh.api.llm import ModelAttemptIdentity
+from traceh.kernel.composition import RuntimeComposition
+from traceh.runtime.request_builder import RequestBuilder
+from traceh.session.context_input import ContextInputService
+from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
+from traceh.session.protocol import CONTEXT_PROTOCOL
+from traceh.session.service import SessionService
 from traceh.session.surface import SurfaceProjector
 from traceh.session.surface_replacement import surface_prefix, surface_replacement_data
+
+
+def session_created() -> PendingEvent:
+    return PendingEvent(
+        "session/created",
+        {
+            "session_id": "s",
+            "workspace": "fixture-workspace",
+            "metadata": {},
+            "context_protocol": CONTEXT_PROTOCOL,
+        },
+    )
 
 
 def materialize(events: list[PendingEvent]) -> tuple[EventEnvelope, ...]:
@@ -19,7 +37,7 @@ def materialize(events: list[PendingEvent]) -> tuple[EventEnvelope, ...]:
 
 def test_surface_projects_messages_and_replacement() -> None:
     history = [
-        PendingEvent("session/created", {"session_id": "s"}),
+        session_created(),
         PendingEvent("turn/start", {"turn_id": "t"}),
         PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
         PendingEvent("user/message", {"content": "old", "step_id": "a"}),
@@ -32,8 +50,11 @@ def test_surface_projects_messages_and_replacement() -> None:
     ]
     # Derived from the real history rather than invented: the invariant checker
     # recomputes the digest and both byte counts.
-    prefix = surface_prefix(materialize(history), cut_seq=7)
-    assert prefix is not None and prefix.source_seqs == (4, 5)
+    original = materialize(history)
+    prefix = surface_prefix(original, cut_seq=original[-1].seq)
+    assert prefix is not None and prefix.source_seqs == tuple(
+        event.seq for event in original if event.type in {"user/message", "assistant/message"}
+    )
     events = materialize(
         history
         + [
@@ -65,7 +86,7 @@ def test_surface_projects_messages_and_replacement() -> None:
 def test_invariants_detect_unmatched_tool_result() -> None:
     events = materialize(
         [
-            PendingEvent("session/created", {"session_id": "s"}),
+            session_created(),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
             PendingEvent(
@@ -80,346 +101,213 @@ def test_invariants_detect_unmatched_tool_result() -> None:
     assert any(item.name == "tool-result-has-call" for item in violations)
 
 
-def attempt_start(
-    attempt_id: object = "m1",
-    *,
-    turn_id: str = "t",
-    step_id: str = "a",
-    event_id: UUID | None = None,
-    ordinal: int = 1,
-    request_snapshot_seq: int = 4,
-) -> PendingEvent:
-    return PendingEvent(
-        "model/attempt-start",
-        {
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "attempt_id": attempt_id,
-            "ordinal": ordinal,
-            "request_snapshot_seq": request_snapshot_seq,
-            "dispatch_fingerprint": request_fingerprint(),
-            "reservation_id": None,
-            "provider": "scripted",
-            "model": "model",
-            "retry_wait_milliseconds": 0 if ordinal == 1 else 1,
-            "retry_failure_code": None if ordinal == 1 else "provider-timeout",
-            "retry_failure_category": None if ordinal == 1 else "timeout",
-        },
-        event_id=event_id,
+async def recorded_attempt(tmp_path):
+    """Get one real Context/Composition/Request/permit prefix before corrupting it."""
+    sessions = SessionService(InMemoryEventStore())
+    session_id = await sessions.create_session(tmp_path, session_id="s")
+    await sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
+    await sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "a"})
+    composition = RuntimeComposition(
+        provider="scripted", model="model", system_prompt="Follow host policy.", tools=()
+    ).snapshot()
+    context = await ContextInputService(sessions.read_session).freeze(
+        session_id=session_id, turn_id="t", step_id="a", composition=composition
     )
-
-
-def request_payload() -> dict[str, object]:
-    return ModelRequest(
-        provider="scripted",
-        model="model",
-        messages=(ModelMessage(role="user", content="work"),),
-        metadata={
-            "session_id": "s",
-            "turn_id": "t",
-            "step_id": "a",
-            "composition_revision": "revision",
-        },
-    ).to_dict()
-
-
-def request_fingerprint() -> str:
-    return fingerprint(request_payload())
-
-
-def request_snapshot(*, turn_id: str = "t", step_id: str = "a") -> PendingEvent:
-    payload = request_payload()
-    request_hash = fingerprint(payload)
-    return PendingEvent(
-        "request/snapshot",
-        {
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "source_seq": 3,
-            "composition_revision": "revision",
-            "composed_fingerprint": request_hash,
-            "dispatch_fingerprint": request_hash,
-            "composed_request": payload,
-            "dispatch_request": payload,
-        },
-        composition_revision="revision",
+    await sessions.append_context_input(
+        session_id, context.to_dict(), expected_seq=context.to_dict()["observed_session_seq"]
     )
+    composition_event = await sessions.append_session(
+        session_id,
+        "composition/snapshot",
+        composition.to_dict(),
+        composition_revision=composition.revision,
+    )
+    built = await RequestBuilder(sessions, SurfaceProjector()).build(
+        session_id=session_id,
+        turn_id="t",
+        step_id="a",
+        composition=composition,
+        through_seq=composition_event.seq,
+    )
+    await sessions.start_model_attempt(
+        session_id,
+        attempt=ModelAttemptIdentity(session_id, "t", "a", "m1", 1),
+        source_seq=built.source_seq,
+        composition_revision=composition.revision,
+        composed_request=built.request,
+        composed_fingerprint=built.fingerprint,
+        dispatch_request=built.request,
+        dispatch_fingerprint=built.fingerprint,
+        reservation_id=None,
+    )
+    events = await sessions.read_session(session_id)
+    assert CoreInvariantChecker().check(events) == ()
+    return events
 
 
-def recovered_attempt_end(
-    attempt_id: str,
-    start_event_id: UUID | None,
-    *,
-    turn_id: str = "t",
-    step_id: str = "a",
-) -> PendingEvent:
-    """The shape RecoveryService appends when it repairs an old session."""
+def append_tail(events, *pending):
+    tail = tuple(
+        EventEnvelope.materialize(events[0].stream_id, events[-1].seq + index, event)
+        for index, event in enumerate(pending, 1)
+    )
+    return (*events, *tail)
 
+
+def attempt_end(start, *, step_id=None, recovered=False, causation_id=None):
+    data = {
+        key: start.data[key]
+        for key in (
+            "turn_id",
+            "step_id",
+            "attempt_id",
+            "ordinal",
+            "request_snapshot_seq",
+            "dispatch_fingerprint",
+            "reservation_id",
+        )
+    }
+    if step_id is not None:
+        data["step_id"] = step_id
+    data["status"] = "unknown_after_crash" if recovered else "succeeded"
+    if recovered:
+        data["recovered"] = True
     return PendingEvent(
         "model/attempt-end",
-        {
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "attempt_id": attempt_id,
-            "ordinal": 1,
-            "request_snapshot_seq": 4,
-            "dispatch_fingerprint": request_fingerprint(),
-            "reservation_id": None,
-            "status": "unknown_after_crash",
-            "recovered": True,
-        },
-        causation_id=start_event_id,
+        data,
+        causation_id=causation_id,
+        composition_revision=start.composition_revision,
     )
 
 
-def attempt_end(
-    attempt_id: str,
-    *,
-    turn_id: str = "t",
-    step_id: str = "a",
-    status: str = "succeeded",
-) -> PendingEvent:
-    return PendingEvent(
-        "model/attempt-end",
-        {
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "attempt_id": attempt_id,
-            "ordinal": 1,
-            "request_snapshot_seq": 4,
-            "dispatch_fingerprint": request_fingerprint(),
-            "reservation_id": None,
-            "status": status,
-        },
-    )
+def close_step():
+    return PendingEvent("step/end", {"turn_id": "t", "step_id": "a", "reason": "interrupted"})
 
 
-def names(events: tuple[EventEnvelope, ...]) -> set[str]:
+def close_turn():
+    return PendingEvent("turn/end", {"turn_id": "t", "reason": "interrupted"})
+
+
+def names(events):
     return {item.name for item in CoreInvariantChecker().check(events)}
 
 
-def test_invariants_accept_a_paired_model_attempt() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            PendingEvent(
-                "assistant/message",
-                {"turn_id": "t", "step_id": "a", "attempt_id": "m1", "content": "hi"},
-            ),
-            attempt_end("m1"),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("turn/end", {"turn_id": "t"}),
-        ]
+async def test_invariants_accept_a_paired_model_attempt(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    start = events[-1]
+    events = append_tail(
+        events,
+        PendingEvent(
+            "assistant/message",
+            {"turn_id": "t", "step_id": "a", "attempt_id": "m1", "content": "hi"},
+        ),
+        attempt_end(start),
+        close_step(),
+        close_turn(),
     )
     assert CoreInvariantChecker().check(events) == ()
 
 
-def test_invariants_accept_an_attempt_still_running_in_an_open_step() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-        ]
+async def test_invariants_accept_an_attempt_still_running_in_an_open_step(tmp_path) -> None:
+    assert CoreInvariantChecker().check(await recorded_attempt(tmp_path)) == ()
+
+
+async def test_invariants_accept_append_only_attempt_repair(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    start = events[-1]
+    events = append_tail(
+        events,
+        close_step(),
+        close_turn(),
+        attempt_end(start, recovered=True, causation_id=start.event_id),
+        PendingEvent("runtime/recovered", {"closed_model_attempts": 1}),
     )
     assert CoreInvariantChecker().check(events) == ()
 
 
-def test_invariants_accept_append_only_attempt_repair() -> None:
-    # An older version closed the step and turn first; recovery could only
-    # append the attempt end afterwards, so it must name the start it repairs.
-    start_event_id = uuid4()
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1", event_id=start_event_id),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a", "reason": "interrupted"}),
-            PendingEvent("turn/end", {"turn_id": "t", "reason": "interrupted"}),
-            recovered_attempt_end("m1", start_event_id),
-            PendingEvent("runtime/recovered", {"closed_model_attempts": 1}),
-        ]
-    )
-    assert CoreInvariantChecker().check(events) == ()
+async def test_invariants_detect_plain_attempt_end_after_the_step_closed(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    events = append_tail(events, close_step(), close_turn(), attempt_end(events[-1]))
+    assert "attempt-end-inside-step" in names(events)
 
 
-def test_invariants_detect_plain_attempt_end_after_the_step_closed() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("turn/end", {"turn_id": "t"}),
-            attempt_end("m1"),
-        ]
+async def test_invariants_reject_a_late_recovered_end_without_causation(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    events = append_tail(
+        events,
+        close_step(),
+        close_turn(),
+        attempt_end(events[-1], recovered=True, causation_id=uuid4()),
     )
     assert "attempt-end-inside-step" in names(events)
 
 
-def test_invariants_reject_a_late_recovered_end_without_causation() -> None:
-    # The append-only exemption is not a free pass: an end that does not point
-    # at its own start cannot claim to be a repair.
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1", event_id=uuid4()),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("turn/end", {"turn_id": "t"}),
-            recovered_attempt_end("m1", uuid4()),
-        ]
-    )
-    assert "attempt-end-inside-step" in names(events)
-
-
-def test_invariants_reject_unusable_attempt_ids() -> None:
+async def test_invariants_reject_unusable_attempt_ids(tmp_path) -> None:
+    original = await recorded_attempt(tmp_path)
     for unusable in (None, 7, True, "", "   "):
-        events = materialize(
-            [
-                PendingEvent("session/created", {"session_id": "s"}),
-                PendingEvent("turn/start", {"turn_id": "t"}),
-                PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-                request_snapshot(),
-                attempt_start(unusable),
-            ]
-        )
-        assert "attempt-id-present" in names(events), unusable
+        start = replace(original[-1], data={**original[-1].data, "attempt_id": unusable})
+        assert "attempt-id-present" in names((*original[:-1], start)), unusable
 
 
-def test_invariants_detect_attempt_started_outside_a_step() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            attempt_start("m1"),
-        ]
+async def test_invariants_detect_attempt_started_outside_a_step(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    before_step = tuple(
+        event
+        for event in events
+        if event.seq < next(item.seq for item in events if item.type == "step/start")
     )
-    assert "attempt-start-inside-step" in names(events)
+    start = events[-1]
+    invalid = append_tail(before_step, PendingEvent(start.type, start.data))
+    assert "attempt-start-inside-step" in names(invalid)
 
 
-def test_invariants_detect_attempt_started_in_a_step_that_is_not_open() -> None:
-    # The payload claims step "b" while step "a" is the one really open.
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1", step_id="b"),
-        ]
+async def test_invariants_detect_attempt_started_in_a_step_that_is_not_open(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    start = replace(events[-1], data={**events[-1].data, "step_id": "b"})
+    assert "attempt-start-inside-step" in names((*events[:-1], start))
+
+
+async def test_invariants_detect_attempt_end_without_start(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    invalid = append_tail(events[:-1], attempt_end(events[-1]), close_step(), close_turn())
+    assert "attempt-end-has-start" in names(invalid)
+
+
+async def test_invariants_detect_duplicate_attempt_start(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    start = events[-1]
+    invalid = append_tail(events, PendingEvent(start.type, start.data), attempt_end(start))
+    assert "single-attempt-start" in names(invalid)
+
+
+async def test_invariants_detect_duplicate_attempt_end(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    invalid = append_tail(events, attempt_end(events[-1]), attempt_end(events[-1]))
+    assert "single-attempt-end" in names(invalid)
+
+
+async def test_invariants_detect_attempt_closed_in_another_step(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    invalid = append_tail(
+        events,
+        close_step(),
+        PendingEvent("step/start", {"turn_id": "t", "step_id": "b"}),
+        attempt_end(events[-1], step_id="b"),
     )
-    assert "attempt-start-inside-step" in names(events)
+    assert "attempt-end-same-scope" in names(invalid)
 
 
-def test_invariants_detect_attempt_end_without_start() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            attempt_end("ghost"),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("turn/end", {"turn_id": "t"}),
-        ]
-    )
-    assert "attempt-end-has-start" in names(events)
-
-
-def test_invariants_detect_duplicate_attempt_start() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            attempt_start("m1"),
-            attempt_end("m1"),
-        ]
-    )
-    assert "single-attempt-start" in names(events)
-
-
-def test_invariants_detect_duplicate_attempt_end() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            attempt_end("m1"),
-            attempt_end("m1"),
-        ]
-    )
-    assert "single-attempt-end" in names(events)
-
-
-def test_invariants_detect_attempt_closed_in_another_step() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "b"}),
-            attempt_end("m1", step_id="b"),
-        ]
-    )
-    assert "attempt-end-same-scope" in names(events)
-
-
-def test_invariants_detect_unclosed_attempt_in_closed_step() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            PendingEvent("step/end", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("turn/end", {"turn_id": "t"}),
-        ]
-    )
+async def test_invariants_detect_unclosed_attempt_in_closed_step(tmp_path) -> None:
+    events = append_tail(await recorded_attempt(tmp_path), close_step(), close_turn())
     assert "attempt-has-end" in names(events)
 
 
-def test_invariants_detect_missing_attempt_id() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            PendingEvent("model/attempt-start", {"turn_id": "t", "step_id": "a"}),
-        ]
-    )
-    assert "attempt-id-present" in names(events)
+async def test_invariants_detect_missing_attempt_id(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    data = {key: value for key, value in events[-1].data.items() if key != "attempt_id"}
+    assert "attempt-id-present" in names((*events[:-1], replace(events[-1], data=data)))
 
 
-def test_invariants_detect_two_open_attempts_in_one_step() -> None:
-    events = materialize(
-        [
-            PendingEvent("session/created", {"session_id": "s"}),
-            PendingEvent("turn/start", {"turn_id": "t"}),
-            PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
-            request_snapshot(),
-            attempt_start("m1"),
-            attempt_start("m2"),
-        ]
-    )
-    assert "single-open-attempt" in names(events)
+async def test_invariants_detect_two_open_attempts_in_one_step(tmp_path) -> None:
+    events = await recorded_attempt(tmp_path)
+    second = PendingEvent(events[-1].type, {**events[-1].data, "attempt_id": "m2"})
+    assert "single-open-attempt" in names(append_tail(events, second))

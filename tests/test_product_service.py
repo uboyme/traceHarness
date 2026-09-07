@@ -54,6 +54,7 @@ from traceh.session.event_store import (
     Durability,
     InMemoryEventStore,
 )
+from traceh.session.protocol import CONTEXT_PROTOCOL
 
 
 class _Wrapping:
@@ -202,6 +203,7 @@ async def test_malformed_session_history_cannot_prove_confirmation() -> None:
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         ),
     )
@@ -249,6 +251,7 @@ async def test_only_an_exact_plain_new_turn_acceptance_can_confirm(
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         ),
         PendingEvent(
@@ -447,6 +450,7 @@ async def test_a_claim_cannot_authorize_a_turn_that_never_started(
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         )
     ]
@@ -504,6 +508,7 @@ async def test_a_claim_cannot_borrow_another_messages_started_turn() -> None:
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         ),
         PendingEvent(
@@ -583,6 +588,7 @@ async def test_the_confirmation_turn_may_be_open_after_its_durable_start() -> No
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         ),
         PendingEvent(
@@ -641,6 +647,7 @@ async def test_a_turn_that_closes_over_an_open_step_cannot_authorize() -> None:
                 "session_id": "session-alpha",
                 "workspace": "workspace-fixture",
                 "metadata": {},
+                "context_protocol": CONTEXT_PROTOCOL,
             },
         ),
         PendingEvent(

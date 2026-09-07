@@ -659,6 +659,11 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         )
         field("system prompt", f"{request.system_prompt_utf8_bytes} bytes")
         field(
+            "Context reference",
+            f"{request.context_input_messages} messages · "
+            f"{request.context_input_utf8_bytes} bytes",
+        )
+        field(
             "Product context",
             f"{request.product_context_messages} messages · "
             f"{request.product_context_utf8_bytes} bytes",

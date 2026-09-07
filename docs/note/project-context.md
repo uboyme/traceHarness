@@ -43,6 +43,8 @@
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
+| 当前开发阶段 | v0.9-F0-A/B/C 本轮授权实现与限定门禁已收口；F1 未开工。版本仍为 `0.8.0`，未运行发布级全量或 L2，不能宣称 v0.9 已发布 |
+| Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；默认空 wrapper user message 始终在全部 Surface 前且不进入 Surface。F0-C 已接入并验证显式原文分页与 typed/Tool 请求；自动选择仍只限目录／摘要，没有检索排名、Skill 或 Memory（7.4） |
 | 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；严格 JSON 解析失败时，只允许按冻结 Tool schema 对顶层 `type=string` 字段的双三引号 multiline lexical form 做一次有界规范化，结果仍须通过标准 JSON object 解析，其他 malformed response 继续 fail closed。CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
@@ -52,7 +54,7 @@
 | CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；当前 TUI 不复制插件管理命令、完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
 | 当前自动化测试 | v0.8.0 最终候选在安装 Textual 8.2.8 的解释器上收集 `2765 tests`；公开真实 L2 独立得到 `1 passed in 1398.14s`，最终无筛选全量得到 `2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。收口期间 L2 先后真实暴露 core-only 环境硬导入 Rich、以及 `test_product_contract.py` 未同步 M3 两个受保护 Runtime pin；两项均在原测试 owner 根修并由公开 L2 反向证明。compileall、修改范围 Ruff、`git diff --check`、文档 QA、Wheel E2E、clean-input 资产预检、core/`[tui]` 离线安装与完整 18-attempt Provider 网格均已执行；详细边界与结果见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节 |
-| Surface 压缩 | M3 起 `CompactionService` 同时拥有手动与自动 replacement；`surface_prefix()` 是选择与全部派生事实的唯一来源，不变量重算它。`AgentLoop` 在 Turn 打开前触发一次；只压缩闭合 Turn 前缀，保留配置数量的最近 Turn，永不触碰 `product/context-snapshot`，也不拆 Step 或 tool call/result。durable 协议为 format 2，绑定 exact source seq/digest、cut boundary、method、policy digest 与摘要器身份；format 1 明确拒绝。摘要按逻辑位置投影，因此不会跑到当前用户消息之后，历史 `request/snapshot` 仍逐字节重建；手动 `--through-seq` 必须精确命中闭合 Turn。触发指标是 canonical UTF-8 字节，**不是 token**；四项配置必须全部显式给出，缺失即关闭。默认摘要器确定性、无模型：当前架构没有可让摘要调用合法复用的可审计模型调用主线（20.39、ADR-0042）。原始事件仍可由宿主审计，但当前模型没有通用压缩历史展开能力；v0.9 计划已冻结一条 current-Session、exact-block、request-only、Step-scoped 的 History Evidence 披露路线，尚未实现 |
+| Surface 压缩 | M3 起 `CompactionService` 拥有手动／自动 replacement；`surface_prefix()` 唯一派生来源，由不变量重算。Turn 前只压缩闭合 Turn 前缀，保留显式数量的最近 Turn，不碰 Product context、不拆 Step/Tool 组。format 2 绑定 exact source、cut、policy 与摘要器；拒绝 format 1。摘要按原逻辑位置投影，历史 Request 精确重建；手动 cut 必须命中闭合 Turn。四项阈值全部显式给出，计 canonical UTF-8 bytes 而非 token。默认摘要器确定性、无模型，尚无合法可审计的模型摘要调用主线（20.39、ADR-0042）。原始事件保留；F0-C 已在同一来源上接入当前 Session、exact block/cursor、request-only、Step-scoped 原文分页，并通过本轮限定验证（7.4） |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 最新正式发布为 `v0.8.0`。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
@@ -67,6 +69,14 @@ Runtime pin 未同步）已在测试 owner 根修并保留反向证据。详细�
 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节。当前仍没有默认 Product Profile、OS 沙箱、
 跨进程 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用
 Workflow DSL、MCP、流式输出或 Provider/model fallback；这些属于 v0.9 及之后的冻结路线。
+
+2026-09-07 已完成 v0.9-F0-A ADR／设计冻结，并将 F0-B 最小 Context 请求链接入现有生产 owner（20.33）。
+F0-A 的 19 项检查只证明旧接缝；F0-B 新增 Context 24、Request protocol 24、Runtime 11 项，共 59 项
+已通过并包含在最终限定门禁中：36 文件 `1079 collected / 1076 passed / 3 skipped`，耗时 20.22 秒。
+F0-C 已将 Session 唯一切到 `context_protocol=2`，明确拒绝 F0-B 的 1，不补写或迁移；outer Context
+format 和 SQLite schema 仍为 1。最终 38 文件 1104 collected、`1100 passed, 4 skipped in 31.98s`，
+包含新 History 四文件 81 项。F0-A/B/C 本轮授权实现收口，F1–F5 未开工，不表示发布门禁完成。
+本轮未运行全量、L2、构建、联网或真实模型；上述 v0.8.0 数字仅是发布基线。
 
 第四轮以后，生产 Router 提示中缺失既有 reason 上界与单行安全约束的根因已经用公共路径反例和反向验证修复；严格 parser 未放宽。随后第五轮从全新输出目录完成修复后的 18-attempt 真实模型网格：`15/18` 严格质量成功，auto `6/6` 严格解析且 reason 拒绝归零；其余 3 次均为 coder 的瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或 Verifier failure。该结果仍是小样本描述，不是显著性结论。
 
@@ -128,10 +138,10 @@ traceharness/
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
 │   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3/F5 的宿主控制面、Chat 表面、durable evidence 只读审批投影、schema-1 配置解析与显式装配；`context.py` 在 requester Turn 前 fresh 冻结安全 Product 状态语义证据，`activity.py`/`memory.py` 从同一 EventStore fresh join task-owned Agent Session 与 Product/Workflow/Review/Promotion 证据
-│   ├── chat/                         v0.8-F3/F4 UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ephemeral ActivityTracker；不读 stdin、不渲染终端、不保存第二份对话历史
-│   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded plain-text presentation、对话/Product 面板、原 START/Approval/Cancel owner 接线与生命周期收敛
+│   ├── chat/                         UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ActivityTracker；F0-C 透传 TurnInput.history_requests；不从正文赋权、不保存第二份对话
+│   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded presentation、对话/Product 面板与原控制 owner；F0-B 的 `context_inspection.py` 复用请求重建并分开统计 Context reference、Product 和 conversation
 │   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
-│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`）
+│   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`；F0-C `history.py` 的 policy/cursor/page request DTO）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
@@ -139,12 +149,12 @@ traceharness/
 │   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、F2 retry/Provider-active 度量、descriptive 报告与唯一 Runner
 │   ├── evolution/                    L2 验证、L3 对比与 L4 人工批准/精确推广/回滚
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
-│   ├── kernel/                       四层 Service 与 Composition Overlay、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
+│   ├── kernel/                       四层 Service 与 Composition Overlay、含空 Skill catalog/digest 的严格快照与 revision、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表、typed sanitized failure、显式 bounded retry policy/scheduler 与两阶段调用边界
 │   ├── plugins/                      Entry Point 发现、显式启用解析、事务式 PluginManager、Generation-owned ActivationSet Builder
 │   ├── runtime/                      AgentRuntime 门面、PluginCompositionCoordinator 控制面、AgentLoop、Generation Composition/Lease、请求、Continuation、Verifier
-│   ├── session/                      EventStore、进程内 Event Feed、跨进程文件锁、投影、恢复、不变量、插件身份、exact `product/context-snapshot` 事实重建，以及 `surface_replacement.py` 的唯一 Surface replacement 协议与 `compaction.py` 的手动/自动压缩 owner
-│   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具
+│   ├── session/                      EventStore、Event Feed、锁、投影、恢复、不变量与事实重建；`protocol.py` 唯一 Session 协议，`context_input.py` 窄策略／只读冻结／renderer／重建；F0-C `history.py` 纯展开分页、`history_requests.py` 唯一授权及目标派生，写入仍由 SessionService owned/CAS；M3 owner 保留
+│   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具；F0-C `history.py` 普通 PURE_READ `request_history_page` 仅返回 receipt
 ├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
 ├── examples/                         无 Key 的确定性 Demo 夹具
 │   └── plugins/                      三个可独立构建安装的外部插件 Distribution（示例、Python Quality、Plugin Creator Skill）
@@ -164,6 +174,9 @@ traceharness/
 ```
 
 `docs/TraceHarness Py：面向插件化与多 Agent 演进的 Python Harness 实施计划.md` 是长篇实施计划；它不是当前代码事实源。
+
+`CHANGELOG.md` 的 Unreleased 记录本轮 v0.9 F0 能力及 Session 协议 2 的旧数据拒绝；v0.8.0 发布记录
+与源码版本保持原值，工作树实现不等于已发布。
 
 ## 4. 运行时装配与依赖方向
 
@@ -194,6 +207,11 @@ flowchart TD
     CLI["CLI / SDK / Evaluator"] --> AR["AgentRuntime"]
     AR --> AL["AgentLoop"]
     AL --> CR["GenerationCompositionRuntime / Lease"]
+    AL --> CI["ContextInputService：同 Lease，只读当前 Session"]
+    CI --> HR["History 纯 reader：来源 / 闭合 Turn 分页"]
+    CI --> HQ["history_requests：durable 授权 / 目标 Step 派生"]
+    CI --> SS
+    CI -. "冻结收据交回原 append owner" .-> AL
     CR --> SC["Application → Workspace → Preset → Agent Service Scope"]
     CR --> CO["四层 Tool / Prompt / Policy Overlay → 单一有效 Composition"]
     AL --> RB["RequestBuilder"]
@@ -202,13 +220,18 @@ flowchart TD
     AL --> CV["CompletionVerifier"]
     AL --> SS["SessionService"]
     RB --> SP["SurfaceProjector"]
+    RB --> CIR["Context reader / renderer：request-only"]
     TR --> SS
+    TR --> HT["request_history_page：只读 receipt，无原文"]
+    HT --> HQ
+    HQ --> HR
     SS --> PS["PublishingEventStore"]
     PS --> ES["EventStore"]
     ES --> JL["SQLite：所有 append-only Streams"]
     PS -. "内层唯一 SYNC append 正常返回后发布（不扩大 commit 保证）" .-> FEED["SessionEventFeed（进程内、只读订阅）"]
     FEED -. "dirty hint / Session events" .-> DRIVER["UI-neutral Chat Driver / Product Observation"]
     DRIVER -. "typed updates" .-> UI["Line CLI / 可选 Textual TUI"]
+    DRIVER -. "TurnInput.history_requests typed 透传" .-> AR
     REC["Recovery / Inspector / Invariants / Compaction"] --> SS
 ```
 
@@ -270,7 +293,12 @@ sequenceDiagram
     AR->>AL: run_turn
     AL->>ES: inbox/accepted, inbox/claimed, turn/start
     loop 每个 Step
-        AL->>ES: step/start, composition/snapshot
+        AL->>ES: step/start；本 Step 的 user/message（若有）
+        opt 首 Step 有 typed host History 请求
+            AL->>ES: 原 SessionService owned/CAS 批量 history/requested
+        end
+        AL->>AL: 同一 Lease 内只读冻结 Context
+        AL->>ES: context/input CAS；随后 composition/snapshot
         loop 每个 Model Attempt ordinal（仅候选瞬时失败可继续）
             AL->>B: admit(frozen request, fresh Attempt)
             B->>ES: independent PENDING Token reservation（若 bounded）
@@ -411,6 +439,8 @@ Agent Directory Stream 是**每个 Store 一条**的控制面流，不是 per-se
 | Session/Inbox | `session/created`、`inbox/accepted`、`inbox/claimed` |
 | Composition control | `composition/migration-authorized`（只记录外部插件身份迁移授权，不进入 Model Surface） |
 | Turn/Step | `turn/start`、`turn/end`、`step/start`、`step/end` |
+| Step reference input | `context/input`（format 1，绑定当前 Session/Turn/Step、观察截止点、同 Lease Composition/catalog、窄 policy、query、exact blocks/exclusions 与渲染预算；只供 Request，不进入 Surface） |
+| History host request | `history/requested`（format 1；typed 用户输入绑定本 Turn 首 Step 与真实 user/message；原 SessionService 写入，不进入 Surface，不能由 source/text 伪造） |
 | 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 7、exact key/messages、当前 Product head causation；原子记录当前 focus 在内最多六项任务、精确总数/省略数、固定状态语义、有界历史 source-request 摘录，并只为稳定检查点 focus 记录最小执行摘要；formats 1–6 拒绝，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
 | 模型 | `model/attempt-start`、`assistant/chunk`、`assistant/message`、`model/attempt-end` |
 | 工具 | `tool/call`、`tool/admitted`、`tool/result` |
@@ -625,6 +655,7 @@ flowchart LR
 - plugin identities；
 - policy 和 middleware 名称；
 - temperature、max output tokens；
+- `skill_catalog=[]` 与 `skill_catalog_digest=H([])`；F0-B 明确拒绝非空 catalog；
 - 基于内容生成的 revision。
 
 `plugin identities` 从 v0.4 起是**真实数据**，不再是占位：它等于 `traceh.core`（版本来自 1.2 的唯一来源）加上本次激活的每个外部插件的真实 `plugin_id` 与 `version`。无插件运行时该列表只有一项。
@@ -662,10 +693,12 @@ Session 中，但当前 Surface 只投影逻辑最新一条。
 
 ### 7.3 Request Snapshot 与 Fingerprint
 
-`RequestBuilder` 使用“截至 Composition Event 的 Surface + 同一 Lease 提供的 Composition Snapshot”生成
-composed `ModelRequest`。Budget admission 可以只把 `max_output_tokens` 正向下调，产生 exact dispatch
-request。首个 Attempt 的 Session CAS batch 只写一条 current-schema `request/snapshot`，其中同时保存
-两份 canonical request/fingerprint、`source_seq` 和 composition revision；同一 batch 再写
+`RequestBuilder` 使用“本 Step Context 的一条 user reference message + 截至 Composition Event 的完整
+Surface + 同一 Lease 提供的 Composition Snapshot”生成 composed `ModelRequest`。Context 在所有
+Surface 消息前，包括 Tool 续步；Surface 自身不识别或保存 Context。Budget admission 可以只把
+`max_output_tokens` 正向下调，产生 exact dispatch request。首个 Attempt 的 Session CAS batch 只写
+一条 current-schema `request/snapshot`，原八项之外新增必填 `context_input_seq`、`context_input_digest`，
+共十项；保存两份 canonical request/fingerprint、`source_seq` 和 composition revision；同一 batch 再写
 `model/attempt-start`。内部 Generation/Attempt/reservation identity 不进入 Request Fingerprint。
 
 ```mermaid
@@ -678,8 +711,11 @@ flowchart LR
     TR --> EV
     EV["Session Events through source_seq"] --> SU["SurfaceProjector"]
     SU --> MSG["Model-visible Messages"]
+    EV --> CTX["context/input：唯一 reader / renderer"]
+    CTX --> REF["一条 request-only user reference"]
     CO["Composition Snapshot"] --> REQ["ModelRequest"]
     MSG --> REQ
+    REF --> REQ
     REQ --> CFP["Composed Fingerprint"]
     REQ --> ADMIT["Budget Admission"]
     ADMIT --> DISPATCH["Exact Dispatch Request / Fingerprint"]
@@ -693,6 +729,68 @@ flowchart LR
 Request，并独立验证两份 fingerprint。dispatch 除正向收紧输出上限外必须逐字段等于 composed request。
 Core invariant 另行核对 Attempt ordinal、snapshot seq、dispatch fingerprint、provider/model 与
 reservation binding；Budget reconciliation 再把 non-null reservation 与唯一 ledger 交叉验证。
+
+### 7.4 F0-C：当前唯一 Context Input 与 History 接缝
+
+[`ContextInputService`](../../src/traceh/session/context_input.py) 只获得 `SessionService.read_session`
+回调与宿主配置；没有 Store writer、Provider、Plugin manager 或后台任务。`AgentLoop` 在同一 Step Lease
+内取得 Composition，读取来源并冻结 Context，由原 `SessionService.append_context_input()` 用观察到的
+Session head 做 CAS；成功后才追加 Composition。retry 位于冻结之后，复用同一 Context、source_seq 和请求。
+
+F0-B 的请求冻结基础与 F0-C 原文披露均已通过本轮限定验证（15.1）。当前唯一策略切换为
+`f0-c-context-policy-v1`，配置为 13.3.1 的原七项加 nullable history。默认使用具名空策略：query、blocks
+为空，明确记录 Skill/Memory 来源未提供及 History 未选择，预算恰容纳空 wrapper。自动目录／摘要仍
+只从当前 Session 可见 M3 replacement 按原逻辑顺序取块；查询只冻结本 Turn 首条真实 user/message，
+不参与排名。仅额外显式配置 History reader 才能请求原文；不提供 raw-only 或跨 Session 读取。
+
+[`api/history.py`](../../src/traceh/api/history.py) 定义 `HistoryReadPolicy`、`HistoryCursor` 与
+`HistoryPageRequest`；DTO 本身不证明授权。[`session/history.py`](../../src/traceh/session/history.py)
+只读验证 M3 图、递归展开允许的 user/message、assistant/message、tool/result，保留 tool_calls 与
+原逻辑顺序。按闭合 Turn 分组分页，section/chunk 首版语义相同；不拆 Turn/Tool 组，超大 Turn 保留
+稳定 page slot 并整页拒绝，不产生 accepted receipt。来源事件数／bytes、深度、block 数与页大小均有
+显式上限。目录正文新增 cursor；未配置 reader 时为 null，配置后为首 cursor。摘要仍为已验证 replacement
+message 的 canonical JSON。只逐页披露 next_cursor，不公开全页目录。
+
+[`session/history_requests.py`](../../src/traceh/session/history_requests.py) 是唯一资格与消费派生规则。
+当前 Session 曾经在冻结 Context 披露的 block/cursor，即使后来被更宽 replacement 隐藏，仍能按精确
+身份请求。普通 PURE_READ [`request_history_page`](../../src/traceh/tools/history.py) 只返回有界 receipt，
+实际嵌套在 tool/result 的 `data["data"]["history_receipt"]`；原文仅由目标 Step 的 Context 注入。
+Tool 只供同 Turn 紧邻后继 Step；`include_default_tools=False` 不自动授予它。用户请求经显式
+`TurnInput.history_requests` tuple，由 `ChatDriver` 透传，在首 Step 真实 user/message 后由原
+`SessionService.append_history_requests()` owned/CAS 批量写入 `history/requested`。source="user"、
+正文和 metadata 都不能伪造该权限。首 Step 是宿主请求的唯一目标；不把请求转交另一 Step/Turn。
+
+每个 History block 绑定 replacement 与闭合 `turn/end` 的完整 EventRef、注入正文字节数／digest、scope
+与观察边界；workspace_observation 严格为 null、freshness 严格为 `unknown`，伪造 matched/stale 拒绝。
+现有 Workspace catalog 的 base_revision 是建仓基线；它未与历史 ToolResult 执行时状态绑定，当前
+Workspace 也可为 DIRTY，不能拿基线相同冒充当前状态。F3/F4 接入真实来源身份／revision 观察并持久
+绑定之后再验收三态。来源重算复用 M3 验证器与
+`surface_conversation()`。`ContextInputSnapshot` 只持有 canonical 字符串，`to_dict()` 返回独立 JSON 图。
+reader 按 `observed_session_seq` 重建旧来源，不用后来的摘要；精确核对本 Step 身份、唯一 Context、
+随后 Composition、catalog、query、正文与预算。原文另核 request_ref、cursor、page/leaf_refs 和目标
+Step，未授权 raw、非空 catalog、Skill/Memory、跨 scope 均拒绝。
+
+唯一 `context-json-v2` renderer 把正文放入 canonical JSON 字符串，由固定宿主头尾声明参考不授予权限；
+history_notice.cursor 在目录／摘要为首 cursor，在原文为 page.next_cursor。默认空 wrapper 仍是一条
+user message。先为本 Step 获授权的原文页分配预算，再选择自动目录／摘要。每个块和 History 配额按完整
+渲染 item 的 UTF-8 计量，包含转义、provenance 和尾注；总额再计 wrapper 与数组分隔符。超限整块排除，
+不截断正文；排除记录超过显式上限则失败。正文 bytes 单独观察；token measurement 固定为 unavailable。
+这不是模型窗口百分比，也不改变 system、Tool schema、当前用户输入或 Product 原权威。
+
+允许已闭合的失败前缀为 Context/Composition/首 Request+Attempt 数 `0/0/0`、`1/0/0`、`1/1/0`、
+`1/1/1`；进入请求构建才要求唯一 Context。append 失败或重复取消先等待 owned Task 收敛，再按精确
+identity 与 canonical JSON 对账 committed true/false/unknown；unknown 不重投、不派发。Recovery
+不补造 Context 或 Attempt。History accepted/eligible/consumed/expired 从原持久事件与 Step 顺序派生；
+目标超预算、失败、未发生、max_steps、取消或恢复均不顺延，无新增 writer、Lease 或 pending 状态机。
+`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=2`；
+共同 Session reader、invariant、open/recover/inspect/replay/Request 路径拒绝旧 Session，只有列表可列身份。
+EventEnvelope schema、SQLite user_version 仍为 1，M3 format 仍为 2；未来配置／协议切换必须显式版本化，
+明确拒绝 F0-B 的 1，没有旧协议兼容 reader 或自动修补。F0-C 本轮已收口；F1 Skill、F2 检索、
+F3 Memory 与 F5 治理 UI 不在本轮范围。
+
+Product 的 Session 证据与叶失败读取也调用同一 `require_session_protocol()`，不再维护两份旧
+`session/created` 字段白名单；新 Session 可读、旧 Session 拒绝。`ModelRequest.from_dict()` 保留合法的
+空字符串 system prompt，不再把它转换为 `None`，保证冻结请求重建字节一致。
 
 ## 8. 模型层
 
@@ -864,6 +962,10 @@ Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以
 这些变量描述机器而不是用户，且仍然经过 KEY/TOKEN/SECRET 等敏感名过滤。
 ## 11. 崩溃恢复与生命周期收敛
 
+F0-C 恢复首先经过唯一 Session 协议 2 校验；History 请求失效只按原 Turn/Step 与 receipt 派生，不能在
+恢复后转交下一轮。合法 Context-only／Composition-only 失败前缀按原 Step/Turn
+规则收敛，不重新选择来源、不补写 Context，也不为未开始的后继 Step 发明 Attempt（7.4）。
+
 `RecoveryService.recover()` 按固定顺序追加事件，使修复后的流与健康流读起来顺序一致：
 
 1. 读取 Session 与 Effect Streams；
@@ -937,6 +1039,10 @@ Attempt 已开始不代表模型答复过，因此状态由持久化证据决定
 ## 12. 投影、压缩、Inspector、Replay 与 Evaluation
 
 ### 12.1 State 与不变量
+
+F0-B 的 `context/input` 不改变 Surface 白名单。Core invariant 复用唯一 Context parser/source reader，
+核对合法失败前缀、当前 Step 唯一 Context 与 Composition/Request 的精确绑定；旧 Session 首标记缺失
+明确拒绝，不以合成空 Context 掩盖。相关生产流程见 7.4。
 
 - `StateProjector` 推导 Session 状态、当前开放 Turn/Step、完成数量和最后序号；
 - `CoreInvariantChecker` 检查序号、生命周期嵌套、Model Attempt 身份/配对/真实作用域、Tool Call/Result、Effect、Composition 与 exact Product context snapshot 等协议关系；Product context 必须 canonical，且同一逻辑 `(task_order_seq, source_seq)` 不能命名两个 head；检查按事件流中真正开放的 Turn/Step 判断，不采信 payload 自报的作用域；
@@ -1035,6 +1141,12 @@ Line 与 TUI 消费**同一条 durable 事件**，不增加第二套状态：[`c
 被替换消息、digest 或 Prompt；失败通知只显示稳定 code。
 
 ### 12.3 TUI 上下文透明度（M4）
+
+F0-B 对现有 M4 Context 面板作相邻协议适配：`context_inspection.py` 用共享纯函数
+`build_request_from_events()` 验证最近冻结请求，先独立统计第一条 request-only Context reference 的
+消息数和 UTF-8 字节，再从剩余 Surface 匹配 Product 前缀，conversation 排除二者。`presentation.py`
+只增加 `Context reference` 统计，不披露 Context 正文。当前 Surface/压缩阈值仍按原投影解释，
+不是 F5 检索治理 UI，没有新增 durable 状态、原文披露、后台任务或第二 reader。
 
 M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓存、索引或状态机。
 [`tui/context_inspection.py`](../../src/traceh/tui/context_inspection.py) 的 `ContextInspectionReader`
@@ -1226,6 +1338,43 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 | data dir | `.traceh` |
 | provider/model | `scripted` / `scripted-model` |
 | 自动 Surface 压缩 | 关闭；启用时四项阈值必须全部显式配置，无内置数值 |
+| Step Context | `RuntimeConfig.context_input=None`：具名空策略，仍冻结空 Context 并渲染一条 request-only user wrapper；没有默认历史选择 |
+
+#### 13.3.1 F0-C 程序化 Context 配置
+
+`RuntimeConfig.context_input` 接受 `ContextInputPolicy` 或 `None`；原文宿主请求经 typed TurnInput/ChatDriver，
+没有 Skill/Memory/检索治理入口。`f0-c-context-policy-v1` 的 exact config 为以下八项，启用值全部显式给出：
+
+| 字段 | 当前含义与约束 |
+|---|---|
+| `history_tier` | `None` 为明确空策略；否则只接受 `directory` 或 `summary`，仅当前 Session 可见 M3 replacement |
+| `total_bytes` | 非负整数，必须至少容纳完整空 wrapper；总 rendered content 的 UTF-8 上限 |
+| `history_bytes` | 非负整数，全部 History 渲染 item 的总上限 |
+| `item_bytes` | 非负整数，每个完整渲染 item 的上限，含转义／provenance／尾注 |
+| `max_blocks` | 非负整数，实际纳入块数上限 |
+| `max_exclusions` | 整数且至少 3，排除记录上限；超过则明确失败 |
+| `max_query_bytes` | 非负整数，本 Turn 第一条真实用户输入的 UTF-8 上限；超限拒绝，不截断 |
+| `history` | null 或 `HistoryReadPolicy` exact 七字段；null 不开放原文分页 |
+
+`history_tier=None` 时 history 必须为 null，`history_bytes/item_bytes/max_blocks/max_query_bytes` 全为 0。
+只允许关闭、directory/summary 仅参考、directory/summary 加显式 reader 三种模式，不实现 raw-only。
+空策略的 `total_bytes` 由固定 wrapper 的真实 bytes 派生，`max_exclusions=3` 对应三个来源的明确状态。
+HistoryReadPolicy 的七项全部为显式正整数：
+
+| 字段 | 约束的工作 |
+|---|---|
+| `max_blocks` | reader 的 replacement 数；不是外层 Context 的注入块数 |
+| `max_depth` | replacement 来源展开深度 |
+| `page_bytes` | 一页完整 canonical 消息数组的 UTF-8 bytes，包含数组标点 |
+| `page_messages` | 一页 ModelMessage 数 |
+| `max_source_events` | 观察 Session 前缀的事件数，含审计事件 |
+| `max_source_bytes` | 观察 Session 前缀的 bytes，含审计事件 |
+| `max_requests` | 请求 owner 接受的页请求数 |
+
+分页 policy digest 为 `H({version:"history-turn-pages-v1",config:七项})`，cursor 绑定该 digest；
+DTO 不制造披露权限。`include_default_tools=False` 不自动授予 History Tool。没有缺值补全的启用策略。
+设计合同 §5.2 的通用 ranking/lane/FTS 配置属于后续阶段，当前 parser 不接受；已明确替换 F0-B policy，
+未来再扩展仍必须显式切版本并拒绝旧配置，不保留双 reader 或隐藏 fallback。
 
 ### 13.4 `traceh chat` 交互循环
 
@@ -1555,6 +1704,33 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 ### 15.1 本地标准检查
 
+**v0.9-F0-B 最终定向／相邻门禁：**限定 36 个测试文件，collect-only **1079 项**，同集合最终
+**1076 passed, 3 skipped in 20.22s**。三项 skip 均为 Windows 边界：两项文件符号链接权限不足
+（`WinError 1314`）、一项 NUL 路径不合法。新 `test_context_input.py` 24、`test_context_request_protocol.py`
+24、`test_context_runtime.py` 11 项，共 **59 项已包含在 1076 中**，不能另加一次。覆盖空策略、M3
+目录／摘要、完整渲染预算、来源篡改拒绝、Tool 续步、精确重建、失败前缀、取消与原 owner 相邻回归。
+
+相邻回归在各自 owner 修正三处真实问题：Product 两份旧 Session 字段白名单改用共同协议检查；
+ModelRequest 保留空 system prompt；TUI 在新 Context reference 后正确定位 Product 与 conversation。
+TUI 反向验证临时恢复旧 offset 后，两项反例按真实 Product mismatch／conversation 计数错误变红，
+随后恢复正确实现；其它关键保护也完成反向证据。两轮有界独立审查及 TUI 复审均无 P0/P1。
+测试从隔离空临时 cwd 使用 absolute tests 路径执行，没有加载仓库真实 `.env`；compileall `src tests`
+成功，30 个改动 Python 文件 Ruff 通过，13 个生产文件反硬编码扫描无命中。这些是 F0-B 已完成的
+阶段证据；该轮未运行全量、L2、构建、联网或真实 Provider。
+
+**v0.9-F0-C 最终定向／相邻门禁：**同一组 **38 文件 collect-only 1104 项，1100 passed, 4 skipped
+in 31.98s**。新 History 四文件 **81 项**（reader 37、requests 12、Tool 16、Runtime 16）已包含在 1100，
+不另相加。四项 skip 是 Windows 边界：SQLite 两项文件符号链接权限不足（WinError 1314）、Tools 一项
+目录符号链接权限不足、CLI 一项 NUL 路径不合法。精确文件集合与隔离 cwd 重放方式见设计合同 §12。
+
+公开路径覆盖原文／next_cursor／leaf_refs／request_ref 的精确重建及篡改拒绝、两类授权、被新 replacement
+隐藏的已披露 block、紧邻 Step、原子预算、retry、失败取消／max_steps／恢复、Tool opt-out 与 SQLite
+重建；两分区独立有限审查均无 P0/P1。七组反向保护证据覆盖紧邻后继、reader 顺序／M3 来源、请求 owner
+页面／请求来源／重复取消，均按预期根因变红后恢复，不作为测试数追加。compileall `src tests` 成功，
+40 个改动 Python 文件 Ruff 通过，19 个生产文件反硬编码扫描无命中。测试从隔离空临时 cwd 调用绝对
+tests 路径，未加载真实 `.env`。F0-A/B/C 本轮授权实现已收口，F1 未开工；没有全量、L2、构建、联网、
+真实 API 或提交，不声称发布通过。以下长门禁历史不是本轮执行要求。
+
 ```powershell
 python -m compileall -q src tests
 python -m pytest -o addopts='' -q
@@ -1668,6 +1844,11 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
+F0-C 当前 Session 原文分页／请求已通过限定验证；没有排名、FTS、typed Skill、Workspace
+Memory、raw-only 模式、跨 Session 原文或实时 Workspace revision 观察。freshness 固定 unknown，
+原文只进授权 Step 的 Context，不驻留 Surface。未配置仍有空 wrapper；未新增治理 UI，字节预算不是
+token 窗口。Session 必须为 `context_protocol=2`；F0-B 的 1 和无标记旧 Session 均拒绝，不迁移（7.4）。
+
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
 | SQLite writer 边界 | 同库 writer 跨 Stream 串行化；普通竞争在显式 5 秒 busy timeout 内等待，超时稳定失败。绕过 Store 直接改数据库仍不受领域协议保护，网络文件系统与任意断电设备未验证 | 继续保持本机 Store；若未来出现多主机写入需求，再选择独立数据库服务而不是伪装 SQLite 已分布式 |
@@ -1730,7 +1911,12 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 | v0.7 Budget 是破坏式切换 | ADR-0025/0026/0027 已落实：不把 v0.6 未执行的 Budget DTO 伪装成新账本，也不保留 legacy/V2/双 Projector/自动迁移路径；执行只由显式宿主适配器接到既有 owned boundary | 新 Agent 使用 schema 2；旧 schema 1 history 明确 fail closed 且永不自动删除旧 `.traceh`；Runtime 与 Supervisor 不保存第二份 balance |
 | Agent Directory 严格 fail closed | 重复 `agent_id`/`session_id`/`request_id`、畸形 payload、未知事件类型、self-owner 和悬空 owner 都会让整份 Directory 读写失败，而不是跳过坏记录。代价是一条坏记录会阻塞该 Store 上的全部 Agent 读取与新建 | 这是事实源应有的行为；未来新增 identity 生命周期事件类型必须显式扩展该投影，通信事件则应放在 per-Agent Stream 而不是这条流上 |
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
-| API 稳定性 | Alpha，协议可能演进 | v1.0 前建立兼容策略和 Upcaster |
+| API 稳定性 | Alpha，协议可能演进 | 每次协议切换明确旧数据拒绝入口；仅在另获迁移授权时设计迁移，v1.0 冻结支持范围，不预设通用 Upcaster |
+
+v0.9-F0-A 已冻结设计，但跨 Session 项目绑定、Context／catalog 协议和 FTS schema 仍未实现，真实
+Sandbox、isolated Plugin 与多 coder 集成也未提前开始。20.33 与相应阶段计划规定 owner 和停止点；
+现有接缝的 19 项定向通过不能证明新协议，不能把新设计当成现有保护。后续全量／L2 仍按明确授权和
+所属检查点执行，本轮均未运行。
 
 ## 17. 变更影响矩阵
 
@@ -1738,6 +1924,7 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 |---|---|---|
 | Agent Loop / Continuation / model retry owner | `runtime/agent_loop.py`、`continuation.py`、`llm/retry.py`、`tests/test_model_retry.py`、E2E/取消测试、ADR-0035/0037 | 4、5、8.4、10、11、15、16、20.34 |
 | Event/Store/Session | `api/events.py`、`session/*`、event/invariant/recovery 测试 | 5、6、7、11、12、15、16 |
+| Step Context / Session Context / History 协议 | `session/context_input.py`、`session/protocol.py`、`session/service.py`、`api/history.py`、`api/turns.py`、`session/history.py`、`session/history_requests.py`、`tools/history.py`、`chat/driver.py`、`kernel/composition.py`、`runtime/request_builder.py`、`runtime/agent_loop.py` 与对应 History/Context、Request/Lease/Budget/Recovery 相邻 owner | 1、3–7、11–13、15–17、20.33；正式合同 §2–5，通俗版对应章节；原文授权不能分散成多个 reader 规则 |
 | Event 所有权 / Store 返回值 | `api/events.py`（`detach_event`、`to_dict`、`from_dict`、`materialize`）、`session/event_store.py`、`session/sqlite.py`、`tests/test_event_store_contract.py`、`tests/test_sqlite_event_store.py` | 6.1、6.4–6.6、15、16 |
 | Event Feed / 发布顺序 | `session/event_feed.py`、`runtime/agent_runtime.py` 的装配、`tests/test_event_feed.py` | 4、6.1、6.4、6.7、15、16 |
 | Chat Driver / Timeline / Chat 输出 | `chat/driver.py`、`cli/timeline.py`、`cli/chat.py`、`cli/main.py`、`tests/test_cli_timeline.py`、`tests/test_cli_chat.py`、README | 1、3、13.4、13.6、15、16、20.35 |
@@ -3657,7 +3844,7 @@ Catalog/Directory/Session identity 和 provider path 双向校验均不变。它
 
 四项新增测试都走真实公开主线而非夹具导入失败：前三项分别覆盖否定消息不能授权 ProductTask、Attempt/Step/Turn owned finalizer 与真实 L4 target venv；第四项用真实 Git for Windows 构造 nested admin path。反向验证分别移除宿主 `START` 守卫、把 convergence 等待退回单次 shield、删除 `scheme="venv"`、恢复冗余 `ws-workspace-` 前缀，依次重现未经授权的 `product-task:*`、第二次取消让调用方提前完成、`promotion-target-inspection-failed` 与 `WorkspaceGitError`。保护恢复后均重新通过。第一次发布全量的 `1 failed + 17 errors` 已证明并修复为同一个插件兼容元数据根因；首次远端 Linux 夹具问题、Windows L2 诊断缺口和最终 nested-worktree 平台缺陷也按各自 owner 修正。当前 collect-only 为 `2413`；只运行一次的最终完整 pytest 为 `2408 passed, 5 skipped`、退出码 0、耗时 `39:33`，真实 L2 包含在内。完整证据见 [`validation-v0.7.1.md`](../validation-v0.7.1.md)。
 
-### 20.33 v0.8/v0.9 冻结计划与 v0.8-F0/F1 实现状态（通俗版 20.27）
+### 20.33 v0.8 实现基线与 v0.9–v1.0 修订计划（通俗版 20.27）
 
 2026-08-29 在已发布 `v0.7.1`、基线 `194f44fe84ecb9adb85fc1d48d182d364bb94f45`
 上完成多轮独立只读审查后，范围分别冻结为 [`v0.8` 阶段计划](../plan/TRACEHARNESS_V0.8_STAGE_PLAN.md)
@@ -3666,13 +3853,24 @@ F1 已实现且 Release Stop A 最终复审确认 P0/P1 清零；这是 F1 停�
 v0.9 均未实现，F2 的后续当前状态见 20.34。F0/F1 没有升级版本、push、
 tag、release、联网、调用真实 Provider 或读取秘密。
 
-2026-09-05 又把已经讨论清楚的后续边界收敛进
-[`v1.0` 总路线](../plan/TRACEHARNESS_V1.0_MASTER_PLAN.md)：顺序固定为 v0.8 M3+M4 收口、v0.9
-Context/Skill/Workspace Memory/History Evidence、v0.10 host-owned Sandbox、v0.11 独立官方 MCP Client
-Plugin、v0.12 受控动态并发 Product Workflow，最后才是 v1.0 RC 与发布。该文档只是阶段计划，不代表这些能力
-已经实现或获得开工授权；当前源码仍没有 Workspace Memory、真实 Sandbox、MCP Client 或动态 Product DAG。
-后续实现必须继续复用同一 EventStore、现有 Plugin Generation/Lease、Workflow DAG/Map/Join 与 Product
-Verification/Review/Approval/Promotion 安全尾部，不能增加第二事实源、第二编排器或模型自授权路径。
+[`v1.0` 总路线](../plan/TRACEHARNESS_V1.0_MASTER_PLAN.md) 已于 2026-09-07 按已发布 v0.8.0 修订：
+M3+M4 前置已完成，不再作为当前待办；后续依次为 v0.9 Context/Skill/Workspace Memory/History Evidence、
+v0.10 host-owned Sandbox、v0.11 官方 MCP Client Plugin、v0.12 受控动态并发 Product Workflow、v1.0 RC。
+计划修订后已完成 F0-A ADR／设计冻结，F0-B 最小请求主线与最终定向／相邻门禁随后完成。
+F0-C History 接缝与最终限定门禁已完成，F0-A/B/C 本轮授权实现收口；F1–F5 未开工，三个 Release Stop 保持不变。
+
+总路线分别定义事实权威、控制权限和预算：当前执行状态由 Product/Workflow/Promotion/Workspace 原流
+的 owner fresh 读取，approved Memory 只证明长期项目事实，Skill／History 作为参考；它们不改写当前
+用户请求、冻结 requirement、验证、批准或预算。Context 预算沿用 v0.9 §4.2，不以 Memory 的长期性提高
+它对当前执行状态的解释权。单一事实源按每类事实的 owner 和可验证引用落实：事件管生命周期与授权，
+CAS 管 digest 绑定的 Patch bytes，Git 管代码／实际 ref；读取投影、检索索引和 UI 不独立裁定业务结论。
+
+v0.10 S3-A 先验收 trusted adapter 管理 Sandbox 外部进程；S3-B 的通用 isolated Plugin 单列协议与
+实现停止点，是否同版由 S0 决定。未完成隔离前装载、贡献子集、序列化与崩溃对账时继续拒绝 isolated，
+不能把进程内 Plugin 宣传为已隔离。v0.12 W1 先开放并行只读分析后交单 coder；W3 接通精确集成 Artifact、
+确定性合并、集成验证和后续真正消费的 post-code Review 后，才开放多 coder 模板。现有 Join 只是屏障。
+后续仍复用同一 EventStore、现有 Generation/Lease、Workflow scheduler 和 Product 安全尾部，不增加
+第二事实源、第二编排器或模型自授权路径；OS/backend、协议字段与通用冷恢复范围仍须在所属阶段决定。
 
 F0 的基线反例确认，旧 `AgentLoop` 会在 `BudgetedLlmRuntime.invoke()` 准入前写
 `request/snapshot`/`model/attempt-start`，零 Token 时 Provider 调用数虽为 0，Session 仍虚构一次 Attempt；
@@ -3801,18 +3999,74 @@ observation 纯读。唯一完整真实 Provider 网格只在 F5 作为发布证
 bounded retry、UI-neutral Driver 与可选最小 Textual TUI，但仍无 Provider/model fallback、token streaming
 或完整历史 Dashboard。
 
-v0.9 只有 v0.8 完成发布后才可重新核对和批准实施。trusted Plugin 在现有
-Activation/Generation/Lease 中贡献 typed Skill catalog，selection 不启用插件、不授予 Tool；Workspace
-Memory 由宿主按 exact digest 批准并 append-only。每个 Step 在 Composition Lease 内先追加唯一 Context
-Input event，再追加 `composition/snapshot`，因此现有 `source_seq` 仍界定完整请求。exact/SQLite FTS 是
-基础检索，本地 embedding/reranker 仅可显式、离线、derived 启用。检索评测仍复用唯一 `traceh eval`；
-完整 corpus、人工 relevance judgment 与 evaluator 不进入 coder writable Workspace 或模型上下文，也不
-新增第二 Runner。2026-09-05 的范围修订把 M3 History Evidence 纳入同一 Context Input 主线：原始
-Surface 事件和 format-2 replacement provenance 仍是唯一来源，默认只披露目录/摘要；用户或模型只能引用
-宿主已公开的当前 Session exact block，宿主递归校验来源链、分页、revision/freshness 与预算后，把原文只
-冻结到紧随其后的一个 Step。普通 Tool result 只保留小型 receipt，原文不进入 Surface、不自动留给后续
-Step；旧工具结果只证明过去，不能覆盖 current Product/Workflow/Workspace 事实。这不是第三 Memory、
-第二 EventStore 或跨 Session 原始聊天 RAG，且仍属尚未实现、未获开工授权的 v0.9 计划。
+v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7.4、13.3.1，验证状态见 15.1。
+设计理由分别记录在
+[ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)（Context/Skill/History/检索）和
+[ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md)（项目绑定/Memory authority）；
+[F0 设计合同](../plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md) 是新字段、事件、状态、schema、配置、
+评测规格和 owner 验收表的唯一详细定义。以下区分已完成 F0-B/C 与后续目标：
+
+- **Skill 与资源 owner**：typed catalog 进入现有 trusted Plugin Activation/Generation/Lease；selection
+  不启用插件、不 publish/drain、不授予 Tool。运行期 exact Lease 校验资源归属；持久 Context 绑定
+  composition revision、plugin provenance 和 catalog 内容 digest，不能用进程内 `generation_id`。
+  ADR-0043 决定由 Composition 持久化有界 descriptor manifest 与可重算 digest，二者进入 revision；
+  Context 保存关联与选中 exact bytes，历史重建校验 catalog 成员，不加载当前 Wheel。四级披露按
+  manifest metadata/summary/section/chunk 的确定规则匹配，资源 chunk 具有显式 byte range/digest。
+  F2 selection 使用同 Store 的 Session-scoped 流，只影响未来 Step；catalog 变化后不静默改绑旧选择。
+  F0-B 已在 Composition 接入空 catalog/digest 并纳入 revision；非空贡献仍留给 F1。
+- **项目 Memory**：当前普通 Session 只有目录，managed workspace identity 是一次 provision 的 worktree
+  身份。ADR-0044 冻结唯一 ProjectScopeService 与同 Store 的 `projects:catalog`，以全流 CAS 记录
+  created/source-bound/session-bound；一 Session 只绑一个项目，不从 metadata 或路径猜归属。
+  requester 的实际 workspace 须经宿主 resolver 核对 source，child 经原 Product/Directory/Workspace
+  关系在首次执行前继承；部分失败仍走原创建／dispose。路径 fingerprint 不是永久 UUID，首版拒绝
+  source mapping 漂移与 rebind。Memory 用 `memory:<project_id>` 的 proposed/approved/superseded/revoked
+  事件，由宿主按 exact proposal digest 批准；同一 scope
+  的宿主事实槽至多一个 active，替代／撤销绑定 exact predecessor/digest/head，经 CAS 追加。跨槽自然
+  语言冲突交宿主审核，不让检索器猜测。scope binding 不另建 Workspace 生命周期或用户全局记忆。
+  Memory 为短事实，目录从固定 metadata 派生，summary/section 保留完整批准正文；不截断限定句，
+  首版没有额外资源 chunk，更不因 source 引用开放跨 Session 原文。批准全文与实际 block 的摘要分开核对。
+- **Context 与合法失败前缀（F0-B 已实现）**：进入请求构建的 Step 在同一 Lease 内先追加唯一 Context，再追加 Composition，
+  沿用 `source_seq`。成功零命中仍记录空 blocks；检索／Lease 失败可以零 Context，Context／Composition
+  已提交而预算拒绝可以没有 Request/Attempt。append 失败／取消先收敛再对账 True/False/unknown；
+  Recovery 不补造 Context 或模型调用。同 Step Provider retry 复用原 Context/source_seq，旧格式缺少
+  Context 不静默合成。F0-C 把 F0-B 的 Session 标记 1 唯一切换到 `context_protocol=2`，共同 reader、
+  invariant、open/recover/inspect/replay/Request 均拒绝无标记和 F0-B 旧 Session；EventEnvelope 与 M3
+  format 2 不变。当前只有 Session 来源，窄策略／空 wrapper／精确旧请求重建见 7.4；没有跨流 latest 保证。
+- **History（F0-C 已完成）**：同 Session 原始 Surface 与 format-2
+  replacement provenance 是唯一来源。当前默认空策略，不默认选历史；显式选择时读取有界目录／摘要。
+  显式 reader 配置后 exact block/cursor 经来源、分页、授权与预算核对才展开；已披露的旧 block 被新
+  replacement 隐藏后仍可请求。只逐页给 next_cursor，不给全页目录。Tool 请求只供同 Turn 紧邻
+  后继 Step，accepted 不保证下一 Step 存在；max_steps、结束、失败、取消或恢复使未消费请求失效。
+  资格从 durable receipt/Step 顺序派生，不增 mutable pending cache；原文只进该 Step Context/request，
+  不进普通 Surface。用户请求由 TurnInput.history_requests/ChatDriver 透传，原 SessionService owned/CAS
+  批量写 history/requested，绑定本轮真实消息与首 Step；自报 source=user 不能授读取资格。section/chunk
+  同按闭合 Turn/Tool 组切分，超大 Turn 的 slot 稳定且整页拒绝，无 accepted receipt；原文预算优先于
+  自动参考。观察时间来自持久 cut boundary；workspace_observation=null、freshness=unknown 严格固定，
+  Workspace base_revision 无历史 ToolResult 执行时绑定，matched/stale 推迟 F3/F4 真实 owner 接入。
+- **索引／计量**：exact+FTS 是 F2 后续目标，当前没有检索排名或索引。F0-B 保持物理 schema 1，F2 再一次切为 2；对象精确为
+  streams/events、manifest/items 两张派生表、contentful FTS5 与五张 shadow 表，拒绝未知对象／旧库。
+  Store 持有连接、worker、事务、重建、关闭与一致 backup/restore；插件无 writer。已知派生行逻辑
+  缺失／过期可 unavailable，DDL/shadow 缺失或物理损坏仍拒绝，重建只改派生行。
+  FTS 先按资格召回，BM25 只使用 eligible corpus 词频，避免全库统计串项目；RRF/稳定 tie-break、
+  中文单字/双字与代码 exact lane、各资源上限都在合同中版本化，具体质量仍待 F2/F5。
+  Context 每块与每类按完整渲染 UTF-8 item 计费，总 wrapper 计总额；原文 bytes 另报。无显式可验证 counter
+  时 token unavailable。可选本地 semantic/reranker 保持离线、derived，先证明预定收益与资源成本。
+- **评测**：复用唯一 `traceh eval`。同一 attempt 内先创建 Store/受控 Runtime、requester Session/项目
+  binding，再由生产服务 seeding，最后构造 Product host；tool-free requester 使用 attempt source
+  repository 以满足真实 source 绑定，F5 不沿用独立 rw 目录。后续 child 继承宿主关联，各部分失败仍由
+  attempt owner 收敛。完整 corpus／人工答案／evaluator 不进 coder Workspace 或模型上下文。F0 定义
+  Step 计样（retry 不重复）、角色／attempt 汇总、K、tier relevance、失败分母和计量；F5 在 candidate
+  结果前冻结语料／阈值。包含中文、英文、混合代码标识和跨 Session 项目问答；scope 泄漏必须为 0，
+  其他阈值缺失只算测量。History 不因评测或 Memory 引用变成跨 Session 原文读取。
+- **实施／验证**：F0-A 设计、F0-B 请求主线与 F0-C History 本轮授权实现均已收口，F1–F5 未开工。F0 不提前造
+  Skill/Memory authority 或完整 UI；仅使用 Session 历史时 receipt 记录 Session 范围，不虚构项目 binding
+  或 Memory 读取资格，后续 owner 各自证明真实路径。F0-A 的 19 项现有接缝测试与文档 QA 是设计依据，
+  不冒充新协议验证。F0-B 三个新模块的 59 项包含在最终 36 文件 `1076 passed, 3 skipped` 中，详见 15.1；本轮没有
+  全量、L2、构建或联网证据。F0-C 最终 38 文件 1100 passed / 4 skipped（1104 collected，含新 History 81），
+  两分区无 P0/P1，详见 15.1。当前 policy 为原七项加 nullable history，完整检索
+  配置仍待后续显式版本切换。Release Stop
+  不自动触发全量。无筛选全量本就含
+  真实 L2，最终检查点须明确授权和长门禁构成，避免无意重复；禁止全量／L2 时如实记录未运行。
 
 ### 20.34 v0.8-F2：typed Provider failure 与同冻结请求 bounded retry（通俗版 20.28）
 
@@ -4625,6 +4879,10 @@ assistant、保留对应 user 后进入 Surface；根修是让检查器用同一
 push、tag 或 release。
 
 ### 20.40 M4：上下文透明度与最终体验（通俗版 20.34）
+
+F0-B 当前相邻适配见 12.3：最近冻结请求新增的 Context reference 单独计数，原 Product 前缀与
+conversation 从其后的 Surface 读取。它复用当前共享请求重建，不新增 F5 治理或原文披露；本轮
+修复与定向／反向证据见 15.1，下面的 M4 发布记录保持原历史边界。
 
 M3 让宿主可以自动压缩，但用户看不到"现在模型能看见多少""离阈值还有多远""哪些历史被压缩了""上次冻结的
 请求到底由什么组成"。M4 只补这一层**只读展示**：不新增 durable 事件、不新增事实源、不改变模型看到的消息、

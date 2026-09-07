@@ -31,6 +31,7 @@ from traceh.session.product_context import (
     ProductContextTask,
     product_context_snapshot_data,
 )
+from traceh.session.protocol import CONTEXT_PROTOCOL
 from traceh.session.surface import SurfaceProjector
 from traceh.session.surface_replacement import (
     MAX_SURFACE_SUMMARY_UTF8_BYTES,
@@ -1100,7 +1101,13 @@ def _replacement_event(**overrides) -> PendingEvent:
 def test_invariants_reject_a_cut_that_is_not_a_closed_turn() -> None:
     events = _session(
         [
-            PendingEvent("session/created", {"session_id": "s"}),
+            PendingEvent(
+                "session/created",
+                {
+                    "session_id": "s", "workspace": "fixture-workspace",
+                    "metadata": {}, "context_protocol": CONTEXT_PROTOCOL,
+                },
+            ),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("user/message", {"content": "old", "step_id": "a"}),
@@ -1128,7 +1135,13 @@ def test_invariants_reject_hiding_product_context_evidence() -> None:
     )
     events = _session(
         [
-            PendingEvent("session/created", {"session_id": "s"}),
+            PendingEvent(
+                "session/created",
+                {
+                    "session_id": "s", "workspace": "fixture-workspace",
+                    "metadata": {}, "context_protocol": CONTEXT_PROTOCOL,
+                },
+            ),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("user/message", {"content": "old", "step_id": "a"}),
@@ -1145,7 +1158,13 @@ def test_invariants_reject_hiding_product_context_evidence() -> None:
 def test_invariants_reject_splitting_a_tool_call_from_its_result() -> None:
     events = _session(
         [
-            PendingEvent("session/created", {"session_id": "s"}),
+            PendingEvent(
+                "session/created",
+                {
+                    "session_id": "s", "workspace": "fixture-workspace",
+                    "metadata": {}, "context_protocol": CONTEXT_PROTOCOL,
+                },
+            ),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("user/message", {"content": "old", "step_id": "a"}),
@@ -1179,7 +1198,13 @@ def test_invariants_reject_splitting_a_tool_call_from_its_result() -> None:
 def test_invariants_reject_the_superseded_replacement_format() -> None:
     events = _session(
         [
-            PendingEvent("session/created", {"session_id": "s"}),
+            PendingEvent(
+                "session/created",
+                {
+                    "session_id": "s", "workspace": "fixture-workspace",
+                    "metadata": {}, "context_protocol": CONTEXT_PROTOCOL,
+                },
+            ),
             PendingEvent("turn/start", {"turn_id": "t"}),
             PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
             PendingEvent("user/message", {"content": "old", "step_id": "a"}),
@@ -1362,7 +1387,13 @@ async def test_automatic_compaction_widens_over_a_late_manual_summary(
 
 def _closed_turn_events() -> list[PendingEvent]:
     return [
-        PendingEvent("session/created", {"session_id": "s"}),
+        PendingEvent(
+                "session/created",
+                {
+                    "session_id": "s", "workspace": "fixture-workspace",
+                    "metadata": {}, "context_protocol": CONTEXT_PROTOCOL,
+                },
+            ),
         PendingEvent("turn/start", {"turn_id": "t"}),
         PendingEvent("step/start", {"turn_id": "t", "step_id": "a"}),
         PendingEvent("user/message", {"content": "question", "step_id": "a"}),

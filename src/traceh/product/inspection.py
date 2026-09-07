@@ -34,11 +34,11 @@ from traceh.product.topology import (
 from traceh.promotion.models import review_matches_verification_plan
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
+from traceh.session.protocol import require_session_protocol
 from traceh.workflow.models import agent_identity, node_kind
 from traceh.workflow.projection import WorkflowStreamReader
 
 _SESSION_STREAM_PREFIX = "session:"
-_SESSION_CREATED_KEYS = frozenset({"session_id", "workspace", "metadata"})
 _RUNTIME_ERROR_KEYS = frozenset(
     {"turn_id", "step_id", "error_type", "message", "traceback"}
 )
@@ -470,6 +470,7 @@ def _message_leaf_failure(
     if not events:
         return _SessionLeafFailure()
 
+    require_session_protocol(events, session_id=session_id)
     stream_id = f"{_SESSION_STREAM_PREFIX}{session_id}"
     open_turn_id: str | None = None
     target_turn_id: str | None = None
@@ -492,7 +493,6 @@ def _message_leaf_failure(
         if expected_seq == 1:
             if (
                 event.type != "session/created"
-                or set(data) != _SESSION_CREATED_KEYS
                 or _plain_text(data.get("session_id")) != session_id
                 or type(data.get("workspace")) is not str
                 or type(data.get("metadata")) is not dict

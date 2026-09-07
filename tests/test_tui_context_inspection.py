@@ -412,6 +412,13 @@ async def test_a_frozen_request_keeps_the_product_context_of_its_own_boundary(
     # ... while the frozen request keeps what it actually carried.
     assert request.product_context_messages == 2
     assert request.product_context_utf8_bytes > 0
+    assert request.context_input_messages == 1
+    assert request.conversation_messages == (
+        len(frozen.data["composed_request"]["messages"]) - 1 - request.product_context_messages
+    )
+    assert "Context reference" in "\n".join(
+        row.plain for row in context_detail_lines(snapshot)
+    )
     assert request.source_seq < snapshot.product.snapshot_seq
     await runtime.dispose()
 
@@ -436,7 +443,9 @@ async def test_the_frozen_request_is_read_not_recomputed(tmp_path) -> None:
     assert before.request.dispatch_matches_composed is True
     assert before.request.provider == "scripted"
     assert before.request.model == "demo"
-    assert before.request.conversation_messages >= 1
+    assert before.request.conversation_messages == 1
+    assert before.request.context_input_messages == 1
+    assert before.request.context_input_utf8_bytes > 0
     assert before.request.product_context_messages == 0
     assert before.request.composed_utf8_bytes > 0
     assert before.request.dispatch_utf8_bytes > 0

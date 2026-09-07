@@ -15,6 +15,8 @@ REQUEST_SNAPSHOT_KEYS = frozenset(
         "step_id",
         "source_seq",
         "composition_revision",
+        "context_input_seq",
+        "context_input_digest",
         "composed_fingerprint",
         "dispatch_fingerprint",
         "composed_request",
@@ -221,7 +223,9 @@ class ModelRequest:
         return cls(
             provider=str(raw["provider"]),
             model=str(raw["model"]),
-            system_prompt=(str(raw["system_prompt"]) if raw.get("system_prompt") else None),
+            system_prompt=(
+                str(raw["system_prompt"]) if raw.get("system_prompt") is not None else None
+            ),
             messages=tuple(
                 ModelMessage.from_dict(item) for item in raw_messages if isinstance(item, dict)
             ),

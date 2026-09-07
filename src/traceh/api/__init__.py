@@ -11,6 +11,7 @@ from traceh.api.artifacts import (
 )
 from traceh.api.budgets import BudgetAmounts, BudgetLimits
 from traceh.api.events import EventEnvelope, PendingEvent
+from traceh.api.history import HistoryCursor, HistoryPageRequest, HistoryReadPolicy
 from traceh.api.llm import (
     LlmProvider,
     ModelAttemptIdentity,
@@ -108,6 +109,9 @@ __all__ = [
     "ToolOutput",
     "ToolSchema",
     "TurnInput",
+    "HistoryCursor",
+    "HistoryPageRequest",
+    "HistoryReadPolicy",
     "Usage",
     "UsageQuality",
     "dispatch_request_matches_composed",

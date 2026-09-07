@@ -1,10 +1,10 @@
 # TraceHarness v1.0 总路线：记忆、隔离、互操作与受控并发
 
-> 状态：讨论结论的执行基线；不是任何阶段的开工授权
+> 状态：v0.8.0 已发布，v0.9-F0-A/B/C 本轮授权实现及限定门禁已收口；F1 未开工，未执行 v0.9 发布级全量或 L2
 >
-> 编制日期：2026-09-05
+> 编制日期：2026-09-05；最近修订：2026-09-07（仅文档改动，19 项现有接缝定向通过；未运行全量／L2／构建／真实服务）
 >
-> 适用范围：v0.8 收口、v0.9、v0.10、v0.11、v0.12 与 v1.0 RC
+> 适用范围：v0.8 已发布基线、v0.9、v0.10、v0.11、v0.12 与 v1.0 RC
 >
 > 事实源优先级：当前源码/测试/协议 > 两份项目上下文 > 本计划 > 旧 Roadmap 与历史讨论
 
@@ -55,7 +55,8 @@ v1.0 的目标不是成为通用云平台，而是完成一个严肃的本地单
 
 ## 2. 当前真实基线
 
-截至本文编制时，源码已经具备：
+当前源码版本和发布 tag 均为 v0.8.0；M3/M4 已收口。发布证据见
+[`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节，本轮不重新执行其中的全量或 L2。源码已经具备：
 
 - append-only EventStore、Session/Turn/Request snapshot 与重放验证；
 - Agent、Composition、Plugin Generation/Lease、Tool、Budget 的独立 owner；
@@ -64,7 +65,11 @@ v1.0 的目标不是成为通用云平台，而是完成一个严肃的本地单
 - 子 Agent 独立 identity、Session 和可选独立 Git worktree；
 - M2 ProductTask 任务记忆；
 - M3 确定性 Surface compaction 及原始事件保留；
-- M4 上下文观察投影的当前候选实现。
+- M4 已发布的只读上下文观察投影。
+- F0-B 已验收的 Context→Composition→Request 主线：同 Lease、原 Session owner，明确空策略或
+  当前 Session M3 目录／摘要，默认也有 request-only user wrapper；59 项新主线包含在其最终 36 文件
+  `1076 passed, 3 skipped` 中。F0-C 已在此基础上接入有界原文披露，最终 38 文件 `1100 passed, 4 skipped`，
+  不表示 v0.9 已发布。
 
 同时必须诚实承认当前还没有：
 
@@ -93,6 +98,11 @@ Verification、取消收敛和 Promotion 等完整合同。
 - Workspace Memory、MCP 调用、Sandbox receipt、Workflow plan 与 join/merge 结果都不能另建可变事实库；
 - SQLite FTS、embedding、缓存和 UI snapshot 只能是可重建派生物；
 - `runtime.state`、共享 mutable messages、模型自述和插件私有状态不能升级成系统事实。
+
+“单一事实源”落实到每类事实的唯一写入 owner 和可验证引用：生命周期／授权在对应事件流，Patch
+bytes 在与事件 digest 绑定的 CAS，代码版本和实际 ref 在 Git。Request Snapshot 描述当时输入并与来源
+事件交叉校验；它不替代今天的任务状态。运行中的锁、Task、Lease 只负责执行协调，不独立裁定持久
+业务结果。跨领域读写还必须验证底层日志、资源身份与 owner，而非只看是否使用同一种数据库。
 
 ### 3.2 权限与建议分离
 
@@ -133,7 +143,7 @@ Verification、取消收敛和 Promotion 等完整合同。
 
 ```mermaid
 flowchart LR
-    V08[v0.8 收口<br/>M3 + M4 联合门禁] --> V09[v0.9<br/>Context / Skill / Memory / History Evidence]
+    V08[v0.8.0 已发布<br/>M3 + M4 已收口] --> V09[v0.9<br/>Context / Skill / Memory / History Evidence]
     V09 --> V10[v0.10<br/>Sandbox 与隔离执行]
     V10 --> V11[v0.11<br/>官方 MCP Client Plugin]
     V11 --> V12[v0.12<br/>受控动态并发 Workflow]
@@ -142,7 +152,7 @@ flowchart LR
 
 | 版本 | 主题 | 必须建立的主能力 | 明确不做 |
 |---|---|---|---|
-| v0.8 收口 | 当前候选闭环 | M3+M4 联合验证、独立审查、发布 | 新增 v0.9+ 功能 |
+| v0.8 基线 | 已发布 v0.8.0 | M3+M4 与发布证据已完成，供后续核对 | 因计划修订重复全量／L2 |
 | v0.9 | 长期上下文与记忆 | Context Composer、typed Skill、Workspace Memory、History Evidence | Sandbox、MCP、动态 Workflow |
 | v0.10 | 隔离执行 | 真实 Sandbox、资源/网络/文件边界、收敛证据 | MCP 产品能力、自由 DAG |
 | v0.11 | 标准互操作 | 独立官方 MCP Client Plugin，纳入既有 Tool/Skill/资源边界 | MCP Server、多租户市场 |
@@ -153,48 +163,65 @@ flowchart LR
 需要调用稳定的内部 Tool 与外部 MCP 能力，因此放在 MCP Client 之后。若真实实现证明某个依赖不成立，必须先
 形成新 ADR 和重新批准版本边界，不能在实现中暗改顺序。
 
-## 5. v0.8 收口：当前阶段的唯一工作
+## 5. v0.8 已发布基线与下一阶段入口
 
-### 5.1 范围
+### 5.1 已完成的前置
 
-当前工作树中的 M3 与 M4 必须作为一个集成候选收口：
+v0.8.0 已发布，M3/M4、SQLite、同请求 Provider retry、共用 Line/TUI Driver 和 Product 任务上下文均在
+当前主线。代码／测试基线与发布验证记录分别由源码、两份上下文和验证文档维护，不把旧的候选收口清单
+继续当作下一轮任务，也不因重新阅读计划重跑全量、L2 或真实模型网格。
 
-1. 独立审查验证 Claude 报告中的实现和测试证据；
-2. 清零符合仓库 Finding 准入规则的 P0/P1；
-3. 使用安装了 TUI extra 的指定解释器运行最终无筛选全量，避免模块级 `importorskip` 静默跳过 TUI；
-4. 完成 clean-input Wheel/sdist/source ZIP、core/`[tui]` 离线安装与计划中授权的真实 Provider 验收；
-5. 同步正式/通俗上下文、验证记录、README 与 CHANGELOG；
-6. 在用户授权后形成单一集成提交、tag 和 release。
+### 5.2 当前授权与下一步
 
-### 5.2 停止条件
+2026-09-07 只读调研与计划修订后，项目所有者授权实施 F0-A ADR／设计合同冻结，并限定只运行相关
+测试。设计已形成 [ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)、
+[ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md) 与
+[F0 设计合同](TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md)。F0-A 当时仅修改文档，19 项现有接缝定向
+测试通过。随后获授权的 F0-B 已完成最小请求主线及最终限定门禁：36 文件 `1079 collected / 1076 passed /
+3 skipped in 20.22s`，包含新 Context 24、Request protocol 24、Runtime 11 项。三项 skip 是 Windows
+两个 symlink 权限、一个 NUL 路径边界。测试在隔离空临时 cwd 运行，未加载真实 `.env`；编译、30 个
+改动 Python 文件 Ruff 和有界独立审查通过。没有全量、L2、构建、联网、真实模型或提交／推送／发布。
 
-- M3/M4 的 projector、协议、UI 只读边界和 request snapshot 关系有可重复证据；
-- P0/P1 清零；
-- 最终全量从头到尾绿色，不能用 `--lf` 或缓存冒充；
-- 未授权前不 commit、push、tag 或 release；
-- v0.8 未发布前，不开始 v0.9 实现。
+设计明确长期项目 scope、Memory 事实槽、Lease 与 catalog 身份、Context 合法失败前缀、History 请求
+失效、FTS 存储和评测合同。F0-C 当前 Session History 接缝已完成最终 38 文件门禁：1104 collected、
+`1100 passed, 4 skipped in 31.98s`，含新 History 81 项（37/12/16/16，不再相加）。四项 skip 为 Windows
+SQLite 两个文件符号链接、Tools 一个目录符号链接权限及 CLI NUL 路径边界。编译、40 Python Ruff、
+19 生产文件反硬编码扫描和两分区独立审查通过，七组反向保护均按预期失败后恢复，未运行全量／L2。
+F0-A/B/C 本轮授权实现收口；F1–F5 未开工，三个 Release Stop 保留原顺序，不能声称发布通过。
 
 ## 6. v0.9：统一上下文与项目级记忆
 
-v0.9 的字段、事件、owner、阶段与 release stop 以
-[`TRACEHARNESS_V0.9_STAGE_PLAN.md`](TRACEHARNESS_V0.9_STAGE_PLAN.md) 为准。总路线只冻结以下产品边界。
+v0.9 的阶段、owner 与 release stop 以
+[`TRACEHARNESS_V0.9_STAGE_PLAN.md`](TRACEHARNESS_V0.9_STAGE_PLAN.md) 为准；详细字段与跨事件规则以
+[F0 设计合同](TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md) 为唯一规范。总路线只冻结以下产品边界。
 
 ### 6.1 统一 Context Composer
 
-建立唯一 request-scoped Context Input 主线，按明确优先级组装：
+F0-B 已实现下面主线的最小子集。F0-C 已在同一主线上接入原文分页与请求授权，唯一切换到
+Session `context_protocol=2`、`f0-c-context-policy-v1` 和 `context-json-v2`；拒绝 F0-B 的协议，不迁移。
+policy 原七项加 nullable history，HistoryReadPolicy 七项上限全部显式给出；默认空策略，启用原文
+必须先启用 directory/summary，不提供 raw-only 模式。Context outer format 1、Request 十字段、
+Composition 空 catalog/digest 与 SQLite schema 1 保留。完整检索、排名、Skill/Memory 仍属后续阶段；
+本轮只读 reader 和授权接线复用原 Session/Runtime/Tool owner，已通过限定验证，F1 未开工。
 
-```text
-宿主 system/policy
-  > 当前 Workspace active Memory
-  > 当前 ProductTask / Workflow / Promotion 权威事实
-  > 当前用户消息与最近原文 Surface
-  > M3 非权威摘要
-  > 按需展开的历史/执行证据
-  > Skill 关联资源
-```
+建立唯一 request-scoped Context Input 主线，与既有 Surface 和 Product 事实投影共同构建请求；分别
+说明事实权威、控制权限和纳入预算，不把它们揉成一张“谁的文字优先”排名：
 
-“优先级更高”表示冲突解释权更高，不表示所有内容都必须塞入 Prompt。最终注入的 exact bytes、来源、版本、
-freshness、预算和排除原因进入可重建的 Context Input snapshot。
+| 内容／动作 | 权威与边界 |
+|---|---|
+| 当前 Product／Workflow／Promotion／Workspace 状态 | 对应领域 owner fresh 读取原流；长期 Memory 不能覆盖 |
+| Workspace active Memory | 只证明宿主确认的长期项目事实；不能改写当前用户请求、冻结 requirement 或执行结论 |
+| Skill、M3 摘要、History 与外部参考 | 保持不可信参考和观察时效；不能授予控制权限 |
+| START、Memory 激活／替代／撤销、Tool grant、Approval、Promotion | 由各宿主控制面授权；用户消息或检索内容不直接改写已冻结控制事实 |
+
+纳入／预算顺序严格沿用 v0.9 §4.2：受保护的 system/tool policy、requirement、验证／批准／预算合同 →
+当前用户消息与 fresh execution context → 本 Step 显式请求的 History → Skill → Memory。这是预算规则，
+不是历史原文的事实解释权。动态参考放入请求专用 user-role block，不写进 Composition system prompt；
+三类输入各自配额，完整 item/section 原子纳入。实际 bytes、来源、版本、时效、计量和排除原因写入 snapshot。
+
+运行期 Lease 负责资源身份；持久请求绑定 composition revision、plugin provenance 和 catalog 内容
+digest，不把进程内 `generation_id` 当持久身份。Context 在 Composition 前冻结；请求构建必须有唯一
+Context，检索失败／取消／预算拒绝可以留下合法不完整前缀。同 Step Provider retry 复用原快照。
 
 ### 6.2 Workspace Memory
 
@@ -203,6 +230,10 @@ freshness、预算和排除原因进入可重建的 Context Input snapshot。
 - 适合长期目标、稳定约束、架构决定、术语、里程碑和已批准路线；
 - 临时进度、模型自评、某次工具输出和未确认推断不进入权威长期记忆；
 - 多个 ProductTask 的完成事实保留在各自记录中，Workspace Memory 只提炼跨任务仍有效的项目事实与阶段关系。
+- 长期项目 scope 由宿主持久绑定 requester、后续 Session 和派生 worktree；当前临时 `workspace_id`、
+  目录路径或同名 source 不能单独证明归属。具体 binding owner／schema 在 F0 冻结，F3 接入；
+- 每个宿主确认的事实槽只有一个 active；替代／撤销绑定 exact predecessor/digest/head，通过 CAS
+  追加。跨事实槽的自然语言矛盾交宿主审核，不要求检索器自动证明所有文字互不冲突。
 
 ### 6.3 Skill 与检索
 
@@ -210,20 +241,31 @@ freshness、预算和排除原因进入可重建的 Context Input snapshot。
 - exact + SQLite FTS 是核心离线路径；本地 embedding/reranker 只能显式启用且仍为可重建派生索引；
 - 检索遵守 Workspace、Generation、authority、freshness 与 Context Budget 两道宿主过滤；
 - Skill 选择不等于启用 Plugin，更不等于授予 Tool。
+- 当前 SQLite 只接受固定的两张事实表；FTS 的 schema 切换、派生对象、重建、关闭与 backup/restore
+  必须先按 v0.9 §5.4 冻结，不允许插件自己加表或关闭 Store。
 
 ### 6.4 M3 History Evidence
 
 - 原始事件从未因 compaction 删除，因此可以按 format-2 provenance 精确重建被压缩历史；
-- 模型默认只看到摘要和可用证据索引，需要时请求最小原始 block；
+- 默认明确选空；宿主显式启用后给目录／摘要及首 cursor，后续只由获授权页披露 next_cursor，不给全页目录；
+- `session/history.py` 复用 M3 图作纯读取，`api/history.py` 提供 typed DTO，`session/history_requests.py`
+  统一授权。Tool `request_history_page` 仅返回 receipt；typed 用户请求经 TurnInput/ChatDriver，
+  由原 SessionService 在首 Step user/message 后 owned/CAS 写入，不用 source/text 自报权限；
+- section/chunk 首版同按闭合 Turn 分页，超大 Turn 整页拒绝且 slot 稳定，无 accepted receipt；已披露
+  后被更宽 replacement 隐藏的当前 Session 旧 block 仍可精确请求，原文页预算优先于自动参考；
 - 展开内容仅进入当前 request/Step，不回写普通 Surface，不自动升级成 Memory；
-- 每块标明 source range、digest、bytes、freshness，并明确“历史工具结果不证明当前状态”；
+- 每块标明 source range、digest、bytes；F0-C workspace_observation=null、freshness=unknown，拒绝
+  matched/stale。现有 base_revision 不是 ToolResult 执行时的版本绑定，真实三态观察留给 F3/F4 owner 接入；
 - 对当前问题真正需要最新状态时，应重新读取/验证，而不是盲信旧工具结果。
+- Tool context request 只供同 Turn 的直接后继 Step；accepted 后若达到步数上限、失败、取消或恢复，
+  未消费请求即失效。普通 Tool result 只保留有界 receipt，不能让原文或 pending 状态跨 Turn 常驻。
 
 ### 6.5 v0.9 完成体验
 
-新 Session 开始后，模型能准确知道项目长期目标、仍有效约束、当前阶段和相关历史任务；面对细节问题时，
-先发现“存在证据”，再展开必要的旧对话或执行记录。用户可以检查模型本次真正收到的 Context Input，而不是
-根据模型自述猜测。
+在宿主已建立同项目 scope binding、并批准相关 Memory 的前提下，新 Session 能检索长期目标、仍有效
+约束、当前获批阶段与里程碑来源。当前执行状态仍从对应领域读取；缺失／未命中明确可见。历史原文只
+允许当前 Session 的已披露 block，跨 Session 只共享批准的长期事实，不承诺搜索旧 Session 原始聊天。
+用户可以检查本次实际 Context Input。此用户旅程进入冻结评测，不能只凭模型自述认定“不会失忆”。
 
 ## 7. v0.10：Sandbox 与隔离执行
 
@@ -271,12 +313,18 @@ receipt 写入同一 EventStore。OS 临时对象和进程句柄属于执行 own
 - output flood、fork bomb、路径逃逸、网络逃逸、secret 泄漏和 unknown commit 有确定性反例；
 - `READ_ONLY` 继续表示访问政策，不被重命名成 Sandbox。
 
-### 7.5 S3：受隔离外部进程与 Plugin 路径
+### 7.5 S3：外部进程接入与隔离插件分别验收
 
-- trusted in-process Plugin 仍是明确支持模式；
-- 需要隔离的 Plugin/local server 使用独立进程与 Sandbox，不把不可信代码加载进宿主；
-- Plugin Generation/Lease/Drain 继续拥有生命周期；Sandbox 只拥有该次执行资源；
-- activation rollback、drain、host shutdown 与进程树收敛必须互相对账。
+**S3-A：trusted adapter 管理 Sandbox 外部进程。** trusted in-process Plugin 仍是支持模式；需要隔离的
+外部程序／本地 server 通过核心 Sandbox 执行。Plugin Generation/Lease/Drain 管 adapter 和连接生命周期，
+Sandbox 管执行资源；activation rollback、drain、shutdown 与进程树收敛共同验收。该子阶段提供后续
+本地 MCP server 的执行基础，不据此声称任意 Plugin 已可跨进程运行。
+
+**S3-B：通用 isolated Plugin 协议，单列设计与实现停止点。** 当前 Plugin SDK 注册 Python 对象、回调
+和 Task，Manager 在宿主加载 Entry Point，且明确拒绝 isolated。若要承诺隔离插件，必须先冻结隔离前的
+发现／装载边界、支持的贡献子集、序列化调用、资源归属、进程崩溃与未知结果对账，再实施和验收。
+不能只给现有 setup 加一个 Sandbox executor。S0 明确 S3-B 是否纳入同版；若延期，发布文案和支持矩阵
+只承诺 S3-A，isolated 继续明确拒绝。不得留下半套协议或静默降级。
 
 ### 7.6 S4：观察、验收与发布停止点
 
@@ -367,16 +415,16 @@ MCP Server 模式，也不承诺第三方插件市场。
 
 ### 9.4 W1：先选择受控模板
 
-第一步只允许模型在宿主批准模板中选择并填写参数，例如：
+第一步只允许模型在宿主批准模板中选择并填写参数。以下为候选模板示例，不是隐藏默认：
 
 ```text
 single coder
 parallel inspect → one coder
 module map → join findings → one coder
-parallel independent coders → deterministic integration
 ```
 
-这一步先验证 routing、参数绑定、包络内自由和权限扩张拒绝，不立即开放任意 DAG。
+W1 只开放并行只读分析后交给一个 coder，先验证 routing、参数绑定和包络内权限。多 coder 模板必须等
+W3 的集成产物、合并、验证和 post-code Review 接通后再开放；选择预设模板也不能跳过该前置。
 
 ### 9.5 W2：受限 DAG 与真正并发
 
@@ -386,6 +434,9 @@ parallel independent coders → deterministic integration
 - 同一 Workspace 的写者默认隔离到独立 worktree 或只读分析环境；
 - sibling cancel、fail-fast/continue、parent shutdown 与 Budget exhaustion 必须确定性收敛；
 - 并发测试使用 Gate/Event/锁，不使用任意 sleep 猜时序。
+
+本阶段先验证受限 DAG 和并行只读／单写者主线；多个 coder 同时写各自 worktree 的产品放行依赖 W3。
+当前 Join 只是 durable 前驱汇合屏障，不会生成集成 Artifact，不能把 scheduler 能并发当作合并已完成。
 
 ### 9.6 W3：Artifact、Join 与 Merge
 
@@ -397,6 +448,11 @@ parallel independent coders → deterministic integration
 - 合并后必须在集成 Workspace 上重新 Verification；
 - 增加独立 post-code Agent Review，再进入人工 Approval 和 Git CAS Promotion；
 - 任一 child 成功不等于 ProductTask 成功，最终 terminal 由 Product owner 根据完整安全尾部写入。
+
+post-code Review 必须绑定精确集成 Artifact／revision，结果由后续安全尾部消费；失败、缺失或身份漂移
+不能进入最终批准。当前固定拓扑的 reviewer 在 coder 前，不能简单把它移到后面就声称接通了代码审查。
+W3 通过后才开放“parallel independent coders → deterministic integration”模板；冲突处理的唯一 owner
+和审查结果的消费方都必须写进已冻结 plan／执行合同。
 
 ### 9.7 W4：有限 replanning、观察与发布停止点
 
@@ -437,9 +493,10 @@ v1.0 RC 不再增加功能，只做整合、清理、兼容边界与发布证据
 
 ### 11.1 长项目不失忆
 
-用户在多个 Session、多个 ProductTask 后询问“我们为什么选择这个架构、现在在哪个阶段”。模型从 active
-Workspace Memory 得到最小权威答案，能列出相关任务/证据索引；需要细节时只展开对应历史 block，不把整个旧
-聊天塞回 Context。
+用户在已绑定同项目的多个 Session、多个 ProductTask 后询问“我们为什么选择这个架构、现在在哪个阶段”。
+模型从 approved active Workspace Memory 读取长期决定与获批路线，并区分当前执行状态的 fresh 证据。
+Memory 的来源可追溯；当前 Session 可按 exact block 展开历史，其他 Session 的原始聊天不因 Memory
+引用自动变为可读。缺失或未命中明确报告，不以生成一段自信回答作为通过证据。
 
 ### 11.2 历史证据不冒充现状
 
@@ -470,12 +527,26 @@ artifacts，确定性合并，集成测试与 post-code Review 通过后才出�
 2. **分批实现**：每批只改一个 owner 或一条端到端主线；
 3. **定向与相邻回归**：正向、关键反例、失败/取消、反向验证；
 4. **Release Stop**：独立审查，只接受符合 `AGENTS.md` 证据门槛的 Finding；
-5. **集成检查点**：跨共享事实源/Runtime/外部副作用后运行一次无筛选全量；
+5. **集成检查点**：跨共享事实源/Runtime/外部副作用的批次按 owner 合并验证，在预先明确且获授权的检查点运行无筛选全量；
 6. **发布检查点**：打包、离线安装、支持平台/Provider/MCP 的授权真实验证；
 7. **提交与发布**：只有用户明确授权后执行。
 
 日常小批次不重复跑全量。全量只放在计划中的集成或发布点；但一旦最终全量出现确定性失败，修复后重跑到
 绿色是同一检查点的一部分，不能省略。
+
+计划调研／文档修订只做文档 QA，不触发 pytest、collect-only、compileall、L2 或构建。本轮明确禁止测试
+与 L2。后续实现批次先列具体定向测试／相邻 owner，检查是否包含 `slow`、递归构建或联网；不能用整仓
+pytest 代替定向回归。v0.9 三个 Release Stop 不自动触发长门禁，具体矩阵见其 §12.4。
+
+当前无筛选全量会选中真实 L2；检查点必须事先列明包含的长门禁，避免独立 L2 与全量中的 L2 无意重复。
+用户禁止全量／L2 时保留禁止并如实报告未运行，不能借“发布计划已冻结”推导授权，也不能将筛选结果称为
+最终全量。真实 Provider/MCP、包索引、平台隔离实验和发布另按用户授权执行。
+
+检索效果继续复用唯一 `traceh eval`：F0 定义 Step／角色／attempt 计样、K、tier relevance 和资源计量，
+F5 在 candidate 结果产生前冻结语料与通过阈值。先建 exact+FTS baseline，覆盖中文、英文、混合代码标识
+及跨 Session 项目问答；零 scope 泄漏是硬门槛，optional lane 必须证明预定收益且不越过退化／成本边界。
+seeding 在同一个 attempt owner 内先建 Session／项目 binding，再用生产服务装载语料，最后构造 Product
+host 和发起请求；不引入旁路 Runner。具体执行合同以 v0.9 §12.2 为准。
 
 每批报告必须包含：
 
@@ -510,9 +581,14 @@ artifacts，确定性合并，集成测试与 post-code Review 通过后才出�
 
 | 决策 | 决定阶段 | 当前约束 |
 |---|---|---|
+| 项目 scope binding、Memory 事实槽及跨 Session／child 关联 | v0.9 F0-A，F3 实现 | 宿主 durable owner；不以路径／临时 worktree id 猜归属；exact predecessor CAS |
+| Context／catalog 持久绑定、失败前缀、History 失效 | v0.9 F0-A，F0-B/C 原型 | 进程内 Generation 编号不持久化；同 Step retry 复用，旧 Turn 披露请求失效 |
+| FTS schema、重建／关闭与旧 Session／数据库拒绝入口 | v0.9 F0-A，所属 owner 实现 | 同一 Store；派生索引可重建，canonical history 不改写；不推迟到 RC 才决定本次切换 |
+| 检索评测单位／计量／阈值规则与具体 frozen corpus | v0.9 F0-A 定规格，F5 冻结数据和数值 | 看 candidate 结果前冻结；exact+FTS 基线；缺少阈值不宣称通过 |
 | Sandbox 支持的 OS/backend | v0.10 S0 | 必须真实隔离、不可静默降级 |
+| S3-B isolated Plugin 是否同版及支持贡献子集 | v0.10 S0／S3-B | 与 S3-A 外部进程验收分开；未实现就继续拒绝 isolated |
 | MCP 协议版本与 transport | v0.11 C0 | 以届时官方规范为准 |
-| 动态 plan schema 与模板集合 | v0.12 W0/W1 | typed、无任意代码、安全尾部不可绕过 |
+| 动态 plan schema、模板集合与集成产物消费 | v0.12 W0/W1/W3 | typed、安全尾部不可绕过；多 coder 模板等待 W3 |
 | 是否在 v0.12 扩展通用冷恢复 | v0.12 W0 | 不得由 UI 文案提前承诺 |
 | pre-1.0 持久数据迁移范围 | v1.0 RC | 逐协议决定迁移或明确拒绝 |
 | v1.0 稳定 API 范围 | v1.0 RC | 小而可验证，不冻结内部实现细节 |

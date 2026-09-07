@@ -85,10 +85,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "ac0b95b902933ed662e89c2387b23db8bc963fa5849607a87227f3516d27a44f"
+        "8edb133431232d371882aec7876df91e711490a3966f7028942304f0e139ab2e"
     ),
     "runtime/agent_runtime.py": (
-        "cc4573ca592133162b09f6992ea3004bdd1206fcfad521cadcf2a48fa8ed1ef7"
+        "0178ab60d681f9b4c50ba98481ce2407ffe1d4d0f1a44993dba541834aa4293d"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
@@ -105,6 +105,16 @@ generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
 and failure-convergence seam. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; neither
 file gains Product state or a Product dependency.
+
+v0.9-F0-C adds typed host History requests through the same Turn and Session
+append owner, plus explicit opt-in registration of a receipt-only PURE_READ
+History Tool. No Product knowledge, raw-history writer or new lifecycle enters
+either protected module.
+
+v0.9-F0-B adds one read-only Context freeze inside the same Composition Lease,
+before its snapshot and outside the same-Step retry loop. AgentRuntime passes
+the explicit ContextInputPolicy; Session remains the only append/dispatch
+owner and Surface retains no Context. No Product dependency is introduced.
 
 M3 changes both pins again, deliberately. ``AgentLoop`` invokes the Session
 compaction owner before a Turn opens and treats compaction failure as non-fatal;

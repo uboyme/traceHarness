@@ -50,6 +50,7 @@ from traceh.product import (
 )
 from traceh.product.errors import ProductProfileError
 from traceh.session.event_store import EventStore, InMemoryEventStore
+from traceh.session.protocol import CONTEXT_PROTOCOL
 
 ORIGIN_SESSION = "session-alpha"
 ORIGIN_TURN = "turn-1"
@@ -206,6 +207,7 @@ async def seed_session(
                         "session_id": session_id,
                         "workspace": "workspace-fixture",
                         "metadata": {},
+                        "context_protocol": CONTEXT_PROTOCOL,
                     },
                 ),
             ),

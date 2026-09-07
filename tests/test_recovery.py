@@ -4,12 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from traceh.api.json_types import fingerprint
-from traceh.api.llm import ModelAttemptIdentity, ModelMessage, ModelRequest
+from traceh.api.llm import ModelAttemptIdentity
+from traceh.kernel.composition import RuntimeComposition
+from traceh.runtime.request_builder import RequestBuilder
+from traceh.session.context_input import ContextInputService
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.recovery import RecoveryService
 from traceh.session.service import SessionService
+from traceh.session.surface import SurfaceProjector
 
 
 async def open_step_with_attempt(
@@ -20,7 +23,6 @@ async def open_step_with_attempt(
     turn_id: str = "t",
     step_id: str = "s",
     correlation_id=None,
-    composition_revision: str | None = None,
 ) -> None:
     """Drive a session up to a started-but-unfinished model attempt."""
 
@@ -35,7 +37,6 @@ async def open_step_with_attempt(
         turn_id=turn_id,
         step_id=step_id,
         correlation_id=correlation_id,
-        composition_revision=composition_revision,
     )
 
 
@@ -47,20 +48,13 @@ async def start_attempt(
     turn_id: str = "t",
     step_id: str = "s",
     correlation_id=None,
-    composition_revision: str | None = None,
 ) -> None:
-    model_request = ModelRequest(
-        provider="scripted",
-        model="scripted-model",
-        messages=(ModelMessage(role="user", content="work"),),
-        metadata={
-            "session_id": session_id,
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "composition_revision": composition_revision or "revision",
-        },
+    built, context_event, composition = await freeze_request(
+        sessions,
+        session_id,
+        turn_id=turn_id,
+        step_id=step_id,
     )
-    events = await sessions.read_session(session_id)
     await sessions.start_model_attempt(
         session_id,
         attempt=ModelAttemptIdentity(
@@ -70,15 +64,50 @@ async def start_attempt(
             attempt_id=attempt_id,
             ordinal=1,
         ),
-        source_seq=events[-1].seq,
-        composition_revision=composition_revision or "revision",
-        composed_request=model_request,
-        composed_fingerprint=fingerprint(model_request.to_dict()),
-        dispatch_request=model_request,
-        dispatch_fingerprint=fingerprint(model_request.to_dict()),
+        source_seq=built.source_seq,
+        composition_revision=composition.revision,
+        composed_request=built.request,
+        composed_fingerprint=built.fingerprint,
+        dispatch_request=built.request,
+        dispatch_fingerprint=built.fingerprint,
         reservation_id=None,
         correlation_id=correlation_id,
     )
+
+
+async def freeze_request(sessions, session_id, *, turn_id, step_id):
+    """Freeze current production Context/Composition before constructing a request."""
+    composition = RuntimeComposition(
+        provider="scripted",
+        model="scripted-model",
+        system_prompt="Follow host policy.",
+        tools=(),
+    ).snapshot()
+    context = await ContextInputService(sessions.read_session).freeze(
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        composition=composition,
+    )
+    context_event = await sessions.append_context_input(
+        session_id,
+        context.to_dict(),
+        expected_seq=context.to_dict()["observed_session_seq"],
+    )
+    composition_event = await sessions.append_session(
+        session_id,
+        "composition/snapshot",
+        composition.to_dict(),
+        composition_revision=composition.revision,
+    )
+    built = await RequestBuilder(sessions, SurfaceProjector()).build(
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        composition=composition,
+        through_seq=composition_event.seq,
+    )
+    return built, context_event, composition
 
 
 def types_of(events) -> list[str]:
@@ -186,7 +215,6 @@ async def test_recovery_closes_attempt_that_crashed_right_after_start(tmp_path) 
         sessions,
         session_id,
         correlation_id=correlation_id,
-        composition_revision="rev-1",
     )
     start = (await sessions.read_session(session_id))[-1]
 
@@ -213,7 +241,7 @@ async def test_recovery_closes_attempt_that_crashed_right_after_start(tmp_path) 
     # Audit trail back to the attempt that was recovered.
     assert attempt_end.causation_id == start.event_id
     assert attempt_end.correlation_id == correlation_id
-    assert attempt_end.composition_revision == "rev-1"
+    assert attempt_end.composition_revision == start.composition_revision
 
     ordered = types_of(events)
     assert ordered.index("model/attempt-end") < ordered.index("step/end")
@@ -332,9 +360,7 @@ async def test_recovery_closes_attempt_left_open_by_an_older_version(tmp_path) -
     await sessions.append_session(
         session_id, "step/end", {"turn_id": "t", "step_id": "s", "reason": "interrupted"}
     )
-    await sessions.append_session(
-        session_id, "turn/end", {"turn_id": "t", "reason": "interrupted"}
-    )
+    await sessions.append_session(session_id, "turn/end", {"turn_id": "t", "reason": "interrupted"})
     before = await sessions.read_session(session_id)
     assert any(item.name == "attempt-has-end" for item in CoreInvariantChecker().check(before))
 
@@ -510,19 +536,15 @@ async def test_recovery_closes_multiple_attempts_in_start_order(tmp_path) -> Non
         # more than one unclosed Attempt.  The dispatch-permit API must not be
         # used to manufacture that illegal history, so inject the second
         # canonical pair at the EventStore-facing test seam.
-        model_request = ModelRequest(
-            provider="scripted",
-            model="scripted-model",
-            messages=(ModelMessage(role="user", content="work"),),
-            metadata={
-                "session_id": session_id,
-                "turn_id": "t",
-                "step_id": step_id,
-                "composition_revision": "revision",
-            },
+        built, context_event, composition = await freeze_request(
+            sessions,
+            session_id,
+            turn_id="t",
+            step_id=step_id,
         )
-        request_fingerprint = fingerprint(model_request.to_dict())
-        source_seq = (await sessions.read_session(session_id))[-1].seq
+        model_request = built.request
+        request_fingerprint = built.fingerprint
+        source_seq = built.source_seq
         snapshot = await sessions.append_session(
             session_id,
             "request/snapshot",
@@ -530,13 +552,15 @@ async def test_recovery_closes_multiple_attempts_in_start_order(tmp_path) -> Non
                 "turn_id": "t",
                 "step_id": step_id,
                 "source_seq": source_seq,
-                "composition_revision": "revision",
+                "composition_revision": composition.revision,
+                "context_input_seq": context_event.seq,
+                "context_input_digest": context_event.data["context_digest"],
                 "composed_fingerprint": request_fingerprint,
                 "dispatch_fingerprint": request_fingerprint,
                 "composed_request": model_request.to_dict(),
                 "dispatch_request": model_request.to_dict(),
             },
-            composition_revision="revision",
+            composition_revision=composition.revision,
         )
         await sessions.append_session(
             session_id,
@@ -555,7 +579,7 @@ async def test_recovery_closes_multiple_attempts_in_start_order(tmp_path) -> Non
                 "retry_failure_code": None,
                 "retry_failure_category": None,
             },
-            composition_revision="revision",
+            composition_revision=composition.revision,
         )
 
     report = await RecoveryService(sessions).recover(session_id)

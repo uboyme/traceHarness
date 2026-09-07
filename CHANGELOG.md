@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### v0.9 F0: frozen Context requests and bounded History disclosure
+
+- Added one Step-scoped Context receipt before the existing Composition and
+  request snapshots. Request reconstruction verifies its exact sources, byte
+  budget and renderer output; same-Step model retries reuse the frozen request.
+- Added opt-in, current-Session History pages from validated format-2 compaction
+  provenance. Pages preserve complete Turns and Tool pairs. The standard
+  `request_history_page` Tool returns only a receipt for the immediate next Step;
+  typed host requests use `TurnInput.history_requests` and the existing Session
+  append owner. Raw pages never become persistent Surface conversation.
+- **Breaking, pre-1.0:** the current Session marker is `context_protocol=2`,
+  with `f0-c-context-policy-v1` and `context-json-v2`. Older Sessions and the
+  interim F0-B protocol are rejected without migration or rewriting; use a new
+  data directory. SQLite and EventEnvelope schema 1 and M3 format 2 are unchanged.
+- Historical workspace freshness remains `unknown` until a later stage supplies
+  verifiable execution-time revision evidence. Skill, Memory and retrieval UI
+  remain outside this implementation.
+
 ## 0.8.0 - 2026-09-05
 
 ### M4: Context transparency in the optional Textual TUI

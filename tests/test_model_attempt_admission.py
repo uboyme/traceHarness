@@ -29,14 +29,17 @@ from traceh.budgets import (
     BudgetExhaustedError,
     BudgetLedgerService,
 )
+from traceh.kernel.composition import RuntimeComposition
 from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.llm.runtime import LlmAdmission, LlmAdmissionBindingError, LlmRuntime
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.continuation import DefaultContinuationRuntime
-from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.runtime.request_builder import BuiltRequest, RequestBuilder, verify_request_snapshots
+from traceh.session.context_input import ContextInputService
 from traceh.session.event_store import Durability, InMemoryEventStore
 from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.service import ModelAttemptConflictError, SessionService
+from traceh.session.surface import SurfaceProjector
 from traceh.supervision import AgentRuntimeExecution
 
 pytestmark = pytest.mark.asyncio
@@ -102,18 +105,34 @@ async def budget_context(
     return sessions, budgets
 
 
-def model_request(*, max_output_tokens: int = 5) -> ModelRequest:
-    return ModelRequest(
+async def model_request(
+    sessions: SessionService, *, max_output_tokens: int = 5
+) -> BuiltRequest:
+    """Use the production Context/Composition/Request seam for direct permits."""
+    await sessions.append_session(
+        "session-root", "user/message", {"turn_id": "turn-root", "content": "work"}
+    )
+    composition = RuntimeComposition(
         provider="scripted",
         model="model",
-        messages=(ModelMessage(role="user", content="work"),),
+        system_prompt="",
+        tools=(),
         max_output_tokens=max_output_tokens,
-        metadata={
-            "session_id": "session-root",
-            "turn_id": "turn-root",
-            "step_id": "step-root",
-            "composition_revision": "revision",
-        },
+    ).snapshot()
+    context = await ContextInputService(sessions.read_session).freeze(
+        session_id="session-root", turn_id="turn-root", step_id="step-root",
+        composition=composition,
+    )
+    await sessions.append_context_input(
+        "session-root", context.to_dict(), expected_seq=context.to_dict()["observed_session_seq"]
+    )
+    source = await sessions.append_session(
+        "session-root", "composition/snapshot", composition.to_dict(),
+        composition_revision=composition.revision,
+    )
+    return await RequestBuilder(sessions, SurfaceProjector()).build(
+        session_id="session-root", turn_id="turn-root", step_id="step-root",
+        composition=composition, through_seq=source.seq,
     )
 
 
@@ -436,7 +455,8 @@ async def test_session_cas_is_the_only_dispatch_permit_for_competing_owners(
         session_id="session-root",
         token_counter=FixedTokenCounter(5),
     )
-    request = model_request()
+    built = await model_request(sessions)
+    request = built.request
     first = await llm.admit(provider, request, attempt=attempt())
     second = await llm.admit(provider, request, attempt=attempt())
     assert first.reservation_id != second.reservation_id
@@ -451,8 +471,8 @@ async def test_session_cas_is_the_only_dispatch_permit_for_competing_owners(
             _, start = await owner_sessions.start_model_attempt(
                 "session-root",
                 attempt=admission.attempt,
-                source_seq=3,
-                composition_revision="revision",
+                source_seq=built.source_seq,
+                composition_revision=request.metadata["composition_revision"],
                 composed_request=request,
                 composed_fingerprint=fingerprint(request.to_dict()),
                 dispatch_request=admission.request,
@@ -533,7 +553,8 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
         session_id="session-root",
         token_counter=FixedTokenCounter(2),
     )
-    request = model_request()
+    built = await model_request(sessions)
+    request = built.request
     starts = []
     admissions = []
     for ordinal in (1, 2):
@@ -545,8 +566,8 @@ async def test_later_ordinal_reuses_the_exact_snapshot_with_a_new_reservation(
         _, start = await sessions.start_model_attempt(
             "session-root",
             attempt=admission.attempt,
-            source_seq=3,
-            composition_revision="revision",
+            source_seq=built.source_seq,
+            composition_revision=request.metadata["composition_revision"],
             composed_request=request,
             composed_fingerprint=fingerprint(request.to_dict()),
             dispatch_request=admission.request,
@@ -650,7 +671,8 @@ async def test_cancel_before_attempt_commit_releases_the_pending_admission(
         session_id="session-root",
         token_counter=FixedTokenCounter(2),
     )
-    request = model_request()
+    built = await model_request(sessions)
+    request = built.request
     admission = await llm.admit(provider, request, attempt=attempt())
 
     async def claim() -> None:
@@ -658,8 +680,8 @@ async def test_cancel_before_attempt_commit_releases_the_pending_admission(
             await sessions.start_model_attempt(
                 "session-root",
                 attempt=admission.attempt,
-                source_seq=3,
-                composition_revision="revision",
+                source_seq=built.source_seq,
+                composition_revision=request.metadata["composition_revision"],
                 composed_request=request,
                 composed_fingerprint=fingerprint(request.to_dict()),
                 dispatch_request=admission.request,
@@ -671,7 +693,7 @@ async def test_cancel_before_attempt_commit_releases_the_pending_admission(
             raise
 
     worker = asyncio.create_task(claim())
-    await store.entered.wait()
+    await asyncio.wait_for(store.entered.wait(), timeout=5)
     worker.cancel()
     with pytest.raises(asyncio.CancelledError):
         await worker
@@ -761,14 +783,15 @@ async def test_replay_rejects_tampered_attempt_and_dispatch_bindings(
         "step/start",
         {"turn_id": "turn-root", "step_id": "step-root"},
     )
-    request = model_request()
+    built = await model_request(sessions)
+    request = built.request
     identity = attempt()
     reservation_id = model_attempt_reservation_id(identity)
     await sessions.start_model_attempt(
         "session-root",
         attempt=identity,
-        source_seq=3,
-        composition_revision="revision",
+        source_seq=built.source_seq,
+        composition_revision=request.metadata["composition_revision"],
         composed_request=request,
         composed_fingerprint=fingerprint(request.to_dict()),
         dispatch_request=request,
@@ -847,13 +870,14 @@ async def test_budget_reconciliation_rejects_a_tampered_attempt_end_binding(
         session_id="session-root",
         token_counter=FixedTokenCounter(2),
     )
-    request = model_request()
+    built = await model_request(sessions)
+    request = built.request
     admission = await llm.admit(provider, request, attempt=attempt())
     _, start = await sessions.start_model_attempt(
         "session-root",
         attempt=admission.attempt,
-        source_seq=3,
-        composition_revision="revision",
+        source_seq=built.source_seq,
+        composition_revision=request.metadata["composition_revision"],
         composed_request=request,
         composed_fingerprint=fingerprint(request.to_dict()),
         dispatch_request=admission.request,

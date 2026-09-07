@@ -146,11 +146,15 @@ async def test_transient_failure_then_success_reuses_one_frozen_request(
     starts = [event for event in events if event.type == "model/attempt-start"]
     ends = [event for event in events if event.type == "model/attempt-end"]
     snapshots = [event for event in events if event.type == "request/snapshot"]
+    contexts = [event for event in events if event.type == "context/input"]
     assert result.final_text == "done"
     assert provider.calls == 2
     assert provider.requests[0] == provider.requests[1]
     assert len(starts) == len(ends) == 2
     assert len(snapshots) == 1
+    assert len(contexts) == 1
+    assert snapshots[0].data["context_input_seq"] == contexts[0].seq
+    assert snapshots[0].data["context_input_digest"] == contexts[0].data["context_digest"]
     assert [event.data["ordinal"] for event in starts] == [1, 2]
     assert starts[1].data["retry_failure_category"] == "dns"
     assert starts[1].data["retry_wait_milliseconds"] == 250

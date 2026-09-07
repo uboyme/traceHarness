@@ -6,7 +6,10 @@ context transparency close the v0.8 line without moving Product state into
 `AgentLoop` or adding a second fact source. The final candidate passed the public
 real L2 gate and `2758 passed, 7 skipped` full suite; its complete real-Provider
 grid measured all 18 attempts and reports quality failures separately from gate
-completion. The remaining v0.9+ stages describe future work.
+completion. The working tree now implements the v0.9-F0-B minimal Context request
+path and completed its targeted gates. F0-C History disclosure and its final
+targeted gates are also complete; F0-A/B/C's authorized implementation is closed,
+while F1-F5 have not started. This is not a v0.9 release gate.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -508,7 +511,7 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
   regression, clean packaging, offline install, annotated tag and GitHub Release
   are complete.
 
-## v0.8: Reliable local ProductTask host — F0-F4 implemented, F5 in progress
+## v0.8: Reliable local ProductTask host — released
 
 - F0 closes the terminal-error injection path and makes one durable Model
   Attempt correspond to one admitted Provider dispatch. Attempt-scoped cost
@@ -585,26 +588,84 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 
 See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 
-## v0.9: Host-owned long context — frozen route, not authorized to start
+## v0.9: Host-owned long context — F0-A/B/C complete, F1 not started
 
-- Add one request-scoped Context Input contract whose exact Skill/Memory bytes are
-  durable, bounded by the existing request `source_seq`, reconstructable without
-  rerunning retrieval and never projected into conversation history.
+- F0-B implements one request-scoped Context Input path on the existing
+  Session/Lease/Request owners. Each Step freezes Context before Composition and
+  reuses it for same-request retry. Its one user reference message precedes all
+  Surface messages, including an empty wrapper under the explicit empty policy.
+  Context is durable and exactly reconstructable, never projected into Surface.
+- F0-C explicitly cuts over to Session `context_protocol=2`,
+  `f0-c-context-policy-v1` and renderer `context-json-v2`; old F0-B Sessions are
+  rejected without migration or fallback. The narrow policy retains seven fields
+  and adds nullable `history`, whose seven explicit limits govern the pure reader.
+  Default selection remains empty. Raw reads require directory/summary mode plus
+  explicit History configuration; there is no raw-only mode or automatic Tool grant.
+- F0-C adds bounded current-Session M3 expansion and sequential cursor disclosure.
+  Section/chunk use the same closed-Turn pages; oversized Turns retain a stable
+  rejected page slot and never receive an accepted receipt. A previously disclosed
+  block remains addressable after a wider replacement hides it. A normal PURE_READ
+  `request_history_page` Tool returns only a receipt; typed host requests pass
+  through `TurnInput.history_requests` and ChatDriver to the existing Session CAS
+  owner. Authorized raw pages receive atomic budget before automatic references.
+- F0-C fixes Workspace observation to null and freshness to unknown: existing
+  base revisions are not execution-time revision facts bound to historical Tool
+  results. Real matched/stale observations belong to F3/F4 source integration.
+  Full retrieval configuration, ranking, Skill, Memory and governance UI remain
+  later-stage work; F0-C implementation and its final targeted gates are complete.
 - Add typed Skill contributions to the existing trusted
   Activation/Generation/Lease lifecycle. Selection does not enable a plugin,
   publish a Generation or grant a Tool; associated resources remain owned by the
   leased Generation.
 - Add host-approved, Workspace-scoped, append-only Memory in the same EventStore.
   Models may propose bounded candidates but cannot approve, supersede or revoke
-  them.
+  them. Host-owned durable project bindings connect requester Sessions, later
+  Sessions and derived worktrees; temporary workspace ids or matching paths are
+  not project authority. Each host-confirmed fact slot has at most one active
+  value, with exact-predecessor CAS for replacement and revocation.
 - Use exact and SQLite FTS retrieval as the core path, with progressive disclosure,
   two host filters and explicit Context Budget. Local embeddings/rerankers remain
   optional, offline and derived.
+- Freeze Context failure prefixes and distinguish runtime Lease identity from
+  durable catalog content identity. Same-Step Provider retries reuse the frozen
+  input. A History Tool request expires if its same-Turn immediate successor
+  Step cannot consume it; it never carries raw history into a later Turn.
+- Treat FTS as a Store-owned schema change with explicit rebuild, cancellation,
+  shutdown and backup/restore contracts, not tables privately added by a plugin.
 - Evaluate retrieval through the existing Product Benchmark runner. Its existing
   attempt owner loads frozen host-only corpus inputs; no second runner, external
-  vector database or model self-evaluation is allowed.
+  vector database or model self-evaluation is allowed. Create the requester
+  Session/project binding before production-service seeding and host assembly;
+  freeze sampling, relevance labels, thresholds and resource limits before
+  candidate results, including Chinese and mixed code-identifier cases.
 
-v0.9 must be rechecked and explicitly authorized after v0.8 is released. See the
+The v0.8.0 prerequisite and the authorized F0-A design freeze are complete.
+[ADR-0043](docs/adr/0043-step-scoped-context-input-and-retrieval.md),
+[ADR-0044](docs/adr/0044-host-owned-project-scope-and-memory-authority.md), and the
+[F0 design contract](docs/plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRACT.md) define the
+decisions, fields and owner acceptance criteria. F0-A's nineteen existing-seam
+checks are design evidence. F0-B's final 36-file targeted gate collected 1079 cases
+and finished with `1076 passed, 3 skipped in 20.22s`; the three Windows skips are
+two symlink privilege cases and one invalid NUL path. Its 59 new Context/protocol/
+Runtime cases (24/24/11) are included in that result, not added to it. That stage
+introduced `context_protocol=1`; F0-C now replaces it with 2 while keeping Context
+outer format 1, the empty Composition catalog/digest, ten Request snapshot fields
+and SQLite schema 1. F0-C's final 38-file gate collected 1104 cases and finished
+with `1100 passed, 4 skipped in 31.98s`. Its 81 new History cases (reader 37,
+requests 12, Tool 16, Runtime 16) are included, not added. The Windows skips were
+two SQLite file symlink privilege cases, one Tool directory symlink privilege
+case and one CLI invalid NUL path. Compileall, changed-Python Ruff (40 files),
+bounded hardcoding checks (19 production files) and two independent review
+partitions passed; seven reverse-protection checks failed for the intended causes
+before restoring the guards. F0-A/B/C's authorized implementation is closed,
+F1 has not started, and release-level full-suite/L2 gates have not run.
+Tests ran from an isolated empty temporary working directory without loading the
+repository's real `.env`. Compileall, changed-Python Ruff and bounded independent
+reviews passed; the existing TUI inspector now counts Context reference separately
+from Product and conversation using the shared request rebuild. No full suite, L2,
+build, network or real Provider ran for this stage. F1-F5 and the
+three release stops remain in order. Daily owner checks do not automatically run full/L2 gates;
+an unfiltered final suite already includes real L2. See the
 [frozen v0.9 stage plan](docs/plan/TRACEHARNESS_V0.9_STAGE_PLAN.md).
 
 ## v0.10: Host-owned Sandbox
@@ -617,6 +678,10 @@ v0.9 must be rechecked and explicitly authorized after v0.8 is released. See the
 - Keep `READ_ONLY`, virtual environments, temporary directories and Git
   worktrees honest: they remain useful policies or isolation units, but are not
   advertised as an OS Sandbox.
+- Separate trusted adapters managing sandboxed external processes (S3-A) from
+  the isolated Plugin protocol (S3-B). Freeze pre-import isolation, contribution
+  subsets and cross-process lifecycle semantics before claiming isolated Plugin
+  support; otherwise keep that mode explicitly rejected.
 
 ## v0.11: Official MCP Client plugin
 
@@ -635,6 +700,9 @@ v0.9 must be rechecked and explicitly authorized after v0.8 is released. See the
   giving each child Agent an independent identity, Session, Context and worktree.
 - Add immutable child artifacts, deterministic Join/Merge and integrated
   Verification plus post-code Review before human Approval and Git CAS Promotion.
+- W1 starts with parallel read-only analysis and one coder. Multiple-coder
+  templates open only after W3 supplies integrated artifacts and a review result
+  consumed by the safety tail; the current Join barrier alone does not merge code.
 - Do not accept arbitrary executable workflow code or allow models to bypass the
   mandatory safety tail.
 

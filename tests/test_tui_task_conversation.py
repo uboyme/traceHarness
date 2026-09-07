@@ -15,8 +15,8 @@ from traceh.agents.identity import (
 )
 from traceh.api.agents import AgentSpec
 from traceh.api.events import PendingEvent
-from traceh.api.json_types import canonical_json, fingerprint
-from traceh.api.llm import ModelMessage, ModelRequest
+from traceh.api.json_types import canonical_json
+from traceh.api.llm import ModelAttemptIdentity
 from traceh.api.product import (
     ProductRole,
     ProductTaskStatus,
@@ -25,6 +25,7 @@ from traceh.api.product import (
     ResolvedTaskMode,
     TaskModeSource,
 )
+from traceh.kernel.composition import RuntimeComposition
 from traceh.product.errors import ProductStateError
 from traceh.product.execution import product_task_owner_id
 from traceh.product.inspection import ProductNodeEvidence, ProductTaskEvidence
@@ -33,8 +34,12 @@ from traceh.product.observation import (
     ProductObservation,
 )
 from traceh.product.topology import product_role_node_id
+from traceh.runtime.request_builder import RequestBuilder
+from traceh.session.context_input import ContextInputService
 from traceh.session.event_store import Durability, InMemoryEventStore
+from traceh.session.protocol import CONTEXT_PROTOCOL
 from traceh.session.service import SessionService
+from traceh.session.surface import SurfaceProjector
 from traceh.tui.task_conversation import TaskConversationReader
 from traceh.workflow.models import agent_identity
 
@@ -81,27 +86,8 @@ class ConversationFixture:
     sessions: dict[str, str]
 
 
-def _request(
-    session_id: str,
-    turn_id: str,
-    step_id: str,
-    revision: str,
-    content: str,
-) -> ModelRequest:
-    return ModelRequest(
-        provider="deterministic-provider",
-        model="deterministic-model",
-        messages=(ModelMessage(role="user", content=content),),
-        metadata={
-            "session_id": session_id,
-            "turn_id": turn_id,
-            "step_id": step_id,
-            "composition_revision": revision,
-        },
-    )
-
-
-def _turn_events(
+async def _append_turn(
+    store: StrictReadStore,
     session_id: str,
     *,
     suffix: str,
@@ -114,16 +100,10 @@ def _turn_events(
     with_search_text: bool = False,
     shell_exit_code: int | None = None,
     shell_status: str = "succeeded",
-) -> tuple[PendingEvent, ...]:
+) -> None:
     turn_id = f"turn-{suffix}"
     step_id = f"step-{suffix}"
     attempt_id = f"attempt-{suffix}"
-    revision = f"revision-{suffix}"
-    source_seq = base_seq + 3
-    snapshot_seq = base_seq + 4
-    request = _request(session_id, turn_id, step_id, revision, input_text)
-    request_data = request.to_dict()
-    request_digest = fingerprint(request_data)
     tool_calls = []
     if with_shell:
         tool_calls.append(
@@ -164,37 +144,45 @@ def _turn_events(
             "user/message",
             {"turn_id": turn_id, "step_id": step_id, "content": input_text},
         ),
-        PendingEvent(
-            "request/snapshot",
-            {
-                "turn_id": turn_id,
-                "step_id": step_id,
-                "source_seq": source_seq,
-                "composition_revision": revision,
-                "composed_fingerprint": request_digest,
-                "dispatch_fingerprint": request_digest,
-                "composed_request": request_data,
-                "dispatch_request": request_data,
-            },
-            composition_revision=revision,
+    ]
+    stream = SessionService.session_stream(session_id)
+    await store.append(
+        stream, expected_seq=base_seq,
+        events=tuple(
+            replace(event, occurred_at=BASE_TIME + timedelta(seconds=base_seq + index))
+            for index, event in enumerate(events, start=1)
         ),
-        PendingEvent(
-            "model/attempt-start",
-            {
-                "turn_id": turn_id,
-                "step_id": step_id,
-                "attempt_id": attempt_id,
-                "ordinal": 1,
-                "request_snapshot_seq": snapshot_seq,
-                "dispatch_fingerprint": request_digest,
-                "reservation_id": None,
-                "provider": "deterministic-provider",
-                "model": "deterministic-model",
-                "retry_wait_milliseconds": 0,
-                "retry_failure_code": None,
-                "retry_failure_category": None,
-            },
-        ),
+    )
+    sessions = SessionService(store)
+    composition = RuntimeComposition(
+        provider="deterministic-provider", model="deterministic-model",
+        system_prompt="", tools=(),
+    ).snapshot()
+    context = await ContextInputService(sessions.read_session).freeze(
+        session_id=session_id, turn_id=turn_id, step_id=step_id, composition=composition,
+    )
+    await sessions.append_context_input(
+        session_id, context.to_dict(), expected_seq=context.to_dict()["observed_session_seq"]
+    )
+    source = await sessions.append_session(
+        session_id, "composition/snapshot", composition.to_dict(),
+        composition_revision=composition.revision,
+    )
+    built = await RequestBuilder(sessions, SurfaceProjector()).build(
+        session_id=session_id, turn_id=turn_id, step_id=step_id,
+        composition=composition, through_seq=source.seq,
+    )
+    snapshot, start = await sessions.start_model_attempt(
+        session_id,
+        attempt=ModelAttemptIdentity(session_id, turn_id, step_id, attempt_id, 1),
+        source_seq=built.source_seq, composition_revision=composition.revision,
+        composed_request=built.request, composed_fingerprint=built.fingerprint,
+        dispatch_request=built.request, dispatch_fingerprint=built.fingerprint,
+        reservation_id=None,
+    )
+    snapshot_seq = snapshot.seq
+    request_digest = built.fingerprint
+    events = [
         PendingEvent(
             "assistant/message",
             {
@@ -320,9 +308,12 @@ def _turn_events(
             PendingEvent("turn/end", {"turn_id": turn_id, "reason": "completed"}),
         )
     )
-    return tuple(
-        replace(event, occurred_at=BASE_TIME + timedelta(seconds=base_seq + index))
-        for index, event in enumerate(events, start=1)
+    await store.append(
+        stream, expected_seq=start.seq,
+        events=tuple(
+            replace(event, occurred_at=BASE_TIME + timedelta(seconds=start.seq + index))
+            for index, event in enumerate(events, start=1)
+        ),
     )
 
 
@@ -381,16 +372,14 @@ async def _append_session(
                     "session_id": session_id,
                     "workspace": f"workspace-{role}",
                     "metadata": {},
+                    "context_protocol": CONTEXT_PROTOCOL,
                 },
                 occurred_at=BASE_TIME,
             ),
         ),
     )
-    await store.append(
-        stream,
-        expected_seq=1,
-        events=_turn_events(
-            session_id,
+    await _append_turn(
+            store, session_id,
             suffix=role,
             base_seq=1,
             input_text=f"input-for-{role}",
@@ -401,7 +390,6 @@ async def _append_session(
             with_search_text=with_search_text,
             shell_exit_code=shell_exit_code,
             shell_status=shell_status,
-        ),
     )
 
 
@@ -572,17 +560,28 @@ async def _append_coder_turn(
     session_id = fixture.sessions["coder"]
     stream = SessionService.session_stream(session_id)
     head = await fixture.store.head(stream)
-    await fixture.store.append(
-        stream,
-        expected_seq=head,
-        events=_turn_events(
-            session_id,
+    await _append_turn(
+            fixture.store, session_id,
             suffix=suffix,
             base_seq=head,
             input_text=input_text,
             model_text=model_text,
-        ),
     )
+
+
+async def _tool_span(fixture: ConversationFixture, tool_name: str) -> str:
+    events = await fixture.store.read(
+        SessionService.session_stream(fixture.sessions["coder"])
+    )
+    call = next(
+        event for event in events
+        if event.type == "tool/call" and event.data["tool_name"] == tool_name
+    )
+    result = next(
+        event for event in events
+        if event.type == "tool/result" and event.data["tool_call_id"] == call.data["tool_call_id"]
+    )
+    return f"{call.seq}\N{EN DASH}{result.seq}"
 
 
 async def test_projects_exact_router_and_fixed_multi_roles() -> None:
@@ -769,7 +768,8 @@ async def test_shell_arguments_and_tool_result_content_are_never_exposed() -> No
 
     assert coder.tool_calls == 1
     assert [kind for kind, _content in coder.messages] == ["input", "model", "tool"]
-    assert f"shell <已遮蔽 · 参数 {expected_size} 字节>\t9–10\n成功" in rendered
+    span = await _tool_span(fixture, "shell")
+    assert f"shell <已遮蔽 · 参数 {expected_size} 字节>\t{span}\n成功" in rendered
     assert "call-coder" not in rendered
     assert "SECRET-IN-ARGUMENT" not in rendered
     assert "SECRET-IN-RESULT" not in rendered
@@ -785,7 +785,8 @@ async def test_empty_non_shell_arguments_do_not_claim_sensitive_masking() -> Non
     coder = next(role for role in snapshot.roles if role.role == "coder")
     rendered = "\n".join(content for _kind, content in coder.messages)
 
-    assert "list_files\t9–10\n成功" in rendered
+    span = await _tool_span(fixture, "list_files")
+    assert f"list_files\t{span}\n成功" in rendered
     assert "已遮蔽" not in rendered
 
 
@@ -796,7 +797,8 @@ async def test_search_text_keeps_its_safe_query_in_the_task_summary() -> None:
     coder = next(role for role in snapshot.roles if role.role == "coder")
     rendered = "\n".join(content for _kind, content in coder.messages)
 
-    assert "search_text reservation_handler\t9–10\n成功" in rendered
+    span = await _tool_span(fixture, "search_text")
+    assert f"search_text reservation_handler\t{span}\n成功" in rendered
     assert "path" not in rendered
 
 
@@ -888,16 +890,12 @@ async def test_load_is_read_only_and_reopen_observes_new_durable_facts() -> None
     coder_session = fixture.sessions["coder"]
     stream = SessionService.session_stream(coder_session)
     head = await fixture.store.head(stream)
-    await fixture.store.append(
-        stream,
-        expected_seq=head,
-        events=_turn_events(
-            coder_session,
+    await _append_turn(
+            fixture.store, coder_session,
             suffix="coder-followup",
             base_seq=head,
             input_text="fresh-followup-input",
             model_text="fresh-followup-output",
-        ),
     )
     append_count_after_external_write = fixture.store.append_calls
 

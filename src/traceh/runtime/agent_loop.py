@@ -32,6 +32,7 @@ from traceh.runtime.continuation import (
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.compaction import CompactionError, CompactionService
+from traceh.session.context_input import ContextInputPolicy, ContextInputService
 from traceh.session.event_store import Durability
 from traceh.session.service import ModelAttemptConflictError, SessionService
 from traceh.session.surface_replacement import SURFACE_COMPACTION_FAILED
@@ -69,6 +70,7 @@ class AgentLoop:
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
         retry_scheduler: RetryScheduler | None = None,
         compaction: CompactionService | None = None,
+        context_policy: ContextInputPolicy | None = None,
     ) -> None:
         self.sessions = sessions
         self.compositions = compositions
@@ -85,6 +87,10 @@ class AgentLoop:
         #: The one compaction owner, shared with `AgentRuntime`. It is consulted
         #: before a Turn opens and never during one.
         self.compaction = compaction
+        self.context_policy = context_policy or ContextInputPolicy.empty()
+        # Only this Session's read capability reaches the source service. The
+        # loop retains the append owner, and retries remain below this freeze.
+        self.context_inputs = ContextInputService(sessions.read_session, policy=self.context_policy)
 
     async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
         # A plain ``str`` keeps the historical behaviour exactly - a fresh id
@@ -92,6 +98,12 @@ class AgentLoop:
         # it already recorded elsewhere, so the Session Turn is addressable
         # afterwards. The loop knows nothing about who that caller is.
         turn_input = TurnInput.from_task(task)
+        if turn_input.history_requests and self.context_policy.history is None:
+            raise ValueError("history-disclosure-disabled")
+        if self.context_policy.history is not None and (
+            len(turn_input.history_requests) > self.context_policy.history.max_requests
+        ):
+            raise ValueError("history-request-resource-limit")
         await self.sessions.ensure_session(session_id)
         workspace = await self.sessions.workspace_for(session_id)
         # The only safe linearization point for automatic compaction: this owner
@@ -157,8 +169,9 @@ class AgentLoop:
                 )
                 step_open = True
 
+                user_message = None
                 for content in pending_messages:
-                    await self.sessions.append_session(
+                    user_message = await self.sessions.append_session(
                         session_id,
                         "user/message",
                         {
@@ -169,6 +182,16 @@ class AgentLoop:
                         correlation_id=correlation_id,
                     )
                 pending_messages = []
+                if steps == 1 and turn_input.history_requests:
+                    from traceh.session.history_requests import event_ref
+
+                    assert user_message is not None and self.context_policy.history is not None
+                    await self.sessions.append_history_requests(
+                        session_id, turn_id=turn_id, step_id=current_step_id,
+                        user_message_ref=event_ref(user_message),
+                        requests=turn_input.history_requests, policy=self.context_policy.history,
+                        correlation_id=correlation_id,
+                    )
 
                 async with self.compositions.lease(
                     workspace=workspace,
@@ -177,6 +200,19 @@ class AgentLoop:
                     step_id=current_step_id,
                 ) as active_composition:
                     composition = active_composition.snapshot
+                    context = await self.context_inputs.freeze(
+                        session_id=session_id,
+                        turn_id=turn_id,
+                        step_id=current_step_id,
+                        composition=composition,
+                    )
+                    context_data = context.to_dict()
+                    await self.sessions.append_context_input(
+                        session_id,
+                        context_data,
+                        expected_seq=context_data["observed_session_seq"],
+                        correlation_id=correlation_id,
+                    )
                     composition_event = await self.sessions.append_session(
                         session_id,
                         "composition/snapshot",

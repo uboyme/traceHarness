@@ -19,6 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 
+from traceh.api.history import HistoryPageRequest
+
 DEFAULT_TURN_SOURCE = "user"
 """Source recorded for a plain ``str`` task, matching the historical behaviour."""
 
@@ -36,6 +38,15 @@ class TurnInput:
     content: str
     message_id: str
     source: str = DEFAULT_TURN_SOURCE
+    history_requests: tuple[HistoryPageRequest, ...] = ()
+
+    def __post_init__(self) -> None:
+        # This is a typed host request, never authority inferred from content
+        # or the human-readable source label.
+        if type(self.history_requests) is not tuple or any(
+            type(request) is not HistoryPageRequest for request in self.history_requests
+        ):
+            raise TypeError("history_requests must be a tuple of HistoryPageRequest")
 
     @classmethod
     def from_task(cls, task: str | TurnInput) -> TurnInput:

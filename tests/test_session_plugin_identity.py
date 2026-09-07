@@ -31,6 +31,7 @@ from traceh.runtime.agent_runtime import (
     build_default_runtime,
     build_default_runtime_async,
 )
+from traceh.session.protocol import CONTEXT_PROTOCOL
 from traceh.session.sqlite import SqliteEventStore
 
 
@@ -150,10 +151,10 @@ async def test_mismatch_message_reports_what_the_session_recorded(
 # --------------------------------------------------------------------------
 
 
-async def test_a_genuinely_missing_key_is_a_pre_v04_session(
+async def test_missing_plugin_key_in_current_session_is_plugin_free(
     tmp_path: Path, workspace: Path
 ) -> None:
-    """No key at all is what a session written before v0.4 looks like."""
+    """A current-protocol Session may omit optional plugin identity metadata."""
 
     runtime = build_default_runtime(
         RuntimeConfig(data_dir=tmp_path / "data"),
@@ -163,6 +164,7 @@ async def test_a_genuinely_missing_key_is_a_pre_v04_session(
     # genuinely absent rather than filled in by `create_session`.
     session_id = await runtime.sessions.create_session(workspace, metadata={"cli": True})
     events = await runtime.sessions.read_session(session_id)
+    assert events[0].data["context_protocol"] == CONTEXT_PROTOCOL
     assert "traceh_plugins" not in events[0].data["metadata"]
 
     await runtime.verify_session_plugins(session_id)
@@ -170,9 +172,7 @@ async def test_a_genuinely_missing_key_is_a_pre_v04_session(
     assert result.reason == "completed"
 
 
-async def test_an_explicit_null_is_malformed_not_a_pre_v04_session(
-    tmp_path: Path, workspace: Path
-) -> None:
+async def test_explicit_null_plugin_key_is_malformed(tmp_path: Path, workspace: Path) -> None:
     """`dict.get()` answers None for both cases; only one of them is benign.
 
     A recorded ``null`` is not something this runtime ever writes, so it is

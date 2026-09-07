@@ -15,11 +15,20 @@ from traceh.api.llm import (
     dispatch_request_matches_composed,
     model_attempt_reservation_id,
 )
+from traceh.kernel.composition import CompositionSnapshot
+from traceh.session.context_input import (
+    parse_context_input,
+    read_context_input,
+    render_context_message,
+    validate_context_input_sources,
+)
+from traceh.session.history_requests import validate_history_request_events
 from traceh.session.plugin_identity import validate_plugin_identity_events
 from traceh.session.product_context import (
     PRODUCT_CONTEXT_SNAPSHOT,
     parse_product_context_snapshot,
 )
+from traceh.session.protocol import SessionProtocolError, require_session_protocol
 from traceh.session.surface_replacement import (
     SURFACE_MESSAGE_TYPES,
     SURFACE_REPLACE,
@@ -74,6 +83,22 @@ class CoreInvariantChecker:
         effect_events: tuple[EventEnvelope, ...] = (),
     ) -> tuple[InvariantViolation, ...]:
         violations: list[InvariantViolation] = []
+        try:
+            require_session_protocol(session_events)
+        except SessionProtocolError as error:
+            return (
+                InvariantViolation(error.code, "Session uses an unsupported Context protocol", 1),
+            )
+        violations.extend(check_surface_replacement_sources(session_events))
+        try:
+            validate_history_request_events(session_events)
+        except (TypeError, ValueError) as error:
+            violations.append(
+                InvariantViolation(
+                    getattr(error, "code", "history-request-invalid"),
+                    "History request authority or source binding is invalid",
+                )
+            )
         for issue in validate_plugin_identity_events(session_events):
             violations.append(
                 InvariantViolation(
@@ -88,7 +113,6 @@ class CoreInvariantChecker:
         calls: dict[str, tuple[str, int]] = {}
         results: set[str] = set()
         closed_steps: set[str] = set()
-        seen_seqs: set[int] = set()
         attempt_starts: dict[str, _AttemptStart] = {}
         attempt_ends: set[str] = set()
         open_attempt: str | None = None
@@ -97,13 +121,9 @@ class CoreInvariantChecker:
         snapshot_steps: dict[tuple[str, str], list[int]] = {}
         attempt_ordinals: dict[tuple[str, str], list[int]] = {}
         product_contexts: dict[tuple[int, int], str] = {}
-        # Logical conversation position of every model-visible event, so a
-        # replacement can be checked against where its sources really sit
-        # rather than against the order in which it happened to be appended.
-        surface_positions: dict[int, int] = {}
-        hidden_sources: set[int] = set()
-        closed_turns: set[int] = set()
-        tool_links = SurfaceToolLinks({}, {})
+        contexts: dict[tuple[str | None, str | None], EventEnvelope] = {}
+        compositions: dict[tuple[str | None, str | None], EventEnvelope] = {}
+        step_start_seq: int | None = None
 
         for index, event in enumerate(session_events):
             if event.seq != expected_seq:
@@ -141,33 +161,59 @@ class CoreInvariantChecker:
                             )
                         )
 
-            if event.type in SURFACE_MESSAGE_TYPES:
-                surface_positions[event.seq] = event.seq
-            elif event.type == SURFACE_REPLACE:
-                violations.extend(
-                    self._check_surface_replacement(
-                        event,
-                        prior_events=session_events[:index],
-                        seen_seqs=seen_seqs,
-                        surface_positions=surface_positions,
-                        hidden_sources=hidden_sources,
-                        closed_turns=closed_turns,
-                        tool_links=tool_links,
+            if event.type == "context/input":
+                key = (open_turn, open_step)
+                try:
+                    context = parse_context_input(event.data)
+                    validate_context_input_sources(context, session_events[:index])
+                    payload = context.to_dict()
+                    if (
+                        open_turn is None
+                        or open_step is None
+                        or step_start_seq is None
+                        or key in contexts
+                        or key in compositions
+                        or payload["session_id"] != event.stream_id.removeprefix("session:")
+                        or payload["turn_id"] != open_turn
+                        or payload["step_id"] != open_step
+                        or not step_start_seq <= payload["observed_session_seq"] < event.seq
+                        or event.composition_revision != payload["composition_revision"]
+                    ):
+                        raise ValueError("context-input-binding-mismatch")
+                except (KeyError, TypeError, ValueError):
+                    violations.append(
+                        InvariantViolation(
+                            "context-input-binding",
+                            "Context is not canonical in its one open Step",
+                            event.seq,
+                        )
                     )
-                )
-
-            if event.type == "assistant/message":
-                raw_calls = event.data.get("tool_calls", [])
-                if isinstance(raw_calls, list):
-                    for item in raw_calls:
-                        if isinstance(item, dict) and isinstance(item.get("id"), str):
-                            tool_links.calls.setdefault(item["id"], event.seq)
-            elif event.type == "tool/result":
-                raw_call_id = event.data.get("tool_call_id")
-                if isinstance(raw_call_id, str):
-                    tool_links.results.setdefault(raw_call_id, event.seq)
-
-            seen_seqs.add(event.seq)
+                contexts[key] = event
+            elif event.type == "composition/snapshot":
+                key = (open_turn, open_step)
+                try:
+                    if open_turn is None or open_step is None or key in compositions:
+                        raise ValueError("composition-step-binding")
+                    composition = CompositionSnapshot.from_dict(event.data)
+                    if event.composition_revision != composition.revision:
+                        raise ValueError("composition-revision-binding")
+                    read_context_input(
+                        session_events[: index + 1],
+                        session_id=event.stream_id.removeprefix("session:"),
+                        turn_id=open_turn,
+                        step_id=open_step,
+                        through_seq=event.seq,
+                        composition=composition,
+                    )
+                except (KeyError, TypeError, ValueError):
+                    violations.append(
+                        InvariantViolation(
+                            "composition-context-binding",
+                            "Composition lacks its exact Step Context",
+                            event.seq,
+                        )
+                    )
+                compositions[key] = event
 
             if event.type == "request/snapshot":
                 declared_turn = event.data.get("turn_id")
@@ -200,6 +246,13 @@ class CoreInvariantChecker:
                     )
                 source_seq = event.data.get("source_seq")
                 composition_revision = event.data.get("composition_revision")
+                declared_key = (
+                    (declared_turn, declared_step)
+                    if isinstance(declared_turn, str) and isinstance(declared_step, str)
+                    else (None, None)
+                )
+                context_event = contexts.get(declared_key)
+                composition_event = compositions.get(declared_key)
                 if (
                     type(source_seq) is not int
                     or source_seq < 1
@@ -207,6 +260,14 @@ class CoreInvariantChecker:
                     or not isinstance(composition_revision, str)
                     or not composition_revision
                     or event.composition_revision != composition_revision
+                    or composition_event is None
+                    or composition_event.seq != source_seq
+                    or composition_event.data.get("revision") != composition_revision
+                    or context_event is None
+                    or type(event.data.get("context_input_seq")) is not int
+                    or event.data.get("context_input_seq") != context_event.seq
+                    or event.data.get("context_input_digest")
+                    != context_event.data.get("context_digest")
                 ):
                     snapshot_valid = False
                     violations.append(
@@ -226,12 +287,18 @@ class CoreInvariantChecker:
                             raise ValueError
                         composed = ModelRequest.from_dict(raw_composed)
                         dispatch = ModelRequest.from_dict(raw_dispatch)
+                        assert context_event is not None
+                        context_message = render_context_message(
+                            parse_context_input(context_event.data)
+                        )
                         if (
                             composed.to_dict() != raw_composed
                             or dispatch.to_dict() != raw_dispatch
                             or not dispatch_request_matches_composed(
                                 composed, dispatch
                             )
+                            or not composed.messages
+                            or composed.messages[0] != context_message
                             or any(
                                 dispatch.metadata.get(key) != expected
                                 for key, expected in (
@@ -245,6 +312,8 @@ class CoreInvariantChecker:
                                         "composition_revision",
                                         event.data["composition_revision"],
                                     ),
+                                    ("context_input_seq", event.data["context_input_seq"]),
+                                    ("context_input_digest", event.data["context_input_digest"]),
                                 )
                             )
                         ):
@@ -303,6 +372,7 @@ class CoreInvariantChecker:
                         )
                     )
                 open_step = step_id
+                step_start_seq = event.seq
                 previous_attempt_end = None
             elif event.type == "model/attempt-start":
                 attempt_id = attempt_identity(event.data)
@@ -672,8 +742,6 @@ class CoreInvariantChecker:
                             event.seq,
                         )
                     )
-                else:
-                    closed_turns.add(event.seq)
                 open_turn = None
                 open_attempt = None
 
@@ -880,3 +948,55 @@ class CoreInvariantChecker:
             surface_positions[event.seq] = min(known)
         hidden_sources.update(replacement.source_seqs)
         return tuple(violations)
+
+
+def check_surface_replacement_sources(
+    events: tuple[EventEnvelope, ...],
+) -> tuple[InvariantViolation, ...]:
+    """Check M3 provenance without recursing into Context/request checks.
+
+    The full checker and Context source reader share these same replacement
+    rules; neither validates a summary by trusting only its payload digest.
+    """
+
+    checker = CoreInvariantChecker()
+    violations: list[InvariantViolation] = []
+    seen_seqs: set[int] = set()
+    surface_positions: dict[int, int] = {}
+    hidden_sources: set[int] = set()
+    closed_turns: set[int] = set()
+    tool_links = SurfaceToolLinks({}, {})
+    open_turn: str | None = None
+    for index, event in enumerate(events):
+        if event.type in SURFACE_MESSAGE_TYPES:
+            surface_positions[event.seq] = event.seq
+        elif event.type == SURFACE_REPLACE:
+            violations.extend(
+                checker._check_surface_replacement(
+                    event,
+                    prior_events=events[:index],
+                    seen_seqs=seen_seqs,
+                    surface_positions=surface_positions,
+                    hidden_sources=hidden_sources,
+                    closed_turns=closed_turns,
+                    tool_links=tool_links,
+                )
+            )
+        if event.type == "assistant/message":
+            raw_calls = event.data.get("tool_calls", [])
+            if isinstance(raw_calls, list):
+                for item in raw_calls:
+                    if isinstance(item, dict) and isinstance(item.get("id"), str):
+                        tool_links.calls.setdefault(item["id"], event.seq)
+        elif event.type == "tool/result":
+            raw_call_id = event.data.get("tool_call_id")
+            if isinstance(raw_call_id, str):
+                tool_links.results.setdefault(raw_call_id, event.seq)
+        elif event.type == "turn/start":
+            open_turn = str(event.data.get("turn_id"))
+        elif event.type == "turn/end":
+            if open_turn == str(event.data.get("turn_id")):
+                closed_turns.add(event.seq)
+            open_turn = None
+        seen_seqs.add(event.seq)
+    return tuple(violations)

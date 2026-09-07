@@ -33,6 +33,7 @@ from traceh.product.topology import (
     product_workflow_definition,
 )
 from traceh.session.event_store import InMemoryEventStore
+from traceh.session.protocol import CONTEXT_PROTOCOL
 from traceh.workflow.events import (
     WORKFLOW_NODE_FAILED,
     WORKFLOW_NODE_STARTED,
@@ -184,6 +185,7 @@ async def _append_session(
                     "session_id": session_id,
                     "workspace": "inspection-workspace",
                     "metadata": {},
+                    "context_protocol": CONTEXT_PROTOCOL,
                 },
             ),
             PendingEvent(
@@ -588,6 +590,7 @@ async def test_contradictory_target_failure_chain_fails_closed(
                     "session_id": session_id,
                     "workspace": "inspection-workspace",
                     "metadata": {},
+                    "context_protocol": CONTEXT_PROTOCOL,
                 },
             ),
             PendingEvent(

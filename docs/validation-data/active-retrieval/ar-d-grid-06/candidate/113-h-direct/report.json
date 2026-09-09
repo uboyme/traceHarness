@@ -1,0 +1,103 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "aebd7631-bc48-4532-b4e2-eab7c18c5fee",
+  "target_start_seq": 152,
+  "answer": "从搜索结果中，我找到了设备交接的口令。在历史记录中明确提到：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 53.93700000003446,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 28138,
+    "output_tokens": 939,
+    "total_tokens": 29077
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 67361,
+    "output_tokens": 969,
+    "total_tokens": 68330
+  },
+  "evidence": [
+    {
+      "context_seq": 210,
+      "reference": {
+        "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+        "cursor": {
+          "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "9999d35bca7057cbf39587f9ea0a3000db82999e73eefa0130bffffe7be7d737",
+          "event_id": "de73011b-5320-44dd-9d48-3fcc16b9a54e",
+          "seq": 111,
+          "stream_id": "session:aebd7631-bc48-4532-b4e2-eab7c18c5fee",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "106f8fe7bd597c53a7e762cfd270d7c06a58f1d13147a38a91c3962ba32633ff"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+        "cursor": {
+          "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+        "cursor": {
+          "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+        "cursor": {
+          "block_id": "abcc446aafcaed9bf658b68b81cae55fca5478c5f12ce43fcd8a6ab366c2d0ff",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "设备交接"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 92.23499999998603
+}

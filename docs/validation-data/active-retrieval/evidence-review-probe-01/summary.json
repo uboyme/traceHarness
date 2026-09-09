@@ -1,0 +1,686 @@
+{
+  "experiment": "evidence-review-probe-01",
+  "release_acceptance": false,
+  "arms": {
+    "baseline": {
+      "closed_cases": 6,
+      "expected_cases": 6,
+      "positive_cases": 3,
+      "positive_joint_pass": 2,
+      "negative_cases": 3,
+      "usage_including_setup": {
+        "attempts": 20,
+        "input_tokens": 99298,
+        "output_tokens": 1578,
+        "total_tokens": 100876,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-absent",
+          "answer": "根据当前提供的档案整理手册目录信息，我搜索了\"车辆\"、\"加油\"和\"折扣码\"等关键词，但都没有找到匹配结果。\n\n手册的目录结构显示它主要包含31个普通事项（section-00到section-30）和一个专门的\"档案整理操作手册\"章节（section-23），但所有章节的摘要都显示为\"说明普通器材登记。\"，除了section-23的摘要为\"档案整理操作手册\"。\n\n由于搜索结果为空，且手册的摘要内容都与\"普通器材登记\"相关，没有提及车辆管理、加油或折扣码等内容，可以确定：\n\n**档案整理手册中没有规定车辆加油的折扣码。**\n\n该手册的内容范围似乎仅限于档案整理和普通器材登记相关的操作规范，不涉及车辆管理或加油折扣等行政后勤事务。",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "车辆"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "加油"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "折扣码"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 23181,
+            "output_tokens": 469,
+            "total_tokens": 23650
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 23181,
+            "output_tokens": 469,
+            "total_tokens": 23650
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "没有。刚才执行的 `python check.py` 检查输出中未出现“保险理赔编号”字样。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "871d8612-0891-41ae-a6ef-e93a93fa608f",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10245,
+            "output_tokens": 150,
+            "total_tokens": 10395
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18970,
+            "output_tokens": 173,
+            "total_tokens": 19143
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "是的，档案整理手册中规定了车辆加油的折扣码。\n\n根据提供的参考内容，手册中明确指出：\"车辆加油的折扣码为 CF-DA353B7883。\"",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "952b6bab31e58998272d44d321e7ef19be91c784c77ad8eb71f7228f1c300b37",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10171,
+            "output_tokens": 340,
+            "total_tokens": 10511
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10171,
+            "output_tokens": 340,
+            "total_tokens": 10511
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "有。刚才的归档检查给出了保险理赔编号：**CF-55C0AB6241**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "0efcd560-aa2c-4b14-a583-1c107f8095cc",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "0efcd560-aa2c-4b14-a583-1c107f8095cc",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10454,
+            "output_tokens": 153,
+            "total_tokens": 10607
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19189,
+            "output_tokens": 176,
+            "total_tokens": 19365
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "刚才的 `python check.py` 执行输出中，**没有出现任何应急工单编号**（例如以“EMG-”、“INC-”、“WORKORDER-”等常见前缀开头的编号，或含“应急工单”字样的字段）。\n\n该输出仅包含 52 行格式化日志：\n```\n检查行 0001：泵站设备读数记录，状态 normal。\n...\n检查行 0052：泵站设备读数记录，状态 normal。\n```\n\n全文未出现“应急工单”、“工单号”、“EMG”、“INC”、“ORDER”、“ticket”、“ID:”等关键词，也无数字编号序列（如 6–10 位纯数字或字母数字组合）被上下文标识为工单编号。\n\n因此，根据本次检查的实际输出，**应急工单编号不存在于该巡检输出中**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5083,
+            "output_tokens": 201,
+            "total_tokens": 5284
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13899,
+            "output_tokens": 224,
+            "total_tokens": 14123
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Failure to obtain the explicit denial present in the original source; preview-only/global-absence answer is not grounded."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "刚才执行 `python check.py` 的输出中，并未出现任何“应急工单编号”（例如形如 `EMG-2024-XXXXX` 或类似格式的编号）。\n\n该输出仅包含 52 行重复的检查日志：\n```\n检查行 0001：泵站设备读数记录，状态 normal。\n...\n检查行 0052：泵站设备读数记录，状态 normal。\n```\n\n全文无数字编号、无工单标识符、无异常状态、无 `EMG`/`INC`/`TICKET`/`WORKORDER` 等关键词，也无任何非 `normal` 状态触发应急逻辑的迹象。\n\n因此，**泵站巡检输出里没有应急工单编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5078,
+            "output_tokens": 173,
+            "total_tokens": 5251
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13888,
+            "output_tokens": 196,
+            "total_tokens": 14084
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    },
+    "candidate": {
+      "closed_cases": 6,
+      "expected_cases": 6,
+      "positive_cases": 3,
+      "positive_joint_pass": 1,
+      "negative_cases": 3,
+      "usage_including_setup": {
+        "attempts": 42,
+        "input_tokens": 307084,
+        "output_tokens": 5590,
+        "total_tokens": 312674,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-absent",
+          "answer": "我需要检查档案整理手册中是否有关于车辆加油折扣码的规定。\n\n当前参考中提供了一个技能（Skill）文档，ID为\"manual-593410eb3c\"，其内容为：\"本手册说明档案整理工作。\"（本手册说明档案整理工作。）\n\n这个内容非常简短，只是一个简单的摘要说明，只表明手册是关于档案整理工作的，并没有包含任何具体的操作规定或细节内容。\n\n由于当前参考只提供了这个极简的摘要，而没有提供手册的完整内容，我无法确定手册中是否包含关于车辆加油折扣码的具体规定。摘要中完全没有提到车辆、加油、折扣码等相关关键词。\n\n因此，基于目前可用的证据，我只能确认档案整理手册的摘要中没有提及车辆加油折扣码，但无法确定完整手册中是否包含相关规定，因为完整内容未被提供。\n\n答案是：根据当前提供的档案整理手册摘要内容，没有规定车辆加油的折扣码。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7efa2afefd848720123a6a4d3981a884acc4599e6cc1dc8c23c20229c9ed16f0",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 15209,
+            "output_tokens": 620,
+            "total_tokens": 15829
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 15209,
+            "output_tokens": 620,
+            "total_tokens": 15829
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "The search for \"保险理赔\" in the tool output returned no matches, and the preview of the tool output shows only repeated lines about \"普通器材登记，状态 normal\" without any mention of insurance claim numbers.\n\nSince the full tool output was not provided in the current references and the search for \"保险理赔\" found no matches, I cannot definitively confirm whether an insurance claim number exists in the complete output. However, given that:\n\n1. The preview shows 56 identical lines about equipment registration with no variation\n2. The search for \"保险理赔\" (insurance claim) returned zero matches\n3. No other obvious terms related to insurance claims appear in the preview\n\nThe evidence strongly suggests that the archive check did not provide an insurance claim number.\n\nTherefore, the answer is: **No, the archive check did not provide an insurance claim number.**",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "7c018e7e-1084-4506-8eb1-a5222d519061",
+                "part": "content",
+                "query": "保险理赔"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 15808,
+            "output_tokens": 421,
+            "total_tokens": 16229
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 24536,
+            "output_tokens": 444,
+            "total_tokens": 24980
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "根据当前提供的档案整理手册参考信息，我需要检查手册内容是否包含关于车辆加油折扣码的规定。\n\n从提供的目录结构来看，手册包含31个章节（section-00到section-30），其中：\n- section-00到section-22：每个都是\"普通事项\"，摘要为\"说明普通器材登记\"\n- section-23：标题为\"档案整理操作手册\"，摘要为\"档案整理操作手册\"\n- section-24到section-30：每个都是\"普通事项\"，摘要为\"说明普通器材登记\"\n\n所有章节的摘要都非常简短，最长的只有44字（section-23），且没有一个摘要提到\"车辆\"、\"加油\"、\"折扣码\"、\"燃油\"、\"汽车\"等相关词汇。\n\n由于手册的摘要信息中完全没有涉及车辆管理、加油费用或折扣码的内容，且这些主题与\"档案整理\"和\"普通器材登记\"的核心职能明显不相关，因此可以确定：\n\n**档案整理手册没有规定车辆加油的折扣码。**",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "车辆"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "加油"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 22827,
+            "output_tokens": 538,
+            "total_tokens": 23365
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 22827,
+            "output_tokens": 538,
+            "total_tokens": 23365
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "是的，刚才的归档检查明确给出了保险理赔编号：**CF-55C0AB6241**。  \n该编号出现在检查输出中，紧接在“保险理赔编号为”之后，是一条独立、清晰的声明行。",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "92e5b6b7-720e-4acf-8252-72322dcad78a",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 1600,
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "92e5b6b7-720e-4acf-8252-72322dcad78a",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "92e5b6b7-720e-4acf-8252-72322dcad78a",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            },
+            {
+              "tool_result_seq": 66,
+              "effect_id": "92e5b6b7-720e-4acf-8252-72322dcad78a",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 22726,
+            "output_tokens": 350,
+            "total_tokens": 23076
+          },
+          "all_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 31462,
+            "output_tokens": 373,
+            "total_tokens": 31835
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "根据对 `check.py` 完整输出的搜索，找到了包含\"应急\"关键词的行：\n\n```\n本次巡检未创建应急工单，因此没有应急工单编号。\n```\n\n这明确说明：**本次泵站巡检未创建应急工单，因此没有应急工单编号**。\n\n检查结束。",
+          "steps": 8,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "offset": 1276,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "offset": 2549,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "offset": 3821,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "offset": 5092,
+                "part": "content"
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "count": 10,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "eee470fe-114c-48e6-9e38-db01bffe2282",
+                "part": "content",
+                "query": "应急"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 8,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 66369,
+            "output_tokens": 1262,
+            "total_tokens": 67631
+          },
+          "all_usage": {
+            "attempts": 10,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 75181,
+            "output_tokens": 1285,
+            "total_tokens": 76466
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "我需要继续读取 `check.py` 的完整输出，直到读取完整个输出（total_chars=18052），以确认是否包含应急工单编号。当前只读取了前12721个Unicode字符，现在继续读取后续内容。\n\n\n\n",
+          "steps": 12,
+          "reason": "max_steps_exceeded",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 1276,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 2549,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 3821,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 5092,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 6365,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 7636,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 8909,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 10181,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 11450,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+                "offset": 12721,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 185,
+              "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+              "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+            }
+          ],
+          "target_usage": {
+            "attempts": 12,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 129057,
+            "output_tokens": 2307,
+            "total_tokens": 131364
+          },
+          "all_usage": {
+            "attempts": 14,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 137869,
+            "output_tokens": 2330,
+            "total_tokens": 140199
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "identity": "holdout-output-present",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "fd202972-8a4e-42cb-8f3b-f9da3443785d",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的输出中，所有检查行均显示为“泵站设备读数记录，状态 normal”，共 52 行（0001–0052），**未出现任何应急工单编号（如“应急工单：XXX”或类似字样）**。\n\n该输出纯为正常巡检日志，无异常触发、无告警、无工单生成。因此，**泵站巡检输出里没有应急工单编号**。\n\n检查结束。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.657000000006519,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 5184,
+    "output_tokens": 110,
+    "total_tokens": 5294
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14208,
+    "output_tokens": 132,
+    "total_tokens": 14340
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 9.483999999938533
+}

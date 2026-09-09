@@ -40,6 +40,7 @@ from traceh.runtime.plugin_composition import (
     SessionPluginMismatchError,
 )
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
+from traceh.runtime.repeated_denial import RepeatedDenialPolicy
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CommandVerifier, CompletionVerifier
 from traceh.session.compaction import (
@@ -113,6 +114,7 @@ class RuntimeConfig:
     verifier_name: str | None = None
     verification_timeout_seconds: float = 60.0
     max_verification_retries: int = 1
+    repeated_denial_policy: RepeatedDenialPolicy | None = RepeatedDenialPolicy()
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY
     #: Automatic Surface compaction. ``None`` means the feature is off, which is
     #: the only thing an absent configuration may mean: a partially configured
@@ -127,6 +129,9 @@ class RuntimeConfig:
     memory: ProjectMemoryConfig | None = None
 
     def __post_init__(self) -> None:
+        if (self.repeated_denial_policy is not None
+                and type(self.repeated_denial_policy) is not RepeatedDenialPolicy):
+            raise TypeError("repeated_denial_policy must be RepeatedDenialPolicy or None")
         if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
             raise TypeError("compaction must be CompactionPolicy")
         if type(self.semantic_summary) is not bool:
@@ -690,11 +695,14 @@ def _prepare_default_runtime(
         and config.context_input.history is not None
     ):
         from traceh.tools.history import HistoryDisclosureTool
+        from traceh.tools.reference_search import HistorySearchTool
 
         selected_tools += (
             HistoryDisclosureTool(sessions.read_session, policy=config.context_input.history),
+            HistorySearchTool(sessions.read_session, policy=config.context_input),
         )
     if include_default_tools and config.context_input and config.context_input.skills:
+        from traceh.tools.reference_search import SkillSearchTool
         from traceh.tools.skill import SkillDisclosureTool
 
         selected_tools += (
@@ -702,6 +710,11 @@ def _prepare_default_runtime(
                 sessions.read_session,
                 sessions.read_skill_selection,
                 policy=config.context_input.skills,
+            ),
+            SkillSearchTool(
+                sessions.read_session,
+                sessions.read_skill_selection,
+                policy=config.context_input,
             ),
         )
     for tool in selected_tools:
@@ -713,6 +726,7 @@ def _prepare_default_runtime(
         if config.context_input is not None and config.context_input.memory is not None:
             from traceh.memory.context import MemoryContextReader
             from traceh.tools.memory_reference import MemoryDisclosureTool
+            from traceh.tools.reference_search import MemorySearchTool
 
             reader = MemoryContextReader(memory_authority)
             tool_registry.register(
@@ -721,6 +735,14 @@ def _prepare_default_runtime(
                     reader.read,
                     reader.recheck,
                     policy=config.context_input.memory,
+                )
+            )
+            tool_registry.register(
+                MemorySearchTool(
+                    sessions.read_session,
+                    reader.read,
+                    reader.recheck,
+                    policy=config.context_input,
                 )
             )
 
@@ -852,6 +874,7 @@ def _finish_default_runtime(
         continuation=prepared.continuation,
         verifier=prepared.verifier,
         max_verification_retries=config.max_verification_retries,
+        repeated_denial_policy=config.repeated_denial_policy,
         hooks=hooks,
         retry_policy=config.model_retry_policy,
         retry_scheduler=prepared.retry_scheduler,

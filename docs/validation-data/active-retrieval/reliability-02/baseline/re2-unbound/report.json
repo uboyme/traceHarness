@@ -1,0 +1,64 @@
+{
+  "identity": "re2-unbound",
+  "case_id": "re2-unbound",
+  "seed": 1609,
+  "family": "memory",
+  "question": "当前项目批准的交接口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "b22e7b7a-15a6-4a12-9496-1a7b16b24362",
+  "target_start_seq": 1,
+  "answer": "根据搜索结果，我没有找到任何与\"交接口令\"、\"接口\"、\"命令\"或\"API\"相关的项目记忆记录。这表明当前项目中没有批准的交接口令被记录在项目记忆中。\n\n由于所有搜索都返回了空结果（source-unavailable状态），并且没有其他相关参考信息可用，我只能得出结论：当前项目没有批准的交接口令，或者该信息没有被记录在项目记忆中。\n\n因此，答案是：当前项目没有批准的交接口令。",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 19.32799999997951,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21452,
+    "output_tokens": 397,
+    "total_tokens": 21849
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21452,
+    "output_tokens": 397,
+    "total_tokens": 21849
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "交接口令"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "接口"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "命令"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "API"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 20.70299999997951
+}

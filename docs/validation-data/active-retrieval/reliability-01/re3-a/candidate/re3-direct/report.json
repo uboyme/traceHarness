@@ -1,0 +1,59 @@
+{
+  "identity": "re3-direct",
+  "case_id": "re3-direct",
+  "seed": 1609,
+  "family": "output",
+  "question": "检查输出里的样品序列号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "5c2eb526-bb5c-4723-9d0b-00c1c2eb6211",
+  "target_start_seq": 28,
+  "answer": "样品序列号是 `REF-9BB96F9C0B`。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 6.858999999938533,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8757,
+    "output_tokens": 155,
+    "total_tokens": 8912
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16707,
+    "output_tokens": 178,
+    "total_tokens": 16885
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 43,
+      "effect_id": "50410f15-20cf-4e9c-9cfb-f29631d56c8b",
+      "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+        "effect_id": "50410f15-20cf-4e9c-9cfb-f29631d56c8b",
+        "part": "content",
+        "queries": [
+          "sample_id",
+          "sample serial",
+          "序列号"
+        ]
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 11.077999999979511
+}

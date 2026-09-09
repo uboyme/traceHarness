@@ -1,0 +1,80 @@
+{
+  "purpose": "Fixed-request one-step causal probe; generated calls were not executed.",
+  "arms": {
+    "baseline": {
+      "correct_source_actions": 1,
+      "requests": 4
+    },
+    "candidate": {
+      "correct_source_actions": 3,
+      "requests": 4
+    }
+  },
+  "reported_total_tokens": 36889,
+  "unknown_usage": 0,
+  "reviews": [
+    {
+      "identity": "113-o-nearby",
+      "arm": "baseline",
+      "correct_source_action": false,
+      "actions": [
+        "list_files"
+      ]
+    },
+    {
+      "identity": "113-o-nearby",
+      "arm": "candidate",
+      "correct_source_action": false,
+      "actions": [
+        "list_files"
+      ]
+    },
+    {
+      "identity": "419-o-nearby",
+      "arm": "candidate",
+      "correct_source_action": true,
+      "actions": [
+        "search_tool_output"
+      ]
+    },
+    {
+      "identity": "419-o-nearby",
+      "arm": "baseline",
+      "correct_source_action": false,
+      "actions": [
+        "read_file"
+      ]
+    },
+    {
+      "identity": "227-s-english",
+      "arm": "baseline",
+      "correct_source_action": false,
+      "actions": []
+    },
+    {
+      "identity": "227-s-english",
+      "arm": "candidate",
+      "correct_source_action": true,
+      "actions": [
+        "search_skill"
+      ]
+    },
+    {
+      "identity": "113-s-english",
+      "arm": "candidate",
+      "correct_source_action": true,
+      "actions": [
+        "search_skill"
+      ]
+    },
+    {
+      "identity": "113-s-english",
+      "arm": "baseline",
+      "correct_source_action": true,
+      "actions": [
+        "search_skill"
+      ]
+    }
+  ],
+  "decision": "Some positive next-action evidence, not end-to-end reliability; leave presentation candidate isolated while implementing bounded deterministic continuation protection."
+}

@@ -1,0 +1,132 @@
+{
+  "identity": "re3-language",
+  "case_id": "re3-language",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "43508110-cab3-48b0-894c-b789ada6edc4",
+  "target_start_seq": 28,
+  "answer": "故障代号是 `REF-AC83E85A30`。",
+  "steps": 10,
+  "reason": "completed",
+  "target_seconds": 54.5,
+  "target_usage": {
+    "attempts": 10,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 87589,
+    "output_tokens": 1140,
+    "total_tokens": 88729
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 95356,
+    "output_tokens": 1163,
+    "total_tokens": 96519
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 139,
+      "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+      "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 10
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 1193,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 2385,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 3579,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 4773,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 5967,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 7161,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+        "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+        "offset": 8355,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 8,
+  "output_executions": 1,
+  "elapsed_seconds": 60.703000000095926
+}

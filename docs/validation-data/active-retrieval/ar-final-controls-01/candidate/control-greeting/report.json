@@ -1,0 +1,39 @@
+{
+  "identity": "control-greeting",
+  "case_id": "s-direct",
+  "seed": 113,
+  "family": "skill",
+  "question": "你好，简单打个招呼就好。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "79c8d8b1-06e5-4f43-b506-5448cbe255a2",
+  "target_start_seq": 1,
+  "answer": "你好！",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 2.6410000000614673,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3925,
+    "output_tokens": 2,
+    "total_tokens": 3927
+  },
+  "all_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3925,
+    "output_tokens": 2,
+    "total_tokens": 3927
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 3.1570000000065193
+}

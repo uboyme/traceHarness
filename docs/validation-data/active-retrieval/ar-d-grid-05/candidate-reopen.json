@@ -1,0 +1,655 @@
+{
+  "arm": "candidate",
+  "cases": 72,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "113-h-absent",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-h-direct",
+      "requests": 15,
+      "attempts_started": 15,
+      "attempts_ended": 15,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-h-disambiguate",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-h-english",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-h-late-page",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-h-rephrase",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-english",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-omitted",
+      "requests": 12,
+      "attempts_started": 12,
+      "attempts_ended": 12,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-revoked",
+      "requests": 8,
+      "attempts_started": 8,
+      "attempts_ended": 8,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-m-superseded",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-absent",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-direct",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-english",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-nearby",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-nonzero",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-rephrase",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-absent",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-english",
+      "requests": 12,
+      "attempts_started": 12,
+      "attempts_ended": 12,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-large-directory",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-resource",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-absent",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-direct",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-disambiguate",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-english",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-late-page",
+      "requests": 15,
+      "attempts_started": 15,
+      "attempts_ended": 15,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-h-rephrase",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-english",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-omitted",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-revoked",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-m-superseded",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-absent",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-direct",
+      "requests": 6,
+      "attempts_started": 6,
+      "attempts_ended": 6,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-english",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-nearby",
+      "requests": 5,
+      "attempts_started": 5,
+      "attempts_ended": 5,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-nonzero",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-o-rephrase",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-absent",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-english",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-large-directory",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-resource",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-absent",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-direct",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-disambiguate",
+      "requests": 12,
+      "attempts_started": 12,
+      "attempts_ended": 12,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-english",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-late-page",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-h-rephrase",
+      "requests": 13,
+      "attempts_started": 13,
+      "attempts_ended": 13,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-english",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-omitted",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-revoked",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-m-superseded",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-absent",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-direct",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-english",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-nearby",
+      "requests": 6,
+      "attempts_started": 6,
+      "attempts_ended": 6,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-nonzero",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-rephrase",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-absent",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-english",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-large-directory",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-rephrase",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-resource",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

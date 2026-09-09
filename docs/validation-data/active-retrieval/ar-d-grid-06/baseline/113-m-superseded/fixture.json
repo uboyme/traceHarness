@@ -1,0 +1,88 @@
+{
+  "id": "m-superseded",
+  "family": "memory",
+  "domain": 1,
+  "mode": "superseded",
+  "language": "zh",
+  "question": "档案整理的人数限制后来改成多少了？",
+  "source_title": "更新后的人员容量",
+  "source_body": "最新批准的档案整理人数上限是 {value} 人，替代先前批准。",
+  "expected": "value",
+  "value_type": "number",
+  "control": true,
+  "discovery": false,
+  "seed": 113,
+  "identity": "113-m-superseded",
+  "value": "43",
+  "source": "最新批准的档案整理人数上限是 43 人，替代先前批准。",
+  "domain_name": "河岸档案整理",
+  "project_id": "project-4499d2111e",
+  "source_id": "source-4499d2111e",
+  "memory_id": "fact-4499d2111e",
+  "fact_slot": "slot-4499d2111e",
+  "skill_id": "manual-4499d2111e",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-4499d2111e-00",
+      "slot": "background-slot-00",
+      "body": "普通材料保管记录第0项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-01",
+      "slot": "background-slot-01",
+      "body": "普通材料保管记录第1项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-02",
+      "slot": "background-slot-02",
+      "body": "普通材料保管记录第2项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-03",
+      "slot": "background-slot-03",
+      "body": "普通材料保管记录第3项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-04",
+      "slot": "background-slot-04",
+      "body": "普通材料保管记录第4项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-05",
+      "slot": "background-slot-05",
+      "body": "普通材料保管记录第5项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-06",
+      "slot": "background-slot-06",
+      "body": "普通材料保管记录第6项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-07",
+      "slot": "background-slot-07",
+      "body": "普通材料保管记录第7项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-08",
+      "slot": "background-slot-08",
+      "body": "普通材料保管记录第8项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-09",
+      "slot": "background-slot-09",
+      "body": "普通材料保管记录第9项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-10",
+      "slot": "background-slot-10",
+      "body": "普通材料保管记录第10项：由资料组维护登记。"
+    },
+    {
+      "id": "background-4499d2111e-11",
+      "slot": "background-slot-11",
+      "body": "普通材料保管记录第11项：由资料组维护登记。"
+    }
+  ],
+  "predecessor_value": "143"
+}

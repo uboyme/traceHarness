@@ -1,0 +1,55 @@
+{
+  "identity": "re2-direct",
+  "case_id": "re2-direct",
+  "seed": 1609,
+  "family": "memory",
+  "question": "陶艺展览当前批准的交接代码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "cf4657b1-e616-480e-8a4c-e7f35b0e15a1",
+  "target_start_seq": 1,
+  "answer": "陶艺展览当前批准的交接代码是 REF-AF46CCDCE6。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.454000000027008,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10348,
+    "output_tokens": 262,
+    "total_tokens": 10610
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10348,
+    "output_tokens": 262,
+    "total_tokens": 10610
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "fact-af46ccdce6",
+      "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-af46ccdce6",
+        "requested_tier": "section",
+        "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 14.530999999959022
+}

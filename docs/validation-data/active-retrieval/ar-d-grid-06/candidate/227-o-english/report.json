@@ -1,0 +1,50 @@
+{
+  "identity": "227-o-english",
+  "case_id": "o-english",
+  "seed": 227,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "da018635-3a21-4458-848a-07f7defbfcfb",
+  "target_start_seq": 30,
+  "answer": "The `check.py` script output shows:\n\n```\nexit_code=0 timed_out=false\n```\n\nThis indicates the equipment check returned a validation code of **0**, which typically signifies success (e.g., PASS).\n\nNo other numeric or symbolic validation code (like \"PASS\", \"FAIL\", or non-zero exit codes) appears in the stdout excerpt — only `exit_code=0`.\n\nThus, the validation code returned earlier is:\n\n0",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 15.062000000034459,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9271,
+    "output_tokens": 427,
+    "total_tokens": 9698
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 17033,
+    "output_tokens": 450,
+    "total_tokens": 17483
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "72fd66c47c805fd000c52add0c6deb2ba7d45077d56bb050a42ea22b6435dc28",
+        "effect_id": "e96d9b4f-dff2-4de7-8772-0112856f6e5d",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 29.718999999924563
+}

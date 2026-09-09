@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "e6123580-93f6-4290-b855-2b1e2048c44f",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的归档检查返回的核验代号（即 Tool 输出的 digest）是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`\n\n该 digest 已在上一步 shell 工具调用的输出中明确披露，对应 effect_id `5487f980-0ccc-4041-acaa-7520bed2c659`。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 7.092999999993481,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4825,
+    "output_tokens": 138,
+    "total_tokens": 4963
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13217,
+    "output_tokens": 160,
+    "total_tokens": 13377
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 14.547000000020489
+}

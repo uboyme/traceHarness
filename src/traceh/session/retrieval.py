@@ -96,10 +96,20 @@ def query_terms(text):
 
 def block_identity(block):
     p = block["provenance"]
+    if block["tier"] == "search":
+        return canonical_json(
+            [block["kind"], block["id"], block["version"], "search", block["content_digest"]]
+        )
     if block["kind"] == "history":
         return canonical_json(
-            [block["kind"], block["id"], block["version"], block["tier"],
-             None if p["page"] is None else p["page"]["index"], block["content_digest"]]
+            [
+                block["kind"],
+                block["id"],
+                block["version"],
+                block["tier"],
+                None if p["page"] is None else p["page"]["index"],
+                block["content_digest"],
+            ]
         )
     return canonical_json(
         [

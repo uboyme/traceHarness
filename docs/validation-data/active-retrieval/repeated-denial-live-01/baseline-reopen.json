@@ -1,0 +1,52 @@
+{
+  "arm": "baseline",
+  "cases": 5,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "113-o-direct",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-nearby",
+      "requests": 8,
+      "attempts_started": 8,
+      "attempts_ended": 8,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-english",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-o-nearby",
+      "requests": 9,
+      "attempts_started": 9,
+      "attempts_ended": 9,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "stress-repeated-denial",
+      "requests": 9,
+      "attempts_started": 9,
+      "attempts_ended": 9,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

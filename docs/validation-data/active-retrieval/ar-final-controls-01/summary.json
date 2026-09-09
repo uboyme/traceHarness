@@ -1,0 +1,135 @@
+{
+  "complete": true,
+  "acceptance_credit": false,
+  "manual_reviews": [
+    {
+      "arm": "baseline",
+      "identity": "control-arithmetic",
+      "answer": "17 加 26 等于 43。",
+      "report_sha256": "9283595b0eeb257fb4d9d4ed440a9baa2c9ad30eeca31fff16059330b443fa20",
+      "source_events_sha256": "87a37bacc7f8f642e990d777db327e95303787a82bc96ccfcd885324655d94d4",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": false,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "answer": "你好！很高兴见到你，简单打个招呼：😊",
+      "report_sha256": "745f15e0df92b9dbd7606fda3b3fdba1207b4b9e03137faf90c6d40ada1ca536",
+      "source_events_sha256": "fc3ff5073c18459d55a5a3dbc0d7b55c967f7f13465e7cf2a4d7568763e95791",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": false,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-provided-fact",
+      "answer": "37",
+      "report_sha256": "40c71feeb7d53d203b532e46c819b5b4f3041f5246a8731a552d6f0940336af6",
+      "source_events_sha256": "5edc1c09c6c2601fe203a545dc4da3f2543b66cba790486c0d99f6fda33846a2",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": false,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "answer": "请把窗户关上，谢谢！",
+      "report_sha256": "79c8aee07376b79018f1f641b5dc6b7ac7cd1519046ff579606a77afc31a3111",
+      "source_events_sha256": "56df30b2f3ada5b559dc6abadaea652328149cf3941534660cd63a359b837f61",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": false,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-arithmetic",
+      "answer": "17 加 26 等于 43。",
+      "report_sha256": "93c5e3d49778bf052b6de5afe96e8d78ae81f3d7987bb0a078d18b7efce807a1",
+      "source_events_sha256": "e24c7f2aaa86e4394682e6d7e09b13eaf7de2fa39d22e2df97f3ea9a838f5132",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": true,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "answer": "你好！",
+      "report_sha256": "b290dfb478269428ad111135b748fc1a12cfc649e9749d56f36e492c7ce8d133",
+      "source_events_sha256": "1814d4dc08509605917639f39d4dfa92aa2eb7f694ea5e38bb69aae1571400c8",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": true,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-provided-fact",
+      "answer": "37",
+      "report_sha256": "1e88a88ab2bb28b1b9c74e1b4f505648b814597cc93e6e339231050e8d955507",
+      "source_events_sha256": "79b673d532e733869479828ff7b9416068d4b3a5ed175ae0c640b3757e8cbcd7",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": true,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "answer": "请把窗户关上，谢谢！",
+      "report_sha256": "9c7326bf59039008ded3c4f082e0522f3e9abe04124dcb941765f0453e6e9c5a",
+      "source_events_sha256": "5a8e0a486f61c3a8470dcc9224827ca00a9b9622777d2d325179099797a47f6c",
+      "answer_pass": true,
+      "unnecessary_tool_calls": 0,
+      "read_tool_exposed": true,
+      "active_search_tool_exposed": true,
+      "reason": "Individually reviewed: answers the greeting/rewrite/arithmetic/repetition request directly; no lookup needed or performed."
+    }
+  ],
+  "arms": {
+    "baseline": {
+      "cases": 4,
+      "correct_direct_answers": 4,
+      "tool_calls": 0,
+      "steps_per_case": 1,
+      "requests_replayed": 4,
+      "provider_reported_usage": {
+        "attempts": 4,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 13580,
+        "output_tokens": 36,
+        "total_tokens": 13616
+      }
+    },
+    "candidate": {
+      "cases": 4,
+      "correct_direct_answers": 4,
+      "tool_calls": 0,
+      "steps_per_case": 1,
+      "requests_replayed": 4,
+      "provider_reported_usage": {
+        "attempts": 4,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 17130,
+        "output_tokens": 26,
+        "total_tokens": 17156
+      }
+    }
+  },
+  "boundary": "Four explicitly no-lookup tasks per arm, one run each with unrelated selected Skill and exposed read/search tools. Does not prove all possible irrelevant-source situations avoid search. Separate from the frozen 72-question grid."
+}

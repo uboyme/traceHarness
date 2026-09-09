@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-english",
+  "case_id": "o-english",
+  "seed": 113,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "22994d56-7c01-40aa-9c38-74570e95446d",
+  "target_start_seq": 28,
+  "answer": "The equipment check returned a validation code of `exit_code=0`, indicating success.\n\nThis is visible in the tool output preview:\n```\nexit_code=0 timed_out=false\n```\n\nNo other validation code (e.g., non-zero exit code or explicit error code) was reported. The check completed without timeout and with normal status across all 56 lines.\n\nThus, the validation code is **0**.",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.094000000040978,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4820,
+    "output_tokens": 84,
+    "total_tokens": 4904
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13217,
+    "output_tokens": 106,
+    "total_tokens": 13323
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 10.687999999965541
+}

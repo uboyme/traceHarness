@@ -49,10 +49,41 @@ def display(value) -> str:
     """JSON escaping preserves complete evidence while making controls inert."""
     from traceh.cli.command_line import escape_for_display
 
-    return "\n".join(
-        escape_for_display(line, limit=max(1, len(line) * 8))
-        for line in json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True).splitlines()
-    )
+    summary = []
+    if isinstance(value, dict) and isinstance(value.get("snapshot"), dict):
+        raw = value["snapshot"]
+        if "context_digest" in raw:
+            snapshot = parse_context_input(raw).to_dict()
+            source_names = {"history": "会话历史", "skill": "Skill 目录", "memory": "项目批准记忆"}
+            statuses = {
+                "matches": "找到匹配片段",
+                "no-hit": "当前字面查询没有匹配，可换相关词继续查",
+                "source-unavailable": "当时没有可用或有效来源，请核对绑定、选择或来源版本",
+                "resource-limit": "搜索页达到资源限额，未提供完整结果",
+            }
+            for block in snapshot["blocks"]:
+                if block["tier"] != "search":
+                    continue
+                page = json.loads(block["body"])
+                summary.append(
+                    f"{source_names[block['kind']]}搜索：{statuses[page['status']]}。"
+                    f"已扫描 {page['scanned']}/{page['total']} 条来源记录，"
+                    f"本页 {len(page['hits'])} 条命中。"
+                    + ("还有下一页，尚未查完。" if page["next_cursor"] else "")
+                )
+            if any(
+                e["reason"] in {"budget-excluded", "token-budget-excluded"}
+                for e in snapshot["exclusions"]
+            ):
+                summary.append("参考资料因预算未准入；未显示不代表原来源不存在。")
+            if summary:
+                summary.insert(0, "以下是该 Step 当时的冻结结果，查看不会给当前模型注入资料。")
+    lines = [
+        *summary,
+        *([""] if summary else []),
+        *json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True).splitlines(),
+    ]
+    return "\n".join(escape_for_display(line, limit=max(1, len(line) * 8)) for line in lines)
 
 
 class ChatGovernance:

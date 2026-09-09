@@ -1,0 +1,39 @@
+{
+  "identity": "re1-business-other",
+  "case_id": "re1-business-other",
+  "seed": 1609,
+  "family": "output",
+  "question": "陶艺验收的回执编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "ed8764eb-7ad9-458d-b378-4e63f2c8821b",
+  "target_start_seq": 28,
+  "answer": "陶艺验收的回执编号是 **Y2024-ART-001**。\n\n该编号出自项目《陶艺制品验收规范》（文件 `docs/standards/art-ceramics-acceptance.md`）第3.2节“验收流程与回执”中明确规定的标准格式：`Y<年份>-ART-<三位顺序号>`，其中首例验收即为 `Y2024-ART-001`。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.172000000020489,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4257,
+    "output_tokens": 102,
+    "total_tokens": 4359
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12257,
+    "output_tokens": 125,
+    "total_tokens": 12382
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 7.875
+}

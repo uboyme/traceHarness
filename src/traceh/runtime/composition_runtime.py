@@ -124,32 +124,21 @@ class _CompositionResourceBinding:
             previous_owner = self.owner
             previous_used = self.used
             if owner is not None and self.owner is not None and self.owner is not owner:
-                raise ValueError(
-                    "resource capabilities already belong to another cleanup owner"
-                )
+                raise ValueError("resource capabilities already belong to another cleanup owner")
             if owner is not None and self.used:
-                raise ValueError(
-                    "cleanup ownership must be created with fresh capabilities"
-                )
+                raise ValueError("cleanup ownership must be created with fresh capabilities")
             missing = tuple(
-                component
-                for component in components
-                if _binding_for(component) is None
+                component for component in components if _binding_for(component) is None
             )
             if owner is not None:
                 unsupported = tuple(
-                    component
-                    for component in missing
-                    if not _binding_storage_available(component)
+                    component for component in missing if not _binding_storage_available(component)
                 )
                 if unsupported:
-                    raise ValueError(
-                        "cleanup ownership requires binding-capable raw capabilities"
-                    )
+                    raise ValueError("cleanup ownership requires binding-capable raw capabilities")
 
             previous_states = tuple(
-                (component, _binding_attribute_state(component))
-                for component in missing
+                (component, _binding_attribute_state(component)) for component in missing
             )
             try:
                 if owner is not None:
@@ -340,16 +329,12 @@ def _set_binding(
 ) -> None:
     current = _binding_for(component)
     if current is not None and current is not binding:
-        raise ValueError(
-            "composition components belong to different resource lineages"
-        )
+        raise ValueError("composition components belong to different resource lineages")
     if current is binding:
         return
     if not _binding_storage_available(component):
         if require_storage:
-            raise ValueError(
-                "cleanup ownership requires binding-capable raw capabilities"
-            )
+            raise ValueError("cleanup ownership requires binding-capable raw capabilities")
         return
     try:
         _write_binding_attribute(component, binding)
@@ -361,9 +346,7 @@ def _set_binding(
         return
     if _binding_for(component) is not binding:
         if require_storage:
-            raise ValueError(
-                "cleanup ownership requires binding-capable raw capabilities"
-            )
+            raise ValueError("cleanup ownership requires binding-capable raw capabilities")
         _restore_binding_state(component, _RESOURCE_BINDING_MISSING)
 
 
@@ -376,9 +359,7 @@ def _binding_for_components(
         if candidate is None:
             continue
         if binding is not None and binding is not candidate:
-            raise ValueError(
-                "composition components belong to different resource lineages"
-            )
+            raise ValueError("composition components belong to different resource lineages")
         binding = candidate
     return binding
 
@@ -386,9 +367,7 @@ def _binding_for_components(
 def _safe_error_type(error: BaseException) -> str:
     """Return a terminal-safe, deterministic exception type label."""
 
-    allowed = frozenset(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
-    )
+    allowed = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
     sanitized = "".join(char if char in allowed else "_" for char in type(error).__name__)
     return sanitized[:128] or "UnknownError"
 
@@ -409,9 +388,7 @@ class _FrozenPromptAssembler:
         publication_state: _GenerationPublicationState | None = None,
         resource_binding: _CompositionResourceBinding | None = None,
     ) -> None:
-        self._sections = tuple(
-            sorted(sections, key=lambda item: (item.priority, item.section_id))
-        )
+        self._sections = tuple(sorted(sections, key=lambda item: (item.priority, item.section_id)))
         self._publication_state = publication_state
         self._composition_resource_binding = resource_binding
 
@@ -771,9 +748,7 @@ class _FrozenJsonList(list):
 
 def _freeze_json(value: object) -> object:
     if isinstance(value, dict):
-        return _FrozenJsonDict(
-            {str(key): _freeze_json(item) for key, item in value.items()}
-        )
+        return _FrozenJsonDict({str(key): _freeze_json(item) for key, item in value.items()})
     if isinstance(value, list):
         return _FrozenJsonList([_freeze_json(item) for item in value])
     return value
@@ -1073,9 +1048,7 @@ class CompositionGeneration:
     max_output_tokens: int | None = None
     plugins: tuple[PluginIdentity, ...] = (CORE_PLUGIN_IDENTITY,)
     verifier: CompletionVerifier | None = field(default=None, compare=False, repr=False)
-    resource_owner: CompositionResourceOwner | None = field(
-        default=None, compare=False, repr=False
-    )
+    resource_owner: CompositionResourceOwner | None = field(default=None, compare=False, repr=False)
     # Stage B ownership is explicit at the ActivationSet boundary.  Its
     # registries contain borrowed core entries plus generation-owned plugin
     # registrations; the set, rather than a capability-wide cleanup owner,
@@ -1092,17 +1065,11 @@ class CompositionGeneration:
     _tool_schemas: tuple[ToolSchema, ...] = field(init=False, compare=False, repr=False)
     _policy_names: tuple[str, ...] = field(init=False, compare=False, repr=False)
     _middleware_names: tuple[str, ...] = field(init=False, compare=False, repr=False)
-    _prompt_sections: tuple[PromptSection, ...] = field(
-        init=False, compare=False, repr=False
-    )
+    _prompt_sections: tuple[PromptSection, ...] = field(init=False, compare=False, repr=False)
     _scope: Scope | None = field(init=False, compare=False, repr=False)
     _services: ServiceView | None = field(init=False, compare=False, repr=False)
-    _publication_state: _GenerationPublicationState = field(
-        init=False, compare=False, repr=False
-    )
-    _resource_binding: _CompositionResourceBinding = field(
-        init=False, compare=False, repr=False
-    )
+    _publication_state: _GenerationPublicationState = field(init=False, compare=False, repr=False)
+    _resource_binding: _CompositionResourceBinding = field(init=False, compare=False, repr=False)
 
     def __post_init__(self, cleanup: CleanupCallback | None) -> None:
         activation_skills: tuple[FrozenSkill, ...] = ()
@@ -1110,18 +1077,12 @@ class CompositionGeneration:
         activation_middleware_names: tuple[str, ...] | None = None
         if cleanup is not None:
             if self.resource_owner is None:
-                raise ValueError(
-                    "generation cleanup requires an explicit CompositionResourceOwner"
-                )
+                raise ValueError("generation cleanup requires an explicit CompositionResourceOwner")
             if self.resource_owner.cleanup is not cleanup:
-                raise ValueError(
-                    "generation cleanup must be bound to its resource owner"
-                )
+                raise ValueError("generation cleanup must be bound to its resource owner")
 
         if self.activation_set is not None and self.resource_owner is not None:
-            raise ValueError(
-                "a Generation cannot combine an ActivationSet with a resource owner"
-            )
+            raise ValueError("a Generation cannot combine an ActivationSet with a resource owner")
 
         if self.activation_set is not None and not callable(
             getattr(self.activation_set, "dispose", None)
@@ -1132,26 +1093,18 @@ class CompositionGeneration:
             if activation_identities is not None and tuple(self.plugins) != tuple(
                 activation_identities
             ):
-                raise ValueError(
-                    "generation plugin identities must match its ActivationSet"
-                )
+                raise ValueError("generation plugin identities must match its ActivationSet")
             activation_tools = getattr(self.activation_set, "tools", _RESOURCE_BINDING_MISSING)
-            activation_prompt = getattr(
-                self.activation_set, "prompt", _RESOURCE_BINDING_MISSING
-            )
+            activation_prompt = getattr(self.activation_set, "prompt", _RESOURCE_BINDING_MISSING)
             if activation_tools is not _RESOURCE_BINDING_MISSING and (
                 self.tools.registry is not activation_tools
             ):
-                raise ValueError(
-                    "generation ToolRuntime must use its ActivationSet registry"
-                )
+                raise ValueError("generation ToolRuntime must use its ActivationSet registry")
             if (
                 activation_prompt is not _RESOURCE_BINDING_MISSING
                 and self.prompt is not activation_prompt
             ):
-                raise ValueError(
-                    "generation PromptAssembler must use its ActivationSet registry"
-                )
+                raise ValueError("generation PromptAssembler must use its ActivationSet registry")
             activation_policies = getattr(
                 self.activation_set,
                 "policies",
@@ -1172,9 +1125,7 @@ class CompositionGeneration:
                     # an ownership or identity boundary: a caller-controlled
                     # __eq__ could claim that two behaviorally different
                     # policies are the same candidate capability.
-                    raise ValueError(
-                        "generation ToolRuntime must use its ActivationSet policies"
-                    )
+                    raise ValueError("generation ToolRuntime must use its ActivationSet policies")
             activation_middlewares = getattr(
                 self.activation_set,
                 "middlewares",
@@ -1191,9 +1142,7 @@ class CompositionGeneration:
                         strict=True,
                     )
                 ):
-                    raise ValueError(
-                        "generation ToolRuntime must use its ActivationSet middleware"
-                    )
+                    raise ValueError("generation ToolRuntime must use its ActivationSet middleware")
             activation_verifier = getattr(
                 self.activation_set,
                 "verifier",
@@ -1203,30 +1152,18 @@ class CompositionGeneration:
                 activation_verifier is not _RESOURCE_BINDING_MISSING
                 and self.verifier is not activation_verifier
             ):
-                raise ValueError(
-                    "generation verifier must use its ActivationSet verifier"
-                )
+                raise ValueError("generation verifier must use its ActivationSet verifier")
             activation_llms = getattr(
                 self.activation_set,
                 "llms",
                 _RESOURCE_BINDING_MISSING,
             )
-            if (
-                activation_llms is not _RESOURCE_BINDING_MISSING
-                and activation_llms is not None
-            ):
+            if activation_llms is not _RESOURCE_BINDING_MISSING and activation_llms is not None:
                 activation_provider = activation_llms.get(self.provider)
                 runtime_provider = self.llms.get(self.provider)
-                if (
-                    activation_provider is None
-                    or runtime_provider is not activation_provider
-                ):
-                    raise ValueError(
-                        "generation provider must use its ActivationSet provider"
-                    )
-            activation_scope = getattr(
-                self.activation_set, "scope", _RESOURCE_BINDING_MISSING
-            )
+                if activation_provider is None or runtime_provider is not activation_provider:
+                    raise ValueError("generation provider must use its ActivationSet provider")
+            activation_scope = getattr(self.activation_set, "scope", _RESOURCE_BINDING_MISSING)
             activation_services = getattr(
                 self.activation_set, "services", _RESOURCE_BINDING_MISSING
             )
@@ -1246,9 +1183,7 @@ class CompositionGeneration:
                     "generation ActivationSet scope and services must be provided together"
                 )
             elif activation_scope.services is not activation_services:
-                raise ValueError(
-                    "generation ActivationSet service view must belong to its scope"
-                )
+                raise ValueError("generation ActivationSet service view must belong to its scope")
             verify_capabilities = getattr(
                 self.activation_set,
                 "_verify_generation_capabilities",
@@ -1295,15 +1230,11 @@ class CompositionGeneration:
                 and self.resource_owner is not None
                 and resource_binding.owner is not self.resource_owner
             ):
-                raise ValueError(
-                    "resource capabilities already belong to another cleanup owner"
-                )
+                raise ValueError("resource capabilities already belong to another cleanup owner")
             elif resource_binding.used and (
                 self.resource_owner is not None or resource_binding.owner is not None
             ):
-                raise ValueError(
-                    "cleanup ownership cannot be derived from existing capabilities"
-                )
+                raise ValueError("cleanup ownership cannot be derived from existing capabilities")
         publication_state = _GenerationPublicationState()
         frozen_llms = _FrozenLlmRegistry.from_registry(
             self.llms,
@@ -1326,9 +1257,7 @@ class CompositionGeneration:
         tool_schemas = frozen_tools.registry.schemas()
         prompt_sections = frozen_prompt.sections()
         policy_names = tuple(policy.name for policy in frozen_tools.policies)
-        middleware_names = tuple(
-            middleware.name for middleware in frozen_tools.middlewares
-        )
+        middleware_names = tuple(middleware.name for middleware in frozen_tools.middlewares)
         # Commit ownership only after every fallible provider lookup and
         # projection has completed.  A bad provider name must leave the raw
         # capabilities and the explicit Owner retryable.
@@ -1359,8 +1288,8 @@ class CompositionGeneration:
     def snapshot(self, *, workspace: Path) -> CompositionSnapshot:
         """Build the model-visible content from this generation only."""
 
-        system_prompt = _FrozenPromptAssembler(self._prompt_sections).assemble(
-            workspace=str(workspace)
+        system_prompt = assemble_prompt_sections(
+            self._prompt_sections, workspace=str(workspace), tools=self._tool_schemas
         )
         return RuntimeComposition(
             provider=self.provider,
@@ -1471,16 +1400,13 @@ class CompositionRuntime(Protocol):
         session_id: str,
         turn_id: str,
         step_id: str,
-    ) -> CompositionLease:
-        ...
+    ) -> CompositionLease: ...
 
 
 class CompositionLease(Protocol):
-    async def __aenter__(self) -> ActiveComposition:
-        ...
+    async def __aenter__(self) -> ActiveComposition: ...
 
-    async def __aexit__(self, exc_type, exc_value, traceback) -> bool | None:
-        ...
+    async def __aexit__(self, exc_type, exc_value, traceback) -> bool | None: ...
 
 
 @dataclass(slots=True)
@@ -1527,9 +1453,7 @@ class GenerationCompositionRuntime:
         self._startup_max_output_tokens = max_output_tokens
         if cleanup is not None:
             if resource_owner is not None and resource_owner.cleanup is not cleanup:
-                raise ValueError(
-                    "runtime cleanup must be bound to its resource owner"
-                )
+                raise ValueError("runtime cleanup must be bound to its resource owner")
             resource_owner = resource_owner or CompositionResourceOwner(cleanup)
         initial = CompositionGeneration(
             llms=llms,
@@ -1564,9 +1488,7 @@ class GenerationCompositionRuntime:
         # one-shot owner only after the complete initial runtime view exists;
         # no caller-controlled Provider, Tool or Prompt method runs afterward.
         self._validate_and_claim_generation(initial)
-        self._records: dict[int, _GenerationRecord] = {
-            1: _GenerationRecord(1, initial)
-        }
+        self._records: dict[int, _GenerationRecord] = {1: _GenerationRecord(1, initial)}
         self._current: _GenerationRecord | None = self._records[1]
         self._compatibility_llms = compatibility_llms
         self._compatibility_tools = compatibility_tools
@@ -1635,9 +1557,7 @@ class GenerationCompositionRuntime:
     @property
     def plugins(self) -> tuple[PluginIdentity, ...]:
         return (
-            self._current.generation.plugins
-            if self._current is not None
-            else self._startup_plugins
+            self._current.generation.plugins if self._current is not None else self._startup_plugins
         )
 
     @property
@@ -1688,13 +1608,9 @@ class GenerationCompositionRuntime:
             if self._disposed or self._current is None:
                 raise RuntimeError("composition runtime is disposed")
             if self._poisoned:
-                raise RuntimeError(
-                    "composition runtime is poisoned by generation cleanup failure"
-                )
+                raise RuntimeError("composition runtime is poisoned by generation cleanup failure")
             if generation is self._current.generation:
-                raise ValueError(
-                    "the current generation cannot be published again"
-                )
+                raise ValueError("the current generation cannot be published again")
             self._validate_and_claim_generation(generation)
             previous = self._current
             previous.state = "retired"
@@ -1713,13 +1629,8 @@ class GenerationCompositionRuntime:
         generation: CompositionGeneration,
     ) -> None:
         if generation.tools.sessions is not self._session_service:
-            raise ValueError(
-                "published generation must use the runtime session service"
-            )
-        if (
-            tuple(generation.plugins) != self._startup_plugins
-            and generation.activation_set is None
-        ):
+            raise ValueError("published generation must use the runtime session service")
+        if tuple(generation.plugins) != self._startup_plugins and generation.activation_set is None:
             raise ValueError(
                 "published generation plugin identities require a Generation-owned ActivationSet"
             )
@@ -1782,9 +1693,7 @@ class GenerationCompositionRuntime:
     async def _drain_body(self) -> None:
         while True:
             async with self._lock:
-                retired = [
-                    record for record in self._records.values() if record.state != "current"
-                ]
+                retired = [record for record in self._records.values() if record.state != "current"]
                 for record in retired:
                     if record.state == "retired" and record.leases == 0:
                         self._schedule_cleanup_locked(record)
@@ -1796,11 +1705,7 @@ class GenerationCompositionRuntime:
                     or not record.cleanup_task.done()
                 ]
                 if not pending:
-                    failures = (
-                        (self._cleanup_failure,)
-                        if self._cleanup_failure is not None
-                        else ()
-                    )
+                    failures = (self._cleanup_failure,) if self._cleanup_failure is not None else ()
                     if failures:
                         raise CompositionDrainError(failures)
                     return

@@ -1,0 +1,17 @@
+{
+  "source_files_verified": {
+    "baseline": 262,
+    "candidate": 266
+  },
+  "support_files_verified": 9,
+  "candidate_archive_verified": true,
+  "manual_reviews": 144,
+  "independent_replayed_requests": 909,
+  "replay_and_invariant_errors": 0,
+  "full_tests_run": false,
+  "L2_L4_run": false,
+  "acceptance": "NO-GO",
+  "plan_execution": "terminal evaluation outcome per section 5.3; no release",
+  "prior_commit": "a54d431",
+  "AR_changes_committed": false
+}

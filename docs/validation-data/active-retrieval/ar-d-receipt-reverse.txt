@@ -1,0 +1,84 @@
+F
+================================== FAILURES ===================================
+_ test_retained_search_and_read_receipts_still_disclose_next_step[m-direct-\u4eba\u6570] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5187/test_retained_search_and_read_0')
+case_id = 'm-direct', query = '人数'
+
+    @pytest.mark.parametrize(
+        "case_id,query", [("h-direct", "口令"), ("m-direct", "人数"), ("s-direct", "签到")]
+    )
+    async def test_retained_search_and_read_receipts_still_disclose_next_step(tmp_path, case_id, query):
+        manifest = deepcopy(
+            load_manifest(Path(__file__).parent / "live_active_retrieval/manifest.json")
+        )
+        # Deliberately smaller than every control receipt; independent from the frozen real grid.
+        manifest["limits"]["max_tool_output_chars"] = 64
+        fixture = next(f for f in materialize(manifest) if f["id"] == case_id)
+    
+        def read(request):
+            pages = [json.loads(b["body"]) for b in items(request) if b["tier"] == "search"]
+            if not pages or not pages[0]["hits"]:
+                return ModelResponse(content="search evidence missing")
+            action = pages[0]["hits"][0]["read_action"]
+            return ModelResponse(
+                tool_calls=(ToolCall("read", action["tool_name"], action["arguments"]),)
+            )
+    
+        def answer(request):
+            visible = any(
+                b["tier"] in {"section", "chunk"} and fixture["value"] in b["body"]
+                for b in items(request)
+            )
+            return ModelResponse(content="body present" if visible else "body missing")
+    
+        provider = SelectingProvider(
+            [ModelResponse(content="noted") for _ in fixture.get("history_turns", [])]
+            + [
+                ModelResponse(
+                    tool_calls=(ToolCall("search", "search_" + fixture["family"], {"query": query}),)
+                ),
+                read,
+                answer,
+            ]
+        )
+        runtime, store, session, scope, value = await prepare_runtime(
+            tmp_path, fixture, {"manifest": manifest}, provider, "fixture-model"
+        )
+        try:
+            await setup_source(runtime, session, scope, value, fixture, manifest)
+>           result = await runtime.run_existing(session, fixture["question"])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reference_receipt_retention.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\runtime\agent_runtime.py:429: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:218: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1400: in freeze
+    ) = await self._select_memory(
+src\traceh\session\context_input.py:1528: in _select_memory
+    found, priorities = searches(source)
+                        ^^^^^^^^^^^^^^^^
+src\traceh\session\context_input.py:1476: in searches
+    found = search_candidates(
+src\traceh\session\memory_search.py:104: in candidates
+    results = eligible_results(
+src\traceh\session\reference_search.py:385: in eligible_results
+    _fail("reference-search-receipt-invalid")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'reference-search-receipt-invalid'
+
+    def _fail(code="reference-search-binding-mismatch"):
+>       raise ReferenceSearchError(code)
+E       traceh.session.reference_search.ReferenceSearchError: reference-search-receipt-invalid
+
+src\traceh\session\reference_search.py:25: ReferenceSearchError
+=========================== short test summary info ===========================
+FAILED tests/test_reference_receipt_retention.py::test_retained_search_and_read_receipts_still_disclose_next_step[m-direct-\u4eba\u6570]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!

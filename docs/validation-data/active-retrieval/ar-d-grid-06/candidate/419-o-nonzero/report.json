@@ -1,0 +1,38 @@
+{
+  "identity": "419-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "04bc8ab2-39ae-42d4-b169-0632948ba70d",
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 0,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 5,
+    "estimated_usage": 0,
+    "input_tokens": 3750,
+    "output_tokens": 20,
+    "total_tokens": 3770
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 35.54599999997299
+}

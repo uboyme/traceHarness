@@ -1,0 +1,100 @@
+{
+  "identity": "113-o-direct",
+  "case_id": "o-direct",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "c0dbfbf2-ab9b-4c3f-8bcf-efc7e842969a",
+  "target_start_seq": 28,
+  "answer": "已完整读取 `python check.py` 的 stdout（共 16853 字符），全文仅包含格式化日志行，如：\n\n```\n检查行 0001：普通器材登记，状态 normal。\n...\n检查行 0270：普通器材登记，状态 normal。\n```\n\n全文**未出现“交接校验码”字样**，也无任何哈希值、校验码、checksum、hash、code 等相关字段或数值。\n\n因此，**本次设备检查输出中不存在“交接校验码”**。\n\n答案：无。",
+  "steps": 7,
+  "reason": "completed",
+  "target_seconds": 62.60900000005495,
+  "target_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 57842,
+    "output_tokens": 1354,
+    "total_tokens": 59196
+  },
+  "all_usage": {
+    "attempts": 9,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 66235,
+    "output_tokens": 1377,
+    "total_tokens": 67612
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 1272,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 2537,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 3804,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 5071,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "5d125f0f-0aef-498a-8a23-c6ec636be7ce",
+        "offset": 6338,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 6,
+  "output_executions": 1,
+  "elapsed_seconds": 70.98400000005495
+}

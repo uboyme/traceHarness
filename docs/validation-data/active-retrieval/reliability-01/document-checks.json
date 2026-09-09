@@ -1,0 +1,46 @@
+{
+  "files": [
+    "docs\\note\\project-context.md",
+    "docs\\note\\project-context-plain-zh.md",
+    "docs\\plan\\TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md",
+    "docs\\plan\\TRACEHARNESS_RETRIEVAL_RELIABILITY_EXPERIMENT_PLAN.md",
+    "docs\\validation-active-retrieval.md",
+    "docs\\deal\\008-retrieval-reliability-experiments.md"
+  ],
+  "sha256": {
+    "docs\\note\\project-context.md": "073e2ae97cb6538ef3d642f2234d1632a63a214c30ffcf4281444a7062a97f19",
+    "docs\\note\\project-context-plain-zh.md": "839a3f69c5703c14d30de2f15a038565f4479ccaeb3477dceb206ac464554fba",
+    "docs\\plan\\TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md": "dcc88ba3bd0f5e4346af8a7ab55e698f802b1e7c001074bee2e74ccf863af218",
+    "docs\\plan\\TRACEHARNESS_RETRIEVAL_RELIABILITY_EXPERIMENT_PLAN.md": "d83f724bfc57872add798eb6f3590f64554d6c014daabf1ffaf332bc5244062a",
+    "docs\\validation-active-retrieval.md": "51c7d2577362a70d5928b74cc080118f8321731627bdee2b1cf5b1afa966148c",
+    "docs\\deal\\008-retrieval-reliability-experiments.md": "3ed735ecf86af9815f4126b24432c88e05e0be64ab4756150a5bca4bc6da777e"
+  },
+  "relative_links_checked": 618,
+  "fenced_blocks_checked": 98,
+  "mermaid_blocks_checked": 59,
+  "context_chapters": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20"
+  ],
+  "errors": [],
+  "scope": "UTF-8, links, fence closure, chapter correspondence and current architecture prose; no new Mermaid topology."
+}

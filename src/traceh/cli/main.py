@@ -111,6 +111,12 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
+    parser.add_argument("--denial-warn-after", type=int, default=None,
+                        help="Warn after this many identical consecutive denied steps (>=2)")
+    parser.add_argument("--denial-stop-after", type=int, default=None,
+                        help="Stop repeated denial after this many steps (greater than warning)")
+    parser.add_argument("--disable-repeated-denial-check", action="store_true",
+                        help="Disable repeated-denial detection; max-steps still applies")
     _add_model_retry_arguments(parser)
     _add_compaction_arguments(parser)
     parser.add_argument(
@@ -532,6 +538,23 @@ def _model_retry_policy(args: argparse.Namespace) -> ModelRetryPolicy:
         raise CliConfigurationError(f"invalid model retry policy: {error}") from None
 
 
+def _repeated_denial_policy(args: argparse.Namespace):
+    from traceh.runtime.repeated_denial import RepeatedDenialPolicy
+
+    if getattr(args, "disable_repeated_denial_check", False):
+        if any(getattr(args, name, None) is not None
+               for name in ("denial_warn_after", "denial_stop_after")):
+            raise ValueError("cannot set denial thresholds while disabling the check")
+        return None
+    defaults = RepeatedDenialPolicy()
+    return RepeatedDenialPolicy(
+        warn_after=(defaults.warn_after if getattr(args, "denial_warn_after", None) is None
+                    else args.denial_warn_after),
+        stop_after=(defaults.stop_after if getattr(args, "denial_stop_after", None) is None
+                    else args.denial_stop_after),
+    )
+
+
 async def _runtime(
     args: argparse.Namespace,
     *,
@@ -550,6 +573,7 @@ async def _runtime(
         provider=args.provider,
         model=model,
         max_steps=args.max_steps,
+        repeated_denial_policy=_repeated_denial_policy(args),
         verification_command=args.verify_command,
         verifier_name=args.verifier_name,
         model_retry_policy=_model_retry_policy(args),

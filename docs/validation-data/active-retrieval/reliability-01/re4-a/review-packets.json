@@ -1,0 +1,1332 @@
+[
+  {
+    "arm": "baseline",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_seconds": 1.25,
+    "report_sha256": "914abda7bdd0dd1f0a041b62e2d16e848dca27520f451a5a92e74f70d579be94",
+    "source_events_sha256": "0337184e3cdc099ecab35b4f53503e3bf43e05ffce9b704d0c3768788d1b663f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_seconds": 1.0940000000409782,
+    "report_sha256": "50afb647cfc98a186e5c868cf605a81eea10d0623f422b9a987057c8cd1a5d92",
+    "source_events_sha256": "97ed3044683742447df68e411f21a6f2b26945a6816d4b9becf55bf28c21a4ef",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 108,
+      "total_tokens": 4049
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 108,
+      "total_tokens": 4049
+    },
+    "target_seconds": 3.51500000001397,
+    "report_sha256": "0c4a42c8be2b4a175ef48c7609e1bceac4434605563e4797eb3280e38f2b147f",
+    "source_events_sha256": "10d00d38cfefc509558e21f16eeef95f6c52bfe99f5ade08c9c3ecc15d7619ea",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_seconds": 1.327999999979511,
+    "report_sha256": "65efcc866961ba54ed4600ff4e21da22b92d25da915aae68b1d261b2b365ed41",
+    "source_events_sha256": "75c83150350f3fe8139b278afca6cf8da43b86b96390328ac5b5487d97bb6360",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-history-no",
+    "family": "history",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-794D1051C7",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "The search result shows a relevant hit: `\"请记下这条记录，只回复已记下：本次交接不使用凭证。\"` which translates to \"Please record this note, reply only with 'recorded': This handover does not use a credential.\"\n\nThis directly answers the question —陶艺交接时要使用哪张凭证？ (Which credential is used for pottery handover?) — with the clear statement that **no credential is used** for this handover.\n\nTherefore, the answer is: **不使用凭证** (No credential is used).",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 4,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 184,
+        "kind": "history",
+        "query": "陶艺交接",
+        "status": "no-hit",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 197,
+        "kind": "history",
+        "query": "凭证",
+        "status": "matches",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": [
+          "请记下这条记录，只回复已记下：本次交接不使用凭证。"
+        ]
+      }
+    ],
+    "calls": [
+      {
+        "name": "request_history_page",
+        "arguments": {
+          "block_id": "b45da94da73fd7f6a91c1d8318f107e987fed201263528e97b7d42336c810c08",
+          "cursor": {
+            "block_id": "b45da94da73fd7f6a91c1d8318f107e987fed201263528e97b7d42336c810c08",
+            "index": 0,
+            "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+          },
+          "requested_tier": "chunk"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "陶艺交接"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "凭证"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 168,
+        "name": "request_history_page"
+      },
+      {
+        "seq": 181,
+        "name": "search_history"
+      },
+      {
+        "seq": 194,
+        "name": "search_history"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 14,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 59458,
+      "output_tokens": 612,
+      "total_tokens": 60070
+    },
+    "target_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 20318,
+      "output_tokens": 582,
+      "total_tokens": 20900
+    },
+    "target_seconds": 31.64000000001397,
+    "report_sha256": "b98237815b7edcaf38611f44f15d4f6b8e8f3003be763037f27f22fbb7f9f9f5",
+    "source_events_sha256": "03044b8bea0c090dd71d17088fe124dd0c9db01bd9a46805b0da63dbc63e304d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-history-yes",
+    "family": "history",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-50DCAF2F9D",
+    "source": "交接凭证是 REF-50DCAF2F9D。",
+    "predecessor_value": null,
+    "answer": "The search result shows a direct match:  \n**“交接凭证是 REF-50DCAF2F9D。”**  \n(“The handover credential is REF-50DCAF2F9D.”)\n\nThis appears in a user message within the history, explicitly stating the credential required for the handover.\n\nTherefore, the credential to be used for ceramic art (陶艺) handover is:\n\n**REF-50DCAF2F9D**",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 191,
+        "request_snapshot_seq": 187,
+        "dispatch_fingerprint": "3b94d9889fee3986e3db47a90ca7f87ae87d2fa8ecfb272ab35308c19054b375",
+        "source_evidence": {
+          "context_seq": 184,
+          "reference": {
+            "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+            "cursor": {
+              "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "34b343c3f8c2d86d643800b05a564d1b7a2dbcdd761247b7970c963b4ac52285",
+              "event_id": "7925d2ed-9bbc-441d-9903-6a70a7d679dc",
+              "seq": 111,
+              "stream_id": "session:72a80285-471d-4d7d-b1c3-4422512e01ce",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "37d5ccee72868073a5c121290378b5ec6d37fbaa24be838802ff64bfa2aa6400"
+          }
+        }
+      }
+    ],
+    "searches": [
+      {
+        "context_seq": 184,
+        "kind": "history",
+        "query": "凭证",
+        "status": "matches",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": [
+          "请记下这条记录，只回复已记下：交接凭证是 REF-50DCAF2F9D。"
+        ]
+      }
+    ],
+    "calls": [
+      {
+        "name": "request_history_page",
+        "arguments": {
+          "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+          "cursor": {
+            "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+            "index": 0,
+            "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+          },
+          "requested_tier": "chunk"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "凭证"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 168,
+        "name": "request_history_page"
+      },
+      {
+        "seq": 181,
+        "name": "search_history"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 13,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 54177,
+      "output_tokens": 509,
+      "total_tokens": 54686
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 14995,
+      "output_tokens": 479,
+      "total_tokens": 15474
+    },
+    "target_seconds": 22.76500000001397,
+    "report_sha256": "04ed59c21d665a259fa32f44da002fbc156ed4b86a89339adc710228981c35e7",
+    "source_events_sha256": "957bf0bdadddd61368bcb1b77ba4fbdf9dbcfc6a23a4a1cac6932091471ee89f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-memory-no",
+    "family": "memory",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-689C399B2D",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的memory条目，陶艺交接时要使用的凭证是\"交接批准记录\"。\n\n在两个已披露的memory条目中都明确提到：\n- \"陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n- \"陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n因此，陶艺交接时要使用的凭证是**交接批准记录**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-689c399b2d-00",
+          "requested_tier": "section",
+          "version": "f6d6c37d51fa969e3b4e872739371ae77f29125f0ae97fe57b27b1be6652d8ed"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-689c399b2d-01",
+          "requested_tier": "section",
+          "version": "1bbcddf64c589d8b64b1b62fa2b7ba390e8b031fae678695c22c80ece84ea509"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18639,
+      "output_tokens": 453,
+      "total_tokens": 19092
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18639,
+      "output_tokens": 453,
+      "total_tokens": 19092
+    },
+    "target_seconds": 21.17200000002049,
+    "report_sha256": "d19fc033d674947134b8d10929038f1fc430d5d515de30f2da23b027d7862ec1",
+    "source_events_sha256": "d2bcacb4487806095ea5cea01b4b74ce605a9de01dffc7bd4b347b916dd32a47",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-memory-yes",
+    "family": "memory",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-35CD9BFA4D",
+    "source": "交接凭证是 REF-35CD9BFA4D。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的所有memory条目，所有信息都一致指出：陶艺交接时要使用哪张凭证，需要查询\"交接批准记录\"。\n\n具体来说：\n- 第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\n- 第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\n\n所有提供的memory条目都明确指引查询\"交接批准记录\"来确定具体的凭证，但这些条目本身没有提供凭证的具体名称。\n\n因此，根据当前可用的参考信息，答案是：需要查询交接批准记录来确定陶艺交接时使用的凭证。\n\n由于问题直接询问\"要使用哪张凭证\"，而参考信息明确指出需要查询\"交接批准记录\"，这表明\"交接批准记录\"本身就是所需的凭证。\n\n**交接批准记录**",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 4,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-00",
+          "requested_tier": "section",
+          "version": "c8f103f2512b76976f52c92682994774bf93198842847bb4478f0eb05ea449cf"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-01",
+          "requested_tier": "section",
+          "version": "88bf1c7681a03218af450f30743ff25974c56317f018113584b0d32d8e366e46"
+        }
+      },
+      {
+        "name": "list_files",
+        "arguments": {}
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 25104,
+      "output_tokens": 759,
+      "total_tokens": 25863
+    },
+    "target_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 25104,
+      "output_tokens": 759,
+      "total_tokens": 25863
+    },
+    "target_seconds": 33.21799999999348,
+    "report_sha256": "fd603407bd6f52cc50fb8efe6ddd1cdcdde4ea190141e8259842a02a59f63948",
+    "source_events_sha256": "f2f7eaed508b83dcfef514c5a0bfb8f15af4318ec8b8cd8a970299cbf6a8e678",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-skill-no",
+    "family": "skill",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-ED3060E9D1",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "根据提供的技能文档内容，其中明确指出：“本次交接不使用凭证。”\n\n因此，陶艺交接时**不使用任何凭证**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_skill_reference",
+        "arguments": {
+          "catalog_digest": "79848465a1f4c086009b9f887654853acc46f99a476c962bb8e1f97b96571a55",
+          "chunk_id": null,
+          "requested_tier": "section",
+          "resource_id": null,
+          "section_id": "section-14",
+          "skill_id": "manual-ed3060e9d1",
+          "version": "1.0.0"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_skill_reference"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10080,
+      "output_tokens": 251,
+      "total_tokens": 10331
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10080,
+      "output_tokens": 251,
+      "total_tokens": 10331
+    },
+    "target_seconds": 8.640999999945052,
+    "report_sha256": "2b6f16de810201e4b55dad859b71de9e95f58916a54be9e6850cba380803f513",
+    "source_events_sha256": "0eb27525ed173a26bc4228396c5aac10338868e76256d680ac6022eaf88023da",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re4-skill-yes",
+    "family": "skill",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-7FD7AD62CE",
+    "source": "交接凭证是 REF-7FD7AD62CE。",
+    "predecessor_value": null,
+    "answer": "The current references state: “交接凭证是 REF-7FD7AD62CE。” (“The handover voucher is REF-7FD7AD62CE.”)\n\nThis explicitly names the voucher used for ceramic art handover as **REF-7FD7AD62CE**.\n\nNo further lookup or verification is needed — the answer is directly provided in the supplied reference.\n\nREF-7FD7AD62CE",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "request_snapshot_seq": 23,
+        "dispatch_fingerprint": "a5dfc968c8dbabc0c1478c7a9b4dede4b0e496e15171edfaebd20c6b22368a81",
+        "source_evidence": {
+          "context_seq": 20,
+          "id": "manual-7fd7ad62ce",
+          "version": "1.0.0",
+          "tier": "section"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_skill_reference",
+        "arguments": {
+          "catalog_digest": "fd2ad045ea82de48ed875b26f86989f5bca374b494c8101b1aec808d7682aa67",
+          "chunk_id": null,
+          "requested_tier": "section",
+          "resource_id": null,
+          "section_id": "section-14",
+          "skill_id": "manual-7fd7ad62ce",
+          "version": "1.0.0"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_skill_reference"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10130,
+      "output_tokens": 357,
+      "total_tokens": 10487
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10130,
+      "output_tokens": 357,
+      "total_tokens": 10487
+    },
+    "target_seconds": 10.954000000027008,
+    "report_sha256": "13a200d99f1f0c7bbd185c5023543e946bd029f76acadef3a82bfb89d77fd256",
+    "source_events_sha256": "25339805cad6b6c08651586b31c06a31c49d3bd4591fae46ca0f099d3d7466f2",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_seconds": 1.0309999999590218,
+    "report_sha256": "0ebf17510ce8e87716dff160f89f0979379f23f0081bcb983469eea29bd959e4",
+    "source_events_sha256": "06dae10867aa1981610c37b18edcb92fa17916b95dbb154a52c88eed42e923be",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_seconds": 1.4060000000754371,
+    "report_sha256": "df478bf4b261837e19564fd92dc84a5c9801245dfb1032aa48a1f1b939f71108",
+    "source_events_sha256": "e41a2917b126ca34d0f2e65debe2662427c7c79ea1bf5148248f64ebe2ce4d06",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否”）和致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感，符合中文日常交际中的礼貌原则。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 124,
+      "total_tokens": 4065
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 124,
+      "total_tokens": 4065
+    },
+    "target_seconds": 3.969000000040978,
+    "report_sha256": "8c38bb8e0702a7cc675f2fd9687522201ad663770abdee907868f705df067cd9",
+    "source_events_sha256": "35bcf7254221719e6f9b8afaafe3348d48dc82224234c749cb5c7985d14ce25c",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_seconds": 1.4070000000065193,
+    "report_sha256": "37cde2572e6694f4f038bc9f5dc46a6bbb437be956fa3ddc706c2694a4a5e9eb",
+    "source_events_sha256": "ccb675dc4628ebbd435ec69b855cef5703c96c4fea6f47ee56ebca94c6693b4b",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-history-no",
+    "family": "history",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-794D1051C7",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "The current references contain only a history directory navigation entry with no actual content body. Since the search for \"陶艺 交接 凭证\" in history returned no results, and there's no workspace file content available in the current references, I cannot determine which credential is used for pottery handover from the provided information.\n\nThe question asks specifically about which credential is used for pottery handover, but none of the available reference sources (history search results, navigation-only directory entry) contain this information.\n\nTherefore, based on the available evidence, I cannot answer which credential is used for pottery handover.",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 171,
+        "kind": "history",
+        "query": "陶艺 交接 凭证",
+        "status": "no-hit",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": []
+      }
+    ],
+    "calls": [
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "陶艺 交接 凭证"
+        }
+      },
+      {
+        "name": "list_files",
+        "arguments": {}
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 168,
+        "name": "search_history"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 13,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 53306,
+      "output_tokens": 319,
+      "total_tokens": 53625
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 14166,
+      "output_tokens": 289,
+      "total_tokens": 14455
+    },
+    "target_seconds": 18.18700000003446,
+    "report_sha256": "7f39739d3b30281558cd1fb40441251ab94590cb86f30c815e9c8f092df6e713",
+    "source_events_sha256": "a38d4726e5019d5f98da182f4b37464487ed7a921243269cd188faa970050b99",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-history-yes",
+    "family": "history",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-50DCAF2F9D",
+    "source": "交接凭证是 REF-50DCAF2F9D。",
+    "predecessor_value": null,
+    "answer": "The search for \"凭证\" found a hit in the history that contains the exact information needed: \"交接凭证是 REF-50DCAF2F9D\" (the handover credential is REF-50DCAF2F9D).\n\nThis appears in the search result with the text: \"请记下这条记录，只回复已记下：交接凭证是 REF-50DCAF2F9D。\"\n\nTherefore, the credential used for pottery handover is **REF-50DCAF2F9D**.\n\n{\"credential\": \"REF-50DCAF2F9D\"}",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 4,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 204,
+        "request_snapshot_seq": 200,
+        "dispatch_fingerprint": "33bc993abd7ff1d5583a5881a5a899591f0f06e271543785cabe8984fe92602b",
+        "source_evidence": {
+          "context_seq": 197,
+          "reference": {
+            "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+            "cursor": {
+              "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "698af73b0adf97dc82928166d5052b290cf6ccbda3bb26e6d7173f5781217261",
+              "event_id": "86d3c000-2624-4eb1-b791-f867d7f375bd",
+              "seq": 111,
+              "stream_id": "session:01933008-18f0-4c84-a6e4-c4daee605251",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "1cdaef18a29e7cd57de32e975fe16f92db36df0bb01beb155d7df7baae52e5f0"
+          }
+        }
+      }
+    ],
+    "searches": [
+      {
+        "context_seq": 184,
+        "kind": "history",
+        "query": "陶艺交接",
+        "status": "no-hit",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 197,
+        "kind": "history",
+        "query": "凭证",
+        "status": "matches",
+        "scanned": 20,
+        "total": 20,
+        "has_next": false,
+        "texts": [
+          "请记下这条记录，只回复已记下：交接凭证是 REF-50DCAF2F9D。"
+        ]
+      }
+    ],
+    "calls": [
+      {
+        "name": "request_history_page",
+        "arguments": {
+          "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+          "cursor": {
+            "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+            "index": 0,
+            "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+          },
+          "requested_tier": "chunk"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "陶艺交接"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "凭证"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 168,
+        "name": "request_history_page"
+      },
+      {
+        "seq": 181,
+        "name": "search_history"
+      },
+      {
+        "seq": 194,
+        "name": "search_history"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 14,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 59397,
+      "output_tokens": 615,
+      "total_tokens": 60012
+    },
+    "target_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 20215,
+      "output_tokens": 585,
+      "total_tokens": 20800
+    },
+    "target_seconds": 31.125,
+    "report_sha256": "9ef3399518f3beacbc44592f0290d5f0d79f2f14abc2b73eee0d555c275d7a41",
+    "source_events_sha256": "1988feaf7b784af21b78dd710f2e5757926623a4ea26480a63fd5805f074d6c9",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-memory-no",
+    "family": "memory",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-689C399B2D",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "根据已提供的背景记忆信息，所有条目都指向同一个答案：陶艺交接时要使用\"交接批准记录\"。\n\n具体来说：\n- 第0项：\"陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n- 第1项：\"陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n其他背景记忆条目（background-689c399b2d-02到05）都是目录元数据，需要进一步读取才能获取具体内容，但根据前两项已经明确指出需要查阅\"交接批准记录\"。\n\n因此，陶艺交接时要使用的凭证是：**交接批准记录**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-689c399b2d-00",
+          "requested_tier": "section",
+          "version": "f6d6c37d51fa969e3b4e872739371ae77f29125f0ae97fe57b27b1be6652d8ed"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-689c399b2d-01",
+          "requested_tier": "section",
+          "version": "1bbcddf64c589d8b64b1b62fa2b7ba390e8b031fae678695c22c80ece84ea509"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18672,
+      "output_tokens": 518,
+      "total_tokens": 19190
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18672,
+      "output_tokens": 518,
+      "total_tokens": 19190
+    },
+    "target_seconds": 22.31299999996554,
+    "report_sha256": "12e793bbc00ae9e043978968f41d7bfe43e4c813f7625067220cb2ce0d101305",
+    "source_events_sha256": "f7d86c9a53ab984bd70c4ae271ef17d4a0402304395ff5b54377283a17d58e12",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-memory-yes",
+    "family": "memory",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-35CD9BFA4D",
+    "source": "交接凭证是 REF-35CD9BFA4D。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的所有background memory条目，它们都包含相同的信息：\"陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n这表明具体的凭证信息不在这些background memory条目中，而是需要查询\"交接批准记录\"。\n\n由于所有已提供的memory条目都明确指出需要查询交接批准记录，但没有提供具体的凭证名称，而问题直接询问\"要使用哪张凭证\"，最合理的答案是：需要查询交接批准记录来确定具体的凭证。\n\n但是，让我检查是否有其他可能的线索。从参考中可以看到这些memory条目都是关于\"陶艺展览查询分工\"的不同项，但都指向同一个答案：需要查交接批准记录。\n\n因此，基于所提供的所有信息，答案应该是：需要查询交接批准记录来确定具体的凭证。\n\n不过，问题要求的是\"哪张凭证\"，所以最准确的回答是：根据现有信息，需要查询交接批准记录来确定具体的凭证，但当前资料中未提供具体的凭证名称。\n\n由于所有memory条目都一致指向\"交接批准记录\"，这本身就是答案的关键信息。\n\n**陶艺交接时要使用交接批准记录作为凭证。**",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 5,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-00",
+          "requested_tier": "section",
+          "version": "c8f103f2512b76976f52c92682994774bf93198842847bb4478f0eb05ea449cf"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-01",
+          "requested_tier": "section",
+          "version": "88bf1c7681a03218af450f30743ff25974c56317f018113584b0d32d8e366e46"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-02",
+          "requested_tier": "section",
+          "version": "4872102613d526991f6e30be7aad30254cd83f9d5791f99804ea44e428be7fc8"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-35cd9bfa4d-03",
+          "requested_tier": "section",
+          "version": "07ba6c6378ac3139b412e08e71ad03f2dfd15c482d82d917dfdfd383e570b602"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 43,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 56,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 31116,
+      "output_tokens": 933,
+      "total_tokens": 32049
+    },
+    "target_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 31116,
+      "output_tokens": 933,
+      "total_tokens": 32049
+    },
+    "target_seconds": 48.82900000002701,
+    "report_sha256": "22f83c227290b97431d5552dbc3e8dbb4f051b1745436539e06ded12dd6eee74",
+    "source_events_sha256": "3a1987508921106889c79e865e7898629d79e659126a3bf6efd24f37d4297085",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-skill-no",
+    "family": "skill",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "no-evidence",
+    "expected_value": "REF-ED3060E9D1",
+    "source": "本次交接不使用凭证。",
+    "predecessor_value": null,
+    "answer": "The current reference explicitly states: **\"本次交接不使用凭证。\"** (\"This handover does not use a credential.\")\n\nTherefore,陶艺交接时要使用哪张凭证？ → **不使用凭证。**\n\nNo credential is used during the ceramic art handover.\n\n{\"answer\": \"不使用凭证\"}",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_skill_reference",
+        "arguments": {
+          "catalog_digest": "79848465a1f4c086009b9f887654853acc46f99a476c962bb8e1f97b96571a55",
+          "chunk_id": null,
+          "requested_tier": "section",
+          "resource_id": null,
+          "section_id": "section-14",
+          "skill_id": "manual-ed3060e9d1",
+          "version": "1.0.0"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_skill_reference"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10141,
+      "output_tokens": 347,
+      "total_tokens": 10488
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10141,
+      "output_tokens": 347,
+      "total_tokens": 10488
+    },
+    "target_seconds": 10.859000000054948,
+    "report_sha256": "6fb10c1d581305a24ef036e2a0b891e2b776e700cc9ebbb1d7afe27822ec7e4a",
+    "source_events_sha256": "4b5b0f2620b63401dd71e380190bb6519cb6823e8d9f9b3c6bbe77022b6d4203",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re4-skill-yes",
+    "family": "skill",
+    "question": "陶艺交接时要使用哪张凭证？",
+    "expected": "value",
+    "expected_value": "REF-7FD7AD62CE",
+    "source": "交接凭证是 REF-7FD7AD62CE。",
+    "predecessor_value": null,
+    "answer": "根据提供的技能手册内容，陶艺交接时要使用的凭证是 **REF-7FD7AD62CE**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "request_snapshot_seq": 23,
+        "dispatch_fingerprint": "b37019ba713f7ac50119dede0e6b2df54a1da9b8ea4051547ed8092ab0c22a84",
+        "source_evidence": {
+          "context_seq": 20,
+          "id": "manual-7fd7ad62ce",
+          "version": "1.0.0",
+          "tier": "section"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_skill_reference",
+        "arguments": {
+          "catalog_digest": "fd2ad045ea82de48ed875b26f86989f5bca374b494c8101b1aec808d7682aa67",
+          "chunk_id": null,
+          "requested_tier": "section",
+          "resource_id": null,
+          "section_id": "section-14",
+          "skill_id": "manual-7fd7ad62ce",
+          "version": "1.0.0"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_skill_reference"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10086,
+      "output_tokens": 255,
+      "total_tokens": 10341
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10086,
+      "output_tokens": 255,
+      "total_tokens": 10341
+    },
+    "target_seconds": 8.983999999938533,
+    "report_sha256": "77ba053cc40f33f11185f876701edefe048d9680e91be2fe7326753218c5d2bd",
+    "source_events_sha256": "9a92c812ce3c1e07c8b06fefb71193e8fe970911869092cd9d88491f8017fa86",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  }
+]

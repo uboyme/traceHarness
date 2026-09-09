@@ -29,6 +29,7 @@ from traceh.runtime.continuation import (
     DefaultContinuationRuntime,
     VerificationFeedback,
 )
+from traceh.runtime.repeated_denial import RepeatedDenialPolicy, repeated_denial_state
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.compaction import CompactionError, CompactionService
@@ -66,6 +67,7 @@ class AgentLoop:
         continuation: ContinuationRuntime | None = None,
         verifier: CompletionVerifier | None = None,
         max_verification_retries: int = 1,
+        repeated_denial_policy: RepeatedDenialPolicy | None = RepeatedDenialPolicy(),
         hooks: HookDispatcher | None = None,
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
         retry_scheduler: RetryScheduler | None = None,
@@ -84,6 +86,7 @@ class AgentLoop:
         self.continuation = continuation or DefaultContinuationRuntime()
         self.verifier = verifier
         self.max_verification_retries = max_verification_retries
+        self.repeated_denial_policy = repeated_denial_policy
         self.hooks = hooks or HookDispatcher()
         self.retry_policy = retry_policy
         self.retry_scheduler = retry_scheduler or RetryScheduler.real()
@@ -160,7 +163,11 @@ class AgentLoop:
         await self.sessions.append_session(
             session_id,
             "turn/start",
-            {"turn_id": turn_id, "message_id": message_id},
+            {"turn_id": turn_id, "message_id": message_id,
+             "repeated_denial_policy": (
+                 self.repeated_denial_policy.to_dict()
+                 if self.repeated_denial_policy is not None else None
+             )},
             correlation_id=correlation_id,
         )
         turn_open = True
@@ -566,6 +573,9 @@ class AgentLoop:
                     verification=verification_feedback,
                     verification_failures=verification_failures,
                     max_verification_retries=self.max_verification_retries,
+                    repeated_denial=repeated_denial_state(
+                        await self.sessions.read_session(session_id), turn_id=turn_id,
+                    ),
                 )
                 if isinstance(directive, Continue):
                     pending_messages.extend(directive.messages)

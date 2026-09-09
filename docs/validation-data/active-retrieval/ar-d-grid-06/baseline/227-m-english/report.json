@@ -1,0 +1,55 @@
+{
+  "identity": "227-m-english",
+  "case_id": "m-english",
+  "seed": 227,
+  "family": "memory",
+  "question": "How many retries have been approved for this project?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "74a8eee5-a5f0-4685-a4d7-b05ae3590c8b",
+  "target_start_seq": 1,
+  "answer": "The approved retry budget for this project is 36 attempts.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 34.07799999997951,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 6786,
+    "output_tokens": 186,
+    "total_tokens": 6972
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 6786,
+    "output_tokens": 186,
+    "total_tokens": 6972
+  },
+  "evidence": [
+    {
+      "context_seq": 22,
+      "id": "fact-d05cb8d6d5",
+      "version": "743fd3603f4da544ce9aca1d419b98c42fd77b657b078bd245fbfb7e7db5a31c",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-d05cb8d6d5",
+        "requested_tier": "section",
+        "version": "743fd3603f4da544ce9aca1d419b98c42fd77b657b078bd245fbfb7e7db5a31c"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 36.21900000004098
+}

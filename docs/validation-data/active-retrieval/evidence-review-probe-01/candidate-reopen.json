@@ -1,0 +1,61 @@
+{
+  "arm": "candidate",
+  "cases": 6,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "113-o-absent",
+      "requests": 5,
+      "attempts_started": 5,
+      "attempts_ended": 5,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-absent",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "counterfactual-113-o-absent",
+      "requests": 6,
+      "attempts_started": 6,
+      "attempts_ended": 6,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "counterfactual-113-s-absent",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "holdout-output-absent",
+      "requests": 10,
+      "attempts_started": 10,
+      "attempts_ended": 10,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "holdout-output-present",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

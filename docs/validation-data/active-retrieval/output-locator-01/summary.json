@@ -1,0 +1,791 @@
+{
+  "experiment": "output-locator-01",
+  "release_acceptance": false,
+  "arms": {
+    "baseline": {
+      "closed_cases": 7,
+      "expected_cases": 7,
+      "positive_cases": 5,
+      "positive_joint_pass": 4,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 33,
+        "input_tokens": 179603,
+        "output_tokens": 3294,
+        "total_tokens": 182897,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-o-direct",
+          "answer": "根据 `search_tool_output` 的结果，关键词“交接校验码”在 `check.py` 输出中被找到，位于第 453 行，匹配内容为：\n\n```\n交接校验码=REF-F958326A62\n```\n\n该值出现在完整输出的 Unicode 偏移位置 12643–12648 处，且 `read_action` 可直接读取该上下文（已验证存在）。\n\n因此，刚才设备检查输出里的交接校验码是：\n\n**REF-F958326A62**",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+                "offset": 1272,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+                "offset": 2537,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+                "offset": 3804,
+                "part": "content"
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "case_sensitive": true,
+                "count": 10,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+                "part": "content",
+                "query": "交接校验码"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 96,
+              "effect_id": "42731cd5-9df8-420a-b965-f4c835b1aa60",
+              "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 47438,
+            "output_tokens": 1655,
+            "total_tokens": 49093
+          },
+          "all_usage": {
+            "attempts": 8,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 56161,
+            "output_tokens": 1678,
+            "total_tokens": 57839
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "诊断分组的处理口令是：REF-9C7A8DE739",
+          "steps": 5,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_file",
+              "arguments": {
+                "path": "check.py"
+              }
+            },
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 1
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "4108b449-5468-4602-85f1-d9dc868052e3",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 2000,
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "4108b449-5468-4602-85f1-d9dc868052e3",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 82,
+              "effect_id": "4108b449-5468-4602-85f1-d9dc868052e3",
+              "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+            }
+          ],
+          "target_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 28296,
+            "output_tokens": 471,
+            "total_tokens": 28767
+          },
+          "all_usage": {
+            "attempts": 7,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 37024,
+            "output_tokens": 494,
+            "total_tokens": 37518
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-o-nearby",
+          "answer": "诊断分组的处理口令是：REF-92CF0902A2",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "d7f77779-13b4-4ea8-8d64-605fced47358",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 1000,
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "d7f77779-13b4-4ea8-8d64-605fced47358",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 57,
+              "effect_id": "d7f77779-13b4-4ea8-8d64-605fced47358",
+              "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7"
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 17014,
+            "output_tokens": 393,
+            "total_tokens": 17407
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 25744,
+            "output_tokens": 416,
+            "total_tokens": 26160
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "刚才执行的 `python check.py` 检查输出中，**没有出现任何保险理赔编号**（如“理赔编号”、“claim number”、“case ID”、“赔案号”等关键词）。\n\n检查日志仅包含重复的如下格式行：\n```\n检查行 00XX：普通器材登记，状态 normal。\n```\n\n全文未见数字编号、字母数字组合编号、或任何疑似保险理赔编号的字段（例如 `CLM-2024-XXXXX`、`P2024XXXXXX`、`赔案号：123456789` 等模式）。\n\n因此，**本次归档检查未给出保险理赔编号**。\n\n如需进一步确认是否存在隐含编号（例如在文件元数据、注释、或未显示的 stderr 中），可指定检查目标（如某配置文件、日志片段或输出文件）进行专项检索。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 4988,
+            "output_tokens": 200,
+            "total_tokens": 5188
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13715,
+            "output_tokens": 223,
+            "total_tokens": 13938
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "是的，刚才的归档检查给出了保险理赔编号：**CF-55C0AB6241**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "1e5c50f0-cf77-486c-b2d0-719660eaee2d",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "1e5c50f0-cf77-486c-b2d0-719660eaee2d",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10457,
+            "output_tokens": 155,
+            "total_tokens": 10612
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19191,
+            "output_tokens": 178,
+            "total_tokens": 19369
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "刚才执行 `python check.py` 的输出中，所有检查行均显示为“泵站设备读数记录，状态 normal”，**未出现任何应急工单编号**（如 `EMG-XXXXXX`、`INC-XXXXXX` 或类似格式的工单号）。\n\n该输出共 52 行，全部为重复的正常状态记录，无异常、告警或工单生成信息。\n\n因此，**泵站巡检输出里没有应急工单编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5074,
+            "output_tokens": 109,
+            "total_tokens": 5183
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13881,
+            "output_tokens": 131,
+            "total_tokens": 14012
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Failure to obtain the explicit denial present in the original source; preview-only/global-absence answer is not grounded."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "刚才执行 `python check.py` 的输出中，并未出现“应急工单编号”这一字段或任何类似编号（如 `EMG-`, `INC-`, `TASK-`, `WO-`, `工单号：` 等常见模式）。\n\n该输出仅包含重复的 52 行日志，格式统一为：\n\n```\n检查行 XXXX：泵站设备读数记录，状态 normal。\n```\n\n全文无异常、无告警、无工单生成触发条件，也**未提及任何工单编号**（包括应急/常规/维修/告警类）。\n\n因此，根据本次检查的实际输出，**不存在应急工单编号**。\n\n答案：无。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5078,
+            "output_tokens": 151,
+            "total_tokens": 5229
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13887,
+            "output_tokens": 174,
+            "total_tokens": 14061
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    },
+    "candidate": {
+      "closed_cases": 7,
+      "expected_cases": 7,
+      "positive_cases": 5,
+      "positive_joint_pass": 5,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 43,
+        "input_tokens": 250130,
+        "output_tokens": 3185,
+        "total_tokens": 253315,
+        "unknown_usage": 1,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-o-direct",
+          "answer": "REF-F958326A62",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "62f6ee76-f8b2-4491-8921-15dc3e16ec1c",
+                "part": "content",
+                "query": "交接校验码"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 45,
+              "effect_id": "62f6ee76-f8b2-4491-8921-15dc3e16ec1c",
+              "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 8529,
+            "output_tokens": 140,
+            "total_tokens": 8669
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 1,
+            "estimated_usage": 0,
+            "input_tokens": 16291,
+            "output_tokens": 163,
+            "total_tokens": 16454
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "诊断分组的处理口令是：`REF-9C7A8DE739`",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "d82a4425-3e31-454d-b7d3-61e0b87565f4",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 2000,
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "d82a4425-3e31-454d-b7d3-61e0b87565f4",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 55,
+              "effect_id": "d82a4425-3e31-454d-b7d3-61e0b87565f4",
+              "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 14114,
+            "output_tokens": 291,
+            "total_tokens": 14405
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 21881,
+            "output_tokens": 313,
+            "total_tokens": 22194
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-o-nearby",
+          "answer": "诊断分组的处理口令是：`REF-92CF0902A2`。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "c75bd75c-fb06-443b-a4b8-41344205407e",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 1600,
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "c75bd75c-fb06-443b-a4b8-41344205407e",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 55,
+              "effect_id": "c75bd75c-fb06-443b-a4b8-41344205407e",
+              "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7"
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 14128,
+            "output_tokens": 294,
+            "total_tokens": 14422
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 21896,
+            "output_tokens": 317,
+            "total_tokens": 22213
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "没有给出保险理赔编号。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_tool_outputs",
+              "arguments": {}
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "2abe4e1a-242c-4c1a-b450-a845d72d5134",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12787,
+            "output_tokens": 148,
+            "total_tokens": 12935
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 20549,
+            "output_tokens": 170,
+            "total_tokens": 20719
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "有。刚才归档检查给出了保险理赔编号：**CF-55C0AB6241**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "729bc40b-cbd7-4746-9b74-372f6ce3696a",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "729bc40b-cbd7-4746-9b74-372f6ce3696a",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 8533,
+            "output_tokens": 153,
+            "total_tokens": 8686
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 16305,
+            "output_tokens": 176,
+            "total_tokens": 16481
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "根据刚才执行的 `python check.py` 命令输出，在检查行 0451 附近有一条明确的信息：\n\n\"本次巡检未创建应急工单，因此没有应急工单编号。\"\n\n因此，泵站巡检输出里没有应急工单编号。",
+          "steps": 12,
+          "reason": "max_steps_exceeded",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 1276,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 2549,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 3821,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 5092,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 6365,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 7636,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 8909,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 10181,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 11450,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "a17ca26f-b0d4-4a96-b31e-b4d446ad788e",
+                "offset": 12721,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 12,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 124724,
+            "output_tokens": 1858,
+            "total_tokens": 126582
+          },
+          "all_usage": {
+            "attempts": 14,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 132485,
+            "output_tokens": 1880,
+            "total_tokens": 134365
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion. The Turn still hit its Step limit; not a completed autonomous task."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "NEW-7ABBAAC1E3",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_tool_outputs",
+              "arguments": {}
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "977386db-ed93-442b-ab04-976bf6e48109",
+                "query": "应急工单编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 55,
+              "effect_id": "977386db-ed93-442b-ab04-976bf6e48109",
+              "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12967,
+            "output_tokens": 144,
+            "total_tokens": 13111
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 20723,
+            "output_tokens": 166,
+            "total_tokens": 20889
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        }
+      ]
+    }
+  }
+}

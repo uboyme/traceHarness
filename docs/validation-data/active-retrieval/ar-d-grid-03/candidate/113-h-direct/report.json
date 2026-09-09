@@ -1,0 +1,79 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "3825206e-c0cf-4f2c-a060-19e793d26b30",
+  "target_start_seq": 154,
+  "answer": "从搜索结果中，我找到了设备交接口令的信息。在历史记录中明确提到：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 REF-34772572F2。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 27.593999999924563,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14334,
+    "output_tokens": 413,
+    "total_tokens": 14747
+  },
+  "all_usage": {
+    "attempts": 14,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 51907,
+    "output_tokens": 443,
+    "total_tokens": 52350
+  },
+  "evidence": [
+    {
+      "context_seq": 186,
+      "reference": {
+        "block_id": "95d272d586a0bde22dae493ad779522a99cb490bfd4de7f93cd21c8d1ba18f90",
+        "cursor": {
+          "block_id": "95d272d586a0bde22dae493ad779522a99cb490bfd4de7f93cd21c8d1ba18f90",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "3e54f842c22f0809af8495185b4d3a06bff5475ae49f65c625118fea0e654dd7",
+          "event_id": "1e9705dc-6738-4262-8bc5-e819ff84f41f",
+          "seq": 113,
+          "stream_id": "session:3825206e-c0cf-4f2c-a060-19e793d26b30",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "a707efa9f5dc01e6e40fd90f5a5a64fc7e2855f7543b1a32fdd9411ff47f7e98"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "95d272d586a0bde22dae493ad779522a99cb490bfd4de7f93cd21c8d1ba18f90",
+        "cursor": {
+          "block_id": "95d272d586a0bde22dae493ad779522a99cb490bfd4de7f93cd21c8d1ba18f90",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "口令"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 107.98399999993853
+}

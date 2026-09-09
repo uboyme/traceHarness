@@ -1,0 +1,90 @@
+{
+  "identity": "113-m-revoked",
+  "case_id": "m-revoked",
+  "seed": 113,
+  "family": "memory",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "d75d7ad5-1266-4003-b47a-183f4e64f726",
+  "target_start_seq": 1,
+  "answer": "根据当前参考中的所有可用信息，我检查了：\n\n1. 所有6个背景内存条目（background-4974c19420-00 到 background-4974c19420-05）\n2. 前4个条目有实际内容，但都只是\"普通材料保管记录第X项：由资料组维护登记。\"\n3. 后2个条目只有元数据，没有显示实际内容\n4. 使用`search_memory`工具搜索了\"联络呼号\"、\"备用\"、\"呼号\"等关键词，均未找到任何匹配项\n\n由于在项目的所有已批准内存事实中没有找到任何关于\"备用联络呼号\"的信息，也没有任何搜索结果，因此可以确定：\n\n项目现在没有有效批准的备用联络呼号。\n\n{\"has_approved_backup_contact_callsign\": false}",
+  "steps": 8,
+  "reason": "completed",
+  "target_seconds": 101.73400000005495,
+  "target_usage": {
+    "attempts": 8,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 49401,
+    "output_tokens": 1193,
+    "total_tokens": 50594
+  },
+  "all_usage": {
+    "attempts": 8,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 49401,
+    "output_tokens": 1193,
+    "total_tokens": 50594
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-00",
+        "requested_tier": "section",
+        "version": "a3e9c49330c493638952fad952ef75c123a2ee4c8ac733cba322c5046a79d058"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-01",
+        "requested_tier": "section",
+        "version": "f1506eaefd56ad238d3897bf6242d2de725ec223a459e4fac352e194a9869ce0"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-02",
+        "requested_tier": "section",
+        "version": "f6a982505a8f21f1955d72ed1c84c1685dd85584eeccc10008915bf8c9557c9b"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-03",
+        "requested_tier": "section",
+        "version": "207c7a8c54ec8e187f13ab9f10c71cac4eb8e560e15bde32aa0af8d79f6021db"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "联络呼号"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "备用"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "呼号"
+      }
+    }
+  ],
+  "search_read_count": 7,
+  "output_executions": null,
+  "elapsed_seconds": 110.82799999997951
+}

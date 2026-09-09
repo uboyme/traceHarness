@@ -1,0 +1,59 @@
+{
+  "identity": "419-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 419,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "2336a94f-d89f-42a1-999e-b902a1cfeb44",
+  "target_start_seq": 1,
+  "answer": "根据提供的档案整理手册内容，交班双方核对身份时使用的暗语（口令）是 **REF-208A0FF245**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 13.172000000020489,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10115,
+    "output_tokens": 289,
+    "total_tokens": 10404
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10115,
+    "output_tokens": 289,
+    "total_tokens": 10404
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-208a0ff245",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "e300957e46d600a3870cd9068380e2b315d9ab57df3cdb6c57970723c43e3001",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-208a0ff245",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 13.655999999959022
+}

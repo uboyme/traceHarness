@@ -1,0 +1,56 @@
+{
+  "stage": "AR-C",
+  "status": "completed scoped verification",
+  "new_tests": {
+    "memory_search": 8,
+    "skill_search": 11
+  },
+  "validation": {
+    "adjacent_initial": {
+      "passed": 103,
+      "log": ".pytest-tmp-codex/ar-c-adjacent.txt"
+    },
+    "merged_gate": {
+      "collected": 298,
+      "passed_initial": 297,
+      "failed_initial": 1,
+      "log": ".pytest-tmp-codex/ar-c-gates.txt"
+    },
+    "budget_confirmation": {
+      "passed": 24,
+      "files": [
+        "tests/test_reference_retention.py",
+        "tests/test_reference_token_budget.py"
+      ],
+      "reason": "Search schemas and generic source guidance increased fixed input. The narrow retention fixture had only 3375 reference tokens and excluded the new body; test window changed 7800 to 9000. Assertions still require the new body and exclusion of retained History. No production limit changed.",
+      "log": ".pytest-tmp-codex/ar-c-budget-confirm.txt"
+    },
+    "reverse": {
+      "test": "tests/test_reference_search_memory.py::test_rehashed_search_snippet_is_checked_against_approved_source",
+      "disabled": "memory_search.verify_pages original-source recomputation",
+      "result": "DID NOT RAISE ReferenceSearchError; forged text reached public runtime path",
+      "restored": "exact bytes restored; merged gate test passed",
+      "log": ".pytest-tmp-codex/ar-c-reverse.txt"
+    },
+    "compileall": "src tests passed",
+    "ruff": "changed/new Python scope passed",
+    "collect_only": 298,
+    "diff_check": "passed"
+  },
+  "real_diagnostics": "ar-c-real-summary.json",
+  "latest_real_run": "ar-c-smoke-05/report.json",
+  "not_run": [
+    "full pytest",
+    "L2-L4",
+    "Wheel/install",
+    "release gates",
+    "AR-D scored grid"
+  ],
+  "boundaries": [
+    "literal search only; no semantic engine",
+    "Skill metadata only and host-selected catalog",
+    "Memory current active approved facts only",
+    "one original receipt/next-Step admission/reader lifecycle",
+    "uncommitted AR changes; previous work committed a54d431 without push"
+  ]
+}

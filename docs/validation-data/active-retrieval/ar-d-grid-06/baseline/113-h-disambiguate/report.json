@@ -1,0 +1,64 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "a43d292b-9f82-42d5-8efb-4b02e1448cfc",
+  "target_start_seq": 152,
+  "answer": "The current references show only historical conversation records about background registration of ordinary equipment, with no mention of either the Archives Review Group (档案复核组) or the Moving Group (搬运组), nor their contact codes.\n\nSince the history pages provided don't contain the requested information, and there are no workspace files or other references indicating where this information might be stored, I cannot determine the contact code for the Archives Review Group from the available evidence.\n\nThe available references only contain repetitive background registration messages about ordinary equipment being inventoried, with no organizational structure details or contact codes for any groups.\n\nTherefore, based on the currently available information, the contact code for the Archives Review Group cannot be determined.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 34.60999999998603,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12279,
+    "output_tokens": 750,
+    "total_tokens": 13029
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 43214,
+    "output_tokens": 780,
+    "total_tokens": 43994
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "c345e22e2e116baeb0c826afda1e6ff93230a488471f4339acb72e58083a2f0d",
+        "cursor": {
+          "block_id": "c345e22e2e116baeb0c826afda1e6ff93230a488471f4339acb72e58083a2f0d",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "c345e22e2e116baeb0c826afda1e6ff93230a488471f4339acb72e58083a2f0d",
+        "cursor": {
+          "block_id": "c345e22e2e116baeb0c826afda1e6ff93230a488471f4339acb72e58083a2f0d",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 74.07799999997951
+}

@@ -1,0 +1,1435 @@
+[
+  {
+    "arm": "baseline",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3918,
+      "output_tokens": 2,
+      "total_tokens": 3920
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3918,
+      "output_tokens": 2,
+      "total_tokens": 3920
+    },
+    "target_seconds": 1.047000000020489,
+    "report_sha256": "01f336682c7fda773952234cb062855254828a9681eff84b0e07a9e78ba498dc",
+    "source_events_sha256": "129191063c45711306d7488f19d200ed796a36552b352c6e25512292a9bad732",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3945,
+      "output_tokens": 2,
+      "total_tokens": 3947
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3945,
+      "output_tokens": 2,
+      "total_tokens": 3947
+    },
+    "target_seconds": 1.202999999979511,
+    "report_sha256": "6f65365d1d72ed14a4bf6c54ab1f9559aba07d34f944a96cc2173ec483c06b47",
+    "source_events_sha256": "324d9e2533acdcf8582627c119e0ec5f51cd913fdc25b4872d4ac600f67efb3e",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了敬语（“您”）、缓和语气的短语（“麻烦您”“如果您方便的话”“能否请您”）以及致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3942,
+      "output_tokens": 127,
+      "total_tokens": 4069
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3942,
+      "output_tokens": 127,
+      "total_tokens": 4069
+    },
+    "target_seconds": 3.843999999924563,
+    "report_sha256": "333e6392e967a0144f882560167347b7663f85ae86f92d877bd748ccb1b1248f",
+    "source_events_sha256": "f3c53382d95ba3b6d2f2d4380dd9c80faee98c3685f498b3834fc3097d19150d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3937,
+      "output_tokens": 14,
+      "total_tokens": 3951
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3937,
+      "output_tokens": 14,
+      "total_tokens": 3951
+    },
+    "target_seconds": 1.390999999945052,
+    "report_sha256": "4118503fa45eaaddd6972ca2e6eb8ab88a0819a515a2c79ac785005e84a32b4a",
+    "source_events_sha256": "30c557248c44e55e0d4ed896fe2cea4a250bef02eea5289dd521833e9a3205b0",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-absent",
+    "family": "memory",
+    "question": "项目批准了停车优惠码吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "本项目仅批准物料清点安排。",
+    "predecessor_value": null,
+    "answer": "根据当前引用的内存事实，项目批准的内容是：\"本项目仅批准物料清点安排。\"\n\n这表明项目只批准了物料清点安排，并没有提到停车优惠码。因此，项目没有批准停车优惠码。\n\n答案：否，项目没有批准停车优惠码。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "fact-a6fdd1f91e",
+          "requested_tier": "section",
+          "version": "64ad636b7f9280c401b0c1cffa72a3dbc4b28e168c15b0246dbbd5bf10971b3f"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10287,
+      "output_tokens": 207,
+      "total_tokens": 10494
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10287,
+      "output_tokens": 207,
+      "total_tokens": 10494
+    },
+    "target_seconds": 9.734000000054948,
+    "report_sha256": "30653bf065d79d8ea66639779725e5cc1c2c1ac5fe06f33a2273269f8bf5b78f",
+    "source_events_sha256": "6e3873737bbdad5e2e7f491e70694dc5c8fa9d1e64d5a8efcc90667e2b17ff64",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-direct",
+    "family": "memory",
+    "question": "陶艺展览当前批准的交接代码是什么？",
+    "expected": "value",
+    "expected_value": "REF-AF46CCDCE6",
+    "source": "陶艺展览已批准交接代码为 REF-AF46CCDCE6。",
+    "predecessor_value": null,
+    "answer": "陶艺展览当前批准的交接代码是 `REF-AF46CCDCE6`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "request_snapshot_seq": 23,
+        "dispatch_fingerprint": "8f5e98ceea2683ad1952acde6bd16f6d6aaa4ddb53eec53021e991e61e8bd881",
+        "source_evidence": {
+          "context_seq": 20,
+          "id": "fact-af46ccdce6",
+          "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f",
+          "tier": "section"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "fact-af46ccdce6",
+          "requested_tier": "section",
+          "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10300,
+      "output_tokens": 206,
+      "total_tokens": 10506
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10300,
+      "output_tokens": 206,
+      "total_tokens": 10506
+    },
+    "target_seconds": 9.516000000061467,
+    "report_sha256": "f71c63a0631c70be5bd6666a756b5090f030545c6fb322a63138c9a8096afff6",
+    "source_events_sha256": "dbfba0a5f6d3f31aaf4d5fcb3e4d8fdc3e6e1ee4ac429d30693a334776c70f66",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-omitted",
+    "family": "memory",
+    "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+    "expected": "value",
+    "expected_value": "REF-E2039898E4",
+    "source": "已批准的项目应急联络呼号是 REF-E2039898E4。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的已批准内存事实，所有相关条目都明确指出：\"项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。\"\n\n这表明具体的呼号值并未直接包含在这些已批准的内存事实中，而是需要查阅\"交接批准记录\"。\n\n由于当前参考中没有提供具体的交接批准记录内容，且所有已批准的内存事实都明确说明\"本条不含具体值\"，我无法从现有证据中确定具体的应急联络呼号。\n\n因此，基于已提供的已批准安排，答案是：**需要查阅交接批准记录来获取具体的应急联络呼号，该呼号未在当前已批准的内存事实中直接提供。**",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 5,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 46,
+        "kind": "memory",
+        "query": "呼号",
+        "status": "matches",
+        "scanned": 2,
+        "total": 13,
+        "has_next": true,
+        "texts": [
+          "呼号",
+          "呼号"
+        ]
+      },
+      {
+        "context_seq": 59,
+        "kind": "memory",
+        "query": "交接批准",
+        "status": "matches",
+        "scanned": 2,
+        "total": 13,
+        "has_next": true,
+        "texts": [
+          "交接批准",
+          "交接批准"
+        ]
+      }
+    ],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-00",
+          "requested_tier": "section",
+          "version": "697c7467b52b636c12bc3bcf3d85941d234d983269f787b76f16ede72ff1248c"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-01",
+          "requested_tier": "section",
+          "version": "52d3b50e4704d8832514cc74c77f0f8d901fdcf94f8628b0094c7fca562f8c6f"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "呼号"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "交接批准"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 43,
+        "name": "search_memory"
+      },
+      {
+        "seq": 56,
+        "name": "search_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 36492,
+      "output_tokens": 805,
+      "total_tokens": 37297
+    },
+    "target_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 36492,
+      "output_tokens": 805,
+      "total_tokens": 37297
+    },
+    "target_seconds": 96.07799999997951,
+    "report_sha256": "f4a952d517f9c082d193e8cf43d08512c7c9fe87f4d3e07e22109a3cbd9a619f",
+    "source_events_sha256": "775ef1cc40cfde45714827893f40e0a174a523c07fece61e3f5a98e7b0daf591",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-omitted-other",
+    "family": "memory",
+    "question": "花卉展的备用集合点批准在哪里？",
+    "expected": "value",
+    "expected_value": "东侧第46号资料柜",
+    "source": "交接批准记录：备用集合点为 东侧第46号资料柜。",
+    "predecessor_value": null,
+    "answer": "根据已有的memory条目，我看到多个条目都指向同一个信息：\n\n\"花卉展查询分工第0项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。\"\n\"花卉展查询分工第1项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。\"\n\n所有memory条目都一致指出：花卉展的备用集合点批准信息应该在\"交接批准记录\"中查找。\n\n由于当前提供的参考信息中没有包含具体的\"交接批准记录\"内容，而只是指示了查找位置，因此答案是：\n\n花卉展的备用集合点批准在交接批准记录中。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-f1df68f2ab-00",
+          "requested_tier": "section",
+          "version": "ca666e527c3c54a344618b274bea17c2f01f6ab4e3644ee7da070b9f1066ad24"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-f1df68f2ab-01",
+          "requested_tier": "section",
+          "version": "767cf5c8f7009d6485ac655a52427c36470c3a2fd113454f1ce97ce3785251d5"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18391,
+      "output_tokens": 495,
+      "total_tokens": 18886
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 18391,
+      "output_tokens": 495,
+      "total_tokens": 18886
+    },
+    "target_seconds": 43.46900000004098,
+    "report_sha256": "ab687ae4e73f972dc42c9aaf51db639bb2316a3903c140ce0397371351509b0c",
+    "source_events_sha256": "b0393fb1bb37392b7e2cdcc99765f449e9f4e77682e13e455a4401d181492fa2",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-revoked",
+    "family": "memory",
+    "question": "陶艺展览现在有有效批准的备用口令吗？",
+    "expected": "no-evidence",
+    "expected_value": "REF-DA56D630C0",
+    "source": "曾批准备用口令为 REF-DA56D630C0。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中提供的所有背景内存条目（background-slot-00到05），我检查了全部6个条目的内容：\n\n- background-slot-00: \"陶艺展览日常准备第0项由值班组登记。\"\n- background-slot-01: \"陶艺展览日常准备第1项由值班组登记。\"\n- background-slot-02: \"陶艺展览日常准备第2项由值班组登记。\"\n- background-slot-03: \"陶艺展览日常准备第3项由值班组登记。\"\n- background-slot-04: \"陶艺展览日常准备第4项由值班组登记。\"\n- background-slot-05: \"陶艺展览日常准备第5项由值班组登记。\"\n\n所有这些条目都只是关于\"陶艺展览日常准备第X项由值班组登记\"的常规登记信息，没有任何一条提到备用口令、有效批准、密码、口令或相关安全措施。\n\n因此，根据当前可用的批准项目事实，**陶艺展览没有有效批准的备用口令**。\n\n{\"has_valid_backup_passphrase\": false, \"evidence\": [\"所有6个背景内存条目均只包含日常准备登记信息，未提及任何备用口令相关内容\"]}",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 7,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-00",
+          "requested_tier": "section",
+          "version": "ac3c843e86c0e74c0207086a6a3a8675be204fad483ed4acce117cf04166691e"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-01",
+          "requested_tier": "section",
+          "version": "b48f4625c14ff336e4e05d76a27c505bf52a209172ade6936cf10ce59d42b4b7"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-02",
+          "requested_tier": "section",
+          "version": "3b3b309245ab3fdd9cc0b0807c3d62e4c9c9405386433e63b9864a2644e96e8d"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-03",
+          "requested_tier": "section",
+          "version": "27910c86bbcc7cd9287a3e1956230912bd4e71fc7b3e51831a66e95496f9c8ea"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-04",
+          "requested_tier": "section",
+          "version": "ef83633857f27f06409a0830701d6ffecf5a0641bd341cc863b64cd12fb2d6a9"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-05",
+          "requested_tier": "section",
+          "version": "a427cb830ccc597e26553ff1a8e135cacdb6a678e292a2d815a827efe3e51e8c"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 43,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 56,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 69,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 82,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 44202,
+      "output_tokens": 1478,
+      "total_tokens": 45680
+    },
+    "target_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 44202,
+      "output_tokens": 1478,
+      "total_tokens": 45680
+    },
+    "target_seconds": 82.90700000000652,
+    "report_sha256": "daab4d5cb6959c7cd1bb03d44016cbf918076ca664334c6950657aa1160970fd",
+    "source_events_sha256": "b7a31d4409f65c8376773de85dfc1920b13230872fa28ba1d76085b9c9c7cb12",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re2-unbound",
+    "family": "memory",
+    "question": "当前项目批准的交接口令是什么？",
+    "expected": "unavailable",
+    "expected_value": "",
+    "source": "隔离材料不应在未绑定会话中被读取。",
+    "predecessor_value": null,
+    "answer": "当前 references 为空，且 `search_memory` 对“交接口令”和“traceh.command”均返回 `source-unavailable`，表明 project Memory 未启用或不可访问。\n\n根据 `traceh.runtime.references` 规则：\n- `kind=memory` 是唯一代表“批准的”（approved）事实的来源；\n- 若 memory 不可用，且无 workspace 文件被引用，则**不存在可验证的、已批准的交接口令证据**。\n\n因此，答案是：  \n**当前项目未提供已批准的交接口令信息。**  \n\n该结论基于：  \n- 所有可用 reference 源（Memory、History、Skill、Workspace）均未披露该事实；  \n- `search_memory` 明确不可用，无法检索 approved facts；  \n- 无 workspace 文件被引用或列出，故无法从代码/文档中推断；  \n- 问题明确要求“批准的”，故不能以推测、默认值或未审核内容作答。\n\n✅ 答案严格符合用户请求格式（仅陈述事实，无额外解释、无 Markdown、无引用）。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 4,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 20,
+        "kind": "memory",
+        "query": "交接口令",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 33,
+        "kind": "memory",
+        "query": "traceh.command",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      }
+    ],
+    "calls": [
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "交接口令"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "traceh.command"
+        }
+      },
+      {
+        "name": "list_files",
+        "arguments": {}
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "search_memory"
+      },
+      {
+        "seq": 30,
+        "name": "search_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17515,
+      "output_tokens": 1093,
+      "total_tokens": 18608
+    },
+    "target_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17515,
+      "output_tokens": 1093,
+      "total_tokens": 18608
+    },
+    "target_seconds": 50.81200000003446,
+    "report_sha256": "4057f71e3ed270c96b8ae0913fe9b8390671372f416d2140df02fe1118a27a1b",
+    "source_events_sha256": "e60fe395bd87c39736747cfb7f90565904659aeac3b6a38fc79ca828718b466f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3918,
+      "output_tokens": 2,
+      "total_tokens": 3920
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3918,
+      "output_tokens": 2,
+      "total_tokens": 3920
+    },
+    "target_seconds": 1.1099999999860302,
+    "report_sha256": "fc08d47dc1e531f24da90bf0b1ac3159a16d28d272603db0f67bd2888c00eb50",
+    "source_events_sha256": "b6a7fbe9d02476ffdecb2baa06f6cbd9682ba4443170290b6514da7da2fa1d81",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3945,
+      "output_tokens": 2,
+      "total_tokens": 3947
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3945,
+      "output_tokens": 2,
+      "total_tokens": 3947
+    },
+    "target_seconds": 1.047000000020489,
+    "report_sha256": "275c74b1d70393f6145ebf1a2780ec3e0e14ea3c8cb1b721645370ced3f67da2",
+    "source_events_sha256": "56a6bc2392f470c9d457cc5ac2a703c87ae733163d3a5c646068d5d795abc9d6",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了敬语（“您”）、缓和语气的短语（“麻烦您”“如果您方便的话”“能否”）以及致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3942,
+      "output_tokens": 126,
+      "total_tokens": 4068
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3942,
+      "output_tokens": 126,
+      "total_tokens": 4068
+    },
+    "target_seconds": 24.875,
+    "report_sha256": "a5e116772ff960e47f72d3e4d62c9f8b14bfb6b29eaccaa911b3be76e56ba23e",
+    "source_events_sha256": "463ca7a3c04747e6c4f676c6a02ea8045cbb860d692b964f3737ef1e6ab5400c",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3937,
+      "output_tokens": 14,
+      "total_tokens": 3951
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3937,
+      "output_tokens": 14,
+      "total_tokens": 3951
+    },
+    "target_seconds": 1.375,
+    "report_sha256": "97f7c73518e9f47b66975404617695041ebe5b6ba43134a4a8982026b6521558",
+    "source_events_sha256": "ee98cf39873f51e5ece2de899cddf0a5c52aa0443426d9330f95485063690113",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-absent",
+    "family": "memory",
+    "question": "项目批准了停车优惠码吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "本项目仅批准物料清点安排。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的内存事实，项目批准的内容是：“本项目仅批准物料清点安排。”\n\n这句话明确指出项目只批准了物料清点安排，没有提到停车优惠码。因此，项目没有批准停车优惠码。\n\n答案：否，项目没有批准停车优惠码。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "fact-a6fdd1f91e",
+          "requested_tier": "section",
+          "version": "64ad636b7f9280c401b0c1cffa72a3dbc4b28e168c15b0246dbbd5bf10971b3f"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10660,
+      "output_tokens": 292,
+      "total_tokens": 10952
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10660,
+      "output_tokens": 292,
+      "total_tokens": 10952
+    },
+    "target_seconds": 11.406000000075437,
+    "report_sha256": "bd59d35596c6b94f57c89cf86d00d3f56c2128a00a5ce15dcc5ec85c0e3f91d1",
+    "source_events_sha256": "5b4b9a2c4656cf25c711803ebe92632ebf1b39995a8caa7db9138d48ea04d56d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-direct",
+    "family": "memory",
+    "question": "陶艺展览当前批准的交接代码是什么？",
+    "expected": "value",
+    "expected_value": "REF-AF46CCDCE6",
+    "source": "陶艺展览已批准交接代码为 REF-AF46CCDCE6。",
+    "predecessor_value": null,
+    "answer": "The current approved handover code for the pottery exhibition is **REF-AF46CCDCE6**.",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "request_snapshot_seq": 23,
+        "dispatch_fingerprint": "787a3395a8bd3df3e135e506de4bc2af20c2df253bfe205ae75d69fc4582314b",
+        "source_evidence": {
+          "context_seq": 20,
+          "id": "fact-af46ccdce6",
+          "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f",
+          "tier": "section"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "fact-af46ccdce6",
+          "requested_tier": "section",
+          "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10592,
+      "output_tokens": 212,
+      "total_tokens": 10804
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 10592,
+      "output_tokens": 212,
+      "total_tokens": 10804
+    },
+    "target_seconds": 9.781000000075437,
+    "report_sha256": "112d907de2ef892cf07574c59ee01b3a78f973df411a272c8f9bf9f9d4c7dd33",
+    "source_events_sha256": "7b3adf4abb52af5c938764210a9f604965fa14ef7fd4ebc34ff0d280451024eb",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-omitted",
+    "family": "memory",
+    "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+    "expected": "value",
+    "expected_value": "REF-E2039898E4",
+    "source": "已批准的项目应急联络呼号是 REF-E2039898E4。",
+    "predecessor_value": null,
+    "answer": "根据当前参考中的所有内存条目，我注意到每个条目（background-e2039898e4-00到background-e2039898e4-05）都明确说明：\"项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。\"\n\n这表明具体的呼号信息并未包含在这些内存条目中，而是需要\"查交接批准记录\"。由于当前参考中没有提供具体的交接批准记录内容，且所有可用的内存条目都声明\"本条不含具体值\"，我无法从当前提供的信息中确定项目应急联络使用的具体呼号。\n\n因此，基于当前可用的信息，答案是：**需要查阅交接批准记录才能确定项目应急联络使用的具体呼号，当前参考中未提供该具体值。**",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 8,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 20,
+        "kind": "memory",
+        "query": "呼号",
+        "status": "matches",
+        "scanned": 2,
+        "total": 13,
+        "has_next": true,
+        "texts": [
+          "呼号",
+          "呼号"
+        ]
+      }
+    ],
+    "calls": [
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "呼号"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-00",
+          "requested_tier": "section",
+          "version": "697c7467b52b636c12bc3bcf3d85941d234d983269f787b76f16ede72ff1248c"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-01",
+          "requested_tier": "section",
+          "version": "52d3b50e4704d8832514cc74c77f0f8d901fdcf94f8628b0094c7fca562f8c6f"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-02",
+          "requested_tier": "section",
+          "version": "704b9a95d0e6baed8f66e303ef65ffc7b0394f675999b1b37efd6e93c73bc1bc"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-03",
+          "requested_tier": "section",
+          "version": "990b8aea41c476384961a573f8d41360142d8ff7c28a3a7777d96b0776c51544"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-04",
+          "requested_tier": "section",
+          "version": "aebf08de1dcab23503223321f5b184aaf76fb8c9a82996c2c8df60048a69bab7"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-e2039898e4-05",
+          "requested_tier": "section",
+          "version": "bdb4475d77a4150c08703de7e44b04fdc10d8042d080af93b414f3f8a18b1ed4"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "search_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 43,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 56,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 69,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 82,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 95,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 8,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 55615,
+      "output_tokens": 1558,
+      "total_tokens": 57173
+    },
+    "target_usage": {
+      "attempts": 8,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 55615,
+      "output_tokens": 1558,
+      "total_tokens": 57173
+    },
+    "target_seconds": 163.73499999998603,
+    "report_sha256": "165979143772eb2517a1a6a29046498dbfdf4cf83bc8709ce11ef501e2f0089a",
+    "source_events_sha256": "902d2ff7f5b7ea44e0a6e719c1c755d38478b7d01dd1a4f3ec2414013f85f2a1",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-omitted-other",
+    "family": "memory",
+    "question": "花卉展的备用集合点批准在哪里？",
+    "expected": "value",
+    "expected_value": "东侧第46号资料柜",
+    "source": "交接批准记录：备用集合点为 东侧第46号资料柜。",
+    "predecessor_value": null,
+    "answer": "从当前参考中，我可以看到第一个Memory条目（background-f1df68f2ab-00）包含了直接相关的信息：\n\n\"花卉展查询分工第0项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。\"\n\n这明确指出：花卉展的备用集合点批准应该在\"交接批准记录\"中查找。\n\n其他Memory条目都是元数据，没有提供具体的批准位置信息。\n\n因此，答案是：花卉展的备用集合点批准在交接批准记录中。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-f1df68f2ab-00",
+          "requested_tier": "section",
+          "version": "ca666e527c3c54a344618b274bea17c2f01f6ab4e3644ee7da070b9f1066ad24"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12518,
+      "output_tokens": 299,
+      "total_tokens": 12817
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12518,
+      "output_tokens": 299,
+      "total_tokens": 12817
+    },
+    "target_seconds": 11.828000000095926,
+    "report_sha256": "2ce27f3077c7fc82210e2ca5f2d97a416b81a5599b81d9a3bb4318903d82dc94",
+    "source_events_sha256": "5053859921cdee4df1ee220d2637abc0b94cb9190fc8702ce110fe1ee5e18b26",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-revoked",
+    "family": "memory",
+    "question": "陶艺展览现在有有效批准的备用口令吗？",
+    "expected": "no-evidence",
+    "expected_value": "REF-DA56D630C0",
+    "source": "曾批准备用口令为 REF-DA56D630C0。",
+    "predecessor_value": null,
+    "answer": "我已检查了所有6个可用的内存条目（background-da56d630c0-00 到 background-da56d630c0-05），它们的内容都是关于\"陶艺展览日常准备第X项由值班组登记\"的记录，从第0项到第5项。\n\n这些内存条目中没有任何一个提到了\"备用口令\"或任何与口令相关的信息。所有条目都只涉及日常准备工作登记，没有关于安全措施、访问控制或备用验证机制的内容。\n\n因此，根据当前可用的批准项目事实，陶艺展览没有有效批准的备用口令。\n\n答案：没有。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 7,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-00",
+          "requested_tier": "section",
+          "version": "ac3c843e86c0e74c0207086a6a3a8675be204fad483ed4acce117cf04166691e"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-01",
+          "requested_tier": "section",
+          "version": "b48f4625c14ff336e4e05d76a27c505bf52a209172ade6936cf10ce59d42b4b7"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-02",
+          "requested_tier": "section",
+          "version": "3b3b309245ab3fdd9cc0b0807c3d62e4c9c9405386433e63b9864a2644e96e8d"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-03",
+          "requested_tier": "section",
+          "version": "27910c86bbcc7cd9287a3e1956230912bd4e71fc7b3e51831a66e95496f9c8ea"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-04",
+          "requested_tier": "section",
+          "version": "ef83633857f27f06409a0830701d6ffecf5a0641bd341cc863b64cd12fb2d6a9"
+        }
+      },
+      {
+        "name": "request_workspace_memory",
+        "arguments": {
+          "memory_id": "background-da56d630c0-05",
+          "requested_tier": "section",
+          "version": "a427cb830ccc597e26553ff1a8e135cacdb6a678e292a2d815a827efe3e51e8c"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 30,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 43,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 56,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 69,
+        "name": "request_workspace_memory"
+      },
+      {
+        "seq": 82,
+        "name": "request_workspace_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 45374,
+      "output_tokens": 1359,
+      "total_tokens": 46733
+    },
+    "target_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 45374,
+      "output_tokens": 1359,
+      "total_tokens": 46733
+    },
+    "target_seconds": 103.40700000000652,
+    "report_sha256": "49ff55f40b2b1ddc7d90a3713296a8f32f951650fe5ae68caa6b8131f6751822",
+    "source_events_sha256": "65ce8b299215561d48c9179f6a338c636a6f396fb308c529f7e5bedc9357f3fc",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re2-unbound",
+    "family": "memory",
+    "question": "当前项目批准的交接口令是什么？",
+    "expected": "unavailable",
+    "expected_value": "",
+    "source": "隔离材料不应在未绑定会话中被读取。",
+    "predecessor_value": null,
+    "answer": "根据当前可用的参考信息，我无法找到关于\"当前项目批准的交接口令\"的具体信息。搜索记忆中没有匹配\"交接口令\"、\"接口\"、\"命令\"或\"批准\"等关键词的相关记录。\n\n这可能意味着：\n1. 该项目没有定义特定的\"交接口令\"\n2. 相关信息不在已批准的项目记忆中\n3. 使用了不同的术语来描述接口命令\n\n由于没有找到相关证据，我无法提供当前项目批准的交接口令。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 6,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "context_seq": 20,
+        "kind": "memory",
+        "query": "交接口令",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 33,
+        "kind": "memory",
+        "query": "接口",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 46,
+        "kind": "memory",
+        "query": "命令",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      },
+      {
+        "context_seq": 59,
+        "kind": "memory",
+        "query": "批准",
+        "status": "source-unavailable",
+        "scanned": 0,
+        "total": 0,
+        "has_next": false,
+        "texts": []
+      }
+    ],
+    "calls": [
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "交接口令"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "接口"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "命令"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "批准"
+        }
+      },
+      {
+        "name": "list_files",
+        "arguments": {}
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 17,
+        "name": "search_memory"
+      },
+      {
+        "seq": 30,
+        "name": "search_memory"
+      },
+      {
+        "seq": 43,
+        "name": "search_memory"
+      },
+      {
+        "seq": 56,
+        "name": "search_memory"
+      }
+    ],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 6,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 26495,
+      "output_tokens": 397,
+      "total_tokens": 26892
+    },
+    "target_usage": {
+      "attempts": 6,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 26495,
+      "output_tokens": 397,
+      "total_tokens": 26892
+    },
+    "target_seconds": 21.18700000003446,
+    "report_sha256": "6ded5036cdfab90ef18a9dec29a4cf173a1a56d225c918f89505376a0482cca0",
+    "source_events_sha256": "8e3729fb37f179b44f61ac2be82f04eceb5a496ef8576a8679fc492c73cdaf60",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  }
+]

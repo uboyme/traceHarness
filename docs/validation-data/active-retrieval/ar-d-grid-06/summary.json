@@ -1,0 +1,339 @@
+{
+  "decision": "NO-GO",
+  "completed_grid": true,
+  "planned_cases_per_arm": 72,
+  "manual_review_complete": true,
+  "arms": {
+    "baseline": {
+      "joint_pass": 20,
+      "completed_answers": 58,
+      "execution_errors": [
+        {
+          "identity": "113-h-english",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "113-o-nonzero",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-h-absent",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-m-omitted",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-m-revoked",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-m-superseded",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-s-english",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-s-resource",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "419-o-direct",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "419-o-nearby",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "419-s-rephrase",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        }
+      ],
+      "connection_failures": 11,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 5
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 0
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 11
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 4
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 17
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 3
+        }
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 10,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 438,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0,
+      "steps": {
+        "n": 58,
+        "mean": 3.1551724137931036,
+        "p95": 7,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 58,
+        "mean": 2.0517241379310347,
+        "p95": 6,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 58,
+        "mean": 33.85460344827052,
+        "p95": 94.15600000007544,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "value": {
+        "planned": 60,
+        "joint_pass": 16
+      },
+      "no-evidence": {
+        "planned": 12,
+        "joint_pass": 4
+      }
+    },
+    "candidate": {
+      "joint_pass": 51,
+      "completed_answers": 66,
+      "execution_errors": [
+        {
+          "identity": "113-h-english",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "113-s-english",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-h-absent",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "227-h-disambiguate",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "419-h-disambiguate",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        },
+        {
+          "identity": "419-o-nonzero",
+          "error": {
+            "type": "ProviderFailure",
+            "code": "provider-tls-eof"
+          }
+        }
+      ],
+      "connection_failures": 6,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 12
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 14
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 14
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 11
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 42
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 9
+        }
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 4,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 399,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0,
+      "steps": {
+        "n": 66,
+        "mean": 3.0454545454545454,
+        "p95": 7,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 66,
+        "mean": 2.0,
+        "p95": 6,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 66,
+        "mean": 29.74127272727095,
+        "p95": 98.40700000000652,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "value": {
+        "planned": 60,
+        "joint_pass": 46
+      },
+      "no-evidence": {
+        "planned": 12,
+        "joint_pass": 5
+      }
+    }
+  },
+  "discovery_gain_cases": [
+    "113-h-disambiguate",
+    "113-h-rephrase",
+    "113-s-large-directory",
+    "113-s-rephrase",
+    "113-s-resource",
+    "227-h-late-page",
+    "227-h-rephrase",
+    "227-s-large-directory",
+    "227-s-rephrase",
+    "227-s-resource",
+    "419-h-rephrase",
+    "419-s-large-directory",
+    "419-s-rephrase",
+    "419-s-resource"
+  ],
+  "observed_lost_pass_cases": [
+    "113-h-absent",
+    "419-h-disambiguate"
+  ],
+  "all_gained_pass_cases": [
+    "113-h-direct",
+    "113-h-disambiguate",
+    "113-h-rephrase",
+    "113-o-direct",
+    "113-o-english",
+    "113-o-nearby",
+    "113-s-direct",
+    "113-s-large-directory",
+    "113-s-rephrase",
+    "113-s-resource",
+    "227-h-direct",
+    "227-h-english",
+    "227-h-late-page",
+    "227-h-rephrase",
+    "227-m-revoked",
+    "227-m-superseded",
+    "227-o-nearby",
+    "227-s-direct",
+    "227-s-english",
+    "227-s-large-directory",
+    "227-s-rephrase",
+    "227-s-resource",
+    "419-h-english",
+    "419-h-rephrase",
+    "419-m-revoked",
+    "419-o-direct",
+    "419-o-english",
+    "419-o-nearby",
+    "419-s-direct",
+    "419-s-english",
+    "419-s-large-directory",
+    "419-s-rephrase",
+    "419-s-resource"
+  ],
+  "both_arms_without_execution_error": {
+    "paired_cases": 57,
+    "scores": {
+      "baseline": 19,
+      "candidate": 44
+    },
+    "note": "Supplementary matched observations excluding a pair when either arm has an execution error. Fixed 72-case totals above remain primary; this does not remove unfinished answers."
+  },
+  "discovery_gain_note": "Matched observations, not a causal estimate. Skill gains include repaired disclosure receipt retention. Stochastic per-case losses are reported, not concealed.",
+  "candidate_thresholds": {
+    "joint_required": 66,
+    "actual": 51,
+    "per_family_required": 15,
+    "quality_pass": false,
+    "release_allowed": false
+  },
+  "interpretation": "One contemporary run per arm on the original fixed 72 questions, with individual answer/evidence review and independent offline replay. No prompt, model, question, budget or acceptance threshold tuned during the run. These questions have been used before, so this is regression measurement, not a new held-out benchmark or statistical model-quality guarantee."
+}

@@ -1,0 +1,91 @@
+{
+  "identity": "419-h-direct",
+  "case_id": "h-direct",
+  "seed": 419,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "9489c699-31fe-4789-aee8-b7331b8b1f03",
+  "target_start_seq": 152,
+  "answer": "根据搜索结果，设备交接的口令是 **REF-027842C074**。\n\n在历史记录中找到了明确的记录：\"请记下这条记录，只回复已记下：设备交接的口令是 REF-027842C074。\"",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 37.73499999998603,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 20391,
+    "output_tokens": 647,
+    "total_tokens": 21038
+  },
+  "all_usage": {
+    "attempts": 14,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 57964,
+    "output_tokens": 677,
+    "total_tokens": 58641
+  },
+  "evidence": [
+    {
+      "context_seq": 197,
+      "reference": {
+        "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+        "cursor": {
+          "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "03b6b43ee35f8197d5c47f3611a79f73a7c358b3cba23110224ea9635e003b1e",
+          "event_id": "e97566f6-8ef1-4062-ba4a-c7062e251e9a",
+          "seq": 111,
+          "stream_id": "session:9489c699-31fe-4789-aee8-b7331b8b1f03",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "e7b437312b776dfe5c3f933966dc524205f45ff062bbcef7c7b6ad826d570c94"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+        "cursor": {
+          "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+        "cursor": {
+          "block_id": "5119bd5050a0491db2f8d37efc1d2f6dbe2fa81aba44ac8b67229b97fb5c96fe",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "口令"
+      }
+    }
+  ],
+  "search_read_count": 3,
+  "output_executions": null,
+  "elapsed_seconds": 73.85900000005495
+}

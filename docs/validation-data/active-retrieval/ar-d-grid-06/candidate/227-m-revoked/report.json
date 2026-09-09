@@ -1,0 +1,78 @@
+{
+  "identity": "227-m-revoked",
+  "case_id": "m-revoked",
+  "seed": 227,
+  "family": "memory",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "df543d70-3362-4cbc-8caa-f8730ec9f238",
+  "target_start_seq": 1,
+  "answer": "根据search_memory的搜索结果，查询\"备用联络呼号\"返回了\"no-hit\"（未找到匹配项），表明在当前项目的所有12个已扫描的memory记录中没有找到关于\"备用联络呼号\"的信息。\n\n所有已知的background memory条目都只涉及\"普通材料保管记录\"，没有任何内容提到联络呼号、备用呼号或相关通信信息。\n\n因此，项目目前没有有效批准的备用联络呼号。\n\n{\"has_approved_backup_call_sign\": false}",
+  "steps": 6,
+  "reason": "completed",
+  "target_seconds": 117.5,
+  "target_usage": {
+    "attempts": 8,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 37026,
+    "output_tokens": 843,
+    "total_tokens": 37869
+  },
+  "all_usage": {
+    "attempts": 8,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 37026,
+    "output_tokens": 843,
+    "total_tokens": 37869
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-00",
+        "requested_tier": "section",
+        "version": "0ec06f9012e1850eb7e8c182ff6eb2db1b5e842208595308ad360fa96720e794"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-01",
+        "requested_tier": "section",
+        "version": "868c211d1841ba88875a78f1cb55199617abbd0d81139c69386d312251e04f71"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-02",
+        "requested_tier": "section",
+        "version": "c911054f7aa7b2b9e3a2b03bad66c127efc50fb7e7c1a664c49dfff2b22307b8"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-03",
+        "requested_tier": "section",
+        "version": "89a2a70c0fc26f60877a4909124cd5ebf94fae11f542438cee72e392ca049df5"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "备用联络呼号"
+      }
+    }
+  ],
+  "search_read_count": 5,
+  "output_executions": null,
+  "elapsed_seconds": 124.54699999990407
+}

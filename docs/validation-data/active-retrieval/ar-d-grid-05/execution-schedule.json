@@ -1,0 +1,16 @@
+{
+  "frozen_before_scoring": true,
+  "waves": [
+    [
+      "baseline-0",
+      "candidate-0"
+    ],
+    [
+      "baseline-1",
+      "candidate-1"
+    ]
+  ],
+  "maximum_simultaneous_workers": 2,
+  "reason": "Repeat complete unchanged grid after connection-only probe recovered. Same scheduling and resource limits for both arms. No claim that concurrency caused the earlier TLS failures.",
+  "manifest_questions_fixtures_model_limits_gates_unchanged": true
+}

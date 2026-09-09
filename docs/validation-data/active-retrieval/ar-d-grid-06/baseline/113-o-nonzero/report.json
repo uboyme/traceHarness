@@ -1,0 +1,80 @@
+{
+  "identity": "113-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "147d4ac3-255d-4916-af33-daff2ec968bf",
+  "target_start_seq": 28,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 8,
+    "unknown_usage": 4,
+    "estimated_usage": 0,
+    "input_tokens": 22902,
+    "output_tokens": 561,
+    "total_tokens": 23463
+  },
+  "all_usage": {
+    "attempts": 10,
+    "unknown_usage": 4,
+    "estimated_usage": 0,
+    "input_tokens": 29939,
+    "output_tokens": 584,
+    "total_tokens": 30523
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "c5c755f6361b2c2d4be69a68719a55b1d9012905b5b710b613aa3130d9fce003",
+        "effect_id": "e7975e32-5fa3-49a5-a607-cffccb491499",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "c5c755f6361b2c2d4be69a68719a55b1d9012905b5b710b613aa3130d9fce003",
+        "effect_id": "e7975e32-5fa3-49a5-a607-cffccb491499",
+        "offset": 1272,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "c5c755f6361b2c2d4be69a68719a55b1d9012905b5b710b613aa3130d9fce003",
+        "effect_id": "e7975e32-5fa3-49a5-a607-cffccb491499",
+        "offset": 2537,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "c5c755f6361b2c2d4be69a68719a55b1d9012905b5b710b613aa3130d9fce003",
+        "effect_id": "e7975e32-5fa3-49a5-a607-cffccb491499",
+        "offset": 3804,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": 1,
+  "elapsed_seconds": 78.21799999999348
+}

@@ -1,0 +1,994 @@
+[
+  {
+    "arm": "baseline",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_seconds": 1.077999999979511,
+    "report_sha256": "fa26900c9575b6992e19469326c1ff82eff1c4d8f1930e9a832069aa1da19ac9",
+    "source_events_sha256": "f366210c847eea4d5862eb767774165478b3aef4c55a09e583aa4b5f515f68ff",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_seconds": 1.1880000000819564,
+    "report_sha256": "1356d6fd81f6d82326e4b4b36fdf969ede556cff9ddbbd63150d49aa0257a3da",
+    "source_events_sha256": "3a11097812003f53733a41fe5db8f8a11a57f9b2a7b86d5c80f99c92061fcf7a",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n- “麻烦您把门关一下，谢谢！”  \n- “请问您方便把门关上吗？谢谢！”  \n- “如果您不介意的话，能请您把门关上吗？非常感谢！”  \n\n这些表达加入了请求语气词（“麻烦您”“请问您方便……吗”“如果您不介意的话”）、委婉句式和致谢，显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知或AI语音交互），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 129,
+      "total_tokens": 4070
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 129,
+      "total_tokens": 4070
+    },
+    "target_seconds": 3.984000000054948,
+    "report_sha256": "f4c5ddd9121379c38a75c00d5906d4c13a853e028243b1c899f508952f7cc0ee",
+    "source_events_sha256": "c2feb920047795c0f40bdc1c5c58bf58a837d16dbdfdc6b4f70c904dc5eefed1",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_seconds": 1.3910000000614673,
+    "report_sha256": "a39cd4c7b3b5ae25190900e2b17bdc7418c5f56e10ca46f4cc5fcebb5b0749d6",
+    "source_events_sha256": "9f75fcdcaf058208875c131fb8d1ad5cc945780b798de4bc6d42cbe803d33034",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-absent",
+    "family": "output",
+    "question": "刚才陶艺验收给出的回执编号是什么？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "本次仅完成清点，未生成验收回执编号。",
+    "predecessor_value": null,
+    "answer": "根据对 `python check.py` 输出的搜索，结果明确指出：\n\n> “本次仅完成清点，未生成验收回执编号。”\n\n因此，刚才的陶艺验收**没有给出回执编号**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "b1f0303cb98c1b6e6a466f89c23b3b571ab0e1b859a927093004be77f51520e9",
+          "effect_id": "4a14e84e-28ba-4019-9da0-602157504230",
+          "part": "content",
+          "query": "回执编号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 44,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16555,
+      "output_tokens": 419,
+      "total_tokens": 16974
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8781,
+      "output_tokens": 396,
+      "total_tokens": 9177
+    },
+    "target_seconds": 12.329000000027008,
+    "report_sha256": "9b291df0a93bbe730ef6acc0ef3ede78ea00d49ee4d871e4fedb646b6b4ac783",
+    "source_events_sha256": "5d48ad5e9c34b295e83ad60e92b7699adc34c5f7fe3189544ee6b34b2bcff294",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-business-en",
+    "family": "output",
+    "question": "What validation code did the equipment check return earlier?",
+    "expected": "value",
+    "expected_value": "REF-02EA3A8FA1",
+    "source": "validation code=REF-02EA3A8FA1",
+    "predecessor_value": null,
+    "answer": "The equipment check returned a validation code of `0`, as indicated by the `exit_code=0` line in the output of `python check.py`.",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178",
+          "effect_id": "4376357d-4415-4c4b-8650-5b1f73663b7b",
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 44,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17000,
+      "output_tokens": 232,
+      "total_tokens": 17232
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 9227,
+      "output_tokens": 210,
+      "total_tokens": 9437
+    },
+    "target_seconds": 8.172000000020489,
+    "report_sha256": "0358e536bcc5eabcabd162bf8e1573148ab5e885c37e754f883f46a4f4d943b6",
+    "source_events_sha256": "6ad13cd4e1cd0045457106daf0061c98a6a8d205bac859c0eb354ed8b244deac",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-business-other",
+    "family": "output",
+    "question": "陶艺验收的回执编号是什么？",
+    "expected": "value",
+    "expected_value": "REF-03A58DDAA4",
+    "source": "验收回执编号=REF-03A58DDAA4",
+    "predecessor_value": null,
+    "answer": "陶艺验收的回执编号是 **TA20240517001**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 11786,
+      "output_tokens": 45,
+      "total_tokens": 11831
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4021,
+      "output_tokens": 23,
+      "total_tokens": 4044
+    },
+    "target_seconds": 1.952999999979511,
+    "report_sha256": "3768dfb4605fd400e54348d2b7b3ab2428d54d9f586a4da47db2e17480cabae1",
+    "source_events_sha256": "523464f0ae5db830ed96827bcc4f13ad632a5323b3c11a60b221d111861ea385",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-business-zh",
+    "family": "output",
+    "question": "刚才归档检查返回的那串核验代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-2C1B33674C",
+    "source": "归档核验代号=REF-2C1B33674C",
+    "predecessor_value": null,
+    "answer": "刚才归档检查返回的核验代号是：\n\n`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155",
+          "effect_id": "e74625a7-f644-45a4-8088-72415ca8ce66",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17124,
+      "output_tokens": 239,
+      "total_tokens": 17363
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 9349,
+      "output_tokens": 216,
+      "total_tokens": 9565
+    },
+    "target_seconds": 8.594000000040978,
+    "report_sha256": "62aea45582b1f9e6ec6d6b92f1cc3b855d46e8ea871abbf05e43acc365b95c35",
+    "source_events_sha256": "17b9546f4ce62578fd1936be2c4379fbfd7caab5cba932d3dc728982e328a902",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-integrity",
+    "family": "output",
+    "question": "刚才保存的工具输出，其内容校验指纹 digest 是什么？",
+    "expected": "integrity",
+    "expected_value": "",
+    "source": "样品记录已保存。",
+    "predecessor_value": null,
+    "answer": "刚才执行 `python check.py` 的工具输出，其内容校验指纹（digest）是：\n\n`27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0`",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 11809,
+      "output_tokens": 107,
+      "total_tokens": 11916
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4039,
+      "output_tokens": 84,
+      "total_tokens": 4123
+    },
+    "target_seconds": 3.3130000000819564,
+    "report_sha256": "78e17405f799f6ffb09bb3e665a96d8e8fa300cc45bb0cd075b0582f5f555d96",
+    "source_events_sha256": "4af3d82544c1fbd6dd686eef398facccdf1e84ad891e9c283dcfe689a5e6468e",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re1-process",
+    "family": "output",
+    "question": "刚才命令的进程退出码是多少？",
+    "expected": "exit-code",
+    "expected_value": "",
+    "source": "本次检测结束。",
+    "predecessor_value": null,
+    "answer": "刚才命令的进程退出码是 `7`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+          "effect_id": "209725f9-c8df-44f9-a763-3e33398520f4",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17027,
+      "output_tokens": 168,
+      "total_tokens": 17195
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 9263,
+      "output_tokens": 145,
+      "total_tokens": 9408
+    },
+    "target_seconds": 6.562000000034459,
+    "report_sha256": "a4e90b1469e4165dfbb32df3b2985923b48dfd3261fcc856a2341fd73f11ff01",
+    "source_events_sha256": "375be6fffea43b382e972360bb5d7178ec785b86cf0e1d3c3501dc8cc84f1d8e",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_seconds": 1.1570000000065193,
+    "report_sha256": "daaf0190ecf9507f9d3a3ed70927c674a0702f2a8340db7cd70e47d62f3c0ddf",
+    "source_events_sha256": "1e60f1b7e43a43f9a0543a60651ddffe3bac6f18127af60d2c1980d81fa37719",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_seconds": 1.1559999999590218,
+    "report_sha256": "0b97e9e1d5c7591015e80767562fc675ca23a9a7b8c9743085e82d37fbdde914",
+    "source_events_sha256": "94056dac98d39ce54d4b6b22b89b66cea2c68fb4aeb8ba12a8fc6aa8033efd2f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否请您”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 109,
+      "total_tokens": 4050
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 109,
+      "total_tokens": 4050
+    },
+    "target_seconds": 3.562999999965541,
+    "report_sha256": "4ec7c8fd1f463f00afaf4220519467458e4555bdb2ab72a20a3f87750ec5a0e6",
+    "source_events_sha256": "0f43d008624479f91bd61f5f54d3c03a03b930040a6db399e5afa1598dea3a97",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_seconds": 1.562000000034459,
+    "report_sha256": "a3db63f38250b4ddab9cfe7bf402078d669b88a92cadb53fa02a3c3567d83c4d",
+    "source_events_sha256": "b7c9369368894f42c5b7702e1043d96edc37b3a3fd6804daedbdc5373554e6ce",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-absent",
+    "family": "output",
+    "question": "刚才陶艺验收给出的回执编号是什么？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "本次仅完成清点，未生成验收回执编号。",
+    "predecessor_value": null,
+    "answer": "陶艺验收的回执编号未在当前参考内容中提供，且 `search_history` 工具调用因无匹配结果而未返回有效线索（当前 references 为空）。  \n由于没有历史记录、内存或技能文档中关于“陶艺验收 回执编号”的显式信息，无法从已有证据中提取该编号。\n\n因此，**无法确定刚才陶艺验收给出的回执编号**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "陶艺验收 回执编号"
+        }
+      }
+    ],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16343,
+      "output_tokens": 163,
+      "total_tokens": 16506
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8431,
+      "output_tokens": 140,
+      "total_tokens": 8571
+    },
+    "target_seconds": 6.030999999959022,
+    "report_sha256": "7fe432d1e871b21bd0eb70a3f589c2457bb90ff56e5ecf50fb9ece963378ac19",
+    "source_events_sha256": "2103e928dcc894f93347eac67189e444740f9094d3f1f0fc7e24771446a6b406",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-business-en",
+    "family": "output",
+    "question": "What validation code did the equipment check return earlier?",
+    "expected": "value",
+    "expected_value": "REF-02EA3A8FA1",
+    "source": "validation code=REF-02EA3A8FA1",
+    "predecessor_value": null,
+    "answer": "The equipment check returned validation code `REF-02EA3A8FA1`.",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 67,
+        "request_snapshot_seq": 63,
+        "dispatch_fingerprint": "2e902f79a04b979ec9a748022a1b44623e87f04d5705c6b5b632a48f7d603a56",
+        "source_evidence": {
+          "tool_result_seq": 57,
+          "effect_id": "f07b048c-c8cb-48d8-a847-97f9f4321ca9",
+          "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10
+        }
+      },
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178",
+          "effect_id": "f07b048c-c8cb-48d8-a847-97f9f4321ca9",
+          "part": "content",
+          "query": "validation"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 44,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 57,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 21607,
+      "output_tokens": 411,
+      "total_tokens": 22018
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 13699,
+      "output_tokens": 388,
+      "total_tokens": 14087
+    },
+    "target_seconds": 14.46799999999348,
+    "report_sha256": "25de4e2a8f7d663dbba98e3f112ea01442eaba63dc09fdb476c6b2b648dfc4d8",
+    "source_events_sha256": "288a92e80fccb9cf560978fdcda648c97cd2ff43bbfcaa4e625b175f6e125a86",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-business-other",
+    "family": "output",
+    "question": "陶艺验收的回执编号是什么？",
+    "expected": "value",
+    "expected_value": "REF-03A58DDAA4",
+    "source": "验收回执编号=REF-03A58DDAA4",
+    "predecessor_value": null,
+    "answer": "陶艺验收的回执编号是 **TA20240517001**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12049,
+      "output_tokens": 46,
+      "total_tokens": 12095
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4153,
+      "output_tokens": 23,
+      "total_tokens": 4176
+    },
+    "target_seconds": 2.0320000000065193,
+    "report_sha256": "e838c60e36605cbc5f3b3d1d623b517a62148c46de5a2f797f0bbc9a8e652dbd",
+    "source_events_sha256": "41f34036bd30daad0116c52ccb9d7bccbec08ee2e7e42349dafb0fdb9ef72660",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-business-zh",
+    "family": "output",
+    "question": "刚才归档检查返回的那串核验代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-2C1B33674C",
+    "source": "归档核验代号=REF-2C1B33674C",
+    "predecessor_value": null,
+    "answer": "核验代号是：`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 1
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16505,
+      "output_tokens": 112,
+      "total_tokens": 16617
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8591,
+      "output_tokens": 89,
+      "total_tokens": 8680
+    },
+    "target_seconds": 6.032000000006519,
+    "report_sha256": "4d2e05218545240f69c3d6e3dd9e837ebb48a44c8102c986a0dd498ae65bb5f0",
+    "source_events_sha256": "65e2e43a8497015222e30515732fadc5cb064942ebdf8b4bf5d79c95b0dd7f0d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-integrity",
+    "family": "output",
+    "question": "刚才保存的工具输出，其内容校验指纹 digest 是什么？",
+    "expected": "integrity",
+    "expected_value": "",
+    "source": "样品记录已保存。",
+    "predecessor_value": null,
+    "answer": "刚才保存的工具输出的内容校验指纹 `digest` 是：\n\n`27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0`",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12081,
+      "output_tokens": 100,
+      "total_tokens": 12181
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4175,
+      "output_tokens": 77,
+      "total_tokens": 4252
+    },
+    "target_seconds": 3.0,
+    "report_sha256": "2e1bf569b7731a6603ef20a5a806f5ba3a4730c7276bd26c760b84d0ca4c7953",
+    "source_events_sha256": "9c6e2e0b30fe39e75e1943704a945b7fbb50e5d32cf1562e1e24854a250f6e76",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re1-process",
+    "family": "output",
+    "question": "刚才命令的进程退出码是多少？",
+    "expected": "exit-code",
+    "expected_value": "",
+    "source": "本次检测结束。",
+    "predecessor_value": null,
+    "answer": "退出码是 7。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+          "effect_id": "5d0b0af2-b187-4fac-898e-1a162a939be8",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17409,
+      "output_tokens": 151,
+      "total_tokens": 17560
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 9513,
+      "output_tokens": 128,
+      "total_tokens": 9641
+    },
+    "target_seconds": 6.202999999979511,
+    "report_sha256": "930ed857461ac4f5e550b9aeaad87b1198c0f48593f88dd5a92aaf9637a0abd5",
+    "source_events_sha256": "28e0d4e9fdf676e7130d86bef6a5720fac023796bd1f09d9631ada893fbbd158",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  }
+]

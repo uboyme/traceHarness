@@ -1,0 +1,103 @@
+{
+  "identity": "227-h-rephrase",
+  "case_id": "h-rephrase",
+  "seed": 227,
+  "family": "history",
+  "question": "之前备用物资搁在哪里来着？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "da21ce36-6e73-49ba-b21d-64c40b76c088",
+  "target_start_seq": 152,
+  "answer": "根据搜索结果，备用物资的存放地点是东侧第52号资料柜。\n\n在历史记录中明确提到：\"请记下这条记录，只回复已记下：备用物资的存放地点是 东侧第52号资料柜。\"",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 98.40700000000652,
+  "target_usage": {
+    "attempts": 9,
+    "unknown_usage": 4,
+    "estimated_usage": 0,
+    "input_tokens": 28383,
+    "output_tokens": 923,
+    "total_tokens": 29306
+  },
+  "all_usage": {
+    "attempts": 19,
+    "unknown_usage": 4,
+    "estimated_usage": 0,
+    "input_tokens": 67604,
+    "output_tokens": 953,
+    "total_tokens": 68557
+  },
+  "evidence": [
+    {
+      "context_seq": 216,
+      "reference": {
+        "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+        "cursor": {
+          "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "48a6c474643e8abc0dce6f74fa60c8993635fd32cf15fe2870b3bc3e2784d6c8",
+          "event_id": "76199e82-edf9-4b22-b799-47036e655cae",
+          "seq": 111,
+          "stream_id": "session:da21ce36-6e73-49ba-b21d-64c40b76c088",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "a17cff2af658895bb3578bd4c1572bfe7634ebce880e1275d2770c2c87ada55d"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+        "cursor": {
+          "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+        "cursor": {
+          "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+        "cursor": {
+          "block_id": "d9597199cd07126a7974a992eed52c4e7610506bb098625074457484aaa5c92c",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "备用物资"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 141.06299999996554
+}

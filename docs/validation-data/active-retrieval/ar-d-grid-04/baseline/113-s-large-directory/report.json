@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-large-directory",
+  "case_id": "s-large-directory",
+  "seed": 113,
+  "family": "skill",
+  "question": "设备演练手册里，终止演练的无线电口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "30610dc6-5fdc-4dbe-ab3c-c6f57a26cc8f",
+  "target_start_seq": 1,
+  "answer": "根据当前参考文档，设备演练手册的目录中确实存在一个名为“无线电终止演练流程”的章节（section-23），其摘要为“无线电终止演练流程”，且 `content_bytes` 为 60，表明该章节有具体内容。然而，在提供的参考内容中，并未直接显示 section-23 的正文内容，只提供了目录结构。\n\n由于参考文档中没有直接给出 section-23 的正文，我需要确认是否还有其他相关章节或信息。但根据目录，只有 section-23 与“无线电终止演练”相关，其他章节均为“普通事项”，与问题无关。\n\n因此，基于当前提供的参考文档，**无法确定终止演练的无线电口令**，因为 section-23 的具体内容未被提供。\n\n答案：**未提供**。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 65.0,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 14506,
+    "output_tokens": 607,
+    "total_tokens": 15113
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 14506,
+    "output_tokens": 607,
+    "total_tokens": 15113
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "04c307c0928d24e624f2da62723d80fe95862676123a7e6e337cd5faea22f850",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-dc37f22941",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "faf3382162c71e7f526a6c20e3c7afef1e480316f8f31afd9ff1a97878027c73",
+        "effect_id": "57cac934-e951-4c67-8edb-10381fffc310",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 65.96900000004098
+}

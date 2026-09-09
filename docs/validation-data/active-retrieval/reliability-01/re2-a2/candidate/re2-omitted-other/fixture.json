@@ -1,0 +1,90 @@
+{
+  "id": "re2-omitted-other",
+  "family": "memory",
+  "domain": 0,
+  "mode": "omitted",
+  "language": "zh",
+  "question": "花卉展的备用集合点批准在哪里？",
+  "source_title": "花卉展记录",
+  "source_body": "交接批准记录：备用集合点为 {value}。",
+  "expected": "value",
+  "value_type": "location",
+  "control": false,
+  "discovery": true,
+  "seed": 1609,
+  "identity": "re2-omitted-other",
+  "value": "东侧第46号资料柜",
+  "source": "交接批准记录：备用集合点为 东侧第46号资料柜。",
+  "domain_name": "花卉展",
+  "project_id": "project-f1df68f2ab",
+  "source_id": "source-f1df68f2ab",
+  "memory_id": "fact-f1df68f2ab",
+  "fact_slot": "slot-f1df68f2ab",
+  "skill_id": "manual-f1df68f2ab",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-f1df68f2ab-00",
+      "slot": "background-slot-00",
+      "body": "花卉展查询分工第0项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-01",
+      "slot": "background-slot-01",
+      "body": "花卉展查询分工第1项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-02",
+      "slot": "background-slot-02",
+      "body": "花卉展查询分工第2项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-03",
+      "slot": "background-slot-03",
+      "body": "花卉展查询分工第3项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-04",
+      "slot": "background-slot-04",
+      "body": "花卉展查询分工第4项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-05",
+      "slot": "background-slot-05",
+      "body": "花卉展查询分工第5项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-06",
+      "slot": "background-slot-06",
+      "body": "花卉展查询分工第6项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-07",
+      "slot": "background-slot-07",
+      "body": "花卉展查询分工第7项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-08",
+      "slot": "background-slot-08",
+      "body": "花卉展查询分工第8项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-09",
+      "slot": "background-slot-09",
+      "body": "花卉展查询分工第9项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-10",
+      "slot": "background-slot-10",
+      "body": "花卉展查询分工第10项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-f1df68f2ab-11",
+      "slot": "background-slot-11",
+      "body": "花卉展查询分工第11项：花卉展的备用集合点批准在哪里？请查交接批准记录；本条不含具体值。"
+    }
+  ],
+  "predecessor_value": null,
+  "grading": "value",
+  "material_digest": "f16be6d8abe6300297e9f4f2b1d975f64b10a99ecffad4ba05b8fcd988f6c4ca"
+}

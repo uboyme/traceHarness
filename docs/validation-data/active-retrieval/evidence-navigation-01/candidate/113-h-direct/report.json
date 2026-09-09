@@ -1,0 +1,79 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "7931c509-608c-46ec-85ad-0c017ed5eca7",
+  "target_start_seq": 152,
+  "answer": "The device handover password is found in the search result: \"设备交接的口令是 REF-34772572F2\" (The device handover password is REF-34772572F2).\n\nTherefore, the device handover password is **REF-34772572F2**.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 34.875,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14926,
+    "output_tokens": 398,
+    "total_tokens": 15324
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54139,
+    "output_tokens": 428,
+    "total_tokens": 54567
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+        "cursor": {
+          "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "d6345b799e3f1e62cbe99c5861838aead3916f0828a8d1489d1e5a49a46618e7",
+          "event_id": "b5b17f57-1a30-4758-b990-615de0409cab",
+          "seq": 111,
+          "stream_id": "session:7931c509-608c-46ec-85ad-0c017ed5eca7",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "7cdd40a4b78fc77cb4a3c231f9730121598468759efcbccdc2a029ebfdaf818f"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+        "cursor": {
+          "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "设备交接"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 71.625
+}

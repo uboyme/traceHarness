@@ -1,0 +1,43 @@
+{
+  "purpose": "Transport-only paired API diagnostic, not retrieval scoring or AgentLoop verification",
+  "started_at": "2026-09-09T12:09:54.558454+00:00",
+  "finished_at": "2026-09-09T12:10:23.408533+00:00",
+  "summary": {
+    "system": {
+      "requests": 6,
+      "successes": 3,
+      "expected_responses": 3,
+      "failures": [
+        {
+          "type": "ProviderFailure",
+          "code": "provider-tls-eof",
+          "category": "tls_eof"
+        },
+        {
+          "type": "ProviderFailure",
+          "code": "provider-tls-eof",
+          "category": "tls_eof"
+        },
+        {
+          "type": "ProviderFailure",
+          "code": "provider-tls-eof",
+          "category": "tls_eof"
+        }
+      ],
+      "successful_median_seconds": 2.829,
+      "reported_tokens": 2478,
+      "unknown_usage_requests": 3
+    },
+    "direct": {
+      "requests": 6,
+      "successes": 6,
+      "expected_responses": 6,
+      "failures": [],
+      "successful_median_seconds": 0.648,
+      "reported_tokens": 4956,
+      "unknown_usage_requests": 0
+    }
+  },
+  "raw_source_sha256": "3a7dd08b852ce195123c96407b8986937fef49b3bee7bbe576af03e229671d83",
+  "scope": "Previously completed transport-only diagnostic. Local addresses and credential-bearing configuration omitted. Does not replace RE-0 probes."
+}

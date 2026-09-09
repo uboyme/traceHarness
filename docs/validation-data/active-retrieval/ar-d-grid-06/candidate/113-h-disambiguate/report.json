@@ -1,0 +1,67 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "fc0b2c9b-1c85-4878-8dc6-3c0a767e8cf0",
+  "target_start_seq": 152,
+  "answer": "From the search results, I can see the exact information needed. The search hit shows:\n\n\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-640CA6984B。搬运组使用另一个代号。 搬运组的联络代号是 DECOY-640CA6984B。\"\n\nThis clearly states that the联络代号 (contact code) for the 档案复核组 (Archives Review Group) is **REF-640CA6984B**, and it explicitly distinguishes this from the 搬运组 (Moving Group) which uses DECOY-640CA6984B.\n\nREF-640CA6984B",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 18.811999999918044,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10106,
+    "output_tokens": 288,
+    "total_tokens": 10394
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 49491,
+    "output_tokens": 318,
+    "total_tokens": 49809
+  },
+  "evidence": [
+    {
+      "context_seq": 171,
+      "reference": {
+        "block_id": "ec89fc2715fddb8327eddac3237fc1ca57bfc582be5c3cddf5c0afe15d688536",
+        "cursor": {
+          "block_id": "ec89fc2715fddb8327eddac3237fc1ca57bfc582be5c3cddf5c0afe15d688536",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "1837a394d503e985251d2c84e64c7636dd445cdaaada910779894f10c4c80fef",
+          "event_id": "29d01fef-1ef1-4008-a854-16a79f9db9be",
+          "seq": 111,
+          "stream_id": "session:fc0b2c9b-1c85-4878-8dc6-3c0a767e8cf0",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "2c1b3ab13beb8b8c7e204423eed75433acb845f527d78dd483ea8c361b9903a9"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "档案复核组"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 52.375
+}

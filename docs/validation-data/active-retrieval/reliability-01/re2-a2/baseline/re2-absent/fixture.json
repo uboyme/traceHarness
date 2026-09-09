@@ -1,0 +1,90 @@
+{
+  "id": "re2-absent",
+  "family": "memory",
+  "domain": 0,
+  "mode": "direct",
+  "language": "zh",
+  "question": "项目批准了停车优惠码吗？",
+  "source_title": "陶艺展览记录",
+  "source_body": "本项目仅批准物料清点安排。",
+  "expected": "no-evidence",
+  "value_type": "none",
+  "control": false,
+  "discovery": false,
+  "seed": 1609,
+  "identity": "re2-absent",
+  "value": "",
+  "source": "本项目仅批准物料清点安排。",
+  "domain_name": "陶艺展览",
+  "project_id": "project-a6fdd1f91e",
+  "source_id": "source-a6fdd1f91e",
+  "memory_id": "fact-a6fdd1f91e",
+  "fact_slot": "slot-a6fdd1f91e",
+  "skill_id": "manual-a6fdd1f91e",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-a6fdd1f91e-00",
+      "slot": "background-slot-00",
+      "body": "陶艺展览日常准备第0项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-01",
+      "slot": "background-slot-01",
+      "body": "陶艺展览日常准备第1项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-02",
+      "slot": "background-slot-02",
+      "body": "陶艺展览日常准备第2项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-03",
+      "slot": "background-slot-03",
+      "body": "陶艺展览日常准备第3项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-04",
+      "slot": "background-slot-04",
+      "body": "陶艺展览日常准备第4项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-05",
+      "slot": "background-slot-05",
+      "body": "陶艺展览日常准备第5项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-06",
+      "slot": "background-slot-06",
+      "body": "陶艺展览日常准备第6项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-07",
+      "slot": "background-slot-07",
+      "body": "陶艺展览日常准备第7项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-08",
+      "slot": "background-slot-08",
+      "body": "陶艺展览日常准备第8项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-09",
+      "slot": "background-slot-09",
+      "body": "陶艺展览日常准备第9项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-10",
+      "slot": "background-slot-10",
+      "body": "陶艺展览日常准备第10项由值班组登记。"
+    },
+    {
+      "id": "background-a6fdd1f91e-11",
+      "slot": "background-slot-11",
+      "body": "陶艺展览日常准备第11项由值班组登记。"
+    }
+  ],
+  "predecessor_value": null,
+  "grading": "no-evidence",
+  "material_digest": "37b358158684dcc9cf3d29ce2a1b48aa52d1617633b057b10cb25635d255a110"
+}

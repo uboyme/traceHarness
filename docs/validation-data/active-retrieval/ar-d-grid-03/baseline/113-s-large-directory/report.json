@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-large-directory",
+  "case_id": "s-large-directory",
+  "seed": 113,
+  "family": "skill",
+  "question": "设备演练手册里，终止演练的无线电口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "09b0ad52-80ba-44aa-bed7-80b46e1b9789",
+  "target_start_seq": 1,
+  "answer": "根据当前提供的参考文档，设备演练手册的目录中确实存在一个名为“无线电终止演练流程”（section-23）的章节，其摘要也明确指出该章节的主题。\n\n然而，当前提供的参考内容仅包含该手册的**目录结构（directory）**，其中列出了所有章节的 ID、标题和摘要，但**并未提供 section-23 的实际正文内容**。`content_bytes` 字段显示为 60，这表示该章节在源 Skill 中有 60 字节的内容，但这些字节的具体文本并未被包含在当前的参考数据中。\n\n由于该口令是手册中一个非常具体且关键的操作指令，它必然存在于 section-23 的正文中，而当前的参考数据中缺失了这部分正文。\n\n因此，基于当前可用的信息，我无法确定终止演练的无线电口令是什么。\n\n**结论：当前参考文档中未提供“无线电终止演练流程”章节的具体内容，因此无法确定终止演练的无线电口令。**",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 23.25,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14513,
+    "output_tokens": 648,
+    "total_tokens": 15161
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14513,
+    "output_tokens": 648,
+    "total_tokens": 15161
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "04c307c0928d24e624f2da62723d80fe95862676123a7e6e337cd5faea22f850",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-dc37f22941",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "7dd8e508580fcc40fffa710ba9f2384014488a9eb583e2c66c6e0583f3b949fd",
+        "effect_id": "82ce0ec6-fac2-413a-b8f5-280b36a00f13",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 24.031000000075437
+}

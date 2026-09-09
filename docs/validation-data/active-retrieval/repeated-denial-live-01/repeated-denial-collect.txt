@@ -1,0 +1,12 @@
+tests/test_budget_enforcement.py: 26
+tests/test_cli_chat.py: 30
+tests/test_product_architecture.py: 17
+tests/test_product_contract.py: 73
+tests/test_recovery.py: 14
+tests/test_reference_token_budget.py: 13
+tests/test_repeated_denial.py: 13
+tests/test_runtime_e2e.py: 1
+tests/test_runtime_factory.py: 2
+tests/test_surface_and_invariants.py: 17
+tests/test_tool_runtime_failures.py: 4
+

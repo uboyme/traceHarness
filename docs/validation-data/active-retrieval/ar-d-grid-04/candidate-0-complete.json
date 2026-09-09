@@ -1,0 +1,15 @@
+{
+  "arm": "candidate",
+  "closed": 36,
+  "scored_review_complete": false,
+  "all_usage": {
+    "attempts": 146,
+    "unknown_usage": 96,
+    "estimated_usage": 0,
+    "input_tokens": 214411,
+    "output_tokens": 3868,
+    "total_tokens": 218279
+  },
+  "mean_target_seconds": 5.645416666663045,
+  "p95_target_seconds": 66.75
+}

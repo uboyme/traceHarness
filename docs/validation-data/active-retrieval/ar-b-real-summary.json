@@ -1,0 +1,50 @@
+[
+  {
+    "run": "ar-b-smoke-01",
+    "purpose": "AR-B diagnostic; not AR-D scored evidence",
+    "attempts_including_setup": 18,
+    "usage_including_setup": {
+      "input_tokens": 67454,
+      "output_tokens": 1233,
+      "total_tokens": 68687
+    },
+    "cases": [
+      {
+        "language": "zh",
+        "steps": 2,
+        "search_used": false,
+        "passed": false
+      },
+      {
+        "language": "en",
+        "steps": 4,
+        "search_used": false,
+        "passed": true
+      }
+    ]
+  },
+  {
+    "run": "ar-b-smoke-02",
+    "purpose": "AR-B diagnostic; not AR-D scored evidence",
+    "attempts_including_setup": 20,
+    "usage_including_setup": {
+      "input_tokens": 80111,
+      "output_tokens": 1617,
+      "total_tokens": 81728
+    },
+    "cases": [
+      {
+        "language": "zh",
+        "steps": 4,
+        "search_used": true,
+        "passed": true
+      },
+      {
+        "language": "en",
+        "steps": 4,
+        "search_used": false,
+        "passed": true
+      }
+    ]
+  }
+]

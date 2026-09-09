@@ -1,0 +1,88 @@
+{
+  "id": "m-english",
+  "family": "memory",
+  "domain": 0,
+  "mode": "direct",
+  "language": "en",
+  "question": "How many retries have been approved for this project?",
+  "source_title": "Approved retry policy",
+  "source_body": "The approved retry budget for this project is {value} attempts.",
+  "expected": "value",
+  "value_type": "number",
+  "control": true,
+  "discovery": false,
+  "seed": 113,
+  "identity": "113-m-english",
+  "value": "31",
+  "source": "The approved retry budget for this project is 31 attempts.",
+  "domain_name": "灯塔设备演练",
+  "project_id": "project-96eccb0750",
+  "source_id": "source-96eccb0750",
+  "memory_id": "fact-96eccb0750",
+  "fact_slot": "slot-96eccb0750",
+  "skill_id": "manual-96eccb0750",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-96eccb0750-00",
+      "slot": "background-slot-00",
+      "body": "普通材料保管记录第0项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-01",
+      "slot": "background-slot-01",
+      "body": "普通材料保管记录第1项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-02",
+      "slot": "background-slot-02",
+      "body": "普通材料保管记录第2项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-03",
+      "slot": "background-slot-03",
+      "body": "普通材料保管记录第3项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-04",
+      "slot": "background-slot-04",
+      "body": "普通材料保管记录第4项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-05",
+      "slot": "background-slot-05",
+      "body": "普通材料保管记录第5项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-06",
+      "slot": "background-slot-06",
+      "body": "普通材料保管记录第6项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-07",
+      "slot": "background-slot-07",
+      "body": "普通材料保管记录第7项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-08",
+      "slot": "background-slot-08",
+      "body": "普通材料保管记录第8项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-09",
+      "slot": "background-slot-09",
+      "body": "普通材料保管记录第9项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-10",
+      "slot": "background-slot-10",
+      "body": "普通材料保管记录第10项：由资料组维护登记。"
+    },
+    {
+      "id": "background-96eccb0750-11",
+      "slot": "background-slot-11",
+      "body": "普通材料保管记录第11项：由资料组维护登记。"
+    }
+  ],
+  "predecessor_value": null
+}

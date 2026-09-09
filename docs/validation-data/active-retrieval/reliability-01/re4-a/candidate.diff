@@ -1,0 +1,22 @@
+--- b0/traceh/session/context_input.py
++++ candidate/traceh/session/context_input.py
+@@ -485,9 +485,18 @@
+     token_mode=False,
+     token_excluded=False,
+ ) -> str:
++    items = []
++    for block in blocks:
++        item = _render_item(block, policy)
++        ordered = {key: item[key] for key in ("kind", "tier", "body_status")}
++        ordered.update(
++            {key: item[key] for key in sorted(item) if key not in ordered and key != "body"}
++        )
++        ordered["body"] = item["body"]
++        items.append(ordered)
+     return (
+         _HEADER
+-        + canonical_json([_render_item(block, policy) for block in blocks])
++        + json.dumps(items, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+         + ((_TOKEN_LIMIT_FOOTER if token_excluded else _TOKEN_FOOTER) if token_mode else _FOOTER)
+     )
+ 

@@ -1,0 +1,65 @@
+{
+  "identity": "113-o-nearby",
+  "case_id": "o-nearby",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "70a96abf-d7b5-4660-9446-0ed7fb7ac886",
+  "target_start_seq": 28,
+  "answer": "诊断分组的处理口令是：`REF-9C7A8DE739`",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 13.562000000034459,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14074,
+    "output_tokens": 283,
+    "total_tokens": 14357
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21837,
+    "output_tokens": 306,
+    "total_tokens": 22143
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 55,
+      "effect_id": "f7573893-5bba-4bfa-a515-cf477ab1e032",
+      "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+        "effect_id": "f7573893-5bba-4bfa-a515-cf477ab1e032",
+        "part": "content",
+        "query": "诊断分组"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 2000,
+        "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+        "effect_id": "f7573893-5bba-4bfa-a515-cf477ab1e032",
+        "offset": 12643,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": 1,
+  "elapsed_seconds": 19.093999999924563
+}

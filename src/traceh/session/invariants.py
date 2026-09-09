@@ -124,6 +124,17 @@ class CoreInvariantChecker:
                     "History request authority or source binding is invalid",
                 )
             )
+        from traceh.session.reference_search import validate_search_events
+
+        try:
+            validate_search_events(session_events)
+        except (KeyError, TypeError, ValueError) as error:
+            violations.append(
+                InvariantViolation(
+                    getattr(error, "code", "reference-search-invalid"),
+                    "Reference search authority or source binding is invalid",
+                )
+            )
         for issue in validate_plugin_identity_events(session_events):
             violations.append(
                 InvariantViolation(

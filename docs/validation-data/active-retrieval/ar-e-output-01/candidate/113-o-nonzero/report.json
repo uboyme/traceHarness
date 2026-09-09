@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "045f15e4-9e9a-487b-bf86-817c2d606774",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这表示检查失败。在许多检查脚本中，非零退出码代表某种错误，而 `7` 通常被用作特定故障代号。\n\n根据工具输出的 preview 内容（显示大量“普通器材登记，状态 normal”后被截断），以及 exit_code=7，结合常见归档/校验脚本惯例（如本项目上下文可能采用的约定），`7` 很可能对应 **“归档损坏”** 或 **“校验失败”** 类故障。\n\n但问题明确问的是“**故障代号**”，而工具输出中直接可见、唯一明确的数字故障标识就是：\n\n**`7`**\n\n该值出现在 `exit_code=7` 字段中，是操作系统层面返回的进程退出码，即本次失败检查所给出的**故障代号**。\n\n因此，答案是：\n\n7",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 8.015999999945052,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4913,
+    "output_tokens": 201,
+    "total_tokens": 5114
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13394,
+    "output_tokens": 224,
+    "total_tokens": 13618
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 15.48499999998603
+}

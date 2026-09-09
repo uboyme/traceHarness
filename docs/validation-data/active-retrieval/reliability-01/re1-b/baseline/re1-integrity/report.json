@@ -1,0 +1,39 @@
+{
+  "identity": "re1-integrity",
+  "case_id": "re1-integrity",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才保存的工具输出，其内容校验指纹 digest 是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "210c29f3-c622-47d3-a2d2-4d6009af21f4",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的工具输出，其内容校验指纹（digest）是：\n\n`27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0`",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.4839999999385327,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4042,
+    "output_tokens": 84,
+    "total_tokens": 4126
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11815,
+    "output_tokens": 107,
+    "total_tokens": 11922
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 7.344000000040978
+}

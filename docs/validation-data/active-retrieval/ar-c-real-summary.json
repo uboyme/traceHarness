@@ -1,0 +1,197 @@
+{
+  "purpose": "AR-C diagnostics only, not AR-D score",
+  "runs": [
+    {
+      "run": "ar-c-smoke-01",
+      "complete": false,
+      "cases": [
+        {
+          "kind": "memory",
+          "answer": "The workspace contains no files, and there are no current references provided that contain information about a project identification code used during project meetings. Without any files or reference material to search through, I cannot determine what the project identification code is.\n\nSince there's no evidence available in the workspace or current references, I cannot provide the project identification code used during project meetings.\n\nTherefore, the answer is that the information is not available in the current context.",
+          "steps": 2,
+          "search_used": false,
+          "passed": false,
+          "evidence_seen": false,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 2,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 6877,
+            "output_tokens": 131,
+            "total_tokens": 7008
+          }
+        }
+      ]
+    },
+    {
+      "run": "ar-c-smoke-02",
+      "complete": true,
+      "cases": [
+        {
+          "kind": "memory",
+          "answer": "根据当前可用的信息，我无法找到项目碰头时用的识别代号。搜索项目记忆没有返回任何匹配结果，工作区中也没有文件，工具输出列表也是空的。\n\n由于没有找到任何相关信息，我无法确定项目碰头时用的识别代号是什么。",
+          "steps": 6,
+          "search_used": true,
+          "passed": false,
+          "evidence_seen": false,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 6,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 23306,
+            "output_tokens": 338,
+            "total_tokens": 23644
+          }
+        },
+        {
+          "kind": "skill",
+          "answer": "在 `fixture.json` 文件中，我找到了关于无线电终止作业的部分。在 `sections` 数组中，`part-23` 部分的标题是 \"无线电终止作业\"，其摘要说明是 \"停止维护作业时使用的无线电口令。\"，而该部分的正文内容是：\"设备维护手册规定，终止作业的无线电口令是 WILLOW-59a0bae7。\"\n\n因此，设备维护手册里，终止作业时的无线电口令是 **WILLOW-59a0bae7**。",
+          "steps": 3,
+          "search_used": false,
+          "passed": false,
+          "evidence_seen": false,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 3,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 15480,
+            "output_tokens": 237,
+            "total_tokens": 15717
+          }
+        }
+      ]
+    },
+    {
+      "run": "ar-c-smoke-03",
+      "complete": true,
+      "cases": [
+        {
+          "kind": "memory",
+          "answer": "从搜索结果中，我可以看到项目已批准的值班联络口令是 \"MAPLE-e6b965bc\"。\n\n在搜索结果中明确显示：\"已经批准的值班联络口令是 MAPLE-e6b965bc。\"\n\n因此，项目已批准的值班联络口令是 MAPLE-e6b965bc。",
+          "steps": 2,
+          "search_used": true,
+          "passed": true,
+          "evidence_seen": true,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 2,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 8446,
+            "output_tokens": 154,
+            "total_tokens": 8600
+          }
+        },
+        {
+          "kind": "skill",
+          "answer": "我需要查找设备维护手册中关于终止作业时的无线电口令的信息。由于当前参考中没有提供具体的手册内容，我应该搜索工作区中的文件。\n\n让我先列出工作区中的文件，然后搜索相关关键词：\n\n\n\n\n\n\n",
+          "steps": 12,
+          "search_used": false,
+          "passed": false,
+          "evidence_seen": false,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 12,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 49162,
+            "output_tokens": 790,
+            "total_tokens": 49952
+          }
+        }
+      ]
+    },
+    {
+      "run": "ar-c-smoke-04",
+      "complete": true,
+      "cases": [
+        {
+          "kind": "memory",
+          "answer": "根据搜索结果，项目已批准的值班联络口令是 **MAPLE-d543f90d**。\n\n这个信息来自已批准的项目记忆（memory_id: \"context-fact\", fact_slot: \"project-boundaries\"）。",
+          "steps": 2,
+          "search_used": true,
+          "passed": true,
+          "evidence_seen": true,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 2,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 8614,
+            "output_tokens": 120,
+            "total_tokens": 8734
+          }
+        },
+        {
+          "kind": "skill",
+          "answer": "根据当前可用的参考信息，我没有找到设备维护手册的具体内容。系统提示\"ValueError: skill-request-not-disclosed\"，表明设备维护手册的技能引用没有被提供。\n\n由于当前参考中没有包含设备维护手册的内容，我无法确定终止作业时的无线电口令是什么。\n\n在实际工作中，这类信息通常会在设备维护手册的\"安全操作规程\"、\"应急程序\"或\"通信协议\"章节中规定，常见的无线电口令可能包括\"作业终止\"、\"任务结束\"、\"停止作业\"等标准化术语，但具体到本手册的准确口令需要查阅实际的手册文档。\n\n由于缺乏必要的参考文档，我无法提供确切的答案。",
+          "steps": 4,
+          "search_used": true,
+          "passed": false,
+          "evidence_seen": false,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 4,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 15949,
+            "output_tokens": 447,
+            "total_tokens": 16396
+          }
+        }
+      ]
+    },
+    {
+      "run": "ar-c-smoke-05",
+      "complete": true,
+      "cases": [
+        {
+          "kind": "memory",
+          "answer": "根据搜索结果，项目已批准的值班联络口令是 **MAPLE-c2b5583e**。",
+          "steps": 2,
+          "search_used": true,
+          "passed": true,
+          "evidence_seen": true,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 2,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 8593,
+            "output_tokens": 101,
+            "total_tokens": 8694
+          }
+        },
+        {
+          "kind": "skill",
+          "answer": "WILLOW-5ecef859",
+          "steps": 5,
+          "search_used": true,
+          "passed": true,
+          "evidence_seen": true,
+          "replay_errors": [],
+          "invariant_errors": [],
+          "attempts": 5,
+          "usage_unknown": 0,
+          "usage": {
+            "input_tokens": 21785,
+            "output_tokens": 461,
+            "total_tokens": 22246
+          }
+        }
+      ]
+    }
+  ],
+  "attempts": 38,
+  "total_tokens": 160991,
+  "limitations": [
+    "Round 1 Skill fixture rejected unsorted section IDs before runtime creation.",
+    "Round 2 Skill answer read an audit fixture in workspace: invalid source, not a pass. Subsequent fixtures live outside workspace with reference-only Tool policy.",
+    "Memory question was clarified in round 3; rounds are diagnostics, not a controlled quality comparison.",
+    "Round 5 both sources used search and original-source evidence, with replay/invariants validated at run time.",
+    "No AR-D scored calls yet."
+  ]
+}

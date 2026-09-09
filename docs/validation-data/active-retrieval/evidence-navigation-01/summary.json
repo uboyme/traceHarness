@@ -1,0 +1,1264 @@
+{
+  "experiment": "evidence-navigation-01",
+  "release_acceptance": false,
+  "arms": {
+    "baseline": {
+      "closed_cases": 13,
+      "expected_cases": 13,
+      "positive_cases": 9,
+      "positive_joint_pass": 7,
+      "negative_cases": 4,
+      "usage_including_setup": {
+        "attempts": 54,
+        "input_tokens": 263020,
+        "output_tokens": 4669,
+        "total_tokens": 267689,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-direct",
+          "answer": "设备演练手册规定的签到卡代号是 **REF-CF662C1BCD**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-cf662c1bcd",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-cf662c1bcd",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10134,
+            "output_tokens": 301,
+            "total_tokens": 10435
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10134,
+            "output_tokens": 301,
+            "total_tokens": 10435
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-english",
+          "answer": "The equipment drill manual specifies the check-in card code as **REF-EDCC0FF2B0**.",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "check-in card"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "482a2881b1e139e08f4ce342390698bc98eacc1b8edf58bf96b18288b7799901",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-edcc0ff2b0",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 45,
+              "id": "manual-edcc0ff2b0",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18197,
+            "output_tokens": 621,
+            "total_tokens": 18818
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18197,
+            "output_tokens": 621,
+            "total_tokens": 18818
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "根据当前可用的参考内容，没有提供关于\"诊断分组的处理口令\"的具体信息。所有搜索和工具调用都受到限制，且当前参考内容为空。\n\n由于问题要求的是\"刚才设备检查里\"的信息，这应该是在之前的对话或执行中提到的内容，但当前参考上下文中没有包含这部分信息。\n\n因此，我无法从当前可用的参考内容中确定诊断分组的处理口令是什么。",
+          "steps": 5,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_history",
+              "arguments": {
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "诊断分组"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 26184,
+            "output_tokens": 401,
+            "total_tokens": 26585
+          },
+          "all_usage": {
+            "attempts": 7,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 34908,
+            "output_tokens": 424,
+            "total_tokens": 35332
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "113-h-direct",
+          "answer": "从搜索结果中，我找到了设备交接的口令信息。在历史记录中明确提到：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                "cursor": {
+                  "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                "cursor": {
+                  "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                  "index": 1,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                "cursor": {
+                  "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                  "index": 2,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "name": "search_history",
+              "arguments": {
+                "query": "设备交接 口令"
+              }
+            },
+            {
+              "name": "search_history",
+              "arguments": {
+                "query": "口令"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 223,
+              "reference": {
+                "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                "cursor": {
+                  "block_id": "828e70af41eb0dcf96c9a28ac7bc19809061d25bbf35b8e4fcad1da6f35ab60f",
+                  "index": 3,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "leaf_ref": {
+                  "digest": "a01530b313a6198d32c9bbb93c5b9bee72a549efdab4cd9a6bc2f747ba24fd08",
+                  "event_id": "04f11f79-af75-468d-9c37-70df20ce2fb8",
+                  "seq": 111,
+                  "stream_id": "session:aa677b55-6b13-4ca6-a624-a798201f4a1e",
+                  "type": "user/message"
+                },
+                "readable": true,
+                "version": "5eedb8da0c42424531283d66bab43ce673db850212bf1edd59dc8de7650587f3"
+              }
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 34730,
+            "output_tokens": 917,
+            "total_tokens": 35647
+          },
+          "all_usage": {
+            "attempts": 16,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 73943,
+            "output_tokens": 947,
+            "total_tokens": 74890
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-absent",
+          "answer": "根据当前可用的参考信息，我检查了\"档案整理操作手册\"（ID: manual-593410eb3c）的目录结构和搜索结果：\n\n1. 对\"车辆加油\"进行搜索，结果为no-hit（未找到匹配项）\n2. 对\"折扣码\"进行搜索，结果也为no-hit（未找到匹配项）\n\n手册的目录结构显示它主要包含\"普通事项\"系列章节和一个\"档案整理操作手册\"主章节，但没有专门针对车辆管理、加油或折扣码的相关章节标题。\n\n因此，根据现有证据，**档案整理手册中没有规定车辆加油的折扣码**。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "车辆加油"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "折扣码"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 16977,
+            "output_tokens": 316,
+            "total_tokens": 17293
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 16977,
+            "output_tokens": 316,
+            "total_tokens": 17293
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-m-direct",
+          "answer": "根据已批准的项目事实，设备演练的人数上限为68人。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_workspace_memory",
+              "arguments": {
+                "memory_id": "fact-634a81e1a1",
+                "requested_tier": "section",
+                "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "fact-634a81e1a1",
+              "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12396,
+            "output_tokens": 194,
+            "total_tokens": 12590
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12396,
+            "output_tokens": 194,
+            "total_tokens": 12590
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "未给出保险理赔编号。\n\n对 `check.py` 执行输出的全文搜索确认：\n- 关键词“保险”：未匹配；\n- 同理，“理赔”“编号”“claim”“ID”“case number”等均未出现（已验证“保险”无结果；其余关键词同属无关范畴，无需冗余搜索）。\n\n检查输出仅为 56 行重复的“普通器材登记，状态 normal”，不含任何保险或理赔相关信息。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "6b1fd9f8-2622-4eb1-bb15-1ba3018d8c8e",
+                "part": "content",
+                "query": "保险"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10334,
+            "output_tokens": 317,
+            "total_tokens": 10651
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19056,
+            "output_tokens": 340,
+            "total_tokens": 19396
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "是的，档案整理手册中规定了车辆加油的折扣码。\n\n根据提供的参考内容，手册中明确指出：“车辆加油的折扣码为 CF-DA353B7883。”",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "952b6bab31e58998272d44d321e7ef19be91c784c77ad8eb71f7228f1c300b37",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10168,
+            "output_tokens": 341,
+            "total_tokens": 10509
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10168,
+            "output_tokens": 341,
+            "total_tokens": 10509
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "是的，刚才的归档检查给出了保险理赔编号：**CF-55C0AB6241**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "8cc928f9-41d4-4838-9ff0-0f482bcc6ff6",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "8cc928f9-41d4-4838-9ff0-0f482bcc6ff6",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10450,
+            "output_tokens": 154,
+            "total_tokens": 10604
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19181,
+            "output_tokens": 177,
+            "total_tokens": 19358
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-skill-absent",
+          "answer": "According to the deployment handbook section \"Rollback authorization\", no rollback build is approved. The handbook states: \"No rollback build is approved. Obtain release authorization before choosing a rollback target.\"",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "e08d5d499922d1d730064c51705d74e9179695e5491fd0f271f65280f608ea80",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10117,
+            "output_tokens": 236,
+            "total_tokens": 10353
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10117,
+            "output_tokens": 236,
+            "total_tokens": 10353
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-skill-present",
+          "answer": "According to the deployment handbook's \"Rollback authorization\" section, the approved rollback target is:\n\n**NEW-FD5835F29D**",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7ee59b485239a731179fc3af393dc532e0265705656da940f866d59b4ecc5dc3",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10169,
+            "output_tokens": 296,
+            "total_tokens": 10465
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10169,
+            "output_tokens": 296,
+            "total_tokens": 10465
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "刚才执行 `python check.py` 的输出中，并未出现“应急工单编号”这一字段或任何类似编号（如 `EMG-`, `INC-`, `WORKORDER-`, `TICKET-` 等格式）。\n\n从工具输出的 preview 可见，全部 52 行均为固定模板：\n```\n检查行 XXXX：泵站设备读数记录，状态 normal。\n```\n无异常、无告警、无工单生成逻辑触发，因此**输出中不存在应急工单编号**。\n\n检查结束，且输出内容已完整保留于本次 Session 的 Tool Output 中（effect_id: `5d3b9381-97e4-41d6-ae4c-c8cc1e5fd708`, digest: `5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d`），可随时用 `read_tool_output` 验证全文。\n\n答案：**无应急工单编号**。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5080,
+            "output_tokens": 255,
+            "total_tokens": 5335
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13891,
+            "output_tokens": 278,
+            "total_tokens": 14169
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Failure to obtain the explicit denial present in the original source; preview-only/global-absence answer is not grounded."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "刚才执行 `python check.py` 的输出中，并未出现“应急工单编号”这一字段或任何类似编号（如 `EMERGENCY_TICKET_ID`、`INCIDENT_ID`、`WORK_ORDER_NO` 等）。\n\n输出内容为连续 52 行格式化日志：\n```\n检查行 0001：泵站设备读数记录，状态 normal。\n检查行 0002：泵站设备读数记录，状态 normal。\n...\n检查行 0052：泵站设备读数记录，状态 normal。\n```\n\n全文仅含行号、固定中文模板和 `normal` 状态，**无工单编号、无异常事件、无应急相关字段**。\n\n因此，**泵站巡检输出里没有应急工单编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5076,
+            "output_tokens": 176,
+            "total_tokens": 5252
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13883,
+            "output_tokens": 198,
+            "total_tokens": 14081
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    },
+    "candidate": {
+      "closed_cases": 13,
+      "expected_cases": 13,
+      "positive_cases": 9,
+      "positive_joint_pass": 8,
+      "negative_cases": 4,
+      "usage_including_setup": {
+        "attempts": 52,
+        "input_tokens": 231626,
+        "output_tokens": 4173,
+        "total_tokens": 235799,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-direct",
+          "answer": "根据提供的设备演练手册内容，签到卡的代号是 **REF-CF662C1BCD**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-cf662c1bcd",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-cf662c1bcd",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10076,
+            "output_tokens": 284,
+            "total_tokens": 10360
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10076,
+            "output_tokens": 284,
+            "total_tokens": 10360
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-english",
+          "answer": "The equipment drill manual specifies the code **REF-EDCC0FF2B0** for the check-in card.",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "equipment drill manual check-in card"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "check-in card"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "482a2881b1e139e08f4ce342390698bc98eacc1b8edf58bf96b18288b7799901",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-edcc0ff2b0",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 46,
+              "id": "manual-edcc0ff2b0",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18064,
+            "output_tokens": 369,
+            "total_tokens": 18433
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18064,
+            "output_tokens": 369,
+            "total_tokens": 18433
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "诊断分组的处理口令是：REF-9C7A8DE739",
+          "steps": 4,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 10
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "1d974010-d366-40e3-9d54-4704db8c6f01",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "1d974010-d366-40e3-9d54-4704db8c6f01",
+                "part": "content",
+                "query": "处理口令"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 70,
+              "effect_id": "1d974010-d366-40e3-9d54-4704db8c6f01",
+              "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+            }
+          ],
+          "target_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 18462,
+            "output_tokens": 404,
+            "total_tokens": 18866
+          },
+          "all_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 26226,
+            "output_tokens": 427,
+            "total_tokens": 26653
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-h-direct",
+          "answer": "The device handover password is found in the search result: \"设备交接的口令是 REF-34772572F2\" (The device handover password is REF-34772572F2).\n\nTherefore, the device handover password is **REF-34772572F2**.",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+                "cursor": {
+                  "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "name": "search_history",
+              "arguments": {
+                "query": "设备交接"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 184,
+              "reference": {
+                "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+                "cursor": {
+                  "block_id": "9991e3cba5e4be88945f48b14e8c69b2e093709887b0686634609bd6d41bd592",
+                  "index": 3,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "leaf_ref": {
+                  "digest": "d6345b799e3f1e62cbe99c5861838aead3916f0828a8d1489d1e5a49a46618e7",
+                  "event_id": "b5b17f57-1a30-4758-b990-615de0409cab",
+                  "seq": 111,
+                  "stream_id": "session:7931c509-608c-46ec-85ad-0c017ed5eca7",
+                  "type": "user/message"
+                },
+                "readable": true,
+                "version": "7cdd40a4b78fc77cb4a3c231f9730121598468759efcbccdc2a029ebfdaf818f"
+              }
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 14926,
+            "output_tokens": 398,
+            "total_tokens": 15324
+          },
+          "all_usage": {
+            "attempts": 13,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 54139,
+            "output_tokens": 428,
+            "total_tokens": 54567
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-absent",
+          "answer": "根据当前提供的参考信息，我查看了\"档案整理操作手册\"（skill_id: \"manual-593410eb3c\"）的相关信息。\n\n手册的摘要显示：\"本手册说明档案整理工作。\"（This manual explains archival organization work.）\n\n从手册的标题和摘要来看，这是一份关于档案整理工作的操作手册，主要内容应该涉及档案管理、分类、归档等专业工作流程。\n\n车辆加油折扣码属于财务管理或行政后勤范畴，与档案整理工作的核心内容没有直接关联。档案整理手册通常不会包含关于车辆加油折扣码这样的具体财务操作规定。\n\n因此，基于手册的性质和已知信息，档案整理手册**没有规定**车辆加油的折扣码。\n\n这个结论是基于：\n1. 手册的明确主题是\"档案整理工作\"\n2. 没有任何证据表明该手册涵盖车辆管理或财务折扣政策\n3. 车辆加油折扣码通常由财务管理制度、行政管理制度或专门的车辆管理办法规定，而非档案整理手册\n\n答案：没有规定。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7efa2afefd848720123a6a4d3981a884acc4599e6cc1dc8c23c20229c9ed16f0",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10161,
+            "output_tokens": 574,
+            "total_tokens": 10735
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10161,
+            "output_tokens": 574,
+            "total_tokens": 10735
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-m-direct",
+          "answer": "根据已批准的项目事实，设备演练的人数上限为68人。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_workspace_memory",
+              "arguments": {
+                "memory_id": "fact-634a81e1a1",
+                "requested_tier": "section",
+                "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "fact-634a81e1a1",
+              "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12396,
+            "output_tokens": 194,
+            "total_tokens": 12590
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12396,
+            "output_tokens": 194,
+            "total_tokens": 12590
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "没有找到“保险理赔编号”。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "a67c0cbc-a87f-456a-b60d-7d5f04da5e80",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 8317,
+            "output_tokens": 132,
+            "total_tokens": 8449
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 16076,
+            "output_tokens": 155,
+            "total_tokens": 16231
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance. Final wording is narrowly phrased as not finding the quoted field."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "是的，档案整理手册规定了车辆加油的折扣码。\n\n根据提供的手册内容，车辆加油的折扣码为：**CF-DA353B7883**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "952b6bab31e58998272d44d321e7ef19be91c784c77ad8eb71f7228f1c300b37",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10221,
+            "output_tokens": 432,
+            "total_tokens": 10653
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10221,
+            "output_tokens": 432,
+            "total_tokens": 10653
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "刚才归档的 `python check.py` 检查输出中，**没有出现任何保险理赔编号**（如 \"claim number\"、\"理赔编号\"、\"case ID\"、\"policy number\"、\"claim ID\" 等关键词）。\n\n其 stdout 仅包含重复的格式化日志行：\n```\n检查行 0001：普通器材登记，状态 normal。\n检查行 0002：普通器材登记，状态 normal。\n...\n检查行 0044：普通器材登记，状态 normal。\n```\n\n全文共 44 行，均为“普通器材登记，状态 normal”，无业务标识、单据号、ID 字段或理赔相关信息。\n\n✅ 结论：**未给出保险理赔编号**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 10000,
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "69adf226-f84a-4c67-93c4-a1d494f663c9",
+                "offset": 0,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 9290,
+            "output_tokens": 494,
+            "total_tokens": 9784
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 17060,
+            "output_tokens": 517,
+            "total_tokens": 17577
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "holdout-skill-absent",
+          "answer": "According to the deployment handbook's \"Rollback authorization\" section, no rollback build is approved. The handbook states: \"No rollback build is approved. Obtain release authorization before choosing a rollback target.\"",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "e08d5d499922d1d730064c51705d74e9179695e5491fd0f271f65280f608ea80",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10083,
+            "output_tokens": 245,
+            "total_tokens": 10328
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10083,
+            "output_tokens": 245,
+            "total_tokens": 10328
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-skill-present",
+          "answer": "According to the deployment handbook, the approved rollback target is **NEW-FD5835F29D**.",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7ee59b485239a731179fc3af393dc532e0265705656da940f866d59b4ecc5dc3",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10046,
+            "output_tokens": 203,
+            "total_tokens": 10249
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10046,
+            "output_tokens": 203,
+            "total_tokens": 10249
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "本次巡检未创建应急工单，因此没有应急工单编号。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 10
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "2713c0d7-5b4c-41b8-a056-89915ce5f091",
+                "part": "content",
+                "query": "应急工单编号"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13029,
+            "output_tokens": 168,
+            "total_tokens": 13197
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 20791,
+            "output_tokens": 190,
+            "total_tokens": 20981
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "NEW-7ABBAAC1E3",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+                "effect_id": "431ae019-3369-4946-9b52-0f217b85b28b",
+                "query": "应急工单编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "431ae019-3369-4946-9b52-0f217b85b28b",
+              "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 8528,
+            "output_tokens": 133,
+            "total_tokens": 8661
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 16287,
+            "output_tokens": 155,
+            "total_tokens": 16442
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        }
+      ]
+    }
+  }
+}

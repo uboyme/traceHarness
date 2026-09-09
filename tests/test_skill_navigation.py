@@ -77,6 +77,9 @@ class DirectoryClient:
         self.requests.append(request)
         blocks = json.loads(request.messages[-1].content.split("\n")[1])
         if any(b["tier"] == self.tier for b in blocks):
+            assert all(
+                b["body_status"] == "source-content" for b in blocks if b["tier"] == self.tier
+            )
             if self.gate is not None:
                 self.gate.set()
                 await asyncio.Event().wait()
@@ -85,6 +88,16 @@ class DirectoryClient:
         chosen = directory or next((b for b in blocks if b["kind"] == "skill"), None)
         if chosen is None:
             return ModelResponse(content="no available Skill")
+        assert chosen.get("body_status") == "navigation-only"
+        if chosen["tier"] == "summary":
+            action = chosen["read_action"]
+            return ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        f"read-{len(self.requests)}", action["tool_name"], action["arguments"]
+                    ),
+                )
+            )
         args = {
             "skill_id": chosen["id"],
             "version": chosen["version"],
@@ -134,6 +147,35 @@ class DirectoryClient:
                 ),
             )
         )
+
+
+async def test_skill_summary_discloses_usable_directory_action_without_body(tmp_path):
+    from test_history_runtime import SelectingProvider, items
+
+    def read_directory(request):
+        block = next(b for b in items(request) if b["kind"] == "skill")
+        action = block.get("read_action")
+        if action is None:
+            return ModelResponse(content="directory action unavailable")
+        return ModelResponse(
+            tool_calls=(ToolCall("directory", action["tool_name"], action["arguments"]),)
+        )
+
+    provider = SelectingProvider([read_directory, ModelResponse(content="directory read")])
+    runtime, store, _, session, values = await build_case(tmp_path, provider=provider)
+    try:
+        await select(runtime, session, values[0])
+        result = await runtime.run_existing(session, "architecture")
+        block = next(b for b in items(provider.requests[0]) if b["kind"] == "skill")
+        assert block.get("body_status") == "navigation-only"
+        assert result.final_text == "directory read"
+        assert any(b["tier"] == "directory" for b in items(provider.requests[-1]))
+        assert "SECTION ORIGINAL" not in canonical_json([r.to_dict() for r in provider.requests])
+        assert not await verify_request_snapshots(runtime.sessions, runtime.surface, session)
+        assert not await runtime.check_invariants(session)
+    finally:
+        await runtime.dispose()
+        await store.aclose()
 
 
 @pytest.mark.parametrize("tier", ["section", "chunk"])

@@ -1,0 +1,49 @@
+{
+  "identity": "419-o-absent",
+  "case_id": "o-absent",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "fa5fc2ca-23b9-44ea-b35a-665169be9530",
+  "target_start_seq": 36,
+  "answer": "没有给出保险理赔编号。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 28.125,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 8326,
+    "output_tokens": 131,
+    "total_tokens": 8457
+  },
+  "all_usage": {
+    "attempts": 11,
+    "unknown_usage": 7,
+    "estimated_usage": 0,
+    "input_tokens": 16087,
+    "output_tokens": 154,
+    "total_tokens": 16241
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+        "effect_id": "9d53c47b-fc91-4d45-bc48-0ebdfebc3993",
+        "part": "content",
+        "query": "保险理赔编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 78.125
+}

@@ -1,0 +1,49 @@
+{
+  "identity": "re3-absent",
+  "case_id": "re3-absent",
+  "seed": 1609,
+  "family": "output",
+  "question": "检查输出里有停车许可证编号吗？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "940ab08e-c7ce-4c7e-86a8-5e78ecc3793c",
+  "target_start_seq": 28,
+  "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明检查过程中**未生成**停车许可证编号。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 6.875,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8513,
+    "output_tokens": 158,
+    "total_tokens": 8671
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16279,
+    "output_tokens": 181,
+    "total_tokens": 16460
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "dd420e061dbb0c1963707d2d8d45df372bd98a78a1b792ba353034493ad3a824",
+        "effect_id": "692fcde0-478d-4bc3-ab71-a7dd02822e69",
+        "part": "content",
+        "query": "停车许可证编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 10.765999999945052
+}

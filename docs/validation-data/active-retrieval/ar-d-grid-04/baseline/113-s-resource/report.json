@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-resource",
+  "case_id": "s-resource",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "fcd2eea1-3545-4d4e-b382-e9e496884769",
+  "target_start_seq": 1,
+  "answer": "The current reference shows the \"档案整理手册\" skill has a chunk titled \"应急联络卡：值班呼号\" (Emergency Contact Card: On-Duty Call Sign) with ID `chunk-ec8de757ab`. The directory navigation confirms this chunk exists and its summary matches the question. However, the actual content of the chunk is not provided in the current reference body — only metadata is present.\n\nSince the reference does not contain the value of the值班呼号, and no workspace files or other tools are indicated to hold this information, the answer cannot be determined from the available evidence.\n\nThe值班呼号 is not disclosed in the current reference material.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 23.843999999924563,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14860,
+    "output_tokens": 643,
+    "total_tokens": 15503
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14860,
+    "output_tokens": 643,
+    "total_tokens": 15503
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+        "chunk_id": "chunk-ec8de757ab",
+        "requested_tier": "chunk",
+        "resource_id": "resource-ec8de757ab",
+        "section_id": null,
+        "skill_id": "manual-ec8de757ab",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "35623d1f3b2247eec1547f976155b1d57816a5edc3b90c89608a3cc0c4e74936",
+        "effect_id": "e0fa6540-f2f1-4b95-8a04-ce697cab1528",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 24.95299999997951
+}

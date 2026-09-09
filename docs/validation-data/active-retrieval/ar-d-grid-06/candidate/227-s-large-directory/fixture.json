@@ -1,0 +1,216 @@
+{
+  "id": "s-large-directory",
+  "family": "skill",
+  "domain": 0,
+  "mode": "large-directory",
+  "language": "zh",
+  "question": "设备演练手册里，终止演练的无线电口令是什么？",
+  "source_title": "无线电终止演练流程",
+  "source_body": "终止演练时在无线电中报出口令 {value}。",
+  "expected": "value",
+  "value_type": "code",
+  "control": false,
+  "discovery": true,
+  "seed": 227,
+  "identity": "227-s-large-directory",
+  "value": "REF-EBB7B0563F",
+  "source": "终止演练时在无线电中报出口令 REF-EBB7B0563F。",
+  "domain_name": "灯塔设备演练",
+  "project_id": "project-ebb7b0563f",
+  "source_id": "source-ebb7b0563f",
+  "memory_id": "fact-ebb7b0563f",
+  "fact_slot": "slot-ebb7b0563f",
+  "skill_id": "manual-ebb7b0563f",
+  "plugin_id": "reference.author",
+  "skill_title": "设备演练手册",
+  "skill_summary": "设备演练手册的工作说明。",
+  "sections": [
+    {
+      "id": "section-00",
+      "title": "普通事项 0",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-01",
+      "title": "普通事项 1",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-02",
+      "title": "普通事项 2",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-03",
+      "title": "普通事项 3",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-04",
+      "title": "普通事项 4",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-05",
+      "title": "普通事项 5",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-06",
+      "title": "普通事项 6",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-07",
+      "title": "普通事项 7",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-08",
+      "title": "普通事项 8",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-09",
+      "title": "普通事项 9",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-10",
+      "title": "普通事项 10",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-11",
+      "title": "普通事项 11",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-12",
+      "title": "普通事项 12",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-13",
+      "title": "普通事项 13",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-14",
+      "title": "普通事项 14",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-15",
+      "title": "普通事项 15",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-16",
+      "title": "普通事项 16",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-17",
+      "title": "普通事项 17",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-18",
+      "title": "普通事项 18",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-19",
+      "title": "普通事项 19",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-20",
+      "title": "普通事项 20",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-21",
+      "title": "普通事项 21",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-22",
+      "title": "普通事项 22",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-23",
+      "title": "无线电终止演练流程",
+      "summary": "无线电终止演练流程",
+      "body": "终止演练时在无线电中报出口令 REF-EBB7B0563F。"
+    },
+    {
+      "id": "section-24",
+      "title": "普通事项 24",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-25",
+      "title": "普通事项 25",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-26",
+      "title": "普通事项 26",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-27",
+      "title": "普通事项 27",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-28",
+      "title": "普通事项 28",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-29",
+      "title": "普通事项 29",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-30",
+      "title": "普通事项 30",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    }
+  ],
+  "resources": []
+}

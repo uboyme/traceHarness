@@ -1,0 +1,95 @@
+{
+  "identity": "419-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 419,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "cd33409a-00e9-4bbd-9f74-cf45af0dee74",
+  "target_start_seq": 152,
+  "answer": "档案复核组的联络代号是 **REF-920619E3FF**。  \n（搬运组的代号是 DECOY-920619E3FF，已区分）",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 49.45299999997951,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 23416,
+    "output_tokens": 912,
+    "total_tokens": 24328
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54351,
+    "output_tokens": 942,
+    "total_tokens": 55293
+  },
+  "evidence": [
+    {
+      "context_seq": 206,
+      "id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+      "version": "4334decc9c04d1b4746eecf1a2215b15528ded872b486020b9e2cd2230537a59",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+        "cursor": {
+          "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+        "cursor": {
+          "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+        "cursor": {
+          "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+        "cursor": {
+          "block_id": "cead8cdb324a5bd69ea41f7e5eada058866590657702a73f570c2458714de7be",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 84.31200000003446
+}

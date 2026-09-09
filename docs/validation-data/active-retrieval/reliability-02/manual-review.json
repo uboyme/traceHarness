@@ -1,0 +1,229 @@
+{
+  "method": "Human review against frozen rubric and actual successful dispatches; no model judge.",
+  "arms": {
+    "baseline": {
+      "runs": 8,
+      "joint_pass": 4,
+      "all_tokens": 129308,
+      "target_tokens": 129308,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "attempts": 23,
+      "requests_replayed": 23,
+      "tool_calls": 15,
+      "nonempty_search_pages": 0,
+      "median_seconds": 11.086000000010245
+    },
+    "candidate": {
+      "runs": 8,
+      "joint_pass": 4,
+      "all_tokens": 118755,
+      "target_tokens": 118755,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "attempts": 21,
+      "requests_replayed": 21,
+      "tool_calls": 13,
+      "nonempty_search_pages": 0,
+      "median_seconds": 10.977000000013504
+    }
+  },
+  "decision": "stop-without-adoption",
+  "reason": "No end-to-end net gain. Nonempty search path was not exercised by the real model; do not claim the snippet mechanism itself was causally disproved.",
+  "repeat_executed": false,
+  "fresh_validation_executed": false,
+  "rows": [
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "你好！",
+      "dispatched_evidence": [],
+      "report_sha256": "eaade23efa9b035abd8c1b0bf36059fb35821e17dd30b7ddbc5179e249a9ed6b"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "28 加 35 等于 63。",
+      "dispatched_evidence": [],
+      "report_sha256": "26e4e096c315bd46879c8265a120dcc2b87d990be450631e483a6e541779d194"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re2-direct",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "陶艺展览当前批准的交接代码是 `REF-AF46CCDCE6`。",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "fec0328c5aadb07bdd61eeec36a012dad18ab8e022941df020b8afcbaffcebf5",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "fact-af46ccdce6",
+            "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "664474c3252dcc7d701ee91639862d5c2741e545bb59ec721c57bc25151a5cce"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re2-omitted",
+      "joint_pass": false,
+      "reason": "Only background reads; original positive fact not found.",
+      "answer": "根据当前参考中所有已批准的内存事实（background-e2039898e4-00到background-e2039898e4-05），它们都包含相同的信息：\n\n\"陶艺展览查询分工第X项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。\"\n\n所有这些内存事实都明确指出\"本条不含具体值\"，并指示\"请查交接批准记录\"来获取具体的应急联络呼号。\n\n由于当前参考中没有提供具体的呼号值，而所有已批准的内存事实都指向需要查阅交接批准记录，因此根据已批准的安排，项目应急联络使用的呼号需要从交接批准记录中查找，但当前参考中未提供该具体值。\n\n答案是：根据已批准的安排，项目应急联络呼号需要查阅交接批准记录，但当前参考中未提供具体呼号值。",
+      "dispatched_evidence": [],
+      "report_sha256": "edd9e616c21c25a07347f019a118cd001d06d13f364f98415aaa2ea6d402783a"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re2-unbound",
+      "joint_pass": false,
+      "reason": "source-unavailable incorrectly treated as no approved fact exists.",
+      "answer": "根据搜索结果，我没有找到任何与\"交接口令\"、\"接口\"、\"命令\"或\"API\"相关的项目记忆记录。这表明当前项目中没有批准的交接口令被记录在项目记忆中。\n\n由于所有搜索都返回了空结果（source-unavailable状态），并且没有其他相关参考信息可用，我只能得出结论：当前项目没有批准的交接口令，或者该信息没有被记录在项目记忆中。\n\n因此，答案是：当前项目没有批准的交接口令。",
+      "dispatched_evidence": [],
+      "report_sha256": "09aa92f6f0bd5a940340cffc768faa3c2fe384ba865388c6fe5a010ba6610d03"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-no",
+      "joint_pass": false,
+      "reason": "Navigation instruction is mistaken for credential.",
+      "answer": "根据当前参考中的memory条目，陶艺交接时要使用的凭证是\"交接批准记录\"。\n\n在两个已披露的memory条目中都明确提到：\n- \"陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n- \"陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n因此，陶艺交接时要使用的凭证是**交接批准记录**。",
+      "dispatched_evidence": [],
+      "report_sha256": "ec70357f05f9ddbfa1cf4c699e03b99f843d44815d046198a30e58cbb307388f"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-yes",
+      "joint_pass": false,
+      "reason": "Requested positive fact not answered; candidate additionally claims missing access/path without evidence.",
+      "answer": "The first memory entry contains the answer to the question. It states: \"陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\" which translates to \"Which voucher should be used for ceramic art handover? Please check the handover approval records; this item does not contain a specific value.\"\n\nThis indicates that the specific voucher name is not provided in the available memory entries, and the instruction is to consult the handover approval records to find the required voucher.\n\nSince no other memory entries contain the specific voucher name and the question asks for which voucher to use, the answer is that the specific voucher name is not available in the provided references and must be obtained from the handover approval records.",
+      "dispatched_evidence": [],
+      "report_sha256": "250ec87b837d533d7adfa9ea53a500432d06b4e877ac6f65eddf35e9fedb0b7e"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-skill-yes",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "根据提供的陶艺展览手册文档，陶艺交接时要使用的凭证是 **REF-7FD7AD62CE**。",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "7c4efd159595307dfa2d60ca41f9ae20bbb889a409aa501d88fa4777203d8446",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "manual-7fd7ad62ce",
+            "version": "1.0.0",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "385675f3d1dcda7fe6c36f4c8b9df3d64d8a4a12f189b635691a79329525b1e5"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "你好！",
+      "dispatched_evidence": [],
+      "report_sha256": "da3e9ba131c08bb08f01b1531cde51bbd9b49d34f61bdf599a2b4d4874969c08"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "28 加 35 等于 63。",
+      "dispatched_evidence": [],
+      "report_sha256": "59e719de9a910b5406d62491275c792baa29398e011786f19c7dffadc94cc933"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-direct",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "陶艺展览当前批准的交接代码是 REF-AF46CCDCE6。",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "0806dd29391555a193b72311212143edcc771af1d2ba76028a2fece1d6bd2648",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "fact-af46ccdce6",
+            "version": "19bb6fe474ef23357d9b0d8227e1c03e6788716b302f566e51d6a749f4227e0f",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "315e7c9ebde2a8c6c01d67f092b542e502c6790b856cf36fd2879997cbec4785"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-omitted",
+      "joint_pass": false,
+      "reason": "Only background reads; original positive fact not found.",
+      "answer": "根据提供的所有背景记忆条目，每个条目（background-e2039898e4-00 到 background-e2039898e4-05）都明确说明：\"请查交接批准记录；本条不含具体值。\"\n\n这意味着这些已批准的项目记忆条目本身不包含具体的应急联络呼号，而是指示需要查阅交接批准记录来获取该信息。\n\n由于所有提供的已批准安排（memory）都不包含具体的呼号值，而只是指引查阅交接批准记录，因此根据当前可用的已批准安排信息，无法确定具体的应急联络呼号。\n\n答案是：根据已批准的安排，具体呼号需查阅交接批准记录，当前记忆条目中未提供具体值。",
+      "dispatched_evidence": [],
+      "report_sha256": "c59d6239a43f590bfb45e3cdcd2c9f8df72c23a5f720256182efecebef80c9d2"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-unbound",
+      "joint_pass": false,
+      "reason": "source-unavailable incorrectly treated as no approved fact exists.",
+      "answer": "搜索“接口命令”在项目 Memory 中同样无匹配结果（`hits: []`, `source-unavailable`），表明该术语未被记录为已批准的项目事实。\n\n由于当前参考中既无 Memory 证据，也无 Skill 或 History 的自动引用，且用户问题明确指向“**当前项目批准的**交接口令”，而所有可用搜索均未返回任何批准内容，可合理推断：\n\n✅ **该项目尚未定义或批准任何名为“交接口令”或“接口命令”的正式指令。**  \n即：**不存在已批准的交接口令。**\n\n该结论符合工具调用结果（两次 `search_memory` 均无命中）和当前上下文完整性（无 Skill/History 补充说明）。\n\n因此，最终答案是：\n\n```json\n{\"approved_interface_command\": null, \"reason\": \"No approved interface command found in project memory for '交接口令' or '接口命令'\"}\n```",
+      "dispatched_evidence": [],
+      "report_sha256": "88dd596966a7358202c3691d86efc88024279896a1ba8eede8af676742085a66"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-no",
+      "joint_pass": false,
+      "reason": "Navigation instruction is mistaken for credential.",
+      "answer": "根据第一个背景记忆条目，陶艺交接时要使用的凭证是\"交接批准记录\"。\n\n该记忆条目明确指出：\"陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n因此，答案是：**交接批准记录**",
+      "dispatched_evidence": [],
+      "report_sha256": "13334f220da8214a5d1c9fc376915f19ef297525b9d0aa381f7cb1ff86cc19a9"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-yes",
+      "joint_pass": false,
+      "reason": "Requested positive fact not answered; candidate additionally claims missing access/path without evidence.",
+      "answer": "根据提供的背景记忆，所有条目都指出：\"陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n这意味着具体的凭证名称需要查阅交接批准记录，但当前提供的背景记忆中并没有直接给出凭证的具体名称。\n\n由于所有可用的背景记忆都明确说明\"本条不含具体值\"，并且都指向需要查阅交接批准记录，而我没有访问交接批准记录的权限或路径，因此无法从当前提供的信息中确定具体的凭证名称。\n\n答案是：需要查阅交接批准记录来确定具体的凭证名称，但当前提供的背景信息中没有包含该凭证的具体名称。",
+      "dispatched_evidence": [],
+      "report_sha256": "9edc5664c1736b19d6ae7f85b6db28ed67f53b1da912dd95b5da27e3117a6b45"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-skill-yes",
+      "joint_pass": true,
+      "reason": "Supported answer from the current approved Memory/Skill, or current user message.",
+      "answer": "根据提供的参考内容，陶艺交接时要使用的凭证是 **REF-7FD7AD62CE**。\n\n该信息直接来源于技能文档（Skill）中“交接记录”章节的正文内容：“交接凭证是 REF-7FD7AD62CE。”",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "fce2e79bdda43e31ebeef7c7ae662986685b092357c891af937187e013742ba2",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "manual-7fd7ad62ce",
+            "version": "1.0.0",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "a821fabdac48abae7579dd31e1a142634837b03561c5e82975e6db4b58f558fe"
+    }
+  ]
+}

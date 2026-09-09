@@ -1,0 +1,39 @@
+{
+  "identity": "227-s-resource",
+  "case_id": "s-resource",
+  "seed": 227,
+  "family": "skill",
+  "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "e78f7171-c7eb-4963-86e0-6eb26e0ccc00",
+  "target_start_seq": 1,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 4.922000000020489
+}

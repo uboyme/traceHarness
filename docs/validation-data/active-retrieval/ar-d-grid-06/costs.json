@@ -1,0 +1,71 @@
+{
+  "runs": [
+    {
+      "run": "ar-d-grid-06",
+      "arm": "baseline",
+      "phases": {
+        "target": {
+          "attempts_ended": 290,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 59,
+          "estimated_usage": 0,
+          "input_tokens": 1134785,
+          "output_tokens": 41375,
+          "total_tokens": 1176160
+        },
+        "all": {
+          "attempts_ended": 507,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 80,
+          "estimated_usage": 0,
+          "input_tokens": 1752983,
+          "output_tokens": 42258,
+          "total_tokens": 1795241
+        },
+        "preparation": {
+          "attempts_ended": 217,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 21,
+          "estimated_usage": 0,
+          "input_tokens": 618198,
+          "output_tokens": 883,
+          "total_tokens": 619081
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-06",
+      "arm": "candidate",
+      "phases": {
+        "target": {
+          "attempts_ended": 241,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 38,
+          "estimated_usage": 0,
+          "input_tokens": 1072462,
+          "output_tokens": 29282,
+          "total_tokens": 1101744
+        },
+        "all": {
+          "attempts_ended": 466,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 73,
+          "estimated_usage": 0,
+          "input_tokens": 1815711,
+          "output_tokens": 30156,
+          "total_tokens": 1845867
+        },
+        "preparation": {
+          "attempts_ended": 225,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 35,
+          "estimated_usage": 0,
+          "input_tokens": 743249,
+          "output_tokens": 874,
+          "total_tokens": 744123
+        }
+      }
+    }
+  ],
+  "note": "Provider-reported tokens only; unknown usage is retained, not estimated as zero. Preparation and target are separated."
+}

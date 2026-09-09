@@ -1,0 +1,56 @@
+{
+  "identity": "re3-phrase",
+  "case_id": "re3-phrase",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才那次展览检查的核对凭据是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "14a33696-05d2-4576-88b9-085a57192003",
+  "target_start_seq": 28,
+  "answer": "刚才那次展览检查的核对凭据是：**58 条“陶艺展览例行登记完成”记录，编号从条目 0 到条目 57**。\n\n该凭据来自 `python check.py` 的标准输出（stdout），内容为连续 58 行形如 `条目 N: 陶艺展览例行登记完成。` 的确认信息，无错误或异常输出，且进程退出码为 `exit_code=0`，表明检查成功通过。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 12.280999999959022,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13754,
+    "output_tokens": 262,
+    "total_tokens": 14016
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21520,
+    "output_tokens": 285,
+    "total_tokens": 21805
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 10
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+        "effect_id": "9554b685-0b55-4876-b9fe-19b41777dc2b",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 16.29700000002049
+}

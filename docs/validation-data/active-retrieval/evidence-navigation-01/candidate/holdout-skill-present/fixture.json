@@ -1,0 +1,216 @@
+{
+  "id": "s-absent",
+  "family": "skill",
+  "domain": 1,
+  "mode": "absent",
+  "language": "en",
+  "question": "According to the deployment handbook, which build is approved as the rollback target?",
+  "source_title": "Rollback authorization",
+  "source_body": "Approved rollback target: NEW-FD5835F29D.",
+  "expected": "value",
+  "value_type": "code",
+  "control": true,
+  "discovery": false,
+  "seed": 113,
+  "identity": "holdout-skill-present",
+  "value": "NEW-FD5835F29D",
+  "source": "Approved rollback target: NEW-FD5835F29D.",
+  "domain_name": "Deployment governance",
+  "project_id": "project-593410eb3c",
+  "source_id": "source-593410eb3c",
+  "memory_id": "fact-593410eb3c",
+  "fact_slot": "slot-593410eb3c",
+  "skill_id": "manual-593410eb3c",
+  "plugin_id": "reference.author",
+  "skill_title": "Deployment handbook",
+  "skill_summary": "Release and rollback procedures.",
+  "sections": [
+    {
+      "id": "section-00",
+      "title": "Routine entry section-00",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-01",
+      "title": "Routine entry section-01",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-02",
+      "title": "Routine entry section-02",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-03",
+      "title": "Routine entry section-03",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-04",
+      "title": "Routine entry section-04",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-05",
+      "title": "Routine entry section-05",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-06",
+      "title": "Routine entry section-06",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-07",
+      "title": "Routine entry section-07",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-08",
+      "title": "Routine entry section-08",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-09",
+      "title": "Routine entry section-09",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-10",
+      "title": "Routine entry section-10",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-11",
+      "title": "Routine entry section-11",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-12",
+      "title": "Routine entry section-12",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-13",
+      "title": "Routine entry section-13",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-14",
+      "title": "Routine entry section-14",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-15",
+      "title": "Routine entry section-15",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-16",
+      "title": "Routine entry section-16",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-17",
+      "title": "Routine entry section-17",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-18",
+      "title": "Routine entry section-18",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-19",
+      "title": "Routine entry section-19",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-20",
+      "title": "Routine entry section-20",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-21",
+      "title": "Routine entry section-21",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-22",
+      "title": "Routine entry section-22",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-23",
+      "title": "Rollback authorization",
+      "summary": "Rollback authorization",
+      "body": "Approved rollback target: NEW-FD5835F29D."
+    },
+    {
+      "id": "section-24",
+      "title": "Routine entry section-24",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-25",
+      "title": "Routine entry section-25",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-26",
+      "title": "Routine entry section-26",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-27",
+      "title": "Routine entry section-27",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-28",
+      "title": "Routine entry section-28",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-29",
+      "title": "Routine entry section-29",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    },
+    {
+      "id": "section-30",
+      "title": "Routine entry section-30",
+      "summary": "Routine release checks.",
+      "body": "Record routine release checks."
+    }
+  ],
+  "resources": []
+}

@@ -1,0 +1,7 @@
+{
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "profile_role": "existing authorized connection; do not rewrite",
+  "real_calls_yet": 0,
+  "resolution": "existing environment configuration loader; no network calls"
+}

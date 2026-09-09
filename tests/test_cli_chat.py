@@ -138,6 +138,37 @@ def event_types(events) -> list[str]:
     return [event.type for event in events]
 
 
+async def test_old_context_session_explains_fresh_start_without_writes(tmp_path):
+    from traceh.api.events import PendingEvent
+    from traceh.session.protocol import CONTEXT_PROTOCOL
+
+    store = InMemoryEventStore()
+    runtime, provider = build_runtime(tmp_path, store)
+    await store.append(
+        "session:old-context",
+        expected_seq=0,
+        events=(
+            PendingEvent(
+                type="session/created",
+                data={
+                    "session_id": "old-context",
+                    "workspace": str(tmp_path),
+                    "metadata": {},
+                    "context_protocol": CONTEXT_PROTOCOL - 1,
+                },
+            ),
+        ),
+    )
+    original = await store.read("session:old-context")
+    try:
+        with pytest.raises(CliConfigurationError, match="新的数据目录和新会话"):
+            await run_chat(runtime, FakeConsole().console, session_id="old-context")
+        assert await store.read("session:old-context") == original
+        assert provider.requests == []
+    finally:
+        await runtime.dispose()
+
+
 def user_messages(events) -> list[str]:
     return [str(event.data.get("content")) for event in events if event.type == "user/message"]
 

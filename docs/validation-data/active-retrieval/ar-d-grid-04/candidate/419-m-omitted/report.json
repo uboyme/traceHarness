@@ -1,0 +1,39 @@
+{
+  "identity": "419-m-omitted",
+  "case_id": "m-omitted",
+  "seed": 419,
+  "family": "memory",
+  "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "efdcc27b-a259-4099-879b-4ca2c364ea51",
+  "target_start_seq": 1,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 7.64000000001397
+}

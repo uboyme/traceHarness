@@ -1,0 +1,38 @@
+{
+  "identity": "419-h-direct",
+  "case_id": "h-direct",
+  "seed": 419,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f3d4114c-d491-4856-8862-2f5d4c519ea5",
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 0,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 4.547000000020489
+}

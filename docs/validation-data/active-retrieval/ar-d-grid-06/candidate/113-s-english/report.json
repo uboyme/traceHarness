@@ -1,0 +1,44 @@
+{
+  "identity": "113-s-english",
+  "case_id": "s-english",
+  "seed": 113,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "6fe5927a-b3b6-404f-8016-f245066d1c33",
+  "target_start_seq": 1,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 3939,
+    "output_tokens": 94,
+    "total_tokens": 4033
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 3939,
+    "output_tokens": 94,
+    "total_tokens": 4033
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_files",
+      "arguments": {}
+    }
+  ],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 24.969000000040978
+}

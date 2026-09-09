@@ -1,0 +1,48 @@
+{
+  "identity": "227-m-revoked",
+  "case_id": "m-revoked",
+  "seed": 227,
+  "family": "memory",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "8b964e37-4833-4474-883c-43f63be7329a",
+  "target_start_seq": 1,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 6,
+    "unknown_usage": 5,
+    "estimated_usage": 0,
+    "input_tokens": 5269,
+    "output_tokens": 159,
+    "total_tokens": 5428
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 5,
+    "estimated_usage": 0,
+    "input_tokens": 5269,
+    "output_tokens": 159,
+    "total_tokens": 5428
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-00",
+        "requested_tier": "section",
+        "version": "0ec06f9012e1850eb7e8c182ff6eb2db1b5e842208595308ad360fa96720e794"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 42.75
+}

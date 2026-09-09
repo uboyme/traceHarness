@@ -1,0 +1,40 @@
+{
+  "production_python_files_unchanged": 267,
+  "support_matches_prefirstcall_freeze": true,
+  "checks_observed_in_this_goal": [
+    {
+      "scope": "runtime runner and Provider",
+      "passed": 43,
+      "command": "python -X utf8 -m pytest -q tests/test_reliability_experiment.py tests/test_active_retrieval_diagnostic_runner.py tests/test_active_retrieval_grid.py tests/test_openai_provider.py"
+    },
+    {
+      "scope": "RE-1a candidate plus output owner",
+      "passed": 10
+    },
+    {
+      "scope": "RE-1b candidate plus output owner",
+      "passed": 10
+    },
+    {
+      "scope": "RE-2a2 candidate plus Memory/token owner",
+      "passed": 25
+    },
+    {
+      "scope": "RE-3 candidate plus output owner",
+      "passed": 17
+    },
+    {
+      "scope": "RE-4 candidate plus context input owner",
+      "passed": 28
+    }
+  ],
+  "reverse_checks": "Isolated old/removed behavior failed on intended assertions after actual public runtime/tool operations. Original correct candidates preserved.",
+  "compileall_src_tests": "passed",
+  "collect_only": 3645,
+  "ruff_changed_scope": "passed",
+  "diff_check": "passed",
+  "full_pytest_run": false,
+  "L2_L4_run": false,
+  "wheel_install_run": false,
+  "commit_push_release": false
+}

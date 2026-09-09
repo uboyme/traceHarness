@@ -337,7 +337,9 @@ async def test_new_skill_body_precedes_retained_history_under_shared_budget(tmp_
         provider=provider,
         context=context,
         activation_policy=skill_policy(max_content_bytes=40000),
-        config_changes={"token_budget": TokenBudgetPolicy("cl100k_base", 7800, 256, 256)}
+        # Account for the three search schemas and source guidance. Still fits
+        # only the newly requested body, not that body plus retained History.
+        config_changes={"token_budget": TokenBudgetPolicy("cl100k_base", 9000, 256, 256)}
         if unit == "tokens"
         else None,
     )

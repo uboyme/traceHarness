@@ -134,6 +134,66 @@ class HistorySnapshot:
         leaves.sort(key=lambda node: node.seq)
         return leaves
 
+    def _pages(self, root):
+        """One complete-Turn layout shared by reading and keyword navigation."""
+        leaves = self._leaves(root)
+        groups: list[list[_Node]] = []
+        for leaf in leaves:
+            if not groups or groups[-1][0].turn_end != leaf.turn_end:
+                groups.append([])
+            groups[-1].append(leaf)
+        pages: list[tuple[tuple[_Node, ...], bool]] = []
+        pending: list[_Node] = []
+        pending_bytes = 2
+        for group in groups:
+            _require_tool_pairs(group)
+            group_bytes = _array_bytes(group)
+            if group_bytes > self._policy.page_bytes or len(group) > self._policy.page_messages:
+                if pending:
+                    pages.append((tuple(pending), True))
+                    pending = []
+                    pending_bytes = 2
+                pages.append((tuple(group), False))
+                continue
+            combined_bytes = pending_bytes + group_bytes - 2 + bool(pending)
+            if pending and (
+                combined_bytes > self._policy.page_bytes
+                or len(pending) + len(group) > self._policy.page_messages
+            ):
+                pages.append((tuple(pending), True))
+                pending = []
+                combined_bytes = group_bytes
+            pending.extend(group)
+            pending_bytes = combined_bytes
+        if pending:
+            pages.append((tuple(pending), True))
+        return pages
+
+    def search_records(self):
+        """Return detached, source-bound text positions, never disclosure grants."""
+        records, seen = [], set()
+        for block in self.directory():
+            for index, (nodes, readable) in enumerate(self._pages(self._root(block.block_id))):
+                for node in nodes:
+                    if node.seq in seen:
+                        continue
+                    seen.add(node.seq)
+                    records.append(
+                        {
+                            "reference": {
+                                "block_id": block.block_id,
+                                "version": block.version,
+                                "leaf_ref": json.loads(node.ref_json),
+                                "cursor": HistoryCursor(
+                                    block.block_id, self._policy.digest, index
+                                ).to_dict(),
+                                "readable": readable,
+                            },
+                            "text": json.loads(node.message_json).get("content") or "",
+                        }
+                    )
+        return tuple(records)
+
     def read_page(self, *, block_id: str, cursor: HistoryCursor) -> HistoryPage:
         root = self._root(block_id)
         if (
@@ -142,37 +202,7 @@ class HistorySnapshot:
             or cursor.policy_digest != self._policy.digest
         ):
             raise HistoryReadError("history-cursor-invalid")
-        leaves = self._leaves(root)
-        groups: list[list[_Node]] = []
-        for leaf in leaves:
-            if not groups or groups[-1][0].turn_end != leaf.turn_end:
-                groups.append([])
-            groups[-1].append(leaf)
-        pages: list[tuple[_Node, ...] | None] = []
-        pending: list[_Node] = []
-        pending_bytes = 2
-        for group in groups:
-            _require_tool_pairs(group)
-            group_bytes = _array_bytes(group)
-            if group_bytes > self._policy.page_bytes or len(group) > self._policy.page_messages:
-                if pending:
-                    pages.append(tuple(pending))
-                    pending = []
-                    pending_bytes = 2
-                pages.append(None)
-                continue
-            combined_bytes = pending_bytes + group_bytes - 2 + bool(pending)
-            if pending and (
-                combined_bytes > self._policy.page_bytes
-                or len(pending) + len(group) > self._policy.page_messages
-            ):
-                pages.append(tuple(pending))
-                pending = []
-                combined_bytes = group_bytes
-            pending.extend(group)
-            pending_bytes = combined_bytes
-        if pending:
-            pages.append(tuple(pending))
+        pages = self._pages(root)
         if cursor.index >= len(pages):
             raise HistoryReadError("history-cursor-invalid")
         next_cursor = (
@@ -180,8 +210,8 @@ class HistorySnapshot:
             if cursor.index + 1 < len(pages)
             else None
         )
-        selected = pages[cursor.index]
-        if selected is None:
+        selected, readable = pages[cursor.index]
+        if not readable:
             raise HistoryReadError("history-page-resource-limit", next_cursor=next_cursor)
         body = "[" + ",".join(node.message_json for node in selected) + "]"
         payload = {

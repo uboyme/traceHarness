@@ -1,0 +1,71 @@
+{
+  "basis": "grid-05 actual candidate failures, one primary behavioral category per case; not proven causal ownership",
+  "categories": {
+    "field_misattribution": {
+      "count": 9,
+      "cases": [
+        "113-o-english",
+        "227-o-english",
+        "419-o-english",
+        "113-o-nonzero",
+        "227-o-nonzero",
+        "419-o-nonzero",
+        "113-o-rephrase",
+        "227-o-rephrase",
+        "419-o-rephrase"
+      ]
+    },
+    "partial_to_global_absence": {
+      "count": 9,
+      "cases": [
+        "113-h-absent",
+        "227-h-absent",
+        "419-h-absent",
+        "113-s-absent",
+        "227-s-absent",
+        "419-s-absent",
+        "419-m-revoked",
+        "113-o-absent",
+        "419-o-absent"
+      ]
+    },
+    "wrong_source_tools": {
+      "count": 4,
+      "cases": [
+        "113-s-english",
+        "113-o-nearby",
+        "227-o-nearby",
+        "419-o-nearby"
+      ]
+    },
+    "early_stop_after_background": {
+      "count": 4,
+      "cases": [
+        "227-h-english",
+        "227-h-rephrase",
+        "227-m-omitted",
+        "419-m-omitted"
+      ]
+    },
+    "paging_step_limit": {
+      "count": 1,
+      "cases": [
+        "113-m-omitted"
+      ]
+    }
+  },
+  "owners_to_examine": {
+    "field_misattribution": "Tool output model-facing presentation plus model interpretation; original Effect identity remains correct",
+    "partial_to_global_absence": "Coverage communication and model stopping judgment; literal no-hit is not semantic absence",
+    "wrong_source_tools": "Tool selection and evaluation SourceOnly policy presentation; denied calls remain visible but do not leak data",
+    "early_stop_after_background": "Discovery/Context guidance and model continuation choice; no default evidence-sufficiency verifier",
+    "paging_step_limit": "Memory candidate ordering/snippet budget and query choice; bounded search is functional but may be inefficient"
+  },
+  "not_authorized_or_not_changed": [
+    "No semantic retrieval",
+    "No forced-read loop",
+    "No new evidence truth store",
+    "No model switching",
+    "No release gate relaxation"
+  ]
+}

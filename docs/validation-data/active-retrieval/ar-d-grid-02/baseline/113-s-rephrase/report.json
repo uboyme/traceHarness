@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "a4c49b03-f4f0-4817-af83-39e7a008411d",
+  "target_start_seq": 1,
+  "answer": "The current reference is a Skill directory for \"档案整理手册\", and it includes a section titled **\"交接身份核验口令\"** (`section_id`: `\"section-23\"`), with `content_bytes`: `57`, indicating it contains the actual secret phrase.\n\nHowever, the body provided in the current reference is only the **directory metadata**, not the content of `section-23`. The directory shows:\n```json\n{\"content_bytes\":57,\"section_id\":\"section-23\",\"summary\":\"交接身份核验口令\",\"title\":\"交接身份核验口令\"}\n```\n\nNo actual phrase or暗语 (secret phrase) is present in the visible reference data. Since the host-provided references contain only navigation metadata — and no admitted section body — and no further tool calls are permitted per the instruction *\"Use this task's configured reference source. Workspace exploration and rerunning historical commands are outside this isolated task.\"*, the required暗语 is **not available in the supplied references**.\n\nTherefore, the answer is:\n\nThe暗语 used by shift-handover parties to verify identity is not disclosed in the provided reference material.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 30.09299999999348,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14730,
+    "output_tokens": 843,
+    "total_tokens": 15573
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14730,
+    "output_tokens": 843,
+    "total_tokens": 15573
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "32abddbc6c4a75e5c7ee8cf6c6bf20eaa0158cd803962e21ed929ef221625dda",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-7e730b6b5d",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "6352808581601ff55bcd673b6565ffa2ac208fb598f5104096581c77c1a29da7",
+        "effect_id": "66d2284f-d590-47a6-9c22-1ad8a003bcab",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 30.93700000003446
+}

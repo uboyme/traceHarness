@@ -1,0 +1,10 @@
+{
+  "identity": "113-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": false,
+  "review": "pending",
+  "provisional_joint_pass": false
+}

@@ -1,0 +1,88 @@
+{
+  "identity": "113-m-revoked",
+  "case_id": "m-revoked",
+  "seed": 113,
+  "family": "memory",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "a8564983-a678-487d-931e-0578e5cf9b35",
+  "target_start_seq": 1,
+  "answer": "根据当前提供的所有参考信息，我检查了项目中所有的6个memory条目（background-4974c19420-00到background-4974c19420-05），它们的内容都是关于\"普通材料保管记录第X项：由资料组维护登记。\"的描述。\n\n这些memory条目中没有任何一个提到\"备用联络呼号\"或相关的信息。所有内容都局限于普通材料保管记录，没有涉及通讯、联络、呼号等任何相关内容。\n\n因此，基于当前可用的所有批准的项目事实（memory），**项目现在没有有效批准的备用联络呼号**。",
+  "steps": 7,
+  "reason": "completed",
+  "target_seconds": 97.17199999990407,
+  "target_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 44632,
+    "output_tokens": 1663,
+    "total_tokens": 46295
+  },
+  "all_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 44632,
+    "output_tokens": 1663,
+    "total_tokens": 46295
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-00",
+        "requested_tier": "section",
+        "version": "a3e9c49330c493638952fad952ef75c123a2ee4c8ac733cba322c5046a79d058"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-01",
+        "requested_tier": "section",
+        "version": "f1506eaefd56ad238d3897bf6242d2de725ec223a459e4fac352e194a9869ce0"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-02",
+        "requested_tier": "section",
+        "version": "f6a982505a8f21f1955d72ed1c84c1685dd85584eeccc10008915bf8c9557c9b"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-03",
+        "requested_tier": "section",
+        "version": "207c7a8c54ec8e187f13ab9f10c71cac4eb8e560e15bde32aa0af8d79f6021db"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-04",
+        "requested_tier": "section",
+        "version": "0a477dfcafadb0727ae34cfbc50858645ae9f331845278735848c3a4e4b584e5"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-4974c19420-05",
+        "requested_tier": "section",
+        "version": "470af7350bf6b50bd03274113057aba6a7e25e2f053daca0ba77b71e61337b68"
+      }
+    }
+  ],
+  "search_read_count": 6,
+  "output_executions": null,
+  "elapsed_seconds": 104.04700000002049
+}

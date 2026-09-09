@@ -1,0 +1,52 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "996e0fac-3d42-4b6e-94cf-7e17d36126e3",
+  "target_start_seq": 152,
+  "answer": "The provided history snippet does not contain any mention of a device handover passphrase. It only includes repeated instructions to \"record this: background registration 0/1: ordinary equipment for this activity has been counted\", with replies of \"recorded\".\n\nSince the current history page does not contain the passphrase, and no other sources (workspace files, tool outputs, memory, or skill) have been indicated as containing it, the evidence is insufficient to determine the device handover passphrase.\n\n{\"passphrase\": null, \"evidence_status\": \"insufficient\"}",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 16.594000000040978,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9151,
+    "output_tokens": 367,
+    "total_tokens": 9518
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 48364,
+    "output_tokens": 397,
+    "total_tokens": 48761
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d19b1c0681e177187e233b43ac7cc2aa67fd2e5f39bf7281bc1a7f03584034c7",
+        "cursor": {
+          "block_id": "d19b1c0681e177187e233b43ac7cc2aa67fd2e5f39bf7281bc1a7f03584034c7",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 52.59299999999348
+}

@@ -1,0 +1,53 @@
+{
+  "phase": "AR-B",
+  "status": "scope-validation-complete",
+  "new_history_search_tests": 24,
+  "primary_targeted_run": {
+    "passed": 357,
+    "failed": 1,
+    "failure": "old 4200-token fixture no longer had navigation space after added search schema and guidance"
+  },
+  "correction": {
+    "production_limits_relaxed": false,
+    "fixture_narrow_window": 5000,
+    "original_body_exclusion_assertions_preserved": true,
+    "affected_module_retest_passed": 13
+  },
+  "final_distinct_targeted_cases_verified": 358,
+  "reverse": {
+    "guard": "Context source-derived candidate equality before public append",
+    "exit_code": 1,
+    "expected_failure": "DID NOT RAISE ContextInputError",
+    "exact_bytes_restored": true
+  },
+  "compileall": "passed",
+  "ruff": "passed",
+  "collect_only": "passed",
+  "diff_check": "passed",
+  "real": {
+    "runs": [
+      "ar-b-smoke-01/report.json",
+      "ar-b-smoke-02/report.json"
+    ],
+    "attempts_including_setup": 38,
+    "total_tokens_including_setup": 150415,
+    "round_one": "Chinese incomplete, English answered using original pages",
+    "round_two": "Both answers and evidence passed; Chinese used search, English used original pages",
+    "frozen_AR_D_cases_run": 0
+  },
+  "full_suite": false,
+  "L2_L4": false,
+  "new_protocol": {
+    "session": 11,
+    "context": 10,
+    "renderer": "context-json-v10",
+    "policy": "active-reference-policy-v6"
+  },
+  "boundaries": [
+    "no Memory/Skill active search yet",
+    "no semantic integration",
+    "no guarantee of model compliance",
+    "oversized complete History Turns remain unreadable as full pages",
+    "AR-D fixed baseline/candidate grid pending"
+  ]
+}

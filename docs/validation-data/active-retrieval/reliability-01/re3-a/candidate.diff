@@ -1,0 +1,207 @@
+--- b0/traceh/session/tool_output.py
++++ candidate/traceh/session/tool_output.py
+@@ -80,7 +80,7 @@
+         display["search_tool"] = OUTPUT_SEARCH_TOOL
+         display["notice"] += (
+             " For a specific keyword or identifier, search_tool_output is the first lookup: "
+-            "pass this effect_id/digest and the keyword as query. Expand insufficient "
++            "pass this effect_id/digest and literal keywords as queries. Expand insufficient "
+             "matches with their read_action. For browsing without a keyword, use "
+             "read_tool_output with this reference."
+         )
+@@ -256,9 +256,9 @@
+     *,
+     effect_id: str,
+     digest: str,
+-    query: str,
++    queries: list[str],
+     part: str,
+-    offset: int,
++    cursor: dict | None,
+     count: int,
+     context_lines: int,
+     case_sensitive: bool,
+@@ -272,8 +272,43 @@
+     if part not in {"content", "data"}:
+         raise ValueError("tool-output-part-invalid")
+     source = payload["content"] if part == "content" else canonical_json(payload["data"])
+-    if not isinstance(query, str) or not query:
++    # Explicit frozen RE-3 experiment policy; not adopted as production defaults.
++    if (
++        type(queries) is not list
++        or not 1 <= len(queries) <= 4
++        or any(type(q) is not str or not q for q in queries)
++        or sum(len(q.encode("utf-8")) for q in queries) > 512
++    ):
+         raise ValueError("tool-output-query-invalid")
++    scan_limit = 200000
++    options = {
++        "effect_id": effect_id,
++        "digest": digest,
++        "part": part,
++        "queries": queries,
++        "case_sensitive": case_sensitive,
++        "context_lines": context_lines,
++        "count": count,
++        "max_chars": max_chars,
++        "scan_limit": scan_limit,
++    }
++
++    def continuation(position):
++        if position is None:
++            return None
++        return {"offset": position, "binding": fingerprint({**options, "offset": position})}
++
++    if cursor is None:
++        offset = 0
++    elif (
++        type(cursor) is dict
++        and set(cursor) == {"offset", "binding"}
++        and type(cursor["offset"]) is int
++        and cursor == continuation(cursor["offset"])
++    ):
++        offset = cursor["offset"]
++    else:
++        raise ValueError("tool-output-cursor-invalid")
+     if type(offset) is not int or not 0 <= offset <= len(source):
+         raise ValueError("tool-output-offset-invalid")
+     if type(count) is not int or not 1 <= count <= 100:
+@@ -282,8 +317,16 @@
+         raise ValueError("tool-output-context-invalid")
+     if type(case_sensitive) is not bool:
+         raise ValueError("tool-output-case-invalid")
+-    pattern = re.compile(re.escape(query), 0 if case_sensitive else re.IGNORECASE)
+-    found = pattern.finditer(source, offset)
++    patterns = {
++        q: re.compile(re.escape(q), 0 if case_sensitive else re.IGNORECASE)
++        for q in dict.fromkeys(queries)
++    }
++    pattern = re.compile(
++        "|".join(re.escape(q) for q in sorted(patterns, key=lambda q: (-len(q), q))),
++        0 if case_sensitive else re.IGNORECASE,
++    )
++    scan_end = min(len(source), offset + scan_limit)
++    found = pattern.finditer(source, offset, scan_end)
+     matches = []
+     following = next(found, None)
+ 
+@@ -293,14 +336,16 @@
+                 "effect_id": effect_id,
+                 "digest": digest,
+                 "part": part,
+-                "query": query,
++                "queries": queries,
++                "scan_window": {"start": offset, "end": scan_end},
++                "scanned_through": following.end() if following is not None else scan_end,
+                 "match_mode": "literal-substring",
+                 "case_sensitive": case_sensitive,
+                 "offset_unit": "unicode-codepoints",
+                 "offset": offset,
+                 "total_chars": len(source),
+                 "matches": matches,
+-                "next_offset": next_offset,
++                "next_cursor": continuation(next_offset),
+             }
+         )
+ 
+@@ -322,6 +367,9 @@
+             left, right = max(start, hit.start() - radius), min(end, hit.end() + radius)
+             read_offset = max(left, line_start)
+             return {
++                "matched_queries": [
++                    q for q, rule in patterns.items() if rule.match(source, hit.start(), scan_end)
++                ],
+                 "match_start": hit.start(),
+                 "match_end": hit.end(),
+                 "line_number": source.count("\n", 0, hit.start()) + 1,
+@@ -362,7 +410,17 @@
+                 raise ValueError("tool-output-page-budget-too-small")
+         following = next(found, None)
+ 
+-    next_offset = matches[-1]["match_end"] if following is not None and matches else None
++    if following is not None and matches:
++        next_offset = matches[-1]["match_end"]
++    elif scan_end < len(source):
++        # Overlap only the possible unfinished literal; do not skip boundary matches.
++        next_offset = max(
++            offset + 1,
++            scan_end - max(map(len, queries)) + 1,
++            matches[-1]["match_end"] if matches else offset,
++        )
++    else:
++        next_offset = None
+     result = render(next_offset)
+     if len(result) > max_chars:
+         raise ValueError("tool-output-page-budget-too-small")
+--- b0/traceh/tools/output.py
++++ candidate/traceh/tools/output.py
+@@ -154,9 +154,10 @@
+ class SearchToolOutput:
+     name = OUTPUT_SEARCH_TOOL
+     description = (
+-        "Grep a literal keyword in one original retained Tool output from this Session. "
++        "Grep up to four literal keywords in one original retained Tool output from this Session. "
+         "Use an existing output_ref or list_tool_outputs to obtain effect_id and digest. "
+-        "query is literal text, NOT regex; case_sensitive defaults to true. part=content "
++        "queries is a list of literal strings, NOT regex; at most 4 and 512 UTF-8 bytes combined. "
++        "case_sensitive defaults to true. part=content "
+         "searches original text; part=data searches canonical structured JSON. Returns "
+         "non-overlapping matches, 1-based LF line numbers, Unicode character offsets and "
+         "matched_lines separately from before_context/after_context (default 0 context lines, "
+@@ -167,7 +168,7 @@
+         "body and boundaries before attributing values. "
+         "Answer from sufficient evidence; otherwise call read_tool_output with the same "
+         "effect_id/digest/part using the match's ready read_action (starts at matched lines, "
+-        "not preceding context). Continue searching with next_offset "
++        "not preceding context). Continue searching with next_cursor "
+         "and the same query/options. Empty matches means this literal was not found in "
+         "the searched suffix, not that the topic is absent. This reads historical evidence, "
+         "never workspace files, another Session, or re-executes the original tool."
+@@ -178,14 +179,32 @@
+         "properties": {
+             "effect_id": {"type": "string", "minLength": 1},
+             "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+-            "query": {"type": "string", "minLength": 1},
++            "queries": {
++                "type": "array",
++                "minItems": 1,
++                "maxItems": 4,
++                "items": {"type": "string", "minLength": 1},
++            },
+             "part": {"type": "string", "enum": ["content", "data"]},
+-            "offset": {"type": "integer", "minimum": 0},
++            "cursor": {
++                "anyOf": [
++                    {"type": "null"},
++                    {
++                        "type": "object",
++                        "properties": {
++                            "offset": {"type": "integer", "minimum": 0},
++                            "binding": {"type": "string"},
++                        },
++                        "required": ["offset", "binding"],
++                        "additionalProperties": False,
++                    },
++                ]
++            },
+             "count": {"type": "integer", "minimum": 1, "maximum": 100},
+             "context_lines": {"type": "integer", "minimum": 0, "maximum": 20},
+             "case_sensitive": {"type": "boolean"},
+         },
+-        "required": ["effect_id", "digest", "query"],
++        "required": ["effect_id", "digest", "queries"],
+         "additionalProperties": False,
+     }
+ 
+@@ -208,9 +227,9 @@
+                 payload,
+                 effect_id=arguments["effect_id"],
+                 digest=arguments["digest"],
+-                query=arguments["query"],
++                queries=arguments["queries"],
+                 part=arguments.get("part", "content"),
+-                offset=arguments.get("offset", 0),
++                cursor=arguments.get("cursor"),
+                 count=arguments.get("count", 10),
+                 context_lines=arguments.get("context_lines", 0),
+                 case_sensitive=arguments.get("case_sensitive", True),

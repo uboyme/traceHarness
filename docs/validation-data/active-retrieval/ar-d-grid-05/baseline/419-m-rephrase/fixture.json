@@ -1,0 +1,88 @@
+{
+  "id": "m-rephrase",
+  "family": "memory",
+  "domain": 1,
+  "mode": "rephrase",
+  "language": "zh",
+  "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+  "source_title": "人员容量批准记录",
+  "source_body": "档案整理项目的参加人数上限为 {value} 人。",
+  "expected": "value",
+  "value_type": "number",
+  "control": false,
+  "discovery": true,
+  "seed": 419,
+  "identity": "419-m-rephrase",
+  "value": "35",
+  "source": "档案整理项目的参加人数上限为 35 人。",
+  "domain_name": "河岸档案整理",
+  "project_id": "project-5c15383026",
+  "source_id": "source-5c15383026",
+  "memory_id": "fact-5c15383026",
+  "fact_slot": "slot-5c15383026",
+  "skill_id": "manual-5c15383026",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-5c15383026-00",
+      "slot": "background-slot-00",
+      "body": "普通材料保管记录第0项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-01",
+      "slot": "background-slot-01",
+      "body": "普通材料保管记录第1项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-02",
+      "slot": "background-slot-02",
+      "body": "普通材料保管记录第2项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-03",
+      "slot": "background-slot-03",
+      "body": "普通材料保管记录第3项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-04",
+      "slot": "background-slot-04",
+      "body": "普通材料保管记录第4项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-05",
+      "slot": "background-slot-05",
+      "body": "普通材料保管记录第5项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-06",
+      "slot": "background-slot-06",
+      "body": "普通材料保管记录第6项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-07",
+      "slot": "background-slot-07",
+      "body": "普通材料保管记录第7项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-08",
+      "slot": "background-slot-08",
+      "body": "普通材料保管记录第8项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-09",
+      "slot": "background-slot-09",
+      "body": "普通材料保管记录第9项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-10",
+      "slot": "background-slot-10",
+      "body": "普通材料保管记录第10项：由资料组维护登记。"
+    },
+    {
+      "id": "background-5c15383026-11",
+      "slot": "background-slot-11",
+      "body": "普通材料保管记录第11项：由资料组维护登记。"
+    }
+  ],
+  "predecessor_value": null
+}

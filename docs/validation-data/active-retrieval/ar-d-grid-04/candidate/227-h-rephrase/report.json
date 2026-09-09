@@ -1,0 +1,38 @@
+{
+  "identity": "227-h-rephrase",
+  "case_id": "h-rephrase",
+  "seed": 227,
+  "family": "history",
+  "question": "之前备用物资搁在哪里来着？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "0713177b-9df0-4df0-b26e-05b9c542e92b",
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 0,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 10.859000000054948
+}

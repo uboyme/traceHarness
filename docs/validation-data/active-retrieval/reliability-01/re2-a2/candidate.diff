@@ -1,0 +1,33 @@
+--- b0/session/context_input.py
++++ re2-a2/session/context_input.py
+@@ -485,8 +485,29 @@
+     token_mode=False,
+     token_excluded=False,
+ ) -> str:
++    header = _HEADER
++    if policy.memory is not None:
++        navigation = {
++            "kind": "source-navigation",
++            "source": "memory",
++            "selection": {
++                "scope": "Only this Step's selected references, not the approved corpus.",
++                "displayed_entries": sum(block["kind"] == "memory" for block in blocks),
++                "total_eligible_facts": None,
++                "total_status": "unknown-from-this-selected-view",
++            },
++            "discovery": {
++                "tool_name": "search_memory",
++                "when_exposed": True,
++                "query_parameter": "query: choose a short literal keyword from your question or a source clue",
++                "scope": "Reader resolves the current project's active approved facts, including unselected facts.",
++                "delivery": "Results appear in the next Step's references; the receipt is not the result.",
++            },
++            "availability": "A configured Memory policy does not establish binding, permission or records. The existing source Reader determines availability.",
++        }
++        header = _HEADER.rstrip("\n") + " Memory source navigation: " + canonical_json(navigation) + "\n"
+     return (
+-        _HEADER
++        header
+         + canonical_json([_render_item(block, policy) for block in blocks])
+         + ((_TOKEN_LIMIT_FOOTER if token_excluded else _TOKEN_FOOTER) if token_mode else _FOOTER)
+     )

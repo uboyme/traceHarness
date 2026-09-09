@@ -1,0 +1,62 @@
+{
+  "purpose": "AR-C diagnostic, not AR-D score",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "runner_sha256": "dfd6ae718f3afab99b9a15c1e4df37e0eafa6215a18ce76aaf87a31f0c5a4bd4",
+  "cases": [
+    {
+      "kind": "memory",
+      "session_id": "47a6b598-3baf-46e3-b04c-48b08fbfea09",
+      "question": "项目碰头时用的识别代号是什么？",
+      "expected": "MAPLE-c35a7a45",
+      "answer": "The workspace contains no files, and there are no current references provided that contain information about a project identification code used during project meetings. Without any files or reference material to search through, I cannot determine what the project identification code is.\n\nSince there's no evidence available in the workspace or current references, I cannot provide the project identification code used during project meetings.\n\nTherefore, the answer is that the information is not available in the current context.",
+      "steps": 2,
+      "reason": "completed",
+      "replay_errors": [],
+      "invariant_errors": [],
+      "evidence_seen": false,
+      "search_used": false,
+      "attempts": [
+        {
+          "attempt_id": "442e050e-765e-426f-a0f6-563c7af73f43",
+          "dispatch_fingerprint": "75ab57ac906230e5e3d6974342e335553c612913667134131376f43aa7e5274b",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2592,
+          "request_snapshot_seq": 10,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "6a07d57d-429d-4a8f-8144-75fa5b748885",
+          "turn_id": "f9b1ab28-2844-4504-a6a4-34fc893a5d7f",
+          "usage": {
+            "input_tokens": 3407,
+            "output_tokens": 44,
+            "quality": "exact",
+            "total_tokens": 3451
+          }
+        },
+        {
+          "attempt_id": "f786993d-4d94-4452-a829-50405b90a95d",
+          "dispatch_fingerprint": "a979469aa76ee5505620b120ae026785d3b13017f8928a1a1c355b79e42290e4",
+          "finish_reason": "stop",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3250,
+          "request_snapshot_seq": 23,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "a854b02a-5935-4296-b924-36ac46f82dc9",
+          "turn_id": "f9b1ab28-2844-4504-a6a4-34fc893a5d7f",
+          "usage": {
+            "input_tokens": 3470,
+            "output_tokens": 87,
+            "quality": "exact",
+            "total_tokens": 3557
+          }
+        }
+      ],
+      "passed": false
+    }
+  ],
+  "complete": false,
+  "scripted_provider": false
+}

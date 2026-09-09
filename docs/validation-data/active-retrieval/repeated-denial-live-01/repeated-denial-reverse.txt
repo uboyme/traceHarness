@@ -1,0 +1,22 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_repeated_denial_warns_then_stops_without_effects ____________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5210/test_repeated_denial_warns_the0')
+
+    @pytest.mark.asyncio
+    async def test_repeated_denial_warns_then_stops_without_effects(tmp_path):
+        provider, policy = Calls(), Decisions()
+        runtime, workspace = make_runtime(tmp_path, provider, policy)
+        try:
+            session = await runtime.create_session(workspace)
+            result = await runtime.run_existing(session, "Read the requested evidence")
+>           assert (result.reason, result.steps) == ("stalled_repeated_denial", 3)
+E           AssertionError: assert ('max_steps_exceeded', 8) == ('stalled_repeated_denial', 3)
+E             
+E             At index 0 diff: 'max_steps_exceeded' != 'stalled_repeated_denial'
+E             Use -v to get more diff
+
+tests\test_repeated_denial.py:86: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_repeated_denial.py::test_repeated_denial_warns_then_stops_without_effects

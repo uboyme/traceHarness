@@ -1,0 +1,55 @@
+{
+  "identity": "419-m-rephrase",
+  "case_id": "m-rephrase",
+  "seed": 419,
+  "family": "memory",
+  "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "6cc2cb05-b403-4679-ac20-6cfd1e9434a9",
+  "target_start_seq": 1,
+  "answer": "根据批准记录，档案整理项目的参加人数上限为35人。\n\n答案：35",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 13.656000000075437,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12393,
+    "output_tokens": 183,
+    "total_tokens": 12576
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12393,
+    "output_tokens": 183,
+    "total_tokens": 12576
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "fact-5c15383026",
+      "version": "9bd9a650eb79306d8b8fd971f92853a5ded2184ed5c2ca1a6b5646612417b04a",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-5c15383026",
+        "requested_tier": "section",
+        "version": "9bd9a650eb79306d8b8fd971f92853a5ded2184ed5c2ca1a6b5646612417b04a"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 16.39000000001397
+}

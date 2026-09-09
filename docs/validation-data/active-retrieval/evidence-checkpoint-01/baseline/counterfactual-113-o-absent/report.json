@@ -1,0 +1,55 @@
+{
+  "identity": "counterfactual-113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "c5a607b7-1fe0-4fc8-8d86-1ed9b7c2e94d",
+  "target_start_seq": 28,
+  "answer": "有。归档检查输出中给出了保险理赔编号：**CF-55C0AB6241**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.047000000020489,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10569,
+    "output_tokens": 255,
+    "total_tokens": 10824
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 19306,
+    "output_tokens": 277,
+    "total_tokens": 19583
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 44,
+      "effect_id": "47c62022-8f7a-4628-9b49-916de5143580",
+      "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+        "effect_id": "47c62022-8f7a-4628-9b49-916de5143580",
+        "part": "content",
+        "query": "保险理赔编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 16.06200000003446
+}

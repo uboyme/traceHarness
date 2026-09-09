@@ -1,0 +1,39 @@
+{
+  "identity": "419-m-direct",
+  "case_id": "m-direct",
+  "seed": 419,
+  "family": "memory",
+  "question": "项目已批准的设备演练人数上限是多少？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "c185746f-d814-49e6-9ffd-23cf6ed02ea0",
+  "target_start_seq": 1,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 7.312999999965541
+}

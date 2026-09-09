@@ -1,0 +1,1598 @@
+{
+  "arm": "candidate",
+  "closed": 36,
+  "scored_review_complete": false,
+  "reports": [
+    {
+      "identity": "113-h-rephrase",
+      "case_id": "h-rephrase",
+      "seed": 113,
+      "family": "history",
+      "question": "之前备用物资搁在哪里来着？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "bd90bd23-9c23-4ba7-b4e3-2fa4b9682c06",
+      "target_start_seq": 152,
+      "answer": "根据搜索结果，备用物资的存放地点是东侧第39号资料柜。\n\n在历史记录中明确提到：\"请记下这条记录，只回复已记下：备用物资的存放地点是 东侧第39号资料柜。\"",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 27.57900000002701,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 14266,
+        "output_tokens": 364,
+        "total_tokens": 14630
+      },
+      "all_usage": {
+        "attempts": 13,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 51837,
+        "output_tokens": 394,
+        "total_tokens": 52231
+      },
+      "evidence": [
+        {
+          "context_seq": 184,
+          "reference": {
+            "block_id": "5b07f909a4c67aec248f89bdd8944005878adabdadadf93ba186008691246f72",
+            "cursor": {
+              "block_id": "5b07f909a4c67aec248f89bdd8944005878adabdadadf93ba186008691246f72",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "b9f73901c666a5b7affced80840f913d6b336796dbbdc67334e8159231f340c1",
+              "event_id": "168c969b-e922-4cfc-8039-fe8ecbafd472",
+              "seq": 111,
+              "stream_id": "session:bd90bd23-9c23-4ba7-b4e3-2fa4b9682c06",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "a9988bd8fbfb32c1dc5b96af1efb5c03e1bccd7afef05471700568da1b4c10c9"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "5b07f909a4c67aec248f89bdd8944005878adabdadadf93ba186008691246f72",
+            "cursor": {
+              "block_id": "5b07f909a4c67aec248f89bdd8944005878adabdadadf93ba186008691246f72",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "备用物资"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 67.35900000005495
+    },
+    {
+      "identity": "113-h-disambiguate",
+      "case_id": "h-disambiguate",
+      "seed": 113,
+      "family": "history",
+      "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "7b73c963-be08-4802-8cac-d4a3e6b21729",
+      "target_start_seq": 152,
+      "answer": "根据搜索结果，档案复核组的联络代号是 **REF-640CA6984B**。\n\n搜索结果显示：\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-640CA6984B。搬运组使用另一个代号。 搬运组的联络代号是 DECOY-640CA6984B。\"",
+      "steps": 4,
+      "reason": "completed",
+      "target_seconds": 43.32799999997951,
+      "target_usage": {
+        "attempts": 4,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 20686,
+        "output_tokens": 709,
+        "total_tokens": 21395
+      },
+      "all_usage": {
+        "attempts": 14,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 58421,
+        "output_tokens": 739,
+        "total_tokens": 59160
+      },
+      "evidence": [
+        {
+          "context_seq": 197,
+          "reference": {
+            "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+            "cursor": {
+              "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "5cf143f4afd785cc46b08a986837fc685f8687b4d7d75359f6d2e8f8a25d402a",
+              "event_id": "927a252e-3dfa-4184-a0e8-9697a097c0ff",
+              "seq": 111,
+              "stream_id": "session:7b73c963-be08-4802-8cac-d4a3e6b21729",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "697766be3c78f33510554e321c9aed29544692c20660f99d073f9991bf1de29a"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+            "cursor": {
+              "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+            "cursor": {
+              "block_id": "67a51b279ba8e4e9ad00f7f4c1bf786161d7db2238e7b2ed3054d960aafdf29c",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "档案复核组"
+          }
+        }
+      ],
+      "search_read_count": 3,
+      "output_executions": null,
+      "elapsed_seconds": 94.21900000004098
+    },
+    {
+      "identity": "113-h-absent",
+      "case_id": "h-absent",
+      "seed": 113,
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "27bb0bdd-7185-4480-b3ac-7eb184132d50",
+      "target_start_seq": 152,
+      "answer": "我检查了当前可用的历史记录，但所有已提供的历史页面内容都只包含关于\"背景登记\"的记录，内容都是\"本次活动普通器材已经清点。\"，并没有提到保险柜的开锁口令。\n\n由于历史记录中没有出现任何关于保险柜或开锁口令的信息，我可以确定：**我们之前没有说过保险柜的开锁口令**。\n\n如果需要设置或记录保险柜的开锁口令，我们可以现在进行。",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 33.64000000001397,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 14343,
+        "output_tokens": 714,
+        "total_tokens": 15057
+      },
+      "all_usage": {
+        "attempts": 13,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 51878,
+        "output_tokens": 744,
+        "total_tokens": 52622
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "bdf01118a5097036947c3c8e09241d0120f7dc8e1f61129db74378402ef6fcf5",
+            "cursor": {
+              "block_id": "bdf01118a5097036947c3c8e09241d0120f7dc8e1f61129db74378402ef6fcf5",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "bdf01118a5097036947c3c8e09241d0120f7dc8e1f61129db74378402ef6fcf5",
+            "cursor": {
+              "block_id": "bdf01118a5097036947c3c8e09241d0120f7dc8e1f61129db74378402ef6fcf5",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 72.26599999994505
+    },
+    {
+      "identity": "113-s-rephrase",
+      "case_id": "s-rephrase",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "10239086-2ef5-4a72-9d45-43f505281335",
+      "target_start_seq": 1,
+      "answer": "根据提供的档案整理手册内容，交班双方核对身份时使用的暗语（口令）是：\n\n**REF-7E730B6B5D**",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 12.765999999945052,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9821,
+        "output_tokens": 306,
+        "total_tokens": 10127
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9821,
+        "output_tokens": 306,
+        "total_tokens": 10127
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "manual-7e730b6b5d",
+          "version": "1.0.0",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "32abddbc6c4a75e5c7ee8cf6c6bf20eaa0158cd803962e21ed929ef221625dda",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-7e730b6b5d",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 13.515999999945052
+    },
+    {
+      "identity": "113-s-resource",
+      "case_id": "s-resource",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "69e74a6d-75e7-4a34-9f97-0682e4f1a901",
+      "target_start_seq": 1,
+      "answer": "根据提供的档案整理手册技能文档，应急联络卡上规定的值班呼号是 **REF-EC8DE757AB**。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 16.5,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9920,
+        "output_tokens": 336,
+        "total_tokens": 10256
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9920,
+        "output_tokens": 336,
+        "total_tokens": 10256
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "manual-ec8de757ab",
+          "version": "1.0.0",
+          "tier": "chunk"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+            "chunk_id": "chunk-ec8de757ab",
+            "requested_tier": "chunk",
+            "resource_id": "resource-ec8de757ab",
+            "section_id": null,
+            "skill_id": "manual-ec8de757ab",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 17.078000000095926
+    },
+    {
+      "identity": "113-s-absent",
+      "case_id": "s-absent",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f26bd4c8-dc14-4f26-ac62-4d879c727397",
+      "target_start_seq": 1,
+      "answer": "根据当前提供的档案整理手册内容，手册的主体内容只有一句话：\"本手册说明档案整理工作。\"\n\n这表明该手册是专门针对档案整理工作的操作指南，其范围限定在档案整理相关事务上。\n\n车辆加油折扣码属于行政后勤或财务管理范畴，与档案整理工作没有直接关联。从手册的标题\"档案整理操作手册\"和其简短的说明来看，它不太可能包含关于车辆加油折扣码的规定。\n\n因此，档案整理手册**没有规定**车辆加油的折扣码。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 69.64100000006147,
+      "target_usage": {
+        "attempts": 4,
+        "unknown_usage": 2,
+        "estimated_usage": 0,
+        "input_tokens": 9822,
+        "output_tokens": 423,
+        "total_tokens": 10245
+      },
+      "all_usage": {
+        "attempts": 4,
+        "unknown_usage": 2,
+        "estimated_usage": 0,
+        "input_tokens": 9822,
+        "output_tokens": 423,
+        "total_tokens": 10245
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "7efa2afefd848720123a6a4d3981a884acc4599e6cc1dc8c23c20229c9ed16f0",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-593410eb3c",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 70.35900000005495
+    },
+    {
+      "identity": "113-m-rephrase",
+      "case_id": "m-rephrase",
+      "seed": 113,
+      "family": "memory",
+      "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "c0d043cb-853a-4c58-942c-18d3107555e7",
+      "target_start_seq": 1,
+      "answer": "根据批准记录，档案整理项目的参加人数上限为26人。\n\n答案：26",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 23.21799999999348,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 11960,
+        "output_tokens": 176,
+        "total_tokens": 12136
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 11960,
+        "output_tokens": 176,
+        "total_tokens": 12136
+      },
+      "evidence": [
+        {
+          "context_seq": 22,
+          "id": "fact-2df5d33b6f",
+          "version": "16440d6fd944edc782c5b4d26b988aae254f2c6820d5bf15eb448474e595ebda",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "fact-2df5d33b6f",
+            "requested_tier": "section",
+            "version": "16440d6fd944edc782c5b4d26b988aae254f2c6820d5bf15eb448474e595ebda"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 26.530999999959022
+    },
+    {
+      "identity": "113-m-superseded",
+      "case_id": "m-superseded",
+      "seed": 113,
+      "family": "memory",
+      "question": "档案整理的人数限制后来改成多少了？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "6200fc8d-9c2c-4572-9b83-dcff2783c2f8",
+      "target_start_seq": 1,
+      "answer": "最新批准的档案整理人数上限是 43 人。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 10.625,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 8124,
+        "output_tokens": 176,
+        "total_tokens": 8300
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 8124,
+        "output_tokens": 176,
+        "total_tokens": 8300
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "fact-4499d2111e",
+          "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "fact-4499d2111e",
+            "requested_tier": "section",
+            "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 13.203000000095926
+    },
+    {
+      "identity": "113-m-revoked",
+      "case_id": "m-revoked",
+      "seed": 113,
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f78914d8-b50b-4781-bd49-64f8e3521e54",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 20.32799999997951
+    },
+    {
+      "identity": "113-o-rephrase",
+      "case_id": "o-rephrase",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才归档检查返回的那串核验代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a0dc9a96-4cc1-4cde-914f-7cd90bc25b3c",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.655999999959022
+    },
+    {
+      "identity": "113-o-nonzero",
+      "case_id": "o-nonzero",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才失败的归档检查给出的故障代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "02fea514-e128-458d-b3ed-b02ab413c459",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 8.78200000000652
+    },
+    {
+      "identity": "113-o-absent",
+      "case_id": "o-absent",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "dec27ab1-dd84-4f83-a680-e97b7667fe43",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 10.375
+    },
+    {
+      "identity": "227-h-rephrase",
+      "case_id": "h-rephrase",
+      "seed": 227,
+      "family": "history",
+      "question": "之前备用物资搁在哪里来着？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "0713177b-9df0-4df0-b26e-05b9c542e92b",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 10.859000000054948
+    },
+    {
+      "identity": "227-h-disambiguate",
+      "case_id": "h-disambiguate",
+      "seed": 227,
+      "family": "history",
+      "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a54677d3-f07f-414b-936f-4823409e68b0",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 9.530999999959022
+    },
+    {
+      "identity": "227-h-absent",
+      "case_id": "h-absent",
+      "seed": 227,
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f03fd4de-0f50-4ecd-b0aa-444863868aea",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.859000000054948
+    },
+    {
+      "identity": "227-s-rephrase",
+      "case_id": "s-rephrase",
+      "seed": 227,
+      "family": "skill",
+      "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f157bdfb-901c-409a-8b7e-086a375c7dbc",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.094000000040978
+    },
+    {
+      "identity": "227-s-resource",
+      "case_id": "s-resource",
+      "seed": 227,
+      "family": "skill",
+      "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "ca70bf4c-fc69-44a9-bea7-975f7b6147ff",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.030999999959022
+    },
+    {
+      "identity": "227-s-absent",
+      "case_id": "s-absent",
+      "seed": 227,
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "3deef077-1b92-4613-8b24-a6171b353e7b",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.937999999965541
+    },
+    {
+      "identity": "227-m-rephrase",
+      "case_id": "m-rephrase",
+      "seed": 227,
+      "family": "memory",
+      "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "84135660-b1b8-45fe-9b2f-5877665ca4ff",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 12.420999999972992
+    },
+    {
+      "identity": "227-m-superseded",
+      "case_id": "m-superseded",
+      "seed": 227,
+      "family": "memory",
+      "question": "档案整理的人数限制后来改成多少了？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "46fc9073-1404-46eb-8898-a37a6dba2995",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.48499999998603
+    },
+    {
+      "identity": "227-m-revoked",
+      "case_id": "m-revoked",
+      "seed": 227,
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "79844145-261e-4e1a-83c8-c0929de01d31",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.719000000040978
+    },
+    {
+      "identity": "227-o-rephrase",
+      "case_id": "o-rephrase",
+      "seed": 227,
+      "family": "output",
+      "question": "刚才归档检查返回的那串核验代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "5c1e58ba-06e7-4c51-811a-acac91d7bce1",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.577999999979511
+    },
+    {
+      "identity": "227-o-nonzero",
+      "case_id": "o-nonzero",
+      "seed": 227,
+      "family": "output",
+      "question": "刚才失败的归档检查给出的故障代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "6f7212e0-c63d-499a-bc32-776a1a238d72",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.843999999924563
+    },
+    {
+      "identity": "227-o-absent",
+      "case_id": "o-absent",
+      "seed": 227,
+      "family": "output",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "e76bf593-1161-40c8-86fa-4b86d6ba8e70",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.812000000034459
+    },
+    {
+      "identity": "419-h-rephrase",
+      "case_id": "h-rephrase",
+      "seed": 419,
+      "family": "history",
+      "question": "之前备用物资搁在哪里来着？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "cb89ff14-53d6-4a8c-b4f0-76e82e14610d",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 9.547000000020489
+    },
+    {
+      "identity": "419-h-disambiguate",
+      "case_id": "h-disambiguate",
+      "seed": 419,
+      "family": "history",
+      "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "5beb6f15-1ad2-417e-a2c4-3d2296b0af3a",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.73499999998603
+    },
+    {
+      "identity": "419-h-absent",
+      "case_id": "h-absent",
+      "seed": 419,
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "df017eaa-6d93-4980-be12-6d7bc34a28ae",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.609000000054948
+    },
+    {
+      "identity": "419-s-rephrase",
+      "case_id": "s-rephrase",
+      "seed": 419,
+      "family": "skill",
+      "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "ed56b10a-66f1-47df-8e8d-18dac5878a23",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.155999999959022
+    },
+    {
+      "identity": "419-s-resource",
+      "case_id": "s-resource",
+      "seed": 419,
+      "family": "skill",
+      "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "97c7df6c-881c-44af-b683-1e6cd946616a",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.202999999979511
+    },
+    {
+      "identity": "419-s-absent",
+      "case_id": "s-absent",
+      "seed": 419,
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "4882f6be-a52e-49db-a02c-1975104efd54",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.983999999938533
+    },
+    {
+      "identity": "419-m-rephrase",
+      "case_id": "m-rephrase",
+      "seed": 419,
+      "family": "memory",
+      "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "441a8958-80a5-4fe4-bbb2-a29a2fde271d",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 6.922000000020489
+    },
+    {
+      "identity": "419-m-superseded",
+      "case_id": "m-superseded",
+      "seed": 419,
+      "family": "memory",
+      "question": "档案整理的人数限制后来改成多少了？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "30b56a28-2279-4419-8541-357a807e3c45",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 6.875
+    },
+    {
+      "identity": "419-m-revoked",
+      "case_id": "m-revoked",
+      "seed": 419,
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "7f00c4d8-a23d-40b4-89a1-a6f884668ebd",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.157000000006519
+    },
+    {
+      "identity": "419-o-rephrase",
+      "case_id": "o-rephrase",
+      "seed": 419,
+      "family": "output",
+      "question": "刚才归档检查返回的那串核验代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "8fb53991-a418-41da-86a1-6a544e6231d6",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.562999999965541
+    },
+    {
+      "identity": "419-o-nonzero",
+      "case_id": "o-nonzero",
+      "seed": 419,
+      "family": "output",
+      "question": "刚才失败的归档检查给出的故障代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a317b682-dd47-4da6-b41e-fa932aa9d2da",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.469000000040978
+    },
+    {
+      "identity": "419-o-absent",
+      "case_id": "o-absent",
+      "seed": 419,
+      "family": "output",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "fb91d600-4d2b-440b-8ecc-2f52b82eef5b",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.577999999979511
+    }
+  ]
+}

@@ -194,7 +194,7 @@ class SessionService:
 
             memory_source = await read_frozen_source(data, self.store.read, events)
             if memory_source is not None:
-                verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory)
+                verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory, events)
 
             open_turn: str | None = None
             open_step: str | None = None
@@ -624,7 +624,7 @@ class SessionService:
 
                 memory_source = await read_frozen_source(data, self.store.read, events)
                 if memory_source is not None:
-                    verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory)
+                    verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory, events)
                 reference = data.get("selection_head")
                 validate_head(reference, session_id)
                 prefix = selections[: reference["head_seq"]]
@@ -632,7 +632,12 @@ class SessionService:
                     raise ValueError("context-selection-binding-mismatch")
                 selection = project_selection(prefix, session_id)
                 skill_receipt = data["retrieval"]["skill"] if data["retrieval"] else None
-                if skill_receipt is not None:
+                search_blocks = [
+                    block
+                    for block in data["blocks"]
+                    if block["kind"] == "skill" and block["tier"] == "search"
+                ]
+                if skill_receipt is not None or search_blocks:
                     from traceh.kernel.composition import CompositionSnapshot
                     from traceh.session.context_input import _parse_policy
                     from traceh.session.retrieval import validate_coverage
@@ -646,26 +651,33 @@ class SessionService:
                             following.append(following_event)
                     if len(following) == 1:
                         composition = CompositionSnapshot.from_dict(following[0].data)
-                        policy = _parse_policy(data["policy"]).skills
-                        corpus, _, rows, descriptors, _ = prepare_corpus(
-                            composition, prefix, session_id, policy
-                        )
-                        import json
+                        if search_blocks:
+                            from traceh.session.skill_search import verify_pages
 
-                        manifest = json.loads(corpus.manifest_json)
-                        if (
-                            skill_receipt["corpus_key"] != corpus.key
-                            or skill_receipt["corpus_digest"] != manifest["corpus_digest"]
-                            or skill_receipt["eligible_count"] != manifest["item_count"]
-                        ):
-                            raise ValueError("context-retrieval-source-mismatch")
-                        validate_coverage(
-                            skill_receipt,
-                            rows,
-                            exact_values(descriptors),
-                            data["query"]["text"],
-                            policy,
-                        )
+                            verify_pages(
+                                data, events, composition, prefix, _parse_policy(data["policy"])
+                            )
+                        if skill_receipt is not None:
+                            policy = _parse_policy(data["policy"]).skills
+                            corpus, _, rows, descriptors, _ = prepare_corpus(
+                                composition, prefix, session_id, policy
+                            )
+                            import json
+
+                            manifest = json.loads(corpus.manifest_json)
+                            if (
+                                skill_receipt["corpus_key"] != corpus.key
+                                or skill_receipt["corpus_digest"] != manifest["corpus_digest"]
+                                or skill_receipt["eligible_count"] != manifest["item_count"]
+                            ):
+                                raise ValueError("context-retrieval-source-mismatch")
+                            validate_coverage(
+                                skill_receipt,
+                                rows,
+                                exact_values(descriptors),
+                                data["query"]["text"],
+                                policy,
+                            )
                 for skill_id, version in receipt_skill_ids(skill_receipt):
                     if (
                         selection is None
@@ -674,11 +686,15 @@ class SessionService:
                     ):
                         raise ValueError("context-skill-selection-mismatch")
                 for block in data.get("blocks", []):
-                    if block["kind"] == "skill" and (
-                        selection is None
-                        or selection["catalog_digest"] != data["skill_catalog_digest"]
-                        or {"skill_id": block["id"], "version": block["version"]}
-                        not in selection["skills"]
+                    if (
+                        block["kind"] == "skill"
+                        and block["tier"] != "search"
+                        and (
+                            selection is None
+                            or selection["catalog_digest"] != data["skill_catalog_digest"]
+                            or {"skill_id": block["id"], "version": block["version"]}
+                            not in selection["skills"]
+                        )
                     ):
                         raise ValueError("context-skill-selection-mismatch")
         return events

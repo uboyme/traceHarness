@@ -1,0 +1,55 @@
+{
+  "identity": "113-m-superseded",
+  "case_id": "m-superseded",
+  "seed": 113,
+  "family": "memory",
+  "question": "档案整理的人数限制后来改成多少了？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "c3b8d187-67bd-451a-911d-d6216e054ebd",
+  "target_start_seq": 1,
+  "answer": "最新批准的档案整理人数上限是 43 人。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 10.46799999999348,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8457,
+    "output_tokens": 183,
+    "total_tokens": 8640
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8457,
+    "output_tokens": 183,
+    "total_tokens": 8640
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "fact-4499d2111e",
+      "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-4499d2111e",
+        "requested_tier": "section",
+        "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 12.937000000034459
+}

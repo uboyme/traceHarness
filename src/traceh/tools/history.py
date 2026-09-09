@@ -15,6 +15,8 @@ class HistoryDisclosureTool:
     name = HISTORY_TOOL_NAME
     description = (
         "Request one already disclosed page of this Session's compacted history. "
+        "To locate a fact in unknown pages, prefer search_history when available; "
+        "then use its exact hit cursor here if the snippet is insufficient. "
         "Only a receipt is returned; the immediate next Step may receive the page as "
         "historical reference in the LAST user message's current host reference context. "
         "Admitted pages may remain within this Turn while within budget, with current freshness "

@@ -1,0 +1,5 @@
+{
+  "state": "superseded-before-scoring",
+  "real_calls": 0,
+  "reason": "Preflight caught unknown usage represented as zero; corrected before first scored call. Frozen manifest and generated source fixtures unchanged."
+}

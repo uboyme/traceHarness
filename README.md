@@ -1,8 +1,8 @@
-# TraceHarness Py v0.8.0
+# TraceHarness Py v0.9.0
 
 大工具输出现可保存在执行账本中，模型通过本会话输出目录按页读回，压缩或重启后仍可定位原文；无需额外绑定项目。分层压缩 A/B 的范围与真实验收见 [验证记录](docs/validation-retained-tool-output.md)。C 已能折叠旧结果，E0 已补完整请求 token 估算，D 可选模型语义摘要；原文保留，支持查证。见 [D 真实验证](docs/validation-semantic-summary.md)。
 
-当前请求协议为 Session 10 / Context 9。旧 Session 1–9 不能直接恢复；启动时可点击“创建新版数据空间并开始”，由程序选择新目录并保留旧记录。旧数据不会被自动迁移、删除或改写。后置参考包现在绑定本轮原始问题，真实换题验证与分页边界见 [验证记录](docs/validation-current-turn-anchor.md)。
+当前请求协议为 Session 13 / Context 12。旧 Session 1–12 不能直接恢复；启动时可点击“创建新版数据空间并开始”，由程序选择新目录并保留旧记录。旧数据不会被自动迁移、删除或改写。后置参考包现在绑定本轮原始问题，真实换题验证与分页边界见 [验证记录](docs/validation-current-turn-anchor.md)。
 
 日常启动只需在工作文件夹运行 `traceh`；首次配置模型一次，以后直接聊天。Ctrl+O 选择历史对话，`/new` 新对话，F2 打开完整配置。已确认并记住的工作区项目选择可自动关联新会话。详见 [启动说明](docs/tui-configuration.md)。
 
@@ -10,10 +10,11 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
-当前开发树已接入 **v0.9-F4**：项目内 active Memory 与 Skill 共用检索和 Context 预算，
-历史工具证据可通过显式 Git 观察标记时效。最新正式发布仍为 v0.8.0；Stop C 修补中的 C2 已接入精简模型视图与阅读导航，唯一 Session 协议为 9、
-Context 9，旧 Session 1–9 明确拒绝，不迁移。程序化配置、模块和边界见
-[项目上下文 §7.7](docs/note/project-context.md#77-f4memory-检索history-时效与统一-context)；F5 治理、冻结评估与精度整改已完成，冻结复验 11 条均达到原阈值，Stop C 已通过限定验收，发布门禁仍待授权。
+当前 v0.9.0 收口 Skill 贡献、项目批准 Memory、History/Memory/Skill 主动字面搜索与分层压缩。
+内部固定题库补测后为 **55/72（76.4%）**；用户接受已知限制，按 Educational alpha 发布。
+模型仍可能漏读或错误描述证据范围；原 66/72 门槛未通过，未运行本次全量测试或 L2。
+详见 [发布记录](docs/deal/011-v090-release.md) 与 [验证范围](docs/validation-v0.9.0.md)。
+当前没有 OS 沙箱；下一阶段为 [v0.10 S0](docs/plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
 
 工具输出关键词查找（分层压缩 B+）：通过 `search_tool_output` 定位原文，必要时按位置读回；见 [设计](docs/adr/0054-retained-tool-output-keyword-search.md) 与 [验证](docs/validation-tool-output-search.md)。
 

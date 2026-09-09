@@ -1,0 +1,59 @@
+{
+  "identity": "227-s-direct",
+  "case_id": "s-direct",
+  "seed": 227,
+  "family": "skill",
+  "question": "设备演练手册规定的签到卡代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "872b949f-1a07-43e7-a91d-08f56de94f0b",
+  "target_start_seq": 1,
+  "answer": "根据设备演练手册\"签到卡发放规定\"章节的内容，设备演练签到后发放的签到卡代号为 **REF-4F517470DD**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 8.969000000040978,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9702,
+    "output_tokens": 222,
+    "total_tokens": 9924
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9702,
+    "output_tokens": 222,
+    "total_tokens": 9924
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-4f517470dd",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "057738b4e5b17527ffaef7920927be18958e50c2cad4660472103a384aa1a2cb",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-4f517470dd",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 9.531000000075437
+}

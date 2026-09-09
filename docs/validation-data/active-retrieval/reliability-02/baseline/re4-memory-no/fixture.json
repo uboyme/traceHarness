@@ -1,0 +1,90 @@
+{
+  "id": "re4-memory-no",
+  "family": "memory",
+  "domain": 0,
+  "mode": "omitted",
+  "language": "zh",
+  "question": "陶艺交接时要使用哪张凭证？",
+  "source_title": "陶艺展览记录",
+  "source_body": "本次交接不使用凭证。",
+  "expected": "no-evidence",
+  "value_type": "code",
+  "control": false,
+  "discovery": true,
+  "seed": 1609,
+  "identity": "re4-memory-no",
+  "value": "REF-689C399B2D",
+  "source": "本次交接不使用凭证。",
+  "domain_name": "陶艺展览",
+  "project_id": "project-689c399b2d",
+  "source_id": "source-689c399b2d",
+  "memory_id": "fact-689c399b2d",
+  "fact_slot": "slot-689c399b2d",
+  "skill_id": "manual-689c399b2d",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-689c399b2d-00",
+      "slot": "background-slot-00",
+      "body": "陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-01",
+      "slot": "background-slot-01",
+      "body": "陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-02",
+      "slot": "background-slot-02",
+      "body": "陶艺展览查询分工第2项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-03",
+      "slot": "background-slot-03",
+      "body": "陶艺展览查询分工第3项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-04",
+      "slot": "background-slot-04",
+      "body": "陶艺展览查询分工第4项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-05",
+      "slot": "background-slot-05",
+      "body": "陶艺展览查询分工第5项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-06",
+      "slot": "background-slot-06",
+      "body": "陶艺展览查询分工第6项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-07",
+      "slot": "background-slot-07",
+      "body": "陶艺展览查询分工第7项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-08",
+      "slot": "background-slot-08",
+      "body": "陶艺展览查询分工第8项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-09",
+      "slot": "background-slot-09",
+      "body": "陶艺展览查询分工第9项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-10",
+      "slot": "background-slot-10",
+      "body": "陶艺展览查询分工第10项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-689c399b2d-11",
+      "slot": "background-slot-11",
+      "body": "陶艺展览查询分工第11项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+    }
+  ],
+  "predecessor_value": null,
+  "grading": "no-evidence",
+  "material_digest": "2f14fc96ca48316cc6307e0a33a491513624d0716b5c046037bf7aed61808c0b"
+}

@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-english",
+  "case_id": "o-english",
+  "seed": 113,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "2c3ea29a-f068-4afa-9386-6c8efc70fd7b",
+  "target_start_seq": 28,
+  "answer": "The validation code from the equipment check is visible in the `shell` tool output preview: `exit_code=0`. This indicates the check completed successfully with no errors.\n\nNo further tool calls are needed — the validation code is `0`.\n\n0",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 5.422000000020489,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4890,
+    "output_tokens": 49,
+    "total_tokens": 4939
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13425,
+    "output_tokens": 72,
+    "total_tokens": 13497
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 12.312999999965541
+}

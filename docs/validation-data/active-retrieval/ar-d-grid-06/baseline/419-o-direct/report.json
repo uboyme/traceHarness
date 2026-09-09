@@ -1,0 +1,38 @@
+{
+  "identity": "419-o-direct",
+  "case_id": "o-direct",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "2a91b54e-e859-48c0-8f77-26956c262382",
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 0,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 4,
+    "estimated_usage": 0,
+    "input_tokens": 2904,
+    "output_tokens": 20,
+    "total_tokens": 2924
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 27.35999999998603
+}

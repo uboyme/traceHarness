@@ -1,0 +1,78 @@
+{
+  "identity": "227-o-direct",
+  "case_id": "o-direct",
+  "seed": 227,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "772cab22-05f1-4928-9e17-b2e494aed181",
+  "target_start_seq": 28,
+  "answer": "交接校验码是 `REF-9ED2D03FE5`。",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 30.905999999959022,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 25911,
+    "output_tokens": 868,
+    "total_tokens": 26779
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 34309,
+    "output_tokens": 891,
+    "total_tokens": 35200
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 70,
+      "effect_id": "cac90109-b908-42c9-940d-a1213d7f2e71",
+      "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "cac90109-b908-42c9-940d-a1213d7f2e71",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "cac90109-b908-42c9-940d-a1213d7f2e71",
+        "offset": 1272,
+        "part": "content"
+      }
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "case_sensitive": true,
+        "count": 10,
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "cac90109-b908-42c9-940d-a1213d7f2e71",
+        "offset": 0,
+        "part": "content",
+        "query": "交接校验码"
+      }
+    }
+  ],
+  "search_read_count": 3,
+  "output_executions": 1,
+  "elapsed_seconds": 36.10999999998603
+}

@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "baseline_commit": "a54d431",
+  "files": {
+    "manifest.json": "916897e8721431882b35aaf59b676a75b7c5f97afa6c51eaed018851133eeeba",
+    "contract.py": "d4d2f491fff959406d8a1c26b9058b0e97188bed7f6577efb7104194e8cfad62"
+  },
+  "acceptance": {
+    "case_count": 24,
+    "per_family_count": 6,
+    "repeats": 3,
+    "minimum_joint_pass_per_model": 66,
+    "minimum_joint_pass_per_family": 15,
+    "scope_violations": 0,
+    "duplicate_side_effects": 0,
+    "unsupported_test_facts": 0,
+    "stale_memory_as_current": 0,
+    "replay_invariant_failures": 0,
+    "minimum_discovery_gain_cases": 1
+  },
+  "repeat_seeds": [
+    113,
+    227,
+    419
+  ],
+  "limits": {
+    "max_steps": 12,
+    "max_output_tokens": 2048,
+    "temperature": 0,
+    "request_window_tokens": 32000,
+    "token_safety_margin": 2048,
+    "context_total_bytes": 30000,
+    "context_kind_bytes": 18000,
+    "context_item_bytes": 6000,
+    "context_max_blocks": 6,
+    "context_max_exclusions": 40,
+    "max_query_bytes": 512,
+    "history_page_bytes": 1600,
+    "history_page_messages": 4,
+    "history_max_blocks": 16,
+    "history_max_depth": 16,
+    "history_max_source_events": 4000,
+    "history_max_source_bytes": 4000000,
+    "max_requests": 8,
+    "max_corpus_items": 80,
+    "max_corpus_bytes": 200000,
+    "max_catalog_bytes": 80000,
+    "max_tool_output_chars": 1600,
+    "provider_timeout_seconds": 60,
+    "max_model_attempts": 3
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "identity": "re1-business-zh",
+  "case_id": "re1-business-zh",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "9927eb5a-e017-4c9c-9c03-47d9f13bc57d",
+  "target_start_seq": 28,
+  "answer": "核验代号是：`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 6.032000000006519,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8591,
+    "output_tokens": 89,
+    "total_tokens": 8680
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16505,
+    "output_tokens": 112,
+    "total_tokens": 16617
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 1
+      }
+    }
+  ],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 10.077999999979511
+}

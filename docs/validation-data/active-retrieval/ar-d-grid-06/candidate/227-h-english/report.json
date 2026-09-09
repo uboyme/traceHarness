@@ -1,0 +1,85 @@
+{
+  "identity": "227-h-english",
+  "case_id": "h-english",
+  "seed": 227,
+  "family": "history",
+  "question": "What was the temporary handover code we discussed earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "3968be29-5177-484b-80af-b26ea3f1dcfd",
+  "target_start_seq": 152,
+  "answer": "The temporary handover code we discussed earlier is **REF-1334BDB95D**.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 22.155999999959022,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14918,
+    "output_tokens": 382,
+    "total_tokens": 15300
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54146,
+    "output_tokens": 412,
+    "total_tokens": 54558
+  },
+  "evidence": [
+    {
+      "context_seq": 171,
+      "reference": {
+        "block_id": "3e074cc14a4243dbe49d4545334c9373b12c4e08ed4fe3a7f47bdae085e3d4fd",
+        "cursor": {
+          "block_id": "3e074cc14a4243dbe49d4545334c9373b12c4e08ed4fe3a7f47bdae085e3d4fd",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "5cc07a329cf3ef113cc1220fc93fc81b790a8bb4bbca3a18269f22e2b9b258dd",
+          "event_id": "e3237eb2-3184-47c2-a7e0-bb6f8c0d8a6a",
+          "seq": 111,
+          "stream_id": "session:3968be29-5177-484b-80af-b26ea3f1dcfd",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "45d97837521e6b6d91b41ac94ff43529407fd4a8d51276bc35f4ee4a58512a8d"
+      }
+    },
+    {
+      "context_seq": 184,
+      "id": "3e074cc14a4243dbe49d4545334c9373b12c4e08ed4fe3a7f47bdae085e3d4fd",
+      "version": "45d97837521e6b6d91b41ac94ff43529407fd4a8d51276bc35f4ee4a58512a8d",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "handover code"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "3e074cc14a4243dbe49d4545334c9373b12c4e08ed4fe3a7f47bdae085e3d4fd",
+        "cursor": {
+          "block_id": "3e074cc14a4243dbe49d4545334c9373b12c4e08ed4fe3a7f47bdae085e3d4fd",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 55.21799999999348
+}

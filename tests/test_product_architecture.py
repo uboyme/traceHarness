@@ -38,10 +38,10 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "8ddf6930875fbe7fc5b6ca27ae46ec352e1f6ed1cd63c4e0947d7aa0c81c7057"
+        "47c8f5ac680ed0e935694da9f076ad5df56c35c9c78d83a351b0e7989f7836ca"
     ),
     "runtime/agent_runtime.py": (
-        "d1a8eaf278775d46b00faf7ec1a8769622aac569d291000874387b4dcbf09b7f"
+        "f598e98d0b2bd3d488f8fa86813f6f7304bf5a5128274604e610e0d34ef9b9ca"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
@@ -52,6 +52,12 @@ PROTECTED_SOURCES = {
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+ADR-0062 adds only event-derived repeated-denial signals at the Continuation seam;
+AgentLoop records config and forwards evidence, without Product or Tool authority.
+
+ADR-0061 AR-B adds HistorySearchTool beside the existing HistoryDisclosureTool,
+borrowing the same Session reader and Context policy. No lifecycle or Product grant changes.
 
 ADR-0057 D adds a frozen summary/input source variant and one ordinary summary Step,
 sharing the original model permit, Budget, cancellation and lifecycle. No Product
@@ -160,10 +166,10 @@ def test_the_four_protected_files_are_byte_identical() -> None:
         assert hashlib.sha256(raw).hexdigest() == expected, relative
 
 
-def test_the_package_version_is_the_v080_release() -> None:
+def test_the_package_version_is_the_v090_release() -> None:
     """The v0.8 release still has one package version source."""
 
-    assert __version__ == "0.8.0"
+    assert __version__ == "0.9.0"
 
 
 def test_no_existing_owner_learns_about_the_product_domain() -> None:

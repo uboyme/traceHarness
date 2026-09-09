@@ -1,0 +1,97 @@
+{
+  "arm": "candidate",
+  "cases": 10,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "control-greeting",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-repeat",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-rewrite",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-sum",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-absent",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-business-en",
+      "requests": 5,
+      "attempts_started": 5,
+      "attempts_ended": 5,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-business-other",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-business-zh",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-integrity",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re1-process",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "identity": "227-s-absent",
+  "case_id": "s-absent",
+  "seed": 227,
+  "family": "skill",
+  "question": "档案整理手册有没有规定车辆加油的折扣码？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "3ca828ac-b045-4a17-a64a-6807416cb2c3",
+  "target_start_seq": 1,
+  "answer": "根据当前提供的参考信息，档案整理手册的内容非常简短：\"本手册说明档案整理工作。\"（本手册说明档案整理工作。）\n\n这个描述明确指出手册的主题是档案整理工作，没有提及任何与车辆加油、折扣码相关的内容。\n\n因此，档案整理手册没有规定车辆加油的折扣码。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 14.687999999965541,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10051,
+    "output_tokens": 300,
+    "total_tokens": 10351
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10051,
+    "output_tokens": 300,
+    "total_tokens": 10351
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "2cf3d8e8f5b8e6d79f20ae6d34fcf4575668638e9362e3a2ab2ffe43e4694f7f",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-d14c9273f7",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 15.265999999945052
+}

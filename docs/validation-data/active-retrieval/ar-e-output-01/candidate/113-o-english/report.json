@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-english",
+  "case_id": "o-english",
+  "seed": 113,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "5c651f9b-d175-4fdf-9c0d-a13e7c75829a",
+  "target_start_seq": 28,
+  "answer": "The earlier equipment check executed `python check.py`, and its output showed exit code `0` (as seen in the retained output envelope: `\"exit_code=0\"`). This is the validation code returned by the equipment check.\n\nNo further interpretation or action is needed — the validation code is `0`.",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.907000000006519,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4903,
+    "output_tokens": 61,
+    "total_tokens": 4964
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13382,
+    "output_tokens": 84,
+    "total_tokens": 13466
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 9.76500000001397
+}

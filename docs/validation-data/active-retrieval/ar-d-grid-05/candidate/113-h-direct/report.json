@@ -1,0 +1,95 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "1696405a-998a-43c3-a350-a13018e1a018",
+  "target_start_seq": 152,
+  "answer": "从当前的历史参考中，我找到了设备交接的口令。在第一个历史记录中明确提到：\n\n\"设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 REF-34772572F2。",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 60.96900000004098,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 27322,
+    "output_tokens": 1186,
+    "total_tokens": 28508
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 64895,
+    "output_tokens": 1216,
+    "total_tokens": 66111
+  },
+  "evidence": [
+    {
+      "context_seq": 210,
+      "id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+      "version": "782567288a69a422b035412642b548e91f6961c04a7f546867ef6113c254b5bf",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+        "cursor": {
+          "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+        "cursor": {
+          "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+        "cursor": {
+          "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+        "cursor": {
+          "block_id": "0e84c08c2201fb93982b58ce5017caebf616fd9bfde257d4113af01d52a9fdf7",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 96.71799999999348
+}

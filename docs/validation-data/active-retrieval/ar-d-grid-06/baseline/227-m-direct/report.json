@@ -1,0 +1,55 @@
+{
+  "identity": "227-m-direct",
+  "case_id": "m-direct",
+  "seed": 227,
+  "family": "memory",
+  "question": "项目已批准的设备演练人数上限是多少？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "5bd94c76-e97c-48b4-95d5-81d16945ef90",
+  "target_start_seq": 1,
+  "answer": "The approved device drill participant limit for this project is 47 people.\n\nThis information comes directly from the approved fact memory with ID \"fact-c2b7d793f8\", which states: \"已批准设备演练的人数上限为 47 人。\" (The approved device drill participant limit is 47 people.)",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 18.561999999918044,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 10648,
+    "output_tokens": 257,
+    "total_tokens": 10905
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 10648,
+    "output_tokens": 257,
+    "total_tokens": 10905
+  },
+  "evidence": [
+    {
+      "context_seq": 22,
+      "id": "fact-c2b7d793f8",
+      "version": "e99aa0b7299343373d3bc9d7d21bbd496d13eaedb6d3b74d6f4d34c943569070",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-c2b7d793f8",
+        "requested_tier": "section",
+        "version": "e99aa0b7299343373d3bc9d7d21bbd496d13eaedb6d3b74d6f4d34c943569070"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 20.655999999959022
+}

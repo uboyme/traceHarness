@@ -1,0 +1,95 @@
+{
+  "identity": "113-h-late-page",
+  "case_id": "h-late-page",
+  "seed": 113,
+  "family": "history",
+  "question": "之前提过检修集合点，具体在哪儿？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "a2181d0e-6d2e-4649-8a68-f6265ed49d9c",
+  "target_start_seq": 152,
+  "answer": "在提供的历史记录中，有一条明确提到了“检修集合点”的位置：\n\n\"请记下这条记录，只回复已记下：检修集合点是 东侧第38号资料柜。\"\n\n因此，检修集合点具体在**东侧第38号资料柜**。",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 68.64099999994505,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 27218,
+    "output_tokens": 1171,
+    "total_tokens": 28389
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 64791,
+    "output_tokens": 1201,
+    "total_tokens": 65992
+  },
+  "evidence": [
+    {
+      "context_seq": 210,
+      "id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+      "version": "4519681a7fcf258c51726ae3a8615ac0608f043a2e8a7760ba1f9e07d61e0e37",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+        "cursor": {
+          "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+        "cursor": {
+          "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+        "cursor": {
+          "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+        "cursor": {
+          "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 113.03099999995902
+}

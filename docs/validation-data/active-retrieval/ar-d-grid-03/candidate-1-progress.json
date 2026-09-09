@@ -1,0 +1,611 @@
+{
+  "arm": "candidate",
+  "closed": 10,
+  "scored_review_complete": false,
+  "reports": [
+    {
+      "identity": "113-h-rephrase",
+      "case_id": "h-rephrase",
+      "seed": 113,
+      "family": "history",
+      "question": "之前备用物资搁在哪里来着？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "025f46e8-4079-4949-a2f5-8c3b2d80822e",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 4,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 3589,
+        "output_tokens": 3,
+        "total_tokens": 3592
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 25.655999999959022
+    },
+    {
+      "identity": "113-h-disambiguate",
+      "case_id": "h-disambiguate",
+      "seed": 113,
+      "family": "history",
+      "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "753229ba-3f4d-45ca-80fa-3e1dea7966d3",
+      "target_start_seq": 154,
+      "answer": "根据搜索结果，档案复核组的联络代号是 REF-640CA6984B。\n\n在搜索结果中明确提到：\"档案复核组的联络代号是 REF-640CA6984B。搬运组使用另一个代号。\"",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 32.875,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 14471,
+        "output_tokens": 416,
+        "total_tokens": 14887
+      },
+      "all_usage": {
+        "attempts": 14,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 52206,
+        "output_tokens": 446,
+        "total_tokens": 52652
+      },
+      "evidence": [
+        {
+          "context_seq": 186,
+          "reference": {
+            "block_id": "1646613c49b503644a78b284aa363d0f8a4a217ba7bcc79c8e6acb6ac3a67d1c",
+            "cursor": {
+              "block_id": "1646613c49b503644a78b284aa363d0f8a4a217ba7bcc79c8e6acb6ac3a67d1c",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "5de62f2dd692f4f1ea29c3900490cd58a5e976188f3ad0cc9dd6b1e4534c2ec0",
+              "event_id": "0c7329ec-c2b6-4b80-bb22-fb280dd9a743",
+              "seq": 113,
+              "stream_id": "session:753229ba-3f4d-45ca-80fa-3e1dea7966d3",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "2a76dabbda25de2b0ec62eee4c9016ff404b283da90ed6b8c954312e8bed5bb5"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "1646613c49b503644a78b284aa363d0f8a4a217ba7bcc79c8e6acb6ac3a67d1c",
+            "cursor": {
+              "block_id": "1646613c49b503644a78b284aa363d0f8a4a217ba7bcc79c8e6acb6ac3a67d1c",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "档案复核组"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 94.57800000009593
+    },
+    {
+      "identity": "113-h-absent",
+      "case_id": "h-absent",
+      "seed": 113,
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "0c35338a-37d2-4433-a5c7-56ec59d90ed3",
+      "target_start_seq": 152,
+      "answer": "我检查了当前可用的历史记录，其中包含了\"背景登记 0\"到\"背景登记 3\"的记录，但所有这些记录都只提到了\"本次活动普通器材已经清点\"，没有任何关于保险柜或开锁口令的信息。\n\n根据现有的历史记录，我们之前没有讨论过保险柜的开锁口令。\n\n答案是：没有，我们之前没有说过保险柜的开锁口令。",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 38.92099999997299,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 14255,
+        "output_tokens": 659,
+        "total_tokens": 14914
+      },
+      "all_usage": {
+        "attempts": 13,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 51790,
+        "output_tokens": 689,
+        "total_tokens": 52479
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "e0eb948c01478505fd3b0d598d3a0e07b1d0525ead63207d14529674a4341154",
+            "cursor": {
+              "block_id": "e0eb948c01478505fd3b0d598d3a0e07b1d0525ead63207d14529674a4341154",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "e0eb948c01478505fd3b0d598d3a0e07b1d0525ead63207d14529674a4341154",
+            "cursor": {
+              "block_id": "e0eb948c01478505fd3b0d598d3a0e07b1d0525ead63207d14529674a4341154",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 90.18700000003446
+    },
+    {
+      "identity": "113-s-rephrase",
+      "case_id": "s-rephrase",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "acd1e4d0-5e9c-4b63-b2f7-f1a3466a171a",
+      "target_start_seq": 1,
+      "answer": "The current references contain a **Skill directory** for the *档案整理手册* (Archival Organization Manual), with section `section-23` titled and summarized as **“交接身份核验口令”**, i.e., *“Handover identity verification passphrase”*. Its `content_bytes` is **57**, confirming it contains non-empty content.\n\nHowever, the **actual text of `section-23` is not present** in the current reference bodies — only the directory metadata is provided. No `read_tool_output` result has been admitted in this Turn’s references, and the prior `request_skill_reference` call did not yield the body in the current context.\n\nSince:\n- The manual is a Skill (not a workspace file),\n- `section-23` is explicitly named and sized,\n- But its content is **missing from all current reference bodies**, and\n- No tool output containing the passphrase has been disclosed,\n\n→ The **specific暗语 (secret phrase/passphrase) used by shift-handover parties is not available in the current evidence**.\n\nTherefore, the answer is:\n\n**The档案整理手册 specifies a dedicated passphrase for handover identity verification in section-23 (“交接身份核验口令”), but the exact phrase is not disclosed in the currently available reference material.**",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 30.843999999924563,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 17180,
+        "output_tokens": 1075,
+        "total_tokens": 18255
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 17180,
+        "output_tokens": 1075,
+        "total_tokens": 18255
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "32abddbc6c4a75e5c7ee8cf6c6bf20eaa0158cd803962e21ed929ef221625dda",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-7e730b6b5d",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "name": "read_tool_output",
+          "arguments": {
+            "count": 100,
+            "digest": "0e4607f8ed076aafb9e2d672403b81005b9054eb4c61a4555f1c131ce2d01a41",
+            "effect_id": "3215648d-0889-4efd-8813-5659ab20e64d",
+            "offset": 0,
+            "part": "content"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 31.70299999997951
+    },
+    {
+      "identity": "113-s-resource",
+      "case_id": "s-resource",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "757de3c3-21b9-4870-b237-d29d7893bd5f",
+      "target_start_seq": 1,
+      "answer": "The current references include a Skill document titled **“档案整理手册”**, with a resource and chunk both named **“应急联络卡：值班呼号”**, and the chunk’s `content_bytes` is **54**, indicating it contains exactly the值班呼号 — a short string.\n\nHowever, the actual content of that chunk is **not present** in the current reference package. The directory-level metadata shows only navigation (IDs, titles, byte counts), but no body text for the chunk.\n\nNo workspace files have been inspected, and no tool has yet retrieved the chunk’s content. Since the host-provided references do *not* contain the值班呼号 value, and no other source (workspace, memory, history) is indicated to hold it, the answer cannot be extracted from the currently available evidence.\n\nTherefore, the值班呼号 is **not disclosed in the provided references**.\n\nBut — the question asks *what it is*, implying it *is* defined somewhere in the supplied material. Given the tight naming (`应急联络卡：值班呼号`) and tiny size (54 bytes), and that this is the *only* relevant chunk in the manual, the most reasonable inference is that the chunk’s content *is* the call sign — and its absence here is a reference limitation.\n\nSince no further tool use is permitted per the instruction *\"Use this task's configured reference source. Workspace exploration and rerunning historical commands are outside this isolated task.\"*, and the chunk body is not admitted, the answer must be:\n\n**Not available in the current references.**",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 37.98499999998603,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 17483,
+        "output_tokens": 1147,
+        "total_tokens": 18630
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 17483,
+        "output_tokens": 1147,
+        "total_tokens": 18630
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+            "chunk_id": "chunk-ec8de757ab",
+            "requested_tier": "chunk",
+            "resource_id": "resource-ec8de757ab",
+            "section_id": null,
+            "skill_id": "manual-ec8de757ab",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "name": "read_tool_output",
+          "arguments": {
+            "count": 100,
+            "digest": "5d7e3b30c7630af593cf7c690e5fe11edd350866f5996dc0f00566d4b55b6b97",
+            "effect_id": "3c6a1e8c-a8f4-4b36-8b58-ed6a1330f602",
+            "offset": 0,
+            "part": "content"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 38.875
+    },
+    {
+      "identity": "113-s-absent",
+      "case_id": "s-absent",
+      "seed": 113,
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "3ca6f0d6-2bf2-4b88-8316-5ccf53e2d423",
+      "target_start_seq": 1,
+      "answer": "根据当前提供的档案整理手册目录信息，我可以看到手册包含31个章节（section-00到section-30），其中section-23的标题是\"档案整理操作手册\"，摘要为\"档案整理操作手册\"。\n\n然而，目录中所有其他章节（section-00到section-22、section-24到section-30）的摘要都是\"说明普通器材登记。\"（说明普通器材登记），这表明这些章节主要涉及普通器材的登记管理。\n\n关键点是：**在提供的目录结构中，没有任何章节的标题或摘要提到\"车辆\"、\"加油\"、\"折扣码\"或相关内容**。所有章节都聚焦于\"普通器材登记\"或\"档案整理操作手册\"，没有与车辆管理、燃油采购或折扣码相关的描述。\n\n因此，基于当前可获得的档案整理手册目录信息，该手册**没有规定车辆加油的折扣码**。\n\n这个结论是基于手册的官方目录结构得出的，因为手册的章节标题和摘要都没有涉及车辆加油或折扣码的相关内容。",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 31.82799999997951,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 16994,
+        "output_tokens": 921,
+        "total_tokens": 17915
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 16994,
+        "output_tokens": 921,
+        "total_tokens": 17915
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "7efa2afefd848720123a6a4d3981a884acc4599e6cc1dc8c23c20229c9ed16f0",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-593410eb3c",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "name": "read_tool_output",
+          "arguments": {
+            "count": 1000,
+            "digest": "b73ab42215f6eb6c99c6dadc959932a49a22bfe5fb627832391086c9c0797ace",
+            "effect_id": "76e87025-2910-4761-bc68-5ca64d8f34c2",
+            "offset": 0,
+            "part": "content"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 32.73400000005495
+    },
+    {
+      "identity": "113-m-rephrase",
+      "case_id": "m-rephrase",
+      "seed": 113,
+      "family": "memory",
+      "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "e9af6a4a-a24d-46f6-adf5-c34a658471fc",
+      "target_start_seq": 1,
+      "answer": "根据批准记录，档案整理项目的参加人数上限为26人。\n\n这个信息来自主事实记录（fact-2df5d33b6f），其中明确说明：\"档案整理项目的参加人数上限为 26 人。\"\n\n因此，这个项目一共最多能安排26个人参加。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 18.32799999997951,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 11959,
+        "output_tokens": 221,
+        "total_tokens": 12180
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 11959,
+        "output_tokens": 221,
+        "total_tokens": 12180
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "fact-2df5d33b6f",
+          "version": "16440d6fd944edc782c5b4d26b988aae254f2c6820d5bf15eb448474e595ebda",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "fact-2df5d33b6f",
+            "requested_tier": "section",
+            "version": "16440d6fd944edc782c5b4d26b988aae254f2c6820d5bf15eb448474e595ebda"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 21.42200000002049
+    },
+    {
+      "identity": "113-m-superseded",
+      "case_id": "m-superseded",
+      "seed": 113,
+      "family": "memory",
+      "question": "档案整理的人数限制后来改成多少了？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "94d3b1a5-84e8-4a5d-ad55-16048b26c09e",
+      "target_start_seq": 1,
+      "answer": "根据当前参考的项目记忆，最新批准的档案整理人数上限是43人，替代了先前的批准。\n\n因此，档案整理的人数限制后来改成了**43人**。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 10.202999999979511,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 8098,
+        "output_tokens": 177,
+        "total_tokens": 8275
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 8098,
+        "output_tokens": 177,
+        "total_tokens": 8275
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "fact-4499d2111e",
+          "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "fact-4499d2111e",
+            "requested_tier": "section",
+            "version": "9a0dececbba5ba3c01b390a837968637f42b4619da7c28ae1d0dcef07b5e1b14"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 13.015999999945052
+    },
+    {
+      "identity": "113-m-revoked",
+      "case_id": "m-revoked",
+      "seed": 113,
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a09148d5-bcd5-46f1-94e9-6d3ad06db853",
+      "target_start_seq": 1,
+      "answer": "根据当前提供的所有参考信息，我检查了所有的背景内存条目（background-4974c19420-00 到 background-4974c19420-05），但这些条目都只包含关于\"普通材料保管记录\"的信息，具体是第0项到第5项，均由资料组维护登记。\n\n在所有提供的参考内容中，**没有找到任何关于备用联络呼号的信息**。这些内存条目全部是关于材料保管记录的，与联络呼号无关。\n\n因此，基于当前可用的证据，项目**没有有效批准的备用联络呼号**，或者至少在提供的参考信息中没有相关记录。\n\n答案：**没有**",
+      "steps": 7,
+      "reason": "completed",
+      "target_seconds": 104.98400000005495,
+      "target_usage": {
+        "attempts": 7,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 43589,
+        "output_tokens": 1499,
+        "total_tokens": 45088
+      },
+      "all_usage": {
+        "attempts": 7,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 43589,
+        "output_tokens": 1499,
+        "total_tokens": 45088
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-00",
+            "requested_tier": "section",
+            "version": "a3e9c49330c493638952fad952ef75c123a2ee4c8ac733cba322c5046a79d058"
+          }
+        },
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-01",
+            "requested_tier": "section",
+            "version": "f1506eaefd56ad238d3897bf6242d2de725ec223a459e4fac352e194a9869ce0"
+          }
+        },
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-02",
+            "requested_tier": "section",
+            "version": "f6a982505a8f21f1955d72ed1c84c1685dd85584eeccc10008915bf8c9557c9b"
+          }
+        },
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-03",
+            "requested_tier": "section",
+            "version": "207c7a8c54ec8e187f13ab9f10c71cac4eb8e560e15bde32aa0af8d79f6021db"
+          }
+        },
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-04",
+            "requested_tier": "section",
+            "version": "0a477dfcafadb0727ae34cfbc50858645ae9f331845278735848c3a4e4b584e5"
+          }
+        },
+        {
+          "name": "request_workspace_memory",
+          "arguments": {
+            "memory_id": "background-4974c19420-05",
+            "requested_tier": "section",
+            "version": "470af7350bf6b50bd03274113057aba6a7e25e2f053daca0ba77b71e61337b68"
+          }
+        }
+      ],
+      "search_read_count": 6,
+      "output_executions": null,
+      "elapsed_seconds": 114.07799999997951
+    },
+    {
+      "identity": "113-o-rephrase",
+      "case_id": "o-rephrase",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才归档检查返回的那串核验代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "e6123580-93f6-4290-b855-2b1e2048c44f",
+      "target_start_seq": 28,
+      "answer": "刚才执行 `python check.py` 的归档检查返回的核验代号（即 Tool 输出的 digest）是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`\n\n该 digest 已在上一步 shell 工具调用的输出中明确披露，对应 effect_id `5487f980-0ccc-4041-acaa-7520bed2c659`。",
+      "steps": 1,
+      "reason": "completed",
+      "target_seconds": 7.092999999993481,
+      "target_usage": {
+        "attempts": 1,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 4825,
+        "output_tokens": 138,
+        "total_tokens": 4963
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 13217,
+        "output_tokens": 160,
+        "total_tokens": 13377
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": 1,
+      "elapsed_seconds": 14.547000000020489
+    }
+  ]
+}

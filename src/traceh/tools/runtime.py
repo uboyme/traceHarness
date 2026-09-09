@@ -604,6 +604,7 @@ class ToolRuntime:
         field = "content" if "content" in outcome_data else "message"
         content, data, retained = prepare_tool_output(
             effect_id=effect_id, content=outcome_data[field],
+            tool_name=call.name, status=outcome_data["status"],
             data=outcome_data.get("data", {}),
             evidence=tuple(outcome_data.get("evidence", [])),
             max_chars=self.max_output_chars,

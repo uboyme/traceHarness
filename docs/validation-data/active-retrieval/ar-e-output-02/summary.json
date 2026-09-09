@@ -1,0 +1,268 @@
+{
+  "decision": "DO_NOT_MERGE_EXPLORATORY_CONTEXT_CHANGE",
+  "production_change_retained": false,
+  "previous_AR_D_acceptance": "NO-GO unchanged",
+  "scope": "12 paired output tasks, two seeds, same questions; new seed changes positive values, not the negative source. Exploratory, not held-out questions or release acceptance.",
+  "interpretation": "Two additional successes concentrated in seed 113. Wrong-source nearby tasks now exhausted steps in both seeds; five field misattributions remain. Evidence is insufficient to establish a stable general improvement; do not change the production frozen renderer on this basis.",
+  "arms": {
+    "baseline": {
+      "joint_pass": 3,
+      "cases": 12,
+      "field_misattribution": 6,
+      "max_steps_exceeded": 0,
+      "replayed_requests": 63,
+      "replay_errors": 0,
+      "invariant_errors": 0,
+      "unfinished_attempts": 0,
+      "usage": {
+        "attempts": 63,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 383393,
+        "output_tokens": 5324,
+        "total_tokens": 388717
+      }
+    },
+    "candidate": {
+      "joint_pass": 5,
+      "cases": 12,
+      "field_misattribution": 5,
+      "max_steps_exceeded": 2,
+      "replayed_requests": 67,
+      "replay_errors": 0,
+      "invariant_errors": 0,
+      "unfinished_attempts": 0,
+      "usage": {
+        "attempts": 67,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 328756,
+        "output_tokens": 3348,
+        "total_tokens": 332104
+      }
+    }
+  },
+  "treatment_visible_in_target_requests": {
+    "baseline": 0,
+    "candidate": 12
+  },
+  "reviews": [
+    {
+      "arm": "baseline",
+      "identity": "113-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output keyword search returned no match and was delivered before the negative answer.",
+      "field_misattribution": false,
+      "report_sha256": "32eabfcd00069efb7370dc38367bce3865004490944ea6fec4129641f11fe86f",
+      "source_events_sha256": "4fca9f17cad8021ed8b13f5a685d0ff965582d9de1bada44b63b4d6bc86cd0a9"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-direct",
+      "joint_pass": false,
+      "reason": "Wrong-source calls or partial reading did not reach the requested evidence.",
+      "field_misattribution": false,
+      "report_sha256": "cbfdfdc7a001035cfee274ed88e8ed68576d423e784b08ed9b89c5a189e267e7",
+      "source_events_sha256": "a7615e8ec363ccbc692f804cf7dade03e47ae3e71b94e2d69fc6da8f94bce55a"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "583346bde7e522ef5df7b60e9770e9e2101841d93cb79acccff6860957130362",
+      "source_events_sha256": "599ad371242a00eed398ae83ec4384537a0c036f412c83f1156becb661036d5d"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-nearby",
+      "joint_pass": false,
+      "reason": "Wrong-source calls or partial reading did not reach the requested evidence.",
+      "field_misattribution": false,
+      "report_sha256": "0d401daa4aabbb5555c51504b948932eacb57e1b6a1181305e60c7d709ea4342",
+      "source_events_sha256": "947c52ac1d23032e124c1937af8720c38825f3a33868bdb11370598b57fc7996"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "1fe5dd8c4582985b309fc9cbbee2062550872b318da55888485e955d253c27b4",
+      "source_events_sha256": "539341f12c2d275dae4230931953f0df109165d671791636d9e67f73d26b3bea"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "800e983429aa3f98e025af404c9629112478fe1ccf3f08dd160af1eff4c5083a",
+      "source_events_sha256": "3274aed8a656dbcbeda4e5c7a5cf9569559759e548c9efb8a74465a41a42b5c1"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output keyword search returned no match and was delivered before the negative answer.",
+      "field_misattribution": false,
+      "report_sha256": "3d5cfcefc9c1f2e3dada8c0d69314dcfc7ad6b7588f62a3d42a7e1d631f47089",
+      "source_events_sha256": "5d86f7e3f8c25c5fafb546005bf9fa77c05e907a602a21ad98092a02bc0df3f6"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-direct",
+      "joint_pass": true,
+      "reason": "Original evidence was delivered and the requested value is correct.",
+      "field_misattribution": false,
+      "report_sha256": "2af58b878d31d7750c6bbe21f9bd3f60d8ef0e33cbf62a91588a06f449bf3cde",
+      "source_events_sha256": "4ac799160d1bb2ad1d092d147e00b11ad272e00ab74bd7bc8a3992e071bea385"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "929b4e6a2180fb01fe46268d92ebd40724f486a56987cbf1c112afe551fdd292",
+      "source_events_sha256": "f04b916baba9fc1ec801099ca5b99b046599a4476980585c43463e1e67c1087e"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-nearby",
+      "joint_pass": false,
+      "reason": "Wrong-source calls or partial reading did not reach the requested evidence.",
+      "field_misattribution": false,
+      "report_sha256": "0453543360cd040d0deedad18f2246bda586640414432d2e8b6d7a5d31ffc0a3",
+      "source_events_sha256": "47646d61a374c838f57df91049fada580454148ab102ba55596777c5aace0ea3"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "259305d297f1bda730d3c3aef1adb4593c38084f05d4125cd14e99d02180f1e8",
+      "source_events_sha256": "88e490a5ee6e40922a95347e7768bab72745248aa3ff7ebdde0259a81fee33fe"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "8d93410099d9efc435b7b3986b525bfeb61c92dd853a644be991752c856bb85c",
+      "source_events_sha256": "52268f2b6f402911455c2fc97e84bb5f9fb53bbdc8fcdf3365845ea349837451"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output keyword search returned no match and was delivered before the negative answer.",
+      "field_misattribution": false,
+      "report_sha256": "7a5504fff76cf1aa31ef995997b680f74a675a1a287f85fdd7e8d89ec8309857",
+      "source_events_sha256": "1e380393a9e57cb548772209ef4c0d0039c23a1026c0d5ff1a5f779b1fb001c3"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-direct",
+      "joint_pass": true,
+      "reason": "Original evidence was delivered and the requested value is correct.",
+      "field_misattribution": false,
+      "report_sha256": "a8ec31580dfe76e9a94f644a710fee1ba61065290197787a28cd573d58c9fbaf",
+      "source_events_sha256": "b62a59766c145146eb8ee76b0d02570789e54937cfaeb2ce9019f6f6e6e27aa9"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "090532624c415960b9a0842344a640f4a5c54d8abcd0ed597d65d24fdd00cb3d",
+      "source_events_sha256": "42de35013ce7dba1552df7854836cf3ad886ce1d40e5f1616d9194ca166dccef"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nearby",
+      "joint_pass": false,
+      "reason": "Wrong-source calls or partial reading did not reach the requested evidence.",
+      "field_misattribution": false,
+      "report_sha256": "1060062173cae212d273aac798357c10207b9ec13a04796a65cb97d308e18002",
+      "source_events_sha256": "afe78078ac71a11f9fa1152e39b155f6d6d8dbca47cbb42c2585bdd1244e447d"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nonzero",
+      "joint_pass": true,
+      "reason": "Original evidence was delivered and the requested value is correct.",
+      "field_misattribution": false,
+      "report_sha256": "1024bbcf979956905b3af7f1bc98578ef0829a9eb43ca2afec5eac6265a83aae",
+      "source_events_sha256": "47dde6b9691b07bb345d5bbb429b8f7eb07f021604cd335b60ce9f4461bd7082"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "b38a8f7a39b839d66f7cbe199064518c910583174e7329749d0f1e27f43ad01e",
+      "source_events_sha256": "defb3a2565063ccbca6819ade44e649d61f33a94280bcaa5d3b1ccba81e4dab7"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output keyword search returned no match and was delivered before the negative answer.",
+      "field_misattribution": false,
+      "report_sha256": "c1e51b54f5eb554e7bac2addb7bc56140ec4f4e921ac359778463830bbff9511",
+      "source_events_sha256": "60863cc82a22eaef4ad309200becdb32ca9509d352922cc9d30128e322e471f0"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-direct",
+      "joint_pass": true,
+      "reason": "Original evidence was delivered and the requested value is correct.",
+      "field_misattribution": false,
+      "report_sha256": "47807e5c22e8ed5f10948cf8a25acdbeefcf801aa73c5b156bed9a946c9105a9",
+      "source_events_sha256": "1d41ddfb8dd19813567c433b0c64e7d1e0484ad8159e2693b64e911a5a2bae06"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "ec611c49e9719c32c1d082b062c0eb04fa8bf856ce3b30428edc9f9685679f6a",
+      "source_events_sha256": "bb74bb56ccd8d76242727593f6a76833e18592c0ca90b82487141eb9f2b9e0ca"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-nearby",
+      "joint_pass": false,
+      "reason": "Wrong-source calls or partial reading did not reach the requested evidence.",
+      "field_misattribution": false,
+      "report_sha256": "246357c411270109eda172a2ee8eca39fec7b15427114f817717132e1bfa944c",
+      "source_events_sha256": "5ec422c6c4cf4426ab7bd40f230e2cc73cefca06b40230532fbd23e24243045c"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "6ddd3182714348088efc1984536e434b6c804f2d355338bde63f2c761316ed11",
+      "source_events_sha256": "221d01a89e7d10b780cfd8afab28965c84fa2d64ba56d86d7eceb571b591922c"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host fingerprint substituted for the requested value.",
+      "field_misattribution": true,
+      "report_sha256": "ecd02d229bcec9fa0026cf102525f423a99a63eda1cf284cd11b6657ff121f7e",
+      "source_events_sha256": "bcbd6d9a003ef838ca0d489e9074e6c387de93dd7041a63c13f686dc83d0493c"
+    }
+  ],
+  "production_source_equal_grid05": true
+}

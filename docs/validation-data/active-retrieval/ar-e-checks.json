@@ -1,0 +1,25 @@
+{
+  "scoped_tests": {
+    "retained_tool_output": 29,
+    "reference_receipt_retention": 4,
+    "tool_runtime_failures": 4,
+    "grid_and_contract": 18,
+    "total": 55
+  },
+  "compileall_src_tests": "passed",
+  "changed_runner_ruff": "passed",
+  "targeted_collection": "passed",
+  "git_diff_check": "passed (line-ending warnings only)",
+  "wrong_imported_source_rejected_before_profile_loading": true,
+  "wrong_source_created_no_arm_directory": true,
+  "production_anti_hardcoding": "All production Python hashes match grid-05; no diagnostic example entered production. Diagnostic seeds and wording are explicit fixtures.",
+  "unrun": [
+    "full pytest",
+    "L2-L4",
+    "wheel/install",
+    "release",
+    "cross-model comparison"
+  ],
+  "git_history_modified": false,
+  "runner_sha256": "bed954d5d50250c405c298e561c220c126900e1d55d367f4669378ccaf74c128"
+}

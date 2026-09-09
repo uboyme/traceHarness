@@ -1,0 +1,34 @@
+{
+  "decision": "INVALID_MIXED_SOURCE_RUN",
+  "reason": "Relative diagnostic root fails SkillResourceRoot before model invocation; all failed cases retained. Full unchanged-material rerun is ar-e-denial-04.",
+  "arms": {
+    "baseline": {
+      "cases": 8,
+      "setup_failed": 4,
+      "actual_sessions": 4,
+      "replayed_requests": 31,
+      "usage": {
+        "attempts": 31,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 155374,
+        "output_tokens": 2023,
+        "total_tokens": 157397
+      }
+    },
+    "candidate": {
+      "cases": 8,
+      "setup_failed": 4,
+      "actual_sessions": 4,
+      "replayed_requests": 19,
+      "usage": {
+        "attempts": 19,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 88439,
+        "output_tokens": 990,
+        "total_tokens": 89429
+      }
+    }
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "id": "s-direct",
+  "family": "skill",
+  "domain": 0,
+  "mode": "direct",
+  "language": "zh",
+  "question": "我刚把本次活动的人数上限改成 37 人。你复述一下我刚说的数字即可。",
+  "source_title": "签到卡发放规定",
+  "source_body": "设备演练签到后发放代号为 {value} 的签到卡。",
+  "expected": "no-evidence",
+  "value_type": "code",
+  "control": true,
+  "discovery": false,
+  "seed": 113,
+  "identity": "control-provided-fact",
+  "value": "REF-CF662C1BCD",
+  "source": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。",
+  "domain_name": "灯塔设备演练",
+  "project_id": "project-cf662c1bcd",
+  "source_id": "source-cf662c1bcd",
+  "memory_id": "fact-cf662c1bcd",
+  "fact_slot": "slot-cf662c1bcd",
+  "skill_id": "manual-cf662c1bcd",
+  "plugin_id": "reference.author",
+  "skill_title": "设备演练手册",
+  "skill_summary": "设备演练手册的工作说明。",
+  "sections": [
+    {
+      "id": "section-00",
+      "title": "普通事项 0",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-01",
+      "title": "普通事项 1",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-02",
+      "title": "普通事项 2",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-03",
+      "title": "普通事项 3",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-04",
+      "title": "普通事项 4",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-05",
+      "title": "普通事项 5",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-06",
+      "title": "普通事项 6",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-07",
+      "title": "普通事项 7",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-08",
+      "title": "普通事项 8",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-09",
+      "title": "普通事项 9",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-10",
+      "title": "普通事项 10",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-11",
+      "title": "普通事项 11",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-12",
+      "title": "普通事项 12",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-13",
+      "title": "普通事项 13",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-14",
+      "title": "普通事项 14",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-15",
+      "title": "普通事项 15",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-16",
+      "title": "普通事项 16",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-17",
+      "title": "普通事项 17",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-18",
+      "title": "普通事项 18",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-19",
+      "title": "普通事项 19",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-20",
+      "title": "普通事项 20",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-21",
+      "title": "普通事项 21",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-22",
+      "title": "普通事项 22",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-23",
+      "title": "签到卡发放规定",
+      "summary": "签到卡发放规定",
+      "body": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。"
+    },
+    {
+      "id": "section-24",
+      "title": "普通事项 24",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-25",
+      "title": "普通事项 25",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-26",
+      "title": "普通事项 26",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-27",
+      "title": "普通事项 27",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-28",
+      "title": "普通事项 28",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-29",
+      "title": "普通事项 29",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    },
+    {
+      "id": "section-30",
+      "title": "普通事项 30",
+      "summary": "说明普通器材登记。",
+      "body": "请登记普通器材。"
+    }
+  ],
+  "resources": [],
+  "control_criterion": "37; attributed to this message, not approved Memory",
+  "control_purpose": "No source lookup is needed; do not count this probe in the 72-question score."
+}

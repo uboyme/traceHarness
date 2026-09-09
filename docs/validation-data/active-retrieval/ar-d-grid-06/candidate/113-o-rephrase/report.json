@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "816b4ea0-de5a-4505-8551-564ff19afe3f",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 后，归档检查返回的核验代号（digest）是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 5.657000000006519,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4033,
+    "output_tokens": 82,
+    "total_tokens": 4115
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11797,
+    "output_tokens": 105,
+    "total_tokens": 11902
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 12.312999999965541
+}

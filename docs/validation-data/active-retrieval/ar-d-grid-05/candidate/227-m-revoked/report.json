@@ -1,0 +1,106 @@
+{
+  "identity": "227-m-revoked",
+  "case_id": "m-revoked",
+  "seed": 227,
+  "family": "memory",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "79ef8bd9-292a-46f4-b85a-89720def6953",
+  "target_start_seq": 1,
+  "answer": "根据当前参考内容，我搜索了\"联络呼号\"、\"呼号\"和\"备用\"等关键词，但所有搜索都返回了\"no-hit\"结果，表明项目内存中没有关于联络呼号的相关记录。\n\n所有已有的背景内存条目（background-c22930ca97-00 到 background-c22930ca97-05）都只是关于\"普通材料保管记录\"的通用描述，没有提到任何联络呼号相关信息。\n\n因此，项目目前**没有有效批准的备用联络呼号**。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 40.82799999997951,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 18000,
+    "output_tokens": 959,
+    "total_tokens": 18959
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 18000,
+    "output_tokens": 959,
+    "total_tokens": 18959
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-00",
+        "requested_tier": "section",
+        "version": "0ec06f9012e1850eb7e8c182ff6eb2db1b5e842208595308ad360fa96720e794"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-01",
+        "requested_tier": "section",
+        "version": "868c211d1841ba88875a78f1cb55199617abbd0d81139c69386d312251e04f71"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-02",
+        "requested_tier": "section",
+        "version": "c911054f7aa7b2b9e3a2b03bad66c127efc50fb7e7c1a664c49dfff2b22307b8"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-03",
+        "requested_tier": "section",
+        "version": "89a2a70c0fc26f60877a4909124cd5ebf94fae11f542438cee72e392ca049df5"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-04",
+        "requested_tier": "section",
+        "version": "6b990ab96a87461addac70950195163d0b2130577e3677aaab1aeec88cf979db"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-c22930ca97-05",
+        "requested_tier": "section",
+        "version": "aa23cf5068d8d5b168ef27aec06e691ff2bf6bb807dbcbd82fd80aa9e830a7d2"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "联络呼号"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "呼号"
+      }
+    },
+    {
+      "name": "search_memory",
+      "arguments": {
+        "query": "备用"
+      }
+    }
+  ],
+  "search_read_count": 9,
+  "output_executions": null,
+  "elapsed_seconds": 45.90599999995902
+}

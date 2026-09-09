@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "d2e46bc4-dc8d-4acc-aa37-55873befa461",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查返回的核验代号（即 Tool 输出的 digest）是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`\n\n这是该次运行输出的唯一哈希标识，可用于后续精确检索或验证。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 9.015999999945052,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4146,
+    "output_tokens": 100,
+    "total_tokens": 4246
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11179,
+    "output_tokens": 122,
+    "total_tokens": 11301
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 15.531000000075437
+}

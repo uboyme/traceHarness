@@ -1,0 +1,55 @@
+{
+  "identity": "113-o-direct",
+  "case_id": "o-direct",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "d4da5ad7-d72e-4cb5-81dc-8317a62e4985",
+  "target_start_seq": 28,
+  "answer": "REF-F958326A62",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 8.75,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8549,
+    "output_tokens": 143,
+    "total_tokens": 8692
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16314,
+    "output_tokens": 165,
+    "total_tokens": 16479
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 43,
+      "effect_id": "36e01014-3a6c-40af-8c8c-1a38a8f9b5b9",
+      "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "36e01014-3a6c-40af-8c8c-1a38a8f9b5b9",
+        "part": "content",
+        "query": "交接校验码"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 14.0
+}

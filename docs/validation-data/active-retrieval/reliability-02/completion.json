@@ -1,0 +1,31 @@
+{
+  "status": "complete-stop-without-adoption",
+  "live_journeys": 16,
+  "scores": {
+    "baseline": "4/8",
+    "candidate": "4/8"
+  },
+  "requests_replayed": 44,
+  "candidate_nonempty_search_path_exercised_by_live_model": false,
+  "mechanism_test": "49 targeted checks passed; original behavior fails intended snippet assertion after actual Runtime journey.",
+  "deep_pagination_probe": "interrupted-not-passed; no new performance/cancellation guarantee",
+  "repeat_and_fresh_runs": 0,
+  "source_unchanged": true,
+  "compileall": "passed",
+  "ruff": "passed",
+  "anti_hardcoding": "passed; specific terms occur only in fixtures",
+  "collect_only": 3645,
+  "full_tests_L2_commit": false,
+  "document_chapters_synced": [
+    "1",
+    "7.11"
+  ],
+  "document_relative_links_checked": 547,
+  "fences_checked": 95,
+  "document_errors": [],
+  "document_hashes": {
+    "docs\\note\\project-context.md": "c81a6f1bc8f9050ba5004a43877c843ce5e020327212c0be0d66ab36c1bb274d",
+    "docs\\note\\project-context-plain-zh.md": "be991fed8bc8216361496593ee2200d287788dfd9120d6ef1977895ad0a0f55b",
+    "docs\\deal\\009-search-snippet-budget-followup.md": "7a8588e072cb85297bdbaf56fc4dc8026e3107c528a9bab38e6e62136bf6ff19"
+  }
+}

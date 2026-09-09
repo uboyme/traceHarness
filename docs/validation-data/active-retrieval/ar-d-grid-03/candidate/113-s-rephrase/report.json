@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "acd1e4d0-5e9c-4b63-b2f7-f1a3466a171a",
+  "target_start_seq": 1,
+  "answer": "The current references contain a **Skill directory** for the *档案整理手册* (Archival Organization Manual), with section `section-23` titled and summarized as **“交接身份核验口令”**, i.e., *“Handover identity verification passphrase”*. Its `content_bytes` is **57**, confirming it contains non-empty content.\n\nHowever, the **actual text of `section-23` is not present** in the current reference bodies — only the directory metadata is provided. No `read_tool_output` result has been admitted in this Turn’s references, and the prior `request_skill_reference` call did not yield the body in the current context.\n\nSince:\n- The manual is a Skill (not a workspace file),\n- `section-23` is explicitly named and sized,\n- But its content is **missing from all current reference bodies**, and\n- No tool output containing the passphrase has been disclosed,\n\n→ The **specific暗语 (secret phrase/passphrase) used by shift-handover parties is not available in the current evidence**.\n\nTherefore, the answer is:\n\n**The档案整理手册 specifies a dedicated passphrase for handover identity verification in section-23 (“交接身份核验口令”), but the exact phrase is not disclosed in the currently available reference material.**",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 30.843999999924563,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17180,
+    "output_tokens": 1075,
+    "total_tokens": 18255
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17180,
+    "output_tokens": 1075,
+    "total_tokens": 18255
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "32abddbc6c4a75e5c7ee8cf6c6bf20eaa0158cd803962e21ed929ef221625dda",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-7e730b6b5d",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100,
+        "digest": "0e4607f8ed076aafb9e2d672403b81005b9054eb4c61a4555f1c131ce2d01a41",
+        "effect_id": "3215648d-0889-4efd-8813-5659ab20e64d",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 31.70299999997951
+}

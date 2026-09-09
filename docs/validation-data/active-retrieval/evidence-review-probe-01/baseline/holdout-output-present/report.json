@@ -1,0 +1,39 @@
+{
+  "identity": "holdout-output-present",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "27debd2f-3e4a-400e-9363-5862b9c13c4b",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的输出中，并未出现任何“应急工单编号”（例如形如 `EMG-2024-XXXXX` 或类似格式的编号）。\n\n该输出仅包含 52 行重复的检查日志：\n```\n检查行 0001：泵站设备读数记录，状态 normal。\n...\n检查行 0052：泵站设备读数记录，状态 normal。\n```\n\n全文无数字编号、无工单标识符、无异常状态、无 `EMG`/`INC`/`TICKET`/`WORKORDER` 等关键词，也无任何非 `normal` 状态触发应急逻辑的迹象。\n\n因此，**泵站巡检输出里没有应急工单编号**。\n\n检查结束。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 6.984000000054948,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 5078,
+    "output_tokens": 173,
+    "total_tokens": 5251
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13888,
+    "output_tokens": 196,
+    "total_tokens": 14084
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 20.530999999959022
+}

@@ -15,10 +15,28 @@ OUTPUT_FORMAT = 1
 OUTPUT_READ_TOOL = "read_tool_output"
 OUTPUT_SEARCH_TOOL = "search_tool_output"
 
+# Session control receipts drive the next Context, independently of model-facing
+# output presentation. Their original domain owners still validate every grant.
+_CONTROL_RECEIPTS = {
+    "request_history_page": "history_receipt",
+    "request_skill_reference": "skill_receipt",
+    "request_workspace_memory": "memory_receipt",
+    "search_history": "search_receipt",
+    "search_skill": "search_receipt",
+    "search_memory": "search_receipt",
+}
+
+
+def _control_data(tool_name, status, data):
+    key = _CONTROL_RECEIPTS.get(tool_name)
+    return {key: data[key]} if status == "succeeded" and key in data else {}
+
 
 def prepare_tool_output(
     *,
     effect_id: str,
+    tool_name: str,
+    status: str,
     content: str,
     data: dict[str, JsonValue],
     evidence: tuple[str, ...],
@@ -40,8 +58,13 @@ def prepare_tool_output(
     }
     display = {
         "notice": (
-            "Tool output retained in this Session's Effect log. Preview is incomplete. "
-            "Do not rerun the original tool to recover this historical result. "
+            "Tool output retained in this Session's Effect log. "
+            + (
+                "Content is not loaded here. "
+                if reader_available or searcher_available
+                else "Preview is incomplete. "
+            )
+            + "Do not rerun the original tool to recover this historical result. "
             + (
                 "Use read_tool_output for original content or structured data."
                 if reader_available
@@ -50,8 +73,9 @@ def prepare_tool_output(
             )
         ),
         "output_ref": reference,
-        "preview": content[:max_chars],
     }
+    if not reader_available and not searcher_available:
+        display["preview"] = content[:max_chars]
     if searcher_available:
         display["search_tool"] = OUTPUT_SEARCH_TOOL
         display["notice"] += (
@@ -71,7 +95,11 @@ def prepare_tool_output(
             },
         }
     presentation = canonical_json(display)
-    return presentation, {}, {"output_ref": reference, "retained_output": payload}
+    return (
+        presentation,
+        _control_data(tool_name, status, data),
+        {"output_ref": reference, "retained_output": payload},
+    )
 
 
 def output_reference(outcome: EventEnvelope) -> dict[str, JsonValue] | None:
@@ -101,6 +129,10 @@ def output_reference(outcome: EventEnvelope) -> dict[str, JsonValue] | None:
     }
     if canonical_json(reference) != canonical_json(expected):
         raise ValueError("tool-output-reference-invalid")
+    if canonical_json(data.get("data", {})) != canonical_json(
+        _control_data(data.get("tool_name"), data.get("status"), payload["data"])
+    ):
+        raise ValueError("tool-output-control-data-mismatch")
     return reference
 
 
@@ -196,6 +228,10 @@ def render_output_page(
                 "part": part,
                 "offset_unit": "unicode-codepoints",
                 "offset": offset,
+                "end_offset": end,
+                "body_status": "complete-source"
+                if offset == 0 and end == len(source)
+                else "source-excerpt",
                 "total_chars": len(source),
                 "next_offset": end if end < len(source) else None,
                 "text": source[offset:end],
@@ -258,6 +294,7 @@ def render_output_search(
                 "digest": digest,
                 "part": part,
                 "query": query,
+                "match_mode": "literal-substring",
                 "case_sensitive": case_sensitive,
                 "offset_unit": "unicode-codepoints",
                 "offset": offset,

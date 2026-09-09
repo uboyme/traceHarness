@@ -1,0 +1,68 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "e1aa944e-21f7-4529-8ec0-f6c5575757c8",
+  "target_start_seq": 152,
+  "answer": "The current references contain only historical conversation records about \"background registration\" for ordinary equipment inventory, with no mention of either the \"档案复核组\" (Archives Review Group) or \"搬运组\" (Moving Group), nor their contact codes.\n\nSince the provided references do not contain the requested information about the Archives Review Group's contact code, and I've checked all available history pages (index 0 and 1, with more pages available but not accessible within the current constraints), I cannot determine the联络代号 from the given evidence.\n\nThe answer is that the档案复核组的联络代号 is not present in the provided reference materials.",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 49.82799999997951,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17368,
+    "output_tokens": 938,
+    "total_tokens": 18306
+  },
+  "all_usage": {
+    "attempts": 14,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 48303,
+    "output_tokens": 968,
+    "total_tokens": 49271
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "17e21253eca159bb86d5358891aa75eb907ab0670faaf419e2e7187252c86bcb",
+        "cursor": {
+          "block_id": "17e21253eca159bb86d5358891aa75eb907ab0670faaf419e2e7187252c86bcb",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "17e21253eca159bb86d5358891aa75eb907ab0670faaf419e2e7187252c86bcb",
+        "cursor": {
+          "block_id": "17e21253eca159bb86d5358891aa75eb907ab0670faaf419e2e7187252c86bcb",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "list_files",
+      "arguments": {}
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 92.14099999994505
+}

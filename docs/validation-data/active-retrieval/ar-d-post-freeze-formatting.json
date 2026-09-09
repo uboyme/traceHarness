@@ -1,0 +1,7 @@
+{
+  "file": "src\\traceh\\tools\\reference_search.py",
+  "change": "Wrap one adjacent string literal for Ruff E501; runtime AST and resulting string are identical. Frozen source archive preserves the exact tested bytes.",
+  "frozen_sha256": "6d41d0fb7b64728e35778588789a158dea16fe2af8259cd34d64c0f59746b73e",
+  "final_sha256": "10f8d79c421acad21b8af31bae73b47036b204a328fa67b4e0cac2fcbddb3fc2",
+  "ast_equal": true
+}

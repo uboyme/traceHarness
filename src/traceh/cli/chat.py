@@ -45,6 +45,7 @@ from traceh.cli.env_file import is_env_var_name
 from traceh.cli.errors import CliConfigurationError
 from traceh.cli.timeline import TimelineRenderer, sanitize
 from traceh.runtime.agent_runtime import AgentRuntime
+from traceh.session.protocol import SessionProtocolError
 from traceh.session.service import SessionNotFoundError
 
 if TYPE_CHECKING:
@@ -255,6 +256,11 @@ async def _open_session(
         raise CliConfigurationError(f"workspace is not a directory: {error}") from error
     except SessionNotFoundError as error:
         raise CliConfigurationError(f"session not found: {session_id}") from error
+    except SessionProtocolError as error:
+        raise CliConfigurationError(
+            "旧版会话协议无法继续。请使用新的数据目录和新会话；旧记录原样保留，"
+            "不会自动迁移或删除。"
+        ) from error
     session = opened.session
     await _write_session_banner(runtime, console, session, resume_environment)
     _write_seq_note(console, timeline=timeline)
@@ -614,6 +620,11 @@ def _write_resume_block(
 
     if config.max_steps:
         restore += [Literal("--max-steps"), str(config.max_steps)]
+    if config.repeated_denial_policy is None:
+        restore += [Literal("--disable-repeated-denial-check")]
+    else:
+        restore += [Literal("--denial-warn-after"), str(config.repeated_denial_policy.warn_after),
+                    Literal("--denial-stop-after"), str(config.repeated_denial_policy.stop_after)]
 
     retry = config.model_retry_policy
     restore += [

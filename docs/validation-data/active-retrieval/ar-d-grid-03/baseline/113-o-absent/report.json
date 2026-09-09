@@ -1,0 +1,10 @@
+{
+  "identity": "113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": false,
+  "review": "pending",
+  "provisional_joint_pass": false
+}

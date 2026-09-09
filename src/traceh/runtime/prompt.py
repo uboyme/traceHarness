@@ -6,12 +6,22 @@ from traceh.api.prompts import PromptSection
 from traceh.kernel.lifespan import CallbackRegistration
 
 _REFERENCE_GUIDANCE = (
+    "Automatic references are a bounded selection, not the complete searchable corpus. "
+    "Even an empty reference list does not mean the available sources contain no evidence. "
+    "For a question about prior discussion, project agreements, or a selected manual, "
+    "use the corresponding available search_history, search_memory, or search_skill Tool "
+    "before concluding that records are absent. Choose short keywords; if one term misses, "
+    "try a relevant synonym or broader term. Use project Memory for approved arrangements, "
+    "History for this Session's discussion, and Skill for contributed documentation. "
+    "These sources are separate from workspace files. "
     "Host reference context may contain Skill documentation selected for this task. "
     "An item with kind=skill is a Skill reference, not a workspace file. When relevant, "
     "consult it before searching for that documentation in the workspace. Its id/version "
     "and catalog_digest identify it. If only a summary is visible and you need "
-    "details, use request_skill_reference with requested_tier=directory, when that Tool is "
-    "available. A directory body is JSON navigation metadata: use chapter titles and "
+    "details, search_skill can find relevant chapter/resource metadata without loading "
+    "the whole directory. Alternatively use request_skill_reference with requested_tier=directory "
+    "when available and within budget. A directory body is JSON navigation metadata: "
+    "use titles and "
     "descriptions to choose the relevant section or resource chunk, copying exact IDs and "
     'setting unused IDs to the JSON null value without quotes, never the string "null". '
     "Read the smallest set that answers the actual question; "
@@ -31,9 +41,19 @@ _REFERENCE_GUIDANCE = (
     "An item with kind=memory is a host-approved project fact; its summary/section is the "
     "complete short fact. Use request_workspace_memory with its exact id and version for "
     "more detail when available. An item with kind=history is this Session's historical "
-    "evidence; use request_history_page with a disclosed cursor to read a page. Its navigation "
+    "evidence. To locate a fact in unknown historical pages, prefer search_history when "
+    "available, using a short keyword from the question. Read the returned hit's page with "
+    "request_history_page when its snippet is insufficient. If search is unavailable, "
+    "use request_history_page with a disclosed cursor. History navigation "
     "identifies the next read_action and current workspace validity, not proof that past "
     "results hold now. "
+    "A search_history, search_memory or search_skill receipt delivers a search page "
+    "in the next Step's current references. Search hits are snippets, not complete pages: "
+    "use the exact hit read_action if more evidence is needed. If a query has no match, "
+    "try another relevant term or read the available history; no literal match alone "
+    "does not prove the topic was never discussed. Never guess a cursor. "
+    "When you decide to search or read, issue the actual Tool call in that response. "
+    "Saying you will search does not execute a Tool and is not a completed answer. "
     "For a question about an earlier TOOL OUTPUT, use list_tool_outputs when available "
     "to find this Session's retained execution results and their effect_id and digest. "
     "This also works after conversation compaction. "
@@ -67,11 +87,63 @@ _REFERENCE_GUIDANCE = (
 )
 
 
-def assemble_prompt_sections(sections: tuple[PromptSection, ...], *, workspace: str) -> str:
+def source_navigation(tools) -> str:
+    """Describe exposed host tools, never infer permission or source availability."""
+    names = {tool.name for tool in tools}
+    rows = []
+    for source, candidates, scope, delivery in (
+        (
+            "History",
+            ("search_history", "request_history_page"),
+            "this Session's earlier discussion",
+            "next Step's reference package",
+        ),
+        (
+            "Memory",
+            ("search_memory", "request_workspace_memory"),
+            "approved project facts",
+            "next Step's reference package",
+        ),
+        (
+            "Skill",
+            ("search_skill", "request_skill_reference"),
+            "selected documentation; search covers navigation, not hidden body text",
+            "next Step's reference package",
+        ),
+        (
+            "Tool Output",
+            ("list_tool_outputs", "search_tool_output", "read_tool_output"),
+            "retained execution output in this Session",
+            "Tool response messages",
+        ),
+    ):
+        exposed = [name for name in candidates if name in names]
+        if exposed:
+            rows.append(f"{source} | {scope} | {', '.join(exposed)} | {delivery}")
+    if not rows:
+        return ""
+    return (
+        "Source | Coverage | Exposed tools | Result location\n"
+        + "\n".join(rows)
+        + "\nExposure is not authorization or proof that records exist. Each call still passes "
+        "Tool policy. An empty reference package says nothing about retained Tool output. "
+        "Use the source the question refers to; source identity is not a workspace path."
+    )
+
+
+def assemble_prompt_sections(
+    sections: tuple[PromptSection, ...], *, workspace: str, tools=()
+) -> str:
     """One rendering rule for live registration and Generation-frozen sections."""
+    navigation = source_navigation(tools)
     effective = sorted(
         (
             *sections,
+            *(
+                (PromptSection("traceh.runtime.source_navigation", navigation, 45),)
+                if navigation
+                else ()
+            ),
             PromptSection("traceh.runtime.references", _REFERENCE_GUIDANCE, 40),
             PromptSection(
                 "traceh.runtime.workspace",

@@ -1,0 +1,158 @@
+{
+  "decision": "NO-GO",
+  "completed_grid": true,
+  "planned_cases_per_arm": 72,
+  "manual_review_complete": true,
+  "interpretation": "The fixed acceptance gate failed. TLS failures dominate and prevent a reliable model-quality or cost comparison. No release or next stage is authorized by this result.",
+  "arms": {
+    "baseline": {
+      "joint_pass": 4,
+      "completed_answers": 14,
+      "connection_failures": 58,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 2,
+          "connection_failures": 12
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 0,
+          "connection_failures": 12
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 2,
+          "connection_failures": 16
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 0,
+          "connection_failures": 18
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 4
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 0
+        }
+      },
+      "steps": {
+        "n": 14,
+        "mean": 3.0,
+        "p95": 5,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 14,
+        "mean": 1.8571428571428572,
+        "p95": 4,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 14,
+        "mean": 37.017785714274005,
+        "p95": 70.45299999997951,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 1,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 163,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0
+    },
+    "candidate": {
+      "joint_pass": 11,
+      "completed_answers": 13,
+      "connection_failures": 59,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 5,
+          "connection_failures": 12
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 4,
+          "connection_failures": 13
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 2,
+          "connection_failures": 16
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 0,
+          "connection_failures": 18
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 10
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 1
+        }
+      },
+      "steps": {
+        "n": 13,
+        "mean": 2.8461538461538463,
+        "p95": 5,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 13,
+        "mean": 1.8461538461538463,
+        "p95": 4,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 13,
+        "mean": 33.88707692306847,
+        "p95": 69.64100000006147,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 0,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 159,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0
+    }
+  },
+  "discovery_gain_cases": [
+    "113-h-rephrase",
+    "113-h-disambiguate",
+    "113-s-rephrase",
+    "113-s-large-directory",
+    "113-s-resource"
+  ],
+  "discovery_gain_note": "Observed matched cases only; Skill gains also include fixing lost disclosure receipts, not solely new search. Connection-failed pairs cannot establish model regression or improvement.",
+  "candidate_thresholds": {
+    "joint_required": 66,
+    "actual": 11,
+    "per_family_required": 15,
+    "observed_safety_violations": {
+      "scope_violations": 0,
+      "duplicate_side_effects": 0,
+      "unsupported_test_facts": 0,
+      "stale_memory_as_current": 0
+    },
+    "quality_pass": false,
+    "release_allowed": false
+  }
+}

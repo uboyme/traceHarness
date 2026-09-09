@@ -1,0 +1,91 @@
+{
+  "identity": "113-h-english",
+  "case_id": "h-english",
+  "seed": 113,
+  "family": "history",
+  "question": "What was the temporary handover code we discussed earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "e80c0c6d-4f6d-4669-9b15-455e3fb098b7",
+  "target_start_seq": 152,
+  "answer": "The search result shows a match containing the exact phrase:\n\n> \"请记下这条记录，只回复已记下：The temporary handover code is REF-9D2D595614.\"\n\nThis confirms the temporary handover code discussed earlier is:\n\n**REF-9D2D595614**",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 32.51600000006147,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21374,
+    "output_tokens": 724,
+    "total_tokens": 22098
+  },
+  "all_usage": {
+    "attempts": 14,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 60596,
+    "output_tokens": 754,
+    "total_tokens": 61350
+  },
+  "evidence": [
+    {
+      "context_seq": 197,
+      "reference": {
+        "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+        "cursor": {
+          "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "34f4728b0ad7b72e60fcf095c38812937aadd76cfbcbceb5402c276b559c6975",
+          "event_id": "775712b9-e371-4694-918d-f045500671e1",
+          "seq": 111,
+          "stream_id": "session:e80c0c6d-4f6d-4669-9b15-455e3fb098b7",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "e2fbc290c71ffbc5f79eaa31426d3f99330fabb5633ff0abf5a74f8e53d23d35"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+        "cursor": {
+          "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+        "cursor": {
+          "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "code"
+      }
+    }
+  ],
+  "search_read_count": 3,
+  "output_executions": null,
+  "elapsed_seconds": 56.56200000003446
+}

@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f5ed953e-218e-4938-83b5-3e2d4f508925",
+  "target_start_seq": 28,
+  "answer": "The tool output from `python check.py` shows `exit_code=7`, which indicates the check failed. The exit code is the fault code reported by the script.\n\nTherefore, the fault code is **7**.",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.312999999965541,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4828,
+    "output_tokens": 44,
+    "total_tokens": 4872
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13224,
+    "output_tokens": 67,
+    "total_tokens": 13291
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 10.625
+}

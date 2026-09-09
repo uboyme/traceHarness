@@ -1,0 +1,919 @@
+F.............F........F..................FFFFFFFFFFFFFFFFFFF........F.. [ 90%]
+FF....FF                                                                 [100%]
+================================== FAILURES ===================================
+__________ test_empty_policy_is_explicit_deterministic_and_read_only __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_empty_policy_is_explicit_0')
+
+    async def test_empty_policy_is_explicit_deterministic_and_read_only(tmp_path):
+        sessions, kwargs = await _fixture(tmp_path, history=True)
+        before = await sessions.read_session(kwargs["session_id"])
+        service = ContextInputService(sessions.read_session)
+>       first, second = await service.freeze(**kwargs), await service.freeze(**kwargs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_input.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_catalog_digest_must_match_exact_composition_even_after_context_rehash __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_catalog_digest_must_match0')
+
+    async def test_catalog_digest_must_match_exact_composition_even_after_context_rehash(tmp_path):
+        sessions, kwargs = await _fixture(tmp_path)
+>       snapshot = await ContextInputService(sessions.read_session).freeze(**kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_input.py:223: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+______________ test_duplicate_context_and_wrong_step_are_refused ______________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_duplicate_context_and_wro0')
+
+    async def test_duplicate_context_and_wrong_step_are_refused(tmp_path):
+        sessions, kwargs = await _fixture(tmp_path)
+>       snapshot = await ContextInputService(sessions.read_session).freeze(**kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_input.py:313: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_______ test_one_context_is_bound_to_request_permit_and_reconstructed[] _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_one_context_is_bound_to_r0')
+system_prompt = ''
+
+    @pytest.mark.parametrize("system_prompt", ["", "Host instruction"])
+    async def test_one_context_is_bound_to_request_permit_and_reconstructed(tmp_path, system_prompt):
+>       sessions, session_id, composition, context, _, built = await frozen(
+            tmp_path, system_prompt=system_prompt
+        )
+
+tests\test_context_request_protocol.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_one_context_is_bound_to_request_permit_and_reconstructed[Host instruction] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_one_context_is_bound_to_r1')
+system_prompt = 'Host instruction'
+
+    @pytest.mark.parametrize("system_prompt", ["", "Host instruction"])
+    async def test_one_context_is_bound_to_request_permit_and_reconstructed(tmp_path, system_prompt):
+>       sessions, session_id, composition, context, _, built = await frozen(
+            tmp_path, system_prompt=system_prompt
+        )
+
+tests\test_context_request_protocol.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_____ test_request_replay_cannot_borrow_equal_revision_from_another_step ______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_request_replay_cannot_bor0')
+
+    async def test_request_replay_cannot_borrow_equal_revision_from_another_step(tmp_path):
+>       sessions, session_id, composition, _, source, built = await frozen(tmp_path)
+                                                              ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_composition_reader_rejects_invalid_catalog_and_content_drift[old-format] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_composition_reader_reject0')
+change = 'old-format'
+
+    @pytest.mark.parametrize("change", ["old-format", "catalog", "catalog-digest", "revision"])
+    async def test_composition_reader_rejects_invalid_catalog_and_content_drift(tmp_path, change):
+>       _, _, _, _, source, _ = await frozen(tmp_path)
+                                ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_composition_reader_rejects_invalid_catalog_and_content_drift[catalog] __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_composition_reader_reject1')
+change = 'catalog'
+
+    @pytest.mark.parametrize("change", ["old-format", "catalog", "catalog-digest", "revision"])
+    async def test_composition_reader_rejects_invalid_catalog_and_content_drift(tmp_path, change):
+>       _, _, _, _, source, _ = await frozen(tmp_path)
+                                ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_composition_reader_rejects_invalid_catalog_and_content_drift[catalog-digest] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_composition_reader_reject2')
+change = 'catalog-digest'
+
+    @pytest.mark.parametrize("change", ["old-format", "catalog", "catalog-digest", "revision"])
+    async def test_composition_reader_rejects_invalid_catalog_and_content_drift(tmp_path, change):
+>       _, _, _, _, source, _ = await frozen(tmp_path)
+                                ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_composition_reader_rejects_invalid_catalog_and_content_drift[revision] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_composition_reader_reject3')
+change = 'revision'
+
+    @pytest.mark.parametrize("change", ["old-format", "catalog", "catalog-digest", "revision"])
+    async def test_composition_reader_rejects_invalid_catalog_and_content_drift(tmp_path, change):
+>       _, _, _, _, source, _ = await frozen(tmp_path)
+                                ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_forged_context_metadata_cannot_obtain_dispatch_permit[context_input_seq] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_forged_context_metadata_c0')
+field = 'context_input_seq'
+
+    @pytest.mark.parametrize("field", ["context_input_seq", "context_input_digest"])
+    async def test_forged_context_metadata_cannot_obtain_dispatch_permit(tmp_path, field):
+>       sessions, session_id, composition, _, _, built = await frozen(tmp_path)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_forged_context_metadata_cannot_obtain_dispatch_permit[context_input_digest] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_forged_context_metadata_c1')
+field = 'context_input_digest'
+
+    @pytest.mark.parametrize("field", ["context_input_seq", "context_input_digest"])
+    async def test_forged_context_metadata_cannot_obtain_dispatch_permit(tmp_path, field):
+>       sessions, session_id, composition, _, _, built = await frozen(tmp_path)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:56: in frozen
+    sessions, session_id, composition, snapshot = await opened(
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+__________ test_requestless_failure_prefix_remains_recoverable[step] __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_requestless_failure_prefi0')
+prefix = 'step'
+
+    @pytest.mark.parametrize("prefix", ["step", "context", "composition"])
+    async def test_requestless_failure_prefix_remains_recoverable(tmp_path, prefix):
+>       sessions, session_id, composition, snapshot = await opened(tmp_path)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+________ test_requestless_failure_prefix_remains_recoverable[context] _________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_requestless_failure_prefi1')
+prefix = 'context'
+
+    @pytest.mark.parametrize("prefix", ["step", "context", "composition"])
+    async def test_requestless_failure_prefix_remains_recoverable(tmp_path, prefix):
+>       sessions, session_id, composition, snapshot = await opened(tmp_path)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+______ test_requestless_failure_prefix_remains_recoverable[composition] _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_requestless_failure_prefi2')
+prefix = 'composition'
+
+    @pytest.mark.parametrize("prefix", ["step", "context", "composition"])
+    async def test_requestless_failure_prefix_remains_recoverable(tmp_path, prefix):
+>       sessions, session_id, composition, snapshot = await opened(tmp_path)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+______ test_duplicate_context_is_rejected_and_raw_duplicate_is_detected _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_duplicate_context_is_reje0')
+
+    async def test_duplicate_context_is_rejected_and_raw_duplicate_is_detected(tmp_path):
+>       sessions, session_id, _, snapshot = await opened(tmp_path)
+                                            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_______ test_competing_context_writer_must_not_rebase_old_frozen_input ________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_competing_context_writer_0')
+
+    async def test_competing_context_writer_must_not_rebase_old_frozen_input(tmp_path):
+>       sessions, session_id, _, snapshot = await opened(tmp_path)
+                                            ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_context_append_failure_preserves_three_commit_outcomes[False-False-False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_context_append_failure_pr0')
+committed = False, unknown = False, expected = False
+
+    @pytest.mark.parametrize(
+        "committed,unknown,expected", [(False, False, False), (True, False, True), (True, True, None)]
+    )
+    async def test_context_append_failure_preserves_three_commit_outcomes(
+        tmp_path, committed, unknown, expected
+    ):
+        store = ContextAppendFaultStore(committed=committed, unknown=unknown)
+>       sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_context_append_failure_preserves_three_commit_outcomes[True-False-True] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_context_append_failure_pr1')
+committed = True, unknown = False, expected = True
+
+    @pytest.mark.parametrize(
+        "committed,unknown,expected", [(False, False, False), (True, False, True), (True, True, None)]
+    )
+    async def test_context_append_failure_preserves_three_commit_outcomes(
+        tmp_path, committed, unknown, expected
+    ):
+        store = ContextAppendFaultStore(committed=committed, unknown=unknown)
+>       sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_context_append_failure_preserves_three_commit_outcomes[True-True-None] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_context_append_failure_pr2')
+committed = True, unknown = True, expected = None
+
+    @pytest.mark.parametrize(
+        "committed,unknown,expected", [(False, False, False), (True, False, True), (True, True, None)]
+    )
+    async def test_context_append_failure_preserves_three_commit_outcomes(
+        tmp_path, committed, unknown, expected
+    ):
+        store = ContextAppendFaultStore(committed=committed, unknown=unknown)
+>       sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence[False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_repeated_cancel_waits_for0')
+committed = False
+
+    @pytest.mark.parametrize("committed", [False, True])
+    async def test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence(
+        tmp_path, committed
+    ):
+        store = ContextAppendFaultStore(committed=committed, gated=True)
+>       sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence[True] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_repeated_cancel_waits_for1')
+committed = True
+
+    @pytest.mark.parametrize("committed", [False, True])
+    async def test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence(
+        tmp_path, committed
+    ):
+        store = ContextAppendFaultStore(committed=committed, gated=True)
+>       sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_context_request_protocol.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_context_request_protocol.py:49: in opened
+    snapshot = await ContextInputService(sessions.read_session).freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+___ test_fixed_product_and_active_tool_group_are_preserved_on_hard_refusal ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_fixed_product_and_active_0')
+
+    async def test_fixed_product_and_active_tool_group_are_preserved_on_hard_refusal(tmp_path):
+        from test_product_model_context import _snapshot_data, _task
+    
+        from traceh.api.llm import ModelResponse, ToolCall
+        from traceh.api.product import ProductTaskStatus
+        from traceh.api.tools import EffectKind, ToolOutput
+        from traceh.llm.scripted import ScriptedLlmProvider
+        from traceh.llm.token_meter import RequestTokenBudgetExceeded
+        from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+        from traceh.session.product_context import PRODUCT_CONTEXT_SNAPSHOT, latest_product_context
+        from traceh.session.sqlite import SqliteEventStore
+    
+        class Emit:
+            name = "emit_active_records"
+            description = "Emit active records and record execution."
+            input_schema = {"type": "object", "properties": {}, "additionalProperties": False}
+            effect_kind = EffectKind.WORKSPACE_WRITE
+    
+            async def execute(self, arguments, context):
+                with (context.workspace / "active-executions.txt").open("a") as target:
+                    target.write("executed\n")
+                return ToolOutput("active results. " * 1600)
+    
+        provider = ScriptedLlmProvider(
+            (ModelResponse(tool_calls=(ToolCall("active-call", Emit.name, {}),)),)
+        )
+        store = SqliteEventStore(tmp_path / "events")
+        runtime = build_default_runtime(
+            RuntimeConfig(
+                data_dir=tmp_path,
+                max_tool_output_chars=50000,
+                token_budget=TokenBudgetPolicy("cl100k_base", 5500, 256, 256),
+            ),
+            provider=provider,
+            event_store=store,
+            additional_tools=(Emit(),),
+            include_default_tools=False,
+        )
+        try:
+            session = await runtime.create_session(tmp_path)
+            # A valid frozen host input, as emitted by ProductModelContext. This test
+            # checks rendering/budget preservation, not approval or promotion execution.
+            task = _task("pending-host-task", order=1, status=ProductTaskStatus.AWAITING_APPROVAL)
+            await runtime.sessions.append_session(
+                session,
+                PRODUCT_CONTEXT_SNAPSHOT,
+                _snapshot_data(session, task, (task,), 1),
+                causation_id=task.source_event_id,
+            )
+            original = await runtime.sessions.read_session(session)
+            product_messages = latest_product_context(original)[1].messages
+            with pytest.raises(RequestTokenBudgetExceeded):
+>               await runtime.run_existing(session, "Emit the active records once.")
+
+tests\test_reference_token_budget.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\runtime\agent_runtime.py:434: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:225: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_history_token_exclusion_keeps_directory_but_does_not_grant_retention[5000-False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_history_token_exclusion_k0')
+window = 5000, body_expected = False
+
+    @pytest.mark.parametrize("window,body_expected", [(5000, False), (16000, True)])
+    async def test_history_token_exclusion_keeps_directory_but_does_not_grant_retention(
+        tmp_path, window, body_expected
+    ):
+        from test_history_runtime import SelectingProvider, items, policy, select_page
+        from test_semantic_summary import history
+    
+        from traceh.api.llm import ModelResponse, ToolCall
+        from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+        from traceh.runtime.request_builder import verify_request_snapshots
+        from traceh.session.sqlite import SqliteEventStore
+    
+>       session, before = await history(tmp_path)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reference_token_budget.py:339: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_semantic_summary.py:78: in history
+    await runtime.run_existing(
+src\traceh\runtime\agent_runtime.py:434: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:225: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_history_token_exclusion_keeps_directory_but_does_not_grant_retention[16000-True] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_history_token_exclusion_k1')
+window = 16000, body_expected = True
+
+    @pytest.mark.parametrize("window,body_expected", [(5000, False), (16000, True)])
+    async def test_history_token_exclusion_keeps_directory_but_does_not_grant_retention(
+        tmp_path, window, body_expected
+    ):
+        from test_history_runtime import SelectingProvider, items, policy, select_page
+        from test_semantic_summary import history
+    
+        from traceh.api.llm import ModelResponse, ToolCall
+        from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
+        from traceh.runtime.request_builder import verify_request_snapshots
+        from traceh.session.sqlite import SqliteEventStore
+    
+>       session, before = await history(tmp_path)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_reference_token_budget.py:339: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_semantic_summary.py:78: in history
+    await runtime.run_existing(
+src\traceh\runtime\agent_runtime.py:434: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:225: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+______ test_policy_is_frozen_and_does_not_force_a_tool_call[Hello-Hello] ______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_policy_is_frozen_and_does0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026E4D74EC00>
+message = 'Hello', answer = 'Hello'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "message,answer", [("Hello", "Hello"), ("Can you resolve this?", "Insufficient evidence")]
+    )
+    async def test_policy_is_frozen_and_does_not_force_a_tool_call(
+        tmp_path, monkeypatch, message, answer
+    ):
+        import traceh.runtime.prompt as prompts
+    
+        provider = ScriptedLlmProvider((ModelResponse(content=answer),))
+        runtime = build_default_runtime(
+            RuntimeConfig(data_dir=tmp_path / "data", provider="scripted", model="policy-contract"),
+            provider=provider,
+            event_store=InMemoryEventStore(),
+            include_default_tools=False,
+        )
+        try:
+            session = await runtime.create_session(tmp_path)
+>           result = await runtime.run_existing(session, message)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_retrieval_policy_prompt.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\runtime\agent_runtime.py:434: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:225: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+_ test_policy_is_frozen_and_does_not_force_a_tool_call[Can you resolve this?-Insufficient evidence] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5219/test_policy_is_frozen_and_does1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026E4E912240>
+message = 'Can you resolve this?', answer = 'Insufficient evidence'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "message,answer", [("Hello", "Hello"), ("Can you resolve this?", "Insufficient evidence")]
+    )
+    async def test_policy_is_frozen_and_does_not_force_a_tool_call(
+        tmp_path, monkeypatch, message, answer
+    ):
+        import traceh.runtime.prompt as prompts
+    
+        provider = ScriptedLlmProvider((ModelResponse(content=answer),))
+        runtime = build_default_runtime(
+            RuntimeConfig(data_dir=tmp_path / "data", provider="scripted", model="policy-contract"),
+            provider=provider,
+            event_store=InMemoryEventStore(),
+            include_default_tools=False,
+        )
+        try:
+            session = await runtime.create_session(tmp_path)
+>           result = await runtime.run_existing(session, message)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_retrieval_policy_prompt.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\runtime\agent_runtime.py:434: in run_existing
+    return await task_handle
+           ^^^^^^^^^^^^^^^^^
+src\traceh\runtime\agent_loop.py:225: in run_turn
+    built = await self.request_builder.prepare(
+src\traceh\runtime\request_builder.py:75: in prepare
+    context = await context_inputs.freeze(
+src\traceh\session\context_input.py:1465: in freeze
+    "budget": _budget(
+src\traceh\session\context_input.py:526: in _budget
+    _fail("context-budget-exceeded")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = 'context-budget-exceeded'
+
+    def _fail(code: str = "context-input-payload-invalid") -> None:
+>       raise ContextInputError(code)
+E       traceh.session.context_input.ContextInputError: context-budget-exceeded
+
+src\traceh\session\context_input.py:185: ContextInputError
+=========================== short test summary info ===========================
+FAILED tests/test_context_input.py::test_empty_policy_is_explicit_deterministic_and_read_only
+FAILED tests/test_context_input.py::test_catalog_digest_must_match_exact_composition_even_after_context_rehash
+FAILED tests/test_context_input.py::test_duplicate_context_and_wrong_step_are_refused
+FAILED tests/test_context_request_protocol.py::test_one_context_is_bound_to_request_permit_and_reconstructed[]
+FAILED tests/test_context_request_protocol.py::test_one_context_is_bound_to_request_permit_and_reconstructed[Host instruction]
+FAILED tests/test_context_request_protocol.py::test_request_replay_cannot_borrow_equal_revision_from_another_step
+FAILED tests/test_context_request_protocol.py::test_composition_reader_rejects_invalid_catalog_and_content_drift[old-format]
+FAILED tests/test_context_request_protocol.py::test_composition_reader_rejects_invalid_catalog_and_content_drift[catalog]
+FAILED tests/test_context_request_protocol.py::test_composition_reader_rejects_invalid_catalog_and_content_drift[catalog-digest]
+FAILED tests/test_context_request_protocol.py::test_composition_reader_rejects_invalid_catalog_and_content_drift[revision]
+FAILED tests/test_context_request_protocol.py::test_forged_context_metadata_cannot_obtain_dispatch_permit[context_input_seq]
+FAILED tests/test_context_request_protocol.py::test_forged_context_metadata_cannot_obtain_dispatch_permit[context_input_digest]
+FAILED tests/test_context_request_protocol.py::test_requestless_failure_prefix_remains_recoverable[step]
+FAILED tests/test_context_request_protocol.py::test_requestless_failure_prefix_remains_recoverable[context]
+FAILED tests/test_context_request_protocol.py::test_requestless_failure_prefix_remains_recoverable[composition]
+FAILED tests/test_context_request_protocol.py::test_duplicate_context_is_rejected_and_raw_duplicate_is_detected
+FAILED tests/test_context_request_protocol.py::test_competing_context_writer_must_not_rebase_old_frozen_input
+FAILED tests/test_context_request_protocol.py::test_context_append_failure_preserves_three_commit_outcomes[False-False-False]
+FAILED tests/test_context_request_protocol.py::test_context_append_failure_preserves_three_commit_outcomes[True-False-True]
+FAILED tests/test_context_request_protocol.py::test_context_append_failure_preserves_three_commit_outcomes[True-True-None]
+FAILED tests/test_context_request_protocol.py::test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence[False]
+FAILED tests/test_context_request_protocol.py::test_repeated_cancel_waits_for_context_append_and_preserves_commit_evidence[True]
+FAILED tests/test_reference_token_budget.py::test_fixed_product_and_active_tool_group_are_preserved_on_hard_refusal
+FAILED tests/test_reference_token_budget.py::test_history_token_exclusion_keeps_directory_but_does_not_grant_retention[5000-False]
+FAILED tests/test_reference_token_budget.py::test_history_token_exclusion_keeps_directory_but_does_not_grant_retention[16000-True]
+FAILED tests/test_retrieval_policy_prompt.py::test_policy_is_frozen_and_does_not_force_a_tool_call[Hello-Hello]
+FAILED tests/test_retrieval_policy_prompt.py::test_policy_is_frozen_and_does_not_force_a_tool_call[Can you resolve this?-Insufficient evidence]

@@ -1,0 +1,156 @@
+{
+  "identity": "holdout-output-present",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "032e062c-4042-4081-a80e-15faf069440f",
+  "target_start_seq": 32,
+  "answer": "在刚才的泵站巡检输出中，应急工单编号是：**NEW-7ABBAAC1E3**",
+  "steps": 12,
+  "reason": "max_steps_exceeded",
+  "target_seconds": 103.67199999990407,
+  "target_usage": {
+    "attempts": 13,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 124490,
+    "output_tokens": 1790,
+    "total_tokens": 126280
+  },
+  "all_usage": {
+    "attempts": 17,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 132248,
+    "output_tokens": 1813,
+    "total_tokens": 134061
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 180,
+      "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+      "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 1276,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 2549,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 3821,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 5092,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 6365,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 7636,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 8909,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 10181,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 11450,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "a51f00ce-8a4f-4929-bade-9992d4a1e4a8",
+        "offset": 12721,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 11,
+  "output_executions": 1,
+  "elapsed_seconds": 126.92200000002049
+}

@@ -1,0 +1,39 @@
+{
+  "identity": "control-sum",
+  "case_id": "control-sum",
+  "seed": 1609,
+  "family": "skill",
+  "question": "28 加 35 等于多少？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "16c38702-9820-4e14-9842-79e387a28e66",
+  "target_start_seq": 1,
+  "answer": "28 加 35 等于 63。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 1.4070000000065193,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3936,
+    "output_tokens": 14,
+    "total_tokens": 3950
+  },
+  "all_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3936,
+    "output_tokens": 14,
+    "total_tokens": 3950
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 1.7339999999385327
+}

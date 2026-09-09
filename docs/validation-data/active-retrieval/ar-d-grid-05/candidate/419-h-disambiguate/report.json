@@ -1,0 +1,67 @@
+{
+  "identity": "419-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 419,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "046a3599-22fb-4902-90d9-158b237760cc",
+  "target_start_seq": 152,
+  "answer": "The search result shows that the contact code for the \"档案复核组\" (Archives Review Group) is **REF-920619E3FF**, and it explicitly distinguishes it from the \"搬运组\" (Moving Group), whose code is DECOY-920619E3FF.\n\nThis matches the user's request to identify the Archives Review Group's contact code and not confuse it with the Moving Group's.\n\nREF-920619E3FF",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 17.469000000040978,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9917,
+    "output_tokens": 235,
+    "total_tokens": 10152
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 47652,
+    "output_tokens": 265,
+    "total_tokens": 47917
+  },
+  "evidence": [
+    {
+      "context_seq": 171,
+      "reference": {
+        "block_id": "01001b78e38f866311e79489f2039ad9174993af0d7b5a1f457432c9c9fb863e",
+        "cursor": {
+          "block_id": "01001b78e38f866311e79489f2039ad9174993af0d7b5a1f457432c9c9fb863e",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "cb025a82abb82d3f4cccb1c4f67e686b415112077dd7a8ba94f2ba3bf0a97e06",
+          "event_id": "8e25ddf6-5378-4a3e-b1dd-a33261653d09",
+          "seq": 111,
+          "stream_id": "session:046a3599-22fb-4902-90d9-158b237760cc",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "9c8ec7760c0fceb144e6f71c3094020bf1a61392303dce001f448f4fcded3a86"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "档案复核组"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 59.60899999993853
+}

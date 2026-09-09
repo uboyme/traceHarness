@@ -1,0 +1,46 @@
+{
+  "identity": "counterfactual-113-s-absent",
+  "case_id": "s-absent",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册有没有规定车辆加油的折扣码？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f6f65e88-12f2-4997-b4b1-d2442e551a48",
+  "target_start_seq": 1,
+  "answer": "我搜索了\"车辆加油\"这个关键词，但没有在档案整理手册中找到任何相关记录（no-hit结果）。档案整理手册的目录显示它主要包含\"普通事项\"（关于普通器材登记）和\"档案整理操作手册\"，所有章节摘要都与档案管理相关，没有提到车辆、加油或折扣码等内容。\n\n因此，档案整理手册没有规定车辆加油的折扣码。\n\n```json\n{\"has_vehicle_fuel_discount_code\": false}\n```",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 9.295999999972992,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11082,
+    "output_tokens": 201,
+    "total_tokens": 11283
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11082,
+    "output_tokens": 201,
+    "total_tokens": 11283
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_skill",
+      "arguments": {
+        "query": "车辆加油"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 9.922000000020489
+}

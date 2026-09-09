@@ -1,0 +1,49 @@
+{
+  "identity": "419-o-absent",
+  "case_id": "o-absent",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "ec74b5ef-3f47-4e31-a8f1-1b8f9dffa0af",
+  "target_start_seq": 28,
+  "answer": "没有。刚才执行的 `python check.py` 归档检查输出中**未出现“保险理赔编号”**，全文搜索确认该字符串完全不存在。检查日志仅包含 56 行重复的“普通器材登记，状态 normal”，无任何保险、理赔或编号相关字段。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 14.359000000054948,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8648,
+    "output_tokens": 294,
+    "total_tokens": 8942
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 15678,
+    "output_tokens": 316,
+    "total_tokens": 15994
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+        "effect_id": "bcf0a3e1-dff0-4eff-99eb-eda23d532c60",
+        "part": "content",
+        "query": "保险理赔编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 24.625
+}

@@ -1,0 +1,59 @@
+{
+  "identity": "227-s-large-directory",
+  "case_id": "s-large-directory",
+  "seed": 227,
+  "family": "skill",
+  "question": "设备演练手册里，终止演练的无线电口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "66d1b480-473e-4be3-9bcd-591d83f9a729",
+  "target_start_seq": 1,
+  "answer": "根据提供的设备演练手册内容，终止演练时在无线电中报出口令是：**REF-EBB7B0563F**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 10.35999999998603,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10074,
+    "output_tokens": 278,
+    "total_tokens": 10352
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10074,
+    "output_tokens": 278,
+    "total_tokens": 10352
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-ebb7b0563f",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "2eba0e3598504fbbee1f60815881c5fc399ee0709a5a3bd0b7883c0ad669517e",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-ebb7b0563f",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 10.844000000040978
+}

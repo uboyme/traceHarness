@@ -1,0 +1,49 @@
+{
+  "identity": "re1-business-en",
+  "case_id": "re1-business-en",
+  "seed": 1609,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "170783bd-efdc-4ebf-a422-cedf887aa58d",
+  "target_start_seq": 28,
+  "answer": "The equipment check returned a validation code of `0`, as indicated by the `exit_code=0` line in the output of `python check.py`.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 8.172000000020489,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9227,
+    "output_tokens": 210,
+    "total_tokens": 9437
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17000,
+    "output_tokens": 232,
+    "total_tokens": 17232
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178",
+        "effect_id": "4376357d-4415-4c4b-8650-5b1f73663b7b",
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 12.21799999999348
+}

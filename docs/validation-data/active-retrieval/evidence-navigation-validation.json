@@ -1,0 +1,41 @@
+{
+  "targeted_unique_tests": 305,
+  "owner_tests": 84,
+  "adjacent_tests": 221,
+  "production_matches_last_real_candidate": true,
+  "old_prompt_restored_byte_for_byte": true,
+  "independent_request_replays": 601,
+  "replay_or_invariant_errors": 0,
+  "real_target_cases": 122,
+  "model_attempts_including_setup": 625,
+  "known_total_tokens": 3430669,
+  "unknown_usage_attempts": 26,
+  "negative_quality": "Not fully accepted; see per-case reviews and record 006.",
+  "not_run": [
+    "full pytest",
+    "L2-L4",
+    "wheel/install",
+    "commit/push/tag/release"
+  ],
+  "reverse_checks": [
+    "missing Skill navigation status after actual dispatched request",
+    "old misleading preview after actual Shell execution",
+    "missing excerpt status after actual retained-output read"
+  ],
+  "example_name_scan": {
+    "files": [
+      "src/traceh/session/context_input.py",
+      "src/traceh/session/tool_output.py",
+      "src/traceh/session/protocol.py"
+    ],
+    "patterns": [
+      "CF-DA353B7883",
+      "CF-55C0AB6241",
+      "NEW-7ABBAAC1E3",
+      "astronomy-night",
+      "qwen-plus",
+      "C:\\\\Users\\\\caojie"
+    ],
+    "matches": []
+  }
+}

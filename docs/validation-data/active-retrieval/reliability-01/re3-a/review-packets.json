@@ -1,0 +1,1312 @@
+[
+  {
+    "arm": "baseline",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3917,
+      "output_tokens": 2,
+      "total_tokens": 3919
+    },
+    "target_seconds": 1.0160000000614673,
+    "report_sha256": "fa06765e8c342442bd7281fa6539faf44c53ffcc2c62cd6740234d53c98775e2",
+    "source_events_sha256": "9a9309f9d3fbd644ce5319c9a63c58f36319aa1e80214c19f58827b47eab8147",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3944,
+      "output_tokens": 2,
+      "total_tokens": 3946
+    },
+    "target_seconds": 1.2030000000959262,
+    "report_sha256": "2c6372ef19157943b9b0514e090c911b33cba9e341cad572c25b741a66e9afda",
+    "source_events_sha256": "b87505575d7a8948f78d21e54d3a6e8818d0790f6d0426de716088d5561902df",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了敬语（“您”）、缓和语气的短语（“麻烦您”“如果您方便的话”“能否”）以及致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、职场上级、客服用语等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 128,
+      "total_tokens": 4069
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3941,
+      "output_tokens": 128,
+      "total_tokens": 4069
+    },
+    "target_seconds": 3.8589999999385327,
+    "report_sha256": "926cca0fa2870dd3c2c811474fbd4682243f714ddce9e7d95b617932151ab4b6",
+    "source_events_sha256": "133dc53e746f2eabcdfc8d2dc1fbb40705294f21b7ef5479f1d49ccf008ec3d4",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 3936,
+      "output_tokens": 14,
+      "total_tokens": 3950
+    },
+    "target_seconds": 1.437999999965541,
+    "report_sha256": "09bb56e3113efd3530a7a8c1d830919e855c65beb6a525c405ec693480f8fbb9",
+    "source_events_sha256": "682b235ef897396a7fb963965928e7b5e8fb200870ba598c061932f9b8d62e77",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-absent",
+    "family": "output",
+    "question": "检查输出里有停车许可证编号吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "仅完成材料检查，没有生成停车许可证编号。",
+    "predecessor_value": null,
+    "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明检查过程中**未生成**停车许可证编号。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "dd420e061dbb0c1963707d2d8d45df372bd98a78a1b792ba353034493ad3a824",
+          "effect_id": "692fcde0-478d-4bc3-ab71-a7dd02822e69",
+          "part": "content",
+          "query": "停车许可证编号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16279,
+      "output_tokens": 181,
+      "total_tokens": 16460
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8513,
+      "output_tokens": 158,
+      "total_tokens": 8671
+    },
+    "target_seconds": 6.875,
+    "report_sha256": "55e6894ef9018e5e4cfdbc911582bbbb7aed14656d90782b63ba55547187c879",
+    "source_events_sha256": "e51c32f975c22a1669359f446b31623e959813b7b9d3ed6f5fa14008dc24f899",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-direct",
+    "family": "output",
+    "question": "检查输出里的样品序列号是什么？",
+    "expected": "value",
+    "expected_value": "REF-9BB96F9C0B",
+    "source": "样品序列号=REF-9BB96F9C0B",
+    "predecessor_value": null,
+    "answer": "检查输出中未发现“样品序列号”或“serial number”相关字样。所有输出内容均为重复的中文提示“陶艺展览例行登记完成”，并按条目编号（0–98）列出，无任何序列号信息。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 5,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "515311aa-eb3c-4662-9e71-6fa02d11d2af",
+          "part": "content",
+          "query": "sample serial number"
+        }
+      },
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "515311aa-eb3c-4662-9e71-6fa02d11d2af",
+          "part": "content",
+          "query": "serial number"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "515311aa-eb3c-4662-9e71-6fa02d11d2af",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "515311aa-eb3c-4662-9e71-6fa02d11d2af",
+          "offset": 1000,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      },
+      {
+        "seq": 55,
+        "name": "search_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 33156,
+      "output_tokens": 608,
+      "total_tokens": 33764
+    },
+    "target_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 25389,
+      "output_tokens": 585,
+      "total_tokens": 25974
+    },
+    "target_seconds": 24.06200000003446,
+    "report_sha256": "2708ea70a3aaf26354e572d780167140cfc6ee68e826800f56a5c7750d158d6e",
+    "source_events_sha256": "c7a5baf917ef7ef04e575bd45418f27a13ab6511f37518341933104c7fe4e185",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-language",
+    "family": "output",
+    "question": "刚才失败的归档检查给出的故障代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-AC83E85A30",
+    "source": "故障代号=REF-AC83E85A30",
+    "predecessor_value": null,
+    "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这是本次失败的归档检查给出的故障代号。\n\n因此，故障代号是：**7**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 7,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "part": "content",
+          "query": "failure code"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "offset": 1000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "offset": 2000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "offset": 3000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "a5f02110-a4c5-4e26-bd52-75b356320ba1",
+          "offset": 4000,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 91,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 103,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 9,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 54126,
+      "output_tokens": 879,
+      "total_tokens": 55005
+    },
+    "target_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 46360,
+      "output_tokens": 856,
+      "total_tokens": 47216
+    },
+    "target_seconds": 38.39100000006147,
+    "report_sha256": "eba9f5dd61c231268ad56f505b86432f434026e1af74489374b09314681aa9a4",
+    "source_events_sha256": "837424c6a29a3698c4c1f786b3e9452fb1483397773ce1c7851514ec525130d4",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-nearby",
+    "family": "output",
+    "question": "诊断组乙的交接凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-D6C4E7EBDC",
+    "source": "交接凭据=REF-D6C4E7EBDC",
+    "predecessor_value": null,
+    "answer": "根据当前可用的参考信息，没有提供关于\"诊断组乙的交接凭据\"的具体内容。参考列表为空，意味着没有相关文档、历史记录、项目记忆或技能文档被提供来回答这个问题。\n\n由于没有可用的参考材料，我无法确定诊断组乙的交接凭据是什么。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_files",
+        "arguments": {}
+      },
+      {
+        "name": "list_files",
+        "arguments": {}
+      }
+    ],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 20172,
+      "output_tokens": 208,
+      "total_tokens": 20380
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12402,
+      "output_tokens": 185,
+      "total_tokens": 12587
+    },
+    "target_seconds": 9.781000000075437,
+    "report_sha256": "090523acbf09ddbd51ab75a05020a8d73eb449cb5451c611c00f5c9292acd6f8",
+    "source_events_sha256": "7669ea25b8489321a11cde14e28699c1b5d2ec07905d180e31bfb5ca830f8724",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-overlap",
+    "family": "output",
+    "question": "本次检查的核验编号（核验码）是什么？",
+    "expected": "value",
+    "expected_value": "REF-3EE9203C75",
+    "source": "核验编号/核验码=REF-3EE9203C75",
+    "predecessor_value": null,
+    "answer": "REF-3EE9203C75",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 53,
+        "request_snapshot_seq": 49,
+        "dispatch_fingerprint": "4ac8eb88f0d8e9c70ff2a51a8acef5f5d0c80c61da7c7e09910fdd2d601f9473",
+        "source_evidence": {
+          "tool_result_seq": 43,
+          "effect_id": "afe9d2f8-b4b1-42f3-81ff-601bcdf0e067",
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "afe9d2f8-b4b1-42f3-81ff-601bcdf0e067",
+          "part": "content",
+          "query": "核验编号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16309,
+      "output_tokens": 161,
+      "total_tokens": 16470
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8542,
+      "output_tokens": 138,
+      "total_tokens": 8680
+    },
+    "target_seconds": 6.390999999945052,
+    "report_sha256": "c244b16a57bcd4ded8be6437fb02a730ad25c8eff427ff026b2c1375bc198847",
+    "source_events_sha256": "904ca2d74c3c82efc2d2ca3f9dc819babce9c3c6ce8e4661ea02532ce0cf31fc",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-phrase",
+    "family": "output",
+    "question": "刚才那次展览检查的核对凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-B868FEEE50",
+    "source": "核对凭据编号：REF-B868FEEE50",
+    "predecessor_value": null,
+    "answer": "刚才那次展览检查的核对凭据是：**58 条“陶艺展览例行登记完成”记录，编号从条目 0 到条目 57**。\n\n该凭据来自 `python check.py` 的标准输出（stdout），内容为连续 58 行形如 `条目 N: 陶艺展览例行登记完成。` 的确认信息，无错误或异常输出，且进程退出码为 `exit_code=0`，表明检查成功通过。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+          "effect_id": "9554b685-0b55-4876-b9fe-19b41777dc2b",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 21520,
+      "output_tokens": 285,
+      "total_tokens": 21805
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 13754,
+      "output_tokens": 262,
+      "total_tokens": 14016
+    },
+    "target_seconds": 12.280999999959022,
+    "report_sha256": "0241894a0f5e3710570bbeafff55d32ae5fd122f83906ba7680c7984b6f44ca1",
+    "source_events_sha256": "0f20a21321e05868e9e876c5aee925722003d665a1f2fdc308be3fb7661c1b0c",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-greeting",
+    "family": "skill",
+    "question": "你好！",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "你好！",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4008,
+      "output_tokens": 2,
+      "total_tokens": 4010
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4008,
+      "output_tokens": 2,
+      "total_tokens": 4010
+    },
+    "target_seconds": 1.125,
+    "report_sha256": "861b561409cc8a8a2ec87d3ac4101d726f45b351d86df7380a884548ee98792e",
+    "source_events_sha256": "03a84e3e35bcddd4a6804dc878ddf1dc1f3849cec6062ffa8cef09deaadf821d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-repeat",
+    "family": "skill",
+    "question": "我现在告诉你参加者有 42 人，重复一下这个人数。",
+    "expected": "direct-control",
+    "expected_value": "42",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "42",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4035,
+      "output_tokens": 2,
+      "total_tokens": 4037
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4035,
+      "output_tokens": 2,
+      "total_tokens": 4037
+    },
+    "target_seconds": 1.1099999999860302,
+    "report_sha256": "da411fceb096ccdf4c4d9edfa2fc2ce29f2a4ab06275328c76229843bf41c08d",
+    "source_events_sha256": "e976049d14f146bf22c4193dfaebdeaf47a073404dc21a281050bc7083716b86",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-rewrite",
+    "family": "skill",
+    "question": "把“请把门关上”改得更礼貌一点。",
+    "expected": "direct-control",
+    "expected_value": "",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否请您”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4032,
+      "output_tokens": 109,
+      "total_tokens": 4141
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4032,
+      "output_tokens": 109,
+      "total_tokens": 4141
+    },
+    "target_seconds": 3.75,
+    "report_sha256": "ac08a2f234db3b86a93de04b6153280a623fa34ac53a8a45711ea027bd18df31",
+    "source_events_sha256": "a30931a4c9cb78128dd4eb9809f2ac5aed8a3c6d27f068cd529b59c769ba0a06",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "control-sum",
+    "family": "skill",
+    "question": "28 加 35 等于多少？",
+    "expected": "direct-control",
+    "expected_value": "63",
+    "source": "此手册记录陶泥存放要求。",
+    "predecessor_value": null,
+    "answer": "28 加 35 等于 63。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 1,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [],
+    "successful_tools": [],
+    "output_executions": null,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4027,
+      "output_tokens": 14,
+      "total_tokens": 4041
+    },
+    "target_usage": {
+      "attempts": 1,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 4027,
+      "output_tokens": 14,
+      "total_tokens": 4041
+    },
+    "target_seconds": 1.452999999979511,
+    "report_sha256": "e7a76a1e5e6217484d04b1ddf15f2cfd2f454376c457b6e32cd88f53b41c749f",
+    "source_events_sha256": "d6f57b32b1b2136f7793ddd0f91e2ddca0819934392adb271df3802228142da4",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-absent",
+    "family": "output",
+    "question": "检查输出里有停车许可证编号吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "仅完成材料检查，没有生成停车许可证编号。",
+    "predecessor_value": null,
+    "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明输出中**提到了“停车许可证编号”这一字段**，但其值为空（未生成）。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "dd420e061dbb0c1963707d2d8d45df372bd98a78a1b792ba353034493ad3a824",
+          "effect_id": "0c3f9d0f-71f8-45db-86c6-a448e3264327",
+          "queries": [
+            "停车许可证编号",
+            "许可证编号",
+            "停车许可"
+          ]
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16715,
+      "output_tokens": 200,
+      "total_tokens": 16915
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8762,
+      "output_tokens": 178,
+      "total_tokens": 8940
+    },
+    "target_seconds": 7.109000000054948,
+    "report_sha256": "463146db92d53b0f7a698b711dd0884dfa1f11f9d7c0a670ff08923d874239b1",
+    "source_events_sha256": "fa4f98d1589eb400bf5b68476147be8179a66a3c27cdd4af63f31064dc9eeba2",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-direct",
+    "family": "output",
+    "question": "检查输出里的样品序列号是什么？",
+    "expected": "value",
+    "expected_value": "REF-9BB96F9C0B",
+    "source": "样品序列号=REF-9BB96F9C0B",
+    "predecessor_value": null,
+    "answer": "样品序列号是 `REF-9BB96F9C0B`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 53,
+        "request_snapshot_seq": 49,
+        "dispatch_fingerprint": "4cae2a5d07bf5e2d2a2e0e5e04c0bfc7025a2155dbb84f8ec54f63bbf7b133c3",
+        "source_evidence": {
+          "tool_result_seq": 43,
+          "effect_id": "50410f15-20cf-4e9c-9cfb-f29631d56c8b",
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "50410f15-20cf-4e9c-9cfb-f29631d56c8b",
+          "part": "content",
+          "queries": [
+            "sample_id",
+            "sample serial",
+            "序列号"
+          ]
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16707,
+      "output_tokens": 178,
+      "total_tokens": 16885
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8757,
+      "output_tokens": 155,
+      "total_tokens": 8912
+    },
+    "target_seconds": 6.858999999938533,
+    "report_sha256": "d593c0219241658ea52e8d4ce4e0d2930c1571ea9c1a6d69a51b145efcce6c20",
+    "source_events_sha256": "cfbe23b857ea5f8ced79b5a26535403f05ad6f1bc25f74cb3e08746bd85262d7",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-language",
+    "family": "output",
+    "question": "刚才失败的归档检查给出的故障代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-AC83E85A30",
+    "source": "故障代号=REF-AC83E85A30",
+    "predecessor_value": null,
+    "answer": "刚才执行 `python check.py` 的归档检查返回了 `exit_code=7`，且输出中未出现“failure code”、“fault code”或“error code”等关键词，也无其他显式故障代号信息。根据标准 Unix/Linux 进程退出码惯例，**`7` 本身即为本次失败检查所给出的故障代号**。\n\n因此，故障代号是：`7`",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 8,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "part": "content",
+          "queries": [
+            "failure code",
+            "fault code",
+            "error code"
+          ]
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 1000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 2000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 3000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 4000,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 1000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f89b17f8-ee26-4571-9613-48b82a667582",
+          "offset": 5000,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 91,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 103,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 115,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 10,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 66376,
+      "output_tokens": 1088,
+      "total_tokens": 67464
+    },
+    "target_usage": {
+      "attempts": 8,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 58426,
+      "output_tokens": 1065,
+      "total_tokens": 59491
+    },
+    "target_seconds": 47.125,
+    "report_sha256": "bf59ff701954fd0a58699fdc41c8e00d61a2a5953ec252ad7475b4b8634f2e41",
+    "source_events_sha256": "d85029a0de0ca0a1c678f0994ed3a7f3fb53b014dd0d302a8233dfb168b96e09",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-nearby",
+    "family": "output",
+    "question": "诊断组乙的交接凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-D6C4E7EBDC",
+    "source": "交接凭据=REF-D6C4E7EBDC",
+    "predecessor_value": null,
+    "answer": "根据当前可用的参考信息，没有提供关于\"诊断组乙的交接凭据\"的具体内容。参考列表为空，意味着没有相关文档、历史记录、项目记忆或技能文档被提供来回答这个问题。\n\n由于问题涉及特定的医疗或诊断分组的交接凭据，这通常会在医疗规范、操作手册或项目特定文档中定义，但这些资料并未包含在当前的参考上下文中。\n\n因此，基于当前可用的信息，我无法确定诊断组乙的交接凭据是什么。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_files",
+        "arguments": {}
+      },
+      {
+        "name": "search_text",
+        "arguments": {
+          "query": "诊断组乙"
+        }
+      }
+    ],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 20577,
+      "output_tokens": 250,
+      "total_tokens": 20827
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12624,
+      "output_tokens": 228,
+      "total_tokens": 12852
+    },
+    "target_seconds": 10.89000000001397,
+    "report_sha256": "42c26584967265b36fd662d76f589660bde7015a5d4fdfa9578dd68292435e0a",
+    "source_events_sha256": "3ebf100aeb62246456f61ec6fa17dca242b3f3887be326316b3f0f8f3e8d918f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-overlap",
+    "family": "output",
+    "question": "本次检查的核验编号（核验码）是什么？",
+    "expected": "value",
+    "expected_value": "REF-3EE9203C75",
+    "source": "核验编号/核验码=REF-3EE9203C75",
+    "predecessor_value": null,
+    "answer": "REF-3EE9203C75",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 65,
+        "request_snapshot_seq": 61,
+        "dispatch_fingerprint": "5f426fb638bfcdab6885b667497bee1f12c07669ff44e3618479807798d63794",
+        "source_evidence": {
+          "tool_result_seq": 55,
+          "effect_id": "ecfb2413-6b4a-4a45-94bd-27ba1b9fab20",
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "ecfb2413-6b4a-4a45-94bd-27ba1b9fab20",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "count": 10,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "ecfb2413-6b4a-4a45-94bd-27ba1b9fab20",
+          "part": "content",
+          "queries": [
+            "核验编号",
+            "核验码"
+          ]
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 55,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 23494,
+      "output_tokens": 309,
+      "total_tokens": 23803
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 15545,
+      "output_tokens": 286,
+      "total_tokens": 15831
+    },
+    "target_seconds": 13.422000000020489,
+    "report_sha256": "2a3aceb8f552249fcaba2f72e3687e8b9abf5c3ba8698c4e4fdf54c8c2401a54",
+    "source_events_sha256": "70e444b45ba6fb9eef713d7de4f46c94dd67cc26123af2f521f48d475937099a",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-phrase",
+    "family": "output",
+    "question": "刚才那次展览检查的核对凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-B868FEEE50",
+    "source": "核对凭据编号：REF-B868FEEE50",
+    "predecessor_value": null,
+    "answer": "刚才那次展览检查的核对凭据是：**“陶艺展览例行登记完成。”**（共58次，条目 0 至 57）",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10,
+          "offset": 0
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+          "effect_id": "9f4160cc-4e00-4408-9425-82f5952ebcc3",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 21981,
+      "output_tokens": 221,
+      "total_tokens": 22202
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 14033,
+      "output_tokens": 198,
+      "total_tokens": 14231
+    },
+    "target_seconds": 10.796999999904074,
+    "report_sha256": "ac0b6fb91fb7f2e3f111366b9546939ab38d06688576006a8bf7d81b2935947d",
+    "source_events_sha256": "28493b72c3b1d1fc322dbf9ccdbfed9d3c19d34a37d64694f3960fa86b8a3e53",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  }
+]

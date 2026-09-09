@@ -1,0 +1,97 @@
+{
+  "arm": "baseline",
+  "cases": 10,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "control-greeting",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-repeat",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-rewrite",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-sum",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-absent",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-omitted",
+      "requests": 5,
+      "attempts_started": 5,
+      "attempts_ended": 5,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-omitted-other",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-revoked",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-unbound",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

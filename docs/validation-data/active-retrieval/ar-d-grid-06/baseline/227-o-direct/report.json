@@ -1,0 +1,84 @@
+{
+  "identity": "227-o-direct",
+  "case_id": "o-direct",
+  "seed": 227,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "62dd2f5f-5ed7-462c-b206-10c5ad0b95af",
+  "target_start_seq": 28,
+  "answer": "交接校验码是 `REF-9ED2D03FE5`。",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 26.953000000095926,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 30685,
+    "output_tokens": 563,
+    "total_tokens": 31248
+  },
+  "all_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 37724,
+    "output_tokens": 586,
+    "total_tokens": 38310
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 79,
+      "effect_id": "c9bfc80c-ef40-4268-9ee3-770329909d26",
+      "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "c9bfc80c-ef40-4268-9ee3-770329909d26",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "c9bfc80c-ef40-4268-9ee3-770329909d26",
+        "offset": 1272,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "c9bfc80c-ef40-4268-9ee3-770329909d26",
+        "offset": 2537,
+        "part": "content"
+      }
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "case_sensitive": true,
+        "digest": "8b457a8f11f33524d422878f1e35eb46378517b9ead3722e39763c3f405171d0",
+        "effect_id": "c9bfc80c-ef40-4268-9ee3-770329909d26",
+        "offset": 0,
+        "part": "content",
+        "query": "交接校验码"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": 1,
+  "elapsed_seconds": 33.54700000002049
+}

@@ -1,0 +1,222 @@
+{
+  "method": "Human semantic assessment against frozen question/source and successful dispatched requests; not blind. Auxiliary stylistic errors retained, not silently discarded. Automatic provisional passes ignored.",
+  "scores": {
+    "baseline": 7,
+    "candidate": 7
+  },
+  "denominator_per_arm": 10,
+  "decision": "not-selected-no-repeat",
+  "rows": [
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "fa26900c9575b6992e19469326c1ff82eff1c4d8f1930e9a832069aa1da19ac9"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "1356d6fd81f6d82326e4b4b36fdf969ede556cff9ddbbd63150d49aa0257a3da"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n- “麻烦您把门关一下，谢谢！”  \n- “请问您方便把门关上吗？谢谢！”  \n- “如果您不介意的话，能请您把门关上吗？非常感谢！”  \n\n这些表达加入了请求语气词（“麻烦您”“请问您方便……吗”“如果您不介意的话”）、委婉句式和致谢，显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知或AI语音交互），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "f4c5ddd9121379c38a75c00d5906d4c13a853e028243b1c899f508952f7cc0ee"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "a39cd4c7b3b5ae25190900e2b17bdc7418c5f56e10ca46f4cc5fcebb5b0749d6"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-absent",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Explicit source says no receipt was generated.",
+      "answer": "根据对 `python check.py` 输出的搜索，结果明确指出：\n\n> “本次仅完成清点，未生成验收回执编号。”\n\n因此，刚才的陶艺验收**没有给出回执编号**。",
+      "evidence": [],
+      "report_sha256": "9b291df0a93bbe730ef6acc0ef3ede78ea00d49ee4d871e4fedb646b6b4ac783"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-business-en",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Process exit status mistaken for business validation code.",
+      "answer": "The equipment check returned a validation code of `0`, as indicated by the `exit_code=0` line in the output of `python check.py`.",
+      "evidence": [],
+      "report_sha256": "0358e536bcc5eabcabd162bf8e1573148ab5e885c37e754f883f46a4f4d943b6"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-business-other",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Expected receipt not retrieved; fabricated receipt or denial based on prefix.",
+      "answer": "陶艺验收的回执编号是 **TA20240517001**。",
+      "evidence": [],
+      "report_sha256": "3768dfb4605fd400e54348d2b7b3ab2428d54d9f586a4da47db2e17480cabae1"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-business-zh",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Content digest mistaken for business code.",
+      "answer": "刚才归档检查返回的核验代号是：\n\n`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+      "evidence": [],
+      "report_sha256": "62aea45582b1f9e6ec6d6b92f1cc3b855d46e8ea871abbf05e43acc365b95c35"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-integrity",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Asked for content integrity digest; exact retained-output digest is legitimate.",
+      "answer": "刚才执行 `python check.py` 的工具输出，其内容校验指纹（digest）是：\n\n`27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0`",
+      "evidence": [],
+      "report_sha256": "78e17405f799f6ffb09bb3e665a96d8e8fa300cc45bb0cd075b0582f5f555d96"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-process",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Asked for process status; original exit_code=7 is legitimate.",
+      "answer": "刚才命令的进程退出码是 `7`。",
+      "evidence": [],
+      "report_sha256": "a4e90b1469e4165dfbb32df3b2985923b48dfd3261fcc856a2341fd73f11ff01"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "daaf0190ecf9507f9d3a3ed70927c674a0702f2a8340db7cd70e47d62f3c0ddf"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "0b97e9e1d5c7591015e80767562fc675ca23a9a7b8c9743085e82d37fbdde914"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否请您”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "4ec7c8fd1f463f00afaf4220519467458e4555bdb2ab72a20a3f87750ec5a0e6"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "a3db63f38250b4ddab9cfe7bf402078d669b88a92cadb53fa02a3c3567d83c4d"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-absent",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Abstention accompanied by unsupported explanation of History/source availability or no-hit; configured Tool output not examined.",
+      "answer": "陶艺验收的回执编号未在当前参考内容中提供，且 `search_history` 工具调用因无匹配结果而未返回有效线索（当前 references 为空）。  \n由于没有历史记录、内存或技能文档中关于“陶艺验收 回执编号”的显式信息，无法从已有证据中提取该编号。\n\n因此，**无法确定刚才陶艺验收给出的回执编号**。",
+      "evidence": [],
+      "report_sha256": "7fe432d1e871b21bd0eb70a3f589c2457bb90ff56e5ecf50fb9ece963378ac19"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-en",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Correct validation fact visible in successful request after output search.",
+      "answer": "The equipment check returned validation code `REF-02EA3A8FA1`.",
+      "evidence": [
+        {
+          "attempt_end_seq": 67,
+          "request_snapshot_seq": 63,
+          "dispatch_fingerprint": "2e902f79a04b979ec9a748022a1b44623e87f04d5705c6b5b632a48f7d603a56",
+          "source_evidence": {
+            "tool_result_seq": 57,
+            "effect_id": "f07b048c-c8cb-48d8-a847-97f9f4321ca9",
+            "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178"
+          }
+        }
+      ],
+      "report_sha256": "25de4e2a8f7d663dbba98e3f112ea01442eaba63dc09fdb476c6b2b648dfc4d8"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-other",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Expected receipt not retrieved; fabricated receipt or denial based on prefix.",
+      "answer": "陶艺验收的回执编号是 **TA20240517001**。",
+      "evidence": [],
+      "report_sha256": "e838c60e36605cbc5f3b3d1d623b517a62148c46de5a2f797f0bbc9a8e652dbd"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-zh",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Content digest mistaken for business code.",
+      "answer": "核验代号是：`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+      "evidence": [],
+      "report_sha256": "4d2e05218545240f69c3d6e3dd9e837ebb48a44c8102c986a0dd498ae65bb5f0"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-integrity",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Asked for integrity digest; correct retained source identity.",
+      "answer": "刚才保存的工具输出的内容校验指纹 `digest` 是：\n\n`27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0`",
+      "evidence": [],
+      "report_sha256": "2e1bf569b7731a6603ef20a5a806f5ba3a4730c7276bd26c760b84d0ca4c7953"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-process",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Correct original process exit code.",
+      "answer": "退出码是 7。",
+      "evidence": [],
+      "report_sha256": "930ed857461ac4f5e550b9aeaad87b1198c0f48593f88dd5a92aaf9637a0abd5"
+    }
+  ]
+}

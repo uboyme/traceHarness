@@ -1,0 +1,39 @@
+{
+  "identity": "887-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 887,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "3a45fa73-415f-4fab-b79f-bd884a56601f",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这表示检查失败。在许多检查脚本中，退出码（exit code）即为故障代号。\n\n因此，**刚才失败的归档检查给出的故障代号是 `7`**。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.094000000040978,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4825,
+    "output_tokens": 62,
+    "total_tokens": 4887
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13218,
+    "output_tokens": 85,
+    "total_tokens": 13303
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 13.187999999965541
+}

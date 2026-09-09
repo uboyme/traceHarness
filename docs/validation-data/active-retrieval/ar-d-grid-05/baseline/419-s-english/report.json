@@ -1,0 +1,51 @@
+{
+  "identity": "419-s-english",
+  "case_id": "s-english",
+  "seed": 419,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "ff13944a-92ec-4f30-8057-e71376c599de",
+  "target_start_seq": 1,
+  "answer": "The current references list is empty, meaning no reference materials have been provided for this task. Since the instruction states \"Use this task's configured reference source\" and \"Workspace exploration and rerunning historical commands are outside this isolated task,\" I cannot search the workspace or run additional tools.\n\nWithout any reference materials containing the equipment drill manual information, I cannot determine which code the manual specifies for the check-in card.\n\nThe answer is that the required information is not available in the provided references.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 15.406000000075437,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9509,
+    "output_tokens": 263,
+    "total_tokens": 9772
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9509,
+    "output_tokens": 263,
+    "total_tokens": 9772
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_files",
+      "arguments": {}
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "max_results": 10,
+        "query": "equipment drill manual"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 16.03200000000652
+}

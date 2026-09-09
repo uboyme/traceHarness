@@ -1,0 +1,36 @@
+{
+  "state": "aborted-for-verified-control-receipt-retention-defect",
+  "complete_grid": false,
+  "reason": "A large Skill navigation result was retained; its data became empty, erasing the accepted disclosure receipt before the next Context. Confirmed on actual successful tool/result seq 17 and missing body Context seq 20 in candidate/113-s-direct. Fix Session control receipt projection, retain original payload in the same Effect and rerun unchanged full paired grid.",
+  "termination": "All four owned workers stopped; interrupted SQLite logs exported read-only. Incomplete remote usage remains unknown.",
+  "interrupted": [
+    {
+      "arm": "baseline",
+      "identity": "113-m-omitted",
+      "attempt_starts": 2,
+      "attempt_ends": 2,
+      "inflight_usage_unknown": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-absent",
+      "attempt_starts": 1,
+      "attempt_ends": 0,
+      "inflight_usage_unknown": 1
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-m-omitted",
+      "attempt_starts": 6,
+      "attempt_ends": 6,
+      "inflight_usage_unknown": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nonzero",
+      "attempt_starts": 2,
+      "attempt_ends": 1,
+      "inflight_usage_unknown": 1
+    }
+  ]
+}

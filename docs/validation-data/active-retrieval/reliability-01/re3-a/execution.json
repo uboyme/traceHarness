@@ -1,0 +1,108 @@
+{
+  "complete": true,
+  "planned": 20,
+  "runs": [
+    {
+      "arm": "baseline",
+      "identity": "re3-language",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-language",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-phrase",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-phrase",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-direct",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-direct",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-overlap",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-overlap",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-absent",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-absent",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-nearby",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-nearby",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-repeat",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-repeat",
+      "exit_code": 0
+    }
+  ],
+  "unrun": [],
+  "stop_reason": null
+}

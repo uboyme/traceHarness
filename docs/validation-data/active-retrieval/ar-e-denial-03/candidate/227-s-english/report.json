@@ -1,0 +1,15 @@
+{
+  "identity": "227-s-english",
+  "case_id": "s-english",
+  "seed": 227,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "error": {
+    "type": "ValueError",
+    "code": null
+  },
+  "elapsed_seconds": 0.0
+}

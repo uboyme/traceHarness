@@ -1,0 +1,39 @@
+{
+  "identity": "re1-business-other",
+  "case_id": "re1-business-other",
+  "seed": 1609,
+  "family": "output",
+  "question": "陶艺验收的回执编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "296a4266-d3df-4824-a275-68a9f61ffe2f",
+  "target_start_seq": 28,
+  "answer": "陶艺验收的回执编号是 **TA20240517001**。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 1.952999999979511,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4021,
+    "output_tokens": 23,
+    "total_tokens": 4044
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11786,
+    "output_tokens": 45,
+    "total_tokens": 11831
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 5.405999999959022
+}

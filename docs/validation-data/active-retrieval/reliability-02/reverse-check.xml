@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="33.405" timestamp="2026-09-09T23:51:11.779462+08:00" hostname="LAPTOP-JLEIPSSI"><testcase classname="docs.validation-data.active-retrieval.reliability-02.candidate_checks" name="test_fewer_hits_restore_context_and_original_reader_reaches_target[re2-omitted-\u547c\u53f7]" time="32.562"><failure message="assert False&#10; +  where False = all(&lt;generator object test_fewer_hits_restore_context_and_original_reader_reaches_target.&lt;locals&gt;.&lt;genexpr&gt; at 0x00000229D9ECE260&gt;)">tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5250/test_fewer_hits_restore_contex0')
+identity = 're2-omitted', query = '呼号'
+
+    @pytest.mark.parametrize("identity,query", [("re2-omitted", "呼号"), ("re4-memory-yes", "凭证")])
+    async def test_fewer_hits_restore_context_and_original_reader_reaches_target(
+        tmp_path, identity, query
+    ):
+        frozen = json.loads((Path(__file__).parent / "frozen.json").read_text(encoding="utf-8"))
+        fixture = next(f for f in frozen["fixtures"] if f["identity"] == identity)
+        pages = []
+    
+        def advance(request):
+            references = items(request)
+            if any(i["tier"] == "section" and fixture["value"] in i["body"] for i in references):
+                return ModelResponse(content=fixture["value"])
+            page = json.loads(next(i["body"] for i in references if i["tier"] == "search"))
+            pages.append(page)
+            for hit in page["hits"]:
+                if hit["reference"]["id"] == fixture["memory_id"]:
+                    action = hit["read_action"]
+                    return ModelResponse(
+                        tool_calls=(ToolCall("read-target", action["tool_name"], action["arguments"]),)
+                    )
+            if len(pages) == 2:
+                # Oracle-assisted diagnosis only: this is never used by the live model.
+                locator = fixture["source"].split(fixture["value"], 1)[0].strip()
+                return ModelResponse(
+                    tool_calls=(ToolCall("diagnostic-locator", "search_memory", {"query": locator}),)
+                )
+            assert page["next_cursor"] is not None
+            return ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        "next-" + str(len(pages)),
+                        "search_memory",
+                        {"query": query, "cursor": page["next_cursor"]},
+                    ),
+                )
+            )
+    
+        provider = SelectingProvider(
+            [
+                ModelResponse(tool_calls=(ToolCall("first", "search_memory", {"query": query}),)),
+                *([advance] * 11),
+            ]
+        )
+        runtime, store, session, scope, value = await prepare_runtime(
+            tmp_path, fixture, frozen, provider, "controlled-reader-diagnosis"
+        )
+        try:
+            await setup_source(runtime, session, scope, value, fixture, frozen["manifest"])
+            result = await runtime.run_existing(session, fixture["question"])
+            assert result.steps &lt;= frozen["manifest"]["limits"]["max_steps"]
+            assert fixture["value"] in provider.requests[-1].messages[-1].content
+            assert pages[0]["total"] == len(fixture["memory_noise"]) + 1
+            assert pages[0]["next_cursor"] is not None
+&gt;           assert all(len(hit["text"]) &gt; len(query) for hit in pages[0]["hits"])
+E           assert False
+E            +  where False = all(&lt;generator object test_fewer_hits_restore_context_and_original_reader_reaches_target.&lt;locals&gt;.&lt;genexpr&gt; at 0x00000229D9ECE260&gt;)
+
+docs\validation-data\active-retrieval\reliability-02\candidate_checks.py:67: AssertionError</failure></testcase></testsuite></testsuites>

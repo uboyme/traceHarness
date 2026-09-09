@@ -1,0 +1,59 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+________ test_diagnostic_case_paths_satisfy_skill_root_contract[True] _________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5201/test_diagnostic_case_paths_sat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029332BF4200>
+relative = True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("relative", [True, False])
+    async def test_diagnostic_case_paths_satisfy_skill_root_contract(tmp_path, monkeypatch, relative):
+        monkeypatch.chdir(tmp_path)
+        root = tmp_path / "experiment"
+        root.mkdir()
+        (root / "experiment.json").write_text(json.dumps({
+            "source_files": {"baseline": {}}, "provider": "test", "model": "test",
+            "manifest": {"limits": {"provider_timeout_seconds": 1}},
+            "fixtures": [{"identity": "explicit-test"}],
+        }), encoding="utf-8")
+        monkeypatch.setattr(runner, "source_files", lambda _: {})
+        monkeypatch.setattr(runner, "load_provider", lambda _: (SimpleNamespace(name="test"), "test"))
+        visited = []
+    
+        async def case(folder, fixture, frozen, provider, model):
+            resources = folder / "plugin-resources"
+            resources.mkdir(parents=True)
+            owner = contribution("diagnostic.test", "manual", "body").descriptor.plugin
+            binding = SkillResourceRoot(owner, resources)
+            visited.append(binding)
+            return {"provisional_joint_pass": False}
+    
+        monkeypatch.setattr(runner, "run_case", case)
+>       await runner.main(Namespace(output=Path("experiment") if relative else root,
+                                    arm="baseline", profile=None))
+
+C:\Users\caojie\Desktop\instudy\traceharness\.pytest-tmp-codex\test_ar_e_runner_before.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\caojie\Desktop\instudy\traceharness\.pytest-tmp-codex\ar-e-runner-before\live_active_retrieval\output_diagnosis.py:24: in main
+    report = await run_case(arm / fixture["identity"], fixture, frozen, provider, model)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\caojie\Desktop\instudy\traceharness\.pytest-tmp-codex\test_ar_e_runner_before.py:37: in case
+    binding = SkillResourceRoot(owner, resources)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:5: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = SkillResourceRoot(plugin=PluginIdentity(plugin_id='diagnostic.test', version='1.0.0'), path=WindowsPath('experiment/baseline/explicit-test/plugin-resources'))
+
+    def __post_init__(self) -> None:
+        if type(self.plugin) is not PluginIdentity or not isinstance(self.path, Path):
+            raise ValueError("skill-root-binding-invalid")
+        if not self.path.is_absolute():
+>           raise ValueError("skill-root-binding-invalid")
+E           ValueError: skill-root-binding-invalid
+
+C:\Users\caojie\Desktop\instudy\traceharness\src\traceh\api\skills.py:318: ValueError
+=========================== short test summary info ===========================
+FAILED .pytest-tmp-codex/test_ar_e_runner_before.py::test_diagnostic_case_paths_satisfy_skill_root_contract[True]

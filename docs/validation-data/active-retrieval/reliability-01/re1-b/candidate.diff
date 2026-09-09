@@ -1,0 +1,33 @@
+--- b0/session/tool_output.py
++++ re1-b/session/tool_output.py
+@@ -93,6 +93,30 @@
+                 "part": "content",
+                 "offset": 0,
+             },
++        }
++    if reader_available or searcher_available:
++        display = {
++            "source_kind": "tool-output",
++            "body_status": "not-loaded",
++            "output_ref": reference,
++            "lookup_in_this_saved_output": {
++                "read_action": {
++                    "tool": OUTPUT_READ_TOOL,
++                    "arguments": {
++                        "effect_id": effect_id, "digest": reference["digest"],
++                        "part": "content", "offset": 0,
++                    },
++                } if reader_available else None,
++                "search_action": {
++                    "tool": OUTPUT_SEARCH_TOOL,
++                    "bound_arguments": {
++                        "effect_id": effect_id, "digest": reference["digest"],
++                        "part": "content",
++                    },
++                    "required_query": "A literal keyword chosen from the question or observed output.",
++                } if searcher_available else None,
++            },
++            "notice": display["notice"],
+         }
+     presentation = canonical_json(display)
+     return (

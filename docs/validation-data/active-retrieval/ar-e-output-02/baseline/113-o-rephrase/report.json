@@ -1,0 +1,39 @@
+{
+  "identity": "113-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "70b8bf53-09b9-4e87-a0d6-be2c3268533a",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查返回的核验代号（即 Tool 输出的 digest）是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`\n\n该 digest 已在上一步 shell 工具调用的输出中明确给出，属于 retained effect 的唯一标识。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 6.094000000040978,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4828,
+    "output_tokens": 108,
+    "total_tokens": 4936
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13223,
+    "output_tokens": 130,
+    "total_tokens": 13353
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 11.905999999959022
+}

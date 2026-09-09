@@ -1,0 +1,11 @@
+--- b0/traceh/session/reference_search.py
++++ candidate/traceh/session/reference_search.py
+@@ -311,6 +311,8 @@
+         if width == 0:
+             if hit_limit > 1:
+                 hit_limit -= 1
++                # Fewer references release space; recompute useful snippet context.
++                width = policy.item_bytes
+                 continue
+             body = json.loads(block["body"])
+             body.update(status="resource-limit", scanned=0, hits=[], next_cursor=None)

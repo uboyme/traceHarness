@@ -1,0 +1,88 @@
+{
+  "id": "m-revoked",
+  "family": "memory",
+  "domain": 1,
+  "mode": "revoked",
+  "language": "zh",
+  "question": "项目现在有没有有效批准的备用联络呼号？",
+  "source_title": "已撤销的联络安排",
+  "source_body": "备用联络呼号是 {value}。",
+  "expected": "no-evidence",
+  "value_type": "code",
+  "control": true,
+  "discovery": false,
+  "seed": 227,
+  "identity": "227-m-revoked",
+  "value": "REF-C22930CA97",
+  "source": "备用联络呼号是 REF-C22930CA97。",
+  "domain_name": "河岸档案整理",
+  "project_id": "project-c22930ca97",
+  "source_id": "source-c22930ca97",
+  "memory_id": "fact-c22930ca97",
+  "fact_slot": "slot-c22930ca97",
+  "skill_id": "manual-c22930ca97",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-c22930ca97-00",
+      "slot": "background-slot-00",
+      "body": "普通材料保管记录第0项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-01",
+      "slot": "background-slot-01",
+      "body": "普通材料保管记录第1项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-02",
+      "slot": "background-slot-02",
+      "body": "普通材料保管记录第2项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-03",
+      "slot": "background-slot-03",
+      "body": "普通材料保管记录第3项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-04",
+      "slot": "background-slot-04",
+      "body": "普通材料保管记录第4项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-05",
+      "slot": "background-slot-05",
+      "body": "普通材料保管记录第5项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-06",
+      "slot": "background-slot-06",
+      "body": "普通材料保管记录第6项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-07",
+      "slot": "background-slot-07",
+      "body": "普通材料保管记录第7项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-08",
+      "slot": "background-slot-08",
+      "body": "普通材料保管记录第8项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-09",
+      "slot": "background-slot-09",
+      "body": "普通材料保管记录第9项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-10",
+      "slot": "background-slot-10",
+      "body": "普通材料保管记录第10项：由资料组维护登记。"
+    },
+    {
+      "id": "background-c22930ca97-11",
+      "slot": "background-slot-11",
+      "body": "普通材料保管记录第11项：由资料组维护登记。"
+    }
+  ],
+  "predecessor_value": null
+}

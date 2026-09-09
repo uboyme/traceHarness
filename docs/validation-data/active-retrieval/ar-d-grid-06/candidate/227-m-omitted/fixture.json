@@ -1,0 +1,88 @@
+{
+  "id": "m-omitted",
+  "family": "memory",
+  "domain": 0,
+  "mode": "omitted",
+  "language": "zh",
+  "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+  "source_title": "值班联络批准记录",
+  "source_body": "已批准的项目应急联络呼号是 {value}。",
+  "expected": "value",
+  "value_type": "code",
+  "control": false,
+  "discovery": true,
+  "seed": 227,
+  "identity": "227-m-omitted",
+  "value": "REF-F62252436D",
+  "source": "已批准的项目应急联络呼号是 REF-F62252436D。",
+  "domain_name": "灯塔设备演练",
+  "project_id": "project-f62252436d",
+  "source_id": "source-f62252436d",
+  "memory_id": "fact-f62252436d",
+  "fact_slot": "slot-f62252436d",
+  "skill_id": "manual-f62252436d",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-f62252436d-00",
+      "slot": "background-slot-00",
+      "body": "项目应急联络呼号查询安排第0项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-01",
+      "slot": "background-slot-01",
+      "body": "项目应急联络呼号查询安排第1项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-02",
+      "slot": "background-slot-02",
+      "body": "项目应急联络呼号查询安排第2项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-03",
+      "slot": "background-slot-03",
+      "body": "项目应急联络呼号查询安排第3项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-04",
+      "slot": "background-slot-04",
+      "body": "项目应急联络呼号查询安排第4项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-05",
+      "slot": "background-slot-05",
+      "body": "项目应急联络呼号查询安排第5项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-06",
+      "slot": "background-slot-06",
+      "body": "项目应急联络呼号查询安排第6项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-07",
+      "slot": "background-slot-07",
+      "body": "项目应急联络呼号查询安排第7项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-08",
+      "slot": "background-slot-08",
+      "body": "项目应急联络呼号查询安排第8项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-09",
+      "slot": "background-slot-09",
+      "body": "项目应急联络呼号查询安排第9项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-10",
+      "slot": "background-slot-10",
+      "body": "项目应急联络呼号查询安排第10项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    },
+    {
+      "id": "background-f62252436d-11",
+      "slot": "background-slot-11",
+      "body": "项目应急联络呼号查询安排第11项：询问已批准的项目应急联络使用哪个呼号时，请查值班联络批准记录；此条只确认查询分工，不包含呼号值。"
+    }
+  ],
+  "predecessor_value": null
+}

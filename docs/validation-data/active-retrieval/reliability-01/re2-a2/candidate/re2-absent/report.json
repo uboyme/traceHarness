@@ -1,0 +1,48 @@
+{
+  "identity": "re2-absent",
+  "case_id": "re2-absent",
+  "seed": 1609,
+  "family": "memory",
+  "question": "项目批准了停车优惠码吗？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "c822e63b-db0c-40a1-b65b-bc6b8394deea",
+  "target_start_seq": 1,
+  "answer": "根据当前参考中的内存事实，项目批准的内容是：“本项目仅批准物料清点安排。”\n\n这句话明确指出项目只批准了物料清点安排，没有提到停车优惠码。因此，项目没有批准停车优惠码。\n\n答案：否，项目没有批准停车优惠码。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.406000000075437,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10660,
+    "output_tokens": 292,
+    "total_tokens": 10952
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10660,
+    "output_tokens": 292,
+    "total_tokens": 10952
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "fact-a6fdd1f91e",
+        "requested_tier": "section",
+        "version": "64ad636b7f9280c401b0c1cffa72a3dbc4b28e168c15b0246dbbd5bf10971b3f"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 13.78200000000652
+}

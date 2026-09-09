@@ -1,0 +1,95 @@
+{
+  "identity": "227-h-english",
+  "case_id": "h-english",
+  "seed": 227,
+  "family": "history",
+  "question": "What was the temporary handover code we discussed earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "80cfeb23-b7bd-4fc4-9d13-997df51f03b9",
+  "target_start_seq": 152,
+  "answer": "The current references include a history chunk (the first one listed) that contains the exact message:  \n`\"请记下这条记录，只回复已记下：The temporary handover code is REF-1334BDB95D.\"`\n\nThis confirms the temporary handover code discussed earlier is **REF-1334BDB95D**.\n\nNo further tool calls are needed — the answer is directly present in the disclosed reference material.\n\nREF-1334BDB95D",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 64.85900000005495,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 24154,
+    "output_tokens": 1343,
+    "total_tokens": 25497
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54932,
+    "output_tokens": 1373,
+    "total_tokens": 56305
+  },
+  "evidence": [
+    {
+      "context_seq": 210,
+      "id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+      "version": "3959295a609f3b6663ad78d8b58605aa18790b5031f523d23e0a181bd98548e4",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+        "cursor": {
+          "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+        "cursor": {
+          "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+        "cursor": {
+          "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+        "cursor": {
+          "block_id": "fa7179ba186003925ef33c24325de8e290c3f029b5aded718da599bfcc47d4bf",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 102.48400000005495
+}

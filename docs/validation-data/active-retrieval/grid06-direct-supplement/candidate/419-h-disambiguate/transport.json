@@ -1,0 +1,58 @@
+{
+  "mode": "direct",
+  "connections": [
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    },
+    {
+      "loopback": false,
+      "port": 443
+    }
+  ],
+  "opener_restored": true
+}

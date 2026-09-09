@@ -1,0 +1,49 @@
+{
+  "identity": "113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "44b53809-257f-4651-9594-8c93ca41ba99",
+  "target_start_seq": 28,
+  "answer": "没有。刚才执行的 `python check.py` 检查输出中未出现“保险理赔编号”字样。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 8.016000000061467,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10245,
+    "output_tokens": 150,
+    "total_tokens": 10395
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 18970,
+    "output_tokens": 173,
+    "total_tokens": 19143
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+        "effect_id": "871d8612-0891-41ae-a6ef-e93a93fa608f",
+        "part": "content",
+        "query": "保险理赔编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 14.108999999938533
+}

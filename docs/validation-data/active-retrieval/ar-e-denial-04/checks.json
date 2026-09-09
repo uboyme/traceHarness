@@ -1,0 +1,14 @@
+{
+  "targeted_tests": 42,
+  "new_runner_tests": 3,
+  "reverse_check": "Isolated old runner fails the relative-path case in SkillResourceRoot; correct runner passes all three cases.",
+  "compileall_src_tests": "passed",
+  "ruff_changed_files": "passed",
+  "targeted_collection": "passed",
+  "diff_check": "passed with line-ending warnings",
+  "anti_hardcoding": "Production hashes unchanged from grid-05; explicit fixture plugin identity only in test, no production examples or model branches.",
+  "production_protocol_changed": false,
+  "full_suite_run": false,
+  "L2_L4_run": false,
+  "commit_push_release": false
+}

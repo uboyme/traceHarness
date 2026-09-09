@@ -1,0 +1,95 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "5679edfb-8d4b-4ee6-a900-e0b0d1677911",
+  "target_start_seq": 152,
+  "answer": "The device handover passphrase is explicitly stated in the first history chunk: `\"设备交接的口令是 REF-34772572F2。\"`.\n\nTherefore, the passphrase is **REF-34772572F2**.",
+  "steps": 5,
+  "reason": "completed",
+  "target_seconds": 62.92200000002049,
+  "target_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 23864,
+    "output_tokens": 1134,
+    "total_tokens": 24998
+  },
+  "all_usage": {
+    "attempts": 15,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54637,
+    "output_tokens": 1164,
+    "total_tokens": 55801
+  },
+  "evidence": [
+    {
+      "context_seq": 210,
+      "id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+      "version": "fa77b57bed3cbded513196cc658c1645c25b9440a5748ae267464f1fefe09932",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+        "cursor": {
+          "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+        "cursor": {
+          "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+        "cursor": {
+          "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+          "index": 2,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+        "cursor": {
+          "block_id": "287d27c4c0d0486c2cc1fd6a771034da7fb7cfcf7603fdd2b852e4bb4b039868",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 102.125
+}

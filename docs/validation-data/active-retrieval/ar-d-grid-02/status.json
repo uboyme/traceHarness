@@ -1,0 +1,36 @@
+{
+  "state": "aborted-for-verified-schema-defect",
+  "complete_grid": false,
+  "reason": "Search schema allowed limit=10 although the frozen Context max_blocks=6 rejects it; model repeated invalid calls. Fix config-derived schema maximum and rerun a new complete paired grid with unchanged questions, fixtures and gates.",
+  "termination": "All four owned execution sessions stopped; interrupted SQLite event logs exported read-only. Incomplete attempts are not successes and remote usage is unknown.",
+  "interrupted": [
+    {
+      "arm": "baseline",
+      "identity": "113-h-english",
+      "attempt_starts": 13,
+      "attempt_ends": 12,
+      "inflight_usage_unknown": 1
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-m-superseded",
+      "attempt_starts": 0,
+      "attempt_ends": 0,
+      "inflight_usage_unknown": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-h-english",
+      "attempt_starts": 7,
+      "attempt_ends": 6,
+      "inflight_usage_unknown": 1
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-s-absent",
+      "attempt_starts": 0,
+      "attempt_ends": 0,
+      "inflight_usage_unknown": 0
+    }
+  ]
+}

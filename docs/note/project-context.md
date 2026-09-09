@@ -34,28 +34,42 @@
 
 ## 1. 当前项目状态
 
-下一步的[主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)已落盘，AR-A–AR-D 均未开始。
-它依次规划合同/评测冻结、History 搜索、Memory/Skill 主动发现、真实自然问答验收；本次只改文档，
-没有新增工具、协议或运行能力。目标边界见 7.11；语义检索保持关闭，发布门禁另行授权。
+**当前版本：0.9.0（Educational alpha，本地发行）。** 用户接受 55/72 的已知检索限制，授权提交和发版，并转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
 
-分层压缩 A/B 已接入：大工具输出在同一 Effect Outcome 中保存完整正文/结构化数据与引用，Session 只携带预览；默认工具提供本会话输出目录及有界读回。B+ 增加同源关键词搜索与附近展开；C 已接入旧结果折叠，仍超阈值才做 M3 摘录；E0 已前置完整请求 token 估算、触发/拒绝与用量显示，D 已接入可选模型语义摘要；E1 已支持轮内闭合旧历史维护，E2 已按 token 准入参考，E3 已完成超限解释与真实旅程验收，见 9.5、12.2 与 ADR-0053/0054/0055/0056。
+**当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 
-本轮问题定位修复已接入唯一请求主线（ADR-0051）：后置参考包末尾逐字引用当前 Turn 的原始输入，防止检索完成后新问题被历史主题覆盖。当前为 Session 10 / Context 9 / `context-json-v9`；旧 Session 1–9 明确拒绝，使用新的数据目录与 Session，不自动迁移或改写旧账。
+**当前执行状态：** AR-A–AR-D、后续定向修复及 RE-0–RE-5 可靠性实验已收口。RE 共完成 112 条真实目标旅程；没有候选满足稳定收益条件，未采用新生产策略。RE-5 完成资格判定，无合格组合，96 条条件性留出验证未启动。原 grid-06 51/72 与 NO-GO 作为历史记录保留；当前按上述用户决定发行；详见[实验记录 008](../deal/008-retrieval-reliability-experiments.md)。 追加授权的一次片段预算追试已收口：16 条真实旅程为 4/8→4/8，未采用候选；关键题未触发有命中搜索，不能据此否定片段机制本身。见[记录 009](../deal/009-search-snippet-budget-followup.md)。
+
+用户已授权依序执行[主动检索计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)。AR-A 已完成
+设计/评测冻结；AR-B 的 History 搜索已接入，AR-C 已接入 Memory/Skill 搜索并完成真实诊断与合并范围门禁。
+上一阶段代码与证据已提交为 `a54d431`，未推送。三个搜索工具共用当前 Step 准入规则；
+最新完整复测 grid-06：基线 20/72、当前候选 51/72 联合通过，分别有 11/6 条 TLS EOF；两臂均无执行错误的 57 对中为 19/57 → 44/57。此前 grid-05 为 21/72 → 45/72，不能跨轮择优或把变化归因于单个补丁。四个独立日常对照每臂均正确回答、零工具调用；详见 7.11 与[最终对照记录](../deal/007-active-retrieval-final-comparison.md)。当前协议不变，语义检索保持关闭。
+随后授权的职责定位与小规模真实对照已完成。前两项呈现实验未合入生产；拒绝状态呈现实验减少重复但未解决来源选择，仍保留为隔离候选。诊断入口已修复相对目录导致 Skill 准备失败的问题，详见 7.11。
+
+已补齐证据导航的呈现合同（7.11、9.5、ADR-0064）：Skill 导航标记与准确目录动作、大输出引用、读取覆盖范围。长提示重写与强制自评实验未采用；不能保证模型正确判断全来源不存在。
+
+已修正来源导航与结果交付说明（7.11、ADR-0063），当前 Session 13 / Context 12；旧会话保留并明确拒绝，需要新的数据空间。
+
+已接入连续相同拒绝的 Continuation 保护，默认 2 次提示、3 次停止；真实验证与保守边界见第 10 节。拒绝 JSON 呈现改动仍未合入，AR-D 的 NO-GO 不变。
+
+分层压缩 A/B 已接入：大工具输出在同一 Effect Outcome 中保存完整正文/结构化数据与引用，Session 携带引用及必要的宿主控制回执；默认工具提供本会话输出目录及有界读回。B+ 增加同源关键词搜索与附近展开；C 已接入旧结果折叠，仍超阈值才做 M3 摘录；E0 已前置完整请求 token 估算、触发/拒绝与用量显示，D 已接入可选模型语义摘要；E1 已支持轮内闭合旧历史维护，E2 已按 token 准入参考，E3 已完成超限解释与真实旅程验收，见 9.5、12.2 与 ADR-0053/0054/0055/0056。
+
+本轮问题定位修复已接入唯一请求主线（ADR-0051）：后置参考包末尾逐字引用当前 Turn 的原始输入，防止检索完成后新问题被历史主题覆盖。当前为 Session 13 / Context 12 / `context-json-v12`；旧 Session 1–12 明确拒绝，使用新的数据目录与 Session，不自动迁移或改写旧账。
 
 当前在 Stop C 限定验收之后新增了 TUI 启动配置面板（13.11）：模型连接、会话、插件、自动压缩与功能开关均有中文表单；
-裸 traceh 在连接配置完整时直接进入聊天，首次缺配置才显示简短向导；Context／Product 可按中文字段编辑，F2 可应用配置并恢复当前会话。它不改变 Session 10／Context 9 协议或已有 authority；
+裸 traceh 在连接配置完整时直接进入聊天，首次缺配置才显示简短向导；Context／Product 可按中文字段编辑，F2 可应用配置并恢复当前会话。它不改变 Session 13／Context 12 协议或已有 authority；
 旧 Stop C 的生产字节冻结与独立审查是历史基线，不自动覆盖此后新增的配置面板实现。
 
 | 项目 | 当前事实 |
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `v0.8.0` 已完成发布门禁；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
+| 当前版本 | `v0.9.0` Educational alpha 本地发行；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前开发阶段 | v0.9-F0-A/B/C、F1 Skill 贡献与 F2 持久选择／检索／渐进披露已实现；限定验证见 15.1。F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查与定向验收，发布门禁仍待授权执行；Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认（15.1、16）。版本仍为 `0.8.0`，未运行发布级全量或 L2，不能宣称 v0.9 已发布 |
+| 当前开发阶段 | v0.9-F0-A/B/C、F1 Skill 贡献与 F2 持久选择／检索／渐进披露已实现；限定验证见 15.1。F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查与定向验收，发布门禁仍待授权执行；Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认（15.1、16）。版本已为 `0.9.0`，本次按第 1 节的用户决定限定发行；未运行发布级全量或 L2 |
 | Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；wrapper user message 始终在完整 Surface 之后且不进入 Surface。显式正文首次供紧邻目标 Step，实际准入正文在本 Turn 逐步复核资格与预算后保留；F2 接入宿主持久选择、eligible exact+FTS 与按请求的 section/chunk，Memory authority 与 F4 Context 注入均已实现；见 7.4–7.10、19.16 |
 | 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
@@ -69,7 +83,7 @@
 | Surface 压缩 | M3 起 `CompactionService` 拥有手动／自动 replacement；`surface_prefix()` 唯一派生来源，由不变量重算。字节模式在 Turn 前、token 模式在首 Step 准备时只压缩闭合旧 Turn 前缀，保留显式数量的最近 Turn，不碰 Product context、不拆 Step/Tool 组。format 2 绑定 exact source、cut、policy 与摘要器；拒绝 format 1。摘要按原逻辑位置投影，历史 Request 精确重建；手动 cut 必须命中闭合 Turn。字节模式四项策略显式给出；E0 可另设完整请求 token 估算策略（12.2），物理字节限额保留。默认规则摘录；D 可选语义摘要走原模型 Step/许可/Budget/取消与冻结来源变体（12.2、20.39、ADR-0057）。原始事件保留；F0-C 已在同一来源上接入当前 Session、exact block/cursor、request-only、Step-scoped 原文分页，并通过本轮限定验证（7.4） |
 | 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
-最新正式发布为 `v0.8.0`。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
+前一版 `v0.8.0` 的完整发布门禁属于历史证据。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
 Provider retry 只复用同一冻结请求，Line/Textual 共用 Driver 与 Product control/observation，format-7
 ProductTask context 提供同 Session 有界目录与按需证据，M3 用 append-only `surface/replace` 自动压缩
 Surface，M4 只读解释当前投影和最近冻结请求。Product/Workflow/Promotion 原流仍是唯一权威；没有第二
@@ -846,7 +860,7 @@ flowchart LR
 Session head 做 CAS；成功后才追加 Composition。retry 位于冻结之后，复用同一 Context、source_seq 和请求。
 
 F0-B 的请求冻结基础与 F0-C 原文披露均已通过本轮限定验证（15.1）。当前唯一策略切换为
-`f5-context-policy-v5`，配置为 13.3.1 的十二项统一策略。默认使用具名空策略：query、blocks
+`active-reference-policy-v8`，配置为 13.3.1 的十二项统一策略。默认使用具名空策略：query、blocks
 为空；空 Skill 目录记录 source-unavailable，非空目录记录 not-selected；Memory 来源未提供、History 未选择，引用配额恰容纳空 wrapper，本轮原问题回显另按实际字节记账。自动目录／摘要仍
 只从当前 Session 可见 M3 replacement 按原逻辑顺序取块；查询只冻结本 Turn 首条真实 user/message，
 History 不参与排名；Skill 与 Memory 共享检索见 7.5、7.7。仅额外显式配置 History reader 才能请求原文；不提供 raw-only 或跨 Session 读取。
@@ -876,7 +890,7 @@ reader 按 `observed_session_seq` 重建旧来源，不用后来的摘要；精�
 随后 Composition、catalog、query、正文与预算。原文另核 request_ref、cursor、page/leaf_refs 和目标
 Step，未授权 raw、无效或错配 catalog、Memory 来源证明和跨 scope 均拒绝；各领域使用 7.5、7.7 的来源验证。
 
-唯一 `context-json-v9` renderer 从完整合格 block 派生精简模型项，正文仍为 canonical JSON 字符串。
+唯一 `context-json-v12` renderer 从完整合格 block 派生精简模型项，正文仍为 canonical JSON 字符串。
 完整 source_refs/provenance 保存在原 Context 事件，模型不再收到重复的账本证明。宿主头尾区分导航
 与来源正文，导航不授予权限。History 的 read_action 按原首／下一 cursor 生成；无 reader 或末页为 null。
 Memory directory 给当前 ID/version 的完整短事实阅读动作，summary/section 已有完整正文时为 null。
@@ -888,10 +902,10 @@ Memory directory 给当前 ID/version 的完整短事实阅读动作，summary/s
 identity 与 canonical JSON 对账 committed true/false/unknown；unknown 不重投、不派发。Recovery
 不补造 Context 或 Attempt。History accepted/eligible/consumed/expired 从原持久事件与 Step 顺序派生；
 目标超预算、失败、未发生、max_steps、取消或恢复均不顺延，无新增 writer、Lease 或 pending 状态机。
-`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=10`；
+`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=13`；
 共同 Session reader、invariant、open/recover/inspect/replay/Request 路径拒绝旧 Session，只有列表可列身份。
-EventEnvelope schema 仍为 1、M3 format 与 SQLite schema 仍为 2；当前 Context outer format 为 9。
-Session marker 1–9、旧 Context/policy/renderer 与物理 schema 1 明确拒绝，无迁移或兼容 reader。
+EventEnvelope schema 仍为 1、M3 format 与 SQLite schema 仍为 2；当前 Context outer format 为 12。
+Session marker 1–10、旧 Context/policy/renderer 与物理 schema 1 明确拒绝，无迁移或兼容 reader。
 F3 authority 和 F4 Memory 检索均已实现（7.6、7.7）；F5 共享治理已接入（7.8）。
 
 Product 的 Session 证据与叶失败读取也调用同一 `require_session_protocol()`，不再维护两份旧
@@ -956,7 +970,7 @@ Tool 返回有界 skill_receipt 与 section/resource/chunk 导航卡（ID、titl
 
 Context 对三类来源统一分配预算：新显式请求、保留正文、自动 History、自动 Skill/Memory 融合候选；按完整渲染 item 分配
 item/kind/total/block 上限，超限整块排除。冻结前再次读取选择 head，变化则记录 source-unavailable，
-不偷偷替换成最新选择。已冻结的 Step 与重试不再检索。Context format 9 的必填
+不偷偷替换成最新选择。已冻结的 Step 与重试不再检索。Context format 12 的必填
 `retrieval` 统一为 `{skill,memory,fusion}` 或 null；每个来源的 format-2 receipt 恰好含 format/corpus_key/corpus_digest/eligible_count/lanes/fusion/coverage，见 7.7。
 lanes 记录 exact/FTS 状态与稳定 identity/score 排名，fusion 保存分子／分母；coverage 记录每个融合候选
 确实覆盖的查询词项。历史读取从原目录／Memory 前缀证明覆盖，不查询当前索引。
@@ -1126,8 +1140,8 @@ append/read 时复用原 project/memory projector 重放 exact 历史前缀，�
 activation、digest 和 eligible corpus。当前观察的 source_identity 必须属于该项目。已冻结 Request
 只使用旧 prefix/receipt/bytes；以后批准、撤销、修改 Git 或丢失索引都不改写旧 Request。
 
-唯一协议现为 Session marker 10、Context format 9、`f5-context-policy-v5`、`context-json-v9`。
-SQLite schema 仍为 2，M3 replacement format 仍为 2；旧 Session 1–9、旧 Context/策略明确拒绝，
+唯一协议现为 Session marker 13、Context format 12、`active-reference-policy-v8`、`context-json-v12`。
+SQLite schema 仍为 2，M3 replacement format 仍为 2；旧 Session 1–12、旧 Context/策略明确拒绝，
 无迁移、别名或兼容 reader。生产 semantic/reranker 目前明确关闭，不加载或下载模型；测试目录中的显式评估资产不属于 Runtime 装配；F5 治理与冻结评测已接入（7.8），发布门禁另计。
 
 ```mermaid
@@ -1244,9 +1258,9 @@ flowchart LR
 
 
 
-精度修订的覆盖证据沿用来源 receipt 2；导航修订后当前唯一协议为 Session 10、Context 9、`f5-context-policy-v5`，
-索引 `traceh-lexical-v3`/`eligible-bm25-v2`。旧 Session 1–9 在原入口明确拒绝，不迁移、改写或删除。
-当前 renderer 为 `context-json-v9`；SQLite 2、M3 2、Context 十二项及来源十五项配置保持原结构。精度阶段冻结 benchmark/
+精度修订的覆盖证据沿用来源 receipt 2；导航修订后当前唯一协议为 Session 13、Context 12、`active-reference-policy-v8`，
+索引 `traceh-lexical-v3`/`eligible-bm25-v2`。旧 Session 1–12 在原入口明确拒绝，不迁移、改写或删除。
+当前 renderer 为 `context-json-v12`；SQLite 2、M3 2、Context 十二项及来源十五项配置保持原结构。精度阶段冻结 benchmark/
 corpus JSON 和阈值不变。SessionService 与 Memory 原历史 reader 验证当时的覆盖和来源前缀，重试／重建
 使用原 receipt 和 bytes，不运行新查询；没有双 reader 或第二事实源。定向验证和冻结复验见 15.1。
 
@@ -1308,9 +1322,9 @@ flowchart LR
 
 真实调用还定位并修复两项：ModelRequest reader 保留 JSON 温度的 int/float 原表示，避免合法 `0`
 变成 `0.0` 导致冻结请求绑定失败；词法分词将无引号普通词尾标点、仅由冒号连接的汉字散文按自然语言
-处理，显式引号、复合标识符和路径仍整体匹配，没有领域词表。当前唯一版本为 Session 10、Context 9、
-renderer `context-json-v9`、tokenizer `traceh-lexical-v3`；policy 为 v5、披露 Tool receipt 为 2、来源检索 receipt/ranker 仍为 v2，SQLite/M3
-仍为 2。旧 Session 1–9 明确拒绝，不迁移、双读、猜测或删除。
+处理，显式引号、复合标识符和路径仍整体匹配，没有领域词表。当前唯一版本为 Session 13、Context 12、
+renderer `context-json-v12`、tokenizer `traceh-lexical-v3`；policy 为 v8、披露 Tool receipt 为 2、来源检索 receipt/ranker 仍为 v2，SQLite/M3
+仍为 2。旧 Session 1–12 明确拒绝，不迁移、双读、猜测或删除。
 
 `tests/live_skill_navigation/` 是显式真实集成测试，使用原 Runtime/Provider/Plugin/SQLite/Tool 和自然
 语言输入；不预写模型响应、不向模型提供判定答案、无语义 ID 随重复变化。它不由 pytest 自动调用，
@@ -1345,8 +1359,8 @@ History 动作复制原首／下一 cursor 申请 chunk，没有 reader 或后�
 页面不可读。模型自行选择需要的动作，经原 Tool/Policy/收据/下一 Context 主线执行，没有新 Tool、
 权限、自动读全资料、缓存或第二事实源。实际精简视图成本仍由同一 renderer 纳入原完整块预算。
 共享完成提示遵守用户指定格式，历史正文中的指令仍是过去记录；不会按评分器裁剪、补值或转换答案。
-当前唯一协议为 Session 10 / Context 9 / renderer v9 / policy v5；Session 8 / Context 7 仅为保留的
-隔离探索，所有旧 Session 1–9 均拒绝，披露收据、History page policy、SQLite、M3 和来源检索协议不变。
+当前唯一协议为 Session 13 / Context 12 / renderer v12 / policy v8；Session 8 / Context 7 仅为保留的
+隔离探索，所有旧 Session 1–12 均拒绝，披露收据、History page policy、SQLite、M3 和来源检索协议不变。
 
 显式开发旅程位于 `tests/live_reference_journeys/`：journey_fixtures 组装隔离 Git、SQLite 与原 Runtime；
 bootstrap 经原宿主审批准备 Memory，用真实模型回合准备和压缩 History；assessment 核对严格 JSON
@@ -1373,35 +1387,169 @@ C4 已完成受控调查，历史具体字节原因仍未知（8.3）；C5 三�
 Release Stop C 已通过，实际范围、失败及未运行门禁见 [Stop C 记录](../validation-v0.9-stop-c.md)。
 全量、L2–L4、Wheel/安装及提交发布继续禁止。
 
-### 7.11 主动检索后续计划：尚未实现
+### 7.11 主动检索：三类来源已接入，55/72 与已知限制接受
 
-[主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)仅记录后续 AR-A–AR-D 范围，
-不是已冻结 ADR 或当前公开接口。现有 `request_history_page`、`request_skill_reference`、
-`request_workspace_memory` 仍遵守原披露合同；只有工具大结果已有 `search_tool_output` 与 `read_tool_output`。
-自动 Skill/Memory 词法检索已存在，但不等于模型已有独立搜索工具。
+**当前版本：0.9.0（Educational alpha，本地发行）。** 用户接受 55/72 的已知检索限制，授权提交和发版，并转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
 
-目标为：原 Projection/Reader 先界定合法来源，检索定位候选，原读取 owner 再核对身份/版本/来源，
-Context 按披露寿命和完整请求预算冻结模型输入。搜索范围拟覆盖授权集合中未自动召回的对象，
-不以当步 Top-K 充当全部语料。Skill 首版仅查宿主已选 Skill 的导航元数据；Memory 仅查当前项目
-active 批准事实；History 仅查原 reader 可验证的同 Session 压缩闭合历史，不开放任意 Stream。
+**当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 
-拟议搜索片段也受披露约束，按原 Context 路径准入；必须在 AR-A 证明首次发现的 handle 能接入现有
-读取授权链，不能只返回模型无法消费的 ID。原工具输出/文件工具保持其实际 Tool result 路径，不统一改名。
-History 原文页仍保持完整 Turn 和 Tool 配对；超大页的限制不因搜索而消失。具体 schema、版本、分页、
-扫描量和配置数值由 AR-A 核查冻结，不另建 pending、平行 Projector、事实源或搜索 AgentLoop。
+**追加追试已停止。** [记录 009](../deal/009-search-snippet-budget-followup.md)在隔离副本尝试减少命中数后重新分配片段上下文。49 项定向检查和公开路径反向验证证明相同预算下可恢复片段、原 Reader 可定位目标；脚本提供精确定位词不算自主检索。真实模型 16 条旅程为 4/8→4/8，没有有命中搜索页，候选关键路径未被真实模型使用，故未验证端到端收益，按用户要求停止追加方案。44 个请求独立重放通过，无最终连接失败，Provider 报告 248,063 tokens；较深连续分页的离线诊断中止、不计通过，其性能与取消收敛不作新保证。未采用生产改动，未跑全量或 L2–L4，未提交。
+
+**可靠性实验已收口，未新增生产策略。** [RE 计划](../plan/TRACEHARNESS_RETRIEVAL_RELIABILITY_EXPERIMENT_PLAN.md)以完整当前源码冻结 B0，在独立进程中用同一模型、预算和直连条件对照。RE-1a/1b 分别为 7/10→7/10；RE-2 为 7/10→6/10；RE-3 首轮 5/10→6/10、重复 3/6→2/6；RE-4 为 8/10→8/10。首轮包含四个无需检索保护题，这些诊断分数不能替代历史 72 题成绩。无稳定收益候选，RE-5 完成组合资格判定，24 个冻结留出场景对应的 96 条验证未运行，不算通过。
+
+新增 `tests/live_active_retrieval/reliability.py` 显式实验入口及固定材料，复用原真实 Runtime/Reader/工具主线；普通 pytest 不隐式联网。112 条目标旅程无最终连接错误，40 条日常保护旅程正确且零工具调用；含准备共 401 个请求在独立 SQLite 副本重放一致，无不变量或 Attempt 收敛错误，命令输出各执行一次。Provider 报告含准备 1,956,458 tokens（目标部分 1,421,171），不含两个探针，unknown/estimated 为 0。运行器/Provider 定向 43 项及各候选 owner 检查通过，3,645 项仅收集；未跑全量、L2–L4 或发布门禁。
+
+实验确认：Memory 可在只扫 2/13 对象且还有下一页时停在背景；模型可能把导航记录名当业务凭证、把来源不可用说成无命中。多词查询的单题改善未重复。题目歧义、附加错误及评分敏感性均单列在[记录 008](../deal/008-retrieval-reliability-experiments.md)，不能归因为存储丢失或靠强制搜索处理。生产 Python 源码与 B0 完全一致，Session 13 / Context 12 协议、原 Projection/Reader、Effect 事实源、预算、停止规则与用户连接配置保持当前主线；语义检索和本轮候选均未采用，原 51/72 与 NO-GO 不变。
+
+[主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)与
+[ADR-0061](../adr/0061-active-reference-search.md)冻结共同合同。AR-A 已完成；AR-B 已接入
+`search_history`，定向/相邻验证已完成。AR-C 已装配 `search_memory`、`search_skill`，保留原自动检索与读取工具；
+合并范围门禁已完成；AR-D 已执行完整网格与独立重放，原验收结论 NO-GO；当前按第 1 节的已知限制接受决定发行并进入 S0。语义检索仍关闭。
+
+`session/history.py` 的同一完整 Turn 分页规则供 `read_page` 与 `search_records` 复用。
+搜索只扫描当前 Session 合法压缩根展开的原消息 content；记录绑定 root/version/leaf ref/page cursor。
+它不是所有 Session 或任意 Stream 搜索；大工具结果仍沿独立 retained output reader 读取，不能重跑命令。
+超大完整 Turn 可以产生带来源的短片段，但原页不可读时 `read_action=null`，不拆开 Tool call/result。
+
+`session/reference_search.py` 负责字面 Unicode 忽略大小写定位、规范参数、稳定扫描顺序与派生页；
+`tools/reference_search.py` 借用同一 Session reader，经原 ToolRuntime、Policy 与 Step 记录回执。
+query 不接受空值或超限，limit 取现有 Context max_blocks，cursor 绑定来源/查询/策略和扫描位置；
+只有本 Step 已准入页给出的 next_cursor 可以翻页。无关追加事件不改变压缩根来源身份。
+没有新索引、pending、持久搜索队列、业务投影、AgentLoop 或预算配置字段。
+
+`session/memory_search.py` 从原 MemoryContextReader / active 投影生成分离的有界记录，搜索 memory_id、fact_slot、
+批准正文；以项目 scope、原 source heads、Memory source policy 绑定版本。候选只含当前批准且有效对象，
+提议、撤销和被替代版本不可重新准入；读取仍由 request_workspace_memory 核对批准引用、版本与当前绑定。
+Session append/read 通过原冻结 Memory reader 重算搜索页，重新计算摘要也不能把伪造片段变成批准事实。
+
+`session/skill_search.py` 从原 selection 与 Composition descriptor 生成顶层/章节/资源分块的 ID、标题、summary、tags
+记录，顺序由原目录身份决定。资源标题进入其 chunk 记录；无 chunk 的资源只提供目录读取入口。
+搜索不调用正文 reader；记录数/字节、catalog、查询、页与 token 均有原限额。搜索页绑定 Session、catalog digest、
+selection head；Session reader 以原选择流前缀和冻结 Composition 重建，Request reader 另外核对片段来自该目录。
+正文继续由原 Skill Lease 的 read_section/read_chunk 读取，插件切换、退役和取消选择沿原规则失效。
+
+共同 `SearchSource` 只是临时 detached reader 结果，不存业务状态。三类工具复用成功 Tool 回执、下一 Step 搜索页、
+预算与游标规则；Memory/Skill 命中只给原读取工具接受的精确 read_action，不能随意改 tier、ID 或版本。
+顶层 Skill 摘要命中不能直接改成目录申请；需要章节正文时继续搜索主题词，或先按原摘要入口取得原披露资格。
+当前参考包装与通用工具说明明确自动目录为空不代表合法资料不存在；搜索未命中应换相关词，不能把工作区文件
+当作批准 Memory 或 Skill 来源。这些指引不包含领域答案、具体模型分支或测试词表。
+
+
+Tool result 只存 format-1 search_receipt；成功模型 Tool call、原冻结请求/Context、来源摘要均核对。
+下一 Step 才从原事件和来源重建 `kind=history|memory|skill,tier=search` 页并走统一准入；搜索页不保留到更后 Step。
+原 `request_history_page` 仅从当前已准入搜索命中接受精确读法，之后继续原 fresh/retained 正文寿命。
+同一步搜索后抢先读取、伪造 offset、跨 Session、过期命中及重新计算摘要后的伪造正文均不能获得授权。
+未准入不等于送达；失败/取消/恢复收据不产生后续搜索候选。CoreInvariantChecker 也核对没有后续 Context 的搜索回执。
+
+搜索片段不伪装成完整批准事实或原消息。body 明示字段、status、scanned/total、hits、next_cursor；
+无合法压缩来源与当前字面无命中分开表达。total 为有界来源记录数，不是命中总数。
+页按原 item/kind/total bytes 与完整请求 token 准入；先缩短片段，再缩减命中数并返回精确续页位置，
+单条身份/动作也放不下时为 resource-limit，绝不截坏 JSON。统一优先级为新正文 → 新搜索页 →
+已保留正文 → 自动 History → 自动 Skill/Memory；重放重算同一规则。
+
+当前唯一合同已切为 Session 13 / Context 12 / `context-json-v12` / `active-reference-policy-v8`。
+普通披露 receipt 2、History page、SQLite/M3 和 retained output 格式不变。
+旧 Session 1–12 明确拒绝，需要新数据目录与新 Session；Line Chat 给出中文说明，TUI 复用原旧数据选择界面。
+不迁移、猜测、修改或删除用户旧账；历史真实报告保留其原协议，不能拿新版 reader 静默读取旧报告中的会话。
 
 ```mermaid
 flowchart LR
-    A["计划 AR-A：合同与评测冻结"] --> B["计划 AR-B：History 定位"]
-    B --> C["计划 AR-C：Memory / Skill 主动发现"]
-    C --> D["计划 AR-D：自然问答、原请求证据与重放验收"]
+    A["AR-A：合同与评测已冻结"] --> B["AR-B：同 Session History 搜索"]
+    B --> S["下一 Step 搜索页准入"]
+    S --> R["原 request_history_page 与正文寿命"]
+    R --> C["AR-C：Memory / Skill 原来源搜索与读取"]
+    C --> D["AR-D 已执行：真实门槛 NO-GO"]
 ```
 
-计划验收以自然问题、两套以上材料及固定重复为基础，分别核对答案、实际证据、来源隔离、预算和成本；
-不向目标问题添加工具名/ID/cursor 或搜索步骤，不强制片段已足够时额外读原文。24 题、每配置三次重复及
-通过门槛是待 AR-A 固化的评测计划，不是已运行结果或生产默认。原语义九候选未接入结论继续有效。
-本次文档仅检查章节、链接、Mermaid、示例/秘密边界与 diff；未运行实现测试或真实模型。
-后续按 owner/相邻测试与授权真实验证执行，继续不跑全量、L2–L4、安装或发布门禁，不自动提交。
+AR-B 的隔离真实 qwen-plus 诊断保留两轮结果：[第一轮](../validation-data/active-retrieval/ar-b-smoke-01/report.json)
+中文未完成检索、英文沿旧分页找回；[第二轮](../validation-data/active-retrieval/ar-b-smoke-02/report.json)
+在通用搜索/实际调用指引修订后，中英文答案与证据、重放、不变量均通过，中文实际使用 search_history，
+英文仍沿原分页完成。第一轮失败未删除。两轮目标问答实际 Provider total_tokens 分别为 28197、40458，
+不含准备材料的请求；这些是诊断，不是 AR-D 得分或模型成功保证。
+
+AR-C 的[真实诊断汇总](../validation-data/active-retrieval/ar-c-real-summary.json)保留五轮全部结果，共 38 个实际 Attempt、
+160991 total_tokens。第一轮 Skill 夹具因目录身份顺序不合法而未启动；第二轮模型读取工作区中的审计夹具，明确判失败，
+随后把证据移到工作区外并使用参考来源 Tool policy。第三轮开始的 Memory 问题更明确，这些轮次不是受控成功率对比。
+[第五轮](../validation-data/active-retrieval/ar-c-smoke-05/report.json) Memory 2 Step、Skill 5 Step 均实际搜索，
+答案、原来源证据、当时请求重放与不变量通过；Skill 目录超过单页预算，通过章节搜索后原 Reader 读回正文。
+合成 owner 检查已覆盖大型目录、章节/chunk、分页、隐藏正文词不检索、身份拒绝、取消选择、插件目录切换和重复取消。
+Memory 伪造片段反向验证：去掉原来源重算保护后公开路径不再拒绝，恢复后正确拒绝。[AR-C 范围门禁](../validation-data/active-retrieval/ar-c.json)：主轮 298 项中 297 通过，1 项旧窄窗口夹具不再容纳新正文；
+按实测开销调整测试窗口后，保留原正文优先及排除历史断言的两个预算模块 24 项通过。新增 Memory 8 项、Skill 11 项通过。
+生产限额未改变，compileall、修改范围 Ruff、298 项收集与 diff 检查通过。
+
+[24 题 manifest](../../tests/live_active_retrieval/manifest.json)及[AR-A 冻结](../validation-data/active-retrieval/manifest-freeze.json)
+未改变。AR-D 的[最终报告](../validation-active-retrieval.md)与[grid-06 完整统计](../validation-data/active-retrieval/ar-d-grid-06/summary.json)
+结论为 **NO-GO**：同一 qwen-plus、24 题 × 3 种子，两臂各 72 条全部收齐、逐项复核答案及实际派发证据。基线 20/72、当前候选 51/72，增加 31 题（43.1 个百分点）。
+基线完成回答 58 条、耗尽 Step 3 条、TLS EOF 11 条；候选完成回答 66 条、耗尽 Step 0 条、TLS EOF 6 条。排除任一臂有执行错误的整对后，57 对为 19/57 → 44/57；此为辅助观察，不替换固定分母。
+候选 History/Skill/Memory/Output 分别通过 12/14/14/11（每类 18）；有答案题 46/60、无答案题 5/12，仍低于总数 66/72、各类 15/18 的冻结门槛。
+候选仍有 4 条把退出码或内容摘要标识误作所问事实；已观察资料越权、重复副作用、旧 Memory 冒充当前批准均为 0。
+先前 grid-05 的 21/72 → 45/72 原样保留为历史对照。当前候选比该轮多 6 题，但题库已用于诊断、存在服务波动，不能解释成独立留出效果或某一补丁的因果收益。
+负例必须限定实际证据范围：Skill 搜索只覆盖导航，局部预览/分页不能证明全来源不存在。
+另有目标答案有证据但附带错误行数的回答，单独记录，不把目标通过解释为所有陈述正确。
+
+grid-02 暴露搜索上限未说明、grid-03 暴露大导航收存清空控制回执；两项均已修复并做公开路径反向验证，旧失败保留。
+搜索 schema 按当前 policy 生成上限；大结果只保留宿主参考工具成功回执投影，仍核对原 Effect，详见 9.5。
+Line/headless TUI 沿同一个 display 将来源、覆盖、命中/无命中/限额/失效翻成中文，并说明查看历史快照不注入模型。
+AR-D 当时 owner/相邻 145 项、协议/CLI/合同 143 项，共 288 项不同用例通过；其编译、修改范围 Ruff、收集与 diff 检查通过。后续生产修复门禁见本节后文，本轮没有重新修改生产源码。
+grid-06 用各臂冻结源码、新 SQLite 备份与独立 Reader 重开 144 个会话，837 个冻结请求精确重放，不变量/重放错误 0，未结束 Attempt 0；重放没有 Provider 调用。
+主网格 973 个结束 Attempt，已报告 3641108 total_tokens，另有 153 个 Attempt 用量未知，估计用量为 0；不能据此声称精确成本下降，准备与目标用量分别保留。
+独立的[四类日常对照](../validation-data/active-retrieval/ar-final-controls-01/summary.json)每臂各 4 题均正确、1 步、零工具调用；当前候选仍暴露搜索/读取工具。8 个请求独立重放通过，另报告 30772 tokens；这是小样本，没有证明所有场景都不误搜，也不计入 72 题得分。原文证据足够时可以直接回答，没有新增每题搜索、遍历全部资料或强制复核规则。
+历史 grid-05 的 909 请求和 4032845 tokens 记录仍保留，不与本轮混算。
+先前 grid-04 的 117 条 TLS EOF 及中止轮仍保留；不能合并不同轮次择优计分。源码与材料冻结摘要、完整源码归档均保留。
+
+自然问题不含工具名、ID、预期答案或操作步骤，片段足够时不强迫多读；批准、选择、版本、取消和预算不放宽。
+已观察到成对收益及个别模型波动损失，未发现新增确定性控制组回归证据；收益不全部归因于搜索，也包括控制回执修复。
+固定门槛未满足，按计划停止进入下一阶段或发布，不换模型、抬预算或改变评分来凑通过。
+后续用户单独授权的职责定位、共性修复与最终 grid-06 复测已完成；完整轨迹和剩余行为边界见[记录 007](../deal/007-active-retrieval-final-comparison.md)，不提前实现语义检索。
+
+[职责诊断记录](../deal/002-active-retrieval-responsibility-diagnosis.md)将 27 条失败按主要行为分为：字段误用 9、
+局部推断全来源不存在 9、错误来源工具 4、读到背景后提前停止 4、分页耗尽步骤 1。行为分类不等于已证明因果 owner。
+默认 Continuation 在无工具调用且无失败的可选 Verifier 时返回 completed，不承诺语义证据充分；没有新增自动证据裁判。
+隔离评测 SourceOnly 拒绝文件探索但保留可见工具定义，必须区分评测条件与生产缺陷，不偷改该条件提高旧分数。
+
+新增 `tests/live_active_retrieval/output_diagnosis.py` 复用原真实 run_case、冻结材料、模型加载器与账本；
+每轮同一模型、六道输出题 × 两个种子、两臂各 12 条。新种子改变正例事实值，负例正文相同，不是未见问题集。
+[呈现说明实验](../validation-data/active-retrieval/ar-e-output-01/summary.json)为 4/12 → 3/12，字段误用均 6 条，已撤回。
+[Context 导航实验](../validation-data/active-retrieval/ar-e-output-02/summary.json)为 3/12 → 5/12，字段误用 6 → 5，
+两条错误文件调用耗尽步骤；收益集中一个种子，尚不能证明稳定的通用改善，未合入生产冻结 renderer。
+两项改动均确认实际派发；实验源码与所有失败保留。这两轮实验结束时生产 Python 摘要与 grid-05 候选一致，Session/Context 协议当时未变；后续当前修改见本节末尾。
+48 条真实任务独立重开后共 245 个请求精确重放，无不变量/重放错误或未结束 Attempt；原输出命令每条只执行一次。
+246 个结束 Attempt，服务报告 1333505 total_tokens，另有 1 次 usage 未知、估计为 0；不合并不同实验择优计分。
+本轮保留诊断运行器、责任归类与证据，未声称修复全部行为问题；下一调查点是来源工具选择与拒绝反馈，
+应沿原 Policy/Tool 边界单独对照，不加领域硬编码、强制读取状态机或新事实源。验证详情见职责诊断记录。
+
+[拒绝反馈诊断](../deal/003-tool-denial-feedback-diagnosis.md)确认：原拒绝说明进入下一请求，但 surface_message 未投影
+status/error_type/policy；工具表仍是 Composition 注册表，权限判定不是可见工具表的过滤器。
+候选仅在隔离源码中把 denied 事件的已有字段呈现为 JSON，不改权限、工具列表、停止规则或生产协议。
+03 轮诊断入口使用相对输出路径，两臂各 4 条 Skill 准备在模型调用前失败；原记录保留。
+output_diagnosis 入口已与 grid 一致使用绝对输出路径，新检查和隔离旧逻辑反向验证确认 Skill 根目录合同。
+04 轮同材料完整重跑：每臂 8 条，联合通过 4/8 → 5/8，相同工具/参数的重复拒绝次数 12 → 0，耗尽步骤 1 → 0；
+三条输出附近读取题双方仍全部失败，不能把减少重复当成正确检索。首次工具选择也有波动，未证明完整因果。
+16 条任务、87 个请求独立重放，无不变量/重放错误或未结束 Attempt；87 个结束 Attempt、426628 已报告 total_tokens，
+未知和估计均为 0。连同 03 轮实际启动的 8 个会话，共 137 个请求重放、673454 total_tokens；另 8 条准备失败不计真实调用。
+候选有后续请求的 8 次结构化拒绝确认实际派发，工具仍可见。当时生产文件摘要保持 grid-05，拒绝 JSON 候选暂不合入；
+后续需固定同一拒绝后请求做成对行动对照，再决定消息投影协议变更。42 项相关检查通过，3 项为新增运行器检查，
+编译、Ruff、定向收集与文档检查通过；全量/L2–L4 未运行，AR-D 仍 NO-GO。
+
+AR-A 的 57 项检查与反向证据仍见 [AR-A 验证数据](../validation-data/active-retrieval/ar-a.json)。
+AR-B 新增 24 项测试通过，358 项不同的定向/相邻用例已验证：主轮 357 通过、1 个窄窗口夹具因新增 schema 开销失败，
+保持正文排除断言并调整测试窗口后，该模块 13 项通过。生产预算未放宽。公开 Context append 来源保护反向失效、恢复后通过；
+compileall、Ruff、collect-only 与 diff 检查通过，见 [AR-B 证据](../validation-data/active-retrieval/ar-b.json)。
+两轮真实诊断含准备共 38 个 Attempt、150415 total_tokens；不运行全量、L2–L4、Wheel/安装或发布门禁，不自动提交 AR 新改动。
+
+来源导航与交付语义已按 [ADR-0063](../adr/0063-source-navigation-and-delivery-semantics.md) 修订。Composition snapshot 从当前 generation 捕获的工具表生成 system_prompt 中的来源导航，仅列实际暴露的宿主工具；不把暴露解释成获准或存在数据，不调用 Policy。History/Memory/Skill 的回执正文进入下一 Step 参考包，Tool Output 正文仍直接进入工具消息；空参考数组不代表后者不可用。搜索结果旁明确列出原有字面子串匹配与字段范围，区分 no-hit、source-unavailable 和预算未准入，不改查询、排序、Reader 或权限。拒绝反馈没有新增替代工具推断。
+
+当前唯一协议为 Session 13 / Context 12 / active-reference-policy-v8 / context-json-v12，拒绝旧 Session 1–12，保留旧数据、不迁移；历史验证用冻结源码重放。六对自然任务与定向验证见[修复记录](../deal/005-source-navigation-and-delivery-semantics.md)，不替代原 AR-D 分数。来源事实仍由各 Reader 提供，Composition 只冻结说明，Context 只编排呈现，架构层级不变。 本轮六对正例为 1/6 → 6/6，但新增两对无答案反例中候选均过早断言不存在；不宣称整体可靠性达标。290 项定向检查和 84 个真实请求独立重放通过。
+
+当前新增的是呈现合同（[ADR-0064](../adr/0064-evidence-bounded-retrieval-policy.md)），不是新的检索状态机。Skill summary/directory 明确为 `navigation-only`，section/chunk 为 `source-content`；summary 附精确 `request_skill_reference(directory)` 动作，身份来自当前已准入 block，其他 ID 为 JSON null。动作仍由原 Skill 选择、版本、披露、Lease 与下一 Step 预算规则校验；不直接交付正文，不扩大 search_skill 的导航字段范围。
+
+工具大结果在当前组合暴露搜索或读回工具时，只展示原 `output_ref` 与查找入口；两种工具都未装配时才保留不完整前缀预览。小结果继续 inline。`read_tool_output` 明确 `end_offset` 与 `body_status`：只有从 0 读到所选 part（content 或 canonical data）末尾的一页才是 complete-source，其余都是 source-excerpt；EOF 不等于已读全文，也不代表另一 part 已读。搜索显式标记 literal-substring。所有标记均由原内容、当前位置与实际组合推导，原文仍在唯一 Effect outcome。
+
+证据充分就回答，局部未命中只描述对应范围，有用且获准的查找仍可继续；权限、预算或证据不足时如实说明未解决。这是需要真实检验的模型行为，`completed` 不证明语义正确。静态长提示、后置提醒、一次强制草稿复核均未稳定改善，因此已撤回，没有模型自评批准事实或可变证据账本。相同问句只改变隐藏正文的正反事实暴露了仅看主题/预览的错误；最终对照、失败及成本见[记录 006](../deal/006-evidence-bounded-retrieval-policy.md)，不重算 AR-D，也不把这些已反复使用的诊断题称为独立留出集。
+
+Context 呈现变化使用 Session 13 / Context 12 / active-reference-policy-v8 / context-json-v12。旧 Session 1–12 保留但拒绝，使用新的数据空间；SQLite、M3 和原 output_ref 格式不变。历史实验仅用各自冻结源码重放，没有兼容解释、迁移或删数据。
+
+本轮 305 个不同定向用例通过，真实最终导航正例 7/9→8/9；覆盖标记候选 5/5，基线 4/5 的缺失为 TLS EOF，不能归因为准确率改善。共 122 个目标实例、含准备 625 次 Attempt，已知 total_tokens=3,430,669，另有 26 次 usage 未知。负面结论仍未全面可靠，未运行全量或 L2–L4；实验完整证据与限制见记录 006。
 
 ## 8. 模型层
 
@@ -1502,7 +1650,7 @@ flowchart LR
 - Policy 中任何 DENY 都不可被后续 ALLOW 覆盖；至少一个 Policy ALLOW 才准入；
 - 连续的 PURE_READ/WORKSPACE_READ 调用使用 `asyncio.gather`；写入、进程和其他副作用形成顺序 Barrier；
 - Middleware 的 `call_next()` 每层最多调用一次；
-- Tool Runtime 有整体超时与 inline 输出字符阈值；超阈值的正文或 canonical data 进入保留 variant，预览外固定引用与 JSON 转义另计实际成本（9.5）；
+- Tool Runtime 有整体超时与 inline 输出字符阈值；超阈值的正文或 canonical data 进入保留 variant，固定引用与 JSON 转义另计实际成本（9.5）；
 - Outcome 记录 inline 结果，或同事务提交 retained_output、output_ref 与有限呈现；工具错误和持久化错误分开处理，原始输出不再由 Runtime 截断；
 - 取消时尽量依据已有 Outcome 补齐 Result，否则记录 `aborted_before_dispatch`。
 
@@ -1541,8 +1689,9 @@ F2 显式开启 skills 策略且启用默认工具时，增加 PURE_READ `reques
 ```mermaid
 flowchart LR
     EXEC["Tool / Middleware 实际输出"] --> PREP["tool_output：inline 或 retained variant"]
-    PREP --> WRITE["原 SessionService：一次 effect/outcome 提交正文、data、引用和预览"]
-    WRITE --> RESULT["tool/result：有限预览 + output_ref"]
+    PREP --> WRITE["原 SessionService：一次 effect/outcome 提交正文、data、引用和呈现"]
+    WRITE --> RESULT["tool/result：查找入口 + output_ref"]
+    RESULT --> CONTROL["宿主参考工具的成功控制回执：原 owner 校验后供下一 Context"]
     RESULT --> REQUEST["原 Surface / RequestBuilder / request snapshot"]
     RESULT --> LIST["list_tool_outputs：当前 Session、固定 through_seq"]
     LIST --> SEARCH["search_tool_output：同源关键词命中及附近行"]
@@ -1556,20 +1705,24 @@ flowchart LR
 ```
 
 content 或 canonical data 超过 `max_tool_output_chars` 时，原 content/data/evidence 放进
-`effect/outcome.retained_output`，同事件写 format-1 `output_ref` 和实际预览。引用含 effect_id、
+`effect/outcome.retained_output`，同事件写 format-1 `output_ref` 和实际呈现。引用含 effect_id、
 payload digest、正文字符/UTF-8 字节数与 canonical data 字符数；没有可变文件路径。
-大 Result.data 为空，原 data 按 `part=data` 读回；避免 stdout 等再次占满 Session 源事件。
-小输出保持 inline。`truncated=false` 表示 Runtime 未丢弃原内容，预览仍明确标注不完整。
+大 Result.data 通常为空，原 data 按 `part=data` 读回；避免 stdout 等再次占满 Session 源事件。
+例外是六个宿主参考搜索/读取工具的成功控制回执：保留对应 history/skill/memory/search_receipt，
+防止大导航收存后丢失下一 Step 的披露请求。Session 仅携带原 Effect payload 的回执投影，
+`output_reference` 验证投影与原数据相等；普通工具的同名字段不会被当作宿主控制回执保留。
+原来源、版本、取消和准入规则继续校验回执；此例外不把大正文重新塞进模型，也不产生新的事实源。
+小输出保持 inline。大输出在暴露搜索/读取工具时只给引用和查找入口，避免前缀冒充全文；两者均未装配时保留明确不完整的前缀预览。`truncated=false` 表示 Runtime 未丢弃原内容，不表示当前呈现完整。
 
 工具读回默认装配，不依赖项目绑定、Memory 或 ProductTask，也不要求开启 History。目录从本 Session
 原始 Tool Result 派生，所以即使 M3 把整轮对话藏起或 History 原文页太大，也能找到输出引用。
 目录按最新结果优先；后续 offset 必须同时提供首目录返回的 through_seq，防止新结果插入导致错页。
 每页完整 canonical JSON 都受字符预算限制，页装不下明确失败；offset 单位为 Unicode code point，
-返回 next_offset，原始 data 按 canonical JSON 作为文本分页。目录和读取结果仍走普通 Tool admission、
+返回 next_offset/end_offset；body_status 只有从 0 一页读到末尾才是 complete-source，否则为 source-excerpt，最后一页也不证明之前已读。原始 data 按 canonical JSON 作为文本分页。目录和读取结果仍走普通 Tool admission、
 Policy、Effect、Result 和模型请求快照；只读不会重跑 Shell 或赋予 Memory 批准权。
 
 B+ 默认工具 `search_tool_output` 必填 effect_id/digest/query；part 默认 content（或 canonical data），
-query 是非空字面词，正则符号不执行。case_sensitive 默认 true，false 使用 Unicode 忽略大小写语义。
+query 是非空字面词，正则符号不执行；结果以 match_mode=literal-substring 明确其范围。case_sensitive 默认 true，false 使用 Unicode 忽略大小写语义。
 offset 默认 0，按同一原文 Unicode code point；count 默认 10、1–100；context_lines 默认 0、0–20（默认仅命中行，附近行显式请求）。
 命中按原文次序且不重叠，返回 match_start/end、LF 一基 line_number、片段 text_offset，
 before_context/matched_lines/after_context 分字段展示；read_action 携带原身份、part 和命中行起点。
@@ -1577,7 +1730,7 @@ before_context/matched_lines/after_context 分字段展示；read_action 携带�
 next_offset 指向最后返回命中的末尾，继续时沿用 query/options；null 表示所选原文后缀无更多命中。
 不提供推测命中总数。直接扫描原 Effect 原文，不加索引或第二事实源，搜索页仍进入原 Tool/请求快照。
 
-关键词问题的通用导航先搜索。registry 有搜索工具时，预览显示搜索入口，移除通用 offset=0 读取动作；
+关键词问题的通用导航先搜索。registry 有搜索工具时，引用显示搜索入口，移除通用 offset=0 读取动作；
 仅有 reader 时保留原读取入口。搜索结果的 read_action 带命中行位置和当前页预算 count。片段不足时执行
 read_action 展开；相邻上下文可能属于别的记录，不能把前一条记录字段配给命中标题，须核对正文归属。
 无命中只表示所选 part/offset 后没有该字面词，不证明相关主题不存在；当前不做跨输出联合、语义或向量搜索。
@@ -1588,9 +1741,9 @@ CoreInvariantChecker 在收到 Effect 流时复用同一验证器；Session-only
 原 runtime/prompt.py 的通用 reference guidance 明确工具历史先定位输出目录，正文来自 Tool Result；
 它不是 Skill/Memory/History 的 next-Step receipt，History 页过大也不代表工具输出不可访问。
 持久化在工具异常处理之外，写入错误不能伪造成另一条工具失败 Outcome。Outcome 已提交但 Result
-未写时，原恢复和取消收敛代码补齐同一预览/引用；未提交时不发布可读指针，恢复按原规则标记执行未知。
+未写时，原恢复和取消收敛代码补齐同一呈现/引用；未提交时不发布可读指针，恢复按原规则标记执行未知。
 
-Session 10 / Context 9 / SQLite 2 / M3 format 2 不变。已有截断记录不会被改写或伪造丢失原文。
+当前 Session 13 / Context 12；SQLite 2 / M3 format 2 不变。已有截断记录不会被改写或伪造丢失原文。
 C 已实现旧 retained Tool reply 的确定性折叠，仍用这里的 output_ref 搜索和读回；细节见 12.2。E0 已增加完整请求 token 估算及超限拒绝；D 已实现可选 LLM 摘要；E1 已在后续 Step 维护闭合旧历史，E2 已实现参考 token 准入，尚未实现 Provider 超限重试。
 A 冻结的后续预算包括 system、tools、Product、Surface、Context reference、当前任务回显、Provider
 封装和输出预留；字节/估算 token/实际 usage 必须分开。80% 触发、60%–65% 目标只是待验证候选，
@@ -1607,7 +1760,7 @@ A 冻结的后续预算包括 system、tools、Product、Surface、Context refer
 `DefaultContinuationRuntime` 按以下顺序决定继续或结束：
 
 1. 达到 `max_steps` → `max_steps_exceeded`；
-2. 模型响应包含 Tool Calls → 下一 Step；
+2. 模型响应包含 Tool Calls → 检查事件派生的连续相同拒绝批次；达到停止阈值则 `stalled_repeated_denial`，达到提示阈值则携带反馈进入下一 Step，其他情况正常继续；
 3. 已运行 Verifier 且失败，失败次数仍在重试预算内 → 把结构化验证摘要作为新 user message 注入下一 Step；
 4. Verifier 持续失败超预算 → `verification_failed`；
 5. 无 Tool Calls 且无失败证据 → `completed`。
@@ -1615,6 +1768,17 @@ A 冻结的后续预算包括 system、tools、Product、Surface、Context refer
 `CommandVerifier` 使用参数拆分和 `create_subprocess_exec` 在 Workspace 中运行独立命令，使用清洗后的环境，收集退出码、stdout、stderr；退出码 0 为通过。AgentLoop 把结果写为 `verification/result`。
 
 Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以结束 Turn，此时 `verification_passed` 为 `None`，不能把它解释成“外部验证已通过”。
+
+
+`runtime/repeated_denial.py` 从当前 Turn 的 `turn/start` 配置与已闭合 Step 的 Tool Call/Result 派生计数。只有整个批次均为无 Effect 的 `denied`，且工具、参数、拒绝类型/原因/data 与 Composition revision 均相同才连续计数；批次内排序不影响身份，一个 Step 只计一次。参数、结果或 Composition 改变、成功执行、其他失败或未闭合 Step 都打断连续性，不跨 Turn 保存计数。每次调用先经过现有 ToolRuntime 的新鲜权限检查，保护只在结果落账后决定是否继续；不缓存授权，也不能观察未记录的外部权限变更。
+
+默认 `RepeatedDenialPolicy(warn_after=2, stop_after=3)`；`RuntimeConfig.repeated_denial_policy=None` 关闭。CLI 提供 `--denial-warn-after`、`--denial-stop-after` 和 `--disable-repeated-denial-check`，要求整数 `2 <= warn_after < stop_after`，关闭不能同时指定阈值。配置写入原 `turn/start`，旧记录缺少该配置时不补推保护。恢复命令保留配置；本次未增加 TUI 配置表单。
+
+AgentLoop 只连接事件投影与 Continuation；默认 Continuation 拥有提示/停止决定，BudgetContinuation 透传状态并保留原预算结算，自定义 Continuation 需自行处理新增可选状态。提示沿现有 user/message 路径持久化，原始当前任务仍由 Turn 首条用户输入锚定。取消、恢复、新 Turn 与重放沿用原 Session 生命周期，没有第二事实源。Session 13 / Context 12 / `context-json-v12` 不变。
+
+这不是通用语义无进展检测：交替调用、变更参数、成功轮询不在本保护范围。真实压力例从 6 次相同拒绝降为 2 次后模型自行停止；真实运行没有触发第 3 次硬停止，该分支由确定性与反向测试验证。4 个自然问题两组均通过 2/4，不能宣称检索准确率改善；10 条真实旅程的 65 个请求独立重放通过。当前范围共 210 项定向/相邻检查通过，未跑全量或 L2–L4。见 [ADR-0062](../adr/0062-repeated-denial-continuation.md) 与[修复记录](../deal/004-repeated-denial-continuation.md)。
+
+参考问答的模型侧停止指导见 7.11：证据充分、仅能作范围限定的结论、或者存在真实阻碍时各自如实回答。宿主默认 Continuation 不解析自然语言来判断否定断言，不把模型自评当作新的批准事实或验证结果；`completed` 仍只表示循环结束。
 
 ### 10.1 Verifier 的子进程与输出所有权
 
@@ -1642,7 +1806,7 @@ Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以
 
 | 超时来源 | 触发方式 | 上报内容 |
 |---|---|---|
-| Tool 自身（`shell` 的 `timeout` 参数） | `ShellTool` 收敛子进程后主动 `raise TimeoutError(content)`，content 含实际命令、`exit_code`、`timed_out=true` 与已捕获的 stdout/stderr | `ToolRuntime` 在嵌套边界上把它重贴为 `ToolReportedTimeout`，据此写 `effect/outcome`（`reported_by=tool`）与 `tool/result`，**保留工具自己的文本与时长**；超出 `max_output_chars` 时完整留在 Effect，Session 展示预览与引用（9.5） |
+| Tool 自身（`shell` 的 `timeout` 参数） | `ShellTool` 收敛子进程后主动 `raise TimeoutError(content)`，content 含实际命令、`exit_code`、`timed_out=true` 与已捕获的 stdout/stderr | `ToolRuntime` 在嵌套边界上把它重贴为 `ToolReportedTimeout`，据此写 `effect/outcome`（`reported_by=tool`）与 `tool/result`，**保留工具自己的文本与时长**；超出 `max_output_chars` 时完整留在 Effect，Session 展示查找入口与引用（无查询工具时才给前缀预览）（9.5） |
 | Runtime 预算（`ToolRuntime.timeout_seconds`） | `asyncio.timeout()` 到期 | 保持通用语义：`Tool timed out after <预算>s`，`effect/outcome` 标 `reported_by=runtime`；子进程仍由 `ShellTool` 的取消路径收敛 |
 
 两者靠**嵌套异常边界**区分，不靠错误文本匹配：工具自己抛出的 `TimeoutError` 在内层被立即重贴为领域异常 `ToolReportedTimeout`，因此外层负责 Runtime 预算的 `except TimeoutError` 不可能再吞掉它。修复前两者共用一个 `except TimeoutError`，结果是 Shell 的 stdout/stderr 从 `effect/outcome` 与 `tool/result` 中消失，且内部超时被误报成 Runtime 预算时长。
@@ -1823,7 +1987,7 @@ CAS 的 expected_seq 必须就是 built.source_seq，Product 分区也只读到�
 但不造 request/snapshot 或 Attempt。它是派生审计事实，不是第二历史、权限或费用账本。
 
 共享 checker 用冻结请求重算分区、数值与身份，并拒绝超限后 dispatch、重复或伪造记录。
-E0 本身保持 Session 10 / Context 9 / SQLite 2 与普通 request/snapshot 形状；D 新增摘要来源判别变体（下文）。未启用计量时无该观测事件。
+E0 本身保持 Session 13 / Context 12 / SQLite 2 与普通 request/snapshot 形状；D 新增摘要来源判别变体（下文）。未启用计量时无该观测事件。
 重算要求同一编码和库版本，不可用新算法冒充旧计量；无库或版本不符时明确失败。
 实际用量仍只来自 `model/attempt-end.usage`，无 exact usage 显示未知；累计计费与单请求窗口分开，
 估算器不作为严格费用 Budget 的 exact TokenCounter。服务端模板/分词差异意味着安全余量也不保证永不超窗。
@@ -1862,7 +2026,7 @@ evidence（source_seq/note）。决定只指用户明确采纳的决定；助手
 成功才由同一 `CompactionService` 追加 format-2 `method=semantic` replacement；causation_id 精确
 指向已成功结束的摘要响应。来源、正文、策略、cut 和摘要器身份由 checker 重算。原事件、Product
 当前状态和人工 Memory 权限不变，摘要仍是不可信历史。旧 reader 明确拒绝新请求形状/method；
-Session 10/Context 9/SQLite 2 不变，不迁移、不改写。摘要之后另开普通 Step，重选 Context 并回答当前问题。
+Session 13/Context 12/SQLite 2 不变，不迁移、不改写。摘要之后另开普通 Step，重选 Context 并回答当前问题。
 
 摘要和回答共享同一个 Turn 的步数与费用，最多一条摘要调用链，原重试策略控制传输重试。失败 JSON
 记录 compaction-failed；Provider/Budget/取消沿原生命周期收敛，原文不被失败摘要替换。若 C 已折叠，
@@ -1964,7 +2128,7 @@ source；ADR-0039/0041 的“摘要可以替换对话 prose、不能遮蔽宿主
 C 新增 `method=tool-fold`，仍为 format 2；沿用摘要变体的 key 集，但去掉 summarizer、summary、
 summary_truncated，source_seqs 必须只有原 result 一项，policy_digest 必填，replacement 是配对的
 Tool reply。共享源检查重算完整消息、来源、digest、字节与保留轮边界。旧实现会明确拒绝新 method，
-不会静默忽略；当前 manual/automatic 摘要仍合法。Session 10 / Context 9 / SQLite 2 /
+不会静默忽略；当前 manual/automatic 摘要仍合法。Session 13 / Context 12 / SQLite 2 /
 retained format 1 不变，无迁移或历史改写。此变体不是第二事实源、第二 Projector 或旧格式适配。
 
 `surface/replace` 的摘要变体 key 集精确：`format_version`、`method`（`manual`/`automatic`/`semantic`）、`cut_seq`、
@@ -2236,7 +2400,7 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 |---|---:|
 | max steps | 20 |
 | tool timeout | 60 秒 |
-| max tool output | 24,000 字符：inline/预览阈值；完整大输出仍保存，搜索/读取页整体限长 |
+| max tool output | 24,000 字符：inline/保留阈值；完整大输出仍保存，搜索/读取页整体限长 |
 | verification timeout | 60 秒 |
 | max verification retries | 1 |
 | model retry max attempts | 3（包含第一次调用） |
@@ -2253,7 +2417,7 @@ Registry 以 `stable / installing / rollbacking` 标记稳定态和崩溃窗口�
 
 `RuntimeConfig.context_input` 接受 `ContextInputPolicy` 或 `None`；原文宿主请求经 typed TurnInput/ChatDriver，
 Skill 选择／索引重建通过 `runtime.skill_context` 的宿主 Python API；尚无 Memory 或检索治理界面。
-Skill 激活资源策略由独立 `RuntimeConfig.skill_policy` 提供。`f5-context-policy-v5` 的 exact config
+Skill 激活资源策略由独立 `RuntimeConfig.skill_policy` 提供。`active-reference-policy-v8` 的 exact config
 为以下十二项，启用值全部显式给出：
 
 | 字段 | 当前含义与约束 |
@@ -2644,7 +2808,7 @@ flowchart LR
 
 `tui/onboarding.py` 提供首次连接向导和旧数据选择页：服务商与地区由用户明确选择，地址预设和有限模型快捷项来自官方文档，未自动选择模型；自定义服务保留地址与模型输入。点击“保存并开始聊天”保存个人连接默认，Windows 可选择通过 `cli/credentials.py` 使用当前用户 DPAPI 加密保存密钥。密文位于个人 `.traceh/credentials`，身份与熵绑定 exact provider/base_url/api_key_env；读取优先级为显式进程内密钥、既有环境密钥、同身份已保存密钥。环境密钥优先时不读取密文。启动 JSON 和事件不保存明文密钥，换地址不能复用其他地址的密文，解密失败明确要求修正，不回退明文。其他平台仍使用环境变量/环境文件或临时密钥；没有新增安装依赖。密钥与 profile 分别原子保存，不承诺跨文件事务，后一步失败可能留下已成功保存的加密条目。
 
-`cli/startup.py` 仅只读检查所选 SQLite 的版本/Session 首事件，识别旧数据并显示选择；它不替代生产 Store/Session 协议验证。用户点击创建后，独占创建旧目录旁的新数据目录、清空恢复目标与项目偏好，保存启动 profile 后继续原入口。旧数据不迁移、不删除、不改写；保存失败可能留下空的新目录。退出或取消不选择新目录。原 Session 10 / Context 9 协议不变。
+`cli/startup.py` 仅只读检查所选 SQLite 的版本/Session 首事件，识别旧数据并显示选择；它不替代生产 Store/Session 协议验证。用户点击创建后，独占创建旧目录旁的新数据目录、清空恢复目标与项目偏好，保存启动 profile 后继续原入口。旧数据不迁移、不删除、不改写；保存失败可能留下空的新目录。退出或取消不选择新目录。原 Session 13 / Context 12 协议不变。
 
 聊天内 Ctrl+O 或 `/sessions` 调用 `tui/session_picker.py`，从原 Session reader 列出同工作区、当前协议、非 managed Agent 的对话，以时间和首条输入显示；`/new` 新建对话。选择后再次检查候选，返回原 RestartChat 意图，旧 owner 全部收尾才恢复或创建，运行中/确认中拒绝切换，取消保留当前会话。它不建立独立会话索引或自动恢复最近会话。
 
@@ -2740,6 +2904,8 @@ flowchart LR
 标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
 ## 15. 测试与验证基线
+
+本次 v0.9.0 的版本、定向回归、打包和文档检查以[发布验证](../validation-v0.9.0.md)为准；下列数字是各阶段历史证据，不相加、不冒充新全量。
 
 当前 E 收口与语义复测门禁（集合有重叠，不相加）：E1 最终 176 项、E2 最终 313 项、E3 相邻主线 198 项、
 界面 61 项及最终专项 6 项通过；语义筛查控制 12 项、相邻检索/evaluator 55 项通过。关键保护均有反向验证。
@@ -3113,13 +3279,15 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
+v0.9.0 接受检索漏读和证据范围误述等已知限制，55/72 是内部固定题库合并成绩；仍无 OS 沙箱。v0.10 S0 尚未完成隔离验收，不把 Policy、worktree 或 Job Object 当成完整隔离。
+
 B+ 只搜索一份已定位 retained output 的字面内容；不搜索 inline 小结果，不提供跨输出联合或语义检索。当前会加载 Session/Effect 流并扫描原文，搜索页限额不是磁盘、CPU 或全请求上限。真实模型可能误配相邻记录；命中行分隔和读取动作改善导航，不构成任意模型均正确的保证。
 
 分层压缩 B 仅限制工具结果呈现，并不限制整批结果或整请求；数据仍占磁盘，reader 仍读取本 Session Effect 流。工具底层已截掉/未返回的数据不能补回。C 已接入旧结果折叠；E0 已计量完整请求，D 已支持可选语义摘要，E1 轮内旧历史维护已实现，E2 已完成，E3 已完成超限解释与真实旅程验收；可读回不等于模型一定会正确选择和翻页。
 
 简化启动不自动猜测项目或创建 Memory 配置；自动关联仅复用本工作区明确记住的选择并经原来源证明。服务预设不是账号模型可用性验证，网络认证仍由真实请求确认。DPAPI 保存仅支持 Windows 当前用户；其他平台沿用环境凭据。旧数据只提供新空间入口，不迁移（13.11）。
 
-本轮问题回显增加实际模型输入字节；引用配额不因此扩大。Session 10 不兼容旧 Session 1–9，现有旧数据保留，需新数据目录和新 Session。真实模型在每页两条消息的自然问句实验中会停在第一页；修改前呈现的对照同样失败，本次只修复换题重复回答，不保证模型总能按 next_cursor 翻完所需页。
+本轮问题回显增加实际模型输入字节；引用配额不因此扩大。Session 13 不兼容旧 Session 1–12，现有旧数据保留，需新数据目录和新 Session。真实模型在每页两条消息的自然问句实验中会停在第一页；修改前呈现的对照同样失败，本次只修复换题重复回答，不保证模型总能按 next_cursor 翻完所需页。
 
 TUI 直接复制选中显示文字，最多涉及当前保留的 2,000 行；Windows Unicode 系统剪贴板中文/emoji/换行
 往返已验证，剪贴板忙时会提示，其他平台依赖终端 OSC 52。Memory 表单仍要人工 CONFIRM，不自动重建检索索引，见 13.11。
@@ -3141,13 +3309,13 @@ Git registry 无法证明的布局仍不可用，不猜路径；common-dir 指�
 
 F0-C 当前 Session 原文分页／请求已通过限定验证；F1 已提供 typed Skill catalog 与 leased resource reader；F2 已接入 Skill 选择／注入、排名和 FTS；F3 已提供 Workspace Memory authority（7.6），B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已有 Memory 检索／Context 注入与显式真实版本观察（7.7）；没有 raw-only 模式或跨 Session 原文；未开启观察时为 unknown，
 原文只进授权 Step 的 Context，不驻留 Surface。未配置仍有空 wrapper；F5 治理见 7.8，字节预算不是
-token 窗口。Session 必须为 `context_protocol=10`；1/2/3/4/5 和无标记旧 Session、物理 schema 1 均拒绝，不迁移（7.4）。
+token 窗口。Session 必须为 `context_protocol=13`；1/2/3/4/5 和无标记旧 Session、物理 schema 1 均拒绝，不迁移（7.4）。
 
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
 | SQLite writer 边界 | 同库 writer 跨 Stream 串行化；普通竞争在显式 5 秒 busy timeout 内等待，超时稳定失败。绕过 Store 直接改数据库仍不受领域协议保护，网络文件系统与任意断电设备未验证 | 继续保持本机 Store；若未来出现多主机写入需求，再选择独立数据库服务而不是伪装 SQLite 已分布式 |
 | Session 级并发 | 事件写入跨进程安全，但“同一 Session 只跑一个 Turn”仍只在单进程内强制 | 跨进程 Session Lease 或 Runtime 级占用标记 |
-| 子进程输出磁盘占用 | 捕获用的临时文件当前没有大小上限，失控命令可以写满临时目录；上层有限预览只减少模型请求里的正文，完整输出仍会进入 Effect，不会减少捕获或数据库的磁盘占用 | 需要时在捕获层增加大小上限并在超限时截断 |
+| 子进程输出磁盘占用 | 捕获用的临时文件当前没有大小上限，失控命令可以写满临时目录；上层引用呈现只减少模型请求里的正文，完整输出仍会进入 Effect，不会减少捕获或数据库的磁盘占用 | 需要时在捕获层增加大小上限并在超限时截断 |
 | 临时文件删除延后 | 孙进程继承捕获句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭 | 与“不管理孙进程”是同一条边界，必要时由外部清理 |
 | Event payload 可变性 | Store 历史已由脱离副本保护（6.4），但 `EventEnvelope.data` 本身仍是普通可变 JSON 图：拿到副本的代码可以随意修改自己那一份，语言层面不阻止。契约由具体边界承担而非自动生效：同一个 Envelope 被交给两个消费者时，框架不会自动隔离它们 | 需要更强保证时才考虑不可变 JSON 容器类型，代价是公共 API 与全部 `event.data` 读取点都要改。已有的扇出（`SessionEventFeed`）按契约为每个 Subscriber 单独 detach；任何新增分发点必须同样处理 |
 | Event 复制成本 | 复制只在 Event API 边界发生，一次 `read()` 的总成本与返回 payload 总量相关。`InMemoryEventStore` 显式 detach；SQLite 从 canonical JSON 重建并可用索引从 `from_seq` 定位 | 属于正确性的必要代价；刻意不加共享 Event cache，因为会重新引入共享引用 |
@@ -3207,7 +3375,7 @@ token 窗口。Session 必须为 `context_protocol=10`；1/2/3/4/5 和无标记�
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
 | API 稳定性 | Alpha，协议可能演进 | 每次协议切换明确旧数据拒绝入口；仅在另获迁移授权时设计迁移，v1.0 冻结支持范围，不预设通用 Upcaster |
 
-v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 10、Context 9、context-json-v9、SQLite 2 与 Skill exact/FTS
+v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 13、Context 12、context-json-v12、SQLite 2 与 Skill exact/FTS
 主线见第 7 节。F3 已实现跨 Session 项目绑定与 Memory authority，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 Memory 检索已接入；真实 Sandbox、isolated Plugin 与多 coder 集成未实现。
 Release Stop A 首审未发现 P0/P1，两项 P2 已在现有 owner 修复并定向确认（15.1）：
 A-P2-01 统一 Skill 内容身份，允许不同层级共存而拒绝真正重复；A-P2-02 保留完整路径字面量和标识边界。
@@ -3610,7 +3778,7 @@ ActivationSet／Drain owner 收敛，不提前返回或增加第二个生命周�
 Composition 只持久化有界 descriptor manifest/digest，不保存 section/resource 正文或 host root。
 Context 绑定 exact catalog digest；默认未配置 F2 时，空目录记 source-unavailable，非空目录记 not-selected，
 Skill blocks 与配额仍为零。插件启用不自动注入；F2 经过宿主持久选择、检索与预算才逐级披露（7.5）。
-当前 Session context_protocol=10、Context format=8、context-json-v9、SQLite schema=2，旧版本拒绝。
+当前 Session context_protocol=13、Context format=12、context-json-v12、SQLite schema=2，旧版本拒绝。
 F1/F2 的限定验证与 Release Stop A 独立审查分别记录于 15.1；后者 P0/P1 清零，2 项 P2 已修复并完成定向确认。
 停止点通过不代表 v0.9 发布通过；F1 的五组反向验证也不代替本轮审查。
 
@@ -5428,7 +5596,7 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   沿用 `source_seq`。成功零命中仍记录空 blocks；检索／Lease 失败可以零 Context，Context／Composition
   已提交而预算拒绝可以没有 Request/Attempt。append 失败／取消先收敛再对账 True/False/unknown；
   Recovery 不补造 Context 或模型调用。同 Step Provider retry 复用原 Context/source_seq，旧格式缺少
-  Context 不静默合成。当前唯一 Session 标记为 `context_protocol=10`，共同 reader、invariant、
+  Context 不静默合成。当前唯一 Session 标记为 `context_protocol=13`，共同 reader、invariant、
   open/recover/inspect/replay/Request 拒绝旧 1/2/3/4/5 和无标记 Session；EventEnvelope 1、M3 format 2 不变。
   Context outer 为 6、SQLite schema 为 2，policy 十二项；Memory 来源绑定项目，精确重建见 7.4–7.7，
   没有跨流 latest 保证。

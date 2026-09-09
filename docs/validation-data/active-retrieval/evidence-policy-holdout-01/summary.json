@@ -1,0 +1,350 @@
+{
+  "experiment": "evidence-policy-holdout-01",
+  "release_acceptance": false,
+  "arms": {
+    "baseline": {
+      "closed_cases": 4,
+      "expected_cases": 4,
+      "positive_cases": 2,
+      "positive_joint_pass": 1,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 11,
+        "input_tokens": 53684,
+        "output_tokens": 960,
+        "total_tokens": 54644,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "holdout-skill-absent",
+          "answer": "According to the deployment handbook's \"Rollback authorization\" section (section-23), **no rollback build is approved**. The handbook explicitly states: \"No rollback build is approved. Obtain release authorization before choosing a rollback target.\"",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "e08d5d499922d1d730064c51705d74e9179695e5491fd0f271f65280f608ea80",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10145,
+            "output_tokens": 266,
+            "total_tokens": 10411
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10145,
+            "output_tokens": 266,
+            "total_tokens": 10411
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-skill-present",
+          "answer": "According to the deployment handbook, the approved rollback target is **NEW-FD5835F29D**.",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7ee59b485239a731179fc3af393dc532e0265705656da940f866d59b4ecc5dc3",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10093,
+            "output_tokens": 203,
+            "total_tokens": 10296
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10093,
+            "output_tokens": 203,
+            "total_tokens": 10296
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "根据 `python check.py` 的输出，其中明确包含一行：\n\n```\n本次巡检未创建应急工单，因此没有应急工单编号。\n```\n\n该行在工具输出中位于第 453 行（LF 行号），匹配关键词“应急工单编号”成功。\n\n因此，**本次泵站巡检输出中没有应急工单编号** —— 系统明确说明“未创建应急工单”，故编号为空/不存在。\n\n答案：**无（未生成应急工单）**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "d856ea2b-812e-4479-821a-a2580d71dd0b",
+                "part": "content",
+                "query": "应急工单编号"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10743,
+            "output_tokens": 337,
+            "total_tokens": 11080
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19561,
+            "output_tokens": 360,
+            "total_tokens": 19921
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "刚才执行 `python check.py` 的输出中，所有检查行均显示为“泵站设备读数记录，状态 normal”，**未出现任何应急工单编号**（如 `EMG-XXXXXX`、`INC-XXXXXX` 或类似格式的工单号）。\n\n该输出共 52 行，每行均为固定模板，无异常、无告警、无工单生成痕迹。因此，**本次巡检输出中不存在应急工单编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5076,
+            "output_tokens": 108,
+            "total_tokens": 5184
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13885,
+            "output_tokens": 131,
+            "total_tokens": 14016
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    },
+    "candidate": {
+      "closed_cases": 4,
+      "expected_cases": 4,
+      "positive_cases": 2,
+      "positive_joint_pass": 1,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 11,
+        "input_tokens": 53853,
+        "output_tokens": 1005,
+        "total_tokens": 54858,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "holdout-skill-absent",
+          "answer": "The deployment handbook's \"Rollback authorization\" section states: \"No rollback build is approved. Obtain release authorization before choosing a rollback target.\"\n\nTherefore, according to the deployment handbook, there is no approved rollback target build.\n\n{\"approved_rollback_build\": null}",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "e08d5d499922d1d730064c51705d74e9179695e5491fd0f271f65280f608ea80",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10109,
+            "output_tokens": 233,
+            "total_tokens": 10342
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10109,
+            "output_tokens": 233,
+            "total_tokens": 10342
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-skill-present",
+          "answer": "According to the deployment handbook's \"Rollback authorization\" section, the approved rollback target is **NEW-FD5835F29D**.",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7ee59b485239a731179fc3af393dc532e0265705656da940f866d59b4ecc5dc3",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10085,
+            "output_tokens": 206,
+            "total_tokens": 10291
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10085,
+            "output_tokens": 206,
+            "total_tokens": 10291
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "holdout-output-absent",
+          "answer": "刚才泵站巡检输出中**没有应急工单编号**。\n\n在 `python check.py` 的完整输出中，存在明确说明：\n\n> **“本次巡检未创建应急工单，因此没有应急工单编号。”**\n\n该句位于 stdout 输出的第 453 行（LF 行号），是唯一提及“工单”的内容，且明确否定其存在。\n\n因此，应急工单编号为：**无**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+                "effect_id": "f0f062f7-f965-4bd0-aca1-f35aed6a3604",
+                "part": "content",
+                "query": "工单"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10957,
+            "output_tokens": 364,
+            "total_tokens": 11321
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19771,
+            "output_tokens": 386,
+            "total_tokens": 20157
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": true,
+          "negative_manual_review": "Original source explicitly denies the requested fact; delivered text and final answer support this denial. This does not validate every incidental assertion."
+        },
+        {
+          "identity": "holdout-output-present",
+          "answer": "刚才执行 `python check.py` 的输出中，所有检查行均显示为“泵站设备读数记录，状态 normal”，**未出现任何应急工单编号**。\n\n该输出共 52 行（行号 0001–0052），每行格式统一为：\n```\n检查行 XXXX：泵站设备读数记录，状态 normal。\n```\n\n全文未包含“应急工单”、“工单编号”、“emergency ticket”、“ticket ID”等关键词，也无类似 `EMG-2024-XXXX`、`TICKET-XXXX` 等编号格式的字符串。\n\n因此，**泵站巡检输出中不存在应急工单编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 5077,
+            "output_tokens": 158,
+            "total_tokens": 5235
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13888,
+            "output_tokens": 180,
+            "total_tokens": 14068
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    }
+  }
+}

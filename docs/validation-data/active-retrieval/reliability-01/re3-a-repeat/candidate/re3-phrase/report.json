@@ -1,0 +1,50 @@
+{
+  "identity": "re3-phrase",
+  "case_id": "re3-phrase",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才那次展览检查的核对凭据是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "ad9f171c-123a-49d8-adb9-56424bcef048",
+  "target_start_seq": 28,
+  "answer": "刚才那次展览检查（`python check.py`）的核对凭据是：\n\n✅ **`exit_code=0`** —— 表示程序成功执行，无错误退出；  \n✅ **`timed_out=false`** —— 表示检查未超时，运行完整；  \n✅ **stdout 中连续 58 条“陶艺展览例行登记完成。”** —— 表明全部登记条目（条目 0 至 57）均已成功处理，无中断、无失败、无跳过。\n\n这三项共同构成本次检查的**权威核对凭据**：  \n- `exit_code=0` 和 `timed_out=false` 是系统级执行完整性凭据；  \n- 58 条一致、有序、无异常文本输出是业务逻辑正确性凭据。\n\n无 stderr 输出，无警告或错误信息，进一步佐证检查通过。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 15.625,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9693,
+    "output_tokens": 561,
+    "total_tokens": 10254
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17643,
+    "output_tokens": 583,
+    "total_tokens": 18226
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+        "effect_id": "74ae2114-51f6-4d27-8c64-f43f3db78476",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 19.04700000002049
+}

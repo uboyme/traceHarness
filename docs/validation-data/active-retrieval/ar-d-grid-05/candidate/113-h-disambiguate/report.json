@@ -1,0 +1,79 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "fa419864-de62-4530-a709-d79bfe063718",
+  "target_start_seq": 152,
+  "answer": "根据搜索结果，档案复核组的联络代号是 **REF-640CA6984B**。\n\n搜索结果显示：\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-640CA6984B。搬运组使用另一个代号。\"",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 22.92200000002049,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14478,
+    "output_tokens": 421,
+    "total_tokens": 14899
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 52213,
+    "output_tokens": 451,
+    "total_tokens": 52664
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "fdf3e4ba257a3fcefce19f55a5609a4e07493b76550b0aa0d9e7778d6b98a333",
+        "cursor": {
+          "block_id": "fdf3e4ba257a3fcefce19f55a5609a4e07493b76550b0aa0d9e7778d6b98a333",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "428fa190bd935f58e6809f04dffd18244a8c554baf1defc18e5f6133f04db54b",
+          "event_id": "1c89f570-b4ad-4058-8ebb-e8bb565c2048",
+          "seq": 111,
+          "stream_id": "session:fa419864-de62-4530-a709-d79bfe063718",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "af2dd65cf2b9ddc8502be31b57c93122ca5772aa7558bd4063f3e034c1d2b2b8"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "fdf3e4ba257a3fcefce19f55a5609a4e07493b76550b0aa0d9e7778d6b98a333",
+        "cursor": {
+          "block_id": "fdf3e4ba257a3fcefce19f55a5609a4e07493b76550b0aa0d9e7778d6b98a333",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "档案复核组"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 59.20400000002701
+}

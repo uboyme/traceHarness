@@ -1,0 +1,59 @@
+{
+  "identity": "227-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 227,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "d47744bf-2037-453b-ab83-bf68d5c101e2",
+  "target_start_seq": 1,
+  "answer": "交班双方用暗语“REF-87D2E870ED”核对身份。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 10.905999999959022,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9806,
+    "output_tokens": 262,
+    "total_tokens": 10068
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9806,
+    "output_tokens": 262,
+    "total_tokens": 10068
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-87d2e870ed",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "98e4c6b4e6af50510355e8df7651c8111762463ea26310451f362d61dcc16717",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-87d2e870ed",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 11.452999999979511
+}

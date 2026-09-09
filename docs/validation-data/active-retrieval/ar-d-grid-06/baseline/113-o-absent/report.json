@@ -1,0 +1,49 @@
+{
+  "identity": "113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "5348ac8a-fcaf-4489-a04e-bfa466b18e49",
+  "target_start_seq": 28,
+  "answer": "没有。刚才的 `python check.py` 检查输出中**未出现“保险理赔编号”**，全文搜索确认该关键词完全不存在。所有 56 行输出均为固定格式的“普通器材登记，状态 normal”，无任何编号、异常信息或额外字段。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 28.75,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 8683,
+    "output_tokens": 316,
+    "total_tokens": 8999
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 15716,
+    "output_tokens": 339,
+    "total_tokens": 16055
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+        "effect_id": "e1cf3654-8191-426f-b6a5-d2639ff7dc5d",
+        "part": "content",
+        "query": "保险理赔编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 38.25
+}

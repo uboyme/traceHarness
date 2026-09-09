@@ -1,0 +1,5 @@
+{
+  "real_calls": 0,
+  "status": "rejected-in-preflight",
+  "reason": "Array navigation item breaks original reference-array consumers. Corrected header-only revision re2-a2 preserves array contract and reruns existing owner tests."
+}

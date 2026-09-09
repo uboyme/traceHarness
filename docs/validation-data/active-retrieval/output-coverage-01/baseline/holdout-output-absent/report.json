@@ -1,0 +1,48 @@
+{
+  "identity": "holdout-output-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "8eaba620-1c30-4885-878a-6238c094ace1",
+  "target_start_seq": 30,
+  "answer": "本次巡检未创建应急工单，因此没有应急工单编号。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 22.54700000002049,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 2,
+    "estimated_usage": 0,
+    "input_tokens": 8516,
+    "output_tokens": 136,
+    "total_tokens": 8652
+  },
+  "all_usage": {
+    "attempts": 7,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 16275,
+    "output_tokens": 159,
+    "total_tokens": 16434
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+        "effect_id": "341c8be2-afda-4fea-8eef-6f1d10ba356a",
+        "query": "应急工单编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 35.10900000005495
+}

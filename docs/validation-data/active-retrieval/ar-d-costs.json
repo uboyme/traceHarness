@@ -1,0 +1,275 @@
+{
+  "notice": "Reported usage only; failed/missing and interrupted remote usage remains unknown. Aborted rounds are retained, never counted as successful full grids. AR-B/AR-C diagnostics are in their separate reports.",
+  "runs": [
+    {
+      "run": "ar-d-grid-02",
+      "arm": "baseline",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 63,
+          "unknown_usage": 3,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 186665,
+          "output_tokens": 573,
+          "total_tokens": 187238
+        },
+        "target": {
+          "attempts_ended": 24,
+          "unknown_usage": 0,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 105927,
+          "output_tokens": 6178,
+          "total_tokens": 112105
+        },
+        "all": {
+          "attempts_ended": 87,
+          "unknown_usage": 3,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 292592,
+          "output_tokens": 6751,
+          "total_tokens": 299343
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-02",
+      "arm": "candidate",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 57,
+          "unknown_usage": 7,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 184133,
+          "output_tokens": 150,
+          "total_tokens": 184283
+        },
+        "target": {
+          "attempts_ended": 22,
+          "unknown_usage": 1,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 104045,
+          "output_tokens": 4056,
+          "total_tokens": 108101
+        },
+        "all": {
+          "attempts_ended": 79,
+          "unknown_usage": 8,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 288178,
+          "output_tokens": 4206,
+          "total_tokens": 292384
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-03",
+      "arm": "baseline",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 68,
+          "unknown_usage": 4,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 198842,
+          "output_tokens": 225,
+          "total_tokens": 199067
+        },
+        "target": {
+          "attempts_ended": 56,
+          "unknown_usage": 1,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 257440,
+          "output_tokens": 10974,
+          "total_tokens": 268414
+        },
+        "all": {
+          "attempts_ended": 124,
+          "unknown_usage": 5,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 456282,
+          "output_tokens": 11199,
+          "total_tokens": 467481
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-03",
+      "arm": "candidate",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 59,
+          "unknown_usage": 5,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 203564,
+          "output_tokens": 195,
+          "total_tokens": 203759
+        },
+        "target": {
+          "attempts_ended": 58,
+          "unknown_usage": 0,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 323858,
+          "output_tokens": 12299,
+          "total_tokens": 336157
+        },
+        "all": {
+          "attempts_ended": 117,
+          "unknown_usage": 5,
+          "inflight_usage_unknown": 1,
+          "estimated_usage": 0,
+          "input_tokens": 527422,
+          "output_tokens": 12494,
+          "total_tokens": 539916
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-04",
+      "arm": "baseline",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 150,
+          "unknown_usage": 90,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 184769,
+          "output_tokens": 180,
+          "total_tokens": 184949
+        },
+        "target": {
+          "attempts_ended": 135,
+          "unknown_usage": 90,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 204656,
+          "output_tokens": 9476,
+          "total_tokens": 214132
+        },
+        "all": {
+          "attempts_ended": 285,
+          "unknown_usage": 180,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 389425,
+          "output_tokens": 9656,
+          "total_tokens": 399081
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-04",
+      "arm": "candidate",
+      "phases": {
+        "preparation": {
+          "attempts_ended": 150,
+          "unknown_usage": 90,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 225569,
+          "output_tokens": 180,
+          "total_tokens": 225749
+        },
+        "target": {
+          "attempts_ended": 133,
+          "unknown_usage": 93,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 200625,
+          "output_tokens": 6982,
+          "total_tokens": 207607
+        },
+        "all": {
+          "attempts_ended": 283,
+          "unknown_usage": 183,
+          "inflight_usage_unknown": 0,
+          "estimated_usage": 0,
+          "input_tokens": 426194,
+          "output_tokens": 7162,
+          "total_tokens": 433356
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-05",
+      "arm": "baseline",
+      "phases": {
+        "target": {
+          "attempts_ended": 253,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 1245370,
+          "output_tokens": 46302,
+          "total_tokens": 1291672
+        },
+        "all": {
+          "attempts_ended": 469,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 1926303,
+          "output_tokens": 47247,
+          "total_tokens": 1973550
+        },
+        "preparation": {
+          "attempts_ended": 216,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 680933,
+          "output_tokens": 945,
+          "total_tokens": 681878
+        }
+      }
+    },
+    {
+      "run": "ar-d-grid-05",
+      "arm": "candidate",
+      "phases": {
+        "target": {
+          "attempts_ended": 224,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 1195968,
+          "output_tokens": 34550,
+          "total_tokens": 1230518
+        },
+        "all": {
+          "attempts_ended": 440,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 2023797,
+          "output_tokens": 35498,
+          "total_tokens": 2059295
+        },
+        "preparation": {
+          "attempts_ended": 216,
+          "inflight_usage_unknown": 0,
+          "unknown_usage": 0,
+          "estimated_usage": 0,
+          "input_tokens": 827829,
+          "output_tokens": 948,
+          "total_tokens": 828777
+        }
+      }
+    }
+  ],
+  "unscored_connection_probe": {
+    "run": "ar-d-connection-check-01",
+    "attempts": 1,
+    "reported_total_tokens": 2985,
+    "acceptance_credit": false
+  }
+}

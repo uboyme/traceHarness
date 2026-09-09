@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-direct",
+  "case_id": "s-direct",
+  "seed": 113,
+  "family": "skill",
+  "question": "设备演练手册规定的签到卡代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "043c9fb0-e285-4f55-9736-0de095576af3",
+  "target_start_seq": 1,
+  "answer": "The current references provide only the **directory** of the \"设备演练手册\" (Equipment Drill Manual), which includes metadata for `section-23` titled `\"签到卡发放规定\"` with `content_bytes`: 67 — indicating it is a short section containing the sign-in card distribution regulation.\n\nHowever, the actual **text content** of `section-23` is **not present** in the provided reference bodies. All listed sections (00–30) have `content_bytes`: 24 except `section-23`, which has 67 — but no body string is supplied for it.\n\nSince:\n- The directory confirms the section exists and is named `\"签到卡发放规定\"`,\n- Its size (67 bytes) suggests it contains a concise rule (e.g., a code like `\"QDK-2024\"` or similar),\n- But the *actual text* is **not disclosed** in the current reference package,\n\nand no Tool output (e.g., from `read_tool_output`) has been admitted to supply that content, the required information — the **sign-in card code** — **is missing from the available evidence**.\n\nTherefore, the answer is:\n\nThe sign-in card code specified in the Equipment Drill Manual is not available in the current reference materials.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 31.42200000002049,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14899,
+    "output_tokens": 1040,
+    "total_tokens": 15939
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14899,
+    "output_tokens": 1040,
+    "total_tokens": 15939
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-cf662c1bcd",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "12b37b18097b6d3e05032a020046a270666ead5171b7c1d219e1e7c0dcce160c",
+        "effect_id": "82b7b14b-ed8c-44df-85df-0444909c305f",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 32.29700000002049
+}

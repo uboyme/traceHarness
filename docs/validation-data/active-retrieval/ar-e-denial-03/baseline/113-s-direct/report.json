@@ -1,0 +1,15 @@
+{
+  "identity": "113-s-direct",
+  "case_id": "s-direct",
+  "seed": 113,
+  "family": "skill",
+  "question": "设备演练手册规定的签到卡代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "error": {
+    "type": "ValueError",
+    "code": null
+  },
+  "elapsed_seconds": 0.0
+}

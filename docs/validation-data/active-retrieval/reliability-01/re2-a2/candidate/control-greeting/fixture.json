@@ -1,0 +1,219 @@
+{
+  "id": "control-greeting",
+  "family": "skill",
+  "domain": 0,
+  "mode": "direct",
+  "language": "zh",
+  "question": "你好！",
+  "source_title": "陶艺展览记录",
+  "source_body": "此手册记录陶泥存放要求。",
+  "expected": "direct-control",
+  "value_type": "none",
+  "control": true,
+  "discovery": false,
+  "seed": 1609,
+  "identity": "control-greeting",
+  "value": "",
+  "source": "此手册记录陶泥存放要求。",
+  "domain_name": "陶艺展览",
+  "project_id": "project-1ca9cbebc1",
+  "source_id": "source-1ca9cbebc1",
+  "memory_id": "fact-1ca9cbebc1",
+  "fact_slot": "slot-1ca9cbebc1",
+  "skill_id": "manual-1ca9cbebc1",
+  "plugin_id": "reference.author",
+  "skill_title": "陶艺展览手册",
+  "skill_summary": "陶艺展览流程与注意事项。",
+  "sections": [
+    {
+      "id": "section-00",
+      "title": "陶艺展览日常事项0",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-01",
+      "title": "陶艺展览日常事项1",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-02",
+      "title": "陶艺展览日常事项2",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-03",
+      "title": "陶艺展览日常事项3",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-04",
+      "title": "陶艺展览日常事项4",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-05",
+      "title": "陶艺展览日常事项5",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-06",
+      "title": "陶艺展览日常事项6",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-07",
+      "title": "陶艺展览日常事项7",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-08",
+      "title": "陶艺展览日常事项8",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-09",
+      "title": "陶艺展览日常事项9",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-10",
+      "title": "陶艺展览日常事项10",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-11",
+      "title": "陶艺展览日常事项11",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-12",
+      "title": "陶艺展览日常事项12",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-13",
+      "title": "陶艺展览日常事项13",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-14",
+      "title": "交接记录",
+      "summary": "交接事项与交班记录。",
+      "body": "此手册记录陶泥存放要求。"
+    },
+    {
+      "id": "section-15",
+      "title": "陶艺展览日常事项15",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-16",
+      "title": "陶艺展览日常事项16",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-17",
+      "title": "陶艺展览日常事项17",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-18",
+      "title": "陶艺展览日常事项18",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-19",
+      "title": "陶艺展览日常事项19",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-20",
+      "title": "陶艺展览日常事项20",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-21",
+      "title": "陶艺展览日常事项21",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-22",
+      "title": "陶艺展览日常事项22",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-23",
+      "title": "陶艺展览日常事项23",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-24",
+      "title": "陶艺展览日常事项24",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-25",
+      "title": "陶艺展览日常事项25",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-26",
+      "title": "陶艺展览日常事项26",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-27",
+      "title": "陶艺展览日常事项27",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-28",
+      "title": "陶艺展览日常事项28",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-29",
+      "title": "陶艺展览日常事项29",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    },
+    {
+      "id": "section-30",
+      "title": "陶艺展览日常事项30",
+      "summary": "记录日常准备。",
+      "body": "材料已清点。"
+    }
+  ],
+  "resources": [],
+  "grading": "direct-control",
+  "expected_answer": "",
+  "material_digest": "468b2c735986354224cf16729cc04304441ef3adbd45bbbb405ccc3f4fdeb5fb"
+}

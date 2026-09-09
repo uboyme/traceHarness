@@ -80,6 +80,10 @@ def source_for_request(events, *, session_id, turn_id, step_id, tool_call_id, re
     context = _context_for_request(events, snapshot)
     context_event = events[snapshot.data["context_input_seq"] - 1]
     expected_call = {"id": tool_call_id, "name": SKILL_TOOL_NAME, "arguments": request}
+    from traceh.session.context_input import _parse_policy
+    from traceh.session.skill_search import disclosed
+
+    search_grant = disclosed(events, context, request, _parse_policy(context["policy"]))
     if (
         not any(
             expected_call in e.data.get("tool_calls", [])
@@ -89,15 +93,23 @@ def source_for_request(events, *, session_id, turn_id, step_id, tool_call_id, re
         or not any(t.name == SKILL_TOOL_NAME for t in composition.tools)
         or call.composition_revision != composition.revision
         or request["catalog_digest"] != composition.skill_catalog_digest
-        or not any(
-            b["kind"] == "skill"
-            and b["id"] == request["skill_id"]
-            and b["version"] == request["version"]
-            for b in context["blocks"]
+        or not (
+            search_grant
+            or any(
+                b["kind"] == "skill"
+                and b["id"] == request["skill_id"]
+                and b["version"] == request["version"]
+                for b in context["blocks"]
+            )
         )
         or context["policy"]["config"]["skills"] != policy.to_dict()
     ):
-        raise ValueError("skill-request-not-disclosed")
+        raise ValueError(
+            "skill-request-not-disclosed: use a currently visible reference or copy the exact "
+            "read_action from this Step's search hit. A summary search hit does not grant "
+            "directory or another chapter. Use search_skill with subject keywords to locate "
+            "the needed section or resource chunk."
+        )
     descriptor = next(s for s in composition.skill_catalog if s.skill_id == request["skill_id"])
     for block in context["blocks"]:
         if block["kind"] == "skill" and block["id"] == descriptor.skill_id:

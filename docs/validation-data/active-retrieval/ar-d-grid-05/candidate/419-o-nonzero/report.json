@@ -1,0 +1,39 @@
+{
+  "identity": "419-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "01f1a596-6827-49e4-b0e2-82e312fc129a",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这表示检查失败。因此，故障代号是 **7**。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.75,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4830,
+    "output_tokens": 33,
+    "total_tokens": 4863
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13228,
+    "output_tokens": 56,
+    "total_tokens": 13284
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 8.266000000061467
+}

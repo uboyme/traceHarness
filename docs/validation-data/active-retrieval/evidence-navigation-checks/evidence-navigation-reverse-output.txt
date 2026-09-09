@@ -1,0 +1,32 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_________ test_search_restart_then_expand_on_real_runtime_and_sqlite __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5225/test_search_restart_then_expan0')
+
+    async def test_search_restart_then_expand_on_real_runtime_and_sqlite(tmp_path):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        command, expected = write_emitter(workspace)
+        root = tmp_path / "data"
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("emit", "shell", {"command": command}),)),
+                ModelResponse(content="captured"),
+            ],
+        )
+        try:
+            sid = await runtime.create_session(workspace)
+            await runtime.run_existing(sid, "Execute once")
+            events = await runtime.sessions.read_session(sid)
+            ref = next(e.data["output_ref"] for e in events if e.type == "tool/result")
+            preview = json.loads(next(e.data["content"] for e in events if e.type == "tool/result"))
+            assert preview["search_tool"] == "search_tool_output"
+            assert "read_action" not in preview
+>           assert "preview" not in preview
+E           assert 'preview' not in {'notice': "Tool output retained in this Session's Effect log. Preview is incomplete. Do not rerun the original tool t...d"\n测量🙂 "quoted"\n测量🙂 "quoted"\n测量🙂 "quoted"\n测量🙂 "quoted"\n测量🙂 "quoted"\n测量🙂 "q', 'search_tool': 'search_tool_output'}
+
+tests\test_retained_tool_output.py:163: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_retained_tool_output.py::test_search_restart_then_expand_on_real_runtime_and_sqlite

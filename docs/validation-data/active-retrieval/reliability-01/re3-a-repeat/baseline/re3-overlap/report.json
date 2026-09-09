@@ -1,0 +1,55 @@
+{
+  "identity": "re3-overlap",
+  "case_id": "re3-overlap",
+  "seed": 1609,
+  "family": "output",
+  "question": "本次检查的核验编号（核验码）是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "64b47e29-0618-4a01-a946-f99661a5b580",
+  "target_start_seq": 28,
+  "answer": "REF-3EE9203C75",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 6.125,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8544,
+    "output_tokens": 138,
+    "total_tokens": 8682
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16313,
+    "output_tokens": 161,
+    "total_tokens": 16474
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 43,
+      "effect_id": "fe2ddf94-2a93-42e8-b358-3454bcbd1e10",
+      "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+        "effect_id": "fe2ddf94-2a93-42e8-b358-3454bcbd1e10",
+        "part": "content",
+        "query": "核验编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 9.905999999959022
+}

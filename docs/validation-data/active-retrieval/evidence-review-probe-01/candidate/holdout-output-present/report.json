@@ -1,0 +1,156 @@
+{
+  "identity": "holdout-output-present",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "fbef74d9-9f8b-4953-9416-55f39269a0d7",
+  "target_start_seq": 28,
+  "answer": "我需要继续读取 `check.py` 的完整输出，直到读取完整个输出（total_chars=18052），以确认是否包含应急工单编号。当前只读取了前12721个Unicode字符，现在继续读取后续内容。\n\n\n\n",
+  "steps": 12,
+  "reason": "max_steps_exceeded",
+  "target_seconds": 106.40599999995902,
+  "target_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 129057,
+    "output_tokens": 2307,
+    "total_tokens": 131364
+  },
+  "all_usage": {
+    "attempts": 14,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 137869,
+    "output_tokens": 2330,
+    "total_tokens": 140199
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 185,
+      "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+      "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 1276,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 2549,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 3821,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 5092,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 6365,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 7636,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 8909,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 10181,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 11450,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "9b746365-5265-45cf-a876-1a617a9e93ec",
+        "offset": 12721,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 11,
+  "output_executions": 1,
+  "elapsed_seconds": 115.375
+}

@@ -1,0 +1,391 @@
+{
+  "descriptor": {
+    "skill_id": "maintenance.handbook",
+    "version": "1.0.0",
+    "plugin": {
+      "plugin_id": "reference.author",
+      "version": "1.0.0"
+    },
+    "title": "设备维护手册",
+    "summary": "设备维护的现场操作说明。",
+    "tags": [],
+    "requires_traceh": ">=0.4,<1.0",
+    "sections": [
+      {
+        "section_id": "part-00",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-01",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-02",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-03",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-04",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-05",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-06",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-07",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-08",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-09",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-10",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-11",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-12",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-13",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-14",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-15",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-16",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-17",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-18",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-19",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-20",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-21",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-22",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-23",
+        "tier": "section",
+        "content_digest": "31da16659634dce9c1e154763aaba0910d03a35ae07fd69812631fc5aa7938df",
+        "content_bytes": 79,
+        "title": "无线电终止作业",
+        "summary": "停止维护作业时使用的无线电口令。"
+      },
+      {
+        "section_id": "part-24",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-25",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-26",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-27",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-28",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-29",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      },
+      {
+        "section_id": "part-30",
+        "tier": "section",
+        "content_digest": "a1084cdd82943fb77798df2610e426c3d91febc9513446b53da928b5035cdec6",
+        "content_bytes": 21,
+        "title": "普通器材清点",
+        "summary": "说明清点顺序。"
+      }
+    ],
+    "resources": []
+  },
+  "sections": [
+    {
+      "id": "part-00",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-01",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-02",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-03",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-04",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-05",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-06",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-07",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-08",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-09",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-10",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-11",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-12",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-13",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-14",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-15",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-16",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-17",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-18",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-19",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-20",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-21",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-22",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-23",
+      "body": "设备维护手册规定，终止作业的无线电口令是 WILLOW-5ecef859。"
+    },
+    {
+      "id": "part-24",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-25",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-26",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-27",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-28",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-29",
+      "body": "清点常用器材。"
+    },
+    {
+      "id": "part-30",
+      "body": "清点常用器材。"
+    }
+  ]
+}

@@ -160,6 +160,9 @@ async def test_search_restart_then_expand_on_real_runtime_and_sqlite(tmp_path):
         preview = json.loads(next(e.data["content"] for e in events if e.type == "tool/result"))
         assert preview["search_tool"] == "search_tool_output"
         assert "read_action" not in preview
+        assert "preview" not in preview
+        assert "Content is not loaded here" in preview["notice"]
+        assert expected[:200] not in canonical_json(preview)
         await runtime.compaction.replace_through(
             sid, through_seq=events[-1].seq, summary="A diagnostic was executed."
         )
@@ -194,7 +197,14 @@ async def test_search_restart_then_expand_on_real_runtime_and_sqlite(tmp_path):
         read = ReadToolOutput(runtime.sessions, max_chars=1024)
         context = ToolExecutionContext(sid, "read", "read", "read", workspace, root)
         expanded = await read.execute(hit["read_action"]["arguments"], context)
-        assert "station-Q / code-9472" in json.loads(expanded.content)["text"]
+        expanded_body = json.loads(expanded.content)
+        assert "station-Q / code-9472" in expanded_body["text"]
+        # Reading the tail reaches EOF but does not read the earlier source.
+        assert expanded_body.get("body_status") == "source-excerpt"
+        assert expanded_body["next_offset"] is None
+        assert expanded_body["offset"] > 0
+        assert expanded_body["end_offset"] == expanded_body["total_chars"]
+        assert page["match_mode"] == "literal-substring"
         assert expected.endswith("END: station-Q / code-9472")
         assert (workspace / "executions.txt").read_text() == "x"
         assert not await verify_request_snapshots(runtime.sessions, runtime.surface, sid)
@@ -381,7 +391,7 @@ async def test_real_shell_survives_restart_and_pages_without_reexecution(tmp_pat
         await store.aclose()
 
 
-async def raw_batch(tmp_path, *, sessions=None):
+async def raw_batch(tmp_path, *, sessions=None, reader=True, searcher=True):
     workspace = tmp_path / "work"
     workspace.mkdir(exist_ok=True)
     command, _ = write_emitter(workspace)
@@ -392,14 +402,52 @@ async def raw_batch(tmp_path, *, sessions=None):
     await sessions.append_session(sid, "step/start", {"turn_id": "turn", "step_id": "step"})
     registry = ToolRegistry()
     registry.register(ShellTool())
-    registry.register(ReadToolOutput(sessions, max_chars=1024))
+    if reader:
+        registry.register(ReadToolOutput(sessions, max_chars=1024))
     registry.register(ListToolOutputs(sessions, max_chars=1024))
-    registry.register(SearchToolOutput(sessions, max_chars=1024))
+    if searcher:
+        registry.register(SearchToolOutput(sessions, max_chars=1024))
     runtime = ToolRuntime(
         registry, sessions, policies=(AllowByDefaultPolicy(),), max_output_chars=1024
     )
     context = ToolExecutionContext(sid, "turn", "step", "batch", workspace, tmp_path)
     return runtime, sessions, store, context, ToolCall("emit", "shell", {"command": command})
+
+
+@pytest.mark.parametrize(
+    "reader,searcher", [(False, False), (True, False), (False, True), (True, True)]
+)
+async def test_large_output_presentation_uses_actual_lookup_composition(tmp_path, reader, searcher):
+    runtime, sessions, store, context, call = await raw_batch(
+        tmp_path, reader=reader, searcher=searcher
+    )
+    try:
+        (result,) = await runtime.execute_batch((call,), context=context, composition_revision="r")
+        assert result.status == "succeeded"
+        display = json.loads(result.content)
+        events = await sessions.read_session(context.session_id)
+        effects = await sessions.read_effects(context.session_id)
+        ref = result.output_ref
+        original = resolve_tool_output(
+            events,
+            effects,
+            session_id=context.session_id,
+            effect_id=ref["effect_id"],
+            digest=ref["digest"],
+        )
+        assert len(original["content"]) > 1024
+        if reader or searcher:
+            assert "preview" not in display
+            assert "Content is not loaded here" in display["notice"]
+        else:
+            assert display["preview"] == original["content"][:1024]
+            assert "Preview is incomplete" in display["notice"]
+        assert ("search_tool" in display) == searcher
+        assert ("read_action" in display) == (reader and not searcher)
+        assert (context.workspace / "executions.txt").read_text() == "x"
+        assert not CoreInvariantChecker().check(events, effects)
+    finally:
+        await store.aclose()
 
 
 async def test_cross_session_and_forged_digest_are_denied_by_real_tool_path(tmp_path):
@@ -549,6 +597,12 @@ def test_page_budget_counts_json_escaping_and_never_splits_unicode():
         )
         assert len(page) <= 400
         raw = json.loads(page)
+        assert raw["end_offset"] == raw["offset"] + len(raw["text"])
+        assert raw["body_status"] == (
+            "complete-source"
+            if raw["offset"] == 0 and raw["end_offset"] == len(text)
+            else "source-excerpt"
+        )
         restored += raw["text"]
         offset = raw["next_offset"]
     assert restored == text
@@ -590,6 +644,7 @@ async def test_large_data_and_reported_failures_use_the_same_retention(tmp_path,
             composition_revision="r",
         )
         assert result.status == ("succeeded" if mode == "data" else "failed")
+        assert "preview" not in json.loads(result.content)
         assert result.data == {}
         ref = result.output_ref
         payload = resolve_tool_output(

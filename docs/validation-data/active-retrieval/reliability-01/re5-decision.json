@@ -1,0 +1,13 @@
+{
+  "status": "completed-no-eligible-combination",
+  "selected_candidates": [],
+  "reason": "No candidate met unchanged two-round gain and protection rules. RE1 and RE2/RE4 have no positive screening net gain; RE3 repeat has negative gain and no repeated improved pair.",
+  "holdout_materials_sha256": "00e8a1bd9cddfe56e2d11e0d9cc4a08ea61b92d188ec3db11170240f867ec3b9",
+  "holdout_scenarios_frozen": 24,
+  "planned_holdout_journeys_if_eligible": 96,
+  "executed_holdout_journeys": 0,
+  "holdout_disposition": "not-run: eligibility precondition not met; neither pass nor fail, materials remain unused for tuning",
+  "production_adoption": false,
+  "historical_grid06_score": "51/72",
+  "release_status": "NO-GO"
+}

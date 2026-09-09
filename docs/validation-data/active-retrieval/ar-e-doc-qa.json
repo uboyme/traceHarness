@@ -1,0 +1,31 @@
+{
+  "documents": 8,
+  "chapter_correspondence": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20"
+  ],
+  "relative_links": 594,
+  "mermaid_blocks_closed": 58,
+  "evidence_json_parsed_and_secret_pattern_checked": 1684,
+  "errors": [],
+  "manual_flow_check": "Original authority unchanged; both exploratory changes excluded from production; formal/plain sections 1 and 7.11 and existing diagrams reviewed. Secret pattern scan is not an exhaustive credential detector."
+}

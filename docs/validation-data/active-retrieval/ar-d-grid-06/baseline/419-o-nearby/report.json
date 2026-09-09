@@ -1,0 +1,46 @@
+{
+  "identity": "419-o-nearby",
+  "case_id": "o-nearby",
+  "seed": 419,
+  "family": "output",
+  "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "bd6f1eaf-fc78-408d-add5-4855879f4430",
+  "target_start_seq": 28,
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 4151,
+    "output_tokens": 46,
+    "total_tokens": 4197
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 11190,
+    "output_tokens": 68,
+    "total_tokens": 11258
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    }
+  ],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 29.14000000001397
+}

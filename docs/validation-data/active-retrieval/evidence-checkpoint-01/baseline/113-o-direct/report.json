@@ -1,0 +1,61 @@
+{
+  "identity": "113-o-direct",
+  "case_id": "o-direct",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才设备检查输出里的交接校验码是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "f1970b2a-09c4-44de-8658-c4aafe37809e",
+  "target_start_seq": 28,
+  "answer": "交接校验码是 `REF-F958326A62`。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 16.93700000003446,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16151,
+    "output_tokens": 367,
+    "total_tokens": 16518
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 24875,
+    "output_tokens": 389,
+    "total_tokens": 25264
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 57,
+      "effect_id": "2d0c6eb5-831f-438b-87a6-d95fb593cb66",
+      "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 1
+      }
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+        "effect_id": "2d0c6eb5-831f-438b-87a6-d95fb593cb66",
+        "part": "content",
+        "query": "交接校验码"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 22.218999999924563
+}

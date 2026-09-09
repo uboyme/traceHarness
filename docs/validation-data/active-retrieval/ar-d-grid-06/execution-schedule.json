@@ -1,0 +1,18 @@
+{
+  "frozen_before_scoring": true,
+  "waves": [
+    [
+      "baseline-0",
+      "candidate-0"
+    ],
+    [
+      "baseline-1",
+      "candidate-1"
+    ]
+  ],
+  "maximum_simultaneous_workers": 2,
+  "reason": "User-requested final comparison using the original no-active-retrieval baseline and current frozen code. Same grid-05 scheduling; no attribution of TLS errors to concurrency.",
+  "manifest_questions_fixtures_model_limits_gates_unchanged": true,
+  "stop_rule": "Each closed case once; retain failures and transport errors. No tuning, production edits or score-driven reruns. No full pytest or L2-L4.",
+  "interpretation": "Cumulative harness comparison; not an isolated estimate of the last presentation patch. Previously used benchmark, not an untouched test set."
+}

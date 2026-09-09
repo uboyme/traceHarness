@@ -1,0 +1,79 @@
+{
+  "arm": "candidate",
+  "cases": 8,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "control-greeting",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-sum",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-direct",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-omitted",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re2-unbound",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re4-memory-no",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re4-memory-yes",
+      "requests": 3,
+      "attempts_started": 3,
+      "attempts_ended": 3,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "re4-skill-yes",
+      "requests": 2,
+      "attempts_started": 2,
+      "attempts_ended": 2,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

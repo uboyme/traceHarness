@@ -1,0 +1,38 @@
+{
+  "identity": "227-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 227,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "107d419e-aca2-4cf0-a8a4-8d84f8d11a0f",
+  "error": {
+    "type": "ProviderFailure",
+    "code": "provider-tls-eof"
+  },
+  "target_usage": {
+    "attempts": 0,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "all_usage": {
+    "attempts": 9,
+    "unknown_usage": 6,
+    "estimated_usage": 0,
+    "input_tokens": 11379,
+    "output_tokens": 9,
+    "total_tokens": 11388
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 53.51600000006147
+}

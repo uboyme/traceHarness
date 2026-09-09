@@ -1,0 +1,30 @@
+--- b0/session/tool_output.py
++++ re1-a/session/tool_output.py
+@@ -93,6 +93,27 @@
+                 "part": "content",
+                 "offset": 0,
+             },
++        }
++    if reader_available or searcher_available:
++        display = {
++            "source_content": {
++                "loaded": False,
++                "read_action": {
++                    "tool": OUTPUT_READ_TOOL,
++                    "arguments": {
++                        "effect_id": effect_id,
++                        "digest": reference["digest"],
++                        "part": "content",
++                        "offset": 0,
++                    },
++                } if reader_available else None,
++            },
++            "storage_navigation": {
++                "output_ref": reference,
++                "purpose": "Identity and content integrity for locating the saved result.",
++                "search_tool": OUTPUT_SEARCH_TOOL if searcher_available else None,
++            },
++            "notice": display["notice"],
+         }
+     presentation = canonical_json(display)
+     return (

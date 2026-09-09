@@ -1,0 +1,39 @@
+{
+  "identity": "counterfactual-113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "542600a1-e82d-483e-ae32-0457b0442590",
+  "target_start_seq": 28,
+  "answer": "刚才执行的 `python check.py` 检查输出中，**没有出现“保险理赔编号”或类似表述（如“理赔编号”、“claim number”、“case ID”等）**。\n\n检查输出为连续 56 行格式化日志（如“检查行 0001：普通器材登记，状态 normal。”），全部内容仅涉及“普通器材登记”及“normal”状态，未包含任何与保险、理赔、编号相关的字段或值。\n\n因此，**该次归档检查未给出保险理赔编号**。\n\n检查结束。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 5.73499999998603,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4985,
+    "output_tokens": 123,
+    "total_tokens": 5108
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13713,
+    "output_tokens": 145,
+    "total_tokens": 13858
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 10.48499999998603
+}

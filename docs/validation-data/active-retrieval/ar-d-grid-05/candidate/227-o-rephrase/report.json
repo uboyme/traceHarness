@@ -1,0 +1,39 @@
+{
+  "identity": "227-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 227,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "235b371f-2133-45ce-b63f-223c100c3342",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 后，工具输出中返回的核验代号（即 `digest`）是：\n\n```\n3909e09580ebdb8efdafc21227a0fd6090b13a4fb38deb585e266d047b7cdb84\n```\n\n这是该次检查运行结果的唯一内容指纹（SHA-256 digest），用于归档与验证。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.781000000075437,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4825,
+    "output_tokens": 109,
+    "total_tokens": 4934
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13216,
+    "output_tokens": 132,
+    "total_tokens": 13348
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 11.687999999965541
+}

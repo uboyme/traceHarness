@@ -1,0 +1,39 @@
+{
+  "identity": "control-arithmetic",
+  "case_id": "s-direct",
+  "seed": 113,
+  "family": "skill",
+  "question": "17 加 26 等于多少？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "46793a7b-8b7e-43cd-b96a-a138650c7c8d",
+  "target_start_seq": 1,
+  "answer": "17 加 26 等于 43。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.5780000000959262,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3051,
+    "output_tokens": 14,
+    "total_tokens": 3065
+  },
+  "all_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3051,
+    "output_tokens": 14,
+    "total_tokens": 3065
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 3.827999999979511
+}

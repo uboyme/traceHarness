@@ -1,0 +1,111 @@
+{
+  "calls": [
+    {
+      "request": {
+        "provider": "openai-compatible",
+        "model": "qwen-plus",
+        "system_prompt": null,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reply exactly RE_CONNECTION_OK."
+          }
+        ],
+        "tools": [],
+        "temperature": 0,
+        "max_output_tokens": 96,
+        "metadata": {}
+      },
+      "response": {
+        "content": "RE_CONNECTION_OK",
+        "tool_calls": [],
+        "finish_reason": "stop",
+        "usage": {
+          "input_tokens": 14,
+          "output_tokens": 3,
+          "total_tokens": 17,
+          "quality": "exact"
+        },
+        "raw": {
+          "response_id": "chatcmpl-2e560e1f-a9ac-92da-8f71-e07cb8fafec8"
+        }
+      },
+      "error": null,
+      "expected": true,
+      "seconds": 0.5,
+      "connections": [
+        {
+          "loopback": false,
+          "port": 443
+        }
+      ]
+    },
+    {
+      "request": {
+        "provider": "openai-compatible",
+        "model": "qwen-plus",
+        "system_prompt": null,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Call connectivity_echo with text RE_CONNECTION_OK."
+          }
+        ],
+        "tools": [
+          {
+            "name": "connectivity_echo",
+            "description": "Synthetic connection probe; not executed.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "temperature": 0,
+        "max_output_tokens": 96,
+        "metadata": {}
+      },
+      "response": {
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_4b132f1af13143c7a19687",
+            "name": "connectivity_echo",
+            "arguments": {
+              "text": "RE_CONNECTION_OK"
+            }
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 163,
+          "output_tokens": 22,
+          "total_tokens": 185,
+          "quality": "exact"
+        },
+        "raw": {
+          "response_id": "chatcmpl-2aef4680-bf93-9b28-afe7-5a761646b191"
+        }
+      },
+      "error": null,
+      "expected": true,
+      "seconds": 0.875,
+      "connections": [
+        {
+          "loopback": false,
+          "port": 443
+        }
+      ]
+    }
+  ],
+  "complete": true,
+  "tool_executions": 0
+}

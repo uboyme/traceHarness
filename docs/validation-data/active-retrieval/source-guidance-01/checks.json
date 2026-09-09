@@ -1,0 +1,22 @@
+{
+  "distinct_scoped_tests": 290,
+  "source_archives_match_frozen": true,
+  "current_production_source_matches_candidate_freeze": true,
+  "real_journeys": 16,
+  "independently_replayed_requests": 84,
+  "reported_total_tokens": 434585,
+  "unknown_usage_attempts": 0,
+  "positive_passes": {
+    "baseline": 1,
+    "candidate": 6,
+    "per_arm": 6
+  },
+  "negative_candidate_failures": 2,
+  "compileall": "passed src tests",
+  "ruff": "passed modified files",
+  "diff_check": "passed",
+  "doc_qa": "../source-guidance-doc-qa.json",
+  "no_full_or_L2": true,
+  "committed": false,
+  "production_scope": "Presentation and explicit protocol switch; no retrieval algorithm or policy changes."
+}

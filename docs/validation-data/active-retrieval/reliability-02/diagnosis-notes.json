@@ -1,0 +1,21 @@
+{
+  "mechanical_observation": "Budget retry reaches width=0 before reducing hit_limit; it never restores snippet width after references free space.",
+  "original_trace": "../reliability-01/re2-a2/baseline/re2-omitted/source-events.json",
+  "observed_original_page": {
+    "scanned": 2,
+    "total": 13,
+    "texts": [
+      "呼号",
+      "呼号"
+    ],
+    "has_next": true
+  },
+  "candidate_observation": "Same first two source identities, actual surrounding source text fits within unchanged item budget after width restart.",
+  "deep_pagination_probe": {
+    "status": "interrupted-not-passed",
+    "reason": "Seven-page controlled navigation reached target in search content, but subsequent verification/read path was slow; stopped the offline probe, no success claim for deep-page lifecycle or performance.",
+    "network_calls": 0
+  },
+  "final_diagnostic": "One actual continuation plus a fixture-derived exact locator, followed by original Reader. Oracle-assisted reachability proof, never scored as autonomous model behavior.",
+  "live_protocol": "Eight fixed baseline/candidate pairs, one candidate only; no net gain or guard regression ends this attempt."
+}

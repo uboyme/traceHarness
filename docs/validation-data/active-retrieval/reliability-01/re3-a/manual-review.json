@@ -1,0 +1,244 @@
+{
+  "method": "Human semantic assessment against frozen question/source and successful dispatched requests; not blind. Auxiliary stylistic errors retained, not silently discarded. Automatic provisional passes ignored.",
+  "scores": {
+    "baseline": 5,
+    "candidate": 6
+  },
+  "denominator_per_arm": 10,
+  "decision": "repeat-six-unchanged",
+  "rows": [
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "fa06765e8c342442bd7281fa6539faf44c53ffcc2c62cd6740234d53c98775e2"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "2c6372ef19157943b9b0514e090c911b33cba9e341cad572c25b741a66e9afda"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了敬语（“您”）、缓和语气的短语（“麻烦您”“如果您方便的话”“能否”）以及致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、职场上级、客服用语等），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "926cca0fa2870dd3c2c811474fbd4682243f714ddce9e7d95b617932151ab4b6"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "09bb56e3113efd3530a7a8c1d830919e855c65beb6a525c405ec693480f8fbb9"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-absent",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Quotes explicit non-generation but starts with yes; contradictory answer, not unambiguous joint success.",
+      "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明检查过程中**未生成**停车许可证编号。",
+      "evidence": [],
+      "report_sha256": "55e6894ef9018e5e4cfdbc911582bbbb7aed14656d90782b63ba55547187c879"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-direct",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Wrong-language search and prefix reads miss original sample number.",
+      "answer": "检查输出中未发现“样品序列号”或“serial number”相关字样。所有输出内容均为重复的中文提示“陶艺展览例行登记完成”，并按条目编号（0–98）列出，无任何序列号信息。",
+      "evidence": [],
+      "report_sha256": "2708ea70a3aaf26354e572d780167140cfc6ee68e826800f56a5c7750d158d6e"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-language",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Exit code mistaken for business fault identifier after wrong-language or incomplete lookup.",
+      "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这是本次失败的归档检查给出的故障代号。\n\n因此，故障代号是：**7**。",
+      "evidence": [],
+      "report_sha256": "eba9f5dd61c231268ad56f505b86432f434026e1af74489374b09314681aa9a4"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-nearby",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Positive target not answered; unrelated medical interpretation or abstention without output lookup.",
+      "answer": "根据当前可用的参考信息，没有提供关于\"诊断组乙的交接凭据\"的具体内容。参考列表为空，意味着没有相关文档、历史记录、项目记忆或技能文档被提供来回答这个问题。\n\n由于没有可用的参考材料，我无法确定诊断组乙的交接凭据是什么。",
+      "evidence": [],
+      "report_sha256": "090523acbf09ddbd51ab75a05020a8d73eb449cb5451c611c00f5c9292acd6f8"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-overlap",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Correct code supported by original matching line.",
+      "answer": "REF-3EE9203C75",
+      "evidence": [
+        {
+          "attempt_end_seq": 53,
+          "request_snapshot_seq": 49,
+          "dispatch_fingerprint": "4ac8eb88f0d8e9c70ff2a51a8acef5f5d0c80c61da7c7e09910fdd2d601f9473",
+          "source_evidence": {
+            "tool_result_seq": 43,
+            "effect_id": "afe9d2f8-b4b1-42f3-81ff-601bcdf0e067",
+            "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+          }
+        }
+      ],
+      "report_sha256": "c244b16a57bcd4ded8be6437fb02a730ad25c8eff427ff026b2c1375bc198847"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re3-phrase",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Visible prefix/routine entries mistaken for asked credential.",
+      "answer": "刚才那次展览检查的核对凭据是：**58 条“陶艺展览例行登记完成”记录，编号从条目 0 到条目 57**。\n\n该凭据来自 `python check.py` 的标准输出（stdout），内容为连续 58 行形如 `条目 N: 陶艺展览例行登记完成。` 的确认信息，无错误或异常输出，且进程退出码为 `exit_code=0`，表明检查成功通过。",
+      "evidence": [],
+      "report_sha256": "0241894a0f5e3710570bbeafff55d32ae5fd122f83906ba7680c7984b6f44ca1"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "861b561409cc8a8a2ec87d3ac4101d726f45b351d86df7380a884548ee98792e"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "da411fceb096ccdf4c4d9edfa2fc2ce29f2a4ab06275328c76229843bf41c08d"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否请您”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "ac08a2f234db3b86a93de04b6153280a623fa34ac53a8a45711ea027bd18df31"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Current-message answer correct, zero Tool calls.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "e7a76a1e5e6217484d04b1ddf15f2cfd2f454376c457b6e32cd88f53b41c749f"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-absent",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Quotes explicit non-generation but starts with yes; contradictory answer, not unambiguous joint success.",
+      "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明输出中**提到了“停车许可证编号”这一字段**，但其值为空（未生成）。",
+      "evidence": [],
+      "report_sha256": "463146db92d53b0f7a698b711dd0884dfa1f11f9d7c0a670ff08923d874239b1"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-direct",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Union includes Chinese literal; original exact sample number delivered.",
+      "answer": "样品序列号是 `REF-9BB96F9C0B`。",
+      "evidence": [
+        {
+          "attempt_end_seq": 53,
+          "request_snapshot_seq": 49,
+          "dispatch_fingerprint": "4cae2a5d07bf5e2d2a2e0e5e04c0bfc7025a2155dbb84f8ec54f63bbf7b133c3",
+          "source_evidence": {
+            "tool_result_seq": 43,
+            "effect_id": "50410f15-20cf-4e9c-9cfb-f29631d56c8b",
+            "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882"
+          }
+        }
+      ],
+      "report_sha256": "d593c0219241658ea52e8d4ce4e0d2930c1571ea9c1a6d69a51b145efcce6c20"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-language",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Exit code mistaken for business fault identifier after wrong-language or incomplete lookup.",
+      "answer": "刚才执行 `python check.py` 的归档检查返回了 `exit_code=7`，且输出中未出现“failure code”、“fault code”或“error code”等关键词，也无其他显式故障代号信息。根据标准 Unix/Linux 进程退出码惯例，**`7` 本身即为本次失败检查所给出的故障代号**。\n\n因此，故障代号是：`7`",
+      "evidence": [],
+      "report_sha256": "bf59ff701954fd0a58699fdc41c8e00d61a2a5953ec252ad7475b4b8634f2e41"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-nearby",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Positive target not answered; unrelated medical interpretation or abstention without output lookup.",
+      "answer": "根据当前可用的参考信息，没有提供关于\"诊断组乙的交接凭据\"的具体内容。参考列表为空，意味着没有相关文档、历史记录、项目记忆或技能文档被提供来回答这个问题。\n\n由于问题涉及特定的医疗或诊断分组的交接凭据，这通常会在医疗规范、操作手册或项目特定文档中定义，但这些资料并未包含在当前的参考上下文中。\n\n因此，基于当前可用的信息，我无法确定诊断组乙的交接凭据是什么。",
+      "evidence": [],
+      "report_sha256": "42c26584967265b36fd662d76f589660bde7015a5d4fdfa9578dd68292435e0a"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-overlap",
+      "joint_pass": true,
+      "fixture_ambiguous": false,
+      "reason": "Correct code supported by original matching line.",
+      "answer": "REF-3EE9203C75",
+      "evidence": [
+        {
+          "attempt_end_seq": 65,
+          "request_snapshot_seq": 61,
+          "dispatch_fingerprint": "5f426fb638bfcdab6885b667497bee1f12c07669ff44e3618479807798d63794",
+          "source_evidence": {
+            "tool_result_seq": 55,
+            "effect_id": "ecfb2413-6b4a-4a45-94bd-27ba1b9fab20",
+            "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+          }
+        }
+      ],
+      "report_sha256": "2a3aceb8f552249fcaba2f72e3687e8b9abf5c3ba8698c4e4fdf54c8c2401a54"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re3-phrase",
+      "joint_pass": false,
+      "fixture_ambiguous": false,
+      "reason": "Visible prefix/routine entries mistaken for asked credential.",
+      "answer": "刚才那次展览检查的核对凭据是：**“陶艺展览例行登记完成。”**（共58次，条目 0 至 57）",
+      "evidence": [],
+      "report_sha256": "ac0b6fb91fb7f2e3f111366b9546939ab38d06688576006a8bf7d81b2935947d"
+    }
+  ]
+}

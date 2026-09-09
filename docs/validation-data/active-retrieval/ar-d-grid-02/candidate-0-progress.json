@@ -1,0 +1,177 @@
+{
+  "arm": "candidate",
+  "closed": 2,
+  "scored_review_complete": false,
+  "reports": [
+    {
+      "identity": "113-h-direct",
+      "case_id": "h-direct",
+      "seed": 113,
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "c70104ab-19b7-4b3a-bbbc-706e4e849833",
+      "target_start_seq": 158,
+      "answer": "从搜索结果中，我找到了设备交接的口令：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 95.54599999997299,
+      "target_usage": {
+        "attempts": 4,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 14280,
+        "output_tokens": 411,
+        "total_tokens": 14691
+      },
+      "all_usage": {
+        "attempts": 17,
+        "unknown_usage": 4,
+        "estimated_usage": 0,
+        "input_tokens": 51263,
+        "output_tokens": 441,
+        "total_tokens": 51704
+      },
+      "evidence": [
+        {
+          "context_seq": 192,
+          "reference": {
+            "block_id": "070b9825b7024144a1d3d65839809b9d8b6f60e49fcaa861316476f2e9bd5251",
+            "cursor": {
+              "block_id": "070b9825b7024144a1d3d65839809b9d8b6f60e49fcaa861316476f2e9bd5251",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "60fd8cd382ad4a8f2617924f079b2d942eb5e848d84133efc95b6345d5d448e4",
+              "event_id": "a0e731ac-e0f4-4ee8-81b5-8d00c5fab5ac",
+              "seq": 117,
+              "stream_id": "session:c70104ab-19b7-4b3a-bbbc-706e4e849833",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "50fbf515bdf2491f15082434de325e047d30e1546b3199beee8f3852f388f89e"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "070b9825b7024144a1d3d65839809b9d8b6f60e49fcaa861316476f2e9bd5251",
+            "cursor": {
+              "block_id": "070b9825b7024144a1d3d65839809b9d8b6f60e49fcaa861316476f2e9bd5251",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "口令"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 227.06200000003446
+    },
+    {
+      "identity": "113-h-late-page",
+      "case_id": "h-late-page",
+      "seed": 113,
+      "family": "history",
+      "question": "之前提过检修集合点，具体在哪儿？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "b22eebec-fb77-4c4a-81d2-3763ec310dcc",
+      "target_start_seq": 152,
+      "answer": "根据搜索结果，检修集合点的具体位置是：**东侧第38号资料柜**。\n\n这个信息来自历史记录中的明确说明：\"请记下这条记录，只回复已记下：检修集合点是 东侧第38号资料柜。\"",
+      "steps": 4,
+      "reason": "completed",
+      "target_seconds": 53.546999999904074,
+      "target_usage": {
+        "attempts": 4,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 20073,
+        "output_tokens": 593,
+        "total_tokens": 20666
+      },
+      "all_usage": {
+        "attempts": 14,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 57056,
+        "output_tokens": 623,
+        "total_tokens": 57679
+      },
+      "evidence": [
+        {
+          "context_seq": 197,
+          "reference": {
+            "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+            "cursor": {
+              "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "dc3a3a432cfa3f9a34148fe17b6c10004d004164f5ed3af2833355205dba9331",
+              "event_id": "f2b4c58a-8f3c-477b-b41a-539f058cb94f",
+              "seq": 111,
+              "stream_id": "session:b22eebec-fb77-4c4a-81d2-3763ec310dcc",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "0956adf94e9a8c85b23ef57ac6c9db27a8d9c5ffb7b40e4c1a5c7342ba54a421"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+            "cursor": {
+              "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+            "cursor": {
+              "block_id": "28c5de5315c8c1abdb72c90f53fa9acaac1ecd1c7e11b7e6bcdf17a843fa3718",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "检修集合点"
+          }
+        }
+      ],
+      "search_read_count": 3,
+      "output_executions": null,
+      "elapsed_seconds": 100.84400000004098
+    }
+  ]
+}

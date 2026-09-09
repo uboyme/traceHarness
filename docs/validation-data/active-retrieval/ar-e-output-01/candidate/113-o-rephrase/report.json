@@ -1,0 +1,50 @@
+{
+  "identity": "113-o-rephrase",
+  "case_id": "o-rephrase",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "a6f9f0ee-74a7-480d-b209-d4dcd6d2d455",
+  "target_start_seq": 28,
+  "answer": "刚才归档检查返回的核验代号是：\n\n`06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a`",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 9.422000000020489,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10860,
+    "output_tokens": 206,
+    "total_tokens": 11066
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 19337,
+    "output_tokens": 229,
+    "total_tokens": 19566
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100000,
+        "digest": "06e98eb8f09da93724345ff3fd37a9023179a27d04a2d1aafd9eee864e78f31a",
+        "effect_id": "8bce28e2-35dc-4856-ba06-029d0b4e28ac",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 15.734000000054948
+}

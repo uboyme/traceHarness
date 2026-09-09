@@ -1,0 +1,79 @@
+{
+  "identity": "227-h-direct",
+  "case_id": "h-direct",
+  "seed": 227,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "15f432d8-3078-4bca-a53b-290864c49a19",
+  "target_start_seq": 152,
+  "answer": "The device handover passphrase is **REF-2E0BC6BCF8**, as found in the search result from the session history.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 22.858999999938533,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14364,
+    "output_tokens": 357,
+    "total_tokens": 14721
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 51929,
+    "output_tokens": 387,
+    "total_tokens": 52316
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "d81fab704a698212268f9f96c9a3ea8ee88b7b09b4be57ab615e7e689fc3dc7c",
+        "cursor": {
+          "block_id": "d81fab704a698212268f9f96c9a3ea8ee88b7b09b4be57ab615e7e689fc3dc7c",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "e81b35e8e91a703af754b88b17f6468593298065b1a46f6aaffd47b4ddb89d66",
+          "event_id": "e0337132-f568-406f-9660-a455309f8fe9",
+          "seq": 111,
+          "stream_id": "session:15f432d8-3078-4bca-a53b-290864c49a19",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "9f144fe05c0332d1685f4951eb68de3ce5e318d29387b5d23d349e7bb7c8b75d"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d81fab704a698212268f9f96c9a3ea8ee88b7b09b4be57ab615e7e689fc3dc7c",
+        "cursor": {
+          "block_id": "d81fab704a698212268f9f96c9a3ea8ee88b7b09b4be57ab615e7e689fc3dc7c",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "设备交接"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 58.06200000003446
+}

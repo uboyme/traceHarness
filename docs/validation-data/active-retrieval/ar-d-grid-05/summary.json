@@ -1,0 +1,160 @@
+{
+  "decision": "NO-GO",
+  "completed_grid": true,
+  "planned_cases_per_arm": 72,
+  "manual_review_complete": true,
+  "arms": {
+    "baseline": {
+      "joint_pass": 21,
+      "completed_answers": 69,
+      "execution_errors": [],
+      "connection_failures": 0,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 6
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 0
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 12
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 3
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 17
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 4
+        }
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 9,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 469,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0,
+      "steps": {
+        "n": 69,
+        "mean": 3.1449275362318843,
+        "p95": 7,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 69,
+        "mean": 2.0144927536231885,
+        "p95": 6,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 69,
+        "mean": 28.94708695651734,
+        "p95": 88.31199999991804,
+        "scope": "completed target answers only; missing observations are not zero"
+      }
+    },
+    "candidate": {
+      "joint_pass": 45,
+      "completed_answers": 69,
+      "execution_errors": [],
+      "connection_failures": 0,
+      "by_family": {
+        "history": {
+          "planned": 18,
+          "joint_pass": 13
+        },
+        "skill": {
+          "planned": 18,
+          "joint_pass": 14
+        },
+        "memory": {
+          "planned": 18,
+          "joint_pass": 14
+        },
+        "output": {
+          "planned": 18,
+          "joint_pass": 4
+        }
+      },
+      "by_language": {
+        "zh": {
+          "planned": 60,
+          "joint_pass": 38
+        },
+        "en": {
+          "planned": 12,
+          "joint_pass": 7
+        }
+      },
+      "observed_violations": {
+        "scope_violations": 0,
+        "duplicate_side_effects": 0,
+        "unsupported_test_facts": 8,
+        "stale_memory_as_current": 0
+      },
+      "reopened_requests": 440,
+      "replay_invariant_errors": 0,
+      "unended_attempts": 0,
+      "steps": {
+        "n": 69,
+        "mean": 2.7246376811594204,
+        "p95": 7,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "search_read_count": {
+        "n": 69,
+        "mean": 1.7536231884057971,
+        "p95": 6,
+        "scope": "completed target answers only; missing observations are not zero"
+      },
+      "target_seconds": {
+        "n": 69,
+        "mean": 22.241579710146535,
+        "p95": 77.65600000007544,
+        "scope": "completed target answers only; missing observations are not zero"
+      }
+    }
+  },
+  "discovery_gain_cases": [
+    "113-h-disambiguate",
+    "113-h-late-page",
+    "113-s-large-directory",
+    "113-s-rephrase",
+    "113-s-resource",
+    "227-h-disambiguate",
+    "227-h-late-page",
+    "227-s-large-directory",
+    "227-s-rephrase",
+    "227-s-resource",
+    "419-h-rephrase",
+    "419-s-large-directory",
+    "419-s-rephrase",
+    "419-s-resource"
+  ],
+  "observed_lost_pass_cases": [
+    "113-h-absent",
+    "227-h-english",
+    "419-o-absent"
+  ],
+  "discovery_gain_note": "Matched observations, not a causal estimate. Skill gains include repaired disclosure receipt retention. Stochastic per-case losses are reported, not concealed.",
+  "candidate_thresholds": {
+    "joint_required": 66,
+    "actual": 45,
+    "per_family_required": 15,
+    "quality_pass": false,
+    "release_allowed": false
+  },
+  "interpretation": "Full fixed paired grid, with individual answer/evidence review and independent offline replay. No prompt, model, question, budget or acceptance threshold tuned to the results."
+}

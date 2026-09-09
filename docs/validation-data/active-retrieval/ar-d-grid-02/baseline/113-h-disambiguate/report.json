@@ -1,0 +1,64 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "3dedad2f-be34-4f9f-ba11-cfdf77e12663",
+  "target_start_seq": 152,
+  "answer": "The current references show only background registration records about equipment inventory, with no information about the \"档案复核组\" (Archives Review Group) or its contact code. The history pages contain repetitive messages about \"背景登记\" (background registration) for equipment counting, but nothing about organizational groups or their联络代号 (contact codes).\n\nSince the provided references don't contain the requested information, and there are no workspace files or other tools available to search for this specific detail, I cannot determine the contact code for the Archives Review Group from the available evidence.\n\nThe answer is that the档案复核组's contact code is not present in the provided references.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 35.14100000006147,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12240,
+    "output_tokens": 752,
+    "total_tokens": 12992
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 43695,
+    "output_tokens": 928,
+    "total_tokens": 44623
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "1ff40984bc0a244c30ec0df9874a155d9d486526d5b6886f837eada7bcda3dad",
+        "cursor": {
+          "block_id": "1ff40984bc0a244c30ec0df9874a155d9d486526d5b6886f837eada7bcda3dad",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "1ff40984bc0a244c30ec0df9874a155d9d486526d5b6886f837eada7bcda3dad",
+        "cursor": {
+          "block_id": "1ff40984bc0a244c30ec0df9874a155d9d486526d5b6886f837eada7bcda3dad",
+          "index": 1,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 102.21900000004098
+}

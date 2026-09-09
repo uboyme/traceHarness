@@ -1,0 +1,39 @@
+{
+  "identity": "control-rewrite",
+  "case_id": "control-rewrite",
+  "seed": 1609,
+  "family": "skill",
+  "question": "把“请把门关上”改得更礼貌一点。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "83b9e42b-43f6-44b8-8bee-424d3b1652dc",
+  "target_start_seq": 1,
+  "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n- “麻烦您把门关一下，谢谢！”  \n- “请问您方便把门关上吗？非常感谢！”  \n- “如果您不介意的话，能请您把门关上吗？谢谢！”\n\n这些说法加入了请求语气（“麻烦您”“请问您方便……吗”“如果您不介意的话”）、谦辞（“谢谢”“非常感谢”）和委婉结构，显著提升了礼貌程度和尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知或AI语音交互），我可进一步优化。",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 4.219000000040978,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3941,
+    "output_tokens": 136,
+    "total_tokens": 4077
+  },
+  "all_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 3941,
+    "output_tokens": 136,
+    "total_tokens": 4077
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 4.641000000061467
+}

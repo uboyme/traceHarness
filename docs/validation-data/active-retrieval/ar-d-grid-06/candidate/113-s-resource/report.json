@@ -1,0 +1,59 @@
+{
+  "identity": "113-s-resource",
+  "case_id": "s-resource",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "e712a022-870b-47a9-91c3-c6c0c018911b",
+  "target_start_seq": 1,
+  "answer": "根据提供的档案整理手册技能文档内容，应急联络卡上规定的值班呼号是：**REF-EC8DE757AB**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 14.969000000040978,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10319,
+    "output_tokens": 434,
+    "total_tokens": 10753
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10319,
+    "output_tokens": 434,
+    "total_tokens": 10753
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-ec8de757ab",
+      "version": "1.0.0",
+      "tier": "chunk"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+        "chunk_id": "chunk-ec8de757ab",
+        "requested_tier": "chunk",
+        "resource_id": "resource-ec8de757ab",
+        "section_id": null,
+        "skill_id": "manual-ec8de757ab",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 15.51500000001397
+}

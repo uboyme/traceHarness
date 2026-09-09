@@ -1,0 +1,62 @@
+{
+  "identity": "113-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f5953d17-99dd-4c02-8813-54f9b4435b12",
+  "target_start_seq": 1,
+  "answer": "根据档案整理手册的目录，`section-23` 的标题为“交接身份核验口令”，其摘要也明确为“交接身份核验口令”。这直接对应了问题中“交班双方用什么暗语核对身份？”的需求。\n\n然而，当前提供的参考内容仅包含该手册的**目录结构（directory tier）**，其中列出了所有章节的ID、标题和摘要，但并未提供 `section-23` 的实际正文内容（即具体的暗语是什么）。目录中只显示了 `section-23` 的 `content_bytes` 为 57，这表明其内容存在且很短，但具体内容文本并未被包含在当前的参考材料中。\n\n由于任务要求严格依据当前提供的参考内容作答，而该内容中缺失了 `section-23` 的具体口令文本，因此无法从现有信息中确定交班双方使用的暗语。\n\n答案是：**当前提供的档案整理手册参考内容中，缺少“交接身份核验口令”（section-23）的具体文本，因此无法得知交班双方使用的暗语。**",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 22.67200000002049,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14567,
+    "output_tokens": 691,
+    "total_tokens": 15258
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14567,
+    "output_tokens": 691,
+    "total_tokens": 15258
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "32abddbc6c4a75e5c7ee8cf6c6bf20eaa0158cd803962e21ed929ef221625dda",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-7e730b6b5d",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "a4cd85d2073040b9e6b5509b41a6ca134a9a39c708b7a5d23bccba13d817ce3d",
+        "effect_id": "849d1e2a-b129-4d1b-8c45-eb48feb1a491",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 23.54700000002049
+}

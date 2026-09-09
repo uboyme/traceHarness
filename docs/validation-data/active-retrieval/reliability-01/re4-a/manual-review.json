@@ -1,0 +1,267 @@
+{
+  "method": "Human semantic review using unchanged frozen rubric; bounded negative abstention allowed, no compulsory exhaustive search.",
+  "scores": {
+    "baseline": 8,
+    "candidate": 8
+  },
+  "denominator_per_arm": 10,
+  "decision": "not-selected-no-repeat: no net gain",
+  "rows": [
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "914abda7bdd0dd1f0a041b62e2d16e848dca27520f451a5a92e74f70d579be94"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "50afb647cfc98a186e5c868cf605a81eea10d0623f422b9a987057c8cd1a5d92"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否”）和致谢，显著提升了礼貌程度与尊重感。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "0c4a42c8be2b4a175ef48c7609e1bceac4434605563e4797eb3280e38f2b147f"
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "65efcc866961ba54ed4600ff4e21da22b92d25da915aae68b1d261b2b365ed41"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-history-no",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "The search result shows a relevant hit: `\"请记下这条记录，只回复已记下：本次交接不使用凭证。\"` which translates to \"Please record this note, reply only with 'recorded': This handover does not use a credential.\"\n\nThis directly answers the question —陶艺交接时要使用哪张凭证？ (Which credential is used for pottery handover?) — with the clear statement that **no credential is used** for this handover.\n\nTherefore, the answer is: **不使用凭证** (No credential is used).",
+      "evidence": [],
+      "report_sha256": "b98237815b7edcaf38611f44f15d4f6b8e8f3003be763037f27f22fbb7f9f9f5"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-history-yes",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "The search result shows a direct match:  \n**“交接凭证是 REF-50DCAF2F9D。”**  \n(“The handover credential is REF-50DCAF2F9D.”)\n\nThis appears in a user message within the history, explicitly stating the credential required for the handover.\n\nTherefore, the credential to be used for ceramic art (陶艺) handover is:\n\n**REF-50DCAF2F9D**",
+      "evidence": [
+        {
+          "attempt_end_seq": 191,
+          "request_snapshot_seq": 187,
+          "dispatch_fingerprint": "3b94d9889fee3986e3db47a90ca7f87ae87d2fa8ecfb272ab35308c19054b375",
+          "source_evidence": {
+            "context_seq": 184,
+            "reference": {
+              "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+              "cursor": {
+                "block_id": "f52ff23eabbf0835b8c1c033e2b334c2136e0b641e9820e3ae9cd45bcae86214",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "34b343c3f8c2d86d643800b05a564d1b7a2dbcdd761247b7970c963b4ac52285",
+                "event_id": "7925d2ed-9bbc-441d-9903-6a70a7d679dc",
+                "seq": 111,
+                "stream_id": "session:72a80285-471d-4d7d-b1c3-4422512e01ce",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "37d5ccee72868073a5c121290378b5ec6d37fbaa24be838802ff64bfa2aa6400"
+            }
+          }
+        }
+      ],
+      "report_sha256": "04ed59c21d665a259fa32f44da002fbc156ed4b86a89339adc710228981c35e7"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-no",
+      "joint_pass": false,
+      "reason": "Navigation instruction to consult approval records is presented as the credential itself; wrong in both positive and negative cases.",
+      "answer": "根据当前参考中的memory条目，陶艺交接时要使用的凭证是\"交接批准记录\"。\n\n在两个已披露的memory条目中都明确提到：\n- \"陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n- \"陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n因此，陶艺交接时要使用的凭证是**交接批准记录**。",
+      "evidence": [],
+      "report_sha256": "d19fc033d674947134b8d10929038f1fc430d5d515de30f2da23b027d7862ec1"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-yes",
+      "joint_pass": false,
+      "reason": "Navigation instruction to consult approval records is presented as the credential itself; wrong in both positive and negative cases.",
+      "answer": "根据当前参考中的所有memory条目，所有信息都一致指出：陶艺交接时要使用哪张凭证，需要查询\"交接批准记录\"。\n\n具体来说：\n- 第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\n- 第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\n\n所有提供的memory条目都明确指引查询\"交接批准记录\"来确定具体的凭证，但这些条目本身没有提供凭证的具体名称。\n\n因此，根据当前可用的参考信息，答案是：需要查询交接批准记录来确定陶艺交接时使用的凭证。\n\n由于问题直接询问\"要使用哪张凭证\"，而参考信息明确指出需要查询\"交接批准记录\"，这表明\"交接批准记录\"本身就是所需的凭证。\n\n**交接批准记录**",
+      "evidence": [],
+      "report_sha256": "fd603407bd6f52cc50fb8efe6ddd1cdcdde4ea190141e8259842a02a59f63948"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-skill-no",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "根据提供的技能文档内容，其中明确指出：“本次交接不使用凭证。”\n\n因此，陶艺交接时**不使用任何凭证**。",
+      "evidence": [],
+      "report_sha256": "2b6f16de810201e4b55dad859b71de9e95f58916a54be9e6850cba380803f513"
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-skill-yes",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "The current references state: “交接凭证是 REF-7FD7AD62CE。” (“The handover voucher is REF-7FD7AD62CE.”)\n\nThis explicitly names the voucher used for ceramic art handover as **REF-7FD7AD62CE**.\n\nNo further lookup or verification is needed — the answer is directly provided in the supplied reference.\n\nREF-7FD7AD62CE",
+      "evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "a5dfc968c8dbabc0c1478c7a9b4dede4b0e496e15171edfaebd20c6b22368a81",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "manual-7fd7ad62ce",
+            "version": "1.0.0",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "13a200d99f1f0c7bbd185c5023543e946bd029f76acadef3a82bfb89d77fd256"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "你好！",
+      "evidence": [],
+      "report_sha256": "0ebf17510ce8e87716dff160f89f0979379f23f0081bcb983469eea29bd959e4"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-repeat",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "42",
+      "evidence": [],
+      "report_sha256": "df478bf4b261837e19564fd92dc84a5c9801245dfb1032aa48a1f1b939f71108"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "“请把门关上”可以改为更礼貌的表达，例如：\n\n**“麻烦您把门关一下，谢谢！”**  \n或更委婉正式些：  \n**“如果您方便的话，能否请您把门关上？非常感谢！”**\n\n这些表达加入了请求缓冲词（“麻烦您”“如果您方便的话”“能否”）和致谢（“谢谢”“非常感谢”），显著提升了礼貌程度和尊重感，符合中文日常交际中的礼貌原则。\n\n如需适配特定场景（如对长辈、客户、书面通知等），我可进一步优化。",
+      "evidence": [],
+      "report_sha256": "8c38bb8e0702a7cc675f2fd9687522201ad663770abdee907868f705df067cd9"
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "joint_pass": true,
+      "reason": "Correct direct answer, no lookup.",
+      "answer": "28 加 35 等于 63。",
+      "evidence": [],
+      "report_sha256": "37cde2572e6694f4f038bc9f5dc46a6bbb437be956fa3ddc706c2694a4a5e9eb"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-history-no",
+      "joint_pass": true,
+      "reason": "Correctly limits inability to answer to provided references after a literal no-hit; does not establish global absence. Misses the explicit negative deeper in history, retained as a completeness limitation.",
+      "answer": "The current references contain only a history directory navigation entry with no actual content body. Since the search for \"陶艺 交接 凭证\" in history returned no results, and there's no workspace file content available in the current references, I cannot determine which credential is used for pottery handover from the provided information.\n\nThe question asks specifically about which credential is used for pottery handover, but none of the available reference sources (history search results, navigation-only directory entry) contain this information.\n\nTherefore, based on the available evidence, I cannot answer which credential is used for pottery handover.",
+      "evidence": [],
+      "report_sha256": "7f39739d3b30281558cd1fb40441251ab94590cb86f30c815e9c8f092df6e713"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-history-yes",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "The search for \"凭证\" found a hit in the history that contains the exact information needed: \"交接凭证是 REF-50DCAF2F9D\" (the handover credential is REF-50DCAF2F9D).\n\nThis appears in the search result with the text: \"请记下这条记录，只回复已记下：交接凭证是 REF-50DCAF2F9D。\"\n\nTherefore, the credential used for pottery handover is **REF-50DCAF2F9D**.\n\n{\"credential\": \"REF-50DCAF2F9D\"}",
+      "evidence": [
+        {
+          "attempt_end_seq": 204,
+          "request_snapshot_seq": 200,
+          "dispatch_fingerprint": "33bc993abd7ff1d5583a5881a5a899591f0f06e271543785cabe8984fe92602b",
+          "source_evidence": {
+            "context_seq": 197,
+            "reference": {
+              "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+              "cursor": {
+                "block_id": "fbff0afef2514934e2e2d07214037bcb3e88ac8a300cc03e544bfe13001b52b1",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "698af73b0adf97dc82928166d5052b290cf6ccbda3bb26e6d7173f5781217261",
+                "event_id": "86d3c000-2624-4eb1-b791-f867d7f375bd",
+                "seq": 111,
+                "stream_id": "session:01933008-18f0-4c84-a6e4-c4daee605251",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "1cdaef18a29e7cd57de32e975fe16f92db36df0bb01beb155d7df7baae52e5f0"
+            }
+          }
+        }
+      ],
+      "report_sha256": "9ef3399518f3beacbc44592f0290d5f0d79f2f14abc2b73eee0d555c275d7a41"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-no",
+      "joint_pass": false,
+      "reason": "Navigation instruction to consult approval records is presented as the credential itself; wrong in both positive and negative cases.",
+      "answer": "根据已提供的背景记忆信息，所有条目都指向同一个答案：陶艺交接时要使用\"交接批准记录\"。\n\n具体来说：\n- 第0项：\"陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n- 第1项：\"陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n其他背景记忆条目（background-689c399b2d-02到05）都是目录元数据，需要进一步读取才能获取具体内容，但根据前两项已经明确指出需要查阅\"交接批准记录\"。\n\n因此，陶艺交接时要使用的凭证是：**交接批准记录**。",
+      "evidence": [],
+      "report_sha256": "12e793bbc00ae9e043978968f41d7bfe43e4c813f7625067220cb2ce0d101305"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-yes",
+      "joint_pass": false,
+      "reason": "Navigation instruction to consult approval records is presented as the credential itself; wrong in both positive and negative cases.",
+      "answer": "根据当前参考中的所有background memory条目，它们都包含相同的信息：\"陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。\"\n\n这表明具体的凭证信息不在这些background memory条目中，而是需要查询\"交接批准记录\"。\n\n由于所有已提供的memory条目都明确指出需要查询交接批准记录，但没有提供具体的凭证名称，而问题直接询问\"要使用哪张凭证\"，最合理的答案是：需要查询交接批准记录来确定具体的凭证。\n\n但是，让我检查是否有其他可能的线索。从参考中可以看到这些memory条目都是关于\"陶艺展览查询分工\"的不同项，但都指向同一个答案：需要查交接批准记录。\n\n因此，基于所提供的所有信息，答案应该是：需要查询交接批准记录来确定具体的凭证。\n\n不过，问题要求的是\"哪张凭证\"，所以最准确的回答是：根据现有信息，需要查询交接批准记录来确定具体的凭证，但当前资料中未提供具体的凭证名称。\n\n由于所有memory条目都一致指向\"交接批准记录\"，这本身就是答案的关键信息。\n\n**陶艺交接时要使用交接批准记录作为凭证。**",
+      "evidence": [],
+      "report_sha256": "22f83c227290b97431d5552dbc3e8dbb4f051b1745436539e06ded12dd6eee74"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-skill-no",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "The current reference explicitly states: **\"本次交接不使用凭证。\"** (\"This handover does not use a credential.\")\n\nTherefore,陶艺交接时要使用哪张凭证？ → **不使用凭证。**\n\nNo credential is used during the ceramic art handover.\n\n{\"answer\": \"不使用凭证\"}",
+      "evidence": [],
+      "report_sha256": "6fb10c1d581305a24ef036e2a0b891e2b776e700cc9ebbb1d7afe27822ec7e4a"
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-skill-yes",
+      "joint_pass": true,
+      "reason": "Requested fact/explicit negative supported by source.",
+      "answer": "根据提供的技能手册内容，陶艺交接时要使用的凭证是 **REF-7FD7AD62CE**。",
+      "evidence": [
+        {
+          "attempt_end_seq": 27,
+          "request_snapshot_seq": 23,
+          "dispatch_fingerprint": "b37019ba713f7ac50119dede0e6b2df54a1da9b8ea4051547ed8092ab0c22a84",
+          "source_evidence": {
+            "context_seq": 20,
+            "id": "manual-7fd7ad62ce",
+            "version": "1.0.0",
+            "tier": "section"
+          }
+        }
+      ],
+      "report_sha256": "77ba053cc40f33f11185f876701edefe048d9680e91be2fe7326753218c5d2bd"
+    }
+  ]
+}

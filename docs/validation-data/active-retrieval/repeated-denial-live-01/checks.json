@@ -1,0 +1,16 @@
+{
+  "distinct_scoped_tests": 210,
+  "final_contract_rerun": 103,
+  "compileall": "passed src tests",
+  "ruff": "passed changed owner files",
+  "diff_check": "passed; line-ending warnings only",
+  "doc_qa": "../repeated-denial-doc-qa.json",
+  "reverse_verification": "Removing the guard produces max_steps_exceeded at step 8 instead of stalled_repeated_denial at step 3.",
+  "not_run": [
+    "full pytest",
+    "L2-L4",
+    "wheel/install",
+    "release"
+  ],
+  "git_history_changed": false
+}

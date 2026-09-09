@@ -1,0 +1,1523 @@
+{
+  "experiment": "evidence-policy-01",
+  "release_acceptance": false,
+  "arms": {
+    "baseline": {
+      "closed_cases": 12,
+      "expected_cases": 12,
+      "positive_cases": 10,
+      "positive_joint_pass": 9,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 75,
+        "input_tokens": 485256,
+        "output_tokens": 8151,
+        "total_tokens": 493407,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-direct",
+          "answer": "根据提供的设备演练手册（`manual-cf662c1bcd`）第 `section-23` 的内容：\n\n> 设备演练签到后发放代号为 **REF-CF662C1BCD** 的签到卡。\n\n因此，设备演练手册规定的签到卡代号是：  \n**REF-CF662C1BCD**",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-cf662c1bcd",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-cf662c1bcd",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10107,
+            "output_tokens": 333,
+            "total_tokens": 10440
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10107,
+            "output_tokens": 333,
+            "total_tokens": 10440
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-english",
+          "answer": "The current references are empty, and the search for \"equipment drill manual check-in card\" in the Skill documentation returned no results. Since no evidence is available in the provided references or searchable Skill documentation, I cannot determine which code the equipment drill manual specifies for the check-in card.\n\nThe answer is: **Not specified in the available references.**",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "equipment drill manual check-in card"
+              }
+            },
+            {
+              "name": "list_files",
+              "arguments": {}
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12502,
+            "output_tokens": 236,
+            "total_tokens": 12738
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12502,
+            "output_tokens": 236,
+            "total_tokens": 12738
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "113-o-direct",
+          "answer": "在 `python check.py` 的输出中，找到了交接校验码：\n\n**交接校验码=REF-F958326A62**",
+          "steps": 11,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 1272,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 2537,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 3804,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 5071,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 6338,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 7603,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 8870,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 10136,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+                "offset": 11401,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 161,
+              "effect_id": "68834ba1-33ba-4f8d-9439-1f2e4f617f96",
+              "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+            }
+          ],
+          "target_usage": {
+            "attempts": 11,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 118039,
+            "output_tokens": 2173,
+            "total_tokens": 120212
+          },
+          "all_usage": {
+            "attempts": 13,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 126763,
+            "output_tokens": 2196,
+            "total_tokens": 128959
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "根据对`check.py`运行输出的搜索结果，诊断分组的处理口令是：`REF-9C7A8DE739`",
+          "steps": 5,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 1
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "3e57c14d-5bdb-4483-992e-4b578bfcedfa",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "3e57c14d-5bdb-4483-992e-4b578bfcedfa",
+                "part": "content",
+                "query": "处理口令"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 82,
+              "effect_id": "3e57c14d-5bdb-4483-992e-4b578bfcedfa",
+              "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+            }
+          ],
+          "target_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 27782,
+            "output_tokens": 517,
+            "total_tokens": 28299
+          },
+          "all_usage": {
+            "attempts": 7,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 36504,
+            "output_tokens": 540,
+            "total_tokens": 37044
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-s-english",
+          "answer": "The equipment drill manual specifies the check-in card code as **REF-EA333BB356**.",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "equipment drill manual"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": null,
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "check-in card"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 71,
+              "id": "manual-ea333bb356",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 27798,
+            "output_tokens": 754,
+            "total_tokens": 28552
+          },
+          "all_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 27798,
+            "output_tokens": 754,
+            "total_tokens": 28552
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-o-nearby",
+          "answer": "诊断分组的处理口令是：REF-92CF0902A2",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_text",
+              "arguments": {
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 1
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "92023a39-941a-46d8-a0eb-5e8295f0e036",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 1000,
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "92023a39-941a-46d8-a0eb-5e8295f0e036",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 94,
+              "effect_id": "92023a39-941a-46d8-a0eb-5e8295f0e036",
+              "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7"
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 33879,
+            "output_tokens": 627,
+            "total_tokens": 34506
+          },
+          "all_usage": {
+            "attempts": 8,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 42608,
+            "output_tokens": 649,
+            "total_tokens": 43257
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-h-direct",
+          "answer": "从搜索结果中，我找到了设备交接的口令信息。在历史记录中明确提到：\"设备交接的口令是 REF-34772572F2\"。\n\n因此，之前设备交接的口令是：REF-34772572F2",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+                "cursor": {
+                  "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "name": "search_history",
+              "arguments": {
+                "query": "设备交接"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 184,
+              "reference": {
+                "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+                "cursor": {
+                  "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+                  "index": 3,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "leaf_ref": {
+                  "digest": "6311725a4f4927c3c40b074caef5b7fce47c3c92c9ab21bdb04ac506a52b6aa9",
+                  "event_id": "c11c20aa-5c30-418c-bc9a-dce1e943e7db",
+                  "seq": 111,
+                  "stream_id": "session:5f6ec316-1704-48ab-a729-684dcfe518d3",
+                  "type": "user/message"
+                },
+                "readable": true,
+                "version": "9e8fab859b53ece8f47049d86a531cdf9d16237f22e6b5da3eadf1017761f6a8"
+              }
+            }
+          ],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 14932,
+            "output_tokens": 422,
+            "total_tokens": 15354
+          },
+          "all_usage": {
+            "attempts": 13,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 54145,
+            "output_tokens": 452,
+            "total_tokens": 54597
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-absent",
+          "answer": "根据当前提供的参考信息，档案整理手册（ID: manual-593410eb3c）的内容摘要仅为\"本手册说明档案整理工作。\"（This manual explains archival organization work.）\n\n这个摘要非常简短，只说明了手册是关于档案整理工作的，并没有提及任何关于车辆加油或折扣码的内容。\n\n由于手册的摘要中完全没有提到车辆、加油、折扣、折扣码等相关关键词，可以确定该档案整理手册没有规定车辆加油的折扣码。\n\n档案整理手册的内容范围是档案整理工作，而车辆加油折扣码属于行政后勤或财务管理范畴，与档案整理工作无直接关联，因此手册中不包含此类规定是合理的。\n\n答案：档案整理手册没有规定车辆加油的折扣码。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "7efa2afefd848720123a6a4d3981a884acc4599e6cc1dc8c23c20229c9ed16f0",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10121,
+            "output_tokens": 427,
+            "total_tokens": 10548
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10121,
+            "output_tokens": 427,
+            "total_tokens": 10548
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-m-direct",
+          "answer": "根据已批准的项目事实，设备演练的人数上限为68人。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_workspace_memory",
+              "arguments": {
+                "memory_id": "fact-634a81e1a1",
+                "requested_tier": "section",
+                "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "fact-634a81e1a1",
+              "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12487,
+            "output_tokens": 285,
+            "total_tokens": 12772
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12487,
+            "output_tokens": 285,
+            "total_tokens": 12772
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "从刚才运行的 `python check.py` 的完整输出来看，检查结果只显示了大量\"普通器材登记，状态 normal\"的信息，最后显示\"检查已经完成，没有其他补充项目。\"\n\n在整个输出中，我没有找到任何关于\"保险理赔编号\"、\"理赔编号\"、\"insurance claim number\"、\"claim number\"或类似术语的内容。输出仅包含对普通器材登记的常规检查，每行都显示\"普通器材登记，状态 normal\"，没有任何提及保险理赔相关信息。\n\n因此，刚才的归档检查**没有给出保险理赔编号**。",
+          "steps": 11,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 1272,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 2537,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 3804,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 5071,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 6338,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 7603,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 8870,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 10136,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 100000,
+                "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+                "effect_id": "b950445f-db07-4571-9371-e2673c2bcecf",
+                "offset": 11401,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 11,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 114115,
+            "output_tokens": 1723,
+            "total_tokens": 115838
+          },
+          "all_usage": {
+            "attempts": 13,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 122836,
+            "output_tokens": 1745,
+            "total_tokens": 124581
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "是的，档案整理手册规定了车辆加油的折扣码。\n\n根据提供的参考内容，手册中明确指出：\"车辆加油的折扣码为 CF-DA353B7883。\"",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "952b6bab31e58998272d44d321e7ef19be91c784c77ad8eb71f7228f1c300b37",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-593410eb3c",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-593410eb3c",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10180,
+            "output_tokens": 353,
+            "total_tokens": 10533
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10180,
+            "output_tokens": 353,
+            "total_tokens": 10533
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "是的，刚才的归档检查给出了保险理赔编号：**CF-55C0AB6241**。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9",
+                "effect_id": "b64cbe41-1637-471e-856e-484165b3222a",
+                "part": "content",
+                "query": "保险理赔编号"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 43,
+              "effect_id": "b64cbe41-1637-471e-856e-484165b3222a",
+              "digest": "cbe751bb965a2ecec24354514b5a2d484d89cdc22cd2a4f12a679d964602b4b9"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10470,
+            "output_tokens": 158,
+            "total_tokens": 10628
+          },
+          "all_usage": {
+            "attempts": 4,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 19205,
+            "output_tokens": 181,
+            "total_tokens": 19386
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        }
+      ]
+    },
+    "candidate": {
+      "closed_cases": 12,
+      "expected_cases": 12,
+      "positive_cases": 10,
+      "positive_joint_pass": 7,
+      "negative_cases": 2,
+      "usage_including_setup": {
+        "attempts": 68,
+        "input_tokens": 395651,
+        "output_tokens": 6752,
+        "total_tokens": 402403,
+        "unknown_usage": 0,
+        "estimated_usage": 0
+      },
+      "cases": [
+        {
+          "identity": "113-s-direct",
+          "answer": "设备演练手册规定的签到卡代号是 `REF-CF662C1BCD`。",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-cf662c1bcd",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "manual-cf662c1bcd",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10141,
+            "output_tokens": 308,
+            "total_tokens": 10449
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 10141,
+            "output_tokens": 308,
+            "total_tokens": 10449
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-s-english",
+          "answer": "The equipment drill manual specifies the code \"REF-EDCC0FF2B0\" for the check-in card.",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "equipment drill manual"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "482a2881b1e139e08f4ce342390698bc98eacc1b8edf58bf96b18288b7799901",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": null,
+                "skill_id": "manual-edcc0ff2b0",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "check-in card"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "482a2881b1e139e08f4ce342390698bc98eacc1b8edf58bf96b18288b7799901",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-edcc0ff2b0",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 71,
+              "id": "manual-edcc0ff2b0",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 27661,
+            "output_tokens": 684,
+            "total_tokens": 28345
+          },
+          "all_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 27661,
+            "output_tokens": 684,
+            "total_tokens": 28345
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-direct",
+          "answer": "在 `python check.py` 的输出中，已找到“交接校验码”行：\n\n```\n交接校验码=REF-F958326A62\n```\n\n因此，交接校验码是：**REF-F958326A62**",
+          "steps": 11,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 0,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 1272,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 2537,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 3804,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 5071,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 6338,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 7603,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 8870,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 10136,
+                "part": "content"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 16853,
+                "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71",
+                "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+                "offset": 11401,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 161,
+              "effect_id": "baf28696-163e-42d0-b2e6-bac2817674da",
+              "digest": "b93b1bc7e5a0a3b00b157040d9ea607767e4dd30af83b61c3dfa0d2f3c8bfe71"
+            }
+          ],
+          "target_usage": {
+            "attempts": 11,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 118399,
+            "output_tokens": 2399,
+            "total_tokens": 120798
+          },
+          "all_usage": {
+            "attempts": 13,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 127120,
+            "output_tokens": 2421,
+            "total_tokens": 129541
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-nearby",
+          "answer": "在刚才设备检查的输出中，诊断分组的处理口令是：REF-9C7A8DE739",
+          "steps": 7,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "read_file",
+              "arguments": {
+                "path": "check.py"
+              }
+            },
+            {
+              "name": "read_file",
+              "arguments": {
+                "path": "check.py"
+              }
+            },
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 1
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "ef975aeb-c905-4647-844a-d515871f85b6",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "read_tool_output",
+              "arguments": {
+                "count": 2000,
+                "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a",
+                "effect_id": "ef975aeb-c905-4647-844a-d515871f85b6",
+                "offset": 12643,
+                "part": "content"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 107,
+              "effect_id": "ef975aeb-c905-4647-844a-d515871f85b6",
+              "digest": "2f10ea0142327728abeb4b47e9238b9bb97fdf8119d75fe1a1ec1f581cc9917a"
+            }
+          ],
+          "target_usage": {
+            "attempts": 7,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 39549,
+            "output_tokens": 610,
+            "total_tokens": 40159
+          },
+          "all_usage": {
+            "attempts": 9,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 48273,
+            "output_tokens": 632,
+            "total_tokens": 48905
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-s-english",
+          "answer": "The equipment drill manual specifies the code \"REF-EA333BB356\" for the check-in card.",
+          "steps": 5,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "equipment drill manual"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "summary",
+                "resource_id": null,
+                "section_id": null,
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "check-in card"
+              }
+            },
+            {
+              "name": "request_skill_reference",
+              "arguments": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 59,
+              "id": "manual-ea333bb356",
+              "version": "1.0.0",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 24156,
+            "output_tokens": 560,
+            "total_tokens": 24716
+          },
+          "all_usage": {
+            "attempts": 5,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 24156,
+            "output_tokens": 560,
+            "total_tokens": 24716
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "419-o-nearby",
+          "answer": "诊断分组的处理口令是：REF-92CF0902A2",
+          "steps": 6,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "list_files",
+              "arguments": {}
+            },
+            {
+              "name": "search_text",
+              "arguments": {
+                "path": ".",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "list_tool_outputs",
+              "arguments": {
+                "count": 10
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "c81ef01c-d448-40af-8d93-6929964f8110",
+                "part": "content",
+                "query": "诊断分组"
+              }
+            },
+            {
+              "name": "search_tool_output",
+              "arguments": {
+                "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7",
+                "effect_id": "c81ef01c-d448-40af-8d93-6929964f8110",
+                "part": "content",
+                "query": "处理口令"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "tool_result_seq": 94,
+              "effect_id": "c81ef01c-d448-40af-8d93-6929964f8110",
+              "digest": "869367612b8fd1daf26c258e986c27309c9beb02e033d28b9c620365a2e90be7"
+            }
+          ],
+          "target_usage": {
+            "attempts": 6,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 33283,
+            "output_tokens": 558,
+            "total_tokens": 33841
+          },
+          "all_usage": {
+            "attempts": 8,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 42011,
+            "output_tokens": 580,
+            "total_tokens": 42591
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-h-direct",
+          "answer": "The provided history snippet does not contain any mention of a device handover passphrase. It only includes repeated instructions to \"record this: background registration 0/1: ordinary equipment for this activity has been counted\", with replies of \"recorded\".\n\nSince the current history page does not contain the passphrase, and no other sources (workspace files, tool outputs, memory, or skill) have been indicated as containing it, the evidence is insufficient to determine the device handover passphrase.\n\n{\"passphrase\": null, \"evidence_status\": \"insufficient\"}",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_history_page",
+              "arguments": {
+                "block_id": "d19b1c0681e177187e233b43ac7cc2aa67fd2e5f39bf7281bc1a7f03584034c7",
+                "cursor": {
+                  "block_id": "d19b1c0681e177187e233b43ac7cc2aa67fd2e5f39bf7281bc1a7f03584034c7",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "requested_tier": "chunk"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 9151,
+            "output_tokens": 367,
+            "total_tokens": 9518
+          },
+          "all_usage": {
+            "attempts": 12,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 48364,
+            "output_tokens": 397,
+            "total_tokens": 48761
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "113-s-absent",
+          "answer": "根据对档案整理手册的搜索结果，我未能找到任何关于\"车辆加油\"或\"折扣码\"的相关规定。\n\n搜索\"车辆加油\"和\"折扣码\"两个关键词均未返回匹配结果（no-hit），且手册目录中所有章节摘要都显示为\"说明普通器材登记。\"，只有第23节的摘要为\"档案整理操作手册\"，这表明该手册主要关注档案整理相关的操作规范，而非车辆管理或加油折扣等行政事务。\n\n因此，档案整理手册没有规定车辆加油的折扣码。",
+          "steps": 3,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "车辆加油"
+              }
+            },
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "折扣码"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 17012,
+            "output_tokens": 311,
+            "total_tokens": 17323
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 17012,
+            "output_tokens": 311,
+            "total_tokens": 17323
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "Unresolved whole-source absence: metadata search or one short section does not justify excluding all unread sections; answer overextends source theme/summary."
+        },
+        {
+          "identity": "113-m-direct",
+          "answer": "The approved device drill participant limit for this project is 68 people.\n\nThis information is directly stated in the approved memory fact: \"已批准设备演练的人数上限为 68 人。\" (The approved device drill participant limit is 68 people.)",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "request_workspace_memory",
+              "arguments": {
+                "memory_id": "fact-634a81e1a1",
+                "requested_tier": "section",
+                "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b"
+              }
+            }
+          ],
+          "evidence": [
+            {
+              "context_seq": 20,
+              "id": "fact-634a81e1a1",
+              "version": "07a92744cc7915e6548b477ccf4d05329fbd88d09545869901d11d745e81845b",
+              "tier": "section"
+            }
+          ],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12417,
+            "output_tokens": 254,
+            "total_tokens": 12671
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 12417,
+            "output_tokens": 254,
+            "total_tokens": 12671
+          },
+          "expected": "value",
+          "positive_joint_pass": true
+        },
+        {
+          "identity": "113-o-absent",
+          "answer": "刚才执行的 `python check.py` 检查输出中，每一行均为格式如：\n\n```\n检查行 0001：普通器材登记，状态 normal。\n```\n\n共检查了至少 56 行（预览截断前显示到“状态 normal。\\r\\n检查行 0056：普通器材登记，状”），**所有已显示的检查行均未出现“保险理赔编号”或类似关键词（如“理赔号”“claim ID”“insurance claim”等）**。\n\n该检查输出为纯文本 stdout，内容仅包含“普通器材登记”和“normal”状态，无任何编号字段、附加信息或异常提示。预览中未见数字编号序列、UUID、字母数字组合或其他可能表示保险理赔编号的模式。\n\n由于输出被截断（preview 显示 `\"状\"` 后即终止），需确认完整输出是否含该信息。但根据已有全部可见行（0001–0056）及统一句式，**无证据表明该次检查生成或输出了保险理赔编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 4981,
+            "output_tokens": 237,
+            "total_tokens": 5218
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13701,
+            "output_tokens": 259,
+            "total_tokens": 13960
+          },
+          "expected": "no-evidence",
+          "positive_joint_pass": null,
+          "explicit_negative_source_delivered": false,
+          "negative_manual_review": "No explicit semantic denial in the source. Inspect exact tool queries: literal non-match is scoped evidence only, not proof that all alternative wording is absent. Not counted as full negative acceptance."
+        },
+        {
+          "identity": "counterfactual-113-s-absent",
+          "answer": "我搜索了\"车辆加油\"这个关键词，但没有在档案整理手册中找到任何相关记录（no-hit结果）。档案整理手册的目录显示它主要包含\"普通事项\"（关于普通器材登记）和\"档案整理操作手册\"，所有章节摘要都与档案管理相关，没有提到车辆、加油或折扣码等内容。\n\n因此，档案整理手册没有规定车辆加油的折扣码。\n\n```json\n{\"has_vehicle_fuel_discount_code\": false}\n```",
+          "steps": 2,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [
+            {
+              "name": "search_skill",
+              "arguments": {
+                "query": "车辆加油"
+              }
+            }
+          ],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 11082,
+            "output_tokens": 201,
+            "total_tokens": 11283
+          },
+          "all_usage": {
+            "attempts": 2,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 11082,
+            "output_tokens": 201,
+            "total_tokens": 11283
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        },
+        {
+          "identity": "counterfactual-113-o-absent",
+          "answer": "刚才执行的 `python check.py` 检查输出中，**没有出现“保险理赔编号”或类似表述（如“理赔编号”、“claim number”、“case ID”等）**。\n\n检查输出为连续 56 行格式化日志（如“检查行 0001：普通器材登记，状态 normal。”），全部内容仅涉及“普通器材登记”及“normal”状态，未包含任何与保险、理赔、编号相关的字段或值。\n\n因此，**该次归档检查未给出保险理赔编号**。\n\n检查结束。",
+          "steps": 1,
+          "reason": "completed",
+          "error": null,
+          "tool_calls": [],
+          "evidence": [],
+          "target_usage": {
+            "attempts": 1,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 4985,
+            "output_tokens": 123,
+            "total_tokens": 5108
+          },
+          "all_usage": {
+            "attempts": 3,
+            "unknown_usage": 0,
+            "estimated_usage": 0,
+            "input_tokens": 13713,
+            "output_tokens": 145,
+            "total_tokens": 13858
+          },
+          "expected": "value",
+          "positive_joint_pass": false
+        }
+      ]
+    }
+  }
+}

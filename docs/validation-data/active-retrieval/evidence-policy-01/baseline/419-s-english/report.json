@@ -1,0 +1,87 @@
+{
+  "identity": "419-s-english",
+  "case_id": "s-english",
+  "seed": 419,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "c881636f-5415-4fe3-a031-7e8cc781dd54",
+  "target_start_seq": 1,
+  "answer": "The equipment drill manual specifies the check-in card code as **REF-EA333BB356**.",
+  "steps": 6,
+  "reason": "completed",
+  "target_seconds": 39.625,
+  "target_usage": {
+    "attempts": 6,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 27798,
+    "output_tokens": 754,
+    "total_tokens": 28552
+  },
+  "all_usage": {
+    "attempts": 6,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 27798,
+    "output_tokens": 754,
+    "total_tokens": 28552
+  },
+  "evidence": [
+    {
+      "context_seq": 71,
+      "id": "manual-ea333bb356",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_files",
+      "arguments": {}
+    },
+    {
+      "name": "search_skill",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": null,
+        "skill_id": "manual-ea333bb356",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "search_skill",
+      "arguments": {
+        "query": "check-in card"
+      }
+    },
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-ea333bb356",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 4,
+  "output_executions": null,
+  "elapsed_seconds": 41.5
+}

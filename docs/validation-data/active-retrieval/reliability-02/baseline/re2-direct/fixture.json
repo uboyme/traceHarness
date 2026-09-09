@@ -1,0 +1,90 @@
+{
+  "id": "re2-direct",
+  "family": "memory",
+  "domain": 0,
+  "mode": "direct",
+  "language": "zh",
+  "question": "陶艺展览当前批准的交接代码是什么？",
+  "source_title": "陶艺展览记录",
+  "source_body": "陶艺展览已批准交接代码为 {value}。",
+  "expected": "value",
+  "value_type": "code",
+  "control": false,
+  "discovery": false,
+  "seed": 1609,
+  "identity": "re2-direct",
+  "value": "REF-AF46CCDCE6",
+  "source": "陶艺展览已批准交接代码为 REF-AF46CCDCE6。",
+  "domain_name": "陶艺展览",
+  "project_id": "project-af46ccdce6",
+  "source_id": "source-af46ccdce6",
+  "memory_id": "fact-af46ccdce6",
+  "fact_slot": "slot-af46ccdce6",
+  "skill_id": "manual-af46ccdce6",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-af46ccdce6-00",
+      "slot": "background-slot-00",
+      "body": "陶艺展览日常准备第0项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-01",
+      "slot": "background-slot-01",
+      "body": "陶艺展览日常准备第1项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-02",
+      "slot": "background-slot-02",
+      "body": "陶艺展览日常准备第2项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-03",
+      "slot": "background-slot-03",
+      "body": "陶艺展览日常准备第3项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-04",
+      "slot": "background-slot-04",
+      "body": "陶艺展览日常准备第4项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-05",
+      "slot": "background-slot-05",
+      "body": "陶艺展览日常准备第5项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-06",
+      "slot": "background-slot-06",
+      "body": "陶艺展览日常准备第6项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-07",
+      "slot": "background-slot-07",
+      "body": "陶艺展览日常准备第7项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-08",
+      "slot": "background-slot-08",
+      "body": "陶艺展览日常准备第8项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-09",
+      "slot": "background-slot-09",
+      "body": "陶艺展览日常准备第9项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-10",
+      "slot": "background-slot-10",
+      "body": "陶艺展览日常准备第10项由值班组登记。"
+    },
+    {
+      "id": "background-af46ccdce6-11",
+      "slot": "background-slot-11",
+      "body": "陶艺展览日常准备第11项由值班组登记。"
+    }
+  ],
+  "predecessor_value": null,
+  "grading": "value",
+  "material_digest": "7eaa5c6118a5968a180ddc817908e3d5292a1daf8e7b47eac98d081dfe6e5cd4"
+}

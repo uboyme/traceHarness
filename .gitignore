@@ -20,3 +20,12 @@ htmlcov/
 .env.*
 !.env.example
 CLAUDE.local.md
+
+# Local experiment workspaces and raw active-retrieval evidence (see evidence README).
+.pytest-tmp-codex/
+docs/validation-data/active-retrieval/**/events.sqlite3*
+docs/validation-data/active-retrieval/**/source-events.json
+docs/validation-data/active-retrieval/**/effect-events.json
+docs/validation-data/active-retrieval/**/interrupted-store-events.json
+docs/validation-data/active-retrieval/**/*.zip
+docs/validation-data/active-retrieval/**/workspace/

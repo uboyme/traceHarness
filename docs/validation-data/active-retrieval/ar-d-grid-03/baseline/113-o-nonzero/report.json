@@ -1,0 +1,49 @@
+{
+  "identity": "113-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "bac43821-e3c8-456b-9684-a337769ffe00",
+  "target_start_seq": 28,
+  "answer": "故障代号是 `7`。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.937000000034459,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8818,
+    "output_tokens": 193,
+    "total_tokens": 9011
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 15858,
+    "output_tokens": 216,
+    "total_tokens": 16074
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "c5c755f6361b2c2d4be69a68719a55b1d9012905b5b710b613aa3130d9fce003",
+        "effect_id": "a25b6131-f0af-47c4-87ca-289462f7e804",
+        "part": "content",
+        "query": "exit_code=7"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 19.234000000054948
+}

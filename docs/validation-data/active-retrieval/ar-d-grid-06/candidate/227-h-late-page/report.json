@@ -1,0 +1,79 @@
+{
+  "identity": "227-h-late-page",
+  "case_id": "h-late-page",
+  "seed": 227,
+  "family": "history",
+  "question": "之前提过检修集合点，具体在哪儿？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "fcf0c91e-f28f-499a-ad42-2030c44eeb48",
+  "target_start_seq": 152,
+  "answer": "根据搜索结果，之前提到的“检修集合点”位于**东侧第72号资料柜**。\n\n搜索结果显示了确切的记录：\"请记下这条记录，只回复已记下：检修集合点是 东侧第72号资料柜。\"",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 26.14000000001397,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14828,
+    "output_tokens": 388,
+    "total_tokens": 15216
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54051,
+    "output_tokens": 418,
+    "total_tokens": 54469
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "f04bc18dfdc8ac7eba49fc140dd05965ad0450a8aa6cd6f6e3894d9ed824ffa7",
+        "cursor": {
+          "block_id": "f04bc18dfdc8ac7eba49fc140dd05965ad0450a8aa6cd6f6e3894d9ed824ffa7",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "8ccc3764828e32f3a8af0b596186fe2bc761f6b861abdfe1ba95c9c7aac70124",
+          "event_id": "db94d551-b557-49b1-a85f-f233ad649dfd",
+          "seq": 111,
+          "stream_id": "session:fcf0c91e-f28f-499a-ad42-2030c44eeb48",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "226444a4cb6b827cb42db325a106815f7c119da8e73e0e82d66ccab6e6746633"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "f04bc18dfdc8ac7eba49fc140dd05965ad0450a8aa6cd6f6e3894d9ed824ffa7",
+        "cursor": {
+          "block_id": "f04bc18dfdc8ac7eba49fc140dd05965ad0450a8aa6cd6f6e3894d9ed824ffa7",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "检修集合点"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 60.28200000000652
+}

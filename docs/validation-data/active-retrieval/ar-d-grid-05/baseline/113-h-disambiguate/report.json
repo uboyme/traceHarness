@@ -1,0 +1,56 @@
+{
+  "identity": "113-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 113,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "86c0a0a6-97cb-4969-90ac-6c0b345aa5d9",
+  "target_start_seq": 152,
+  "answer": "The current reference contains only a compacted history chunk with two identical \"背景登记\" (background registration) records about ordinary equipment being counted. There is no mention of \"档案复核组\" (Archives Review Group), \"搬运组\" (Moving Group), or any联络代号 (contact codes).\n\nNo other references — workspace files, skill documentation, memory, or additional history pages — have been disclosed in this Turn that contain group contact information.\n\nSince the question asks for a specific factual identifier and the only available evidence does not contain it, and no tool has been used to inspect workspace files (as instructed not to explore the workspace without explicit authorization), the联络代号 for the 档案复核组 is **not present in the provided references**.\n\nTherefore, based solely on the current evidence:\n\nThe档案复核组的联络代号 is unknown.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 28.17200000002049,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11662,
+    "output_tokens": 696,
+    "total_tokens": 12358
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 42597,
+    "output_tokens": 726,
+    "total_tokens": 43323
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "83f2d592a05da87b82eb64416b389d3b393d4fee3ed8c201b200f7a1bde47b16",
+        "cursor": {
+          "block_id": "83f2d592a05da87b82eb64416b389d3b393d4fee3ed8c201b200f7a1bde47b16",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "list_files",
+      "arguments": {}
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 59.186999999918044
+}

@@ -1,0 +1,1012 @@
+[
+  {
+    "arm": "baseline",
+    "identity": "re3-absent",
+    "family": "output",
+    "question": "检查输出里有停车许可证编号吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "仅完成材料检查，没有生成停车许可证编号。",
+    "predecessor_value": null,
+    "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明输出中提到了“停车许可证编号”，但该编号未被生成。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "dd420e061dbb0c1963707d2d8d45df372bd98a78a1b792ba353034493ad3a824",
+          "effect_id": "0d73a83e-799f-44dd-ad4f-363f741b4204",
+          "part": "content",
+          "query": "停车许可证编号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16307,
+      "output_tokens": 191,
+      "total_tokens": 16498
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8535,
+      "output_tokens": 168,
+      "total_tokens": 8703
+    },
+    "target_seconds": 7.077999999979511,
+    "report_sha256": "6c2df6cffcb7eaa484ced850c219bcf771fcaaf264c4ee9490aadbbfab841f33",
+    "source_events_sha256": "0909234e957c78f7617904b10c052cc4e4d875cdf6ac894c97b7ce036192940d",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-direct",
+    "family": "output",
+    "question": "检查输出里的样品序列号是什么？",
+    "expected": "value",
+    "expected_value": "REF-9BB96F9C0B",
+    "source": "样品序列号=REF-9BB96F9C0B",
+    "predecessor_value": null,
+    "answer": "样品序列号是 `REF-9BB96F9C0B`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 53,
+        "request_snapshot_seq": 49,
+        "dispatch_fingerprint": "7b19c122b951f9c256378fe976789d6e525e60f8071bbe599abbdfa1447b55d1",
+        "source_evidence": {
+          "tool_result_seq": 43,
+          "effect_id": "6802320b-a7ba-427b-ae44-794351026a18",
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "6802320b-a7ba-427b-ae44-794351026a18",
+          "part": "content",
+          "query": "样品序列号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16303,
+      "output_tokens": 171,
+      "total_tokens": 16474
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8533,
+      "output_tokens": 148,
+      "total_tokens": 8681
+    },
+    "target_seconds": 6.687999999965541,
+    "report_sha256": "4e4e5a029b0674f64cddf5242daff86ba21b67a9eb73e3a0aeea0518cb6be327",
+    "source_events_sha256": "7281f6c99d5e872ca9dfdaabb038b4228e6b08da8422985a84e04d31ecaa81e4",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-language",
+    "family": "output",
+    "question": "刚才失败的归档检查给出的故障代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-AC83E85A30",
+    "source": "故障代号=REF-AC83E85A30",
+    "predecessor_value": null,
+    "answer": "故障代号是 `REF-AC83E85A30`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 10,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 149,
+        "request_snapshot_seq": 145,
+        "dispatch_fingerprint": "5ec146925ed90766c30e8a2ff40cdc431d0c26a2b5a32bad550d11f5f4a9f37e",
+        "source_evidence": {
+          "tool_result_seq": 139,
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 1193,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 2385,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 3579,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 4773,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 5967,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 7161,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "d934cf31-2122-4dc2-bc69-5ab5a5f809b0",
+          "offset": 8355,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 91,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 103,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 115,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 127,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 139,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 12,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 95356,
+      "output_tokens": 1163,
+      "total_tokens": 96519
+    },
+    "target_usage": {
+      "attempts": 10,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 87589,
+      "output_tokens": 1140,
+      "total_tokens": 88729
+    },
+    "target_seconds": 54.5,
+    "report_sha256": "8d3996f031ed71a4906aedf919c80ef465fc394c36ca3497f413696e02466a09",
+    "source_events_sha256": "6d7f5e6c7d0aebcd23f7074d46b40ce4c9177dcb2302163f978411ba4eab8ec8",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-nearby",
+    "family": "output",
+    "question": "诊断组乙的交接凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-D6C4E7EBDC",
+    "source": "交接凭据=REF-D6C4E7EBDC",
+    "predecessor_value": null,
+    "answer": "根据当前可用的参考信息，没有关于\"诊断组乙的交接凭据\"的具体内容。所有提供的参考材料都是空的，没有包含任何相关文档或信息。\n\n由于没有可用的参考资料来回答这个问题，我无法提供诊断组乙的交接凭据是什么。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_files",
+        "arguments": {}
+      },
+      {
+        "name": "search_text",
+        "arguments": {
+          "path": ".",
+          "query": "诊断组乙"
+        }
+      }
+    ],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 20104,
+      "output_tokens": 186,
+      "total_tokens": 20290
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 12333,
+      "output_tokens": 163,
+      "total_tokens": 12496
+    },
+    "target_seconds": 9.156000000075437,
+    "report_sha256": "71fed5571f78fd79f01da96b55258ae06a7901b877565b7fd99b5f05132b6841",
+    "source_events_sha256": "096322042d191f344a02a488d942d9b818874db4578fbdf42d34d218dfa3d683",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-overlap",
+    "family": "output",
+    "question": "本次检查的核验编号（核验码）是什么？",
+    "expected": "value",
+    "expected_value": "REF-3EE9203C75",
+    "source": "核验编号/核验码=REF-3EE9203C75",
+    "predecessor_value": null,
+    "answer": "REF-3EE9203C75",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 53,
+        "request_snapshot_seq": 49,
+        "dispatch_fingerprint": "49b728dc85426eb99872b73fdb8e57b5ce86a19e3dd714ed939c455807d7b9fd",
+        "source_evidence": {
+          "tool_result_seq": 43,
+          "effect_id": "fe2ddf94-2a93-42e8-b358-3454bcbd1e10",
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "fe2ddf94-2a93-42e8-b358-3454bcbd1e10",
+          "part": "content",
+          "query": "核验编号"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16313,
+      "output_tokens": 161,
+      "total_tokens": 16474
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8544,
+      "output_tokens": 138,
+      "total_tokens": 8682
+    },
+    "target_seconds": 6.125,
+    "report_sha256": "471bfb3d79c5f72c431d4ce275ec8b0454a76bccf1870fe158ea699da8c52476",
+    "source_events_sha256": "f9aded3b2a2aef41f0ea30ca6ded77429170560845f6c7b7ed372acf3ac1c536",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "baseline",
+    "identity": "re3-phrase",
+    "family": "output",
+    "question": "刚才那次展览检查的核对凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-B868FEEE50",
+    "source": "核对凭据编号：REF-B868FEEE50",
+    "predecessor_value": null,
+    "answer": "刚才那次展览检查的核对凭据是：**“陶艺展览例行登记完成。”**（共58次，条目 0 至 57）",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 3,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+          "effect_id": "bae374ae-d182-4ef2-a200-272a1bbff973",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 21497,
+      "output_tokens": 211,
+      "total_tokens": 21708
+    },
+    "target_usage": {
+      "attempts": 3,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 13733,
+      "output_tokens": 188,
+      "total_tokens": 13921
+    },
+    "target_seconds": 10.155999999959022,
+    "report_sha256": "c64065ce956eda6aa7ea0c8e8910922808e2ff82a3d47662970aac6b312e7c99",
+    "source_events_sha256": "f75d2f55bd3a28693820935877ee107e2dc0773571fc990351845df437dbe7fb",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-absent",
+    "family": "output",
+    "question": "检查输出里有停车许可证编号吗？",
+    "expected": "no-evidence",
+    "expected_value": "",
+    "source": "仅完成材料检查，没有生成停车许可证编号。",
+    "predecessor_value": null,
+    "answer": "有。检查输出中明确提到：“仅完成材料检查，没有生成停车许可证编号。”  \n这表明输出中提到了“停车许可证编号”，但该编号未被生成。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "dd420e061dbb0c1963707d2d8d45df372bd98a78a1b792ba353034493ad3a824",
+          "effect_id": "60b91bb5-53a4-4efc-8403-379359d9f0cf",
+          "part": "content",
+          "queries": [
+            "停车许可证编号",
+            "许可证编号",
+            "停车许可"
+          ]
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16721,
+      "output_tokens": 199,
+      "total_tokens": 16920
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8767,
+      "output_tokens": 176,
+      "total_tokens": 8943
+    },
+    "target_seconds": 8.109000000054948,
+    "report_sha256": "59c30b587f413139cb7c236ef996d62bbe202f910fb60d721e5fad4156d3fb8f",
+    "source_events_sha256": "5bf505adbd155a74c60dfc9c49a51fa03ef6f3340798619b4f5ebda7fcf7ff4f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-direct",
+    "family": "output",
+    "question": "检查输出里的样品序列号是什么？",
+    "expected": "value",
+    "expected_value": "REF-9BB96F9C0B",
+    "source": "样品序列号=REF-9BB96F9C0B",
+    "predecessor_value": null,
+    "answer": "样品序列号是 `REF-9BB96F9C0B`。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 53,
+        "request_snapshot_seq": 49,
+        "dispatch_fingerprint": "9d083324a1d9ff185ff76c29ea1526ac749ce6813b0331e2b485d8cb5eeef06a",
+        "source_evidence": {
+          "tool_result_seq": 43,
+          "effect_id": "78aa8ad0-79b6-4e37-b6ee-badf1c055965",
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_tool_output",
+        "arguments": {
+          "digest": "104cb10700e60aa9a832f59ad39ce2446fc9b0bd0e7f19c9977d4a482944d882",
+          "effect_id": "78aa8ad0-79b6-4e37-b6ee-badf1c055965",
+          "part": "content",
+          "queries": [
+            "样品序列号"
+          ]
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "search_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 16676,
+      "output_tokens": 168,
+      "total_tokens": 16844
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 8728,
+      "output_tokens": 145,
+      "total_tokens": 8873
+    },
+    "target_seconds": 6.35999999998603,
+    "report_sha256": "e963b48d9b8932ac90ec1bdfbd406c9c3efe00892619af8db2d11b27df94d63f",
+    "source_events_sha256": "a7b6b7d4a79df596ac8164090a5a7b00357a81f9b48c6b3caa8513703a292e93",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-language",
+    "family": "output",
+    "question": "刚才失败的归档检查给出的故障代号是什么？",
+    "expected": "value",
+    "expected_value": "REF-AC83E85A30",
+    "source": "故障代号=REF-AC83E85A30",
+    "predecessor_value": null,
+    "answer": "刚才执行 `python check.py` 的检查返回了 `exit_code=7`，这表示归档检查失败，其故障代号是 **7**。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 8,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "list_tool_outputs",
+        "arguments": {
+          "count": 10
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 1193,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 2385,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 3579,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 4773,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "f667d4bff0b26967fc287fc6f905bcc1558e4e27318dd9045d17fcf04d353268",
+          "effect_id": "f8c4d648-7ba2-4b49-93ff-16c8bf83159f",
+          "offset": 5967,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "list_tool_outputs"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 91,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 103,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 115,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 10,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 68889,
+      "output_tokens": 909,
+      "total_tokens": 69798
+    },
+    "target_usage": {
+      "attempts": 8,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 60939,
+      "output_tokens": 886,
+      "total_tokens": 61825
+    },
+    "target_seconds": 40.90599999995902,
+    "report_sha256": "9eb20c26c4c84730b45d1365298e1b2650900b84ec99cdc83845c785a8190b73",
+    "source_events_sha256": "8734b1b4c1bc7d41a2fe6bc1ebb2afd46f4b2c06083caf5a52c012b84e580af5",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-nearby",
+    "family": "output",
+    "question": "诊断组乙的交接凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-D6C4E7EBDC",
+    "source": "交接凭据=REF-D6C4E7EBDC",
+    "predecessor_value": null,
+    "answer": "根据当前可用的参考信息，未找到关于“诊断组乙的交接凭据”的相关内容。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 5,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "search_skill",
+        "arguments": {
+          "query": "诊断组乙 交接凭据"
+        }
+      },
+      {
+        "name": "search_text",
+        "arguments": {
+          "path": ".",
+          "query": "诊断组乙"
+        }
+      },
+      {
+        "name": "search_history",
+        "arguments": {
+          "query": "诊断组乙 交接凭据"
+        }
+      },
+      {
+        "name": "search_memory",
+        "arguments": {
+          "query": "诊断组乙 交接凭据"
+        }
+      }
+    ],
+    "successful_tools": [],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 29053,
+      "output_tokens": 144,
+      "total_tokens": 29197
+    },
+    "target_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 21100,
+      "output_tokens": 121,
+      "total_tokens": 21221
+    },
+    "target_seconds": 12.733999999938533,
+    "report_sha256": "2d4f2561e231dec2c0496b0618582d0d6c2eb98bee7b5ab877c1a498a62d9a23",
+    "source_events_sha256": "b74503641e15c29b1cdebfcce47044fb754de247968c05c6711942f6697f3d26",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-overlap",
+    "family": "output",
+    "question": "本次检查的核验编号（核验码）是什么？",
+    "expected": "value",
+    "expected_value": "REF-3EE9203C75",
+    "source": "核验编号/核验码=REF-3EE9203C75",
+    "predecessor_value": null,
+    "answer": "REF-3EE9203C75",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 5,
+    "provisional_joint_pass": true,
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 89,
+        "request_snapshot_seq": 85,
+        "dispatch_fingerprint": "b7e304d3e8534885e28354a841c06bdbb0350794863e088ba11fb8d7143d06c9",
+        "source_evidence": {
+          "tool_result_seq": 79,
+          "effect_id": "a7edb758-e95f-47de-8d24-0218573d0f63",
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851"
+        }
+      }
+    ],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "a7edb758-e95f-47de-8d24-0218573d0f63",
+          "offset": 0,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "a7edb758-e95f-47de-8d24-0218573d0f63",
+          "offset": 1193,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "a7edb758-e95f-47de-8d24-0218573d0f63",
+          "offset": 2385,
+          "part": "content"
+        }
+      },
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "5b8e262cf12783f15080db0eec7b1fd00a145f057f1ecb78e24f70173149c851",
+          "effect_id": "a7edb758-e95f-47de-8d24-0218573d0f63",
+          "offset": 3579,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 43,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 55,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 67,
+        "name": "read_tool_output"
+      },
+      {
+        "seq": 79,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 7,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 41098,
+      "output_tokens": 591,
+      "total_tokens": 41689
+    },
+    "target_usage": {
+      "attempts": 5,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 33145,
+      "output_tokens": 568,
+      "total_tokens": 33713
+    },
+    "target_seconds": 23.719000000040978,
+    "report_sha256": "fc6d7cb0382bc7624406aab3e9e1bd09ea8b8632b7cba6f910409e2a6525addb",
+    "source_events_sha256": "0cdaf6277b056912f4db3cbff10bd8bb7398fa8981ade3dc7bcb96166ba99995",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  },
+  {
+    "arm": "candidate",
+    "identity": "re3-phrase",
+    "family": "output",
+    "question": "刚才那次展览检查的核对凭据是什么？",
+    "expected": "value",
+    "expected_value": "REF-B868FEEE50",
+    "source": "核对凭据编号：REF-B868FEEE50",
+    "predecessor_value": null,
+    "answer": "刚才那次展览检查（`python check.py`）的核对凭据是：\n\n✅ **`exit_code=0`** —— 表示程序成功执行，无错误退出；  \n✅ **`timed_out=false`** —— 表示检查未超时，运行完整；  \n✅ **stdout 中连续 58 条“陶艺展览例行登记完成。”** —— 表明全部登记条目（条目 0 至 57）均已成功处理，无中断、无失败、无跳过。\n\n这三项共同构成本次检查的**权威核对凭据**：  \n- `exit_code=0` 和 `timed_out=false` 是系统级执行完整性凭据；  \n- 58 条一致、有序、无异常文本输出是业务逻辑正确性凭据。\n\n无 stderr 输出，无警告或错误信息，进一步佐证检查通过。",
+    "error": null,
+    "audit_error": null,
+    "reason": "completed",
+    "steps": 2,
+    "provisional_joint_pass": false,
+    "dispatched_evidence": [],
+    "searches": [],
+    "calls": [
+      {
+        "name": "read_tool_output",
+        "arguments": {
+          "count": 10000,
+          "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+          "effect_id": "74ae2114-51f6-4d27-8c64-f43f3db78476",
+          "offset": 0,
+          "part": "content"
+        }
+      }
+    ],
+    "successful_tools": [
+      {
+        "seq": 44,
+        "name": "read_tool_output"
+      }
+    ],
+    "output_executions": 1,
+    "replay_errors": [],
+    "invariant_errors": [],
+    "all_usage": {
+      "attempts": 4,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 17643,
+      "output_tokens": 583,
+      "total_tokens": 18226
+    },
+    "target_usage": {
+      "attempts": 2,
+      "unknown_usage": 0,
+      "estimated_usage": 0,
+      "input_tokens": 9693,
+      "output_tokens": 561,
+      "total_tokens": 10254
+    },
+    "target_seconds": 15.625,
+    "report_sha256": "ce14860b9c9fc4b2664b38f3c522bbec6ba9399851bbebf6a661bf2fbb922daa",
+    "source_events_sha256": "a53d3d1d752cb0581254f84a4dcbeac0693a22362c1ab7c663da14822b8c3c4f",
+    "manual_review": "pending: assess answer attribution, unsupported facts and negatives"
+  }
+]

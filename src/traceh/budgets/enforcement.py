@@ -62,6 +62,7 @@ from traceh.runtime.continuation import (
     LoopDirective,
     VerificationFeedback,
 )
+from traceh.runtime.repeated_denial import RepeatedDenialState
 from traceh.session.event_store import EventStore
 from traceh.session.service import SessionService
 from traceh.supervision.execution import (
@@ -475,6 +476,7 @@ class BudgetContinuationRuntime:
         verification: VerificationFeedback | None,
         verification_failures: int,
         max_verification_retries: int,
+        repeated_denial: RepeatedDenialState | None = None,
     ) -> LoopDirective:
         directive = await self._inner.decide(
             response=response,
@@ -483,6 +485,7 @@ class BudgetContinuationRuntime:
             verification=verification,
             verification_failures=verification_failures,
             max_verification_retries=max_verification_retries,
+            repeated_denial=repeated_denial,
         )
         await self.reconcile()
         if isinstance(directive, Continue):

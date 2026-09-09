@@ -1,0 +1,79 @@
+{
+  "identity": "419-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 419,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "080bffb8-d140-4f63-8091-c89d79216022",
+  "target_start_seq": 152,
+  "answer": "根据搜索结果，档案复核组的联络代号是 REF-920619E3FF。\n\n在搜索结果中明确提到：\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-920619E3FF。搬运组使用另一个代号。\"\n\n这清楚地区分了档案复核组和搬运组的联络代号，档案复核组使用的是 REF-920619E3FF，而搬运组使用的是 DECOY-920619E3FF。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 20.95299999997951,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 15018,
+    "output_tokens": 476,
+    "total_tokens": 15494
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54393,
+    "output_tokens": 506,
+    "total_tokens": 54899
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+        "cursor": {
+          "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "97c62558c91a2c5a6205c2db20d3e9ddc10772a793fb1af8e903ea9f5e3cacf0",
+          "event_id": "13de04ea-450f-4137-9901-e74a105774ae",
+          "seq": 111,
+          "stream_id": "session:080bffb8-d140-4f63-8091-c89d79216022",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "fa152bbdb750395e19616a1a286792654679c1c31dfa9250cca8e5a3b7da11be"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+        "cursor": {
+          "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "档案复核组"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 43.625
+}

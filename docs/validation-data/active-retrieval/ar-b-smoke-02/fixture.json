@@ -1,0 +1,10 @@
+{
+  "zh": {
+    "source": "设备维修组临时联络代号是 ORCHID-73908e2a。",
+    "question": "之前维修组用哪个临时联络代号来着？"
+  },
+  "en": {
+    "source": "The temporary repair team contact code is ORCHID-73908e2a.",
+    "question": "What was the repair team's temporary contact code?"
+  }
+}

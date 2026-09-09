@@ -1,0 +1,89 @@
+{
+  "identity": "227-o-nonzero",
+  "case_id": "o-nonzero",
+  "seed": 227,
+  "family": "output",
+  "question": "刚才失败的归档检查给出的故障代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f9015a5c-a9c8-406f-b57c-465aea187c39",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 的检查输出中，**未发现任何失败（failure）或错误信息**，所有 600 行均显示为：\n\n```\n检查行 XXXX：普通器材登记，状态 normal。\n```\n\n且 `stderr` 部分为空（仅显示 `--- stderr ---` 后无内容），`exit_code=7` 虽非零，但输出中**未出现 `Failure code:` 字样，也未打印任何故障代号**。\n\n因此，根据实际检查输出，**本次检查未给出明确的故障代号**。\n\n答案：无故障代号（未在输出中报告）。",
+  "steps": 6,
+  "reason": "completed",
+  "target_seconds": 50.29700000002049,
+  "target_usage": {
+    "attempts": 6,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 34394,
+    "output_tokens": 798,
+    "total_tokens": 35192
+  },
+  "all_usage": {
+    "attempts": 8,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 42154,
+    "output_tokens": 821,
+    "total_tokens": 42975
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "f6725d7e7ca5624f0ca954719bdb7d9675ea6cf4aaf60429fcf904304efb8fd2",
+        "effect_id": "3ef50866-4d7a-48d5-9cce-9568cad8f7c9",
+        "part": "content",
+        "query": "Failure code:"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "f6725d7e7ca5624f0ca954719bdb7d9675ea6cf4aaf60429fcf904304efb8fd2",
+        "effect_id": "3ef50866-4d7a-48d5-9cce-9568cad8f7c9",
+        "offset": 0,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "f6725d7e7ca5624f0ca954719bdb7d9675ea6cf4aaf60429fcf904304efb8fd2",
+        "effect_id": "3ef50866-4d7a-48d5-9cce-9568cad8f7c9",
+        "offset": 1000,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "f6725d7e7ca5624f0ca954719bdb7d9675ea6cf4aaf60429fcf904304efb8fd2",
+        "effect_id": "3ef50866-4d7a-48d5-9cce-9568cad8f7c9",
+        "offset": 15000,
+        "part": "content"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 1000,
+        "digest": "f6725d7e7ca5624f0ca954719bdb7d9675ea6cf4aaf60429fcf904304efb8fd2",
+        "effect_id": "3ef50866-4d7a-48d5-9cce-9568cad8f7c9",
+        "offset": 16000,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 5,
+  "output_executions": 1,
+  "elapsed_seconds": 58.89000000001397
+}

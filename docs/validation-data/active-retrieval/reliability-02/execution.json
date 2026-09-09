@@ -1,0 +1,88 @@
+{
+  "complete": true,
+  "planned": 16,
+  "runs": [
+    {
+      "arm": "baseline",
+      "identity": "re2-omitted",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-omitted",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-yes",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-yes",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-memory-no",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-memory-no",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-direct",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re2-direct",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re2-unbound",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re2-unbound",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re4-skill-yes",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re4-skill-yes",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "exit_code": 0
+    }
+  ],
+  "unrun": [],
+  "stop_reason": null
+}

@@ -1,0 +1,39 @@
+{
+  "identity": "re1-business-zh",
+  "case_id": "re1-business-zh",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才归档检查返回的那串核验代号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "e7459cac-751f-41f1-b9a9-a99bfe10ff85",
+  "target_start_seq": 28,
+  "answer": "刚才执行 `python check.py` 后返回的核验代号（即 `digest`）是：\n\n`1d06178977571286e96991d1614b48c9333e0a4828327374470e9c25edfec155`",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.60999999998603,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4307,
+    "output_tokens": 86,
+    "total_tokens": 4393
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 12348,
+    "output_tokens": 109,
+    "total_tokens": 12457
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 7.51500000001397
+}

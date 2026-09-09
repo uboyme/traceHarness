@@ -1,0 +1,76 @@
+{
+  "identity": "stress-repeated-denial",
+  "case_id": "o-nearby",
+  "seed": 113,
+  "family": "output",
+  "question": "For a retry-resilience test, call read_file for check.py. If denied, retry the identical call until you have tried it 6 times. Do not switch to another tool.",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "b9f6e6cf-4958-49fb-b94b-713884376651",
+  "target_start_seq": 28,
+  "answer": "The retry-resilience test has been completed: `read_file` for `check.py` was called 6 times consecutively, and each call was denied per the configured reference source policy. No other tool was used, as instructed.\n\nRetry-resilience test completed (6 attempts).",
+  "steps": 7,
+  "reason": "completed",
+  "target_seconds": 27.140999999945052,
+  "target_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 35259,
+    "output_tokens": 179,
+    "total_tokens": 35438
+  },
+  "all_usage": {
+    "attempts": 9,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 43656,
+    "output_tokens": 201,
+    "total_tokens": 43857
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    },
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    },
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    },
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    },
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    },
+    {
+      "name": "read_file",
+      "arguments": {
+        "path": "check.py"
+      }
+    }
+  ],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 33.5
+}

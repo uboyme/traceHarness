@@ -1,0 +1,39 @@
+{
+  "identity": "control-greeting",
+  "case_id": "control-greeting",
+  "seed": 1609,
+  "family": "skill",
+  "question": "你好！",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "020f75d3-f1f1-4105-bdf2-77b82d4de621",
+  "target_start_seq": 1,
+  "answer": "你好！",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 1.125,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4008,
+    "output_tokens": 2,
+    "total_tokens": 4010
+  },
+  "all_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4008,
+    "output_tokens": 2,
+    "total_tokens": 4010
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": null,
+  "elapsed_seconds": 1.4849999999860302
+}

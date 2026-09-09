@@ -1,0 +1,7 @@
+{
+  "status": "complete-no-go",
+  "release_allowed": false,
+  "summary": "summary.json",
+  "all_failures_retained": true,
+  "prior_rounds_preserved": true
+}

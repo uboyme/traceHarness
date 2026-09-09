@@ -1,0 +1,59 @@
+{
+  "identity": "counterfactual-113-s-absent",
+  "case_id": "s-absent",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册有没有规定车辆加油的折扣码？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "5b80c3dc-a6a7-4d30-9498-a36e1b84d01f",
+  "target_start_seq": 1,
+  "answer": "是的，档案整理手册中规定了车辆加油的折扣码。\n\n根据提供的参考内容，手册中明确指出：\"车辆加油的折扣码为 CF-DA353B7883。\"",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 13.125,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10171,
+    "output_tokens": 340,
+    "total_tokens": 10511
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10171,
+    "output_tokens": 340,
+    "total_tokens": 10511
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-593410eb3c",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "952b6bab31e58998272d44d321e7ef19be91c784c77ad8eb71f7228f1c300b37",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-593410eb3c",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 13.625
+}

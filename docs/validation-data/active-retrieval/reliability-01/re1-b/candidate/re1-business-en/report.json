@@ -1,0 +1,62 @@
+{
+  "identity": "re1-business-en",
+  "case_id": "re1-business-en",
+  "seed": 1609,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "c985d9b0-be8f-4ce1-8dc0-4258bae11998",
+  "target_start_seq": 28,
+  "answer": "The equipment check returned the validation code: `REF-02EA3A8FA1`.\n\nThis was found in the `check.py` output at line 420, with the exact substring `\"validation code=REF-02EA3A8FA1\\r\\n\"`.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 18.641000000061467,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14198,
+    "output_tokens": 545,
+    "total_tokens": 14743
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 22213,
+    "output_tokens": 568,
+    "total_tokens": 22781
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 57,
+      "effect_id": "fe5c9c34-56d1-4bc3-b6ea-d7ec8aa15b72",
+      "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 5
+      }
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "count": 1,
+        "digest": "b3963a7a3b2babedce199059e1d0f6e19c97c9b843fccd0d160e4d13a1b07178",
+        "effect_id": "fe5c9c34-56d1-4bc3-b6ea-d7ec8aa15b72",
+        "part": "content",
+        "query": "validation code"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 23.625
+}

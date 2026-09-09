@@ -31,6 +31,7 @@ async def memory_case(
     tools=True,
     max_steps=20,
     config_changes=None,
+    runtime_options=None,
     body=BODY,
     authority_policy=None,
 ):
@@ -57,6 +58,7 @@ async def memory_case(
         provider=provider,
         event_store=store,
         include_default_tools=tools,
+        **(runtime_options or {}),
     )
     try:
         session = await runtime.create_session(workspace)

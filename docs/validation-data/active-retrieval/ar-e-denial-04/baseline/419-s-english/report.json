@@ -1,0 +1,69 @@
+{
+  "identity": "419-s-english",
+  "case_id": "s-english",
+  "seed": 419,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "ff8e086c-1a42-48c7-acce-bc555eda4bc8",
+  "target_start_seq": 1,
+  "answer": "The equipment drill manual specifies the code for the check-in card as **REF-EA333BB356**.",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 24.75,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17374,
+    "output_tokens": 605,
+    "total_tokens": 17979
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17374,
+    "output_tokens": 605,
+    "total_tokens": 17979
+  },
+  "evidence": [
+    {
+      "context_seq": 45,
+      "id": "manual-ea333bb356",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_files",
+      "arguments": {}
+    },
+    {
+      "name": "search_skill",
+      "arguments": {
+        "query": "check-in card"
+      }
+    },
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-ea333bb356",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 25.969000000040978
+}

@@ -1,0 +1,67 @@
+{
+  "identity": "113-h-english",
+  "case_id": "h-english",
+  "seed": 113,
+  "family": "history",
+  "question": "What was the temporary handover code we discussed earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "44c60fa5-2dce-4fd5-89db-b4753c79f159",
+  "target_start_seq": 152,
+  "answer": "I found a search result that contains the temporary handover code. The search result shows: \"The temporary handover code is REF-9D2D595614.\"\n\nLet me extract this code from the search result.\n\nThe temporary handover code is REF-9D2D595614.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 12.64000000001397,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9687,
+    "output_tokens": 147,
+    "total_tokens": 9834
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 47269,
+    "output_tokens": 177,
+    "total_tokens": 47446
+  },
+  "evidence": [
+    {
+      "context_seq": 171,
+      "reference": {
+        "block_id": "3ef4bf6ef5883d991f25ebe131b8be075c76357f7078bcd0b7fea3bf208155da",
+        "cursor": {
+          "block_id": "3ef4bf6ef5883d991f25ebe131b8be075c76357f7078bcd0b7fea3bf208155da",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "2536c770f295dc7bd5d7019eb15701a9a067760b1293aa9095414972b195b73c",
+          "event_id": "15b53dcb-8b79-4c31-8b61-bfe1e79afa75",
+          "seq": 111,
+          "stream_id": "session:44c60fa5-2dce-4fd5-89db-b4753c79f159",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "a50a2cf4f48fe04e6b51b366c0bbf2ca059fdab94afe938b75e4062e088cb89d"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "handover code"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 56.25
+}

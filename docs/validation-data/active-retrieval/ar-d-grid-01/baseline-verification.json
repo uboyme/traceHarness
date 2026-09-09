@@ -1,0 +1,7 @@
+{
+  "commit": "a54d431",
+  "python_files": 262,
+  "comparison": "Git blob SHA-1 after CRLF-to-LF normalization",
+  "result": "passed",
+  "raw_byte_hashes": "frozen.json pins actual extracted bytes"
+}

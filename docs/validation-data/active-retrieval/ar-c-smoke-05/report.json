@@ -1,0 +1,168 @@
+{
+  "purpose": "AR-C diagnostic, not AR-D score",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "runner_sha256": "3bf01e25dbcbf7f257dc8f40da8d32e3f6ef3c583f8488d4acf0f17998625f91",
+  "cases": [
+    {
+      "kind": "memory",
+      "session_id": "c84048c1-fb83-4d6f-b665-638bd693be9d",
+      "question": "项目已批准的值班联络口令是什么？",
+      "expected": "MAPLE-c2b5583e",
+      "answer": "根据搜索结果，项目已批准的值班联络口令是 **MAPLE-c2b5583e**。",
+      "steps": 2,
+      "reason": "completed",
+      "replay_errors": [],
+      "invariant_errors": [],
+      "evidence_seen": true,
+      "search_used": true,
+      "attempts": [
+        {
+          "attempt_id": "517b7f57-bf8d-4eb6-965e-ce71210eafba",
+          "dispatch_fingerprint": "ecb663d3d23d65dd759617ad0cc0e056d1675c4797dbd25a2e1a856b84d36075",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3468,
+          "request_snapshot_seq": 10,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "404c5e44-d2dd-42b1-b22c-63f33e4f42fd",
+          "turn_id": "ec257d21-edb2-45ad-b30c-07c13a9fc114",
+          "usage": {
+            "input_tokens": 3592,
+            "output_tokens": 75,
+            "quality": "exact",
+            "total_tokens": 3667
+          }
+        },
+        {
+          "attempt_id": "885ea38a-ff7f-473b-b8ce-49ec31cacf49",
+          "dispatch_fingerprint": "00d325bfeb7bce49b45825d0e8cb43aae13a2a9b6976075d14df72dab01536f9",
+          "finish_reason": "stop",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3905,
+          "request_snapshot_seq": 23,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "cb3b5310-d1b1-43b4-8ae4-77bb1c47a2ef",
+          "turn_id": "ec257d21-edb2-45ad-b30c-07c13a9fc114",
+          "usage": {
+            "input_tokens": 5001,
+            "output_tokens": 26,
+            "quality": "exact",
+            "total_tokens": 5027
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "kind": "skill",
+      "session_id": "af67815a-ee26-481e-b041-43db8180df56",
+      "question": "设备维护手册里，终止作业时的无线电口令是什么？",
+      "expected": "WILLOW-5ecef859",
+      "answer": "WILLOW-5ecef859",
+      "steps": 5,
+      "reason": "completed",
+      "replay_errors": [],
+      "invariant_errors": [],
+      "evidence_seen": true,
+      "search_used": true,
+      "attempts": [
+        {
+          "attempt_id": "f8094745-032b-4581-ba64-95cf3befb820",
+          "dispatch_fingerprint": "0bc586cf91979ac5d1ae19ac795453cd549685f441fca907c12dd712f154b948",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3234,
+          "request_snapshot_seq": 10,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "cf9b25cc-de68-4d39-b788-2472913c8df3",
+          "turn_id": "2f1c271b-81f5-42e3-ab31-9132ec5d9d3e",
+          "usage": {
+            "input_tokens": 3715,
+            "output_tokens": 53,
+            "quality": "exact",
+            "total_tokens": 3768
+          }
+        },
+        {
+          "attempt_id": "97046a8a-eea2-4755-be84-0ebe39a51e6d",
+          "dispatch_fingerprint": "187f972cfbf41c554ae5ba1ca4f7367c85e3c7f672abd1e79efa4a9589560536",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 4641,
+          "request_snapshot_seq": 23,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "7dac67d8-6680-45d7-8459-c2a60b11599c",
+          "turn_id": "2f1c271b-81f5-42e3-ab31-9132ec5d9d3e",
+          "usage": {
+            "input_tokens": 4355,
+            "output_tokens": 146,
+            "quality": "exact",
+            "total_tokens": 4501
+          }
+        },
+        {
+          "attempt_id": "b68cfaa1-988c-41c1-9b24-450836601d29",
+          "dispatch_fingerprint": "aa1534c13e2be13913e90ff20dd1688aa884b5a3b37b26b98e07902b3fdb08ab",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3405,
+          "request_snapshot_seq": 36,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "593b6b8a-41d8-4f28-aa7e-9e2237085354",
+          "turn_id": "2f1c271b-81f5-42e3-ab31-9132ec5d9d3e",
+          "usage": {
+            "input_tokens": 4332,
+            "output_tokens": 65,
+            "quality": "exact",
+            "total_tokens": 4397
+          }
+        },
+        {
+          "attempt_id": "874f212b-1930-4033-868a-7fb02582da8d",
+          "dispatch_fingerprint": "046c94aa091902507430751e458b5a83376dd2731adfa15fb4a303756827f3dc",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 5937,
+          "request_snapshot_seq": 49,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "a6622629-9d5e-475a-8ad8-371c95436c58",
+          "turn_id": "2f1c271b-81f5-42e3-ab31-9132ec5d9d3e",
+          "usage": {
+            "input_tokens": 4680,
+            "output_tokens": 187,
+            "quality": "exact",
+            "total_tokens": 4867
+          }
+        },
+        {
+          "attempt_id": "d5d08b77-61d2-42bf-96b1-103040c5952b",
+          "dispatch_fingerprint": "c2c17b290f9132ad926c453379ff167fddc29eadb38113b1a3e6125f64cf06bd",
+          "finish_reason": "stop",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2092,
+          "request_snapshot_seq": 62,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "7ceaf982-f353-4c04-b2bc-89ee21c29ed6",
+          "turn_id": "2f1c271b-81f5-42e3-ab31-9132ec5d9d3e",
+          "usage": {
+            "input_tokens": 4703,
+            "output_tokens": 10,
+            "quality": "exact",
+            "total_tokens": 4713
+          }
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "complete": true,
+  "scripted_provider": false
+}

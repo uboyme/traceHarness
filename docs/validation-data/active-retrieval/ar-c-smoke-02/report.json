@@ -1,0 +1,204 @@
+{
+  "purpose": "AR-C diagnostic, not AR-D score",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "runner_sha256": "c2cf77851741f8c18d905afd5276d8be7f51a1bf4d170769494b03a811f5ce7a",
+  "cases": [
+    {
+      "kind": "memory",
+      "session_id": "7d7d907c-ba26-4a65-b778-653d11f9d8e5",
+      "question": "项目碰头时用的识别代号是什么？",
+      "expected": "MAPLE-1b5aeef3",
+      "answer": "根据当前可用的信息，我无法找到项目碰头时用的识别代号。搜索项目记忆没有返回任何匹配结果，工作区中也没有文件，工具输出列表也是空的。\n\n由于没有找到任何相关信息，我无法确定项目碰头时用的识别代号是什么。",
+      "steps": 6,
+      "reason": "completed",
+      "replay_errors": [],
+      "invariant_errors": [],
+      "evidence_seen": false,
+      "search_used": true,
+      "attempts": [
+        {
+          "attempt_id": "73f2b2f0-aba7-4188-8811-e29fa621386d",
+          "dispatch_fingerprint": "65aca7d11e5977e73456d2864775d2f6ef3782be250f262d498661455b413d3b",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2125,
+          "request_snapshot_seq": 10,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "8d32ffe2-68c0-480e-886e-de6ea7ea189c",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 3535,
+            "output_tokens": 41,
+            "quality": "exact",
+            "total_tokens": 3576
+          }
+        },
+        {
+          "attempt_id": "2e97f1d3-2c4c-4869-9843-050deb0a0253",
+          "dispatch_fingerprint": "05b3428227d8331e91b81352c564839a2f123d6dc38e8f5fe2af2d49c8ddbbae",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2734,
+          "request_snapshot_seq": 23,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "5ffadad4-fdf5-483e-a58d-f9b35a76b415",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 3596,
+            "output_tokens": 64,
+            "quality": "exact",
+            "total_tokens": 3660
+          }
+        },
+        {
+          "attempt_id": "df532386-4f98-4d74-8789-1757ff00b5e8",
+          "dispatch_fingerprint": "840c3395c40298b81fe7a4c8d9ffa78a350be64487190a9e0a942c5d14d70af7",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2422,
+          "request_snapshot_seq": 36,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "3e58daa5-b687-4ee8-9310-fa3a3f14a8de",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 3693,
+            "output_tokens": 57,
+            "quality": "exact",
+            "total_tokens": 3750
+          }
+        },
+        {
+          "attempt_id": "00671fd1-1cf6-4d10-a7c6-fd619b672cd7",
+          "dispatch_fingerprint": "9e4da6455d05ea864278d1e17d8c4d78ebe389e59eba37881ecfaa21f61d431b",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2812,
+          "request_snapshot_seq": 49,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "4591caf0-1698-447e-baf7-16c5af46bf09",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 4071,
+            "output_tokens": 63,
+            "quality": "exact",
+            "total_tokens": 4134
+          }
+        },
+        {
+          "attempt_id": "11adf66c-47e9-422c-8a6c-11b15bee69ea",
+          "dispatch_fingerprint": "556dc85bfae271e4af7efd7895a9ffbf43bb115b1ecb5350a3c18b51c38fed9f",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2671,
+          "request_snapshot_seq": 62,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "3892f614-3d03-4c17-9914-b7cd76618a19",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 4168,
+            "output_tokens": 53,
+            "quality": "exact",
+            "total_tokens": 4221
+          }
+        },
+        {
+          "attempt_id": "27ee8643-5c62-4c05-8dfe-1b736b05965f",
+          "dispatch_fingerprint": "7e6eed9394f01ac371176dad1a2ddcde62707a0b06bab4a250d7a3e1a7ef7391",
+          "finish_reason": "stop",
+          "ordinal": 1,
+          "provider_active_milliseconds": 3157,
+          "request_snapshot_seq": 75,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "4f11e756-462b-4dbe-9900-764d38ed7c08",
+          "turn_id": "69206481-8c6c-4b5e-9093-29021424d4e5",
+          "usage": {
+            "input_tokens": 4243,
+            "output_tokens": 60,
+            "quality": "exact",
+            "total_tokens": 4303
+          }
+        }
+      ],
+      "passed": false
+    },
+    {
+      "kind": "skill",
+      "session_id": "1c7bc082-fde6-4829-b052-bf672c89f26d",
+      "question": "设备维护手册里，终止作业时的无线电口令是什么？",
+      "expected": "WILLOW-59a0bae7",
+      "answer": "在 `fixture.json` 文件中，我找到了关于无线电终止作业的部分。在 `sections` 数组中，`part-23` 部分的标题是 \"无线电终止作业\"，其摘要说明是 \"停止维护作业时使用的无线电口令。\"，而该部分的正文内容是：\"设备维护手册规定，终止作业的无线电口令是 WILLOW-59a0bae7。\"\n\n因此，设备维护手册里，终止作业时的无线电口令是 **WILLOW-59a0bae7**。",
+      "steps": 3,
+      "reason": "completed",
+      "replay_errors": [],
+      "invariant_errors": [],
+      "evidence_seen": false,
+      "search_used": false,
+      "attempts": [
+        {
+          "attempt_id": "3e7fbc33-f43c-4a3b-a882-b5851e2b78e9",
+          "dispatch_fingerprint": "d16dd181e1137ebb5019d6af09f2e731f68b8a9a443a9899d0c5a1b06ca82ece",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2343,
+          "request_snapshot_seq": 10,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "0e4d69a5-eed7-49d2-8570-88fc137afc47",
+          "turn_id": "a051fe93-e217-495e-86ee-51ec9394fa1d",
+          "usage": {
+            "input_tokens": 3591,
+            "output_tokens": 50,
+            "quality": "exact",
+            "total_tokens": 3641
+          }
+        },
+        {
+          "attempt_id": "e7e026c6-3bf3-4703-a907-ce640a5579b3",
+          "dispatch_fingerprint": "86fb883deeaa6fc6c6a79cb95874f3f49fcc1f6fca771f4ff5449fb580cb0a13",
+          "finish_reason": "tool_calls",
+          "ordinal": 1,
+          "provider_active_milliseconds": 2483,
+          "request_snapshot_seq": 23,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "6643b345-ad24-4af3-860d-74d09549d2cb",
+          "turn_id": "a051fe93-e217-495e-86ee-51ec9394fa1d",
+          "usage": {
+            "input_tokens": 3663,
+            "output_tokens": 66,
+            "quality": "exact",
+            "total_tokens": 3729
+          }
+        },
+        {
+          "attempt_id": "dde748c5-b942-4548-b82f-c38402753a3d",
+          "dispatch_fingerprint": "edce7ec1247470768af406ddb7485c1f922cb17d41aa1f90987412d56adf25c4",
+          "finish_reason": "stop",
+          "ordinal": 1,
+          "provider_active_milliseconds": 4390,
+          "request_snapshot_seq": 36,
+          "reservation_id": null,
+          "status": "succeeded",
+          "step_id": "fbbdc25c-2356-4d67-b9ff-606ba1c01d9a",
+          "turn_id": "a051fe93-e217-495e-86ee-51ec9394fa1d",
+          "usage": {
+            "input_tokens": 8226,
+            "output_tokens": 121,
+            "quality": "exact",
+            "total_tokens": 8347
+          }
+        }
+      ],
+      "passed": false
+    }
+  ],
+  "complete": true,
+  "scripted_provider": false
+}

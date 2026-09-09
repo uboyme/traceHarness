@@ -1,0 +1,52 @@
+{
+  "identity": "227-h-disambiguate",
+  "case_id": "h-disambiguate",
+  "seed": 227,
+  "family": "history",
+  "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "cfaf08b4-f102-4640-a079-8f1f58a674de",
+  "target_start_seq": 152,
+  "answer": "The current reference shows only a JSON array of historical messages about \"背景登记\" (background registration) regarding ordinary equipment inventory, with no mention of \"档案复核组\" (Archives Review Group) or \"搬运组\" (Moving Group) or any contact codes.\n\nSince the provided history chunk does not contain the requested information, and no other references (workspace files, skills, memory) have been disclosed that would contain this detail, I cannot determine the contact code for the Archives Review Group from the currently available evidence.\n\nThe request specifically asks to distinguish it from the Moving Group, but neither group's contact code appears in the admitted historical chunk.\n\nTherefore, based on the currently available references, the contact code for the Archives Review Group is not present.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 18.56299999996554,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 7555,
+    "output_tokens": 451,
+    "total_tokens": 8006
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 38498,
+    "output_tokens": 481,
+    "total_tokens": 38979
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "d8073063d46b9c25b1b3801536287931e5bae9a95dc98be8aad870df73922a8a",
+        "cursor": {
+          "block_id": "d8073063d46b9c25b1b3801536287931e5bae9a95dc98be8aad870df73922a8a",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 46.25
+}

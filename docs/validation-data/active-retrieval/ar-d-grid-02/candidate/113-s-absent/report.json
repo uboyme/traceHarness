@@ -1,0 +1,12 @@
+{
+  "identity": "113-s-absent",
+  "case_id": "s-absent",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册有没有规定车辆加油的折扣码？",
+  "closed": false,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "8422e011-ff5a-41bc-b676-68ff9ba58344",
+  "target_start_seq": 1
+}

@@ -1,0 +1,79 @@
+{
+  "identity": "113-h-direct",
+  "case_id": "h-direct",
+  "seed": 113,
+  "family": "history",
+  "question": "之前设备交接的口令是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "5f6ec316-1704-48ab-a729-684dcfe518d3",
+  "target_start_seq": 152,
+  "answer": "从搜索结果中，我找到了设备交接的口令信息。在历史记录中明确提到：\"设备交接的口令是 REF-34772572F2\"。\n\n因此，之前设备交接的口令是：REF-34772572F2",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 27.07900000002701,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14932,
+    "output_tokens": 422,
+    "total_tokens": 15354
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 54145,
+    "output_tokens": 452,
+    "total_tokens": 54597
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+        "cursor": {
+          "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "6311725a4f4927c3c40b074caef5b7fce47c3c92c9ab21bdb04ac506a52b6aa9",
+          "event_id": "c11c20aa-5c30-418c-bc9a-dce1e943e7db",
+          "seq": 111,
+          "stream_id": "session:5f6ec316-1704-48ab-a729-684dcfe518d3",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "9e8fab859b53ece8f47049d86a531cdf9d16237f22e6b5da3eadf1017761f6a8"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+        "cursor": {
+          "block_id": "a8c7f8ac653816fa0c831a89ed1d4d2bebbbcac41f657055d5d84d1c01fc2e12",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "设备交接"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 64.31299999996554
+}

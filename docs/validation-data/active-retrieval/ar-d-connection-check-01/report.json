@@ -1,0 +1,28 @@
+{
+  "purpose": "unscored connection-only diagnosis after grid-04 TLS failures; not an acceptance retest",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "session_id": "9c3533e4-f5b3-4826-9616-1990ea8a6477",
+  "connection_succeeded": true,
+  "answer": "OK",
+  "attempts": [
+    {
+      "attempt_id": "c9411df0-87ed-4cfc-826c-42337c9cd89d",
+      "dispatch_fingerprint": "f847e7e46d8e597cc896ab99e5636c5c3e6bbab403ba9e3ad6bc330380988dd2",
+      "finish_reason": "stop",
+      "ordinal": 1,
+      "provider_active_milliseconds": 1108,
+      "request_snapshot_seq": 9,
+      "reservation_id": null,
+      "status": "succeeded",
+      "step_id": "14233af0-f4ca-4172-9940-80f8ac1e3c9a",
+      "turn_id": "4686c357-1dd5-4b06-a1e9-686c9b1f7efc",
+      "usage": {
+        "input_tokens": 2984,
+        "output_tokens": 1,
+        "quality": "exact",
+        "total_tokens": 2985
+      }
+    }
+  ]
+}

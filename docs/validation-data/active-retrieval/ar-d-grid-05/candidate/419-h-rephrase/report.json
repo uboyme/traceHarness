@@ -1,0 +1,79 @@
+{
+  "identity": "419-h-rephrase",
+  "case_id": "h-rephrase",
+  "seed": 419,
+  "family": "history",
+  "question": "之前备用物资搁在哪里来着？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "d782ad6c-b582-48a9-a623-540bbb220d07",
+  "target_start_seq": 152,
+  "answer": "根据历史记录中的搜索结果，备用物资的存放地点是：**东侧第61号资料柜**。\n\n在搜索结果中明确提到：\"请记下这条记录，只回复已记下：备用物资的存放地点是 东侧第61号资料柜。\"",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 25.484000000054948,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 14310,
+    "output_tokens": 374,
+    "total_tokens": 14684
+  },
+  "all_usage": {
+    "attempts": 13,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 51881,
+    "output_tokens": 404,
+    "total_tokens": 52285
+  },
+  "evidence": [
+    {
+      "context_seq": 184,
+      "reference": {
+        "block_id": "e1ac16587ccd0756a06ea30e70b8c195b90b3deb54abcb234055421eb9c4d8e1",
+        "cursor": {
+          "block_id": "e1ac16587ccd0756a06ea30e70b8c195b90b3deb54abcb234055421eb9c4d8e1",
+          "index": 3,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "leaf_ref": {
+          "digest": "6014591c54c4fc937f201c9cf621fede21c8a1df8da27c53ccf025a8e5600511",
+          "event_id": "c1144c94-27b1-4e5a-9edd-da654db02663",
+          "seq": 111,
+          "stream_id": "session:d782ad6c-b582-48a9-a623-540bbb220d07",
+          "type": "user/message"
+        },
+        "readable": true,
+        "version": "331d5fe3746c7d6b3a4b63ce291ace8abc53a99ab288b215ae03a4e8a1c48be1"
+      }
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "e1ac16587ccd0756a06ea30e70b8c195b90b3deb54abcb234055421eb9c4d8e1",
+        "cursor": {
+          "block_id": "e1ac16587ccd0756a06ea30e70b8c195b90b3deb54abcb234055421eb9c4d8e1",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    },
+    {
+      "name": "search_history",
+      "arguments": {
+        "query": "备用物资"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 58.39000000001397
+}

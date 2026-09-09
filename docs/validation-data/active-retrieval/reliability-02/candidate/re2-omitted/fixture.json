@@ -1,0 +1,90 @@
+{
+  "id": "re2-omitted",
+  "family": "memory",
+  "domain": 0,
+  "mode": "omitted",
+  "language": "zh",
+  "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+  "source_title": "陶艺展览记录",
+  "source_body": "已批准的项目应急联络呼号是 {value}。",
+  "expected": "value",
+  "value_type": "code",
+  "control": false,
+  "discovery": true,
+  "seed": 1609,
+  "identity": "re2-omitted",
+  "value": "REF-E2039898E4",
+  "source": "已批准的项目应急联络呼号是 REF-E2039898E4。",
+  "domain_name": "陶艺展览",
+  "project_id": "project-e2039898e4",
+  "source_id": "source-e2039898e4",
+  "memory_id": "fact-e2039898e4",
+  "fact_slot": "slot-e2039898e4",
+  "skill_id": "manual-e2039898e4",
+  "plugin_id": "reference.author",
+  "memory_noise": [
+    {
+      "id": "background-e2039898e4-00",
+      "slot": "background-slot-00",
+      "body": "陶艺展览查询分工第0项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-01",
+      "slot": "background-slot-01",
+      "body": "陶艺展览查询分工第1项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-02",
+      "slot": "background-slot-02",
+      "body": "陶艺展览查询分工第2项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-03",
+      "slot": "background-slot-03",
+      "body": "陶艺展览查询分工第3项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-04",
+      "slot": "background-slot-04",
+      "body": "陶艺展览查询分工第4项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-05",
+      "slot": "background-slot-05",
+      "body": "陶艺展览查询分工第5项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-06",
+      "slot": "background-slot-06",
+      "body": "陶艺展览查询分工第6项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-07",
+      "slot": "background-slot-07",
+      "body": "陶艺展览查询分工第7项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-08",
+      "slot": "background-slot-08",
+      "body": "陶艺展览查询分工第8项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-09",
+      "slot": "background-slot-09",
+      "body": "陶艺展览查询分工第9项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-10",
+      "slot": "background-slot-10",
+      "body": "陶艺展览查询分工第10项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    },
+    {
+      "id": "background-e2039898e4-11",
+      "slot": "background-slot-11",
+      "body": "陶艺展览查询分工第11项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+    }
+  ],
+  "predecessor_value": null,
+  "grading": "value",
+  "material_digest": "eb2f375d19f5b5fa8db1a1f7cc5563fa707ca716b1faa4ef528a2c2904880c7c"
+}

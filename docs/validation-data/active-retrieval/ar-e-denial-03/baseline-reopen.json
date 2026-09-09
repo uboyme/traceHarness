@@ -1,0 +1,79 @@
+{
+  "arm": "baseline",
+  "cases": 8,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "113-o-direct",
+      "requests": 4,
+      "attempts_started": 4,
+      "attempts_ended": 4,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-o-nearby",
+      "requests": 7,
+      "attempts_started": 7,
+      "attempts_ended": 7,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "113-s-direct",
+      "setup_failed": true,
+      "requests": 0,
+      "attempts_started": 0,
+      "attempts_ended": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "identity": "113-s-english",
+      "setup_failed": true,
+      "requests": 0,
+      "attempts_started": 0,
+      "attempts_ended": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "identity": "227-o-nearby",
+      "requests": 6,
+      "attempts_started": 6,
+      "attempts_ended": 6,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "227-s-english",
+      "setup_failed": true,
+      "requests": 0,
+      "attempts_started": 0,
+      "attempts_ended": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "identity": "419-o-nearby",
+      "requests": 14,
+      "attempts_started": 14,
+      "attempts_ended": 14,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "419-s-english",
+      "setup_failed": true,
+      "requests": 0,
+      "attempts_started": 0,
+      "attempts_ended": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "identity": "227-s-english",
+  "case_id": "s-english",
+  "seed": 227,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "d41fc9a1-6b84-492c-a654-cbc1f0cccb79",
+  "target_start_seq": 1,
+  "answer": "The current references are empty, and the search for \"equipment drill manual\" did not yield accessible content. Since the question specifically asks about a code specified in the equipment drill manual for the check-in card, and no manual content is available in the references, I cannot determine the code from the provided information. The answer must be based on the supplied references, which are absent here.\n\nTherefore, the code specified for the check-in card in the equipment drill manual is not available in the current references.",
+  "steps": 4,
+  "reason": "completed",
+  "target_seconds": 24.844000000040978,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16720,
+    "output_tokens": 507,
+    "total_tokens": 17227
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16720,
+    "output_tokens": 507,
+    "total_tokens": 17227
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_skill",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "11ce504f0edecae9981dc9df1f8c8e110671b3c440e41e0e09a90eb215743d25",
+        "chunk_id": null,
+        "requested_tier": "directory",
+        "resource_id": null,
+        "section_id": null,
+        "skill_id": "manual-275c65682a",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "list_files",
+      "arguments": {}
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 26.03200000000652
+}

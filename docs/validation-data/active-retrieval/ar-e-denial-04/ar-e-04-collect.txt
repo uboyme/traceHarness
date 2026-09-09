@@ -1,0 +1,6 @@
+tests/test_active_retrieval_contract.py: 6
+tests/test_active_retrieval_diagnostic_runner.py: 3
+tests/test_active_retrieval_grid.py: 12
+tests/test_surface_and_invariants.py: 17
+tests/test_tool_runtime_failures.py: 4
+

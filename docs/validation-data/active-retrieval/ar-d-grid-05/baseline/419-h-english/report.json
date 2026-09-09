@@ -1,0 +1,52 @@
+{
+  "identity": "419-h-english",
+  "case_id": "h-english",
+  "seed": 419,
+  "family": "history",
+  "question": "What was the temporary handover code we discussed earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "ff1b22ad-fcd0-428a-9c42-6158606be9a3",
+  "target_start_seq": 152,
+  "answer": "The history page content shows two user messages asking to \"remember this record\", both about background registration of ordinary equipment, and the assistant replying \"remembered\". There is no mention of a \"temporary handover code\" in the provided historical reference.\n\nSince the current reference does not contain the temporary handover code, and no other references (e.g., skill docs, workspace files, or tool outputs) have been disclosed that would contain it, the code is not present in the available evidence.\n\nTherefore, based on the currently admitted references, the temporary handover code is **not available**.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 18.5,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 7535,
+    "output_tokens": 424,
+    "total_tokens": 7959
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 38313,
+    "output_tokens": 454,
+    "total_tokens": 38767
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_history_page",
+      "arguments": {
+        "block_id": "f38fc47dc0c1f313693a5f212374820d8999fa48924e80879f2bb67c1f2e935a",
+        "cursor": {
+          "block_id": "f38fc47dc0c1f313693a5f212374820d8999fa48924e80879f2bb67c1f2e935a",
+          "index": 0,
+          "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+        },
+        "requested_tier": "chunk"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 54.75
+}

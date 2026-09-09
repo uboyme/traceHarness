@@ -1,0 +1,53 @@
+{
+  "identity": "holdout-output-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "2aeebe77-8351-4303-bb28-4642bccc6845",
+  "target_start_seq": 28,
+  "answer": "根据刚才执行的 `python check.py` 命令输出，我在第453行找到了相关信息：\n\n\"本次巡检未创建应急工单，因此没有应急工单编号。\"\n\n这表明泵站巡检没有创建应急工单，因此没有应急工单编号。",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 35.57799999997951,
+  "target_usage": {
+    "attempts": 6,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 13156,
+    "output_tokens": 291,
+    "total_tokens": 13447
+  },
+  "all_usage": {
+    "attempts": 8,
+    "unknown_usage": 3,
+    "estimated_usage": 0,
+    "input_tokens": 20921,
+    "output_tokens": 314,
+    "total_tokens": 21235
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {}
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "5b6a51134cdecc59998de0f5a8c6ea8427eca070a22af88e7d5580f0b8a23b7d",
+        "effect_id": "2431891f-4038-497f-80cb-8785b17392d2",
+        "part": "content",
+        "query": "应急工单编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 41.98400000005495
+}

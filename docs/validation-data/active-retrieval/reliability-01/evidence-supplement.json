@@ -1,0 +1,306 @@
+[
+  {
+    "stage": "re1-a",
+    "arm": "baseline",
+    "identity": "re1-absent",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本次仅完成清点，未生成验收回执编号。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 50,
+        "attempt_end_seq": 54,
+        "dispatch_fingerprint": "68e20417c7897843f9a1e7c3179807431780646c0d46775c6cd1f3a5281f79b0"
+      }
+    ]
+  },
+  {
+    "stage": "re1-a",
+    "arm": "baseline",
+    "identity": "re1-integrity",
+    "type": "explicit-negative-or-metadata",
+    "needle": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+    "origin": {
+      "session_result_seq": 16,
+      "output_ref": {
+        "content_chars": 12538,
+        "content_utf8_bytes": 28128,
+        "data_chars": 13793,
+        "digest": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+        "effect_id": "9027f332-9d33-436a-b2f5-eee7cc7ebb73",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 37,
+        "attempt_end_seq": 41,
+        "dispatch_fingerprint": "29af5752f3ba08864816b64b2f828efe84d76b5dff0ecc08eedb1ff152dd5cba"
+      }
+    ]
+  },
+  {
+    "stage": "re1-a",
+    "arm": "baseline",
+    "identity": "re1-process",
+    "type": "explicit-negative-or-metadata",
+    "needle": "exit_code=7",
+    "origin": {
+      "effect_outcome_seq": 3,
+      "output_ref": {
+        "content_chars": 12537,
+        "content_utf8_bytes": 28125,
+        "data_chars": 13792,
+        "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+        "effect_id": "209725f9-c8df-44f9-a763-3e33398520f4",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 49,
+        "attempt_end_seq": 53,
+        "dispatch_fingerprint": "67c66a925ab3dcd7c50bf3b699cdf433bb3cc6ae71d365a9879c286491f3abe5"
+      }
+    ]
+  },
+  {
+    "stage": "re1-a",
+    "arm": "candidate",
+    "identity": "re1-integrity",
+    "type": "explicit-negative-or-metadata",
+    "needle": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+    "origin": {
+      "session_result_seq": 16,
+      "output_ref": {
+        "content_chars": 12538,
+        "content_utf8_bytes": 28128,
+        "data_chars": 13793,
+        "digest": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+        "effect_id": "ed5dad69-4930-45f8-aabe-0d1cd80e86ef",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 37,
+        "attempt_end_seq": 41,
+        "dispatch_fingerprint": "fda44c79b7df97cb2aa7ea1ae9396c587f7dc4d4a6153e5038d9fa16482b8564"
+      }
+    ]
+  },
+  {
+    "stage": "re1-a",
+    "arm": "candidate",
+    "identity": "re1-process",
+    "type": "explicit-negative-or-metadata",
+    "needle": "exit_code=7",
+    "origin": {
+      "effect_outcome_seq": 3,
+      "output_ref": {
+        "content_chars": 12537,
+        "content_utf8_bytes": 28125,
+        "data_chars": 13792,
+        "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+        "effect_id": "5d0b0af2-b187-4fac-898e-1a162a939be8",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 49,
+        "attempt_end_seq": 53,
+        "dispatch_fingerprint": "6a0f660a5950eefde79d34e28b13d97b37acdfd316f36d905a0b078d52f0e124"
+      }
+    ]
+  },
+  {
+    "stage": "re1-b",
+    "arm": "baseline",
+    "identity": "re1-integrity",
+    "type": "explicit-negative-or-metadata",
+    "needle": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+    "origin": {
+      "session_result_seq": 16,
+      "output_ref": {
+        "content_chars": 12538,
+        "content_utf8_bytes": 28128,
+        "data_chars": 13793,
+        "digest": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+        "effect_id": "9c4b5d69-26db-407b-ae74-34f6737fe106",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 37,
+        "attempt_end_seq": 41,
+        "dispatch_fingerprint": "b5cd02f5c366bc81776682df0a6839cfc210307e1c55e796b866a72db198f465"
+      }
+    ]
+  },
+  {
+    "stage": "re1-b",
+    "arm": "baseline",
+    "identity": "re1-process",
+    "type": "explicit-negative-or-metadata",
+    "needle": "exit_code=7",
+    "origin": {
+      "effect_outcome_seq": 3,
+      "output_ref": {
+        "content_chars": 12537,
+        "content_utf8_bytes": 28125,
+        "data_chars": 13792,
+        "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+        "effect_id": "ce9f2f82-b296-4490-a7fd-e7e33bbb1f9e",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 49,
+        "attempt_end_seq": 53,
+        "dispatch_fingerprint": "9882c64da405a5d25dc9a1d6cde4400d00f8ea60bf997fd6e00ebc04665e4d0a"
+      }
+    ]
+  },
+  {
+    "stage": "re1-b",
+    "arm": "candidate",
+    "identity": "re1-integrity",
+    "type": "explicit-negative-or-metadata",
+    "needle": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+    "origin": {
+      "session_result_seq": 16,
+      "output_ref": {
+        "content_chars": 12538,
+        "content_utf8_bytes": 28128,
+        "data_chars": 13793,
+        "digest": "27a9f26e113b81a36ef88768511dce37736113be68e777a1e937d386941a23a0",
+        "effect_id": "a095b35c-1f13-47ee-bb58-0b883827f013",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 37,
+        "attempt_end_seq": 41,
+        "dispatch_fingerprint": "b27aa4a01dbb0288c6fe54f577524395915b214e33d515d76f505183f2aea7c7"
+      }
+    ]
+  },
+  {
+    "stage": "re1-b",
+    "arm": "candidate",
+    "identity": "re1-process",
+    "type": "explicit-negative-or-metadata",
+    "needle": "exit_code=7",
+    "origin": {
+      "effect_outcome_seq": 3,
+      "output_ref": {
+        "content_chars": 12537,
+        "content_utf8_bytes": 28125,
+        "data_chars": 13792,
+        "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+        "effect_id": "9d77b002-30c9-4885-aded-68d70457fcd3",
+        "format": 1
+      }
+    },
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 49,
+        "attempt_end_seq": 53,
+        "dispatch_fingerprint": "7b16c69740bdba710655784e2554b756a4b57132572a999f3996249e8a83620e"
+      }
+    ]
+  },
+  {
+    "stage": "re2-a2",
+    "arm": "baseline",
+    "identity": "re2-absent",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本项目仅批准物料清点安排。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 23,
+        "attempt_end_seq": 27,
+        "dispatch_fingerprint": "567641a9551e8735705c02e9181183388b489fff7b3d3739b13fd9315ca0615b"
+      }
+    ]
+  },
+  {
+    "stage": "re2-a2",
+    "arm": "baseline",
+    "identity": "re2-unbound",
+    "type": "bounded-abstention",
+    "basis": "Manually inspected search status and answer limitation in review packet; no positive fact inferred."
+  },
+  {
+    "stage": "re2-a2",
+    "arm": "candidate",
+    "identity": "re2-absent",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本项目仅批准物料清点安排。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 23,
+        "attempt_end_seq": 27,
+        "dispatch_fingerprint": "cf7f317f0c34103594759073671cd91f73881bb6aa288f6568f276c39c4db350"
+      }
+    ]
+  },
+  {
+    "stage": "re4-a",
+    "arm": "baseline",
+    "identity": "re4-history-no",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本次交接不使用凭证。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 200,
+        "attempt_end_seq": 204,
+        "dispatch_fingerprint": "a29b3a077dabd099d9bee0f1de03c41c187d3a6395d110e089ad1fc46cb63c79"
+      }
+    ]
+  },
+  {
+    "stage": "re4-a",
+    "arm": "baseline",
+    "identity": "re4-skill-no",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本次交接不使用凭证。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 23,
+        "attempt_end_seq": 27,
+        "dispatch_fingerprint": "cd2c0048793cb5f55b1d7a93e39fae6b2c583a6e9027325d6968b2d1eff2a91f"
+      }
+    ]
+  },
+  {
+    "stage": "re4-a",
+    "arm": "candidate",
+    "identity": "re4-history-no",
+    "type": "bounded-abstention",
+    "basis": "Manually inspected search status and answer limitation in review packet; no positive fact inferred."
+  },
+  {
+    "stage": "re4-a",
+    "arm": "candidate",
+    "identity": "re4-skill-no",
+    "type": "explicit-negative-or-metadata",
+    "needle": "本次交接不使用凭证。",
+    "origin": null,
+    "successful_dispatches": [
+      {
+        "request_snapshot_seq": 23,
+        "attempt_end_seq": 27,
+        "dispatch_fingerprint": "2583f3b9c502cd2997beaa959aa0c722b7575ad0cbbb946dd0bbcc9afa5d0c77"
+      }
+    ]
+  }
+]

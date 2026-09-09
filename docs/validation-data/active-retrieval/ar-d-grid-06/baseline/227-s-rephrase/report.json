@@ -1,0 +1,62 @@
+{
+  "identity": "227-s-rephrase",
+  "case_id": "s-rephrase",
+  "seed": 227,
+  "family": "skill",
+  "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "7daffb12-5781-4bfe-a283-9e7c615617ff",
+  "target_start_seq": 1,
+  "answer": "The current reference shows that section-23 is titled **\"交接身份核验口令\"**, with `content_bytes: 57`, and its summary is **\"交接身份核验口令\"**, confirming it contains the handover identity verification passphrase.\n\nHowever, the *actual content* (i.e., the passphrase itself) is **not present in the disclosed reference data** — only the navigation metadata (section ID, title, summary, byte count) is provided. There is no body text for section-23 in the current references.\n\nSince the host-provided references contain only the directory-level catalog (no section-23 content), and no further skill content was admitted (e.g., no `body` field for section-23), the passphrase **is not available in the current evidence**.\n\nTherefore, the answer is:\n\nThe档案整理手册 specifies a section titled “交接身份核验口令” (section-23), but the actual passphrase is not disclosed in the provided reference material.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 34.625,
+  "target_usage": {
+    "attempts": 4,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 14821,
+    "output_tokens": 839,
+    "total_tokens": 15660
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 1,
+    "estimated_usage": 0,
+    "input_tokens": 14821,
+    "output_tokens": 839,
+    "total_tokens": 15660
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "98e4c6b4e6af50510355e8df7651c8111762463ea26310451f362d61dcc16717",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-87d2e870ed",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 100,
+        "digest": "37217204598d4e1c1b2be1f8fb8c10e9296c6664c304fa2be3b10eb965fef568",
+        "effect_id": "c3719ebb-cfa3-4269-aec0-4e450ae8b0e1",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 2,
+  "output_executions": null,
+  "elapsed_seconds": 35.31200000003446
+}

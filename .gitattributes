@@ -1,0 +1,6 @@
+# Immutable evaluation evidence keeps the recorded bytes on every checkout.
+docs/validation-data/active-retrieval/** -text whitespace=cr-at-eol
+# Captured pytest output and patches intentionally contain trailing whitespace.
+docs/validation-data/active-retrieval/**/*.txt whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+docs/validation-data/active-retrieval/**/*.diff whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+docs/validation-data/active-retrieval/**/*.xml whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof

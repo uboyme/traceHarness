@@ -1,0 +1,32 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______ test_skill_summary_discloses_usable_directory_action_without_body ______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5229/test_skill_summary_discloses_u0')
+
+    async def test_skill_summary_discloses_usable_directory_action_without_body(tmp_path):
+        from test_history_runtime import SelectingProvider, items
+    
+        def read_directory(request):
+            block = next(b for b in items(request) if b["kind"] == "skill")
+            action = block.get("read_action")
+            if action is None:
+                return ModelResponse(content="directory action unavailable")
+            return ModelResponse(
+                tool_calls=(ToolCall("directory", action["tool_name"], action["arguments"]),)
+            )
+    
+        provider = SelectingProvider([read_directory, ModelResponse(content="directory read")])
+        runtime, store, _, session, values = await build_case(tmp_path, provider=provider)
+        try:
+            await select(runtime, session, values[0])
+            result = await runtime.run_existing(session, "architecture")
+            block = next(b for b in items(provider.requests[0]) if b["kind"] == "skill")
+>           assert block.get("body_status") == "navigation-only"
+E           AssertionError: assert None == 'navigation-only'
+E            +  where None = <built-in method get of dict object at 0x00000204CDFB7080>('body_status')
+E            +    where <built-in method get of dict object at 0x00000204CDFB7080> = {'body': '模块边界和所有权的工作方法', 'catalog_digest': 'c85b47bbfe90e4b5aa2dd0cb47b4085b6ff7d84beb87b93f0db8210b1561fa28', 'digest': '09f479b0ae74298483df9c0a3523c29c7f98e9470642a6f9fc8a4b31f968b694', 'id': 'boundary.notes', ...}.get
+
+tests\test_skill_navigation.py:170: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_skill_navigation.py::test_skill_summary_discloses_usable_directory_action_without_body

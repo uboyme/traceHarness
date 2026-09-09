@@ -232,6 +232,10 @@ def _discloses(
     stored_policy = HistoryReadPolicy.from_dict(raw_policy)
     if stored_policy.digest != policy.digest or request.cursor.policy_digest != policy.digest:
         return False
+    from traceh.session.reference_search import history_discloses
+
+    if history_discloses(events, request_event, request, context):
+        return True
     history = read_history(
         events,
         session_id=context["session_id"],

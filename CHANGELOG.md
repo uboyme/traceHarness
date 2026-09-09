@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## 0.9.0 — 2026-09-10
+
+- 收口 Skill/Memory/History 主动检索、分层上下文容量管理与 TUI 配置，唯一包版本更新为 0.9.0；当前 Session 13 / Context 12。
+- 最新内部固定题库成绩 55/72（含六条直连补测），用户接受剩余限制并批准 Educational alpha 发布；原 66/72 门槛未通过的历史结论保留，解除本次发布阻断，不修改评分。
+- 本次不跑全量/L2，限定验证、安装和发行范围见 [v0.9.0 记录](docs/validation-v0.9.0.md)。下列 NO-GO 和中间协议版本为各阶段历史记录，当前发布决定见 [收口记录](docs/deal/011-v090-release.md)。
+
+- 明确证据导航与覆盖范围：Skill 摘要/目录标为导航，摘要给精确目录动作；大工具输出有查找入口时先给引用，读取页区分片段与全文、标出结束位置，搜索声明字面匹配。当前 Session 13 / Context 12，旧 1–12 保留但拒绝。最终导航定向正例 7/9→8/9，负面结论仍有限制；未采用无效长提示/强制自评，详见记录 006。
+
+- 修正来源导航与搜索结果交付说明：导航来自当前工具表，不授予权限；区分参考包与工具输出、字面无命中与来源不可用。当前切到 Session 12 / Context 11，旧 Session 1–11 保留但明确拒绝，需新数据空间。真实正例 1/6 → 6/6，两条负例仍失败；不宣称整体准确率达标。
+
+- Continuation 增加事件派生的连续相同拒绝保护：默认 2 次提示、3 次停止，可配置或关闭；每次仍重新检查权限，不增加事实源。真实压力例验证提示后停止，自然检索小样本两组均 2/4，原发布 NO-GO 不变。
+
+- 修复主动检索诊断入口的相对输出目录，使 Skill 资源使用绝对路径并通过原根目录校验；增加正反向验证。
+  拒绝反馈真实实验减少原样重复，但尚未解决来源选择，生产投影和协议保持不变。
+- 主动检索职责诊断：增加复用原执行主线的小规模真实对照运行器，完成失败归类和两项呈现实验；
+  未证明稳定的通用改善，实验改动未合入生产，AR-D 的 NO-GO 和协议不变。
+- 主动检索 AR-D：Line/TUI 为冻结搜索页显示中文覆盖范围和状态；工具说明按配置标出搜索返回上限。
+  大结果收存保留宿主参考工具的成功控制回执，并核对其与原 Effect payload 一致，避免下一步披露丢失。
+  288 项最终定向检查、grid-05 的 909 个独立请求重放通过；真实完整网格基线 21/72、候选 45/72，仍未达门槛，结论 NO-GO，不发布。
+- 主动检索 AR-C：在原批准 Memory 与宿主选择 Skill 目录上接入有界搜索，命中沿原工具精确读回；
+  空自动目录与无资料分开解释，保持版本、选择/撤销、下一 Step 准入和原来源重放校验。
+
+### Active History discovery (AR-B)
+
+- Add bounded `search_history` on the original Session History reader. Search receipts deliver a budgeted next-Step reference page; only admitted hits can authorize original page reads. No new fact store, background loop or permission grant.
+- Preserve complete Turn/tool pairing, source/query/policy-bound cursors, cancellation, source verification and frozen request replay. Keep real Provider diagnostic failures alongside successful retests.
+- Switch the single current protocol to Session 11 / Context 10 / `context-json-v10`; reject old Sessions without rewriting them. Skill/Memory active search is implemented; the fixed AR-D comparison concluded NO-GO.
+
 ### Bounded semantic retrieval retest
 
 - Retest nine frozen BGE single/dual candidates with real local inference and independent vector/score/runtime replay checks. Resource and isolation gates pass; language quality does not. Semantic retrieval and reranking remain disabled, with no new production dependency.

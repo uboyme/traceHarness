@@ -1,0 +1,8 @@
+{
+  "state": "complete-no-go",
+  "complete_grid": true,
+  "manual_review_complete": true,
+  "independent_reopen_complete": true,
+  "reason": "117/144 journeys failed with Provider TLS EOF; candidate joint result 11/72, below frozen 66/72 and per-family thresholds. Partial-source categorical absence answers also fail evidence review.",
+  "next": "Stop promotion/release. After connection stability is restored, run a newly frozen complete paired grid under the same manifest; do not delete or selectively rerun failures."
+}

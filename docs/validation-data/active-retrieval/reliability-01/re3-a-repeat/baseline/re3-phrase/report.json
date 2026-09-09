@@ -1,0 +1,56 @@
+{
+  "identity": "re3-phrase",
+  "case_id": "re3-phrase",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才那次展览检查的核对凭据是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "cd91b40f-2381-4cbc-80df-ad7c4ff7fb9e",
+  "target_start_seq": 28,
+  "answer": "刚才那次展览检查的核对凭据是：**“陶艺展览例行登记完成。”**（共58次，条目 0 至 57）",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 10.155999999959022,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13733,
+    "output_tokens": 188,
+    "total_tokens": 13921
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 21497,
+    "output_tokens": 211,
+    "total_tokens": 21708
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 10
+      }
+    },
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "db9a8a5bd161e9d9536e3409822dea173d9b5670cd94271e40aad2dba77985fa",
+        "effect_id": "bae374ae-d182-4ef2-a200-272a1bbff973",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 14.59299999999348
+}

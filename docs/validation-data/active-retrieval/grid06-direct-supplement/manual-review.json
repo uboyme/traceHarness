@@ -1,0 +1,240 @@
+{
+  "criteria": "Same frozen grid-05 criteria: correct attribution and actual successful dispatched source evidence for positives; qualified lack-of-evidence consistent with inspected scope for negatives. Partial-scope absence must be qualified. Transport failures and unfinished answers retained. No-lookup controls scored separately, without altering the 72-case denominator.",
+  "reviews": [
+    {
+      "arm": "candidate",
+      "identity": "113-h-english",
+      "joint_pass": true,
+      "reason": "Correct requested fact and attribution, supported in actual successful dispatched source evidence.",
+      "answer": "The search result shows a match containing the exact phrase:\n\n> \"请记下这条记录，只回复已记下：The temporary handover code is REF-9D2D595614.\"\n\nThis confirms the temporary handover code discussed earlier is:\n\n**REF-9D2D595614**",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 204,
+          "request_snapshot_seq": 200,
+          "dispatch_fingerprint": "9baf62801d43cadd929f757ec22138a0ce89761252ebc4b23bde9108f9c22ceb",
+          "source_evidence": {
+            "context_seq": 197,
+            "reference": {
+              "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+              "cursor": {
+                "block_id": "1496828939eedb2737b5fa3f90a9b2b4ca1e3e841d3c70fd55a25a5a3b69dadb",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "34f4728b0ad7b72e60fcf095c38812937aadd76cfbcbceb5402c276b559c6975",
+                "event_id": "775712b9-e371-4694-918d-f045500671e1",
+                "seq": 111,
+                "stream_id": "session:e80c0c6d-4f6d-4669-9b15-455e3fb098b7",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "e2fbc290c71ffbc5f79eaa31426d3f99330fabb5633ff0abf5a74f8e53d23d35"
+            }
+          }
+        }
+      ],
+      "searches": [
+        {
+          "context_seq": 197,
+          "kind": "history",
+          "query": "code",
+          "status": "matches",
+          "scanned": 20,
+          "total": 20,
+          "has_next": false,
+          "texts": [
+            "请记下这条记录，只回复已记下：The temporary handover code is REF-9D2D595614."
+          ]
+        }
+      ],
+      "report_sha256": "ea388fdabfa2f07e516c3852244640cab00a8b820a1bed641b18697ad7a8b9d3"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-s-english",
+      "joint_pass": true,
+      "reason": "Correct requested fact and attribution, supported in actual successful dispatched source evidence.",
+      "answer": "The equipment drill manual specifies the code **REF-EDCC0FF2B0** for the check-in card.",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 78,
+          "request_snapshot_seq": 74,
+          "dispatch_fingerprint": "2ab5fc3f3fa68cba3bae5fcb088359c8202ac2537c34aef2e0544c78f2ecb264",
+          "source_evidence": {
+            "context_seq": 71,
+            "id": "manual-edcc0ff2b0",
+            "version": "1.0.0",
+            "tier": "section"
+          }
+        }
+      ],
+      "searches": [
+        {
+          "context_seq": 32,
+          "kind": "skill",
+          "query": "equipment drill manual",
+          "status": "matches",
+          "scanned": 32,
+          "total": 32,
+          "has_next": false,
+          "texts": [
+            "manual-edcc0ff2b0\nEquipment drill manual\nEquipment drill manual的工作说明。"
+          ]
+        },
+        {
+          "context_seq": 58,
+          "kind": "skill",
+          "query": "check-in card",
+          "status": "matches",
+          "scanned": 32,
+          "total": 32,
+          "has_next": false,
+          "texts": [
+            "manual-edcc0ff2b0\nsection-23\nCheck-in card procedure\nCheck-in card procedure"
+          ]
+        }
+      ],
+      "report_sha256": "3bed4549290c11ca4dc20efda80f98c06752d7faf29763eba473f5e0cfb88f46"
+    },
+    {
+      "arm": "candidate",
+      "identity": "227-h-absent",
+      "joint_pass": false,
+      "reason": "Full literal searches scanned 20/20 records, but answer falsely says history contains only two records. Direction of answer is correct; evidence description is inconsistent, so joint criteria not met.",
+      "answer": "根据当前可用的历史记录搜索结果，我没有找到任何关于\"保险柜\"或\"口令\"的记录。历史记录中只包含两条关于\"背景登记\"的简单记录，内容都是\"本次活动普通器材已经清点。\"，没有提及保险柜或其开锁口令。\n\n因此，答案是否定的：我们之前没有说过保险柜的开锁口令。",
+      "dispatched_evidence": [],
+      "searches": [
+        {
+          "context_seq": 184,
+          "kind": "history",
+          "query": "保险柜",
+          "status": "no-hit",
+          "scanned": 20,
+          "total": 20,
+          "has_next": false,
+          "texts": []
+        },
+        {
+          "context_seq": 197,
+          "kind": "history",
+          "query": "口令",
+          "status": "no-hit",
+          "scanned": 20,
+          "total": 20,
+          "has_next": false,
+          "texts": []
+        }
+      ],
+      "report_sha256": "d3d835b1f9349179ebbadf519390c12d2d5ec485a181480cab347cc2b145720e"
+    },
+    {
+      "arm": "candidate",
+      "identity": "227-h-disambiguate",
+      "joint_pass": true,
+      "reason": "Correct requested fact and attribution, supported in actual successful dispatched source evidence.",
+      "answer": "根据搜索结果，档案复核组的联络代号是 **REF-5D4A050636**。\n\n搜索结果显示：\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-5D4A050636。搬运组使用另一个代号。 搬运组的联络代号是 DECOY-5D4A050636。\"\n\n这明确区分了档案复核组和搬运组的联络代号，符合用户要求\"别和搬运组混了\"。",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 191,
+          "request_snapshot_seq": 187,
+          "dispatch_fingerprint": "793a028e8248a3d51cf27fee519bbf3dfdd91fce635d8b3c0205cc8b61510f32",
+          "source_evidence": {
+            "context_seq": 184,
+            "reference": {
+              "block_id": "c9d6b08b41609d6454f7cdc763a8cd88e1fce1f2922fece5f5c4bb96782558e8",
+              "cursor": {
+                "block_id": "c9d6b08b41609d6454f7cdc763a8cd88e1fce1f2922fece5f5c4bb96782558e8",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "fe32b9b3d83ad1cd90dacc51a3df91fa848279ed8bb0b6e9d9897244b55bfafd",
+                "event_id": "386ee115-1d87-4de9-a319-f50b5fb59b87",
+                "seq": 111,
+                "stream_id": "session:e72e4a85-33eb-42a3-9139-b34a5d6efb9c",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "e6ba544a16ba4ee99c5036e3d9efba7f362ebea19d10c58abd1d2b39e2562b13"
+            }
+          }
+        }
+      ],
+      "searches": [
+        {
+          "context_seq": 184,
+          "kind": "history",
+          "query": "档案复核组",
+          "status": "matches",
+          "scanned": 20,
+          "total": 20,
+          "has_next": false,
+          "texts": [
+            "请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-5D4A050636。搬运组使用另一个代号。 搬运组的联络代号是 DECOY-5D4A050636。"
+          ]
+        }
+      ],
+      "report_sha256": "2414089b52ca7be51684c0ac459b5495dcb2bf94d7bc83691a9609b48de8788a"
+    },
+    {
+      "arm": "candidate",
+      "identity": "419-h-disambiguate",
+      "joint_pass": true,
+      "reason": "Correct requested fact and attribution, supported in actual successful dispatched source evidence.",
+      "answer": "根据搜索结果，档案复核组的联络代号是 REF-920619E3FF。\n\n在搜索结果中明确提到：\"请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-920619E3FF。搬运组使用另一个代号。\"\n\n这清楚地区分了档案复核组和搬运组的联络代号，档案复核组使用的是 REF-920619E3FF，而搬运组使用的是 DECOY-920619E3FF。",
+      "dispatched_evidence": [
+        {
+          "attempt_end_seq": 191,
+          "request_snapshot_seq": 187,
+          "dispatch_fingerprint": "76cf2391c4bbe2d423d11b67d54d44d8f090484a8be20c382f08ab928c030ede",
+          "source_evidence": {
+            "context_seq": 184,
+            "reference": {
+              "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+              "cursor": {
+                "block_id": "ee81154dd49685208cd3c27206b6e736bede134b3324aa84a4b36ce969086ce4",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "97c62558c91a2c5a6205c2db20d3e9ddc10772a793fb1af8e903ea9f5e3cacf0",
+                "event_id": "13de04ea-450f-4137-9901-e74a105774ae",
+                "seq": 111,
+                "stream_id": "session:080bffb8-d140-4f63-8091-c89d79216022",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "fa152bbdb750395e19616a1a286792654679c1c31dfa9250cca8e5a3b7da11be"
+            }
+          }
+        }
+      ],
+      "searches": [
+        {
+          "context_seq": 184,
+          "kind": "history",
+          "query": "档案复核组",
+          "status": "matches",
+          "scanned": 20,
+          "total": 20,
+          "has_next": false,
+          "texts": [
+            "请记下这条记录，只回复已记下：档案复核组的联络代号是 REF-920619E3FF。搬运组使用另一个代号。 搬运组的联络代号是 DECOY-920619E3FF。"
+          ]
+        }
+      ],
+      "report_sha256": "8d4dea86d68cb3447f5373a207b39329b8b45a4e504c10b219c4d260d4cde9a1"
+    },
+    {
+      "arm": "candidate",
+      "identity": "419-o-nonzero",
+      "joint_pass": false,
+      "reason": "Original output contains requested fault code, but model fails to retrieve it and answers that no code exists.",
+      "answer": "刚才执行的 `python check.py` 检查并未报告失败，其输出中全是“普通器材登记，状态 normal”，且最终 `exit_code=7`（注意：`exit_code=7` 通常表示某种错误，但输出中未出现明确的 failure、error 或故障代号字样），也未出现任何“failure code”或类似关键词。\n\n在全部已读取的 `check.py` 输出内容（共约 16852 字符）中，**未发现任何明确的故障代号（failure code）** —— 既无“failure code: XXX”、也无“code=XXX”、“errcode”、“fault ID”等模式，亦无异常行或报错信息。\n\n因此，根据当前检查输出，**不存在可识别的故障代号**。\n\n答案：无",
+      "dispatched_evidence": [],
+      "searches": [],
+      "report_sha256": "45ee7d2f95003ee05cec04b2bca5e3ca7ec00e5946d8ed1900e23476074f45ad"
+    }
+  ]
+}

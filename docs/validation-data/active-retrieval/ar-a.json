@@ -1,0 +1,25 @@
+{
+  "phase": "AR-A",
+  "production_changes": false,
+  "targeted_files": {
+    "tests/test_active_retrieval_contract.py": 6,
+    "tests/test_history_requests.py": 12,
+    "tests/test_memory_context_failures.py": 20,
+    "tests/test_reference_read_actions.py": 4,
+    "tests/test_skill_context_failures.py": 15
+  },
+  "targeted_passed": 57,
+  "compileall": "passed",
+  "ruff": "passed",
+  "collect_only": "passed",
+  "reverse": {
+    "disabled": "frozen file digest verification",
+    "exit_code": 1,
+    "expected_failure": "DID NOT RAISE",
+    "exact_bytes_restored": true
+  },
+  "real_provider_calls": 0,
+  "full_suite": false,
+  "L2_L4": false,
+  "prior_work_commit": "a54d431"
+}

@@ -1,0 +1,55 @@
+{
+  "identity": "419-o-english",
+  "case_id": "o-english",
+  "seed": 419,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "4f9f56aa-077d-40f5-a9dc-9e9b19538339",
+  "target_start_seq": 28,
+  "answer": "The equipment check returned the validation code `REF-7D898AA9B7`.",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.047000000020489,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8593,
+    "output_tokens": 196,
+    "total_tokens": 8789
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16362,
+    "output_tokens": 219,
+    "total_tokens": 16581
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 44,
+      "effect_id": "f67ce376-82e1-44fa-8039-c85548dc1327",
+      "digest": "25d4469d2adbbf30e0a83e23c555a308e0b1f34154d5f5976d3260d7811d176b"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "25d4469d2adbbf30e0a83e23c555a308e0b1f34154d5f5976d3260d7811d176b",
+        "effect_id": "f67ce376-82e1-44fa-8039-c85548dc1327",
+        "part": "content",
+        "query": "validation code"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 16.68700000003446
+}

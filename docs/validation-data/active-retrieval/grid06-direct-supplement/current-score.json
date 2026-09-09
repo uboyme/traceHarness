@@ -1,0 +1,375 @@
+{
+  "current_score": 55,
+  "denominator": 72,
+  "percent": 76.4,
+  "calculation": "51 original passes + 4 direct supplement passes = 55/72",
+  "supplement_runs": 6,
+  "supplement_passes": 4,
+  "supplement_answer_or_evidence_failures": 2,
+  "supplement_transport_failures": 0,
+  "baseline_runs": 0,
+  "original_review_sha256": "da486991fcc129ffcc93b26a5a6a259e306be3df5d629e2f651419ff04ea07d2",
+  "current_reviews": [
+    {
+      "identity": "113-h-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-h-english",
+      "joint_pass": true,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "113-h-late-page",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-large-directory",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-m-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-english",
+      "joint_pass": true,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "113-m-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-m-omitted",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-nearby",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-h-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-h-late-page",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-h-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-s-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-s-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-s-large-directory",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-omitted",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-english",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-nearby",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-h-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-h-late-page",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-h-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-large-directory",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-omitted",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-o-direct",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-o-english",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-o-nearby",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-h-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-h-disambiguate",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-h-absent",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-absent",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-s-resource",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-m-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-m-superseded",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-m-revoked",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-rephrase",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-absent",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "113-o-nonzero",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-h-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-h-absent",
+      "joint_pass": false,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "227-h-disambiguate",
+      "joint_pass": true,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "227-s-absent",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-s-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-s-resource",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-superseded",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-m-revoked",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-absent",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-nonzero",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "227-o-rephrase",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-h-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-h-disambiguate",
+      "joint_pass": true,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "419-h-absent",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-superseded",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-absent",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-rephrase",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-s-resource",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-m-revoked",
+      "joint_pass": true,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-o-nonzero",
+      "joint_pass": false,
+      "source": "direct-supplement"
+    },
+    {
+      "identity": "419-o-rephrase",
+      "joint_pass": false,
+      "source": "original-grid06"
+    },
+    {
+      "identity": "419-o-absent",
+      "joint_pass": true,
+      "source": "original-grid06"
+    }
+  ],
+  "note": "Latest user-authorized composite score replaces six transport-failed slots only. Original run evidence retained. Not a new all-72 run."
+}

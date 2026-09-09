@@ -1,0 +1,199 @@
+{
+  "natural_pass": {
+    "baseline": "2/4",
+    "candidate": "2/4"
+  },
+  "stress": "6 identical denials without guard; 2 with guard, then model voluntarily stops. Real hard-stop branch not exercised.",
+  "cases": [
+    {
+      "arm": "baseline",
+      "identity": "113-o-direct",
+      "steps": 5,
+      "reason": "completed",
+      "denials": 0,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 7,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 43749,
+        "output_tokens": 1153,
+        "total_tokens": 44902
+      },
+      "natural_pass": true
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-nearby",
+      "steps": 6,
+      "reason": "completed",
+      "denials": 4,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 8,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 38851,
+        "output_tokens": 488,
+        "total_tokens": 39339
+      },
+      "natural_pass": false
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-s-english",
+      "steps": 3,
+      "reason": "completed",
+      "denials": 1,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 12019,
+        "output_tokens": 334,
+        "total_tokens": 12353
+      },
+      "natural_pass": false
+    },
+    {
+      "arm": "baseline",
+      "identity": "419-o-nearby",
+      "steps": 7,
+      "reason": "completed",
+      "denials": 3,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 9,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 46886,
+        "output_tokens": 720,
+        "total_tokens": 47606
+      },
+      "natural_pass": true
+    },
+    {
+      "arm": "baseline",
+      "identity": "stress-repeated-denial",
+      "steps": 7,
+      "reason": "completed",
+      "denials": 6,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 9,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 43656,
+        "output_tokens": 201,
+        "total_tokens": 43857
+      },
+      "natural_pass": null
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-direct",
+      "steps": 2,
+      "reason": "completed",
+      "denials": 0,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 4,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 18564,
+        "output_tokens": 214,
+        "total_tokens": 18778
+      },
+      "natural_pass": true
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nearby",
+      "steps": 7,
+      "reason": "completed",
+      "denials": 4,
+      "warning_request_seqs": [
+        86,
+        98,
+        110
+      ],
+      "all_usage": {
+        "attempts": 9,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 44443,
+        "output_tokens": 541,
+        "total_tokens": 44984
+      },
+      "natural_pass": false
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-s-english",
+      "steps": 6,
+      "reason": "completed",
+      "denials": 1,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 6,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 27079,
+        "output_tokens": 859,
+        "total_tokens": 27938
+      },
+      "natural_pass": true
+    },
+    {
+      "arm": "candidate",
+      "identity": "419-o-nearby",
+      "steps": 3,
+      "reason": "completed",
+      "denials": 2,
+      "warning_request_seqs": [],
+      "all_usage": {
+        "attempts": 5,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 23228,
+        "output_tokens": 303,
+        "total_tokens": 23531
+      },
+      "natural_pass": false
+    },
+    {
+      "arm": "candidate",
+      "identity": "stress-repeated-denial",
+      "steps": 3,
+      "reason": "completed",
+      "denials": 2,
+      "warning_request_seqs": [
+        60
+      ],
+      "all_usage": {
+        "attempts": 5,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 23243,
+        "output_tokens": 142,
+        "total_tokens": 23385
+      },
+      "natural_pass": null
+    }
+  ],
+  "replayed_requests": 65,
+  "all_usage": {
+    "attempts": 65,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 321718,
+    "output_tokens": 4955,
+    "total_tokens": 326673
+  },
+  "limitations": [
+    "One run per case/arm, not a stable retrieval improvement estimate.",
+    "Fixed-request feedback candidate remains isolated.",
+    "Hard stop verified by deterministic and reverse tests only."
+  ]
+}

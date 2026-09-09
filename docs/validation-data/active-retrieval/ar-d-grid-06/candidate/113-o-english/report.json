@@ -1,0 +1,62 @@
+{
+  "identity": "113-o-english",
+  "case_id": "o-english",
+  "seed": 113,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "a0d84baf-b82f-4105-aa41-528e3d64bf44",
+  "target_start_seq": 28,
+  "answer": "The equipment check returned the validation code `REF-FAF6E932E9`.",
+  "steps": 3,
+  "reason": "completed",
+  "target_seconds": 15.937000000034459,
+  "target_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 13206,
+    "output_tokens": 300,
+    "total_tokens": 13506
+  },
+  "all_usage": {
+    "attempts": 5,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 20972,
+    "output_tokens": 323,
+    "total_tokens": 21295
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 57,
+      "effect_id": "418d4798-aee8-4d07-ae87-99fb4517e916",
+      "digest": "b0ca6c0c9b3d934e87db6840d155274e142e04456eef2293434e79065bf35fb7"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_tool_outputs",
+      "arguments": {
+        "count": 10
+      }
+    },
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "count": 10,
+        "digest": "b0ca6c0c9b3d934e87db6840d155274e142e04456eef2293434e79065bf35fb7",
+        "effect_id": "418d4798-aee8-4d07-ae87-99fb4517e916",
+        "part": "content",
+        "query": "validation"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 23.57799999997951
+}

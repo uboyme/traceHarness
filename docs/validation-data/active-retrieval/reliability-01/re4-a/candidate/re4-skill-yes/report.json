@@ -1,0 +1,59 @@
+{
+  "identity": "re4-skill-yes",
+  "case_id": "re4-skill-yes",
+  "seed": 1609,
+  "family": "skill",
+  "question": "陶艺交接时要使用哪张凭证？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "bd1d6989-71a9-46a9-9ae7-a7d44b120bed",
+  "target_start_seq": 1,
+  "answer": "根据提供的技能手册内容，陶艺交接时要使用的凭证是 **REF-7FD7AD62CE**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 8.983999999938533,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10086,
+    "output_tokens": 255,
+    "total_tokens": 10341
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10086,
+    "output_tokens": 255,
+    "total_tokens": 10341
+  },
+  "evidence": [
+    {
+      "context_seq": 20,
+      "id": "manual-7fd7ad62ce",
+      "version": "1.0.0",
+      "tier": "section"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "fd2ad045ea82de48ed875b26f86989f5bca374b494c8101b1aec808d7682aa67",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-14",
+        "skill_id": "manual-7fd7ad62ce",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 10.233999999938533
+}

@@ -1,0 +1,50 @@
+{
+  "identity": "re1-process",
+  "case_id": "re1-process",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才命令的进程退出码是多少？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "4eea123f-0593-4c83-bd58-103682fed5da",
+  "target_start_seq": 28,
+  "answer": "刚才命令的进程退出码是 `7`。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 6.562000000034459,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9263,
+    "output_tokens": 145,
+    "total_tokens": 9408
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 17027,
+    "output_tokens": 168,
+    "total_tokens": 17195
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "read_tool_output",
+      "arguments": {
+        "count": 10000,
+        "digest": "eadd02899d0abf76f2b0b25a3dd95f38dfdfada24312897f3d000ea2ebc01c67",
+        "effect_id": "209725f9-c8df-44f9-a763-3e33398520f4",
+        "offset": 0,
+        "part": "content"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 11.39000000001397
+}

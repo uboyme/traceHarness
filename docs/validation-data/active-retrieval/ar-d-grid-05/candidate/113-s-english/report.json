@@ -1,0 +1,110 @@
+{
+  "identity": "113-s-english",
+  "case_id": "s-english",
+  "seed": 113,
+  "family": "skill",
+  "question": "Which code does the equipment drill manual specify for the check-in card?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "2178d900-872e-4e0d-a423-3fee12cb29a9",
+  "target_start_seq": 1,
+  "answer": "Since the current references are empty and I need to find information about the equipment drill manual and check-in card code, I should search for relevant documentation using the available tools.\n\nThe most appropriate approach is to search for \"equipment drill manual\" or related terms in the workspace files, as this appears to be a documentation-related question.\n\nLet me search for \"equipment drill manual\" in the workspace:\n\n\n\n\n\n\n\n\n\n\n",
+  "steps": 12,
+  "reason": "max_steps_exceeded",
+  "target_seconds": 76.59400000004098,
+  "target_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 53656,
+    "output_tokens": 1161,
+    "total_tokens": 54817
+  },
+  "all_usage": {
+    "attempts": 12,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 53656,
+    "output_tokens": 1161,
+    "total_tokens": 54817
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "list_files",
+      "arguments": {}
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    },
+    {
+      "name": "search_text",
+      "arguments": {
+        "query": "equipment drill manual"
+      }
+    }
+  ],
+  "search_read_count": 11,
+  "output_executions": null,
+  "elapsed_seconds": 80.67200000002049
+}

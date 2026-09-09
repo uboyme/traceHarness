@@ -258,10 +258,14 @@ def prepare_corpus(source, policy):
     )
 
 
-def verify_blocks(data, source, policy):
+def verify_blocks(data, source, policy, events):
+    from traceh.session.context_input import _parse_policy
+    from traceh.session.memory_search import verify_pages
+
+    verify_pages(data, events, source, _parse_policy(data["policy"]))
     facts = {fact.memory_id: fact for fact in source.view.active}
     for block in data["blocks"]:
-        if block["kind"] != "memory":
+        if block["kind"] != "memory" or block["tier"] == "search":
             continue
         fact = facts.get(block["id"])
         if fact is None or canonical_json(block) != canonical_json(

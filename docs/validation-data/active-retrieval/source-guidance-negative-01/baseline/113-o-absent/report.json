@@ -1,0 +1,49 @@
+{
+  "identity": "113-o-absent",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才归档检查有没有给出保险理赔编号？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f4545e67-5892-420d-ad60-2ca08e56f074",
+  "target_start_seq": 28,
+  "answer": "未给出保险理赔编号。\n\n检查输出中未出现“保险”“理赔”“编号”“claim”“case”“ID”等关键词，且全部 56 行均为格式化重复语句：“普通器材登记，状态 normal。”  \n无任何字段、标识符或附加信息表明存在或生成了保险理赔编号。\n\n检查结束。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.719000000040978,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10002,
+    "output_tokens": 288,
+    "total_tokens": 10290
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 18397,
+    "output_tokens": 311,
+    "total_tokens": 18708
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b28f4e70ab70a32d9939ce3340c2ad46dfe91b5e1ccb9bc0ca2a87ee12263640",
+        "effect_id": "14ab682d-c3c0-4225-af8c-d01b47da61d4",
+        "part": "content",
+        "query": "保险"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 16.54599999997299
+}

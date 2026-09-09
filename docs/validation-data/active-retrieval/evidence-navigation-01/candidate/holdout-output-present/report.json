@@ -1,0 +1,54 @@
+{
+  "identity": "holdout-output-present",
+  "case_id": "o-absent",
+  "seed": 113,
+  "family": "output",
+  "question": "刚才泵站巡检输出里的应急工单编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": true,
+  "session_id": "18076505-7384-489d-a39a-9a845545da88",
+  "target_start_seq": 28,
+  "answer": "NEW-7ABBAAC1E3",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 7.656000000075437,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8528,
+    "output_tokens": 133,
+    "total_tokens": 8661
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16287,
+    "output_tokens": 155,
+    "total_tokens": 16442
+  },
+  "evidence": [
+    {
+      "tool_result_seq": 43,
+      "effect_id": "431ae019-3369-4946-9b52-0f217b85b28b",
+      "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef"
+    }
+  ],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "fabce43a1ef787e41248050c54cd1076fe014327e62134cfa54ab918b98586ef",
+        "effect_id": "431ae019-3369-4946-9b52-0f217b85b28b",
+        "query": "应急工单编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 12.515999999945052
+}

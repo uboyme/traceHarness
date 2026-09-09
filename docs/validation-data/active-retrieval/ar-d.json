@@ -1,0 +1,77 @@
+{
+  "stage": "AR-D",
+  "implementation_and_evaluation_execution": "complete; grid-05 full paired evaluation and independent replay concluded NO-GO under the frozen stop rule",
+  "acceptance": "NO-GO",
+  "release_allowed": false,
+  "source_scope": [
+    "Host reference Tool definitions and original receipt lifetimes",
+    "Session History/Memory/Skill source verification and Context admission",
+    "Retained Tool result control projection",
+    "Line/TUI frozen search display"
+  ],
+  "deterministic_checks": {
+    "owner_and_adjacent": 145,
+    "protocol_cli_contract": 143,
+    "distinct_total": 288,
+    "post_format_schema_confirmation": 4,
+    "compileall": "src tests passed",
+    "ruff": "43 changed/new Python files passed",
+    "full_test_execution": false,
+    "L2_L4": false,
+    "wheel_install_release": false,
+    "collection_only": {
+      "items": 3616,
+      "test_bodies_executed": false
+    }
+  },
+  "reverse_checks": [
+    {
+      "guard": "model-visible configured search limit",
+      "observed_without_guard": "actual public runtime response no evidence instead of found",
+      "restored": true
+    },
+    {
+      "guard": "original Memory source equality",
+      "observed_without_guard": "forged snippet no longer rejected on public runtime path",
+      "restored": true
+    },
+    {
+      "guard": "retained control receipt projection",
+      "observed_without_guard": "successful real Tool execution followed by Context ReferenceSearchError reference-search-receipt-invalid",
+      "restored": true,
+      "note": "The probe initially expected a final missing-evidence answer, but the actual earlier Context failure is the valid root-cause observation. It was not a fixture/import failure."
+    }
+  ],
+  "real_grid": "ar-d-grid-05/summary.json",
+  "independent_reopen": {
+    "sessions": 144,
+    "requests": 909,
+    "replay_errors": 0,
+    "invariant_errors": 0,
+    "unended_attempts": 0,
+    "provider_calls": 0
+  },
+  "scoped_review": {
+    "reviewer": "primary agent, no independently spawned review agent",
+    "remaining_current_P0_P1": [],
+    "resolved_public_defects": [
+      "Undocumented configured search limit caused invalid model calls",
+      "Large navigation retention erased the next-Step disclosure receipt"
+    ],
+    "limitations": [
+      "Joint evidence/answer 45/72 and all four families below frozen thresholds",
+      "Model stops retrieval early and misattributes process exit status/content digest as requested facts",
+      "Skill searches navigation, not hidden body; partial-source absence cannot establish global absence",
+      "Only qwen-plus and this frozen configuration exercised; results are not universal model-quality guarantees",
+      "Old Sessions require new data; no migration or user-profile mutation"
+    ]
+  },
+  "documentation_sections": [
+    "1 current state",
+    "7.11 active reference search and real acceptance",
+    "9.5 retained output and control receipt projection"
+  ],
+  "commit_policy": "Only prior work a54d431 committed; AR changes uncommitted, no push/tag/release",
+  "doc_qa": "ar-d-doc-qa.json",
+  "current_grid": "ar-d-grid-05"
+}

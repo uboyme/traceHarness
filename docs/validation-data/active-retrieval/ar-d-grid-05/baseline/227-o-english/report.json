@@ -1,0 +1,39 @@
+{
+  "identity": "227-o-english",
+  "case_id": "o-english",
+  "seed": 227,
+  "family": "output",
+  "question": "What validation code did the equipment check return earlier?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "f72dc4a7-a0a2-43a5-94a8-e3fb4e67a44a",
+  "target_start_seq": 28,
+  "answer": "The validation code returned by the equipment check is `exit_code=0`, as shown in the shell tool output preview:\n\n```\nexit_code=0 timed_out=false\n```\n\nThis indicates the `python check.py` execution completed successfully with no errors.\n\nNo further interpretation or action is needed — the validation code is `0`.",
+  "steps": 1,
+  "reason": "completed",
+  "target_seconds": 3.327999999979511,
+  "target_usage": {
+    "attempts": 1,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 4139,
+    "output_tokens": 66,
+    "total_tokens": 4205
+  },
+  "all_usage": {
+    "attempts": 3,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 11174,
+    "output_tokens": 89,
+    "total_tokens": 11263
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [],
+  "search_read_count": 0,
+  "output_executions": 1,
+  "elapsed_seconds": 7.811999999918044
+}

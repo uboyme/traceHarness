@@ -1,0 +1,36 @@
+F
+================================== FAILURES ===================================
+_ test_dispatched_schema_guides_model_to_a_valid_configured_limit[history-handover] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5183/test_dispatched_schema_guides_0')
+family = 'history', query = 'handover'
+
+    @pytest.mark.parametrize(
+        "family,query", [("history", "handover"), ("memory", "Keep"), ("skill", "Fixture navigation")]
+    )
+    async def test_dispatched_schema_guides_model_to_a_valid_configured_limit(tmp_path, family, query):
+        def request_search(request):
+            tool = next(t for t in request.tools if t.name == "search_" + family)
+            # Reproduce the real model's limit=10 habit when no upper bound is advertised.
+            limit = tool.input_schema["properties"]["limit"].get("maximum", 10)
+            return ModelResponse(
+                tool_calls=(ToolCall("search", tool.name, {"query": query, "limit": limit}),)
+            )
+    
+        def answer(request):
+            pages = [json.loads(item["body"]) for item in items(request) if item["tier"] == "search"]
+            return ModelResponse(content="found" if pages and pages[0]["hits"] else "no evidence")
+    
+        provider = SelectingProvider([request_search, answer])
+        async with case(tmp_path, family, provider) as (runtime, session):
+            result = await runtime.run_existing(session, "What did we agree?")
+>           assert result.final_text == "found"
+E           AssertionError: assert 'no evidence' == 'found'
+E             
+E             - found
+E             + no evidence
+
+tests\test_reference_search_schema.py:70: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_reference_search_schema.py::test_dispatched_schema_guides_model_to_a_valid_configured_limit[history-handover]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!

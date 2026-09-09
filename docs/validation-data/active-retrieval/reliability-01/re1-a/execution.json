@@ -1,0 +1,108 @@
+{
+  "complete": true,
+  "planned": 20,
+  "runs": [
+    {
+      "arm": "baseline",
+      "identity": "re1-business-zh",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-zh",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-other",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-business-other",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-business-en",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-business-en",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-integrity",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-integrity",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-process",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-process",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "re1-absent",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "re1-absent",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-greeting",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-rewrite",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-rewrite",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-sum",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-sum",
+      "exit_code": 0
+    },
+    {
+      "arm": "candidate",
+      "identity": "control-repeat",
+      "exit_code": 0
+    },
+    {
+      "arm": "baseline",
+      "identity": "control-repeat",
+      "exit_code": 0
+    }
+  ],
+  "unrun": [],
+  "stop_reason": null
+}

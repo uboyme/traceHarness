@@ -1,0 +1,3558 @@
+{
+  "purpose": "RE controlled experiments; separate from the historical 72-question score",
+  "manifest": {
+    "format": 1,
+    "purpose": "AR-A frozen synthetic evaluation; not production defaults",
+    "baseline_commit": "a54d431",
+    "model_selection": "existing authorized profile; freeze resolved provider/model before first scored request",
+    "repeat_seeds": [
+      113,
+      227,
+      419
+    ],
+    "limits": {
+      "max_steps": 12,
+      "max_output_tokens": 2048,
+      "temperature": 0,
+      "request_window_tokens": 32000,
+      "token_safety_margin": 2048,
+      "context_total_bytes": 30000,
+      "context_kind_bytes": 18000,
+      "context_item_bytes": 6000,
+      "context_max_blocks": 6,
+      "context_max_exclusions": 40,
+      "max_query_bytes": 512,
+      "history_page_bytes": 1600,
+      "history_page_messages": 4,
+      "history_max_blocks": 16,
+      "history_max_depth": 16,
+      "history_max_source_events": 4000,
+      "history_max_source_bytes": 4000000,
+      "max_requests": 8,
+      "max_corpus_items": 80,
+      "max_corpus_bytes": 200000,
+      "max_catalog_bytes": 80000,
+      "max_tool_output_chars": 1600,
+      "provider_timeout_seconds": 60,
+      "max_model_attempts": 3
+    },
+    "acceptance": {
+      "case_count": 24,
+      "per_family_count": 6,
+      "repeats": 3,
+      "minimum_joint_pass_per_model": 66,
+      "minimum_joint_pass_per_family": 15,
+      "scope_violations": 0,
+      "duplicate_side_effects": 0,
+      "unsupported_test_facts": 0,
+      "stale_memory_as_current": 0,
+      "replay_invariant_failures": 0,
+      "minimum_discovery_gain_cases": 1
+    },
+    "fixtures": {
+      "domains": [
+        "灯塔设备演练",
+        "河岸档案整理"
+      ],
+      "value_generation": "deterministic from repeat seed and case identity; expected values never in target questions",
+      "history_background_turns": 10,
+      "history_target_position": 7,
+      "skill_noise_sections": 30,
+      "skill_target_position": 23,
+      "memory_noise_facts": 12,
+      "output_noise_lines": 600,
+      "output_target_line": 451,
+      "output_detail_line": 471,
+      "compaction_summary": "早先记录了活动临时安排及若干背景事项，具体细节请以历史原文为准。",
+      "negative_answer_review": "Inspect final natural answer and actual evidence; require explicit lack-of-evidence or no-record conclusion, no invented value. Never use an expected answer as a model prompt."
+    },
+    "cases": [
+      {
+        "id": "h-direct",
+        "family": "history",
+        "domain": 0,
+        "mode": "direct",
+        "language": "zh",
+        "question": "之前设备交接的口令是什么？",
+        "source_title": "临时交接安排",
+        "source_body": "设备交接的口令是 {value}。",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "h-rephrase",
+        "family": "history",
+        "domain": 1,
+        "mode": "rephrase",
+        "language": "zh",
+        "question": "之前备用物资搁在哪里来着？",
+        "source_title": "物资登记",
+        "source_body": "备用物资的存放地点是 {value}。",
+        "expected": "value",
+        "value_type": "location",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "h-late-page",
+        "family": "history",
+        "domain": 0,
+        "mode": "late-page",
+        "language": "zh",
+        "question": "之前提过检修集合点，具体在哪儿？",
+        "source_title": "检修协调记录",
+        "source_body": "检修集合点是 {value}。",
+        "expected": "value",
+        "value_type": "location",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "h-disambiguate",
+        "family": "history",
+        "domain": 1,
+        "mode": "disambiguate",
+        "language": "zh",
+        "question": "档案复核组的联络代号是什么？别和搬运组混了。",
+        "source_title": "两组联络记录",
+        "source_body": "档案复核组的联络代号是 {value}。搬运组使用另一个代号。",
+        "expected": "value",
+        "value_type": "code",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "h-english",
+        "family": "history",
+        "domain": 0,
+        "mode": "direct",
+        "language": "en",
+        "question": "What was the temporary handover code we discussed earlier?",
+        "source_title": "Temporary handover",
+        "source_body": "The temporary handover code is {value}.",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "h-absent",
+        "family": "history",
+        "domain": 1,
+        "mode": "absent",
+        "language": "zh",
+        "question": "我们之前说过保险柜的开锁口令吗？",
+        "source_title": "普通活动安排",
+        "source_body": "这次只记录普通活动安排。",
+        "expected": "no-evidence",
+        "value_type": "none",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "s-direct",
+        "family": "skill",
+        "domain": 0,
+        "mode": "direct",
+        "language": "zh",
+        "question": "设备演练手册规定的签到卡代号是什么？",
+        "source_title": "签到卡发放规定",
+        "source_body": "设备演练签到后发放代号为 {value} 的签到卡。",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "s-rephrase",
+        "family": "skill",
+        "domain": 1,
+        "mode": "rephrase",
+        "language": "zh",
+        "question": "档案整理手册里，交班双方用什么暗语核对身份？",
+        "source_title": "交接身份核验口令",
+        "source_body": "交班双方核对身份时使用口令 {value}。",
+        "expected": "value",
+        "value_type": "code",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "s-large-directory",
+        "family": "skill",
+        "domain": 0,
+        "mode": "large-directory",
+        "language": "zh",
+        "question": "设备演练手册里，终止演练的无线电口令是什么？",
+        "source_title": "无线电终止演练流程",
+        "source_body": "终止演练时在无线电中报出口令 {value}。",
+        "expected": "value",
+        "value_type": "code",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "s-resource",
+        "family": "skill",
+        "domain": 1,
+        "mode": "resource",
+        "language": "zh",
+        "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+        "source_title": "应急联络卡：值班呼号",
+        "source_body": "应急联络卡规定值班呼号为 {value}。",
+        "expected": "value",
+        "value_type": "code",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "s-english",
+        "family": "skill",
+        "domain": 0,
+        "mode": "direct",
+        "language": "en",
+        "question": "Which code does the equipment drill manual specify for the check-in card?",
+        "source_title": "Check-in card procedure",
+        "source_body": "The equipment drill check-in card code is {value}.",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "s-absent",
+        "family": "skill",
+        "domain": 1,
+        "mode": "absent",
+        "language": "zh",
+        "question": "档案整理手册有没有规定车辆加油的折扣码？",
+        "source_title": "档案整理操作手册",
+        "source_body": "本手册说明档案整理工作。",
+        "expected": "no-evidence",
+        "value_type": "none",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "m-direct",
+        "family": "memory",
+        "domain": 0,
+        "mode": "direct",
+        "language": "zh",
+        "question": "项目已批准的设备演练人数上限是多少？",
+        "source_title": "人数上限批准记录",
+        "source_body": "已批准设备演练的人数上限为 {value} 人。",
+        "expected": "value",
+        "value_type": "number",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "m-rephrase",
+        "family": "memory",
+        "domain": 1,
+        "mode": "rephrase",
+        "language": "zh",
+        "question": "这个项目一共最多能安排几个人参加？以批准记录为准。",
+        "source_title": "人员容量批准记录",
+        "source_body": "档案整理项目的参加人数上限为 {value} 人。",
+        "expected": "value",
+        "value_type": "number",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "m-omitted",
+        "family": "memory",
+        "domain": 0,
+        "mode": "omitted",
+        "language": "zh",
+        "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+        "source_title": "值班联络批准记录",
+        "source_body": "已批准的项目应急联络呼号是 {value}。",
+        "expected": "value",
+        "value_type": "code",
+        "control": false,
+        "discovery": true
+      },
+      {
+        "id": "m-superseded",
+        "family": "memory",
+        "domain": 1,
+        "mode": "superseded",
+        "language": "zh",
+        "question": "档案整理的人数限制后来改成多少了？",
+        "source_title": "更新后的人员容量",
+        "source_body": "最新批准的档案整理人数上限是 {value} 人，替代先前批准。",
+        "expected": "value",
+        "value_type": "number",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "m-english",
+        "family": "memory",
+        "domain": 0,
+        "mode": "direct",
+        "language": "en",
+        "question": "How many retries have been approved for this project?",
+        "source_title": "Approved retry policy",
+        "source_body": "The approved retry budget for this project is {value} attempts.",
+        "expected": "value",
+        "value_type": "number",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "m-revoked",
+        "family": "memory",
+        "domain": 1,
+        "mode": "revoked",
+        "language": "zh",
+        "question": "项目现在有没有有效批准的备用联络呼号？",
+        "source_title": "已撤销的联络安排",
+        "source_body": "备用联络呼号是 {value}。",
+        "expected": "no-evidence",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-direct",
+        "family": "output",
+        "domain": 0,
+        "mode": "direct",
+        "language": "zh",
+        "question": "刚才设备检查输出里的交接校验码是什么？",
+        "source_title": "设备检查输出",
+        "source_body": "交接校验码={value}",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-rephrase",
+        "family": "output",
+        "domain": 1,
+        "mode": "rephrase",
+        "language": "zh",
+        "question": "刚才归档检查返回的那串核验代号是什么？",
+        "source_title": "归档检查输出",
+        "source_body": "归档核验代号={value}",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-nearby",
+        "family": "output",
+        "domain": 0,
+        "mode": "nearby",
+        "language": "zh",
+        "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+        "source_title": "诊断分组",
+        "source_body": "处理口令={value}",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-nonzero",
+        "family": "output",
+        "domain": 1,
+        "mode": "nonzero",
+        "language": "zh",
+        "question": "刚才失败的归档检查给出的故障代号是什么？",
+        "source_title": "归档检查错误",
+        "source_body": "故障代号={value}",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-english",
+        "family": "output",
+        "domain": 0,
+        "mode": "direct",
+        "language": "en",
+        "question": "What validation code did the equipment check return earlier?",
+        "source_title": "Equipment check output",
+        "source_body": "validation code={value}",
+        "expected": "value",
+        "value_type": "code",
+        "control": true,
+        "discovery": false
+      },
+      {
+        "id": "o-absent",
+        "family": "output",
+        "domain": 1,
+        "mode": "absent",
+        "language": "zh",
+        "question": "刚才归档检查有没有给出保险理赔编号？",
+        "source_title": "归档检查输出",
+        "source_body": "检查已经完成，没有其他补充项目。",
+        "expected": "no-evidence",
+        "value_type": "none",
+        "control": true,
+        "discovery": false
+      }
+    ]
+  },
+  "context_policies": {
+    "history": {
+      "history": {
+        "max_blocks": 16,
+        "max_depth": 16,
+        "page_bytes": 1600,
+        "page_messages": 4,
+        "max_source_events": 4000,
+        "max_source_bytes": 4000000,
+        "max_requests": 8
+      },
+      "history_bytes": 18000,
+      "history_tier": "directory",
+      "item_bytes": 6000,
+      "local_lanes": {
+        "semantic": null,
+        "reranker": null
+      },
+      "max_blocks": 6,
+      "max_exclusions": 40,
+      "max_query_bytes": 512,
+      "memory": null,
+      "skills": null,
+      "total_bytes": 30000,
+      "workspace_observations": false
+    },
+    "skill": {
+      "history": null,
+      "history_bytes": 18000,
+      "history_tier": null,
+      "item_bytes": 6000,
+      "local_lanes": {
+        "semantic": null,
+        "reranker": null
+      },
+      "max_blocks": 6,
+      "max_exclusions": 40,
+      "max_query_bytes": 512,
+      "memory": null,
+      "skills": {
+        "unicode_version": "15.0.0",
+        "default_tier": "directory",
+        "match_fields": [
+          "id",
+          "tag",
+          "path",
+          "symbol",
+          "error"
+        ],
+        "k1": 1.2,
+        "b": 0.75,
+        "rrf_constant": 60,
+        "exact_weight": 2,
+        "fts_weight": 1,
+        "context_bytes": 18000,
+        "max_catalog_bytes": 80000,
+        "max_terms": 100,
+        "max_corpus_items": 80,
+        "max_corpus_bytes": 200000,
+        "max_candidates": 20,
+        "max_requests": 8
+      },
+      "total_bytes": 30000,
+      "workspace_observations": false
+    },
+    "memory": {
+      "history": null,
+      "history_bytes": 18000,
+      "history_tier": null,
+      "item_bytes": 6000,
+      "local_lanes": {
+        "semantic": null,
+        "reranker": null
+      },
+      "max_blocks": 6,
+      "max_exclusions": 40,
+      "max_query_bytes": 512,
+      "memory": {
+        "unicode_version": "15.0.0",
+        "default_tier": "directory",
+        "match_fields": [
+          "id",
+          "tag",
+          "path",
+          "symbol",
+          "error"
+        ],
+        "k1": 1.2,
+        "b": 0.75,
+        "rrf_constant": 60,
+        "exact_weight": 2,
+        "fts_weight": 1,
+        "context_bytes": 18000,
+        "max_catalog_bytes": 80000,
+        "max_terms": 100,
+        "max_corpus_items": 80,
+        "max_corpus_bytes": 200000,
+        "max_candidates": 20,
+        "max_requests": 8
+      },
+      "skills": null,
+      "total_bytes": 30000,
+      "workspace_observations": false
+    },
+    "output": {
+      "history": {
+        "max_blocks": 16,
+        "max_depth": 16,
+        "page_bytes": 1600,
+        "page_messages": 4,
+        "max_source_events": 4000,
+        "max_source_bytes": 4000000,
+        "max_requests": 8
+      },
+      "history_bytes": 18000,
+      "history_tier": "directory",
+      "item_bytes": 6000,
+      "local_lanes": {
+        "semantic": null,
+        "reranker": null
+      },
+      "max_blocks": 6,
+      "max_exclusions": 40,
+      "max_query_bytes": 512,
+      "memory": null,
+      "skills": null,
+      "total_bytes": 30000,
+      "workspace_observations": false
+    }
+  },
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "endpoint_sha256": "5891aed827c4e67b2d7c0c73ea819327ce3f2b6ef72213cd79669486a26b1ead",
+  "materials_sha256": "00e8a1bd9cddfe56e2d11e0d9cc4a08ea61b92d188ec3db11170240f867ec3b9",
+  "support_files": {
+    "live_active_retrieval/__init__.py": "6c773994402c3d04273e95a504a5a471bd5a4e4e43d16dcdb68826b7614e9086",
+    "live_active_retrieval/audit.py": "36a180cebd1be09f33dc2a142ea691c3332d92d0958e24aea70a6a7e5e288624",
+    "live_active_retrieval/contract.py": "d4d2f491fff959406d8a1c26b9058b0e97188bed7f6577efb7104194e8cfad62",
+    "live_active_retrieval/denial_loop.py": "c0851b8cf1e61e62e862f1fd61e618cd6b6d360f5207aeb0e7edbb1704bc71f1",
+    "live_active_retrieval/fixtures.py": "8c333f0fd5f40dd6f0129348a71b1f8fdc4738fa2cac5fbf595ba86824686392",
+    "live_active_retrieval/grid.py": "b2f321dfa71fbe63c6147e29cbfbcb1ac06f508094bad7990259692b9bcd1f44",
+    "live_active_retrieval/history_smoke.py": "7da59952d222741b7a40f233d9bab666754b799da542f3f8983ea00ad79dc4ba",
+    "live_active_retrieval/output_diagnosis.py": "e9db3ea8bc6af78a355df7317c8c8050fecfbd7bff819139a39ad46be179f3c6",
+    "live_active_retrieval/reliability.py": "84314300161a163cfa33d228f45f37b42f3f5a6266dc0bc5d94c5970bba302ec",
+    "live_active_retrieval/reliability_fixtures.py": "d7108b0c56c673ea9af1bc41593a4178d5754659aa5bb73b4380f71e629a9ad6",
+    "live_active_retrieval/reopen.py": "fd714f4435294515175d149cb45d2290203d0a90005eb9d0912ba4e3022d9eca",
+    "live_active_retrieval/source_smoke.py": "3bf01e25dbcbf7f257dc8f40da8d32e3f6ef3c583f8488d4acf0f17998625f91",
+    "memory_fixtures.py": "ff5b5ca28a965a6d7ceaaa0120b09b007c3f8f28333ad61656dbc888ba4f9340",
+    "retrieval_fixtures.py": "2d7e503a2f61b414a571613e3dad54d5b078a6ad10d82244d81e1172229d8113",
+    "skill_fixtures.py": "b069f58a4ac2f0d9b16a1e7022e53557b3daa371b6c0d31f25d396698e754552",
+    "plugin_fixtures.py": "ffc1d4835799cece6a1797a1cd44adcbd3c7bf49750c2099c3a88f0794cae69d"
+  },
+  "baseline_source": {
+    "traceh/__init__.py": "1c9836b89b9bc921c6a3181e359a0c3dad604d9845a0a8c47c2e10154c9fa010",
+    "traceh/agents/__init__.py": "8c7691c1a9a8a20105c3f9b700cf04ed214b5d4d0473746c82f5534d6c1dab2e",
+    "traceh/agents/commit_reconciliation.py": "739a85fd7b3642b5f127dfebbb26e4c28a27a841887e2294d292e29e3ecd22d5",
+    "traceh/agents/directory.py": "012ff2a7e20edebf320fa5bfd25da44a0606734e7a10f9aabab518d4fbf02b4e",
+    "traceh/agents/errors.py": "f0a2833032eed999cdace4178d59b37943309d3d22db043a13580ec7faf0cd90",
+    "traceh/agents/identity.py": "aeb16ad349629b99a1c8d17297b66b8938ff5e6cff11f5ec1004534298cd7553",
+    "traceh/agents/inbox.py": "0261615e0014052853a22181f0afc59e024cd07e2b920f8aebe7b4179875ae48",
+    "traceh/agents/inbox_identity.py": "2b62ebbc0991260b7486cd90e6833f7edae56d81ffa286b8f0fd9645aea515de",
+    "traceh/agents/inbox_service.py": "b18a2ee223b19c01aef7ac461d7d785fa84f06c93106261a63b8b5e825e944cf",
+    "traceh/agents/registrar.py": "d7c73e8f7404eb5dcf1081b1ff477457440e9f740501213337fcebe5d8761ba2",
+    "traceh/api/__init__.py": "3062ce262d9b576ab6ad377ac4d31ff790401985fedabf586b251d6324b33dc4",
+    "traceh/api/agents.py": "373e06b5d79b04bae36e39a89ab99d306083ae4c94eefa59f1a9bb509a41dc85",
+    "traceh/api/artifacts.py": "3479fbe3adc0de5a3eba9177f8687ac2177bb4fdcacc945c9f920e6d3e5f2e90",
+    "traceh/api/budgets.py": "7a98f94096768154973efac409e975d0d6d96909fcd7f6841f491dbc65d6be28",
+    "traceh/api/events.py": "3314909ddb5f0346e7e59100260e9a196ffef690d9205a226d50b2c3dde002d1",
+    "traceh/api/history.py": "eeafecd703e0fe83597c8e7f8630c3b19e701d0b02725d3f8461d75463d62486",
+    "traceh/api/json_types.py": "7eb0ffc16b47bd4078c3be9aea2556a443746aceb31d78b8d3a95b2884099ede",
+    "traceh/api/llm.py": "309ee0523440f9bb452623a3a6100ed1334e45c10771d9870706dcd5004c15d0",
+    "traceh/api/memory.py": "38149a9126af40af00d2df807730eca0f43b6ac10171e0ef3e42868e59ac4c88",
+    "traceh/api/plugins.py": "68fccd17f134469823ae5ff8147c20a8e48ed3e89f23e87a08bc9deb1124178b",
+    "traceh/api/product.py": "03869213287f8ffd8c9f5b9e9bc71973a993c542aae45882b7a689d392d2bfe9",
+    "traceh/api/promotion.py": "f6d0c76298b94ada00d542925726b34af6d66e5bd6468dbde5340327e5b583e5",
+    "traceh/api/prompts.py": "251b61de93f1dee157a5d7e21e02cd1bcce9eb384cbe69e9a67e555834fd7b2b",
+    "traceh/api/retrieval.py": "ce31d0550cd77d87270e373454e64c985ce32317645afdf2a7e74721989faa5c",
+    "traceh/api/services.py": "6e918d3b123f7be563a882cba3cd54ea001884907d2b610ed629c930182189c1",
+    "traceh/api/skills.py": "1855caa5a5b1eb26fb31626aa2b40a5b338b65c1ee792281f837ed4bb1f2726a",
+    "traceh/api/tools.py": "86e27f6be8db2493c4f6af31fde7d8fe2585604fd45537c0faf25cdb89bd784e",
+    "traceh/api/turns.py": "0666ee2de17da99846e65bfecb1e75479506bd2ad3986fb6a71f3b88b491747f",
+    "traceh/api/workflow.py": "45f29befd8423af4e3051ac6be6a579b95b2bc335b6598083c45028b39e03797",
+    "traceh/api/workspaces.py": "08e2f40383ff95a48f93f7d6a30b00a5574a7e035a9fdbce95cca656147ec586",
+    "traceh/artifacts/__init__.py": "e50902e22df5c194615a2f4cb63391ab6101ff0eea674a264800a7b5b7b42e65",
+    "traceh/artifacts/capture.py": "9c2eb49dda97cece23f038156dc0572cd9ac5d75615f0e786f4cf708e545c0fc",
+    "traceh/artifacts/cas.py": "6d1aefa43b8d9eeacefe7f69b1cd1c32db92d55a4622d54b47d60317e9663d95",
+    "traceh/artifacts/catalog.py": "d51b3974b159b130b1d5516970750531d041d49c183369c557564b48c0f81b6b",
+    "traceh/artifacts/errors.py": "0ece2afdb2da45324e22218a923f30910be88c2bc342ad20bfb5233afe030d1f",
+    "traceh/artifacts/events.py": "d95e966fba5301057a446f44d7b65fbf91109abe0ebea5ab6c451a18cfa894a7",
+    "traceh/artifacts/git_patch.py": "4667173cbf58b8eb2077fcaeeb45bab17a9f94fd13fd00c4b7b5e200bf10c7b5",
+    "traceh/artifacts/manifest.py": "ca940a4682e9f0e608b4bb5bd3e9c8ed5db664ca94200e11c8f838ebeb57d82c",
+    "traceh/artifacts/reader.py": "5b7590059a4eceee0fd94d4da720fdb22b216350efe9adb98fb7e94ea93f041b",
+    "traceh/artifacts/reporting.py": "d7ce597981c1cba134d93be1292124c897319508739c26872daa651ab4ee30f9",
+    "traceh/artifacts/unified_diff.py": "50d5e87a8d4047bcc2905df587b20dd6e923ff39ffbaf97c17291810815490be",
+    "traceh/budgets/__init__.py": "d81a313eae1602a89ccc3c7a1bc5d9a2bbaee3baee6620fe336561baf62f6f43",
+    "traceh/budgets/enforcement.py": "bd2e6d6eb70cf6ec1fb357c0b9f678b94de37a1c66d458785ebabb96a0f8d638",
+    "traceh/budgets/errors.py": "3f481dc1d90f1acf15f326825cb477ac0219e7c5474b2fd28562ec0ab7b16e2d",
+    "traceh/budgets/events.py": "434db8a4d6675d2316820beab07c50aa7660a7a3813f4ebc89e61a99d5b4740f",
+    "traceh/budgets/projection.py": "289dd8fe499bc60b644df0503852bcd0084349b1a69588669730903d469e1f5a",
+    "traceh/budgets/service.py": "954051252a54661c03e7706c9db646df7f5c29798f45011336447386ff5b4c43",
+    "traceh/budgets/supervision.py": "bfffe1e62ceb4fecf4cc5e1e8650a8f72df87e69bb7623b8c564eb8edb0a5d76",
+    "traceh/chat/__init__.py": "8acb4c2301a27e9283bfbb866f726ec82de27b6812a9e6af31b1979cf119514d",
+    "traceh/chat/activity.py": "b5d6705317ca714d85362b92b2be7ad3cf796b46ab15bd58305c064e5915f05f",
+    "traceh/chat/config.py": "0ce90da894c14f6a07188529444e1403b9ba9b26ad7d056d2d8e5d1250cfb201",
+    "traceh/chat/context_pressure.py": "3aa6a380100c3be6a3266b5a96c0b4389f52b216971ed5bf59a06f8398d7ae8d",
+    "traceh/chat/driver.py": "19fbfbfa56d459fcc4b395f141c2968447cd930fe0640174fea3189fb94e9863",
+    "traceh/chat/governance.py": "ce01686e734591ea639619c2624f0f19bf21765ec7e26396adb187d12bb3c4f3",
+    "traceh/chat/session.py": "73d70d6985259cdf74805ef286371f85e3ea68a303ed36079dc5929db3621976",
+    "traceh/chat/workspace_project.py": "4b0c9c257419136b81d5af5f301bd6a91a366df9f5080cb8bdf391e93119e86e",
+    "traceh/cli/__init__.py": "fa2e7718b0453b8bbb25bc246df94e7e58549586e0d0024faddeb7b9e0dacfb5",
+    "traceh/cli/activity.py": "2892adf530b59921d109281fd3e649b3a9c724ed9267b8d9509bb73e4a3f37c7",
+    "traceh/cli/chat.py": "5f5d33f9fbda1c081bcc46ede27809f435a690382390a599941ddfff76ac4488",
+    "traceh/cli/command_line.py": "e29e4b37b2d67059ac4f4e390afe7e45c7cefa9d421b39264a3b0bc5f6c259c9",
+    "traceh/cli/console.py": "881fe1ac4f6382ec5a938f4e04510dbd593ca39bc4212f4e26d0092af5d03b91",
+    "traceh/cli/context_pressure.py": "86a341c6b8c752a70aacd52e0b569081e378922b703ceb1eb3ee41bf8750d724",
+    "traceh/cli/credentials.py": "ab9303ceac3498895fcb351abef1096bd58cdd5a61156f4643adb1d86e8d88a9",
+    "traceh/cli/env_file.py": "9481a465cc4035c43e7af3f0cbd8aa77e89a34d9c3686de7d4cc9357686407b1",
+    "traceh/cli/errors.py": "47286a3fc84ffaa55e5eca3be692e0d53c5274fb53ebcfc405f2660e4ec3c3ad",
+    "traceh/cli/main.py": "ef5fd34b550202eae96b3bc3c3b9d15ebe26ee0b13227bbecf0f24e142ca5ef6",
+    "traceh/cli/plugins.py": "77bff1d026e064b15353361145b6c138dace83131d72b57659613f4b5e458183",
+    "traceh/cli/product.py": "da7e749c3f7c0e30b81f68f8d311ded4bd0c2376fcc2e30a16b8669ea457c5bb",
+    "traceh/cli/startup.py": "c26e35a5b47be9c583380d51150e2f61d3a99c3e36f9dcecebf115c9c5bd3d40",
+    "traceh/cli/text_safety.py": "ccbfa8ad030f28447979a208ea4b4d08afee9b97ef82af8dea2c9913da6b1c79",
+    "traceh/cli/timeline.py": "21e81a337c33d6835e8812097a2d40772188fc452c5c5a49d0713bd13a43d57e",
+    "traceh/cli/tui_config.py": "db0fbc8dcc71f065ab0609a61d2384b9a81d88f0625607be7b78428337866362",
+    "traceh/cli/tui_entry.py": "b823b4b1ad6ecd0b5c6ce96459f4928b56b37064087b81e03a8cedd2055c0080",
+    "traceh/concurrency.py": "837dc9165588b7551c1790b117c6b0cd629ed1e263945b42d41cabf9808a80a7",
+    "traceh/evaluation/__init__.py": "7875c46ff7710160ea4c5bb450056019f2df702d02bd7fdae9b7420756b6d024",
+    "traceh/evaluation/attempt.py": "365d1a135e632f919beb92ecbe55d0e90c31f12565a762f5093465f0ee59c09e",
+    "traceh/evaluation/errors.py": "eb7dafc297ec98d1f805d86b1c04d383e75c0c8ef2cbe630c55479e07cdebdfd",
+    "traceh/evaluation/manifest.py": "4f0ec3fad9c1fc9dea42dc54b89a3bbe06fda7c4ed7e4cf87430bfa5615759a7",
+    "traceh/evaluation/metrics.py": "ffa2f9fb51d75c49c45bc4b359e0a8b7b0ab722b0771ec4f6bb7ae7744ab8e2f",
+    "traceh/evaluation/report.py": "1df19f18db22f61c709b0211f43527da36addc817ce74691f07b53fc17620f46",
+    "traceh/evaluation/repositories.py": "621c81484a5d442f6673ccbdab5e9ec947d0b3f0ecb93397cd2dbdcdd2725890",
+    "traceh/evaluation/retrieval.py": "0f21995ad7b7f3f2deb82c870d778708a3203f9649f6d41c1b38007927615f70",
+    "traceh/evaluation/runner.py": "859e4026adaeb773fff0076c855db36385ae6bb9bb76ba2686d55838a777aad7",
+    "traceh/evolution/__init__.py": "2de1256b658dc0b48bd81717d601c1f2f98359a13f7c74c94a53d5b9549f2d8d",
+    "traceh/evolution/artifacts.py": "2387a293c51bb74aa2aaf4f83c071e410a0391c4e7b23e87500fde84f20630fc",
+    "traceh/evolution/candidate_comparison.py": "516bfd7f0431058cfb9bbb31a1c205e7ebd4a742614af5e673c96dc72f78480b",
+    "traceh/evolution/candidate_promotion.py": "9d97c43001b197d8a05e60dfbbbb10d66c73f09dc98e0e94afcfb4605b0e620f",
+    "traceh/evolution/candidate_validation.py": "56da0b3f456c97a0d5f5b1f396f105e9a753265e17d4a203bced0730ab9565cf",
+    "traceh/evolution/comparison_probe.py": "fb0758c0f78166f7132a0444fc0fd6924328ebe10ea49e12d3976402b2839960",
+    "traceh/evolution/contract_probe.py": "e6c3f30be2193582f26f2574db8b498b22d4be6b1f890ab02cb99849d9a61c2a",
+    "traceh/inspector/__init__.py": "895fa59bd30bb3d592080b9be85e1a73ee75a8f91ab1a8e679c25686d1ddfbec",
+    "traceh/inspector/session_inspector.py": "bd62ff079be44289fada5fa4f736017c52a0347f9fcd8996c3eab461ce33dae8",
+    "traceh/kernel/__init__.py": "6f45234cd50446fbab108aa1119e680f2f9776c09fda955472fa6425544d84ea",
+    "traceh/kernel/activation.py": "9a9c15425598bcd69d07a7c5a46e325a35484ccda03cd4e41d748e34a16ca390",
+    "traceh/kernel/composition.py": "4ae5aca88cc00bec9560180be4da8e3fbc9e94138312915b72e1cba6447e30e4",
+    "traceh/kernel/composition_overlays.py": "1887e257e57fca12238627c90b56ab17d6fe22d83d878c7fe8ed762a6a872247",
+    "traceh/kernel/hooks.py": "25a0fd21ea6639e57ef7933a414133272c3778e1ffd26e379d0ff2894cc89e95",
+    "traceh/kernel/lifespan.py": "1d52935c4bbf14f6de766911a21dd3b8699070a262722ebe5a1834a5d7def91f",
+    "traceh/kernel/registry.py": "d3fbd2dc8d40bb3d60dddcf4bf85d300ee6cc8e8295f4e94b35cbaea7dfc11e7",
+    "traceh/kernel/scope.py": "0c76a8f3f270bdd13e3ebc2d23cba5f6e9d990992076d4b99acb9590c90ce9a3",
+    "traceh/kernel/tasks.py": "24e3429b464f2cb539efb46561d6bfa275171ec6ddb0737da7f33d1ef84b0674",
+    "traceh/llm/__init__.py": "87d3ae1e469ca6dfe49dd8d8e4c5f1d10abcfe46d79bb0d7eb26c609888624e5",
+    "traceh/llm/failures.py": "3f0f1debcb53cda14e2550877e666b1177769b50ea2b3147aca54131852c88e7",
+    "traceh/llm/openai_compatible.py": "4557857f9348e2b3fcce141fe41dd1dbc9f952d5c2c27698c5119af0e0b79c13",
+    "traceh/llm/registry.py": "537c8aa271ddab3e5c16f228f56045522d49fab2b4de8d90ad59a33792996dee",
+    "traceh/llm/retry.py": "98fcb63e81f73fa410448556ce389acc30eb0c57fcb9b6ca29bdfa7714b480d5",
+    "traceh/llm/runtime.py": "e4bec452adf93eb49d7bf81010ce78092eaa7993cb386cb3be1711c837122e89",
+    "traceh/llm/scripted.py": "e7cbb66c41ef6f1e2b3d767541d9bd97453e899b864a495acb7613c65f39d30d",
+    "traceh/llm/token_meter.py": "9bfa8d8e57913be6329879b56e91a7960b827af7a3f635d38e7565454cb21819",
+    "traceh/memory/__init__.py": "c18eee7f6d484b1abda1b0c3b485e67a7518eae5c2cc7e9a3ff5fe783703139c",
+    "traceh/memory/context.py": "99f072ef08eb521e1770684e91ff26edd0eca3504286d7dfb2a6a03a2af486ec",
+    "traceh/memory/policy.py": "4d44720f7a493e38dd244a694a73db72156c219a061ea6ad481ddeec3f5fd692",
+    "traceh/memory/projection.py": "9cfda824024620199dc8450a6c7834e0d7359e66d3896510653d8e1ba1667eb7",
+    "traceh/memory/service.py": "bece1ec2850cc2aa4005b20373d4164c6f613bd165d32c22f774491a114a89d2",
+    "traceh/memory/sources.py": "4c03084e1bdaa90829bd99177f282ee5085580ac0fb339a0eb4196e648542609",
+    "traceh/plugins/__init__.py": "e4194b552553b214e5e510bc44d53edef706f45b98bde52041c5f2e1d6f636c7",
+    "traceh/plugins/discovery.py": "4c3d8547ea5c43511dfb5514b3d2878b470b1fcf647919ba3665e0644c94e254",
+    "traceh/plugins/errors.py": "b26de4966340fb8f5486803273f5b274624b7db019f0e909073574eca319f5cd",
+    "traceh/plugins/manager.py": "8d46f3893c880503ed2c56b44c67ebf662a19531bc5cfbbe6e03a38dcf7ad97c",
+    "traceh/plugins/selection.py": "0eee9a762cdfcb7cb22fdb9a921fce6ed011f9614a8ffb8f92cc97bbcea36ef7",
+    "traceh/plugins/skills.py": "98db96a1fc0bf71bdbe0b02433063a89b033abc3dd2b8bd5546eddcf8ad089f1",
+    "traceh/process_control.py": "2f088a4c9917fc31962a4b6f34f0c6396177f3b6deb80ea07cf9871d00d2af67",
+    "traceh/product/__init__.py": "574d1277ae53aa018b06654723413d9e639e73241bc71a503122269ab891a1b2",
+    "traceh/product/activity.py": "935e256dcff1a23ee0885916d0b7fb114a65c5a42af6fef7c5b0ff37950db2bb",
+    "traceh/product/assembly.py": "fd1d246310ec8c7bc1ff7e14b857d433f85838f3e8e2e5228c34fe42984dee95",
+    "traceh/product/chat.py": "52e99b2416f783c60725d7b22af87ba79a053e57a270699b11643980d9cc23df",
+    "traceh/product/config.py": "90e2400832656ab1f491bbdd26927e7ee0ee54d5930e12b2c9a8142e1698cebf",
+    "traceh/product/context.py": "9f29d519a6de0b0f5dcdd0da988368a675c9e098c9540a762cd366e37b3e877c",
+    "traceh/product/control.py": "cadfcd6a8b2392067fd685c60128cf08bbb7a4b1573ac003f39cbe5508aa2688",
+    "traceh/product/errors.py": "641a08b5168e29bacaa3d906f399601378c4fd8b5e07ad4c101e3e3e922dcae0",
+    "traceh/product/events.py": "d4396e47eb509afe720b5e0718acc34bb01fbc6dd155dae1f03b6755a9c589c7",
+    "traceh/product/evidence.py": "77c4746f799bff1c5b7dad554fb4ecd04e43d29ee05645ab4c1946c2b45f5633",
+    "traceh/product/execution.py": "152ca445725e11e5de239867c9bf8255281ed7ed908ea1f308a16f3728816775",
+    "traceh/product/host.py": "9cf617e03f64839ea99351140246ec843c13435d72541b2022ed3dd6ac93b5d7",
+    "traceh/product/inspection.py": "26e33917515ee43b4b176820ac32c8d73a71bad7da9cdc842da7f1d7ffd44c6e",
+    "traceh/product/memory.py": "8d7fe77f49aaa68d1fae4dfea91fb276c69fabfea87eff54271ceae50f4f5bb9",
+    "traceh/product/observation.py": "f0369051ddde8714d6199d226923259b5c2269ab681d78e336917b84195ab9c0",
+    "traceh/product/project_scope.py": "1e44a5cd17ee0e8ffc999378a573f6b1c850296a1dfc7cff81039c7e829d6f7a",
+    "traceh/product/projection.py": "e7ee535a181d2f94ff0895bab1fa3da167704b3f241ca7b6995b3917833a9697",
+    "traceh/product/registry.py": "ac84e2419a02165233189ce71654478f9dc4cab2bc23376c0abbe7db45439a71",
+    "traceh/product/resources.py": "ba527991912c7526348c20ab0bd06988192def1faac82d135c7c504ec48b8ae1",
+    "traceh/product/router.py": "828dbd429aa091a748d05470b928e4897c4e645b6c2819e2a0d6a58b7ec32765",
+    "traceh/product/runtime.py": "99dc23f16d9869c566deb3284a8cd14e67330cd2b704f76fb59a1266b29735e8",
+    "traceh/product/service.py": "40f9044877fc66ddfaf513164acc10d904f5192ab39695f5d57fbe84f251418f",
+    "traceh/product/topology.py": "097621ef3faeb4c62a697871a8b81058123e87ca4ca3f8588dbfc83a0f711311",
+    "traceh/projects/__init__.py": "e3cb3b4a5fc6bff23b85b39e715c44795ad057e038e8c16435deed28e2122752",
+    "traceh/projects/events.py": "52ab555199455ace68d6b782d202b738ea65fdcbba5e49939be1d7bf0ba5ba5b",
+    "traceh/projects/projection.py": "297081dcc40747155b980efccf463718b5d87620eda3756edd85bf15c296d372",
+    "traceh/projects/service.py": "0f7424374e80dfa2a1bc80a873616616765dacf45de46aeb7c20bdb780aeb363",
+    "traceh/promotion/__init__.py": "65843e3c0257c3a62bae0d4d07ccd42461f85b77c733f5146e9a091f9968a2f4",
+    "traceh/promotion/cleanup.py": "a5b7b617fab7928bcdab5d54e7a9bb5fc77d09842e52b3acf9ea9b958bc5bd70",
+    "traceh/promotion/errors.py": "9afda1dbb4069999d570d5b3b0889e98b4ff962260c0ac30b7eec6ea66a58b21",
+    "traceh/promotion/events.py": "1758b1015d0addb3c336692f3e50a47089610bc2d2334764543dc12c6c5135a0",
+    "traceh/promotion/local_git.py": "5970408c4443b2c5c920b07af4ce387fa7b20695cc47bab428ebebebea505adc",
+    "traceh/promotion/models.py": "baa7f69d6d01e34c079fd6e99d8e1555ca3188a100b4e2ca2aedf6257b6cf2a9",
+    "traceh/promotion/projection.py": "504965daaef3bccd11e435412461a95a333643280bf223ed082a043490499bdf",
+    "traceh/promotion/service.py": "366f81cc6604fc80c2e452c54c01644b28abdd0527d8bd13b301c3a2abe0fd65",
+    "traceh/promotion/verification.py": "c9cb00e18ba00a4147f46792b2199c6dd0153708c39e6ab4678c3f31dc3d1a49",
+    "traceh/runtime/__init__.py": "995ecc6a5b24e9b420c98299aaffc1cbae6412734559efeaf744fe6d7ac83230",
+    "traceh/runtime/agent_loop.py": "1ca41a973be96e149f37d0b8635e1319cf52c9fc8bb615822d86c740ade4ce4b",
+    "traceh/runtime/agent_runtime.py": "fb3c1afb0c726695165535ffde7b15cdec5f9b439ceebb1e61da3ec237eea48e",
+    "traceh/runtime/composition_runtime.py": "506f92e6a2ec5fbc5ca3ed49cd54a92b4725ec27bb9952c1d6112e37e1ade83a",
+    "traceh/runtime/continuation.py": "c711bb4fda6a4a754aed4f66c3cd59bc94fc900869072b75ce86df4667645f78",
+    "traceh/runtime/memory_control.py": "7b985871a6020bd921ad6a07b6fb75bbe773f9f6605ee268f12764140d5f577f",
+    "traceh/runtime/plugin_composition.py": "5c44ec7a2abe36b22f8f7cb7357abfc217faf90dc53d64ad8c6ab1afee83d082",
+    "traceh/runtime/prompt.py": "1e8a84dc65c72bc9c4b272d42c9cb062ebb274bb711c315a324eb6d7efa5e0e1",
+    "traceh/runtime/repeated_denial.py": "2681cbdb792d7956f703a48c0fc94702817e62bbb48359ef47da689435b82ccd",
+    "traceh/runtime/request_builder.py": "86a11a12f9c25a3980e3ed338362a3206bc9fded2a7d69e92abd45caaf90d862",
+    "traceh/runtime/skill_context.py": "a358855f5090f092cb8d51da7f9ea6c7fad60730b73ef1024b28d6f1b934ebd8",
+    "traceh/runtime/verification.py": "2a735ebcfba68a7c09c62f7a031109c57e41a74a61f40ae067e335bbb8000cca",
+    "traceh/session/__init__.py": "299449021e2a72c0fece44b2628400623b99e3c1287cab87b666910fde4580d3",
+    "traceh/session/compaction.py": "5b146e89362651f1f07b000a1593518cdbdbe9c2bdcd236c21bbed4804c85eab",
+    "traceh/session/context_index.py": "5d7946ff198424587d93fedff8750d917e69113fe97db31c9f64ee90a62dff9e",
+    "traceh/session/context_input.py": "9a4173f1115bfd9d8a058de816b6fe8e80adeaea6742fbae72a3e2851077080f",
+    "traceh/session/context_tokens.py": "6f520d26c0384092e95a46785b1cb4562587750ad5562107d1fdf8b4bbae57a4",
+    "traceh/session/event_feed.py": "2db28ba6e9df681e13632ee37e3f25117e08247b3b8231e1435f924b1d907536",
+    "traceh/session/event_store.py": "15440fbe22bfb04f9574e99ab25f1f379ef1b6f9b2e130cb29239c507d82f46b",
+    "traceh/session/file_lock.py": "6924f8b27e1bb93c39c800595c4e7a68f38609ea36af6183ddfedc5f01bd504a",
+    "traceh/session/history.py": "08e26759bedff2a63d39935fe81747a28df84769a7426e9d9f09bb1e2957eb39",
+    "traceh/session/history_observation.py": "e6be13d7bcc5e1046fb73a540d9444f6c49fe3203e69f0a476c7012134b64909",
+    "traceh/session/history_requests.py": "2b896b525cf5a5318e21e66e3c13d92af16ce9f35b3bb6ac9e74c014958a6c0c",
+    "traceh/session/invariants.py": "b5fb1488d73adca78db428e6a61da79244d2945dbc1e90a8521f6cc1ced139ba",
+    "traceh/session/memory_requests.py": "9fd8290e76ac2c50d7d8fbe533afab288c0314434471bfb4b027fd046b987e5c",
+    "traceh/session/memory_search.py": "d6b94ea7e670aef1dafc34f569732c508b860c3d807f177c9b99e44336236f5e",
+    "traceh/session/plugin_identity.py": "1e3adbb53f61a3580249442e5512abed02e180c733b1d100c00903fec697626f",
+    "traceh/session/product_context.py": "bc634c7b0294215c36f9c88cc64da1406aef8ef93e2af5ae23705d1fcc6c6086",
+    "traceh/session/projections.py": "cb4afabc0aa029d4dbb3b6cd2a0cef8ccebeae3bd0bb09f1d553e0c3dcc85974",
+    "traceh/session/protocol.py": "c80334cc8636713bdb7e724e79d61d293f92ae7e1dfc239692f71d88bd8fd41b",
+    "traceh/session/recovery.py": "e13a9256f2c4efe9666b0c8b6d624a4945f73c2f8c8d702fdacbae051c32073f",
+    "traceh/session/reference_requests.py": "604c46069b89a04c98c9054a1c06ff1161b6d73d91becc47b9bd170445ae495e",
+    "traceh/session/reference_search.py": "e9830c88d0cae49537576bfdae098d792c5535ffaf38ae28284113709865d22f",
+    "traceh/session/retrieval.py": "6dd7f4a2c78a372e586dc557e6ef5a400be4bad04c91c2030f3d48ec770f9a08",
+    "traceh/session/semantic_summary.py": "9ef073a37c310d6473c5f47750a10f60d58d3bf818cfa6e6e44d26282c033c48",
+    "traceh/session/service.py": "61c8a46232fabc1d270eccd88e66941ab18dc42ebdb4b767498b0c799d70fbf0",
+    "traceh/session/skill_requests.py": "5c54f306c73dc418c15670b2784d2c5d627badeb06942c7533fe5ec987d97785",
+    "traceh/session/skill_retrieval.py": "fdc227299c23dee88db8bedce09edf3bc84044a6816188d12d0298359185b6f6",
+    "traceh/session/skill_search.py": "503f85ae0e71f2c90f586dde081321c5411ede544eddaa0c2cca5f64e9e68e9a",
+    "traceh/session/skill_selection.py": "a801a09b0f88bfb529864f80903c91836dffa9c18405915787e029265ea961e8",
+    "traceh/session/sqlite.py": "22ab5be0e47853bd9bb7e44e5b3a9c6918770c47cca86601851cb71e79606b2a",
+    "traceh/session/stream_heads.py": "99b64f4987955f70b7d2bab376750bfd49a5029765e10e4f720d96b67563a28c",
+    "traceh/session/surface.py": "87277f4958cf2c386f474d9decec7065edef69ca5141722588dcf29e171fa8cd",
+    "traceh/session/surface_replacement.py": "45db2fa2f71401706cb09d9ddd7ba776d47d76b7c04aced455678fb793999be8",
+    "traceh/session/tool_output.py": "c74ddd30de330a2eeee25330ed0ce8883edceb8e24bd41b2066a46d3de2bee5e",
+    "traceh/supervision/__init__.py": "6b292943788604c02662b89cba4dbda95087397942ab66aad9d8036c91d0a215",
+    "traceh/supervision/authority.py": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+    "traceh/supervision/delivery.py": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432",
+    "traceh/supervision/delivery_identity.py": "a0ec959cab8eea6e177b2f1b9e2500401c6ed5d0e258f2475bd41aa517cd7341",
+    "traceh/supervision/delivery_service.py": "66616b802121c8f24561e0fc3123252cebab220999aa322064c7874c1b5ba271",
+    "traceh/supervision/errors.py": "376ae8707e63074b45924bb4b866c8b760f18ce39e5d29ef0f2d3ce5772ad724",
+    "traceh/supervision/execution.py": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+    "traceh/supervision/lifecycle.py": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+    "traceh/supervision/provisioning.py": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+    "traceh/supervision/reports.py": "b9fe4fe6e762f67e37e9c0b9ac628bb8a4a79a5f46de77652db2e81bdc73a4f5",
+    "traceh/supervision/supervisor.py": "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0",
+    "traceh/supervision/tools.py": "498e53c7d43c55d4d72dc36ee991b110af45c02a2a210fae7bda19314171fdcd",
+    "traceh/tools/__init__.py": "7d55c8ba69f1611110a11bbd4e32403253c32bc5229023e7dc80d282db49208e",
+    "traceh/tools/builtins/__init__.py": "02160a0fd5c5ab0f5c28557597f66454245155322cfadcc42a1f6e8f74db9722",
+    "traceh/tools/builtins/apply_patch.py": "0088940c0872c4f02cd9b811b8e3d3133206ca7deb11e2e07a5910aaba83e369",
+    "traceh/tools/builtins/list_files.py": "ad2f6b9194c5521114a8461d42f0f33639296594e567f19c248587ef3a875999",
+    "traceh/tools/builtins/paths.py": "13004707b9a4c692292ad3be40888bf1a50366f2261d2639f5d661603c3eac43",
+    "traceh/tools/builtins/read_file.py": "a7aee53f3341bfbbe773d7c071609b5b1ac9808a514f63947627a17d40c7f5ce",
+    "traceh/tools/builtins/search_text.py": "c0d4fdf1ae6d90435b8790904f3b7bfaf05abe0e69d1d80c74bd87b8a6a7da32",
+    "traceh/tools/builtins/shell.py": "a78152ec01acfae0b1f5217733969b8316c4742a685dab0737c3d2fa921869a0",
+    "traceh/tools/history.py": "2eb8e6eeebfc4b0471e0db8db38572e3a5bcf07afe447d401c877afadbf091b2",
+    "traceh/tools/memory.py": "cd908b8c6a5dc58ce1790d2cd88268fd38db882aa3b40bab7092764c4ddfbcae",
+    "traceh/tools/memory_reference.py": "4e8aaa1b3218ae7952190121d99f822d22176177dbcd293bb7a145ad36a78131",
+    "traceh/tools/middleware.py": "8de2e5fa15d77fe8d77a53509e83723597e53ee8b71cea4e3147b298b09626cb",
+    "traceh/tools/output.py": "682d52115bfa260a9b205a21fe82ed2075deb114890aefacef04a2547da89b15",
+    "traceh/tools/policy.py": "2b4e854fb9f02e5b1f327ae412d0f7c3877ad7c2bd8c0c1329fa22031673e870",
+    "traceh/tools/process_control.py": "828b8a887dac109c281493b11117e1fa99c99c2106e3fe9ea19c4bc4edd4b269",
+    "traceh/tools/reference_search.py": "10f8d79c421acad21b8af31bae73b47036b204a328fa67b4e0cac2fcbddb3fc2",
+    "traceh/tools/registry.py": "a94cd8065d65cf24931b8ee7b4b01b7313eedf7f06453bd9a8465d200b0a04c8",
+    "traceh/tools/results.py": "04a213f558828e244788030d9daefe41ddea429e616ee8c97e5098e7624d7651",
+    "traceh/tools/runtime.py": "6afb18758dd6bf87bdd92993dd5c80d63e25db27b4039f4dd4de4dae1259a52b",
+    "traceh/tools/schema.py": "c1b0c198793e736872cc0d716f6a4dd89c7d004e161417e91e50f1cb124c09eb",
+    "traceh/tools/skill.py": "403e363e2c17e682f38c97c3c6336f5a06ecd2fbf7f119cc8a7473448a428d51",
+    "traceh/tui/__init__.py": "dced2ae7cd5998fc6540603c71cb1b339c5e28b74a341c419c01a40a504e56f6",
+    "traceh/tui/app.py": "b6baf29ec10158e1895f3a90518729ae7e9df9815b95545d2f4a16b5af94ee1a",
+    "traceh/tui/clipboard.py": "f65e36ead1ec083b4743c3d8430aae4db1bdf5a9f4f8e5428f53709381b1c278",
+    "traceh/tui/config_forms.py": "804ee736ce8bdfdcd4f3da42970263fc9d1cd0a8abdcc3a3cec756ed06050064",
+    "traceh/tui/context_inspection.py": "9f777263712f03b5b8b63c50cf8020f2c628fd862ed0753746974e7fcd45514f",
+    "traceh/tui/governance.py": "6b6984512329c920956a0376ef5695732c03a83c796476ee624bb398417c57cf",
+    "traceh/tui/onboarding.py": "579183b83c34d17287a4baf67aeb078a3439bb76abdef7aa3736e4e92da7666f",
+    "traceh/tui/presentation.py": "e2f2d837f03f4268b7b209d5ac839714319f379384f4e8fab622262e2b87293b",
+    "traceh/tui/runner.py": "ef9e1d4810fd50e3353e3c26a95b8d6e1c7c41c7ffdf3fe47f3ea643c5bd3eb7",
+    "traceh/tui/screens.py": "e8d89edf5e23b37f06d30449a455f7e5c7fa2ab6b5a3ef8786d219bc04b25795",
+    "traceh/tui/session_picker.py": "e9593ef3df410bc3f6bcb6528a84901af03e872cda739696b39b60cb1d8d8d05",
+    "traceh/tui/settings.py": "ea2a898cc39ae2f523874da997cb3628c571259a0f76a142f18cf4a1577b8fae",
+    "traceh/tui/task_conversation.py": "a39afbacefd8da4f3aecc6ca0af3c6a48bb4af0d2962cbf7da7130a8efd3ef5b",
+    "traceh/tui/text_selection.py": "0113d43775cc19b14f056c5058caf4a7704c752573ba27c74de14e593ce5d1c9",
+    "traceh/version.py": "47781340d5afb844556ae8b1bd98dbee5c0533fc8f7013ede5fcde6bd2c021fd",
+    "traceh/workflow/__init__.py": "0717c769d8543b4ea6915592b1986b2c3e7a4ad7f9f55d29915f62dfda1a0d1e",
+    "traceh/workflow/errors.py": "17dd8826c908c184e881c29e70d178a4fd9ea95b13a59fb583a0cad474fb1968",
+    "traceh/workflow/events.py": "9a3d1571f8fc000b2b9aa39fba590e388ff45f27abc5f06430a60a4e1bb5f72f",
+    "traceh/workflow/execution.py": "eb110a27b6442f2423755925f03c00c858c4cbf297b960c350f7966b65b8ffeb",
+    "traceh/workflow/models.py": "0ab8bf76f94d38ab685bbbbf4c638ce237c51a58b796a182c475ee1c1a88e34a",
+    "traceh/workflow/projection.py": "79278ba2d8ff02bc9cfc52351061cad9e433c9d2d8d218ca86892160faa709fa",
+    "traceh/workflow/service.py": "ab37ccc7fa52bd02152eea11c40c87498c8b01fd6a39dbba8f4bc00fb9210746",
+    "traceh/workspaces/__init__.py": "5aa947b283fc5692a8ef499fe33ec99020f3d804e04021189c56dfbdd99bb541",
+    "traceh/workspaces/catalog.py": "9a1259237485b1450aa7867bf6463c60740c7219374c6dd0352a6dc4edbf6e53",
+    "traceh/workspaces/errors.py": "52467f0792e3719c76e0262a4b2a5aed876df79180f50204428ae1aa14daff23",
+    "traceh/workspaces/events.py": "9ddc0adfb26f9ea23fcf69d63c51c6e399f40f2c064c388be9ea23ad5b972000",
+    "traceh/workspaces/local_git.py": "8eb8b6c7380c75baa0e8e3e241f3c9f48ff44ce979c203bec5851da2567c9a65",
+    "traceh/workspaces/observation.py": "3071f4793d3ba7aa5ce2fadf2e966b76bb206cd923fb10b1292fc699ca1df2c8",
+    "traceh/workspaces/policy.py": "a9e9e335e543088192523d52dde138d9429dd05794d1e8422eb817947fb26fb6",
+    "traceh/workspaces/service.py": "9b10273b01577863796dab0791b1d60ad6a44aa07f811109a9ac6b6f07aa9d85",
+    "traceh/workspaces/supervision.py": "96c73fb3a7b12e428b91dbd3ce3fd1805ea51bb16022419cd477e44cb4f32e97"
+  },
+  "schedule": "Single request at a time; alternating paired arm order; retain failures.",
+  "max_candidates_per_group": 1,
+  "max_target_journeys": 48,
+  "probe_configuration": {
+    "calls": 2,
+    "retry": 0,
+    "timeout": 45
+  },
+  "evaluation": "Manual answer/evidence/scope review; no model grader. Positive abstention fails.",
+  "control_exception": "Current-message controls intentionally contain user-provided data; hidden source answers never enter questions.",
+  "fixtures": [
+    {
+      "id": "re2-omitted",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+      "source_title": "陶艺展览记录",
+      "source_body": "已批准的项目应急联络呼号是 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "re2-omitted",
+      "value": "REF-E2039898E4",
+      "source": "已批准的项目应急联络呼号是 REF-E2039898E4。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-e2039898e4",
+      "source_id": "source-e2039898e4",
+      "memory_id": "fact-e2039898e4",
+      "fact_slot": "slot-e2039898e4",
+      "skill_id": "manual-e2039898e4",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-e2039898e4-00",
+          "slot": "background-slot-00",
+          "body": "陶艺展览查询分工第0项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-01",
+          "slot": "background-slot-01",
+          "body": "陶艺展览查询分工第1项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-02",
+          "slot": "background-slot-02",
+          "body": "陶艺展览查询分工第2项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-03",
+          "slot": "background-slot-03",
+          "body": "陶艺展览查询分工第3项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-04",
+          "slot": "background-slot-04",
+          "body": "陶艺展览查询分工第4项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-05",
+          "slot": "background-slot-05",
+          "body": "陶艺展览查询分工第5项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-06",
+          "slot": "background-slot-06",
+          "body": "陶艺展览查询分工第6项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-07",
+          "slot": "background-slot-07",
+          "body": "陶艺展览查询分工第7项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-08",
+          "slot": "background-slot-08",
+          "body": "陶艺展览查询分工第8项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-09",
+          "slot": "background-slot-09",
+          "body": "陶艺展览查询分工第9项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-10",
+          "slot": "background-slot-10",
+          "body": "陶艺展览查询分工第10项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-e2039898e4-11",
+          "slot": "background-slot-11",
+          "body": "陶艺展览查询分工第11项：项目应急联络使用哪个呼号？我问的是已批准的安排。请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "value",
+      "material_digest": "eb2f375d19f5b5fa8db1a1f7cc5563fa707ca716b1faa4ef528a2c2904880c7c"
+    },
+    {
+      "id": "re4-memory-yes",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "陶艺交接时要使用哪张凭证？",
+      "source_title": "陶艺展览记录",
+      "source_body": "交接凭证是 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "re4-memory-yes",
+      "value": "REF-35CD9BFA4D",
+      "source": "交接凭证是 REF-35CD9BFA4D。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-35cd9bfa4d",
+      "source_id": "source-35cd9bfa4d",
+      "memory_id": "fact-35cd9bfa4d",
+      "fact_slot": "slot-35cd9bfa4d",
+      "skill_id": "manual-35cd9bfa4d",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-35cd9bfa4d-00",
+          "slot": "background-slot-00",
+          "body": "陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-01",
+          "slot": "background-slot-01",
+          "body": "陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-02",
+          "slot": "background-slot-02",
+          "body": "陶艺展览查询分工第2项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-03",
+          "slot": "background-slot-03",
+          "body": "陶艺展览查询分工第3项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-04",
+          "slot": "background-slot-04",
+          "body": "陶艺展览查询分工第4项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-05",
+          "slot": "background-slot-05",
+          "body": "陶艺展览查询分工第5项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-06",
+          "slot": "background-slot-06",
+          "body": "陶艺展览查询分工第6项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-07",
+          "slot": "background-slot-07",
+          "body": "陶艺展览查询分工第7项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-08",
+          "slot": "background-slot-08",
+          "body": "陶艺展览查询分工第8项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-09",
+          "slot": "background-slot-09",
+          "body": "陶艺展览查询分工第9项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-10",
+          "slot": "background-slot-10",
+          "body": "陶艺展览查询分工第10项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-35cd9bfa4d-11",
+          "slot": "background-slot-11",
+          "body": "陶艺展览查询分工第11项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "value",
+      "material_digest": "cb4627f9cbbe3029d6eb67777f2c6e8f0ac10db181a52b6bc7b0296811cb3d6e"
+    },
+    {
+      "id": "re4-memory-no",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "陶艺交接时要使用哪张凭证？",
+      "source_title": "陶艺展览记录",
+      "source_body": "本次交接不使用凭证。",
+      "expected": "no-evidence",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "re4-memory-no",
+      "value": "REF-689C399B2D",
+      "source": "本次交接不使用凭证。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-689c399b2d",
+      "source_id": "source-689c399b2d",
+      "memory_id": "fact-689c399b2d",
+      "fact_slot": "slot-689c399b2d",
+      "skill_id": "manual-689c399b2d",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-689c399b2d-00",
+          "slot": "background-slot-00",
+          "body": "陶艺展览查询分工第0项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-01",
+          "slot": "background-slot-01",
+          "body": "陶艺展览查询分工第1项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-02",
+          "slot": "background-slot-02",
+          "body": "陶艺展览查询分工第2项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-03",
+          "slot": "background-slot-03",
+          "body": "陶艺展览查询分工第3项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-04",
+          "slot": "background-slot-04",
+          "body": "陶艺展览查询分工第4项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-05",
+          "slot": "background-slot-05",
+          "body": "陶艺展览查询分工第5项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-06",
+          "slot": "background-slot-06",
+          "body": "陶艺展览查询分工第6项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-07",
+          "slot": "background-slot-07",
+          "body": "陶艺展览查询分工第7项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-08",
+          "slot": "background-slot-08",
+          "body": "陶艺展览查询分工第8项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-09",
+          "slot": "background-slot-09",
+          "body": "陶艺展览查询分工第9项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-10",
+          "slot": "background-slot-10",
+          "body": "陶艺展览查询分工第10项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-689c399b2d-11",
+          "slot": "background-slot-11",
+          "body": "陶艺展览查询分工第11项：陶艺交接时要使用哪张凭证？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "no-evidence",
+      "material_digest": "2f14fc96ca48316cc6307e0a33a491513624d0716b5c046037bf7aed61808c0b"
+    },
+    {
+      "id": "re2-direct",
+      "family": "memory",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "陶艺展览当前批准的交接代码是什么？",
+      "source_title": "陶艺展览记录",
+      "source_body": "陶艺展览已批准交接代码为 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "re2-direct",
+      "value": "REF-AF46CCDCE6",
+      "source": "陶艺展览已批准交接代码为 REF-AF46CCDCE6。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-af46ccdce6",
+      "source_id": "source-af46ccdce6",
+      "memory_id": "fact-af46ccdce6",
+      "fact_slot": "slot-af46ccdce6",
+      "skill_id": "manual-af46ccdce6",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-af46ccdce6-00",
+          "slot": "background-slot-00",
+          "body": "陶艺展览日常准备第0项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-01",
+          "slot": "background-slot-01",
+          "body": "陶艺展览日常准备第1项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-02",
+          "slot": "background-slot-02",
+          "body": "陶艺展览日常准备第2项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-03",
+          "slot": "background-slot-03",
+          "body": "陶艺展览日常准备第3项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-04",
+          "slot": "background-slot-04",
+          "body": "陶艺展览日常准备第4项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-05",
+          "slot": "background-slot-05",
+          "body": "陶艺展览日常准备第5项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-06",
+          "slot": "background-slot-06",
+          "body": "陶艺展览日常准备第6项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-07",
+          "slot": "background-slot-07",
+          "body": "陶艺展览日常准备第7项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-08",
+          "slot": "background-slot-08",
+          "body": "陶艺展览日常准备第8项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-09",
+          "slot": "background-slot-09",
+          "body": "陶艺展览日常准备第9项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-10",
+          "slot": "background-slot-10",
+          "body": "陶艺展览日常准备第10项由值班组登记。"
+        },
+        {
+          "id": "background-af46ccdce6-11",
+          "slot": "background-slot-11",
+          "body": "陶艺展览日常准备第11项由值班组登记。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "value",
+      "material_digest": "7eaa5c6118a5968a180ddc817908e3d5292a1daf8e7b47eac98d081dfe6e5cd4"
+    },
+    {
+      "id": "re2-unbound",
+      "family": "memory",
+      "domain": 0,
+      "mode": "unbound",
+      "language": "zh",
+      "question": "当前项目批准的交接口令是什么？",
+      "source_title": "陶艺展览记录",
+      "source_body": "隔离材料不应在未绑定会话中被读取。",
+      "expected": "unavailable",
+      "value_type": "none",
+      "control": false,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "re2-unbound",
+      "value": "",
+      "source": "隔离材料不应在未绑定会话中被读取。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-b1c992af0f",
+      "source_id": "source-b1c992af0f",
+      "memory_id": "fact-b1c992af0f",
+      "fact_slot": "slot-b1c992af0f",
+      "skill_id": "manual-b1c992af0f",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-b1c992af0f-00",
+          "slot": "background-slot-00",
+          "body": "陶艺展览日常准备第0项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-01",
+          "slot": "background-slot-01",
+          "body": "陶艺展览日常准备第1项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-02",
+          "slot": "background-slot-02",
+          "body": "陶艺展览日常准备第2项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-03",
+          "slot": "background-slot-03",
+          "body": "陶艺展览日常准备第3项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-04",
+          "slot": "background-slot-04",
+          "body": "陶艺展览日常准备第4项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-05",
+          "slot": "background-slot-05",
+          "body": "陶艺展览日常准备第5项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-06",
+          "slot": "background-slot-06",
+          "body": "陶艺展览日常准备第6项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-07",
+          "slot": "background-slot-07",
+          "body": "陶艺展览日常准备第7项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-08",
+          "slot": "background-slot-08",
+          "body": "陶艺展览日常准备第8项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-09",
+          "slot": "background-slot-09",
+          "body": "陶艺展览日常准备第9项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-10",
+          "slot": "background-slot-10",
+          "body": "陶艺展览日常准备第10项由值班组登记。"
+        },
+        {
+          "id": "background-b1c992af0f-11",
+          "slot": "background-slot-11",
+          "body": "陶艺展览日常准备第11项由值班组登记。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "unavailable",
+      "material_digest": "1863c3d54d7be7fa0425025cda2bd00e0849676da5ee744aa0a90544ddccfcd0"
+    },
+    {
+      "id": "re4-skill-yes",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "陶艺交接时要使用哪张凭证？",
+      "source_title": "陶艺展览记录",
+      "source_body": "交接凭证是 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "re4-skill-yes",
+      "value": "REF-7FD7AD62CE",
+      "source": "交接凭证是 REF-7FD7AD62CE。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-7fd7ad62ce",
+      "source_id": "source-7fd7ad62ce",
+      "memory_id": "fact-7fd7ad62ce",
+      "fact_slot": "slot-7fd7ad62ce",
+      "skill_id": "manual-7fd7ad62ce",
+      "plugin_id": "reference.author",
+      "skill_title": "陶艺展览手册",
+      "skill_summary": "陶艺展览流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "陶艺展览日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "陶艺展览日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "陶艺展览日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "陶艺展览日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "陶艺展览日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "陶艺展览日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "陶艺展览日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "陶艺展览日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "陶艺展览日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "陶艺展览日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "陶艺展览日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "陶艺展览日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "陶艺展览日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "陶艺展览日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "交接凭证是 REF-7FD7AD62CE。"
+        },
+        {
+          "id": "section-15",
+          "title": "陶艺展览日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "陶艺展览日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "陶艺展览日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "陶艺展览日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "陶艺展览日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "陶艺展览日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "陶艺展览日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "陶艺展览日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "陶艺展览日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "陶艺展览日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "陶艺展览日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "陶艺展览日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "陶艺展览日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "陶艺展览日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "陶艺展览日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "陶艺展览日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "value",
+      "material_digest": "2c38f6f1bad6a9e0d60aa1ed0002274bf456c1f12dbdad5ebef87427538bded5"
+    },
+    {
+      "id": "control-greeting",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "你好！",
+      "source_title": "陶艺展览记录",
+      "source_body": "此手册记录陶泥存放要求。",
+      "expected": "direct-control",
+      "value_type": "none",
+      "control": true,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "control-greeting",
+      "value": "",
+      "source": "此手册记录陶泥存放要求。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-1ca9cbebc1",
+      "source_id": "source-1ca9cbebc1",
+      "memory_id": "fact-1ca9cbebc1",
+      "fact_slot": "slot-1ca9cbebc1",
+      "skill_id": "manual-1ca9cbebc1",
+      "plugin_id": "reference.author",
+      "skill_title": "陶艺展览手册",
+      "skill_summary": "陶艺展览流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "陶艺展览日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "陶艺展览日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "陶艺展览日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "陶艺展览日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "陶艺展览日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "陶艺展览日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "陶艺展览日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "陶艺展览日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "陶艺展览日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "陶艺展览日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "陶艺展览日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "陶艺展览日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "陶艺展览日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "陶艺展览日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "此手册记录陶泥存放要求。"
+        },
+        {
+          "id": "section-15",
+          "title": "陶艺展览日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "陶艺展览日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "陶艺展览日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "陶艺展览日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "陶艺展览日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "陶艺展览日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "陶艺展览日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "陶艺展览日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "陶艺展览日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "陶艺展览日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "陶艺展览日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "陶艺展览日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "陶艺展览日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "陶艺展览日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "陶艺展览日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "陶艺展览日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "direct-control",
+      "expected_answer": "",
+      "material_digest": "468b2c735986354224cf16729cc04304441ef3adbd45bbbb405ccc3f4fdeb5fb"
+    },
+    {
+      "id": "control-sum",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "28 加 35 等于多少？",
+      "source_title": "陶艺展览记录",
+      "source_body": "此手册记录陶泥存放要求。",
+      "expected": "direct-control",
+      "value_type": "none",
+      "control": true,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "control-sum",
+      "value": "63",
+      "source": "此手册记录陶泥存放要求。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-789f3f0a61",
+      "source_id": "source-789f3f0a61",
+      "memory_id": "fact-789f3f0a61",
+      "fact_slot": "slot-789f3f0a61",
+      "skill_id": "manual-789f3f0a61",
+      "plugin_id": "reference.author",
+      "skill_title": "陶艺展览手册",
+      "skill_summary": "陶艺展览流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "陶艺展览日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "陶艺展览日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "陶艺展览日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "陶艺展览日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "陶艺展览日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "陶艺展览日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "陶艺展览日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "陶艺展览日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "陶艺展览日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "陶艺展览日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "陶艺展览日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "陶艺展览日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "陶艺展览日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "陶艺展览日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "此手册记录陶泥存放要求。"
+        },
+        {
+          "id": "section-15",
+          "title": "陶艺展览日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "陶艺展览日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "陶艺展览日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "陶艺展览日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "陶艺展览日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "陶艺展览日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "陶艺展览日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "陶艺展览日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "陶艺展览日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "陶艺展览日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "陶艺展览日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "陶艺展览日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "陶艺展览日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "陶艺展览日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "陶艺展览日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "陶艺展览日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "direct-control",
+      "expected_answer": "63",
+      "material_digest": "8754e7a9d5aef2420e75eb4c89861479b5cce93a06d8f75ee24780233ac15fce"
+    }
+  ],
+  "source_roots": {
+    "baseline": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.pytest-tmp-codex\\reliability-01\\b0\\src",
+    "candidate": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.pytest-tmp-codex\\reliability-02\\candidate\\src"
+  },
+  "source_files": {
+    "baseline": {
+      "traceh/__init__.py": "1c9836b89b9bc921c6a3181e359a0c3dad604d9845a0a8c47c2e10154c9fa010",
+      "traceh/agents/__init__.py": "8c7691c1a9a8a20105c3f9b700cf04ed214b5d4d0473746c82f5534d6c1dab2e",
+      "traceh/agents/commit_reconciliation.py": "739a85fd7b3642b5f127dfebbb26e4c28a27a841887e2294d292e29e3ecd22d5",
+      "traceh/agents/directory.py": "012ff2a7e20edebf320fa5bfd25da44a0606734e7a10f9aabab518d4fbf02b4e",
+      "traceh/agents/errors.py": "f0a2833032eed999cdace4178d59b37943309d3d22db043a13580ec7faf0cd90",
+      "traceh/agents/identity.py": "aeb16ad349629b99a1c8d17297b66b8938ff5e6cff11f5ec1004534298cd7553",
+      "traceh/agents/inbox.py": "0261615e0014052853a22181f0afc59e024cd07e2b920f8aebe7b4179875ae48",
+      "traceh/agents/inbox_identity.py": "2b62ebbc0991260b7486cd90e6833f7edae56d81ffa286b8f0fd9645aea515de",
+      "traceh/agents/inbox_service.py": "b18a2ee223b19c01aef7ac461d7d785fa84f06c93106261a63b8b5e825e944cf",
+      "traceh/agents/registrar.py": "d7c73e8f7404eb5dcf1081b1ff477457440e9f740501213337fcebe5d8761ba2",
+      "traceh/api/__init__.py": "3062ce262d9b576ab6ad377ac4d31ff790401985fedabf586b251d6324b33dc4",
+      "traceh/api/agents.py": "373e06b5d79b04bae36e39a89ab99d306083ae4c94eefa59f1a9bb509a41dc85",
+      "traceh/api/artifacts.py": "3479fbe3adc0de5a3eba9177f8687ac2177bb4fdcacc945c9f920e6d3e5f2e90",
+      "traceh/api/budgets.py": "7a98f94096768154973efac409e975d0d6d96909fcd7f6841f491dbc65d6be28",
+      "traceh/api/events.py": "3314909ddb5f0346e7e59100260e9a196ffef690d9205a226d50b2c3dde002d1",
+      "traceh/api/history.py": "eeafecd703e0fe83597c8e7f8630c3b19e701d0b02725d3f8461d75463d62486",
+      "traceh/api/json_types.py": "7eb0ffc16b47bd4078c3be9aea2556a443746aceb31d78b8d3a95b2884099ede",
+      "traceh/api/llm.py": "309ee0523440f9bb452623a3a6100ed1334e45c10771d9870706dcd5004c15d0",
+      "traceh/api/memory.py": "38149a9126af40af00d2df807730eca0f43b6ac10171e0ef3e42868e59ac4c88",
+      "traceh/api/plugins.py": "68fccd17f134469823ae5ff8147c20a8e48ed3e89f23e87a08bc9deb1124178b",
+      "traceh/api/product.py": "03869213287f8ffd8c9f5b9e9bc71973a993c542aae45882b7a689d392d2bfe9",
+      "traceh/api/promotion.py": "f6d0c76298b94ada00d542925726b34af6d66e5bd6468dbde5340327e5b583e5",
+      "traceh/api/prompts.py": "251b61de93f1dee157a5d7e21e02cd1bcce9eb384cbe69e9a67e555834fd7b2b",
+      "traceh/api/retrieval.py": "ce31d0550cd77d87270e373454e64c985ce32317645afdf2a7e74721989faa5c",
+      "traceh/api/services.py": "6e918d3b123f7be563a882cba3cd54ea001884907d2b610ed629c930182189c1",
+      "traceh/api/skills.py": "1855caa5a5b1eb26fb31626aa2b40a5b338b65c1ee792281f837ed4bb1f2726a",
+      "traceh/api/tools.py": "86e27f6be8db2493c4f6af31fde7d8fe2585604fd45537c0faf25cdb89bd784e",
+      "traceh/api/turns.py": "0666ee2de17da99846e65bfecb1e75479506bd2ad3986fb6a71f3b88b491747f",
+      "traceh/api/workflow.py": "45f29befd8423af4e3051ac6be6a579b95b2bc335b6598083c45028b39e03797",
+      "traceh/api/workspaces.py": "08e2f40383ff95a48f93f7d6a30b00a5574a7e035a9fdbce95cca656147ec586",
+      "traceh/artifacts/__init__.py": "e50902e22df5c194615a2f4cb63391ab6101ff0eea674a264800a7b5b7b42e65",
+      "traceh/artifacts/capture.py": "9c2eb49dda97cece23f038156dc0572cd9ac5d75615f0e786f4cf708e545c0fc",
+      "traceh/artifacts/cas.py": "6d1aefa43b8d9eeacefe7f69b1cd1c32db92d55a4622d54b47d60317e9663d95",
+      "traceh/artifacts/catalog.py": "d51b3974b159b130b1d5516970750531d041d49c183369c557564b48c0f81b6b",
+      "traceh/artifacts/errors.py": "0ece2afdb2da45324e22218a923f30910be88c2bc342ad20bfb5233afe030d1f",
+      "traceh/artifacts/events.py": "d95e966fba5301057a446f44d7b65fbf91109abe0ebea5ab6c451a18cfa894a7",
+      "traceh/artifacts/git_patch.py": "4667173cbf58b8eb2077fcaeeb45bab17a9f94fd13fd00c4b7b5e200bf10c7b5",
+      "traceh/artifacts/manifest.py": "ca940a4682e9f0e608b4bb5bd3e9c8ed5db664ca94200e11c8f838ebeb57d82c",
+      "traceh/artifacts/reader.py": "5b7590059a4eceee0fd94d4da720fdb22b216350efe9adb98fb7e94ea93f041b",
+      "traceh/artifacts/reporting.py": "d7ce597981c1cba134d93be1292124c897319508739c26872daa651ab4ee30f9",
+      "traceh/artifacts/unified_diff.py": "50d5e87a8d4047bcc2905df587b20dd6e923ff39ffbaf97c17291810815490be",
+      "traceh/budgets/__init__.py": "d81a313eae1602a89ccc3c7a1bc5d9a2bbaee3baee6620fe336561baf62f6f43",
+      "traceh/budgets/enforcement.py": "bd2e6d6eb70cf6ec1fb357c0b9f678b94de37a1c66d458785ebabb96a0f8d638",
+      "traceh/budgets/errors.py": "3f481dc1d90f1acf15f326825cb477ac0219e7c5474b2fd28562ec0ab7b16e2d",
+      "traceh/budgets/events.py": "434db8a4d6675d2316820beab07c50aa7660a7a3813f4ebc89e61a99d5b4740f",
+      "traceh/budgets/projection.py": "289dd8fe499bc60b644df0503852bcd0084349b1a69588669730903d469e1f5a",
+      "traceh/budgets/service.py": "954051252a54661c03e7706c9db646df7f5c29798f45011336447386ff5b4c43",
+      "traceh/budgets/supervision.py": "bfffe1e62ceb4fecf4cc5e1e8650a8f72df87e69bb7623b8c564eb8edb0a5d76",
+      "traceh/chat/__init__.py": "8acb4c2301a27e9283bfbb866f726ec82de27b6812a9e6af31b1979cf119514d",
+      "traceh/chat/activity.py": "b5d6705317ca714d85362b92b2be7ad3cf796b46ab15bd58305c064e5915f05f",
+      "traceh/chat/config.py": "0ce90da894c14f6a07188529444e1403b9ba9b26ad7d056d2d8e5d1250cfb201",
+      "traceh/chat/context_pressure.py": "3aa6a380100c3be6a3266b5a96c0b4389f52b216971ed5bf59a06f8398d7ae8d",
+      "traceh/chat/driver.py": "19fbfbfa56d459fcc4b395f141c2968447cd930fe0640174fea3189fb94e9863",
+      "traceh/chat/governance.py": "ce01686e734591ea639619c2624f0f19bf21765ec7e26396adb187d12bb3c4f3",
+      "traceh/chat/session.py": "73d70d6985259cdf74805ef286371f85e3ea68a303ed36079dc5929db3621976",
+      "traceh/chat/workspace_project.py": "4b0c9c257419136b81d5af5f301bd6a91a366df9f5080cb8bdf391e93119e86e",
+      "traceh/cli/__init__.py": "fa2e7718b0453b8bbb25bc246df94e7e58549586e0d0024faddeb7b9e0dacfb5",
+      "traceh/cli/activity.py": "2892adf530b59921d109281fd3e649b3a9c724ed9267b8d9509bb73e4a3f37c7",
+      "traceh/cli/chat.py": "5f5d33f9fbda1c081bcc46ede27809f435a690382390a599941ddfff76ac4488",
+      "traceh/cli/command_line.py": "e29e4b37b2d67059ac4f4e390afe7e45c7cefa9d421b39264a3b0bc5f6c259c9",
+      "traceh/cli/console.py": "881fe1ac4f6382ec5a938f4e04510dbd593ca39bc4212f4e26d0092af5d03b91",
+      "traceh/cli/context_pressure.py": "86a341c6b8c752a70aacd52e0b569081e378922b703ceb1eb3ee41bf8750d724",
+      "traceh/cli/credentials.py": "ab9303ceac3498895fcb351abef1096bd58cdd5a61156f4643adb1d86e8d88a9",
+      "traceh/cli/env_file.py": "9481a465cc4035c43e7af3f0cbd8aa77e89a34d9c3686de7d4cc9357686407b1",
+      "traceh/cli/errors.py": "47286a3fc84ffaa55e5eca3be692e0d53c5274fb53ebcfc405f2660e4ec3c3ad",
+      "traceh/cli/main.py": "ef5fd34b550202eae96b3bc3c3b9d15ebe26ee0b13227bbecf0f24e142ca5ef6",
+      "traceh/cli/plugins.py": "77bff1d026e064b15353361145b6c138dace83131d72b57659613f4b5e458183",
+      "traceh/cli/product.py": "da7e749c3f7c0e30b81f68f8d311ded4bd0c2376fcc2e30a16b8669ea457c5bb",
+      "traceh/cli/startup.py": "c26e35a5b47be9c583380d51150e2f61d3a99c3e36f9dcecebf115c9c5bd3d40",
+      "traceh/cli/text_safety.py": "ccbfa8ad030f28447979a208ea4b4d08afee9b97ef82af8dea2c9913da6b1c79",
+      "traceh/cli/timeline.py": "21e81a337c33d6835e8812097a2d40772188fc452c5c5a49d0713bd13a43d57e",
+      "traceh/cli/tui_config.py": "db0fbc8dcc71f065ab0609a61d2384b9a81d88f0625607be7b78428337866362",
+      "traceh/cli/tui_entry.py": "b823b4b1ad6ecd0b5c6ce96459f4928b56b37064087b81e03a8cedd2055c0080",
+      "traceh/concurrency.py": "837dc9165588b7551c1790b117c6b0cd629ed1e263945b42d41cabf9808a80a7",
+      "traceh/evaluation/__init__.py": "7875c46ff7710160ea4c5bb450056019f2df702d02bd7fdae9b7420756b6d024",
+      "traceh/evaluation/attempt.py": "365d1a135e632f919beb92ecbe55d0e90c31f12565a762f5093465f0ee59c09e",
+      "traceh/evaluation/errors.py": "eb7dafc297ec98d1f805d86b1c04d383e75c0c8ef2cbe630c55479e07cdebdfd",
+      "traceh/evaluation/manifest.py": "4f0ec3fad9c1fc9dea42dc54b89a3bbe06fda7c4ed7e4cf87430bfa5615759a7",
+      "traceh/evaluation/metrics.py": "ffa2f9fb51d75c49c45bc4b359e0a8b7b0ab722b0771ec4f6bb7ae7744ab8e2f",
+      "traceh/evaluation/report.py": "1df19f18db22f61c709b0211f43527da36addc817ce74691f07b53fc17620f46",
+      "traceh/evaluation/repositories.py": "621c81484a5d442f6673ccbdab5e9ec947d0b3f0ecb93397cd2dbdcdd2725890",
+      "traceh/evaluation/retrieval.py": "0f21995ad7b7f3f2deb82c870d778708a3203f9649f6d41c1b38007927615f70",
+      "traceh/evaluation/runner.py": "859e4026adaeb773fff0076c855db36385ae6bb9bb76ba2686d55838a777aad7",
+      "traceh/evolution/__init__.py": "2de1256b658dc0b48bd81717d601c1f2f98359a13f7c74c94a53d5b9549f2d8d",
+      "traceh/evolution/artifacts.py": "2387a293c51bb74aa2aaf4f83c071e410a0391c4e7b23e87500fde84f20630fc",
+      "traceh/evolution/candidate_comparison.py": "516bfd7f0431058cfb9bbb31a1c205e7ebd4a742614af5e673c96dc72f78480b",
+      "traceh/evolution/candidate_promotion.py": "9d97c43001b197d8a05e60dfbbbb10d66c73f09dc98e0e94afcfb4605b0e620f",
+      "traceh/evolution/candidate_validation.py": "56da0b3f456c97a0d5f5b1f396f105e9a753265e17d4a203bced0730ab9565cf",
+      "traceh/evolution/comparison_probe.py": "fb0758c0f78166f7132a0444fc0fd6924328ebe10ea49e12d3976402b2839960",
+      "traceh/evolution/contract_probe.py": "e6c3f30be2193582f26f2574db8b498b22d4be6b1f890ab02cb99849d9a61c2a",
+      "traceh/inspector/__init__.py": "895fa59bd30bb3d592080b9be85e1a73ee75a8f91ab1a8e679c25686d1ddfbec",
+      "traceh/inspector/session_inspector.py": "bd62ff079be44289fada5fa4f736017c52a0347f9fcd8996c3eab461ce33dae8",
+      "traceh/kernel/__init__.py": "6f45234cd50446fbab108aa1119e680f2f9776c09fda955472fa6425544d84ea",
+      "traceh/kernel/activation.py": "9a9c15425598bcd69d07a7c5a46e325a35484ccda03cd4e41d748e34a16ca390",
+      "traceh/kernel/composition.py": "4ae5aca88cc00bec9560180be4da8e3fbc9e94138312915b72e1cba6447e30e4",
+      "traceh/kernel/composition_overlays.py": "1887e257e57fca12238627c90b56ab17d6fe22d83d878c7fe8ed762a6a872247",
+      "traceh/kernel/hooks.py": "25a0fd21ea6639e57ef7933a414133272c3778e1ffd26e379d0ff2894cc89e95",
+      "traceh/kernel/lifespan.py": "1d52935c4bbf14f6de766911a21dd3b8699070a262722ebe5a1834a5d7def91f",
+      "traceh/kernel/registry.py": "d3fbd2dc8d40bb3d60dddcf4bf85d300ee6cc8e8295f4e94b35cbaea7dfc11e7",
+      "traceh/kernel/scope.py": "0c76a8f3f270bdd13e3ebc2d23cba5f6e9d990992076d4b99acb9590c90ce9a3",
+      "traceh/kernel/tasks.py": "24e3429b464f2cb539efb46561d6bfa275171ec6ddb0737da7f33d1ef84b0674",
+      "traceh/llm/__init__.py": "87d3ae1e469ca6dfe49dd8d8e4c5f1d10abcfe46d79bb0d7eb26c609888624e5",
+      "traceh/llm/failures.py": "3f0f1debcb53cda14e2550877e666b1177769b50ea2b3147aca54131852c88e7",
+      "traceh/llm/openai_compatible.py": "4557857f9348e2b3fcce141fe41dd1dbc9f952d5c2c27698c5119af0e0b79c13",
+      "traceh/llm/registry.py": "537c8aa271ddab3e5c16f228f56045522d49fab2b4de8d90ad59a33792996dee",
+      "traceh/llm/retry.py": "98fcb63e81f73fa410448556ce389acc30eb0c57fcb9b6ca29bdfa7714b480d5",
+      "traceh/llm/runtime.py": "e4bec452adf93eb49d7bf81010ce78092eaa7993cb386cb3be1711c837122e89",
+      "traceh/llm/scripted.py": "e7cbb66c41ef6f1e2b3d767541d9bd97453e899b864a495acb7613c65f39d30d",
+      "traceh/llm/token_meter.py": "9bfa8d8e57913be6329879b56e91a7960b827af7a3f635d38e7565454cb21819",
+      "traceh/memory/__init__.py": "c18eee7f6d484b1abda1b0c3b485e67a7518eae5c2cc7e9a3ff5fe783703139c",
+      "traceh/memory/context.py": "99f072ef08eb521e1770684e91ff26edd0eca3504286d7dfb2a6a03a2af486ec",
+      "traceh/memory/policy.py": "4d44720f7a493e38dd244a694a73db72156c219a061ea6ad481ddeec3f5fd692",
+      "traceh/memory/projection.py": "9cfda824024620199dc8450a6c7834e0d7359e66d3896510653d8e1ba1667eb7",
+      "traceh/memory/service.py": "bece1ec2850cc2aa4005b20373d4164c6f613bd165d32c22f774491a114a89d2",
+      "traceh/memory/sources.py": "4c03084e1bdaa90829bd99177f282ee5085580ac0fb339a0eb4196e648542609",
+      "traceh/plugins/__init__.py": "e4194b552553b214e5e510bc44d53edef706f45b98bde52041c5f2e1d6f636c7",
+      "traceh/plugins/discovery.py": "4c3d8547ea5c43511dfb5514b3d2878b470b1fcf647919ba3665e0644c94e254",
+      "traceh/plugins/errors.py": "b26de4966340fb8f5486803273f5b274624b7db019f0e909073574eca319f5cd",
+      "traceh/plugins/manager.py": "8d46f3893c880503ed2c56b44c67ebf662a19531bc5cfbbe6e03a38dcf7ad97c",
+      "traceh/plugins/selection.py": "0eee9a762cdfcb7cb22fdb9a921fce6ed011f9614a8ffb8f92cc97bbcea36ef7",
+      "traceh/plugins/skills.py": "98db96a1fc0bf71bdbe0b02433063a89b033abc3dd2b8bd5546eddcf8ad089f1",
+      "traceh/process_control.py": "2f088a4c9917fc31962a4b6f34f0c6396177f3b6deb80ea07cf9871d00d2af67",
+      "traceh/product/__init__.py": "574d1277ae53aa018b06654723413d9e639e73241bc71a503122269ab891a1b2",
+      "traceh/product/activity.py": "935e256dcff1a23ee0885916d0b7fb114a65c5a42af6fef7c5b0ff37950db2bb",
+      "traceh/product/assembly.py": "fd1d246310ec8c7bc1ff7e14b857d433f85838f3e8e2e5228c34fe42984dee95",
+      "traceh/product/chat.py": "52e99b2416f783c60725d7b22af87ba79a053e57a270699b11643980d9cc23df",
+      "traceh/product/config.py": "90e2400832656ab1f491bbdd26927e7ee0ee54d5930e12b2c9a8142e1698cebf",
+      "traceh/product/context.py": "9f29d519a6de0b0f5dcdd0da988368a675c9e098c9540a762cd366e37b3e877c",
+      "traceh/product/control.py": "cadfcd6a8b2392067fd685c60128cf08bbb7a4b1573ac003f39cbe5508aa2688",
+      "traceh/product/errors.py": "641a08b5168e29bacaa3d906f399601378c4fd8b5e07ad4c101e3e3e922dcae0",
+      "traceh/product/events.py": "d4396e47eb509afe720b5e0718acc34bb01fbc6dd155dae1f03b6755a9c589c7",
+      "traceh/product/evidence.py": "77c4746f799bff1c5b7dad554fb4ecd04e43d29ee05645ab4c1946c2b45f5633",
+      "traceh/product/execution.py": "152ca445725e11e5de239867c9bf8255281ed7ed908ea1f308a16f3728816775",
+      "traceh/product/host.py": "9cf617e03f64839ea99351140246ec843c13435d72541b2022ed3dd6ac93b5d7",
+      "traceh/product/inspection.py": "26e33917515ee43b4b176820ac32c8d73a71bad7da9cdc842da7f1d7ffd44c6e",
+      "traceh/product/memory.py": "8d7fe77f49aaa68d1fae4dfea91fb276c69fabfea87eff54271ceae50f4f5bb9",
+      "traceh/product/observation.py": "f0369051ddde8714d6199d226923259b5c2269ab681d78e336917b84195ab9c0",
+      "traceh/product/project_scope.py": "1e44a5cd17ee0e8ffc999378a573f6b1c850296a1dfc7cff81039c7e829d6f7a",
+      "traceh/product/projection.py": "e7ee535a181d2f94ff0895bab1fa3da167704b3f241ca7b6995b3917833a9697",
+      "traceh/product/registry.py": "ac84e2419a02165233189ce71654478f9dc4cab2bc23376c0abbe7db45439a71",
+      "traceh/product/resources.py": "ba527991912c7526348c20ab0bd06988192def1faac82d135c7c504ec48b8ae1",
+      "traceh/product/router.py": "828dbd429aa091a748d05470b928e4897c4e645b6c2819e2a0d6a58b7ec32765",
+      "traceh/product/runtime.py": "99dc23f16d9869c566deb3284a8cd14e67330cd2b704f76fb59a1266b29735e8",
+      "traceh/product/service.py": "40f9044877fc66ddfaf513164acc10d904f5192ab39695f5d57fbe84f251418f",
+      "traceh/product/topology.py": "097621ef3faeb4c62a697871a8b81058123e87ca4ca3f8588dbfc83a0f711311",
+      "traceh/projects/__init__.py": "e3cb3b4a5fc6bff23b85b39e715c44795ad057e038e8c16435deed28e2122752",
+      "traceh/projects/events.py": "52ab555199455ace68d6b782d202b738ea65fdcbba5e49939be1d7bf0ba5ba5b",
+      "traceh/projects/projection.py": "297081dcc40747155b980efccf463718b5d87620eda3756edd85bf15c296d372",
+      "traceh/projects/service.py": "0f7424374e80dfa2a1bc80a873616616765dacf45de46aeb7c20bdb780aeb363",
+      "traceh/promotion/__init__.py": "65843e3c0257c3a62bae0d4d07ccd42461f85b77c733f5146e9a091f9968a2f4",
+      "traceh/promotion/cleanup.py": "a5b7b617fab7928bcdab5d54e7a9bb5fc77d09842e52b3acf9ea9b958bc5bd70",
+      "traceh/promotion/errors.py": "9afda1dbb4069999d570d5b3b0889e98b4ff962260c0ac30b7eec6ea66a58b21",
+      "traceh/promotion/events.py": "1758b1015d0addb3c336692f3e50a47089610bc2d2334764543dc12c6c5135a0",
+      "traceh/promotion/local_git.py": "5970408c4443b2c5c920b07af4ce387fa7b20695cc47bab428ebebebea505adc",
+      "traceh/promotion/models.py": "baa7f69d6d01e34c079fd6e99d8e1555ca3188a100b4e2ca2aedf6257b6cf2a9",
+      "traceh/promotion/projection.py": "504965daaef3bccd11e435412461a95a333643280bf223ed082a043490499bdf",
+      "traceh/promotion/service.py": "366f81cc6604fc80c2e452c54c01644b28abdd0527d8bd13b301c3a2abe0fd65",
+      "traceh/promotion/verification.py": "c9cb00e18ba00a4147f46792b2199c6dd0153708c39e6ab4678c3f31dc3d1a49",
+      "traceh/runtime/__init__.py": "995ecc6a5b24e9b420c98299aaffc1cbae6412734559efeaf744fe6d7ac83230",
+      "traceh/runtime/agent_loop.py": "1ca41a973be96e149f37d0b8635e1319cf52c9fc8bb615822d86c740ade4ce4b",
+      "traceh/runtime/agent_runtime.py": "fb3c1afb0c726695165535ffde7b15cdec5f9b439ceebb1e61da3ec237eea48e",
+      "traceh/runtime/composition_runtime.py": "506f92e6a2ec5fbc5ca3ed49cd54a92b4725ec27bb9952c1d6112e37e1ade83a",
+      "traceh/runtime/continuation.py": "c711bb4fda6a4a754aed4f66c3cd59bc94fc900869072b75ce86df4667645f78",
+      "traceh/runtime/memory_control.py": "7b985871a6020bd921ad6a07b6fb75bbe773f9f6605ee268f12764140d5f577f",
+      "traceh/runtime/plugin_composition.py": "5c44ec7a2abe36b22f8f7cb7357abfc217faf90dc53d64ad8c6ab1afee83d082",
+      "traceh/runtime/prompt.py": "1e8a84dc65c72bc9c4b272d42c9cb062ebb274bb711c315a324eb6d7efa5e0e1",
+      "traceh/runtime/repeated_denial.py": "2681cbdb792d7956f703a48c0fc94702817e62bbb48359ef47da689435b82ccd",
+      "traceh/runtime/request_builder.py": "86a11a12f9c25a3980e3ed338362a3206bc9fded2a7d69e92abd45caaf90d862",
+      "traceh/runtime/skill_context.py": "a358855f5090f092cb8d51da7f9ea6c7fad60730b73ef1024b28d6f1b934ebd8",
+      "traceh/runtime/verification.py": "2a735ebcfba68a7c09c62f7a031109c57e41a74a61f40ae067e335bbb8000cca",
+      "traceh/session/__init__.py": "299449021e2a72c0fece44b2628400623b99e3c1287cab87b666910fde4580d3",
+      "traceh/session/compaction.py": "5b146e89362651f1f07b000a1593518cdbdbe9c2bdcd236c21bbed4804c85eab",
+      "traceh/session/context_index.py": "5d7946ff198424587d93fedff8750d917e69113fe97db31c9f64ee90a62dff9e",
+      "traceh/session/context_input.py": "9a4173f1115bfd9d8a058de816b6fe8e80adeaea6742fbae72a3e2851077080f",
+      "traceh/session/context_tokens.py": "6f520d26c0384092e95a46785b1cb4562587750ad5562107d1fdf8b4bbae57a4",
+      "traceh/session/event_feed.py": "2db28ba6e9df681e13632ee37e3f25117e08247b3b8231e1435f924b1d907536",
+      "traceh/session/event_store.py": "15440fbe22bfb04f9574e99ab25f1f379ef1b6f9b2e130cb29239c507d82f46b",
+      "traceh/session/file_lock.py": "6924f8b27e1bb93c39c800595c4e7a68f38609ea36af6183ddfedc5f01bd504a",
+      "traceh/session/history.py": "08e26759bedff2a63d39935fe81747a28df84769a7426e9d9f09bb1e2957eb39",
+      "traceh/session/history_observation.py": "e6be13d7bcc5e1046fb73a540d9444f6c49fe3203e69f0a476c7012134b64909",
+      "traceh/session/history_requests.py": "2b896b525cf5a5318e21e66e3c13d92af16ce9f35b3bb6ac9e74c014958a6c0c",
+      "traceh/session/invariants.py": "b5fb1488d73adca78db428e6a61da79244d2945dbc1e90a8521f6cc1ced139ba",
+      "traceh/session/memory_requests.py": "9fd8290e76ac2c50d7d8fbe533afab288c0314434471bfb4b027fd046b987e5c",
+      "traceh/session/memory_search.py": "d6b94ea7e670aef1dafc34f569732c508b860c3d807f177c9b99e44336236f5e",
+      "traceh/session/plugin_identity.py": "1e3adbb53f61a3580249442e5512abed02e180c733b1d100c00903fec697626f",
+      "traceh/session/product_context.py": "bc634c7b0294215c36f9c88cc64da1406aef8ef93e2af5ae23705d1fcc6c6086",
+      "traceh/session/projections.py": "cb4afabc0aa029d4dbb3b6cd2a0cef8ccebeae3bd0bb09f1d553e0c3dcc85974",
+      "traceh/session/protocol.py": "c80334cc8636713bdb7e724e79d61d293f92ae7e1dfc239692f71d88bd8fd41b",
+      "traceh/session/recovery.py": "e13a9256f2c4efe9666b0c8b6d624a4945f73c2f8c8d702fdacbae051c32073f",
+      "traceh/session/reference_requests.py": "604c46069b89a04c98c9054a1c06ff1161b6d73d91becc47b9bd170445ae495e",
+      "traceh/session/reference_search.py": "e9830c88d0cae49537576bfdae098d792c5535ffaf38ae28284113709865d22f",
+      "traceh/session/retrieval.py": "6dd7f4a2c78a372e586dc557e6ef5a400be4bad04c91c2030f3d48ec770f9a08",
+      "traceh/session/semantic_summary.py": "9ef073a37c310d6473c5f47750a10f60d58d3bf818cfa6e6e44d26282c033c48",
+      "traceh/session/service.py": "61c8a46232fabc1d270eccd88e66941ab18dc42ebdb4b767498b0c799d70fbf0",
+      "traceh/session/skill_requests.py": "5c54f306c73dc418c15670b2784d2c5d627badeb06942c7533fe5ec987d97785",
+      "traceh/session/skill_retrieval.py": "fdc227299c23dee88db8bedce09edf3bc84044a6816188d12d0298359185b6f6",
+      "traceh/session/skill_search.py": "503f85ae0e71f2c90f586dde081321c5411ede544eddaa0c2cca5f64e9e68e9a",
+      "traceh/session/skill_selection.py": "a801a09b0f88bfb529864f80903c91836dffa9c18405915787e029265ea961e8",
+      "traceh/session/sqlite.py": "22ab5be0e47853bd9bb7e44e5b3a9c6918770c47cca86601851cb71e79606b2a",
+      "traceh/session/stream_heads.py": "99b64f4987955f70b7d2bab376750bfd49a5029765e10e4f720d96b67563a28c",
+      "traceh/session/surface.py": "87277f4958cf2c386f474d9decec7065edef69ca5141722588dcf29e171fa8cd",
+      "traceh/session/surface_replacement.py": "45db2fa2f71401706cb09d9ddd7ba776d47d76b7c04aced455678fb793999be8",
+      "traceh/session/tool_output.py": "c74ddd30de330a2eeee25330ed0ce8883edceb8e24bd41b2066a46d3de2bee5e",
+      "traceh/supervision/__init__.py": "6b292943788604c02662b89cba4dbda95087397942ab66aad9d8036c91d0a215",
+      "traceh/supervision/authority.py": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+      "traceh/supervision/delivery.py": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432",
+      "traceh/supervision/delivery_identity.py": "a0ec959cab8eea6e177b2f1b9e2500401c6ed5d0e258f2475bd41aa517cd7341",
+      "traceh/supervision/delivery_service.py": "66616b802121c8f24561e0fc3123252cebab220999aa322064c7874c1b5ba271",
+      "traceh/supervision/errors.py": "376ae8707e63074b45924bb4b866c8b760f18ce39e5d29ef0f2d3ce5772ad724",
+      "traceh/supervision/execution.py": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+      "traceh/supervision/lifecycle.py": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+      "traceh/supervision/provisioning.py": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+      "traceh/supervision/reports.py": "b9fe4fe6e762f67e37e9c0b9ac628bb8a4a79a5f46de77652db2e81bdc73a4f5",
+      "traceh/supervision/supervisor.py": "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0",
+      "traceh/supervision/tools.py": "498e53c7d43c55d4d72dc36ee991b110af45c02a2a210fae7bda19314171fdcd",
+      "traceh/tools/__init__.py": "7d55c8ba69f1611110a11bbd4e32403253c32bc5229023e7dc80d282db49208e",
+      "traceh/tools/builtins/__init__.py": "02160a0fd5c5ab0f5c28557597f66454245155322cfadcc42a1f6e8f74db9722",
+      "traceh/tools/builtins/apply_patch.py": "0088940c0872c4f02cd9b811b8e3d3133206ca7deb11e2e07a5910aaba83e369",
+      "traceh/tools/builtins/list_files.py": "ad2f6b9194c5521114a8461d42f0f33639296594e567f19c248587ef3a875999",
+      "traceh/tools/builtins/paths.py": "13004707b9a4c692292ad3be40888bf1a50366f2261d2639f5d661603c3eac43",
+      "traceh/tools/builtins/read_file.py": "a7aee53f3341bfbbe773d7c071609b5b1ac9808a514f63947627a17d40c7f5ce",
+      "traceh/tools/builtins/search_text.py": "c0d4fdf1ae6d90435b8790904f3b7bfaf05abe0e69d1d80c74bd87b8a6a7da32",
+      "traceh/tools/builtins/shell.py": "a78152ec01acfae0b1f5217733969b8316c4742a685dab0737c3d2fa921869a0",
+      "traceh/tools/history.py": "2eb8e6eeebfc4b0471e0db8db38572e3a5bcf07afe447d401c877afadbf091b2",
+      "traceh/tools/memory.py": "cd908b8c6a5dc58ce1790d2cd88268fd38db882aa3b40bab7092764c4ddfbcae",
+      "traceh/tools/memory_reference.py": "4e8aaa1b3218ae7952190121d99f822d22176177dbcd293bb7a145ad36a78131",
+      "traceh/tools/middleware.py": "8de2e5fa15d77fe8d77a53509e83723597e53ee8b71cea4e3147b298b09626cb",
+      "traceh/tools/output.py": "682d52115bfa260a9b205a21fe82ed2075deb114890aefacef04a2547da89b15",
+      "traceh/tools/policy.py": "2b4e854fb9f02e5b1f327ae412d0f7c3877ad7c2bd8c0c1329fa22031673e870",
+      "traceh/tools/process_control.py": "828b8a887dac109c281493b11117e1fa99c99c2106e3fe9ea19c4bc4edd4b269",
+      "traceh/tools/reference_search.py": "10f8d79c421acad21b8af31bae73b47036b204a328fa67b4e0cac2fcbddb3fc2",
+      "traceh/tools/registry.py": "a94cd8065d65cf24931b8ee7b4b01b7313eedf7f06453bd9a8465d200b0a04c8",
+      "traceh/tools/results.py": "04a213f558828e244788030d9daefe41ddea429e616ee8c97e5098e7624d7651",
+      "traceh/tools/runtime.py": "6afb18758dd6bf87bdd92993dd5c80d63e25db27b4039f4dd4de4dae1259a52b",
+      "traceh/tools/schema.py": "c1b0c198793e736872cc0d716f6a4dd89c7d004e161417e91e50f1cb124c09eb",
+      "traceh/tools/skill.py": "403e363e2c17e682f38c97c3c6336f5a06ecd2fbf7f119cc8a7473448a428d51",
+      "traceh/tui/__init__.py": "dced2ae7cd5998fc6540603c71cb1b339c5e28b74a341c419c01a40a504e56f6",
+      "traceh/tui/app.py": "b6baf29ec10158e1895f3a90518729ae7e9df9815b95545d2f4a16b5af94ee1a",
+      "traceh/tui/clipboard.py": "f65e36ead1ec083b4743c3d8430aae4db1bdf5a9f4f8e5428f53709381b1c278",
+      "traceh/tui/config_forms.py": "804ee736ce8bdfdcd4f3da42970263fc9d1cd0a8abdcc3a3cec756ed06050064",
+      "traceh/tui/context_inspection.py": "9f777263712f03b5b8b63c50cf8020f2c628fd862ed0753746974e7fcd45514f",
+      "traceh/tui/governance.py": "6b6984512329c920956a0376ef5695732c03a83c796476ee624bb398417c57cf",
+      "traceh/tui/onboarding.py": "579183b83c34d17287a4baf67aeb078a3439bb76abdef7aa3736e4e92da7666f",
+      "traceh/tui/presentation.py": "e2f2d837f03f4268b7b209d5ac839714319f379384f4e8fab622262e2b87293b",
+      "traceh/tui/runner.py": "ef9e1d4810fd50e3353e3c26a95b8d6e1c7c41c7ffdf3fe47f3ea643c5bd3eb7",
+      "traceh/tui/screens.py": "e8d89edf5e23b37f06d30449a455f7e5c7fa2ab6b5a3ef8786d219bc04b25795",
+      "traceh/tui/session_picker.py": "e9593ef3df410bc3f6bcb6528a84901af03e872cda739696b39b60cb1d8d8d05",
+      "traceh/tui/settings.py": "ea2a898cc39ae2f523874da997cb3628c571259a0f76a142f18cf4a1577b8fae",
+      "traceh/tui/task_conversation.py": "a39afbacefd8da4f3aecc6ca0af3c6a48bb4af0d2962cbf7da7130a8efd3ef5b",
+      "traceh/tui/text_selection.py": "0113d43775cc19b14f056c5058caf4a7704c752573ba27c74de14e593ce5d1c9",
+      "traceh/version.py": "47781340d5afb844556ae8b1bd98dbee5c0533fc8f7013ede5fcde6bd2c021fd",
+      "traceh/workflow/__init__.py": "0717c769d8543b4ea6915592b1986b2c3e7a4ad7f9f55d29915f62dfda1a0d1e",
+      "traceh/workflow/errors.py": "17dd8826c908c184e881c29e70d178a4fd9ea95b13a59fb583a0cad474fb1968",
+      "traceh/workflow/events.py": "9a3d1571f8fc000b2b9aa39fba590e388ff45f27abc5f06430a60a4e1bb5f72f",
+      "traceh/workflow/execution.py": "eb110a27b6442f2423755925f03c00c858c4cbf297b960c350f7966b65b8ffeb",
+      "traceh/workflow/models.py": "0ab8bf76f94d38ab685bbbbf4c638ce237c51a58b796a182c475ee1c1a88e34a",
+      "traceh/workflow/projection.py": "79278ba2d8ff02bc9cfc52351061cad9e433c9d2d8d218ca86892160faa709fa",
+      "traceh/workflow/service.py": "ab37ccc7fa52bd02152eea11c40c87498c8b01fd6a39dbba8f4bc00fb9210746",
+      "traceh/workspaces/__init__.py": "5aa947b283fc5692a8ef499fe33ec99020f3d804e04021189c56dfbdd99bb541",
+      "traceh/workspaces/catalog.py": "9a1259237485b1450aa7867bf6463c60740c7219374c6dd0352a6dc4edbf6e53",
+      "traceh/workspaces/errors.py": "52467f0792e3719c76e0262a4b2a5aed876df79180f50204428ae1aa14daff23",
+      "traceh/workspaces/events.py": "9ddc0adfb26f9ea23fcf69d63c51c6e399f40f2c064c388be9ea23ad5b972000",
+      "traceh/workspaces/local_git.py": "8eb8b6c7380c75baa0e8e3e241f3c9f48ff44ce979c203bec5851da2567c9a65",
+      "traceh/workspaces/observation.py": "3071f4793d3ba7aa5ce2fadf2e966b76bb206cd923fb10b1292fc699ca1df2c8",
+      "traceh/workspaces/policy.py": "a9e9e335e543088192523d52dde138d9429dd05794d1e8422eb817947fb26fb6",
+      "traceh/workspaces/service.py": "9b10273b01577863796dab0791b1d60ad6a44aa07f811109a9ac6b6f07aa9d85",
+      "traceh/workspaces/supervision.py": "96c73fb3a7b12e428b91dbd3ce3fd1805ea51bb16022419cd477e44cb4f32e97"
+    },
+    "candidate": {
+      "traceh/__init__.py": "1c9836b89b9bc921c6a3181e359a0c3dad604d9845a0a8c47c2e10154c9fa010",
+      "traceh/agents/__init__.py": "8c7691c1a9a8a20105c3f9b700cf04ed214b5d4d0473746c82f5534d6c1dab2e",
+      "traceh/agents/commit_reconciliation.py": "739a85fd7b3642b5f127dfebbb26e4c28a27a841887e2294d292e29e3ecd22d5",
+      "traceh/agents/directory.py": "012ff2a7e20edebf320fa5bfd25da44a0606734e7a10f9aabab518d4fbf02b4e",
+      "traceh/agents/errors.py": "f0a2833032eed999cdace4178d59b37943309d3d22db043a13580ec7faf0cd90",
+      "traceh/agents/identity.py": "aeb16ad349629b99a1c8d17297b66b8938ff5e6cff11f5ec1004534298cd7553",
+      "traceh/agents/inbox.py": "0261615e0014052853a22181f0afc59e024cd07e2b920f8aebe7b4179875ae48",
+      "traceh/agents/inbox_identity.py": "2b62ebbc0991260b7486cd90e6833f7edae56d81ffa286b8f0fd9645aea515de",
+      "traceh/agents/inbox_service.py": "b18a2ee223b19c01aef7ac461d7d785fa84f06c93106261a63b8b5e825e944cf",
+      "traceh/agents/registrar.py": "d7c73e8f7404eb5dcf1081b1ff477457440e9f740501213337fcebe5d8761ba2",
+      "traceh/api/__init__.py": "3062ce262d9b576ab6ad377ac4d31ff790401985fedabf586b251d6324b33dc4",
+      "traceh/api/agents.py": "373e06b5d79b04bae36e39a89ab99d306083ae4c94eefa59f1a9bb509a41dc85",
+      "traceh/api/artifacts.py": "3479fbe3adc0de5a3eba9177f8687ac2177bb4fdcacc945c9f920e6d3e5f2e90",
+      "traceh/api/budgets.py": "7a98f94096768154973efac409e975d0d6d96909fcd7f6841f491dbc65d6be28",
+      "traceh/api/events.py": "3314909ddb5f0346e7e59100260e9a196ffef690d9205a226d50b2c3dde002d1",
+      "traceh/api/history.py": "eeafecd703e0fe83597c8e7f8630c3b19e701d0b02725d3f8461d75463d62486",
+      "traceh/api/json_types.py": "7eb0ffc16b47bd4078c3be9aea2556a443746aceb31d78b8d3a95b2884099ede",
+      "traceh/api/llm.py": "309ee0523440f9bb452623a3a6100ed1334e45c10771d9870706dcd5004c15d0",
+      "traceh/api/memory.py": "38149a9126af40af00d2df807730eca0f43b6ac10171e0ef3e42868e59ac4c88",
+      "traceh/api/plugins.py": "68fccd17f134469823ae5ff8147c20a8e48ed3e89f23e87a08bc9deb1124178b",
+      "traceh/api/product.py": "03869213287f8ffd8c9f5b9e9bc71973a993c542aae45882b7a689d392d2bfe9",
+      "traceh/api/promotion.py": "f6d0c76298b94ada00d542925726b34af6d66e5bd6468dbde5340327e5b583e5",
+      "traceh/api/prompts.py": "251b61de93f1dee157a5d7e21e02cd1bcce9eb384cbe69e9a67e555834fd7b2b",
+      "traceh/api/retrieval.py": "ce31d0550cd77d87270e373454e64c985ce32317645afdf2a7e74721989faa5c",
+      "traceh/api/services.py": "6e918d3b123f7be563a882cba3cd54ea001884907d2b610ed629c930182189c1",
+      "traceh/api/skills.py": "1855caa5a5b1eb26fb31626aa2b40a5b338b65c1ee792281f837ed4bb1f2726a",
+      "traceh/api/tools.py": "86e27f6be8db2493c4f6af31fde7d8fe2585604fd45537c0faf25cdb89bd784e",
+      "traceh/api/turns.py": "0666ee2de17da99846e65bfecb1e75479506bd2ad3986fb6a71f3b88b491747f",
+      "traceh/api/workflow.py": "45f29befd8423af4e3051ac6be6a579b95b2bc335b6598083c45028b39e03797",
+      "traceh/api/workspaces.py": "08e2f40383ff95a48f93f7d6a30b00a5574a7e035a9fdbce95cca656147ec586",
+      "traceh/artifacts/__init__.py": "e50902e22df5c194615a2f4cb63391ab6101ff0eea674a264800a7b5b7b42e65",
+      "traceh/artifacts/capture.py": "9c2eb49dda97cece23f038156dc0572cd9ac5d75615f0e786f4cf708e545c0fc",
+      "traceh/artifacts/cas.py": "6d1aefa43b8d9eeacefe7f69b1cd1c32db92d55a4622d54b47d60317e9663d95",
+      "traceh/artifacts/catalog.py": "d51b3974b159b130b1d5516970750531d041d49c183369c557564b48c0f81b6b",
+      "traceh/artifacts/errors.py": "0ece2afdb2da45324e22218a923f30910be88c2bc342ad20bfb5233afe030d1f",
+      "traceh/artifacts/events.py": "d95e966fba5301057a446f44d7b65fbf91109abe0ebea5ab6c451a18cfa894a7",
+      "traceh/artifacts/git_patch.py": "4667173cbf58b8eb2077fcaeeb45bab17a9f94fd13fd00c4b7b5e200bf10c7b5",
+      "traceh/artifacts/manifest.py": "ca940a4682e9f0e608b4bb5bd3e9c8ed5db664ca94200e11c8f838ebeb57d82c",
+      "traceh/artifacts/reader.py": "5b7590059a4eceee0fd94d4da720fdb22b216350efe9adb98fb7e94ea93f041b",
+      "traceh/artifacts/reporting.py": "d7ce597981c1cba134d93be1292124c897319508739c26872daa651ab4ee30f9",
+      "traceh/artifacts/unified_diff.py": "50d5e87a8d4047bcc2905df587b20dd6e923ff39ffbaf97c17291810815490be",
+      "traceh/budgets/__init__.py": "d81a313eae1602a89ccc3c7a1bc5d9a2bbaee3baee6620fe336561baf62f6f43",
+      "traceh/budgets/enforcement.py": "bd2e6d6eb70cf6ec1fb357c0b9f678b94de37a1c66d458785ebabb96a0f8d638",
+      "traceh/budgets/errors.py": "3f481dc1d90f1acf15f326825cb477ac0219e7c5474b2fd28562ec0ab7b16e2d",
+      "traceh/budgets/events.py": "434db8a4d6675d2316820beab07c50aa7660a7a3813f4ebc89e61a99d5b4740f",
+      "traceh/budgets/projection.py": "289dd8fe499bc60b644df0503852bcd0084349b1a69588669730903d469e1f5a",
+      "traceh/budgets/service.py": "954051252a54661c03e7706c9db646df7f5c29798f45011336447386ff5b4c43",
+      "traceh/budgets/supervision.py": "bfffe1e62ceb4fecf4cc5e1e8650a8f72df87e69bb7623b8c564eb8edb0a5d76",
+      "traceh/chat/__init__.py": "8acb4c2301a27e9283bfbb866f726ec82de27b6812a9e6af31b1979cf119514d",
+      "traceh/chat/activity.py": "b5d6705317ca714d85362b92b2be7ad3cf796b46ab15bd58305c064e5915f05f",
+      "traceh/chat/config.py": "0ce90da894c14f6a07188529444e1403b9ba9b26ad7d056d2d8e5d1250cfb201",
+      "traceh/chat/context_pressure.py": "3aa6a380100c3be6a3266b5a96c0b4389f52b216971ed5bf59a06f8398d7ae8d",
+      "traceh/chat/driver.py": "19fbfbfa56d459fcc4b395f141c2968447cd930fe0640174fea3189fb94e9863",
+      "traceh/chat/governance.py": "ce01686e734591ea639619c2624f0f19bf21765ec7e26396adb187d12bb3c4f3",
+      "traceh/chat/session.py": "73d70d6985259cdf74805ef286371f85e3ea68a303ed36079dc5929db3621976",
+      "traceh/chat/workspace_project.py": "4b0c9c257419136b81d5af5f301bd6a91a366df9f5080cb8bdf391e93119e86e",
+      "traceh/cli/__init__.py": "fa2e7718b0453b8bbb25bc246df94e7e58549586e0d0024faddeb7b9e0dacfb5",
+      "traceh/cli/activity.py": "2892adf530b59921d109281fd3e649b3a9c724ed9267b8d9509bb73e4a3f37c7",
+      "traceh/cli/chat.py": "5f5d33f9fbda1c081bcc46ede27809f435a690382390a599941ddfff76ac4488",
+      "traceh/cli/command_line.py": "e29e4b37b2d67059ac4f4e390afe7e45c7cefa9d421b39264a3b0bc5f6c259c9",
+      "traceh/cli/console.py": "881fe1ac4f6382ec5a938f4e04510dbd593ca39bc4212f4e26d0092af5d03b91",
+      "traceh/cli/context_pressure.py": "86a341c6b8c752a70aacd52e0b569081e378922b703ceb1eb3ee41bf8750d724",
+      "traceh/cli/credentials.py": "ab9303ceac3498895fcb351abef1096bd58cdd5a61156f4643adb1d86e8d88a9",
+      "traceh/cli/env_file.py": "9481a465cc4035c43e7af3f0cbd8aa77e89a34d9c3686de7d4cc9357686407b1",
+      "traceh/cli/errors.py": "47286a3fc84ffaa55e5eca3be692e0d53c5274fb53ebcfc405f2660e4ec3c3ad",
+      "traceh/cli/main.py": "ef5fd34b550202eae96b3bc3c3b9d15ebe26ee0b13227bbecf0f24e142ca5ef6",
+      "traceh/cli/plugins.py": "77bff1d026e064b15353361145b6c138dace83131d72b57659613f4b5e458183",
+      "traceh/cli/product.py": "da7e749c3f7c0e30b81f68f8d311ded4bd0c2376fcc2e30a16b8669ea457c5bb",
+      "traceh/cli/startup.py": "c26e35a5b47be9c583380d51150e2f61d3a99c3e36f9dcecebf115c9c5bd3d40",
+      "traceh/cli/text_safety.py": "ccbfa8ad030f28447979a208ea4b4d08afee9b97ef82af8dea2c9913da6b1c79",
+      "traceh/cli/timeline.py": "21e81a337c33d6835e8812097a2d40772188fc452c5c5a49d0713bd13a43d57e",
+      "traceh/cli/tui_config.py": "db0fbc8dcc71f065ab0609a61d2384b9a81d88f0625607be7b78428337866362",
+      "traceh/cli/tui_entry.py": "b823b4b1ad6ecd0b5c6ce96459f4928b56b37064087b81e03a8cedd2055c0080",
+      "traceh/concurrency.py": "837dc9165588b7551c1790b117c6b0cd629ed1e263945b42d41cabf9808a80a7",
+      "traceh/evaluation/__init__.py": "7875c46ff7710160ea4c5bb450056019f2df702d02bd7fdae9b7420756b6d024",
+      "traceh/evaluation/attempt.py": "365d1a135e632f919beb92ecbe55d0e90c31f12565a762f5093465f0ee59c09e",
+      "traceh/evaluation/errors.py": "eb7dafc297ec98d1f805d86b1c04d383e75c0c8ef2cbe630c55479e07cdebdfd",
+      "traceh/evaluation/manifest.py": "4f0ec3fad9c1fc9dea42dc54b89a3bbe06fda7c4ed7e4cf87430bfa5615759a7",
+      "traceh/evaluation/metrics.py": "ffa2f9fb51d75c49c45bc4b359e0a8b7b0ab722b0771ec4f6bb7ae7744ab8e2f",
+      "traceh/evaluation/report.py": "1df19f18db22f61c709b0211f43527da36addc817ce74691f07b53fc17620f46",
+      "traceh/evaluation/repositories.py": "621c81484a5d442f6673ccbdab5e9ec947d0b3f0ecb93397cd2dbdcdd2725890",
+      "traceh/evaluation/retrieval.py": "0f21995ad7b7f3f2deb82c870d778708a3203f9649f6d41c1b38007927615f70",
+      "traceh/evaluation/runner.py": "859e4026adaeb773fff0076c855db36385ae6bb9bb76ba2686d55838a777aad7",
+      "traceh/evolution/__init__.py": "2de1256b658dc0b48bd81717d601c1f2f98359a13f7c74c94a53d5b9549f2d8d",
+      "traceh/evolution/artifacts.py": "2387a293c51bb74aa2aaf4f83c071e410a0391c4e7b23e87500fde84f20630fc",
+      "traceh/evolution/candidate_comparison.py": "516bfd7f0431058cfb9bbb31a1c205e7ebd4a742614af5e673c96dc72f78480b",
+      "traceh/evolution/candidate_promotion.py": "9d97c43001b197d8a05e60dfbbbb10d66c73f09dc98e0e94afcfb4605b0e620f",
+      "traceh/evolution/candidate_validation.py": "56da0b3f456c97a0d5f5b1f396f105e9a753265e17d4a203bced0730ab9565cf",
+      "traceh/evolution/comparison_probe.py": "fb0758c0f78166f7132a0444fc0fd6924328ebe10ea49e12d3976402b2839960",
+      "traceh/evolution/contract_probe.py": "e6c3f30be2193582f26f2574db8b498b22d4be6b1f890ab02cb99849d9a61c2a",
+      "traceh/inspector/__init__.py": "895fa59bd30bb3d592080b9be85e1a73ee75a8f91ab1a8e679c25686d1ddfbec",
+      "traceh/inspector/session_inspector.py": "bd62ff079be44289fada5fa4f736017c52a0347f9fcd8996c3eab461ce33dae8",
+      "traceh/kernel/__init__.py": "6f45234cd50446fbab108aa1119e680f2f9776c09fda955472fa6425544d84ea",
+      "traceh/kernel/activation.py": "9a9c15425598bcd69d07a7c5a46e325a35484ccda03cd4e41d748e34a16ca390",
+      "traceh/kernel/composition.py": "4ae5aca88cc00bec9560180be4da8e3fbc9e94138312915b72e1cba6447e30e4",
+      "traceh/kernel/composition_overlays.py": "1887e257e57fca12238627c90b56ab17d6fe22d83d878c7fe8ed762a6a872247",
+      "traceh/kernel/hooks.py": "25a0fd21ea6639e57ef7933a414133272c3778e1ffd26e379d0ff2894cc89e95",
+      "traceh/kernel/lifespan.py": "1d52935c4bbf14f6de766911a21dd3b8699070a262722ebe5a1834a5d7def91f",
+      "traceh/kernel/registry.py": "d3fbd2dc8d40bb3d60dddcf4bf85d300ee6cc8e8295f4e94b35cbaea7dfc11e7",
+      "traceh/kernel/scope.py": "0c76a8f3f270bdd13e3ebc2d23cba5f6e9d990992076d4b99acb9590c90ce9a3",
+      "traceh/kernel/tasks.py": "24e3429b464f2cb539efb46561d6bfa275171ec6ddb0737da7f33d1ef84b0674",
+      "traceh/llm/__init__.py": "87d3ae1e469ca6dfe49dd8d8e4c5f1d10abcfe46d79bb0d7eb26c609888624e5",
+      "traceh/llm/failures.py": "3f0f1debcb53cda14e2550877e666b1177769b50ea2b3147aca54131852c88e7",
+      "traceh/llm/openai_compatible.py": "4557857f9348e2b3fcce141fe41dd1dbc9f952d5c2c27698c5119af0e0b79c13",
+      "traceh/llm/registry.py": "537c8aa271ddab3e5c16f228f56045522d49fab2b4de8d90ad59a33792996dee",
+      "traceh/llm/retry.py": "98fcb63e81f73fa410448556ce389acc30eb0c57fcb9b6ca29bdfa7714b480d5",
+      "traceh/llm/runtime.py": "e4bec452adf93eb49d7bf81010ce78092eaa7993cb386cb3be1711c837122e89",
+      "traceh/llm/scripted.py": "e7cbb66c41ef6f1e2b3d767541d9bd97453e899b864a495acb7613c65f39d30d",
+      "traceh/llm/token_meter.py": "9bfa8d8e57913be6329879b56e91a7960b827af7a3f635d38e7565454cb21819",
+      "traceh/memory/__init__.py": "c18eee7f6d484b1abda1b0c3b485e67a7518eae5c2cc7e9a3ff5fe783703139c",
+      "traceh/memory/context.py": "99f072ef08eb521e1770684e91ff26edd0eca3504286d7dfb2a6a03a2af486ec",
+      "traceh/memory/policy.py": "4d44720f7a493e38dd244a694a73db72156c219a061ea6ad481ddeec3f5fd692",
+      "traceh/memory/projection.py": "9cfda824024620199dc8450a6c7834e0d7359e66d3896510653d8e1ba1667eb7",
+      "traceh/memory/service.py": "bece1ec2850cc2aa4005b20373d4164c6f613bd165d32c22f774491a114a89d2",
+      "traceh/memory/sources.py": "4c03084e1bdaa90829bd99177f282ee5085580ac0fb339a0eb4196e648542609",
+      "traceh/plugins/__init__.py": "e4194b552553b214e5e510bc44d53edef706f45b98bde52041c5f2e1d6f636c7",
+      "traceh/plugins/discovery.py": "4c3d8547ea5c43511dfb5514b3d2878b470b1fcf647919ba3665e0644c94e254",
+      "traceh/plugins/errors.py": "b26de4966340fb8f5486803273f5b274624b7db019f0e909073574eca319f5cd",
+      "traceh/plugins/manager.py": "8d46f3893c880503ed2c56b44c67ebf662a19531bc5cfbbe6e03a38dcf7ad97c",
+      "traceh/plugins/selection.py": "0eee9a762cdfcb7cb22fdb9a921fce6ed011f9614a8ffb8f92cc97bbcea36ef7",
+      "traceh/plugins/skills.py": "98db96a1fc0bf71bdbe0b02433063a89b033abc3dd2b8bd5546eddcf8ad089f1",
+      "traceh/process_control.py": "2f088a4c9917fc31962a4b6f34f0c6396177f3b6deb80ea07cf9871d00d2af67",
+      "traceh/product/__init__.py": "574d1277ae53aa018b06654723413d9e639e73241bc71a503122269ab891a1b2",
+      "traceh/product/activity.py": "935e256dcff1a23ee0885916d0b7fb114a65c5a42af6fef7c5b0ff37950db2bb",
+      "traceh/product/assembly.py": "fd1d246310ec8c7bc1ff7e14b857d433f85838f3e8e2e5228c34fe42984dee95",
+      "traceh/product/chat.py": "52e99b2416f783c60725d7b22af87ba79a053e57a270699b11643980d9cc23df",
+      "traceh/product/config.py": "90e2400832656ab1f491bbdd26927e7ee0ee54d5930e12b2c9a8142e1698cebf",
+      "traceh/product/context.py": "9f29d519a6de0b0f5dcdd0da988368a675c9e098c9540a762cd366e37b3e877c",
+      "traceh/product/control.py": "cadfcd6a8b2392067fd685c60128cf08bbb7a4b1573ac003f39cbe5508aa2688",
+      "traceh/product/errors.py": "641a08b5168e29bacaa3d906f399601378c4fd8b5e07ad4c101e3e3e922dcae0",
+      "traceh/product/events.py": "d4396e47eb509afe720b5e0718acc34bb01fbc6dd155dae1f03b6755a9c589c7",
+      "traceh/product/evidence.py": "77c4746f799bff1c5b7dad554fb4ecd04e43d29ee05645ab4c1946c2b45f5633",
+      "traceh/product/execution.py": "152ca445725e11e5de239867c9bf8255281ed7ed908ea1f308a16f3728816775",
+      "traceh/product/host.py": "9cf617e03f64839ea99351140246ec843c13435d72541b2022ed3dd6ac93b5d7",
+      "traceh/product/inspection.py": "26e33917515ee43b4b176820ac32c8d73a71bad7da9cdc842da7f1d7ffd44c6e",
+      "traceh/product/memory.py": "8d7fe77f49aaa68d1fae4dfea91fb276c69fabfea87eff54271ceae50f4f5bb9",
+      "traceh/product/observation.py": "f0369051ddde8714d6199d226923259b5c2269ab681d78e336917b84195ab9c0",
+      "traceh/product/project_scope.py": "1e44a5cd17ee0e8ffc999378a573f6b1c850296a1dfc7cff81039c7e829d6f7a",
+      "traceh/product/projection.py": "e7ee535a181d2f94ff0895bab1fa3da167704b3f241ca7b6995b3917833a9697",
+      "traceh/product/registry.py": "ac84e2419a02165233189ce71654478f9dc4cab2bc23376c0abbe7db45439a71",
+      "traceh/product/resources.py": "ba527991912c7526348c20ab0bd06988192def1faac82d135c7c504ec48b8ae1",
+      "traceh/product/router.py": "828dbd429aa091a748d05470b928e4897c4e645b6c2819e2a0d6a58b7ec32765",
+      "traceh/product/runtime.py": "99dc23f16d9869c566deb3284a8cd14e67330cd2b704f76fb59a1266b29735e8",
+      "traceh/product/service.py": "40f9044877fc66ddfaf513164acc10d904f5192ab39695f5d57fbe84f251418f",
+      "traceh/product/topology.py": "097621ef3faeb4c62a697871a8b81058123e87ca4ca3f8588dbfc83a0f711311",
+      "traceh/projects/__init__.py": "e3cb3b4a5fc6bff23b85b39e715c44795ad057e038e8c16435deed28e2122752",
+      "traceh/projects/events.py": "52ab555199455ace68d6b782d202b738ea65fdcbba5e49939be1d7bf0ba5ba5b",
+      "traceh/projects/projection.py": "297081dcc40747155b980efccf463718b5d87620eda3756edd85bf15c296d372",
+      "traceh/projects/service.py": "0f7424374e80dfa2a1bc80a873616616765dacf45de46aeb7c20bdb780aeb363",
+      "traceh/promotion/__init__.py": "65843e3c0257c3a62bae0d4d07ccd42461f85b77c733f5146e9a091f9968a2f4",
+      "traceh/promotion/cleanup.py": "a5b7b617fab7928bcdab5d54e7a9bb5fc77d09842e52b3acf9ea9b958bc5bd70",
+      "traceh/promotion/errors.py": "9afda1dbb4069999d570d5b3b0889e98b4ff962260c0ac30b7eec6ea66a58b21",
+      "traceh/promotion/events.py": "1758b1015d0addb3c336692f3e50a47089610bc2d2334764543dc12c6c5135a0",
+      "traceh/promotion/local_git.py": "5970408c4443b2c5c920b07af4ce387fa7b20695cc47bab428ebebebea505adc",
+      "traceh/promotion/models.py": "baa7f69d6d01e34c079fd6e99d8e1555ca3188a100b4e2ca2aedf6257b6cf2a9",
+      "traceh/promotion/projection.py": "504965daaef3bccd11e435412461a95a333643280bf223ed082a043490499bdf",
+      "traceh/promotion/service.py": "366f81cc6604fc80c2e452c54c01644b28abdd0527d8bd13b301c3a2abe0fd65",
+      "traceh/promotion/verification.py": "c9cb00e18ba00a4147f46792b2199c6dd0153708c39e6ab4678c3f31dc3d1a49",
+      "traceh/runtime/__init__.py": "995ecc6a5b24e9b420c98299aaffc1cbae6412734559efeaf744fe6d7ac83230",
+      "traceh/runtime/agent_loop.py": "1ca41a973be96e149f37d0b8635e1319cf52c9fc8bb615822d86c740ade4ce4b",
+      "traceh/runtime/agent_runtime.py": "fb3c1afb0c726695165535ffde7b15cdec5f9b439ceebb1e61da3ec237eea48e",
+      "traceh/runtime/composition_runtime.py": "506f92e6a2ec5fbc5ca3ed49cd54a92b4725ec27bb9952c1d6112e37e1ade83a",
+      "traceh/runtime/continuation.py": "c711bb4fda6a4a754aed4f66c3cd59bc94fc900869072b75ce86df4667645f78",
+      "traceh/runtime/memory_control.py": "7b985871a6020bd921ad6a07b6fb75bbe773f9f6605ee268f12764140d5f577f",
+      "traceh/runtime/plugin_composition.py": "5c44ec7a2abe36b22f8f7cb7357abfc217faf90dc53d64ad8c6ab1afee83d082",
+      "traceh/runtime/prompt.py": "1e8a84dc65c72bc9c4b272d42c9cb062ebb274bb711c315a324eb6d7efa5e0e1",
+      "traceh/runtime/repeated_denial.py": "2681cbdb792d7956f703a48c0fc94702817e62bbb48359ef47da689435b82ccd",
+      "traceh/runtime/request_builder.py": "86a11a12f9c25a3980e3ed338362a3206bc9fded2a7d69e92abd45caaf90d862",
+      "traceh/runtime/skill_context.py": "a358855f5090f092cb8d51da7f9ea6c7fad60730b73ef1024b28d6f1b934ebd8",
+      "traceh/runtime/verification.py": "2a735ebcfba68a7c09c62f7a031109c57e41a74a61f40ae067e335bbb8000cca",
+      "traceh/session/__init__.py": "299449021e2a72c0fece44b2628400623b99e3c1287cab87b666910fde4580d3",
+      "traceh/session/compaction.py": "5b146e89362651f1f07b000a1593518cdbdbe9c2bdcd236c21bbed4804c85eab",
+      "traceh/session/context_index.py": "5d7946ff198424587d93fedff8750d917e69113fe97db31c9f64ee90a62dff9e",
+      "traceh/session/context_input.py": "9a4173f1115bfd9d8a058de816b6fe8e80adeaea6742fbae72a3e2851077080f",
+      "traceh/session/context_tokens.py": "6f520d26c0384092e95a46785b1cb4562587750ad5562107d1fdf8b4bbae57a4",
+      "traceh/session/event_feed.py": "2db28ba6e9df681e13632ee37e3f25117e08247b3b8231e1435f924b1d907536",
+      "traceh/session/event_store.py": "15440fbe22bfb04f9574e99ab25f1f379ef1b6f9b2e130cb29239c507d82f46b",
+      "traceh/session/file_lock.py": "6924f8b27e1bb93c39c800595c4e7a68f38609ea36af6183ddfedc5f01bd504a",
+      "traceh/session/history.py": "08e26759bedff2a63d39935fe81747a28df84769a7426e9d9f09bb1e2957eb39",
+      "traceh/session/history_observation.py": "e6be13d7bcc5e1046fb73a540d9444f6c49fe3203e69f0a476c7012134b64909",
+      "traceh/session/history_requests.py": "2b896b525cf5a5318e21e66e3c13d92af16ce9f35b3bb6ac9e74c014958a6c0c",
+      "traceh/session/invariants.py": "b5fb1488d73adca78db428e6a61da79244d2945dbc1e90a8521f6cc1ced139ba",
+      "traceh/session/memory_requests.py": "9fd8290e76ac2c50d7d8fbe533afab288c0314434471bfb4b027fd046b987e5c",
+      "traceh/session/memory_search.py": "d6b94ea7e670aef1dafc34f569732c508b860c3d807f177c9b99e44336236f5e",
+      "traceh/session/plugin_identity.py": "1e3adbb53f61a3580249442e5512abed02e180c733b1d100c00903fec697626f",
+      "traceh/session/product_context.py": "bc634c7b0294215c36f9c88cc64da1406aef8ef93e2af5ae23705d1fcc6c6086",
+      "traceh/session/projections.py": "cb4afabc0aa029d4dbb3b6cd2a0cef8ccebeae3bd0bb09f1d553e0c3dcc85974",
+      "traceh/session/protocol.py": "c80334cc8636713bdb7e724e79d61d293f92ae7e1dfc239692f71d88bd8fd41b",
+      "traceh/session/recovery.py": "e13a9256f2c4efe9666b0c8b6d624a4945f73c2f8c8d702fdacbae051c32073f",
+      "traceh/session/reference_requests.py": "604c46069b89a04c98c9054a1c06ff1161b6d73d91becc47b9bd170445ae495e",
+      "traceh/session/reference_search.py": "b857af052ef64febbbfc4e8bc81c20bf4288a72a921ebfbfb7201f4f7966081e",
+      "traceh/session/retrieval.py": "6dd7f4a2c78a372e586dc557e6ef5a400be4bad04c91c2030f3d48ec770f9a08",
+      "traceh/session/semantic_summary.py": "9ef073a37c310d6473c5f47750a10f60d58d3bf818cfa6e6e44d26282c033c48",
+      "traceh/session/service.py": "61c8a46232fabc1d270eccd88e66941ab18dc42ebdb4b767498b0c799d70fbf0",
+      "traceh/session/skill_requests.py": "5c54f306c73dc418c15670b2784d2c5d627badeb06942c7533fe5ec987d97785",
+      "traceh/session/skill_retrieval.py": "fdc227299c23dee88db8bedce09edf3bc84044a6816188d12d0298359185b6f6",
+      "traceh/session/skill_search.py": "503f85ae0e71f2c90f586dde081321c5411ede544eddaa0c2cca5f64e9e68e9a",
+      "traceh/session/skill_selection.py": "a801a09b0f88bfb529864f80903c91836dffa9c18405915787e029265ea961e8",
+      "traceh/session/sqlite.py": "22ab5be0e47853bd9bb7e44e5b3a9c6918770c47cca86601851cb71e79606b2a",
+      "traceh/session/stream_heads.py": "99b64f4987955f70b7d2bab376750bfd49a5029765e10e4f720d96b67563a28c",
+      "traceh/session/surface.py": "87277f4958cf2c386f474d9decec7065edef69ca5141722588dcf29e171fa8cd",
+      "traceh/session/surface_replacement.py": "45db2fa2f71401706cb09d9ddd7ba776d47d76b7c04aced455678fb793999be8",
+      "traceh/session/tool_output.py": "c74ddd30de330a2eeee25330ed0ce8883edceb8e24bd41b2066a46d3de2bee5e",
+      "traceh/supervision/__init__.py": "6b292943788604c02662b89cba4dbda95087397942ab66aad9d8036c91d0a215",
+      "traceh/supervision/authority.py": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+      "traceh/supervision/delivery.py": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432",
+      "traceh/supervision/delivery_identity.py": "a0ec959cab8eea6e177b2f1b9e2500401c6ed5d0e258f2475bd41aa517cd7341",
+      "traceh/supervision/delivery_service.py": "66616b802121c8f24561e0fc3123252cebab220999aa322064c7874c1b5ba271",
+      "traceh/supervision/errors.py": "376ae8707e63074b45924bb4b866c8b760f18ce39e5d29ef0f2d3ce5772ad724",
+      "traceh/supervision/execution.py": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+      "traceh/supervision/lifecycle.py": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+      "traceh/supervision/provisioning.py": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+      "traceh/supervision/reports.py": "b9fe4fe6e762f67e37e9c0b9ac628bb8a4a79a5f46de77652db2e81bdc73a4f5",
+      "traceh/supervision/supervisor.py": "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0",
+      "traceh/supervision/tools.py": "498e53c7d43c55d4d72dc36ee991b110af45c02a2a210fae7bda19314171fdcd",
+      "traceh/tools/__init__.py": "7d55c8ba69f1611110a11bbd4e32403253c32bc5229023e7dc80d282db49208e",
+      "traceh/tools/builtins/__init__.py": "02160a0fd5c5ab0f5c28557597f66454245155322cfadcc42a1f6e8f74db9722",
+      "traceh/tools/builtins/apply_patch.py": "0088940c0872c4f02cd9b811b8e3d3133206ca7deb11e2e07a5910aaba83e369",
+      "traceh/tools/builtins/list_files.py": "ad2f6b9194c5521114a8461d42f0f33639296594e567f19c248587ef3a875999",
+      "traceh/tools/builtins/paths.py": "13004707b9a4c692292ad3be40888bf1a50366f2261d2639f5d661603c3eac43",
+      "traceh/tools/builtins/read_file.py": "a7aee53f3341bfbbe773d7c071609b5b1ac9808a514f63947627a17d40c7f5ce",
+      "traceh/tools/builtins/search_text.py": "c0d4fdf1ae6d90435b8790904f3b7bfaf05abe0e69d1d80c74bd87b8a6a7da32",
+      "traceh/tools/builtins/shell.py": "a78152ec01acfae0b1f5217733969b8316c4742a685dab0737c3d2fa921869a0",
+      "traceh/tools/history.py": "2eb8e6eeebfc4b0471e0db8db38572e3a5bcf07afe447d401c877afadbf091b2",
+      "traceh/tools/memory.py": "cd908b8c6a5dc58ce1790d2cd88268fd38db882aa3b40bab7092764c4ddfbcae",
+      "traceh/tools/memory_reference.py": "4e8aaa1b3218ae7952190121d99f822d22176177dbcd293bb7a145ad36a78131",
+      "traceh/tools/middleware.py": "8de2e5fa15d77fe8d77a53509e83723597e53ee8b71cea4e3147b298b09626cb",
+      "traceh/tools/output.py": "682d52115bfa260a9b205a21fe82ed2075deb114890aefacef04a2547da89b15",
+      "traceh/tools/policy.py": "2b4e854fb9f02e5b1f327ae412d0f7c3877ad7c2bd8c0c1329fa22031673e870",
+      "traceh/tools/process_control.py": "828b8a887dac109c281493b11117e1fa99c99c2106e3fe9ea19c4bc4edd4b269",
+      "traceh/tools/reference_search.py": "10f8d79c421acad21b8af31bae73b47036b204a328fa67b4e0cac2fcbddb3fc2",
+      "traceh/tools/registry.py": "a94cd8065d65cf24931b8ee7b4b01b7313eedf7f06453bd9a8465d200b0a04c8",
+      "traceh/tools/results.py": "04a213f558828e244788030d9daefe41ddea429e616ee8c97e5098e7624d7651",
+      "traceh/tools/runtime.py": "6afb18758dd6bf87bdd92993dd5c80d63e25db27b4039f4dd4de4dae1259a52b",
+      "traceh/tools/schema.py": "c1b0c198793e736872cc0d716f6a4dd89c7d004e161417e91e50f1cb124c09eb",
+      "traceh/tools/skill.py": "403e363e2c17e682f38c97c3c6336f5a06ecd2fbf7f119cc8a7473448a428d51",
+      "traceh/tui/__init__.py": "dced2ae7cd5998fc6540603c71cb1b339c5e28b74a341c419c01a40a504e56f6",
+      "traceh/tui/app.py": "b6baf29ec10158e1895f3a90518729ae7e9df9815b95545d2f4a16b5af94ee1a",
+      "traceh/tui/clipboard.py": "f65e36ead1ec083b4743c3d8430aae4db1bdf5a9f4f8e5428f53709381b1c278",
+      "traceh/tui/config_forms.py": "804ee736ce8bdfdcd4f3da42970263fc9d1cd0a8abdcc3a3cec756ed06050064",
+      "traceh/tui/context_inspection.py": "9f777263712f03b5b8b63c50cf8020f2c628fd862ed0753746974e7fcd45514f",
+      "traceh/tui/governance.py": "6b6984512329c920956a0376ef5695732c03a83c796476ee624bb398417c57cf",
+      "traceh/tui/onboarding.py": "579183b83c34d17287a4baf67aeb078a3439bb76abdef7aa3736e4e92da7666f",
+      "traceh/tui/presentation.py": "e2f2d837f03f4268b7b209d5ac839714319f379384f4e8fab622262e2b87293b",
+      "traceh/tui/runner.py": "ef9e1d4810fd50e3353e3c26a95b8d6e1c7c41c7ffdf3fe47f3ea643c5bd3eb7",
+      "traceh/tui/screens.py": "e8d89edf5e23b37f06d30449a455f7e5c7fa2ab6b5a3ef8786d219bc04b25795",
+      "traceh/tui/session_picker.py": "e9593ef3df410bc3f6bcb6528a84901af03e872cda739696b39b60cb1d8d8d05",
+      "traceh/tui/settings.py": "ea2a898cc39ae2f523874da997cb3628c571259a0f76a142f18cf4a1577b8fae",
+      "traceh/tui/task_conversation.py": "a39afbacefd8da4f3aecc6ca0af3c6a48bb4af0d2962cbf7da7130a8efd3ef5b",
+      "traceh/tui/text_selection.py": "0113d43775cc19b14f056c5058caf4a7704c752573ba27c74de14e593ce5d1c9",
+      "traceh/version.py": "47781340d5afb844556ae8b1bd98dbee5c0533fc8f7013ede5fcde6bd2c021fd",
+      "traceh/workflow/__init__.py": "0717c769d8543b4ea6915592b1986b2c3e7a4ad7f9f55d29915f62dfda1a0d1e",
+      "traceh/workflow/errors.py": "17dd8826c908c184e881c29e70d178a4fd9ea95b13a59fb583a0cad474fb1968",
+      "traceh/workflow/events.py": "9a3d1571f8fc000b2b9aa39fba590e388ff45f27abc5f06430a60a4e1bb5f72f",
+      "traceh/workflow/execution.py": "eb110a27b6442f2423755925f03c00c858c4cbf297b960c350f7966b65b8ffeb",
+      "traceh/workflow/models.py": "0ab8bf76f94d38ab685bbbbf4c638ce237c51a58b796a182c475ee1c1a88e34a",
+      "traceh/workflow/projection.py": "79278ba2d8ff02bc9cfc52351061cad9e433c9d2d8d218ca86892160faa709fa",
+      "traceh/workflow/service.py": "ab37ccc7fa52bd02152eea11c40c87498c8b01fd6a39dbba8f4bc00fb9210746",
+      "traceh/workspaces/__init__.py": "5aa947b283fc5692a8ef499fe33ec99020f3d804e04021189c56dfbdd99bb541",
+      "traceh/workspaces/catalog.py": "9a1259237485b1450aa7867bf6463c60740c7219374c6dd0352a6dc4edbf6e53",
+      "traceh/workspaces/errors.py": "52467f0792e3719c76e0262a4b2a5aed876df79180f50204428ae1aa14daff23",
+      "traceh/workspaces/events.py": "9ddc0adfb26f9ea23fcf69d63c51c6e399f40f2c064c388be9ea23ad5b972000",
+      "traceh/workspaces/local_git.py": "8eb8b6c7380c75baa0e8e3e241f3c9f48ff44ce979c203bec5851da2567c9a65",
+      "traceh/workspaces/observation.py": "3071f4793d3ba7aa5ce2fadf2e966b76bb206cd923fb10b1292fc699ca1df2c8",
+      "traceh/workspaces/policy.py": "a9e9e335e543088192523d52dde138d9429dd05794d1e8422eb817947fb26fb6",
+      "traceh/workspaces/service.py": "9b10273b01577863796dab0791b1d60ad6a44aa07f811109a9ac6b6f07aa9d85",
+      "traceh/workspaces/supervision.py": "96c73fb3a7b12e428b91dbd3ce3fd1805ea51bb16022419cd477e44cb4f32e97"
+    }
+  },
+  "hypothesis": "When reducing the number of hits to fit the same item budget, restart snippet context allocation instead of leaving width zero.",
+  "stop_rule": "One candidate only. First 8 paired scenarios; if no positive joint net gain or any protected behavior regresses, stop. If gain, one unchanged repeat plus fresh cases before any adoption. No full tests/L2/commit.",
+  "protocol_impact": "Isolated search-page packing experiment only; same source, ordering, cursor binding, budget and permission. No production adoption until actual evidence.",
+  "fresh_fixtures": [
+    {
+      "id": "hold-re2-0",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "温室巡检交班时，应使用哪个封签批次？",
+      "source_title": "温室巡检记录",
+      "source_body": "温室巡检交班封签批次是 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "hold-re2-0",
+      "value": "REF-843B8193DE",
+      "source": "温室巡检交班封签批次是 REF-843B8193DE。",
+      "domain_name": "温室巡检",
+      "project_id": "project-843b8193de",
+      "source_id": "source-843b8193de",
+      "memory_id": "fact-843b8193de",
+      "fact_slot": "slot-843b8193de",
+      "skill_id": "manual-843b8193de",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-843b8193de-00",
+          "slot": "background-slot-00",
+          "body": "温室巡检查询分工第0项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-01",
+          "slot": "background-slot-01",
+          "body": "温室巡检查询分工第1项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-02",
+          "slot": "background-slot-02",
+          "body": "温室巡检查询分工第2项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-03",
+          "slot": "background-slot-03",
+          "body": "温室巡检查询分工第3项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-04",
+          "slot": "background-slot-04",
+          "body": "温室巡检查询分工第4项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-05",
+          "slot": "background-slot-05",
+          "body": "温室巡检查询分工第5项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-06",
+          "slot": "background-slot-06",
+          "body": "温室巡检查询分工第6项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-07",
+          "slot": "background-slot-07",
+          "body": "温室巡检查询分工第7项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-08",
+          "slot": "background-slot-08",
+          "body": "温室巡检查询分工第8项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-09",
+          "slot": "background-slot-09",
+          "body": "温室巡检查询分工第9项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-10",
+          "slot": "background-slot-10",
+          "body": "温室巡检查询分工第10项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-843b8193de-11",
+          "slot": "background-slot-11",
+          "body": "温室巡检查询分工第11项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "value",
+      "experiment_group": "re2",
+      "material_digest": "0a7d4f3c2ea5913929376ba1251df5d02a8760f2d9c54b747de1b151545365ea"
+    },
+    {
+      "id": "hold-re2-1",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "展馆布展交班时，应使用哪个封签批次？",
+      "source_title": "展馆布展记录",
+      "source_body": "展馆布展交班封签批次是 {value}。",
+      "expected": "value",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "hold-re2-1",
+      "value": "REF-BD91E05381",
+      "source": "展馆布展交班封签批次是 REF-BD91E05381。",
+      "domain_name": "展馆布展",
+      "project_id": "project-bd91e05381",
+      "source_id": "source-bd91e05381",
+      "memory_id": "fact-bd91e05381",
+      "fact_slot": "slot-bd91e05381",
+      "skill_id": "manual-bd91e05381",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-bd91e05381-00",
+          "slot": "background-slot-00",
+          "body": "展馆布展查询分工第0项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-01",
+          "slot": "background-slot-01",
+          "body": "展馆布展查询分工第1项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-02",
+          "slot": "background-slot-02",
+          "body": "展馆布展查询分工第2项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-03",
+          "slot": "background-slot-03",
+          "body": "展馆布展查询分工第3项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-04",
+          "slot": "background-slot-04",
+          "body": "展馆布展查询分工第4项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-05",
+          "slot": "background-slot-05",
+          "body": "展馆布展查询分工第5项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-06",
+          "slot": "background-slot-06",
+          "body": "展馆布展查询分工第6项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-07",
+          "slot": "background-slot-07",
+          "body": "展馆布展查询分工第7项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-08",
+          "slot": "background-slot-08",
+          "body": "展馆布展查询分工第8项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-09",
+          "slot": "background-slot-09",
+          "body": "展馆布展查询分工第9项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-10",
+          "slot": "background-slot-10",
+          "body": "展馆布展查询分工第10项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-bd91e05381-11",
+          "slot": "background-slot-11",
+          "body": "展馆布展查询分工第11项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "value",
+      "experiment_group": "re2",
+      "material_digest": "83a509e0f11fafc345a782ca98cba060a1b79d6a69006e5022fee6839431b336"
+    },
+    {
+      "id": "hold-re2-2",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "温室巡检交班时，应使用哪个封签批次？",
+      "source_title": "温室巡检记录",
+      "source_body": "温室巡检本次交班不使用封签。",
+      "expected": "no-evidence",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "hold-re2-2",
+      "value": "REF-D553551082",
+      "source": "温室巡检本次交班不使用封签。",
+      "domain_name": "温室巡检",
+      "project_id": "project-d553551082",
+      "source_id": "source-d553551082",
+      "memory_id": "fact-d553551082",
+      "fact_slot": "slot-d553551082",
+      "skill_id": "manual-d553551082",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-d553551082-00",
+          "slot": "background-slot-00",
+          "body": "温室巡检查询分工第0项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-01",
+          "slot": "background-slot-01",
+          "body": "温室巡检查询分工第1项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-02",
+          "slot": "background-slot-02",
+          "body": "温室巡检查询分工第2项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-03",
+          "slot": "background-slot-03",
+          "body": "温室巡检查询分工第3项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-04",
+          "slot": "background-slot-04",
+          "body": "温室巡检查询分工第4项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-05",
+          "slot": "background-slot-05",
+          "body": "温室巡检查询分工第5项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-06",
+          "slot": "background-slot-06",
+          "body": "温室巡检查询分工第6项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-07",
+          "slot": "background-slot-07",
+          "body": "温室巡检查询分工第7项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-08",
+          "slot": "background-slot-08",
+          "body": "温室巡检查询分工第8项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-09",
+          "slot": "background-slot-09",
+          "body": "温室巡检查询分工第9项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-10",
+          "slot": "background-slot-10",
+          "body": "温室巡检查询分工第10项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-d553551082-11",
+          "slot": "background-slot-11",
+          "body": "温室巡检查询分工第11项：温室巡检交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "no-evidence",
+      "experiment_group": "re2",
+      "material_digest": "7cd1b65a6e4e8a877be4c092a7c2d26ad47fba518a4e342fc4ed784db1ad24b6"
+    },
+    {
+      "id": "hold-re2-3",
+      "family": "memory",
+      "domain": 0,
+      "mode": "omitted",
+      "language": "zh",
+      "question": "展馆布展交班时，应使用哪个封签批次？",
+      "source_title": "展馆布展记录",
+      "source_body": "展馆布展本次交班不使用封签。",
+      "expected": "no-evidence",
+      "value_type": "code",
+      "control": false,
+      "discovery": true,
+      "seed": 1609,
+      "identity": "hold-re2-3",
+      "value": "REF-2C5713FAC2",
+      "source": "展馆布展本次交班不使用封签。",
+      "domain_name": "展馆布展",
+      "project_id": "project-2c5713fac2",
+      "source_id": "source-2c5713fac2",
+      "memory_id": "fact-2c5713fac2",
+      "fact_slot": "slot-2c5713fac2",
+      "skill_id": "manual-2c5713fac2",
+      "plugin_id": "reference.author",
+      "memory_noise": [
+        {
+          "id": "background-2c5713fac2-00",
+          "slot": "background-slot-00",
+          "body": "展馆布展查询分工第0项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-01",
+          "slot": "background-slot-01",
+          "body": "展馆布展查询分工第1项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-02",
+          "slot": "background-slot-02",
+          "body": "展馆布展查询分工第2项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-03",
+          "slot": "background-slot-03",
+          "body": "展馆布展查询分工第3项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-04",
+          "slot": "background-slot-04",
+          "body": "展馆布展查询分工第4项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-05",
+          "slot": "background-slot-05",
+          "body": "展馆布展查询分工第5项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-06",
+          "slot": "background-slot-06",
+          "body": "展馆布展查询分工第6项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-07",
+          "slot": "background-slot-07",
+          "body": "展馆布展查询分工第7项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-08",
+          "slot": "background-slot-08",
+          "body": "展馆布展查询分工第8项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-09",
+          "slot": "background-slot-09",
+          "body": "展馆布展查询分工第9项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-10",
+          "slot": "background-slot-10",
+          "body": "展馆布展查询分工第10项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        },
+        {
+          "id": "background-2c5713fac2-11",
+          "slot": "background-slot-11",
+          "body": "展馆布展查询分工第11项：展馆布展交班时，应使用哪个封签批次？请查交接批准记录；本条不含具体值。"
+        }
+      ],
+      "predecessor_value": null,
+      "grading": "no-evidence",
+      "experiment_group": "re2",
+      "material_digest": "ebb5611c7d0905fbc2faf579ebe548a05ba82060ea4e07acdbc853608a3b8761"
+    },
+    {
+      "id": "hold-control-greeting",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "早上好。",
+      "source_title": "陶艺展览记录",
+      "source_body": "此手册记录陶泥存放要求。",
+      "expected": "direct-control",
+      "value_type": "none",
+      "control": true,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "hold-control-greeting",
+      "value": "",
+      "source": "此手册记录陶泥存放要求。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-e7b3d335c9",
+      "source_id": "source-e7b3d335c9",
+      "memory_id": "fact-e7b3d335c9",
+      "fact_slot": "slot-e7b3d335c9",
+      "skill_id": "manual-e7b3d335c9",
+      "plugin_id": "reference.author",
+      "skill_title": "陶艺展览手册",
+      "skill_summary": "陶艺展览流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "陶艺展览日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "陶艺展览日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "陶艺展览日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "陶艺展览日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "陶艺展览日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "陶艺展览日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "陶艺展览日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "陶艺展览日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "陶艺展览日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "陶艺展览日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "陶艺展览日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "陶艺展览日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "陶艺展览日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "陶艺展览日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "此手册记录陶泥存放要求。"
+        },
+        {
+          "id": "section-15",
+          "title": "陶艺展览日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "陶艺展览日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "陶艺展览日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "陶艺展览日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "陶艺展览日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "陶艺展览日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "陶艺展览日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "陶艺展览日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "陶艺展览日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "陶艺展览日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "陶艺展览日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "陶艺展览日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "陶艺展览日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "陶艺展览日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "陶艺展览日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "陶艺展览日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "direct-control",
+      "expected_answer": "",
+      "material_digest": "25761f1a31df3586f7176cd33de994be0e4e959407ad37579f5a54bbccf9c06c"
+    },
+    {
+      "id": "hold-control-sum",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "19 加 47 是多少？",
+      "source_title": "陶艺展览记录",
+      "source_body": "此手册记录陶泥存放要求。",
+      "expected": "direct-control",
+      "value_type": "none",
+      "control": true,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "hold-control-sum",
+      "value": "66",
+      "source": "此手册记录陶泥存放要求。",
+      "domain_name": "陶艺展览",
+      "project_id": "project-0b97cea8af",
+      "source_id": "source-0b97cea8af",
+      "memory_id": "fact-0b97cea8af",
+      "fact_slot": "slot-0b97cea8af",
+      "skill_id": "manual-0b97cea8af",
+      "plugin_id": "reference.author",
+      "skill_title": "陶艺展览手册",
+      "skill_summary": "陶艺展览流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "陶艺展览日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "陶艺展览日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "陶艺展览日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "陶艺展览日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "陶艺展览日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "陶艺展览日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "陶艺展览日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "陶艺展览日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "陶艺展览日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "陶艺展览日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "陶艺展览日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "陶艺展览日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "陶艺展览日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "陶艺展览日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "此手册记录陶泥存放要求。"
+        },
+        {
+          "id": "section-15",
+          "title": "陶艺展览日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "陶艺展览日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "陶艺展览日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "陶艺展览日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "陶艺展览日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "陶艺展览日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "陶艺展览日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "陶艺展览日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "陶艺展览日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "陶艺展览日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "陶艺展览日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "陶艺展览日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "陶艺展览日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "陶艺展览日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "陶艺展览日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "陶艺展览日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "direct-control",
+      "expected_answer": "66",
+      "material_digest": "1524770cae2b23709b2e4eb5b801b5589fae665e1d5f8e0c94a5900fc6505357"
+    },
+    {
+      "id": "hold-protect-history",
+      "family": "history",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "温室巡检记录的交班集合点在哪里？",
+      "source_title": "温室巡检记录",
+      "source_body": "交班集合点为 {value}。",
+      "expected": "value",
+      "value_type": "location",
+      "control": false,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "hold-protect-history",
+      "value": "东侧第51号资料柜",
+      "source": "交班集合点为 东侧第51号资料柜。",
+      "domain_name": "温室巡检",
+      "project_id": "project-ae6d4923f0",
+      "source_id": "source-ae6d4923f0",
+      "memory_id": "fact-ae6d4923f0",
+      "fact_slot": "slot-ae6d4923f0",
+      "skill_id": "manual-ae6d4923f0",
+      "plugin_id": "reference.author",
+      "history_turns": [
+        "温室巡检准备记录0：已检查照明。",
+        "温室巡检准备记录1：已检查照明。",
+        "交班集合点为 东侧第51号资料柜。",
+        "温室巡检准备记录3：已检查照明。",
+        "温室巡检准备记录4：已检查照明。",
+        "温室巡检准备记录5：已检查照明。",
+        "温室巡检准备记录6：已检查照明。",
+        "温室巡检准备记录7：已检查照明。",
+        "温室巡检准备记录8：已检查照明。",
+        "温室巡检准备记录9：已检查照明。"
+      ],
+      "grading": "value",
+      "protection": true,
+      "material_digest": "1008ed97623cabaa33e02e740e33c02f6c6912f3c5fb18213d1cd37d68db5feb"
+    },
+    {
+      "id": "hold-protect-skill",
+      "family": "skill",
+      "domain": 0,
+      "mode": "direct",
+      "language": "zh",
+      "question": "温室巡检记录的交班集合点在哪里？",
+      "source_title": "温室巡检记录",
+      "source_body": "交班集合点为 {value}。",
+      "expected": "value",
+      "value_type": "location",
+      "control": false,
+      "discovery": false,
+      "seed": 1609,
+      "identity": "hold-protect-skill",
+      "value": "东侧第60号资料柜",
+      "source": "交班集合点为 东侧第60号资料柜。",
+      "domain_name": "温室巡检",
+      "project_id": "project-3686ddb0c3",
+      "source_id": "source-3686ddb0c3",
+      "memory_id": "fact-3686ddb0c3",
+      "fact_slot": "slot-3686ddb0c3",
+      "skill_id": "manual-3686ddb0c3",
+      "plugin_id": "reference.author",
+      "skill_title": "温室巡检手册",
+      "skill_summary": "温室巡检流程与注意事项。",
+      "sections": [
+        {
+          "id": "section-00",
+          "title": "温室巡检日常事项0",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-01",
+          "title": "温室巡检日常事项1",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-02",
+          "title": "温室巡检日常事项2",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-03",
+          "title": "温室巡检日常事项3",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-04",
+          "title": "温室巡检日常事项4",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-05",
+          "title": "温室巡检日常事项5",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-06",
+          "title": "温室巡检日常事项6",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-07",
+          "title": "温室巡检日常事项7",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-08",
+          "title": "温室巡检日常事项8",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-09",
+          "title": "温室巡检日常事项9",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-10",
+          "title": "温室巡检日常事项10",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-11",
+          "title": "温室巡检日常事项11",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-12",
+          "title": "温室巡检日常事项12",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-13",
+          "title": "温室巡检日常事项13",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-14",
+          "title": "交接记录",
+          "summary": "交接事项与交班记录。",
+          "body": "交班集合点为 东侧第60号资料柜。"
+        },
+        {
+          "id": "section-15",
+          "title": "温室巡检日常事项15",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-16",
+          "title": "温室巡检日常事项16",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-17",
+          "title": "温室巡检日常事项17",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-18",
+          "title": "温室巡检日常事项18",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-19",
+          "title": "温室巡检日常事项19",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-20",
+          "title": "温室巡检日常事项20",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-21",
+          "title": "温室巡检日常事项21",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-22",
+          "title": "温室巡检日常事项22",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-23",
+          "title": "温室巡检日常事项23",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-24",
+          "title": "温室巡检日常事项24",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-25",
+          "title": "温室巡检日常事项25",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-26",
+          "title": "温室巡检日常事项26",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-27",
+          "title": "温室巡检日常事项27",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-28",
+          "title": "温室巡检日常事项28",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-29",
+          "title": "温室巡检日常事项29",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        },
+        {
+          "id": "section-30",
+          "title": "温室巡检日常事项30",
+          "summary": "记录日常准备。",
+          "body": "材料已清点。"
+        }
+      ],
+      "resources": [],
+      "grading": "value",
+      "protection": true,
+      "material_digest": "189b3e7a263a5334a15808b8be21d86dfc0bd8b7a77c2a98c7c66491742182ab"
+    }
+  ],
+  "selection_rule": "Positive joint net gain with no guard regression in both screening and unchanged repeat; at least one same improved pair. Then one frozen fresh set, positive net gain with no guard regression. Otherwise reject and stop."
+}

@@ -1,0 +1,88 @@
+{
+  "identity": "re2-revoked",
+  "case_id": "re2-revoked",
+  "seed": 1609,
+  "family": "memory",
+  "question": "陶艺展览现在有有效批准的备用口令吗？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "9ae7863a-c565-4137-bafa-2d98dac9eca0",
+  "target_start_seq": 1,
+  "answer": "根据当前参考中提供的所有背景内存条目（background-slot-00到05），我检查了全部6个条目的内容：\n\n- background-slot-00: \"陶艺展览日常准备第0项由值班组登记。\"\n- background-slot-01: \"陶艺展览日常准备第1项由值班组登记。\"\n- background-slot-02: \"陶艺展览日常准备第2项由值班组登记。\"\n- background-slot-03: \"陶艺展览日常准备第3项由值班组登记。\"\n- background-slot-04: \"陶艺展览日常准备第4项由值班组登记。\"\n- background-slot-05: \"陶艺展览日常准备第5项由值班组登记。\"\n\n所有这些条目都只是关于\"陶艺展览日常准备第X项由值班组登记\"的常规登记信息，没有任何一条提到备用口令、有效批准、密码、口令或相关安全措施。\n\n因此，根据当前可用的批准项目事实，**陶艺展览没有有效批准的备用口令**。\n\n{\"has_valid_backup_passphrase\": false, \"evidence\": [\"所有6个背景内存条目均只包含日常准备登记信息，未提及任何备用口令相关内容\"]}",
+  "steps": 7,
+  "reason": "completed",
+  "target_seconds": 82.90700000000652,
+  "target_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 44202,
+    "output_tokens": 1478,
+    "total_tokens": 45680
+  },
+  "all_usage": {
+    "attempts": 7,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 44202,
+    "output_tokens": 1478,
+    "total_tokens": 45680
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-00",
+        "requested_tier": "section",
+        "version": "ac3c843e86c0e74c0207086a6a3a8675be204fad483ed4acce117cf04166691e"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-01",
+        "requested_tier": "section",
+        "version": "b48f4625c14ff336e4e05d76a27c505bf52a209172ade6936cf10ce59d42b4b7"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-02",
+        "requested_tier": "section",
+        "version": "3b3b309245ab3fdd9cc0b0807c3d62e4c9c9405386433e63b9864a2644e96e8d"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-03",
+        "requested_tier": "section",
+        "version": "27910c86bbcc7cd9287a3e1956230912bd4e71fc7b3e51831a66e95496f9c8ea"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-04",
+        "requested_tier": "section",
+        "version": "ef83633857f27f06409a0830701d6ffecf5a0641bd341cc863b64cd12fb2d6a9"
+      }
+    },
+    {
+      "name": "request_workspace_memory",
+      "arguments": {
+        "memory_id": "background-da56d630c0-05",
+        "requested_tier": "section",
+        "version": "a427cb830ccc597e26553ff1a8e135cacdb6a678e292a2d815a827efe3e51e8c"
+      }
+    }
+  ],
+  "search_read_count": 6,
+  "output_executions": null,
+  "elapsed_seconds": 90.0
+}

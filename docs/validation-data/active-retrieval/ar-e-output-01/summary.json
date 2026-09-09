@@ -1,0 +1,267 @@
+{
+  "decision": "REJECT_PRESENTATION_CHANGE",
+  "production_change_retained": false,
+  "previous_AR_D_acceptance": "NO-GO unchanged",
+  "scope": "output only, 12 paired tasks; one known seed and one new seed, same questions; the negative source text is unchanged. Not a held-out question set or release grid.",
+  "arms": {
+    "baseline": {
+      "joint_pass": 4,
+      "cases": 12,
+      "field_misattribution": 6,
+      "replayed_requests": 60,
+      "replay_errors": 0,
+      "usage": {
+        "attempts": 61,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 340045,
+        "output_tokens": 4006,
+        "total_tokens": 344051
+      }
+    },
+    "candidate": {
+      "joint_pass": 3,
+      "cases": 12,
+      "field_misattribution": 6,
+      "replayed_requests": 55,
+      "replay_errors": 0,
+      "usage": {
+        "attempts": 55,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 265698,
+        "output_tokens": 2935,
+        "total_tokens": 268633
+      }
+    }
+  },
+  "treatment_visible_in_target_requests": {
+    "baseline": 0,
+    "candidate": 12
+  },
+  "reviews": [
+    {
+      "arm": "baseline",
+      "identity": "113-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output search returned no requested identifier.",
+      "field_misattribution": false,
+      "report_sha256": "00059348ae0f02ec0cef93b01506e3eefae2f3d612e26c3fb99d3f6839ec8fab",
+      "source_events_sha256": "6ce996738ed1564f0d040938ccec0fa965cc17216d48e373f56c62ac236e7d0a"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-direct",
+      "joint_pass": true,
+      "reason": "Correct requested value with original evidence in successful dispatch.",
+      "field_misattribution": false,
+      "report_sha256": "325203995a6f1b4b81b59da58a3db859b21aceaf82355d0341d6cec17800e50e",
+      "source_events_sha256": "4aa03f309e54e155a2f4aa35c5d9a1ed03e4096ed3261541deeb70cb6f9fe0ad"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "ed9a308cde3252ce424574767b2aead1c58d4cc1c02f52fe826b058436e37ecd",
+      "source_events_sha256": "4dff4c2c297d4b0af57e5d80f7ef9c1a2f95ba18fcbc1959b1627b9bad03a240"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-nearby",
+      "joint_pass": false,
+      "reason": "Requested fact missing; wrong source or premature termination.",
+      "field_misattribution": false,
+      "report_sha256": "ae0764db897567ee6b212a18bc0fe14a96c218ebb94b4729f258f78beef8d3e2",
+      "source_events_sha256": "e09825c56acee7897b838c5dcfddc2207c40dea9b76d906bd4f5acc75bf55f49"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "ab98ee956b08cbd18feff39862b12fb969718b523b92268a779ef443d87cf1f2",
+      "source_events_sha256": "0f7334b006f8b0d3233f5da7428058f6b8a3320be3eb7b09a3586724accfd2e2"
+    },
+    {
+      "arm": "baseline",
+      "identity": "113-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "69153e5ae4f437554d2d44f941067e19fc5c410096252b38025f8f2165dfada2",
+      "source_events_sha256": "43737f91c81727e33946bebe64c481b07fd697c59ac90363a9cf9902df4aa1bf"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-absent",
+      "joint_pass": true,
+      "reason": "Complete original-output search returned no requested identifier.",
+      "field_misattribution": false,
+      "report_sha256": "fb175e383fa1042841d5c208706abf2f6b77047077ed39103ca578da33237b94",
+      "source_events_sha256": "6d0164859c6ec9920d272038764bf23dbfa13ecd2bf9a3315904ddd259d823c4"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-direct",
+      "joint_pass": true,
+      "reason": "Correct requested value with original evidence in successful dispatch.",
+      "field_misattribution": false,
+      "report_sha256": "1bf3b039d50c904818c6d699bb5423096f0d419a33a9e92d190d381ad9b1453a",
+      "source_events_sha256": "de0e6e06fc48c6d2a1a676496e1cef99da885c24313b12d33af1956e66615579"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "03135886343d61d08ef86d56c588870a0ffebdfa377553b277415846c694931a",
+      "source_events_sha256": "48fa029f7f91161bf8a630e503e595ab5f2884ea03dac098c0988e0e14aa156f"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-nearby",
+      "joint_pass": false,
+      "reason": "Requested fact missing; wrong source or premature termination.",
+      "field_misattribution": false,
+      "report_sha256": "9b7df560e39cfdd25154c870c5a9be7634c90db2bfe80c211f604a073c9a1cce",
+      "source_events_sha256": "f92d1b42653f4254ebce6b72ee0dece360210e2aa3914e80f670711d9ddf00c6"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "981c1a9eb168e104267c8c299212ae95c24d42113f2593df46e03c5a64a6d492",
+      "source_events_sha256": "ae39faed69eacabbcf9681ed07f572524f62ce6f173d51d9c3465ceaa26ccd9f"
+    },
+    {
+      "arm": "baseline",
+      "identity": "887-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "378db0918404e5e5df5106a39816aa7562fb65f84ac231d63adf0df624b28f8f",
+      "source_events_sha256": "8c4e905a430ce3aa8a95fccfb9c32635d1dcd3e181e6fc1e2d1c1839ac1969c4"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-absent",
+      "joint_pass": false,
+      "reason": "Only preview inspected, but answer claims absence in entire output.",
+      "field_misattribution": false,
+      "report_sha256": "71bb6d944c9c1099230a16e5152bc442691753a56afdf1a700a7733ed8b92c8c",
+      "source_events_sha256": "af3018d33c4870d763e9046d6133f85276d771718cce3658b09041e8c2499e65"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-direct",
+      "joint_pass": true,
+      "reason": "Correct requested value with original evidence in successful dispatch.",
+      "field_misattribution": false,
+      "report_sha256": "1b38da111726f07bfcc14189770602cba9880065f8b5b398717848b7331422b5",
+      "source_events_sha256": "059ec3ab85fac2190685590d3017a6a20acfae0001433a3b99f325a82e3e5ca2"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "8a6635456fe8ad3f03c30a5ac03f292f3daf751b0611b9f0e4925e19e0228cde",
+      "source_events_sha256": "49e15242eacf4cf83148da408cb4b30e01b70045ee25451563b149ad6c50bb86"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nearby",
+      "joint_pass": true,
+      "reason": "Correct requested value with original evidence in successful dispatch.",
+      "field_misattribution": false,
+      "report_sha256": "c183a68a9fd99169535ac00961a84fd5a58f4b95d333a262a1fda42571c24b61",
+      "source_events_sha256": "5b129e727d055d741897252a20bb031724ba4fff679cef2cc5df8a40d9ce1d1f"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "64079571000f7be4bc891353c84c6b231be16f4fe2fa27ae0fc11cd89407e6ab",
+      "source_events_sha256": "900e7713962b9fe8bcca8361a2790e93d4fe3116ed759f38bc10539f944b8814"
+    },
+    {
+      "arm": "candidate",
+      "identity": "113-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "6245be4d973849a113543df920904ed482966b0e722155d7f84eef49dfbb4ad8",
+      "source_events_sha256": "cc219e1220d42489b7d780ee58e2a1a81057b08b9d57a9dd17669b9a675ebe31"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-absent",
+      "joint_pass": false,
+      "reason": "Only preview inspected, but answer claims absence in entire output.",
+      "field_misattribution": false,
+      "report_sha256": "20e8559aa1ae8b9265539142cc5e55bb7d791f8a18b5446b258ffedcb9f93904",
+      "source_events_sha256": "aada5b4af626070639d302530520e8fd2e8d31c5356399dc548d27f7c04f8909"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-direct",
+      "joint_pass": true,
+      "reason": "Correct requested value with original evidence in successful dispatch.",
+      "field_misattribution": false,
+      "report_sha256": "282a894486bf769b29044d6508c87f9561700a2dd95b7c3f43af29fc528e9ff0",
+      "source_events_sha256": "c728b34efd568ab562e773d7d00ad001e271ceea14b9f5d579af85d24d3b0e65"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-english",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "5bc99de7e0dc8f1260a0a21ce563f207a8ed0c9cf73f76debd8acf8d7532cb0f",
+      "source_events_sha256": "b6294132c2d69b0c40059072b29aa7710054f6c8d2e1e867d14e56ac0d7d9cc8"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-nearby",
+      "joint_pass": false,
+      "reason": "Requested fact missing; wrong source or premature termination.",
+      "field_misattribution": false,
+      "report_sha256": "314090e2fce6665b4442db4479d0f884b69a70dbb39ae2be4446c69f1aab08f9",
+      "source_events_sha256": "2b6b26c69a59121bf66c44961a53a666ab9b7d85ce3504f73854cc3968871972"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-nonzero",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "6496f4fab3403f4767a63e99738f00a055aee6f91becaf925ad150ffb82af3cf",
+      "source_events_sha256": "6dc066bc23e0a56771811611e0269d29716f39b239188ed4b1b702360f3d1475"
+    },
+    {
+      "arm": "candidate",
+      "identity": "887-o-rephrase",
+      "joint_pass": false,
+      "reason": "Process status or host digest misattributed as requested domain value.",
+      "field_misattribution": true,
+      "report_sha256": "9876aa291852318052546e37696e198d3e2174c1c2a0f47b68a3bcfab21ecbe7",
+      "source_events_sha256": "28bbf2a69594606531b1225d71e077bd12efe40888fe5680892de3be87ecd973"
+    }
+  ],
+  "owner_conclusion": "Adding output-envelope prose alone did not improve aggregate correctness or prevent field misattribution. Model-vs-harness causality remains unresolved.",
+  "source_restored_to_grid05": true,
+  "deterministic_tests": {
+    "passed": 37,
+    "full_suite": false,
+    "L2_L4": false
+  }
+}

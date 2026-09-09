@@ -1,11 +1,15 @@
 # 主动检索执行计划：搜索、阅读与证据核对
 
-日期：2026-09-09。状态：**计划已落盘，AR-A–AR-D 尚未开始**。
+**2026-09-10 发布决定：** 用户接受 55/72 与已知限制，授权 v0.9.0 Educational alpha 发行并转入沙箱 S0。原冻结门槛和历史 NO-GO 不改写，但不再阻断本次发行；见[收口记录](../deal/011-v090-release.md)。
 
-本次授权仅编写执行计划及同步项目上下文，不实现接口、不运行真实 Provider、不提交或发布。
+日期：2026-09-09。状态：**AR-A–AR-D 与后续授权定向修复已执行；最终 grid-06 为 20/72 → 51/72，原真实门槛仍 NO-GO，不进入发布**。本轮测量完成后停止调整，见[记录 007](../deal/007-active-retrieval-final-comparison.md)。
+
+后续授权的[可靠性实验](TRACEHARNESS_RETRIEVAL_RELIABILITY_EXPERIMENT_PLAN.md)已收口：112 条真实目标旅程，没有稳定收益候选；RE-5 无合格组合，条件性留出验证未启动。生产策略及本计划的历史成绩、发布门槛不变，见[记录 008](../deal/008-retrieval-reliability-experiments.md)。
+
+最初授权仅编写计划；用户随后已授权先提交之前工作，再目标模式连续完成 AR-A–AR-D。
+之前工作已提交为 `a54d431`，未推送；AR 新工作暂不提交或发布。真实测试在本次授权范围内按下述合同执行。
 AR 是本计划的阶段前缀，用来区别已完成的分层压缩 A/B/B+/C/E0/D/E1–E3；不另立版本路线。
-后续实施须遵守用户实际授权的阶段范围。落盘不等于设计合同已经冻结，也不等于获得后续阶段的执行授权。
-若用户后续一次授权多个阶段，前置门槛通过即可在该范围内连续推进，不要求每个阶段重复确认。
+实施须遵守用户实际授权的阶段范围。落盘不等于实现；当前授权已覆盖四阶段，前置门槛通过后连续推进，不重复确认。
 
 ## 1. 目标与现有依据
 
@@ -13,14 +17,14 @@ AR 是本计划的阶段前缀，用来区别已完成的分层压缩 A/B/B+/C/E
 复用现有渐进披露、Reader、Context 和 AgentLoop，使“发现候选 → 读原文 → 再搜索”成为同一条生产主线。
 自动候选与目录仍提供初始线索；本计划不把一次自动召回失败等同于资料不存在。
 
-以当前源码为准，相关入口如下。表中已有工具名是实际名称；后文新工具名仅为拟议名称，AR-A 才冻结。
+以当前源码为准，相关入口如下。三个搜索工具名称由 AR-A 冻结，History 在 AR-B、Skill/Memory 在 AR-C 接入。
 
 | 来源 | 当前已实现 | 当前缺口 | 本计划范围 |
 |---|---|---|---|
-| History | 本 Session 压缩历史目录；`request_history_page` 请求完整 Turn 组成的原文页 | 模型缺少按查询定位原文页的工具；只能沿已披露 cursor 阅读 | 在合法压缩历史来源中查关键词，提供精确位置与现有 reader 可用的读取动作 |
-| Skill | 宿主持久选择；已选 Skill 顶层元数据的自动词法检索；`request_skill_reference` 读取目录、章节和资源块 | 初始自动召回遗漏后，模型不能自己换词搜索；大目录不能分页 | 主动搜索已选且属于当前有效 Composition 的导航元数据，并有界呈现命中章节或资源入口 |
-| Memory | 项目批准事实投影、自动词法检索；`request_workspace_memory` 读取已披露 ID/version | 模型无法自行用另一条查询发现未自动召回的有效记忆 | 主动检索当前项目 active 的已批准事实；保留原批准和版本规则 |
-| 工具输出 | `list_tool_outputs`、`search_tool_output`、`read_tool_output` | 已有能力，仍需验证新导航不会使模型绕路或重跑工具 | 复用和回归，不重做存储或搜索接口 |
+| History | 本 Session 压缩历史目录、`search_history` 有界关键词定位、`request_history_page` 请求完整 Turn 原文页 | 自然问答固定门槛未通过；模型可能对局部未命中过度断言 | 已接入原来源和完整 Turn 分页，搜索页准入后可请求精确原文页 |
+| Skill | 宿主持久选择、自动词法检索、`search_skill` 导航关键词查询、原工具读取章节和资源块 | 只搜索导航，不扫描隐藏正文；真实门槛未通过 | 已沿当前有效 Composition 接入有界命中和合法原文读回 |
+| Memory | 项目批准事实投影、自动词法检索、`search_memory` 显式查询与原工具读回 | 模型自主换词和不充分证据处理仍有行为边界；真实门槛未通过 | 已接入当前项目 active 批准事实，不放宽批准和版本规则 |
+| 工具输出 | `list_tool_outputs`、`search_tool_output`、`read_tool_output` | 当前 grid-06 联合通过 11/18，原门槛未达标；历史 grid-05 为 4/18 | 复用原存储和搜索接口；修复控制回执、定位入口与读取范围呈现 |
 | 工作区文件 | `list_files`、`search_text`、`read_file`，由原 Policy 控制 | 与内部参考是不同权限面 | 复用；不让 shell/文件搜索读取内部账本代替领域 reader |
 
 源码依据：
@@ -101,7 +105,7 @@ Tool result 提供有界回执；搜索命中片段与导航经原 Context owner
 搜索回执不是长期授权，不将参考正文直接写进普通 Tool result 绕过原保留/撤销规则。
 AR-A 须用真实 owner 接缝证明新发现的 handle 能被原读取工具合法消费；不得只实现能输出 ID 的孤立搜索接口。
 
-该方向涉及披露协议扩展，尚未冻结 schema/版本号。AR-A 必须明确候选页如何记录、来源如何验证、
+该方向涉及的 schema/版本已在 AR-A 冻结并由 AR-B 切换为 Session 11 / Context 10。合同明确候选页如何记录、来源如何验证、
 首次准入失败如何反馈、目录/片段何时退出，以及原 collector/reader/checker 如何重建；不能只在 prompt 中补说明。
 如现有 owner 无法承载，先收敛设计决定再开始 AR-B，不临时开一套 pending、平行 Projector 或模糊双协议。
 若持久协议确需切换，遵守 pre-1.0 单一明确版本；旧数据显式拒绝并说明使用新数据目录，不迁移、猜测或删除。
@@ -125,7 +129,10 @@ AR-A 须用真实 owner 接缝证明新发现的 handle 能被原读取工具合
 
 ### AR-A：设计合同与评测冻结
 
-**状态：待执行。** 先恢复两份上下文、检查真实 diff 与公开装配，完成以下内容后才能进入 AR-B：
+**状态：已完成。** [ADR-0061](../adr/0061-active-reference-search.md) 与
+[评测冻结](../validation-data/active-retrieval/manifest-freeze.json)已落盘；已有配置解析为
+openai-compatible/qwen-plus，无真实调用。[57 项定向及反向验证](../validation-data/active-retrieval/ar-a.json)通过。
+AR-A 当时不修改生产协议；AR-B 已实施协议切换。以下为 AR-A 交付范围：
 
 1. 给出 History、Skill、Memory 的生产入口、Reader、authority、Projection、Context 和持久协议 owner 对照表。
 2. 核对普通 Chat、Product requester、程序化 Runtime、功能关闭和插件切换的真实能力装配；
@@ -142,7 +149,10 @@ AR-A 须用真实 owner 接缝证明新发现的 handle 能被原读取工具合
 
 ### AR-B：History 主动定位
 
-**状态：待 AR-A 完成并获得实施授权。**
+**状态：已完成范围验证。** 生产接线、24 项新增 History 搜索测试、相邻回归与反向验证已完成。
+两轮隔离真实诊断保留第一轮中文失败和第二轮中英文答案/证据通过，见
+[AR-B 证据](../validation-data/active-retrieval/ar-b.json)及[实际用量](../validation-data/active-retrieval/ar-b-real-summary.json)。
+两轮共 38 个真实 Attempt、150415 total_tokens（含准备材料）；这些不计作 AR-D 固定题目得分。
 
 - 在原 History 来源展开与分页 owner 上增加有界查询；不另写一套压缩来源展开器。
 - 搜索不要求用户/模型先猜 block_id，不以当前已注入目录作为全部范围；由合法来源集合发现命中页。
@@ -156,7 +166,10 @@ AR-A 须用真实 owner 接缝证明新发现的 handle 能被原读取工具合
 
 ### AR-C：Skill / Memory 主动发现
 
-**状态：待 AR-B 范围门禁通过并获得实施授权。** 内部按 C1 Memory、C2 Skill 推进，共用 AR-A 的规则。
+**状态：已完成范围验证。** C1 Memory / C2 Skill 均沿原 Reader、选择/批准来源接入，共享 AR-A 搜索页生命周期。
+新增 Memory 8 项与 Skill 11 项、相邻及合并门禁、原来源保护反向验证见 [AR-C 证据](../validation-data/active-retrieval/ar-c.json)。
+五轮真实诊断保留失败；第五轮两类均实际搜索并通过答案、证据、重放检查。总 38 Attempt、160991 total_tokens，
+这些诊断不计 AR-D 得分。
 
 - **C1 Memory**：复用当前项目 Reader、active 投影和词法排序，让显式查询能找到未自动召回的批准事实。
   验证批准后发现、supersede/revoke 后旧结果不能再次准入、跨项目拒绝、变更绑定、无绑定/无批准记录、预算和取消。
@@ -172,7 +185,13 @@ C1/C2 分步运行对应 owner 测试，共享 Context/披露寿命回归在合�
 
 ### AR-D：自然问答、基线对照与范围收口
 
-**状态：待 AR-C 完成并获得实施授权。**
+**状态：本轮实现、完整网格、逐项审阅和独立重放已收口，验收 NO-GO。**
+见[最终报告](../validation-active-retrieval.md)和[当前 grid-06 统计](../validation-data/active-retrieval/ar-d-grid-06/summary.json)。
+两臂各 72 条自然任务全部保留，联合通过 20/72 → 51/72，TLS EOF 为 11/6；两边无执行错误的 57 对为 19/57 → 44/57。候选 4 条误报所问事实，仍未达到 66/72 与各类 15/18，不发布。历史 grid-05 的 21/72 → 45/72 原样保留。四个独立日常对照每臂均答对、零工具调用，不进入 72 题成绩。
+局部资料上的过度断言另列为证据不足，不靠换 prompt、删题或抬预算凑通过。
+grid-02/03 暴露的搜索上限说明和控制回执丢失已修复并反向确认，失败未删除。
+AR-D 当时共 288 项不同定向检查通过，grid-05 重放 909 个请求；后续修复门禁另见当前上下文。最终 grid-06 重开 144 个会话、837 个请求，另有 8 个日常对照请求；重放/不变量错误均为 0。
+本轮同清单复测仍有连接错误及证据使用、检索行为缺口；保留失败和原门槛 NO-GO，按用户要求结束这次测量，不继续调参或进入发布。
 
 - 使用同一真实 Provider、相同语料/问题/资源配置做基线和候选对照；原脚本 Provider 只验证确定性合同，
   不能代替真实模型自主搜索行为。真实运行必须显式触发，不能由普通 pytest 隐式联网。
@@ -190,7 +209,8 @@ C1/C2 分步运行对应 owner 测试，共享 Context/披露寿命回归在合�
 
 ## 5. 真实验收设计与停止条件
 
-以下是**待 AR-A 固化的验收计划数值**，不是生产默认配置，不回写旧语义 benchmark。
+以下验收数值已由 AR-A 固化在[独立 manifest](../../tests/live_active_retrieval/manifest.json)，
+不是生产默认配置，不回写旧语义 benchmark。具体生成语料与 runner/装配摘要在首次评分前冻结。
 
 ### 5.1 用例与证据
 
@@ -271,9 +291,11 @@ git diff --check
 
 | 项目 | 当前状态 | 下一步 |
 |---|---|---|
-| 本计划与两份上下文入口 | 已落盘；文档 QA 通过 | AR-A 待授权执行 |
-| AR-A 设计/评测冻结 | 未开始 | 授权后完成接缝、协议、预算和 manifest 冻结 |
-| AR-B History 搜索 | 未开始 | AR-A 范围门槛通过后实施 |
-| AR-C Memory / Skill 搜索 | 未开始 | AR-B 范围门槛通过后实施 |
-| AR-D 真实验收与收口 | 未开始 | AR-C 完成后执行固定网格与范围门禁 |
+| 本计划与两份上下文入口 | 已同步 AR-A–AR-C 与 AR-D 当前事实 | 随实际代码更新 |
+| AR-A 设计/评测冻结 | 已完成；57 项定向与反向确认 | 生产协议切换由 AR-B 实现 |
+| AR-B History 搜索 | 已完成范围验证 | 保持真实行为限制说明 |
+| AR-C Memory / Skill 搜索 | 已完成范围验证 | 保持真实行为限制说明 |
+| AR-D 真实验收与收口 | 最终 grid-06 完整执行收口，NO-GO | 同清单、同预算；837 个网格请求及 8 个独立日常对照请求重放通过，原质量门槛未达，结束本轮测量、不发布 |
+| 已授权后续共性问题修复 | 已补来源导航、重复拒绝与证据呈现，见[记录 006](../deal/006-evidence-bounded-retrieval-policy.md) | 未证明全局负面结论可靠；不改 AR-D 分数，不自动开始发布 |
+| 后续可靠性实验 | [RE-0–RE-5 已收口](TRACEHARNESS_RETRIEVAL_RELIABILITY_EXPERIMENT_PLAN.md) | 112 条真实目标旅程；无稳定收益候选，未采用；RE-5 无合格组合，留出验证未运行 |
 | 语义检索、发布门禁 | 不属于本计划 | 保持原不接入结论与独立授权边界 |

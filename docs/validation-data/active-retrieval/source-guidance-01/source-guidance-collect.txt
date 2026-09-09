@@ -1,0 +1,13 @@
+tests/test_composition_generations.py: 50
+tests/test_composition_scope_overlays.py: 24
+tests/test_context_input.py: 25
+tests/test_context_request_protocol.py: 35
+tests/test_product_architecture.py: 17
+tests/test_product_contract.py: 73
+tests/test_reference_search_history.py: 24
+tests/test_reference_search_memory.py: 10
+tests/test_reference_search_schema.py: 4
+tests/test_reference_search_skill.py: 13
+tests/test_reference_token_budget.py: 13
+tests/test_runtime_factory.py: 2
+

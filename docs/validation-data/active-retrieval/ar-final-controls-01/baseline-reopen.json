@@ -1,0 +1,43 @@
+{
+  "arm": "baseline",
+  "cases": 4,
+  "provider_calls": 0,
+  "results": [
+    {
+      "identity": "control-arithmetic",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-greeting",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-provided-fact",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    },
+    {
+      "identity": "control-rewrite",
+      "requests": 1,
+      "attempts_started": 1,
+      "attempts_ended": 1,
+      "replay_errors": [],
+      "invariant_errors": [],
+      "source_events_equal_recorded_export": true
+    }
+  ]
+}

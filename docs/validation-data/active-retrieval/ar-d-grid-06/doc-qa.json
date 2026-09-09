@@ -1,0 +1,31 @@
+{
+  "documents": 5,
+  "chapter_correspondence": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20"
+  ],
+  "relative_links": 590,
+  "mermaid_blocks_closed": 59,
+  "evidence_json_parsed_and_secret_pattern_checked": 633,
+  "errors": [],
+  "manual_flow_check": "Validation-only update: existing Projection/Reader, bounded search, source authority and protocol unchanged. Current grid-06 results distinguished from historical grid-05. Existing diagrams unchanged. Secret pattern scan is not an exhaustive credential detector."
+}

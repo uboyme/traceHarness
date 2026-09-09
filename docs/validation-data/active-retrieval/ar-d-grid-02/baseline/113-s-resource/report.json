@@ -1,0 +1,52 @@
+{
+  "identity": "113-s-resource",
+  "case_id": "s-resource",
+  "seed": 113,
+  "family": "skill",
+  "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "94d694c8-b027-4897-9d2c-e97cfde17056",
+  "target_start_seq": 1,
+  "answer": "The current reference context confirms the existence of a Skill titled \"档案整理手册\" (Archival Organization Manual), with a resource named \"应急联络卡：值班呼号\" (Emergency Contact Card: On-Duty Call Sign), and a corresponding chunk `chunk-ec8de757ab`. However, the actual content of that chunk — i.e., the value of the on-duty call sign — is **not present** in the current reference bodies.\n\nThe navigation metadata shows:\n- `chunk_id`: `\"chunk-ec8de757ab\"`\n- `content_bytes`: `54`\n- `summary`: `\"应急联络卡：值班呼号\"`\n- `title`: `\"应急联络卡：值班呼号\"`\n\nBut no body text containing the call sign itself has been disclosed. The last Tool call (`request_skill_reference`) returned only a receipt — not the chunk’s content — and the current reference package contains only directory-level metadata, not the requested chunk body.\n\nSince the host-selected Skill reference was requested at `requested_tier=\"chunk\"` but the body did **not appear** in the current reference context (only the receipt and directory metadata did), and no further chunk content was admitted, the值班呼号 remains **unavailable in the supplied evidence**.\n\nTherefore, based solely on the currently provided and accessible reference material, the值班呼号 cannot be determined.\n\n{\"值班呼号\": null}",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 18.95299999997951,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9577,
+    "output_tokens": 570,
+    "total_tokens": 10147
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 9577,
+    "output_tokens": 570,
+    "total_tokens": 10147
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+        "chunk_id": "chunk-ec8de757ab",
+        "requested_tier": "chunk",
+        "resource_id": "resource-ec8de757ab",
+        "section_id": null,
+        "skill_id": "manual-ec8de757ab",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 19.56299999996554
+}

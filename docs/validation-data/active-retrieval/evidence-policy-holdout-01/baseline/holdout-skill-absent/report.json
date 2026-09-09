@@ -1,0 +1,52 @@
+{
+  "identity": "holdout-skill-absent",
+  "case_id": "s-absent",
+  "seed": 113,
+  "family": "skill",
+  "question": "According to the deployment handbook, which build is approved as the rollback target?",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "7383e2c3-10e4-407a-826e-3320c3aa0a42",
+  "target_start_seq": 1,
+  "answer": "According to the deployment handbook's \"Rollback authorization\" section (section-23), **no rollback build is approved**. The handbook explicitly states: \"No rollback build is approved. Obtain release authorization before choosing a rollback target.\"",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 11.0,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10145,
+    "output_tokens": 266,
+    "total_tokens": 10411
+  },
+  "all_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 10145,
+    "output_tokens": 266,
+    "total_tokens": 10411
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "request_skill_reference",
+      "arguments": {
+        "catalog_digest": "e08d5d499922d1d730064c51705d74e9179695e5491fd0f271f65280f608ea80",
+        "chunk_id": null,
+        "requested_tier": "section",
+        "resource_id": null,
+        "section_id": "section-23",
+        "skill_id": "manual-593410eb3c",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": null,
+  "elapsed_seconds": 11.64000000001397
+}

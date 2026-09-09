@@ -1,0 +1,1613 @@
+{
+  "arm": "candidate",
+  "closed": 36,
+  "scored_review_complete": false,
+  "reports": [
+    {
+      "identity": "113-h-direct",
+      "case_id": "h-direct",
+      "seed": 113,
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "ac21101e-a3fc-4a81-90dd-9f3e5a6f499d",
+      "target_start_seq": 152,
+      "answer": "从搜索结果中，我找到了设备交接的口令：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。",
+      "steps": 3,
+      "reason": "completed",
+      "target_seconds": 26.42200000002049,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 14416,
+        "output_tokens": 408,
+        "total_tokens": 14824
+      },
+      "all_usage": {
+        "attempts": 13,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 51989,
+        "output_tokens": 438,
+        "total_tokens": 52427
+      },
+      "evidence": [
+        {
+          "context_seq": 184,
+          "reference": {
+            "block_id": "a7a34ac3a5b64de39e1d10ce8b8d1aae526556d15c6f8cd1227039a09696803b",
+            "cursor": {
+              "block_id": "a7a34ac3a5b64de39e1d10ce8b8d1aae526556d15c6f8cd1227039a09696803b",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "leaf_ref": {
+              "digest": "347f9e832e241f1e8b20edca861ca69b93d4e6f67ef8604528bfe0089c993ec0",
+              "event_id": "65b1edf4-a5d3-4197-9783-408024d4faea",
+              "seq": 111,
+              "stream_id": "session:ac21101e-a3fc-4a81-90dd-9f3e5a6f499d",
+              "type": "user/message"
+            },
+            "readable": true,
+            "version": "b043daf93018ccc7f64d8c11b24a755b2be4b918cf2c9b7b065d398aa523e8f0"
+          }
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "a7a34ac3a5b64de39e1d10ce8b8d1aae526556d15c6f8cd1227039a09696803b",
+            "cursor": {
+              "block_id": "a7a34ac3a5b64de39e1d10ce8b8d1aae526556d15c6f8cd1227039a09696803b",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "search_history",
+          "arguments": {
+            "query": "口令"
+          }
+        }
+      ],
+      "search_read_count": 2,
+      "output_executions": null,
+      "elapsed_seconds": 70.70299999997951
+    },
+    {
+      "identity": "113-h-late-page",
+      "case_id": "h-late-page",
+      "seed": 113,
+      "family": "history",
+      "question": "之前提过检修集合点，具体在哪儿？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "a2181d0e-6d2e-4649-8a68-f6265ed49d9c",
+      "target_start_seq": 152,
+      "answer": "在提供的历史记录中，有一条明确提到了“检修集合点”的位置：\n\n\"请记下这条记录，只回复已记下：检修集合点是 东侧第38号资料柜。\"\n\n因此，检修集合点具体在**东侧第38号资料柜**。",
+      "steps": 5,
+      "reason": "completed",
+      "target_seconds": 68.64099999994505,
+      "target_usage": {
+        "attempts": 5,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 27218,
+        "output_tokens": 1171,
+        "total_tokens": 28389
+      },
+      "all_usage": {
+        "attempts": 15,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 64791,
+        "output_tokens": 1201,
+        "total_tokens": 65992
+      },
+      "evidence": [
+        {
+          "context_seq": 210,
+          "id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+          "version": "4519681a7fcf258c51726ae3a8615ac0608f043a2e8a7760ba1f9e07d61e0e37",
+          "tier": "chunk"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+            "cursor": {
+              "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+            "cursor": {
+              "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+            "cursor": {
+              "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+              "index": 2,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+            "cursor": {
+              "block_id": "2b910f9a8d4414db033bdb7dfdffcfc42fbe3ddd26b0a935b6fb17c63763b92c",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        }
+      ],
+      "search_read_count": 4,
+      "output_executions": null,
+      "elapsed_seconds": 113.03099999995902
+    },
+    {
+      "identity": "113-h-english",
+      "case_id": "h-english",
+      "seed": 113,
+      "family": "history",
+      "question": "What was the temporary handover code we discussed earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "c446e1ff-0d2d-4949-9e6e-329c1283c031",
+      "target_start_seq": 152,
+      "answer": "The temporary handover code is **REF-9D2D595614**.\n\nThis is explicitly stated in the historical reference:  \n`\"The temporary handover code is REF-9D2D595614.\"`",
+      "steps": 5,
+      "reason": "completed",
+      "target_seconds": 66.75,
+      "target_usage": {
+        "attempts": 5,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 27605,
+        "output_tokens": 1265,
+        "total_tokens": 28870
+      },
+      "all_usage": {
+        "attempts": 15,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 65187,
+        "output_tokens": 1295,
+        "total_tokens": 66482
+      },
+      "evidence": [
+        {
+          "context_seq": 210,
+          "id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+          "version": "2047a1eecbdd9bdd86e3743d29c7096d10981d7ba0da3478a0c2c6d1a6a33b0f",
+          "tier": "chunk"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+            "cursor": {
+              "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+            "cursor": {
+              "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+              "index": 1,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+            "cursor": {
+              "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+              "index": 2,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        },
+        {
+          "name": "request_history_page",
+          "arguments": {
+            "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+            "cursor": {
+              "block_id": "401cd1576ecf967ca6f6de24db2b76e5b2e38272abc4076786558b8bba114232",
+              "index": 3,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          }
+        }
+      ],
+      "search_read_count": 4,
+      "output_executions": null,
+      "elapsed_seconds": 111.42200000002049
+    },
+    {
+      "identity": "113-s-direct",
+      "case_id": "s-direct",
+      "seed": 113,
+      "family": "skill",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "0d0e64b1-4469-4b34-9311-fd2dec86fecf",
+      "target_start_seq": 1,
+      "answer": "设备演练手册规定的签到卡代号是 **REF-CF662C1BCD**。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 23.75,
+      "target_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9805,
+        "output_tokens": 311,
+        "total_tokens": 10116
+      },
+      "all_usage": {
+        "attempts": 2,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 9805,
+        "output_tokens": 311,
+        "total_tokens": 10116
+      },
+      "evidence": [
+        {
+          "context_seq": 20,
+          "id": "manual-cf662c1bcd",
+          "version": "1.0.0",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-cf662c1bcd",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 24.406000000075437
+    },
+    {
+      "identity": "113-s-large-directory",
+      "case_id": "s-large-directory",
+      "seed": 113,
+      "family": "skill",
+      "question": "设备演练手册里，终止演练的无线电口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": true,
+      "session_id": "d62c7621-6700-4bb5-9650-849e29477059",
+      "target_start_seq": 1,
+      "answer": "根据设备演练手册中“无线电终止演练流程”章节的内容，终止演练时在无线电中报出口令是：**REF-DC37F22941**。",
+      "steps": 2,
+      "reason": "completed",
+      "target_seconds": 17.671999999904074,
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 9754,
+        "output_tokens": 255,
+        "total_tokens": 10009
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 1,
+        "estimated_usage": 0,
+        "input_tokens": 9754,
+        "output_tokens": 255,
+        "total_tokens": 10009
+      },
+      "evidence": [
+        {
+          "context_seq": 22,
+          "id": "manual-dc37f22941",
+          "version": "1.0.0",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "04c307c0928d24e624f2da62723d80fe95862676123a7e6e337cd5faea22f850",
+            "chunk_id": null,
+            "requested_tier": "section",
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-dc37f22941",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "search_read_count": 1,
+      "output_executions": null,
+      "elapsed_seconds": 18.405999999959022
+    },
+    {
+      "identity": "113-s-english",
+      "case_id": "s-english",
+      "seed": 113,
+      "family": "skill",
+      "question": "Which code does the equipment drill manual specify for the check-in card?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f9715ef5-44dc-461f-8472-3b0f048a93ee",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 8,
+        "unknown_usage": 5,
+        "estimated_usage": 0,
+        "input_tokens": 12885,
+        "output_tokens": 368,
+        "total_tokens": 13253
+      },
+      "all_usage": {
+        "attempts": 8,
+        "unknown_usage": 5,
+        "estimated_usage": 0,
+        "input_tokens": 12885,
+        "output_tokens": 368,
+        "total_tokens": 13253
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [
+        {
+          "name": "search_skill",
+          "arguments": {
+            "query": "equipment drill manual"
+          }
+        },
+        {
+          "name": "request_skill_reference",
+          "arguments": {
+            "catalog_digest": "482a2881b1e139e08f4ce342390698bc98eacc1b8edf58bf96b18288b7799901",
+            "chunk_id": null,
+            "requested_tier": "summary",
+            "resource_id": null,
+            "section_id": null,
+            "skill_id": "manual-edcc0ff2b0",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "name": "search_skill",
+          "arguments": {
+            "query": "check-in card"
+          }
+        }
+      ],
+      "search_read_count": 3,
+      "output_executions": null,
+      "elapsed_seconds": 71.20299999997951
+    },
+    {
+      "identity": "113-m-direct",
+      "case_id": "m-direct",
+      "seed": 113,
+      "family": "memory",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "9f80704c-39e3-4f50-bca8-bd8973e5138a",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 17.65700000000652
+    },
+    {
+      "identity": "113-m-omitted",
+      "case_id": "m-omitted",
+      "seed": 113,
+      "family": "memory",
+      "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "9e831e45-bc8b-4572-aa8b-6d2188ce2f2f",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 13.155999999959022
+    },
+    {
+      "identity": "113-m-english",
+      "case_id": "m-english",
+      "seed": 113,
+      "family": "memory",
+      "question": "How many retries have been approved for this project?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "0730be78-8d2c-402c-b7a8-eaf732de379e",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 9.90700000000652
+    },
+    {
+      "identity": "113-o-direct",
+      "case_id": "o-direct",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "d44d01c2-3da6-43d6-b83d-db56773ec2e2",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.702999999979511
+    },
+    {
+      "identity": "113-o-nearby",
+      "case_id": "o-nearby",
+      "seed": 113,
+      "family": "output",
+      "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "7860e34d-7996-43eb-8fcb-3ed0fc8944d1",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.704000000027008
+    },
+    {
+      "identity": "113-o-english",
+      "case_id": "o-english",
+      "seed": 113,
+      "family": "output",
+      "question": "What validation code did the equipment check return earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a13f82cb-46fc-4859-875c-3022725130eb",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.577999999979511
+    },
+    {
+      "identity": "227-h-direct",
+      "case_id": "h-direct",
+      "seed": 227,
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "6a287da1-09f7-40d6-83a3-bdf2c908999d",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.530999999959022
+    },
+    {
+      "identity": "227-h-late-page",
+      "case_id": "h-late-page",
+      "seed": 227,
+      "family": "history",
+      "question": "之前提过检修集合点，具体在哪儿？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "0cad4a56-a6da-4da0-88a5-6141d98bde74",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.687999999965541
+    },
+    {
+      "identity": "227-h-english",
+      "case_id": "h-english",
+      "seed": 227,
+      "family": "history",
+      "question": "What was the temporary handover code we discussed earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "77c46c23-b1e3-4a2e-b290-7b9ff28bf57a",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.609000000054948
+    },
+    {
+      "identity": "227-s-direct",
+      "case_id": "s-direct",
+      "seed": 227,
+      "family": "skill",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "f8a0731b-7e6f-483b-afa6-30b81c74e58f",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.062999999965541
+    },
+    {
+      "identity": "227-s-large-directory",
+      "case_id": "s-large-directory",
+      "seed": 227,
+      "family": "skill",
+      "question": "设备演练手册里，终止演练的无线电口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "00fb99c7-1c81-419f-a1f8-3e2540abff82",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 5.077999999979511
+    },
+    {
+      "identity": "227-s-english",
+      "case_id": "s-english",
+      "seed": 227,
+      "family": "skill",
+      "question": "Which code does the equipment drill manual specify for the check-in card?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "bdeb130b-cfbc-4794-8dff-2c2437969a52",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.89000000001397
+    },
+    {
+      "identity": "227-m-direct",
+      "case_id": "m-direct",
+      "seed": 227,
+      "family": "memory",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "1ee61ea7-059f-47c6-8d94-e68e89774184",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.766000000061467
+    },
+    {
+      "identity": "227-m-omitted",
+      "case_id": "m-omitted",
+      "seed": 227,
+      "family": "memory",
+      "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "8af7b472-8a03-4eff-a676-3682cbd8ce87",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.952999999979511
+    },
+    {
+      "identity": "227-m-english",
+      "case_id": "m-english",
+      "seed": 227,
+      "family": "memory",
+      "question": "How many retries have been approved for this project?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "4a75265d-5d9b-4397-90fc-ecada4edc8f5",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.405999999959022
+    },
+    {
+      "identity": "227-o-direct",
+      "case_id": "o-direct",
+      "seed": 227,
+      "family": "output",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "2c8692d1-39ed-4c84-bf08-2d6676307bc4",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.73499999998603
+    },
+    {
+      "identity": "227-o-nearby",
+      "case_id": "o-nearby",
+      "seed": 227,
+      "family": "output",
+      "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "c6863815-61e0-4c3a-a1ff-7589c0179e74",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.76500000001397
+    },
+    {
+      "identity": "227-o-english",
+      "case_id": "o-english",
+      "seed": 227,
+      "family": "output",
+      "question": "What validation code did the equipment check return earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "c63a506b-059c-4546-b911-dcfa2c785095",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.562999999965541
+    },
+    {
+      "identity": "419-h-direct",
+      "case_id": "h-direct",
+      "seed": 419,
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "11c6661d-d6dd-4be4-be8e-7ced9909f996",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.407000000006519
+    },
+    {
+      "identity": "419-h-late-page",
+      "case_id": "h-late-page",
+      "seed": 419,
+      "family": "history",
+      "question": "之前提过检修集合点，具体在哪儿？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "15cd1e3f-aee4-4a83-aec2-10e0a6bbca62",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.5
+    },
+    {
+      "identity": "419-h-english",
+      "case_id": "h-english",
+      "seed": 419,
+      "family": "history",
+      "question": "What was the temporary handover code we discussed earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "59601f67-a423-4214-8d5b-a2816cbca75a",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.60999999998603
+    },
+    {
+      "identity": "419-s-direct",
+      "case_id": "s-direct",
+      "seed": 419,
+      "family": "skill",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "5d7a504a-e97e-4638-b306-61d4b1fadb8e",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 9.687000000034459
+    },
+    {
+      "identity": "419-s-large-directory",
+      "case_id": "s-large-directory",
+      "seed": 419,
+      "family": "skill",
+      "question": "设备演练手册里，终止演练的无线电口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "eb21aefd-e6cd-46d8-86ee-369baafe369f",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.780999999959022
+    },
+    {
+      "identity": "419-s-english",
+      "case_id": "s-english",
+      "seed": 419,
+      "family": "skill",
+      "question": "Which code does the equipment drill manual specify for the check-in card?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "20705e4b-f0c0-4a2d-88ab-15161d4777e5",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.687999999965541
+    },
+    {
+      "identity": "419-m-direct",
+      "case_id": "m-direct",
+      "seed": 419,
+      "family": "memory",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "80d8a2ac-3d86-4ab1-8cfc-777bcb817c51",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.23499999998603
+    },
+    {
+      "identity": "419-m-omitted",
+      "case_id": "m-omitted",
+      "seed": 419,
+      "family": "memory",
+      "question": "项目应急联络使用哪个呼号？我问的是已批准的安排。",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "efdcc27b-a259-4099-879b-4ca2c364ea51",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.64000000001397
+    },
+    {
+      "identity": "419-m-english",
+      "case_id": "m-english",
+      "seed": 419,
+      "family": "memory",
+      "question": "How many retries have been approved for this project?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "de6fa61c-0317-418e-b782-4e0ff8877648",
+      "target_start_seq": 1,
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 7.015999999945052
+    },
+    {
+      "identity": "419-o-direct",
+      "case_id": "o-direct",
+      "seed": 419,
+      "family": "output",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "a0a19fb0-8015-4339-84d4-a5e62e0161f0",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.51500000001397
+    },
+    {
+      "identity": "419-o-nearby",
+      "case_id": "o-nearby",
+      "seed": 419,
+      "family": "output",
+      "question": "刚才设备检查里，诊断分组的处理口令是什么？",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "ad55b863-e2c0-4d89-8a8d-3fe9cb35dad8",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.718999999924563
+    },
+    {
+      "identity": "419-o-english",
+      "case_id": "o-english",
+      "seed": 419,
+      "family": "output",
+      "question": "What validation code did the equipment check return earlier?",
+      "closed": true,
+      "review": "pending",
+      "provisional_joint_pass": false,
+      "session_id": "9de82268-d90f-4a1e-939d-9ccb2ce5e5b5",
+      "error": {
+        "type": "ProviderFailure",
+        "code": "provider-tls-eof"
+      },
+      "target_usage": {
+        "attempts": 0,
+        "unknown_usage": 0,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "all_usage": {
+        "attempts": 3,
+        "unknown_usage": 3,
+        "estimated_usage": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "tool_calls": [],
+      "search_read_count": 0,
+      "output_executions": null,
+      "elapsed_seconds": 4.484000000054948
+    }
+  ]
+}

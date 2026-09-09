@@ -1,0 +1,49 @@
+{
+  "identity": "re1-absent",
+  "case_id": "re1-absent",
+  "seed": 1609,
+  "family": "output",
+  "question": "刚才陶艺验收给出的回执编号是什么？",
+  "closed": true,
+  "review": "pending",
+  "provisional_joint_pass": false,
+  "session_id": "603a3ea2-cac0-49e8-9272-7a7242cae370",
+  "target_start_seq": 28,
+  "answer": "根据对 `python check.py` 输出的搜索，结果明确指出：\n\n> “本次仅完成清点，未生成验收回执编号。”\n\n因此，刚才的陶艺验收**没有给出回执编号**。",
+  "steps": 2,
+  "reason": "completed",
+  "target_seconds": 12.329000000027008,
+  "target_usage": {
+    "attempts": 2,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 8781,
+    "output_tokens": 396,
+    "total_tokens": 9177
+  },
+  "all_usage": {
+    "attempts": 4,
+    "unknown_usage": 0,
+    "estimated_usage": 0,
+    "input_tokens": 16555,
+    "output_tokens": 419,
+    "total_tokens": 16974
+  },
+  "evidence": [],
+  "replay_errors": [],
+  "invariant_errors": [],
+  "tool_calls": [
+    {
+      "name": "search_tool_output",
+      "arguments": {
+        "digest": "b1f0303cb98c1b6e6a466f89c23b3b571ab0e1b859a927093004be77f51520e9",
+        "effect_id": "4a14e84e-28ba-4019-9da0-602157504230",
+        "part": "content",
+        "query": "回执编号"
+      }
+    }
+  ],
+  "search_read_count": 1,
+  "output_executions": 1,
+  "elapsed_seconds": 16.64000000001397
+}

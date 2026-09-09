@@ -53,6 +53,11 @@ def source_for_request(events, *, session_id, turn_id, step_id, tool_call_id, re
         and b["id"] == request["memory_id"]
         and b["version"] == request["version"]
     ]
+    if not blocks:
+        from traceh.session.context_input import _parse_policy
+        from traceh.session.memory_search import disclosed
+
+        blocks = disclosed(events, context, request, _parse_policy(context["policy"]))
     if (
         not any(
             expected in e.data.get("tool_calls", [])

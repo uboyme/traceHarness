@@ -37,6 +37,7 @@ from traceh.evaluation.report import (
     build_task_conditions,
     render_markdown,
 )
+from traceh.evaluation.retrieval import unavailable_retrieval
 from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 
 REPORT_JSON = "report.json"
@@ -164,6 +165,9 @@ class ProductBenchmarkRunner:
                 error_code=code if type(code) is str else "benchmark-attempt-unreadable",
                 evidence=None,
                 timing=None,
+                retrieval=None if self._manifest.retrieval is None else unavailable_retrieval(
+                    self._manifest.retrieval, task.task_id,
+                ),
             )
 
     def _write(self, report: BenchmarkReport) -> None:

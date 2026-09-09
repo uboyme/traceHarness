@@ -82,7 +82,7 @@ def _load(root: Path):
 # ------------------------------------------------------------------- manifest
 
 
-def test_the_shipped_benchmark_is_a_valid_schema_1_manifest() -> None:
+def test_the_shipped_benchmark_is_a_valid_schema_2_manifest() -> None:
     manifest = _load(SHIPPED_BENCHMARK)
 
     assert manifest.benchmark_id == "traceh-product-v1"
@@ -143,6 +143,7 @@ def test_the_shipped_manifest_cannot_name_a_repository_or_a_graph() -> None:
         "benchmark_id",
         "arms",
         "tasks",
+        "retrieval",
     }
 
 
@@ -219,7 +220,7 @@ def test_an_unknown_manifest_key_is_a_rejection(tmp_path: Path, extra: str) -> N
 
 def test_an_unsupported_protocol_version_is_a_rejection(tmp_path: Path) -> None:
     manifest = _manifest()
-    manifest["protocol_version"] = 2
+    manifest["protocol_version"] = 1
 
     with pytest.raises(BenchmarkManifestError) as caught:
         _load(_write(tmp_path / "b", manifest))

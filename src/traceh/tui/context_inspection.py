@@ -15,10 +15,9 @@ today's Surface and calling it "what the model saw" would be a fabrication, so
 the frozen request is read from ``request/snapshot`` instead, and the Product
 context it contained is selected from events within its own ``source_seq``.
 
-**Bytes are bytes.** There is no trusted general tokenizer here and no canonical
-per-model context-window size, so nothing in this projection may be presented as
-tokens or as a share of a model's context window. The only honest denominator is
-the configured compaction trigger, and only when compaction is enabled.
+**Bytes, estimates and usage are distinct.** Byte fields measure storage size.
+Optional token measurements bind an explicit policy to the frozen request;
+actual usage comes only from its completed Attempt, never from a byte ratio.
 """
 
 from __future__ import annotations
@@ -28,10 +27,10 @@ from dataclasses import dataclass
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import canonical_json
 from traceh.api.llm import (
-    REQUEST_SNAPSHOT_KEYS,
     ModelMessage,
     ModelRequest,
     dispatch_request_matches_composed,
+    request_snapshot_keys,
 )
 from traceh.runtime.request_builder import build_request_from_events
 from traceh.session.compaction import CompactionPolicy
@@ -42,6 +41,7 @@ from traceh.session.surface import SurfaceProjector
 from traceh.session.surface_replacement import (
     SURFACE_COMPACTION_FAILED,
     SURFACE_REPLACE,
+    SurfaceReplacement,
     parse_surface_replacement,
     surface_conversation,
     surface_utf8_bytes,
@@ -138,6 +138,10 @@ class ContextRequestView:
     composed_max_output_tokens: int | None
     dispatch_max_output_tokens: int | None
     dispatch_matches_composed: bool
+    purpose: str = "conversation"
+    token_measurement: dict | None = None
+    actual_input_tokens: int | None = None
+    actual_output_tokens: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +172,7 @@ class ContextSnapshot:
     product: ContextProductView | None
     request: ContextRequestView | None
     policy: ContextPolicyView | None
+    token_pressure: dict | None = None
 
     @property
     def compaction_count(self) -> int:
@@ -246,17 +251,23 @@ class ContextInspectionReader:
             session_id=session_id,
             head_seq=events[-1].seq if events else 0,
             conversation_messages=len(entries),
-            conversation_utf8_bytes=surface_utf8_bytes(
-                entry.message for entry in entries
-            ),
+            conversation_utf8_bytes=surface_utf8_bytes(entry.message for entry in entries),
             visible_summaries=sum(
-                1 for entry in entries if entry.replacement is not None
+                1 for entry in entries if isinstance(entry.replacement, SurfaceReplacement)
             ),
             compactions=compactions,
             failures=self._failures(events),
             product=self._product(events, through_seq=None),
             request=self._request(events),
             policy=self._policy_view(),
+            token_pressure=next(
+                (
+                    e.data["measurement"]
+                    for e in reversed(events)
+                    if e.type == "request/token-measurement"
+                ),
+                None,
+            ),
         )
 
     # -- compaction -------------------------------------------------------
@@ -272,10 +283,10 @@ class ContextInspectionReader:
             try:
                 replacement = parse_surface_replacement(event)
             except (TypeError, ValueError):
-                raise ContextInspectionError(
-                    "context-inspection-replacement-invalid"
-                ) from None
-            summarizer = replacement.summarizer
+                raise ContextInspectionError("context-inspection-replacement-invalid") from None
+            is_summary = isinstance(replacement, SurfaceReplacement)
+            summarizer = replacement.summarizer if is_summary else None
+            summary = replacement.summary if is_summary else ""
             records.append(
                 ContextCompactionRecord(
                     seq=event.seq,
@@ -284,18 +295,16 @@ class ContextInspectionReader:
                     source_count=len(replacement.source_seqs),
                     source_utf8_bytes=replacement.source_utf8_bytes,
                     history_utf8_bytes=replacement.history_utf8_bytes,
-                    summary_utf8_bytes=len(replacement.summary.encode("utf-8")),
-                    summary_truncated=replacement.summary_truncated,
+                    summary_utf8_bytes=len(summary.encode("utf-8")),
+                    summary_truncated=replacement.summary_truncated if is_summary else False,
                     kept_recent_turns=replacement.kept_recent_turns,
                     policy_digest=replacement.policy_digest,
                     summarizer_name=None if summarizer is None else summarizer.name,
-                    summarizer_version=(
-                        None if summarizer is None else summarizer.version
-                    ),
+                    summarizer_version=(None if summarizer is None else summarizer.version),
                     summarizer_config_digest=(
                         None if summarizer is None else summarizer.config_digest
                     ),
-                    summary=replacement.summary,
+                    summary=summary,
                     matches_current_policy=(
                         current is not None
                         and replacement.policy_digest is not None
@@ -305,9 +314,7 @@ class ContextInspectionReader:
             )
         return tuple(records)
 
-    def _failures(
-        self, events: tuple[EventEnvelope, ...]
-    ) -> tuple[ContextCompactionFailure, ...]:
+    def _failures(self, events: tuple[EventEnvelope, ...]) -> tuple[ContextCompactionFailure, ...]:
         failures: list[ContextCompactionFailure] = []
         for event in events:
             if event.type != SURFACE_COMPACTION_FAILED:
@@ -322,9 +329,7 @@ class ContextInspectionReader:
                     # Only an exact boolean answers the question; anything else
                     # - absent, null, or the wrong type - stays unknown rather
                     # than being reported as "nothing was written".
-                    committed=(
-                        committed if committed is True or committed is False else None
-                    ),
+                    committed=(committed if committed is True or committed is False else None),
                 )
             )
         return tuple(failures)
@@ -345,9 +350,7 @@ class ContextInspectionReader:
         try:
             latest = latest_product_context(selected)
         except (TypeError, ValueError):
-            raise ContextInspectionError(
-                "context-inspection-product-context-invalid"
-            ) from None
+            raise ContextInspectionError("context-inspection-product-context-invalid") from None
         if latest is None:
             return None
         seq, snapshot = latest
@@ -376,9 +379,7 @@ class ContextInspectionReader:
 
     # -- latest frozen request --------------------------------------------
 
-    def _request(
-        self, events: tuple[EventEnvelope, ...]
-    ) -> ContextRequestView | None:
+    def _request(self, events: tuple[EventEnvelope, ...]) -> ContextRequestView | None:
         snapshot = next(
             (event for event in reversed(events) if event.type == "request/snapshot"),
             None,
@@ -389,7 +390,7 @@ class ContextInspectionReader:
         # one to show an older request as "latest" would be a quiet lie, so it
         # fails closed instead.
         data = snapshot.data if isinstance(snapshot.data, dict) else {}
-        if set(data) != REQUEST_SNAPSHOT_KEYS:
+        if set(data) != request_snapshot_keys(data):
             raise ContextInspectionError("context-inspection-request-invalid")
         try:
             raw_composed = data["composed_request"]
@@ -398,10 +399,7 @@ class ContextInspectionReader:
                 raise ValueError
             composed = ModelRequest.from_dict(raw_composed)
             dispatch = ModelRequest.from_dict(raw_dispatch)
-            if (
-                composed.to_dict() != raw_composed
-                or dispatch.to_dict() != raw_dispatch
-            ):
+            if composed.to_dict() != raw_composed or dispatch.to_dict() != raw_dispatch:
                 raise ValueError
             source_seq = data["source_seq"]
             composition_revision = data["composition_revision"]
@@ -431,26 +429,48 @@ class ContextInspectionReader:
         # The Product context this request carried must come from within its own
         # source boundary. Today's ProductTask head may be newer, and using it
         # would rewrite what the model saw when this request was frozen.
-        historical = self._product(events, through_seq=source_seq)
+        is_summary = "summary_input_seq" in data
+        historical = None if is_summary else self._product(events, through_seq=source_seq)
         # The shared request builder proves one request-only Context message
-        # before the complete historical Surface. It is neither Product nor
+        # after the complete historical Surface. It is neither Product nor
         # conversation, and must not inflate either count in the existing UI.
-        context_message, *surface_messages = composed.messages
+        surface_messages = composed.messages if is_summary else composed.messages[:-1]
         leading = 0
         product_bytes = 0
         if historical is not None:
             expected = self._product_messages(events, source_seq)
             if len(surface_messages) < len(expected) or any(
-                surface_messages[index] != message
-                for index, message in enumerate(expected)
+                surface_messages[index] != message for index, message in enumerate(expected)
             ):
-                raise ContextInspectionError(
-                    "context-inspection-request-product-mismatch"
-                )
+                raise ContextInspectionError("context-inspection-request-product-mismatch")
             leading = len(expected)
             product_bytes = surface_utf8_bytes(expected)
         conversation = surface_messages[leading:]
+        measurement = next(
+            (
+                e.data["measurement"]
+                for e in events
+                if e.type == "request/token-measurement" and e.data["step_id"] == data["step_id"]
+            ),
+            None,
+        )
+        # Latest completed attempt for this request, not cumulative session spend.
+        attempt_ids = {
+            e.data["attempt_id"]
+            for e in events
+            if e.type == "model/attempt-start" and e.data["request_snapshot_seq"] == snapshot.seq
+        }
+        usage = next(
+            (
+                e.data.get("usage")
+                for e in reversed(events)
+                if e.type == "model/attempt-end" and e.data["attempt_id"] in attempt_ids
+            ),
+            None,
+        )
+        exact_usage = usage if isinstance(usage, dict) and usage.get("quality") == "exact" else {}
         return ContextRequestView(
+            purpose="semantic_summary" if is_summary else "conversation",
             seq=snapshot.seq,
             source_seq=source_seq,
             composition_revision=composition_revision,
@@ -460,24 +480,23 @@ class ContextInspectionReader:
             dispatch_utf8_bytes=_canonical_utf8_bytes(raw_dispatch),
             composed_fingerprint=composed_fingerprint,
             dispatch_fingerprint=dispatch_fingerprint,
-            system_prompt_utf8_bytes=len(
-                (dispatch.system_prompt or "").encode("utf-8")
-            ),
-            context_input_messages=1,
-            context_input_utf8_bytes=surface_utf8_bytes((context_message,)),
+            system_prompt_utf8_bytes=len((dispatch.system_prompt or "").encode("utf-8")),
+            context_input_messages=0 if is_summary else 1,
+            context_input_utf8_bytes=0
+            if is_summary
+            else surface_utf8_bytes((composed.messages[-1],)),
             product_context_messages=leading,
             product_context_utf8_bytes=product_bytes,
             conversation_messages=len(conversation),
             conversation_utf8_bytes=surface_utf8_bytes(conversation),
             tool_schemas=len(dispatch.tools),
-            tool_utf8_bytes=_canonical_utf8_bytes(
-                [tool.to_dict() for tool in dispatch.tools]
-            ),
+            tool_utf8_bytes=_canonical_utf8_bytes([tool.to_dict() for tool in dispatch.tools]),
             composed_max_output_tokens=composed.max_output_tokens,
             dispatch_max_output_tokens=dispatch.max_output_tokens,
-            dispatch_matches_composed=dispatch_request_matches_composed(
-                composed, dispatch
-            ),
+            dispatch_matches_composed=dispatch_request_matches_composed(composed, dispatch),
+            token_measurement=measurement,
+            actual_input_tokens=exact_usage.get("input_tokens"),
+            actual_output_tokens=exact_usage.get("output_tokens"),
         )
 
     def _product_messages(
@@ -487,9 +506,7 @@ class ContextInspectionReader:
         try:
             latest = latest_product_context(selected)
         except (TypeError, ValueError):
-            raise ContextInspectionError(
-                "context-inspection-product-context-invalid"
-            ) from None
+            raise ContextInspectionError("context-inspection-product-context-invalid") from None
         return () if latest is None else latest[1].messages
 
     def _policy_view(self) -> ContextPolicyView | None:

@@ -1,0 +1,13 @@
+{
+  "score_rows": 19,
+  "candidate_observations": 171,
+  "accepted": [],
+  "sessions": 44,
+  "contexts": 44,
+  "requests": 44,
+  "replay_violations": 0,
+  "invariant_violations": 0,
+  "source_and_assets_unchanged": true,
+  "max_actual_question_rendered_bytes": 2302,
+  "result_sha256": "a134a9bf222289d48837fe0b9d3feb4c33cd5e8dbb8148d94b9719dc5bba4442"
+}

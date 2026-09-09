@@ -1,0 +1,7 @@
+{
+  "case": "pagination-original-presentation",
+  "source_snapshot_seq": 50,
+  "content": "The交接暗号 (handover passphrase) is **“潮汐-583”**, the person responsible for reception is **许宁**, and the spare badge location is **not mentioned** in the provided historical reference.\n\nNo further details about the spare badge are present in the disclosed history chunk.",
+  "tool_calls": [],
+  "wire_matches": true
+}

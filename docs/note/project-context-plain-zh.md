@@ -28,6 +28,18 @@
 
 ## 1. 项目现在处于什么阶段
 
+下一步的[主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)已经写好，四个阶段
+AR-A–AR-D 都还没开始：先定合同和测试题，再补历史搜索，然后补记忆/Skill 搜索，最后用真实模型验收。
+本次只写计划，没有新增工具或改变协议。对应正式版 1、7.11；语义检索仍关闭，发布检查需要另行授权。
+
+分层压缩已经接上 A/B：工具返回大段内容时，完整结果保存在原来的执行账本里，聊天只带预览；模型可以列出本会话保存过的工具结果，再按页读原文。B+ 还可以先查关键词，再展开命中附近。C 已经会先收起旧工具预览，仍太大才摘录旧对话；E0 已补上整个请求的 token 估算、超限拦截和实际用量显示；D 已支持可选模型摘要，E1 已能在轮内收起旧历史，E2 已按 token 选择资料，E3 已能解释超限并完成真实旅程验收，见 9.5、12 节。
+
+这次修复的是“查完历史后，问你好却仍重复旧答案”。资料仍放在请求后面，最后再明确引用你这轮真正问的原话。当前使用 Session 10、Context 9 和 `context-json-v9`；旧 Session 1–9 会被明确拒绝，需要新的数据目录和新会话，旧记录不会被修改或删除。
+
+Stop C 限定验收之后，又新增了 TUI 配置面板（13.11）。现在可以自己在中文界面填写模型、会话、插件、
+自动压缩与功能开关；裸 traceh 在连接配置完整时直接聊天，缺配置才打开简短向导，知识/记忆和任务执行也能逐项修改，聊天里按 F2 可应用配置并恢复原会话。Session 10／Context 9 和原权限规则没变。
+先前 Stop C 审查的是当时的代码，不能把那份通过报告自动算作新面板的审查结果。
+
 TraceHarness 的 Python 包名是 `traceh`，发布包名是 `traceharness-py`。最新正式发布为 **`v0.8.0`**。
 这一版把 v0.8 的整条主线收口：模型请求先冻结再获 Session CAS 派发许可证；SQLite 是唯一生产账本；
 瞬时 Provider 重试不换模型、不改请求；Line 和 Textual 用同一个聊天 Driver；ProductTask、Workflow、
@@ -51,10 +63,10 @@ Workflow；这些是 v0.9 及之后的冻结路线，不属于 v0.8.0 已发布�
 新 Context 24、Request protocol 24、Runtime 11 项，共 59 项已通过并包含在最终限定门禁中：36 个文件
 收集 1079 项，`1076 passed, 3 skipped`，耗时 20.22 秒。F0-B 已完成。
 F0-C 当前会话原文分页披露和最终限定门禁已完成：38 文件收集 1104 项，`1100 passed, 4 skipped in 31.98s`，
-包含新 History 四文件 81 项。F0-A/B/C 本轮授权实现收口，F1 Skill 贡献与 F2 持久选择／检索／模型披露已实现（7.5），项目 Memory authority 已在 F3 接入（7.6），尚未检索或注入 Context。
-Release Stop A 已完成独立审查：没有 P0/P1，2 项 P2 已修复并通过定向确认；按计划通过停止点，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工。
-版本仍是 `0.8.0`；F2 数据库和 Context 外层格式已切到 2，新 Session 标记唯一为 `context_protocol=3`。
-旧数据库 schema 1、Session 标记 1/2 和无标记旧 Session 都明确拒绝，不能补写或迁移。上面的 1076 项是 F0-B 阶段证据，不能算
+包含新 History 四文件 81 项。F0-A/B/C 本轮授权实现收口，F1 Skill 贡献与 F2 持久选择／检索／模型披露已实现（7.5），项目 Memory authority 已在 F3 接入（7.6），F4 已检索并注入 Context（7.7）。
+Release Stop A 已完成独立审查：没有 P0/P1，2 项 P2 已修复并通过定向确认；按计划通过停止点，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查和相关测试，发布检查仍待授权。
+版本仍是 `0.8.0`；SQLite 仍为 2，当前 Context 外层格式为 9，新 Session 标记唯一为 `context_protocol=10`。
+旧数据库 schema 1、Session 标记 1/2/3/4/5/6 和无标记旧 Session 都明确拒绝，不能补写或迁移。上面的 1076 项是 F0-B 阶段证据，不能算
 F0-C 的结果；本轮没有运行全量、L2、构建、联网或真实模型，也没有发布。
 
 第四轮之后已经修好“程序自己限制 reason，却没把限制告诉 Router 模型”的根因，严格 parser 没放宽，公开路径反例也做了反向验证。随后第五轮从新目录完整重跑 18 次：严格质量成功 15 次，auto 6/6 都按合同解析、reason 拒绝归零；另外 3 次全是 coder 碰到瞬时 DNS `getaddrinfo failed`，没有 TLS EOF 或检查失败。这个结果只证明当时的旧 Profile，仍是小样本描述，不是统计显著。
@@ -150,6 +162,18 @@ flowchart LR
 
 ## 3. 从目录看懂整个项目
 
+D 新增 `session/semantic_summary.py`：负责把选好的历史变成摘要请求，并核对模型返回的格式和出处。它不拥有模型或账本；挑内容、调用模型、记账仍由原模块分别负责（12 节）。
+
+`llm/token_meter.py` 是统一的请求估算器；`runtime/request_builder.py` 负责组装、记下估算及核对来源；压缩仍由 `session/compaction.py` 一处写账。界面负责显示，不另存一份聊天事实。
+
+E3 增加 `chat/context_pressure.py` 核对失败请求的原计量证据，`cli/context_pressure.py` 给命令行和 TUI 共用中文提示；`tests/test_context_pressure.py` 测显示与失败路径，`tests/live_context_acceptance/run.py` 跑完整真实旅程。
+
+C 没另建压缩系统：`session/compaction.py` 决定和记账，`surface_replacement.py` 定义怎样收起旧结果并核对来源，`history.py` 找回原事件，`context_input.py` 只把真正摘要放进历史目录。TUI 和命令行读同一记录；专项测试是 `test_tool_result_folding.py`，真实测试入口增加 `--fold-tools`。
+
+`session/tool_output.py` 管“原文和引用怎样对应、怎样搜索和分页”的共同规则；`tools/output.py` 把列目录、关键词搜索和读原文接成普通只读工具。真实体验脚本是 `tests/live_tool_outputs/run.py`，普通 pytest 不会自动调用付费模型。
+
+新增的 onboarding/session_picker 管首次设置和对话选择，CLI 的 credentials/startup 管加密密钥和旧数据入口，chat/workspace_project 把已确认的文件夹项目选择交给原负责人执行；详见 13.11。
+
 根目录文件先分成四类：
 
 1. **AI 开发规则**：`AGENTS.md` 是共享规则；`CLAUDE.md` 让 Claude 导入同一规则。
@@ -166,9 +190,9 @@ flowchart LR
 | `tui/` | 可选 Textual 界面：把原观察变成双栏，控制按钮送回原 owner；现有 Context 详情页复用请求重建，分别统计本步参考、Product 状态和对话，自己不记第二份账 | `TracehTuiApp`、`context_inspection.py`、`runner.py`、`presentation.py` |
 | `cli/` | 把终端命令和 `.env` 翻译成 Runtime 配置；Line adapter 把 typed Chat/Product update 变成安全的一行行文本，并把恢复命令按目标 Shell 渲染出来 | `main.py`、`chat.py`、`product.py`、`console.py`、`timeline.py`、`activity.py`、`command_line.py`、`env_file.py` |
 | `projects/` | 只记和证明宿主的长期项目关联，不管理工作区生死 | ProjectScopeService、唯一 projector（7.6） |
-| `memory/` | 检查短事实和来源，追加提议／人工决定，从原账重建生效副本 | policy.py、sources.py、projection.py、service.py（7.6） |
+| `memory/` | 检查短事实和来源，追加人工决定，从原账重建生效副本；F4 context.py 提供项目内检索来源与历史证明 | policy.py、sources.py、projection.py、service.py、context.py（7.6–7.7） |
 | `runtime/` | 运行时中枢：对外门面、插件组合控制面和真正的一轮执行各有自己的负责人 | `AgentRuntime`、`PluginCompositionCoordinator`、`AgentLoop` |
-| `session/` | 原账本、广播、投影、恢复与检查；Context 只读选择和统一渲染，F0-C history.py 只展开分页、history_requests.py 统一判权限和目标步骤，写账仍由原 SessionService 负责；F2 的 skill_selection/skill_retrieval/skill_requests/context_index 管选择、检索、披露与派生索引 | `SqliteEventStore`、`protocol.py`、`context_input.py`、`history.py`、`history_requests.py`、Projector、Recovery |
+| `session/` | 原账本、广播、投影、恢复与检查；Context 只读选择和统一渲染，F0-C history.py 只展开分页、history_requests.py 统一判权限和目标步骤，写账仍由原 SessionService 负责；F2 的 skill_selection/skill_retrieval/skill_requests/context_index 管选择、检索、披露与派生索引；F4 retrieval/reference_requests/stream_heads 共享规则，history_observation 派生时效 | `SqliteEventStore`、`protocol.py`、`context_input.py`、`history.py`、`history_requests.py`、Projector、Recovery |
 | `concurrency.py` | 杀不掉的后台活儿（线程）取消后怎么等它收尾 | `await_worker_convergence()` |
 | `process_control.py` | Tool、Verifier、Git 都能复用的直接子进程取消/超时收敛 | `converge_process()` |
 | `tools/process_control.py` | Tool 专属的 stdout/stderr 临时文件捕获 | `capture_output()` |
@@ -191,11 +215,51 @@ flowchart LR
 
 `api/` 里的 Plugin 部分现在**是真的在工作**（见第 19 节），`TurnInput` 也是真的在用；`AgentSupervisor` Protocol 已由 `ProcessAgentSupervisor` 满足，D0 后 Stage E Tool 与 Stage C Workspace wrapper 都只面向这份公共合同。`WorkspaceProvider` 也已有真实 Git 实现和契约测试；`api/artifacts.py` 与 `api/promotion.py` 里的 Patch、Review、Approval、Promotion 值同样都有真实实现和测试，不是占位。看到 `api/` 里有个类型不等于背后有实现——判断标准仍是有没有测试真的把它跑起来。
 
-`examples/plugins/` 下面放的是三个**能独立打包安装**的插件，不是仓库内的测试夹具：一个最小 Skill 示例、一个真正有用途的 Python Quality 插件，以及一个只负责写源码候选的 Plugin Creator Skill。它们存在的意义是：插件这条路必须按外部作者真正会遇到的方式走一遍（打 Wheel → 装进干净环境 → 被发现 → 显式启用 → 进入真实 Prompt/Tool/Policy/Verifier 主线），而不是靠内部假接口自说自话。
+`examples/plugins/` 下面现有四个独立插件包的源码：最小 Skill 示例、Python Quality、只写源码候选的 Plugin Creator Skill，以及 F5 的 Reference Skills 评估示例。前三个有历史构建和干净环境安装证据；第四个当前只验证了从源码经原加载器进入主线，还没有安装验收。不能把前三个的历史 Wheel 结果当成第四个也已通过。
 
 `docs/adr/` 不应随意重写，因为它解释当时为什么选择 Event Log、Effect Ledger、Composition Freeze 等设计。现在的状态变化写进两份上下文文档，版本变化写进 CHANGELOG。
 
+F5 另外接入 chat/config.py（读明确配置）、chat/governance.py（两种界面的同一治理服务）、
+tui/governance.py（证据和确认窗口）、evaluation/retrieval.py（冻结检验和评分）。准备语料仍由
+原 attempt.py 负责，不多一套运行器，详见 7.8。
+
+共享检索 `session/retrieval.py` 现在还负责保留完整查询段和证明覆盖词；最终是否装入及排除弱覆盖
+由原 `session/context_input.py` 的预算负责人决定，E2 同时检查完整请求剩余 token 和物理字节边界，规则和协议见 7.9。
+
+真实导航验证放在 `tests/live_skill_navigation/`：脚本与合成材料只用于显式真实调用，不随 pytest 自动执行；
+原 Runtime 和产品评估仍各走原主线，详见 7.10。
+`tests/live_reference_journeys/` 继续用原 Runtime 和 SQLite 检验真实 Memory、History 与混合旅程。
+`tests/local_retrieval_screen/` 是 C3 的显式本地模型诊断：从原主线记录获准材料，再离线比较候选，
+不为产品增加另一套检索或事实源，详见 7.9。
+`tests/provider_argument_probe/` 是 C4 的显式取证脚本，核对原请求和实际 HTTP 字节，仍使用原
+Provider，不执行返回的工具，也没有给产品开启原始响应日志，详见第 8 节。
+
 ## 4. 程序启动后各模块怎样连接
+
+开启 D 后，总结用的还是当前模型连接、原来的调用许可和费用账；没有偷偷创建后台会话或另一套模型调度。
+
+启动时明确给编码、窗口和预留，Runtime 才装上 token 计量。主循环借原来的组合使用权准备请求，没有多开一个调用模型或压缩历史的后台系统。换模型不能默默沿用不匹配的预算绑定。
+
+C 仍由原来的对话启动流程调用同一个压缩服务，先收起旧工具正文，不够再摘录旧历史。没有第二个运行器；找原文仍用原会话账本及 B/B+ 的目录、搜索和阅读工具。
+
+三个输出工具（目录、关键词搜索、原文读取）借用当前 Runtime 原有的 SessionService。没有第二个数据库、文件目录管理器、后台任务或缓存。普通聊天默认工具包含它们；明确关闭默认工具或按 Product 角色限制能力的宿主，要自己明确装配/授予，系统不自动扩大权限。
+
+TUI 打开会话后，先通过原项目规则确认归属、重建原记忆索引，再接受聊天输入；切换会话仍先关好旧运行环境，详见 13.11。
+
+当前问题仍取自原来的事件账：ContextInputService 找到这一轮第一条用户输入，Session 写入前核对它确实来自这里。发给模型、检查和重放都用同一个呈现函数。Provider 不偷偷追加内容，聊天历史也不另存一份问题作为事实源。
+
+配置面板涉及的职责也分开了：`cli/tui_config.py` 负责非密钥启动文件、路径和本地预检；
+`cli/tui_entry.py` 负责同一条启动/重启循环；`tui/settings.py` 负责启动字段、开关和标签页；`tui/config_forms.py` 把知识/记忆和任务配置变成中文树形表单，支持可编辑预设及逐项增删。
+Context 使用 `chat/config.py`，Product 使用 `product/config.py` 的同一个解析函数，磁盘文件和还没保存的草稿都用各自原规则。真正组装模型和 Runtime 的仍是 `cli/main.py`，打开/恢复会话、
+收尾 Product 与 Runtime 的仍是 `tui/runner.py`。这些配置不能替代 Session 账本、Memory 权限
+或已经确认的 Skill 选择。
+
+`tui/governance.py` 负责可选文字和记忆操作表单。表单帮你携带准确的 ID，生成命令草稿后仍
+交给 `chat/governance.py` 重新读账和审阅；表单本身没有写入或批准记忆的权限。
+`tui/text_selection.py` 让现有显示日志能够按字符选中、高亮，并提供右键复制菜单，仍使用 Textual 的
+选区。`tui/clipboard.py` 只负责把文字交给 Windows Unicode 系统剪贴板：临时窗口、剪贴板和未转交
+的内存都会在返回前收好，成功交付的内存归 Windows 管。它们不新增聊天账本或记忆权限。
+`tui/app.py` 的任务面板快捷键只改变原控件是否显示，不另记任务状态，也不会重启任务负责人。
 
 `build_default_runtime()` 像装配车间。它把零件装成一个可运行的 `AgentRuntime`：
 
@@ -235,7 +299,7 @@ flowchart TD
     COMP --> SCOPE["四层 Service Scope：最近一层优先"]
     COMP --> OVERLAY["四层 Tool / Prompt / Policy → 一份有效 Composition"]
     LOOP --> REQUEST["RequestBuilder：重建模型请求"]
-    REQUEST --> RENDER["Context reader / renderer：只给本次请求"]
+    REQUEST --> RENDER["同一个 reader / renderer：只展示本次需要的参考"]
     LOOP --> LLM["LlmRuntime：先准入，再凭 Session 许可调用模型"]
     LOOP --> TOOLS["ToolRuntime：审核和执行工具"]
     LOOP --> VERIFIER["Verifier：检查完成证据"]
@@ -264,6 +328,8 @@ flowchart TD
 - `AgentLoop` 面向一次 Turn，负责不断创建 Step，直到完成、失败或用完预算。
 
 ## 5. Session、Turn、Step 是怎样一层层工作的
+
+D 加 E1 可以在本轮需要时先写摘要，再用下一步继续回答，两步都计入步数和用量，必须留出回答机会。显式选中的 History 阅读优先，这轮暂不摘要。
 
 最容易理解的类比是：
 
@@ -326,6 +392,14 @@ flowchart LR
 
 ## 6. 为什么有两本事件账
 
+D 仍用同一本会话账：记下“给模型哪些原文”和“模型回了什么”，通过来源身份再追加摘要。原文不改，摘要也不是另一份权威记忆。
+
+E0 在同一本 Session 账里加“请求 token 估算”记录，标清它算的是哪一步、哪份冻结请求。真正用了多少仍看模型调用结束时的 usage；估算不是账单，也不是第二份聊天记录。
+
+C 只在原来的替换记录里增加“工具折叠”这种明确类型，一次引用一个旧工具结果，记下来源、大小、
+截止轮和策略。它记的是较短的展示，不改原工具执行账，也没有摘要器或摘要正文。已有会话和数据库
+版本不变，完整规则与旧程序读不懂时的拒绝方式见第 12 节。
+
 F3 又增加两类同库事件流：每 Store 一本 projects:catalog 管项目关联，每项目一本 memory:project_id
 管提议、批准、替代和撤销。它们的外壳和内容格式都是 1，只追加，不增加 SQLite 表，不进入当前
 Surface、Session 恢复或 Context。第 7.6 节说明实际 owner、配置与状态；后面的“两本”指原执行账。
@@ -335,10 +409,10 @@ F0-B 的 `context/input` 写在原 Session 账里，记录“这个 Step 选择�
 与本轮首 Step，不进入聊天；文字自称“我是用户”不能制造这条授权。Context 和原文都不靠临时缓存传给下一轮。
 
 `session/created` 仍恰好有 session_id、workspace、metadata、context_protocol 四项，
-最后一项已唯一切到整数 3；旧 1/2 和无标记旧会话在详情、运行、检查和恢复时都拒绝，列表只能列出身份。
+最后一项已唯一切到整数 6；旧 1/2/3/4/5 和无标记旧会话在详情、运行、检查和恢复时都拒绝，列表只能列出身份。
 事件外壳仍为版本 1，F2 SQLite 结构为 2，原压缩记录仍是 format 2。
 F2 另有每会话一条 context-selection 流，记录宿主的 skill/selection-set；不进入 Surface。
-模型只能请求本轮紧邻下一步披露，不能修改选择，详细字段和 owner 见第 7 节。
+模型只能请求本轮紧邻下一步首次披露，已读正文按本轮预算保留，不能修改选择，详细字段和 owner 见第 7 节。
 
 （严格说现在不止两条流：除了下面这两本按会话分的账，还有六条**全局的**控制账（含 F3 的 projects:catalog）——Agent 名册 `agents:directory`、Budget 账本 `budgets:ledger`、Workspace 名册 `workspaces:catalog`、Patch Manifest 名册 `artifacts:catalog` 和推广账本 `patch-promotions:ledger`；另外每次 Workflow 运行有一条 `workflow:<run_id>`，每个 ProductTask 有一条 `product-task:<task_id>`，每个 Agent 各有收件/投递两条流。F0 当时只冻结了 ProductTask 协议，F1 已经补上真实 writer/projector，所以它现在属于当前 Stream 清单。这些 raw 控制流不会被直接塞进模型历史、不参与 Session 恢复、不影响请求指纹，`traceh sessions` 也看不到它们——那条命令只认 `session:` 开头的流。20.32 有一个故意很窄的桥：下一轮 requester 模型开始前，宿主 fresh 读取同一 Session 关联的 canonical ProductTask heads，把当前 focus、最多五项近期历史、准确总数/省略数、固定状态语义和 focus 最小执行摘要原子写成 requester Session 的 format-7 `product/context-snapshot`。需要细节时，模型可显式调用纯读 `read_product_task_evidence`，由同一 EventStore fresh join 后把受限结果作为普通 Session Tool 审计写入；这不是第二份 Product 状态或新 Memory Stream。Patch bytes 仍不塞进事件，而在宿主显式 SHA-256 CAS 中由 Manifest 引用。Budget 账本当前共有十类事实：`root-granted`、`child-reserved`、`reservation-committed/released`、`usage-charged`、`usage-reserved/started/settled/released` 和 `account-closed`；推广账本只有三类：`patch/review-recorded`、`patch/approval-recorded` 和 `patch/promotion-committed`。）
 
@@ -512,13 +586,19 @@ SQLite backup API 写到一个全新临时目录，按相同 schema/integrity/hi
 
 ## 7. 模型到底看到了什么，能不能事后证明
 
+D 给冻结请求标明用途：聊天按当时的对话和参考资料还原，摘要按圈定的旧原文还原。两种都能核对真正发出的请求，不把摘要硬装成一条聊天。
+
+先把本轮资料选出来，才能知道整个请求有多大。首个请求若需要压缩旧历史，会压缩后重新选资料，再正式冻结、计量和发送。统计任务状态只看到该请求当时的截止位置；别人此时抢先写了账，计量写入就拒绝，不能把新状态混进旧请求。
+
+C 收起的是旧工具回复里的正文。模型仍看得见当时调用了什么、参数是什么，以及与该调用配对的较短回复。原账不改，所以旧请求仍能重建。工具折叠不冒充 History 摘要；以后整段对话被摘要时，仍能沿来源找回原工具事件。
+
 模型看到的内容不是直接读取某个一直变化的 `messages` 变量。Context 当前组合为：
 
 ```text
 ModelRequest = 本 Step 一条 Context 参考消息 + 截至 Composition 序号的完整 Surface + 冻结 Composition
 ```
 
-### Composition 是能力清单
+### 7.1 Composition 是能力清单
 
 它回答：
 
@@ -536,7 +616,7 @@ Lease 的意思是“这个 Step 借用这一整套能力直到结束”。现�
 
 Stage B 把插件资源从这套“能力-wide owner”边界里单独分出来：`PluginActivationSet` 明确持有插件 Activation、插件贡献、Owned Task 和 cleanup；SessionService、EventStore、内置能力和没有被插件注册的核心 Provider 是可以借用的 core。每次候选都用私有注册表 setup，publish 成功后由对应 Generation 接管；旧 Lease 结束前，旧 set 的 Service、Tool、Provider 或 Verifier 都不会被卸载。
 
-### Surface 是给模型看的历史
+### 7.2 Surface 是给模型看的历史
 
 它只挑：
 
@@ -556,14 +636,16 @@ Stage B 把插件资源从这套“能力-wide owner”边界里单独分出来�
 不管人工压缩还是自动压缩都不能把它遮掉。像 `step/start`、`effect/intent` 以及 raw Product/Workflow/Promotion 控制事件
 不会直接塞给模型，否则模型上下文会被技术账本淹没。
 
-### Request Snapshot 是事后证据
+### 7.3 Request Snapshot 是事后证据
 
 F0-B 在原来的八个字段之外增加 `context_input_seq` 和 `context_input_digest`，总共十项，精确指出
 这份请求采用哪张 Context。重建会回到当时的观察位置核对来源，不拿今天的摘要代替过去内容；合法的
 空 system prompt 也保留为空字符串，不再被读成 `None`。Product 证据与叶失败读取共用同一 Session
 协议检查，不再各存一份旧字段清单。
 
-现在一次调用先有两份不能混叫的请求。RequestBuilder 根据 Surface/Composition 生成“组装请求”；Budget
+现在一次调用先有两份不能混叫的请求。RequestBuilder 根据 Composition，把完整 Surface 放在前面，
+当前 Step 的一条 Context 参考消息放在最后，生成“组装请求”。工具调用和结果组保持完整，Surface
+自身不保存这条临时参考；不能再用“最后一条 user 消息”直接代表真实用户输入。Budget
 admission 只允许把输出上限压低，得到“最终线上请求”，但这时还没有调用 Provider。当前 Step 的 owner
 随后用一次 Session CAS 同时保存一条 snapshot 和 Attempt start。snapshot 里分别放两份完整请求与摘要、
 历史读到的 `source_seq` 和 Composition revision；Attempt start 再指回这条 snapshot、最终请求摘要和
@@ -575,14 +657,32 @@ Replay 会按当时边界重建组装请求，再独立验证最终请求；除�
 
 Fingerprint 不是加密秘密保护，它主要是稳定内容校验：相同结构生成相同摘要，任意请求内容变化都会导致摘要变化。
 
-### F0-C：每一步参考和历史原文怎样受控读取（正式版 7.4）
+### 7.4 F0-C：每一步参考和历史原文怎样受控读取（正式版 7.4）
+
+现在参考包里有 `active_request`：记录“这轮第一条真实用户消息是哪条，以及原话是什么”。它不拿搜索关键词或摘要代替你的问题。调用工具后继续处理同一问题；你发起新一轮，就重新绑定新问题。即使没有参考资料，也会显示这个定位。写入前还会回到事件账核对，改掉原话或借别轮消息冒充，即使重新计算摘要校验值也会被拒绝。
+
+资料继续后置，末尾再用 JSON 引用你的原话，并说明应该回答当前问题。参考内容和问题回显一起冻结，重放也是同一份。预算分开记：`reference_limit` 是原有资料配额，`reference_bytes` 是资料实际占用；`active_request_bytes` 是问题回显和说明的 UTF-8 字节数。`rendered_bytes` 是两者相加，`total_limit` 是资料配额加本次回显大小；`remaining_bytes` 只算还能放多少资料。问题回显不会额外放行资料，最终完整请求仍计入模型预算。
+
+```mermaid
+flowchart LR
+    E[事件账 user/message] --> A[派生 active_request]
+    R[合格参考来源] --> B[Context blocks]
+    A --> C[唯一 Context renderer]
+    B --> C
+    S[Surface 与工具消息组] --> Q[RequestBuilder]
+    C --> Q
+    Q --> F[冻结请求并派发]
+    F --> V[相同来源校验与重放]
+```
+
+设计决定见 [ADR-0051](../adr/0051-current-turn-request-anchor.md)。
 
 现在 `ContextInputService` 手里只有“读 Session／选择／派生索引”的回调和宿主策略，没有写账、调模型、装插件或
 开后台任务的权限。AgentLoop 借到这一代能力后，先让它读来源、冻成收据，再由原 SessionService 写账。
 这发生在网络重试之前，所以同一步重试不会再选一次参考，也不会改变请求字节。
 
-默认策略明确选空：不造查询、不选历史。Skill 空目录写 source-unavailable，有目录但没有选择写 not-selected；Context 的 Memory 来源仍为空（F3 authority 见 7.6）、History 没选择。即使空，
-仍有一条带固定说明的 user reference message，排在全部 Surface 前。工具接着执行的下一 Step 也遵守
+默认策略明确选空：不造查询、不选历史。Skill 空目录写 source-unavailable，有目录但没有选择写 not-selected；空策略的 Memory 未启用（开启后的 F4 主线见 7.7）、History 没选择。即使空，
+仍有一条带固定说明的 user reference message，排在全部 Surface 和完整工具结果之后。工具接着执行的下一 Step 也遵守
 同一顺序；参考说明不成为 Surface 的聊天记录，不会因下一步而一遍遍积累。
 
 F0-B 基础主线与 F0-C 原文披露均已通过本轮限定验证（第 15 节）。自动目录／摘要仍只看
@@ -604,26 +704,28 @@ ChatDriver 原样传递；首 Step 的真实用户消息先记账，再由原 Se
 正文、source="user" 或随意 metadata 都不能代替这个宿主入口。
 
 每块都核对实际注入正文的字节、摘要值、原事件身份、闭合轮次和观察截止点。原文页还检查请求收据、
-页码、叶事件和目标 Step。Workspace 观察严格为 null、新旧程度严格为 unknown，伪造 matched/stale 会拒绝。
-工作区现有 base_revision 只是建仓基线，历史工具结果没有记录执行时的可靠版本；现在也可能有未提交修改，
-所以“基线一样”不能证明旧测试现在仍通过。真实版本事实的接入留到 F3/F4，不能拿历史原文冒充当前验证。
+页码、叶事件和目标 Step。未开启真实观察时 Workspace 观察为 null、新旧程度为 unknown；F4 开启后的三态需由真实来源派生。
+工作区现有 base_revision 只是建仓基线，没有真实观察的历史工具结果不具备执行时的可靠版本；现在也可能有未提交修改，
+所以“基线一样”不能证明旧测试现在仍通过。F4 已接入真实 Git/Tool 观察（7.7），仍不能拿历史原文冒充当前验证。
 
-快照内部只存不可改的 canonical 字符串，调用方拿到的是独立副本。正文放在 JSON 字符串里，伪标题、
-引号或闭合标记仍只是内容；固定头尾解释它不能改变工具政策、当前要求或批准权限。预算算的是完整
-渲染版本唯一切到 `context-json-v3`，尾注里目录／摘要给首 cursor，原文页给 next_cursor。预算先给这一步
-明确请求的原文页，再给自动目录／摘要。算完整渲染后的块：转义、来源和历史尾注都算，再把总包裹文字计入总额。块放不下就整块排除，不剪正文；
-排除记录超过显式上限就失败。字节数不是 token，目前 token 只报告 unavailable。
+快照内部只存不可改的 canonical 字符串，调用方拿到的是独立副本。正文放在 JSON 字符串里，
+伪标题、引号或闭合标记仍只是内容。现在 context-json-v9 只把模型需要的身份、正文和阅读动作
+显示出来，完整来源证明还在原账本里。固定头尾区分宿主导航与资料正文，两者都不能绕过工具政策。
+Memory 目录给出读取完整短事实的动作；History 给出首／下一页的动作，没启用读取或没有下一页时
+就是 null。预算仍先给新申请，再给有效的已读正文、自动历史和自动 Skill/Memory；实际显示的字节、
+转义、导航和头尾都算进去。块放不下就整块排除，不剪正文；排除项太多则失败。字节数不是 token，
+token 计量仍报告 unavailable。
 
 失败时账本可以停在四个位置：什么都没写；只写 Context；写了 Context 和 Composition；首请求与
 Attempt 已一起写入。前面三种都不能调用 Provider。取消也先等那次写入收尾，再查到底已写、未写还是
 不知道；不知道就不重投、不继续。恢复只收敛原 Step/Turn，不补造 Context。历史请求只供唯一目标：
 用户是本轮首 Step，工具是同轮紧邻下一 Step；目标没发生、失败、超预算、步数用尽、取消或恢复，都不会
 顺延。接受／可用／已消费／失效从原账本顺序推算，不加另一套 writer、Lease 或 pending 状态机。
-Session 已唯一切到 `context_protocol=3`，拒绝旧 1/2；F2 Context 外层格式、数据库为 2，
+Session 已唯一切到 `context_protocol=10`，拒绝旧 1–9；当前 Context 外层为 9，数据库仍为 2，
 EventEnvelope 仍为 1、M3 仍为 2。没有兼容 reader 或旧账迁移。F1 目录与 F2 选择／排名／披露已接入，
-Memory 和治理 UI 仍待后续阶段。
+F4 Memory 已接入（7.7），F5 两种界面已接入共享治理（7.8）。
 
-### F2：谁能被选中、怎样检索、正文何时给模型看（正式版 7.5）
+### 7.5 F2：谁能被选中、怎样检索、正文何时给模型看（正式版 7.5）
 
 Stop A 的两处 P2 已修好。Context 和排名共用同一个 Skill 内容身份，层级也算身份的一部分，
 所以目录和摘要能一起进入下一步；相同请求仍只消费一次，账本中的真正重复块仍拒绝。
@@ -643,7 +745,8 @@ Skill id/version。相同操作只能重复完全相同的内容；另一次修�
 
 `session/skill_retrieval.py` 先求“这一代已启用目录”和“宿主所选”的交集，再排名。
 query 只来自本轮第一条真实用户消息，并保存来源；检索会统一全半角和大小写，绑定 Unicode 版本，
-不会改写实际正文。中文按单字和相邻双字分词，其他字母数字按连续词分组；
+不会改写实际正文。中文按单字和相邻双字分词，其他字母数字按连续词分组，并保留完整代码字面量。
+查询里的点分标识或路径保持整体，至少命中一个完整字面量才有资格，不能靠碎词退回相似标识；
 送进 FTS 的是编码后的文字 token，用户输入的引号、OR 或星号不能变成搜索命令。
 自动候选只看目录／摘要，索引不保存 section 或资源原文。exact 先按配置匹配 id、标签、路径、
 代码符号或错误标识，FTS 召回后用 BM25 算相关度；文档总数、平均长度、词频都只取本次合格集合。
@@ -663,14 +766,15 @@ FTS5 不可用就明确失败，不偷偷装包。宿主重建在同一个写事
 普通只读工具 `request_skill_reference` 只接受准确的 Skill id/version、catalog_digest、
 requested_tier 和 section/resource/chunk id；不适用项必须写 null。
 模型只能进一步请求这一步已经看见、宿主仍选中的 Skill。目录和摘要来自冻结目录，
-section 是完整具名章节，chunk 是贡献方划好的完整资源片段。工具返回的只是收据和可用章节／片段 id，
+section 是完整具名章节，chunk 是贡献方划好的完整资源片段。工具返回收据和可用章节／片段的 ID、标题、说明及字节数，
 原文到同轮紧邻下一 Step 的 Context 才出现，读取仍经过那一步的有效 Lease 并核对字节摘要。
 工具失败、取消、恢复、最后一步没后继、目标失败或放不进预算，都不会把请求顺延到别轮。
 没有新的 pending 账本，也没有模型修改宿主选择的入口。
 
-预算先给 History，再给 Skill 的精确披露和自动候选；每块算完整渲染后的大小，超限整块排除。
+三类资料共用预算：先给新明确申请，再给已读正文，然后自动 History、自动 Skill/Memory；每块算完整渲染后的大小，超限整块排除。
 冻结前再看一次选择 head；变了就记录 source-unavailable，不把最新选择偷换进去。
-Context 外层格式 2 另存 retrieval 收据：语料 key/digest、合格条数、两路状态和排名、融合分数的分子／分母。
+当前 Context 格式 9 的 retrieval 包含 skill、memory 与总 fusion；各来源收据记录语料 key/digest、
+合格条数、两路状态和排名、融合分数的分子／分母，以及真正覆盖的查询词，统一规则见 7.7/7.9。
 重建旧请求时只核对当时的收据、选择前缀、Composition 目录、原文字节和预算，
 不再搜索今天的索引或读取今天的文件。每块必须来自冻结排名或准确披露请求；
 同一步重试也复用原请求。参考不成为 Surface 的聊天记录，选择、检索和正文都不增加权限。
@@ -699,7 +803,7 @@ flowchart TD
 ### 7.6 F3：哪些会话属于同一项目，哪些事实真的生效
 
 F3 的项目归属与 Memory 已接入代码，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）。把 Memory 检索并送进
-模型 Context 仍是 F4；现在不能把“记下提议”解释成“下一步已喂给模型”。
+模型 Context 已由 F4 接入（7.7）；只有仍生效且通过检索和预算的事实才进入请求，不能把提议当成已披露。
 
 `projects/service.py` 的 ProjectScopeService 负责宿主创建项目、绑定 source、绑定 Session，
 `projects/projection.py` 只从唯一 `projects:catalog` 重建关联。三种事件分别是 project/created、
@@ -773,8 +877,341 @@ flowchart TD
     G --> A
     E --> R["唯一重放器重建生效事实副本"]
     R --> C["再核来源与账本位置"]
-    C --> V["宿主读取；F4 才接入 Context"]
+    C --> V["宿主读取；F4 经过资格检查进入 Context"]
 ```
+
+### 7.7 F4：三种参考怎样进入同一份请求
+
+现在 Memory 已能进入模型 Context。它先证明当前会话属于哪个项目，再从原 Memory 账本拿出仍在
+生效的事实；同一个目录里的未绑定会话没有资格。负责这件事的是 memory/context.py，它每次现读、
+记录来源账本位置、再复核，没有偷偷存一份“当前记忆”。设计原因见
+[ADR-0045](../adr/0045-qualified-reference-retrieval-and-history-observations.md)。
+
+Skill 和 Memory 共用 session/retrieval.py 的规范化、分词、精确匹配、BM25 和排名合并规则。
+Skill 仍只检索已选目录；Memory 检索生效事实的 id、fact_slot 和完整已批准正文。没有批准的、撤销的、
+已被替代的事实都不参与。含空格的标识必须用引号或反引号界定，程序保留整段字面量，不猜散文路径。
+两个来源各算自己的词频和语料统计，另一个项目增加再多相似文字，也不能改变本项目的分数。
+索引仍归同一个 SQLite Worker；它只是可重建资料。缺失时明确记 index-unavailable，精确匹配仍可工作；
+宿主通过 runtime.memory.rebuild_index(session_id) 重建，批准和撤销账本不会改变。
+
+每步只有一份 query，来自本轮第一条真实用户输入。retrieval 同时保存 skill、memory 两份来源收据和
+合并后的 fusion；各来源格式 2 收据记录语料身份、数量、两路命中、有理数分数和覆盖词，自动排除见 7.9。先给新明确申请
+分配位置，再放仍有效的已读正文，然后自动 History，最后自动 Skill/Memory；前两组都按 History、Skill、Memory 和原请求／准入顺序。所有块经过同一个完整字节预算，
+包括转义、来源、尾注和包裹文字；整块装不下就排除，不截断事实。仍不能把字节数说成 token 数。
+
+Memory 目录只告诉模型 project_id、memory_id、fact_slot、已批准正文摘要和全文字节数。这里的摘要是
+校验用的 digest。summary 和 section 给的都是完整已批准短事实，不再生成另一段摘要。
+每块 version 取 proposal_digest，来源引用 proposal 和 activation，另记 activation_ref 和
+approved_content_digest；同一个 memory_id 在请求里最多一次。普通只读工具 request_workspace_memory
+只接受模型实际见过的 memory_id/version/tier，返回“下一步可请求”的收据，不把正文塞进工具结果。
+它不能批准、撤销或翻出其他会话原文，也不支持 chunk。下一步会重新检查事实是否仍生效。
+Skill、Memory、History 的首次申请和逐步保留共用 reference_requests.py（7.10）；取消、失败、达到步数上限、恢复或开始新一轮
+都会使未消费收据过期。重试模型调用只复用已冻结的那一份请求。
+
+历史版本检查必须显式打开 workspace_observations，并配齐 Memory authority、Memory 检索和有界
+History reader；resolver 还要能做只读 project_observation。LocalGit 先证明工作区确实属于这个项目，
+读一次 HEAD、检查所有可见修改，再读一次 HEAD。干净且两次相同才有已知版本；创建工作区时的
+base_revision 不能代替这个观察。ToolRuntime 在读组、串行写和 process 执行前后都观察；只有两次
+一致才把证明放进工具结果的宿主外层。工具正文自称“我验证了版本”没有这种效力。
+
+历史目录还会记 original_bytes：配置了有界 reader 时，表示完整原始消息数组有多少 UTF-8 字节；
+没配置时是 null。看见大小不等于获准读原文，也不保证一页就能装下。
+
+history_observation.py 沿原 History 图的合法叶子看真实工具记录，再与当前请求冻结的观察比较。
+已知版本冲突是 stale；所有相关工具都有已知且一致的版本才是 matched；脏文件、缺少证明、执行期间
+变化等情况为 unknown。来源和当前的身份/版本四字段随块冻结。matched 只说明观察时 Git 版本一致，
+不代表旧测试今天仍通过，也不会覆盖 Product、Workflow 或 Workspace 的现行状态。
+
+Context 额外记录 memory_source（当时的两组权威限额）和 workspace_observation。SessionService
+追加或读取时，沿冻结的项目/Memory 账本位置重放原有投影，核对会话创建、绑定、生效事实和摘要。
+以后撤销记忆、移动 Git HEAD 或重建索引，都不会改写模型当时真正收到的 Request；重建不查当前文件。
+这些观察没有跨账本原子事务或跨进程文件锁，程序也不承诺返回以后文件永远不变。
+
+当前唯一协议是 Session 10、Context 9、f5-context-policy-v5、context-json-v9；SQLite 和 M3 格式仍为 2。
+旧 Session 1–9 和旧 Context 明确拒绝，不迁移或猜测兼容。semantic/reranker 都明确关闭，没有
+隐式加载、下载模型；F5 共享治理和冻结评测见 7.8，发布门禁另计。
+
+```mermaid
+flowchart TB
+    Q["本轮真实输入"] --> R["共同的精确检索与词频排名"]
+    S["已选择 Skill"] --> R
+    M["项目内仍生效的 Memory"] --> R
+    I["原 SQLite 的可重建索引"] --> R
+    H["本会话历史 + 真实版本标记"] --> B["同一份预算：算模型真正看到的内容"]
+    T["新披露收据与逐步获准的已读正文"] --> B
+    R --> B
+    B --> C["冻结完整来源证明、精简模型视图、能力与请求"]
+    C --> P["模型；重试使用同一份请求"]
+```
+
+### 7.8 F5：人怎样管理参考，怎样证明检索真的有效
+
+对应正式版 7.8、12.5、13.10；设计理由见
+[ADR-0046](../adr/0046-shared-context-governance-and-frozen-retrieval-evaluation.md)。
+Line 和 Textual 都调用 `chat/governance.py`，每次查看都向原负责人重新读账。
+`chat/config.py` 只把明确配置交给原 Runtime；`tui/governance.py` 展示可选择、复制的证据与确认框，
+也让你从列表选择记忆提议。表单只是命令草稿，提交后仍由同一个治理服务重新核对；窗口关闭会结束
+原有等待任务，不留下另一份待批准状态。
+
+- `/skills` 把“启用了什么、选了什么、现在有资格用什么、上次实际送了什么”分开。`/plugins`
+  查看安装/启用状态，use/reload 在 setup 前显示完整 Manifest。查看候选需要先 import，可信插件
+  的 import 本身可能执行代码；provides 只是声明。确认后检查的仍是同一个对象和同一份声明，
+  然后走原加载、代际替换和释放流程。
+- `/memory` 能看到提议、来源、项目、正文、摘要和生效事实。declare 只提议；approve、supersede、
+  revoke 需要人工输入完整 `CONFIRM`。确认前保存账本位置和精确引用；等待时有人改了事实，
+  原确认会拒绝。Skill 选择和 Project 关联也交给原来的写账规则，模型不能替人批准。
+- `/history` 和 page 从原有界 reader 展示当前 Session 的摘要、原文页、来源摘要、原文大小、
+  截止位置、披露收据和时效。给人看不等于已送给模型。`/context [STEP_ID]` 才展示那个 Step
+  真正冻结的查询、来源、排序、排除、预算、内容，并说明请求是否发出。
+
+配置文件 `--context-config` 的顶层为 format/context/skill_policy/project，格式版本是 1。
+所有限额、Skill 资源根、Git 来源和 managed 目录都显式写出。可从
+[`examples/context-governance.json`](../../examples/context-governance.json) 修改；里面路径与数值
+仅是示例。与 Product 一起用时，双方必须指向同一来源和同一个 resolver，不能各自认领一套项目。
+角色 Runtime 使用同一 Context/Memory 配置，工具权限仍由原 Profile 决定，不自动继承人的 Skill 选择。
+
+后续 coder 的工作区先真正挂接并证明身份，再由原 Product 绑定步骤为其 Session 准备 Memory
+索引。索引键含 Session 和来源账本位置，不能拿 requester 的索引冒用。出错和取消交给原资源
+负责人收尾，不在查询中偷偷修复，也不增加后台维护者。
+
+`traceh eval` 仍只有一个 Runner。现在根 manifest 只接受版本 2，retrieval 必须明确为 null 或
+file/sha256；旧根版本 1 拒绝，内层 Verifier 仍为 1。corpus 格式 1 冻结事实、政策、插件选择、
+题目、答案判断和阈值，文件必须在 benchmark 根目录内且不在模型初始工作区，装载和准备时重验摘要。
+原 attempt 先创建真实 source/requester/项目关联，经生产接口写入事实与插件贡献，再创建 Product。
+同一 requester 发出真实请求；完整语料和评分规则不会复制进 coder 工作区。
+
+评分数的是实际冻结且已发出的 Context，每个 Session/Step 只算一次，重试不重复。候选排序与
+实际注入分开，同一身份去重；实际披露任一合格层级才能得分。报告 Recall/MRR/precision@K、
+全部注入内容的 precision、零命中、隔离违规与没能证明的题目；失败和未发出的步骤不会消失。
+按 attempt/角色/查询给出描述性汇总，未设阈值只测量；Product 任务成功与检索质量分开判断。
+
+成本分别记录 Context 字节、完整准备时间、索引逻辑条数/字节、准备重建时间、总 seed 时间和
+解释器/数据库/Unicode/操作系统版本，不把它们冒充纯排序延迟或物理磁盘大小。
+[`benchmarks/retrieval_v1`](../../benchmarks/retrieval_v1/README.md) 预先冻结 11 条多语言与代码查询，
+包含真实插件退役和失效/跨项目反例。语义题的词法最低分明确为 0，只记录能力缺口；
+semantic/reranker 继续关闭。缺插件或摘要不符会拒绝，不走评估专用旁路。
+
+```mermaid
+flowchart LR
+    L[Line] --> G[共享治理]
+    T[Textual] --> G
+    G --> R[原领域负责人]
+    R --> E[(唯一事件账)]
+    G --> H[原 History 有界读取]
+    G --> C[实际冻结 Context]
+    B[原 eval Runner] --> A[真实来源和项目准备]
+    A --> P[原 Product 与资源生命周期]
+    P --> C
+    C --> M[按冻结题目测量]
+```
+
+F5 开发与发布是不同检查点；原 5 条质量失败已修复，11 条都达到原冻结阈值；语义题仍为 0。Release Stop C 已通过限定验收，真实模型证据见 7.10；全量、L2–L4、Wheel 和发布检查仍待授权。
+
+### 7.9 F5：检索怎样减少弱匹配
+
+对应正式版 7.9，决定见 [ADR-0047](../adr/0047-literal-query-coverage-admission.md)。
+问题在于“搜到了一个相同的词”以前就能进入模型参考。现在含点、下划线或路径分隔符的查询段保持
+完整，不把不同标识因为共享前半段就当成命中；同时保留普通词搜索能力。尾连接符不会被悄悄删掉。
+普通单词后的一个句号按散文标点处理；若它属于标识，使用成对引号或反引号明确表达。已有内部连接符的段保留末尾句号和其他连接符。
+
+每条自动候选会记下确实覆盖了查询里的哪些词。来源收据格式为 2，新增 coverage；除了目录／
+已批准 Memory 正文的词项，完整路径的真实 exact 匹配也能提供证明，不偷偷读取 Skill 章节正文。
+来源内仍按原 BM25/RRF 排名；最后合并时先看覆盖词数，再按原分数与稳定身份排并列。
+
+负责原字节预算的 Context 服务逐块装入。只有已经装入的自动参考，才能把后续“命中词完全是其
+严格一部分”的候选排除，原因记 query-dominated。覆盖相等或各自补充不同词的内容仍保留。
+大块装不下，小块仍有机会；明确请求的 Skill/Memory 披露继续优先，也不参与这项自动筛选。
+没有按样本名字写例外，没有新调分阈值、停用词表或语义模型。这仍可能误判：偶然多命中几个词的
+资料会压制有用的部分资料，覆盖相等或互补的噪声也不会被它清掉。
+
+先前 C3 实测了当时本地模型的四种候选，结果是不接入。原来的 11 题在当前 Runtime 又跑了一遍，
+都满足原门槛；44 个 Session、Context 和请求与原 SQLite 核对，重放和不变量没有错误。
+另加中英文各四条改写，题目、模型文件和成功线都在评分前固定；模型只看原资格过滤后的 6 条材料。
+`capture.py` 记录原运行过程，`screen.py` 离线试算固定向量阈值和可选重排，再用原 Context 预算。
+这些试算不写成 Session 的正式证据，也没有给产品加模型依赖或默认模型。
+
+最好的一组补回了两条英文结果，但新增英文题平均召回率/精度只有 25%/25%，中文为 25%/12.5%，
+都低于各项 75% 的要求。九条语义题的平均召回增益为 2/9，也低于要求的 25%。其他三个候选同样
+不达标，原精确匹配、零命中等要求和项目隔离没有退化。速度不是问题：暖查询 p95 约 11.40–25.26
+毫秒，6 条向量共 9216 bytes，但跑得快不代表找得准。中文题有 55%–88% 的词元变成未知符号；
+而且这次只补充“词法没找到”的结果，不能修正词法已经找错的情况。这不说明所有向量模型都无效，
+只说明当前模型、表示和候选不合格。产品的语义和重排仍关闭，继续使用原词法规则。
+当时未接入新检索，没有把重复聊天调用当成新的语义集成验收。
+完整结果和未运行的检查见 [C3 验证记录](../validation-v0.9-stop-c-c3.md)。
+
+E1/E2/E3 完成后，又用小型 BGE 中文和英文模型做了九组真实复测，仍没有接入。
+只比较中文单模型、英文单模型及两者取较高分，阈值固定 .6/.7/.8；440 个代码/测试文件、题目和资产
+都在评分前固定，没有看到分数后临时调参。
+这次中文模型能认出四道中文题的所有字词，说明已经补上“很多字不认识”的问题，但仍没找准足够资料。
+最好的一组英文四题答对两题，对应召回率/精度 50%/50%；中文仍是 25%/12.5%，达不到各项 75% 的要求。
+比如英文“汽车靠什么液体运行”和“URL handler 为什么失败”能找到了，职责划分和交付阶段两题仍空。
+两个单语言模型合在一起，也不自动等于跨语言检索；只补“没找到”的问题，还修不了已经找错的词法结果。
+
+`local_retrieval_screen/retest.py` 和 `retest.json` 是测试工具，不是产品开关：先把题目、门槛、代码、模型和
+合格材料固定，再真实运行模型。保存文档和问题的向量，另算一次核对 171 条观察，不只信脚本的结论。
+模型文件约 220MiB，每条双向量 3584 bytes，没有截断；暖查询 p95 约 15.33–37.30ms，加载约 .69 秒、
+重建约 .19 秒，速度和资源都合格，仍不能替代找得准。44 个 Session/上下文/请求的原账和重放也核对通过。
+12 项控制检查、55 项相邻定向测试通过；拆掉语言质量门槛，新测试会抓到错误的“可以接入”。
+所以保持产品的语义和重排关闭，不装新生产依赖、不建立第二事实源，也不继续改题降线凑通过。
+完整证据见 [复测报告](../validation-semantic-retest.md)。这只是本次九组候选不合格，不等于所有向量模型都没用。
+
+
+
+导航修订后的当前合同使用 Session 10、Context 9、f5-context-policy-v5，索引分词 v3、排名 v2。
+旧 Session 1–9 明确拒绝，程序不迁移、删掉或改写旧账。显示包装 context-json-v9、SQLite 2、
+M3 2 和十二项／十五项配置结构都不变，评估题目、语料、答案判断与分数线也不改。
+读历史请求时，从当时的目录或项目记忆账本证明覆盖，只使用那次冻结内容；今天改文件、撤销记忆、
+丢失索引都不会重新搜索旧请求。测试与冻结复验结果见第 15 节。
+
+```mermaid
+flowchart LR
+    Q[真实查询] --> A[保留完整标识与普通词]
+    E[已选 Skill / 生效 Memory] --> R[原来源排名]
+    A --> R
+    R --> C[记录命中词 / 按覆盖排序]
+    C --> B[原字节预算逐块装入]
+    B --> D[已装入自动块排除弱覆盖]
+    D --> F[冻结原请求]
+    H[明确披露请求] --> B
+```
+
+### 7.10 模型现在怎样看懂目录并逐步读正文
+
+对应正式版 7.10：贡献者现在必须给每个章节、资源和分块写明标题与说明。缺了就拒绝，系统不会从
+编号、文件名或正文猜出来。这些文字与正文摘要一起冻结在原目录中；改了就改变目录身份，旧选择要
+重新确认。每条说明和整个目录继续遵守原大小上限，没有新增一套配置或事实源。
+
+模型看到目录时，能读到“这一章讲什么”、精确 ID 和字节数；资源还列出它的分块。目录和工具回执
+都从同一份冻结元数据生成。若最初只给了 Skill 摘要，模型先用原引用工具要目录，再按标题和说明
+选章节或分块。召回仍只查已选择 Skill 的顶层元数据，系统没有因此变成全文或语义搜索。
+
+宿主会明确告诉模型：这是 Skill 文档，使用引用工具读取；资源路径不是工作区路径。普通装配与真正
+发给模型的冻结装配共用同一段提示规则，避免说明写了却没有进入生产请求。作者的正文始终只是参考，
+不能改用户意图、系统指令或工具权限。
+
+```mermaid
+flowchart LR
+  A[作者写标题说明和正文] --> B[宿主冻结原目录并确认选择]
+  B --> C[模型看到摘要或可读目录]
+  C --> D[模型用引用工具自主选章]
+  D --> E[原 Session 保存收据]
+  E --> F[紧邻下一步首次提供正文]
+  F --> R[本轮逐步核对资格与预算后保留]
+  R --> G[最后一条当前参考：模型对照证据回答]
+  R --> X[淘汰／资格中断／结束：退出不复活]
+```
+
+当前参考每一步都放在完整对话和工具结果之后，作为最后一条 user reference message。固定说明明确
+它是眼前任务的资料，不是新任务。构建、真正发给模型、重试、重放、检查和 Inspector 都按这一顺序。
+工具回执本身没有正文，普通聊天账也不积累参考正文。
+
+[ADR-0049](../adr/0049-current-reference-context-and-bounded-turn-retention.md) 规定三类资料使用同一规则：
+工具申请的正文首次只在同一轮紧邻下一步给出，宿主明确申请的历史页首次只在本轮第一步给出。
+只有真的放进当步参考的 Skill 章节／分块、Memory 完整短事实、History 原文页，才有资格留到本轮后续步骤。
+因此先读甲章、再读乙章时，模型可以同时看到仍合规的甲乙正文，不必靠自己先写笔记保存证据。
+
+`reference_requests.collect_requests()` 每次从原事件检查连续的准入记录，只派生读取句柄，不存另一份
+正文或待办状态。每步重新核对 Skill 选择、目录与资源借用权，Memory 是否仍获批准及项目归属，
+History 原始来源与新旧程度。历史页保留原申请凭据；旧请求重放只看当时的冻结证据。
+预算先给新申请正文，再给已读正文，然后自动历史目录，最后自动 Skill/Memory 检索结果；前两组内部
+按 History、Skill、Memory 及原请求／准入顺序排列。每块、每类、总字节与块数仍用同一套限制，放不下就整块退出。
+第一次没放进来、后来被挤出或资格中断的旧申请，都不能自己回来。失败、取消、恢复或这一轮结束后
+不顺延，元数据也不因旧收据一直占位。同一步网络重试仍原样重发已冻结请求。
+
+真实测试还发现两个程序问题：读回温度时把整数 0 改成小数 0.0，导致同一请求的字节指纹不一致；
+中文冒号被当成代码符号，导致整句要求精确匹配。现在分别保留合法数字原样、按标点结构区分散文
+和代码；没有按题目词语写例外。当前 Session 10、Context 9、显示包装 v9、分词 v3；策略为 v5，披露工具收据为 2，来源检索收据、
+排名、SQLite 和压缩格式仍为 2，旧 Session 1–9 明确拒绝，需要新目录，不自动迁移或删数据。
+
+`tests/live_skill_navigation/` 通过真实服务，让模型从自然语言自主选章；判定答案不给模型，编号
+会变化。它是显式集成测试，不是另一个产品评估引擎，也不会跟着 pytest 自动花费真实调用。
+报告分别写出各模型答对、读到证据、是否多读、误用工具和服务失败，保留去掉导航的对照及失败原账。
+这次测到了成功路径，也测到了模型提前结束、找工作区文件或多读的问题；不能说所有模型都稳定。
+大目录仍可能因超预算被整体排除，还没有分页。具体数字见 [验证记录](../validation-v0.9-skill-navigation.md)，
+设计见 [ADR-0048](../adr/0048-skill-navigation-and-real-provider-disclosure.md)。Stop C 已通过限定验收，发布检查仍待授权。
+
+现已按用户授权开始[Stop C 修补计划](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_C_EXECUTION.md)。
+先在隔离副本做了 40 次真实调用：原位置通过 4/8，把当前参考放到对话后通过 8/8，再加本轮已读
+正文保留也通过 8/8。每组仍很小，不能当最终验收。现在 C1 已按新 ADR 和唯一协议接入生产，
+Skill、Memory、History 共用上述保留与预算规则。主线 149 项、相邻检索／Inspector 171 项、
+Provider／请求相邻 75 项通过；补上 Memory 正向后，专门的 10 项保留测试也通过。集合有重叠，不能相加。
+四组隔离反向验证确实抓到了正文提前消失、旧申请复活、新申请被挤出和位置错误；正确版本随后通过。
+按任务区分资料问答与工作区检查的提示修改通过了 95 项相邻确认；进一步说明 JSON null 类型后，
+导航、检索和失败相关 99 项通过（67.33 秒）。新用例确认错字符串不能获得正文或收据，改正后才成功。
+程序不会自动把字符串变成 null。compileall、修改范围 Ruff 和 3259 项仅收集检查也通过。
+
+C1 现在已达到事前验收门槛：第三轮三个模型各 24/24 严格通过，任务、答案和正文证据也各 24/24，
+隔离、重放和不变量违规都是 0。前两轮失败及两次八例探索全部保留；共 232 次旅程、614 份请求、
+615 次模型尝试，614 次有准确用量，合计 2,002,286 tokens。一次断线沿原策略重试成功，
+那次没有用量，未填零。题目、判定、权限、预算和门槛始终未改。详见 [C1 验证记录](../validation-v0.9-stop-c-c1.md)。
+
+C2 已按 [ADR-0050](../adr/0050-compact-reference-navigation-and-model-view.md) 接入原展示器和共享提示。
+完整来源引用、批准记录和历史证明还在原 Context 账本里。模型只看来源种类、ID、版本、层级、正文
+摘要值和正文。Skill 再给 catalog_digest 与阅读说明；Memory 再给项目、事实槽、正文状态和阅读动作；
+History 再给正文状态、当前工作区有效性、是否还有页和阅读动作。资料正文没有改写。
+Memory 目录的动作带着准确 ID/版本，申请完整短事实；已经有正文时为 null。History 动作带原首／
+下一页游标；没启用 reader 或已经到末页则为 null。unknown/stale 不等于页面读不了。模型仍要选择
+需要的动作，交给原工具和权限检查，收据再驱动下一份 Context。没有自动读全资料、新工具或第二本账。
+同一个预算规则计算模型实际看到的内容。共享提示尊重用户指定的输出格式，不裁剪、补造或转换答案。
+当前是 Session 10 / Context 9 / 展示 v9 / 策略 v5；Session 8 / Context 7 只是保留的隔离实验。
+旧 Session 1–9 都拒绝，工具收据、历史分页、SQLite、压缩和来源检索协议没有另改。
+
+开发验证在 `tests/live_reference_journeys/`。journey_fixtures 准备隔离 Git、SQLite 和原 Runtime；
+bootstrap 经原审批入口准备记忆，再用真实模型回合准备历史；assessment 核对严格 JSON 和最后实际
+发给模型的正文；run 冻结输入、保存原账本，并分开统计准备和回答的用量。audit 重新打开 SQLite，
+从原会话、请求、助手消息和结束事件核对结果，不信报告自述；篡改复制报告会被拒绝。
+第一版没有写清单位和代号形式，第二版用独立 answer_fields 公开这些要求，不给预期答案。
+描述缺失或字段对不上会在模型调用前拒绝。27 项评估器检查通过，恢复旧问题生成器后 3 项按预期失败。
+旧题结果和探索都保留，不重新改分，也不与第二版混算。
+
+第二版同题对照：原实现三个模型为 20/28、27/28、28/28；只加动作时为 22/28、28/28、28/28；
+精简展示后为 27/28、28/28、28/28，达到各模型至少 26/28 的要求，最后正文都为 28/28 齐全。
+隔离、重放、不变量和证据读取违规为 0。最后 96 条旅程有 250 次准确用量，共 840,126 tokens。
+各模型另 4 条语义诊断全通过，但用的仍是词法检索，不能说已经有向量能力。
+原 Skill 完整回归为 24/24、23/24、24/24，达到原严格至少 22、任务至少 23 的要求；最后正文都齐全。
+72 条 Skill 旅程 183 次准确用量，共 575,886 tokens。仍保留一次 JSON 格式偏离，以及一次 Skill
+错误请求和后来被拒的文件工具调用；这些有限测试不保证所有模型永远可靠。
+隔离源码的相邻 owner 检查在同步展示断言后 160 项通过，阅读动作、权限拒绝、分页和预算 4 项通过。
+244 个源码模块格式化前后 AST 一致；当前源码把 180 个实测会话中的 433 份参考请求逐字节重现。
+接入后先通过 215 项，一条旧预算测试因“大块”现在装得下而失败。让夹具正文明确超过 Context 限额，
+并单独配置足够的记忆批准容量后，精度／共享预算 31 项通过，另 153 项相邻检查通过，已知失败已清零。
+编译、修改范围 Ruff、差异和文档检查通过；只收集 3292 项，没有执行全量。C2 已完成，详见
+[C2 验证记录](../validation-v0.9-stop-c-c2.md)。C3 本地模型筛查见 7.9；没有候选达到接入门槛，保持关闭。
+C4 已完成受控调查，历史具体字节原因仍未知（第 8 节）；C5 三路独立审查及范围内修复已完成，
+Release Stop C 通过，原失败和没跑的检查见 [Stop C 记录](../validation-v0.9-stop-c.md)。
+继续不跑全量、L2–L4、安装或打包，也不提交发布。
+
+
+### 7.11 下一步：让模型自己找资料，计划尚未实现
+
+对应正式版 7.11，具体顺序在[主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)。
+当前历史、Skill、Memory 已经能按给出的身份请求原文，但还没有各自的模型主动搜索工具。
+工具大结果已经有搜索和读取；Skill/Memory 的自动关键词召回也已存在，不要把这些不同能力混为一谈。
+
+计划让模型在第一次没拿到资料时，自己换个词继续找。Reader 先取正确范围，Projection 按原规则算出有效状态，
+搜索在这些合法资料中定位，读取时再核对来源，Context 最后决定哪些内容能放进模型这一份请求。
+可以搜索的资料不能仅限于“刚才自动挑出的几条”，否则遗漏还是找不回来；也不能扩大到所有项目或所有插件。
+Skill 先查宿主已选资料的标题和目录说明，不偷读隐藏正文；Memory 只查本项目当前有效的批准事实；
+History 只查同一会话中原历史读取器能证明来源的压缩旧对话，不直接扫描所有账本。
+
+搜索命中的短片段也算给模型看的内容，要经过原来的披露和预算控制。找到的入口必须能被原读取工具接住，
+不能只给一个看似有用、实际上无法读取的 ID。工具大结果和文件仍保持现有直接返回内容的方式，不为了统一改名。
+历史原文页仍保留完整回合和工具调用/结果配对；某一页特别大时，搜索不会让它自动变得可读。
+具体参数、页大小、扫描上限、授权凭据和是否要换协议，都要在 AR-A 核查后定下来，不再造第二本账或后台搜索循环。
+
+```mermaid
+flowchart LR
+    A["计划 AR-A：先定规则与测试题"] --> B["计划 AR-B：按关键词找旧对话"]
+    B --> C["计划 AR-C：主动找批准记忆与 Skill 目录"]
+    C --> D["计划 AR-D：真实提问并核对证据"]
+```
+
+计划准备至少两套不同材料，用普通自然问题测试，不在问题里告诉模型工具名、内部 ID 或操作步骤。
+24 道题、每个配置重复三次和对应通过线，都只是待 AR-A 固化的测试计划，还没有跑出结果，也不是产品默认参数。
+不仅看回答对不对，还要看模型真的读到了什么、是否越权、能否重放及实际成本；短片段够回答时不用强迫多读一次。
+之前九组向量检索未达标的结果原样保留，本轮不接入语义模型。
+本次只核对文档章节、链接、流程图、示例和秘密边界及文件差异；以后实现才跑相关模块、相邻回归和授权的真实测试。
+仍不跑全量、L2–L4、安装或发布检查，也不自动提交代码。
 
 ## 8. 两种模型 Provider 分别做什么
 
@@ -802,6 +1239,17 @@ Tool 参数仍以严格 JSON 为第一规则。真实 Endpoint 已经出现过�
 没有 JSON5、通用“修 JSON”、retry 或 fallback，也不会看模型名、任务名、文件名或 Tool 名决定放行。
 详细决定见 [ADR-0038](../adr/0038-schema-gated-multiline-tool-arguments.md)。
 
+C4 用显式诊断脚本核对历史失败对应的 Stream、Step、Turn、请求引用和指纹，再把原请求交给原
+Provider，只记录真正收到的响应字节和请求内容摘要。脚本不读认证头、不导出环境值、不执行工具，
+也不恢复旧 Session；产品仍只记录原有的清洗后错误。Adapter 与历史运行的源码字节相同，但当时
+没保存 HTTP body，所以无法倒推出具体是哪种坏格式。
+这次固定 24 次重放有 21 次解析成功、3 次连接/TLS 中断；18 个工具参数都是合法 JSON object，
+与 Adapter 解析出的值完全相同，也通过原 JSON Schema。一次最小文本控制成功；连同控制收到的
+22 份响应都用原 Adapter 离线重放核对。没有复现参数协议错误，没有证据支持改 parser。
+原 24 次已知用量为 67,024 tokens，3 次未知不能算零，控制另用了 101 tokens。参数类型通过也不
+表示资料权限正确或工具已执行。历史失败、网络失败和未知部分都保留，见
+[C4 验证记录](../validation-v0.9-stop-c-c4.md)。
+
 “OpenAI-Compatible”表示协议格式兼容，不表示只支持 OpenAI，也不表示所有第三方平台细节完全相同。Base URL、Model 和 Key 环境变量名必须由配置明确提供。
 
 虽然 Session 里有 `assistant/chunk`，当前实现并不是真流式。Provider 先拿到完整响应，LlmRuntime 再把完整文本作为一个 Chunk 记录。以后做流式时可以替换这层，而不用改变 Step 的意义。
@@ -824,8 +1272,8 @@ F3 的 propose_workspace_memory 也走原 ToolRuntime，但它是追加提议的
 5. 根据 Effect Kind 决定并发还是排队；
 6. 经过 Middleware；
 7. 调用工具；
-8. 写 Effect Outcome；
-9. 裁剪过长输出并写 Tool Result。
+8. 在一次 Effect Outcome 写入里保存原结果和必要的引用/预览；
+9. 写 Tool Result：小结果原样展示，大结果展示预览和引用，原文按需读回。
 
 Middleware 像一层层包装器，可以做日志、计时或附加限制。每层 `call_next()` 最多一次，防止一个 Middleware 不小心把写文件动作执行两遍。
 
@@ -833,7 +1281,7 @@ Middleware 像一层层包装器，可以做日志、计时或附加限制。每
 
 连续多个读操作互相不改变 Workspace，可以一起等待；写文件和进程可能改变现实状态，必须形成 Barrier，保证调用顺序可解释。
 
-### 五个工具的细节
+### 内置工具的细节
 
 #### `list_files`
 
@@ -860,6 +1308,82 @@ Middleware 像一层层包装器，可以做日志、计时或附加限制。每
 子进程环境只保留少量必要变量，并删除名字包含 KEY、TOKEN、SECRET、PASSWORD、CREDENTIAL、AUTH 的变量，避免模型运行的测试进程顺手继承 API Key。它支持超时和取消，并返回退出码、stdout、stderr。
 
 默认危险命令 Policy 会挡住一组明显危险的程序名，但黑名单永远不等于真正沙箱。运行不可信模型时仍需容器或远程隔离。
+
+### 9.5 大工具结果：保存、列目录、查关键词、读原文
+
+这就是分层压缩 A/B。比如一个命令输出很长的日志，以前超出显示上限的正文会被剪掉；现在程序
+会把完整正文、结构化数据和证据放进同一次执行结果里，同时记下摘要指纹和给模型的预览。
+都存在当前数据目录的同一 SQLite 账本，不往 TraceHarness 源码目录塞日志，也没有第二套文件事实源。
+
+```mermaid
+flowchart LR
+    TOOL["工具真实返回"] --> SAVE["一次写入：原文、结构化数据、指纹和预览"]
+    SAVE --> SHOW["聊天只带小结果或预览引用"]
+    SHOW --> MODEL["原请求主线冻结并发送"]
+    SHOW --> LIST["列出本会话保存过的输出"]
+    LIST --> SEARCH["在同一份原文里查关键词"]
+    SEARCH --> READ["按命中位置展开，或继续分页"]
+    SEARCH --> SAVE
+    LIST --> READ
+    SAVE --> SEARCH
+    SAVE --> READ
+    READ --> SAVE
+    SAVE --> RECOVER["崩溃/取消后从同一结果补齐聊天记录"]
+```
+
+三个普通只读工具负责这一件事：
+
+- `list_tool_outputs`：从本会话真实结果列出保存的输出，最新的在前。首目录返回 through_seq；翻页
+  同时带这个边界和 next_offset，后来新增的结果就不会把页码挤乱。
+- `search_tool_output`：带着目录中的原执行编号和指纹查字面关键词；把命中行和前后附近行分开给出，
+  附上可以直接执行的原文读取动作。片段够用就回答，不够就展开。
+- `read_tool_output`：拿目录里的 effect_id 和 digest 读取原文。part=content 看当时正文，part=data
+  看当时结构化数据；offset 按 Unicode 字符计数，next_offset 表示下一段。整页 JSON 也要装得下预算，
+  不会把中文、emoji 或 JSON 从中间剪坏，也不会因为读了一页又生成一条无限循环的保存引用。
+
+B+ 搜索默认区分大小写，可显式关闭；输入的是普通文字，不是正则表达式。默认搜正文 content，也能
+搜原结构化数据 data 的标准 JSON 文字。默认从第 0 个 Unicode 字符开始，一次最多 10 个命中（可选 1–100），
+默认只给命中行，前后文可显式选择各 0–20 行。按原文顺序返回不重叠命中；行号从 1 开始按换行 LF 计算，字符位置与读取工具一致。
+next_offset 是最后一个已返回命中的末尾；继续时带同一关键词和选项，null 才表示后面没有更多命中。
+没有凭空估计总数。很长的行会缩短附近片段并标记 context_truncated，命中文字必须完整；连一个命中都放
+不进页预算就明确报错。read_action 从命中行展开，巨长行也不会强制从整行开头读起。
+
+例如搜索某条记录编号时，附近可能带上上一条记录的字段。程序现在把命中行和前后附近行分开，模型
+需要确认字段属于哪条记录；只看到标题却没看到该记录的答案，就用附带动作读后面的原文。
+搜索工具可用时，预览改为显示搜索入口，不再只给一个“从头读取”的动作；只装了读取工具时仍给
+原来的读取入口。命中后的展开动作也填好了当前页预算允许的读取长度，模型不用再猜位置和长度。
+查不到某个词，只说明所选内容范围没有这个字面词，
+不能推断相关事情从未发生。搜索只扫描这份已保存原文，没有另建数据库、索引或向量库。
+
+原通用提示也解释了区别：问旧工具结果先找输出目录，读到的正文就在工具结果里，不必等最后的参考包。
+这不是 Skill/Memory/History 那种“工具只交收据、下一步再披露正文”的读法。
+
+不用先绑定项目或打开 Memory、ProductTask、History。即使整轮历史已经压缩，或者这一轮太大装不进
+History 原文页，工具输出目录仍能找到原来的结果。这没有改坏 History“完整对话一起读”的规则。
+
+实际判断“大”的阈值沿用 max_tool_output_chars：正文或结构化数据超过它，就保存完整内容并展示预览。
+预览之外的固定说明、引用和 JSON 转义也占空间，不能把这个阈值叫 token 上限或整请求上限。
+大结果在 Session 的 data 不再重复塞一遍 stdout 等内容；原 data 仍在 Effect 账本中，可单独读回。
+truncated=false 表示 Runtime 没有丢掉原文，不表示预览已经包含全部内容。
+
+程序会核对原 Tool Call、Result、执行 Intent 和 Outcome：会话、工具、调用编号、Step、参数、状态、
+先后因果与指纹都要对上。同一工作区的另一个会话也不能拿这个引用读走内容。完整不变量检查复用这一套
+规则；只检查 Session 时不能声称已经核查了 Effect 来源。读的是当时结果，不会为了找旧日志再运行命令。
+
+原文和引用一次提交，失败时不会先公布一个不存在的指针。结果记下后、聊天记录补上前崩溃，由原恢复器
+补齐；重复取消也先收敛。不确定是否执行完成时照实记录未知，不把写数据库失败说成工具本身失败。
+冻结的请求里保存当时的预览/页正文，所以重放不用重新读最新文件或再次执行工具。
+
+A 还明确了后续顺序：先保存大结果，补好关键词查找，再折叠旧结果，最后才做模型摘要。预算要一起看系统提示、工具定义、
+任务状态、聊天、参考资料、当前问题回显和输出预留。80% 触发、60%–65% 目标只是待真实验证的候选，
+现在没有偷偷加成默认值。D 已通过普通模型步骤接入语义摘要，仍走原记账和取消链，不能在本地摘要器里私自调 API。
+
+Session 10、Context 9、SQLite 2 和原压缩 format 2 不变。以前已经截掉的正文不会被猜出来。
+底层工具自己没交出的内容、Shell 解码前的原字节、工具还没返回就被取消的输出，也不承诺能补回。
+工具主动报告的长错误/超时文本可以保留，非零退出码仍保持原值。数据仍占数据库磁盘，当前读取器会先读
+本会话执行流，再少量交给模型；还没有流式保存、磁盘配额或自动清理。
+详见 [设计决定](../adr/0053-layered-compaction-and-retained-tool-output.md) 和
+[真实及定向验证记录](../validation-retained-tool-output.md)。
 
 ## 10. 为什么模型说“完成了”还不算完成
 
@@ -912,7 +1436,7 @@ CommandVerifier 会在真实 Workspace 里重新运行配置命令。退出码 0
 
 `shell` 工具用的是同一套机制，但它比 Verifier 多一层：它归 `ToolRuntime` 调度，于是有**两个**超时同时存在。
 
-- **工具自己的超时**（你在 `shell` 调用里写的 `timeout`）：`ShellTool` 会先把子进程收干净，然后带着"实际命令、退出码、`timed_out=true`、已经抓到的 stdout/stderr"主动报错。这份内容会原样进入 `effect/outcome` 和 `tool/result`（超长时按上限截断），模型下一步能看到命令到底打印了什么。
+- **工具自己的超时**（你在 `shell` 调用里写的 `timeout`）：`ShellTool` 会先把子进程收干净，然后带着"实际命令、退出码、`timed_out=true`、已经抓到的 stdout/stderr"主动报错。这份内容会原样进入 `effect/outcome` 和 `tool/result`（超长时完整留在 Effect，聊天只带预览和引用，见 9.5），模型下一步能看到命令到底打印了什么。
 - **Runtime 预算**（`ToolRuntime.timeout_seconds`）：这是整个工具调用的总闸门。它先到期时，报的是通用的"Tool timed out after <预算>s"，子进程同样会被收敛掉。
 
 两者怎么区分？靠**嵌套的异常边界**，不是去比对错误文字：工具自己抛出的超时在内层立刻被重新贴上一个专门的标签，外层那个负责 Runtime 预算的处理器就再也捞不到它了。
@@ -931,7 +1455,9 @@ CommandVerifier 会在真实 Workspace 里重新运行配置命令。退出码 0
 带 KEY/TOKEN/SECRET 字样的变量仍然一律删掉，这两条修正没有放松过滤。
 ## 11. 程序崩溃以后为什么不能直接重跑
 
-F0-C 的恢复先检查唯一 Session 协议 2；History 请求仍按原来的轮次／步骤和收据判失效，恢复后不能
+摘要过程中崩溃也按原规则收尾：已有完整模型输出就能证明返回过，否则保持未知；不编 token 用量、不重调模型、不自动补写没提交的摘要。已经写入的摘要保留。
+
+恢复先检查当前唯一 Session 协议 7；History 请求仍按原来的轮次／步骤和收据判失效，恢复后不能
 转交下一轮。只写了一张 Context、还没写 Composition，或还没取得首个
 模型请求许可，都是允许出现的失败位置；恢复不会重新选参考，也不会补造 Context 或下一步模型调用。
 
@@ -964,14 +1490,173 @@ F0-C 的恢复先检查唯一 Session 协议 2；History 请求仍按原来的�
 
 ## 12. 怎样从事件得到状态、压缩历史和评估质量
 
+### E0：先估整个请求，再看服务端实际用了多少（正式版 12.2、12.3）
+
+以前只知道“历史占多少字节”，现在可把系统说明、工具清单、任务状态、对话、参考资料和问题回显、
+请求外壳一起估算。它们都占模型空间，不能只看聊天文字。编码由用户明确指定；本地分词与服务端
+未必相同，所以始终写“估算”，不把字节除以固定数冒充 token。
+
+输入可用量 = 配置窗口 − 回答预留 − 安全余量。提前压缩线默认是输入可用量的 80%，可以改为
+1–100；达到这条线先收起旧结果，不够才摘录旧对话。这个 80% 是软件策略，不是某模型天生的限制。
+回答预留也限制本次最大输出；填不齐、预留超过窗口或换模型不匹配都会明确报错。
+
+token 模式在每轮首个请求准备时检查；没有启用 token 的字节模式仍在轮前检查。两者都保护当前
+问题、活动工具组、最近几轮和任务状态，压缩关闭就不擅自打开。后续工具读回更多内容时仍重新估算；
+E1 现在会在工具返回后的下一步再检查旧历史是否需要收起。仍超过硬上限就停止发请求，完整工具调用和结果留在账上；不会把当前这一轮切碎。
+
+每次估算在正式请求来源之后记账，指纹、编码、库版本、配置和分项都能重算。抢写、写入失败或取消
+不会越过检查去调用模型；取消会等正在写的动作收尾。原 Session/Context/SQLite 版本不变；没开计量
+的会话无需这条可选记录。重新核对旧估算需要同一编码和库版本，缺失或变化会明确拒绝。
+
+状态条写“最近请求输入估算”，不是随着屏幕文字增长实时预测；超限写“超限未发送”。Ctrl+X 详情
+显示每部分多少、窗口、预留和实际输入/输出。服务没给可靠 usage 就显示未知，不能写成 0；一次请求
+占窗口多少和整个任务累计花多少也不是一回事。计量没有被当作精确花费接到费用权限账上。
+
+例如窗口、回答预留和安全余量由你填写，输入余量还剩 20000 token 时，默认提前线就是 16000；
+这是计算示例，不是系统默认窗口。保留物理字节限额，选中的资料再一起算 token；逐类自动裁剪资料
+仍在后续 E；模型写摘要已由 D 实现。可选依赖叫 `tokens`，首次取得编码可能下载公开词表。
+
+```mermaid
+flowchart TD
+    A[选资料 / 估完整请求] --> B{首个请求到提前线且开启压缩?}
+    B -- 是 --> C[收起闭合旧历史 / 重新选资料]
+    B -- 否 --> D[冻结来源并记录估算]
+    C --> D
+    D --> E{超过硬上限?}
+    E -- 是 --> F[停止发送 / 保留工具事实]
+    E -- 否 --> G[原流程调用模型 / 记录真实用量]
+```
+
+### D：让模型写“接着干活要知道什么”（正式版 12.2）
+
+达到提前线后先收起旧工具结果，还太大才按你选择的方式摘要。默认仍是规则摘录；选模型模式时，
+宿主先圈定已经结束的旧对话，把原文序号、范围、配置和指纹记下来，再用当前连接让模型总结。
+它只能看到这些旧资料，不能调用工具或把里面的话当成新命令。最近保留的轮数、当前问题和任务状态不被压掉。
+
+模型须分开写：目标、约束、实际验证进度、他人或助手陈述、用户采纳的决定、未决问题、原文位置。
+例如“助手说做完了”放陈述栏，真实检查退出码是失败就保留失败；不能凭运行成功推断所有功能都完成。
+没找到证据的文件、失败原因或授权继续保持未知。程序检查完整 JSON 和来源，超长、截断、空内容或夹带工具调用都拒绝。
+
+这次总结本身占当前轮的一个普通步骤：E1 已允许在工具执行后的后续步骤触发，照常检查预算、记录请求、拿调用许可和记实际 token，还要留一步给回答。
+成功后在同一本账上追加一条有来源的摘要，下一个步骤才重新选资料、回答你。因此至少要允许两步，
+摘要也算步数和花费。没有另一套模型后台或聊天记录；原文不删除，漏掉的内容还可从本会话 History 读回。
+
+模型输出放在 summary/response 记录中，不会直接作为聊天显示，也不会批准 Memory。它只是历史参考，
+程序不能保证每句总结都完全正确。写入时抢跑会重新核对原来源；不会拿旧摘要套新历史，也不会重调模型来解决写入冲突。
+重复取消会等原调用/写入收尾。恢复时只承认已记下的结果，不造用量、不再调模型、不擅自把未提交摘要补上。
+
+格式失败会记明原因并保留原历史；正常回答仍能装下就继续，装不下就拒绝，先前已收起的旧工具结果仍保留。
+如果你明确选择了一页 History，这轮先读它，暂不做模型摘要，避免摘要占掉本来属于阅读的首步。
+摘要请求也要装得进硬上限。目前没有自动分批摘要；每轮最多一条摘要调用链，不能反复写摘要消耗所有回答步骤。
+
+```mermaid
+flowchart TD
+    A[旧历史仍太大] --> B[宿主圈定旧原文 / 记冻结来源]
+    B --> C[原预算和许可 / 当前模型写完整摘要]
+    C --> D{格式与来源通过?}
+    D -- 是 --> E[同一本账追加摘要 / 原文仍在]
+    D -- 否 --> F[记失败 / 保留旧历史]
+    E --> G[下一步重新选资料 / 回答当前问题]
+    F --> G
+    G --> H[仍须通过输入硬上限]
+```
+
+实测两组：一次本地检查返回 0，另一次返回 7。摘要后都记住了正确结果，重启后还能实际翻页找回随机旧细节，
+再问新题也正常。最终 16 个回合通过，22 次调用实际用了 107759 token，其中写摘要用了 7983。
+相同请求只把摘要换回原文比较，本地输入估算下降约 39%–41%；这不是账单保证。详见
+[真实验证](../validation-semantic-summary.md)。所有例子是测试数据，不是系统默认项目、命令或模型。
+
+### E1：工具回来后，也能收起旧历史（正式版 12.2）
+
+比如第一步还不大，运行检查后日志很多，下一步就会检查能否收起更早结束的对话。刚执行的工具、参数和完整结果不能拆，近期对话和你当前的问题也保留。最后只剩一步时，不会让模型写摘要占掉回答机会；规则摘录不调用模型，所以仍能做。
+
+如果模型刚申请读 Skill、Memory 或 History，先让它拿到那份资料，不插入摘要消耗阅读机会。同时修复了一个问题：摘要步骤之后才发起的正常历史页申请，现在能真正拿到原文，不会一直只看到目录。摘要本身不携带以前的阅读授权，失败、取消或预算逐出的资料不会被复活。
+
+7 项专项测试通过，包含工具执行后取消摘要；最终 8 文件的相关门禁 176 项通过，包含架构和 Product 合同检查。真实测试两组各四回合，成功检查返回 0、失败返回 7，都只执行一次，工具后做摘要再回答，重启换题也正常。12 次调用实际用了 98665 token，摘要占 5921；对应单次后续请求的估算约减少 11.4%，不是总费用保证。失败尝试和反向验证都见 [E1 验证](../validation-in-turn-compaction.md)。E2/E3 已完成，语义检索已复测，未达门槛继续关闭。
+
+### E2：资料能装多少，按 token 算（正式版 12.2）
+
+例如同一份 Skill 的正文，在宽额度下完整送给模型；额度不足时整块不放，原本合格的小目录可能留下。
+不会截一半 Memory 冒充完整事实。先收起可处理的旧历史，再用剩下的位置放资料：刚申请阅读优先，
+其次是本轮实际读过且仍能保留的内容，最后才是自动参考。当前问题、任务状态和本轮工具记录不能删。
+
+`session/context_tokens.py` 只负责从原账本算剩余位置，不另存真相；`context_input.py` 仍负责取舍。
+每次把计量规则和来源指纹记下来，重放时按当时内容重新核对。没开启完整 Token 预算时仍按字节限制。
+模型会收到明确说明：“工具说请求接受了，不代表正文真的装进上下文；装不下就说明空间不足，别原样反复申请。”
+这两种提示自身也算占用，事先留足位置；目录都装不下时也会省略，最后仍超限就停止调用。
+
+真实测试把 Skill、已批准 Memory、压缩 History 各测宽和窄两组，六组都用两步结束。连同 History 建档
+共 14 次真实调用，实际用了 112182 token；失败尝试也保留，所有尝试合计 273913 token。
+最初模型会没读就说装不下，后来 History 又反复翻同一页，最后根据真实排除结果给提示才通过。
+13 项专项、相邻最终 313 项通过，去掉两条关键保护的新反例会失败；重启能精确重建原请求。
+见 [E2 验证](../validation-reference-token-budget.md)。E3 的友好提示已完成，语义检索已复测，未达门槛继续关闭。
+
+### E3：空间不够时，告诉你原因和下一步（正式版 12.2）
+
+现在命令行和 TUI 都会解释：估算用了多少、允许多少，哪些位置被对话、参考、任务状态、系统说明、
+工具定义和请求封装占用了；还会说这一轮真正做成多少次折叠/摘要、失败多少次。摘要请求被拦也会标清楚。
+`chat/context_pressure.py` 从原账本核对这一条失败，`cli/context_pressure.py` 负责两种界面的中文说明；
+不会拿后来另一条问题的数字顶替。明细读不出来就直说，不能显示假数字，也不把问题或密钥印出来。
+
+你可以缩短当前输入，或在原 Token 配置页按模型实际容量改窗口和预留；大工具结果可另起一轮问具体片段，
+也可新建会话。原记录保留，系统不会自动重跑已执行的工具。Ctrl+X 的最近已发送请求可能早于这次被拦的请求。
+没有为了显示提示另建历史、费用账或自动重试。六项专项、198 项相邻主线、61 项界面检查通过（有重叠），
+两项反向验证确认显示分支和原请求身份确实起作用。真实旅程、费用和失败详情见 [E3 验证](../validation-context-acceptance.md)。
+
+真实测试也暴露模型有时漏执行新命令、生成了不合法的摘要证据编号；不合法摘要被拒绝，原文还在。
+明确执行顺序后的完整旅程另行留证，不能把这些失败抹掉。语义检索已按冻结门槛复测，九组均未达标，继续关闭。
+
+### C：先收起旧工具正文，不够再摘录旧对话（正式版 12.2）
+
+比如之前跑工具得到一大段日志，B 已把完整日志记到账本里、聊天里留预览。C 会在自动压缩阈值
+达到时，先把旧预览收成“这是历史结果、执行状态、原文引用”。当时的工具调用、参数、回复的
+配对身份和位置都保留。执行状态不等于程序退出码；细节仍需搜索或阅读原输出，不能重跑。
+
+系统从最旧的可折叠结果开始，每收起一条就重新看大小，低于阈值就停；还太大才用已有 M3 摘录
+旧对话。最近配置要求保留的几轮、还没结束的工具组、Product 状态不动；没有完整引用的小结果
+不做这层折叠。它也不会替你打开原本关闭的压缩，没有新增配置项或百分比目标。
+
+```mermaid
+flowchart TD
+    A[字节模式在轮前 / token 模式在每一步请求准备时] --> B{压缩开启且达到对应触发线?}
+    B -- 否 --> G[继续准备请求]
+    B -- 是 --> C{有合适的旧大结果?}
+    C -- 是 --> D[核对原文来源并记一条折叠]
+    D --> B
+    C -- 否 --> E[原来的旧对话摘录]
+    E --> G
+    D -- 失败 --> F[如实记下已经完成多少]
+    E -- 失败 --> F
+    F --> G
+```
+
+这仍用原 surface/replace 记录，新 method 叫 tool-fold，表示“折叠工具”，没有摘要正文或摘要器
+字段。每条只引用一个原工具结果，并记录策略、截止轮、原始大小和指纹；检查器会重算，不是
+相信这些数字。原协议版本不变，旧程序读不懂新 method 会明确拒绝，不会偷偷忽略。策略指纹的
+配置版本改为 3，用来表明自动压缩现在多了这一层；已有四项设置不变，不迁移用户旧账本。
+
+每条折叠单独确认落盘，抢写会重新读再选择，取消会等已经发出的写入结束再返回。若先折叠成功、
+后来摘要失败，界面会说“部分工具结果已折叠，后续压缩失败”，不能说“什么都没动”。只完成折叠
+时返回报告指向最后那一条，全部经过仍查原账。屏幕会区分折叠和摘要，不显示一个假的空摘要。
+
+工具折叠不另列成 History 摘要目录，模型用原文引用走 B/B+。以后整段对话又被摘要时，History
+仍能沿折叠节点找到原工具事件。旧请求重放按当时的截止序号读取，所以压缩前后都能准确重建。
+完整日志还占磁盘；字节模式只量对话，E0 token 模式已量完整请求。D 模型摘要和 E1 轮内旧历史维护已实现，E2 参考资料 token 取舍
+也已实现，自定义宿主没装搜索/阅读工具时，只能由宿主查原账，不会因此获得新的工具权限。
+
+大工具结果的保存、关键词查找和读回见 9.5。实际交给模型的搜索片段也会记入原结果和请求快照，重放时不用重新查一遍。自动压缩默认规则摘录，也可显式选择 D 模型摘要；History 整轮分页没有放宽。输出目录解决的是找回工具原文，不代表任何大小的普通历史页都能读取。
+
+聊天文字会等实际聊天区域尺寸变化后再重新排版，窗口 Resize 只负责切换单双栏。这样不会在
+双栏布局还没完成时按旧宽度换行。这里的 LayoutChanged 只是界面通知，不写账本，也不保存第二份对话。
+
 ### StateProjector
 
 它像会计报表程序：不修改账本，只从事件计算 Session 现在是 active、completed、interrupted 还是 failed，当前有没有开放 Turn/Step，一共完成多少次。
 
 ### CoreInvariantChecker
 
-F0-B 还复用同一 Context 解析器与来源检查：真正进入请求构建时必须有本 Step 唯一 Context，并与
-Composition、Request 精确对应；失败前缀可以不齐，但旧 Session 缺协议标记不能靠合成空记录蒙混过去。
+F0-B 还复用同一 Context 解析器与来源检查：普通聊天请求构建时必须有本 Step 唯一 Context，并与
+Composition、Request 精确对应；D 摘要步骤改用冻结原文记录，不混成普通 Context。失败前缀可以不齐，但旧 Session 缺协议标记不能靠合成空记录蒙混过去。
 
 它检查协议是否自洽，例如序号是否连续、Turn/Step 是否正确嵌套、Tool Call 是否有结果、Effect 是否能对应、Composition 是否存在。`product/context-snapshot` 也必须是 exact canonical 形状，同一个逻辑 task/head 顺序不能出现两份冲突身份。它不是业务测试，而是检查“轨迹本身有没有违反规则”。
 
@@ -991,13 +1676,12 @@ Composition、Request 精确对应；失败前缀可以不齐，但旧 Session �
 M3 之后**宿主也可以自己做这件事**，而且手动和自动走的是同一套代码、写的是同一种账本记录。旧事件永远不删，
 只是下次投影时把被替换的那几条藏起来，改用一条摘要。
 
-**什么时候做。** 在一轮新对话真正开始之前（用户这句话还没写进账本的时候）检查一次。选这个时刻是因为它同时
-满足三件事：这个会话当前只有一个主人在跑；没有任何一轮对话开着，所以“哪些历史已经结束”没有歧义；写下去的
-摘要必然排在这一轮的用户消息和这一轮所有模型请求之前。压缩**不算这一轮对话的一部分**：万一压缩失败，历史
-一个字都不动，这一轮照样用完整历史跑完。为了一次维护动作去拒绝用户的提问，才是更糟的选择。
+**什么时候做。** 未开启 token 计量时，在本轮用户消息入账之前检查历史字节；开启后，在本轮首个
+请求准备时检查完整 token 估算。始终只有同一 Turn 主人和同一个压缩服务，只处理已经结束的旧历史。
+维护失败保留实际已完成的折叠；最终请求仍要通过硬上限，不能因压缩失败就无限发送。
 
-**用什么当尺子。** 用「模型看得见的对话，按规范 JSON 算出来的 UTF-8 字节数」。**这是字节，不是 token。**
-我们手里没有一个可信的通用 token 计数器，把字节数说成 token 就是编数字。
+**用什么当尺子。** 字节模式量模型可见对话的 canonical UTF-8 字节；E0 另用显式编码估整个请求的
+token。两种单位不混用，摘要和文件等物理大小仍保留字节限额。
 
 **哪些绝对不动。** 切口只能落在真正结束过的那一轮对话的收尾事件上，所以当前这句话、正在进行的一轮、一个
 Step、以及「模型请求了一个工具」和「那个工具的结果」永远不会被拆成两半。自动压缩还会按配置额外留下最近
@@ -1035,13 +1719,9 @@ N 轮完整对话不碰。手动 `compact` 的 `--through-seq` 必须**正好等
 重建出来还是原始历史，压缩之后的请求重建出来才是摘要后的历史。重放不会再叫一次摘要器、不会调模型、也不会去
 读“今天的最新状态”。
 
-**为什么默认摘要器不是模型？** 这是一条硬约束，不是偷懒。这个系统里唯一“能审计、能计费、能取消、能收敛”的
-模型调用通道，是必须先把请求和这次调用冻结进会话账本的那条主线；而账本要求每一条冻结下来的请求都必须等于
-「当时的 Surface 投影 + 当时的能力清单」。摘要请求按定义就不是那个投影，硬记进去会让所有压缩过的会话在
-请求重放校验时确定性报错；绕开那条主线直接去调 Provider，则是一次没人记账、没人计费、取消不了的调用。所以
-M3 明确**不提供**模型摘要器，默认给的是一个确定性的、有界的转录摘要。宿主可以注入自己的摘要器，但受同一条
-约束。摘要器拿到手的东西也只有：会话 id、要被替换的那几条消息、字节上限、留了几轮——没有账本、没有工具、
-没有任何审批权限，所以它既选不了压缩范围，也做不了任何副作用。
+**默认规则摘录，也可选模型摘要。** D 已扩展冻结请求的来源规则，让摘要成为当前轮的一个普通模型步骤。
+它沿用原许可、计费、重试和取消，下一步再回答你。原来的本地规则摘录器仍没有工具、账本或审批权限，
+不能自己偷偷调 API。详细解释见本节 D，与正式版 12.2 对应。
 
 **抢跑、失败和取消怎么办。** 挑历史时看到的“账本走到哪”会原样带进写入，由数据库的比较后交换来把关：摘要
 期间会话动过，这次写入就会被拒，然后从头重新读、重新挑，绝不把已经过时的那份再投一次。取消时先等已经发出的
@@ -1059,7 +1739,7 @@ M3 明确**不提供**模型摘要器，默认给的是一个确定性的、有�
 
 ### 界面上怎么知道"模型现在能看见多少"
 
-F0-B 让原 M4 详情页适应新请求：先用共享请求重建函数验证“当时到底发了什么”，把第一条 Context
+当前 M4 详情页先用共享请求重建函数验证“当时到底发了什么”，把最后一条 Context
 reference 的消息数和 UTF-8 字节单列出来，再从剩下的 Surface 找 Product 状态，最后才算对话。
 这样新参考不会冒充 Product，也不会让对话数多一条。这里只显示统计，不展示参考正文；当前历史
 大小与压缩阈值仍按原 Surface 计算。这是已有面板的协议适配，不是 F5 的检索治理页。
@@ -1099,10 +1779,21 @@ Replay 不是重新执行工具，而是重新投影模型当时能看到的 Sur
 
 现在有三个互不相同的小任务，共用同一份检查命令。它能证明整条管线连通并给出可比较的数字，但三个任务加几次重复只是体检，不是模型排名。旧的 `case.json` 布局被明确拒绝，见 20.24。
 
+F5 增加的冻结检索规格、真实 requester 项目准备、按 Step 的评分分母与成本见 7.8。
+当前根 benchmark protocol 只接受 2，retrieval 必须明确给出；Verifier 的内层版本仍是 1。
+requester 直接使用 attempt 的真实 source，不再有独立 rw。原 Product 三任务继续保留，
+另有冻结 11 查询的 retrieval_v1；缺插件或摘要漂移拒绝，旧根版本不自动迁移。
+
 ## 13. 日常怎么启动、配置和查看
 
+D 在 F2“自动压缩”页可选“模型语义摘要（使用当前连接）”，也可继续规则摘录。需开启自动压缩、填齐 Token 预算并允许至少两步；不齐会用中文提示。命令参数是 `--auto-compact-method semantic`。保存配置共 26 项，新加可选摘要方式，不改你原文件。Ctrl+X 标明最近一次是在写摘要还是聊天。
+
+按 F2 打开“Token 预算”，填本地编码、模型窗口、回答预留和安全余量，提前百分比可留空用 80；前四项全空表示关闭。CLI 对应五个 `--token-encoding` / `--context-*` 参数，完整拼写见 [配置说明](../tui-configuration.md)。配置文件增加五个可选值，继续会话的启动命令会保留；系统不根据模型名字猜这些值。
+
+C 直接沿用已有自动压缩页的开关、触发大小、摘要大小和保留轮数。开启时先收旧工具正文，不够再摘录历史；关闭仍不动。手动 compact 仍按你指定的范围做摘要，不必为 C 再填 JSON。
+
 F3 通过 Python 宿主 API 的 RuntimeConfig.memory 配置，必须交齐 ProjectMemoryConfig 的限额和
-source resolver；字段见 7.6。当前没有新增 CLI 开关、口头批准解析或治理页。
+source resolver；字段见 7.6。F5 通过 --context-config 输入同一合同，并提供共享治理命令（13.10），不解析口头批准。
 
 
 F1 的 Skill 资源配置同样由 Python 宿主明确提供：`RuntimeConfig.skill_policy` 默认 None，插件此时不能
@@ -1111,24 +1802,27 @@ F1 的 Skill 资源配置同样由 Python 宿主明确提供：`RuntimeConfig.sk
 `SkillResourceRoot`，按准确插件 id/version 绑定绝对目录；插件自己只能提供相对路径，不能自报可信 root。
 它不等于选择 Skill，也不会给模型额外工具；细节见 19.12，对应正式版 13.3.1、19.16。
 
-F2 的 Context 配置仍走 Python 装配：`RuntimeConfig.context_input` 接收 `ContextInputPolicy`
-或 `None`，用户原文请求通过 typed TurnInput/ChatDriver，尚无检索治理界面。`None` 明确选空，仍有空参考说明。
-当前配置唯一切到 `f2-context-policy-v1`，恰好九项（原八项加 skills，对应正式版 13.3.1）：
+F4 的 Context 配置仍走 Python 装配：`RuntimeConfig.context_input` 接收 `ContextInputPolicy`
+或 `None`，用户原文请求通过 typed TurnInput/ChatDriver，F5 治理见 7.8。`None` 明确选空，仍有空参考说明。
+当前配置唯一切到 `f5-context-policy-v5`，恰好十二项（对应正式版 13.3.1）：
 
 | 字段 | 通俗含义 |
 |---|---|
 | `history_tier` | `None` 不选；`directory` 看目录；`summary` 看摘要。只限当前会话可见 M3 压缩块 |
-| `total_bytes` | 整条参考说明的 UTF-8 上限，连空包裹文字也必须装得下 |
+| `total_bytes` | 参考资料与包裹说明的 UTF-8 上限；本轮问题回显另按实际大小计入请求（7.4） |
 | `history_bytes` | 全部历史块渲染之后合计最多多大 |
 | `item_bytes` | 一个完整块最多多大，转义、来源和尾注都算 |
 | `max_blocks` | 最多放进多少块 |
 | `max_exclusions` | 最多记多少条排除原因，至少 3；超过就明确失败 |
 | `max_query_bytes` | 本轮第一条用户输入作为 query 时最多多少 UTF-8 字节；超限不截断，直接拒绝 |
 | `history` | null 不开放原文；否则必须明确给出下面七项读取上限 |
-| `skills` | null 不启用 Skill 检索／披露；否则明确给出下面十五项 SkillRetrievalPolicy 配置 |
+| `skills` | null 不启用 Skill 检索／披露；否则明确给出下面十五项 ReferenceRetrievalPolicy 配置 |
+| `memory` | null 不检索 Memory；启用时给同样十五项，并配置 RuntimeConfig.memory 的项目权威 |
+| `local_lanes` | 固定 `{semantic:null,reranker:null}`，Python 传空 tuple；启用未选定模型直接拒绝 |
+| `workspace_observations` | 是否观察真实版本；开启要同时配 Memory、History 和支持观察的 resolver |
 
 外层数字均为非负整数，max_exclusions 至少 3。history_tier=None 时 history 必须 null，不选择 History；
-只有 skills 也关闭时，item/query 字节及 max_blocks 才都必须为 0。History 没有单独原文模式，Skill 可独立启用。
+只有 skills 和 memory 都关闭时，item/query 字节及 max_blocks 才都必须为 0。History 没有单独原文模式，Skill 可独立启用。
 空策略按实际 wrapper 算 total_bytes，恰留三条来源状态记录，不拿示例数字补默认。
 
 HistoryReadPolicy 七项全部是显式正整数：
@@ -1143,16 +1837,16 @@ HistoryReadPolicy 七项全部是显式正整数：
 | `max_source_bytes` | 所观察的会话前缀最多多少字节，审计事件也算 |
 | `max_requests` | 请求负责人最多接受多少页请求 |
 
-页策略的摘要同时包含 `history-turn-pages-v1` 和这七项，cursor 必须绑定同一摘要；换了策略不能偷偷
+页策略的摘要同时包含 `history-turn-pages-v2` 和这七项，cursor 必须绑定同一摘要；换了策略不能偷偷
 继续用旧页定位。关闭默认工具不会自动获得 History 或 Skill Tool，DTO 表格也不代表已有权限。
 
-SkillRetrievalPolicy 十五项与正式版相同：unicode_version 必须匹配解释器，default_tier 只能目录或摘要，
+ReferenceRetrievalPolicy 十五项与正式版相同：unicode_version 必须匹配解释器，default_tier 只能目录或摘要，
 match_fields 明确 id/symbol/path/error/tag 的优先顺序；k1 是正有限数、b 在 0–1 之间；
-rrf_constant、exact_weight、fts_weight 是正整数，控制两路排名融合；skill_bytes 是非负的 Skill 渲染配额；
+rrf_constant、exact_weight、fts_weight 是正整数，控制两路排名融合；context_bytes 是该来源的非负渲染配额；
 max_catalog_bytes、max_terms、max_corpus_items、max_corpus_bytes、max_candidates、max_requests 都是正整数，
 分别约束目录大小、查询词数、语料条数／大小、排名候选和披露请求数。没有隐含调参数字，也不能夹带
 semantic、reranker 或 embedding_model。宿主通过 runtime.skill_context.select/rebuild_index 操作，
-模型只用受限披露工具；当前没有治理界面。跨来源通用配置留到 F4，当前 F2 字段合同见设计合同 §14。
+模型只用受限披露工具；F5 共享治理见 7.8。统一配置由 ADR-0045 和设计合同 §16 冻结；Memory 重建走 runtime.memory.rebuild_index，仍复用原负责人。
 
 安装开发版本：
 
@@ -1441,7 +2135,7 @@ Numbers shown as [event N] are Event Log seq values; they may start above 1 or s
 
 OpenAI-Compatible 模式不偷偷选择平台和模型：Base URL、Model 必须明确配置。示例模板可以展示某个平台写法，但生产代码不能因为示例是百炼就默认永远调用百炼。
 
-默认一次最多 20 个 Step；工具和验证命令各有 60 秒 Runtime 级默认超时；工具结果最多保留 24,000 字符；验证默认允许失败后再尝试修复一次。
+默认一次最多 20 个 Step；工具和验证命令各有 60 秒 Runtime 级默认超时；工具结果的 inline/预览阈值为 24,000 字符，大结果的原文仍完整保存，搜索和读取页的完整内容也受该字符限额约束；验证默认允许失败后再尝试修复一次。
 
 自动上下文压缩**默认关闭，而且没有任何内置数值**。要打开就得把四件事一次性说全：开关（`--auto-compact on`或 `TRACEH_AUTO_COMPACT`）、触发字节数（`--auto-compact-bytes` / `TRACEH_AUTO_COMPACT_BYTES`）、摘要字节上限（`--auto-compact-summary-bytes` / `TRACEH_AUTO_COMPACT_SUMMARY_BYTES`）、保留最近几轮对话（`--auto-compact-keep-turns` / `TRACEH_AUTO_COMPACT_KEEP_TURNS`）。只给阈值不给开关、写了 `off` 却又带阈值、或者少给任何一个阈值，都会在创建 Runtime 和 Session **之前**直接报配置错误——不猜、不补默认值。四个全不给，就是关闭。只有 `run`/`chat`/`resume` 接受这四个参数，查看类命令（包括 `compact`）不接受。
 
@@ -1458,6 +2152,128 @@ Windows 上中文最容易出问题，所以 `chat` 有一套明确规则，而�
 - 如果一行里出现了 `U+FFFD`（就是那个黑底问号 �），说明原字符在解码那一步就已经丢了。这时候程序**拒绝这一行**：不发给模型、不写进账本、也不猜你原本想说什么，只提示你改用 UTF-8 重发。
 
 最后一条是刻意的：猜出来的内容一旦写进账本，就变成了假的历史事实。
+
+### 13.10 F5 的治理命令
+
+两种界面都可用 `/context [STEP_ID]`、`/skills`、`/plugins`、`/memory`、`/history` 和 `/project`；
+`/help` 列出完整语法。Textual 的 Esc 取消确认或关闭证据页；Line 输入 CONFIRM 之外的内容取消。
+这些命令留在宿主，不发给模型。
+
+Skill 选择用 `/skills select ACTOR ID...`，清除用 `/skills clear ACTOR`；插件用
+`/plugins use ID...`、`/plugins use --none` 或 `/plugins reload`。Memory 先通过
+`/memory declare ACTOR "BODY"` 提议，随后用 `/memory approve PROPOSAL SLOT NEW_ID ACTOR`、
+`/memory supersede PROPOSAL SLOT NEW_ID ACTOR` 或 `/memory revoke ID ACTOR` 决定。
+`/skills rebuild`、`/memory rebuild` 显式重建派生索引并显示来源、条数和逻辑大小。
+
+项目用 `/project create ID ACTOR "LABEL"` 创建，`/project source PROJECT SOURCE ACTOR`
+关联宿主配置的来源，`/project bind PROJECT ACTOR` 绑定当前 Session；查看会列出已登记项目、
+来源和当前关联，不猜默认项目。History 原文用 `/history page BLOCK INDEX` 逐页查看。
+每个 actor 和 ID 都由人明确输入。
+
+启动为 `traceh chat <workspace> --context-config <file>`，加 `--tui` 选择 Textual。
+配置格式和示例见 7.8；相对路径按配置文件目录解析。恢复命令会保留该路径，重启后重新检查，
+不会缓存一份旧配置当作事实。
+
+### 13.11 一条命令启动与 TUI 应用配置
+
+直接在聊天正文里拖选文字，选区会高亮，右键弹出“复制”。Ctrl+C 也只复制当前选区，没有选字就什么
+也不做，不会再退出 TUI；退出用 Ctrl+Q，仍会等工作收尾。顶部那排按钮和 F3 独立复制页已删除。
+没启用 Product 时右侧默认收起，启用时默认展开。在聊天主界面按 Ctrl+B（底部“任务面板”），可以
+随时展开、收起；没配置时展开会显示“未启用”。收起后聊天占满宽度，任务仍继续运行、刷新状态。
+正在填写的审批确认内容会保留，重新展开会回到确认框；收起不会替你批准。打开全屏详情或弹窗时不切换
+后面的主面板，退出收尾期间也不切换。显示偏好只在这次 TUI 运行里保留，不写设置文件或账本。
+治理证据也能直接选字、右键复制。复制内容来自当前保留的最多 2,000 行显示日志，不是完整历史导出。
+Windows 实际运行时直接写系统 Unicode 剪贴板，也保留 TUI 内粘贴；剪贴板被占用时明确提示，TUI 内仍
+能粘贴。其他系统继续依赖终端 OSC 52。headless 测试不会动用户系统剪贴板。
+
+空闲时按 F4 或输入 `/memory`，可以从列表选择实际提议，无需手抄长 ID。填写事实槽位
+和操作人，新记忆 ID 留空时自动生成。替换或撤销要选择现有生效事实，替换不能改掉它的槽位。缺少输入
+会提示；点击审阅按钮后仍要核对真实正文并输入 CONFIRM。系统重新读账，取消不批准，并发变化仍由原规则
+拒绝。没有默认的测试人名、槽位或案例，也不会因此自动批准记忆或自动更新检索索引。
+
+```mermaid
+flowchart LR
+    Form[从 Memory 表单选择真实记录] --> Draft[生成命令草稿]
+    Draft --> Shared[原治理服务重新读账并展示审阅]
+    Shared --> Confirm[用户输入 CONFIRM]
+    Confirm --> Owner[原记忆负责人核对并追加事件]
+```
+
+装好可选 TUI 依赖后，在任何工作目录输入 `traceh` 就会进入交互式 Chat，当前目录就是新会话的
+工作区。`traceh chat --tui` 也可以不再填写工作区。原来那些 Line 子命令保持原用法；想先看表单时
+可继续加 `--configure`，指定某个启动文件时加 `--tui-profile`；现在配置完整就直接聊天，不再每次打开配置页。
+
+只有 `cli/tui_entry.py` 管这条启动循环：读配置、让原 CLI 组装 Runtime；收到应用请求后，等旧
+运行环境彻底关好才再次组装。`cli/tui_config.py` 管非密钥文件和本地检查；`tui/settings.py` 管
+界面；Context 的解析依然只在 `chat/config.py`，没有另起一份配置解析规则或聊天账本。
+
+首次向导在 `tui/onboarding.py`：你选择服务商和地区，程序填写对应官方地址，模型可以从有限快捷项中选择或自己输入，不偷偷替你选。点“保存并开始聊天”记住个人连接。Windows 可以勾选记住密钥：`cli/credentials.py` 用系统当前用户的 DPAPI 加密，密文放在个人 `.traceh/credentials`，与服务地址、接入方式和密钥变量名绑定；换地址不会取到另一地址的密钥。优先使用这次明确输入的密钥，其次已有环境密钥，再找同连接的加密密钥；解密失败要求修正，不保存明文兜底。启动 JSON 和事件不保存明文。其他系统暂时用环境变量、环境文件或临时密钥，不需要安装新依赖。加密条目和配置文件分别保存，第二步失败可能留下第一步已经保存的加密条目。
+
+`cli/startup.py` 只读辨认旧数据库/旧 Session，不能替代真正的协议检查。遇到旧数据时显示“创建新版数据空间并开始”：你点击后程序在旧目录旁创建新目录，清空旧会话和项目偏好并保存启动配置，旧数据原样保留。取消不会选新目录；保存配置失败时可能留一个空的新目录。它不是迁移工具，也不升级旧会话，仍使用 Session 10 / Context 9。
+
+聊天中 Ctrl+O 或 `/sessions` 打开 `tui/session_picker.py` 的对话列表，只显示这个工作区、当前协议、普通用户会话，按时间和第一条输入辨认；`/new` 新建。选好后再核对一次，先收尾原运行环境再切换；运行中或确认中不能换，取消回到原对话。默认仍是新聊天，不自动继续最近一条，也没有第二份会话索引。
+
+`chat/workspace_project.py` 在打开 Session 后、接受输入前连接原项目能力。只有已经配置项目能力且存在来源合格的项目，才显示项目名称与首次操作署名。多个候选必须自己选，确认后仍由原项目负责人核对来源并写正式关联；勾选记住才保存“项目、署名、这个文件夹”三项偏好。下次新会话会重新验明来源、正式关联并重建原记忆索引；复制配置到其他文件夹不会自动继承。旧会话保留原归属，索引失败后恢复会补建，不重复写关联。没开启项目功能或没有合格项目就保持未关联，不猜项目、创建项目或开启 Memory。偏好只是你的启动选择，真正权限仍来自原项目和记忆事件账。
+
+
+个人默认保存在用户主目录的 `.traceh/settings.json`。面板里的“保存为个人默认”只记模型服务、
+模型名、地址、密钥变量名、环境文件路径和最大步数。这里引用的环境文件也只提供连接信息和选定
+密钥，不会顺便带走另一个项目的数据目录、插件、重试参数或校验命令。你明确选的项目/CLI 环境
+文件仍按原规则读取。当前目录 `.traceh-tui.json` 可以覆盖个人默认；空白模型字段继承，插件栏
+清空明确表示关闭外部插件。明确输入的 CLI 参数优先，面板里改的值作为这次显式输入。
+
+自动找到的启动文件不会把你送回旧工作区或旧会话：默认用当前目录，也可明确写 CLI 目标。
+只有自己通过 `--tui-profile` 点名的文件才可携带指定会话。数据默认存在当前或明确选择的工作区下面的 `.traceh`，
+明确给出的项目/CLI/进程环境存储配置仍有效。保存时路径转为绝对路径，加载文件里的相对路径按
+文件目录解释。格式 1 保存 13 个必填基础字段、5 个可选压缩输入（含摘要方式）、3 个可选项目偏好（项目、操作署名、所属工作区）及 5 个可选 token 输入，共 26 项。已有文件缺少可选项表示没有指定，未知字段和版本仍拒绝，不会偷偷改写原文件；它不是完整 CLI 备份。
+
+配置完整就直接进入聊天；缺连接配置时才显示服务商、模型和密钥向导。想修改其他功能按 F2 或启动时加 --configure；可修正的装配错误回到完整配置页。F2 重启不会再弹首次向导。预检查只验证，不把环境中读到的重试参数固定成新输入，换环境文件仍会重新读取。
+这时还不能发消息，也不会用固定假回答冒充模型。离线 scripted 必须由用户或明确环境配置选择。
+本地校验在一份独立环境字典里完成，完全不碰当前进程变量，也不调用 API、执行插件 setup 或创建
+账本。只有整套配置解析成功才正式加载这一轮的环境变量；旧运行环境都关闭后再恢复这些变量。
+所以换环境文件会真正读到新密钥和参数，也不会让当前请求读到你还没应用的草稿。
+
+聊天空闲且没有权限确认时按 F2 或输入 `/settings`，会预填当前会话 ID。点“应用配置”后先校验，
+再让原聊天 Driver、观察者、Product、Runtime 和 Store 收尾；新运行环境从原账本恢复同一个会话
+和对话。下一轮用新模型，之前每轮仍能按当时的记录还原。清空 Context 路径就是关闭它，不保留旧
+解析结果。没有直接改正在运行的 Runtime，也没有另一份聊天记录。任何收尾失败都终止切换；
+收尾时再次退出可取消接下来的重启，但仍会等原有工作全部收尾。
+
+继续同一会话必须保留数据目录；已有会话的插件切换仍用 `/plugins use`。要换插件集合或 Product
+配置，可清空会话 ID、填写工作区明确新建会话。保存项目配置、保存个人默认和应用是三个不同动作：
+保存不立刻影响当前运行，应用也不会自动写配置文件。嵌入式 TUI 没有宿主启动参数时只提示 CLI 入口。
+
+密码框始终不显示已有密钥。临时输入只给原内置 Provider，不写 JSON 或事件；同地址、同 Provider、
+同密钥变量名时，留空可以保留当前进程的密钥。换连接身份或加载另一份 profile 后要重新填或依赖
+环境。个人默认只引用密钥文件，不复制密钥。地址不能夹带账号密码或查询参数，变量名栏也会校验。
+知识与记忆、任务执行都有总开关和中文配置按钮；原始 Context JSON 放进高级折叠区。左边选中文参数，右边看单位和说明再修改；
+可选模式用下拉，数字直接填，来源、资源目录和验证命令参数可以逐项添加、删除，不用写 JSON。History、Skill、Memory 可以分别开关。
+空策略第一次开启读取会显示可修改预算；来源、插件身份、审批署名、目标仓库/分支、命令还要自己填写。预设只在主动新建草稿时提供，
+不是系统偷偷使用的默认配置；标识用新生成的 UUID，不拿测试案例充数。插件勾选框只读本机安装信息，不加载插件代码，点使用才选用。
+自动压缩页能选择沿用、开启、关闭，并填写触发大小、摘要大小和保留轮数。明确关闭会忽略环境里的旧阈值；CLI 显式同时给关闭和数字仍报错。
+压缩默认规则摘录；D 可选模型摘要，在 token 模式首个步骤执行，原事件仍保留。保存功能草稿仍用原解析规则；打开已有文件先验证，被外部修改则要求重新加载。
+写齐临时文件后才替换原文件；关闭功能只取消这次装配，不删除文件或账本。表单不会安装插件、选 Skill、绑定项目、批准记忆、
+运行验证命令或创建 Git 仓库。取消不会撤销之前已经点保存写下的文件。
+
+```mermaid
+flowchart LR
+    Defaults[个人连接默认与当前项目配置] --> Entry[同一个交互启动循环]
+    CLI[当前文件夹与显式参数] --> Entry
+    Entry -->|缺少连接配置| Wizard[首次连接向导]
+    Wizard -->|保存并开始| Entry
+    Entry -->|明确配置或出错| Form[完整配置与功能表单]
+    Form -->|检查通过| Entry
+    Entry -->|发现旧数据| Old[保留旧账并选择新空间]
+    Old -->|用户点击创建| Entry
+    Entry -->|配置与协议可用| Assembly[原来的组装与会话恢复]
+    Assembly --> Binding[原项目核验和正式关联]
+    Binding --> Chat[聊天界面]
+    Chat -->|F2 或列表切换对话| Drain[原有模块全部收尾]
+    Drain -->|全部成功| Entry
+    Drain -->|收尾失败| Stop[停止切换]
+```
+
+操作步骤见 [TUI 配置说明](../tui-configuration.md)。
 
 ## 14. 代码里那些“未来接口”应该怎样理解
 
@@ -1533,6 +2349,132 @@ v0.7-D1 已经补上 immutable Patch Artifact：宿主可把一个 terminal mess
 
 ## 15. 我们怎样知道当前代码没有悄悄坏掉
 
+这次 E 收口：E1 最终 176 项、E2 最终 313 项；E3 相邻主线 198 项、界面 61 项、最后专项 6 项通过。
+语义筛查控制 12 项、相邻检索测试 55 项通过。这些集合有重叠，不能直接相加当总数；关键保护拆掉后测试会失败。
+全仓只收集了 3537 项，没有跑这次全量或 L2–L4；编译、代码检查、diff 和两份文档检查也通过。
+真实聊天模型所有尝试的已知返回用量是 1345379 token，另一次网络失败计费未知；失败也保留了。
+语义模型九组都没过语言质量线；另算向量核对 171 条结果、重放 44 个 Session 没有异常，所以继续关闭。
+完整数字和边界见 [执行记录](../plan/TRACEHARNESS_E_AND_SEMANTIC_EXECUTION.md)；这些不等于发布全量已通过。
+
+
+D 的 21 项摘要专项、真实案例和反向测试见 [语义摘要验证](../validation-semantic-summary.md)。最终真实 16 回合通过、22 次调用，检查失败没有变成成功；仍不代表所有模型、所有语义都可靠。本阶段没有跑全量或 L2–L4，也没提交。
+
+E0 的真实模型走完两组共 14 个回合、37 次调用，实际总用量 456929 token；估算平均绝对百分比误差约 19.64%，有时低估 11.84%，有时高估 26.73%。所以它是容量参考，不能保证任何服务都不超窗。定向检查还覆盖抢写、两次取消、拒绝后不发请求、重启和故意恢复故障逻辑。探索失败与最终结果均保留在 [专题验证](../validation-request-token-meter.md)，没跑全量或 L2。
+
+C 的相关与相邻测试共 586 项通过，临时恢复故障验证后，新加的 17 项也再次通过。真实
+qwen-plus 两种退出码共 14 个回合全部答对，实际搜索 10 次、阅读附近 10 次，原程序各跑一次。
+这组对话从约 25 KB 降至约 14 KB，减少约 44%，只是本次字节效果。首次真实测试发现目录把
+工具折叠误当历史摘要，修好后还故意恢复错误确认测试能抓到；篡改配对身份和字节数也能拦下。
+编译、格式检查、3464 项仅收集和 diff 检查通过，没有跑全量/L2、没有提交；详见 [C 验证](../validation-tool-result-folding.md)。
+
+B+ 相关检查 252 项通过、1 项因符号链接权限跳过；真实多行日志两种退出码的 10 个回合全部通过，确实搜索 8 次、展开 9 次，原程序各只跑一次。恢复还有 4 次先读 History 的绕路。另一组单行记录的 6 个回合也通过，搜索 4 次就答对，没有额外分页；两组共 16 个真实回合、12 次搜索、9 次按需展开。完整记录见 [关键词查找验证](../validation-tool-output-search.md)。原真实脚本增加 `--keyword-search` 模式：用运行时随机日志验证先搜索再展开、压缩重启、重复和无命中，特意检查会不会把上一条记录的字段认成当前记录。失败也保留，不把“调用过工具”当成“答对了”。
+
+A/B 阶段的相关检查是 238 项通过、1 项因 Windows 符号链接权限跳过。真实模型完成两个场景的 6 个回合，
+确实读了 21 页原文，两个诊断各只执行一次。恢复时仍先尝试了过大的 History 页，再转到输出目录，
+所以没有宣称“完全没有绕路”；前面失败的运行和不可用的用量都保留在报告里。
+
+分层压缩 A/B 用真实 Shell 和 SQLite 验证保存、重启、读取、跨会话拒绝、失败/取消及恢复；还临时恢复截断故障，确认新测试确实报错。真实模型另走 `tests/live_tool_outputs/run.py`。测试数量、失败记录和实际模型结果见 [专题验证](../validation-retained-tool-output.md)，不把脚本模型或收集测试算作真实验收。
+
+简化启动的验证见 [验证记录](../validation-tui-simple-start.md)：首次设置后第二次直接启动，使用本地真实 HTTP 和合成密钥；还检查了真实 Git 来源、取消、来源变化、索引失败恢复、对话列表和旧数据入口。没有跑全量或 L2。
+
+这次修复的测试和真实模型回答在 [验证记录](../validation-current-turn-anchor.md)。新测试检查原话和来源不能被调包、字节数准确、调用工具后仍记得任务，以及失败后可以换题。临时去掉来源保护后，两个测试真的发现伪造被接受；恢复保护后通过。本次没有跑全量或 L2。
+
+中文启动和功能表单这次检查覆盖 181 项：相邻模块 145 项通过，配置相关最终 36 项通过。最初有一项测试点到了滚动中的按钮，后来改用真正的焦点/回车操作，再检查全部配置用例通过。
+还临时拿掉“保存前用原规则校验”的保护，非法预算果然被写入，测试按预期失败；恢复原代码后，取消、非法输入和外部修改三项重新通过。
+编译、定向代码检查、收集与文档核对见 [当前记录](../validation-tui-feature-settings.md)。没有跑全量、L2 或外部模型。
+
+**当前任务面板快捷键的检查：**TUI、治理界面、设置、可选安装和 Product 架构五个文件
+`110 passed in 97.62s`。真的反复按 Ctrl+B 展开、收起，也检查没配置时的提示、宽窄屏和聊天换行、
+弹窗里不改变后面的面板、审批输入和焦点恢复及取消。面板收起期间，SQLite 的状态变化仍能被原观察者
+读到；切换没有新增模型请求或会话事件。临时删掉快捷键绑定后，测试确实因无法展开而失败，再恢复代码。
+同范围收集了 110 项；编译、两个修改 Python 文件 Ruff、差异和文档检查通过，未跑全量/L2。
+反示例扫描只匹配了原来的 `ChatDriver` 类型名。见 [定向记录](../validation-tui-copy.md)。
+
+**正文直接复制与记忆表单的验证基线：**七个相关文件 `152 passed in 84.65s`，真的在滚动后的聊天正文里
+拖选、检查高亮、右键复制和粘贴，也检查了没选文字时 Ctrl+C 不退出、输入框和治理证据的复制。从真实
+提议和生效事实里选择并批准/替换/撤销，以及取消和退出仍通过。没有 Product 时聊天铺满宽度；原界面、
+配置、共享治理、架构与协议拒绝也回归通过。临时去掉原文坐标后，鼠标复制测试确实选错内容并失败，
+随后恢复正确代码。还用合成的中文、emoji 和换行实际写入 Windows 系统剪贴板并读回核对。同范围收集
+了 152 项；编译、六个修改 Python 文件 Ruff 和差异检查通过，未跑全量/L2/真实模型。
+见 [定向记录](../validation-tui-copy.md)。
+
+**当前一条命令启动与应用配置的检查：**七个相关文件最终 `138 passed in 69.35s`，其中配置
+面板文件有 27 项。真的用同一 Session 发出前后两种模型请求并从账本重建，也检查了更换环境文件
+的新密钥/参数、关闭 Context、环境解析失败不污染进程、关闭失败不继续重启。原 Product、TUI
+和治理回归通过；聊天换行改为等实际聊天区域尺寸变化，两项关键保护都做过反向失败验证。
+使用你日常的 Anaconda Python 3.12.7 和已安装 Textual 8.2.8，没有借缓存或安装依赖。编译、十个
+相关 Python 文件 Ruff 和差异检查通过；3377 项只是收集，未跑全量或 L2。
+详见 [当前验证](../validation-tui-entry.md)。下面 C5 与首版面板的 129 项是历史记录，不能替代
+这次启动/应用实现的验证，也不代表又完成了独立审查或发布门禁。
+
+**Stop C 当前检查状态：**C1/C2 已达到事先定下的真实模型门槛，见 7.10；下面旧 F5 成绩记录的是
+当时的失败，不能当作 C2 的最终成绩。C3 没改生产代码，原 11 题 Runtime 复验通过，44 个 Context/
+请求也与原 SQLite 核对通过。四种本地模型候选都没达到质量和增益要求，所以继续关闭，见 7.9。
+筛查与相邻四个测试文件共 43 项通过；修正查询规范化对齐后，筛查文件 4 项通过（两组有重叠），
+失败记录保留。编译、修改范围 Ruff、差异、文档章节/链接/围栏和示例硬编码检查通过；3296 项只是
+收集，没有全部运行。C4 的 Provider、重试、工具失败和诊断四个文件 53 项通过；真实调用及边界见
+第 8 节，没有确认的生产缺陷。C4 最终编译、Ruff、差异、文档和反硬编码检查通过；3300 项只是收集，
+244 个生产模块与 C2 的字节相同。C5 也已完成：三路独立审查没有生产 P0/P1/P2；Context 113 项、
+检索 31 项、治理相邻 5 项通过。旧 Product 测试把参考当输入、TUI 测试等得不够，这两类验证缺口
+已修复并独立复核；相关 32 项和原 TUI/Line 七项全部通过，旧失败记录保留。
+97 个变更 Python 文件 Ruff、编译、差异和 3300 项仅收集通过；Textual 8.2.8 用现成缓存补跑，
+没有跳过，也没安装或联网。这些测试有重叠，不能相加。当前已知失败清零，Release Stop C 通过；
+见 [最终记录](../validation-v0.9-stop-c.md)。没有跑全量、L2–L4、Wheel/安装或发布级检查，也没有提交或发布。
+
+**F5 导航修订，对应正式版 15.1：**548 项相关/相邻测试通过、1 项 Windows 权限跳过，并做四组
+拿掉保护的反向验证。最终相邻补充 198 项通过/1 skip（有重叠）；冻结检索另 18 项通过，
+11 次 Product 和原分数线全部通过，44 Step、隔离违规 0。Prompt 直接相邻 3 文件另 70 项通过，
+合计 30 个不同文件 636 项通过、1 项跳过。用户本轮已明确授权真实模型调用；各模型的成功与失败都见
+[本轮验证记录](../validation-v0.9-skill-navigation.md)。正式真实测试有 96 个场景、370 次调用；严格通过
+分别为 qwen-plus 11/24、qwen3.8-max-0902 17/24、deepseek-v4-pro-0813 20/24；同 qwen max
+隐藏导航后为 0/24。当前默认模型还不能按稳定可用验收，不能用别的模型代替它通过。
+原冻结检索先因新增目录字段而拒绝，随后只更新目录绑定和文件校验值，题目、答案判断、分数线、
+预算和初始工作区没动。下方“不改 JSON／没调真实模型”是前一精度阶段的历史结果。
+没有跑全量、L2–L4 或 Wheel。
+
+
+**F5 精度整改与正式版 15.1 对应：**最终只执行 16 个具名文件，303 项通过，973.99 秒；其中包含
+19 项非样本用例和一次完整的 11 条冻结网格，共 44 个 Step。原来五条不达标题目都已修复：四项
+注入精度从 0.5 到 1，召回和首项相关度仍为 1；退役题的零命中从 0 到 1。Product 11/11 完成，
+11/11 达到原分数线，隔离违规为 0。语义题仍是 0，只达到事前允许的词法底线，不能说已懂语义。
+语料、题目、答案判断、阈值和 evaluator 摘要没改，生产代码没有按样本名字写例外。
+三个保护分别拿掉后，新测试都因真实错误结果失败，之后源码逐字节恢复；独立复核关闭尾连接符 P2。
+编译、11 个修改 Python 文件 Ruff、反硬编码和 diff 检查通过；只收集 3193 项，没跑全量或 L2。
+正式版及通俗版、ADR-0047、计划与验证记录已同步；Release Stop C 已通过限定审查和相关测试，发布检查仍待授权。
+
+
+**F5 当前开发验证：**两种界面/CLI/Product 相邻测试 274 项通过，治理/项目/架构最终确认
+145 项通过，新 CLI 配置 2 项通过。相邻大清单首轮 464 项通过、1 项失败，遗漏的项目目录查看已
+修复并包含在 145 项确认里；这些清单有重叠。冻结评估及真实准备/索引失败和取消 18 项最终通过，
+耗时 864.69 秒，其中重新跑了 11 次真实本地 attempt、44 个 Step。62 个修改 Python 文件 Ruff、
+编译、示例硬编码扫描及 diff-check 通过，core 只收集 3173 项而没有全量执行。两项保护反向
+验证确实拦住同名同版本换内容后的旧确认、以及语料文件漂移；恢复后 16 项在 3.39 秒内通过。
+首次 11 条冻结查询中，Product 全部完成、隔离违规为 0，但曾有 5 条精度/零命中未到原线。
+这些问题已由上方精度整改关闭；Release Stop C 已通过限定审查和相关测试，发布检查仍待授权。详见
+[F5 验证记录](../validation-v0.9-f5.md)，未跑全量、L2–L4、Wheel 或真实模型。
+
+
+**F4 当前验证与正式版 15.1 对应：**这次只运行明确列出的 27 个相关和相邻测试文件，
+收集 457 项，**456 通过、1 跳过，216.73 秒**。跳过项是 Windows 没有创建目录符号链接的权限。
+覆盖 Memory 生效资格、项目隔离、历史时效、SQLite 索引、统一预算、原文工具、请求重建和取消，
+也覆盖旧协议、缺失字段及未实现 semantic 配置的拒绝。首轮唯一失败是旧测试仍期待旧错误码，
+实际篡改已正确拒绝；同步断言后把上述清单全部重跑到绿色。
+
+另外临时拿掉三处保护做反向检查：撤销后的 Memory 会进入请求；改过 fact_slot 的冻结证明会被
+接受；Git 观察期间提交变化仍会被误记成已知版本。三个测试都因预期错误失败，恢复原代码后
+**3 项通过，2.10 秒**。这证明测试确实走到了要保护的真实路径。带空格标识的三个完整边界反例也通过。
+两份 Product 架构检查同步了 F4 必要的 Runtime 回调接线，Supervisor 和 PluginManager 没有改动。
+额外 9 个文件的架构、协议和请求检查 **190 项通过，4.34 秒**。它抓到了 Runtime 直接导入
+Workspace 观察模块的越层依赖；已移到 MemoryContextReader 来源适配层，原检查没有放宽。
+最终接线再跑 6 个相关文件，**55 项通过，77.86 秒**。最后补齐历史目录的 original_bytes 时，
+原文请求的检查也同步从同一 reader 核对大小；最终 7 个 History、Context 和统一编排文件
+**118 项通过，72.47 秒**，目录到原文披露和旧请求重建都通过。与前面的清单有重叠，不能简单相加。
+编译、37 个修改 Python 文件 Ruff、生产代码反硬编码扫描和 diff 检查都通过。9 份文档的
+547 个相对链接存在，33 个 Mermaid 块闭合且有合法图类型；正式版与通俗版 0–20 节及 7.7 对应。
+没有跑全量、L2–L4、Wheel、联网或真实模型，没有提交、推送或发布；以上是 F4 阶段证据，F5 验证另列；Release Stop C 没有运行。
+
+下面的旧阶段结果只说明当时的范围：
+
 **Release Stop B 修复后独立复审已通过：没有 P0、P1、P2，B-P1-01 已关闭。**
 这次重新检查真实代码、公开调用、本机 Git 官方说明和新跑出的结果，没有把上一轮完成报告直接当证据。
 source、消费目录和只查 source 的入口使用同一条名册与管理目录核对；主／linked 目录分类正确，
@@ -1542,7 +2484,7 @@ source、消费目录和只查 source 的入口使用同一条名册与管理目
 取证都被拒绝，项目与 Memory 账本逐条不变；恢复指针后，同一次准确审批成功，head 从 3 到 4、
 生效事实从 1 到 2。唯一跳过仍因 Windows 不能创建目录符号链接。29 个 F3 Python 文件 Ruff 通过，
 复审前后字节没有变化；核查了修复阶段旧代码会触发 8 项失败及正确代码恢复的日志，但没有冒称重跑。
-完整记录见[复审第 8 节](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#8-修复后独立复审)。本轮只改文档，F4 没有开始；没有跑全量、L2–L4、Wheel、联网或真实模型，也没有提交。
+完整记录见[复审第 8 节](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#8-修复后独立复审)。Stop B 复审当时只改文档；当前 F4 见 7.7；没有跑全量、L2–L4、Wheel、联网或真实模型，也没有提交。
 文档检查通过：10 份文档的 522 个相对链接有效，32 个图代码块闭合，两版 0–20 章对应；配置和
 阶段测试清单一致，没有新增秘密形态、乱码或差异空白错误。
 
@@ -1555,7 +2497,7 @@ source、消费目录和只查 source 的入口使用同一条名册与管理目
 9 项中 8 项因原来的身份错误失败、1 项仍过（28.17 秒），随后逐字节恢复修复代码。
 源码/测试编译、两文件 Ruff、生产文件防硬编码扫描通过；完整清单和夹具修订说明见
 [审查记录第 7 节](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
-该阶段只是修复和定向确认；后续独立复审结果见本节开头。F4 未开始。没有跑全量、L2–L4、
+该阶段只是修复和定向确认；后续独立复审结果见本节开头。Stop B 时 F4 尚未开始；当前 F4 见 7.7。没有跑全量、L2–L4、
 Wheel、联网或真实模型，也没有提交、推送、发布。
 
 **v0.9 Stop B 首审历史（修复前）没过：没有 P0，有 1 项 P1，没有另外登记的 P2。** 临时真实 Git 反例
@@ -1584,7 +2526,7 @@ project-inherit: 操作 id 误认为事件流；现在说明其用途，并检�
 2 个反例失败。随后按原字节恢复，5 项确认通过。源码和测试编译、29 个改动 Python 文件 Ruff、
 19 个生产文件反硬编码扫描、限定收集和 diff 空白检查通过。9 份文档的 500 个相对链接、32 个
 Mermaid 块、0–20 章节对应与 Memory 配置字段检查都通过。没有全量、L2–L4、Wheel、联网、
-真实模型、提交或推送。F3 实现与限定验证完成，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），F4 未开始。
+真实模型、提交或推送。F3 实现与限定验证完成，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），Stop B 时 F4 尚未开始；当前 F4 见 7.7。
 
 
 **两项 P2 修复与正式版 15.1 对应：**只改了 Context 去重、精确匹配和两份对应测试。
@@ -1638,7 +2580,7 @@ None；TUI 先扣除新增 Context reference，再正确统计 Product 和对话
 工具或注入正文，以及 Context/History、TUI 检查页、请求重建和旧协议拒绝。五组反向检查临时引入提示词
 泄漏，或移除目录收据、资源摘要、Lease 有效性、SDK 拒绝工具授权字段的保护；测试确实因对应问题
 失败，随后逐字节恢复了源码。编译 src/tests 和本轮 **23 个 Python 文件 Ruff** 均通过。测试从隔离空临时
-目录运行，不读取真实 `.env`；没有全量、L2、Wheel、联网、真实 API、提交、推送或发布。F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工。
+目录运行，不读取真实 `.env`；没有全量、L2、Wheel、联网、真实 API、提交、推送或发布。F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查和相关测试，发布检查仍待授权。
 
 **v0.9-F0-C 最终定向／相邻门禁：**同一组 **38 文件收集 1104 项，1100 passed, 4 skipped in 31.98s**。
 新 History 四文件 **81 项**（reader 37、requests 12、Tool 16、Runtime 16）已包含在 1100，不再加一次。
@@ -1780,15 +2722,35 @@ GitHub CI 现在有两个 Job：Linux 上用 Python 3.12 和 3.13 安装 `.[dev,
 
 ## 16. 当前最需要保持清醒的地方
 
+B+ 目前一次搜索一份已保存的大输出，不搜小结果，也没有跨多份输出或语义检索。它仍要读当前会话的账本并扫描原文；给模型的片段小，不表示扫描、磁盘和整次模型请求也都有上限。分开显示命中行和附近行有助于防止串记录，但不能保证任何模型每次都判断正确。
+
+大结果能读回，不等于模型总能选对和翻完；当前只控制单个工具结果的呈现，整批结果和完整请求仍可能太大。原文仍占磁盘，读取器也不是流式的。C 会折叠旧结果，字节模式在下一轮之前检查，token 模式在每一步请求准备时检查；E0 已能估算完整请求并拦截超限；D 已支持可选模型摘要；E1 已可在后续步骤收起旧历史，E2 已完成，E3 已有可读超限说明。
+
+自动识别不等于猜测：仍需先配置项目能力并确认这个文件夹的项目选择。服务商快捷项不证明账号已开通模型，网络认证要实际请求才能确认。加密记住密钥目前只支持 Windows 当前用户；其他系统用已有环境凭据。旧记录保留但不迁移。
+
+把原问题再显示一次会增加模型输入量，但不会让参考资料越过自己的配额。新版拒绝旧 Session 1–9，所以需要新数据目录和新会话，旧账保留。真实模型在每页仅两条消息时有过只读第一页就回答的情况，旧呈现方式也如此；换题重复回答已修复，自动把所需历史页都翻完仍不是保证。
+
+复制只取当前保留的最多 2,000 行中选中的显示文字。Windows 系统剪贴板已验证中文、emoji 和换行能
+写入再读回，被其他程序占用时会提示；其他平台仍看终端的 OSC 52 支持。记忆表单仍要求 CONFIRM，
+不会自动更新检索索引，见 13.11。
+Ctrl+B 只展开或收起显示区域，不会启用还没配置的 Product，也不会取消运行中的任务；重启后恢复默认显示方式。
+
+配置面板的边界也要说准（13.11）：知识/记忆和任务配置已有中文字段与可修改预设，但复杂预算还需要自己理解确认；不会安装插件、直接改写活动 Runtime 或批准 Memory；本工作区明确记住的项目选择可以通过原校验自动关联新会话；应用会先收尾再重建。保存文件只记面板字段，
+临时密钥不跨进程保存。本地检查通过也不等于认证、网络、插件激活、旧会话协议和发布检查通过。
+
+F5 原来的五条精度/零命中问题已在同一题目上修好，没有按示例名字特判或降低分数线。
+这仍是小型词法基线：语义题为 0，覆盖判断也可能删掉有用的部分资料或留下同等覆盖的噪声（7.9）。
+Release Stop C 已通过，发布检查还没做，不能因此宣称通用语义检索或 v0.9 发布完成。
+
 **B-P1-01 修复后复审已关闭；Stop B 已通过，没有 P0/P1/P2。** source 与消费方用同一条 Git 名册／
 admin 核对规则，坏指针不能读记忆或批准新事实，合法主 checkout 不再因 source 是 linked
 而被误拒。Git 名册没有证明的布局仍不可用；路径指纹不是永久身份证，多条事件流也不是同一
-瞬间的原子快照。没有加第二套工作区生命周期，F4 未开始；证据见
+瞬间的原子快照。没有加第二套工作区生命周期，Stop B 时 F4 尚未开始；当前 F4 见 7.7；证据见
 [Stop B 审查](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md)。
 
-F0-C 当前会话原文分页／请求已通过限定验证；F1 已有 Skill 目录和只能在有效 Lease 内读取的资源；F2 已接 Skill 选择／模型披露、排名与 FTS；F3 已能保存和人工管理项目 Memory（7.6），B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；仍没有 Memory 检索或 Context 注入、单独原文模式、跨会话原文或实时工作区版本观察。新旧程度固定 unknown，原文只给获授权的那一步，
-不会留在 Surface。默认空说明仍会发送，也没新增治理页；字节预算不是模型 token 窗口。新 Session
-只接受 context_protocol=3，旧标记 1/2、物理 schema 1 和无标记旧账都不迁移，只能用旧发行版读取或新建目录。
+F0-C 当前会话原文分页／请求已通过限定验证；F1 已有 Skill 目录和只能在有效 Lease 内读取的资源；F2 已接 Skill 选择／模型披露、排名与 FTS；F3 已能保存和人工管理项目 Memory（7.6），B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已有 Memory 检索、Context 注入和显式真实版本观察（7.7）；没有单独原文模式或跨会话原文；没有观察证明时仍为 unknown，原文只给获授权的那一步，
+不会留在 Surface。默认空说明仍会发送，F5 治理见 7.8；字节预算不是模型 token 窗口。新 Session
+只接受 context_protocol=10，旧标记 1–9、物理 schema 1 和无标记旧账都不迁移，只能用旧发行版读取或新建目录。
 
 1. **SQLite writer 的边界**：同一个本地数据库只有一个 writer，不同 Stream 也会有界排队；默认 5 秒
    后报稳定 busy。绕过 Store 直接改数据库、网络盘和任意断电设备不在保证里。事件事务安全也不等于
@@ -1802,7 +2764,7 @@ F0-C 当前会话原文分页／请求已通过限定验证；F1 已有 Skill �
 5. **时间线是一道输出面，所以它是被当作不可信内容处理的**：屏幕上的每个字都先经过清洗（去控制字符、强制一行、限长），`shell` 的命令和运行时错误的消息一律不显示。残余边界要记住：注入文字里"看起来像标记"的内容仍会作为该行内部的普通文字出现，保证的是"不会变成第二行"而不是"不会出现形似标记的字符"。
 6. **Model Attempt 的证据上限**：崩在模型调用中途时，Attempt 现在会被补上结束事件，但“不知道”就是“不知道”——恢复只能说明有没有完整答复，找不回当时的 token 用量和 finish_reason。
 7. **CLI 体验**：`chat` 已经能连续对话、实时显示每一步和每次工具调用、卡住时报进度、按一次 Ctrl+C 只取消这一轮，但离成熟的交互式 Coding Agent 界面还有距离——没有逐字流式输出、没有转圈动画和颜色、没有执行前审批，Turn 运行期间也不能继续输入；`run`/`resume` 这两个命令目前还没有接时间线。
-8. **子进程输出会占磁盘**：捕获用的临时文件目前没有大小上限，一个失控命令可以把临时目录写满；上层对 Tool Result 的截断只是把读出来的文本剪短，减不掉读取之前已经占用的磁盘。另外，孙进程继承了这些句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭——这和“不管理孙进程”是同一条边界。
+8. **子进程输出会占磁盘**：捕获用的临时文件目前没有大小上限，一个失控命令可以把临时目录写满；上层只把给模型的预览缩短，完整结果还会保存到执行账本，减不掉捕获或数据库占用的磁盘。另外，孙进程继承了这些句柄时，Windows 会把临时文件的删除推迟到最后一个句柄关闭——这和“不管理孙进程”是同一条边界。
 9. **中断的退出码不由我们说了算，而且硬中断没有收敛**：空闲时按 Ctrl+C，程序内部以 130 返回；硬中断（Ctrl+Break、直接关窗口）由操作系统终止进程，实测是 `3221225786`，收敛代码和所有提示都不会跑。所以别把退出码当契约，真正的兜底是**启动时就已经打印在屏幕上的恢复命令**（含 data 目录）加崩溃恢复。
 10. **等待提示只是屏幕上的东西**：它不是事件、不落盘、不可回查，日志里永远看不到“当时等了多久”，完成耗时也只出现在屏幕上。要可审计的耗时，得在 Provider/工具那一层把用量和时长落盘，而不是把界面状态写进账本。
 11. **恢复命令不是完整配置快照**：验证命令一律不回显（任意 Shell 文本，证明不了里面没密钥）；命名插件 Verifier 会安全地写回命令，但账本只记验证结果，不把它的选择名当成 Session 兼容身份，所以别手动删掉 `--plugin-verifier`。Base URL 也只按结构规则挡（内嵌用户名密码、带查询参数），这不是万能的秘密识别器。别把它读成"秘密永远不会出现"，要读成"这几条具体规则可以验证"。另外 Scripted 的响应游标不跨进程保存，重新加载脚本会从头开始。
@@ -1821,14 +2783,7 @@ F0-C 当前会话原文分页／请求已通过限定验证；F1 已有 Skill �
 24. **SQLite 启动成本**：每次打开都会完整校验 schema、integrity 和全部 history；历史很大时线性变慢。
 25. **写文件 Tool 与 Artifact capture 是两回事**：原来的 patch/write Tool 适合小而精确的文本修改；v0.7-D1 的 Git capture 能冻结完整 candidate tree 和 binary Patch，但它只产证据，判断与推广由 v0.7-D2 在另一层做。
 26. **Benchmark 代表性**：一个固定加法 Bug 只能证明管线，不代表复杂 Coding 水平。
-27. **自动压缩已经有了，但默认摘要器不是模型**：M3 之后宿主可以在每轮对话开始前自己压缩闭合历史，账本记录
-    能对上精确来源、切口、策略和摘要器身份，摘要也会停在被替换历史原来的位置，压缩前后的历史请求都还能逐字节
-    重建。但默认写摘要的是一个确定性的“有界转录摘要”，不是模型总结。这不是省事：这个系统里唯一能审计、能计费、
-    能取消的模型调用通道要求每一条冻结的请求都等于当时的 Surface 投影，而摘要请求按定义不是那个投影；绕开它直接
-    调 Provider 又是一次没人记账的调用。所以要真正的模型摘要，得先单独设计并授权一条“不属于某一轮对话、但同样
-    可审计可计费可取消”的模型调用协议。另外，触发用的阈值是模型可见对话的规范 UTF-8 **字节数**，不是 token：
-    不同模型的分词比例差很多，别把它当成“还剩多少 token”；我们宁可给一个诚实的字节数，也不给一个编出来的
-    token 数。
+27. **模型摘要已可选，但不是事实保证**：D 把模型生成放进同一轮的普通步骤，原许可/计费/取消仍生效。摘要也花 token，可能漏掉细节；需按原文查证。E1 只能收起闭合旧历史；E2 已按 token 选择参考；分批摘要尚未实现，摘要请求超限也会拒绝。
 28. **Alpha API**：现在的公开类名和协议在 v1.0 前仍可能调整。每次切换要说明怎样拒绝旧数据；只有另获
     迁移授权才设计搬数据的办法，不提前承诺一个能兼容所有旧版本的转换器。
 29. **L1 的“单独目录”和“不执行”仍是流程纪律，不是沙箱**：Plugin Creator 只给模型 Prompt 和只读指南；模型写出的 `CANDIDATE.md` 也只是待审卡片，不是安全证明。L1 不能说“测试通过”或“能力变强”，L2 必须在候选之外独立 build/test，L3–L4 才能做比较和人工批准。
@@ -1853,16 +2808,28 @@ F0-C 当前会话原文分页／请求已通过限定验证；F1 已有 Skill �
 47. **通过检查 + 有人签字，仍然不等于“这个改动是对的”**：D2 只能证明这份 Patch 干净地应用到了那个精确 commit 上、跑完了宿主**事先定死**的那几条命令、并且有人对这份具体内容交回了精确摘要。检查命令跑在同一个用户权限下，那是能力和证据边界，不是操作系统隔离；另一个有目标仓库写权限的进程照样能挪分支，系统只保证发现并拒绝。另外 `write-tree`/`commit-tree` 会在分支移动前先把对象写进目标仓库，被拒绝的推广可能留下没人引用的对象——没有分支指向它们，但清理仍要人显式做。
 48. **推广没有“自动”这一档**：没有自动批准、没有自动挑目标、没有 CLI，也没有模型可见的 approve/merge/promote 工具。目标只支持宿主管理的裸仓库，不动任何普通 checkout；分支只能靠 `update-ref` 的比较后交换移动，失败之后不做自动回滚去覆盖别人后来写进去的东西。
 
-v0.8.0 已发布，v0.9 的 F0-A/B/C、F1/F2 已实现。第 7 节所述 Session 3、Context 2、
-context-json-v3、SQLite 2 和 Skill exact/FTS 已有真实代码；F3 已接项目绑定和 Memory authority，
-B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）。Memory 检索、真 Sandbox、隔离插件和多 coder 集成仍未实现。Stop A 首审没有 P0/P1，两处 P2 已在原负责模块修好，定向确认见第 15 节。
+v0.8.0 已发布，v0.9 的 F0-A/B/C、F1/F2 已实现。第 7 节所述 Session 10、Context 9、
+context-json-v9、SQLite 2 和 Skill exact/FTS 已有真实代码；F3 已接项目绑定和 Memory authority，
+B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）。F4 Memory 检索已接入；真 Sandbox、隔离插件和多 coder 集成仍未实现。Stop A 首审没有 P0/P1，两处 P2 已在原负责模块修好，定向确认见第 15 节。
 A-P2-01 让不同披露层级正确共存，真正重复仍被拒绝；A-P2-02 保留完整路径并检查两侧标识边界。
 精确匹配仍不做模糊查找、别名或自动纠正路径，也不绕过宿主选择；资源正文没有放进 FTS。
-披露请求仍只对本轮紧邻下一步有效，失败、取消或放不下都不会顺延。
+披露请求首次仍只对本轮紧邻下一步有效；真正注入的正文按 7.10 在本轮逐步保留，失败、取消或放不下都不会顺延或复活。
 原始反例与修复证据见 [审查记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。P2 修复阶段未提前做 F3；随后授权的 F3 见 7.6、15，
 没有运行全量／L2；后续仍只在明确授权的相应检查点运行。
 
 ## 17. 改一个地方时，还要想到哪些地方
+
+修改摘要时必须连着核对来源、费用、取消/恢复、历史阅读、旧工具折叠、配置和重放；只改几句提示而不核对旧请求身份，会破坏可追溯性。
+
+改 token 计数还要查请求组装、原压缩服务、计量记录核对、启动配置、恢复命令和界面。重点验证“算的是同一份请求”“取消/抢写不能调用模型”“估算不冒充真实 usage”；改分词算法或库版本不能悄悄改旧记录含义。
+
+改 C 要一起查：谁写折叠、怎么投影、原文身份是否核对、History 能否找回、Context 是否误列目录、界面是否如实说、旧请求能否重建。只把显示变短还不够；真实测试就发现过目录错把工具折叠当摘要，已补定向和反向回归。
+
+改工具输出时，要一起看保存规则、目录/读回工具、ToolRuntime、Result、恢复器、不变量检查和默认装配。测试必须证明“真实执行只发生应有的次数、原文能找回、跨会话不能读、目录不会错页、旧请求能重放”。改关键词搜索还要核对文字与读取位置是否对应、重复命中有没有漏、长行是否装得下，以及真实模型有没有把旁边记录当作答案。
+
+修改启动流程时，要一起检查配置解析、首次向导、密钥保存、旧数据入口、会话选择、项目核验和记忆索引；不把这些界面职责塞进 AgentLoop。
+
+修改“当前问题”定位时，要一起看 Context 构建、Session 协议、系统提示，检查新输入绑定测试、History、请求重放和相邻 Product 请求。两个上下文版本也必须同时更新。
 
 改 F3 时，要一起看项目关联、Memory 状态和来源、api/memory 配置、Runtime 门面、提议工具、
 Product 继承连接、Workspace 的 Supervisor/Git 和历史闭合规则；同步 1、3、6、7.6、9、13、15–17 及计划合同。
@@ -1872,10 +2839,15 @@ Product 继承连接、Workspace 的 Supervisor/Git 和历史闭合规则；同�
 RequestBuilder、AgentLoop 及对应测试，另外检查 Lease、Budget、Recovery 和 Product 读账。
 这会影响两版第 1、3–7、11–13、15–17 节及正式版 20.33／本版 20.27，不能只改一张配置表。
 
+改检索精度时，要同时检查共享排名、Context 最后装入预算、Skill/Memory 当时的来源证明、
+Session/索引版本和真实模型请求的评分；两版同步 7.5/7.7/7.9、11、13、15–17。
+非样本测试在 test_retrieval_precision.py，不能为了候选改评估题、答案或分数线。
+
 这是防止“AI 改得很快，但没人知道影响范围”的检查表：
 
 | 你修改了什么 | 通常还要检查什么 | 为什么 |
 |---|---|---|
+| 语义检索可行性复测 | `tests/local_retrieval_screen` 的捕获/试算、原题与门槛、模型摘要、原检索和 evaluator 回归 | 只试算合格材料，没过门槛就不能假装产品已经能用向量 |
 | AgentLoop | Continuation、事件顺序、E2E、取消和恢复 | 一处顺序变化可能让整个生命周期不配对 |
 | Event 类型或字段 | Projector、Invariant、Recovery、Inspector、Replay | 所有消费者都依赖事件协议 |
 | 事件广播或发布顺序 | `session/event_feed.py`、Runtime 装配、Feed 契约测试 | 顺序或复印错了，界面就会对已发生的事撒谎 |
@@ -1922,6 +2894,9 @@ RequestBuilder、AgentLoop 及对应测试，另外检查 Lease、Budget、Recov
 | 目录或开发流程 | AGENTS、两份上下文、README/CI | 下一次 AI 必须找到新的入口 |
 
 每次只需更新真正受影响的章节，但不能跳过检查。例如只给 README 改错别字，不必重写 ToolRuntime；修改 Tool Result 字段，则一定要检查第 6、9、11、12、15、16 节。
+
+F5 改治理时，要一起验证两种界面的确认/关闭、原写账规则的并发检查和历史 Context 重读；
+改评测时，要一起验证输入拒绝、真实准备顺序、失败收尾、项目绑定、指标和冻结摘要。
 
 ## 18. 以后每次 Vibe Coding 固定怎样进行
 
@@ -2204,7 +3179,7 @@ Registry 先写精确 Artifact 和不可变记录，再把状态从 stable 改�
 
 插件现在通过公共 `traceh.plugins` SDK 的 `register_skill()` 交一份明确的材料：`SkillContribution`
 包含不可改的 `SkillDescriptor` 和正文 `SkillSectionContent`。目录列出 id、版本、实际贡献插件、标题、
-摘要、标签、兼容条件，以及 section/resource/chunk 的字节数和 SHA-256；字段不能夹带工具授权、执行
+摘要、标签、兼容条件，以及 section/resource/chunk 必填的标题、说明、字节数和 SHA-256；字段不能夹带工具授权、执行
 对象或绝对路径。Skill id 在整个候选里唯一；sections/resources 按 id 排序，标签去重排序。
 section tier 目前固定是 section；chunk 是作者明确划好的、按字节位置排列且不重叠的完整片段，不能
 切断 UTF-8。宿主按原始 bytes 对账，Windows 的 CRLF 也不能偷偷改成 LF 后再算摘要。
@@ -2217,7 +3192,7 @@ section tier 目前固定是 section；chunk 是作者明确划好的、按字�
 原 Activation 清理，没有另造资源计数器、后台任务或插件加载器；F2 索引由原 Store 管理。
 
 宿主用 `SkillPolicy` 明确配置五个正整数上限：Skill 个数、整份目录字节、单份摘要字节、全部正文合计
-字节、单个文件字节。默认 None 就明确拒绝 Skill 注册，没有暗藏数值。文件 root 由宿主用
+字节、单个文件字节。单份摘要上限覆盖 Skill、章节、资源和分块。默认 None 就明确拒绝 Skill 注册，没有暗藏数值。文件 root 由宿主用
 `SkillResourceRoot(plugin, path)` 提供，每个插件 id 只能有一个绑定，而且 id/version 都要对上；
 缺失、版本不对或多义就失败。只贡献字符串 section 可以不设文件 root。文件必须是 root 内普通文件，
 拒绝绝对路径、上跳、非规范路径、Windows 设备名／流、符号链接、reparse point、越界和超限；
@@ -2250,8 +3225,16 @@ flowchart LR
 账本中的 Composition 只保存有界目录和摘要，不放正文或宿主绝对目录。Context 必须绑定同一份目录：
 未配置 F2 时空目录说来源没有提供，有目录说还没选择。启用插件本身不会把正文、标题或摘要
 自动放进 system prompt、Surface 或请求消息，更不增加 Tool；F2 显式选择后按第 7 节逐步披露。旧请求只凭当时事件重建，不去加载
-当前 Wheel。F2 当前 Session marker=3、Context 外层=2、renderer=context-json-v3、SQLite schema=2；
+当前 Wheel。当前 Session marker=10、Context 外层=9、renderer=context-json-v9、SQLite schema=2；
 旧版本明确拒绝。持久选择、检索和逐级披露已接入，第 7 节说明边界；仍不代表 v0.9 已发布。
+
+### 19.13 F5：先审阅，再由原插件负责人执行（正式版 19.17）
+
+两种界面先通过原 Manager 导入明确选择的可信插件，显示 Manifest，再确认 setup；确认时检查
+的还是原对象与同一摘要，失败由原流程回滚。Skill 选择会显示 descriptor 和目录摘要，实际注入
+另外列出内容摘要、来源、层级和字节。--context-config 可以明确输入限额和资源根。
+新的 traceh-reference-skills 示例只提供两项内联 Skill，让旧项真的激活后再退役；没有 Tool、
+Prompt 或自动启用。已做源码 Entry Point 定向测试，没有做 Wheel 和离线安装，详见 7.8。
 
 ## 20. 多 Agent 是怎么起步的（身份 + 收件箱 + 执行 + 生命周期 + 模型 Tool）
 
@@ -3494,6 +4477,8 @@ F3 本身没有做 benchmark 重构和旧 eval manifest 切断——那是 20.24
 
 ### 20.24 v0.7-F4：让「跑得怎么样」这件事只有一个答案（正式版 20.30）
 
+本节保留 v0.7-F4 的实施记录；当前 v0.9-F5 的根版本 2、真实项目准备顺序和检索评估见 7.8、第 12 章。
+
 正式版对应 20.30，设计决定在 [ADR-0033](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)。这一轮**没有增加任何产品能力**，只是把 v0.6 那个「复制一个目录、跑一个脚本 Agent、报个成功率」的 benchmark，换成一个真正度量当前主线的宿主。
 
 #### 为什么不另开一条 benchmark
@@ -3766,7 +4751,7 @@ Catalog、Agent、Session、路径反查和安全删除仍核对同一个完整�
 M3+M4 已经收口，后面仍依次做 v0.9 上下文／Skill／项目记忆／历史展开、v0.10 Sandbox、v0.11 MCP
 Client、v0.12 受控动态并发 Workflow，最后进入 v1.0 RC。计划修订后，这次获准完成了 F0-A 的设计与
 ADR；随后 F0-B 最小请求主线和 F0-C 当前会话历史展开都完成最终限定门禁，F0-A/B/C 本轮授权实现
-收口。F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，三个审查停止点保持原顺序。
+收口。F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查和相关测试，发布检查仍待授权，三个审查停止点保持原顺序。
 Release Stop A 已通过没有 P0/P1 的独立审查门槛，2 项 P2 已修复并通过定向确认，证据与边界见第 15、16 节。
 
 计划现在把三件事分清：**谁能证明事实、谁能批准动作、上下文先装哪些内容**。当前任务／流程／推广／
@@ -3924,7 +4909,7 @@ v0.8 发布前置和 F0-A/B 已经完成；F0-C 当前实施与配置见第 7、
   用同一个 `source_seq` 限定证据。成功但没有命中时照样记空内容；还没读完就失败可以没有 Context，
   Context 已记好但预算拒绝可以没有模型请求。写入失败／取消先等工作收尾，再查是已写、未写还是未知，
   不能猜答案或补造调用。恢复不重新检索，同一步的 Provider 重试复用原快照；旧格式没有 Context 时
-  不偷偷补空记录。F2 当前唯一标记为 `context_protocol=3`，读账、检查、恢复、重放和请求构建
+  不偷偷补空记录。F2 当前唯一标记为 `context_protocol=10`，读账、检查、恢复、重放和请求构建
   统一拒绝旧 1/2 和无标记 Session；EventEnvelope 1、M3 format 2 不变，Context 外层与数据库为 2。
   来源仍为 Session 范围，默认空策略、原八项加 skills、空说明和旧请求重建见第 7、13 节，
   没有跨账“绝对最新”承诺。
@@ -3954,13 +4939,13 @@ v0.8 发布前置和 F0-A/B 已经完成；F0-C 当前实施与配置见第 7、
   不重复）、角色／attempt 汇总、K、片段相关性、失败分母和成本；F5 在看到候选结果前锁定语料和通过线。
   中文、英文、混合代码标识和换 Session 后问项目目标都要覆盖；跨项目泄漏必须为 0，缺少其他阈值只能
   报分数，不能声称通过。Memory 引用或评测不会顺便开放跨 Session 原始聊天搜索。
-- **先做什么、怎么验证。** F0-A 设计、F0-B 主线与 F0-C 历史展开本轮授权实现已收口，F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工。
+- **先做什么、怎么验证。** F0-A 设计、F0-B 主线与 F0-C 历史展开本轮授权实现已收口，F1 Skill 贡献与 F2 持久选择／检索／披露已实现，F3 项目归属与 Memory 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查和相关测试，发布检查仍待授权。
   F0 不提前造完整 Skill/Memory 或 UI；只读当前 Session 历史就只记这个范围，不能假装已经绑定了项目或
   获准读取项目记忆。后续每个负责模块都要证明自己的真实路径。F0-A 的 19 项旧接缝检查是设计依据，
   不冒充新协议验证；F0-B 三个新模块 59 项包含在最终 36 文件的 `1076 passed, 3 skipped` 中，详见第 15 节。本轮没有
   全量、L2、构建或联网证据；F0-C 最终 38 文件 1104 收集、1100 通过、4 跳过（含新 History 81），两分区
-  无 P0/P1，详见第 15 节。F2 当前配置是原八项加 nullable skills，内部十五项 Skill 检索参数
-  均由宿主明确给定（第 13 节）；跨来源通用配置留到 F4。
+  无 P0/P1，详见第 15 节。F4 当前配置是十二项，Skill/Memory 各使用同一十五项 ReferenceRetrievalPolicy，
+  均由宿主明确给定（第 13 节）；跨来源检索已按 ADR-0045 接入。
   停止审查不自动触发全量；完整无筛选
   全量本身包含真实 L2，要事先明确授权和构成，避免不知情重复。用户禁止全量／L2 时就如实写“未运行”。
 
@@ -4305,7 +5290,7 @@ ESC、CR、NUL、双向控制等字符显示为转义文字。默认摘要、主
 显式关闭 markup，所以模型写 `[bold]` 只会看到这几个字符，不会执行 Rich/Textual 标记。错误只显示
 稳定 code/type，不把 Provider 原始正文、header、traceback 或本机路径塞进屏幕。
 
-关闭窗口、终端 EOF/teardown 或 Ctrl+C 时，App 会先切到看得见的 closing 画面，逐项显示 operation、
+关闭窗口、终端 EOF/teardown 或 Ctrl+Q 时，App 会先切到看得见的 closing 画面，逐项显示 operation、
 Chat driver、observer、Product host 和 Runtime 是否已经关闭；然后才等待各自原 owner 收敛。普通 Turn
 仍由 Runtime owner 取消，Product start 的 caller cancellation 仍由 Product control owner 收敛。UI 的
 关闭标记现在与 Textual 自己的内部 `_closing` 分开，不能再出现“资源其实关完了，最终退出消息却被自己
@@ -4358,7 +5343,7 @@ RichLog 行；任务对话只用打开时已经取得的 snapshot 重画，没�
 确认截图后，N12/R4 又删除了任务对话里屏幕、单条消息和 RichLog 三层固定截断，并完成上述分区；同一
 EventStore→精确 Session→snapshot 主线没有改变。最终复审为 **P0=0 / P1=0 / P2=0**，提交门禁记在验证文档。测试不仅
 点按钮，还故意让 observer 和 START 卡住、让事实 20 秒不动、让两次读取乱序、让 Product/Workflow 分歧、
-让 Ctrl+C 在资源关闭一半时停住，并验证窄屏折叠与 typed confirmation。另有一条完全确定性的真实本地链：
+让 Ctrl+Q 在资源关闭一半时停住，并验证窄屏折叠与 typed confirmation。另有一条完全确定性的真实本地链：
 真实 Product host、auto Router、固定 multi 三角色、managed Git、Verifier、Review 一直跑到
 `awaiting_approval`。这条链实际抓到了“任务已经 durable，但旧 proposal 还压着状态表，导致 Review 齐全
 也没有批准入口”的 bug。分别拿掉 operation 启动时的立即刷新、拿掉读取排序锁、恢复旧 proposal 抢占时，
@@ -4613,7 +5598,7 @@ reader bundle 拒绝，以及两次人工压缩后的精确请求重建。最终
 ### 20.33 M3：宿主自己会压缩上下文了，而且以前的请求还能一模一样重建（正式版 20.39）
 
 **修的是什么。** 会话一长，给模型的请求就一直变长，以前只能靠人自己发现、自己写摘要、自己敲一次 `compact`。
-M3 把这件事交给宿主：每轮新对话真正开始之前检查一次，超过配置的字节阈值就把已经结束的旧对话换成一段摘要。
+M3 把这件事交给宿主；C 已先收起旧工具结果，E0 又在 token 模式下改为首个请求准备时检查完整大小。字节模式仍在轮前检查；规则摘录为默认，D 可选模型语义摘要。
 
 **顺带修掉的两个旧毛病。** 一是旧的记录格式太薄：只记了“替换了哪几条”和一条自由格式的消息，既没有内容指纹、
 也没有策略和摘要器身份，事后根本回答不了“谁按什么规则、针对哪段精确历史做了这次压缩”；而且它用一对 XML
@@ -4621,10 +5606,9 @@ M3 把这件事交给宿主：每轮新对话真正开始之前检查一次，�
 旧代码按写入顺序排，于是“旧对话的摘要”会排到更新的对话后面——自动压缩每轮都跑的话，它会稳定地排到用户刚说的
 那句话后面，描述一段从没发生过的顺序。
 
-**做在哪一刻，为什么是这一刻。** 做在一轮对话真正开始之前：这时同一个会话只有一个主人在跑，没有任何一轮开着，
-写下的摘要必然排在这一轮的用户消息和这一轮全部模型请求之前。压缩不算这一轮的一部分——失败了历史一个字不动，
-这一轮照样用完整历史跑完，只额外记一条“这次压缩没做成，原因是这个稳定错误码”。为了一次维护失败去拒绝用户的
-提问，才是更糟的选择。
+**做在哪一刻。** 字节模式在新一轮入账前检查；E0 token 模式等首个请求准备时，资料已经选出再
+检查。同一个会话主人、同一个压缩服务，只处理结束的旧历史，摘要仍按原位置显示。失败要说清楚已经
+折叠了多少；完整请求最后仍要通过 token 上限，不能因维护失败就无限发送。当前问题和工具组不会被剪断。
 
 **碰不到的东西。** 切口只能落在真正结束过的那一轮的收尾上，所以当前这句话、正在进行的一轮、一个 Step、以及
 “模型请求了工具”和“工具的结果”都不会被拆开；自动压缩还会按配置留下最近 N 轮完整对话。宿主写给模型的
@@ -4641,11 +5625,7 @@ ProductTask 状态证据根本不在可替换的类型清单里，这条现在�
 序号，所以压缩之前冻结的请求重建出来还是原始历史，之后的才是摘要后的历史；重放不会再叫摘要器、不调模型、
 也不读“今天的状态”。测试直接拿当初冻结的请求和一次全新重建做逐字节比较。
 
-**一个必须说清楚的限制。** M3 **不带模型摘要器**，这是决定不是遗漏。这个系统里唯一能审计、能计费、能取消的
-模型调用通道要求每条冻结请求都等于当时的 Surface 投影，摘要请求按定义不是；硬记进去会让所有压缩过的会话在
-请求重放校验时确定性报错，绕开它直接调 Provider 又是一次没人记账的调用。所以默认给的是确定性的有界转录摘要，
-宿主可以注入自己的摘要器，但受同一条约束。摘要器手里只有“会话 id + 要被替换的那几条消息 + 字节上限 + 留了几轮”，
-没有账本、没有工具、没有任何审批权限。
+**当前摘要方式。** 默认仍为规则摘录；D 已让语义摘要使用当前轮的普通模型步骤，先冻结旧原文，再走原许可、计费、重试和取消，下一步回答你。它不会获得工具或审批权限。详细流程见 12 节，与正式版 20.39/12.2 对应。
 
 **抢跑和取消。** 挑历史时看到的账本位置原样带进写入，由数据库的比较后交换把关；摘要期间会话动过就写不进去，
 然后从头重读重挑，绝不重投旧的那份。取消先等已经发出的写入收敛，再重读账本确认到底写没写，然后照原样把取消
@@ -4654,9 +5634,7 @@ ProductTask 状态证据根本不在可替换的类型清单里，这条现在�
 **屏幕上一致。** Line 和 TUI 读同一条账本记录，一个打英文一行、一个打中文一行，都只报数量和来源，不显示摘要
 正文、原话、指纹或提示词。
 
-**当前还不能让模型自己翻回原文。** 原始事件确实没有删除，所以宿主和审计代码能追溯；但当前没有通用的
-模型历史展开工具，也不会把展开原文按 Step 临时注入。这个能力已经写入 v0.9 冻结计划，做法是“默认摘要和
-目录、需要时读 exact block、只给一个 Step、随后退出 Prompt”，不能把整段历史作为普通工具结果永久带回 Surface。
+**当前已经能查回原文。** v0.9 的 History 目录和按需原文页已接入；B/B+ 又提供工具结果目录、关键词搜索和分页阅读。C 折叠沿用这些入口，不再把工具预览长期带进请求。原文是否真的被模型读到、是否答对，要以实际工具记录与回答核对。
 
 **独立复审提出的三个 P1、两个 P2 已经全部改掉，并且每一条都做了反向验证。**
 
@@ -4695,8 +5673,8 @@ push、tag 或 release。
 
 ### 20.34 M4：终于能一眼看出"模型现在能看见多少"（正式版 20.40）
 
-F0-B 当前适配见第 12 节：详情页把请求第一条参考单独统计，Product 与对话从后面的 Surface 读取，
-共用原请求重建，既不披露正文，也不提前做 F5 治理页。修复及定向／反向证据见第 15 节，下面保留
+当前适配见第 12 节：详情页把请求最后一条 Context 参考单独统计，Product 与对话从它之前的
+完整 Surface 读取，共用原请求重建。修复及定向／反向证据见第 15 节，下面保留
 M4 原发布阶段的历史记录。
 
 M3 之后宿主会自己压缩历史，但用户看不见三件事：现在模型能看见多少、离压缩阈值还有多远、上一次真正冻结

@@ -1514,6 +1514,45 @@ class PluginManager:
             raise PluginValidationError(ordered)
         return loaded
 
+    def review_enable(self, enabled_plugin_ids: Sequence[str]):
+        """Import and validate explicit trusted candidates without running setup.
+
+        The returned discovery reuses these exact objects in the normal activation
+        transaction. No Activation, resource, registry publication or task exists
+        yet. Discovery/listing itself remains metadata-only.
+        """
+        from dataclasses import asdict, replace
+
+        from traceh.api.json_types import canonical_json
+
+        enabled = tuple(enabled_plugin_ids)
+        if len(set(enabled)) != len(enabled) or any(not is_plugin_id(x) for x in enabled):
+            raise ValueError("enabled-plugin-list-invalid")
+        records = {item.entry_name: item for item in self.discovery.discover()}
+        loaded = self._load(records, enabled)
+        self._dependency_order(loaded)
+
+        class ReviewedEntryPoint:
+            def __init__(self, candidate):
+                self.plugin = candidate.plugin
+                self.manifest_json = canonical_json(asdict(candidate.manifest))
+
+            def load(self):
+                if canonical_json(asdict(self.plugin.manifest)) != self.manifest_json:
+                    raise ValueError("plugin-enable-review-stale")
+                return self.plugin
+
+        reviewed = tuple(
+            replace(item.record, entry_point=ReviewedEntryPoint(item))
+            for item in loaded.values()
+        )
+
+        class ReviewedDiscovery(PluginDiscovery):
+            def discover(self):
+                return reviewed
+
+        return tuple(item.to_dict() for item in self.statuses), ReviewedDiscovery()
+
     def _dependency_order(self, loaded: Mapping[str, _LoadedPlugin]) -> tuple[str, ...]:
         failures: list[PluginFailure] = []
         dependencies: dict[str, set[str]] = {plugin_id: set() for plugin_id in loaded}

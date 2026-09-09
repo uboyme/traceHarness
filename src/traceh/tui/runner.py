@@ -14,6 +14,9 @@ from traceh.runtime.agent_runtime import AgentRuntime
 from traceh.session.service import SessionNotFoundError
 
 if TYPE_CHECKING:
+    from argparse import Namespace
+
+    from traceh.cli.tui_entry import RestartChat
     from traceh.product.host import ProductChatHost
 
 TUI_INSTALL_HINT = (
@@ -38,12 +41,13 @@ async def run_tui(
     heartbeat_seconds: float,
     product: ProductChatHost | None = None,
     clock: Clock | None = None,
-) -> int:
+    settings_args: Namespace | None = None,
+) -> int | RestartChat:
     """Open the shared Session, run Textual, then converge shared owners."""
 
     require_textual()
     primary: BaseException | None = None
-    result: int | None = None
+    result: int | RestartChat | None = None
     try:
         try:
             opened = await open_chat_session(
@@ -59,6 +63,21 @@ async def run_tui(
             raise CliConfigurationError(f"session not found: {session_id}") from error
         from traceh.tui.app import TracehTuiApp
 
+        if settings_args is not None:
+            from traceh.chat.workspace_project import restore_workspace_project
+            from traceh.tui.session_picker import ProjectChoiceApp
+
+            async def choose(options):
+                return await ProjectChoiceApp(options).run_async()
+
+            try:
+                await restore_workspace_project(runtime, opened.session.session_id,
+                                                settings_args, choose=choose)
+            except ValueError:
+                raise CliConfigurationError(
+                    "项目关联未就绪；请在配置中检查默认项目与署名。已写入的关联保留。"
+                ) from None
+
         app = TracehTuiApp(
             runtime,
             opened,
@@ -66,6 +85,7 @@ async def run_tui(
             heartbeat_seconds=heartbeat_seconds,
             product=product,
             clock=clock or default_clock(),
+            settings_args=settings_args,
         )
         app_result = await app.run_async()
         result = 0 if app_result is None else app_result
@@ -84,6 +104,10 @@ async def run_tui(
             cleanup = combine_failures(cleanup, error, "TUI runtime shutdown failed")
         combined = combine_failures(primary, cleanup, "TUI shutdown failed")
         if combined is not None:
+            if cleanup is not None:
+                # A failed close must never be mistaken for a repairable launch
+                # configuration error by the interactive restart owner.
+                raise BaseExceptionGroup("TUI owners did not close cleanly", [combined])
             raise combined
     assert result is not None
     return result

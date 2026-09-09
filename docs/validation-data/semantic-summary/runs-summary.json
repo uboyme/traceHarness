@@ -1,0 +1,81 @@
+[
+  {
+    "run": "01",
+    "completed": false,
+    "turns": 3,
+    "passed_turns": 2,
+    "attempts": 3,
+    "statuses": {
+      "succeeded": 3
+    },
+    "actual_total_tokens": 9302,
+    "actual_summary_tokens": 0,
+    "summary_requests": [],
+    "usage_unknown": 0,
+    "tool_results": {
+      "shell:succeeded": 1
+    }
+  },
+  {
+    "run": "02",
+    "completed": true,
+    "turns": 16,
+    "passed_turns": 16,
+    "attempts": 22,
+    "statuses": {
+      "succeeded": 22
+    },
+    "actual_total_tokens": 108457,
+    "actual_summary_tokens": 8028,
+    "summary_requests": [
+      {
+        "input_tokens": 3402,
+        "output_tokens": 622,
+        "quality": "exact",
+        "total_tokens": 4024
+      },
+      {
+        "input_tokens": 3376,
+        "output_tokens": 628,
+        "quality": "exact",
+        "total_tokens": 4004
+      }
+    ],
+    "usage_unknown": 0,
+    "tool_results": {
+      "shell:succeeded": 2,
+      "request_history_page:succeeded": 2
+    }
+  },
+  {
+    "run": "03",
+    "completed": true,
+    "turns": 16,
+    "passed_turns": 16,
+    "attempts": 22,
+    "statuses": {
+      "succeeded": 22
+    },
+    "actual_total_tokens": 107759,
+    "actual_summary_tokens": 7983,
+    "summary_requests": [
+      {
+        "input_tokens": 3457,
+        "output_tokens": 577,
+        "quality": "exact",
+        "total_tokens": 4034
+      },
+      {
+        "input_tokens": 3505,
+        "output_tokens": 444,
+        "quality": "exact",
+        "total_tokens": 3949
+      }
+    ],
+    "usage_unknown": 0,
+    "tool_results": {
+      "shell:succeeded": 2,
+      "request_history_page:succeeded": 2
+    }
+  }
+]

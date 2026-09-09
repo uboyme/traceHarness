@@ -247,24 +247,19 @@ class PluginCompositionCoordinator:
             if llms is None:
                 llms = self._llms
             if llms is None:
-                raise RuntimeError(
-                    "this runtime has no candidate LLM registry for replacement"
-                )
+                raise RuntimeError("this runtime has no candidate LLM registry for replacement")
             if self._runtime_is_disposed():
                 raise RuntimeError("runtime is disposed")
             current = self._compositions.current_generation
             candidate_tools = ToolRuntime(
                 activation_set.tools,
                 self._sessions,
-                policies=tuple(
-                    getattr(activation_set, "policies", self._policies)
-                ),
-                middlewares=tuple(
-                    getattr(activation_set, "middlewares", self._middlewares)
-                ),
+                policies=tuple(getattr(activation_set, "policies", self._policies)),
+                middlewares=tuple(getattr(activation_set, "middlewares", self._middlewares)),
                 timeout_seconds=self._tool_timeout_seconds,
                 max_output_chars=self._max_tool_output_chars,
                 admission_gate=current.tools.admission_gate,
+                workspace_observer=current.tools.workspace_observer,
             )
             generation = CompositionGeneration(
                 llms=llms,

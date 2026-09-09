@@ -1,0 +1,108 @@
+{
+  "model": "qwen-plus",
+  "journey": [
+    {
+      "name": "seed-one",
+      "question": "记录本会话的临时安排：青禾观鸟活动的接待负责人是许宁，交接暗号是“潮汐-583”。不要写文件，也不要保存项目记忆。只回复收到。",
+      "status": "ok",
+      "answer": "收到",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "seed-two",
+      "question": "再补充一条本会话临时安排：备用胸牌放在西门绿色箱子的第二层。不要写文件，也不要保存项目记忆。只回复收到。",
+      "status": "ok",
+      "answer": "收到",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "recall",
+      "question": "之前交接暗号是什么？谁负责接待，备用胸牌放在哪里？请依据本会话记录回答，不要猜测。",
+      "status": "ok",
+      "answer": "根据会话记录，交接暗号是“潮汐-583”，接待负责人是许宁。\n\n关于备用胸牌的位置，当前提供的会话记录中**未提及**。\n\n因此，依据本会话记录可确认的信息为：\n- 交接暗号：潮汐-583  \n- 接待负责人：许宁  \n- 备用胸牌位置：未说明",
+      "steps": 2,
+      "calls": [
+        {
+          "name": "request_history_page",
+          "outcome": "succeeded"
+        }
+      ],
+      "history_pages": [
+        null
+      ],
+      "active_input_matches": true
+    },
+    {
+      "name": "greeting",
+      "question": "你好",
+      "status": "ok",
+      "answer": "你好！",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "identity",
+      "question": "你是谁？",
+      "status": "ok",
+      "answer": "我是 TraceHarness 中的编码代理（coding agent），正在此工作空间中协助你完成开发任务。我通过调用工具来读取文件、搜索代码、运行命令或应用补丁，并严格依据你提供的上下文和当前工作区的实际内容进行操作。",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "new-task",
+      "question": "换个话题：17 加 26 等于多少？只回答数字。",
+      "status": "ok",
+      "answer": "43",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "resume-greeting",
+      "question": "早上好！",
+      "status": "ok",
+      "answer": "早上好！",
+      "steps": 1,
+      "calls": [],
+      "history_pages": [],
+      "active_input_matches": true
+    },
+    {
+      "name": "resume-recall",
+      "question": "回到刚才的活动安排，交接暗号和备用胸牌位置分别是什么？",
+      "status": "ok",
+      "answer": "根据当前提供的会话记录（历史引用内容）：\n\n- 交接暗号是：“潮汐-583”  \n- **备用胸牌位置未被提及**，该信息在所提供的历史内容中不存在。\n\n因此，答案为：  \n交接暗号：潮汐-583  \n备用胸牌位置：未说明",
+      "steps": 2,
+      "calls": [
+        {
+          "name": "request_history_page",
+          "outcome": "succeeded"
+        }
+      ],
+      "history_pages": [
+        null
+      ],
+      "active_input_matches": true
+    }
+  ],
+  "production_runtime": true,
+  "provider_responses_scripted": false,
+  "session": "f9f0f7dc-9a23-4098-aab7-a8244261b372",
+  "replay_before_close": [],
+  "replay_after_resume": [],
+  "workspace_files": [],
+  "attempts": 10,
+  "completed": true,
+  "semantic_result": "failed: missed evidence on next History page"
+}

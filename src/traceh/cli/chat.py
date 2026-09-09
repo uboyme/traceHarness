@@ -77,10 +77,6 @@ _SEQ_NOTE_LINES = (
 _HELP_LINES = (
     "/help     show these commands",
     "/session  show the session id, workspace, provider, model and resume command",
-    "/plugins                 show active plugins",
-    "/plugins reload          rebuild the active plugin composition",
-    "/plugins use ID [ID ...] switch this session to installed plugins",
-    "/plugins use --none      switch this session to no external plugins",
     "/task inspect TASK_ID    inspect a durable ProductTask (with --product-config)",
     "/task approve TASK_ID    approve and promote a verified ProductTask",
     "/task reject TASK_ID     reject without moving the target ref",
@@ -130,6 +126,7 @@ class ResumeEnvironment:
     env_file_supplies: frozenset[str] = frozenset()
     verifier_from_env_file: bool = False
     product_config: Path | None = None
+    context_config: Path | None = None
 
 
 def _safe_base_url(value: str | None) -> tuple[str | None, str | None]:
@@ -171,9 +168,7 @@ def chat_target(workspace: Path | None, session_id: str | None) -> tuple[Path | 
     """Validate that exactly one of workspace / session id was requested."""
 
     if workspace is not None and session_id is not None:
-        raise CliConfigurationError(
-            "chat takes either a workspace or --session-id, not both"
-        )
+        raise CliConfigurationError("chat takes either a workspace or --session-id, not both")
     if workspace is None and session_id is None:
         raise CliConfigurationError(
             "chat needs a workspace to start a new session, or --session-id to continue one"
@@ -319,9 +314,7 @@ async def _chat_loop(
                 resume_environment,
                 product=product,
             ):
-                await _write_resume_block_for_session(
-                    runtime, console, session, resume_environment
-                )
+                await _write_resume_block_for_session(runtime, console, session, resume_environment)
                 return 0
             continue
         interrupted_twice = await _run_turn(
@@ -339,16 +332,6 @@ async def _chat_loop(
             # converging. Convergence finished first; now honour the second ask.
             await _write_resume_block_for_session(runtime, console, session, resume_environment)
             return INTERRUPTED_EXIT_CODE
-
-
-def _active_plugins_line(runtime: AgentRuntime) -> str:
-    identities = runtime.external_plugin_identities
-    if not identities:
-        return "active plugins: none"
-    rendered = ", ".join(
-        f"{identity.plugin_id}=={identity.version}" for identity in identities
-    )
-    return f"active plugins: {rendered}"
 
 
 async def _handle_command(
@@ -369,48 +352,31 @@ async def _handle_command(
     if text == "/help":
         for entry in _HELP_LINES:
             console.write(entry)
+        from traceh.chat.governance import HELP
+
+        for entry in HELP:
+            console.write(entry)
         return False
     if text == "/session":
         await _write_session_banner(runtime, console, session, resume_environment)
         return False
-    if text == "/plugins":
-        console.write(_active_plugins_line(runtime))
-        return False
-    if text == "/plugins reload":
+    from traceh.chat.governance import ChatGovernance, display, handles
+
+    if handles(text):
+
+        async def confirm(review):
+            console.write(display(review))
+            try:
+                answer = console.read_line("Type CONFIRM to apply; anything else cancels: ")
+                return answer == "CONFIRM"
+            except EOFError:
+                return False
+
         try:
-            await runtime.reload_plugin_composition(session.session_id)
+            result = await ChatGovernance(runtime, session.session_id).run(text, confirm=confirm)
+            console.write(display(result))
         except Exception:
-            console.write("plugin composition change failed")
-        else:
-            console.write("plugin composition reloaded")
-            console.write(_active_plugins_line(runtime))
-        return False
-    if text == "/plugins use" or text.startswith("/plugins use "):
-        parts = text.split()
-        if parts == ["/plugins", "use", "--none"]:
-            enabled_plugin_ids: tuple[str, ...] = ()
-        elif len(parts) >= 3 and "--none" not in parts[2:]:
-            enabled_plugin_ids = tuple(parts[2:])
-        else:
-            console.write("usage: /plugins use ID [ID ...] or /plugins use --none")
-            return False
-        try:
-            await runtime.migrate_session_plugin_composition(
-                session.session_id,
-                enabled_plugin_ids,
-            )
-        except Exception:
-            # Selection and third-party activation failures are deliberately
-            # not rendered here.  Their details may contain paths, plugin text
-            # or configuration secrets; the runtime already retains only
-            # bounded structured diagnostics for programmatic callers.
-            console.write("plugin composition change failed")
-        else:
-            console.write("plugin composition switched")
-            console.write(_active_plugins_line(runtime))
-        return False
-    if text.startswith("/plugins "):
-        console.write("unknown plugin command (try /help)")
+            console.write("governance operation failed; inspect current facts before retrying")
         return False
     console.write("unknown command (try /help)")
     return False
@@ -492,6 +458,11 @@ class _LineUpdateAdapter:
             _write_turn_result(self._console, update.result)
             return
         if isinstance(update, TurnFailedUpdate):
+            if update.context_limit_exceeded:
+                from traceh.cli.context_pressure import context_pressure_text
+
+                self._console.write(context_pressure_text(update.context_pressure))
+                return
             error_type = sanitize(update.error_type) or "Error"
             message = sanitize(update.message) or "error"
             self._console.write(f"error: {error_type}: {message}")
@@ -667,6 +638,22 @@ def _write_resume_block(
     # is a non-negative integer or a fixed literal, so nothing here can carry a
     # credential.
     compaction = config.compaction
+    if config.token_budget is not None:
+        budget = config.token_budget
+        restore.extend(
+            [
+                Literal("--token-encoding"),
+                budget.encoding,
+                Literal("--context-window-tokens"),
+                str(budget.window_tokens),
+                Literal("--context-output-reserve"),
+                str(budget.output_reserve_tokens),
+                Literal("--context-safety-margin"),
+                str(budget.safety_margin_tokens),
+                Literal("--context-trigger-percent"),
+                str(budget.trigger_percent),
+            ]
+        )
     if compaction is not None and compaction.enabled:
         restore += [
             Literal("--auto-compact"),
@@ -677,6 +664,10 @@ def _write_resume_block(
             str(compaction.max_summary_utf8_bytes),
             Literal("--auto-compact-keep-turns"),
             str(compaction.keep_recent_turns),
+        ]
+        restore += [
+            Literal("--auto-compact-method"),
+            "semantic" if config.semantic_summary else "extractive",
         ]
 
     if config.verifier_name is not None:
@@ -699,6 +690,8 @@ def _write_resume_block(
             Literal("--product-config"),
             str(Path(environment.product_config).resolve()),
         ]
+    if environment.context_config is not None:
+        restore += [Literal("--context-config"), str(Path(environment.context_config).resolve())]
 
     base_url, withheld_reason = _safe_base_url(environment.base_url)
     if base_url:
@@ -720,9 +713,7 @@ def _write_resume_block(
                 "its value is never printed."
             )
         else:
-            notes.append(
-                f"  note: set {key_name} in that shell; its value is never printed."
-            )
+            notes.append(f"  note: set {key_name} in that shell; its value is never printed.")
 
     if environment.env_file is not None:
         restore += [Literal("--env-file"), str(Path(environment.env_file).resolve())]
@@ -733,8 +724,7 @@ def _write_resume_block(
         # which value is actually in effect.
         if environment.verifier_from_env_file and environment.env_file is not None:
             notes.append(
-                "  note: the verifier command is restored by the env file above, "
-                "not shown here."
+                "  note: the verifier command is restored by the env file above, not shown here."
             )
         else:
             notes.append(

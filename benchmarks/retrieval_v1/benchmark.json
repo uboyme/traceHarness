@@ -1,0 +1,202 @@
+{
+  "protocol_version": 2,
+  "benchmark_id": "traceh-retrieval-v1",
+  "profile_id": "retrieval-baseline-v1",
+  "approver_id": "benchmark-host",
+  "default_mode": "single",
+  "roles": {
+    "parent": {
+      "preset": "product-benchmark-parent",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ],
+      "max_output_tokens": 8192,
+      "budget": {
+        "max_tokens": 60000,
+        "max_steps": 12,
+        "max_tool_calls": 40,
+        "max_wall_milliseconds": 300000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    },
+    "reviewer": {
+      "preset": "product-benchmark-reviewer",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ],
+      "max_output_tokens": 8192,
+      "budget": {
+        "max_tokens": 60000,
+        "max_steps": 12,
+        "max_tool_calls": 40,
+        "max_wall_milliseconds": 300000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    },
+    "coder": {
+      "preset": "product-benchmark-coder",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text",
+        "apply_patch",
+        "shell"
+      ],
+      "max_output_tokens": 8192,
+      "budget": {
+        "max_tokens": 120000,
+        "max_steps": 24,
+        "max_tool_calls": 80,
+        "max_wall_milliseconds": 600000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 4
+      }
+    }
+  },
+  "router": {
+    "preset": "product-benchmark-router",
+    "max_output_tokens": 256,
+    "budget": {
+      "max_tokens": 8000,
+      "max_steps": 2,
+      "max_tool_calls": 0,
+      "max_wall_milliseconds": 60000,
+      "max_children": 0,
+      "max_depth": 0,
+      "max_processes": 4
+    },
+    "timeout_milliseconds": 60000,
+    "max_response_bytes": 2048
+  },
+  "task_budget": {
+    "max_tokens": 500000,
+    "max_steps": 200,
+    "max_tool_calls": 400,
+    "max_wall_milliseconds": 1800000,
+    "max_children": 8,
+    "max_depth": 2,
+    "max_processes": 8
+  },
+  "verification": {
+    "plan_id": "benchmark-unittest-v1",
+    "plan_version": 1,
+    "commands": [
+      {
+        "command_id": "expected-file",
+        "argv": [
+          "python",
+          "-c",
+          "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+        ],
+        "timeout_ms": 120000
+      }
+    ],
+    "environment": {
+      "policy_id": "benchmark-minimal-v1",
+      "passthrough": [
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "SYSTEMDRIVE",
+        "WINDIR",
+        "COMSPEC",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "HOME",
+        "LANG",
+        "LC_ALL"
+      ],
+      "overrides": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
+    },
+    "max_output_bytes": 1048576,
+    "protocol_version": 1
+  },
+  "capture_limits": {
+    "max_changed_paths": 100,
+    "max_path_bytes": 1024,
+    "max_file_bytes": 1048576,
+    "max_total_file_bytes": 4194304,
+    "max_patch_bytes": 4194304
+  },
+  "max_report_chars": 4096,
+  "arms": [
+    {
+      "requested_mode": "single",
+      "repetitions": 1
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "query_01",
+      "requirement": "goals.code",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_02",
+      "requirement": "项目目标保持边界清楚",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_03",
+      "requirement": "src/route.py RouteError",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_04",
+      "requirement": "vehicle fuel",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_05",
+      "requirement": "quasarnevermentioned",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_06",
+      "requirement": "secretneedle",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_07",
+      "requirement": "revokedneedle",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_08",
+      "requirement": "priorneedle",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_09",
+      "requirement": "reference.retired",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_10",
+      "requirement": "route.error",
+      "initial_dir": "initial"
+    },
+    {
+      "task_id": "query_11",
+      "requirement": "reference.current",
+      "initial_dir": "initial"
+    }
+  ],
+  "retrieval": {
+    "file": "corpus.json",
+    "sha256": "eef440b9401360cca66aa195403ca1e261acbd56d492f4ba702870673da260f3"
+  }
+}

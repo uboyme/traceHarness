@@ -12,8 +12,8 @@ from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.skills import SkillResourceRoot
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.request_builder import reconstruct_request, verify_request_snapshots
+from traceh.session.retrieval import query_terms, tokenize
 from traceh.session.skill_requests import SKILL_TOOL_NAME
-from traceh.session.skill_retrieval import tokenize
 
 
 @pytest.mark.parametrize("query", ["boundary.notes", "模块所有权边界", "ＡＲＣＨＩＴＥＣＴＵＲＥ"])
@@ -103,7 +103,7 @@ async def test_model_disclosure_uses_exact_next_step_and_never_persists_body_in_
         assert len(contexts) == 2
         assert contexts[1].data["blocks"][0]["tier"] == tier
         tool = next(e for e in events if e.type == "tool/result")
-        assert tool.data["data"]["skill_receipt"]["target_rule"] == "immediate-next-step"
+        assert tool.data["data"]["skill_receipt"]["target_rule"] == "next-step-then-bounded-turn"
         assert first.sections[0].body not in canonical_json(tool.data)
         assert resource not in canonical_json(tool.data)
         assert await verify_request_snapshots(runtime.sessions, runtime.surface, session) == ()
@@ -111,7 +111,7 @@ async def test_model_disclosure_uses_exact_next_step_and_never_persists_body_in_
         await runtime.run_existing(session, "unrelated zzzzzz")
         last = canonical_json(provider.requests[-1].to_dict())
         assert first.sections[0].body not in last and resource not in last
-        assert not json.loads(provider.requests[-1].messages[0].content.split("\n")[1])
+        assert not json.loads(provider.requests[-1].messages[-1].content.split("\n")[1])
     finally:
         await runtime.dispose()
         await store.aclose()
@@ -119,7 +119,7 @@ async def test_model_disclosure_uses_exact_next_step_and_never_persists_body_in_
 
 @pytest.mark.parametrize("limit", [0, 80])
 async def test_atomic_budget_exclusion_records_reason(tmp_path, limit):
-    context = context_policy(skills=retrieval_policy(skill_bytes=limit))
+    context = context_policy(skills=retrieval_policy(context_bytes=limit))
     runtime, store, provider, session, values = await build_case(tmp_path, context=context)
     try:
         await select(runtime, session, values[0])
@@ -146,17 +146,27 @@ def test_unicode_tokenizer_han_bigrams_and_code_fragments():
         "py",
         "err",
         "42",
+        "abc.py",
+        "err_42",
     )
+    assert set(query_terms("边界 ＡＰＩ abc.py ERR_42")) == {
+        "边",
+        "界",
+        "边界",
+        "api",
+        "abc.py",
+        "err_42",
+    }
     with pytest.raises(ValueError, match="unicode-version"):
         replace(retrieval_policy(), unicode_version="not-this-runtime")
 
 
 @pytest.mark.parametrize("extra", ["semantic", "reranker", "embedding_model"])
 def test_unimplemented_retrieval_configuration_is_rejected(extra):
-    from traceh.api.retrieval import SkillRetrievalPolicy
+    from traceh.api.retrieval import ReferenceRetrievalPolicy
 
     with pytest.raises(ValueError, match="policy-unsupported"):
-        SkillRetrievalPolicy.from_dict({**retrieval_policy().to_dict(), extra: "unauthorized"})
+        ReferenceRetrievalPolicy.from_dict({**retrieval_policy().to_dict(), extra: "unauthorized"})
 
 
 async def test_foreign_corpus_cannot_change_eligible_bm25_statistics(tmp_path):
@@ -166,7 +176,7 @@ async def test_foreign_corpus_cannot_change_eligible_bm25_statistics(tmp_path):
         await runtime.skill_context.rebuild_index(session)
         await runtime.run_existing(session, "模块边界")
         before = next(
-            e.data["retrieval"]
+            e.data["retrieval"]["skill"]
             for e in await runtime.sessions.read_session(session)
             if e.type == "context/input"
         )
@@ -175,7 +185,7 @@ async def test_foreign_corpus_cannot_change_eligible_bm25_statistics(tmp_path):
         await runtime.skill_context.rebuild_index(other)
         await runtime.run_existing(session, "模块边界")
         after = [
-            e.data["retrieval"]
+            e.data["retrieval"]["skill"]
             for e in await runtime.sessions.read_session(session)
             if e.type == "context/input"
         ][-1]
@@ -199,7 +209,9 @@ async def test_no_hit_and_fts_syntax_are_literal_bounded_queries(tmp_path, query
         )
         assert event.data["blocks"] == []
         assert any(e["reason"] == "no-hit" for e in event.data["exclusions"])
-        assert all(lane["status"] == "available" for lane in event.data["retrieval"]["lanes"])
+        assert all(
+            lane["status"] == "available" for lane in event.data["retrieval"]["skill"]["lanes"]
+        )
     finally:
         await runtime.dispose()
         await store.aclose()
@@ -217,7 +229,9 @@ async def test_candidate_limit_excludes_whole_lane(tmp_path):
             e for e in await runtime.sessions.read_session(session) if e.type == "context/input"
         )
         assert event.data["blocks"] == []
-        assert all(lane["status"] == "resource-limit" for lane in event.data["retrieval"]["lanes"])
+        assert all(
+            lane["status"] == "resource-limit" for lane in event.data["retrieval"]["skill"]["lanes"]
+        )
         assert any(e["reason"] == "resource-limit" for e in event.data["exclusions"])
     finally:
         await runtime.dispose()
@@ -263,12 +277,12 @@ async def test_mixed_skill_tiers_share_next_step_and_identical_requests_coalesce
         contexts = [e for e in events if e.type == "context/input"]
         assert len(contexts) == len(provider.requests) == 2
         assert [b["tier"] for b in contexts[1].data["blocks"]] == list(dict.fromkeys(tiers))
-        rendered = json.loads(provider.requests[1].messages[0].content.split("\n")[1])
+        rendered = json.loads(provider.requests[1].messages[-1].content.split("\n")[1])
         assert [item["tier"] for item in rendered] == list(dict.fromkeys(tiers))
         assert await verify_request_snapshots(runtime.sessions, runtime.surface, session) == ()
         assert runtime.invariants.check(events) == ()
         await runtime.run_existing(session, "unrelated zzzzzz")
-        assert json.loads(provider.requests[-1].messages[0].content.split("\n")[1]) == []
+        assert json.loads(provider.requests[-1].messages[-1].content.split("\n")[1]) == []
     finally:
         await runtime.dispose()
         await store.aclose()
@@ -308,7 +322,7 @@ async def test_exact_resource_path_preserves_complete_literal_and_boundaries(
         await runtime.run_existing(session, query_pattern.format(relative.upper()))
         events = await runtime.sessions.read_session(session)
         context = next(e for e in events if e.type == "context/input")
-        exact, fts = context.data["retrieval"]["lanes"]
+        exact, fts = context.data["retrieval"]["skill"]["lanes"]
         assert exact["status"] == fts["status"] == "available"
         assert fts["ranking"] == []
         assert bool(exact["ranking"]) is expected

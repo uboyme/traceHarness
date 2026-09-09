@@ -1,0 +1,77 @@
+[
+  {
+    "run": 1,
+    "completed": false,
+    "attempts": 35,
+    "failure_codes": {
+      "provider-tls-eof": 15
+    },
+    "tool_results": {
+      "list_files:denied": 20
+    },
+    "known_usage_count": 20,
+    "known_tokens": 51350
+  },
+  {
+    "run": 2,
+    "completed": false,
+    "attempts": 30,
+    "failure_codes": {
+      "provider-tls-eof": 6
+    },
+    "tool_results": {
+      "list_files:denied": 24
+    },
+    "known_usage_count": 24,
+    "known_tokens": 65230
+  },
+  {
+    "run": 3,
+    "completed": false,
+    "attempts": 9,
+    "failure_codes": {
+      "provider-tls-eof": 4
+    },
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "read_tool_output:succeeded": 3
+    },
+    "known_usage_count": 5,
+    "known_tokens": 28689
+  },
+  {
+    "run": 4,
+    "completed": false,
+    "attempts": 16,
+    "failure_codes": {
+      "provider-disconnected": 1,
+      "provider-tls-eof": 4
+    },
+    "tool_results": {
+      "shell:succeeded": 1,
+      "read_tool_output:succeeded": 5,
+      "request_history_page:failed": 3
+    },
+    "known_usage_count": 11,
+    "known_tokens": 87767
+  },
+  {
+    "run": 5,
+    "completed": true,
+    "attempts": 54,
+    "failure_codes": {
+      "provider-tls-eof": 16,
+      "provider-disconnected": 1
+    },
+    "tool_results": {
+      "list_files:succeeded": 2,
+      "shell:succeeded": 2,
+      "read_tool_output:succeeded": 21,
+      "request_history_page:failed": 4,
+      "list_tool_outputs:succeeded": 2
+    },
+    "known_usage_count": 37,
+    "known_tokens": 361862
+  }
+]

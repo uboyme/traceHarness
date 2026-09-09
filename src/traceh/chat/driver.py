@@ -19,7 +19,9 @@ from traceh.chat.activity import (
     ActivityUpdate,
     Clock,
 )
+from traceh.chat.context_pressure import ContextPressureView, read_context_pressure
 from traceh.concurrency import await_worker_convergence
+from traceh.llm.token_meter import RequestTokenBudgetExceeded
 from traceh.runtime.agent_loop import TurnResult
 from traceh.runtime.agent_runtime import AgentRuntime
 from traceh.session.event_feed import EventSubscription
@@ -42,6 +44,8 @@ class TurnFailedUpdate:
 
     error_type: str
     message: str
+    context_pressure: ContextPressureView | None = None
+    context_limit_exceeded: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,8 +132,17 @@ class ChatDriver:
             return await self._interrupt(narration, turn)
         except Exception as error:
             await self._stop_narration(narration)
+            pressure = None
+            exceeded = isinstance(error, RequestTokenBudgetExceeded)
+            if exceeded:
+                try:
+                    pressure = await read_context_pressure(self._runtime.sessions, error)
+                except Exception:
+                    # A diagnostic read must not mask the failed Turn or print
+                    # unverified counts. Cancellation still propagates normally.
+                    pass
             await self._emit(
-                TurnFailedUpdate(type(error).__name__, str(error))
+                TurnFailedUpdate(type(error).__name__, str(error), pressure, exceeded)
             )
             return ChatTurnOutcome(result=None, failed=True)
         except BaseException:

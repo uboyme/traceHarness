@@ -6,7 +6,7 @@ import asyncio
 
 from traceh.agents.commit_reconciliation import committed_after_failure
 from traceh.api.events import PendingEvent
-from traceh.api.json_types import canonical_json, fingerprint
+from traceh.api.json_types import canonical_json
 from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import ConcurrencyConflict, Durability
 
@@ -23,32 +23,16 @@ _KEYS = {
 
 
 def head_ref(session_id, events):
-    event = events[-1] if events else None
-    return {
-        "stream_id": f"context-selection:{session_id}",
-        "head_seq": len(events),
-        "head_event_id": str(event.event_id) if event else None,
-        "head_digest": fingerprint(event.to_dict()) if event else None,
-    }
+    from traceh.session.stream_heads import stream_head
+
+    return stream_head(f"context-selection:{session_id}", events)
 
 
 def validate_head(data, session_id):
-    if (
-        type(data) is not dict
-        or set(data) != set(head_ref(session_id, ()))
-        or data["stream_id"] != f"context-selection:{session_id}"
-        or type(data["head_seq"]) is not int
-        or data["head_seq"] < 0
-    ):
-        raise ValueError("skill-selection-head-invalid")
-    if data["head_seq"] == 0:
-        if data != head_ref(session_id, ()):
-            raise ValueError("skill-selection-head-invalid")
-    elif (
-        type(data["head_event_id"]) is not str
-        or not data["head_event_id"]
-        or not _digest(data["head_digest"])
-    ):
+    from traceh.session.stream_heads import validate_stream_head
+
+    validate_stream_head(data)
+    if data["stream_id"] != f"context-selection:{session_id}":
         raise ValueError("skill-selection-head-invalid")
 
 

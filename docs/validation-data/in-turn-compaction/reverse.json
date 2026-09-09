@@ -1,0 +1,14 @@
+[
+  {
+    "guard": "disclosure-after-summary",
+    "test": "tests/test_in_turn_compaction.py::test_summary_then_tool_history_read_is_admitted_in_same_turn",
+    "exit_code": 1,
+    "expected_failure": "'directory' == 'chunk'"
+  },
+  {
+    "guard": "later-step-maintenance",
+    "test": "tests/test_in_turn_compaction.py::test_tool_pressure_compacts_only_old_turns_without_reexecution[True-False-4-False]",
+    "exit_code": 1,
+    "expected_failure": "assert 0 == 1"
+  }
+]

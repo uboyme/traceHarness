@@ -1,0 +1,16 @@
+[
+  {
+    "case": "exit-0",
+    "events": 263,
+    "measurements": 19,
+    "valid": true,
+    "events_unchanged": true
+  },
+  {
+    "case": "exit-7",
+    "events": 250,
+    "measurements": 18,
+    "valid": true,
+    "events_unchanged": true
+  }
+]

@@ -276,19 +276,41 @@ async def test_tui_uses_the_shared_driver_and_durable_session(tmp_path: Path) ->
     ("width", "narrow"),
     ((99, True), (100, True), (109, True), (110, False)),
 )
-async def test_layout_breakpoint_preserves_full_fact_row_width(
+async def test_layout_breakpoint_gives_chat_full_width_without_product(
     tmp_path: Path,
     width: int,
     narrow: bool,
 ) -> None:
     provider = _Provider()
-    app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    app, runtime, store, opened = await _opened_app(tmp_path, provider)
     try:
         async with app.run_test(size=(width, 30)) as pilot:
             await pilot.pause()
             assert app.screen.has_class("narrow") is narrow
-            if not narrow:
-                assert app.query_one("#product-state", Static).content_size.width >= 52
+            assert not app.query_one("#product-column").display
+            assert app.query_one("#conversation-column").size.width == width
+            before = await runtime.sessions.read_session(opened.session.session_id)
+            for _ in range(2):
+                await pilot.press("ctrl+b")
+                await pilot.pause()
+                panel = app.query_one("#product-column")
+                assert panel.display and panel.region.height > 0
+                assert "ProductTask 未启用" in str(
+                    app.query_one("#product-state", Static).content
+                )
+                if not narrow:
+                    assert app.query_one("#conversation-column").size.width < width
+                await pilot.press("ctrl+b")
+                await pilot.pause()
+                assert not panel.display
+                assert app.query_one("#conversation-column").size.width == width
+                assert app.query_one("#chat-input", Input).has_focus
+            await pilot.press("ctrl+p")
+            assert isinstance(app.screen, ProductIdentityScreen)
+            await pilot.press("ctrl+b", "escape")
+            assert not panel.display
+            assert await runtime.sessions.read_session(opened.session.session_id) == before
+            assert provider.requests == []
     finally:
         await runtime.dispose()
         del store
@@ -411,34 +433,40 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
         del store
 
 
-async def test_conversation_rewraps_when_dual_pane_narrows_the_log(
+@pytest.mark.parametrize("narrow_by", ("terminal", "panel"))
+async def test_conversation_rewraps_when_display_area_narrows(
     tmp_path: Path,
+    narrow_by: str,
 ) -> None:
     provider = _Provider()
     app, runtime, store, _opened = await _opened_app(tmp_path, provider)
+    rewrapped = asyncio.Event()
+    rewrap = app._rewrap_conversation
+
+    def observe_rewrap():
+        rewrap()
+        log = app.query_one("#conversation", RichLog)
+        if log.content_region.width < 70:
+            rewrapped.set()
+
+    app._rewrap_conversation = observe_rewrap
     message = "reservation-handler-keeps-every-request-atomic-without-partial-writes"
     try:
-        async with app.run_test(size=(100, 30)) as pilot:
+        async with app.run_test(size=(110, 30)) as pilot:
             log = app.query_one("#conversation", RichLog)
             app._write_conversation("assistant", message)
             await pilot.pause()
             model_lines = [line for line in log.lines if line.text.startswith("  ▏")]
             assert len(model_lines) == 1
 
-            await pilot.resize_terminal(110, 30)
-            for _ in range(20):
-                await pilot.pause()
-                width = max(
-                    1,
-                    log.content_region.width - log.styles.scrollbar_size_vertical,
-                )
-                model_lines = [
-                    line for line in log.lines if line.text.startswith("  ▏")
-                ]
-                if len(model_lines) > 1 and all(
-                    line.cell_length <= width for line in model_lines
-                ):
-                    break
+            if narrow_by == "panel":
+                await pilot.press("ctrl+b")
+            else:
+                await pilot.resize_terminal(60, 30)
+            await asyncio.wait_for(rewrapped.wait(), 10)
+            await pilot.pause()
+            width = max(1, log.content_region.width - log.styles.scrollbar_size_vertical)
+            model_lines = [line for line in log.lines if line.text.startswith("  ▏")]
 
             assert len(model_lines) > 1
             assert all(line.text.startswith("  ▏") for line in model_lines)
@@ -449,7 +477,7 @@ async def test_conversation_rewraps_when_dual_pane_narrows_the_log(
                 for line in model_lines
             )
             assert restored == message
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -480,7 +508,7 @@ async def test_identity_changes_and_task_conversation_are_full_width_screens(
             assert isinstance(app.screen, TaskConversationScreen)
             await pilot.press("escape")
             assert app.screen is home
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -1075,12 +1103,16 @@ def test_footer_advertises_only_implemented_global_actions() -> None:
     }
 
     assert visible == {
-        "ctrl+c": ("leave", "退出"),
+        "ctrl+c": ("copy_selection", "复制"),
         "ctrl+q": ("leave", "退出"),
+        "ctrl+b": ("toggle_product_panel", "任务面板"),
         "ctrl+p": ("identity", "完整身份"),
         "ctrl+d": ("changes", "改动"),
         "ctrl+t": ("task_conversation", "任务对话"),
         "ctrl+x": ("context", "上下文"),
+        "f2": ("settings", "配置"),
+        "f4": ("memory_panel", "项目记忆"),
+        "ctrl+o": ("sessions", "历史对话"),
     }
     # Every advertised action must really exist on the app.
     for action, _ in visible.values():
@@ -1125,7 +1157,7 @@ async def test_identity_copy_falls_back_to_an_explicit_file(
                 app.screen.query_one("#identity-status", Static).content
             )
             await pilot.press("escape")
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         if fallback_path is not None:
             fallback_path.unlink(missing_ok=True)
@@ -1133,7 +1165,7 @@ async def test_identity_copy_falls_back_to_an_explicit_file(
         del store
 
 
-async def test_ctrl_c_converges_an_active_provider_call(tmp_path: Path) -> None:
+async def test_ctrl_q_converges_an_active_provider_call(tmp_path: Path) -> None:
     provider = _Provider(gate=True)
     app, runtime, store, opened = await _opened_app(tmp_path, provider)
     try:
@@ -1141,7 +1173,7 @@ async def test_ctrl_c_converges_an_active_provider_call(tmp_path: Path) -> None:
             app.query_one("#chat-input", Input).value = "block until cancelled"
             await pilot.press("enter")
             await asyncio.wait_for(provider.started.wait(), timeout=2)
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
 
         events = await runtime.sessions.read_session(opened.session.session_id)
         effects = await runtime.sessions.read_effects(opened.session.session_id)
@@ -1507,6 +1539,8 @@ async def test_product_view_periodically_refreshes_sqlite_without_a_feed_notific
             assert "durable 开 ✓" in str(
                 app.query_one("#product-state", Static).content
             )
+            await pilot.press("ctrl+b")
+            assert not app.query_one("#product-column").display
             await durable_store.append(
                 state_stream,
                 expected_seq=0,
@@ -1518,6 +1552,8 @@ async def test_product_view_periodically_refreshes_sqlite_without_a_feed_notific
             for _ in range(3):
                 await pilot.pause()
 
+            await pilot.press("ctrl+b")
+            assert app.query_one("#product-column").display
             assert "任务已记录失败 · external-writer-failed" in str(
                 app.query_one("#product-state", Static).content
             )
@@ -1566,7 +1602,7 @@ async def test_initial_observation_failure_is_visible_and_periodically_recovers(
             assert "任务已打开" in str(
                 app.query_one("#gate-message", Static).content
             )
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -1630,7 +1666,7 @@ async def test_successful_refresh_clears_only_the_stale_observation_error(
             assert "product-observation-unavailable" not in str(
                 app.query_one("#product-state", Static).content
             )
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -1703,7 +1739,7 @@ async def test_concurrent_product_refreshes_cannot_overwrite_newer_facts(
             assert "审批 ⋯" in str(
                 app.query_one("#product-state", Static).content
             )
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         observer.first_release.set()
         await runtime.dispose()
@@ -1894,7 +1930,7 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
                 for line in indented_message_lines
             )
             await pilot.press("escape")
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await product.aclose()
         await runtime.dispose()
@@ -1991,6 +2027,18 @@ async def test_model_confirmation_cannot_bypass_the_tui_start_gesture(
                 "输入 START 确认 · Esc 取消"
             )
             assert len(app.query("#cancel-confirmation")) == 0
+            confirmation.value = "STA"
+            before_toggle = await runtime.sessions.read_session(session_id)
+            await pilot.press("ctrl+b")
+            assert not app.query_one("#product-column").display
+            assert not confirmation.has_focus
+            await pilot.press("enter")
+            assert host.started_requests == []
+            await pilot.press("ctrl+b")
+            await _wait_for_confirmation_focus(pilot, confirmation)
+            assert app.query_one("#product-column").display
+            assert confirmation.value == "STA"
+            assert await runtime.sessions.read_session(session_id) == before_toggle
             await pilot.press("escape")
             await pilot.pause()
             assert app._confirmation_action is None
@@ -2034,7 +2082,7 @@ async def test_model_confirmation_cannot_bypass_the_tui_start_gesture(
             assert "START 已被宿主接受 · 等待返回" in stalled
             assert "警告：无新任务事实" in stalled
             assert "19 秒前" not in stalled
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         host.start_release.set()
         await runtime.dispose()
@@ -2140,7 +2188,7 @@ async def test_new_confirmed_proposal_replaces_a_terminal_task_view(
             assert app._task_id == host.request.pending.task_id
             assert len(host.observers) == 1
             assert host.observers[0].closed
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -2500,7 +2548,7 @@ async def test_diverged_facts_show_no_approval_gate_and_reconcile_is_explicit(
             await pilot.press("ctrl+i")
             await pilot.pause()
             assert host.commands == []
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
         del store
@@ -2530,7 +2578,7 @@ async def test_leave_renders_closing_owners_before_the_app_exits(
     )
     try:
         async with app.run_test(size=(100, 30)) as pilot:
-            await pilot.press("ctrl+c")
+            await pilot.press("ctrl+q")
             await asyncio.wait_for(host.close_started.wait(), timeout=2)
             closing = str(app.query_one("#product-state", Static).content)
             assert "正在安全收敛" in closing
@@ -2597,10 +2645,11 @@ async def test_context_bar_reports_history_without_claiming_tokens(
             assert "token" not in bar.lower()
             assert "%" not in bar
             assert len(bar.splitlines()) == 1
-            # The row must not push the conversation column, the Product pane
-            # or the input off the screen.
+            # The status row preserves the chat and input; an unconfigured
+            # Product pane occupies no space.
             screen_height = app.screen.size.height
-            for selector in ("#conversation-column", "#product-state", "#chat-input"):
+            assert not app.query_one("#product-column").display
+            for selector in ("#conversation-column", "#chat-input"):
                 widget = app.query_one(selector)
                 assert widget.size.height > 0, selector
                 assert widget.region.bottom <= screen_height, selector

@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import sys
+from argparse import Namespace
 from collections.abc import Coroutine
+from copy import copy
+from pathlib import Path
 from typing import Any
 
 from rich.text import Text
@@ -13,7 +17,8 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.css.query import NoMatches
 from textual.events import Resize
-from textual.widgets import Button, Footer, Input, RichLog, Static
+from textual.message import Message
+from textual.widgets import Button, Footer, Input, RichLog, Static, TextArea
 
 from traceh.chat.activity import (
     DEFAULT_HEARTBEAT_SECONDS,
@@ -32,6 +37,8 @@ from traceh.chat.driver import (
 from traceh.chat.session import OpenedChatSession
 from traceh.cli.console import contains_undecodable_input, normalize_input
 from traceh.cli.timeline import TimelineRenderer, sanitize
+from traceh.cli.tui_config import LaunchConfigurationError
+from traceh.cli.tui_entry import RestartChat
 from traceh.concurrency import await_worker_convergence
 from traceh.product.chat import (
     ProductCommand,
@@ -77,6 +84,7 @@ from traceh.tui.screens import (
     TaskConversationScreen,
 )
 from traceh.tui.task_conversation import TaskConversationReader
+from traceh.tui.text_selection import CopyMenu, CopyRequested, SelectableLog
 
 _GATE_LABELS = {
     ProductGateAction.START: "START",
@@ -107,6 +115,10 @@ _CONTEXT_EVENT_TYPES = frozenset(
         "tool/result",
         PRODUCT_CONTEXT_SNAPSHOT,
         "request/snapshot",
+        "summary/input",
+        "summary/response",
+        "request/token-measurement",
+        "model/attempt-end",
         SURFACE_REPLACE,
         SURFACE_COMPACTION_FAILED,
     }
@@ -126,18 +138,32 @@ def _available_log_width(log: RichLog) -> int:
     return max(1, log.content_region.width - log.styles.scrollbar_size_vertical)
 
 
-class TracehTuiApp(App[int]):
+class ConversationLog(SelectableLog):
+    """Notify after the conversation's own layout changes, not the terminal's."""
+
+    class LayoutChanged(Message):
+        pass
+
+    def on_resize(self, event: Resize) -> None:
+        self.post_message(self.LayoutChanged())
+
+
+class TracehTuiApp(App[int | RestartChat]):
     """The one TUI view; every action still crosses the existing host owner."""
 
     TITLE = "TraceHarness Chat"
     SUB_TITLE = "durable Session + controlled ProductTask"
     BINDINGS = [
-        Binding("ctrl+c", "leave", "退出", priority=True),
+        Binding("ctrl+c", "copy_selection", "复制", priority=True),
         Binding("ctrl+q", "leave", "退出", priority=True),
+        Binding("ctrl+b", "toggle_product_panel", "任务面板", priority=True),
         Binding("ctrl+p", "identity", "完整身份", priority=True),
         Binding("ctrl+d", "changes", "改动", priority=True),
         Binding("ctrl+t", "task_conversation", "任务对话", priority=True),
         Binding("ctrl+x", "context", "上下文", priority=True),
+        Binding("f2", "settings", "配置", priority=True),
+        Binding("f4", "memory_panel", "项目记忆", priority=True),
+        Binding("ctrl+o", "sessions", "历史对话", priority=True),
         Binding("escape", "cancel_confirmation", "取消确认", show=False),
     ]
     CSS = """
@@ -206,17 +232,18 @@ class TracehTuiApp(App[int]):
         heartbeat_seconds: float,
         product: ProductChatHost | None,
         clock: Clock,
+        settings_args: Namespace | None = None,
     ) -> None:
         super().__init__()
         self.theme = "textual-light"
+        self._settings_args = settings_args
+        self._restart_request: RestartChat | None = None
         self._runtime = runtime
         self._opened = opened
         self._session = opened.session
         self._heartbeat_seconds = heartbeat_seconds if timeline else 0.0
         self._product_refresh_seconds = (
-            heartbeat_seconds
-            if heartbeat_seconds > 0
-            else DEFAULT_HEARTBEAT_SECONDS
+            heartbeat_seconds if heartbeat_seconds > 0 else DEFAULT_HEARTBEAT_SECONDS
         )
         self._product = product
         self._task_conversation = TaskConversationReader(runtime.sessions.store)
@@ -282,7 +309,7 @@ class TracehTuiApp(App[int]):
         with Horizontal(id="main"):
             with Vertical(id="conversation-column"):
                 yield Static("", id="conversation-spacer")
-                yield RichLog(
+                yield ConversationLog(
                     id="conversation",
                     markup=False,
                     highlight=False,
@@ -305,6 +332,7 @@ class TracehTuiApp(App[int]):
         yield Footer()
 
     async def on_mount(self) -> None:
+        self.query_one("#product-column").display = self._product is not None
         self._set_narrow(self.size.width < _NARROW_TERMINAL_COLUMNS)
         initial_system = [
             f"Session {self._session.session_id}\nWorkspace {self._session.workspace}"
@@ -333,10 +361,13 @@ class TracehTuiApp(App[int]):
 
     async def on_resize(self, event: Resize) -> None:
         self._set_narrow(event.size.width < _NARROW_TERMINAL_COLUMNS)
-        self.call_after_refresh(self._rewrap_conversation)
         # The status row picks its rendering from the width it actually has, so
         # it has to be recomposed once the new layout is known.
         self.call_after_refresh(self._render_context_bar)
+
+    @on(ConversationLog.LayoutChanged)
+    def _conversation_layout_changed(self) -> None:
+        self.call_after_refresh(self._rewrap_conversation)
 
     def _set_narrow(self, enabled: bool) -> None:
         screen = self.screen
@@ -373,9 +404,7 @@ class TracehTuiApp(App[int]):
         try:
             task_id = self._task_id
             if task_id is None:
-                task_id = await product.observation.current_task_id(
-                    self._session.session_id
-                )
+                task_id = await product.observation.current_task_id(self._session.session_id)
             if task_id is None:
                 self._observation_error = None
                 self._refresh_product_view()
@@ -406,13 +435,41 @@ class TracehTuiApp(App[int]):
         if self._busy or self._ui_closing or self._confirmation_action is not None:
             self._write_system("请等待当前操作收敛或先完成权限确认。")
             return
+        from traceh.chat.governance import HELP, handles
+
+        if text == "/help":
+            from traceh.tui.governance import GovernanceScreen
+
+            await self.push_screen(
+                GovernanceScreen(
+                    {
+                        "commands": (
+                            *HELP,
+                            "/settings (F2 配置)",
+                            "/sessions (Ctrl+O 历史对话)",
+                            "/new 新对话",
+                        )
+                    }
+                )
+            )
+            return
+        if text == "/settings":
+            await self.action_settings()
+            return
+        if text == "/sessions":
+            await self.action_sessions()
+            return
+        if text == "/new":
+            await self._choose_session("")
+            return
+        if handles(text):
+            self._launch(self._run_governance(text), name="governance")
+            return
         if text.startswith("/task") and self._product is not None:
             try:
                 command = parse_product_command(text)
             except ProductInputError:
-                self._write_system(
-                    "Usage: /task inspect|approve|reject|cancel|abandon TASK_ID"
-                )
+                self._write_system("Usage: /task inspect|approve|reject|cancel|abandon TASK_ID")
                 return
             if command is not None:
                 self._task_id = command.task_id
@@ -446,13 +503,7 @@ class TracehTuiApp(App[int]):
         button_id = event.button.id
         if self._ui_closing:
             return
-        index = (
-            0
-            if button_id == "gate-primary"
-            else 1
-            if button_id == "gate-secondary"
-            else -1
-        )
+        index = 0 if button_id == "gate-primary" else 1 if button_id == "gate-secondary" else -1
         if index < 0 or index >= len(self._gate_actions):
             return
         action = self._gate_actions[index]
@@ -482,9 +533,7 @@ class TracehTuiApp(App[int]):
         start = self._operation_task
         if start is None or start.done() or self._operation_name != "start":
             self._launch(
-                self._execute_product(
-                    ProductCommand(ProductCommandOperation.CANCEL, task_id)
-                ),
+                self._execute_product(ProductCommand(ProductCommandOperation.CANCEL, task_id)),
                 name="cancel",
             )
             return
@@ -492,9 +541,7 @@ class TracehTuiApp(App[int]):
         async def cancel_after_start_converges() -> None:
             start.cancel()
             await await_worker_convergence(start)
-            await self._execute_product(
-                ProductCommand(ProductCommandOperation.CANCEL, task_id)
-            )
+            await self._execute_product(ProductCommand(ProductCommandOperation.CANCEL, task_id))
 
         self._operation_error = None
         self._operation_name = "cancel"
@@ -522,6 +569,84 @@ class TracehTuiApp(App[int]):
                 if self.is_mounted and not self._ui_closing:
                     self._refresh_product_view()
                     self.query_one("#chat-input", Input).focus()
+
+    async def _run_governance(self, text: str) -> None:
+        from traceh.chat.governance import ChatGovernance
+        from traceh.tui.governance import GovernanceScreen, MemoryScreen
+
+        async def interact(screen):
+            answer = asyncio.get_running_loop().create_future()
+
+            def completed(value):
+                if not answer.done():
+                    answer.set_result(value)
+
+            await self.push_screen(screen, completed)
+            try:
+                return await answer
+            finally:
+                if screen in self.screen_stack:
+                    self.pop_screen()
+
+        async def confirm(review):
+            return await interact(GovernanceScreen(review, confirmation=True))
+
+        control = ChatGovernance(self._runtime, self._session.session_id)
+        if text.strip() == "/memory":
+            draft = await interact(MemoryScreen(await control.memory()))
+            if not isinstance(draft, str):
+                return
+            text = draft
+        result = await control.run(
+            text,
+            confirm=confirm,
+        )
+        await self.push_screen(GovernanceScreen(result))
+        await self._refresh_context()
+
+    def action_copy_selection(self) -> None:
+        if isinstance(self.screen, CopyMenu):
+            self.screen.copy_selection()
+            return
+        focused = self.focused
+        text = (
+            focused.selected_text if isinstance(focused, (Input, TextArea)) else ""
+        ) or self.screen.get_selected_text()
+        if text:
+            self.copy_to_clipboard(text)
+
+    def copy_to_clipboard(self, text: str) -> None:
+        if sys.platform == "win32" and not self.is_headless:
+            from traceh.tui.clipboard import copy_windows_text
+
+            # The existing Textual clipboard remains the in-app paste owner.
+            self._clipboard = text
+            try:
+                copy_windows_text(text)
+            except OSError:
+                self.notify("系统剪贴板暂不可用；文字仍可在 TUI 内粘贴。", severity="warning")
+        else:
+            super().copy_to_clipboard(text)
+
+    @on(CopyRequested)
+    def show_copy_menu(self, event: CopyRequested) -> None:
+        if not self._ui_closing and not isinstance(self.screen, CopyMenu):
+            self.push_screen(CopyMenu(event.text, event.position))
+
+    def action_toggle_product_panel(self) -> None:
+        if len(self.screen_stack) != 1 or self._ui_closing:
+            return
+        panel = self.query_one("#product-column", Vertical)
+        panel.display = not panel.display
+        if panel.display and self._confirmation_action is not None:
+            self.call_after_refresh(self.query_one("#confirmation-input", Input).focus)
+        elif not panel.display:
+            self.set_focus(None)
+            self.query_one("#chat-input", Input).focus()
+
+    def action_memory_panel(self) -> None:
+        if len(self.screen_stack) == 1 and not self._ui_closing:
+            self._launch(self._run_governance("/memory"), name="governance")
 
     async def _run_turn(self, text: str) -> None:
         prepared = None
@@ -574,16 +699,12 @@ class TracehTuiApp(App[int]):
             while True:
                 self._context_refresh_pending = False
                 try:
-                    snapshot = await self._context_reader.load(
-                        self._session.session_id
-                    )
+                    snapshot = await self._context_reader.load(self._session.session_id)
                 except Exception as error:
                     # Context is a read-only view. Its failure must never reach
                     # the Turn, the ProductTask or shutdown.
                     self._context_snapshot = None
-                    self._context_error = _safe_error_code(
-                        error, "context-inspection-unavailable"
-                    )
+                    self._context_error = _safe_error_code(error, "context-inspection-unavailable")
                 else:
                     self._context_snapshot = snapshot
                     self._context_error = None
@@ -617,9 +738,7 @@ class TracehTuiApp(App[int]):
         """Move the single Product pane from old durable history to ``pending``."""
 
         observed = self._observation
-        selected_task_id = (
-            observed.task_id if observed is not None else self._task_id
-        )
+        selected_task_id = observed.task_id if observed is not None else self._task_id
         if selected_task_id is not None and selected_task_id != pending.task_id:
             await self._close_observer()
             self._observation = None
@@ -633,9 +752,7 @@ class TracehTuiApp(App[int]):
         if isinstance(update, SessionEventUpdate):
             completed = update.completed_activity
             elapsed = None if completed is None else completed.elapsed_seconds
-            line = self._timeline_renderer.render(
-                update.event, elapsed_seconds=elapsed
-            )
+            line = self._timeline_renderer.render(update.event, elapsed_seconds=elapsed)
             if line is not None:
                 self._set_activity(line)
             # Compaction changes what the model may still see, so it also lands
@@ -660,8 +777,14 @@ class TracehTuiApp(App[int]):
             )
             return
         if isinstance(update, TurnFailedUpdate):
-            self._write_system(f"Turn 失败（{sanitize(update.error_type)}）。")
-            self._set_activity("Turn 失败")
+            if update.context_limit_exceeded:
+                from traceh.cli.context_pressure import context_pressure_text
+
+                self._write_system(context_pressure_text(update.context_pressure))
+                self._set_activity("上下文空间不足")
+            else:
+                self._write_system(f"Turn 失败（{sanitize(update.error_type)}）。")
+                self._set_activity("Turn 失败")
             return
         if isinstance(update, TurnInterruptedUpdate):
             self._write_system("Turn 已在 durable 收敛后中断。")
@@ -692,9 +815,7 @@ class TracehTuiApp(App[int]):
         result = await self._product.start(request)
         self._start_request = None
         await self._refresh_observation()
-        self._write_system(
-            f"ProductTask 已到达 durable 状态：{result.summary.status.value}。"
-        )
+        self._write_system(f"ProductTask 已到达 durable 状态：{result.summary.status.value}。")
 
     async def _execute_product(self, command: ProductCommand) -> None:
         assert self._product is not None
@@ -740,9 +861,7 @@ class TracehTuiApp(App[int]):
     async def _watch_observation(self, observer: ProductObservationSession) -> None:
         while True:
             dirty = asyncio.create_task(observer.wait_dirty())
-            periodic = asyncio.create_task(
-                self._clock.sleep(self._product_refresh_seconds)
-            )
+            periodic = asyncio.create_task(self._clock.sleep(self._product_refresh_seconds))
             try:
                 done, _pending = await asyncio.wait(
                     (dirty, periodic), return_when=asyncio.FIRST_COMPLETED
@@ -762,9 +881,7 @@ class TracehTuiApp(App[int]):
                     if observer is self._observer:
                         self._apply_observation(observation)
             except Exception as error:
-                self._show_observation_error(
-                    error, fallback="product-observation-unavailable"
-                )
+                self._show_observation_error(error, fallback="product-observation-unavailable")
 
     async def _pulse(self) -> None:
         while True:
@@ -772,11 +889,7 @@ class TracehTuiApp(App[int]):
             if not self.is_mounted:
                 return
             now = self._clock.monotonic()
-            if (
-                self._observer is None
-                and not self._busy
-                and now >= self._next_product_discovery_at
-            ):
+            if self._observer is None and not self._busy and now >= self._next_product_discovery_at:
                 await self._retry_product_observation()
             self._refresh_product_view()
 
@@ -807,20 +920,14 @@ class TracehTuiApp(App[int]):
         now = self._clock.monotonic()
         if self._ui_closing:
             waiting = (
-                0
-                if self._ui_closing_started_at is None
-                else int(now - self._ui_closing_started_at)
+                0 if self._ui_closing_started_at is None else int(now - self._ui_closing_started_at)
             )
             return TransientProductState("closing", "leave", max(0, waiting))
         if self._busy:
             waiting = (
-                0
-                if self._operation_started_at is None
-                else int(now - self._operation_started_at)
+                0 if self._operation_started_at is None else int(now - self._operation_started_at)
             )
-            return TransientProductState(
-                "operation_pending", self._operation_name, max(0, waiting)
-            )
+            return TransientProductState("operation_pending", self._operation_name, max(0, waiting))
         durable_task_exists = (
             self._observation is not None and self._observation.summary is not None
         )
@@ -899,9 +1006,7 @@ class TracehTuiApp(App[int]):
         self._confirmation_action = action
         panel = self.query_one("#confirmation-panel", Vertical)
         panel.display = True
-        self.query_one("#confirmation-label", Static).update(
-            f"输入 {token} 确认 · Esc 取消"
-        )
+        self.query_one("#confirmation-label", Static).update(f"输入 {token} 确认 · Esc 取消")
         field = self.query_one("#confirmation-input", Input)
         field.value = ""
         field.placeholder = token
@@ -1028,9 +1133,7 @@ class TracehTuiApp(App[int]):
             )
 
     def _set_activity(self, content: object) -> None:
-        self.query_one("#activity", Static).update(
-            safe_display_block(content, limit=500)
-        )
+        self.query_one("#activity", Static).update(safe_display_block(content, limit=500))
 
     def _set_product_text(self, content: object, *, terminal: bool = False) -> None:
         self.query_one("#product-state", Static).update(
@@ -1042,8 +1145,7 @@ class TracehTuiApp(App[int]):
         session = self._session.session_id[:8]
         config = self._runtime.config
         return safe_display_block(
-            f"traceharness · {workspace} · session {session}    "
-            f"{config.provider}/{config.model}",
+            f"traceharness · {workspace} · session {session}    {config.provider}/{config.model}",
             limit=500,
             max_lines=1,
         )
@@ -1051,9 +1153,7 @@ class TracehTuiApp(App[int]):
     async def action_identity(self) -> None:
         if self._ui_closing:
             return
-        observation_reader = (
-            None if self._product is None else self._product.observation
-        )
+        observation_reader = None if self._product is None else self._product.observation
         await self.push_screen(
             ProductIdentityScreen(
                 chat_session_id=self._session.session_id,
@@ -1067,9 +1167,7 @@ class TracehTuiApp(App[int]):
     async def action_changes(self) -> None:
         if self._ui_closing:
             return
-        observation_reader = (
-            None if self._product is None else self._product.observation
-        )
+        observation_reader = None if self._product is None else self._product.observation
         await self.push_screen(
             ProductChangesScreen(
                 observation_reader=observation_reader,
@@ -1080,9 +1178,103 @@ class TracehTuiApp(App[int]):
     async def action_context(self) -> None:
         if self._ui_closing:
             return
+        await self.push_screen(ContextScreen(self._context_reader, self._session.session_id))
+
+    async def action_settings(self) -> None:
+        if self._ui_closing or self._busy or self._confirmation_action is not None:
+            self._write_system("请等待当前操作收敛或先完成权限确认，再打开配置。")
+            return
+        if self._settings_args is None:
+            self._write_system("此嵌入式 TUI 未提供启动参数；请使用 chat --tui --configure 配置。")
+            return
+        from traceh.cli.tui_config import PROFILE_NAME, form_values
+        from traceh.tui.settings import SettingsScreen
+
+        draft = copy(self._settings_args)
+        draft.workspace = None
+        draft.session_id = self._session.session_id
+        draft.plugins = list(self._runtime.enabled_plugin_ids)
         await self.push_screen(
-            ContextScreen(self._context_reader, self._session.session_id)
+            SettingsScreen(
+                draft,
+                form_values(draft),
+                getattr(self._settings_args, "tui_profile", None) or Path.cwd() / PROFILE_NAME,
+                startup=False,
+                live_apply=self._validate_settings_apply,
+            ),
+            self._apply_settings,
         )
+
+    async def action_sessions(self) -> None:
+        if self._busy or self._ui_closing or self._confirmation_action is not None:
+            self._write_system("请先等待当前操作完成，再切换对话。")
+            return
+        if self._settings_args is None:
+            self._write_system("此嵌入式界面未提供切换会话的启动参数。")
+            return
+        from traceh.tui.session_picker import SessionPicker, session_choices
+
+        try:
+            choices = await session_choices(self._runtime, self._session.workspace)
+        except Exception:
+            self._write_system("历史对话暂时无法读取，当前对话未改变。")
+            return
+        await self.push_screen(SessionPicker(choices), self._choose_session)
+
+    async def _choose_session(self, session_id) -> None:
+        if session_id is None or session_id == self._session.session_id:
+            return
+        if self._settings_args is None:
+            self._write_system("此嵌入式界面未提供切换会话的启动参数。")
+            return
+        if self._busy or self._ui_closing or self._confirmation_action is not None:
+            self._write_system("当前操作尚未完成，对话未切换。")
+            return
+        from traceh.tui.session_picker import session_choices
+
+        if session_id and session_id not in dict(
+            (sid, label)
+            for label, sid in await session_choices(self._runtime, self._session.workspace)
+        ):
+            self._write_system("所选对话不属于当前工作区或已不可用。")
+            return
+        draft = copy(self._settings_args)
+        draft.workspace = None if session_id else self._session.workspace
+        draft.session_id = session_id or None
+        draft.data_dir = self._runtime.config.data_dir
+        draft.plugins = list(self._runtime.enabled_plugin_ids)
+        draft._entry_workspace = self._session.workspace
+        await self._apply_settings(draft)
+
+    def _validate_settings_apply(self, args: Namespace) -> None:
+        if (
+            args.session_id is not None
+            and tuple(args.plugins or ()) != self._runtime.enabled_plugin_ids
+        ):
+            raise LaunchConfigurationError(
+                "已有会话的插件切换请先用 /plugins use；或清空会话 ID、填写工作区新建会话。"
+            )
+        if args.session_id == self._session.session_id:
+            if (
+                args.data_dir is None
+                or Path(args.data_dir).resolve() != self._runtime.config.data_dir.resolve()
+            ):
+                raise LaunchConfigurationError("继续当前会话必须使用原数据目录；换目录请新建会话。")
+            previous = self._settings_args.product_config
+            if (args.product_config.resolve() if args.product_config else None) != (
+                previous.resolve() if previous else None
+            ):
+                raise LaunchConfigurationError("更换 Product 配置需要清空会话 ID 并填写工作区。")
+
+    async def _apply_settings(self, args: Namespace | None) -> None:
+        if args is None:
+            return
+        if self._busy or self._ui_closing or self._confirmation_action is not None:
+            self._write_system("当前操作尚未收敛，配置未应用；请空闲时重新打开配置。")
+            return
+        self._restart_request = RestartChat(args)
+        self._write_system("正在应用配置：先收尾运行环境，再从账本恢复会话。")
+        await self._start_shutdown()
 
     async def action_cancel_confirmation(self) -> None:
         if self._confirmation_action is None:
@@ -1094,9 +1286,7 @@ class TracehTuiApp(App[int]):
     async def action_task_conversation(self) -> None:
         if self._ui_closing:
             return
-        observation_reader = (
-            None if self._product is None else self._product.observation
-        )
+        observation_reader = None if self._product is None else self._product.observation
         await self.push_screen(
             TaskConversationScreen(
                 self._task_conversation,
@@ -1106,6 +1296,10 @@ class TracehTuiApp(App[int]):
         )
 
     async def action_leave(self) -> None:
+        self._restart_request = None
+        await self._start_shutdown()
+
+    async def _start_shutdown(self) -> None:
         if self._ui_closing:
             return
         self._ui_closing = True
@@ -1134,7 +1328,7 @@ class TracehTuiApp(App[int]):
         failed |= await self._close_stage("runtime", self._runtime.dispose)
         self._shutdown_complete = True
         self._refresh_product_view()
-        self.call_later(self.exit, 1 if failed else 130)
+        self.call_later(self.exit, 1 if failed else self._restart_request or 130)
 
     async def _close_stage(self, name: str, close) -> bool:
         self._shutdown_states[name] = "等待中"
@@ -1162,9 +1356,7 @@ class TracehTuiApp(App[int]):
             lines.append(f"  {labels[key]:<14} {self._shutdown_states[key]}")
         lines.extend(("", f"已等待 {format_age(waiting_seconds)}"))
         if waiting_seconds >= 20:
-            lines.append(
-                "收敛时间较长；界面仍在等待原 owner 返回，不提供绕过 owner 的强制退出。"
-            )
+            lines.append("收敛时间较长；界面仍在等待原 owner 返回，不提供绕过 owner 的强制退出。")
         return "\n".join(lines)
 
     async def on_unmount(self) -> None:

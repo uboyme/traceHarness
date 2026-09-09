@@ -1,0 +1,420 @@
+{
+  "format": 2,
+  "notice": "Synthetic evaluation fixtures only; values, paths, policies and model choices here are explicit test inputs, never production defaults.",
+  "acceptance": {
+    "models": [
+      "qwen-plus",
+      "qwen3.8-max-0902",
+      "deepseek-v4-pro-0813"
+    ],
+    "repeats": 2,
+    "core_cases_per_model": 28,
+    "minimum_core_task_passed_per_model": 26,
+    "scope_violations": 0,
+    "replay_violations": 0,
+    "invariant_violations": 0,
+    "semantic_cases": "Diagnostic lexical baseline, reported separately before C3. Never counted as evidence of semantic success when unanswered.",
+    "answer_contract": "The question exposes explicit per-field answer_fields descriptions, separately from expected values. Judge exact string values after strict JSON decoding; no coercion, answer extraction or LLM self-grading. Preserve previous format-1 runs without regrading; format-2 measurements use fresh complete grids."
+  },
+  "bounds": {
+    "max_steps": 12,
+    "max_output_tokens": 16384,
+    "temperature": 0,
+    "provider_timeout_seconds": 300,
+    "allowed_tools": [
+      "request_skill_reference",
+      "request_workspace_memory",
+      "request_history_page",
+      "list_files",
+      "read_file",
+      "search_text"
+    ],
+    "retry": {
+      "max_attempts": 3,
+      "max_elapsed_seconds": 600,
+      "base_delay_seconds": 1,
+      "max_delay_seconds": 8,
+      "retry_after_cap_seconds": 8,
+      "jitter_ratio": 0
+    }
+  },
+  "facts": {
+    "active": {
+      "fact_slot": "maintenance-retention",
+      "body": "合成项目批准事实：传感器维护与标定记录的归档保留窗口为 38 天。",
+      "value": "38"
+    },
+    "proposed": {
+      "fact_slot": "release-audit",
+      "body": "合成未批准提议：发布审计的保留窗口为 71 天。",
+      "value": "71"
+    },
+    "revoked": {
+      "fact_slot": "release-audit",
+      "body": "合成后续撤销事实：发布审计的保留窗口为 82 天。",
+      "value": "82"
+    },
+    "predecessor": {
+      "fact_slot": "release-audit",
+      "body": "合成旧批准事实：发布审计的保留窗口为 64 天。",
+      "value": "64"
+    },
+    "successor": {
+      "fact_slot": "release-audit",
+      "body": "合成当前批准事实：发布审计的保留窗口为 37 天。",
+      "value": "37"
+    },
+    "foreign": {
+      "fact_slot": "release-audit",
+      "body": "合成另一个项目的批准事实：发布审计的保留窗口为 93 天。",
+      "value": "93"
+    },
+    "semantic": {
+      "fact_slot": "decision-record",
+      "body": "合成项目批准事实：凡是会改变系统设计取舍的决定，必须先取得评审批准，批准凭据标签为 DECISION-527。",
+      "value": "DECISION-527"
+    }
+  },
+  "history": {
+    "first": "合成历史记录：接口评审的登记代号为 REVIEW-613。",
+    "second": "合成历史记录：数据审计的登记代号为 AUDIT-824。",
+    "old_retention": "合成历史记录：当时传感器维护记录的归档保留窗口为 64 天。",
+    "batch": "合成历史记录：当次传感器维护的批次代号为 BATCH-946。",
+    "summary": "早前的接口评审、数据审计或传感器维护记录。具体原始值请按历史页核对。",
+    "seed_instruction": "这是用于本次合成评估的历史记录。请只回复已记录，不查询工具或补充事实。"
+  },
+  "files": {
+    "current": {
+      "path": "specs.txt",
+      "body": "Synthetic workspace record: current inspection label = FILE-465.\n"
+    },
+    "observed": {
+      "path": "review_state.txt",
+      "before": "Synthetic review state: STALE-148.\n",
+      "after": "Synthetic review state: CURRENT-259.\n"
+    }
+  },
+  "cases": [
+    {
+      "id": "memory_summary",
+      "group": "core",
+      "setup": "active",
+      "memory_tier": "summary",
+      "query": "本项目当前批准的传感器维护与标定记录，归档保留窗口是多少天？",
+      "answers": {
+        "days": "38"
+      },
+      "sources": [
+        "memory:active"
+      ],
+      "answer_fields": {
+        "days": "天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "memory_directory",
+      "group": "core",
+      "setup": "active",
+      "memory_tier": "directory",
+      "query": "本项目当前批准的传感器维护与标定记录，归档保留窗口是多少天？",
+      "answers": {
+        "days": "38"
+      },
+      "sources": [
+        "memory:active"
+      ],
+      "required_tools": [
+        "request_workspace_memory"
+      ],
+      "answer_fields": {
+        "days": "天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "memory_cross_session",
+      "group": "core",
+      "setup": "active-cross-session",
+      "memory_tier": "directory",
+      "query": "这是本项目的新会话。请查明项目当前批准的传感器维护与标定记录归档保留窗口是多少天。",
+      "answers": {
+        "days": "38"
+      },
+      "sources": [
+        "memory:active"
+      ],
+      "required_tools": [
+        "request_workspace_memory"
+      ],
+      "answer_fields": {
+        "days": "天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "memory_proposed_excluded",
+      "group": "core",
+      "setup": "proposed",
+      "memory_tier": "summary",
+      "query": "本项目当前已批准的发布审计保留窗口是多少天？没有当前批准事实时写 UNKNOWN。",
+      "answers": {
+        "days": "UNKNOWN"
+      },
+      "sources": [],
+      "forbidden_bodies": [
+        "proposed"
+      ],
+      "answer_fields": {
+        "days": "天数；有当前批准事实时仅十进制数字，不带单位或说明；没有时为大写 UNKNOWN"
+      }
+    },
+    {
+      "id": "memory_revoked_excluded",
+      "group": "core",
+      "setup": "revoked",
+      "memory_tier": "summary",
+      "query": "本项目当前已批准的发布审计保留窗口是多少天？没有当前批准事实时写 UNKNOWN。",
+      "answers": {
+        "days": "UNKNOWN"
+      },
+      "sources": [],
+      "forbidden_bodies": [
+        "revoked"
+      ],
+      "answer_fields": {
+        "days": "天数；有当前批准事实时仅十进制数字，不带单位或说明；没有时为大写 UNKNOWN"
+      }
+    },
+    {
+      "id": "memory_superseded_excluded",
+      "group": "core",
+      "setup": "superseded",
+      "memory_tier": "directory",
+      "query": "本项目当前已批准的发布审计保留窗口是多少天？",
+      "answers": {
+        "days": "37"
+      },
+      "sources": [
+        "memory:successor"
+      ],
+      "forbidden_bodies": [
+        "predecessor"
+      ],
+      "answer_fields": {
+        "days": "天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "memory_foreign_excluded",
+      "group": "core",
+      "setup": "foreign",
+      "memory_tier": "summary",
+      "query": "本项目当前已批准的发布审计保留窗口是多少天？没有当前批准事实时写 UNKNOWN。",
+      "answers": {
+        "days": "UNKNOWN"
+      },
+      "sources": [],
+      "forbidden_bodies": [
+        "foreign"
+      ],
+      "answer_fields": {
+        "days": "天数；有当前批准事实时仅十进制数字，不带单位或说明；没有时为大写 UNKNOWN"
+      }
+    },
+    {
+      "id": "history_page",
+      "group": "core",
+      "setup": "history-first",
+      "memory_tier": "summary",
+      "query": "请从早前接口评审的原始历史记录中找出登记代号。",
+      "answers": {
+        "label": "REVIEW-613"
+      },
+      "sources": [
+        "history:first"
+      ],
+      "required_tools": [
+        "request_history_page"
+      ],
+      "freshness": "unknown",
+      "answer_fields": {
+        "label": "接口评审登记代号；仅代号本身"
+      }
+    },
+    {
+      "id": "history_two_pages",
+      "group": "core",
+      "setup": "history-two",
+      "memory_tier": "summary",
+      "query": "请对照早前接口评审与数据审计两份原始历史记录，分别列出登记代号。",
+      "answers": {
+        "interface": "REVIEW-613",
+        "audit": "AUDIT-824"
+      },
+      "sources": [
+        "history:first",
+        "history:second"
+      ],
+      "required_tools": [
+        "request_history_page"
+      ],
+      "freshness": "unknown",
+      "answer_fields": {
+        "interface": "接口评审登记代号；仅代号本身",
+        "audit": "数据审计登记代号；仅代号本身"
+      }
+    },
+    {
+      "id": "history_stale_and_current_file",
+      "group": "core",
+      "setup": "history-stale",
+      "memory_tier": "summary",
+      "query": "请比较早前读取到的 review_state.txt 状态和工作区该文件现在的状态，分别给出先前值与当前值。",
+      "answers": {
+        "previous": "STALE-148",
+        "current": "CURRENT-259"
+      },
+      "sources": [
+        "history:observed",
+        "file:observed-after"
+      ],
+      "required_tools": [
+        "request_history_page",
+        "read_file"
+      ],
+      "freshness": "stale",
+      "answer_fields": {
+        "previous": "早前读取到的状态代号；仅代号，不含整行文字、字段前缀或标点",
+        "current": "文件现在的状态代号；仅代号，不含整行文字、字段前缀或标点"
+      }
+    },
+    {
+      "id": "skill_and_memory",
+      "group": "core",
+      "setup": "skill-memory",
+      "memory_tier": "directory",
+      "query": "依据传感器维护资料和本项目当前批准事实，停机标定要记录什么流程代号、稳定等待多少秒，以及记录归档保留多少天？",
+      "answers": {
+        "procedure": "CAL-OFF-731",
+        "seconds": "47",
+        "days": "38"
+      },
+      "sources": [
+        "skill:calibration/offline",
+        "memory:active"
+      ],
+      "required_tools": [
+        "request_skill_reference",
+        "request_workspace_memory"
+      ],
+      "answer_fields": {
+        "procedure": "停机标定流程代号；仅代号本身",
+        "seconds": "稳定等待秒数；仅十进制数字，不带单位或说明",
+        "days": "天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "memory_and_history",
+      "group": "core",
+      "setup": "memory-history",
+      "memory_tier": "directory",
+      "query": "请区分传感器维护记录过去历史中采用的归档保留天数，与本项目当前批准的归档保留天数。",
+      "answers": {
+        "previous": "64",
+        "current": "38"
+      },
+      "sources": [
+        "memory:active",
+        "history:old_retention"
+      ],
+      "required_tools": [
+        "request_workspace_memory",
+        "request_history_page"
+      ],
+      "freshness": "unknown",
+      "answer_fields": {
+        "previous": "过去历史的保留天数；仅十进制数字，不带单位或说明",
+        "current": "当前批准的保留天数；仅十进制数字，不带单位或说明"
+      }
+    },
+    {
+      "id": "all_three_sources",
+      "group": "core",
+      "setup": "skill-memory-history",
+      "memory_tier": "directory",
+      "query": "请核对传感器维护资料中的停机标定流程代号、本项目当前批准的记录归档保留天数，以及早前历史记录中的维护批次代号。",
+      "answers": {
+        "procedure": "CAL-OFF-731",
+        "days": "38",
+        "batch": "BATCH-946"
+      },
+      "sources": [
+        "skill:calibration/offline",
+        "memory:active",
+        "history:batch"
+      ],
+      "required_tools": [
+        "request_skill_reference",
+        "request_workspace_memory",
+        "request_history_page"
+      ],
+      "freshness": "unknown",
+      "answer_fields": {
+        "procedure": "停机标定流程代号；仅代号本身",
+        "days": "天数；仅十进制数字，不带单位或说明",
+        "batch": "早前维护批次代号；仅代号本身"
+      }
+    },
+    {
+      "id": "ordinary_workspace_read",
+      "group": "core",
+      "setup": "current-file",
+      "memory_tier": "summary",
+      "query": "请读取工作区 specs.txt，报告其中当前的 inspection label。",
+      "answers": {
+        "label": "FILE-465"
+      },
+      "sources": [
+        "file:current"
+      ],
+      "required_tools": [
+        "read_file"
+      ],
+      "answer_fields": {
+        "label": "当前 inspection label；仅标签代号本身"
+      }
+    },
+    {
+      "id": "semantic_memory_paraphrase",
+      "group": "semantic-diagnostic",
+      "setup": "semantic-memory",
+      "memory_tier": "summary",
+      "query": "打算把单体应用拆成微服务，动工前需要办的手续对应哪一个凭据标签？",
+      "answers": {
+        "label": "DECISION-527"
+      },
+      "sources": [
+        "memory:semantic"
+      ],
+      "answer_fields": {
+        "label": "凭据标签；仅标签代号本身"
+      }
+    },
+    {
+      "id": "semantic_skill_paraphrase",
+      "group": "semantic-diagnostic",
+      "setup": "semantic-skill",
+      "memory_tier": "summary",
+      "query": "The new build has broken production. We must restore the previous working deployment. Which bookkeeping label and retention length does the handbook require?",
+      "answers": {
+        "label": "ROLLBACK-843",
+        "days": "26"
+      },
+      "sources": [
+        "skill:delivery/rollback"
+      ],
+      "answer_fields": {
+        "label": "Bookkeeping label, only the identifier itself",
+        "days": "Retention in days, decimal digits only, without units or explanation"
+      }
+    }
+  ]
+}

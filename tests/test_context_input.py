@@ -181,11 +181,11 @@ async def test_renderer_escapes_body_without_changing_exact_bytes(tmp_path):
     content = rendered.content
     # Decode the single actual JSON array, proving that the injected text is a
     # string value in one item rather than an extra message or framing element.
-    array_text = content.split("\n", 1)[1].rsplit("\n", 1)[0]
+    array_text = content.split("\n")[1]
     items = json.loads(array_text)
     assert len(items) == 1
     assert items[0]["body"] == snapshot.to_dict()["blocks"][0]["body"]
-    assert items[0]["history_notice"]["freshness"] == "unknown"
+    assert items[0]["current_workspace_validity"] == "unknown"
     assert snapshot.to_dict()["budget"]["rendered_bytes"] == len(content.encode("utf-8"))
 
 

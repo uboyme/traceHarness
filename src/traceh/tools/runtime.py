@@ -10,6 +10,7 @@ from uuid import uuid4
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint, to_json_value
 from traceh.api.llm import ToolCall
 from traceh.api.tools import (
+    EffectKind,
     PreparedToolCall,
     Tool,
     ToolAdmissionDecision,
@@ -18,6 +19,12 @@ from traceh.api.tools import (
 )
 from traceh.concurrency import await_worker_convergence
 from traceh.session.service import SessionService
+from traceh.session.tool_output import (
+    OUTPUT_READ_TOOL,
+    OUTPUT_SEARCH_TOOL,
+    output_reference,
+    prepare_tool_output,
+)
 from traceh.tools.middleware import ToolInvocation, ToolMiddleware, invoke_middleware_chain
 from traceh.tools.policy import DecisionKind, ToolPolicy, evaluate_policies
 from traceh.tools.registry import ToolRegistry
@@ -73,6 +80,7 @@ class ToolRuntime:
         timeout_seconds: float = 60.0,
         max_output_chars: int = 24_000,
         admission_gate: ToolAdmissionGate | None = None,
+        workspace_observer=None,
     ) -> None:
         self.registry = registry
         self.sessions = sessions
@@ -91,12 +99,11 @@ class ToolRuntime:
             binding is not component_bindings[0] for binding in component_bindings[1:]
         ):
             raise ValueError("tool runtime mixes composition resource lineages")
-        self._composition_resource_binding = (
-            component_bindings[0] if component_bindings else None
-        )
+        self._composition_resource_binding = component_bindings[0] if component_bindings else None
         self.timeout_seconds = timeout_seconds
         self.max_output_chars = max_output_chars
         self.admission_gate = admission_gate
+        self.workspace_observer = workspace_observer
 
     async def execute_batch(
         self,
@@ -155,22 +162,17 @@ class ToolRuntime:
             cancellation: asyncio.CancelledError | None = None
             if not gate_candidates or self.admission_gate is None:
                 decisions = tuple(
-                    ToolAdmissionDecision(call.tool_call_id, True)
-                    for call in gate_candidates
+                    ToolAdmissionDecision(call.tool_call_id, True) for call in gate_candidates
                 )
             else:
                 admission_task = asyncio.create_task(
                     self.admission_gate.admit(tuple(gate_candidates), context),
                     name="traceh-tool-admission",
                 )
-                decisions, cancellation = await self._owned_task_result(
-                    admission_task
-                )
+                decisions, cancellation = await self._owned_task_result(admission_task)
             self._validate_admission_decisions(decisions, gate_candidates)
 
-            for position, decision in zip(
-                candidate_positions, decisions, strict=True
-            ):
+            for position, decision in zip(candidate_positions, decisions, strict=True):
                 item = prepared[position]
                 assert isinstance(item, _PreparedInvocation)
                 if not decision.admitted:
@@ -205,8 +207,16 @@ class ToolRuntime:
                     continue
                 parallel_safe = item.tool.effect_kind.is_parallel_safe
                 if not parallel_safe:
+                    before = (
+                        await self._observe_workspace(context)
+                        if item.tool.effect_kind in {EffectKind.WORKSPACE_WRITE, EffectKind.PROCESS}
+                        else None
+                    )
                     result = await self._dispatch_one(item)
-                    await self._append_result(context, result, composition_revision)
+                    observation = await self._finish_observation(context, before)
+                    await self._append_result(
+                        context, result, composition_revision, workspace_observation=observation
+                    )
                     results.append(result)
                     index += 1
                     continue
@@ -222,11 +232,24 @@ class ToolRuntime:
                     group.append(candidate)
                     index += 1
 
-                group_results = await asyncio.gather(
-                    *(self._dispatch_one(item) for item in group)
+                before = (
+                    await self._observe_workspace(context)
+                    if any(item.tool.effect_kind is EffectKind.WORKSPACE_READ for item in group)
+                    else None
                 )
-                for result in group_results:
-                    await self._append_result(context, result, composition_revision)
+                group_results = await asyncio.gather(*(self._dispatch_one(item) for item in group))
+                observation = await self._finish_observation(context, before)
+                for invocation, result in zip(group, group_results, strict=True):
+                    await self._append_result(
+                        context,
+                        result,
+                        composition_revision,
+                        workspace_observation=(
+                            observation
+                            if invocation.tool.effect_kind is EffectKind.WORKSPACE_READ
+                            else None
+                        ),
+                    )
                     results.append(result)
         except asyncio.CancelledError as cancelled:
             finalizer = asyncio.create_task(
@@ -365,6 +388,7 @@ class ToolRuntime:
                         or "Tool execution was cancelled."
                     ),
                     data=data,
+                    output_ref=output_reference(outcome),
                     effect_id=str(outcome.data.get("effect_id")),
                     error_type=(
                         str(outcome.data.get("error_type"))
@@ -379,13 +403,33 @@ class ToolRuntime:
         context: ToolExecutionContext,
         result: ToolRunResult,
         composition_revision: str,
+        *,
+        workspace_observation=None,
     ) -> None:
+        data = result.to_event_data(step_id=context.step_id)
+        if self.workspace_observer is not None:
+            # Host envelope metadata: ToolOutput.data cannot supply or override this proof.
+            data["workspace_observation"] = workspace_observation
         await self.sessions.append_session(
             context.session_id,
             "tool/result",
-            result.to_event_data(step_id=context.step_id),
+            data,
             composition_revision=composition_revision,
         )
+
+    async def _observe_workspace(self, context):
+        if self.workspace_observer is None:
+            return None
+        if await self.sessions.workspace_for(context.session_id) != context.workspace:
+            return None
+        return await self.workspace_observer(context.session_id)
+
+    async def _finish_observation(self, context, before):
+        from traceh.workspaces.observation import stable_observation
+
+        if before is None:
+            return None
+        return stable_observation(before, await self._observe_workspace(context))
 
     async def _prepare_one(
         self,
@@ -495,90 +539,28 @@ class ToolRuntime:
                     # including whatever the command printed first. Re-labelled
                     # here so the runtime's own budget handler cannot swallow it.
                     raise ToolReportedTimeout(error) from error
-            content = output.content
-            truncated = False
-            if len(content) > self.max_output_chars:
-                content = content[: self.max_output_chars] + "\n...[truncated by TraceHarness]"
-                truncated = True
             outcome_data: dict[str, JsonValue] = {
                 "effect_id": effect_id,
                 "tool_call_id": call.id,
                 "tool_name": call.name,
                 "status": "succeeded",
-                "content": content,
+                "content": output.content,
                 "data": output.data,
                 "evidence": list(output.evidence),
-                "truncated": truncated,
             }
-            await self.sessions.append_effect(
-                call_context.session_id,
-                "effect/outcome",
-                outcome_data,
-                causation_id=intent.event_id,
-            )
-            return ToolRunResult(
-                call.id,
-                call.name,
-                "succeeded",
-                content,
-                data=output.data,
-                effect_id=effect_id,
-            )
         except ToolReportedTimeout as reported:
-            # Keep the tool's own account of its timeout: it carries the real
-            # duration and whatever the command managed to print.
-            message = str(reported)
-            truncated = False
-            if len(message) > self.max_output_chars:
-                message = message[: self.max_output_chars] + "\n...[truncated by TraceHarness]"
-                truncated = True
-            await self.sessions.append_effect(
-                call_context.session_id,
-                "effect/outcome",
-                {
-                    "effect_id": effect_id,
-                    "tool_call_id": call.id,
-                    "tool_name": call.name,
-                    "status": "failed",
-                    "error_type": type(reported.error).__name__,
-                    "message": message,
-                    "truncated": truncated,
-                    "reported_by": "tool",
-                },
-                causation_id=intent.event_id,
-            )
-            return ToolRunResult(
-                call.id,
-                call.name,
-                "failed",
-                message,
-                effect_id=effect_id,
-                error_type=type(reported.error).__name__,
-            )
+            outcome_data = {
+                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
+                "status": "failed", "error_type": type(reported.error).__name__,
+                "message": str(reported), "reported_by": "tool",
+            }
         except TimeoutError:
-            message = f"Tool timed out after {self.timeout_seconds:.1f}s"
-            await self.sessions.append_effect(
-                call_context.session_id,
-                "effect/outcome",
-                {
-                    "effect_id": effect_id,
-                    "tool_call_id": call.id,
-                    "tool_name": call.name,
-                    "status": "failed",
-                    "error_type": "TimeoutError",
-                    "message": message,
-                    "reported_by": "runtime",
-                },
-                causation_id=intent.event_id,
-            )
-            return ToolRunResult(
-                call.id,
-                call.name,
-                "failed",
-                message,
-                effect_id=effect_id,
-                error_type="TimeoutError",
-            )
+            outcome_data = {
+                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
+                "status": "failed", "error_type": "TimeoutError",
+                "message": f"Tool timed out after {self.timeout_seconds:.1f}s",
+                "reported_by": "runtime",
+            }
         except asyncio.CancelledError as cancelled:
             async def finalize_cancel() -> None:
                 await self.sessions.append_effect(
@@ -609,27 +591,36 @@ class ToolRuntime:
                     raise cancelled from failure
             raise cancelled
         except Exception as error:
-            message = f"{type(error).__name__}: {error}"
-            await self.sessions.append_effect(
-                call_context.session_id,
-                "effect/outcome",
-                {
-                    "effect_id": effect_id,
-                    "tool_call_id": call.id,
-                    "tool_name": call.name,
-                    "status": "failed",
-                    "error_type": type(error).__name__,
-                    "message": message,
-                    "traceback": "".join(traceback.format_exception(error))[-8000:],
-                    "arguments_json": canonical_json(call.arguments),
-                },
-                causation_id=intent.event_id,
-            )
-            return ToolRunResult(
-                call.id,
-                call.name,
-                "failed",
-                message,
-                effect_id=effect_id,
-                error_type=type(error).__name__,
-            )
+            outcome_data = {
+                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
+                "status": "failed", "error_type": type(error).__name__,
+                "message": f"{type(error).__name__}: {error}",
+                "traceback": "".join(traceback.format_exception(error))[-8000:],
+                "arguments_json": canonical_json(call.arguments),
+            }
+
+        # Persistence is outside the invocation exception handler: a failed or
+        # cancelled write must never be relabelled as a failed tool execution.
+        field = "content" if "content" in outcome_data else "message"
+        content, data, retained = prepare_tool_output(
+            effect_id=effect_id, content=outcome_data[field],
+            data=outcome_data.get("data", {}),
+            evidence=tuple(outcome_data.get("evidence", [])),
+            max_chars=self.max_output_chars,
+            reader_available=self.registry.get(OUTPUT_READ_TOOL) is not None,
+            searcher_available=self.registry.get(OUTPUT_SEARCH_TOOL) is not None,
+        )
+        outcome_data[field] = content
+        if "data" in outcome_data:
+            outcome_data["data"] = data
+        outcome_data["truncated"] = False
+        outcome_data.update(retained)
+        await self.sessions.append_effect(
+            call_context.session_id, "effect/outcome", outcome_data,
+            causation_id=intent.event_id,
+        )
+        return ToolRunResult(
+            call.id, call.name, outcome_data["status"], content, data=data,
+            effect_id=effect_id, error_type=outcome_data.get("error_type"),
+            output_ref=retained.get("output_ref"),
+        )

@@ -31,6 +31,8 @@ from traceh.workspaces.events import require_workspace_identifier
 
 _MAX_GIT_OUTPUT = 1024 * 1024
 _DEFAULT_GIT_TIMEOUT_SECONDS = 30.0
+
+
 @dataclass(frozen=True, slots=True)
 class _GitOutcome:
     exit_code: int | None
@@ -583,6 +585,35 @@ class LocalGitWorkspaceProvider:
         ), cwd=checkout)
         if _path_key(actual) != _path_key(registered):
             raise WorkspaceSourceError
+
+    async def project_observation(self, source_id: str, workspace: Path) -> dict:
+        """Observe a qualified clean checkout revision, never its provision baseline."""
+        identity = await self.project_fingerprint(source_id, workspace)
+        before = await self._capture_one(
+            self._command("-C", str(workspace), "rev-parse", "--verify", "HEAD"),
+            cwd=workspace,
+        )
+        status = await self._run_required(
+            self._command(
+                "-C",
+                str(workspace),
+                "status",
+                "--porcelain=v1",
+                "-z",
+                "--untracked-files=all",
+            ),
+            cwd=workspace,
+        )
+        after = await self._capture_one(
+            self._command("-C", str(workspace), "rev-parse", "--verify", "HEAD"),
+            cwd=workspace,
+        )
+        if not _is_object_id(before) or not _is_object_id(after):
+            raise WorkspaceGitError
+        return {
+            "source_identity": identity,
+            "source_revision": before if not status and before == after else None,
+        }
 
     async def _source_context(self, source_id: str) -> tuple[Path, Path]:
         source, common = await self._inspect_source(source_id)

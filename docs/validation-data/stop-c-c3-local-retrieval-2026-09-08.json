@@ -1,0 +1,3589 @@
+{
+  "stage": "C3",
+  "conclusion": "screen_complete_no_candidate_qualified_for_integration",
+  "production_semantic_enabled": false,
+  "criteria": {
+    "format": 1,
+    "purpose": "Explicit C3 feasibility screen, not product defaults or a release benchmark.",
+    "embedding": {
+      "max_length": 256,
+      "pooling": "attention-mask-mean",
+      "normalization": "l2",
+      "dimension": 384,
+      "dtype": "float32",
+      "device": "cpu",
+      "threads": 2
+    },
+    "reranker": {
+      "max_length": 512,
+      "activation": "identity",
+      "dtype": "float32",
+      "device": "cpu"
+    },
+    "candidates": [
+      {
+        "id": "cosine-050",
+        "cosine_min": 0.5,
+        "reranker_min": null
+      },
+      {
+        "id": "cosine-060",
+        "cosine_min": 0.6,
+        "reranker_min": null
+      },
+      {
+        "id": "cosine-070",
+        "cosine_min": 0.7,
+        "reranker_min": null
+      },
+      {
+        "id": "cosine-050-cross-0",
+        "cosine_min": 0.5,
+        "reranker_min": 0.0
+      }
+    ],
+    "acceptance": {
+      "original_nonsemantic_thresholds_unchanged": true,
+      "original_semantic_recall": 1.0,
+      "original_semantic_precision": 1.0,
+      "original_semantic_mrr": 1.0,
+      "added_semantic_recall_per_language": 0.75,
+      "added_semantic_precision_per_language": 0.75,
+      "scope_violations": 0,
+      "warm_query_p95_ms": 500,
+      "cold_load_ms": 120000,
+      "rebuild_ms": 120000,
+      "model_assets_bytes": 268435456,
+      "vector_bytes_per_item": 4096,
+      "minimum_gain_over_lexical_semantic_recall": 0.25
+    },
+    "rules": [
+      "Use the exact eligible canonical corpus captured inside the original Runtime; never encode unapproved, revoked, superseded, foreign or retired records.",
+      "Preserve the original lexical admission result. Semantic additions are considered only for queries without complete literal anchors and with no lexical admissions. This is an explicit conservative candidate, not a claim that this policy solves every mixed-evidence query.",
+      "Score every eligible document before semantic top-K. Cosine thresholds are absolute; no per-query or case-name tuning.",
+      "Allow zero lexical coverage for screened semantic additions. Use the original Context budget and renderer. Never forge a production retrieval receipt or persist screened results into a Session.",
+      "Screening success is only a prerequisite for production integration and full same-input Runtime evaluation; screening failure leaves semantic and reranker lanes disabled.",
+      "Keep every candidate, failure and timing. Do not replace results or lower criteria after observing scores. No model downloads or remote vector services."
+    ],
+    "additional_queries": [
+      {
+        "id": "zh-transport",
+        "language": "zh",
+        "query": "机动车上路需要加什么能源？",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "zh-diagnostic",
+        "language": "zh",
+        "query": "函数抛异常的诱因是什么？",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "zh-boundary",
+        "language": "zh",
+        "query": "职责划分的原则有哪些？",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "zh-stage",
+        "language": "zh",
+        "query": "现阶段在忙什么？",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "en-transport",
+        "language": "en",
+        "query": "Which liquid powers a car?",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "en-diagnostic",
+        "language": "en",
+        "query": "Why does the URL handler fail?",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "en-boundary",
+        "language": "en",
+        "query": "How should responsibilities be separated?",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "en-stage",
+        "language": "en",
+        "query": "What delivery milestone are we currently at?",
+        "relevant": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "tiers": [
+              "summary"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "assets": {
+    "embedding": {
+      "files": {
+        "1_Pooling/config.json": "4be450dde3b0273bb9787637cfbd28fe04a7ba6ab9d36ac48e92b11e350ffc23",
+        "config.json": "953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41",
+        "config_sentence_transformers.json": "061ca9d39661d6c6d6de5ba27f79a1cd5770ea247f8d46412a68a498dc5ac9f3",
+        "data_config.json": "32edcb108fc2516b920734a862ae0692bcae1c5d45d5f8d972cb0d53434a4c54",
+        "model.safetensors": "53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db",
+        "modules.json": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf",
+        "sentence_bert_config.json": "fc1993fde0a95c24ec6c022539d41cf6e2f7c9721e5415d6fb6897472a9cd4b7",
+        "special_tokens_map.json": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+        "tokenizer.json": "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
+        "tokenizer_config.json": "acb92769e8195aabd29b7b2137a9e6d6e25c476a4f15aa4355c233426c61576b",
+        "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+      },
+      "bytes": 91607178
+    },
+    "reranker": {
+      "files": {
+        "config.json": "380e02c93f431831be65d99a4e7e5f67c133985bf2e77d9d4eba46847190bacc",
+        "model.safetensors": "821d1aa69520101d6e0737f78a042ae25b19e5cb9160701909d10434f4aeb0ae",
+        "special_tokens_map.json": "3c3507f36dff57bce437223db3b3081d1e2b52ec3e56ee55438193ecb2c94dd6",
+        "tokenizer.json": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+        "tokenizer_config.json": "a5c2e5a7b1a29a0702cd28c08a399b5ecc110c263009d17f7e3b415f25905fd8",
+        "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+      },
+      "bytes": 91815758
+    }
+  },
+  "source_sha256": {
+    "benchmarks/retrieval_v1/benchmark.json": "550a55f991c0c8de80e6c9c4daf8dde84bff22755e146425e635363b2f8037b6",
+    "benchmarks/retrieval_v1/corpus.json": "eef440b9401360cca66aa195403ca1e261acbd56d492f4ba702870673da260f3",
+    "examples/plugins/traceh-reference-skills/src/traceh_reference_skills/__init__.py": "3ba18dcdc7861edb3702fe7f41ca8ff2d41761166be4e51be076a282364aa871",
+    "src/traceh/__init__.py": "1c9836b89b9bc921c6a3181e359a0c3dad604d9845a0a8c47c2e10154c9fa010",
+    "src/traceh/agents/__init__.py": "8c7691c1a9a8a20105c3f9b700cf04ed214b5d4d0473746c82f5534d6c1dab2e",
+    "src/traceh/agents/commit_reconciliation.py": "739a85fd7b3642b5f127dfebbb26e4c28a27a841887e2294d292e29e3ecd22d5",
+    "src/traceh/agents/directory.py": "012ff2a7e20edebf320fa5bfd25da44a0606734e7a10f9aabab518d4fbf02b4e",
+    "src/traceh/agents/errors.py": "f0a2833032eed999cdace4178d59b37943309d3d22db043a13580ec7faf0cd90",
+    "src/traceh/agents/identity.py": "aeb16ad349629b99a1c8d17297b66b8938ff5e6cff11f5ec1004534298cd7553",
+    "src/traceh/agents/inbox.py": "0261615e0014052853a22181f0afc59e024cd07e2b920f8aebe7b4179875ae48",
+    "src/traceh/agents/inbox_identity.py": "2b62ebbc0991260b7486cd90e6833f7edae56d81ffa286b8f0fd9645aea515de",
+    "src/traceh/agents/inbox_service.py": "b18a2ee223b19c01aef7ac461d7d785fa84f06c93106261a63b8b5e825e944cf",
+    "src/traceh/agents/registrar.py": "d7c73e8f7404eb5dcf1081b1ff477457440e9f740501213337fcebe5d8761ba2",
+    "src/traceh/api/__init__.py": "3062ce262d9b576ab6ad377ac4d31ff790401985fedabf586b251d6324b33dc4",
+    "src/traceh/api/agents.py": "373e06b5d79b04bae36e39a89ab99d306083ae4c94eefa59f1a9bb509a41dc85",
+    "src/traceh/api/artifacts.py": "3479fbe3adc0de5a3eba9177f8687ac2177bb4fdcacc945c9f920e6d3e5f2e90",
+    "src/traceh/api/budgets.py": "7a98f94096768154973efac409e975d0d6d96909fcd7f6841f491dbc65d6be28",
+    "src/traceh/api/events.py": "3314909ddb5f0346e7e59100260e9a196ffef690d9205a226d50b2c3dde002d1",
+    "src/traceh/api/history.py": "eeafecd703e0fe83597c8e7f8630c3b19e701d0b02725d3f8461d75463d62486",
+    "src/traceh/api/json_types.py": "7eb0ffc16b47bd4078c3be9aea2556a443746aceb31d78b8d3a95b2884099ede",
+    "src/traceh/api/llm.py": "5d5dee09b500c85937d59deb11cdef8dd3111a2a4d6375dc7e8d03ce3c973c96",
+    "src/traceh/api/memory.py": "38149a9126af40af00d2df807730eca0f43b6ac10171e0ef3e42868e59ac4c88",
+    "src/traceh/api/plugins.py": "68fccd17f134469823ae5ff8147c20a8e48ed3e89f23e87a08bc9deb1124178b",
+    "src/traceh/api/product.py": "03869213287f8ffd8c9f5b9e9bc71973a993c542aae45882b7a689d392d2bfe9",
+    "src/traceh/api/promotion.py": "f6d0c76298b94ada00d542925726b34af6d66e5bd6468dbde5340327e5b583e5",
+    "src/traceh/api/prompts.py": "251b61de93f1dee157a5d7e21e02cd1bcce9eb384cbe69e9a67e555834fd7b2b",
+    "src/traceh/api/retrieval.py": "ce31d0550cd77d87270e373454e64c985ce32317645afdf2a7e74721989faa5c",
+    "src/traceh/api/services.py": "6e918d3b123f7be563a882cba3cd54ea001884907d2b610ed629c930182189c1",
+    "src/traceh/api/skills.py": "1855caa5a5b1eb26fb31626aa2b40a5b338b65c1ee792281f837ed4bb1f2726a",
+    "src/traceh/api/tools.py": "86e27f6be8db2493c4f6af31fde7d8fe2585604fd45537c0faf25cdb89bd784e",
+    "src/traceh/api/turns.py": "0666ee2de17da99846e65bfecb1e75479506bd2ad3986fb6a71f3b88b491747f",
+    "src/traceh/api/workflow.py": "45f29befd8423af4e3051ac6be6a579b95b2bc335b6598083c45028b39e03797",
+    "src/traceh/api/workspaces.py": "08e2f40383ff95a48f93f7d6a30b00a5574a7e035a9fdbce95cca656147ec586",
+    "src/traceh/artifacts/__init__.py": "e50902e22df5c194615a2f4cb63391ab6101ff0eea674a264800a7b5b7b42e65",
+    "src/traceh/artifacts/capture.py": "9c2eb49dda97cece23f038156dc0572cd9ac5d75615f0e786f4cf708e545c0fc",
+    "src/traceh/artifacts/cas.py": "6d1aefa43b8d9eeacefe7f69b1cd1c32db92d55a4622d54b47d60317e9663d95",
+    "src/traceh/artifacts/catalog.py": "d51b3974b159b130b1d5516970750531d041d49c183369c557564b48c0f81b6b",
+    "src/traceh/artifacts/errors.py": "0ece2afdb2da45324e22218a923f30910be88c2bc342ad20bfb5233afe030d1f",
+    "src/traceh/artifacts/events.py": "d95e966fba5301057a446f44d7b65fbf91109abe0ebea5ab6c451a18cfa894a7",
+    "src/traceh/artifacts/git_patch.py": "4667173cbf58b8eb2077fcaeeb45bab17a9f94fd13fd00c4b7b5e200bf10c7b5",
+    "src/traceh/artifacts/manifest.py": "ca940a4682e9f0e608b4bb5bd3e9c8ed5db664ca94200e11c8f838ebeb57d82c",
+    "src/traceh/artifacts/reader.py": "5b7590059a4eceee0fd94d4da720fdb22b216350efe9adb98fb7e94ea93f041b",
+    "src/traceh/artifacts/reporting.py": "d7ce597981c1cba134d93be1292124c897319508739c26872daa651ab4ee30f9",
+    "src/traceh/artifacts/unified_diff.py": "50d5e87a8d4047bcc2905df587b20dd6e923ff39ffbaf97c17291810815490be",
+    "src/traceh/budgets/__init__.py": "d81a313eae1602a89ccc3c7a1bc5d9a2bbaee3baee6620fe336561baf62f6f43",
+    "src/traceh/budgets/enforcement.py": "13def8c0e2174a9976cdf6bdfbd045583e6b676e20f897dbf00426377a120614",
+    "src/traceh/budgets/errors.py": "3f481dc1d90f1acf15f326825cb477ac0219e7c5474b2fd28562ec0ab7b16e2d",
+    "src/traceh/budgets/events.py": "434db8a4d6675d2316820beab07c50aa7660a7a3813f4ebc89e61a99d5b4740f",
+    "src/traceh/budgets/projection.py": "289dd8fe499bc60b644df0503852bcd0084349b1a69588669730903d469e1f5a",
+    "src/traceh/budgets/service.py": "954051252a54661c03e7706c9db646df7f5c29798f45011336447386ff5b4c43",
+    "src/traceh/budgets/supervision.py": "bfffe1e62ceb4fecf4cc5e1e8650a8f72df87e69bb7623b8c564eb8edb0a5d76",
+    "src/traceh/chat/__init__.py": "8acb4c2301a27e9283bfbb866f726ec82de27b6812a9e6af31b1979cf119514d",
+    "src/traceh/chat/activity.py": "b5d6705317ca714d85362b92b2be7ad3cf796b46ab15bd58305c064e5915f05f",
+    "src/traceh/chat/config.py": "530c07b2d3ff57c8a16db73707bcd63300958b6bcf7fd1e68a3fb4ae418f7b0c",
+    "src/traceh/chat/driver.py": "ffd776416d81fd9e6398c8315ccb9a8300d1459c7a2b9a8c2e31c2259f2d14e2",
+    "src/traceh/chat/governance.py": "cf6898e5a79de2aa73252412082ce651a539791877ff5717e2f0c55c2f094de6",
+    "src/traceh/chat/session.py": "73d70d6985259cdf74805ef286371f85e3ea68a303ed36079dc5929db3621976",
+    "src/traceh/cli/__init__.py": "fa2e7718b0453b8bbb25bc246df94e7e58549586e0d0024faddeb7b9e0dacfb5",
+    "src/traceh/cli/activity.py": "2892adf530b59921d109281fd3e649b3a9c724ed9267b8d9509bb73e4a3f37c7",
+    "src/traceh/cli/chat.py": "294f7b8a27aaf0d8ea5f4a48efeb62d882ab3e760ef88eee1328d991b4cb1b8b",
+    "src/traceh/cli/command_line.py": "e29e4b37b2d67059ac4f4e390afe7e45c7cefa9d421b39264a3b0bc5f6c259c9",
+    "src/traceh/cli/console.py": "881fe1ac4f6382ec5a938f4e04510dbd593ca39bc4212f4e26d0092af5d03b91",
+    "src/traceh/cli/env_file.py": "ddc49ca1b3715cb892d1743a753548826537ae9d000750658e21d967fc6c801a",
+    "src/traceh/cli/errors.py": "dd3bbcbc10f07f4e84c39bb31880650b3c11a36f639f5783c7437f85aef3b4b6",
+    "src/traceh/cli/main.py": "db24e15a80b9bf7a96fd5fefc92f95ab943911b406dbefb2365f49479ee49ade",
+    "src/traceh/cli/plugins.py": "77bff1d026e064b15353361145b6c138dace83131d72b57659613f4b5e458183",
+    "src/traceh/cli/product.py": "da7e749c3f7c0e30b81f68f8d311ded4bd0c2376fcc2e30a16b8669ea457c5bb",
+    "src/traceh/cli/text_safety.py": "ccbfa8ad030f28447979a208ea4b4d08afee9b97ef82af8dea2c9913da6b1c79",
+    "src/traceh/cli/timeline.py": "7e848a877de74d2f067b6a490ac6d38389977d2aceffb00d9657e3bf8b85a7d0",
+    "src/traceh/concurrency.py": "837dc9165588b7551c1790b117c6b0cd629ed1e263945b42d41cabf9808a80a7",
+    "src/traceh/evaluation/__init__.py": "7875c46ff7710160ea4c5bb450056019f2df702d02bd7fdae9b7420756b6d024",
+    "src/traceh/evaluation/attempt.py": "365d1a135e632f919beb92ecbe55d0e90c31f12565a762f5093465f0ee59c09e",
+    "src/traceh/evaluation/errors.py": "eb7dafc297ec98d1f805d86b1c04d383e75c0c8ef2cbe630c55479e07cdebdfd",
+    "src/traceh/evaluation/manifest.py": "4f0ec3fad9c1fc9dea42dc54b89a3bbe06fda7c4ed7e4cf87430bfa5615759a7",
+    "src/traceh/evaluation/metrics.py": "ffa2f9fb51d75c49c45bc4b359e0a8b7b0ab722b0771ec4f6bb7ae7744ab8e2f",
+    "src/traceh/evaluation/report.py": "1df19f18db22f61c709b0211f43527da36addc817ce74691f07b53fc17620f46",
+    "src/traceh/evaluation/repositories.py": "621c81484a5d442f6673ccbdab5e9ec947d0b3f0ecb93397cd2dbdcdd2725890",
+    "src/traceh/evaluation/retrieval.py": "0f21995ad7b7f3f2deb82c870d778708a3203f9649f6d41c1b38007927615f70",
+    "src/traceh/evaluation/runner.py": "859e4026adaeb773fff0076c855db36385ae6bb9bb76ba2686d55838a777aad7",
+    "src/traceh/evolution/__init__.py": "2de1256b658dc0b48bd81717d601c1f2f98359a13f7c74c94a53d5b9549f2d8d",
+    "src/traceh/evolution/artifacts.py": "2387a293c51bb74aa2aaf4f83c071e410a0391c4e7b23e87500fde84f20630fc",
+    "src/traceh/evolution/candidate_comparison.py": "516bfd7f0431058cfb9bbb31a1c205e7ebd4a742614af5e673c96dc72f78480b",
+    "src/traceh/evolution/candidate_promotion.py": "9d97c43001b197d8a05e60dfbbbb10d66c73f09dc98e0e94afcfb4605b0e620f",
+    "src/traceh/evolution/candidate_validation.py": "56da0b3f456c97a0d5f5b1f396f105e9a753265e17d4a203bced0730ab9565cf",
+    "src/traceh/evolution/comparison_probe.py": "fb0758c0f78166f7132a0444fc0fd6924328ebe10ea49e12d3976402b2839960",
+    "src/traceh/evolution/contract_probe.py": "e6c3f30be2193582f26f2574db8b498b22d4be6b1f890ab02cb99849d9a61c2a",
+    "src/traceh/inspector/__init__.py": "895fa59bd30bb3d592080b9be85e1a73ee75a8f91ab1a8e679c25686d1ddfbec",
+    "src/traceh/inspector/session_inspector.py": "bd62ff079be44289fada5fa4f736017c52a0347f9fcd8996c3eab461ce33dae8",
+    "src/traceh/kernel/__init__.py": "6f45234cd50446fbab108aa1119e680f2f9776c09fda955472fa6425544d84ea",
+    "src/traceh/kernel/activation.py": "9a9c15425598bcd69d07a7c5a46e325a35484ccda03cd4e41d748e34a16ca390",
+    "src/traceh/kernel/composition.py": "4ae5aca88cc00bec9560180be4da8e3fbc9e94138312915b72e1cba6447e30e4",
+    "src/traceh/kernel/composition_overlays.py": "1887e257e57fca12238627c90b56ab17d6fe22d83d878c7fe8ed762a6a872247",
+    "src/traceh/kernel/hooks.py": "25a0fd21ea6639e57ef7933a414133272c3778e1ffd26e379d0ff2894cc89e95",
+    "src/traceh/kernel/lifespan.py": "1d52935c4bbf14f6de766911a21dd3b8699070a262722ebe5a1834a5d7def91f",
+    "src/traceh/kernel/registry.py": "d3fbd2dc8d40bb3d60dddcf4bf85d300ee6cc8e8295f4e94b35cbaea7dfc11e7",
+    "src/traceh/kernel/scope.py": "0c76a8f3f270bdd13e3ebc2d23cba5f6e9d990992076d4b99acb9590c90ce9a3",
+    "src/traceh/kernel/tasks.py": "24e3429b464f2cb539efb46561d6bfa275171ec6ddb0737da7f33d1ef84b0674",
+    "src/traceh/llm/__init__.py": "87d3ae1e469ca6dfe49dd8d8e4c5f1d10abcfe46d79bb0d7eb26c609888624e5",
+    "src/traceh/llm/failures.py": "3f0f1debcb53cda14e2550877e666b1177769b50ea2b3147aca54131852c88e7",
+    "src/traceh/llm/openai_compatible.py": "4557857f9348e2b3fcce141fe41dd1dbc9f952d5c2c27698c5119af0e0b79c13",
+    "src/traceh/llm/registry.py": "537c8aa271ddab3e5c16f228f56045522d49fab2b4de8d90ad59a33792996dee",
+    "src/traceh/llm/retry.py": "98fcb63e81f73fa410448556ce389acc30eb0c57fcb9b6ca29bdfa7714b480d5",
+    "src/traceh/llm/runtime.py": "e4bec452adf93eb49d7bf81010ce78092eaa7993cb386cb3be1711c837122e89",
+    "src/traceh/llm/scripted.py": "e7cbb66c41ef6f1e2b3d767541d9bd97453e899b864a495acb7613c65f39d30d",
+    "src/traceh/memory/__init__.py": "c18eee7f6d484b1abda1b0c3b485e67a7518eae5c2cc7e9a3ff5fe783703139c",
+    "src/traceh/memory/context.py": "1e04b1d7363c918cef2d513c7b0a5a2630930fd9842e6a533e3c50c8bbae334b",
+    "src/traceh/memory/policy.py": "4d44720f7a493e38dd244a694a73db72156c219a061ea6ad481ddeec3f5fd692",
+    "src/traceh/memory/projection.py": "9cfda824024620199dc8450a6c7834e0d7359e66d3896510653d8e1ba1667eb7",
+    "src/traceh/memory/service.py": "bece1ec2850cc2aa4005b20373d4164c6f613bd165d32c22f774491a114a89d2",
+    "src/traceh/memory/sources.py": "4c03084e1bdaa90829bd99177f282ee5085580ac0fb339a0eb4196e648542609",
+    "src/traceh/plugins/__init__.py": "e4194b552553b214e5e510bc44d53edef706f45b98bde52041c5f2e1d6f636c7",
+    "src/traceh/plugins/discovery.py": "4c3d8547ea5c43511dfb5514b3d2878b470b1fcf647919ba3665e0644c94e254",
+    "src/traceh/plugins/errors.py": "b26de4966340fb8f5486803273f5b274624b7db019f0e909073574eca319f5cd",
+    "src/traceh/plugins/manager.py": "8d46f3893c880503ed2c56b44c67ebf662a19531bc5cfbbe6e03a38dcf7ad97c",
+    "src/traceh/plugins/selection.py": "0eee9a762cdfcb7cb22fdb9a921fce6ed011f9614a8ffb8f92cc97bbcea36ef7",
+    "src/traceh/plugins/skills.py": "98db96a1fc0bf71bdbe0b02433063a89b033abc3dd2b8bd5546eddcf8ad089f1",
+    "src/traceh/process_control.py": "2f088a4c9917fc31962a4b6f34f0c6396177f3b6deb80ea07cf9871d00d2af67",
+    "src/traceh/product/__init__.py": "574d1277ae53aa018b06654723413d9e639e73241bc71a503122269ab891a1b2",
+    "src/traceh/product/activity.py": "935e256dcff1a23ee0885916d0b7fb114a65c5a42af6fef7c5b0ff37950db2bb",
+    "src/traceh/product/assembly.py": "fd1d246310ec8c7bc1ff7e14b857d433f85838f3e8e2e5228c34fe42984dee95",
+    "src/traceh/product/chat.py": "52e99b2416f783c60725d7b22af87ba79a053e57a270699b11643980d9cc23df",
+    "src/traceh/product/config.py": "e2daf826bebc93359260076833d58180da54372dec717ab8dd5de88f048b5cb4",
+    "src/traceh/product/context.py": "9f29d519a6de0b0f5dcdd0da988368a675c9e098c9540a762cd366e37b3e877c",
+    "src/traceh/product/control.py": "cadfcd6a8b2392067fd685c60128cf08bbb7a4b1573ac003f39cbe5508aa2688",
+    "src/traceh/product/errors.py": "641a08b5168e29bacaa3d906f399601378c4fd8b5e07ad4c101e3e3e922dcae0",
+    "src/traceh/product/events.py": "d4396e47eb509afe720b5e0718acc34bb01fbc6dd155dae1f03b6755a9c589c7",
+    "src/traceh/product/evidence.py": "77c4746f799bff1c5b7dad554fb4ecd04e43d29ee05645ab4c1946c2b45f5633",
+    "src/traceh/product/execution.py": "152ca445725e11e5de239867c9bf8255281ed7ed908ea1f308a16f3728816775",
+    "src/traceh/product/host.py": "9cf617e03f64839ea99351140246ec843c13435d72541b2022ed3dd6ac93b5d7",
+    "src/traceh/product/inspection.py": "26e33917515ee43b4b176820ac32c8d73a71bad7da9cdc842da7f1d7ffd44c6e",
+    "src/traceh/product/memory.py": "8d7fe77f49aaa68d1fae4dfea91fb276c69fabfea87eff54271ceae50f4f5bb9",
+    "src/traceh/product/observation.py": "f0369051ddde8714d6199d226923259b5c2269ab681d78e336917b84195ab9c0",
+    "src/traceh/product/project_scope.py": "1e44a5cd17ee0e8ffc999378a573f6b1c850296a1dfc7cff81039c7e829d6f7a",
+    "src/traceh/product/projection.py": "e7ee535a181d2f94ff0895bab1fa3da167704b3f241ca7b6995b3917833a9697",
+    "src/traceh/product/registry.py": "ac84e2419a02165233189ce71654478f9dc4cab2bc23376c0abbe7db45439a71",
+    "src/traceh/product/resources.py": "ba527991912c7526348c20ab0bd06988192def1faac82d135c7c504ec48b8ae1",
+    "src/traceh/product/router.py": "828dbd429aa091a748d05470b928e4897c4e645b6c2819e2a0d6a58b7ec32765",
+    "src/traceh/product/runtime.py": "99dc23f16d9869c566deb3284a8cd14e67330cd2b704f76fb59a1266b29735e8",
+    "src/traceh/product/service.py": "40f9044877fc66ddfaf513164acc10d904f5192ab39695f5d57fbe84f251418f",
+    "src/traceh/product/topology.py": "097621ef3faeb4c62a697871a8b81058123e87ca4ca3f8588dbfc83a0f711311",
+    "src/traceh/projects/__init__.py": "e3cb3b4a5fc6bff23b85b39e715c44795ad057e038e8c16435deed28e2122752",
+    "src/traceh/projects/events.py": "52ab555199455ace68d6b782d202b738ea65fdcbba5e49939be1d7bf0ba5ba5b",
+    "src/traceh/projects/projection.py": "297081dcc40747155b980efccf463718b5d87620eda3756edd85bf15c296d372",
+    "src/traceh/projects/service.py": "0f7424374e80dfa2a1bc80a873616616765dacf45de46aeb7c20bdb780aeb363",
+    "src/traceh/promotion/__init__.py": "65843e3c0257c3a62bae0d4d07ccd42461f85b77c733f5146e9a091f9968a2f4",
+    "src/traceh/promotion/cleanup.py": "a5b7b617fab7928bcdab5d54e7a9bb5fc77d09842e52b3acf9ea9b958bc5bd70",
+    "src/traceh/promotion/errors.py": "9afda1dbb4069999d570d5b3b0889e98b4ff962260c0ac30b7eec6ea66a58b21",
+    "src/traceh/promotion/events.py": "1758b1015d0addb3c336692f3e50a47089610bc2d2334764543dc12c6c5135a0",
+    "src/traceh/promotion/local_git.py": "5970408c4443b2c5c920b07af4ce387fa7b20695cc47bab428ebebebea505adc",
+    "src/traceh/promotion/models.py": "baa7f69d6d01e34c079fd6e99d8e1555ca3188a100b4e2ca2aedf6257b6cf2a9",
+    "src/traceh/promotion/projection.py": "504965daaef3bccd11e435412461a95a333643280bf223ed082a043490499bdf",
+    "src/traceh/promotion/service.py": "366f81cc6604fc80c2e452c54c01644b28abdd0527d8bd13b301c3a2abe0fd65",
+    "src/traceh/promotion/verification.py": "c9cb00e18ba00a4147f46792b2199c6dd0153708c39e6ab4678c3f31dc3d1a49",
+    "src/traceh/runtime/__init__.py": "995ecc6a5b24e9b420c98299aaffc1cbae6412734559efeaf744fe6d7ac83230",
+    "src/traceh/runtime/agent_loop.py": "08f11026a156a7b1e2562d688dc6303cc4d2885bdf31b96a873c04fd983739d6",
+    "src/traceh/runtime/agent_runtime.py": "ca9befea41b617806e8a168c214efd5efcece7d9c50ea658d11be421179d2743",
+    "src/traceh/runtime/composition_runtime.py": "df41555137f6f6fc0317fde87e96222fbcb8d3d6923736065064832e02b981b8",
+    "src/traceh/runtime/continuation.py": "3befc05aca46cd31dde394e76a9a79861e72310d3b33a19ef5f8a97439b544ed",
+    "src/traceh/runtime/memory_control.py": "7b985871a6020bd921ad6a07b6fb75bbe773f9f6605ee268f12764140d5f577f",
+    "src/traceh/runtime/plugin_composition.py": "5c44ec7a2abe36b22f8f7cb7357abfc217faf90dc53d64ad8c6ab1afee83d082",
+    "src/traceh/runtime/prompt.py": "2a47835cad664a825993e6a3437849b4279d9c59be226385147a6a84b22d6d34",
+    "src/traceh/runtime/request_builder.py": "536d63e26ddc296fc1b36a5a6cd87f5c84e19b0234e113492cea07a6537dbc58",
+    "src/traceh/runtime/skill_context.py": "a358855f5090f092cb8d51da7f9ea6c7fad60730b73ef1024b28d6f1b934ebd8",
+    "src/traceh/runtime/verification.py": "2a735ebcfba68a7c09c62f7a031109c57e41a74a61f40ae067e335bbb8000cca",
+    "src/traceh/session/__init__.py": "299449021e2a72c0fece44b2628400623b99e3c1287cab87b666910fde4580d3",
+    "src/traceh/session/compaction.py": "1260a13ceae9292630a09fecd11606fe7ee6b46dbedd96928c9206e277d29fcf",
+    "src/traceh/session/context_index.py": "5d7946ff198424587d93fedff8750d917e69113fe97db31c9f64ee90a62dff9e",
+    "src/traceh/session/context_input.py": "e0005c0b42f2195105425dfbd15fbb3c1bf73646cfa54ee2e685f437bff98a54",
+    "src/traceh/session/event_feed.py": "2db28ba6e9df681e13632ee37e3f25117e08247b3b8231e1435f924b1d907536",
+    "src/traceh/session/event_store.py": "15440fbe22bfb04f9574e99ab25f1f379ef1b6f9b2e130cb29239c507d82f46b",
+    "src/traceh/session/file_lock.py": "6924f8b27e1bb93c39c800595c4e7a68f38609ea36af6183ddfedc5f01bd504a",
+    "src/traceh/session/history.py": "6f42899ff12d00327cf5fae6444b4fee45e97265866f598a0cf51a161a3405f9",
+    "src/traceh/session/history_observation.py": "e6be13d7bcc5e1046fb73a540d9444f6c49fe3203e69f0a476c7012134b64909",
+    "src/traceh/session/history_requests.py": "f16f675570cd9576270e6c9b4e9fcf92b09f636706e76eb22fe08f236ff08dcf",
+    "src/traceh/session/invariants.py": "6fd8e81a897de92feea4839319d9cea47ff6ad5dc14e26f03697c3adf17afd9d",
+    "src/traceh/session/memory_requests.py": "397176a470145668b91479d4252e0750bdb6271c946561c3727fc34f5bb22533",
+    "src/traceh/session/plugin_identity.py": "1e3adbb53f61a3580249442e5512abed02e180c733b1d100c00903fec697626f",
+    "src/traceh/session/product_context.py": "bc634c7b0294215c36f9c88cc64da1406aef8ef93e2af5ae23705d1fcc6c6086",
+    "src/traceh/session/projections.py": "cb4afabc0aa029d4dbb3b6cd2a0cef8ccebeae3bd0bb09f1d553e0c3dcc85974",
+    "src/traceh/session/protocol.py": "ffa4f8808f375c562a5d1ffccb13ca92c9a7c9a3ffec4655fc9a97c323ce84ed",
+    "src/traceh/session/recovery.py": "c0df079f6a4d70b7e6d0076aa9955c5c8f9ff493e5270cbd41d5f73c835d3831",
+    "src/traceh/session/reference_requests.py": "2b97a631c51f3e478e7c6f4ebbbbabac59cdfc203de8c1991fa52b99b56bed59",
+    "src/traceh/session/retrieval.py": "bd7e3a4ac8995a479b66e5ccd0846ff60b5e7940eeaabc99944f3c993373a107",
+    "src/traceh/session/service.py": "958d809cbd131f2727a0bc9bb774d0cfc5d91d5a71079b7042b367556b004dae",
+    "src/traceh/session/skill_requests.py": "736999ea9956a63cd9ba998e0293c6e2ae1988b132d0297dedd3d18af7ef0e6c",
+    "src/traceh/session/skill_retrieval.py": "fdc227299c23dee88db8bedce09edf3bc84044a6816188d12d0298359185b6f6",
+    "src/traceh/session/skill_selection.py": "a801a09b0f88bfb529864f80903c91836dffa9c18405915787e029265ea961e8",
+    "src/traceh/session/sqlite.py": "22ab5be0e47853bd9bb7e44e5b3a9c6918770c47cca86601851cb71e79606b2a",
+    "src/traceh/session/stream_heads.py": "99b64f4987955f70b7d2bab376750bfd49a5029765e10e4f720d96b67563a28c",
+    "src/traceh/session/surface.py": "87277f4958cf2c386f474d9decec7065edef69ca5141722588dcf29e171fa8cd",
+    "src/traceh/session/surface_replacement.py": "42cee0f0bf85f0bc8ca032513763b135fb0339817825cbe82acd538395026c54",
+    "src/traceh/supervision/__init__.py": "6b292943788604c02662b89cba4dbda95087397942ab66aad9d8036c91d0a215",
+    "src/traceh/supervision/authority.py": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+    "src/traceh/supervision/delivery.py": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432",
+    "src/traceh/supervision/delivery_identity.py": "a0ec959cab8eea6e177b2f1b9e2500401c6ed5d0e258f2475bd41aa517cd7341",
+    "src/traceh/supervision/delivery_service.py": "66616b802121c8f24561e0fc3123252cebab220999aa322064c7874c1b5ba271",
+    "src/traceh/supervision/errors.py": "376ae8707e63074b45924bb4b866c8b760f18ce39e5d29ef0f2d3ce5772ad724",
+    "src/traceh/supervision/execution.py": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+    "src/traceh/supervision/lifecycle.py": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+    "src/traceh/supervision/provisioning.py": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+    "src/traceh/supervision/reports.py": "b9fe4fe6e762f67e37e9c0b9ac628bb8a4a79a5f46de77652db2e81bdc73a4f5",
+    "src/traceh/supervision/supervisor.py": "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0",
+    "src/traceh/supervision/tools.py": "498e53c7d43c55d4d72dc36ee991b110af45c02a2a210fae7bda19314171fdcd",
+    "src/traceh/tools/__init__.py": "7d55c8ba69f1611110a11bbd4e32403253c32bc5229023e7dc80d282db49208e",
+    "src/traceh/tools/builtins/__init__.py": "02160a0fd5c5ab0f5c28557597f66454245155322cfadcc42a1f6e8f74db9722",
+    "src/traceh/tools/builtins/apply_patch.py": "0088940c0872c4f02cd9b811b8e3d3133206ca7deb11e2e07a5910aaba83e369",
+    "src/traceh/tools/builtins/list_files.py": "ad2f6b9194c5521114a8461d42f0f33639296594e567f19c248587ef3a875999",
+    "src/traceh/tools/builtins/paths.py": "13004707b9a4c692292ad3be40888bf1a50366f2261d2639f5d661603c3eac43",
+    "src/traceh/tools/builtins/read_file.py": "a7aee53f3341bfbbe773d7c071609b5b1ac9808a514f63947627a17d40c7f5ce",
+    "src/traceh/tools/builtins/search_text.py": "c0d4fdf1ae6d90435b8790904f3b7bfaf05abe0e69d1d80c74bd87b8a6a7da32",
+    "src/traceh/tools/builtins/shell.py": "a78152ec01acfae0b1f5217733969b8316c4742a685dab0737c3d2fa921869a0",
+    "src/traceh/tools/history.py": "779662853b7a31925748dd9bc2c83ad39c46e7eedd02eed20b4d22e1cd4a64f3",
+    "src/traceh/tools/memory.py": "cd908b8c6a5dc58ce1790d2cd88268fd38db882aa3b40bab7092764c4ddfbcae",
+    "src/traceh/tools/memory_reference.py": "4e8aaa1b3218ae7952190121d99f822d22176177dbcd293bb7a145ad36a78131",
+    "src/traceh/tools/middleware.py": "8de2e5fa15d77fe8d77a53509e83723597e53ee8b71cea4e3147b298b09626cb",
+    "src/traceh/tools/policy.py": "2b4e854fb9f02e5b1f327ae412d0f7c3877ad7c2bd8c0c1329fa22031673e870",
+    "src/traceh/tools/process_control.py": "828b8a887dac109c281493b11117e1fa99c99c2106e3fe9ea19c4bc4edd4b269",
+    "src/traceh/tools/registry.py": "a94cd8065d65cf24931b8ee7b4b01b7313eedf7f06453bd9a8465d200b0a04c8",
+    "src/traceh/tools/results.py": "c1988dab51f754b89f227cf23a333144f7c8599e522ed81853e904a93acd3dc0",
+    "src/traceh/tools/runtime.py": "222d3fb8973127a3511b3e1ad21f57a4ea38afba582dbba35740d94f20b3e81c",
+    "src/traceh/tools/schema.py": "c1b0c198793e736872cc0d716f6a4dd89c7d004e161417e91e50f1cb124c09eb",
+    "src/traceh/tools/skill.py": "403e363e2c17e682f38c97c3c6336f5a06ecd2fbf7f119cc8a7473448a428d51",
+    "src/traceh/tui/__init__.py": "dced2ae7cd5998fc6540603c71cb1b339c5e28b74a341c419c01a40a504e56f6",
+    "src/traceh/tui/app.py": "1d36d473ed2a04283e9c7182abd296577f4ee399ac0b71d08f1e8343b0678bc7",
+    "src/traceh/tui/context_inspection.py": "93e25f98f2ac1ac5586afd8b05552df360534678d37f3d6c7cbf6c857f83bb9f",
+    "src/traceh/tui/governance.py": "3beecb838b3893120ae95361ad95720bc083d443009538a12f16e52810e303b9",
+    "src/traceh/tui/presentation.py": "f14ee92cf669df77aeeb9d19efbee3a477ae88108a9eb77afc133a1cfdc60090",
+    "src/traceh/tui/runner.py": "768acf613cf937632017a88cd798b26879e62b87bc84a13b703677f47219f02f",
+    "src/traceh/tui/screens.py": "e8d89edf5e23b37f06d30449a455f7e5c7fa2ab6b5a3ef8786d219bc04b25795",
+    "src/traceh/tui/task_conversation.py": "a39afbacefd8da4f3aecc6ca0af3c6a48bb4af0d2962cbf7da7130a8efd3ef5b",
+    "src/traceh/version.py": "47781340d5afb844556ae8b1bd98dbee5c0533fc8f7013ede5fcde6bd2c021fd",
+    "src/traceh/workflow/__init__.py": "0717c769d8543b4ea6915592b1986b2c3e7a4ad7f9f55d29915f62dfda1a0d1e",
+    "src/traceh/workflow/errors.py": "17dd8826c908c184e881c29e70d178a4fd9ea95b13a59fb583a0cad474fb1968",
+    "src/traceh/workflow/events.py": "9a3d1571f8fc000b2b9aa39fba590e388ff45f27abc5f06430a60a4e1bb5f72f",
+    "src/traceh/workflow/execution.py": "eb110a27b6442f2423755925f03c00c858c4cbf297b960c350f7966b65b8ffeb",
+    "src/traceh/workflow/models.py": "0ab8bf76f94d38ab685bbbbf4c638ce237c51a58b796a182c475ee1c1a88e34a",
+    "src/traceh/workflow/projection.py": "79278ba2d8ff02bc9cfc52351061cad9e433c9d2d8d218ca86892160faa709fa",
+    "src/traceh/workflow/service.py": "ab37ccc7fa52bd02152eea11c40c87498c8b01fd6a39dbba8f4bc00fb9210746",
+    "src/traceh/workspaces/__init__.py": "5aa947b283fc5692a8ef499fe33ec99020f3d804e04021189c56dfbdd99bb541",
+    "src/traceh/workspaces/catalog.py": "9a1259237485b1450aa7867bf6463c60740c7219374c6dd0352a6dc4edbf6e53",
+    "src/traceh/workspaces/errors.py": "52467f0792e3719c76e0262a4b2a5aed876df79180f50204428ae1aa14daff23",
+    "src/traceh/workspaces/events.py": "9ddc0adfb26f9ea23fcf69d63c51c6e399f40f2c064c388be9ea23ad5b972000",
+    "src/traceh/workspaces/local_git.py": "8eb8b6c7380c75baa0e8e3e241f3c9f48ff44ce979c203bec5851da2567c9a65",
+    "src/traceh/workspaces/observation.py": "3071f4793d3ba7aa5ce2fadf2e966b76bb206cd923fb10b1292fc699ca1df2c8",
+    "src/traceh/workspaces/policy.py": "a9e9e335e543088192523d52dde138d9429dd05794d1e8422eb817947fb26fb6",
+    "src/traceh/workspaces/service.py": "9b10273b01577863796dab0791b1d60ad6a44aa07f811109a9ac6b6f07aa9d85",
+    "src/traceh/workspaces/supervision.py": "96c73fb3a7b12e428b91dbd3ce3fd1805ea51bb16022419cd477e44cb4f32e97",
+    "tests/cross_process_worker.py": "3a65c043f87fece6de198db3b70e6d28902dd3cd5681889d17056d0abc4c33eb",
+    "tests/live_reference_journeys/assessment.py": "9e503a7c5331e30afa0e1c35b53046c01c102a4cf2175d3b26e8fda4f197b8ec",
+    "tests/live_reference_journeys/audit.py": "eff5865f9ccd7a738e94e0e45b2d9f4130fa49ec394495ab88b3e110f9e0a5c5",
+    "tests/live_reference_journeys/bootstrap.py": "030351629502ee70b18e4dcdc55256f401e95b4c40e45e468c8507f61b10b06e",
+    "tests/live_reference_journeys/corpus.json": "c50ca852eed4da398608fc6f94839be16f30ce8337110d8c0ef5156909b655f8",
+    "tests/live_reference_journeys/journey_fixtures.py": "d1735331ec039b9119a810108a054746f3b925e3369d187c2798fb4bf59fa0fd",
+    "tests/live_reference_journeys/run.py": "dca3d505524a5cedf9d3184428a655914f9f01a5e366e1f35674b83df1265e3c",
+    "tests/live_skill_navigation/corpus.json": "e5696111bea0a7a13ba88c25237ec409ddc197f5db3f97f93a2963b2e82dbe52",
+    "tests/live_skill_navigation/run.py": "38323d1eff359c18709019d3a6f156a8270ba0513aa7030b8d39747a932d7f7d",
+    "tests/local_retrieval_screen/capture.py": "fc1aa47aeac168e49dff2f18ea624f7c1a557838b61ee274f0f3083d1e2af7a1",
+    "tests/local_retrieval_screen/cases.json": "71c64e5f2f6c227e7e00a5712ae863a2c04efd2093ceddefbb7cc2f815efdb7d",
+    "tests/local_retrieval_screen/screen.py": "6dcf51bcce378116e7b1630e9337b80c136a34a74d281438b1d0405e254a6c50",
+    "tests/memory_fixtures.py": "ff5b5ca28a965a6d7ceaaa0120b09b007c3f8f28333ad61656dbc888ba4f9340",
+    "tests/plugin_e2e_driver.py": "ae4231bb80b5fd7500fbce71b5443c23e56b3a6134924c4d03573037d76c7c16",
+    "tests/plugin_fixtures.py": "ffc1d4835799cece6a1797a1cd44adcbd3c7bf49750c2099c3a88f0794cae69d",
+    "tests/product_fixtures.py": "c9d43c3735bc77ca3f774bc0c957e195fa77942a30e9c5b378c613ccf8604179",
+    "tests/promotion_fixtures.py": "2476b61eb078dc3b0ca16d2130ff4063ace8436cd7934962cfebc045ad33f0cc",
+    "tests/retrieval_fixtures.py": "2d7e503a2f61b414a571613e3dad54d5b078a6ad10d82244d81e1172229d8113",
+    "tests/skill_fixtures.py": "b069f58a4ac2f0d9b16a1e7022e53557b3daa371b6c0d31f25d396698e754552",
+    "tests/supervision_fixtures.py": "09f6d395f50ff22bb1d079f0e47b167dd2df260e17735ed11d181bdcf281a177",
+    "tests/test_agent_delivery.py": "e8924188ed932fdb4fa2f47474c4f122ba8a9503837bd1523805a3c35a30918d",
+    "tests/test_agent_identity.py": "d9f95954a2cd610bb492c93e0eafe5493d028992c984ef5bb8556bd46766466e",
+    "tests/test_agent_inbox.py": "fe1bec870bc81b769103fbda12036dfa943b2d15e3da844b81f6c9264e4f0ac5",
+    "tests/test_agent_lifecycle.py": "33596d7892c9b5748262cbe401e2394f782005983e35f68c3ce793cd782ea1bc",
+    "tests/test_agent_supervisor.py": "fecf89170b320092240ba9d36c3d1e31774ab9a72704ee5ebb27a09399b36010",
+    "tests/test_agent_tools.py": "6df357fe2902701d5b6b9858549fd4b13595bee44276624977cbb49b3c30f801",
+    "tests/test_budget_enforcement.py": "f928cbe458db1a26259529c4718466bdbb2c6b3a421f3cb8bb20876f1da516a7",
+    "tests/test_budget_ledger.py": "5c8144b7685076669ee83b3ca10355226cc1fcf1a5691dae0a1f9931957e7aaa",
+    "tests/test_budget_supervision.py": "9f33789c8f329f69d568fddc7ce3a4f8929ec19d54fdebff877ee178042f9c02",
+    "tests/test_cancellation.py": "ba0bac0f112a665145d60c7bc3048bec65dc626acd464655cfd25b0f09f69bf3",
+    "tests/test_candidate_comparison.py": "657c4b46b3dcfa701d6a78bc5eb89af19dc7ecc455a84e8879a2302629c17cc0",
+    "tests/test_candidate_promotion.py": "f498a7d9b30a87975ca87d96f3abf65020ff523208f1fc00eeba07ffde67c6b0",
+    "tests/test_candidate_validation.py": "5995e11c032be940f1b5a4935e4f62268fe31f912a824c8879b06619c16f98c2",
+    "tests/test_chat_governance.py": "f9fa63e3e356bdfaee0922f376d34013d92bcf05e406fdd413c33367ac4a9e17",
+    "tests/test_cli_activity.py": "8d5ea0bb6ec355f40c19dd91ca09fc1eb0a2e646b548d4358d3bb38e5b7c0c2d",
+    "tests/test_cli_chat.py": "08e90bae271b8ee5069fb1ef72ef2466e7f543d18d6fbe729a6e52457fa567da",
+    "tests/test_cli_context_config.py": "544fe1b69aeb6bb20e7fa090eb7f671651947ddc2909ae70e8cdb7141095ec0b",
+    "tests/test_cli_env.py": "122ce3f76913ccb06b2989bfd35301c004761f83152a49b286070492fe1a634a",
+    "tests/test_cli_plugin_selection.py": "63bfe7ac9cd6c665ee621005ccd47c9a023462938fc5b35918cdeeadb1224ec6",
+    "tests/test_cli_plugins.py": "5e8b864605e7ea1ded4d09e443d43430b26308a3a6ae2fe7d9d75498db78d9ae",
+    "tests/test_cli_read_only_commands.py": "48c0a383322b7b98aae20ce0e0806e530db6988e2879bb9502fc9605756f1cb0",
+    "tests/test_cli_resume.py": "6d65d2e908a718e4b674af95e5993ca1b1fcd56a6ffcf311277dcac53e3c70ea",
+    "tests/test_cli_resume_safety.py": "b71e3198e9631c35b97a2766bef1ed4b1172d7a29a524d1e86e2e2441ca59e23",
+    "tests/test_cli_run_dispose.py": "70f808d0a08d1a45ad2b148b719b422d71a1f9e38b2a6822351cb6f0a29ce134",
+    "tests/test_cli_timeline.py": "d88942467a02cc534520104758fd8c0edb2e9ced7c767f13297915871e5922b4",
+    "tests/test_compaction.py": "970cff6afd2bd20e87e5cb038fdbb73766492af7d6c334784639557ea2c6c707",
+    "tests/test_composition_generations.py": "d5cbd903e9f2c3cd3ff4d1cce381750089b9d2e023db74b2b1b5b6ea2081dc0b",
+    "tests/test_composition_scope_overlays.py": "6de84756c0814e30e3e0f0a7da25caf37418267b009e4bf5b35e447f37b6a335",
+    "tests/test_context_index.py": "a8fb5d3967d1b9fadaef0e88dc91ecaf0b17d00cfa1bc55e712501632099d68c",
+    "tests/test_context_input.py": "93ad5d452149bcaabc3034b26a7e85ad5cdfa793a6ec2da587fd62a81805bfe6",
+    "tests/test_context_request_protocol.py": "2251311bc5383b32b5e19c3836efbc7fd581bfe017972b452e6f336f5f27cb16",
+    "tests/test_context_runtime.py": "d0f4a1d2d509b536ad86d1c4c02071ed9dad15851d3919003454e5a44f8c9845",
+    "tests/test_event_feed.py": "171da9f3962be5c4c7f64b38d2e53b111b86697b9914f317b9cd6b10430ab176",
+    "tests/test_event_store.py": "0c9f705c86fb30fe6954a659da8a1581cc03d621e00d0f67db4745dd13be7270",
+    "tests/test_event_store_contract.py": "c684e0ed598700090b2e16cdb96c938376590d2d263dd1f5093d1adf070024d6",
+    "tests/test_event_store_cross_process.py": "752d43ec33d3592066a4f91255492e7edfd8b9d9ea61e9b905e88fadb9519280",
+    "tests/test_future_protocols.py": "80348a71c5d1a623daf4cbfb89e530c1d5bd7e0ed60d6e1eb2d87a9403b49bc4",
+    "tests/test_git_patch_capture.py": "58403c31fff5ac1745595779e948bf32dab15c862192869090eed14e81992ebf",
+    "tests/test_history_freshness.py": "48755731757716d1e6100a4d6ea8f320fc4764bb894ac3f6b1a835eba7e48908",
+    "tests/test_history_reader.py": "d0b02be74e2276308b7fd0fc2ff6a12d6ad9139666b112b2075a7918d0d2e286",
+    "tests/test_history_requests.py": "cac3919257d1466a28d6d67eedc9b4cd6b94e8a927274405d01601e29f795358",
+    "tests/test_history_runtime.py": "f88ffb7b17a6b392ecf8c89762d7919a994e6539db0d521cc817bcd3fd050592",
+    "tests/test_history_tool.py": "00e17ea53ef31d93362d87d26f2ae93cc1e24aa0639b999871ceb07e1b94b2ed",
+    "tests/test_inspector.py": "307211a622e9303f8a1ade9f8e27fdd76f916fc108319f4be4d531cd12a875b2",
+    "tests/test_kernel.py": "27c157fb90c8274ea844fe889ecd33406d18bab4a690625b0bb7c811b36cffaa",
+    "tests/test_live_reference_journeys.py": "e613f0ccf8db8f282d0aa80698e6f0cc130047b4640e5ab49adbd2b50584b5a2",
+    "tests/test_local_git_workspaces.py": "11e0fdb1c0b413fe8ad68a1966f97d76c91ee28dfdf8a07402627c5aca721c07",
+    "tests/test_local_retrieval_screen.py": "b71828fe5a92b734418f23f93f44b5b6cdeb295d9bff70497decd5e96c90fd41",
+    "tests/test_memory_authority.py": "cb5ca507f25ca5e7d2ae16aaead3a882229903b71dfffc69cf9683d4f92fccb5",
+    "tests/test_memory_context.py": "9fe4bee2d041b76028b30bee00498bb6a20db6ed2620f285e510b239b126b51e",
+    "tests/test_memory_context_failures.py": "e7e5914efcfd43c69abe3531047fa3399751d933b729f99ab62db958d5c4190a",
+    "tests/test_memory_convergence.py": "8ac3501ebc817b38ad49965bd374a8ee81f66bb27253628a442725346c3020ef",
+    "tests/test_memory_product.py": "01ab0bd502e5f1ec38d82b14bf5de7e26591caf17591b6de87645124278c7bc4",
+    "tests/test_memory_runtime.py": "dfc99f4d3bf24f481984af8e5ee1083628de198dc6fce378d2b903421d91e0b2",
+    "tests/test_memory_sources.py": "341c6318c77139ffbe8bc4f65da8eb49bb9feff87c274c43e168235c5fc818e2",
+    "tests/test_model_attempt_admission.py": "c9144461fd275f7cc5d399ba54472f34776a32a9fb9426bcb5bf1aead5e02731",
+    "tests/test_model_retry.py": "9cd39eae6a9e652d9987a013864001f2750f5680b95360f86772e2478db92630",
+    "tests/test_openai_provider.py": "7e46af59752a222703d85a4cb49b027b65e61a06531b5dff42e8f9f194bb1fd9",
+    "tests/test_owned_task_ownership.py": "51f263ba6e182f45246d706dd5be7e98ee2150328e0f914c99f10b4dd7a181e9",
+    "tests/test_patch_artifact_architecture.py": "444e460a142fcd32c133a14166f9ea07e4b7ac2c3c84967fae86ca1448d49d9f",
+    "tests/test_patch_artifact_catalog.py": "ada859845903f26d124c06c93060e9b5946c6d52fad9c0136c8ad9997cacce20",
+    "tests/test_patch_capture_service.py": "aa624054e1ffb9125395c17771d6d709deb10f1f35d2c4e69f4bc7beadf6cc07",
+    "tests/test_patch_promotion.py": "032e79c0b05df8259db5a6ca59ee62d839bb2fa03fcacfaff09ffd3f29504c1f",
+    "tests/test_patch_review.py": "1e29b5b7a3296be7c01b2ae76c335ec8428f2bbf87c5efc7920e71e6711bde08",
+    "tests/test_plugin_activation_sets.py": "a476ec7d49bd480ccea0801c12f0f20f53a02ea56efd1a973407b6c8044d93d5",
+    "tests/test_plugin_cancellation.py": "78e126e897779a940e17320d8c3bc813d6e8aba4fdcde4888c53a7c6fe978154",
+    "tests/test_plugin_composition_coordinator.py": "80cc2223bfeca2c8a3f0540b35355456fc46f8d17f4c3ccc230343cc72b4b9cd",
+    "tests/test_plugin_composition_stage_c.py": "a571c79621bae7f69ba2683038a5f86ee4aec598f30385c8bdf6622424039f4f",
+    "tests/test_plugin_discovery.py": "bba40a680b66583801c1e3bac150408af0236a3af607c9c2ee1ebb45d545d473",
+    "tests/test_plugin_extended_contributions.py": "75a2e566e885b5523b001fea7ab6a6b030873a148485793b8e55f4dd1ce56628",
+    "tests/test_plugin_manager.py": "ff6178edef0d7a27894ff45e61c4465fef4059fc65ddcd3e9c4a466bec1929ad",
+    "tests/test_plugin_manifest.py": "114e4640026a27da5bfddcacbcf5e33ce9a600d8291122b348a42f1ff850ab73",
+    "tests/test_plugin_runtime.py": "7c036e8155f1f3f740a5a1d7cb76bcaf582f433df7f2ba5b153258a9d6681b4d",
+    "tests/test_plugin_sdk.py": "0f5c23532419aee7b2297012bb7b0ca2912b4658007df283cfe279b8bd39e263",
+    "tests/test_plugin_selection.py": "4bd598c9ccd7c7256ed1aab78784abb867190cfb3f1e59437b7da8b4eb81cea0",
+    "tests/test_plugin_wheel_e2e.py": "c47fad9841b645469591345c6e3197a51dd34b95087279c6b6f4be89b4b09f21",
+    "tests/test_product_architecture.py": "2ae171926712d9591b7a5505b2438d7b650e73dd4d725778ebdf34fb5c714063",
+    "tests/test_product_assembly.py": "10f91be3374bfcc15496e1ef98fea5bf33110ce20f463c3c9ccdab5b4f913da2",
+    "tests/test_product_benchmark.py": "5e659c64970860dc7560a84bf0ad72247ef93c77927460684afc978442fbb412",
+    "tests/test_product_benchmark_e2e.py": "3ca998d53d010e2e45a387e4202dd4ecfab892a7023a252972f6d1d1c3a7b044",
+    "tests/test_product_config.py": "083f2a9b60b91eaa05d9db9805fe2dce5e37914bc1205e7ad9c9b93dfa4a1baa",
+    "tests/test_product_contract.py": "99a8886a3384725d73b5f1c5d7bd11862242169941dbe1c9d52987e8d3b0087f",
+    "tests/test_product_f3_e2e.py": "5c500ec0f2e2571cae9b4293dc40e1fcc3119f8509fbf9e76a0a954ee42a7b57",
+    "tests/test_product_inspection_leaf_failure.py": "a62475941955b1abd434915a78d9c4f3fcd075dec8cb204c21164828333e6413",
+    "tests/test_product_memory.py": "be07f8da5e8f221f8c78dda35731fbae53ffc9f57ae259e6144cc239ae48408f",
+    "tests/test_product_model_context.py": "e36206a80ef166806d78e84e29744e4261db039e0ec62ec2b19d706c8bc20be3",
+    "tests/test_product_observation.py": "7d48238f526b6d16f7afdc34e67379785cef09ddd4f5938aa1fcd44af9beb063",
+    "tests/test_product_registry.py": "d36eb21ef0962d0797de28691fc0ba7dbee2a9166f7b59ee11106ed1b32662b2",
+    "tests/test_product_router.py": "92a30807ccd5be8230a604193a368b11c4ca459608f42e526301d19009bcbd99",
+    "tests/test_product_service.py": "8c8bdc3b5d2b77981f555023c0a6d474b9d3bcad519144a2b99084fe9b02f948",
+    "tests/test_product_task_stream.py": "54d43671cac49eb684f7357e46bd7f437153c0550175af9f952249d27fecc07a",
+    "tests/test_project_scope.py": "6b0e8340363b9d998cb0cfaf60153a3d23d40efd4297ce5411f34783c7420256",
+    "tests/test_promotion_architecture.py": "f1833a16a4f928de76de4abe7576aed05a2e358f253dc8779e66c939cd2d2e9a",
+    "tests/test_promotion_ledger.py": "3696a6697faf464bf15aae700c171b7b247952590dc01eb737a0e29831853507",
+    "tests/test_recovery.py": "61ad7fdf30e291d665a462a8325ea931d20533415a0953af87ac6bad7ff54cf6",
+    "tests/test_reference_orchestration.py": "27e84d13b130374179f9bdfb4c68659b7e6a8b611fb9f0559197d07708a33871",
+    "tests/test_reference_read_actions.py": "22f2b3321a5defc9043dec4d34b2961e44c9ded60b1e92c7449d76c79146cad5",
+    "tests/test_reference_retention.py": "a3bc622a2c6275b52e648b62f750d689177363466a7cb41b490dcf8763541c4d",
+    "tests/test_retrieval_evaluation.py": "713b4e94b29de4a6e815baacaf2b7a46e909b54e3125e1be85b7f14dbb29aa15",
+    "tests/test_retrieval_evaluation_failures.py": "c246a497e7695ba5dc0cceb60e2e7b358002cdc8ef6b3037f723c31fd8a644e5",
+    "tests/test_retrieval_precision.py": "7b1d9842e5572a35fc82d2794ba44e637628da256e6892159270270c8f9bd583",
+    "tests/test_runtime_dispose.py": "6a66705bd63496f8c36b5b1e64634c1509d715c2c896ac8e2c8fe8766ab0aa3f",
+    "tests/test_runtime_e2e.py": "00d512235f122b2980e79f2ae97d7dcbafa37a29f84b23629c7b217d290bf67d",
+    "tests/test_runtime_factory.py": "86869cb4ba307b34c146c4b5d118591e5df4ffdf10e084c873b719f5203dd837",
+    "tests/test_scope_overlays.py": "29c218c3ad6353dec599290bd55c9cee5e96d92a9d6fca334196ba48fba394db",
+    "tests/test_session_plugin_identity.py": "f725f7947e3f0acb720b0fb588d2650285f82b06a6680ce4cc4aae6c010f58da",
+    "tests/test_skill_context_failures.py": "d0b2cb53c5acf17dc7b7e1e17035e7de30f406e948091d9f773d5452972c620a",
+    "tests/test_skill_contributions.py": "6170e26985a0cd485ca625210865cde91fd2a9fab17bd3dad447987a64253a90",
+    "tests/test_skill_navigation.py": "b59b62f44f3e2bd43f0b541c50b24451b882177c18e757912d8f73635024e2f5",
+    "tests/test_skill_resources.py": "dc7f55120370af5a7ca10a912530781c39712a40093c81104b009609388a1797",
+    "tests/test_skill_retrieval.py": "84da7cbe349b1265475caa3a6f3223c1284ea74bf22ceb5a1cb83c9723067a4c",
+    "tests/test_skill_selection.py": "38f99d7a03d4059032e97af9e5250f11fa81cb5f90ba955c7b10e4791217bd02",
+    "tests/test_sqlite_event_store.py": "61c81ad16a92f1fe2acf42f7a29ea68263cb0c135d0410b918271a073a78b6aa",
+    "tests/test_sqlite_event_store_architecture.py": "25018a501e11789a1fb842696005e6d9e12520f741f5f85f456accd792921558",
+    "tests/test_surface_and_invariants.py": "a38e95a7b578843aac0fc216ce1cf4f4e6957cbaf408cc87eb816c80ec9f8bb6",
+    "tests/test_tool_middleware.py": "34232649a9e3caedc285dfb6e48b96e8a85ecd1d9f98c24d63fc56d59214f465",
+    "tests/test_tool_runtime_failures.py": "5312b934fcb31d635fee469db2620a645ec61ce10bb74564d7f6e331d9bd089b",
+    "tests/test_tools.py": "8ee1142d43d1f30074d2de12ea5ca202ad438d2c67d8bf6e534603e401923a10",
+    "tests/test_tui.py": "a3a96ccf66d50289877bfd41971a9897cb98a8b9855805257ef61d29ee03805b",
+    "tests/test_tui_context_inspection.py": "9eb121d0c5b7f9d29cdf1ff85153e275db182264c20007f2cba4d8120badc230",
+    "tests/test_tui_governance.py": "63542a65b1594a9bc1e4a45ab044a96de4e0b5b09916ee0d9296981b77519cf0",
+    "tests/test_tui_optional.py": "b72e73634f87116b9a7d4c5d4c0be905ce9214743c7f6ffef9f45c71a12ac4b3",
+    "tests/test_tui_presentation.py": "a0066dd974e00444227ca56f1c9eca6a54e03e8ba9392e675c21ab50c0f28685",
+    "tests/test_tui_task_conversation.py": "e9f33c78bb8ef9229a4fd15e657a12a8a8e26acdedd9770c8711edf3f55e1689",
+    "tests/test_unified_diff.py": "8772696f743347321459aed34ed564efbb532f4f85207ae9e52f12cb2894ec49",
+    "tests/test_v07_d0_architecture.py": "90e2092af8871c00821f5c3dc5eeb1cbf9e55d8b7733d493daa0ddd2582ae42c",
+    "tests/test_version_contract.py": "4f4b9bec06d1998cbcbc70f3c49eba0bd273fe76877e8b9a4dc83ebfedf89527",
+    "tests/test_workflow_architecture.py": "bb04496c5b46e5a6d36a80afac9d3dc848817189ca00a043a0e4613d7833f0a0",
+    "tests/test_workflow_definition.py": "59b169396373162d362add7038d2389a2937bd68bae0b3d6c8a2eae0fe30b9d4",
+    "tests/test_workflow_execution.py": "0c3c0b545982658b216e36357962559ae11aad5a844c314f91276a677be185b0",
+    "tests/test_workspace_architecture.py": "fb203e5fa68a0f18af9539db43f9d1f7f97f5b04cf290f1210fdf8cd8da43032",
+    "tests/test_workspace_catalog.py": "664b4425a53e2bdb54ae2600593416bc1df81ecd9b31cc09e504d2e82eae5102",
+    "tests/test_workspace_policy.py": "a1e9e4b83b0c1614c31f879a3fce9e2ff853721ba17a0137b3863d7fe99eeb8d",
+    "tests/test_workspace_supervision.py": "aa7a25271ddfc53f6d0f9ad8b6fed2846409c9f4a963aca92420bf3f1e6f9435",
+    "tests/workflow_fixtures.py": "a248da6b998c82af40d52a7633545cc8ceb52afab52c0d7aa2452c3c32f7581a"
+  },
+  "freeze_sha256": {
+    "c3-screen-frozen.json": "4cf75ff6e0bbbec964ead4f41f7f7048ff1c7e5ce43a28b5aeff363b43f91b4e",
+    "c3-screen-frozen-v2.json": "1b9d2d6cca5d0e3e9c10b8f5f30d0578cd70b1bd298fb318e7823ab91cc87d44"
+  },
+  "original_runtime": {
+    "attempts": 11,
+    "product_passed": 11,
+    "quality_passed": 11,
+    "audit": {
+      "accepted": true,
+      "sessions": 44,
+      "contexts": 44,
+      "dispatches": 44,
+      "replay_errors": 0,
+      "invariant_errors": 0,
+      "capture_sha256": "61e7dd641a4eddff40993f2400d886a1688663df319bcbeffedc1c1479342247",
+      "report_sha256": "4e71ae82755797e4a782e71af9e02bc27d22c3ff53f09eb9199875224d6f8976"
+    },
+    "observations": [
+      {
+        "category": "exact",
+        "context_bytes": 1016,
+        "context_digest": "9a1308784534a19526c26202e79ab9005e23d34cf772367443e8889370dd68b8",
+        "context_prepare_ms": 1281,
+        "injected": [
+          {
+            "content_bytes": 60,
+            "id": "goals.code",
+            "kind": "memory",
+            "tier": "summary"
+          }
+        ],
+        "metrics": {
+          "context_precision": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "goals.code",
+        "query_digest": "1f276f99a83f13ba9e7e145d5c877f8b706d24ee3a2dd5ffda94c97057986766",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "lexical",
+        "context_bytes": 1016,
+        "context_digest": "6dc86f6a9e0047d85f5989e15a246e5e41d2aa7ef25e266c900ddbb5fb612169",
+        "context_prepare_ms": 1247,
+        "injected": [
+          {
+            "content_bytes": 60,
+            "id": "goals.code",
+            "kind": "memory",
+            "tier": "summary"
+          }
+        ],
+        "metrics": {
+          "context_precision": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "项目目标保持边界清楚",
+        "query_digest": "1c658d780b8c2639233a0c7bccbabdd71766a772fd652673387f1bac0206192f",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "lexical",
+        "context_bytes": 1026,
+        "context_digest": "804f3152c92a7e13879686a232e9f24cde4de1dd9352b5f799f2e43bbf44c4d2",
+        "context_prepare_ms": 1235,
+        "injected": [
+          {
+            "content_bytes": 63,
+            "id": "route.error",
+            "kind": "memory",
+            "tier": "summary"
+          }
+        ],
+        "metrics": {
+          "context_precision": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "src/route.py routeerror",
+        "query_digest": "4fcf83fc12230b5fb821612c8af9030ff6ae41f78c5f42b21768fbff98e83e24",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "semantic",
+        "context_bytes": 579,
+        "context_digest": "7f04ead2680a10aab18ad85764271070b964d1f095f78d032f20c418e3388904",
+        "context_prepare_ms": 1303,
+        "injected": [],
+        "metrics": {
+          "context_precision": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "vehicle fuel",
+        "query_digest": "f6115765c6725d0404db3267c10ebe10f76480b940c21c896423f46737e1ebde",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "zero-hit",
+        "context_bytes": 579,
+        "context_digest": "1f35d7dd569617dc3cec179f176b2773d439a253c52ba597df1a979fce05a09c",
+        "context_prepare_ms": 1251,
+        "injected": [],
+        "metrics": {
+          "context_precision": null,
+          "mrr": null,
+          "precision": null,
+          "recall": null,
+          "scope_violations": 0,
+          "zero_hit": 1.0
+        },
+        "query": "quasarnevermentioned",
+        "query_digest": "413c16155b2905cb84722755925713cac091c6e6516915f63a81e6380932d034",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "cross-workspace",
+        "context_bytes": 579,
+        "context_digest": "bd24cb50890ba566e0947b75236c73552c4d75fd9e906b9845dfc33f50ef5fe2",
+        "context_prepare_ms": 1239,
+        "injected": [],
+        "metrics": {
+          "context_precision": null,
+          "mrr": null,
+          "precision": null,
+          "recall": null,
+          "scope_violations": 0,
+          "zero_hit": 1.0
+        },
+        "query": "secretneedle",
+        "query_digest": "5a3e38b22191441eb05ee03fd520083d89f2f12e82fd660717ea982c39af7d3b",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "revoked",
+        "context_bytes": 579,
+        "context_digest": "68d9ef0a6a889789a6ec8ccb6efea8371802a1cf66156b17ded0c0225ec8425b",
+        "context_prepare_ms": 1220,
+        "injected": [],
+        "metrics": {
+          "context_precision": null,
+          "mrr": null,
+          "precision": null,
+          "recall": null,
+          "scope_violations": 0,
+          "zero_hit": 1.0
+        },
+        "query": "revokedneedle",
+        "query_digest": "0c4e960404721d89cd72eb12e2295fb72c956555cfae46d59dcf7f8b1b085867",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "superseded",
+        "context_bytes": 579,
+        "context_digest": "ddb2d00540c1e85ae2bd04a52d600ef8bf81d505fa9cd895b8041c84bf78ef17",
+        "context_prepare_ms": 1399,
+        "injected": [],
+        "metrics": {
+          "context_precision": null,
+          "mrr": null,
+          "precision": null,
+          "recall": null,
+          "scope_violations": 0,
+          "zero_hit": 1.0
+        },
+        "query": "priorneedle",
+        "query_digest": "8e19366c4968683816b64c58c73826dcaea87a2859b4387cdb0e1d7a7d726c8d",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "retired-generation",
+        "context_bytes": 579,
+        "context_digest": "916066a017cfa61d924e017b91838b4e6bb9ba2a79f8102d78c7ae4dccd01609",
+        "context_prepare_ms": 1388,
+        "injected": [],
+        "metrics": {
+          "context_precision": null,
+          "mrr": null,
+          "precision": null,
+          "recall": null,
+          "scope_violations": 0,
+          "zero_hit": 1.0
+        },
+        "query": "reference.retired",
+        "query_digest": "0720182c27ed9cbf5ec9a2d3406ab1cbfb87d055caa39db8e5158cfce9616020",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "hard-negative",
+        "context_bytes": 1026,
+        "context_digest": "145def01f063e3922f23759c0ba44cd5ad9637086f3da35c38630576193f9132",
+        "context_prepare_ms": 1532,
+        "injected": [
+          {
+            "content_bytes": 63,
+            "id": "route.error",
+            "kind": "memory",
+            "tier": "summary"
+          }
+        ],
+        "metrics": {
+          "context_precision": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "route.error",
+        "query_digest": "aaeec6d136fb5c8b86afcb2f3a757152fbc9a891fb0745387cf67955050dbfc8",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      },
+      {
+        "category": "exact",
+        "context_bytes": 1647,
+        "context_digest": "df7e2553323df56a1f01e24daa11e0f668302dc05086058f48b61370598897a9",
+        "context_prepare_ms": 1371,
+        "injected": [
+          {
+            "content_bytes": 33,
+            "id": "reference.current",
+            "kind": "skill",
+            "tier": "summary"
+          }
+        ],
+        "metrics": {
+          "context_precision": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "scope_violations": 0,
+          "zero_hit": null
+        },
+        "query": "reference.current",
+        "query_digest": "810c19ef005e687e6a9d8dbfd57635b1a14b5ae1dc7c7eeb7bd3598fb77c6c69",
+        "role": "requester",
+        "scope_violations": 0,
+        "status": "measured"
+      }
+    ]
+  },
+  "local_inference": {
+    "format": 1,
+    "freeze_sha256": "1b9d2d6cca5d0e3e9c10b8f5f30d0578cd70b1bd298fb318e7823ab91cc87d44",
+    "capture_sha256": "61e7dd641a4eddff40993f2400d886a1688663df319bcbeffedc1c1479342247",
+    "phase": "pre-integration-feasibility-only",
+    "runtime_semantic_enabled": false,
+    "accepted_for_integration": [],
+    "summaries": [
+      {
+        "id": "cosine-050",
+        "checks": {
+          "original_nonsemantic": true,
+          "original_semantic": true,
+          "languages": false,
+          "scope": true,
+          "gain": false,
+          "cost": true
+        },
+        "language": {
+          "en": {
+            "recall": 0.25,
+            "precision": 0.25
+          },
+          "zh": {
+            "recall": 0.25,
+            "precision": 0.125
+          }
+        },
+        "semantic_recall_gain": 0.2222222222222222,
+        "warm_p95_ms": 12.562799965962768,
+        "asset_bytes": 91607178
+      },
+      {
+        "id": "cosine-060",
+        "checks": {
+          "original_nonsemantic": true,
+          "original_semantic": false,
+          "languages": false,
+          "scope": true,
+          "gain": false,
+          "cost": true
+        },
+        "language": {
+          "en": {
+            "recall": 0.0,
+            "precision": 0.0
+          },
+          "zh": {
+            "recall": 0.25,
+            "precision": 0.125
+          }
+        },
+        "semantic_recall_gain": 0.0,
+        "warm_p95_ms": 11.401599971577525,
+        "asset_bytes": 91607178
+      },
+      {
+        "id": "cosine-070",
+        "checks": {
+          "original_nonsemantic": true,
+          "original_semantic": false,
+          "languages": false,
+          "scope": true,
+          "gain": false,
+          "cost": true
+        },
+        "language": {
+          "en": {
+            "recall": 0.0,
+            "precision": 0.0
+          },
+          "zh": {
+            "recall": 0.25,
+            "precision": 0.125
+          }
+        },
+        "semantic_recall_gain": 0.0,
+        "warm_p95_ms": 12.101799948140979,
+        "asset_bytes": 91607178
+      },
+      {
+        "id": "cosine-050-cross-0",
+        "checks": {
+          "original_nonsemantic": true,
+          "original_semantic": false,
+          "languages": false,
+          "scope": true,
+          "gain": false,
+          "cost": true
+        },
+        "language": {
+          "en": {
+            "recall": 0.0,
+            "precision": 0.0
+          },
+          "zh": {
+            "recall": 0.25,
+            "precision": 0.125
+          }
+        },
+        "semantic_recall_gain": 0.0,
+        "warm_p95_ms": 25.255699991248548,
+        "asset_bytes": 183422936
+      }
+    ],
+    "results": [
+      {
+        "query": "goals.code",
+        "category": "exact",
+        "language": null,
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "context_precision": 1.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.011267436668276787,
+            "reranker": -11.358238220214844
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.6445558667182922,
+            "reranker": 7.567034721374512
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.11116417497396469,
+            "reranker": -11.357733726501465
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.10093977302312851,
+            "reranker": -11.238333702087402
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.009448319673538208,
+            "reranker": -11.405000686645508
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.12850461900234222,
+            "reranker": -11.413605690002441
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "项目目标保持边界清楚",
+        "category": "lexical",
+        "language": null,
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "context_precision": 1.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.32465660572052,
+            "reranker": -1.2339081764221191
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.6038517355918884,
+            "reranker": 6.60384464263916
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": -0.0038583208806812763,
+            "reranker": -9.373034477233887
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.471333384513855,
+            "reranker": 5.602471828460693
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": -0.05151331424713135,
+            "reranker": -10.00727653503418
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.017588408663868904,
+            "reranker": -9.745906829833984
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "goals.code"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "src/route.py RouteError",
+        "category": "lexical",
+        "language": null,
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "context_precision": 1.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.05290795490145683,
+            "reranker": -11.241193771362305
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.0635751411318779,
+            "reranker": -11.36628532409668
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.12668246030807495,
+            "reranker": -11.148195266723633
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.07557205855846405,
+            "reranker": -11.060396194458008
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.796333909034729,
+            "reranker": 8.016403198242188
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.1667780578136444,
+            "reranker": -8.824882507324219
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "vehicle fuel",
+        "category": "semantic",
+        "language": null,
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.04815693199634552,
+            "reranker": -11.18716049194336
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.04643377661705017,
+            "reranker": -11.243256568908691
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.5041170716285706,
+            "reranker": -3.8901283740997314
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.054522451013326645,
+            "reranker": -11.048084259033203
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": -0.07564301788806915,
+            "reranker": -11.365461349487305
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.03556695953011513,
+            "reranker": -11.318852424621582
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "mobility.note"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "quasarnevermentioned",
+        "category": "zero-hit",
+        "language": null,
+        "lexical": {
+          "recall": null,
+          "mrr": null,
+          "precision": null,
+          "context_precision": null,
+          "zero_hit": 1.0,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.08465450257062912,
+            "reranker": -11.395992279052734
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.17354968190193176,
+            "reranker": -11.415096282958984
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": -0.0414346307516098,
+            "reranker": -11.430567741394043
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.2161719799041748,
+            "reranker": -11.305206298828125
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.07843761891126633,
+            "reranker": -11.453252792358398
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.086745984852314,
+            "reranker": -11.443769454956055
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "secretneedle",
+        "category": "cross-workspace",
+        "language": null,
+        "lexical": {
+          "recall": null,
+          "mrr": null,
+          "precision": null,
+          "context_precision": null,
+          "zero_hit": 1.0,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.07825490832328796,
+            "reranker": -11.363483428955078
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.07438153773546219,
+            "reranker": -11.395195007324219
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": -0.06626739352941513,
+            "reranker": -11.411476135253906
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.13738547265529633,
+            "reranker": -11.236640930175781
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.04581174999475479,
+            "reranker": -11.35335922241211
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.08254804462194443,
+            "reranker": -11.383249282836914
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "revokedneedle",
+        "category": "revoked",
+        "language": null,
+        "lexical": {
+          "recall": null,
+          "mrr": null,
+          "precision": null,
+          "context_precision": null,
+          "zero_hit": 1.0,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": -0.008712263777852058,
+            "reranker": -11.357355117797852
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.06360211968421936,
+            "reranker": -11.381823539733887
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": -0.034038081765174866,
+            "reranker": -11.373703002929688
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.07306084781885147,
+            "reranker": -11.155843734741211
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.041270993649959564,
+            "reranker": -11.261510848999023
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.10118166357278824,
+            "reranker": -11.400134086608887
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "priorneedle",
+        "category": "superseded",
+        "language": null,
+        "lexical": {
+          "recall": null,
+          "mrr": null,
+          "precision": null,
+          "context_precision": null,
+          "zero_hit": 1.0,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.07981172949075699,
+            "reranker": -11.36285400390625
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.06851103156805038,
+            "reranker": -11.373838424682617
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": -0.019063401967287064,
+            "reranker": -11.404590606689453
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.13021200895309448,
+            "reranker": -11.264490127563477
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": -0.011598849669098854,
+            "reranker": -11.348198890686035
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.11019871383905411,
+            "reranker": -11.380690574645996
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "reference.retired",
+        "category": "retired-generation",
+        "language": null,
+        "lexical": {
+          "recall": null,
+          "mrr": null,
+          "precision": null,
+          "context_precision": null,
+          "zero_hit": 1.0,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.07817059755325317,
+            "reranker": -11.195146560668945
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.0910084992647171,
+            "reranker": -11.260615348815918
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.14887550473213196,
+            "reranker": -11.233657836914062
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.33661001920700073,
+            "reranker": -3.370516061782837
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.041041649878025055,
+            "reranker": -11.473201751708984
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.06974407285451889,
+            "reranker": -11.347713470458984
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": null,
+              "mrr": null,
+              "precision": null,
+              "context_precision": null,
+              "zero_hit": 1.0,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "route.error",
+        "category": "hard-negative",
+        "language": null,
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "context_precision": 1.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.16185279190540314,
+            "reranker": -11.297527313232422
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.10988200455904007,
+            "reranker": -11.402997016906738
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.16550840437412262,
+            "reranker": -11.056356430053711
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.10809849202632904,
+            "reranker": -11.074390411376953
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.5841060280799866,
+            "reranker": 6.230319499969482
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.26371678709983826,
+            "reranker": -1.6561625003814697
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "route.error"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "reference.current",
+        "category": "exact",
+        "language": null,
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 1.0,
+          "context_precision": 1.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.3815312087535858,
+            "reranker": -5.15632438659668
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.10813703387975693,
+            "reranker": -11.114500999450684
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.19288818538188934,
+            "reranker": -11.095179557800293
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.5957146883010864,
+            "reranker": 8.042153358459473
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": -0.0064012957736849785,
+            "reranker": -11.43310832977295
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.09529630839824677,
+            "reranker": -11.182561874389648
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "机动车上路需要加什么能源？",
+        "category": "added-semantic",
+        "language": "zh",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.33264702558517456,
+            "reranker": 1.851657509803772
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.4407516419887543,
+            "reranker": 2.4019546508789062
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.05500737950205803,
+            "reranker": -7.8831071853637695
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.2796773910522461,
+            "reranker": 2.8935322761535645
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.01778477057814598,
+            "reranker": -8.418508529663086
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.034503865987062454,
+            "reranker": -8.289764404296875
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "函数抛异常的诱因是什么？",
+        "category": "added-semantic",
+        "language": "zh",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.3387305438518524,
+            "reranker": 2.861471176147461
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.34203818440437317,
+            "reranker": 2.239187002182007
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.04015931487083435,
+            "reranker": -7.1258344650268555
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.24001233279705048,
+            "reranker": 2.3949573040008545
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.0136712696403265,
+            "reranker": -7.654661655426025
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.04036370664834976,
+            "reranker": -7.598294258117676
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "职责划分的原则有哪些？",
+        "category": "added-semantic",
+        "language": "zh",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.3383289873600006,
+            "reranker": 2.087470054626465
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.28333061933517456,
+            "reranker": 2.2907357215881348
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.036866068840026855,
+            "reranker": -8.549070358276367
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.2288362979888916,
+            "reranker": 0.5078995227813721
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.00817494373768568,
+            "reranker": -9.335953712463379
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.05612587928771973,
+            "reranker": -9.041267395019531
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "现阶段在忙什么？",
+        "category": "added-semantic",
+        "language": "zh",
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "precision": 0.5,
+          "context_precision": 0.5,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.33727508783340454,
+            "reranker": 3.682488441467285
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.35259610414505005,
+            "reranker": 0.7183932065963745
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.11197212338447571,
+            "reranker": -7.211129665374756
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.3431667983531952,
+            "reranker": 2.7284460067749023
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.011449215933680534,
+            "reranker": -8.043231010437012
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.0175321102142334,
+            "reranker": -7.708483695983887
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 0.5,
+              "context_precision": 0.5,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              },
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 0.5,
+              "context_precision": 0.5,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              },
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 0.5,
+              "context_precision": 0.5,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              },
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 0.5,
+              "context_precision": 0.5,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "current.phase"
+              },
+              {
+                "kind": "skill",
+                "id": "reference.current"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "query": "Which liquid powers a car?",
+        "category": "added-semantic",
+        "language": "en",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.179051473736763,
+            "reranker": -11.172981262207031
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.051618415862321854,
+            "reranker": -11.365259170532227
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.5270878076553345,
+            "reranker": -7.515974044799805
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.07337215542793274,
+            "reranker": -10.928300857543945
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": -0.11783646047115326,
+            "reranker": -11.445547103881836
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.11234875023365021,
+            "reranker": -11.43862533569336
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 1.0,
+              "mrr": 1.0,
+              "precision": 1.0,
+              "context_precision": 1.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": [
+              {
+                "kind": "memory",
+                "id": "mobility.note"
+              }
+            ]
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "Why does the URL handler fail?",
+        "category": "added-semantic",
+        "language": "en",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": -0.014267927035689354,
+            "reranker": -11.235862731933594
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": -0.09037904441356659,
+            "reranker": -11.34765338897705
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.0023286764044314623,
+            "reranker": -11.358104705810547
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.02829938381910324,
+            "reranker": -11.159651756286621
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.28180989623069763,
+            "reranker": -11.0354585647583
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.09087276458740234,
+            "reranker": -11.319616317749023
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "How should responsibilities be separated?",
+        "category": "added-semantic",
+        "language": "en",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": -0.04191570729017258,
+            "reranker": -11.258540153503418
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.18310900032520294,
+            "reranker": -11.37234115600586
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.09878338873386383,
+            "reranker": -11.39181137084961
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.012585686519742012,
+            "reranker": -11.149696350097656
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.0247885100543499,
+            "reranker": -11.430335998535156
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": -0.0069901663810014725,
+            "reranker": -11.426584243774414
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      },
+      {
+        "query": "What delivery milestone are we currently at?",
+        "category": "added-semantic",
+        "language": "en",
+        "lexical": {
+          "recall": 0.0,
+          "mrr": 0.0,
+          "precision": 0.0,
+          "context_precision": 0.0,
+          "zero_hit": null,
+          "scope_violations": 0
+        },
+        "scores": [
+          {
+            "kind": "memory",
+            "id": "current.phase",
+            "cosine": 0.031907349824905396,
+            "reranker": -11.07373046875
+          },
+          {
+            "kind": "memory",
+            "id": "goals.code",
+            "cosine": 0.20979911088943481,
+            "reranker": -11.397554397583008
+          },
+          {
+            "kind": "memory",
+            "id": "mobility.note",
+            "cosine": 0.10280340164899826,
+            "reranker": -11.460103034973145
+          },
+          {
+            "kind": "skill",
+            "id": "reference.current",
+            "cosine": 0.05628617852926254,
+            "reranker": -11.167579650878906
+          },
+          {
+            "kind": "memory",
+            "id": "route.error",
+            "cosine": 0.04644155129790306,
+            "reranker": -11.491336822509766
+          },
+          {
+            "kind": "memory",
+            "id": "route.noise",
+            "cosine": 0.215260311961174,
+            "reranker": -11.485798835754395
+          }
+        ],
+        "candidates": [
+          {
+            "id": "cosine-050",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-060",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-070",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          },
+          {
+            "id": "cosine-050-cross-0",
+            "metrics": {
+              "recall": 0.0,
+              "mrr": 0.0,
+              "precision": 0.0,
+              "context_precision": 0.0,
+              "zero_hit": null,
+              "scope_violations": 0
+            },
+            "admitted": []
+          }
+        ]
+      }
+    ],
+    "cost": {
+      "cold_load_both_models_ms": 747.6879999740049,
+      "rebuild_ms": 100.73030006606132,
+      "eligible_items": 6,
+      "vector_bytes": 9216,
+      "vector_file_bytes": 9344,
+      "truncations": [],
+      "warm_samples_ms": {
+        "cosine-050": [
+          6.473700050264597,
+          11.96410006377846,
+          10.647799936123192,
+          9.413399966433644,
+          8.514999994076788,
+          11.660100077278912,
+          9.530000039376318,
+          11.417399975471199,
+          11.6584999486804,
+          7.703599985688925,
+          10.665599955245852,
+          7.722600013948977,
+          8.459399919956923,
+          7.764899986796081,
+          6.752600078471005,
+          8.843200048431754,
+          7.566099986433983,
+          8.407899993471801,
+          9.006100008264184,
+          5.983799928799272,
+          8.68670002091676,
+          9.17410000693053,
+          9.082500007934868,
+          7.176399929448962,
+          9.684500051662326,
+          6.5570001024752855,
+          7.859000004827976,
+          8.016500039957464,
+          7.658599992282689,
+          9.743499918840826,
+          12.362400069832802,
+          8.630999946035445,
+          9.87629999872297,
+          7.54719995893538,
+          8.930600015446544,
+          7.596999988891184,
+          7.697799941524863,
+          8.018100052140653,
+          7.49979994725436,
+          5.717799998819828,
+          10.055300081148744,
+          9.261400089599192,
+          9.907900006510317,
+          6.430600071325898,
+          7.70890002604574,
+          6.264900090172887,
+          10.130800073966384,
+          9.043099940754473,
+          6.530800019390881,
+          6.4857000252231956,
+          7.0454999804496765,
+          9.47189994622022,
+          10.656700003892183,
+          7.355900015681982,
+          8.53110000025481,
+          7.617500028572977,
+          6.752899964340031,
+          10.966300033032894,
+          10.804699966683984,
+          10.401299921795726,
+          11.360800010152161,
+          11.522100074216723,
+          10.955600067973137,
+          13.577600009739399,
+          10.129700065590441,
+          12.562799965962768,
+          11.707399971783161,
+          13.095300062559545,
+          12.805200065486133,
+          12.65739998780191,
+          8.374099968932569,
+          9.321399964392185,
+          8.22139997035265,
+          9.789700037799776,
+          7.382199983112514,
+          10.899999993853271,
+          9.936499991454184,
+          9.592800051905215,
+          7.03770003747195,
+          9.369099978357553,
+          11.186599964275956,
+          9.01699997484684,
+          8.303900016471744,
+          8.764600032009184,
+          7.481000036932528,
+          11.752599966712296,
+          9.304800070822239,
+          8.867700002156198,
+          10.459700017236173,
+          11.107999947853386,
+          11.068099993281066,
+          9.673699969425797,
+          7.704899995587766,
+          8.822300005704165,
+          7.509699906222522
+        ],
+        "cosine-060": [
+          10.074399993754923,
+          7.9703000374138355,
+          10.942599968984723,
+          8.299399982206523,
+          7.770900032483041,
+          9.491399978287518,
+          9.810799965634942,
+          10.497499955818057,
+          9.862200007773936,
+          8.733400027267635,
+          6.633299984969199,
+          9.519399958662689,
+          7.861600024625659,
+          11.35349995456636,
+          9.768499992787838,
+          8.306600037030876,
+          9.102300042286515,
+          6.472500041127205,
+          8.562800008803606,
+          9.336799965240061,
+          8.701700018718839,
+          10.681299958378077,
+          8.063500048592687,
+          10.518199997022748,
+          10.388600057922304,
+          7.758599938824773,
+          7.831500028260052,
+          8.483199984766543,
+          8.791300002485514,
+          6.504500051960349,
+          6.745600025169551,
+          8.761600009165704,
+          8.864200091920793,
+          8.162999991327524,
+          7.019400014542043,
+          7.313500042073429,
+          7.268899935297668,
+          8.0344999441877,
+          6.912700016982853,
+          9.120999951846898,
+          7.451999932527542,
+          6.401299964636564,
+          6.869400036521256,
+          7.912999950349331,
+          8.510499959811568,
+          9.807500056922436,
+          9.424999938346446,
+          6.826000055298209,
+          9.192600031383336,
+          7.0445999735966325,
+          7.646500016562641,
+          8.984200074337423,
+          7.4748999904841185,
+          7.706399890594184,
+          8.111800067126751,
+          9.63950005825609,
+          9.479900007136166,
+          11.177900014445186,
+          8.924899972043931,
+          10.977700003422797,
+          11.215100064873695,
+          12.95980007853359,
+          9.649599902331829,
+          7.668500067666173,
+          9.761899942532182,
+          12.761199963279068,
+          12.792399968020618,
+          12.400700012221932,
+          11.401599971577525,
+          10.215900023467839,
+          10.838699992746115,
+          8.035700069740415,
+          9.496099897660315,
+          8.969100075773895,
+          8.949600043706596,
+          8.833399973809719,
+          9.142399998381734,
+          10.10750001296401,
+          8.368700044229627,
+          9.33880009688437,
+          6.250499980524182,
+          7.599600008688867,
+          8.567799930460751,
+          10.15500002540648,
+          9.37829993199557,
+          10.078100021928549,
+          10.819199960678816,
+          7.707000011578202,
+          8.539499947801232,
+          7.533199968747795,
+          9.844299987889826,
+          9.450099896639585,
+          7.146400050260127,
+          7.630299893207848,
+          9.579300065524876
+        ],
+        "cosine-070": [
+          6.721199955791235,
+          8.46739998087287,
+          9.974600048735738,
+          8.725799969397485,
+          9.218999999575317,
+          10.442200000397861,
+          10.362999979406595,
+          9.528999915346503,
+          10.26930008083582,
+          11.022299993783236,
+          8.546299999579787,
+          7.723900023847818,
+          7.949999999254942,
+          12.029299978166819,
+          11.39210001565516,
+          8.805699995718896,
+          7.806599955074489,
+          6.154500064440072,
+          8.012300007976592,
+          9.720499976538122,
+          8.767000050283968,
+          7.145799929276109,
+          6.64520007558167,
+          5.63589995726943,
+          6.956600002013147,
+          7.2963000275194645,
+          9.800200001336634,
+          12.232600012794137,
+          9.488600073382258,
+          7.793700089678168,
+          8.79919994622469,
+          9.727500029839575,
+          6.228899932466447,
+          8.923399960622191,
+          7.118500070646405,
+          8.137300028465688,
+          8.149800007231534,
+          8.216299931518734,
+          9.149700053967535,
+          10.398600017651916,
+          8.057099999859929,
+          8.207799983210862,
+          8.314999984577298,
+          8.595100021921098,
+          6.513300002552569,
+          8.52189993020147,
+          8.47759994212538,
+          6.907799979671836,
+          8.790499996393919,
+          7.15169997420162,
+          8.097799960523844,
+          7.828000001609325,
+          5.750600015744567,
+          6.098799989558756,
+          6.6920999670401216,
+          10.051700053736567,
+          7.130299927666783,
+          10.614700033329427,
+          9.529200033284724,
+          9.377700043842196,
+          10.8098000055179,
+          12.101799948140979,
+          10.97569998819381,
+          9.456299943849444,
+          11.057600029744208,
+          12.137899990193546,
+          13.8617999618873,
+          12.577700079418719,
+          11.020200094208121,
+          9.85420006327331,
+          10.47640002798289,
+          8.7000000057742,
+          7.293500006198883,
+          8.321699919179082,
+          9.430099977180362,
+          7.610699976794422,
+          6.113299983553588,
+          6.848199991509318,
+          10.514199966564775,
+          8.551500039175153,
+          8.182499906979501,
+          8.192999986931682,
+          8.719700039364398,
+          10.98439993802458,
+          10.04379999358207,
+          7.966100005432963,
+          9.551400085911155,
+          9.637800045311451,
+          6.809700047597289,
+          7.776100072078407,
+          6.820800015702844,
+          6.783999968320131,
+          9.72949992865324,
+          8.914300007745624,
+          9.725700016133487
+        ],
+        "cosine-050-cross-0": [
+          21.32920001167804,
+          17.657099990174174,
+          22.581700002774596,
+          16.21439994778484,
+          15.806799987331033,
+          26.253300020471215,
+          26.55650000087917,
+          28.885799925774336,
+          25.96050000283867,
+          19.796199980191886,
+          24.297400028444827,
+          22.118800086900592,
+          24.898799951188266,
+          21.061399951577187,
+          19.776000059209764,
+          18.17619998473674,
+          19.72920005209744,
+          18.941999995149672,
+          14.835299924015999,
+          18.425700021907687,
+          11.857800069265068,
+          8.299299981445074,
+          10.46439993660897,
+          8.531500003300607,
+          7.91919999755919,
+          9.786600014194846,
+          10.867099976167083,
+          11.087499908171594,
+          9.43189999088645,
+          10.099100065417588,
+          6.3776999013498425,
+          9.22610005363822,
+          10.172099922783673,
+          8.496400085277855,
+          8.044700021855533,
+          7.388999918475747,
+          8.106800029054284,
+          5.8376999804750085,
+          7.213799981400371,
+          7.527299923822284,
+          7.327600033022463,
+          8.717200020328164,
+          5.7088000467047095,
+          7.219399907626212,
+          7.24199996329844,
+          21.384499967098236,
+          19.820000045001507,
+          18.92000006046146,
+          20.55739995557815,
+          18.94860004540533,
+          17.499800072982907,
+          20.703000016510487,
+          22.923000040464103,
+          23.381799925118685,
+          22.425099974498153,
+          8.048999938182533,
+          11.670000036247075,
+          9.105599950999022,
+          7.878000033088028,
+          10.574399959295988,
+          10.089099989272654,
+          8.696299977600574,
+          9.665000019595027,
+          11.415399960242212,
+          8.532100007869303,
+          10.149899986572564,
+          10.55769994854927,
+          10.885600000619888,
+          8.638699888251722,
+          8.830100065097213,
+          9.607499931007624,
+          8.263799943961203,
+          10.633300058543682,
+          8.949599927291274,
+          10.578899993561208,
+          24.233500007539988,
+          25.255699991248548,
+          21.69490000233054,
+          21.88009989913553,
+          15.530000091530383,
+          8.487100014463067,
+          9.192300029098988,
+          8.267800090834498,
+          10.260699898935854,
+          9.339599986560643,
+          10.456399992108345,
+          9.680100018158555,
+          7.104200078174472,
+          8.510800078511238,
+          6.090199924074113,
+          11.117200017906725,
+          9.223700035363436,
+          9.73259995225817,
+          7.641799980774522,
+          8.807599893771112
+        ]
+      }
+    },
+    "versions": {
+      "torch": "2.12.0+cpu",
+      "transformers": "5.9.0",
+      "numpy": "1.26.4"
+    }
+  },
+  "score_audit": {
+    "verified": true,
+    "candidate_observations": 76,
+    "max_screen_context_bytes": 2059,
+    "criteria_and_assets_unchanged_after_preflight_correction": true,
+    "result_sha256": "439a885b801d0f1d9873d693ac57f179025e474da25dd449ac9ec93d3a2d5809"
+  },
+  "tokenizer_diagnostic": [
+    {
+      "id": "zh-transport",
+      "language": "zh",
+      "query": "机动车上路需要加什么能源？",
+      "tokens": 13,
+      "unknown_tokens": 10,
+      "unknown_fraction": 0.7692307692307693
+    },
+    {
+      "id": "zh-diagnostic",
+      "language": "zh",
+      "query": "函数抛异常的诱因是什么？",
+      "tokens": 12,
+      "unknown_tokens": 10,
+      "unknown_fraction": 0.8333333333333334
+    },
+    {
+      "id": "zh-boundary",
+      "language": "zh",
+      "query": "职责划分的原则有哪些？",
+      "tokens": 11,
+      "unknown_tokens": 6,
+      "unknown_fraction": 0.5454545454545454
+    },
+    {
+      "id": "zh-stage",
+      "language": "zh",
+      "query": "现阶段在忙什么？",
+      "tokens": 8,
+      "unknown_tokens": 7,
+      "unknown_fraction": 0.875
+    },
+    {
+      "id": "en-transport",
+      "language": "en",
+      "query": "Which liquid powers a car?",
+      "tokens": 6,
+      "unknown_tokens": 0,
+      "unknown_fraction": 0.0
+    },
+    {
+      "id": "en-diagnostic",
+      "language": "en",
+      "query": "Why does the URL handler fail?",
+      "tokens": 8,
+      "unknown_tokens": 0,
+      "unknown_fraction": 0.0
+    },
+    {
+      "id": "en-boundary",
+      "language": "en",
+      "query": "How should responsibilities be separated?",
+      "tokens": 6,
+      "unknown_tokens": 0,
+      "unknown_fraction": 0.0
+    },
+    {
+      "id": "en-stage",
+      "language": "en",
+      "query": "What delivery milestone are we currently at?",
+      "tokens": 8,
+      "unknown_tokens": 0,
+      "unknown_fraction": 0.0
+    }
+  ],
+  "preflight_failure": {
+    "log": "c3-screen-r1.log",
+    "code": "c3-original-observation-not-unique",
+    "cause": "Original query casing differs from the normalized Runtime query.",
+    "before_model_scoring": true,
+    "criteria_changed": false
+  },
+  "targeted_checks": {
+    "owner_and_adjacent": "43 passed in 90.04s",
+    "lookup_correction": "4 passed in 1.32s",
+    "compileall": "passed",
+    "final_static_and_docs": "passed",
+    "ruff": "passed",
+    "diff_check": "passed",
+    "collect_only": "3296 tests collected in 1.76s; not executed",
+    "production_modules_unchanged_from_c2": 244,
+    "new_file_whitespace_and_secret_shape_check": "passed",
+    "anti_example_hardcoding": "No sample/model-name branches or local path defaults; explicit fixtures only.",
+    "context_documents": "Chapters 2, 7.9, 7.10, 15 synchronized; main chapters 0-20 and 7.1-7.10 align."
+  },
+  "not_run": [
+    "full pytest",
+    "L2-L4",
+    "Wheel",
+    "installation",
+    "real Provider",
+    "production semantic integration"
+  ]
+}

@@ -1,0 +1,4926 @@
+{
+  "format": 1,
+  "status": "C2 baseline failed; repairs and final acceptance pending",
+  "audit_scope": "Independent recalculation from SQLite exports and fresh original Session/replay/invariant readers; no Provider calls.",
+  "audit_source_sha256": "eff5865f9ccd7a738e94e0e45b2d9f4130fa49ec394495ab88b3e110f9e0a5c5",
+  "raw_audit_sha256": "26515f83ac23dd17b8c84ae427f03a81692b2af275b25efc28955e20e85766f3",
+  "frozen_record_sha256": "4ce60d9fe3dc760d37be9d5e3796488b5d6adb7792e52daa93bc68d15e8b18ca",
+  "c2_acceptance_passed": false,
+  "runs": [
+    {
+      "model": "qwen-plus",
+      "run": "c2-r1-live-qwen-plus",
+      "summary": {
+        "complete_grid": true,
+        "core": {
+          "total": 28,
+          "task_passed": 11
+        },
+        "semantic_diagnostic": {
+          "total": 4,
+          "task_passed": 3
+        },
+        "scope_violations": 0,
+        "replay_errors": 0,
+        "invariants": 0,
+        "evidence_errors": 0,
+        "acceptance_passed": false
+      },
+      "core_answer_ok": 11,
+      "core_evidence_ok": 21,
+      "core_json_object_decoded": 13,
+      "attempt_metrics": {
+        "bootstrap": {
+          "attempts": 14,
+          "succeeded": 14,
+          "with_exact_usage": 14,
+          "exact_tokens": 33314,
+          "missing_usage": 0
+        },
+        "target": {
+          "attempts": 57,
+          "succeeded": 57,
+          "with_exact_usage": 57,
+          "exact_tokens": 209132,
+          "missing_usage": 0
+        }
+      },
+      "manifest_sha256": "7056b0fdb3acab37b72774feafbf436b2fde430155377c7af6cd3bf551738fd1",
+      "report_sha256": "1b43607a9b535c726eb22721d7c2d82f996f3f0480f05b0dedfc5e9b368f470b",
+      "evidence_sha256": {
+        "0-memory_summary": {
+          "result.json": "97142338dd71c6b10c214323dc6f09b30d1c653e09031a0f64ee2d0ed08999ac",
+          "expected.json": "d945395f2df8fb3f10f76892a25afb48e150dbb2ed5a0163fed6acb13bd5c205",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "10f6462c522208675f5465abef5292502cc31be49a8ee2b905c9da1b428745b6"
+        },
+        "0-memory_directory": {
+          "result.json": "ad6159b1e5f8d0ae98dd09ca1168fb9037f644a38b5766d320d6a43fe14acd11",
+          "expected.json": "480d4e16d5b45545ce536119083a8c637c7456c528ab3baef28322799985f6ce",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "abdcfa37a556296fc2c34328f2a8feb38bc211a86e267600ecbb1198cfccb112"
+        },
+        "0-memory_cross_session": {
+          "result.json": "b61a8ed283f486b0e041069dfcfe0db1b3365d0a2ec797d453405d766e2c90ac",
+          "expected.json": "394b0543b6323aef21b3d29e1c368bd63ef69ec7ccb4a3b8cf144b763c593d08",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "8d8366d193f72e3f0e6ee4db854e886400417e4240448eda4f966a9885b59d41"
+        },
+        "0-memory_proposed_excluded": {
+          "result.json": "6c742dc6dfd0640f98e7e555e2fd280bdfe86b0784cc5aae02c6ea197c07079c",
+          "expected.json": "14275c8b0b75abd29cb33a357572159558059b42036af25ec166133d12250066",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "d294d53336164a738c0fab6b4976dca7319bdded77c846ce4d56ef5e383b94f9"
+        },
+        "0-memory_revoked_excluded": {
+          "result.json": "c6af9fc6cb5902a655a1c2367e73efc2c2326c4c0ecdcdade4e9dfe8a2c681d6",
+          "expected.json": "e240252cb3d36689e1ddfe75e104ac6211545a76590a3b7a3ed12e1a710139e9",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "c51a229009bb5ba516e63c1bc9be7941960cbb879c4417ef724598454ce90807"
+        },
+        "0-memory_superseded_excluded": {
+          "result.json": "780bcde0049c2e6f2d778331b3055d6f62150e6d41f73f00c8661bb8f6054aaf",
+          "expected.json": "61c4891e6b64541ca0231f01d3ec7fc44ec634c043a6eeb3fb812e5c71f98ad7",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "3dd0fc2bdfa0820574350dacd98c6e53e063dbe4f2bf71e6d6e5ad4dc4a96770"
+        },
+        "0-memory_foreign_excluded": {
+          "result.json": "c08a5559bd5a76587026ba9aa61649599ff9bcbc2044297a85a3dd2668175251",
+          "expected.json": "92e9d9612650ccb47c4e131f928a02fa0a1b90d7a069d54281df64570a175b82",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "c7fe570990a08ab20324dfde8ad1aa06a29dd2ecf8b63e29769557c98d766f12"
+        },
+        "0-history_page": {
+          "result.json": "2514bebcc0ef3c3de48839f975dfc77609be7a98b1512ac5fcca11f9937bb956",
+          "expected.json": "a42e260e8002d3466fbe983c5431dead89c652a85d045600ffb4e643141c3dca",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "cf8476da7bba838fd5f9b62621fd30270bdf77e73658b32dced4412a9a8983a6"
+        },
+        "0-history_two_pages": {
+          "result.json": "960754a659e324728cc677c9f76cc1e6526c2d5605dc30dc7337b27e81670ed4",
+          "expected.json": "53e9a4dab544c0369927651b505469c52544d69345ad3e11fc96db8303dc2c3c",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "a9c47ab98df52bde78b66f398204f410ef9f7e1dfd7df9556146b9d71e11a3b0"
+        },
+        "0-history_stale_and_current_file": {
+          "result.json": "610205af0a99bbe3e12f24b127b36bd276682ba4411d5bf4f83034cf536f0db2",
+          "expected.json": "e367a31629a40710e5fbcb52830370a5b600072eff747345ecfaae73832a5253",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "f71d669efda3ad3cdcab12298cefe0d2a0a19cdf1e53c896aa6ffdc92d0edd99"
+        },
+        "0-skill_and_memory": {
+          "result.json": "8d3e88e67780a6c53f70475c9f4039fc3efdcb509b9bf015375b2e33332551be",
+          "expected.json": "6dc3ff4d50a6946763af92fca6fbd322db01a67cf09731aa3e70782c583199ff",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "581832d011f34b1b39bfdd33c2678eaef9e356af34f1a6417d5d9f8205490d86"
+        },
+        "0-memory_and_history": {
+          "result.json": "0c8b1a0f8b177484569c0713e4c2f117ed20b2937d4c3070c976d3a7d2b23e1d",
+          "expected.json": "41cc8ea2e4bbbcae6297f765bc4005c29196745c92489e1e3b0ccd4dbce6bb8d",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "ec989b341d5022b7243b905bf6c90a7aa9aec6893f1b44625ffc0013ea9fc62b"
+        },
+        "0-all_three_sources": {
+          "result.json": "8313bcd11cc0b8d8472639966c77406e3e95e8f2efe8633767252b6d8196a05d",
+          "expected.json": "ab5e364357df91122151b047592a8f2cc764d81c537ac63d7607e447c1b2dcbe",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "549d33f616e1b1e4ea746443c5db59bfba815fbeb8b07fd27b5c917ad1af7bb6"
+        },
+        "0-ordinary_workspace_read": {
+          "result.json": "29eb15d36035d271c6f7e28cdc1d9f907d4cd8f291e3e8fd672c17d1cc950ef6",
+          "expected.json": "a5693f8ffbb665b6d2cfb4016c2c57161b9a0094d8a72bc3df1031db276ad2a5",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "a9667ebcc3f22c1ad8dd08584beb5e5bba71a6db612b2057a8ae01ebdc0466ad"
+        },
+        "0-semantic_memory_paraphrase": {
+          "result.json": "01ea6cff346f1889130f004a76541e2d22828b59aaacfefcb4485643cad4e095",
+          "expected.json": "2eb915361b8a626f2ac1bdaccb1ba9464c44c77b882e233c97de87a0787b4235",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "400208ebdb5ac1301d6aad0e41e5a3778f0fb57cf6df6d2019b02d5e92c49014"
+        },
+        "0-semantic_skill_paraphrase": {
+          "result.json": "0c775c2252729a2e076727cda2858669ae935fc3fe6813db3409291dd2be5bbd",
+          "expected.json": "b5c01ddd5c49613f54d8067442e6872b5ce6ce9c8bfd423bb5e19e8fbad2f702",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "47175bbcdf21507092408865a83101b9c2f4373f5b9a51d8b96e3050f8fbd4ff"
+        },
+        "1-memory_summary": {
+          "result.json": "f77b96cca33037a13567ee018c09ef04a7168c6f5828c8bec71fafc0b9c971f8",
+          "expected.json": "94676eea8c55d8a29819bf0afe81694b5f8839b9962914f39a9ac14732359740",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "3d89051921ababaaa123158b49671237b9bef551bceed70b903614e176622451"
+        },
+        "1-memory_directory": {
+          "result.json": "0d2591e38514041ca040ec77b0c10fdf9b907e2cdf7197c33a600d35e00817e2",
+          "expected.json": "2e61e98162d1010185caa44bf469d5c3bcd6b069013cc017b0590db64414e592",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "3e04369ceb6ec68f62d6a419b395fe94edec7046b4254f45949bf06d786f523e"
+        },
+        "1-memory_cross_session": {
+          "result.json": "bbe05c0f1af071b7815b351b192bd97ecc6074aee4921330b445f3ad1ed8b097",
+          "expected.json": "252ccd486c2b8b93f365953a6b64f09c012604b0b37801f3d44ee23f6d74964f",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "3446d3a9986c674a6f2d97ea73f87ffe7120c6a1903495d7c7580a24719a624a"
+        },
+        "1-memory_proposed_excluded": {
+          "result.json": "98c5a0bab02111fbd16e976b89e869b0fb275f8c5bfa26826203e57d0428426c",
+          "expected.json": "95d64fb3f6f46eef301fd00b766ba62b1cdd88c15c565a821f7be45c8dbcd924",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "7f6b7d2db1e57568997bd8c5ab1a765be1e6732869a753215fc9bb60ba67612b"
+        },
+        "1-memory_revoked_excluded": {
+          "result.json": "5f16d72fcc73791122394f5be8ecd772336e4f0e1cd781833ec27e9c9cf80509",
+          "expected.json": "066a6c492f1657e759c2cded96d050b627eb77cdf4642dc470b5072ba0387fc7",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "6bd529c6eeb9b58fa8faa078424a7e4afc70e7975b11eefe542b3ae5c16a7259"
+        },
+        "1-memory_superseded_excluded": {
+          "result.json": "61f0ed6afc146b7f73582dcfa44c1e90db12e1277f09940f2dfa0c66c15ba9d0",
+          "expected.json": "9e8ad4ab2b5557988b2134cb9d70fd119c6ce407c4161b087d48da0ce24491fc",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "aae2978e23c76b831d5daaecd1f11511256034139a4384098fad7210c3288046"
+        },
+        "1-memory_foreign_excluded": {
+          "result.json": "cafa28e58f063d8f8886e3f5cf30acf1e542aef5328b3a3c83c35d5bac1b2515",
+          "expected.json": "8d4da48ffa37bc16764e926dab9a3e7f4908184bcec5bbb6c442930dca308f19",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "e2975c7b5495e62d0fb25a28e822710f6551f9380e59cab6e3a05508d085faae"
+        },
+        "1-history_page": {
+          "result.json": "c0e69410f49cf22f54ecff5a1c69b3d31c72ee287bcdf8d4965a0f54e2169814",
+          "expected.json": "f1de8367c921a4dd9f4106b624c55029626b5b2dc69328998876429866b7c00c",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "dcdb352e1151f0a50812d704c2b55c5b184d68746d6a7dd97290bf81ba790b65"
+        },
+        "1-history_two_pages": {
+          "result.json": "76f3de71277e3fe9b868c37c48964fea659c7356a533e55cc199147966b57978",
+          "expected.json": "23187af94296c066cf5b8a32d164516c5d30daf039cdf6e168cf8fcdc435d943",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "df5ee3a1825f6646949789eb8f29575157a7a84d0449553038458501f4569943"
+        },
+        "1-history_stale_and_current_file": {
+          "result.json": "8fefb09e6844e0fc091be33d49d44aaf2cc2e0d23102109d7d779280ce0d4a0b",
+          "expected.json": "6904c06ca8d06d53c7e506e0a7654c387deabb688705306ced65db634ab01d49",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "b55ae65c17b700ba3e35fe88a1c222d5677d4be93704577bde16fff4f39901b8"
+        },
+        "1-skill_and_memory": {
+          "result.json": "f6de65bdf91da73a59a6fa3c4802ddc9c5ed6af3128fa4c6d294214ef82f163a",
+          "expected.json": "3b67daedcad62b421dc4d45f09e867429f5821c2118860dd0e3ee27b2c0ca761",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "5d3357c380dbff3781ab4b0d96647e39f8b17d147dcb7d2514a1f2e6205c1226"
+        },
+        "1-memory_and_history": {
+          "result.json": "8b8bbf692b2bf281cd8cbca6622d0775eef8beb67853ba38bc48d6be614a050f",
+          "expected.json": "536e9cb81023b2b584addb0ff373d53d0e77ee69749c3bcb73ce9994b4fe2ba8",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "1ccdc7caa37701c03acdd7a50e05fb97a82bacfaee198c10c3d7688208ca238a"
+        },
+        "1-all_three_sources": {
+          "result.json": "2c7b4975c4990bcec1acdfc19f275e02eed049593ef79b1bce6da443be126528",
+          "expected.json": "ce10b0f55a49ada64914a05a10ac1f00895351870fa90cfbc0920dcc7ebc7803",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "bac874318ec7f9560e3c407beab9003508ef975444efcb0acbd36dedc85b2cd8"
+        },
+        "1-ordinary_workspace_read": {
+          "result.json": "0206e49d4352a9a143459dceea4227601ff3ed8cd24aa0546e46a5a06b0a5e2e",
+          "expected.json": "4eea391c067c022971fe9d9db2c755b1d6615644a80eb63088a8d0b67f4ce62f",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "6f703519b7349e73aa943bbc1e8e6f55ba6271a4e66320cc6baf185f8c3f9a01"
+        },
+        "1-semantic_memory_paraphrase": {
+          "result.json": "d0b938de794c37ca25b0e913295e3d2d8ae5f6176020ecc398bda00f914a4101",
+          "expected.json": "21271a497c8c82947e9680c643bda8bcc09a629de7afc667133b4b5d5fa42ce7",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "ee49be5f44acaf1d192e0a7f85bcc0be5e9163ab9253dc8f28552927e68ada61"
+        },
+        "1-semantic_skill_paraphrase": {
+          "result.json": "f0831375f567bb22d6c2928a0fe14ba92174b4f3d9016da1893721b5c6e17b7a",
+          "expected.json": "cba1bd37662bf2810dc6a747bc4e88664c2faf4a69e21a2a72f7bdc563520986",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "b05b087d8b9b7f8f63173f438ba3fde0c03fbc212a0bc33c52939b2e8c9cce7a"
+        }
+      },
+      "cases": [
+        {
+          "case": "memory_summary",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2745,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5878,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5900,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2280,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2280,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "memory:successor": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2883,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2279,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                34
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2275,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7600,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                48
+              ]
+            },
+            "history:second": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4603,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7656,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                70
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                55
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 4,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4639,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 4,
+              "succeeded": 4,
+              "with_exact_usage": 4,
+              "exact_tokens": 15310,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                22
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                22
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9417,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "memory:active": {
+              "last_request": false,
+              "context_seqs": []
+            },
+            "history:old_retention": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [
+            "request_history_page",
+            "request_workspace_memory"
+          ],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2856,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 4382,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                34,
+                46,
+                58
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                46,
+                58
+              ]
+            },
+            "history:batch": {
+              "last_request": true,
+              "context_seqs": [
+                58
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 4,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2278,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 4,
+              "succeeded": 4,
+              "with_exact_usage": 4,
+              "exact_tokens": 24218,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4622,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2768,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                19
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7305,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_summary",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2747,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5907,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5921,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2280,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2280,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:successor": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5937,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2279,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                34
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2275,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7458,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                48
+              ]
+            },
+            "history:second": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4603,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7986,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                46,
+                58
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                55
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4639,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 12447,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            },
+            "memory:active": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [
+            "request_workspace_memory"
+          ],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 8807,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "memory:active": {
+              "last_request": false,
+              "context_seqs": []
+            },
+            "history:old_retention": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [
+            "request_history_page",
+            "request_workspace_memory"
+          ],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2868,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 4213,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": false,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                46
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                34,
+                46
+              ]
+            },
+            "history:batch": {
+              "last_request": false,
+              "context_seqs": []
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [
+            "request_history_page"
+          ],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2278,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 18537,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 4622,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2770,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                19
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7418,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        }
+      ]
+    },
+    {
+      "model": "qwen3.8-max-0902",
+      "run": "c2-r1-live-qwen3.8-max-0902",
+      "summary": {
+        "complete_grid": true,
+        "core": {
+          "total": 28,
+          "task_passed": 15
+        },
+        "semantic_diagnostic": {
+          "total": 4,
+          "task_passed": 3
+        },
+        "scope_violations": 0,
+        "replay_errors": 0,
+        "invariants": 0,
+        "evidence_errors": 0,
+        "acceptance_passed": false
+      },
+      "core_answer_ok": 15,
+      "core_evidence_ok": 28,
+      "core_json_object_decoded": 16,
+      "attempt_metrics": {
+        "bootstrap": {
+          "attempts": 14,
+          "succeeded": 14,
+          "with_exact_usage": 14,
+          "exact_tokens": 36917,
+          "missing_usage": 0
+        },
+        "target": {
+          "attempts": 67,
+          "succeeded": 67,
+          "with_exact_usage": 67,
+          "exact_tokens": 254551,
+          "missing_usage": 0
+        }
+      },
+      "manifest_sha256": "cb40866b90e28164c4e93181dbc6ebe26b79dc90343040910595af4738117a07",
+      "report_sha256": "bce9fd224f4b035462993e3b91c13b4716d6063bc494676a7cf450c50e7e2773",
+      "evidence_sha256": {
+        "0-memory_summary": {
+          "result.json": "ba679f428d8e58a0d44e2dc706302109052cc05f0799b051d590c46fefda15d9",
+          "expected.json": "4d0744bcdcb8cb667a5add2b31a950ddd0b8e567e71519303a9c790f9080e3a9",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "e24622a4023086c518e77bb04b285b7d2d6e476fbf43c7c19949efe98847df1d"
+        },
+        "0-memory_directory": {
+          "result.json": "92f3fde8d1771c86e1108c74ae2cfc0226829687835f99bf8a1652dd04e9aa9c",
+          "expected.json": "645d3ba28676e6ed1ca30f903ddc3f9fdf6605b2df372597017fb78fd864267d",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "1685b4f6df889551e1dea305538a012960e82b5cae21cd69ba982cadcd0563b5"
+        },
+        "0-memory_cross_session": {
+          "result.json": "dcb583b9de0373c8aa84bf36611688739bd1bdba262f4045acdfbbefe6a4c2e1",
+          "expected.json": "41b9399b65e99d8f19e341968767a16eb0f0d9965dcfeab9488bda1b23dce0f0",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "e1e47d24cbc2e62a4a4ba90d5a81f6c420c13d9ba4181b27de71b9a085204c80"
+        },
+        "0-memory_proposed_excluded": {
+          "result.json": "9bd46a8eb1c74121cd4870348ab2ae98bd63fa47230acae9093f00441ad440a3",
+          "expected.json": "35d6ff2f53c7bd616e4f227e74c81f3d8add23d3aba4d59b6d388f7c6953b40f",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "676f2b1e9cb9d846dd3e051be2dfd50ca0e7db1b2e6e9031b0696ed2fbb628f1"
+        },
+        "0-memory_revoked_excluded": {
+          "result.json": "1e677832cb91821393a374f49bddd091aaa6e299bdce2d80a0f9762ecef31a72",
+          "expected.json": "8a46e736088ad78a7cf5be2f1d726454641ba613b33bcfe6cbf76a0dc66a9856",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "f4fad160872701ee8a8e4cded84e4397cc0169f286a03be4f3f6b719a99d0574"
+        },
+        "0-memory_superseded_excluded": {
+          "result.json": "249608eef980cb90580e7de6712b58b02d6326dd56282e94e0e822b2d44b1d66",
+          "expected.json": "8597e60dc2cb48fead317c44a29eafd35d0724099d4144f753065c3d297ec671",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "ccec85ce783b59e73d6fcc7b1830f6ecfb4a4008c470a7458276c0890227f1ef"
+        },
+        "0-memory_foreign_excluded": {
+          "result.json": "ea992e05360a97a172a97404a4ad649dda2e99a5c46f5ade80dd2b759d988f91",
+          "expected.json": "6298478bac7278381a9384cb76495bb827e279cf9471940bf0ba9d749fbba76e",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "685793c7f47caade6263cbb12c6a89c47d1ea487014443a5e18235a349d79621"
+        },
+        "0-history_page": {
+          "result.json": "7788ab3610cd829cb2af875f74f197a38a723fcc8ed8c72bbdee04d23f9ec877",
+          "expected.json": "1bef7dd3112d7452f3abbf8f3b4991f0406fccd337badef1bc08a7cb420ac0b1",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "d6ad6281677b8d07508ebb6f169c519cacc77efbe912c17e5242a41d2795f85a"
+        },
+        "0-history_two_pages": {
+          "result.json": "c5adc6939fa6e11d900c42810be3cbb289e2df1ac3ae8d09462e81f06de50b39",
+          "expected.json": "8d6dcf30785656132d1d8ed96e3ad27ab0a41ef074d666eb85b384e5d4e70cde",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "a2517a4cd5a1b8269c529c580853b358df14389abb3bb80a891dabedec1fc07f"
+        },
+        "0-history_stale_and_current_file": {
+          "result.json": "bb411a95c3a7cabf362f35e1280d4f6a44c44ef1469fe59094dc48a51690e46d",
+          "expected.json": "548d8a0f3c5946b263c42504bf6502b1196065ef855e014b3792d636938de850",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "816c6d3cb49fadc82a1cd11a8925ee9c1a5addfe9dffe89d7a0362add0e6defb"
+        },
+        "0-skill_and_memory": {
+          "result.json": "9a9cc176fa76bd95cf0a5e48499dda70f82a887db1f1e8352de1d6f137ebf3f8",
+          "expected.json": "d72254877c60607b939c7a098afb4cb1f41535813f61f88c66aad107402776eb",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "4bfcd098114c27cbcee8edef9b70a474d1b0026c0e5bb2d9f244e8234f87024c"
+        },
+        "0-memory_and_history": {
+          "result.json": "04c47e5cab31d89baa00461b066ab38101da48e07be8d9a38c4a41dc2a4148a7",
+          "expected.json": "bf699bd724fa919316ae1e2d7616e11cd80d381459202cfb4626526934f2715d",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "f7287c814f3cf483b8ca371dfe8a86ff33be6b9bb6561141da8c90f70f51cf1d"
+        },
+        "0-all_three_sources": {
+          "result.json": "0c7794e43dcd8ff1b7b2b292a373a892ed502420f77e13228450329904d4dab4",
+          "expected.json": "23b6873cde6ee75fb14b249822f22a826f81a25d727f720892d67b1cc0664bf0",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "cf29e9aa779ef4288c455a82227a3a90269407f1eed76d7fa0f5d3fe15c036b7"
+        },
+        "0-ordinary_workspace_read": {
+          "result.json": "0e1a65518e50437be5c8f34073b46a75bb0372a60cb0b3f30be22ffddcc38e03",
+          "expected.json": "bd816297e73b30fdbc95f7a22b9c70dcedee13d94d88387b690f2863e43b39db",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "14c26502eff71d13420456dc2d9d080ca2bcef4c288d8ca48eff3dbe8db42c44"
+        },
+        "0-semantic_memory_paraphrase": {
+          "result.json": "67c37deeec5572fe651b8fbdb9d7de73f94f91fbc21d8f470775b24e9f554389",
+          "expected.json": "7ea51ca3810b0732e226cafd6809f6ce80de3b5ca4ae52b951d8d5b3a8aa2324",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "2fa73157123872e7060007f6bea29213c96f389c50eed62b5948dd9a1568a2d6"
+        },
+        "0-semantic_skill_paraphrase": {
+          "result.json": "615341fdbd6276853c3ee8b8f45e4f3ba6fd94b99101d1a1b2fbb5039e2830c4",
+          "expected.json": "57b6163202ea08785b38fcccafe4f88bb2d2073b9de3730284cd9209f786adc3",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "e682a9958b05192797545d6867a1a4d5fabf647a852c27629baf1dbbdac74a07"
+        },
+        "1-memory_summary": {
+          "result.json": "a8a9423363b8ee6ee074152fd1232acf77cbece2662eabf4226183423db93c20",
+          "expected.json": "c1011fda103bdb15246ef0387cbe1be3313a1eb7bedbc320d01a0d008cf13099",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "c0fe0d1aaeb6787b635765e6af09e4dd043f3fe3019f353f79af0cd208b00675"
+        },
+        "1-memory_directory": {
+          "result.json": "6958733acca844be19556b4f8acdbb19a708387b37ef4741d92e9dc939486873",
+          "expected.json": "7fe428fb67d5890375ac9e87cdecef5fd6b79e57c2c3458379491cff74ae0f3b",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "35dde39a29f232c0308b387a88eaa0bf626177ca4a06e3cc4c2c8bdf41be437c"
+        },
+        "1-memory_cross_session": {
+          "result.json": "4a9d90dc841208b2c50bc660732f919b9b894974c2db9baf3fe86bc81c358a26",
+          "expected.json": "9330796e80302823393b02c75985d4bec837d9bbf9c17ee72c7557b2e9881ed9",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "be9459d4c5854da4e9338614bd2fe654dab7833325e14fc98b977965e0118ce6"
+        },
+        "1-memory_proposed_excluded": {
+          "result.json": "1869d8abaed54d87a5a94aa973f1592e3061bf42a1026452f8745c384187babe",
+          "expected.json": "646383b48a45d78b9f7d501c365a2f349b1725a3d0d5c47e01cbe409f3650093",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "45847947019bd7dc19ceab0f8521810ecd576acb6ceeef0b6b064ca6118ec47d"
+        },
+        "1-memory_revoked_excluded": {
+          "result.json": "b33148c86e5bf8b935b8fb63073a96cd3b29b53cf943cb06c7d9132ec3633311",
+          "expected.json": "07e61e1c98ea62548cb206bf0ff6b57817d581d4552f9a381b04b97a35dd3f3f",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "89dc99cca8cb6ac5f6a9a133d220eae61681ba265cc0a6a531c543c3e0f18898"
+        },
+        "1-memory_superseded_excluded": {
+          "result.json": "99147c4c10de370a8f208bf6786306deca6fb0a549365e0fd64fb0a7c28c0dca",
+          "expected.json": "8b5031ebf769db6cc3d997b04de5aef6413bce640081328a89c8ae27d1009c23",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "185cbb29d6f8b794d46962b44ef4796c07192527a59354e0b5d73833cbedd27a"
+        },
+        "1-memory_foreign_excluded": {
+          "result.json": "0b554581f7140b3ea4162b54e537dd18ec3d477519c618d140e819b546bdd692",
+          "expected.json": "cce53db732076a81f028ac411c4c15e2c1225d16f61b5b68f370f5624b81ef31",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "50ecfac7c218f98fcf8074b968f9ca345787ea2677c44cc5a9200e565610e037"
+        },
+        "1-history_page": {
+          "result.json": "a3c672564528ee49c89d932265cd9634ba569a17236c25b9837dd7930d875890",
+          "expected.json": "cb431eb3509b140b70bd52953e5eb022f0a6b703ffb45e36750e9c385cd96148",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "443c4b3441cfb5d9aa0d4c09ae7c35cf376449fc152ec2d2bbf1d1d52fb3cbe4"
+        },
+        "1-history_two_pages": {
+          "result.json": "ba326a016ea9ac7ac1cf02922bc8584694240afede6ad4742becf7bf2286456e",
+          "expected.json": "160d6146c16ba992b1b7f5257b05d7a7b13ecc7e59cb27c1b3eedb19691d8e0a",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "0412f5521c1bfe7e9ff933cc49e6557c7b0e76047fe5c758dc0f4cd34d5e5953"
+        },
+        "1-history_stale_and_current_file": {
+          "result.json": "d096d0159a8da2856a535bdcb064fb8029a53e925fac998b34f081f4a153188e",
+          "expected.json": "4dc43f01e4431224b66e653addc15ccf863f8381098511e200296665aebf2538",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "38c44da922aee212a49f0120bc22df094ea59d0286c75396493a9bce100aad79"
+        },
+        "1-skill_and_memory": {
+          "result.json": "8540f0a6d3481f16aee700bb25f56d76739ffa5af089a1b9fa2ba56f1ec1a590",
+          "expected.json": "2e61bc49001787255357d67c1b16973a06678ce4d0b47bd7b2b59198c4a67aa4",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "ffb2d9d0d04ecc44369ca291d72ea26bbd7202948b4f253153f8f3a290dde0ea"
+        },
+        "1-memory_and_history": {
+          "result.json": "08ea11a2b221654845a1712ec5b0d2c5d6e87f8765924c5255a17bbd1f8ba477",
+          "expected.json": "3b4e5e63d46e1d0106bb0040ddb3d42d4da94a6058ebbf4507ff43bf5e9234c2",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "6b48aec2209af12b8583793b5ba223563185bd921fae84761898ca32b8a648ff"
+        },
+        "1-all_three_sources": {
+          "result.json": "6ce6c45d252733ab0747379a102b6cbdf052b497539e478a7c55170536f66432",
+          "expected.json": "189a45965593f58de33574dd0ace6f91d476db9ae133f4a25398d9e0bb2f6d70",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "a8ba440219ca0d05a90c776d42148591ef0fa37b3f496d25144ad1168f2f2da2"
+        },
+        "1-ordinary_workspace_read": {
+          "result.json": "4810b0d6489a7dcb8543ca55de7deb1ab646a646da3854257c9ef192b9c200f6",
+          "expected.json": "f6332d88f1d0d430f97d83b3d94ed88f2ef88c4af5b37109710d91bbe64e461a",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "3ee46ffb866843d64f8783d44abf54ac6088ed3d6db6ccc4fefe516f14aa4d8f"
+        },
+        "1-semantic_memory_paraphrase": {
+          "result.json": "4a80a48dfd609c6e4465ee0afe1685e1a456958b6c141834b5c9636e702b7579",
+          "expected.json": "66b330cafa5e0b6f0c08e41b0585dca3a21e4d950144d7b703ee3bfb86de6c4a",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "282ce898ec6a030c921001d37e4616e5cd074f9f176966daca2d1f9bf1ae83f0"
+        },
+        "1-semantic_skill_paraphrase": {
+          "result.json": "ceade0b192fc37df0b849300ee61133135db96018da2ff31d5f012b3a78a42d3",
+          "expected.json": "79e89d784db4118a4bf70c638e932a47a4bd0e9af2df5ac480a4fc82f6a7d2f7",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "bc3d69b36789f34d9ecffc79070e5b6955f2e3687693ba86e75d2f545ec37979"
+        }
+      },
+      "cases": [
+        {
+          "case": "memory_summary",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3053,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6495,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                21,
+                35
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 10017,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 7908,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2648,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:successor": {
+              "last_request": true,
+              "context_seqs": [
+                60
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 5,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 5,
+              "succeeded": 5,
+              "with_exact_usage": 5,
+              "exact_tokens": 18628,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 8198,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                33
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2493,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7716,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "history:second": {
+              "last_request": true,
+              "context_seqs": [
+                58
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5137,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 13749,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                55
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5079,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 13032,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 10040,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            },
+            "history:old_retention": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3146,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9485,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "history:batch": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2551,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 12720,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5085,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3145,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7569,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_summary",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2995,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6589,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6481,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2772,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2846,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:successor": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6769,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 7990,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                34
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2553,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 8015,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "history:second": {
+              "last_request": true,
+              "context_seqs": [
+                58
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5148,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 13591,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                47
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                44
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5079,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 8528,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                22
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                22
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 10093,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            },
+            "history:old_retention": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3180,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9503,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                40
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                40
+              ]
+            },
+            "history:batch": {
+              "last_request": true,
+              "context_seqs": [
+                40
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2551,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 13220,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5063,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3057,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7551,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        }
+      ]
+    },
+    {
+      "model": "deepseek-v4-pro-0813",
+      "run": "c2-r1-live-deepseek-v4-pro-0813",
+      "summary": {
+        "complete_grid": true,
+        "core": {
+          "total": 28,
+          "task_passed": 27
+        },
+        "semantic_diagnostic": {
+          "total": 4,
+          "task_passed": 4
+        },
+        "scope_violations": 0,
+        "replay_errors": 0,
+        "invariants": 0,
+        "evidence_errors": 0,
+        "acceptance_passed": true
+      },
+      "core_answer_ok": 27,
+      "core_evidence_ok": 28,
+      "core_json_object_decoded": 28,
+      "attempt_metrics": {
+        "bootstrap": {
+          "attempts": 14,
+          "succeeded": 14,
+          "with_exact_usage": 14,
+          "exact_tokens": 37286,
+          "missing_usage": 0
+        },
+        "target": {
+          "attempts": 68,
+          "succeeded": 67,
+          "with_exact_usage": 67,
+          "exact_tokens": 242214,
+          "missing_usage": 1
+        }
+      },
+      "manifest_sha256": "ca39a569970223c059af831ceb81320a50cbd6ec8c92df2fce94d987740f0df8",
+      "report_sha256": "3daae5e690bfd350ad0088596694f5e5bd1fb88b5f646f06cb4fb33d674508b6",
+      "evidence_sha256": {
+        "0-memory_summary": {
+          "result.json": "0145ea0e59685da46536a3b8a3772ea3f371f821c5774aef7a68eb72ee87fb25",
+          "expected.json": "0908a320888c6ffcdbb4566474b43bec3f5192e97cef331435064e6a0c33a3f7",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "bacd8472446ede4066cbb6db76334655ff7312aaf591c52b6b73ce9efce7c5df"
+        },
+        "0-memory_directory": {
+          "result.json": "3814056e638e414ef894aa1612bfce1474b694097af25e455d22aa97c4257fc8",
+          "expected.json": "02a869b3ac6d82565406ac39b5a21a610775f322a7e0ed027b97550dad1a1f8c",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "3a8efe0153eef37ea25a970ac63ffd49d694833b7a03c93a1bb396d8f334ffc8"
+        },
+        "0-memory_cross_session": {
+          "result.json": "b7260be2b76bb0c91112057e24f835d0d716454cb853c37c3ee6763ffc1930c2",
+          "expected.json": "b5bffa3ee185cdab87a86f51c61d464681725506f560e4ae6907da7fbedfd214",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "b4070848a2262e0d3bfce7daa149b1a8f64288a2811c2bf8cfaa5a645ab308d8"
+        },
+        "0-memory_proposed_excluded": {
+          "result.json": "cf3ffa62be95ae67d4a6d159c05660375fe67439ac55499d5fd9086b3a022849",
+          "expected.json": "b9780a759312bf4457727e7e673e73107546726c50cf0ff7ea142dc51fd9ef1a",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "dae20e40019fd376eed65e467dca819cfc54937b9ea14e3159dfc639f0947bf8"
+        },
+        "0-memory_revoked_excluded": {
+          "result.json": "1be995577ede37b76bd62bfabe8b8e6f99bce124ed12e9a71b14bfae826bdc41",
+          "expected.json": "de919eb3c42efae2654a2e1667738e096c0587b4257c05f06c606e83894e808e",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "a6d5dd048cf9c7895e2ad464c4958d318a3992f7b5e17707c138f5edf46bd05a"
+        },
+        "0-memory_superseded_excluded": {
+          "result.json": "b6f26c1c23e8f5c55a8a7eff538df446514555191014ef3092853f8fc25435b4",
+          "expected.json": "12b11212290d67ab8fcbff5cb9eba0563398320ae8667bc4d6da0535c6fc8eef",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "1992dcc057fc2980a21690e9d076cf37e98e1a62ec5703bea77681fc42caa885"
+        },
+        "0-memory_foreign_excluded": {
+          "result.json": "4a1d20ef01f89031ac60bc8052766ddb1addf4f65de3514eedf04f6242535b18",
+          "expected.json": "8a5e84962c17b21067ed641165039ffd674dc09341c4167d0e73f7ee26988aca",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "e8bf78b17828ff8c67256bc10321d18f16a9598d80b86bf1e8479081ce40b441"
+        },
+        "0-history_page": {
+          "result.json": "c172e0abb7290b95e3e17b418562ebe886610860e316cf53adbeed2999cc4eb4",
+          "expected.json": "03e311861e835a6742c9a027456769327eb3bec07afd4c5ad8f1f9ced481b36c",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "c5fd21263c7259452783ecd3fde38251d8ff5ba1c9882f3d350938d3cdf5de9a"
+        },
+        "0-history_two_pages": {
+          "result.json": "499719066f7e1cce924db94f1b004a52d4bc03e4c1848b58d2f555b3cbfb0ba6",
+          "expected.json": "a6bbd00415ee7e04760b3f7bdbe9a49682fe81b392fdf390cc040302b89fecff",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "f488e8c46244dc3b7d10ac47d612a6fe9ab23c514f2b14b8741d435ec7ecd288"
+        },
+        "0-history_stale_and_current_file": {
+          "result.json": "c4c7e4ccd8866672a902262751d4b21cd9922fc081c8f64352b0036cbcfe5e0f",
+          "expected.json": "838e0a0b22ccc1a0b466c57b4c345b2767dc2632723151047666ad6874436b63",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "533e896844bdce99984234f0d10f8eae58ad2c9011e2a2b5f61fe230dab11564"
+        },
+        "0-skill_and_memory": {
+          "result.json": "5ca297a567f9959248568efbd9b3cf3fc08e2bb424f12d7aa81efca3d09c80a0",
+          "expected.json": "47a8e1b9a7d984d728aa6701c6b12e81a431bfb482ec24cd83ffaaf85ee8e89d",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "9779ab4182744bbe49667c28505d3cccebdf2f332e4ac5c33fd89e4326f740a5"
+        },
+        "0-memory_and_history": {
+          "result.json": "0707f4456e97f2005322e3d86a3fd2a263c7826875a5fb1eead4afa1c878e7a0",
+          "expected.json": "d4e54da9c07f9a10a37e686d532f6d06c6e37b51d0c9649a25fd32a724a9c5d6",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "74a4a53fea9d78866201743e57707fb0d9498538c95d714cbce897684035534d"
+        },
+        "0-all_three_sources": {
+          "result.json": "f632f91e6d5bbc0644e69def284023b7e19651f2e8982ea29e9a5f11ad8b0f8c",
+          "expected.json": "eccc07d5b2ce2bf03be42967dc8dde1cac487641828cc85d2b799bf4a058d5ed",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "2a67a4159d949f2fb79f731a6909336031bca0810b31274e178073f71ef866d8"
+        },
+        "0-ordinary_workspace_read": {
+          "result.json": "71ecb017f5cd10533dc5015b43c22e1a11bc6af0ebbe4e73b86b7fcc2e391527",
+          "expected.json": "a09a3c650151676b47165b9fbd5972e4f351de4f800641a52d698497f2c6e809",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "0b034168b86e629ce568a2d009f8e3f0cb573e466ff3d6d1bdc05a8170b1fc49"
+        },
+        "0-semantic_memory_paraphrase": {
+          "result.json": "64a35917985bba2311817192b8db2fdd6c9c35cd7d35f5a7fab935dd4d8b13b5",
+          "expected.json": "9cdf46ae23af08e874c5f040ea72363cd0d5ad7b6ed20541802847b1c225c55d",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "bea1559e661e110eda1761da0f448f7a65b95ad4d11b8d38fcbfafc2f304e153"
+        },
+        "0-semantic_skill_paraphrase": {
+          "result.json": "3d5ef32e880b571d67f75826484f044920c1b14fcc06ef5af1ea4755c675b880",
+          "expected.json": "4e207ba09be7d41486793bfadd223ad606768386c18ef5acfc9c77c882ce5ac0",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "425b4621e4d685e1c1dd064c43dfbd1e6d64e200b2cc2634885eb8a45855d6e4"
+        },
+        "1-memory_summary": {
+          "result.json": "da760f3932d4dd6bf70b7138db42d60c0e5fc1728bfaaa33c18fac436a4cf8d8",
+          "expected.json": "bc9b7e5a1edec0b56acf2a4f0a1e5f9fcd21755c701aef9ad39ba7eaf38f606f",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "0b88a3dbbf6d0cb27a44264a0fc079b07f31bfd8708fc04edfea52492e47ec90"
+        },
+        "1-memory_directory": {
+          "result.json": "4f0e54b8b72ba380cbb4741aeaddfbe6f26c1b2246c723dddfa2dc78696049ca",
+          "expected.json": "2e6efecd20c27b41186a98a59e34405e94e547a8644e31fc01f8351075fba6cb",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "296b0818ba32122b828045ac2cecda5f149cd06534187e460b2d0010fd5c54ba"
+        },
+        "1-memory_cross_session": {
+          "result.json": "0ac2970941ebabc6c20058f2091b298076a775846191e100a932b58ee10e6b6b",
+          "expected.json": "45bdf6c5bc693a276809dfe14eb95a25f4dcd751c3d259eb1a3e3423b02059d3",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "2e2613cdd255ddc98668adbfaa29f5ca0abcbb0c5595f71ff597d368aa5a8253"
+        },
+        "1-memory_proposed_excluded": {
+          "result.json": "3026860fcabc92531bf2d4463bd6bc83587e453c8d1490f581eabd973762b3be",
+          "expected.json": "cbfa3e8607ccf24007e211330b532e38c867b07c69a80910a65e1332a5ab650a",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "0bef6a3b497cac49c9282f0ad7b2135044aaa1bf45dabf4e6cb8100743a33546"
+        },
+        "1-memory_revoked_excluded": {
+          "result.json": "0b9cf1e63197f9ccec4a20715192ce1686953661dd00ea55e5a369725d5c48b2",
+          "expected.json": "2c0a018796f15d1601cadcba3cddc8f78ba00dead11f398a8a7d52989614f360",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "04c5c027a7edf8a19da4ec8dcb6b7cd8bc832b5e8bf13a90ff84e83c02f7080b"
+        },
+        "1-memory_superseded_excluded": {
+          "result.json": "2e97157277302b4290ee4db8a28c589fba157a133df5d3a79110e5a3f2c22588",
+          "expected.json": "97f5d0b13e35afc8de8c458504a7c4303ff95339ac0a16e35e1f5f6157c1c4a9",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "d3273a0b1cdba19693285f2549079de763e4df416b88877050b91dff98877a54"
+        },
+        "1-memory_foreign_excluded": {
+          "result.json": "016cc912296db77ca76635880c052193411b56cce819ceaf03884afa0e923a9f",
+          "expected.json": "b05eb913498aa64a43fa4b5bd27110fbde8b1f32a68025c4f83e239b9e7b8866",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "098c5edaf138de11c3917a71ab36a1983c14e23014e5e6b3c9bb27db4ac08773"
+        },
+        "1-history_page": {
+          "result.json": "e4bdd7878d25d3cabb0f7517597c58cde88a5f4ceb578342e45671d639dad16a",
+          "expected.json": "34a2d3b332c71300ffb4abd973135ff49fca6d7958ead3ecd0a3cf9205c6b5ee",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "fe9544ee9b34165b6528d728d323739da474de059af338d96e46c7cec43bc843"
+        },
+        "1-history_two_pages": {
+          "result.json": "9719c5e051610efbb3d9a4b78b337ba353fd5bea880cbb474d0d327361de63a1",
+          "expected.json": "5a79f4e2d5f6b7beb32f5b1b790173580486d211bdd2631517eedc45a322c9b4",
+          "fixture-policy.json": "440cc060d8f5feeae9f7fd1865c5e6fe68753d64ea1ec04270d165704ae274c6",
+          "streams.json": "ed10d42845f8ae5754e4bbd204900ce9024b9183ed0248a6f2af0575732b61ba"
+        },
+        "1-history_stale_and_current_file": {
+          "result.json": "0e84f9ecdc4c6af817e6b2f892bf4c47da7d3e3bb291c24d17d967e7303eac35",
+          "expected.json": "eb5a38278337f23d92a432deafac4b3e90138573b6f7f21266b3d2b0d74d3107",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "beb340b9268c5afe5e698ed61a0eeb7ff1211bde57c1c06ce26613d02d2f90d7"
+        },
+        "1-skill_and_memory": {
+          "result.json": "7e4aee31db1fed07f682d8b8cb8900fdca3ac384f9c6a400992e434cfae380c9",
+          "expected.json": "44121ca99a37229c896141c1d709b36c08e1223cea1accb1a9cc573f6ce83277",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "1e8bf0144d6157b4f1c482d6fa3e018d09e65223bd3ef31dd36e508dc20488cc"
+        },
+        "1-memory_and_history": {
+          "result.json": "15a2cb3e3efba669a2fe679ededb42bc9324e5571927e92915069a3a408244d5",
+          "expected.json": "b083bc98513824c598231d7691e84eb57f52fd553628354af552d9857749e28e",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "5d932c5350ca22604410d17ab18defc260a00dec641882e30514c404824e2c38"
+        },
+        "1-all_three_sources": {
+          "result.json": "d71d92963dc83e38d0799d94f941d644ed2ad10ad896b25eaaf8b0287db9c074",
+          "expected.json": "227948775f0947efbea83614354715949366a3f5771d84b9d131c7c757c23a68",
+          "fixture-policy.json": "2e8d938ec257c7a07e4cada0c57945f5c05d0996b7f27409c9fe683368bf5c99",
+          "streams.json": "5f5ba83b1f963c024cb741e412c3cdf05dddadbf88a91e628577c107ec631c7b"
+        },
+        "1-ordinary_workspace_read": {
+          "result.json": "743ffac7804017f3dde54c1e7bbb5f749d11e9abb762f6c3fe668f929fb9486e",
+          "expected.json": "fc5c05db23c130acf2e46f6c0a106593a3422c8677da9e22a50ee4a847d6373f",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "81fba5b91f01e8b04fb940a2c4f3e4a9a94c04efb59934390e8aede713442fa8"
+        },
+        "1-semantic_memory_paraphrase": {
+          "result.json": "40a2605cf6a430d653101cacd338ab22b3a0a783b066d5c05b95d5dd06cb5efb",
+          "expected.json": "3a35cc9d3f70ad34c60c755b3a84e80542addc45a1311c7648917b6fee87cb3c",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "5f7e99bea77fdd8d8294b948fd0612fce5692b210988fd0ce5bde4464692bc80"
+        },
+        "1-semantic_skill_paraphrase": {
+          "result.json": "178966dcf931f4c9da1a4dc1cf762965e937ceea1d06b08acb2a3c0c69c6a3ee",
+          "expected.json": "8e76058b9e8b28d6bdc1cfb73933c917b5a5c7b3fa0ff2dd6415c80ea76319f3",
+          "fixture-policy.json": "d90b39ddf68818c0df82ef34433e28a4661f55b5e3f90c0a9b9fbdaf54fe9650",
+          "streams.json": "2a950a7ec84428372efaa9708d1c3841ac5720a78d6fad616caaabb018161055"
+        }
+      },
+      "cases": [
+        {
+          "case": "memory_summary",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2876,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6278,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6254,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2706,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 8305,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:successor": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6494,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 8187,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                33
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2575,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7252,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "history:second": {
+              "last_request": true,
+              "context_seqs": [
+                58
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5163,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 12893,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                69
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                55
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 4,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5052,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 4,
+              "succeeded": 4,
+              "with_exact_usage": 4,
+              "exact_tokens": 15087,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9680,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": false,
+          "answer_ok": false,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            },
+            "history:old_retention": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3342,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 8490,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "history:batch": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2579,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 12244,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 0,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5198,
+              "missing_usage": 1
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2955,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 0,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7407,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_summary",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2915,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_directory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6223,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_cross_session",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6260,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_proposed_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 8067,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_revoked_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2897,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_superseded_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:successor": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 6382,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_foreign_excluded",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {},
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 8300,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_page",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                33
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2601,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7271,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_two_pages",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:first": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "history:second": {
+              "last_request": true,
+              "context_seqs": [
+                58
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5195,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 12741,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "history_stale_and_current_file",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "history:observed": {
+              "last_request": true,
+              "context_seqs": [
+                47,
+                58
+              ]
+            },
+            "file:observed-after": {
+              "last_request": true,
+              "tool_result_seqs": [
+                55
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 3,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5078,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 3,
+              "succeeded": 3,
+              "with_exact_usage": 3,
+              "exact_tokens": 12090,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "skill_and_memory",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                21
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9597,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "memory_and_history",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            },
+            "history:old_retention": {
+              "last_request": true,
+              "context_seqs": [
+                36
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 3104,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 9248,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "all_three_sources",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:calibration/offline": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "memory:active": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            },
+            "history:batch": {
+              "last_request": true,
+              "context_seqs": [
+                39
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2597,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 12382,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "ordinary_workspace_read",
+          "repeat": 1,
+          "group": "core",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "file:current": {
+              "last_request": true,
+              "tool_result_seqs": [
+                15
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 5106,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_memory_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "memory:semantic": {
+              "last_request": true,
+              "context_seqs": [
+                7
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 1,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 1,
+              "succeeded": 1,
+              "with_exact_usage": 1,
+              "exact_tokens": 2949,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        },
+        {
+          "case": "semantic_skill_paraphrase",
+          "repeat": 1,
+          "group": "semantic-diagnostic",
+          "task_passed": true,
+          "answer_ok": true,
+          "evidence_ok": true,
+          "evidence": {
+            "skill:delivery/rollback": {
+              "last_request": true,
+              "context_seqs": [
+                18
+              ]
+            }
+          },
+          "reason": "completed",
+          "missing_tools": [],
+          "requests": 2,
+          "other_tool_calls": [],
+          "scope_violations": [],
+          "replay_errors": [],
+          "invariants": [],
+          "bootstrap_completed": true,
+          "attempt_metrics": {
+            "bootstrap": {
+              "attempts": 0,
+              "succeeded": 0,
+              "with_exact_usage": 0,
+              "exact_tokens": 0,
+              "missing_usage": 0
+            },
+            "target": {
+              "attempts": 2,
+              "succeeded": 2,
+              "with_exact_usage": 2,
+              "exact_tokens": 7480,
+              "missing_usage": 0
+            }
+          },
+          "error_type": null,
+          "tool_error_count": 0
+        }
+      ]
+    }
+  ],
+  "guidance_pilot": {
+    "model": "qwen-plus",
+    "total": 7,
+    "task_passed": 2,
+    "report_sha256": "2677c44e53828d65f0595e16814bab07843207c87f220f59de41c49a00c37d60"
+  },
+  "completion_pilot": {
+    "model": "qwen-plus",
+    "total": 7,
+    "task_passed": 4,
+    "evidence_ok": 6,
+    "report_sha256": "eb17756cac4184a29e06cfb0ddb0a826d481e123d771c5e8ba0e5d72d5cac01a"
+  },
+  "direct_diagnostics": [
+    {
+      "name": "c2-shape-probe",
+      "scope": "Direct single-request decision diagnostic; not Runtime acceptance",
+      "manifest_sha256": "39215bdb162cda90cc99b7773622ef1a2941989b96db3115417ef8dbb8b13f4a",
+      "results_sha256": "a94ad9629d40d5b27a2f767048705d336c7546bc3eb2fbe6a3c428933565b15a",
+      "variants": [
+        {
+          "variant": "baseline",
+          "total": 6,
+          "passed": 0
+        },
+        {
+          "variant": "guidance",
+          "total": 6,
+          "passed": 4
+        },
+        {
+          "variant": "guidance-task-echo",
+          "total": 6,
+          "passed": 3
+        },
+        {
+          "variant": "task-echo",
+          "total": 6,
+          "passed": 1
+        }
+      ],
+      "attempts": 24,
+      "exact_tokens": 90202,
+      "with_exact_usage": 24
+    },
+    {
+      "name": "c2-action-probe",
+      "scope": "Direct single-request decision diagnostic; not Runtime acceptance",
+      "manifest_sha256": "e7c2a6864d74cc7723e3f3e0e71dd137f8e92b1cf661d259e643fb063479047b",
+      "results_sha256": "ee159603885e3d2aa3d9c7865f5cb7cb8ff5626980281e5f5d7236ed867a443c",
+      "variants": [
+        {
+          "variant": "action-notices",
+          "total": 4,
+          "passed": 2
+        },
+        {
+          "variant": "baseline",
+          "total": 4,
+          "passed": 1
+        },
+        {
+          "variant": "both",
+          "total": 4,
+          "passed": 4
+        },
+        {
+          "variant": "final-contract",
+          "total": 4,
+          "passed": 4
+        }
+      ],
+      "attempts": 16,
+      "exact_tokens": 55285,
+      "with_exact_usage": 16
+    }
+  ],
+  "note": "No criteria changed; raw SQLite, exports, source snapshots and failures remain in the development evidence archive."
+}

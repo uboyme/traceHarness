@@ -41,7 +41,16 @@ def contribution(plugin_id: str, skill_id: str, body: str, *, version: str = "1.
             "Fixture summary",
             ("fixture",),
             DEFAULT_REQUIRES_TRACEH,
-            (SkillSection("guide", "section", digest(body), len(body.encode("utf-8"))),),
+            (
+                SkillSection(
+                    "guide",
+                    "section",
+                    digest(body),
+                    len(body.encode("utf-8")),
+                    title="Fixture navigation",
+                    summary="Explicit fixture content description",
+                ),
+            ),
             (),
         ),
         (SkillSectionContent("guide", body),),
@@ -55,7 +64,19 @@ def with_resource(value: SkillContribution, relative: str, body: str) -> SkillCo
         relative,
         digest(data),
         len(data),
-        (SkillChunk("whole", 0, len(data), digest(data), len(data)),),
+        (
+            SkillChunk(
+                "whole",
+                0,
+                len(data),
+                digest(data),
+                len(data),
+                title="Fixture navigation",
+                summary="Explicit fixture content description",
+            ),
+        ),
+        title="Fixture navigation",
+        summary="Explicit fixture content description",
     )
     return replace(value, descriptor=replace(value.descriptor, resources=(resource,)))
 

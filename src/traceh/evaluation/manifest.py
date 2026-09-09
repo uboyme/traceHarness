@@ -27,6 +27,7 @@ from pathlib import Path
 
 from traceh.api.product import RequestedTaskMode
 from traceh.evaluation.errors import BenchmarkManifestError
+from traceh.evaluation.retrieval import FrozenRetrieval, load_retrieval
 from traceh.product.config import (
     PRODUCT_HOST_SETTINGS_KEYS,
     ProductHostSettings,
@@ -39,7 +40,7 @@ from traceh.promotion.models import verifier_definition_digest
 MANIFEST_FILENAME = "benchmark.json"
 LEGACY_CASE_FILENAME = "case.json"
 
-BENCHMARK_PROTOCOL_VERSION = 1
+BENCHMARK_PROTOCOL_VERSION = 2
 
 #: Identities the runner owns because it creates the repositories they name.
 BENCHMARK_SOURCE_ID = "benchmark-source"
@@ -52,7 +53,7 @@ MAX_ARMS = len(RequestedTaskMode)
 MAX_REPETITIONS = 25
 
 _TOP_KEYS = PRODUCT_HOST_SETTINGS_KEYS | frozenset(
-    {"protocol_version", "benchmark_id", "arms", "tasks"}
+    {"protocol_version", "benchmark_id", "arms", "tasks", "retrieval"}
 )
 _ARM_KEYS = frozenset({"requested_mode", "repetitions"})
 _TASK_KEYS = frozenset({"task_id", "requirement", "initial_dir"})
@@ -88,6 +89,7 @@ class BenchmarkManifest:
     arms: tuple[BenchmarkArm, ...]
     tasks: tuple[BenchmarkTask, ...]
     directory: Path
+    retrieval: FrozenRetrieval | None = None
 
     @property
     def attempt_count(self) -> int:
@@ -156,12 +158,14 @@ def load_benchmark_manifest(
     except ProductError as error:
         code = getattr(error, "code", "benchmark-manifest-profile-invalid")
         raise BenchmarkManifestError(str(code), "profile") from None
+    tasks = _tasks(root["tasks"], root_directory)
     return BenchmarkManifest(
         benchmark_id=_text(root["benchmark_id"], "benchmark_id"),
         settings=settings,
         arms=_arms(root["arms"]),
-        tasks=_tasks(root["tasks"], root_directory),
+        tasks=tasks,
         directory=root_directory,
+        retrieval=load_retrieval(root["retrieval"], root_directory, tasks),
     )
 
 

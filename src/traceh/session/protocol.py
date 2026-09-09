@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from traceh.api.events import EventEnvelope
 
-CONTEXT_PROTOCOL = 3
-SESSION_CREATED_KEYS = frozenset(
-    {"session_id", "workspace", "metadata", "context_protocol"}
-)
+CONTEXT_PROTOCOL = 10
+SESSION_CREATED_KEYS = frozenset({"session_id", "workspace", "metadata", "context_protocol"})
 
 
 class SessionProtocolError(ValueError):

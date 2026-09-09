@@ -55,11 +55,11 @@ def policy(**overrides):
 
 
 def items(request):
-    return json.loads(request.messages[0].content.split("\n", 1)[1].rsplit("\n", 1)[0])
+    return json.loads(request.messages[-1].content.split("\n")[1])
 
 
 def page_request(request, tier="chunk"):
-    cursor = HistoryCursor.from_dict(items(request)[0]["history_notice"]["cursor"])
+    cursor = HistoryCursor.from_dict(items(request)[0]["read_action"]["arguments"]["cursor"])
     return HistoryPageRequest(cursor.block_id, cursor, tier)
 
 
@@ -98,7 +98,7 @@ async def seed(runtime, tmp_path, subject):
 
 
 @pytest.mark.parametrize("subject", ["历史接口证据", "thermal conductivity evidence"])
-async def test_tool_receipt_discloses_only_the_immediate_step_and_replays(tmp_path, subject):
+async def test_tool_receipt_retains_admitted_page_within_turn_and_replays(tmp_path, subject):
     (tmp_path / "note.txt").write_text("fresh observation", encoding="utf-8")
     provider = SelectingProvider(
         [
@@ -136,7 +136,7 @@ async def test_tool_receipt_discloses_only_the_immediate_step_and_replays(tmp_pa
         assert [e.data["blocks"][0]["tier"] for e in contexts] == [
             "directory",
             "chunk",
-            "directory",
+            "chunk",
         ]
         raw = contexts[1].data["blocks"][0]
         assert subject in raw["body"]
@@ -165,7 +165,9 @@ async def test_tool_receipt_discloses_only_the_immediate_step_and_replays(tmp_pa
 
 
 @pytest.mark.parametrize("tier", ["section", "chunk"])
-async def test_typed_host_request_survives_wider_compaction_and_is_first_step_only(tmp_path, tier):
+async def test_typed_host_request_survives_compaction_and_retains_only_admitted_body(
+    tmp_path, tier
+):
     provider = SelectingProvider(
         [
             ModelResponse(content="old answer"),
@@ -208,7 +210,9 @@ async def test_typed_host_request_survives_wider_compaction_and_is_first_step_on
         raw = [b for b in contexts[0].data["blocks"] if b["tier"] == tier]
         assert len(raw) == 1 and raw[0]["id"] == request.block_id
         assert "original source payload" in raw[0]["body"]
-        assert all(b["tier"] == "directory" for b in contexts[1].data["blocks"])
+        retained = [b for b in contexts[1].data["blocks"] if b["tier"] == tier]
+        assert retained == raw
+        assert await verify_request_snapshots(runtime.sessions, runtime.surface, session_id) == ()
         assert runtime.invariants.check(events) == ()
     finally:
         await runtime.dispose()
@@ -232,7 +236,7 @@ async def test_text_or_source_label_cannot_request_raw_history(tmp_path):
             ),
         )
         assert items(provider.requests[-1])[0]["tier"] == "directory"
-        assert "unrequested payload" not in provider.requests[-1].messages[0].content
+        assert "unrequested payload" not in provider.requests[-1].messages[-1].content
         assert not any(
             e.type == "history/requested" for e in await runtime.sessions.read_session(session_id)
         )
@@ -423,13 +427,13 @@ async def test_model_follows_only_disclosed_next_cursor_across_pages(tmp_path):
         result = await runtime.run_existing(first.session_id, "Read consecutive pages")
         assert result.steps == 3
         requests = provider.requests[-3:]
-        assert items(requests[0])[0]["history_notice"]["cursor"]["index"] == 0
+        assert items(requests[0])[0]["read_action"]["arguments"]["cursor"]["index"] == 0
         assert "first historical input" in items(requests[1])[0]["body"]
         assert "second historical input" not in items(requests[1])[0]["body"]
-        assert items(requests[1])[0]["history_notice"]["cursor"]["index"] == 1
+        assert items(requests[1])[0]["read_action"]["arguments"]["cursor"]["index"] == 1
         assert "second historical input" in items(requests[2])[0]["body"]
         assert "first historical input" not in items(requests[2])[0]["body"]
-        assert items(requests[2])[0]["history_notice"]["cursor"] is None
+        assert items(requests[2])[0]["read_action"] is None
         assert runtime.invariants.check(await runtime.sessions.read_session(first.session_id)) == ()
     finally:
         await runtime.dispose()
@@ -530,7 +534,7 @@ async def test_rehashed_raw_context_cannot_forge_sources_or_current_evidence(tmp
             {k: v for k, v in data.items() if k != "context_digest"}
         )
         if change == "freshness":
-            with pytest.raises(ValueError, match="context-source-unsupported"):
+            with pytest.raises(ValueError, match="context-workspace-observation-unsupported"):
                 parse_context_input(data)
         else:
             # The new hash and byte accounting are internally consistent. The

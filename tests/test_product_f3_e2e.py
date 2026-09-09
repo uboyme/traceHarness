@@ -27,7 +27,7 @@ from traceh.api.budgets import (
 )
 from traceh.api.events import PendingEvent
 from traceh.api.json_types import canonical_json
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
+from traceh.api.llm import ModelMessage, ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
 from traceh.api.product import (
     PRODUCT_TASK_AWAITING,
     ProductRoleProfile,
@@ -199,6 +199,14 @@ class _PromotionReadOverrideStore:
         return await self.inner.list_streams(prefix=prefix)
 
 
+def _conversation_messages(request: ModelRequest) -> tuple[ModelMessage, ...]:
+    """Use the Runtime's explicit request-only Context suffix contract."""
+    assert request.metadata["context_input_seq"] > 0
+    assert request.metadata["context_input_digest"]
+    assert request.messages[-1].role == "user"
+    return request.messages[:-1]
+
+
 class _ChatProvider:
     name = "scripted"
 
@@ -218,15 +226,16 @@ class _ChatProvider:
     async def complete(self, request: ModelRequest) -> ModelResponse:
         if self.requests is not None:
             self.requests.append(request)
+        messages = _conversation_messages(request)
         last_user = next(
             message.content
-            for message in reversed(request.messages)
+            for message in reversed(messages)
             if message.role == "user"
         )
-        after_user = tuple(request.messages)[
+        after_user = messages[
             max(
                 index
-                for index, message in enumerate(request.messages)
+                for index, message in enumerate(messages)
                 if message.role == "user"
             )
             + 1 :
@@ -265,14 +274,15 @@ class _EvidenceReadingChatProvider:
         self.evidence: dict | None = None
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
+        messages = _conversation_messages(request)
         last_user_index = max(
             index
-            for index, message in enumerate(request.messages)
+            for index, message in enumerate(messages)
             if message.role == "user"
         )
         tool_results = tuple(
             message
-            for message in request.messages[last_user_index + 1 :]
+            for message in messages[last_user_index + 1 :]
             if message.role == "tool"
         )
         if not tool_results:
@@ -298,15 +308,16 @@ class _SideEffectAttemptingChatProvider:
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
         self.requests.append(request)
+        messages = _conversation_messages(request)
         last_user_index = max(
             index
-            for index, message in enumerate(request.messages)
+            for index, message in enumerate(messages)
             if message.role == "user"
         )
-        last_user = request.messages[last_user_index].content
+        last_user = messages[last_user_index].content
         tool_results = tuple(
             message
-            for message in request.messages[last_user_index + 1 :]
+            for message in messages[last_user_index + 1 :]
             if message.role == "tool"
         )
         if last_user == "propose controlled work":
@@ -445,7 +456,7 @@ class _ContractAwareRouterProvider(_ProductProvider):
         if request.system_prompt and "routing classifier" in request.system_prompt:
             last_user = next(
                 message.content
-                for message in reversed(request.messages)
+                for message in reversed(_conversation_messages(request))
                 if message.role == "user"
             )
             self.saw_reason_bound = (
@@ -807,17 +818,16 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
         if event.type == "context/input"
         and event.data["step_id"] == context_request.metadata["step_id"]
     )
-    assert context_request.messages[0] == render_context_message(
+    assert context_request.messages[-1] == render_context_message(
         parse_context_input(context_event.data)
     )
-    assert tuple(message.role for message in context_request.messages[:3]) == (
-        "user",
+    assert tuple(message.role for message in context_request.messages[:2]) == (
         "system",
         "user",
     )
     assert all(message.role != "system" for message in context_request.messages[2:])
-    contexts = [context_request.messages[1].content]
-    history_reference = context_request.messages[2].content
+    contexts = [context_request.messages[0].content]
+    history_reference = context_request.messages[1].content
     assert len(contexts) == 1
     assert f"- Task: {task_id}" in contexts[0]
     assert "- Status: completed" in contexts[0]

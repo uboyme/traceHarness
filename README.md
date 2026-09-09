@@ -1,8 +1,25 @@
 # TraceHarness Py v0.8.0
 
+大工具输出现可保存在执行账本中，模型通过本会话输出目录按页读回，压缩或重启后仍可定位原文；无需额外绑定项目。分层压缩 A/B 的范围与真实验收见 [验证记录](docs/validation-retained-tool-output.md)。C 已能折叠旧结果，E0 已补完整请求 token 估算，D 可选模型语义摘要；原文保留，支持查证。见 [D 真实验证](docs/validation-semantic-summary.md)。
+
+当前请求协议为 Session 10 / Context 9。旧 Session 1–9 不能直接恢复；启动时可点击“创建新版数据空间并开始”，由程序选择新目录并保留旧记录。旧数据不会被自动迁移、删除或改写。后置参考包现在绑定本轮原始问题，真实换题验证与分页边界见 [验证记录](docs/validation-current-turn-anchor.md)。
+
+日常启动只需在工作文件夹运行 `traceh`；首次配置模型一次，以后直接聊天。Ctrl+O 选择历史对话，`/new` 新对话，F2 打开完整配置。已确认并记住的工作区项目选择可自动关联新会话。详见 [启动说明](docs/tui-configuration.md)。
+
 TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线；v0.8 再把唯一生产 EventStore 切到 SQLite，加入同 Provider/同模型/同冻结请求的有界 retry、UI-neutral Chat Driver、纯读 Product observation 与可选 Textual TUI。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
+
+当前开发树已接入 **v0.9-F4**：项目内 active Memory 与 Skill 共用检索和 Context 预算，
+历史工具证据可通过显式 Git 观察标记时效。最新正式发布仍为 v0.8.0；Stop C 修补中的 C2 已接入精简模型视图与阅读导航，唯一 Session 协议为 9、
+Context 9，旧 Session 1–9 明确拒绝，不迁移。程序化配置、模块和边界见
+[项目上下文 §7.7](docs/note/project-context.md#77-f4memory-检索history-时效与统一-context)；F5 治理、冻结评估与精度整改已完成，冻结复验 11 条均达到原阈值，Stop C 已通过限定验收，发布门禁仍待授权。
+
+工具输出关键词查找（分层压缩 B+）：通过 `search_tool_output` 定位原文，必要时按位置读回；见 [设计](docs/adr/0054-retained-tool-output-keyword-search.md) 与 [验证](docs/validation-tool-output-search.md)。
+
+可选的完整请求 token 计量在 F2 的“Token 预算”页配置，需要 `tokens` extra。它显式区分发送前估算与
+服务端实际 usage，按完整请求提前触发旧历史压缩，超限则停止下一次模型请求；物理字节限额保留。
+编码与窗口需明确填写，详见 [配置说明](docs/tui-configuration.md) 与 [真实验证](docs/validation-request-token-meter.md)。
 
 ## 已经包含什么
 
@@ -38,6 +55,33 @@ TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python
 - **多 Agent 控制面（v0.6）**：`traceh.agents` 从同一 EventStore 重建 identity 与 FIFO acceptance，`traceh.supervision` 记录 claim/terminal、维持每 Agent/Session 至多一个进程内 Activation，并按 durable `owner_agent_id` child-first 收敛子树；`SupervisorToolset` 提供 `spawn_agent`、`send_agent_message`、`wait_agent`、`collect_agent_artifact`、`stop_agent`，但只有宿主显式装配后模型才能看见；
 - **`traceh plugins list/inspect/doctor`**：`list`/`inspect` 只读取元数据，不 import 任何插件、不创建 Session、不调用模型；
 - 类型化 Hook、Application → Workspace → Preset → Agent Service Scope 与 Tool/Prompt/Policy Overlay、可逆 Activation 和 Owned Task 收敛等 Kernel 原语；四层装配结果跟随 Generation/Step Lease 冻结。
+
+**v0.9-F5 工作树进度：**Line 与 Textual 共用 `/skills`、`/plugins`、`/memory`、`/history`、
+`/context` 和 `/project` 治理，变更需显式 CONFIRM；`--context-config` 使用明确的宿主配置。
+可修改 [配置示例](examples/context-governance.json)，其中来源路径和数值只是示例，并非系统默认。
+实际冻结请求/历史证据可只读检查，界面不保存第二事实源。完整语法见
+[上下文 13.10](docs/note/project-context.md#1310-f5-治理入口)。
+
+唯一 `traceh eval` 新增 [11 查询冻结基线](benchmarks/retrieval_v1/README.md)；根 manifest 只接受
+protocol 2，旧 1 拒绝。首次本地网格 Product 11/11 完成、隔离违规 0，但 5 条检索质量未达预设
+阈值。精度修订现已接入共享检索：完整标识符/路径保持整体匹配，最终预算通过的自动参考可排除查询
+覆盖为其严格子集的后续候选；相等/互补覆盖和显式披露保留。语料、判断与阈值未改，也没有示例名单或隐藏默认。
+同冻结输入复验现为 Product 11/11、原阈值 quality_passed 11/11、隔离 0，原五条失败已达标。
+语义题仍只满足事前词法底线 0，不代表语义检索或泛化精度 100%。16 个具名文件 303 项通过，详见
+[验证记录](docs/validation-v0.9-f5.md) 与 [ADR-0047](docs/adr/0047-literal-query-coverage-admission.md)。
+Release Stop C 已完成限定审查与验收；发布门禁仍待授权执行。
+后续导航修订补齐章节/资源/分块标题与说明，让模型自主选章；真实调用还修复了整数温度绑定和
+自然语言冒号漏召回。当前 Session 10 / Context 9 / renderer v9 / policy v5 / tokenizer v3，旧 Session 1–9 拒绝。
+原冻结检索只更新目录协议绑定及文件摘要，查询、判定和阈值不变。真实模型的成功、额外读取与失败按模型
+分别记录，不能宣称任意模型稳定；见 [真实验证记录](docs/validation-v0.9-skill-navigation.md) 和
+[ADR-0048](docs/adr/0048-skill-navigation-and-real-provider-disclosure.md)。
+按 [ADR-0049](docs/adr/0049-current-reference-context-and-bounded-turn-retention.md)，当前参考位于完整对话和工具结果之后；
+Skill、Memory、History 实际获准正文可在本轮内经逐步资格复核与统一预算保留，淘汰后不复活，正文不进入 Surface。
+C1 第三轮冻结真实验收三模型各 24/24 通过，前两轮失败保留；C2 真实核心及原 Skill 回归达到冻结门槛。
+C3 本地模型筛查已完成，四个候选均未达到质量门槛，semantic/reranker 保持关闭；结果见
+[C3 验证记录](docs/validation-v0.9-stop-c-c3.md)。C4 的 24 次受控重放没有确认 Adapter 缺陷，历史具体语法原因仍未知，
+保留 3 次网络失败；见 [C4 记录](docs/validation-v0.9-stop-c-c4.md)。C5 三路独立审查及范围内修复已完成，生产 P0/P1/P2 为 0，相关测试通过；见 [Stop C 最终记录](docs/validation-v0.9-stop-c.md)。
+本轮已获授权运行真实 Provider，未运行全量、L2–L4 或 Wheel；版本仍是 0.8.0。
 
 ## 不安装直接运行
 
@@ -88,6 +132,18 @@ authority probe 的数据库不会先被改写 journal mode/bytes，也不会丢
 python -m pip install -e ".[tui]"
 traceh chat . --tui
 ```
+
+日常在任意工作目录运行一条命令即可进入 TUI：
+
+```powershell
+traceh
+```
+
+自动加载个人默认、当前项目配置和显式参数，当前目录就是新会话工作区。连接配置完整时直接聊天，缺配置时打开简短向导，
+已有值自动带入，核对或修改后点 **启动聊天**。面板可保存非密钥项目配置或“保存为个人默认”；临时 API Key
+只在本次进程使用，也可引用已有环境变量。聊天中按 **F2** 或输入 `/settings`，点击“应用配置”会先
+收尾旧 Runtime，再从账本恢复同一会话，下一轮使用新模型。知识与记忆、ProductTask 都有中文分组表单与启用开关，自动压缩可直接填写阈值与保留轮数；
+选 Skill、绑定项目和审批 Memory 仍走原治理命令。详见[配置面板使用说明](docs/tui-configuration.md)。
 
 继续旧会话仍用同一个命令，只增加 adapter 选择：
 
@@ -906,3 +962,5 @@ python -m pytest -o addopts='' -q -m "not slow"
 ## License
 
 MIT。
+
+模型语义摘要可在 F2“自动压缩”页选择；需开启压缩、填齐 Token 预算、至少允许 2 步。默认仍为规则摘录，CLI 对应 `--auto-compact-method semantic`。摘要走当前连接及原 Budget/许可/取消，额外用量如实记录；轮内自适应腾挪仍待 E。

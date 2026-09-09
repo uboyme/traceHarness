@@ -7,7 +7,7 @@ from plugin_fixtures import ScriptedPlugin, manifest
 from skill_fixtures import contribution, discovery, policy
 
 from traceh.api.llm import ModelResponse
-from traceh.api.retrieval import SkillRetrievalPolicy
+from traceh.api.retrieval import ReferenceRetrievalPolicy
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime_async
 from traceh.session.context_input import ContextInputPolicy
@@ -15,7 +15,7 @@ from traceh.session.sqlite import SqliteEventStore
 
 
 def retrieval_policy(**kwargs):
-    return SkillRetrievalPolicy(
+    return ReferenceRetrievalPolicy(
         **{
             "unicode_version": unicodedata.unidata_version,
             "default_tier": "summary",
@@ -25,7 +25,7 @@ def retrieval_policy(**kwargs):
             "rrf_constant": 60,
             "exact_weight": 2,
             "fts_weight": 1,
-            "skill_bytes": 20000,
+            "context_bytes": 20000,
             "max_catalog_bytes": 20000,
             "max_terms": 100,
             "max_corpus_items": 40,

@@ -1,0 +1,6 @@
+{
+  "guard": "each language quality gate",
+  "exit_code": 1,
+  "test": "test_screen_requires_every_frozen_gate[language]",
+  "restored_exact_bytes": true
+}

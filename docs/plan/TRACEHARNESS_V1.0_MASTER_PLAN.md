@@ -1,8 +1,8 @@
 # TraceHarness v1.0 总路线：记忆、隔离、互操作与受控并发
 
-> 状态：v0.8.0 已发布，v0.9-F0-A/B/C 本轮授权实现及限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露完成限定验证；F3 项目归属与 Memory authority 已实现并通过定向验证，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；Release Stop A 独立审查 P0/P1 清零，2 项 P2 已修复并完成定向确认，未执行 v0.9 发布级全量或 L2
+> 状态：v0.8.0 已发布，v0.9-F0-A/B/C 本轮授权实现及限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露完成限定验证；F3 项目归属与 Memory authority 已实现并通过定向验证，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 共享检索与真实 History 观察已实现并完成定向验证，F5 治理/冻结评估、精度整改及冻结复验完成，11 条均达到原阈值；Stop C 已通过限定验收，发布门禁仍待授权。Release Stop A 独立审查 P0/P1 清零，2 项 P2 已修复并完成定向确认，未执行 v0.9 发布级全量或 L2
 >
-> 编制日期：2026-09-05；最近修订：2026-09-07（仅文档改动，19 项现有接缝定向通过；未运行全量／L2／构建／真实服务）
+> 编制日期：2026-09-05；最近修订：2026-09-08（同步 F5 导航修订与真实 Provider 验证；未运行全量／L2／构建）
 >
 > 适用范围：v0.8 已发布基线、v0.9、v0.10、v0.11、v0.12 与 v1.0 RC
 >
@@ -187,7 +187,7 @@ v0.8.0 已发布，M3/M4、SQLite、同请求 Provider retry、共用 Line/TUI D
 `1100 passed, 4 skipped in 31.98s`，含新 History 81 项（37/12/16/16，不再相加）。四项 skip 为 Windows
 SQLite 两个文件符号链接、Tools 一个目录符号链接权限及 CLI NUL 路径边界。编译、40 Python Ruff、
 19 生产文件反硬编码扫描和两分区独立审查通过，七组反向保护均按预期失败后恢复，未运行全量／L2。
-F0-A/B/C 本轮授权实现收口；F1/F2 已实现，F3 authority 已接入、B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），F4–F5 未开工，Release Stop A 独立审查已通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认，三个 Release Stop 保留原顺序，不能声称发布通过。
+F0-A/B/C 本轮授权实现收口；F1/F2 已实现，F3 authority 已接入、B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0），F4 已实现（阶段计划 §11.4）；F5 治理/冻结评估、精度整改及冻结复验完成，11 条均达到原阈值，Stop C 已通过限定验收，发布门禁仍待授权。Release Stop A 独立审查已通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认，三个 Release Stop 保留原顺序，不能声称发布通过。
 
 ## 6. v0.9：统一上下文与项目级记忆
 
@@ -197,12 +197,18 @@ v0.9 的阶段、owner 与 release stop 以
 
 ### 6.1 统一 Context Composer
 
-F0-B 最小主线与 F0-C 原文分页／授权已实现。F2 当前唯一协议为 Session `context_protocol=3`、
-Context format 2、`f2-context-policy-v1` 和 `context-json-v3`；旧版本明确拒绝，不迁移。
-policy 原八项加 nullable skills，HistoryReadPolicy 七项上限全部显式给出；默认空策略，启用 History 原文
+F0-B 最小主线与 F0-C 原文分页／授权已实现。当前唯一协议为 Session `context_protocol=9`、
+Context format 8、`f5-context-policy-v5` 和 `context-json-v8`；旧 Session 1–8 明确拒绝，不迁移。
+当前参考在完整 Surface 之后；三类实际准入正文经逐步资格与预算复核可在本 Turn 保留，淘汰不复活。
+C1 第三轮三模型各 24/24 通过。C2 精简模型视图保留原完整来源证明，真实核心为 27/28、28/28、28/28，
+Skill 回归为 24/24、23/24、24/24，达到原门槛。C3 四个本地候选均未达到冻结质量/增益门槛，
+按计划保持 semantic/reranker 关闭；原 Runtime 11 题通过。C4 固定 24 次真实重放无确认 Adapter 缺陷，
+保留历史具体原因未知和 3 次网络失败。C5 已按 [Stop C 执行计划](TRACEHARNESS_V0.9_RELEASE_STOP_C_EXECUTION.md) 完成，三路独立审查生产 P0/P1/P2 为 0，
+测试适配修复及相关确认通过；[Release Stop C 已验收](../validation-v0.9-stop-c.md)，发布门禁仍待授权。
+policy 十二项、Skill/Memory 各有同类型十五项策略，HistoryReadPolicy 七项上限全部显式给出；默认空策略，启用 History 原文
 必须先启用 directory/summary，不提供 raw-only 模式。Request 十字段保留，
 Composition 既有 catalog/digest 字段由 F1 接入真实目录；SQLite 已切到 schema 2。
-F2 Skill 选择／exact+FTS 排名／模型披露已实现；Memory authority 已由 F3 实现，Memory 与跨来源通用检索留到 F4；
+F2 Skill 选择／exact+FTS 排名／模型披露已实现；Memory authority 已由 F3 实现，Memory 与跨来源共享检索已由 F4 接入；配置细化见 ADR-0045；
 本轮只读 reader 和授权接线复用原 Session/Runtime/Tool owner，已通过限定验证，F1 Skill 贡献已完成限定验证。
 
 建立唯一 request-scoped Context Input 主线，与既有 Surface 和 Product 事实投影共同构建请求；分别
@@ -241,7 +247,12 @@ Context，检索失败／取消／预算拒绝可以留下合法不完整前缀�
 F1 已完成 typed contribution、显式 SkillPolicy／资源 root 绑定、有界资源快照与 exact Lease 读取。
 目录参与 Composition revision，Context 绑定 digest；插件启用本身不注入正文、不授予 Tool。
 资源仍由原 Activation/Generation cleanup 释放；F2 由宿主 selection 流选择，按 eligible corpus
-exact+FTS/BM25/RRF 与预算冻结引用，原 Store 单事务重建索引，模型只申请下一 Step 的精确披露。
+exact+FTS/BM25/RRF 与预算冻结引用，原 Store 单事务重建索引，模型只申请紧邻下一 Step 的首次精确披露，实际准入正文依 C1 合同在本轮有界保留。
+F5 精度修订保留完整标识符/路径查询，以来源收据证明覆盖；全局排序优先覆盖数量，最终预算通过的
+自动块才能排除严格子集候选。相等/互补覆盖与显式披露保留，不按样本名称、词表或新增阈值筛选。
+它仍是词法规则，语义能力没有扩大；冻结 query/corpus/judgments/阈值与 evaluator 不变。
+复验 Product 与原阈值均为 11/11、隔离 0，原五条质量失败已达标；语义题仍只达到事前词法底线 0。
+16 个具名文件 303 项通过，含非样本回归、冻结网格与失败取消；三组反向验证已完成，详见阶段计划 §12.5。
 F1 定向与相邻 31 文件 764 通过、3 项 Windows 权限跳过；F2 的 40 文件 893 通过、3 项跳过，
 六组反向保护已验证。没有全量或 L2，详情见阶段计划 §8.3、§9.4。Release Stop A 已独立审查通过 P0/P1 门槛，2 项 P2 已修复并完成定向确认；
 范围、公开反例与本轮实测见 [审查记录](TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。
@@ -250,8 +261,8 @@ F1 定向与相邻 31 文件 764 通过、3 项 Windows 权限跳过；F2 的 40
 - exact + SQLite FTS 是核心离线路径；本地 embedding/reranker 只能显式启用且仍为可重建派生索引；
 - 检索遵守 Workspace、Generation、authority、freshness 与 Context Budget 两道宿主过滤；
 - Skill 选择不等于启用 Plugin，更不等于授予 Tool。
-- 当前 SQLite 只接受固定的两张事实表；FTS 的 schema 切换、派生对象、重建、关闭与 backup/restore
-  必须先按 v0.9 §5.4 冻结，不允许插件自己加表或关闭 Store。
+- 当前 SQLite schema 2 严格接受两张事实表以及固定的派生 manifest/items、FTS5/shadow 对象；
+  重建、关闭与 backup/restore 由原 Store 拥有，不允许插件自己加表或关闭 Store。
 
 ### 6.4 M3 History Evidence
 
@@ -263,8 +274,8 @@ F1 定向与相邻 31 文件 764 通过、3 项 Windows 权限跳过；F2 的 40
 - section/chunk 首版同按闭合 Turn 分页，超大 Turn 整页拒绝且 slot 稳定，无 accepted receipt；已披露
   后被更宽 replacement 隐藏的当前 Session 旧 block 仍可精确请求，原文页预算优先于自动参考；
 - 展开内容仅进入当前 request/Step，不回写普通 Surface，不自动升级成 Memory；
-- 每块标明 source range、digest、bytes；F0-C workspace_observation=null、freshness=unknown，拒绝
-  matched/stale。现有 base_revision 不是 ToolResult 执行时的版本绑定，真实三态观察留给 F3/F4 owner 接入；
+- 每块标明 source range、digest、bytes；F0-C 当时 workspace_observation=null、freshness=unknown，拒绝
+  matched/stale。现有 base_revision 不是 ToolResult 执行时的版本绑定，F4 已在原 Tool/Git owner 接入真实三态观察，未配置观察仍为 unknown；
 - 对当前问题真正需要最新状态时，应重新读取/验证，而不是盲信旧工具结果。
 - Tool context request 只供同 Turn 的直接后继 Step；accepted 后若达到步数上限、失败、取消或恢复，
   未消费请求即失效。普通 Tool result 只保留有界 receipt，不能让原文或 pending 状态跨 Turn 常驻。
@@ -620,3 +631,10 @@ host 和发起请求；不引入旁路 Runner。具体执行合同以 v0.9 §12.
 达到这里，TraceHarness 可以诚实地定位为：**一个本地单用户、可审计、可重放、具备长期记忆、标准外部工具
 互操作、真实执行隔离和受控多 Agent 并发的 Coding Agent 宿主**。它仍不是通用云平台，但已经不是依赖演示路径
 才能成立的玩具。
+
+
+当前 F5 已补齐作者显式导航元数据，并用真实 Provider 验证模型自主选章与下一 Step 读取；同时修复
+请求数字表示及散文冒号问题。真实结果按模型保留任务完成、严格选章和失败，不能以某模型成功代表
+默认模型稳定。只重冻结旧检索基准的目录绑定及文件摘要，不改题目或分数线。详见
+[ADR-0048](../adr/0048-skill-navigation-and-real-provider-disclosure.md) 和
+[验证记录](../validation-v0.9-skill-navigation.md)；不提前进入后续阶段或宣称 Stop C/发布通过。

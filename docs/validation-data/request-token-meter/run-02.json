@@ -1,0 +1,600 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "turns": [
+        {
+          "label": "read-new-output",
+          "question": "请运行一次 python telemetry.py，查一下日志中 R0164 的设备标签和复核码。另外告诉我程序的退出码。请依据实际执行结果回答。",
+          "answer": "From the execution of `python telemetry.py`, I found:\n\n- For R0164: \n  - Device label: \"仪表-9827a9e74a\"\n  - Verification code: \"67fb91b8d3f4\"\n\n- The program's exit code was 0 (as shown in the tool output: \"exit_code=0\")\n\nThe output shows successful execution with exit_code=0 and the JSON object for R0164 contains the device label and verification code as requested.",
+          "steps": 5,
+          "tool_results": [
+            {
+              "tool": "list_files",
+              "status": "succeeded",
+              "call_id": "call_cbf6a817510b4e3fb50590"
+            },
+            {
+              "tool": "shell",
+              "status": "succeeded",
+              "call_id": "call_270f0bcbbf3b46139e136a"
+            },
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_035c728be9d749ec8d39d6"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_c0cdb9cdf8a544c5adf5c2"
+            }
+          ],
+          "read_offsets": [
+            51050
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "list_files",
+              "arguments": {}
+            },
+            {
+              "tool": "shell",
+              "arguments": {
+                "command": "python telemetry.py"
+              }
+            },
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                "part": "content",
+                "query": "R0164"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                "offset": 51050,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+              "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 1971,
+                  "match_end": 51058,
+                  "match_start": 51053,
+                  "matched_lines": "记录 R0164\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                      "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                      "offset": 51050,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 51050
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R0164",
+              "total_chars": 80925
+            }
+          ],
+          "token_measurements": [
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 2583,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 61,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 204,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "a2e74c7cb83b8f93a56d2ad8375a98b3c77d99ed48677c10cc053177d24f4af5",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 2709,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 187,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 204,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "06c62dbf5a34eb39fdc6df547af92931385a08de9d28d95d4223387287d3a785",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 7308,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 4786,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 204,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "56da74c1af0a6082101d1d00e8be979b5fc31ab632c9ce9e5ae44161b19ac8e7",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 7777,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 5255,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 204,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "1bfca06d0321822ca0242477b2653aaab1911c4cc0bb572ef5481b2cef4b54ea",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 11901,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 9379,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 204,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "6512675a59c3c80f10b34810609a752cdc902724891faa13052bad3db0708fab",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            }
+          ],
+          "attempt_usage": [
+            {
+              "input_tokens": 2930,
+              "output_tokens": 66,
+              "quality": "exact",
+              "total_tokens": 2996
+            },
+            {
+              "input_tokens": 3013,
+              "output_tokens": 37,
+              "quality": "exact",
+              "total_tokens": 3050
+            },
+            {
+              "input_tokens": 6232,
+              "output_tokens": 205,
+              "quality": "exact",
+              "total_tokens": 6437
+            },
+            {
+              "input_tokens": 6772,
+              "output_tokens": 158,
+              "quality": "exact",
+              "total_tokens": 6930
+            },
+            {
+              "input_tokens": 9698,
+              "output_tokens": 111,
+              "quality": "exact",
+              "total_tokens": 9809
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "recent-conversation",
+          "question": "先停一下查询。请只回答：好的。",
+          "answer": "好的",
+          "steps": 1,
+          "tool_results": [],
+          "read_offsets": [],
+          "expected_found": true,
+          "tool_calls": [],
+          "search_pages": [],
+          "token_measurements": [
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 97952,
+              "input_tokens": 12006,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 9522,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 166,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "2b8035ea060eb438e6e44ad20429ec43407e6fbf42503f320c57050ef3bf8aa2",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 78361,
+              "window_tokens": 100000
+            }
+          ],
+          "attempt_usage": [
+            {
+              "input_tokens": 9802,
+              "output_tokens": 1,
+              "quality": "exact",
+              "total_tokens": 9803
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "restart-after-compaction",
+          "question": "刚才那份日志里 R0239 的设备标签和复核码是什么？请查当时的记录。",
+          "answer": "For R0239 in the telemetry log:\n- Device label: \"仪表-0d4f89d4a5\"\n- Verification code: \"dd6603a6b324\"",
+          "steps": 3,
+          "tool_results": [
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_c21c438b27934334975b25"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_204b842826b348f0ad1bc6"
+            }
+          ],
+          "read_offsets": [
+            74378
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                "part": "content",
+                "query": "R0239"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                "offset": 74378,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+              "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 2871,
+                  "match_end": 74386,
+                  "match_start": 74381,
+                  "matched_lines": "记录 R0239\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "c4f183ad15105e29b8bd0549189ecedfc960c661fdec4c058c5e46d90df152b1",
+                      "effect_id": "387f1173-c2b3-4c26-930f-44e6ddb6ba40",
+                      "offset": 74378,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 74378
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R0239",
+              "total_chars": 80925
+            }
+          ],
+          "token_measurements": [
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 14054,
+              "input_tokens": 7734,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 5231,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 185,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 16102
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "3fd6476c361c65f70124bd5662bbd60e89e987b1f85857465119cc523ba50f2c",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 11243,
+              "window_tokens": 16102
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 14054,
+              "input_tokens": 8163,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 5660,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 185,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 16102
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "fad03b1e76b97710b7ffe9e8af0c7b1ccae4bdf7e062fd563f8e386d43c6829a",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 11243,
+              "window_tokens": 16102
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 14054,
+              "input_tokens": 12290,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 1024,
+              "over_limit": false,
+              "parts": {
+                "conversation": 9787,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 185,
+                "system": 1139,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 1024,
+                "safety_margin_tokens": 1024,
+                "trigger_percent": 80,
+                "window_tokens": 16102
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "804f126a0299c8becf51b2d445fbe26bcd6c880b6ecd58b480fd1b94dd389bc0",
+              "safety_margin_tokens": 1024,
+              "trigger_tokens": 11243,
+              "window_tokens": 16102
+            }
+          ],
+          "attempt_usage": [
+            {
+              "input_tokens": 6880,
+              "output_tokens": 164,
+              "quality": "exact",
+              "total_tokens": 7044
+            },
+            {
+              "input_tokens": 7380,
+              "output_tokens": 158,
+              "quality": "exact",
+              "total_tokens": 7538
+            },
+            {
+              "input_tokens": 10310,
+              "output_tokens": 46,
+              "quality": "exact",
+              "total_tokens": 10356
+            }
+          ],
+          "replay_and_invariants": true
+        }
+      ],
+      "session_id": "8380e0dd-464f-40c5-b9f0-936e2f19954c",
+      "before_fold_bytes": 25004,
+      "fold_input_limit": 14054
+    }
+  ],
+  "completed": false,
+  "keyword_search": true,
+  "fold_tools": true,
+  "token_meter": true,
+  "retry_max_attempts": 6,
+  "provider_timeout_seconds": 45
+}

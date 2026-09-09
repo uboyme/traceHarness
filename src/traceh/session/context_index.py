@@ -48,8 +48,8 @@ class ContextCorpus:
             "scope": scope,
             "catalog_digest": catalog_digest,
             "source_heads": source_heads,
-            "tokenizer": "traceh-lexical-v1",
-            "ranker": "eligible-bm25-v1",
+            "tokenizer": "traceh-lexical-v3",
+            "ranker": "eligible-bm25-v2",
             "config_digest": config_digest,
         }
         rows = tuple(canonical_json(item) for item in items)

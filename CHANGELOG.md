@@ -2,6 +2,178 @@
 
 ## Unreleased
 
+### Bounded semantic retrieval retest
+
+- Retest nine frozen BGE single/dual candidates with real local inference and independent vector/score/runtime replay checks. Resource and isolation gates pass; language quality does not. Semantic retrieval and reranking remain disabled, with no new production dependency.
+
+### Audited context-limit feedback (E3)
+
+- Explain local request refusal in Line/TUI using the original Session/Turn/Step proof, input partitions and maintenance outcomes. Diagnostic failure preserves the original refusal without printing request or exception contents.
+- Validate integrated real Provider journeys through history recovery, retained-output search/read, restart, nonzero exit, repeated cancellation and hard refusal; retain model omission and rejected-summary failures in the report.
+
+### Reference token admission (E2)
+
+- Admit complete eligible references against the remaining measured input allowance after old-history maintenance; preserve byte bounds, current Tool groups and qualified navigation.
+- Freeze and verify the original fixed-request basis; explain actual nondelivery to prevent repeated unchanged reads. Six real wide/narrow cases, source-forgery reverse checks and 313 targeted regressions pass.
+
+### In-turn closed-history maintenance (E1)
+
+- Recheck old history after Tool results while preserving the active Turn, complete Tool groups and recent conversations. Reserve an answering Step and allow one semantic-summary chain per Turn.
+- Preserve outstanding reference reads and repair new History/Skill/Memory disclosure after a summary Step. Record targeted, cancellation, reverse and real success/nonzero-exit verification in `docs/validation-in-turn-compaction.md`.
+
+### Semantic history summaries (D)
+
+- Opt into a model-generated structured summary through the current Turn's ordinary Step, sharing request admission, Session permit, Budget, retry and cancellation. Preserve original history and evidence pointers.
+- Freeze a strict summary request source; bind accepted replacement to the durable response. Reject partial/invalid/tool-bearing summaries and retain explicit History reading priority.
+- Add a Chinese F2 summary-method selector and request-purpose display. Real success/failure journeys, restart/readback, accounting and recovery verification are recorded in `docs/validation-semantic-summary.md`.
+
+### Complete request token metering (E0)
+
+- Add explicit model-bound estimates for the whole request, including tools, Product and references; keep provider usage separate and physical byte limits intact.
+- Trigger existing closed-history compaction before the configured input limit, audit exact request estimates with CAS, and refuse oversized requests before model admission. Active Tool groups stay intact.
+- Add Chinese F2 token settings and honest estimate/actual usage display. Semantic summaries and in-turn closed-history maintenance are implemented; reference token allocation is implemented in E2.
+
+### Old Tool result folding (layered compaction C)
+
+- At the existing automatic byte threshold, fold old retained Tool replies before falling through to M3 history summaries. Preserve call arguments, reply identities, recent turns, original Effect facts and exact request replay.
+- Reuse Surface replacement/CAS reconciliation; show partial completion when later maintenance fails. Keep Tool folds out of History summary directories while allowing later summaries to expand through them.
+
+### Retained Tool output keyword search (B+)
+
+- Add same-Session literal grep through `search_tool_output`, using the original retained source and identity checks. Return bounded snippets, exact Unicode offsets, and continuation for more matches; expand nearby evidence with `read_tool_output`.
+- Keep search on the ordinary Tool/Effect/Result/replay path without another store or index. Teach navigation to search keywords first and verify record boundaries before attributing nearby values.
+
+### Retained Tool output (layered compaction A/B)
+
+- Preserve large Tool content/data in the original Effect outcome, atomically with a digest-bound reference and bounded presentation. Keep small output inline; recover the same presentation without repeating effects.
+- Add current-Session output listing and paged reading through ordinary PURE_READ tools, including after compaction/restart. Validate execution identity, page boundaries, and cross-Session isolation using shared source rules.
+- Freeze the later compaction budget/layering contract. Semantic summaries and per-Step pressure control remain unimplemented; C now adds old-result folding above.
+
+### Simple interactive startup
+
+- Enter Chat directly when connection inputs are ready; use a small first-run provider/model/key wizard, with optional Windows current-user DPAPI credential storage. Keep advanced settings behind F2 or --configure.
+- Add a workspace-filtered conversation picker (Ctrl+O / /sessions) and /new, using the existing drained restart lifecycle. Offer an explicit fresh data-space button for old protocols without migrating old records.
+- Remember an explicitly confirmed workspace project preference; verify the original source and write the normal Session binding before rebuilding the original Memory index. No new authority store or automatic Memory approval.
+- Extend format-1 launch profiles with three optional project preference inputs; existing Session/Context protocols are unchanged.
+
+### Current Turn request anchoring
+
+- Keep references last and bind their final task echo to the original Turn input, with source validation, exact byte accounting and shared request replay. Fix repeated historical answers after changing topics.
+- Switch to Session 10 / Context 9 / context-json-v9; reject old Sessions without modifying existing data. Real-provider topic switching and resume passed; premature stopping on tiny History pages remains a documented model limitation.
+
+### Chinese startup and feature settings
+
+- Always show an editable startup sheet with saved values. Add feature toggles, installed-plugin selection, structured Chinese Context/Product fields and automatic compaction controls; raw Context JSON is collapsed under advanced settings.
+- Share the production Context/Product parsers between file load and form drafts. Save explicitly, reject observed stale writes, preserve cancellation, and leave Git execution, approval authority and Runtime lifecycle with existing owners.
+- Extend format-1 launch inputs with four optional compaction fields. Explicit off overrides environment thresholds; contradictory explicit CLI values still fail.
+
+### TUI text copying and Memory forms
+
+- Support direct drag selection and right-click Copy in conversation and governance evidence. Ctrl+C only copies the current selection; Ctrl+Q exits. Remove the separate F3 copy page and top action toolbar.
+- Add Ctrl+B (task panel) to expand/collapse the Product pane on the chat screen, including its unconfigured state. Product starts expanded when configured and collapsed otherwise. Hiding preserves running work, observation updates and typed approval drafts; visibility is not persisted.
+- Add Memory forms (F4 or `/memory`) that select real proposal/active IDs and submit drafts through the existing review, CONFIRM and authority owners. Missing selections fail locally; cancelled reviews write nothing.
+- Write the Windows Unicode system clipboard through a short-lived native owner and retain Textual in-app paste; other platforms use terminal OSC 52. No additional event source, approval authority or automatic retrieval-index rebuild is introduced.
+
+### One-command TUI and runtime configuration apply
+
+- Make bare `traceh` open Chat in the current directory, loading personal connection defaults, project settings and explicit CLI inputs. Startup shows saved values in the Chinese settings sheet; it never falls back to scripted answers.
+- Add in-TUI apply: drain original owners, reopen the same durable Session with the new Runtime, and reconstruct prior conversation. Cleanup failure blocks restart; plugin identity and data ownership remain enforced.
+- Resolve preview configuration in private environment mappings. Scope personal environment files to connection fields and the selected key; restore launch-owned environment after cleanup, re-read changed files and discard disabled Context settings.
+- Keep explicit save separate from apply, preserve optional Textual installation and Line commands, and validate with focused UI/CLI tests and loopback HTTP only.
+
+### TUI configuration panel
+
+- Add `chat --tui --configure` before environment validation and Runtime creation, plus F2 / `/settings` for next-launch settings. Model connection, workspace/session, storage, plugin IDs and configuration paths are editable in Chinese tabs.
+- Save strict non-secret launch profiles with atomic replacement; temporary password input goes only to the original Provider. Context editing shares the existing strict parser and refuses an observed stale overwrite.
+- Keep active Runtime, Session, Skill selection and Memory authority with their original owners. Validation covers real headless UI interactions, original SQLite Chat and a loopback HTTP Provider; no full suite or L2 was run. See [configuration guide](docs/tui-configuration.md).
+
+### Release Stop C — limited acceptance
+
+- Complete three independent reviews and focused confirmation with no production P0/P1/P2 findings. Preserve all earlier failures and the C3/C4 limitations.
+- Align scripted Product test providers with the Context suffix contract; synchronize UI tests on real screen mounts and retain durable confirmation/cancellation checks. Production sources are unchanged from C2 acceptance.
+- Synchronize current protocol, request position, example-package boundaries and completion status in both context documents and plans. Full-suite, L2–L4, Wheel/install and release gates remain unrun. See [Stop C evidence](docs/validation-v0.9-stop-c.md).
+
+### Release Stop C — C4 Provider evidence
+
+- Add opt-in diagnostics that bind the original failed dispatch, capture consumed HTTP bytes without headers or credentials, and distinguish JSON parsing from Tool Schema validation.
+- Preserve 24 real attempts: 21 parsed and three transport failures; offline byte replay verifies 22 received bodies including a separate control. No confirmed Adapter defect or parser change; the historical malformed bytes remain unavailable. See [C4 evidence](docs/validation-v0.9-stop-c-c4.md).
+
+### Release Stop C — C3 local retrieval feasibility
+
+- Re-run the original 11-query Runtime baseline and independently verify 44 Contexts/dispatches against SQLite.
+- Freeze and measure four explicit local embedding/reranker candidates on the original corpus plus eight bilingual paraphrases. All fail the declared quality/gain thresholds despite acceptable measured cost; retain every result.
+- Keep semantic/reranker lanes disabled. Add only opt-in development diagnostics, controls and [evidence](docs/validation-v0.9-stop-c-c3.md); no production protocol, model dependency or hidden default changes. Later Stop C stages are tracked separately.
+
+### Release Stop C — C2 compact navigation and real reference journeys
+
+- Keep complete source proofs in the original Context event while deriving a compact model view with explicit Memory and History read actions; preserve original tools, authority, retention and full-render budgets.
+- Cut over to Session 9, Context 8, context-json-v8 and f5-context-policy-v5. Old Sessions 1–8 are refused; disclosure receipts, History page policy, SQLite, M3 and lexical retrieval versions remain unchanged.
+- Disclose explicit answer field grammar in evaluation corpus format 2 and preserve format-1 scores without rescoring. Frozen real core results are 27/28, 28/28 and 28/28; original Skill regression is 24/24, 23/24 and 24/24. SQLite recalculation confirms the original thresholds; retain both model-behavior failures.
+- Adoption and targeted checks are complete; later stages remain tracked in the [Stop C plan](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_C_EXECUTION.md). No full suite, L2–L4, Wheel/install or publication gate was run.
+
+### Release Stop C — C1 implementation and bounded acceptance
+
+- Place the current reference after the complete Surface and Tool groups in dispatch, replay, invariant checks and Inspector.
+- Derive bounded same-Turn retention for admitted Skill, Memory and History bodies from existing Context events; recheck source authority each Step and prevent eviction or cancellation from reviving old grants.
+- Apply one shared admission order: fresh explicit requests, retained bodies, automatic History, then automatic Skill/Memory fusion. Preserve whole-block budgets and the original event authority.
+- Cut over to Session 7, Context 6, context-json-v6, f5-context-policy-v3, disclosure Tool receipt 2 and history-turn-pages-v2. SQLite, M3 and source retrieval receipts remain format 2; old Sessions are rejected.
+- Clarify tier-specific null fields without guessing IDs or accepting malformed requests. Targeted tests pass; the third frozen real Skill grid passes 24/24 for each of three models, retaining all earlier failures. Later Stop C work is tracked separately above.
+
+### Skill navigation and real Provider disclosure
+
+- Require explicit titles and summaries for sections, resources and chunks; reuse the frozen catalog's navigation in Context directories and Tool receipts.
+- Share host reference guidance between live and frozen prompt assembly, retaining next-Step-only body disclosure and existing authority boundaries.
+- Preserve request temperature number representation and distinguish prose punctuation from quoted/compound literal identifiers without domain-specific rules.
+- Switch Session/Context/renderer/tokenizer to 6/5/v5/v3; retain policy, source receipt, ranker, SQLite and M3 v2. Old Sessions are rejected.
+- Add explicit real Provider integration tests with opaque IDs, separate strict/task metrics and retained failures. Re-freeze only the retrieval catalog binding and dependent file hash; keep queries, judgments, thresholds and limits. See [validation](docs/validation-v0.9-skill-navigation.md). No full suite, L2 or Wheel run.
+
+### v0.9 F5: shared governance and frozen retrieval evaluation
+
+- Line/Textual share fresh Skill/Plugin/Memory/History/Context/Project governance and explicit
+  --context-config. Confirmation freezes existing CAS inputs; no model approval or UI fact cache.
+- Plugin Manifest review occurs before setup and binds the existing loader's exact imported object.
+- The existing Product attempt seeds through production owners after real requester scope binding;
+  role Memory indexes are prepared at the original Product binding boundary.
+- Benchmark root schema 2 requires retrieval; old schema 1 is rejected. Frozen Context observations,
+  unavailable/unproven denominators, isolation checks and logical index costs share the sole runner.
+- First frozen 11-query baseline: Product 11/11, scope violations 0, five retrieval quality failures.
+  After the general precision correction, unchanged-input verification reports Product 11/11,
+  quality_passed 11/11 under the original thresholds and zero scope violations. All five original
+  failures meet their frozen thresholds; the semantic query still only meets its lexical floor of zero.
+  Stop C and release gates remain open; these results do not claim general semantic performance.
+  Targeted validation only; see [F5 evidence](docs/validation-v0.9-f5.md).
+- The shared lexical index now preserves complete punctuated identifiers/paths; query literals are
+  atomic and cannot fall back to component words. Source receipts prove matching query coverage.
+  Global fusion orders coverage count before the existing RRF/identity order; only automatic blocks
+  actually admitted by the final budget suppress strict-subset candidates as `query-dominated`.
+  Equal/complementary coverage and explicit disclosure retain their existing eligibility.
+- Breaking pre-1.0 precision cut: Session 5, Context 4, f4-context-policy-v2, source receipt 2 and
+  tokenizer/ranker v2. Renderer context-json-v4, SQLite 2, M3 2 and configuration fields stay unchanged;
+  old Sessions 1-4 are explicitly rejected. Frozen benchmark/corpus JSON, judgments and thresholds
+  remain unchanged; no sample-name exceptions or hidden retrieval defaults were added. See
+  [ADR-0047](docs/adr/0047-literal-query-coverage-admission.md).
+- Precision verification: 16 named files report 303 passed in 973.99s, including 19 non-corpus
+  Runtime regressions, the sole 11-attempt frozen grid and seed/Product index failure/cancellation.
+  Three root-cause reverse checks fail as intended and restore the exact tested source bytes.
+
+
+### v0.9 F4: qualified Memory retrieval and History observations
+
+- Memory active facts now enter the existing Context/Request path through a qualified reader,
+  shared exact/eligible BM25/RRF, source quotas and one final byte budget. Rebuild uses the
+  existing Store worker; historical requests replay frozen prefixes and bytes.
+- Added receipt-only request_workspace_memory for the immediate next Step. No approval,
+  raw cross-Session sources, pending cache or extra authority; revoked facts are rechecked.
+- Opt-in Git/Tool observations derive matched/stale/unknown History framing. Dirty, missing,
+  changing and cancelled observations cannot claim a known matching revision.
+- Breaking pre-1.0 cut at the F4 checkpoint: Session 4, Context 3, f4-context-policy-v1, context-json-v4 and
+  ReferenceRetrievalPolicy/context_bytes. SQLite stays at schema 2; no aliases or migration.
+  Semantic/reranker remain explicitly disabled. See [ADR-0045](docs/adr/0045-qualified-reference-retrieval-and-history-observations.md).
+- Validation covers affected owners and adjacent regressions only; three reverse guards
+  fail as intended and pass after restoration. No full suite, L2–L4, network or real Provider.
+  Current counts and limits are recorded in [project context §15.1](docs/note/project-context.md#151-本地标准检查).
+
+
 ### v0.9 F3: durable project scope and Memory authority
 
 - Added host-owned project association in projects:catalog and append-only
@@ -25,7 +197,7 @@
   failures; the final 11-file gate passed 189 cases with one platform skip.
   Post-fix independent review found P0=0/P1=0/P2=0 and closed B-P1-01.
   The 11 repository test files plus four independent probes passed with
-  193 passed / 1 skipped; Stop B passed and F4 has not started. See the [review record](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
+  193 passed / 1 skipped; Stop B passed; F4 had not started at that review checkpoint. See the [review record](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
   No full suite, L2, package build, network or real Provider was run.
 
 ### v0.9 F2: durable Skill selection, retrieval and progressive disclosure
@@ -39,7 +211,7 @@
 - Added a receipt-only Skill Tool for directory/summary/section/chunk disclosure
   in the immediate next Step. Original bytes remain outside Surface; historical
   reconstruction and same-Step retries never query current indexes/resources.
-- **Breaking, pre-1.0:** current Session context_protocol=3, Context format=2,
+- **Breaking, pre-1.0 (F2 checkpoint):** Session context_protocol=3, Context format=2,
   f2-context-policy-v1, context-json-v3 and SQLite schema=2. Older versions are
   rejected without migration. EventEnvelope 1 and M3 format 2 are unchanged.
 - Validated 40 related files: 893 passed, 3 Windows symlink privilege skips.

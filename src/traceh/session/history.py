@@ -19,6 +19,8 @@ from traceh.session.protocol import require_session_protocol
 from traceh.session.surface_replacement import (
     SURFACE_MESSAGE_TYPES,
     SURFACE_REPLACE,
+    SurfaceReplacement,
+    SurfaceToolFold,
     parse_surface_replacement,
     surface_conversation,
     surface_message,
@@ -102,14 +104,14 @@ class HistorySnapshot:
                 return root
         raise HistoryReadError("history-block-unavailable")
 
-    def read_page(self, *, block_id: str, cursor: HistoryCursor) -> HistoryPage:
-        root = self._root(block_id)
-        if (
-            type(cursor) is not HistoryCursor
-            or cursor.block_id != block_id
-            or cursor.policy_digest != self._policy.digest
-        ):
-            raise HistoryReadError("history-cursor-invalid")
+    def leaf_refs(self, block_id: str) -> tuple[dict, ...]:
+        return tuple(json.loads(node.ref_json) for node in self._leaves(self._root(block_id)))
+
+    def original_bytes(self, block_id: str) -> int:
+        """Full source-message array size; not a raw-page disclosure grant."""
+        return _array_bytes(self._leaves(self._root(block_id)))
+
+    def _leaves(self, root):
         nodes = {node.seq: node for node in self._nodes}
         stack = [root.seq]
         visited: set[int] = set()
@@ -130,6 +132,17 @@ class HistorySnapshot:
                 leaves.append(node)
         # Replacement append order differs from original conversation order.
         leaves.sort(key=lambda node: node.seq)
+        return leaves
+
+    def read_page(self, *, block_id: str, cursor: HistoryCursor) -> HistoryPage:
+        root = self._root(block_id)
+        if (
+            type(cursor) is not HistoryCursor
+            or cursor.block_id != block_id
+            or cursor.policy_digest != self._policy.digest
+        ):
+            raise HistoryReadError("history-cursor-invalid")
+        leaves = self._leaves(root)
         groups: list[list[_Node]] = []
         for leaf in leaves:
             if not groups or groups[-1][0].turn_end != leaf.turn_end:
@@ -277,6 +290,11 @@ def read_history(
                 raise HistoryReadError("history-depth-resource-limit")
             depths[event.seq] = depth
             ref = _event_ref(event)
+            if isinstance(replacement, SurfaceToolFold):
+                nodes.append(
+                    _Node(event.seq, replacement.source_seqs, None, canonical_json(ref), None)
+                )
+                continue
             cut_event = prefix[replacement.cut_seq - 1]
             block_id = fingerprint({"session_id": session_id, "replacement_ref": ref})
             block = HistoryBlock(
@@ -294,7 +312,7 @@ def read_history(
     visible = tuple(
         root_ids[entry.seq]
         for entry in surface_conversation(prefix)
-        if entry.replacement is not None
+        if isinstance(entry.replacement, SurfaceReplacement)
     )
     if len(visible) > policy.max_blocks:
         raise HistoryReadError("history-block-resource-limit")

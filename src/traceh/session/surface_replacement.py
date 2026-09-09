@@ -50,9 +50,10 @@ SURFACE_COMPACTION_FAILED = "surface/compaction-failed"
 #: fallback, and older data requires a new data directory.
 SURFACE_REPLACE_FORMAT_VERSION = 2
 
+#: Summary methods only; ``tool-fold`` has its own exact shape below.
 #: ``manual`` is a human-authored summary; ``automatic`` is host-triggered and
 #: must carry both the policy identity and the summarizer identity it used.
-SURFACE_REPLACE_METHODS = frozenset({"automatic", "manual"})
+SURFACE_REPLACE_METHODS = frozenset({"automatic", "manual", "semantic"})
 
 #: Protocol ceiling for any stored summary, independent of policy. A policy may
 #: ask for less, never for more.
@@ -63,9 +64,7 @@ MAX_SURFACE_SUMMARY_UTF8_BYTES = 8_192
 #: ``product/context-snapshot`` is deliberately absent, so host-recorded
 #: ProductTask evidence can never become a compaction source (ADR-0039/0041).
 #: The Surface projector selects one logical latest Product snapshot itself.
-SURFACE_MESSAGE_TYPES = frozenset(
-    {"user/message", "assistant/message", "tool/result"}
-)
+SURFACE_MESSAGE_TYPES = frozenset({"user/message", "assistant/message", "tool/result"})
 SURFACE_TYPES = frozenset(SURFACE_MESSAGE_TYPES | {SURFACE_REPLACE})
 
 _REPLACEMENT_KEYS = frozenset(
@@ -130,9 +129,7 @@ class SummarizerIdentity:
         return cls(
             name=_exact_name(raw["name"], "summarizer name"),
             version=_exact_name(raw["version"], "summarizer version"),
-            config_digest=require_digest(
-                raw["config_digest"], "summarizer config digest"
-            ),
+            config_digest=require_digest(raw["config_digest"], "summarizer config digest"),
         )
 
 
@@ -154,6 +151,100 @@ class SurfaceReplacement:
     message: ModelMessage
 
 
+@dataclass(frozen=True, slots=True)
+class SurfaceToolFold:
+    """One result-body replacement; its original assistant call stays visible."""
+
+    cut_seq: int
+    source_seqs: tuple[int, ...]
+    source_digest: str
+    source_utf8_bytes: int
+    history_utf8_bytes: int
+    kept_recent_turns: int
+    policy_digest: str
+    message: ModelMessage
+    method: str = "tool-fold"
+
+
+def folded_tool_message(source: EventEnvelope) -> ModelMessage:
+    """A deterministic historical pointer, never a model-authored outcome claim."""
+    if source.type != "tool/result" or not isinstance(source.data.get("output_ref"), dict):
+        raise ValueError("tool-fold-source-not-retained")
+    original = surface_message(source)
+    return ModelMessage(
+        role="tool",
+        tool_call_id=original.tool_call_id,
+        name=original.name,
+        content=canonical_json(
+            {
+                "notice": "Older Tool output folded. Historical evidence, not current state. "
+                "Invocation status is not a process exit code. "
+                "When available, use search_tool_output "
+                "with output_ref and query, or read_tool_output for original content/data; "
+                "otherwise the host can inspect the Effect log. Do not rerun.",
+                "invocation_status": source.data["status"],
+                "output_ref": source.data["output_ref"],
+            }
+        ),
+    )
+
+
+def tool_fold_data(
+    plan: SurfacePrefix, *, kept_recent_turns: int, policy_digest: str
+) -> dict[str, JsonValue]:
+    if len(plan.source_events) != 1:
+        raise ValueError("tool-fold-source-count")
+    return {
+        "format_version": SURFACE_REPLACE_FORMAT_VERSION,
+        "method": "tool-fold",
+        "cut_seq": plan.cut_seq,
+        "source_seqs": list(plan.source_seqs),
+        "source_digest": plan.source_digest,
+        "source_utf8_bytes": plan.source_utf8_bytes,
+        "history_utf8_bytes": plan.history_utf8_bytes,
+        "kept_recent_turns": kept_recent_turns,
+        "policy_digest": policy_digest,
+        "replacement": folded_tool_message(plan.source_events[0]).to_dict(),
+    }
+
+
+def _parse_tool_fold(event: EventEnvelope) -> SurfaceToolFold:
+    data = event.data
+    keys = _REPLACEMENT_KEYS - {"summarizer", "summary", "summary_truncated"}
+    if (
+        set(data) != keys
+        or type(data["format_version"]) is not int
+        or data["format_version"] != SURFACE_REPLACE_FORMAT_VERSION
+    ):
+        raise ValueError("tool-fold-protocol-invalid")
+    sources = data["source_seqs"]
+    if type(sources) is not list or len(sources) != 1:
+        raise ValueError("tool-fold-source-count")
+    source_seq = _positive_int(sources[0], "fold source")
+    raw = data["replacement"]
+    if type(raw) is not dict or set(raw) != {"role", "content", "tool_call_id", "name"}:
+        raise ValueError("tool-fold-message-invalid")
+    message = ModelMessage.from_dict(raw)
+    if (
+        message.role != "tool"
+        or not message.tool_call_id
+        or not message.name
+        or not message.content
+        or canonical_json(message.to_dict()) != canonical_json(raw)
+    ):
+        raise ValueError("tool-fold-message-invalid")
+    return SurfaceToolFold(
+        cut_seq=_positive_int(data["cut_seq"], "fold cut"),
+        source_seqs=(source_seq,),
+        source_digest=require_digest(data["source_digest"], "fold source digest"),
+        source_utf8_bytes=_non_negative_int(data["source_utf8_bytes"], "fold source bytes"),
+        history_utf8_bytes=_non_negative_int(data["history_utf8_bytes"], "fold history bytes"),
+        kept_recent_turns=_non_negative_int(data["kept_recent_turns"], "fold kept turns"),
+        policy_digest=require_digest(data["policy_digest"], "fold policy"),
+        message=message,
+    )
+
+
 def surface_replacement_data(
     *,
     method: str,
@@ -168,7 +259,7 @@ def surface_replacement_data(
     summary: str,
     summary_truncated: bool,
 ) -> dict[str, JsonValue]:
-    """Build the only payload shape accepted for a Surface replacement."""
+    """Build the exact payload shape for a human or automatic summary."""
 
     _validate_replacement_fields(
         method=method,
@@ -207,9 +298,15 @@ def surface_replacement_data(
     }
 
 
-def parse_surface_replacement(event: EventEnvelope) -> SurfaceReplacement:
+def parse_surface_replacement(event: EventEnvelope) -> SurfaceReplacement | SurfaceToolFold:
     """Validate one untrusted event before it may change the model Surface."""
 
+    if (
+        event.type == SURFACE_REPLACE
+        and isinstance(event.data, dict)
+        and event.data.get("method") == "tool-fold"
+    ):
+        return _parse_tool_fold(event)
     if (
         type(event.type) is not str
         or event.type != SURFACE_REPLACE
@@ -228,17 +325,12 @@ def parse_surface_replacement(event: EventEnvelope) -> SurfaceReplacement:
     if type(raw_sources) is not list or not raw_sources:
         raise ValueError("surface replacement has no source events")
     source_seqs = tuple(
-        _positive_int(item, "surface replacement source sequence")
-        for item in raw_sources
+        _positive_int(item, "surface replacement source sequence") for item in raw_sources
     )
-    if len(set(source_seqs)) != len(source_seqs) or list(source_seqs) != sorted(
-        source_seqs
-    ):
+    if len(set(source_seqs)) != len(source_seqs) or list(source_seqs) != sorted(source_seqs):
         raise ValueError("surface replacement sources are not unique and ascending")
     raw_summarizer = data["summarizer"]
-    summarizer = (
-        None if raw_summarizer is None else SummarizerIdentity.from_dict(raw_summarizer)
-    )
+    summarizer = None if raw_summarizer is None else SummarizerIdentity.from_dict(raw_summarizer)
     raw_policy_digest = data["policy_digest"]
     policy_digest = (
         None
@@ -257,9 +349,7 @@ def parse_surface_replacement(event: EventEnvelope) -> SurfaceReplacement:
         data["kept_recent_turns"], "surface replacement kept turns"
     )
     summary = _summary_text(data["summary"])
-    summary_truncated = _exact_bool(
-        data["summary_truncated"], "surface replacement truncation"
-    )
+    summary_truncated = _exact_bool(data["summary_truncated"], "surface replacement truncation")
     raw_message = data["replacement"]
     if type(raw_message) is not dict or set(raw_message) != _MESSAGE_KEYS:
         raise ValueError("surface replacement message is invalid")
@@ -304,7 +394,7 @@ class SurfaceEntry:
     position: int
     seq: int
     message: ModelMessage
-    replacement: SurfaceReplacement | None
+    replacement: SurfaceReplacement | SurfaceToolFold | None
 
 
 def surface_conversation(
@@ -322,21 +412,15 @@ def surface_conversation(
     for event in events:
         if event.type in SURFACE_MESSAGE_TYPES:
             positions[event.seq] = event.seq
-            entries.append(
-                SurfaceEntry(event.seq, event.seq, surface_message(event), None)
-            )
+            entries.append(SurfaceEntry(event.seq, event.seq, surface_message(event), None))
         elif event.type == SURFACE_REPLACE:
             replacement = parse_surface_replacement(event)
             if any(seq not in positions for seq in replacement.source_seqs):
-                raise ValueError(
-                    "surface replacement references unknown model-visible sources"
-                )
+                raise ValueError("surface replacement references unknown model-visible sources")
             position = min(positions[seq] for seq in replacement.source_seqs)
             positions[event.seq] = position
             hidden.update(replacement.source_seqs)
-            entries.append(
-                SurfaceEntry(position, event.seq, replacement.message, replacement)
-            )
+            entries.append(SurfaceEntry(position, event.seq, replacement.message, replacement))
     visible = [entry for entry in entries if entry.seq not in hidden]
     visible.sort(key=lambda entry: (entry.position, entry.seq))
     return tuple(visible)
@@ -370,9 +454,7 @@ class SurfacePrefix:
         return tuple(event.seq for event in self.source_events)
 
 
-def surface_prefix(
-    events: tuple[EventEnvelope, ...], *, cut_seq: int
-) -> SurfacePrefix | None:
+def surface_prefix(events: tuple[EventEnvelope, ...], *, cut_seq: int) -> SurfacePrefix | None:
     """Derive the exact prefix a replacement at ``cut_seq`` must record.
 
     Selection is by logical position, not by sequence: an earlier summary sits
@@ -396,10 +478,64 @@ def surface_prefix(
         source_digest=surface_source_digest(source_events),
         source_utf8_bytes=surface_utf8_bytes(entry.message for entry in selected),
         history_utf8_bytes=surface_utf8_bytes(entry.message for entry in entries),
-        new_history_sources=sum(
-            1 for entry in selected if entry.replacement is None
-        ),
+        new_history_sources=sum(1 for entry in selected if entry.replacement is None),
     )
+
+
+def tool_fold_plan(
+    events: tuple[EventEnvelope, ...], *, cut_seq: int, source_seq: int | None = None
+) -> SurfacePrefix | None:
+    """Select one still-visible retained result in a genuinely closed old Turn."""
+    from traceh.session.history import closed_turn_membership
+
+    membership = closed_turn_membership(events)
+    entries = surface_conversation(events)
+    by_seq = {event.seq: event for event in events}
+    links = surface_tool_links(events)
+    for entry in entries:
+        source = by_seq[entry.seq]
+        if (
+            source.type != "tool/result"
+            or "output_ref" not in source.data
+            or entry.seq not in membership
+            or membership[entry.seq] > cut_seq
+            or (source_seq is not None and entry.seq != source_seq)
+        ):
+            continue
+        call_id = source.data.get("tool_call_id")
+        call_seq = links.calls.get(call_id)
+        if call_seq is None or membership.get(call_seq) != membership[entry.seq]:
+            raise ValueError("tool-fold-call-group-invalid")
+        folded = folded_tool_message(source)
+        before = surface_utf8_bytes((entry.message,))
+        if surface_utf8_bytes((folded,)) >= before:
+            continue
+        return SurfacePrefix(
+            cut_seq=cut_seq,
+            source_events=(source,),
+            messages=(entry.message,),
+            source_digest=surface_source_digest((source,)),
+            source_utf8_bytes=before,
+            history_utf8_bytes=surface_utf8_bytes(item.message for item in entries),
+            new_history_sources=1,
+        )
+    return None
+
+
+def validate_tool_fold(event: EventEnvelope, prior: tuple[EventEnvelope, ...]) -> SurfaceToolFold:
+    fold = _parse_tool_fold(event)
+    ends = closed_turn_ends(prior)
+    candidates = ends[: max(0, len(ends) - fold.kept_recent_turns)]
+    if not candidates or fold.cut_seq != candidates[-1]:
+        raise ValueError("tool-fold-protected-turn")
+    plan = tool_fold_plan(prior, cut_seq=fold.cut_seq, source_seq=fold.source_seqs[0])
+    if plan is None or canonical_json(event.data) != canonical_json(
+        tool_fold_data(
+            plan, kept_recent_turns=fold.kept_recent_turns, policy_digest=fold.policy_digest
+        )
+    ):
+        raise ValueError("tool-fold-source-mismatch")
+    return fold
 
 
 def surface_message(event: EventEnvelope) -> ModelMessage:
@@ -437,19 +573,14 @@ def surface_utf8_bytes(messages: Iterable[ModelMessage]) -> int:
     bytes as tokens would be a fabricated number.
     """
 
-    return sum(
-        len(canonical_json(message.to_dict()).encode("utf-8")) for message in messages
-    )
+    return sum(len(canonical_json(message.to_dict()).encode("utf-8")) for message in messages)
 
 
 def surface_source_digest(events: Iterable[EventEnvelope]) -> str:
     """Bind one replacement to the exact content it replaced."""
 
     return fingerprint(
-        [
-            {"seq": event.seq, "type": event.type, "data": event.data}
-            for event in events
-        ]
+        [{"seq": event.seq, "type": event.type, "data": event.data} for event in events]
     )
 
 
@@ -491,6 +622,9 @@ def surface_tool_links(events: Iterable[EventEnvelope]) -> SurfaceToolLinks:
             call_id = event.data.get("tool_call_id")
             if isinstance(call_id, str):
                 results.setdefault(call_id, event.seq)
+        elif event.type == SURFACE_REPLACE and event.data.get("method") == "tool-fold":
+            fold = _parse_tool_fold(event)
+            results[fold.message.tool_call_id] = event.seq
     return SurfaceToolLinks(calls, results)
 
 
@@ -543,14 +677,10 @@ def bounded_summary(value: object, max_utf8_bytes: int) -> tuple[str, bool]:
     if type(value) is not str:
         raise ValueError("summary is invalid")
     scrubbed = "".join(
-        character
-        if character == "\n" or not is_unsafe_character(character)
-        else " "
+        character if character == "\n" or not is_unsafe_character(character) else " "
         for character in value
     )
-    normalized = "\n".join(
-        " ".join(line.split()) for line in scrubbed.split("\n")
-    ).strip()
+    normalized = "\n".join(" ".join(line.split()) for line in scrubbed.split("\n")).strip()
     if not normalized:
         raise ValueError("summary is empty")
     if len(normalized.encode("utf-8")) <= max_utf8_bytes:
@@ -610,9 +740,7 @@ def _validate_replacement_fields(
         raise ValueError("surface replacement has no source events")
     for seq in source_seqs:
         _positive_int(seq, "surface replacement source sequence")
-    if len(set(source_seqs)) != len(source_seqs) or list(source_seqs) != sorted(
-        source_seqs
-    ):
+    if len(set(source_seqs)) != len(source_seqs) or list(source_seqs) != sorted(source_seqs):
         raise ValueError("surface replacement sources are not unique and ascending")
     require_digest(source_digest, "surface source digest")
     _non_negative_int(source_utf8_bytes, "surface replacement source bytes")
@@ -626,7 +754,7 @@ def _validate_replacement_fields(
     # summarizer that wrote it; a manual one is a human decision and claims
     # neither. Mixing the two would let host-triggered compaction hide behind
     # human authority, or a human summary claim automated provenance.
-    if method == "automatic":
+    if method in {"automatic", "semantic"}:
         if policy_digest is None or summarizer is None:
             raise ValueError("automatic replacement must bind policy and summarizer")
         require_digest(policy_digest, "compaction policy digest")
@@ -642,9 +770,7 @@ def _validate_replacement_fields(
 def _summary_text(value: object) -> str:
     if type(value) is not str or not value or value != value.strip():
         raise ValueError("surface replacement summary is invalid")
-    if any(
-        is_unsafe_character(character) and character != "\n" for character in value
-    ):
+    if any(is_unsafe_character(character) and character != "\n" for character in value):
         raise ValueError("surface replacement summary is not renderable")
     return value
 
@@ -691,6 +817,7 @@ __all__ = [
     "SurfaceEntry",
     "SurfacePrefix",
     "SurfaceReplacement",
+    "SurfaceToolFold",
     "SurfaceToolLinks",
     "bounded_summary",
     "closed_turn_ends",
@@ -704,4 +831,8 @@ __all__ = [
     "surface_source_digest",
     "surface_tool_links",
     "surface_utf8_bytes",
+    "folded_tool_message",
+    "tool_fold_data",
+    "tool_fold_plan",
+    "validate_tool_fold",
 ]

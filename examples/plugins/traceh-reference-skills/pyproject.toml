@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "traceh-reference-skills"
+version = "0.1.0"
+description = "Explicit typed Skill examples for the frozen TraceHarness retrieval benchmark"
+requires-python = ">=3.12"
+dependencies = ["traceharness-py>=0.8,<1.0"]
+
+[project.entry-points."traceh.plugins"]
+"traceh.reference.current" = "traceh_reference_skills:CurrentPlugin"
+"traceh.reference.retired" = "traceh_reference_skills:RetiredPlugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]

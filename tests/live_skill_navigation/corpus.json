@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "notice": "Synthetic evaluation material only. None of these values are product defaults or real operating instructions.",
+  "skills": [
+    {
+      "key": "calibration",
+      "title": "传感器维护与校准手册",
+      "summary": "传感器停机标定、在线校准、维护记录与校准参数表。Sensor maintenance, offline calibration, online calibration and parameter tables.",
+      "sections": [
+        {"key": "offline", "title": "停机后的离线标定", "summary": "适用于设备已停机时的传感器标定；给出流程代号和稳定等待时间，不适用于在线校准。", "body": "合成测试手册：停机后的离线标定使用流程代号 CAL-OFF-731，稳定等待 47 秒。记录时使用这两个精确值。"},
+        {"key": "online", "title": "不停机的在线校准", "summary": "适用于设备仍在运行时的传感器校准；给出在线流程代号和采样窗口，不适用于停机标定。", "body": "合成测试手册：不停机在线校准使用流程代号 CAL-ON-284，采样窗口为 19 秒。记录时使用这两个精确值。"},
+        {"key": "replacement", "title": "传感器更换后的登记", "summary": "仅用于更换传感器后的登记和编号，不包含离线或在线校准步骤。", "body": "合成测试手册：更换后的登记代号是 REPLACE-596，登记窗口是 83 秒。此段不是标定流程。"}
+      ],
+      "resources": [
+        {"key": "tables", "title": "校准参数附表", "summary": "按离线标定和在线校准划分参数；按分块选择对应场景。", "chunks": [
+          {"key": "offline_table", "title": "停机标定参数", "summary": "离线标定的基准片代码与允许偏差；不包含在线参数。", "body": "合成参数表：停机标定的基准片代码是 PLATE-682，允许偏差是 0.037。\n"},
+          {"key": "online_table", "title": "在线校准参数", "summary": "在线校准的基准片代码与允许偏差；不包含离线参数。", "body": "合成参数表：在线校准的基准片代码是 PLATE-159，允许偏差是 0.082。\n"}
+        ]}
+      ]
+    },
+    {
+      "key": "delivery",
+      "title": "Service delivery handbook",
+      "summary": "Service deployment, release rollback and rollback rehearsal. 服务部署、发布回滚与回滚演练。",
+      "sections": [
+        {"key": "rollback", "title": "Rollback after an actual failed release", "summary": "Use when a real service release has failed and needs rollback; includes the authorization record label and retention period. Excludes rehearsals.", "body": "Synthetic handbook: for rollback after an actual failed release, the record label is ROLLBACK-843 and the retention period is 26 days."},
+        {"key": "rehearsal", "title": "Rollback rehearsal without a failed release", "summary": "Use only for planned drills; gives rehearsal record labels and retention. Not for an actual failed release.", "body": "Synthetic handbook: for a rehearsal, the record label is DRILL-217 and the retention period is 11 days."},
+        {"key": "deploy", "title": "Normal release registration", "summary": "Use to register a successful release; not for rollback or rehearsal.", "body": "Synthetic handbook: normal release records use RELEASE-905 and are retained for 58 days."}
+      ],
+      "resources": []
+    },
+    {
+      "key": "unselected",
+      "title": "未选中的旧维护记录",
+      "summary": "传感器停机标定和在线校准的旧草稿。Sensor maintenance offline online calibration.",
+      "sections": [
+        {"key": "old", "title": "旧草稿", "summary": "宿主未选择的过期资料。", "body": "UNSELECTED-DO-NOT-DISCLOSE-468"}
+      ],
+      "resources": []
+    }
+  ],
+  "selected": ["calibration", "delivery"],
+  "cases": [
+    {"id": "zh_offline_section", "query": "设备已经停机，现在要做传感器标定。请按维护资料告诉我应该记录的流程代号和稳定等待时间。", "references": ["calibration/offline"], "answer_fragments": ["CAL-OFF-731", "47"], "forbidden_fragments": ["CAL-ON-284", "REPLACE-596"]},
+    {"id": "zh_resource_chunk", "query": "做传感器停机标定时，参数表规定用哪一种基准片代码，允许偏差是多少？", "references": ["calibration/tables/offline_table"], "answer_fragments": ["PLATE-682", "0.037"], "forbidden_fragments": ["PLATE-159", "0.082"]},
+    {"id": "zh_compare_sections", "query": "请根据传感器维护资料，对比停机标定与不停机在线校准：分别列出流程代号，以及稳定等待时间或采样窗口。", "references": ["calibration/offline", "calibration/online"], "answer_fragments": ["CAL-OFF-731", "47", "CAL-ON-284", "19"], "forbidden_fragments": ["REPLACE-596"]},
+    {"id": "en_actual_rollback", "query": "Our actual service release failed and we need a rollback, not a rehearsal. According to the delivery handbook, what record label and retention period apply?", "references": ["delivery/rollback"], "answer_fragments": ["ROLLBACK-843", "26"], "forbidden_fragments": ["DRILL-217", "RELEASE-905"]}
+  ]
+}

@@ -286,7 +286,8 @@ def build_benchmark(
         initial.mkdir(parents=True, exist_ok=True)
         (initial / "kept.txt").write_text("kept\n", encoding="utf-8")
     manifest = {
-        "protocol_version": 1,
+        "protocol_version": 2,
+        "retrieval": None,
         "benchmark_id": "benchmark-under-test",
         "profile_id": "benchmark-profile",
         "approver_id": "benchmark-host",

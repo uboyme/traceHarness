@@ -498,7 +498,10 @@ async def test_runtime_dispose_converges_the_turn_before_unloading(
     assert runtime.loop.compositions.tools.registry.names() == (
         "apply_patch",
         "list_files",
+        "list_tool_outputs",
         "read_file",
+        "read_tool_output",
         "search_text",
+        "search_tool_output",
         "shell",
     )

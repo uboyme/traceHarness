@@ -139,8 +139,8 @@ async def test_host_request_is_atomic_deduplicated_and_first_step_only(tmp_path,
             step_id=scope["step_id"],
             policy=policy,
         )
-        assert eligible[0].request == request
-        assert eligible[0].request_ref == event_ref(recorded[0])
+        assert eligible.fresh[0].request == request
+        assert eligible.fresh[0].request_ref == event_ref(recorded[0])
         await runtime.sessions.append_session(
             sid,
             "step/end",
@@ -158,7 +158,7 @@ async def test_host_request_is_atomic_deduplicated_and_first_step_only(tmp_path,
                 turn_id=scope["turn_id"],
                 step_id="later-step",
                 policy=policy,
-            )
+            ).all
             == ()
         )
     finally:

@@ -9,7 +9,10 @@ grid measured all 18 attempts and reports quality failures separately from gate
 completion. The working tree now implements the v0.9-F0-B minimal Context request
 path and completed its targeted gates. F0-C History disclosure and its final
 targeted gates are also complete; F0-A/B/C's authorized implementation is closed,
-while F1 Skill contributions are complete and F2-F5 have not started. This is not a v0.9 release gate.
+with F1-F4 implemented and F5 governance/evaluator implemented. The retrieval precision correction
+and unchanged-input verification are complete: all 11 attempts meet the original thresholds with zero
+scope violations. The semantic query still only meets its predeclared lexical floor of zero.
+Stop C and release gates remain pending.
 
 ## v0.4: Plugin SDK and discovery — done
 
@@ -588,7 +591,7 @@ See [ADR-0024](docs/adr/0024-v07-managed-agent-control-plane-and-threat-boundary
 
 See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
 
-## v0.9: Host-owned long context — F0-A/B/C, F1 and F2 implemented; Stop A reviewed and both P2 findings fixed
+## v0.9: Host-owned long context — F1-F4 and F5 governance/evaluator implemented; frozen precision verification complete
 
 - F0-B implements one request-scoped Context Input path on the existing
   Session/Lease/Request owners. Each Step freezes Context before Composition and
@@ -624,7 +627,7 @@ See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
   atomic reference budgets, and receipt-only four-tier disclosure for the immediate next Step.
   Index rebuild uses the existing Store worker/transaction/close/backup owner. Historical requests
   reconstruct without consulting current indexes or resources; same-Step retries never retrieve again.
-  The current unique protocol is Session 3, Context 2, f2-context-policy-v1, context-json-v3 and
+  At the F2 checkpoint the protocol was Session 3, Context 2, f2-context-policy-v1, context-json-v3 and
   SQLite schema 2. Old versions are refused; no migration. Local semantic/reranker work remains deferred.
   The 40-file targeted gate passed 893 cases with 3 Windows symlink skips; six reverse guards passed.
   Release Stop A independently cleared P0/P1; both P2 findings have since been fixed. Context uses the
@@ -647,7 +650,17 @@ See the [frozen v0.8 stage plan](docs/plan/TRACEHARNESS_V0.8_STAGE_PLAN.md).
   consumers no longer depend on which checkout is configured as source. Thirteen new cases
   pass; the fix-stage 11-file gate reports 189 passed / 1 skipped. Post-fix independent
   review found P0=0/P1=0/P2=0; the 11 repository files plus four independent probes
-  report 193 passed / 1 skipped. Stop B passed; F4 has not started. See the [Stop B review](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
+  report 193 passed / 1 skipped. Stop B passed; F4 was not part of that review checkpoint. See the [Stop B review](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md).
+- **v0.9 F4 implemented:** active project Memory now shares exact/eligible BM25/RRF and one
+  final Context budget with Skill/History; each source keeps its own authority and corpus statistics.
+  Memory disclosure is receipt-only; admitted bodies may remain within the same Turn under current authority and budgets. Frozen requests
+  replay historical prefixes/bytes. Opt-in real Git/Tool observations derive History freshness.
+   The F4 checkpoint used Session 4 / Context 3 / f4-context-policy-v1 / context-json-v4;
+   C2 now uses Session 9 / Context 8 / f5-context-policy-v5,
+   renderer context-json-v8 and tokenizer v3; SQLite remains 2. Semantic/reranker are explicitly disabled;
+   no download or alternate parser.
+  See [ADR-0045](docs/adr/0045-qualified-reference-retrieval-and-history-observations.md).
+  F5 governance and frozen evaluation are implemented below; Stop C is passed in the focused authorized scope; final release gates remain outstanding.
 - Use exact and SQLite FTS retrieval as the core path, with progressive disclosure,
   two host filters and explicit Context Budget. Local embeddings/rerankers remain
   optional, offline and derived.
@@ -755,3 +768,51 @@ See the [F1 contract and evidence](docs/plan/TRACEHARNESS_V0.9_F0_DESIGN_CONTRAC
 The authoritative sequencing, ownership boundaries, stage stops and acceptance
 journeys are defined in the
 [v1.0 master plan](docs/plan/TRACEHARNESS_V1.0_MASTER_PLAN.md).
+
+### v0.9 F5 governance and frozen evaluation
+
+Both chat adapters share fresh host governance and explicit Context configuration. The sole Product
+benchmark runner now owns real requester scope and production Skill/Memory seeding before host assembly.
+Root manifest schema 2 rejects schema 1; no second reader, registry, Store or runner was introduced.
+The first 11-query frozen baseline completed every Product attempt with zero scope violations, while
+five queries failed precision/zero-hit thresholds. The correction and unchanged-input verification are
+complete: Product 11/11, quality_passed 11/11 under the original thresholds, scope violations 0.
+The four precision failures improve from 0.5 to 1 for precision@K and full Context precision while
+Recall/MRR stay at 1; the retired-generation query improves from zero-hit 0 to 1. The semantic query
+retains Recall/MRR/precision 0 and only meets its predeclared lexical floor; this is no generalization
+or semantic-performance claim. Sixteen named test files pass 303 cases, including the frozen grid,
+19 non-corpus Runtime regressions and seed/Product index failure/cancellation paths. Three root-cause
+reverse checks fail as intended before exact restoration. Stop C is now passed within the focused authorized scope;
+no full suite, L2-L4, packaging or real Provider ran in this stage.
+See [F5 validation](docs/validation-v0.9-f5.md) and [ADR-0046](docs/adr/0046-shared-context-governance-and-frozen-retrieval-evaluation.md).
+
+The shared ranker now preserves complete punctuated identifiers/paths as query terms; queries containing
+these literals require at least one complete literal match. Ordinary prose retains partial OR retrieval.
+Per-source receipts freeze matching query coverage; global fusion orders coverage count before the
+original rational RRF score and content identity. Only automatically selected blocks admitted by the
+final Context budget can exclude later strict-subset coverage as `query-dominated`. Equal/complementary
+coverage and explicit disclosure remain eligible. This is a lexical rule, not a semantic guarantee.
+Current C2 uses Session 9 / Context 8 / source receipt 2, tokenizer v3 and ranker v2;
+old Sessions 1–8 are rejected without migration. No query-id exceptions, stopword list, new threshold or
+configuration field was added. See [ADR-0047](docs/adr/0047-literal-query-coverage-admission.md).
+
+
+F5 Skill navigation now supplies author-owned section/resource/chunk titles and summaries through the existing catalog and disclosure path. Real Provider tests cover autonomous chapter selection and next-Step reads, with model-specific failures retained; this is not a universal reliability claim. The retrieval corpus changes only its catalog binding and dependent hash for the new descriptor protocol, preserving all quality judgments and thresholds. See [ADR-0048](docs/adr/0048-skill-navigation-and-real-provider-disclosure.md) and [validation](docs/validation-v0.9-skill-navigation.md). Release Stop C is now passed within the authorized focused scope; release gates remain outstanding. No full suite, L2 or Wheel was run.
+
+
+C1 implementation now places the current reference after complete Tool groups and derives bounded same-Turn
+retention for admitted Skill, Memory and History bodies. Source authority and shared budgets are rechecked each
+Step; eviction cannot revive an old grant. C1 third-round frozen Skill acceptance passed 24/24 for each of three models; earlier failed grids remain recorded. The ordered
+[Stop C repair plan](docs/plan/TRACEHARNESS_V0.9_RELEASE_STOP_C_EXECUTION.md) keeps full-suite, L2–L4,
+Wheel/install and Git publication gates prohibited for this task; the limited Stop C acceptance is complete.
+
+C2 now derives a compact model view and explicit Memory/History read actions from the same complete
+Context proofs. Fresh format-2 core grids pass 27/28, 28/28 and 28/28; original Skill regression passes
+24/24, 23/24 and 24/24 against the predeclared thresholds. SQLite recalculation retains the remaining
+model-behavior failures. Adoption checks are complete. C3's four frozen local retrieval candidates
+failed the declared multilingual quality and gain thresholds; the original 11-query Runtime baseline
+still passes. Semantic/reranker lanes remain disabled, with no production protocol or dependency
+change. See [C3 evidence](docs/validation-v0.9-stop-c-c3.md). C4 preserves 24 controlled attempts:
+21 parsed and three transport failures, with no confirmed Adapter defect. All 22 received bodies
+including a separate control pass offline byte replay; the historical malformed bytes remain unknown.
+See [C4 evidence](docs/validation-v0.9-stop-c-c4.md). C5 independent review and focused fixes are complete with zero production P0/P1/P2 findings. Product fixture and UI synchronization regressions pass; see [Stop C acceptance](docs/validation-v0.9-stop-c.md).

@@ -28,6 +28,7 @@ from traceh.llm.registry import LlmRegistry
 from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy, RetryScheduler
 from traceh.llm.runtime import LlmRuntime
 from traceh.llm.scripted import ScriptedLlmProvider
+from traceh.llm.token_meter import RequestTokenMeter, TokenBudgetPolicy
 from traceh.runtime.agent_loop import AgentLoop, TurnResult
 from traceh.runtime.composition_runtime import GenerationCompositionRuntime
 from traceh.runtime.continuation import ContinuationRuntime
@@ -106,6 +107,8 @@ class RuntimeConfig:
     max_tool_output_chars: int = 24_000
     temperature: float | None = None
     max_output_tokens: int | None = None
+    token_budget: TokenBudgetPolicy | None = None
+    semantic_summary: bool = False
     verification_command: str | None = None
     verifier_name: str | None = None
     verification_timeout_seconds: float = 60.0
@@ -124,6 +127,24 @@ class RuntimeConfig:
     memory: ProjectMemoryConfig | None = None
 
     def __post_init__(self) -> None:
+        if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
+            raise TypeError("compaction must be CompactionPolicy")
+        if type(self.semantic_summary) is not bool:
+            raise TypeError("semantic_summary must be a boolean")
+        if self.semantic_summary and (
+            self.token_budget is None
+            or self.compaction is None
+            or not self.compaction.enabled
+            or self.max_steps < 2
+        ):
+            raise ValueError("semantic-summary-requires-token-budget-compaction-and-two-steps")
+        if self.token_budget is not None:
+            if type(self.token_budget) is not TokenBudgetPolicy:
+                raise TypeError("token_budget must be TokenBudgetPolicy")
+            if self.max_output_tokens is not None and (
+                self.max_output_tokens > self.token_budget.output_reserve_tokens
+            ):
+                raise ValueError("token-output-reserve-too-small")
         if self.max_steps < 1:
             raise ValueError("max_steps must be at least 1")
         if self.tool_timeout_seconds <= 0:
@@ -136,14 +157,17 @@ class RuntimeConfig:
             raise ValueError("max_verification_retries cannot be negative")
         if type(self.model_retry_policy) is not ModelRetryPolicy:
             raise TypeError("model_retry_policy must be ModelRetryPolicy")
-        if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
-            raise TypeError("compaction must be CompactionPolicy")
         if self.context_input is not None and type(self.context_input) is not ContextInputPolicy:
             raise TypeError("context_input must be ContextInputPolicy")
         if self.skill_policy is not None and type(self.skill_policy) is not SkillPolicy:
             raise TypeError("skill_policy must be SkillPolicy")
+        if self.context_input and self.context_input.memory and self.memory is None:
+            raise ValueError("memory-retrieval-requires-authority")
         if self.memory is not None and type(self.memory) is not ProjectMemoryConfig:
             raise TypeError("memory must be ProjectMemoryConfig")
+        if self.context_input and self.context_input.workspace_observations:
+            if not callable(getattr(self.memory.source_resolver, "project_observation", None)):
+                raise ValueError("workspace-observation-unsupported")
 
 
 class AgentRuntime:
@@ -192,12 +216,17 @@ class AgentRuntime:
         # Like SessionService, the association service is Store-owned. Memory host
         # operations below additionally borrow this Runtime's Drain/Lease owner.
         self.project_scope = memory_authority.scope if memory_authority is not None else None
-        self.memory = MemoryControl(sessions, loop.compositions, memory_authority)
+        self.memory = MemoryControl(
+            sessions,
+            loop.compositions,
+            memory_authority,
+            config.context_input.memory if config.context_input else None,
+        )
         self.recovery = recovery
         self.surface = surface
         self.invariants = invariants
         self.hooks = hooks
-        # One compaction owner per Runtime. The loop compacts before a Turn and
+        # One compaction owner per Runtime. Request preparation/Turn entry and
         # the facade exposes the manual command; two instances would mean two
         # policies and two summarizers writing the same protocol.
         if loop.compaction is not None and loop.compaction is not compaction:
@@ -618,7 +647,9 @@ def _prepare_default_runtime(
 
         memory_authority = MemoryService(
             ProjectScopeService(
-                sessions, config.memory.source_resolver, config.memory.project_limits,
+                sessions,
+                config.memory.source_resolver,
+                config.memory.project_limits,
             ),
             config.memory.memory_policy,
         )
@@ -640,12 +671,17 @@ def _prepare_default_runtime(
 
     tool_registry = ToolRegistry()
     services = ServiceRegistry()
+    from traceh.tools.output import ListToolOutputs, ReadToolOutput, SearchToolOutput
+
     default_tools: tuple[Tool, ...] = (
         ListFilesTool(),
         ReadFileTool(),
         SearchTextTool(),
         ApplyPatchTool(),
         ShellTool(),
+        ReadToolOutput(sessions, max_chars=config.max_tool_output_chars),
+        ListToolOutputs(sessions, max_chars=config.max_tool_output_chars),
+        SearchToolOutput(sessions, max_chars=config.max_tool_output_chars),
     )
     selected_tools = (default_tools if include_default_tools else ()) + additional_tools
     if (
@@ -674,6 +710,19 @@ def _prepare_default_runtime(
         from traceh.tools.memory import MemoryProposalTool
 
         tool_registry.register(MemoryProposalTool(memory_authority.propose_model))
+        if config.context_input is not None and config.context_input.memory is not None:
+            from traceh.memory.context import MemoryContextReader
+            from traceh.tools.memory_reference import MemoryDisclosureTool
+
+            reader = MemoryContextReader(memory_authority)
+            tool_registry.register(
+                MemoryDisclosureTool(
+                    sessions.read_session,
+                    reader.read,
+                    reader.recheck,
+                    policy=config.context_input.memory,
+                )
+            )
 
     effective_policies = policies or (DangerousShellPolicy(), AllowByDefaultPolicy())
     effective_verifier = verifier
@@ -724,6 +773,18 @@ def _finish_default_runtime(
     plugin_manager: PluginManager | None = None,
 ) -> AgentRuntime:
     config = prepared.config
+    from traceh.memory.context import MemoryContextReader
+
+    memory_reader = (
+        MemoryContextReader(prepared.memory_authority)
+        if prepared.memory_authority is not None
+        else None
+    )
+    observer = (
+        memory_reader.observe_workspace
+        if config.context_input and config.context_input.workspace_observations
+        else None
+    )
     core_tool_runtime = ToolRuntime(
         prepared.tool_registry,
         prepared.sessions,
@@ -732,6 +793,7 @@ def _finish_default_runtime(
         timeout_seconds=config.tool_timeout_seconds,
         max_output_chars=config.max_tool_output_chars,
         admission_gate=prepared.tool_admission_gate,
+        workspace_observer=observer,
     )
     tool_runtime = ToolRuntime(
         activation_set.tools,
@@ -741,12 +803,22 @@ def _finish_default_runtime(
         timeout_seconds=config.tool_timeout_seconds,
         max_output_chars=config.max_tool_output_chars,
         admission_gate=prepared.tool_admission_gate,
+        workspace_observer=observer,
     )
-    request_builder = RequestBuilder(prepared.sessions, prepared.surface)
+    request_builder = RequestBuilder(
+        prepared.sessions,
+        prepared.surface,
+        token_meter=(
+            RequestTokenMeter(config.token_budget, provider=config.provider, model=config.model)
+            if config.token_budget
+            else None
+        ),
+    )
     hooks = HookDispatcher()
     compaction = CompactionService(
         prepared.sessions,
         policy=config.compaction,
+        semantic_summary=config.semantic_summary,
         summarizer=prepared.summarizer,
     )
     composition_runtime = GenerationCompositionRuntime(
@@ -756,7 +828,13 @@ def _finish_default_runtime(
         provider=config.provider,
         model=config.model,
         temperature=config.temperature,
-        max_output_tokens=config.max_output_tokens,
+        max_output_tokens=(
+            config.max_output_tokens
+            if config.max_output_tokens is not None
+            else config.token_budget.output_reserve_tokens
+            if config.token_budget
+            else None
+        ),
         plugins=activation_set.identities,
         activation_set=activation_set,
         verifier=activation_set.verifier,
@@ -779,6 +857,9 @@ def _finish_default_runtime(
         retry_scheduler=prepared.retry_scheduler,
         compaction=compaction,
         context_policy=config.context_input,
+        read_memory_context=memory_reader.read if memory_reader else None,
+        recheck_memory_context=memory_reader.recheck if memory_reader else None,
+        observe_workspace=observer,
     )
     return AgentRuntime(
         config=config,

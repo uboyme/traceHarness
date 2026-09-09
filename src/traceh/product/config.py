@@ -208,6 +208,16 @@ def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
         raw_path = Path(path)
         with raw_path.open("r", encoding="utf-8") as stream:
             raw = json.load(stream)
+        return parse_product_host_config(raw)
+    except ProductInputError:
+        raise
+    except Exception:
+        raise ProductInputError("product-host-config-invalid", "product_config") from None
+
+
+def parse_product_host_config(raw: object) -> ProductHostFileConfiguration:
+    """Validate the same host document from disk or an unsaved settings form."""
+    try:
         root = _object(raw, _TOP_KEYS, "root")
         if _integer(root["protocol_version"], "protocol_version") != 1:
             raise ValueError
@@ -412,5 +422,6 @@ __all__ = [
     "ProductHostFileConfiguration",
     "ProductHostSettings",
     "load_product_host_file",
+    "parse_product_host_config",
     "parse_product_host_settings",
 ]

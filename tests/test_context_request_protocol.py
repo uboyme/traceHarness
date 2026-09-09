@@ -60,12 +60,17 @@ async def frozen(tmp_path, *, system_prompt="Host instruction"):
         session_id, snapshot.to_dict(), expected_seq=snapshot.to_dict()["observed_session_seq"]
     )
     composition_event = await sessions.append_session(
-        session_id, "composition/snapshot", composition.to_dict(),
+        session_id,
+        "composition/snapshot",
+        composition.to_dict(),
         composition_revision=composition.revision,
     )
     built = await RequestBuilder(sessions, SurfaceProjector()).build(
-        session_id=session_id, turn_id="turn-one", step_id="step-one",
-        composition=composition, through_seq=composition_event.seq,
+        session_id=session_id,
+        turn_id="turn-one",
+        step_id="step-one",
+        composition=composition,
+        through_seq=composition_event.seq,
     )
     return sessions, session_id, composition, context_event, composition_event, built
 
@@ -74,21 +79,27 @@ async def dispatch_permit(sessions, session_id, composition, built):
     return await sessions.start_model_attempt(
         session_id,
         attempt=ModelAttemptIdentity(session_id, "turn-one", "step-one", "attempt-one", 1),
-        source_seq=built.source_seq, composition_revision=composition.revision,
-        composed_request=built.request, composed_fingerprint=built.fingerprint,
-        dispatch_request=built.request, dispatch_fingerprint=built.fingerprint,
+        source_seq=built.source_seq,
+        composition_revision=composition.revision,
+        composed_request=built.request,
+        composed_fingerprint=built.fingerprint,
+        dispatch_request=built.request,
+        dispatch_fingerprint=built.fingerprint,
         reservation_id=None,
     )
 
 
-@pytest.mark.parametrize("marker", [None, True, 0, 1, 2, CONTEXT_PROTOCOL + 1, "2"])
+@pytest.mark.parametrize(
+    "marker", [None, True, *range(CONTEXT_PROTOCOL), CONTEXT_PROTOCOL + 1, "2"]
+)
 async def test_old_session_is_refused_by_read_recovery_inspection_without_writes(tmp_path, marker):
     store = InMemoryEventStore()
     data = {"session_id": "old-session", "workspace": str(tmp_path), "metadata": {}}
     if marker is not None:
         data["context_protocol"] = marker
     await store.append(
-        "session:old-session", expected_seq=0,
+        "session:old-session",
+        expected_seq=0,
         events=(PendingEvent(type="session/created", data=data),),
     )
     sessions = SessionService(store)
@@ -181,7 +192,9 @@ async def test_requestless_failure_prefix_remains_recoverable(tmp_path, prefix):
         )
     if prefix == "composition":
         await sessions.append_session(
-            session_id, "composition/snapshot", composition.to_dict(),
+            session_id,
+            "composition/snapshot",
+            composition.to_dict(),
             composition_revision=composition.revision,
         )
     await RecoveryService(sessions).recover(session_id)
@@ -199,10 +212,15 @@ async def test_duplicate_context_is_rejected_and_raw_duplicate_is_detected(tmp_p
     with pytest.raises(ValueError, match="context-input-binding-mismatch"):
         await sessions.append_context_input(session_id, snapshot.to_dict(), expected_seq=first.seq)
     await sessions.store.append(
-        sessions.session_stream(session_id), expected_seq=first.seq,
-        events=(PendingEvent(
-            type="context/input", data=first.data, composition_revision=first.composition_revision
-        ),),
+        sessions.session_stream(session_id),
+        expected_seq=first.seq,
+        events=(
+            PendingEvent(
+                type="context/input",
+                data=first.data,
+                composition_revision=first.composition_revision,
+            ),
+        ),
     )
     events = await sessions.read_session(session_id)
     assert "context-input-binding" in {issue.name for issue in CoreInvariantChecker().check(events)}
@@ -260,8 +278,9 @@ class ContextAppendFaultStore(InMemoryEventStore):
         return await super().read(stream_id, from_seq=from_seq)
 
 
-@pytest.mark.parametrize("committed,unknown,expected", [(False, False, False), (True, False, True),
-                                                      (True, True, None)])
+@pytest.mark.parametrize(
+    "committed,unknown,expected", [(False, False, False), (True, False, True), (True, True, None)]
+)
 async def test_context_append_failure_preserves_three_commit_outcomes(
     tmp_path, committed, unknown, expected
 ):
@@ -284,9 +303,11 @@ async def test_repeated_cancel_waits_for_context_append_and_preserves_commit_evi
 ):
     store = ContextAppendFaultStore(committed=committed, gated=True)
     sessions, session_id, _, snapshot = await opened(tmp_path, store=store)
-    append_task = asyncio.create_task(sessions.append_context_input(
-        session_id, snapshot.to_dict(), expected_seq=snapshot.to_dict()["observed_session_seq"]
-    ))
+    append_task = asyncio.create_task(
+        sessions.append_context_input(
+            session_id, snapshot.to_dict(), expected_seq=snapshot.to_dict()["observed_session_seq"]
+        )
+    )
     await store.entered.wait()
     append_task.cancel()
     # A call_soon gate lets the cancellation handler run without guessed sleeps.

@@ -209,7 +209,7 @@ def _context_for_request(
         if (
             canonical_json(composed.metadata) != canonical_json(expected_metadata)
             or not composed.messages
-            or composed.messages[0] != render_context_message(snapshot)
+            or composed.messages[-1] != render_context_message(snapshot)
         ):
             _fail()
         return context
@@ -261,6 +261,7 @@ def _discloses(
                         "observed_through_seq": source.observed_through_seq,
                         "observed_at": source.observed_at,
                         "cursor": source.first_cursor.to_dict(),
+                        "original_bytes": history.original_bytes(source.block_id),
                     }
                 )
             )
@@ -290,11 +291,11 @@ def _raw_request_source(
     block: dict,
     cursor: HistoryCursor,
 ) -> None:
-    """Check a raw page's exact request and target without recursive replay.
+    """Prove the original grant and uninterrupted admissions without recursion.
 
-    Every public entry validates all accepted request events in sequence. Thus
-    the request's own earlier disclosure is checked once by that traversal;
-    this edge only proves which Step and page it was allowed to populate.
+    Public callers validate accepted events in sequence. The shared collector
+    only derives lifetime from those grants and past Context admissions; it
+    does not recursively validate the request's earlier source again.
     """
     ref = block["provenance"]["request_ref"]
     prefix = events[: context["observed_session_seq"]]
@@ -307,59 +308,19 @@ def _raw_request_source(
     source = prefix[ref["seq"] - 1]
     if canonical_json(event_ref(source)) != canonical_json(ref):
         _fail("history-disclosure-invalid")
-    step, starts = _step(prefix, context["turn_id"], context["step_id"])
-    if any(event.type == "runtime/cancel-requested" for event in prefix[starts[0].seq :]):
-        _fail("history-request-expired")
-    if source.type == "history/requested":
-        data = source.data
-        if (
-            len(starts) != 1
-            or data.get("turn_id") != context["turn_id"]
-            or data.get("step_id") != context["step_id"]
-            or source.seq <= step.seq
-        ):
-            _fail("history-disclosure-invalid")
-        candidates = [
-            event for event in prefix[step.seq : source.seq] if event.type == "history/requested"
-        ]
-    elif source.type == "tool/result":
-        data = source.data.get("data", {}).get("history_receipt", {})
-        if len(starts) < 2 or source.data.get("error_type") == "RecoveredAfterCrash":
-            _fail("history-disclosure-invalid")
-        previous = starts[-2]
-        if (
-            data.get("turn_id") != context["turn_id"]
-            or data.get("source_step_id") != previous.data["step_id"]
-            or not previous.seq < source.seq < step.seq
-        ):
-            _fail("history-disclosure-invalid")
-        endings = [
-            event for event in prefix[previous.seq : step.seq - 1] if event.type == "step/end"
-        ]
-        if len(endings) != 1 or endings[0].data.get("reason") != "model_response":
-            _fail("history-disclosure-invalid")
-        candidates = [
-            event
-            for event in prefix[previous.seq : source.seq]
-            if event.type == "tool/result"
-            and isinstance(event.data.get("data"), dict)
-            and "history_receipt" in event.data["data"]
-        ]
-    else:
+    policy = HistoryReadPolicy.from_dict(context["policy"]["config"]["history"])
+    groups = _collect_history_requests(
+        prefix,
+        session_id=context["session_id"],
+        turn_id=context["turn_id"],
+        step_id=context["step_id"],
+        policy=policy,
+    )
+    if not any(
+        candidate.request.cursor == cursor and matches_block(candidate, block)
+        for candidate in groups.all
+    ):
         _fail("history-disclosure-invalid")
-    requested = _request(data)
-    if requested.cursor != cursor or requested.requested_tier != block["tier"]:
-        _fail("history-disclosure-invalid")
-    for candidate in candidates:
-        payload = (
-            candidate.data
-            if candidate.type == "history/requested"
-            else candidate.data["data"]["history_receipt"]
-        )
-        if _request(payload).cursor == cursor:
-            if candidate.event_id != source.event_id:
-                _fail("history-disclosure-invalid")
-            break
 
 
 def _policy_for(
@@ -404,7 +365,11 @@ def _user_source(
         )
     ):
         _fail()
-    candidates = [event for event in events[: users[0].seq - 1] if event.type == "request/snapshot"]
+    candidates = [
+        event
+        for event in events[: users[0].seq - 1]
+        if event.type == "request/snapshot" and "context_input_seq" in event.data
+    ]
     if not any(_discloses(events, event, request, policy) for event in reversed(candidates)):
         _fail("history-request-not-disclosed")
     read_history(events, session_id=session_id, through_seq=users[0].seq, policy=policy).read_page(
@@ -522,6 +487,8 @@ def validate_model_history_request(
     request: HistoryPageRequest,
     policy: HistoryReadPolicy,
 ) -> dict[str, JsonValue]:
+    from traceh.session.reference_requests import RECEIPT_FORMAT, TARGET_RULE
+
     _prefix(events, context.session_id)
     validate_history_request_events(events)
     step, _ = _step(events, context.turn_id, context.step_id)
@@ -538,14 +505,14 @@ def validate_model_history_request(
     )
     _model_page(events, call, request, policy)
     return {
-        "format": 1,
+        "format": RECEIPT_FORMAT,
         "status": "accepted",
         "session_id": context.session_id,
         "turn_id": context.turn_id,
         "source_step_id": context.step_id,
         "tool_call_id": context.tool_call_id,
         **request.to_dict(),
-        "target_rule": "immediate-next-step",
+        "target_rule": TARGET_RULE,
     }
 
 
@@ -606,14 +573,16 @@ def _validate_host_event(
 def _validate_receipt(
     events: tuple[EventEnvelope, ...], event: EventEnvelope
 ) -> HistoryPageRequest:
+    from traceh.session.reference_requests import RECEIPT_FORMAT, TARGET_RULE
+
     data = event.data["data"]["history_receipt"]
     if (
         type(data) is not dict
         or set(data) != _RECEIPT_KEYS
         or type(data["format"]) is not int
-        or data["format"] != 1
+        or data["format"] != RECEIPT_FORMAT
         or data["status"] != "accepted"
-        or data["target_rule"] != "immediate-next-step"
+        or data["target_rule"] != TARGET_RULE
         or event.data.get("status") != "succeeded"
         or event.data.get("tool_name") != HISTORY_TOOL_NAME
         or event.data.get("tool_call_id") != data["tool_call_id"]
@@ -667,9 +636,49 @@ def eligible_history_requests(
     turn_id: str,
     step_id: str,
     policy: HistoryReadPolicy,
-) -> tuple[EligibleHistoryRequest, ...]:
+):
     _prefix(events, session_id)
     validate_history_request_events(events)
+    return _collect_history_requests(
+        events, session_id=session_id, turn_id=turn_id, step_id=step_id, policy=policy
+    )
+
+
+def matches_block(eligible: EligibleHistoryRequest, block: dict) -> bool:
+    request = eligible.request
+    return (
+        block["kind"] == "history"
+        and block["id"] == request.block_id
+        and block["tier"] == request.requested_tier
+        and block["provenance"]["page"] is not None
+        and block["provenance"]["page"]["index"] == request.cursor.index
+        and block["provenance"]["request_ref"] == eligible.request_ref
+    )
+
+
+def _collect_history_requests(events, *, session_id, turn_id, step_id, policy):
+    from traceh.session.reference_requests import collect_requests
+
+    return collect_requests(
+        events,
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        kind="history",
+        policy=policy,
+        immediate=lambda prefix, target: _immediate_history_requests(
+            prefix, session_id=session_id, turn_id=turn_id, step_id=target, policy=policy
+        ),
+        matches=matches_block,
+        identity=lambda eligible: canonical_json(eligible.request.cursor.to_dict()),
+        body_tiers=frozenset({"section", "chunk"}),
+    )
+
+
+def _immediate_history_requests(
+    events, *, session_id, turn_id, step_id, policy
+) -> tuple[EligibleHistoryRequest, ...]:
+    """Select from previously validated accepted events; no recursive source validation."""
     step, starts = _step(events, turn_id, step_id)
     if any(event.type == "runtime/cancel-requested" for event in events[starts[0].seq :]):
         return ()
@@ -677,7 +686,7 @@ def eligible_history_requests(
     if len(starts) == 1:
         for event in events[step.seq :]:
             if event.type == "history/requested":
-                request = _validate_host_event(events, event)
+                request = _request(event.data)
                 if event.data["turn_id"] != turn_id or event.data["step_id"] != step_id:
                     _fail()
                 candidates.append((event, request))
@@ -697,7 +706,7 @@ def eligible_history_requests(
                 and isinstance(event.data.get("data"), dict)
                 and "history_receipt" in event.data["data"]
             ):
-                request = _validate_receipt(events, event)
+                request = _request(event.data["data"]["history_receipt"])
                 receipt = event.data["data"]["history_receipt"]
                 if receipt["turn_id"] != turn_id or receipt["source_step_id"] != previous_id:
                     _fail()

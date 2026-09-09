@@ -122,7 +122,7 @@ async def test_reload_marks_previous_selection_stale_until_host_reconfirms(tmp_p
         await select(runtime, session, changed, operation="reconfirm", head=1)
         await runtime.skill_context.rebuild_index(session)
         await runtime.run_existing(session, "boundary.notes")
-        assert "changed summary" in provider.requests[-1].messages[0].content
+        assert "changed summary" in provider.requests[-1].messages[-1].content
         rebuilt = await reconstruct_request(runtime.sessions, runtime.surface, session, original)
         assert rebuilt.request == provider.requests[0]
     finally:
@@ -160,7 +160,7 @@ async def test_selection_change_during_query_never_substitutes_latest_source(tmp
         assert values[1].descriptor.summary not in canonical_json(provider.requests[0].to_dict())
         await runtime.skill_context.rebuild_index(session)
         await runtime.run_existing(session, "orbital.notes")
-        assert values[1].descriptor.summary in provider.requests[-1].messages[0].content
+        assert values[1].descriptor.summary in provider.requests[-1].messages[-1].content
     finally:
         release.set()
         await runtime.dispose()
@@ -228,12 +228,12 @@ async def test_frozen_lane_receipt_rejects_changed_fusion_even_with_new_context_
         data = next(
             e for e in await runtime.sessions.read_session(session) if e.type == "context/input"
         ).data
-        assert data["retrieval"]["lanes"][1]["status"] == "available"
+        assert data["retrieval"]["skill"]["lanes"][1]["status"] == "available"
         data["retrieval"]["fusion"][0]["numerator"] += 1
         data["context_digest"] = fingerprint(
             {k: v for k, v in data.items() if k != "context_digest"}
         )
-        with pytest.raises(ValueError, match="fusion-invalid"):
+        with pytest.raises(ValueError, match="context-retrieval-fusion-mismatch"):
             parse_context_input(data)
     finally:
         await runtime.dispose()

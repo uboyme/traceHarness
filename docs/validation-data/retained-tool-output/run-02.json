@@ -1,0 +1,18 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "turns": [
+        {
+          "label": "read-new-output",
+          "question": "请运行一次 python telemetry.py，查一下日志中 R0164 的设备标签和复核码。另外告诉我程序的退出码。请依据实际执行结果回答。",
+          "error_type": "ProviderFailure"
+        }
+      ],
+      "session_id": "d0c45578-8559-4536-a627-402539a88fea"
+    }
+  ],
+  "completed": false
+}

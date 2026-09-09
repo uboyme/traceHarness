@@ -97,11 +97,7 @@ def safe_display_block(
     rendered = [
         escape_for_display(
             line,
-            limit=(
-                line_limit
-                if line_limit is not None
-                else max(1, len(line) * 8 + 1)
-            ),
+            limit=(line_limit if line_limit is not None else max(1, len(line) * 8 + 1)),
         )
         for line in visible_lines
     ]
@@ -125,9 +121,7 @@ def prefixed_display_lines(
     from rich.cells import cell_len, chop_cells, set_cell_size
 
     continuation = (
-        " " * cell_len(first_prefix)
-        if continuation_prefix is None
-        else continuation_prefix
+        " " * cell_len(first_prefix) if continuation_prefix is None else continuation_prefix
     )
     requested_prefix_width = max(
         cell_len(first_prefix),
@@ -187,10 +181,7 @@ def resolve_gate(
         return GateDecision(message="任务已打开，宿主正在推进下一条 durable 事实。")
     if product is ProductTaskStatus.STARTED and workflow is WorkflowStatus.RUNNING:
         return GateDecision((ProductGateAction.CANCEL,), "任务正在执行。")
-    if (
-        product is ProductTaskStatus.STARTED
-        and workflow is WorkflowStatus.AWAITING_APPROVAL
-    ):
+    if product is ProductTaskStatus.STARTED and workflow is WorkflowStatus.AWAITING_APPROVAL:
         return GateDecision(
             message=(
                 "Product 与 Workflow 尚未对账；本轮 TUI 不提供写入型对账快捷键，"
@@ -270,7 +261,9 @@ def product_panel_text(
     task_id = (
         observation.task_id
         if observation is not None
-        else None if pending is None else pending.task_id
+        else None
+        if pending is None
+        else pending.task_id
     )
     requirement = None if pending is None else pending.requirement
     header = [
@@ -427,12 +420,14 @@ def product_identity_fields(
     )
     add(
         "approval_operation",
-        None if observation is None or observation.approval is None
+        None
+        if observation is None or observation.approval is None
         else observation.approval.operation_id,
     )
     add(
         "promotion",
-        None if observation is None or observation.promotion is None
+        None
+        if observation is None or observation.promotion is None
         else observation.promotion.promotion_id,
     )
     return tuple(rows)
@@ -441,10 +436,8 @@ def product_identity_fields(
 def format_utf8_bytes(value: int) -> str:
     """Render a byte count as bytes. Never as tokens, never as a window share.
 
-    This runtime has no trusted general tokenizer and no canonical per-model
-    context-window size, so "62% of context" cannot be computed honestly here.
-    The only denominator that exists is the configured compaction trigger, and
-    `context_status_line()` uses it only when compaction is actually enabled.
+    Physical sizes retain their units. When configured, complete-request token
+    estimates come from the separate durable measurement, never this formatter.
     """
 
     if type(value) is not int or value < 0:
@@ -506,10 +499,15 @@ def context_status_line(
     policy = snapshot.policy
     enabled = policy is not None and policy.enabled
     threshold = format_utf8_bytes(policy.trigger_utf8_bytes) if enabled else ""
-    wide_head = (
-        f"历史 {size} / {threshold} 阈值" if enabled else f"历史 {size} · 自动压缩关闭"
-    )
+    wide_head = f"历史 {size} / {threshold} 阈值" if enabled else f"历史 {size} · 自动压缩关闭"
     short_head = f"{size}/{threshold}" if enabled else f"{size} · 压缩关闭"
+    if snapshot.token_pressure is not None:
+        measured = snapshot.token_pressure
+        suffix = " · 超限未发送" if measured["over_limit"] else ""
+        wide_head = (
+            f"最近请求输入估算 {measured['input_tokens']}/{measured['input_limit']} token{suffix}"
+        )
+        short_head = f"估算 {measured['input_tokens']} token{suffix}"
 
     count = snapshot.compaction_count
     failures = snapshot.failure_count
@@ -549,10 +547,7 @@ def _first_fitting(candidates: tuple[str, ...], width: int | None) -> str:
 
     from rich.cells import cell_len
 
-    rendered = [
-        safe_display_block(candidate, limit=400, max_lines=1)
-        for candidate in candidates
-    ]
+    rendered = [safe_display_block(candidate, limit=400, max_lines=1) for candidate in candidates]
     if width is None or width <= 0:
         return rendered[0]
     for candidate in rendered:
@@ -618,8 +613,7 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         field("Product context", f"snapshot seq {product.snapshot_seq}")
         field(
             "任务",
-            f"shown {product.shown} / total {product.total} / "
-            f"omitted {product.omitted}",
+            f"shown {product.shown} / total {product.total} / omitted {product.omitted}",
         )
         field("focus", f"{product.focus_task_id} · {product.focus_status}")
         field(
@@ -649,6 +643,35 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         field("source seq", f"{request.source_seq}")
         field("composition", request.composition_revision)
         field("provider/model", f"{request.provider}/{request.model}")
+        field("请求用途", "历史语义摘要" if request.purpose == "semantic_summary" else "对话")
+        meter = request.token_measurement
+        if meter is not None:
+            field("提前压缩线", f"{meter['trigger_tokens']} token（配置的输入预算比例）")
+            field("完整请求输入（估算）", f"{meter['input_tokens']} / {meter['input_limit']} token")
+            field("模型窗口（配置值）", f"{meter['window_tokens']} token")
+            field(
+                "输出预留 / 安全余量",
+                f"{meter['output_reserve_tokens']} / {meter['safety_margin_tokens']} token",
+            )
+            field("计数方式", f"{meter['counter']['encoding']} · 本地估算，非服务端精确计数")
+            labels = {
+                "system": "系统提示",
+                "product": "任务状态",
+                "conversation": "对话",
+                "references_and_current_request": "参考资料与当前问题回显",
+                "tools": "工具定义",
+                "envelope": "请求封装估算",
+            }
+            for name, count in meter["parts"].items():
+                field(labels[name], f"约 {count} token")
+        field(
+            "最近 Attempt 实际输入 / 输出",
+            (
+                f"{request.actual_input_tokens} / {request.actual_output_tokens} token"
+                if request.actual_input_tokens is not None
+                else "未知（服务尚未返回有效 usage）"
+            ),
+        )
         field(
             "composed",
             f"{request.composed_utf8_bytes} bytes · {request.composed_fingerprint}",
@@ -660,8 +683,7 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         field("system prompt", f"{request.system_prompt_utf8_bytes} bytes")
         field(
             "Context reference",
-            f"{request.context_input_messages} messages · "
-            f"{request.context_input_utf8_bytes} bytes",
+            f"{request.context_input_messages} messages · {request.context_input_utf8_bytes} bytes",
         )
         field(
             "Product context",
@@ -670,8 +692,7 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         )
         field(
             "conversation",
-            f"{request.conversation_messages} messages · "
-            f"{request.conversation_utf8_bytes} bytes",
+            f"{request.conversation_messages} messages · {request.conversation_utf8_bytes} bytes",
         )
         field(
             "tools",
@@ -736,6 +757,11 @@ def context_detail_lines(snapshot: ContextSnapshot) -> tuple[Text, ...]:
         field("source events", f"{latest.source_count}")
         field("source bytes", f"{latest.source_utf8_bytes}")
         field("history bytes", f"{latest.history_utf8_bytes}")
+        if latest.method == "tool-fold":
+            field("处理方式", "折叠旧工具正文，保留调用参数、结果配对和原文引用")
+            field("保留最近对话", f"{latest.kept_recent_turns} 轮")
+            field("policy digest", latest.policy_digest or "无")
+            return tuple(rows)
         field("summary bytes", f"{latest.summary_utf8_bytes}")
         field("summary truncated", "是" if latest.summary_truncated else "否")
         field("kept recent turns", f"{latest.kept_recent_turns}")
@@ -781,7 +807,11 @@ def compaction_notice_text(event: EventEnvelope) -> str | None:
         if committed is False:
             outcome = "历史未改变，可手动 compact 或重试"
         elif committed is True:
-            outcome = "摘要已写入但读回失败，请用 inspect 核对历史"
+            outcome = (
+                "部分工具结果已折叠，后续压缩失败，请用 inspect 核对历史"
+                if code.startswith("compaction-after-tool-fold-")
+                else "摘要已写入但读回失败，请用 inspect 核对历史"
+            )
         else:
             outcome = "是否已写入未知，请用 inspect 核对历史"
         return f"自动上下文压缩未完成 · {code} · {outcome}"
@@ -790,9 +820,13 @@ def compaction_notice_text(event: EventEnvelope) -> str | None:
     sources = data.get("source_seqs")
     kept = data.get("kept_recent_turns")
     method = data.get("method")
-    if not isinstance(sources, list) or method not in ("manual", "automatic"):
+    if method == "tool-fold":
+        return "旧工具结果已折叠 · 调用与结果配对保留 · 原文可搜索和读取"
+    if not isinstance(sources, list) or method not in ("manual", "automatic", "semantic"):
         return "上下文已压缩"
     shape = f"{len(sources)} 段历史 → 1 段摘要"
+    if method == "semantic":
+        return f"模型语义摘要已写入 · {shape} · 原文保留"
     if method == "automatic" and isinstance(kept, int) and not isinstance(kept, bool):
         return f"上下文已压缩 · {shape} · 保留最近 {kept} 个对话"
     return f"上下文已压缩（人工）· {shape}"
@@ -818,15 +852,13 @@ def product_compact_text(
     if pending is None and observation is None:
         if observation_error is not None:
             return safe_display_block(
-                "ProductTask 状态暂不可读\n"
-                f"Observation · {observation_error.code}",
+                f"ProductTask 状态暂不可读\nObservation · {observation_error.code}",
                 limit=600,
                 max_lines=2,
             )
         if operation_error is not None:
             return safe_display_block(
-                "尚无 ProductTask\n"
-                f"宿主操作未完成 · {operation_error.code}",
+                f"尚无 ProductTask\n宿主操作未完成 · {operation_error.code}",
                 limit=600,
                 max_lines=2,
             )
@@ -834,7 +866,9 @@ def product_compact_text(
     task_id = (
         observation.task_id
         if observation is not None
-        else None if pending is None else pending.task_id
+        else None
+        if pending is None
+        else pending.task_id
     )
     requirement = None if pending is None else pending.requirement
     lifecycle = _lifecycle(pending, start_request, observation, transient)
@@ -847,8 +881,7 @@ def product_compact_text(
         )
     elif operation_error is not None:
         second = (
-            "宿主操作未完成 · "
-            f"{safe_display_block(operation_error.code, limit=120, max_lines=1)}"
+            f"宿主操作未完成 · {safe_display_block(operation_error.code, limit=120, max_lines=1)}"
         )
     elif transient.kind == "operation_pending":
         second = (
@@ -858,24 +891,15 @@ def product_compact_text(
         if transient.waiting_seconds >= STALL_WARNING_SECONDS:
             second += " · 无新任务事实"
     elif summary is not None and summary.status is ProductTaskStatus.FAILED:
-        failure = _leaf_failure_line(observation) or (
-            summary.failure_code or "product-task-failed"
-        )
-        second = (
-            "任务失败 · "
-            f"{safe_display_block(failure, limit=120, max_lines=1)}"
-        )
+        failure = _leaf_failure_line(observation) or (summary.failure_code or "product-task-failed")
+        second = f"任务失败 · {safe_display_block(failure, limit=120, max_lines=1)}"
     else:
         age = _latest_fact_age(
             observation,
             now_monotonic=now_monotonic,
             observation_received_at=observation_received_at,
         )
-        second = (
-            "尚无任务事实"
-            if age is None
-            else f"最近任务事实 · {format_age(age)}前"
-        )
+        second = "尚无任务事实" if age is None else f"最近任务事实 · {format_age(age)}前"
     return safe_display_block(f"{first}\n{second}", limit=600, max_lines=2)
 
 
@@ -944,12 +968,12 @@ def _subtitle(
     requested = (
         pending.proposal.requested_mode.value
         if pending is not None
-        else "unknown" if summary is None else summary.requested_mode.value
+        else "unknown"
+        if summary is None
+        else summary.requested_mode.value
     )
     resolved = (
-        None
-        if summary is None or summary.resolved_mode is None
-        else summary.resolved_mode.value
+        None if summary is None or summary.resolved_mode is None else summary.resolved_mode.value
     )
     if requested == RequestedTaskMode.AUTO.value:
         mode = f"auto → {resolved or '待路由'}"
@@ -961,9 +985,7 @@ def _subtitle(
         target = _short_ref(pending.proposal.preflight.promotion_target_ref)
     elif observation is not None and observation.review is not None:
         target = _short_ref(observation.review.target_ref)
-    return safe_display_block(
-        f"{mode} · {profile} · → {target}", limit=300, max_lines=1
-    )
+    return safe_display_block(f"{mode} · {profile} · → {target}", limit=300, max_lines=1)
 
 
 def _lifecycle(
@@ -975,13 +997,13 @@ def _lifecycle(
     summary = None if observation is None else observation.summary
     proposed = pending is not None or summary is not None
     confirmed = start_request is not None or summary is not None
-    transient_track = (
-        f"进程内 提议 {'✓' if proposed else '·'} · 确认 {'✓' if confirmed else '·'}"
-    )
+    transient_track = f"进程内 提议 {'✓' if proposed else '·'} · 确认 {'✓' if confirmed else '·'}"
     requested = (
         pending.proposal.requested_mode
         if pending is not None
-        else None if summary is None else summary.requested_mode
+        else None
+        if summary is None
+        else summary.requested_mode
     )
     stages: list[str] = []
     status = None if summary is None else summary.status
@@ -1136,16 +1158,11 @@ def _derived_symptom(observation: ProductObservation) -> str:
         and router is not None
         and router.event_type == "turn/end"
     ):
-        return (
-            "Router Session 已结束；ProductTask 尚未记录 routing。"
-            "这是症状描述，不是根因判断。"
-        )
+        return "Router Session 已结束；ProductTask 尚未记录 routing。这是症状描述，不是根因判断。"
     return ""
 
 
-def _find_head(
-    observation: ProductObservation, stream_id: str
-) -> ObservedStreamHead | None:
+def _find_head(observation: ProductObservation, stream_id: str) -> ObservedStreamHead | None:
     return next(
         (head for head in observation.stream_heads if head.stream_id == stream_id),
         None,
@@ -1164,14 +1181,12 @@ def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
     revision = safe_display_block(review.expected_revision[:12], limit=24)
     patch = safe_display_block(review.patch_sha256[:12], limit=24)
     digest_text = (
-        "unavailable"
-        if digest is None
-        else safe_display_block(digest[:12], limit=24) + "…"
+        "unavailable" if digest is None else safe_display_block(digest[:12], limit=24) + "…"
     )
     lines.extend(
         (
-        f"  审批    {review_id}…  →  {_short_ref(review.target_ref)} @ {revision}…",
-        f"          patch {patch}… · digest {digest_text}",
+            f"  审批    {review_id}…  →  {_short_ref(review.target_ref)} @ {revision}…",
+            f"          patch {patch}… · digest {digest_text}",
         )
     )
     evidence = None if observation.evidence is None else observation.evidence.review
@@ -1206,11 +1221,7 @@ def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
     )
     if summary is None:
         for path in evidence.changed_paths:
-            lines.append(
-                "          "
-                f"{_safe_full_label(path)}"
-                " · 状态未知"
-            )
+            lines.append(f"          {_safe_full_label(path)} · 状态未知")
     else:
         for file in summary.files:
             path = _safe_full_label(file.path)
@@ -1253,10 +1264,7 @@ def _terminal_line(status: ProductTaskStatus, failure_code: str | None) -> str:
         return "已合入 · Promotion receipt 已记录"
     if status is ProductTaskStatus.FAILED:
         code = failure_code or "product-task-failed"
-        return (
-            f"任务已记录失败 · {safe_display_block(code, limit=120)}；"
-            "查看证据后创建新任务。"
-        )
+        return f"任务已记录失败 · {safe_display_block(code, limit=120)}；查看证据后创建新任务。"
     return f"任务终态：{status.value}。"
 
 
@@ -1308,9 +1316,7 @@ def _leaf_failure_line(observation: ProductObservation | None) -> str:
     for node in evidence.nodes:
         if node.leaf_failure_code is not None:
             category = (
-                ""
-                if node.leaf_failure_category is None
-                else f" · {node.leaf_failure_category}"
+                "" if node.leaf_failure_category is None else f" · {node.leaf_failure_category}"
             )
             return safe_display_block(
                 f"叶子失败：{node.node_id} · {node.leaf_failure_code}{category}",
@@ -1323,10 +1329,7 @@ def _leaf_failure_line(observation: ProductObservation | None) -> str:
                 limit=300,
                 max_lines=1,
             )
-        if (
-            unavailable_node is None
-            and node.failure_code == "workflow-agent-message-failed"
-        ):
+        if unavailable_node is None and node.failure_code == "workflow-agent-message-failed":
             unavailable_node = node.node_id
     if unavailable_node is not None:
         return safe_display_block(

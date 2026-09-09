@@ -1,0 +1,808 @@
+{
+  "format": 1,
+  "context": {
+    "history": null,
+    "history_bytes": 0,
+    "history_tier": null,
+    "item_bytes": 12000,
+    "local_lanes": {
+      "semantic": null,
+      "reranker": null
+    },
+    "max_blocks": 20,
+    "max_exclusions": 40,
+    "max_query_bytes": 4000,
+    "memory": {
+      "unicode_version": "15.0.0",
+      "default_tier": "summary",
+      "match_fields": [
+        "id",
+        "tag",
+        "path",
+        "symbol",
+        "error"
+      ],
+      "k1": 1.2,
+      "b": 0.75,
+      "rrf_constant": 60,
+      "exact_weight": 2,
+      "fts_weight": 1,
+      "context_bytes": 20000,
+      "max_catalog_bytes": 20000,
+      "max_terms": 100,
+      "max_corpus_items": 40,
+      "max_corpus_bytes": 40000,
+      "max_candidates": 20,
+      "max_requests": 8
+    },
+    "skills": {
+      "unicode_version": "15.0.0",
+      "default_tier": "summary",
+      "match_fields": [
+        "id",
+        "tag",
+        "path",
+        "symbol",
+        "error"
+      ],
+      "k1": 1.2,
+      "b": 0.75,
+      "rrf_constant": 60,
+      "exact_weight": 2,
+      "fts_weight": 1,
+      "context_bytes": 20000,
+      "max_catalog_bytes": 20000,
+      "max_terms": 100,
+      "max_corpus_items": 40,
+      "max_corpus_bytes": 40000,
+      "max_candidates": 20,
+      "max_requests": 8
+    },
+    "total_bytes": 30000,
+    "workspace_observations": false
+  },
+  "project_limits": {
+    "max_catalog_events": 200,
+    "max_label_bytes": 200
+  },
+  "memory_policy": {
+    "max_body_bytes": 1024,
+    "max_sources": 4,
+    "max_source_events": 400,
+    "max_source_bytes": 400000,
+    "max_memory_events": 120,
+    "denied_patterns": [
+      "fixture-private-input"
+    ]
+  },
+  "memories": [
+    {
+      "id": "goals.code",
+      "scope": "current",
+      "slot": "goal",
+      "body": "项目目标保持边界清楚。Use approved project goals.",
+      "status": "active",
+      "successor": null
+    },
+    {
+      "id": "route.error",
+      "scope": "current",
+      "slot": "diagnostic",
+      "body": "src/route.py raises RouteError when endpoint binding is absent.",
+      "status": "active",
+      "successor": null
+    },
+    {
+      "id": "mobility.note",
+      "scope": "current",
+      "slot": "mobility",
+      "body": "An automobile needs petrol to travel.",
+      "status": "active",
+      "successor": null
+    },
+    {
+      "id": "other.goals",
+      "scope": "foreign",
+      "slot": "goal",
+      "body": "Foreign scope visibility secretneedle.",
+      "status": "active",
+      "successor": null
+    },
+    {
+      "id": "revoked.goals",
+      "scope": "current",
+      "slot": "past-goal",
+      "body": "Invalidated instruction revokedneedle.",
+      "status": "revoked",
+      "successor": null
+    },
+    {
+      "id": "old.phase",
+      "scope": "current",
+      "slot": "phase",
+      "body": "Obsolete delivery phase priorneedle.",
+      "status": "superseded",
+      "successor": {
+        "id": "current.phase",
+        "body": "当前阶段是交付验收。"
+      }
+    },
+    {
+      "id": "route.noise",
+      "scope": "current",
+      "slot": "noise",
+      "body": "An endpoint alphabet puzzle unrelated to repository diagnostics.",
+      "status": "active",
+      "successor": null
+    }
+  ],
+  "plugins": {
+    "enabled": [
+      "traceh.reference.current"
+    ],
+    "retired": [
+      "traceh.reference.retired"
+    ],
+    "catalog_digest": "4a37d1256a7ae2ea2b2bea7a576c793744c6f730d9dba55cc23023b5a25b946b",
+    "selected": [
+      "reference.current"
+    ],
+    "limits": {
+      "max_skills": 8,
+      "max_catalog_bytes": 16000,
+      "max_summary_bytes": 300,
+      "max_content_bytes": 8000,
+      "max_resource_bytes": 4000
+    }
+  },
+  "judgments": [
+    {
+      "task_id": "query_01",
+      "role": "requester",
+      "query": "goals.code",
+      "category": "exact",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_02",
+      "role": "requester",
+      "query": "项目目标保持边界清楚",
+      "category": "lexical",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_03",
+      "role": "requester",
+      "query": "src/route.py RouteError",
+      "category": "lexical",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_04",
+      "role": "requester",
+      "query": "vehicle fuel",
+      "category": "semantic",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_05",
+      "role": "requester",
+      "query": "quasarnevermentioned",
+      "category": "zero-hit",
+      "relevant": [],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_06",
+      "role": "requester",
+      "query": "secretneedle",
+      "category": "cross-workspace",
+      "relevant": [],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_07",
+      "role": "requester",
+      "query": "revokedneedle",
+      "category": "revoked",
+      "relevant": [],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_08",
+      "role": "requester",
+      "query": "priorneedle",
+      "category": "superseded",
+      "relevant": [],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_09",
+      "role": "requester",
+      "query": "reference.retired",
+      "category": "retired-generation",
+      "relevant": [],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_10",
+      "role": "requester",
+      "query": "route.error",
+      "category": "hard-negative",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    },
+    {
+      "task_id": "query_11",
+      "role": "requester",
+      "query": "reference.current",
+      "category": "exact",
+      "relevant": [
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ],
+      "forbidden": [
+        {
+          "kind": "memory",
+          "id": "other.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "revoked.goals",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "memory",
+          "id": "old.phase",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "reference.retired",
+          "tiers": [
+            "directory",
+            "summary",
+            "section",
+            "chunk"
+          ]
+        }
+      ]
+    }
+  ],
+  "evaluator": {
+    "k": 3,
+    "thresholds": {
+      "exact": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "lexical": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "semantic": {
+        "recall": 0,
+        "mrr": 0,
+        "precision": 0,
+        "zero_hit": 1
+      },
+      "zero-hit": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "cross-workspace": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "revoked": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "superseded": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "retired-generation": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      },
+      "hard-negative": {
+        "recall": 1,
+        "mrr": 1,
+        "precision": 1,
+        "zero_hit": 1
+      }
+    },
+    "max_context_bytes": 30000,
+    "max_context_prepare_ms": 120000
+  }
+}

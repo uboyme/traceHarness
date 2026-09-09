@@ -1,0 +1,27 @@
+{
+  "stages": [
+    {
+      "stage": "E1",
+      "known_input_tokens": 311612,
+      "known_output_tokens": 1755
+    },
+    {
+      "stage": "E2",
+      "known_input_tokens": 267413,
+      "known_output_tokens": 6500
+    },
+    {
+      "stage": "E3",
+      "known_input_tokens": 746050,
+      "known_output_tokens": 12049
+    }
+  ],
+  "known_returned_tokens": 1345379,
+  "additional_failed_provider_attempt_billing": "unknown",
+  "semantic_candidates": 9,
+  "semantic_integrated": false,
+  "full_suite_run": false,
+  "L2_L4_run": false,
+  "project_commit_push_tag_release": false,
+  "status": "completed within authorized boundaries"
+}

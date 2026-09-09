@@ -1,0 +1,200 @@
+[
+  {
+    "run": "single-line-01",
+    "completed": true,
+    "attempt_statuses": {
+      "succeeded": 18
+    },
+    "usage_known": 18,
+    "usage_unknown": 0,
+    "known_tokens": 81807,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 2,
+      "shell:succeeded": 2,
+      "search_tool_output:succeeded": 4,
+      "request_history_page:succeeded": 2,
+      "list_tool_outputs:succeeded": 2
+    },
+    "execution_counts": [
+      1,
+      1
+    ],
+    "turns": 6
+  },
+  {
+    "run": "01",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 6
+    },
+    "usage_known": 6,
+    "usage_unknown": 0,
+    "known_tokens": 44300,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "read_tool_output:succeeded": 2,
+      "search_tool_output:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 1
+  },
+  {
+    "run": "02",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 4
+    },
+    "usage_known": 4,
+    "usage_unknown": 0,
+    "known_tokens": 19213,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 1
+  },
+  {
+    "run": "03",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 4
+    },
+    "usage_known": 4,
+    "usage_unknown": 0,
+    "known_tokens": 19510,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 1
+  },
+  {
+    "run": "04",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 8
+    },
+    "usage_known": 8,
+    "usage_unknown": 0,
+    "known_tokens": 82360,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "read_tool_output:succeeded": 4,
+      "search_tool_output:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 1
+  },
+  {
+    "run": "05",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 5
+    },
+    "usage_known": 5,
+    "usage_unknown": 0,
+    "known_tokens": 27172,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 1,
+      "read_tool_output:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 1
+  },
+  {
+    "run": "06",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 10
+    },
+    "usage_known": 10,
+    "usage_unknown": 0,
+    "known_tokens": 53059,
+    "failure_categories": {},
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 2,
+      "read_tool_output:succeeded": 1,
+      "request_history_page:failed": 2,
+      "list_tool_outputs:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 2
+  },
+  {
+    "run": "07",
+    "completed": false,
+    "attempt_statuses": {
+      "succeeded": 15
+    },
+    "usage_known": 15,
+    "usage_unknown": 0,
+    "known_tokens": 125184,
+    "failure_categories": {},
+    "tool_results": {
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 4,
+      "read_tool_output:succeeded": 4,
+      "request_history_page:failed": 1,
+      "list_tool_outputs:succeeded": 1
+    },
+    "execution_counts": [
+      1
+    ],
+    "turns": 4
+  },
+  {
+    "run": "08",
+    "completed": true,
+    "attempt_statuses": {
+      "failed": 7,
+      "succeeded": 37
+    },
+    "usage_known": 37,
+    "usage_unknown": 7,
+    "known_tokens": 288465,
+    "failure_categories": {
+      "tls_eof:provider-tls-eof": 7
+    },
+    "tool_results": {
+      "list_files:succeeded": 2,
+      "shell:succeeded": 2,
+      "search_tool_output:succeeded": 8,
+      "read_tool_output:succeeded": 9,
+      "request_history_page:failed": 4,
+      "list_tool_outputs:succeeded": 2
+    },
+    "execution_counts": [
+      1,
+      1
+    ],
+    "turns": 10
+  }
+]

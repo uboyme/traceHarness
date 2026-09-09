@@ -12,6 +12,7 @@ import sys
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from traceh.api.llm import ModelResponse
 from traceh.api.tools import Tool
@@ -77,6 +78,8 @@ from traceh.tools.policy import ToolPolicy
 from traceh.version import __version__
 
 _PROVIDERS = ("scripted", "openai-compatible")
+if TYPE_CHECKING:
+    from traceh.cli.tui_entry import RestartChat
 _PLUGIN_CAPABILITY = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,127}\Z")
 
 __all__ = ["CliConfigurationError", "build_parser", "main"]
@@ -110,6 +113,15 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--max-steps", type=int, default=None)
     _add_model_retry_arguments(parser)
     _add_compaction_arguments(parser)
+    parser.add_argument(
+        "--token-encoding",
+        default=None,
+        help="Explicit local tiktoken encoding; estimates are not provider usage",
+    )
+    parser.add_argument("--context-window-tokens", type=int, default=None)
+    parser.add_argument("--context-output-reserve", type=int, default=None)
+    parser.add_argument("--context-safety-margin", type=int, default=None)
+    parser.add_argument("--context-trigger-percent", type=int, default=None)
     parser.add_argument("--verify-command")
     parser.add_argument(
         "--plugin-verifier",
@@ -169,12 +181,9 @@ def _add_compaction_arguments(parser: argparse.ArgumentParser) -> None:
             "UTF-8 bytes. This is a byte count, not a token count."
         ),
     )
-    parser.add_argument(
-        "--auto-compact-summary-bytes", type=int, default=None, metavar="BYTES"
-    )
-    parser.add_argument(
-        "--auto-compact-keep-turns", type=int, default=None, metavar="TURNS"
-    )
+    parser.add_argument("--auto-compact-summary-bytes", type=int, default=None, metavar="BYTES")
+    parser.add_argument("--auto-compact-keep-turns", type=int, default=None, metavar="TURNS")
+    parser.add_argument("--auto-compact-method", choices=("extractive", "semantic"), default=None)
 
 
 #: Each automatic-compaction threshold and the environment variable that may
@@ -197,13 +206,15 @@ _COMPACTION_SETTINGS = (
 def _compaction_policy(args: argparse.Namespace) -> CompactionPolicy | None:
     mode = _from_environment(args, "auto_compact", "TRACEH_AUTO_COMPACT")
     supplied = {
-        attribute: _from_environment(args, attribute, variable)
+        attribute: (
+            getattr(args, attribute, None)
+            if getattr(args, "auto_compact", None) == "off"
+            else _from_environment(args, attribute, variable)
+        )
         for attribute, variable, _ in _COMPACTION_SETTINGS
     }
     configured = [
-        flag
-        for attribute, _, flag in _COMPACTION_SETTINGS
-        if supplied[attribute] is not None
+        flag for attribute, _, flag in _COMPACTION_SETTINGS if supplied[attribute] is not None
     ]
     if mode is None:
         if configured:
@@ -217,19 +228,12 @@ def _compaction_policy(args: argparse.Namespace) -> CompactionPolicy | None:
     if mode == "off":
         if configured:
             raise CliConfigurationError(
-                "--auto-compact off cannot be combined with "
-                f"{', '.join(configured)}"
+                f"--auto-compact off cannot be combined with {', '.join(configured)}"
             )
         return None
-    missing = [
-        flag
-        for attribute, _, flag in _COMPACTION_SETTINGS
-        if supplied[attribute] is None
-    ]
+    missing = [flag for attribute, _, flag in _COMPACTION_SETTINGS if supplied[attribute] is None]
     if missing:
-        raise CliConfigurationError(
-            f"--auto-compact on requires {', '.join(missing)}"
-        )
+        raise CliConfigurationError(f"--auto-compact on requires {', '.join(missing)}")
     try:
         return CompactionPolicy(
             enabled=True,
@@ -253,7 +257,7 @@ def _from_environment(args: argparse.Namespace, attribute: str, variable: str, d
     current = getattr(args, attribute, None)
     if current is not None:
         return current
-    return os.environ.get(variable, default)
+    return getattr(args, "_configuration_environment", os.environ).get(variable, default)
 
 
 def _positive_integer(value: object, *, variable: str) -> int:
@@ -286,8 +290,38 @@ def _nonnegative_float(value: object, *, variable: str) -> float:
     return parsed
 
 
-def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
-    report = load_env_file(getattr(args, "env_file", None))
+def _configure_from_environment(args: argparse.Namespace, *, environment=None) -> EnvLoadReport:
+    target = os.environ if environment is None else environment
+    args._configuration_environment = dict(target)
+    try:
+        report = _resolve_environment(args)
+        for name in report.applied_keys:
+            target[name] = args._configuration_environment[name]
+        return report
+    finally:
+        del args._configuration_environment
+
+
+def _resolve_environment(args: argparse.Namespace) -> EnvLoadReport:
+    environment = args._configuration_environment
+    file_environment = (
+        dict(environment) if getattr(args, "_personal_env_only", False) else environment
+    )
+    report = load_env_file(getattr(args, "env_file", None), environment=file_environment)
+    if file_environment is not environment:
+        key_name = args.api_key_env or file_environment.get("TRACEH_API_KEY_ENV", "OPENAI_API_KEY")
+        allowed = {
+            "TRACEH_PROVIDER",
+            "TRACEH_MODEL",
+            "TRACEH_BASE_URL",
+            "TRACEH_API_KEY_ENV",
+            "TRACEH_MAX_STEPS",
+            key_name,
+        }
+        applied = tuple(name for name in report.applied_keys if name in allowed)
+        for name in applied:
+            environment[name] = file_environment[name]
+        report = EnvLoadReport(report.path, report.loaded, applied)
     if hasattr(args, "data_dir"):
         args.data_dir = Path(_from_environment(args, "data_dir", "TRACEH_DATA_DIR", ".traceh"))
     if hasattr(args, "plugins"):
@@ -295,7 +329,7 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
         # and an invalid id fails before discovery imports anything.
         args.plugins = resolve_enabled_plugins(
             args.plugins,
-            os.environ.get("TRACEH_PLUGINS"),
+            args._configuration_environment.get("TRACEH_PLUGINS"),
         )
     if not hasattr(args, "provider"):
         return report
@@ -358,6 +392,47 @@ def _configure_from_environment(args: argparse.Namespace) -> EnvLoadReport:
             )
     if hasattr(args, "auto_compact"):
         args.compaction = _compaction_policy(args)
+    if hasattr(args, "token_encoding"):
+        from traceh.llm.token_meter import TokenBudgetPolicy
+
+        values = [
+            getattr(args, name, None)
+            for name in (
+                "token_encoding",
+                "context_window_tokens",
+                "context_output_reserve",
+                "context_safety_margin",
+            )
+        ]
+        args.token_budget = None
+        if (
+            not any(value is not None for value in values)
+            and getattr(args, "context_trigger_percent", None) is not None
+        ):
+            raise CliConfigurationError(
+                "请先配置 Token 编码、窗口、输出预留和安全余量，再设置触发比例。"
+            )
+        if any(value is not None for value in values):
+            if any(value is None for value in values):
+                raise CliConfigurationError("Token 计量需填写编码、模型窗口、输出预留和安全余量。")
+            try:
+                percent = getattr(args, "context_trigger_percent", None)
+                args.token_budget = TokenBudgetPolicy(
+                    *values, trigger_percent=percent if percent is not None else 80
+                )
+            except ValueError:
+                raise CliConfigurationError(
+                    "Token 预算无效；输出预留加安全余量须小于窗口。"
+                ) from None
+    if getattr(args, "auto_compact_method", None) == "semantic" and (
+        getattr(args, "token_budget", None) is None
+        or getattr(args, "compaction", None) is None
+        or not args.compaction.enabled
+        or getattr(args, "max_steps", 20) < 2
+    ):
+        from traceh.cli.errors import SemanticSummaryConfigurationError
+
+        raise SemanticSummaryConfigurationError()
     if hasattr(args, "verify_command"):
         # The two verifier selectors are mutually exclusive, but a selector
         # explicitly written on the command line still outranks the other
@@ -437,6 +512,7 @@ def _provider_and_model(args: argparse.Namespace):
         )
     provider = OpenAICompatibleProvider(
         args.base_url,
+        api_key=getattr(args, "tui_api_key", None),
         api_key_env=args.api_key_env,
     )
     return provider, args.model
@@ -468,6 +544,7 @@ async def _runtime(
     provider, model = (
         _provider_and_model(args) if provider_and_model is None else provider_and_model
     )
+    context_settings = getattr(args, "context_settings", None)
     config = RuntimeConfig(
         data_dir=args.data_dir,
         provider=args.provider,
@@ -477,6 +554,11 @@ async def _runtime(
         verifier_name=args.verifier_name,
         model_retry_policy=_model_retry_policy(args),
         compaction=getattr(args, "compaction", None),
+        token_budget=getattr(args, "token_budget", None),
+        semantic_summary=getattr(args, "auto_compact_method", None) == "semantic",
+        context_input=context_settings.context if context_settings else None,
+        skill_policy=context_settings.skill_policy if context_settings else None,
+        memory=context_settings.memory if context_settings else None,
     )
     return await build_default_runtime_async(
         config,
@@ -569,8 +651,17 @@ async def _run(args: argparse.Namespace) -> int:
         return 0 if result.reason == "completed" else 2
 
 
-async def _chat(args: argparse.Namespace) -> int:
+async def _chat(args: argparse.Namespace) -> int | RestartChat:
     workspace, session_id = chat_target(args.workspace, args.session_id)
+    # Every assembly parses the selected host file afresh, including explicit off.
+    args.context_settings = None
+    if getattr(args, "context_config", None) is not None:
+        from traceh.chat.config import load_context_host_file
+
+        try:
+            args.context_settings = load_context_host_file(args.context_config)
+        except (ValueError, OSError, TypeError):
+            raise CliConfigurationError("context host configuration invalid") from None
     tui_runner = None
     if args.tui:
         # The optional dependency is checked before Store/Runtime/Product
@@ -654,9 +745,7 @@ async def _chat(args: argparse.Namespace) -> int:
                 artifact_cas=artifact_cas,
                 max_report_chars=product_config.max_report_chars,
             )
-            additional_tools = product_chat_runtime_tools(
-                actions, read_models.memory
-            )
+            additional_tools = product_chat_runtime_tools(actions, read_models.memory)
         runtime = await _runtime(
             args,
             event_store=store,
@@ -676,6 +765,17 @@ async def _chat(args: argparse.Namespace) -> int:
                     product_config.source_id: product_config.source_repository,
                 },
             )
+            if runtime.config.memory is not None:
+                settings = args.context_settings
+                if (
+                    dict(settings.sources).get(product_config.source_id)
+                    != product_config.source_repository.resolve()
+                    or settings.managed_root != product_config.managed_workspace_root.resolve()
+                ):
+                    raise CliConfigurationError(
+                        "Product and Context must name the same source and managed root"
+                    )
+                workspace_provider = runtime.config.memory.source_resolver
             promotion_targets = LocalBareGitPromotionTargets(
                 targets={
                     product_config.promotion_target_id: product_config.promotion_target,
@@ -707,6 +807,9 @@ async def _chat(args: argparse.Namespace) -> int:
                 read_models=read_models,
                 model_retry_policy=runtime.config.model_retry_policy,
                 event_feed=runtime.events,
+                project_scope=runtime.project_scope,
+                context_input=runtime.config.context_input,
+                memory_config=runtime.config.memory,
             )
         heartbeat_seconds = validate_heartbeat_seconds(
             args.heartbeat_seconds, timeline=args.timeline
@@ -726,9 +829,27 @@ async def _chat(args: argparse.Namespace) -> int:
             env_file_supplies=frozenset(report.applied_keys) if loaded else frozenset(),
             verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
             product_config=args.product_config,
+            context_config=getattr(args, "context_config", None),
         )
         if tui_runner is not None:
             handed_to_chat = True
+            from copy import copy
+
+            from traceh.cli.tui_config import FIELDS
+
+            settings_args = copy(getattr(args, "_tui_launch_inputs", args))
+            for name in FIELDS:
+                setattr(settings_args, name, getattr(args, name, None))
+            # Preserve only the user's process-local input. A key resolved from
+            # saved storage is reloaded after environment resolution on restart.
+            settings_args.tui_api_key = getattr(
+                getattr(args, "_tui_launch_inputs", args), "tui_api_key", None
+            )
+            settings_args._launch_base_environment = dict(
+                getattr(args, "_launch_base_environment", os.environ)
+            )
+            # The password widget is always blank; the process-only key can be
+            # retained on a same-endpoint restart, never serialized in a profile.
             result = await tui_runner(
                 runtime,
                 workspace=workspace,
@@ -736,6 +857,7 @@ async def _chat(args: argparse.Namespace) -> int:
                 timeline=args.timeline,
                 heartbeat_seconds=heartbeat_seconds,
                 product=product_host,
+                settings_args=settings_args,
             )
         else:
             line_product = (
@@ -772,15 +894,15 @@ async def _chat(args: argparse.Namespace) -> int:
             try:
                 await runtime.dispose()
             except BaseException as error:
-                cleanup = combine_failures(
-                    cleanup, error, "chat runtime shutdown failed"
-                )
+                cleanup = combine_failures(cleanup, error, "chat runtime shutdown failed")
         try:
             await store.aclose()
         except BaseException as error:
             cleanup = combine_failures(cleanup, error, "chat store shutdown failed")
         combined = combine_failures(primary, cleanup, "chat shutdown failed")
         if combined is not None:
+            if args.tui and cleanup is not None:
+                raise BaseExceptionGroup("TUI store did not close cleanly", [combined])
             raise combined
     assert result is not None
     return result
@@ -1185,6 +1307,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Use the optional Textual interface (install traceharness-py[tui])",
     )
     chat.add_argument(
+        "--configure",
+        action="store_true",
+        help="Open the TUI launch configuration panel before creating a runtime",
+    )
+    chat.add_argument(
+        "--tui-profile",
+        type=Path,
+        default=None,
+        help="Launch profile for --tui --configure (default: .traceh-tui.json in cwd)",
+    )
+    chat.add_argument(
         "--no-timeline",
         dest="timeline",
         action="store_false",
@@ -1209,6 +1342,12 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     _add_runtime_arguments(chat)
+    chat.add_argument(
+        "--context-config",
+        type=Path,
+        default=None,
+        help="Explicit Context, Skill and project Memory host configuration",
+    )
     chat.set_defaults(handler=_chat)
 
     resume = sub.add_parser("resume", help="Recover a session and continue in a new turn")
@@ -1398,11 +1537,32 @@ def main(argv: list[str] | None = None) -> None:
     # never crashes a Windows console that inherited a legacy code page.
     configure_stdio()
     parser = build_parser()
-    args = parser.parse_args(argv)
-    try:
-        args.env_report = _configure_from_environment(args)
-    except (CliConfigurationError, EnvFileError, PluginError) as error:
-        parser.error(str(error))
+    tokens = list(sys.argv[1:] if argv is None else argv)
+    args = parser.parse_args(tokens or ["chat", "--tui"])
+    if args.command == "chat" and args.tui:
+        from traceh.cli.tui_entry import run_interactive
+
+        chat_parser = next(
+            action.choices["chat"]
+            for action in parser._actions
+            if isinstance(action, argparse._SubParsersAction)
+        )
+        supplied = {token.split("=", 1)[0] for token in tokens if token.startswith("--")}
+        args.tui_explicit = {
+            action.dest
+            for action in chat_parser._actions
+            if supplied.intersection(action.option_strings)
+        }
+        if args.workspace is not None:
+            args.tui_explicit.add("workspace")
+        args.handler = run_interactive
+    else:
+        if getattr(args, "configure", False) or getattr(args, "tui_profile", None) is not None:
+            parser.error("--configure / --tui-profile requires --tui")
+        try:
+            args.env_report = _configure_from_environment(args)
+        except (CliConfigurationError, EnvFileError, PluginError) as error:
+            parser.error(str(error))
     handler = args.handler
     try:
         if asyncio.iscoroutinefunction(handler):

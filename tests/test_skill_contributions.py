@@ -200,7 +200,17 @@ async def test_activation_rejects_invalid_identity_content_compatibility_and_abs
         descriptor = replace(descriptor, plugin=PluginIdentity("another.author", "1.0.0"))
     elif change == "digest":
         descriptor = replace(
-            descriptor, sections=(SkillSection("guide", "section", digest("nope"), 4),)
+            descriptor,
+            sections=(
+                SkillSection(
+                    "guide",
+                    "section",
+                    digest("nope"),
+                    4,
+                    title="Fixture navigation",
+                    summary="Explicit fixture content description",
+                ),
+            ),
         )
     elif change == "sections":
         value = replace(value, sections=())

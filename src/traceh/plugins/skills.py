@@ -149,9 +149,14 @@ def freeze_skill(
     if Version(__version__) not in SpecifierSet(descriptor.requires_traceh):
         raise ValueError("skill-core-incompatible")
     limits = policy.limits
-    if (
-        len(canonical_json(descriptor.to_dict()).encode("utf-8")) > limits.max_catalog_bytes
-        or len(descriptor.summary.encode("utf-8")) > limits.max_summary_bytes
+    summaries = (
+        descriptor.summary,
+        *(section.summary for section in descriptor.sections),
+        *(resource.summary for resource in descriptor.resources),
+        *(chunk.summary for resource in descriptor.resources for chunk in resource.chunks),
+    )
+    if len(canonical_json(descriptor.to_dict()).encode("utf-8")) > limits.max_catalog_bytes or any(
+        len(summary.encode("utf-8")) > limits.max_summary_bytes for summary in summaries
     ):
         raise ValueError("skill-descriptor-resource-limit")
     sections = {

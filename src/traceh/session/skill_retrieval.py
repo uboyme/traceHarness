@@ -4,73 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import re
-import unicodedata
 from collections import Counter
-from fractions import Fraction
 
 from traceh.api.json_types import canonical_json
 from traceh.session.context_index import ContextCorpus
+from traceh.session.retrieval import block_identity, tokenize
 from traceh.session.skill_selection import eligible_skills, head_ref, project_selection
-
-
-def normalize(text):
-    return unicodedata.normalize("NFKC", text).casefold()
-
-
-def _han(char):
-    # Unicode Han unified ideographs and their extension/compatibility blocks.
-    value = ord(char)
-    return (
-        0x3400 <= value <= 0x4DBF
-        or 0x4E00 <= value <= 0x9FFF
-        or 0xF900 <= value <= 0xFAFF
-        or 0x20000 <= value <= 0x2EE5F
-        or 0x2F800 <= value <= 0x2FA1F
-        or 0x30000 <= value <= 0x323AF
-    )
-
-
-def tokenize(text):
-    result, run, han = [], "", False
-
-    def flush():
-        if han:
-            result.extend(run)
-            result.extend(run[i : i + 2] for i in range(len(run) - 1))
-        elif run:
-            result.append(run)
-
-    for char in normalize(text):
-        current_han = _han(char)
-        if not char.isalnum():
-            flush()
-            run, han = "", False
-        else:
-            if run and current_han != han:
-                flush()
-                run = ""
-            han = current_han
-            run += char
-    flush()
-    return tuple(result)
-
-
-def block_identity(block):
-    p = block["provenance"]
-    return canonical_json(
-        [
-            block["kind"],
-            block["id"],
-            block["version"],
-            block["tier"],
-            p["section_id"],
-            p["resource_id"],
-            p["chunk_id"],
-            block["content_digest"],
-        ]
-    )
 
 
 def make_block(
@@ -85,12 +25,7 @@ def make_block(
     chunk_id=None,
 ):
     if tier == "directory":
-        body = canonical_json(
-            {
-                key: descriptor.to_dict()[key]
-                for key in ("skill_id", "version", "plugin", "title", "tags")
-            }
-        )
+        body = canonical_json(descriptor.directory())
     elif tier == "summary":
         body = descriptor.summary
     elif tier == "section":
@@ -138,16 +73,7 @@ def verify_block(block, descriptor, catalog_digest):
     if tier in {"directory", "summary"}:
         if any(p[key] is not None for key in ("section_id", "resource_id", "chunk_id")):
             raise ValueError("skill-block-source-mismatch")
-        body = (
-            descriptor.summary
-            if tier == "summary"
-            else canonical_json(
-                {
-                    key: descriptor.to_dict()[key]
-                    for key in ("skill_id", "version", "plugin", "title", "tags")
-                }
-            )
-        )
+        body = descriptor.summary if tier == "summary" else canonical_json(descriptor.directory())
         if block["body"] != body:
             raise ValueError("skill-block-content-mismatch")
     elif tier == "section":
@@ -228,194 +154,6 @@ def prepare_corpus(composition, selections, session_id, policy):
     return corpus, blocks, rows, descriptors, reason
 
 
-def _matches_exact(value, normalized_query):
-    # Keep the complete literal, including spaces, within the existing identifier boundaries.
-    pattern = rf"(?<![\w./\\:#-]){re.escape(normalize(value))}(?![\w./\\:#-])"
-    return re.search(pattern, normalized_query) is not None
-
-
-def rank(blocks, rows, descriptors, query, fts_hits, policy):
-    terms = tuple(sorted(set(tokenize(query))))
-    if len(terms) > policy.max_terms:
-        raise ValueError("skill-query-resource-limit")
-    exact = []
-    normalized_query = normalize(query)
-    for block, descriptor in zip(blocks, descriptors, strict=True):
-        values = {
-            "id": [descriptor.skill_id],
-            "tag": descriptor.tags,
-            "path": [r.relative_path for r in descriptor.resources],
-            "symbol": re.findall(r"[\w.:/-]+", descriptor.summary),
-            "error": re.findall(r"[\w-]+", descriptor.summary),
-        }
-        priority = next(
-            (
-                i
-                for i, field in enumerate(policy.match_fields)
-                if any(_matches_exact(value, normalized_query) for value in values[field])
-            ),
-            None,
-        )
-        if priority is not None:
-            exact.append((priority, block_identity(block)))
-    exact_ids = [identity for _, identity in sorted(exact)]
-    lexical = []
-    if fts_hits is not None and rows:
-        expected = {row["identity"] for row in rows if set(row["tf"]) & set(terms)}
-        if set(fts_hits) != expected:
-            fts_hits = None
-        else:
-            count = len(rows)
-            average = sum(row["length"] for row in rows) / count
-            df = {term: sum(term in row["tf"] for row in rows) for term in terms}
-            for row in rows:
-                if row["identity"] not in expected:
-                    continue
-                score = sum(
-                    math.log(1 + (count - df[term] + 0.5) / (df[term] + 0.5))
-                    * row["tf"][term]
-                    * (policy.k1 + 1)
-                    / (
-                        row["tf"][term]
-                        + policy.k1 * (1 - policy.b + policy.b * row["length"] / average)
-                    )
-                    for term in terms
-                    if term in row["tf"]
-                )
-                lexical.append((-score, row["identity"]))
-    fts_ids = [identity for _, identity in sorted(lexical)]
-    unavailable = []
-    if fts_hits is None:
-        unavailable.append("index-unavailable")
-    lanes = [(exact_ids, policy.exact_weight), (fts_ids, policy.fts_weight)]
-    lane_receipts = []
-    for name, ids, raw_scores in (
-        ("exact", exact_ids, {identity: priority for priority, identity in exact}),
-        ("fts", fts_ids, {identity: -score for score, identity in lexical}),
-    ):
-        status = "available"
-        if name == "fts" and fts_hits is None:
-            status = "index-unavailable"
-        if len(ids) > policy.max_candidates:
-            status = "resource-limit"
-        lane_receipts.append(
-            {
-                "id": name,
-                "status": status,
-                "ranking": [
-                    {"identity": identity, "score": raw_scores[identity]} for identity in ids
-                ]
-                if status == "available"
-                else [],
-            }
-        )
-    scores = {}
-    for ids, weight in lanes:
-        if len(ids) > policy.max_candidates:
-            unavailable.append("resource-limit")
-            continue
-        for ordinal, identity in enumerate(ids, 1):
-            scores[identity] = scores.get(identity, Fraction()) + Fraction(
-                weight, policy.rrf_constant + ordinal
-            )
-    ordered = sorted(scores, key=lambda identity: (-scores[identity], identity))
-    if len(ordered) > policy.max_candidates:
-        return [], [*unavailable, "resource-limit"], {"lanes": lane_receipts, "fusion": []}
-    by_identity = {block_identity(block): block for block in blocks}
-    receipt = {
-        "lanes": lane_receipts,
-        "fusion": [
-            {
-                "identity": identity,
-                "numerator": scores[identity].numerator,
-                "denominator": scores[identity].denominator,
-            }
-            for identity in ordered
-        ],
-    }
-    return [by_identity[identity] for identity in ordered], unavailable, receipt
-
-
-def validate_retrieval_receipt(receipt, policy):
-    """Validate frozen lane/fusion evidence without querying any index at replay."""
-    if receipt is None:
-        return
-    if (
-        policy is None
-        or type(receipt) is not dict
-        or set(receipt)
-        != {"format", "corpus_key", "corpus_digest", "eligible_count", "lanes", "fusion"}
-        or type(receipt["format"]) is not int
-        or receipt["format"] != 1
-    ):
-        raise ValueError("skill-retrieval-receipt-invalid")
-    for name in ("corpus_key", "corpus_digest"):
-        value = receipt[name]
-        if (
-            type(value) is not str
-            or len(value) != 64
-            or any(c not in "0123456789abcdef" for c in value)
-        ):
-            raise ValueError("skill-retrieval-receipt-invalid")
-    if (
-        type(receipt["eligible_count"]) is not int
-        or not 0 <= receipt["eligible_count"] <= policy.max_corpus_items
-    ):
-        raise ValueError("skill-retrieval-receipt-invalid")
-    lanes = receipt["lanes"]
-    if type(lanes) is not list or len(lanes) != 2:
-        raise ValueError("skill-retrieval-receipt-invalid")
-    scores = {}
-    for lane, name, weight in zip(
-        lanes, ("exact", "fts"), (policy.exact_weight, policy.fts_weight), strict=True
-    ):
-        if (
-            type(lane) is not dict
-            or set(lane) != {"id", "status", "ranking"}
-            or lane["id"] != name
-            or lane["status"] not in {"available", "resource-limit", "index-unavailable"}
-        ):
-            raise ValueError("skill-retrieval-receipt-invalid")
-        ranking = lane["ranking"]
-        if (
-            type(ranking) is not list
-            or len(ranking) > policy.max_candidates
-            or (lane["status"] != "available" and ranking)
-        ):
-            raise ValueError("skill-retrieval-receipt-invalid")
-        seen, order = set(), []
-        for ordinal, item in enumerate(ranking, 1):
-            if (
-                type(item) is not dict
-                or set(item) != {"identity", "score"}
-                or type(item["identity"]) is not str
-                or type(item["score"]) not in {int, float}
-                or not math.isfinite(item["score"])
-                or item["score"] < 0
-                or item["identity"] in seen
-            ):
-                raise ValueError("skill-retrieval-receipt-invalid")
-            seen.add(item["identity"])
-            order.append((item["score"] if name == "exact" else -item["score"], item["identity"]))
-            scores[item["identity"]] = scores.get(item["identity"], Fraction()) + Fraction(
-                weight, policy.rrf_constant + ordinal
-            )
-        if order != sorted(order):
-            raise ValueError("skill-retrieval-rank-invalid")
-    expected = [
-        {
-            "identity": identity,
-            "numerator": scores[identity].numerator,
-            "denominator": scores[identity].denominator,
-        }
-        for identity in sorted(scores, key=lambda identity: (-scores[identity], identity))
-    ]
-    if len(expected) > policy.max_candidates:
-        expected = []
-    if canonical_json(receipt["fusion"]) != canonical_json(expected):
-        raise ValueError("skill-retrieval-fusion-invalid")
-
-
 def verify_retrieval_catalog(receipt, composition, session_id, policy):
     if receipt is None:
         return
@@ -441,3 +179,16 @@ def receipt_skill_ids(receipt):
         for lane in receipt["lanes"]
         for item in lane["ranking"]
     )
+
+
+def exact_values(descriptors):
+    return [
+        {
+            "id": [d.skill_id],
+            "tag": d.tags,
+            "path": [r.relative_path for r in d.resources],
+            "symbol": re.findall(r"[\w.:/-]+", d.summary),
+            "error": re.findall(r"[\w-]+", d.summary),
+        }
+        for d in descriptors
+    ]

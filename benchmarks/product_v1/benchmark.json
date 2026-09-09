@@ -1,5 +1,5 @@
 {
-  "protocol_version": 1,
+  "protocol_version": 2,
   "benchmark_id": "traceh-product-v1",
   "profile_id": "product-benchmark-v1",
   "approver_id": "benchmark-host",
@@ -7,7 +7,11 @@
   "roles": {
     "parent": {
       "preset": "product-benchmark-parent",
-      "capability_grants": ["list_files", "read_file", "search_text"],
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ],
       "max_output_tokens": 8192,
       "budget": {
         "max_tokens": 60000,
@@ -21,7 +25,11 @@
     },
     "reviewer": {
       "preset": "product-benchmark-reviewer",
-      "capability_grants": ["list_files", "read_file", "search_text"],
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ],
       "max_output_tokens": 8192,
       "budget": {
         "max_tokens": 60000,
@@ -84,7 +92,16 @@
     "commands": [
       {
         "command_id": "unittest",
-        "argv": ["python", "-m", "unittest", "discover", "-s", ".", "-p", "test_*.py"],
+        "argv": [
+          "python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          ".",
+          "-p",
+          "test_*.py"
+        ],
         "timeout_ms": 180000
       }
     ],
@@ -121,9 +138,18 @@
   },
   "max_report_chars": 4096,
   "arms": [
-    { "requested_mode": "single", "repetitions": 2 },
-    { "requested_mode": "multi", "repetitions": 2 },
-    { "requested_mode": "auto", "repetitions": 2 }
+    {
+      "requested_mode": "single",
+      "repetitions": 2
+    },
+    {
+      "requested_mode": "multi",
+      "repetitions": 2
+    },
+    {
+      "requested_mode": "auto",
+      "repetitions": 2
+    }
   ],
   "tasks": [
     {
@@ -141,5 +167,6 @@
       "requirement": "A parsing function accepts values the test suite says it must reject. Add the missing validation so that running the test suite passes. Do not change or delete the tests.",
       "initial_dir": "guard_invalid_input/initial"
     }
-  ]
+  ],
+  "retrieval": null
 }

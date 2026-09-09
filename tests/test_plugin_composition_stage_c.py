@@ -97,12 +97,13 @@ async def _runtime(
 
 
 async def test_plugins_help_and_idle_commands_do_not_create_turn_or_model_call(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
     plugin = ScriptedPlugin(manifest("a.example"))
     provider = ScriptedLlmProvider((ModelResponse(content="unused"),), repeat_last=True)
     runtime = await _runtime(tmp_path, plugin, enabled=("a.example",), provider=provider)
-    console = _Console("/help", "/plugins", "/plugins reload", "/exit")
+    monkeypatch.setattr("traceh.chat.governance.PluginDiscovery", lambda: _discovery(plugin))
+    console = _Console("/help", "/plugins", "/plugins reload", "CONFIRM", "/exit")
     try:
         assert await run_chat(runtime, console, workspace=tmp_path) == 0
         events = await runtime.sessions.read_session((await runtime.sessions.list_sessions())[0])
@@ -112,7 +113,8 @@ async def test_plugins_help_and_idle_commands_do_not_create_turn_or_model_call(
         assert "/plugins reload" in help_text
         assert "python -m pip install <plugin-wheel-or-package>" in help_text
         assert "traceh plugins doctor ID" in help_text
-        assert "active plugins: a.example==1.0.0" in console.lines
+        assert '"plugin_id": "a.example"' in help_text
+        assert plugin.setup_calls == 2
     finally:
         # run_chat owns and disposes this runtime; the second call verifies
         # idempotence without creating another cleanup.
@@ -316,7 +318,7 @@ async def test_use_none_removes_old_plugin_tools_from_next_snapshot(
 
 
 async def test_chat_use_command_changes_real_generation_without_a_turn_for_the_command(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
     first = ScriptedPlugin(manifest("a.example", "1.0.0"))
     second = ScriptedPlugin(manifest("b.example", "2.0.0"))
@@ -328,15 +330,16 @@ async def test_chat_use_command_changes_real_generation_without_a_turn_for_the_c
         enabled=("a.example",),
         provider=provider,
     )
-    console = _Console("/plugins use b.example", "question", "/exit")
+    monkeypatch.setattr("traceh.chat.governance.PluginDiscovery", lambda: _discovery(first, second))
+    console = _Console("/plugins use b.example", "CONFIRM", "question", "/exit")
     try:
         assert await run_chat(runtime, console, workspace=tmp_path) == 0
         session_id = (await runtime.sessions.list_sessions())[0]
         events = await runtime.sessions.read_session(session_id)
         assert sum(event.type == "turn/start" for event in events) == 1
         assert sum(event.type == MIGRATION_EVENT_TYPE for event in events) == 1
-        assert "plugin composition switched" in console.lines
-        assert "active plugins: b.example==2.0.0" in console.lines
+        assert second.setup_calls == 1
+        assert '"status": "enabled"' in "\n".join(console.lines)
         assert len(provider.requests) == 1
     finally:
         await runtime.dispose()

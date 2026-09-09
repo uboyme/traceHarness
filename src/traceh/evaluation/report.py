@@ -132,6 +132,7 @@ class AttemptReport:
     error_code: str | None
     evidence: AttemptEvidence | None
     timing: PhaseTiming | None
+    retrieval: dict | None = None
 
     @property
     def measured(self) -> bool:
@@ -160,6 +161,7 @@ class AttemptReport:
             "measured": self.measured,
             "error_code": self.error_code,
             "success": self.success,
+            "retrieval": self.retrieval,
         }
         result["timing"] = (
             None
@@ -735,6 +737,23 @@ def render_markdown(report: BenchmarkReport) -> str:
         lines.append(f"- {attempt_id}: {', '.join(labels)}")
     for attempt_id, code in failures:
         lines.append(f"- {attempt_id}: attempt error {code}")
+    retrieval = [a for a in data["attempts"] if a.get("retrieval") is not None]
+    if retrieval:
+        lines.extend(("", "## Frozen retrieval observations", "",
+                      "Each row is one Step. Provider retries do not add samples. "
+                      "Candidate ranks and actual injection are reported separately.", ""))
+        for attempt in retrieval:
+            result = attempt["retrieval"]
+            lines.append(f"- {attempt['attempt_id']}: quality={result['quality_passed']}; "
+                         f"expected={result['expected_judgments']}; "
+                         f"unproven={len(result['unproven'])}; "
+                         f"evaluator={result['evaluator_digest']}")
+            for row in result["observations"]:
+                lines.append(f"  - role={row['role']}; step={row['step_id']}; "
+                             f"status={row['status']}; metrics={row['metrics']}")
+        lines.append("Full query provenance, injected tiers/bytes and seeding receipts: "
+                     "report.json. "
+                     "n=1 is a single observation; no statistical significance is claimed.")
     return "\n".join(lines) + "\n"
 
 

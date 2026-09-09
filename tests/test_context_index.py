@@ -8,7 +8,8 @@ import pytest
 from retrieval_fixtures import build_case, select
 
 from traceh.session import context_index
-from traceh.session.skill_retrieval import prepare_corpus, tokenize
+from traceh.session.retrieval import tokenize
+from traceh.session.skill_retrieval import prepare_corpus
 from traceh.session.sqlite import ContextIndexWriteError, EventStoreSchemaError, SqliteEventStore
 
 

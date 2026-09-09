@@ -1,0 +1,90 @@
+[
+  {
+    "run": 1,
+    "completed": false,
+    "attempts": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "summary_tokens": 0,
+    "cases": []
+  },
+  {
+    "run": 2,
+    "completed": false,
+    "attempts": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "summary_tokens": 0,
+    "cases": []
+  },
+  {
+    "run": 3,
+    "completed": false,
+    "attempts": 18,
+    "input_tokens": 106838,
+    "output_tokens": 537,
+    "summary_tokens": 0,
+    "cases": [
+      {
+        "exit_code": 0,
+        "nonce": "693d29112d5b",
+        "session_id": "d3f28d98-4864-4560-9076-719b8c7dd5e6",
+        "executions": null,
+        "passed": null
+      }
+    ]
+  },
+  {
+    "run": 4,
+    "completed": false,
+    "attempts": 18,
+    "input_tokens": 106781,
+    "output_tokens": 546,
+    "summary_tokens": 0,
+    "cases": [
+      {
+        "exit_code": 0,
+        "nonce": "06b162d9d2a1",
+        "session_id": "648631fa-f6bb-464e-9f6b-929e9d7c94df",
+        "executions": null,
+        "passed": null
+      }
+    ]
+  },
+  {
+    "run": 5,
+    "completed": true,
+    "attempts": 12,
+    "input_tokens": 97993,
+    "output_tokens": 672,
+    "summary_tokens": 5921,
+    "cases": [
+      {
+        "exit_code": 0,
+        "nonce": "c362e9a5303a",
+        "session_id": "3b01cd92-964c-4b0f-b997-6d57e43b6880",
+        "executions": 1,
+        "passed": true,
+        "same_request_with_old_history_tokens": 14349,
+        "same_request_after_summary_tokens": 12704,
+        "summary_source_bytes": 5573,
+        "summary_bytes": 769,
+        "invariant_violations": [],
+        "replay_violations": []
+      },
+      {
+        "exit_code": 7,
+        "nonce": "5e8fadc43ba3",
+        "session_id": "3902819b-af01-4330-8a19-836be74b9026",
+        "executions": 1,
+        "passed": true,
+        "same_request_with_old_history_tokens": 14368,
+        "same_request_after_summary_tokens": 12725,
+        "summary_source_bytes": 5659,
+        "summary_bytes": 816,
+        "invariant_violations": [],
+        "replay_violations": []
+      }
+    ]
+  }
+]

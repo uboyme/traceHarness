@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from math import isfinite
 from typing import Protocol
 
 from traceh.api.json_types import JsonValue, fingerprint, to_json_value
@@ -23,6 +24,24 @@ REQUEST_SNAPSHOT_KEYS = frozenset(
         "dispatch_request",
     }
 )
+
+SUMMARY_REQUEST_SNAPSHOT_KEYS = (
+    REQUEST_SNAPSHOT_KEYS - {"context_input_seq", "context_input_digest"}
+) | {"summary_input_seq", "summary_input_digest"}
+
+
+def request_source_fields(metadata: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
+    """The explicit source variant of one frozen model invocation."""
+    names = (
+        ("summary_input_seq", "summary_input_digest")
+        if "summary_input_seq" in metadata
+        else ("context_input_seq", "context_input_digest")
+    )
+    return {name: metadata[name] for name in names}
+
+
+def request_snapshot_keys(data: Mapping[str, JsonValue]) -> frozenset[str]:
+    return SUMMARY_REQUEST_SNAPSHOT_KEYS if "summary_input_seq" in data else REQUEST_SNAPSHOT_KEYS
 
 
 def _require_attempt_identity(value: object, *, field_name: str) -> str:
@@ -123,9 +142,7 @@ class ModelMessage:
             content=str(raw.get("content") or ""),
             tool_call_id=(str(raw["tool_call_id"]) if raw.get("tool_call_id") else None),
             tool_calls=tuple(
-                ToolCall.from_dict(item)
-                for item in raw_calls
-                if isinstance(item, dict)
+                ToolCall.from_dict(item) for item in raw_calls if isinstance(item, dict)
             ),
             name=str(raw["name"]) if raw.get("name") else None,
         )
@@ -213,6 +230,14 @@ class ModelRequest:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> ModelRequest:
+        # Frozen fingerprints bind JSON bytes, including 0 versus 0.0.
+        # Preserve the legal number rather than changing it during replay.
+        temperature = raw.get("temperature")
+        if temperature is not None and (
+            type(temperature) not in (int, float)
+            or (type(temperature) is float and not isfinite(temperature))
+        ):
+            raise ValueError("request temperature must be a finite JSON number or null")
         raw_messages = raw.get("messages", [])
         raw_tools = raw.get("tools", [])
         if not isinstance(raw_messages, list) or not isinstance(raw_tools, list):
@@ -230,11 +255,9 @@ class ModelRequest:
                 ModelMessage.from_dict(item) for item in raw_messages if isinstance(item, dict)
             ),
             tools=tuple(ToolSchema.from_dict(item) for item in raw_tools if isinstance(item, dict)),
-            temperature=float(raw["temperature"]) if raw.get("temperature") is not None else None,
+            temperature=temperature,
             max_output_tokens=(
-                int(raw["max_output_tokens"])
-                if raw.get("max_output_tokens") is not None
-                else None
+                int(raw["max_output_tokens"]) if raw.get("max_output_tokens") is not None else None
             ),
             metadata={str(k): to_json_value(v) for k, v in metadata.items()},
         )
@@ -255,9 +278,7 @@ def dispatch_request_matches_composed(
     if composed_data != dispatch_data:
         return False
     if composed_limit is None:
-        return dispatch_limit is None or (
-            type(dispatch_limit) is int and dispatch_limit > 0
-        )
+        return dispatch_limit is None or (type(dispatch_limit) is int and dispatch_limit > 0)
     return (
         type(composed_limit) is int
         and composed_limit > 0
@@ -287,5 +308,4 @@ class ModelResponse:
 class LlmProvider(Protocol):
     name: str
 
-    async def complete(self, request: ModelRequest) -> ModelResponse:
-        ...
+    async def complete(self, request: ModelRequest) -> ModelResponse: ...

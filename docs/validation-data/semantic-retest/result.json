@@ -1,0 +1,4959 @@
+{
+  "format": 1,
+  "phase": "pre-integration-feasibility-only",
+  "runtime_semantic_enabled": false,
+  "freeze_sha256": "e604dad0e9fee89ad831fd00bf756f05489787e3974639b85fcaadfc7724d0e6",
+  "capture_sha256": "fda6af3676408b32c2a7474a0d918b29cbc2cb87e7ffa50df8aa707b6543e57a",
+  "results": [
+    {
+      "query": "goals.code",
+      "category": "exact",
+      "language": null,
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "context_precision": 1.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.33896559476852417,
+          "en": 0.5074881911277771
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.6574551463127136,
+          "en": 0.8058833479881287
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3941706717014313,
+          "en": 0.39168110489845276
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.3970315456390381,
+          "en": 0.5142456293106079
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.42793866991996765,
+          "en": 0.5601191520690918
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.36678987741470337,
+          "en": 0.5567335486412048
+        }
+      ]
+    },
+    {
+      "query": "项目目标保持边界清楚",
+      "category": "lexical",
+      "language": null,
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "context_precision": 1.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "goals.code"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.3416900336742401,
+          "en": 0.5321314334869385
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.712822437286377,
+          "en": 0.7145846486091614
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.33659109473228455,
+          "en": 0.5057353973388672
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.48149195313453674,
+          "en": 0.6858595013618469
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.3861261010169983,
+          "en": 0.48727333545684814
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.39329779148101807,
+          "en": 0.5633565187454224
+        }
+      ]
+    },
+    {
+      "query": "src/route.py RouteError",
+      "category": "lexical",
+      "language": null,
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "context_precision": 1.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.3778856694698334,
+          "en": 0.4904814660549164
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.36164215207099915,
+          "en": 0.5358830690383911
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3929954469203949,
+          "en": 0.44008371233940125
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.3091641068458557,
+          "en": 0.5537108778953552
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.5786307454109192,
+          "en": 0.8386124968528748
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.4051847755908966,
+          "en": 0.66349858045578
+        }
+      ]
+    },
+    {
+      "query": "vehicle fuel",
+      "category": "semantic",
+      "language": null,
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.31840115785598755,
+          "en": 0.4473889470100403
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.3400380611419678,
+          "en": 0.4180848002433777
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.39112037420272827,
+          "en": 0.744749128818512
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.27257001399993896,
+          "en": 0.46927058696746826
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.30239972472190857,
+          "en": 0.4163494408130646
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.35314232110977173,
+          "en": 0.4623820185661316
+        }
+      ]
+    },
+    {
+      "query": "quasarnevermentioned",
+      "category": "zero-hit",
+      "language": null,
+      "lexical": {
+        "recall": null,
+        "mrr": null,
+        "precision": null,
+        "context_precision": null,
+        "zero_hit": 1.0,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.30689311027526855,
+          "en": 0.4924747347831726
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.32980287075042725,
+          "en": 0.4731888175010681
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.35595768690109253,
+          "en": 0.4824025630950928
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.26218438148498535,
+          "en": 0.5087631940841675
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.32609236240386963,
+          "en": 0.4881629943847656
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.3726789653301239,
+          "en": 0.5202292799949646
+        }
+      ]
+    },
+    {
+      "query": "secretneedle",
+      "category": "cross-workspace",
+      "language": null,
+      "lexical": {
+        "recall": null,
+        "mrr": null,
+        "precision": null,
+        "context_precision": null,
+        "zero_hit": 1.0,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.27151769399642944,
+          "en": 0.45065775513648987
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.33388781547546387,
+          "en": 0.3318578898906708
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3463493287563324,
+          "en": 0.3433273732662201
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.2514054477214813,
+          "en": 0.39737817645072937
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.3480609655380249,
+          "en": 0.3951566219329834
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.38068583607673645,
+          "en": 0.4684376120567322
+        }
+      ]
+    },
+    {
+      "query": "revokedneedle",
+      "category": "revoked",
+      "language": null,
+      "lexical": {
+        "recall": null,
+        "mrr": null,
+        "precision": null,
+        "context_precision": null,
+        "zero_hit": 1.0,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.29310885071754456,
+          "en": 0.46701666712760925
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.2926788032054901,
+          "en": 0.394629567861557
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3374323546886444,
+          "en": 0.3738320469856262
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.2885504364967346,
+          "en": 0.4271632432937622
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.3507397472858429,
+          "en": 0.4899597764015198
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.393892765045166,
+          "en": 0.5099485516548157
+        }
+      ]
+    },
+    {
+      "query": "priorneedle",
+      "category": "superseded",
+      "language": null,
+      "lexical": {
+        "recall": null,
+        "mrr": null,
+        "precision": null,
+        "context_precision": null,
+        "zero_hit": 1.0,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.33526384830474854,
+          "en": 0.538869321346283
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.32233312726020813,
+          "en": 0.33948591351509094
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.29912570118904114,
+          "en": 0.40286245942115784
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.26944777369499207,
+          "en": 0.46388211846351624
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.30911123752593994,
+          "en": 0.46658214926719666
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.35372161865234375,
+          "en": 0.44237861037254333
+        }
+      ]
+    },
+    {
+      "query": "reference.retired",
+      "category": "retired-generation",
+      "language": null,
+      "lexical": {
+        "recall": null,
+        "mrr": null,
+        "precision": null,
+        "context_precision": null,
+        "zero_hit": 1.0,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": null,
+            "mrr": null,
+            "precision": null,
+            "context_precision": null,
+            "zero_hit": 1.0,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.37727996706962585,
+          "en": 0.5233546495437622
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.34875333309173584,
+          "en": 0.4863206148147583
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.38013502955436707,
+          "en": 0.49516382813453674
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.5513446927070618,
+          "en": 0.7003414630889893
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.4614794850349426,
+          "en": 0.5034095048904419
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.47272613644599915,
+          "en": 0.5129650831222534
+        }
+      ]
+    },
+    {
+      "query": "route.error",
+      "category": "hard-negative",
+      "language": null,
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "context_precision": 1.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.360363245010376,
+          "en": 0.4955340623855591
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.4052329361438751,
+          "en": 0.5240993499755859
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3645990788936615,
+          "en": 0.4786670207977295
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.4054394066333771,
+          "en": 0.5803709626197815
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.6897341012954712,
+          "en": 0.7918503880500793
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.4654405117034912,
+          "en": 0.7028052806854248
+        }
+      ]
+    },
+    {
+      "query": "reference.current",
+      "category": "exact",
+      "language": null,
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 1.0,
+        "context_precision": 1.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.49603745341300964,
+          "en": 0.7038635015487671
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.4082069396972656,
+          "en": 0.5181578397750854
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.38690850138664246,
+          "en": 0.5156044363975525
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.7266119718551636,
+          "en": 0.8763530850410461
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.43994227051734924,
+          "en": 0.5188564658164978
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.45652034878730774,
+          "en": 0.5596716403961182
+        }
+      ]
+    },
+    {
+      "query": "机动车上路需要加什么能源？",
+      "category": "added-semantic",
+      "language": "zh",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.2568439543247223,
+          "en": 0.578694760799408
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.2890240550041199,
+          "en": 0.5499914884567261
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.43199422955513,
+          "en": 0.49176961183547974
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.15663045644760132,
+          "en": 0.5911150574684143
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.273166686296463,
+          "en": 0.5094934105873108
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.21935611963272095,
+          "en": 0.5020826458930969
+        }
+      ]
+    },
+    {
+      "query": "函数抛异常的诱因是什么？",
+      "category": "added-semantic",
+      "language": "zh",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.31509754061698914,
+          "en": 0.6059678792953491
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.26889464259147644,
+          "en": 0.512740969657898
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.2505156993865967,
+          "en": 0.49751558899879456
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.31369176506996155,
+          "en": 0.5810622572898865
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.37447258830070496,
+          "en": 0.45036542415618896
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.33803439140319824,
+          "en": 0.5400452613830566
+        }
+      ]
+    },
+    {
+      "query": "职责划分的原则有哪些？",
+      "category": "added-semantic",
+      "language": "zh",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.33369776606559753,
+          "en": 0.553658127784729
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.3991827666759491,
+          "en": 0.4911324381828308
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.2952558100223541,
+          "en": 0.4558519124984741
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.39397698640823364,
+          "en": 0.5363011956214905
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.33786332607269287,
+          "en": 0.4165918827056885
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.37710750102996826,
+          "en": 0.48914438486099243
+        }
+      ]
+    },
+    {
+      "query": "现阶段在忙什么？",
+      "category": "added-semantic",
+      "language": "zh",
+      "lexical": {
+        "recall": 1.0,
+        "mrr": 1.0,
+        "precision": 0.5,
+        "context_precision": 0.5,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 0.5,
+            "context_precision": 0.5,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "current.phase"
+            },
+            {
+              "kind": "skill",
+              "id": "reference.current"
+            }
+          ]
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.4313682019710541,
+          "en": 0.6244683265686035
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.3362187147140503,
+          "en": 0.5214605927467346
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.318319708108902,
+          "en": 0.5153095722198486
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.38812947273254395,
+          "en": 0.5808907747268677
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.27158090472221375,
+          "en": 0.43961623311042786
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.3058135211467743,
+          "en": 0.542013943195343
+        }
+      ]
+    },
+    {
+      "query": "Which liquid powers a car?",
+      "category": "added-semantic",
+      "language": "en",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "mobility.note"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.33663564920425415,
+          "en": 0.5001343488693237
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.37421801686286926,
+          "en": 0.3678315281867981
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.5361692905426025,
+          "en": 0.6211285591125488
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.2587161660194397,
+          "en": 0.43016383051872253
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.3440452516078949,
+          "en": 0.34225690364837646
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.35227376222610474,
+          "en": 0.3750567138195038
+        }
+      ]
+    },
+    {
+      "query": "Why does the URL handler fail?",
+      "category": "added-semantic",
+      "language": "en",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 1.0,
+            "mrr": 1.0,
+            "precision": 1.0,
+            "context_precision": 1.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": [
+            {
+              "kind": "memory",
+              "id": "route.error"
+            }
+          ]
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.3227958083152771,
+          "en": 0.5010496377944946
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.34872379899024963,
+          "en": 0.4689559042453766
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.3751120865345001,
+          "en": 0.4212835133075714
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.23516517877578735,
+          "en": 0.544762372970581
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.3876781761646271,
+          "en": 0.6491208672523499
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.41434744000434875,
+          "en": 0.5928286910057068
+        }
+      ]
+    },
+    {
+      "query": "How should responsibilities be separated?",
+      "category": "added-semantic",
+      "language": "en",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.34773534536361694,
+          "en": 0.445995032787323
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.35673239827156067,
+          "en": 0.5659913420677185
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.4281453490257263,
+          "en": 0.4837168753147125
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.29066193103790283,
+          "en": 0.5070794820785522
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.39741575717926025,
+          "en": 0.446247935295105
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.4875088036060333,
+          "en": 0.4641886353492737
+        }
+      ]
+    },
+    {
+      "query": "What delivery milestone are we currently at?",
+      "category": "added-semantic",
+      "language": "en",
+      "lexical": {
+        "recall": 0.0,
+        "mrr": 0.0,
+        "precision": 0.0,
+        "context_precision": 0.0,
+        "zero_hit": null,
+        "scope_violations": 0
+      },
+      "candidates": [
+        {
+          "id": "zh-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "zh-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "en-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.6",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.7",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        },
+        {
+          "id": "dual-max-0.8",
+          "metrics": {
+            "recall": 0.0,
+            "mrr": 0.0,
+            "precision": 0.0,
+            "context_precision": 0.0,
+            "zero_hit": null,
+            "scope_violations": 0
+          },
+          "admitted": []
+        }
+      ],
+      "scores": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "zh": 0.4288402199745178,
+          "en": 0.5406907796859741
+        },
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "zh": 0.3715135157108307,
+          "en": 0.5036199688911438
+        },
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "zh": 0.4306291341781616,
+          "en": 0.4785829484462738
+        },
+        {
+          "kind": "skill",
+          "id": "reference.current",
+          "zh": 0.36965009570121765,
+          "en": 0.5060065388679504
+        },
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "zh": 0.393159419298172,
+          "en": 0.48820969462394714
+        },
+        {
+          "kind": "memory",
+          "id": "route.noise",
+          "zh": 0.47513824701309204,
+          "en": 0.48550209403038025
+        }
+      ]
+    }
+  ],
+  "summaries": [
+    {
+      "id": "zh-0.6",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": false,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.0,
+      "warm_p95_ms": 15.964700025506318
+    },
+    {
+      "id": "zh-0.7",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": false,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.0,
+      "warm_p95_ms": 15.327599947340786
+    },
+    {
+      "id": "zh-0.8",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": false,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.0,
+      "warm_p95_ms": 15.332199982367456
+    },
+    {
+      "id": "en-0.6",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": true,
+        "languages": false,
+        "scope": true,
+        "gain": true,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.5,
+          "precision": 0.5
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.3333333333333333,
+      "warm_p95_ms": 22.971600061282516
+    },
+    {
+      "id": "en-0.7",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": true,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.1111111111111111,
+      "warm_p95_ms": 22.985200048424304
+    },
+    {
+      "id": "en-0.8",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": false,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.0,
+      "warm_p95_ms": 24.22280004248023
+    },
+    {
+      "id": "dual-max-0.6",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": true,
+        "languages": false,
+        "scope": true,
+        "gain": true,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.5,
+          "precision": 0.5
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.3333333333333333,
+      "warm_p95_ms": 34.128100029192865
+    },
+    {
+      "id": "dual-max-0.7",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": true,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.1111111111111111,
+      "warm_p95_ms": 37.304500001482666
+    },
+    {
+      "id": "dual-max-0.8",
+      "checks": {
+        "original_nonsemantic": true,
+        "original_semantic": false,
+        "languages": false,
+        "scope": true,
+        "gain": false,
+        "cost": true
+      },
+      "language": {
+        "en": {
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        "zh": {
+          "recall": 0.25,
+          "precision": 0.125
+        }
+      },
+      "semantic_recall_gain": 0.0,
+      "warm_p95_ms": 35.296999965794384
+    }
+  ],
+  "accepted_for_integration": [],
+  "cost": {
+    "cold_load_both_ms": 688.9932999620214,
+    "rebuild_both_ms": 190.8398000523448,
+    "asset_bytes": 230788023,
+    "vector_bytes_per_item": 3584.0,
+    "eligible_items": 6,
+    "warm_samples_ms": {
+      "zh-0.6": [
+        8.343800087459385,
+        8.388900081627071,
+        7.842399994842708,
+        10.69430005736649,
+        11.685000034049153,
+        16.389999887906015,
+        10.99360000807792,
+        14.464800013229251,
+        16.162200015969574,
+        14.718000078573823,
+        13.428800040856004,
+        14.190700021572411,
+        11.818300001323223,
+        11.32829999551177,
+        12.625399976968765,
+        8.811699924990535,
+        9.690199978649616,
+        11.058100033551455,
+        12.339300010353327,
+        11.524899979121983,
+        12.51949998550117,
+        13.022499973885715,
+        8.460300043225288,
+        12.280800030566752,
+        10.667600086890161,
+        10.428300010971725,
+        10.745899984613061,
+        11.89730002079159,
+        12.921599904075265,
+        15.261100023053586,
+        11.30020001437515,
+        12.358600040897727,
+        10.486999992281199,
+        15.964700025506318,
+        14.611300081014633,
+        9.215200087055564,
+        11.139499954879284,
+        12.12690002284944,
+        10.177500080317259,
+        13.510199962183833,
+        13.90640006866306,
+        14.927399926818907,
+        19.080900005064905,
+        16.55219995882362,
+        14.586200006306171,
+        13.085299986414611,
+        11.20980002451688,
+        12.273200089111924,
+        11.948800063692033,
+        10.713699972257018,
+        10.729299974627793,
+        11.782699963077903,
+        11.252199998125434,
+        10.518399998545647,
+        9.031499968841672,
+        13.533299905247986,
+        11.71059999614954,
+        11.392400017939508,
+        10.568200028501451,
+        12.293200008571148,
+        12.369300005957484,
+        10.003700037486851,
+        11.928300024010241,
+        11.836799909360707,
+        11.507100076414645,
+        13.981100055389106,
+        11.27189991530031,
+        15.530599979683757,
+        13.771000085398555,
+        13.356200070120394,
+        11.020799982361495,
+        8.967800065875053,
+        11.445800075307488,
+        12.033000006340444,
+        10.561700095422566,
+        9.820199920795858,
+        10.874600033275783,
+        11.22009998653084,
+        9.993999963626266,
+        12.784300022758543,
+        12.517599971033633,
+        11.412100051529706,
+        10.856499895453453,
+        11.956100002862513,
+        13.02019995637238,
+        11.506100068800151,
+        9.717200067825615,
+        12.130399933084846,
+        13.596300035715103,
+        9.732399950735271,
+        12.62479997240007,
+        11.25290000345558,
+        11.492499965243042,
+        11.915000039152801,
+        12.49719993211329
+      ],
+      "zh-0.7": [
+        13.106800033710897,
+        13.861099956557155,
+        11.669800034724176,
+        11.063399957492948,
+        13.344399980269372,
+        16.927000018768013,
+        12.815100024454296,
+        13.448199955746531,
+        12.72410003002733,
+        12.413099990226328,
+        9.85740008763969,
+        8.39459989219904,
+        11.614800081588328,
+        13.455600012093782,
+        10.647800052538514,
+        10.695299948565662,
+        10.996100027114153,
+        10.805899975821376,
+        10.33269998151809,
+        12.596399988979101,
+        10.32819994725287,
+        11.288000037893653,
+        11.346999905072153,
+        11.66030007880181,
+        10.911300079897046,
+        12.297200039029121,
+        14.428699971176684,
+        12.133399955928326,
+        11.822500033304095,
+        8.84680007584393,
+        11.411800049245358,
+        12.338200001977384,
+        11.389799998141825,
+        12.943000067025423,
+        12.92539993301034,
+        12.582499999552965,
+        11.893099988810718,
+        10.537900030612946,
+        14.644699986092746,
+        10.200700024142861,
+        15.327599947340786,
+        15.090300003066659,
+        16.385599970817566,
+        16.427599941380322,
+        14.196399948559701,
+        12.675800011493266,
+        11.528100003488362,
+        11.900800047442317,
+        9.624699945561588,
+        10.67059999331832,
+        10.814900044351816,
+        12.645200011320412,
+        10.091000003740191,
+        12.05729995854199,
+        10.95629995688796,
+        12.481099925935268,
+        11.424400028772652,
+        12.982600019313395,
+        12.928199954330921,
+        11.678199982270598,
+        11.269400012679398,
+        11.125100078061223,
+        11.246700072661042,
+        13.00839998293668,
+        12.619199929758906,
+        15.990399988368154,
+        12.247300008311868,
+        9.921699995175004,
+        11.551600066013634,
+        13.789699994958937,
+        12.83540006261319,
+        11.120200040750206,
+        10.72679995559156,
+        12.435900047421455,
+        10.278499918058515,
+        10.38739993236959,
+        12.567400000989437,
+        12.155900010839105,
+        10.419499943964183,
+        9.964899974875152,
+        11.971900006756186,
+        13.818299979902804,
+        9.395699948072433,
+        9.577700053341687,
+        12.3744000447914,
+        12.252000044099987,
+        13.993300031870604,
+        11.579800047911704,
+        10.342500056140125,
+        10.011999984271824,
+        13.931000023148954,
+        12.98769994173199,
+        12.308300007134676,
+        11.827500071376562,
+        12.911499943584204
+      ],
+      "zh-0.8": [
+        10.543299955315888,
+        15.699799987487495,
+        12.682400061748922,
+        12.992799980565906,
+        12.604499934241176,
+        12.977400096133351,
+        14.590800041332841,
+        13.3401999482885,
+        12.510600034147501,
+        12.95959996059537,
+        12.365699978545308,
+        12.404899927787483,
+        12.632500031031668,
+        13.219199958257377,
+        10.317199979908764,
+        12.28250004351139,
+        11.055000009946525,
+        12.986600049771369,
+        10.754499933682382,
+        11.400500079616904,
+        9.565699961967766,
+        12.774800066836178,
+        14.10210004542023,
+        10.379099985584617,
+        11.86169998254627,
+        10.954100056551397,
+        12.74019991979003,
+        12.475499999709427,
+        10.361099964939058,
+        9.850100032053888,
+        12.918599997647107,
+        15.332199982367456,
+        14.046399970538914,
+        17.17589993495494,
+        14.439600054174662,
+        11.161900009028614,
+        15.131100080907345,
+        12.604099931195378,
+        15.10940003208816,
+        14.286200050264597,
+        13.34619999397546,
+        15.275800018571317,
+        13.11960001476109,
+        14.154099975712597,
+        12.501099961809814,
+        10.713799973018467,
+        12.330300058238208,
+        11.50940009392798,
+        14.301700051873922,
+        11.812399956397712,
+        10.920000029727817,
+        9.536199970170856,
+        10.781100019812584,
+        9.33539995457977,
+        11.209700023755431,
+        11.170600075274706,
+        11.960199917666614,
+        14.877800014801323,
+        16.30019990261644,
+        16.37790002860129,
+        11.366800055839121,
+        11.504199937917292,
+        10.093800025060773,
+        13.281899970024824,
+        10.387900052592158,
+        12.631400022655725,
+        10.690300026908517,
+        11.954100104048848,
+        13.188500073738396,
+        13.363100006245077,
+        11.342200101353228,
+        13.283199979923666,
+        11.019199970178306,
+        12.258000089786947,
+        13.704500044696033,
+        11.567699955776334,
+        12.44249998126179,
+        10.84979996085167,
+        10.969400056637824,
+        12.971300049684942,
+        11.127999983727932,
+        11.892999988049269,
+        13.834699988365173,
+        14.23079997766763,
+        12.001600000075996,
+        10.843200027011335,
+        12.02930009458214,
+        10.399799910373986,
+        12.976199970580637,
+        9.727500029839575,
+        13.306399923749268,
+        12.973500066436827,
+        9.340399992652237,
+        8.67030001245439,
+        12.514400063082576
+      ],
+      "en-0.6": [
+        16.030199942179024,
+        19.251200021244586,
+        17.930599977262318,
+        18.976699910126626,
+        15.439499984495342,
+        17.90199999231845,
+        21.346000023186207,
+        17.776899971067905,
+        18.200399936176836,
+        21.07010001782328,
+        21.23710000887513,
+        18.796200049109757,
+        20.081899943761528,
+        18.3730999706313,
+        17.273699981160462,
+        15.548799885436893,
+        17.09930005017668,
+        15.3524000197649,
+        10.910699958913028,
+        16.19839994236827,
+        14.276200090534985,
+        14.240700053051114,
+        17.990499967709184,
+        19.20330000575632,
+        14.903699979186058,
+        18.343399977311492,
+        11.893599992617965,
+        16.51959994342178,
+        18.63539998885244,
+        18.228999921120703,
+        19.381799967959523,
+        17.387400032021105,
+        20.325199933722615,
+        24.147899937815964,
+        18.480599974282086,
+        20.35999996587634,
+        19.117599935270846,
+        18.491300055757165,
+        18.16579990554601,
+        16.14960003644228,
+        17.07870000973344,
+        17.678799922578037,
+        22.206599940545857,
+        22.971600061282516,
+        23.721099947579205,
+        12.73880002554506,
+        15.535000013187528,
+        16.249800100922585,
+        16.98810001835227,
+        17.677800031378865,
+        15.791199984960258,
+        13.826999929733574,
+        16.3840000750497,
+        15.485499985516071,
+        15.828800038434565,
+        22.96319999732077,
+        23.917300044558942,
+        28.267899993807077,
+        21.354300086386502,
+        20.389400073327124,
+        16.13879995420575,
+        18.0622999323532,
+        19.584599998779595,
+        20.69090004079044,
+        21.182799944654107,
+        19.891300005838275,
+        17.32889993581921,
+        19.619100028648973,
+        19.597499980591238,
+        19.115899922326207,
+        21.55460009817034,
+        16.006399993784726,
+        14.624900068156421,
+        18.165200017392635,
+        19.920499995350838,
+        18.25070008635521,
+        17.931300099007785,
+        15.974199981428683,
+        14.301000046543777,
+        16.610599937848747,
+        16.215599956922233,
+        14.461699989624321,
+        15.950200031511486,
+        17.311599920503795,
+        14.288200065493584,
+        17.795300111174583,
+        13.960600015707314,
+        15.275000012479722,
+        15.931400004774332,
+        15.182400005869567,
+        14.990599942393601,
+        16.440900042653084,
+        16.140099964104593,
+        14.956199913285673,
+        21.340199979022145
+      ],
+      "en-0.7": [
+        16.794799943454564,
+        19.57500004209578,
+        18.159600091166794,
+        17.364900093525648,
+        16.902900068089366,
+        24.44670000113547,
+        22.721299901604652,
+        24.27340007852763,
+        24.866600055247545,
+        21.777399932034314,
+        18.02049996331334,
+        16.979800071567297,
+        16.024700016714633,
+        16.792900045402348,
+        18.568299943581223,
+        17.376399948261678,
+        15.762499999254942,
+        16.136799938976765,
+        14.421500032767653,
+        14.638699940405786,
+        15.627600019797683,
+        16.488099936395884,
+        13.443900039419532,
+        19.348999951034784,
+        13.585499953478575,
+        16.968100098893046,
+        16.655500046908855,
+        15.052199945785105,
+        14.01899999473244,
+        14.791199937462807,
+        21.96459996048361,
+        17.824599985033274,
+        14.687899965792894,
+        19.906000001356006,
+        22.967100027017295,
+        13.735100044868886,
+        13.952700071968138,
+        14.904199982993305,
+        15.946200001053512,
+        15.96869993954897,
+        20.354799926280975,
+        22.187800030224025,
+        14.415599987842143,
+        16.637400025501847,
+        19.35130008496344,
+        17.555799917317927,
+        14.573800028301775,
+        16.923399991355836,
+        16.08529989607632,
+        15.794800012372434,
+        14.23820003401488,
+        16.067099990323186,
+        18.86069995816797,
+        17.043699976056814,
+        15.607799985446036,
+        22.982400027103722,
+        21.66389999911189,
+        20.020600059069693,
+        18.252399982884526,
+        18.493899959139526,
+        16.950299963355064,
+        22.228199988603592,
+        20.51579998806119,
+        19.20770003926009,
+        17.77339994441718,
+        21.138899959623814,
+        21.177100017666817,
+        24.86270002555102,
+        22.985200048424304,
+        21.066499990411103,
+        16.99699996970594,
+        15.601700055412948,
+        16.509999986737967,
+        15.079600038006902,
+        14.975199941545725,
+        17.96719990670681,
+        17.44030008558184,
+        16.096399980597198,
+        16.54039998538792,
+        18.348900019191206,
+        15.663199941627681,
+        15.370700042694807,
+        14.939400018192828,
+        15.386000042781234,
+        14.376499922946095,
+        15.144999953918159,
+        16.57940004952252,
+        15.70339989848435,
+        15.395099995657802,
+        14.433600008487701,
+        16.86540001537651,
+        20.418700063601136,
+        20.497800083830953,
+        17.005999921821058,
+        12.100900057703257
+      ],
+      "en-0.8": [
+        19.33230005670339,
+        15.932200010865927,
+        14.04259994160384,
+        15.532799996435642,
+        15.004199929535389,
+        22.948099998757243,
+        20.239200093783438,
+        22.626399993896484,
+        21.464399993419647,
+        23.657400044612586,
+        18.49220006261021,
+        24.574499926529825,
+        25.285499985329807,
+        19.653699942864478,
+        20.593499997630715,
+        19.92920006159693,
+        17.954299924895167,
+        18.409900018014014,
+        16.132400021888316,
+        16.504400060512125,
+        13.411000021733344,
+        18.28600000590086,
+        21.45540004130453,
+        13.696099980734289,
+        18.13169999513775,
+        15.266100061126053,
+        16.620400012470782,
+        16.09009993262589,
+        16.109799966216087,
+        15.753100044094026,
+        21.700600045733154,
+        23.699400015175343,
+        24.22280004248023,
+        25.438700104132295,
+        21.88470005057752,
+        17.875699908472598,
+        16.562200034968555,
+        19.679199904203415,
+        15.061800018884242,
+        16.666200011968613,
+        19.51729995198548,
+        17.136999987997115,
+        14.935699990019202,
+        20.479099941439927,
+        19.781299983151257,
+        17.243799986317754,
+        14.937800006009638,
+        16.339799971319735,
+        14.49589990079403,
+        14.396500075235963,
+        16.07580005656928,
+        16.02789992466569,
+        16.039100009948015,
+        13.889099936932325,
+        13.74189998023212,
+        18.23849999345839,
+        22.06560003105551,
+        20.592299988493323,
+        20.234499941579998,
+        18.111899960786104,
+        19.553899997845292,
+        20.56930004619062,
+        18.834899994544685,
+        21.8141000950709,
+        22.670700098387897,
+        21.755299996584654,
+        20.417400053702295,
+        21.425000042654574,
+        19.76160006597638,
+        24.241599952802062,
+        13.056199997663498,
+        18.01320002414286,
+        16.406500013545156,
+        17.969900043681264,
+        19.948900095187128,
+        16.212699934840202,
+        18.247000058181584,
+        17.046799999661744,
+        14.408299932256341,
+        16.008400009013712,
+        13.298700097948313,
+        13.509300071746111,
+        15.231299912557006,
+        15.723800053820014,
+        18.55229993816465,
+        15.148999984376132,
+        17.76299998164177,
+        12.931199977174401,
+        14.926699921488762,
+        18.75419996213168,
+        13.968999963253736,
+        17.8711999906227,
+        14.678900013677776,
+        14.00109997484833,
+        17.786999931558967
+      ],
+      "dual-max-0.6": [
+        26.406799908727407,
+        26.648700004443526,
+        23.438400006853044,
+        26.37700003106147,
+        28.655200032517314,
+        33.24410005006939,
+        33.20529998745769,
+        26.149200042709708,
+        33.20539998821914,
+        32.85449999384582,
+        36.114700022153556,
+        33.18649996072054,
+        33.00459997262806,
+        33.11349998693913,
+        29.623399954289198,
+        27.345200069248676,
+        24.842499988153577,
+        25.475100032053888,
+        31.593300052918494,
+        27.35180000308901,
+        26.731399935670197,
+        28.148000012151897,
+        32.36279997508973,
+        27.586599928326905,
+        29.751299996860325,
+        29.242899967357516,
+        22.946599987335503,
+        26.82579995598644,
+        31.080099986866117,
+        21.48610004223883,
+        30.923800077289343,
+        29.490699991583824,
+        29.811699991114438,
+        33.421300002373755,
+        35.30919994227588,
+        29.482999932952225,
+        31.582899973727763,
+        27.779299998655915,
+        34.86570005770773,
+        34.02920009102672,
+        34.44119996856898,
+        28.44529994763434,
+        25.890600052662194,
+        25.9012000169605,
+        28.308100067079067,
+        31.590199912898242,
+        32.25779999047518,
+        29.568099998869002,
+        28.777700033970177,
+        28.67939998395741,
+        28.619299991987646,
+        27.436799951829016,
+        27.03320002183318,
+        27.068099938333035,
+        28.91490003094077,
+        28.843200067058206,
+        30.53579991683364,
+        34.128100029192865,
+        32.80859999358654,
+        30.496199964545667,
+        33.28770003281534,
+        31.259899958968163,
+        29.708900023251772,
+        24.205799913033843,
+        30.428800033405423,
+        30.974099994637072,
+        27.281800052151084,
+        27.91349997278303,
+        27.70480001345277,
+        28.969100094400346,
+        25.232599931769073,
+        28.651900007389486,
+        32.06040000077337,
+        31.659999978728592,
+        26.50429995264858,
+        23.370500071905553,
+        26.328600011765957,
+        30.0661000655964,
+        27.01550000347197,
+        28.70470006018877,
+        25.535100023262203,
+        29.447800014168024,
+        28.712600003927946,
+        22.923699929378927,
+        32.64600003603846,
+        27.660700026899576,
+        30.37330007646233,
+        28.6614999640733,
+        30.929200001992285,
+        28.575000003911555,
+        30.88979993481189,
+        30.072800000198185,
+        31.577599933370948,
+        27.152900001965463,
+        29.407499940134585
+      ],
+      "dual-max-0.7": [
+        28.863399988040328,
+        29.99489998910576,
+        27.956999954767525,
+        24.24209995660931,
+        26.576300035230815,
+        32.69030002411455,
+        32.41430001799017,
+        30.32859996892512,
+        27.813500026240945,
+        28.20549998432398,
+        33.68739993311465,
+        29.649300035089254,
+        35.64089990686625,
+        26.457700063474476,
+        26.2717999285087,
+        31.868699938058853,
+        32.28119993582368,
+        30.986100086010993,
+        26.949900086037815,
+        24.734999984502792,
+        28.610900044441223,
+        28.459099936299026,
+        29.846300021745265,
+        29.786899918690324,
+        26.945600053295493,
+        25.153900031000376,
+        31.875799992121756,
+        27.908499934710562,
+        22.230400005355477,
+        22.214900003746152,
+        29.94589996524155,
+        36.11819993238896,
+        74.81150003150105,
+        51.44279997330159,
+        41.64660000242293,
+        34.31959997396916,
+        27.747899992391467,
+        34.01159995701164,
+        37.304500001482666,
+        32.72589994594455,
+        25.155299925245345,
+        26.690299971960485,
+        28.42470002360642,
+        26.25560003798455,
+        27.992899995297194,
+        26.206300011835992,
+        27.06580003723502,
+        26.655999943614006,
+        26.499100029468536,
+        28.982199961319566,
+        25.490500032901764,
+        26.984799886122346,
+        28.845899971202016,
+        26.353800087235868,
+        27.046000002883375,
+        33.48129999358207,
+        29.336699983105063,
+        33.98039995227009,
+        32.61939994990826,
+        30.384400044567883,
+        25.446000043302774,
+        33.16989995073527,
+        33.51540002040565,
+        33.9051999617368,
+        39.38289999496192,
+        27.56389998830855,
+        32.90979994926602,
+        28.922699973918498,
+        24.573300033807755,
+        29.75759992841631,
+        28.939599986188114,
+        26.45590004976839,
+        25.555099942721426,
+        26.571399997919798,
+        31.0200999956578,
+        31.32290008943528,
+        32.59000007528812,
+        31.411100062541664,
+        28.324899962171912,
+        22.8965999558568,
+        27.621100074611604,
+        33.9671999681741,
+        26.331299915909767,
+        19.15740000549704,
+        26.96339995600283,
+        24.19600007124245,
+        30.434400076046586,
+        27.733800001442432,
+        28.460000059567392,
+        27.48219994828105,
+        28.189899981953204,
+        27.38739992491901,
+        25.934500037692487,
+        28.140399954281747,
+        28.064799960702658
+      ],
+      "dual-max-0.8": [
+        25.311899953521788,
+        26.851700036786497,
+        32.16970001813024,
+        34.6798999235034,
+        36.733999964781106,
+        23.68350001052022,
+        36.24549997039139,
+        29.89290002733469,
+        28.838899917900562,
+        28.450699988752604,
+        28.34169997368008,
+        29.573600040748715,
+        26.857399963773787,
+        30.436199973337352,
+        28.62140000797808,
+        27.020599925890565,
+        29.145900043658912,
+        29.74950009956956,
+        28.01989996805787,
+        24.222899926826358,
+        29.2219000402838,
+        28.991700033657253,
+        29.838899965398014,
+        28.979600057937205,
+        32.83850010484457,
+        24.639900075271726,
+        30.049300054088235,
+        28.885499923489988,
+        25.3489000024274,
+        27.026299969293177,
+        40.69769999478012,
+        42.093200027011335,
+        33.08600001037121,
+        34.26820004824549,
+        32.523399917408824,
+        34.93100008927286,
+        31.41160006634891,
+        29.963099979795516,
+        28.783499961718917,
+        26.439699926413596,
+        28.085899888537824,
+        27.966199908405542,
+        28.669800027273595,
+        24.560699937865138,
+        22.326100035570562,
+        31.246700091287494,
+        24.831000017002225,
+        26.25410002656281,
+        25.548200006596744,
+        29.34729994740337,
+        34.48550007306039,
+        29.35490000527352,
+        28.83640001527965,
+        22.928599966689944,
+        29.281400027684867,
+        34.07090005930513,
+        27.39780000410974,
+        32.9270000802353,
+        35.296999965794384,
+        30.23179993033409,
+        29.66050000395626,
+        31.403100001625717,
+        25.349700008518994,
+        30.224199988879263,
+        30.26650007814169,
+        33.188499975949526,
+        30.322900041937828,
+        31.10030002426356,
+        28.80239998921752,
+        28.456600033678114,
+        31.319300062023103,
+        29.669800074771047,
+        28.956900001503527,
+        29.354199999943376,
+        29.22160003799945,
+        24.734199978411198,
+        31.367699964903295,
+        27.125299908220768,
+        25.943399989046156,
+        29.2450999841094,
+        30.7981000514701,
+        22.759099956601858,
+        28.524899971671402,
+        32.73360000457615,
+        27.14449993800372,
+        27.506199898198247,
+        29.61860003415495,
+        30.24809993803501,
+        31.30210004746914,
+        32.32809994369745,
+        30.717099900357425,
+        31.256700051017106,
+        28.431099955923855,
+        27.275700005702674,
+        27.564899995923042
+      ]
+    }
+  },
+  "diagnostics": [
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "1ec036d04901d0aab1e8391fa514fecfd0eb7255610a78754a46b01bdafa23af",
+      "tokens": 20,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "abd10a07089ae6a13c2a28dc18cff95e1fb4cc0db030ae0466cb8ab5f2d7e680",
+      "tokens": 27,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "51a1989290bd6334ecf1085b57ed2afa066ccc61b2b5db0ef855de2933aaec17",
+      "tokens": 20,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "7c894030b9401402bae567c72dcf4d83e892009b85311f85507b8ca7e7ee6f5f",
+      "tokens": 27,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "c4d76b3df231fbeb144a916dc0d582f67d21a0744c2012fea954fab4ee16a7f4",
+      "tokens": 31,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": false,
+      "text_sha256": "2bbb08d4bedc8b5633849b0ce4e68383ba4e2b269dcc20db4667a5ec47d9a33b",
+      "tokens": 32,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "871cccd98f845aa73cf41c268ae7e3b662772521ab6c954c43e9cf32fdf10e2f",
+      "tokens": 25,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "3199d4919e3463d1d3de94ce5d3220896bc722091977bf323fa356d5b7c5e1e7",
+      "tokens": 31,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "1d009309be69d57728d674cd396e671be046001cd3102fc5ea17238ef6c28195",
+      "tokens": 30,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "9fd002bf190a45cafa72c2b817639523f8c25bb96150155d53cc048dd0bd992d",
+      "tokens": 26,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "27298741b4963bb1fb2c8cfacdf0596318b6cc87bbac94afbb9ed128f2b9a0c7",
+      "tokens": 29,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "07cf184c4f834750d421f2c3f94dbe9607b92f4a0a093eb0b8ef9c1130c308b2",
+      "tokens": 25,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "dd6e83f659fdf4994ca88e4d4a1ef9453297f914f5a94c57a96a22538dc7d5da",
+      "tokens": 28,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "45b5d9fd92aaba0782931c3a20196dc87bc1eed986fe60fc30d634bc7b4b3127",
+      "tokens": 27,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "01bd1d2ee0557041800fc60df8e0afb94170a5963bbf002fb3712f652a027daf",
+      "tokens": 27,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "aee7898e607a77f22a07ad43d4439d29601db01b33daca084af7c3908df9183d",
+      "tokens": 25,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "54375e820bf937a4576f6946c7ceee88b83516cb5b1b0f5a9829604307580d8b",
+      "tokens": 27,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "b80ebaa3cf1b97cbaccaa849d3afec33c11a0c6515ea7d5ba2a1ef05e382e461",
+      "tokens": 34,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "0fb840af97bd67606036686f78674c995957cd37042393ca39926e25f92644ea",
+      "tokens": 33,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "0d783a2c3813172094b63fb9a3f54507d78cfa7c4cd9ef7d7c101d31e641dd0a",
+      "tokens": 32,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "0ae6c64db6c9882056a813977a0598a230830809a68b2dee2581a3661feb6f5e",
+      "tokens": 29,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "e2f52ba382c104ea5fe2e6b6a183133100ca5d52519b9eb513e67250550e7c25",
+      "tokens": 30,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "519548b1a7cab28f4f79baec4f879e1640cc37b9be8f7d8250ade58ba993f577",
+      "tokens": 32,
+      "unknown": 2,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "5c2b550e91d49179dc57694a65647b27ef0a06d2b0d251436f04d5dba47737a6",
+      "tokens": 36,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "zh",
+      "query": true,
+      "text_sha256": "c97c81dd63f9caa003f4f80b743a11795d4addbcf7fa8610e1f9fb2ba998856a",
+      "tokens": 36,
+      "unknown": 1,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "1ec036d04901d0aab1e8391fa514fecfd0eb7255610a78754a46b01bdafa23af",
+      "tokens": 16,
+      "unknown": 8,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "abd10a07089ae6a13c2a28dc18cff95e1fb4cc0db030ae0466cb8ab5f2d7e680",
+      "tokens": 22,
+      "unknown": 6,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "51a1989290bd6334ecf1085b57ed2afa066ccc61b2b5db0ef855de2933aaec17",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "7c894030b9401402bae567c72dcf4d83e892009b85311f85507b8ca7e7ee6f5f",
+      "tokens": 20,
+      "unknown": 9,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "c4d76b3df231fbeb144a916dc0d582f67d21a0744c2012fea954fab4ee16a7f4",
+      "tokens": 24,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": false,
+      "text_sha256": "2bbb08d4bedc8b5633849b0ce4e68383ba4e2b269dcc20db4667a5ec47d9a33b",
+      "tokens": 17,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "871cccd98f845aa73cf41c268ae7e3b662772521ab6c954c43e9cf32fdf10e2f",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "3199d4919e3463d1d3de94ce5d3220896bc722091977bf323fa356d5b7c5e1e7",
+      "tokens": 20,
+      "unknown": 6,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "1d009309be69d57728d674cd396e671be046001cd3102fc5ea17238ef6c28195",
+      "tokens": 20,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "9fd002bf190a45cafa72c2b817639523f8c25bb96150155d53cc048dd0bd992d",
+      "tokens": 12,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "27298741b4963bb1fb2c8cfacdf0596318b6cc87bbac94afbb9ed128f2b9a0c7",
+      "tokens": 16,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "07cf184c4f834750d421f2c3f94dbe9607b92f4a0a093eb0b8ef9c1130c308b2",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "dd6e83f659fdf4994ca88e4d4a1ef9453297f914f5a94c57a96a22538dc7d5da",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "45b5d9fd92aaba0782931c3a20196dc87bc1eed986fe60fc30d634bc7b4b3127",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "01bd1d2ee0557041800fc60df8e0afb94170a5963bbf002fb3712f652a027daf",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "aee7898e607a77f22a07ad43d4439d29601db01b33daca084af7c3908df9183d",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "54375e820bf937a4576f6946c7ceee88b83516cb5b1b0f5a9829604307580d8b",
+      "tokens": 13,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "b80ebaa3cf1b97cbaccaa849d3afec33c11a0c6515ea7d5ba2a1ef05e382e461",
+      "tokens": 23,
+      "unknown": 10,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "0fb840af97bd67606036686f78674c995957cd37042393ca39926e25f92644ea",
+      "tokens": 22,
+      "unknown": 10,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "0d783a2c3813172094b63fb9a3f54507d78cfa7c4cd9ef7d7c101d31e641dd0a",
+      "tokens": 21,
+      "unknown": 6,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "0ae6c64db6c9882056a813977a0598a230830809a68b2dee2581a3661feb6f5e",
+      "tokens": 18,
+      "unknown": 7,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "e2f52ba382c104ea5fe2e6b6a183133100ca5d52519b9eb513e67250550e7c25",
+      "tokens": 16,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "519548b1a7cab28f4f79baec4f879e1640cc37b9be8f7d8250ade58ba993f577",
+      "tokens": 18,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "5c2b550e91d49179dc57694a65647b27ef0a06d2b0d251436f04d5dba47737a6",
+      "tokens": 16,
+      "unknown": 0,
+      "truncated": false
+    },
+    {
+      "encoder": "en",
+      "query": true,
+      "text_sha256": "c97c81dd63f9caa003f4f80b743a11795d4addbcf7fa8610e1f9fb2ba998856a",
+      "tokens": 18,
+      "unknown": 0,
+      "truncated": false
+    }
+  ],
+  "versions": {
+    "torch": "2.12.0",
+    "transformers": "5.9.0",
+    "numpy": "1.26.4",
+    "tokenizers": "0.22.2"
+  }
+}

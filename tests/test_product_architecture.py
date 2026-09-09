@@ -38,19 +38,24 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "17076c64650d24cba5c0c28733b45877086962abd947b68964e47796f9b21e18"
+        "8ddf6930875fbe7fc5b6ca27ae46ec352e1f6ed1cd63c4e0947d7aa0c81c7057"
     ),
     "runtime/agent_runtime.py": (
-        "d2e9b572562b836bc48ada05825d9b2b4f306040c6a32898d1d4220f90b109f2"
+        "d1a8eaf278775d46b00faf7ec1a8769622aac569d291000874387b4dcbf09b7f"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
+    # F5: pre-enable Manifest review uses the same loader and activation path.
     "plugins/manager.py": (
-        "30a524258d42dcaad8f4b5919e3235927b5868092c3ae775b0df4854dfc6608e"
+        "5f982e4655e44e6b15d4465b3aa874c83fc2f46a8e833110116c64a5edc26cee"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+ADR-0057 D adds a frozen summary/input source variant and one ordinary summary Step,
+sharing the original model permit, Budget, cancellation and lifecycle. No Product
+state or parallel Provider execution path is introduced.
 
 These four own the v0.6 concurrency kernel. The product surface is built
 entirely above their public seams. v0.8-F0 changes ``AgentLoop`` only to admit
@@ -59,6 +64,23 @@ capability back to the host-resolved Provider/Attempt, and converge open
 Attempts on generic failure. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; no
 Product state or dependency enters either file.
+
+v0.9-F4 adds only read/recheck/observation callbacks to AgentLoop and assembles
+the qualified Memory reader and optional Git observer in AgentRuntime. Existing
+Session, Tool and Lease owners remain; no Product state or new lifecycle enters.
+
+ADR-0053 B adds two default PURE_READ output tools to AgentRuntime, both borrowing
+the same SessionService and existing character policy. No AgentLoop, Provider,
+Store, Product authority, or lifecycle is added. This is the only pin changed
+for retained Tool output; the other three remain fixed.
+ADR-0054 B+ adds the third PURE_READ search tool at this same assembly point;
+it borrows the same SessionService and source resolver, with no new lifecycle.
+
+ADR-0056 E0 delegates complete request preparation within the existing Lease
+to RequestBuilder and assembles an explicit model-bound token estimator. Token
+pressure may compact closed older history during the first Step; active Tool
+groups, Session dispatch permission and Provider/Budget owners remain unchanged.
+No Product dependency, mutable messages or parallel lifecycle is introduced.
 
 v0.9-F3 adds explicit ProjectMemoryConfig, a proposal-only Tool callback and a
 host Memory control facade borrowing the existing Lease. No Product import,

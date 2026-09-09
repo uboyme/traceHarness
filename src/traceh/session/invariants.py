@@ -14,11 +14,12 @@ from traceh.api.llm import (
     ModelRequest,
     dispatch_request_matches_composed,
     model_attempt_reservation_id,
+    request_snapshot_keys,
+    request_source_fields,
 )
 from traceh.kernel.composition import CompositionSnapshot
 from traceh.session.context_input import (
     parse_context_input,
-    read_context_input,
     render_context_message,
     validate_context_input_sources,
 )
@@ -32,10 +33,12 @@ from traceh.session.protocol import SessionProtocolError, require_session_protoc
 from traceh.session.surface_replacement import (
     SURFACE_MESSAGE_TYPES,
     SURFACE_REPLACE,
+    SurfaceToolFold,
     SurfaceToolLinks,
     parse_surface_replacement,
     split_tool_calls,
     surface_prefix,
+    validate_tool_fold,
 )
 
 
@@ -90,6 +93,28 @@ class CoreInvariantChecker:
                 InvariantViolation(error.code, "Session uses an unsupported Context protocol", 1),
             )
         violations.extend(check_surface_replacement_sources(session_events))
+        from traceh.session.semantic_summary import validate_summary_events
+
+        try:
+            validate_summary_events(session_events)
+        except (KeyError, TypeError, ValueError):
+            violations.append(
+                InvariantViolation(
+                    "semantic-summary-source-invalid",
+                    "Semantic summary source or provenance is invalid",
+                )
+            )
+        from traceh.runtime.request_builder import validate_token_measurements
+
+        try:
+            validate_token_measurements(session_events)
+        except (KeyError, TypeError, ValueError):
+            violations.append(
+                InvariantViolation(
+                    "request-token-measurement-invalid",
+                    "Token measurement source or value is invalid",
+                )
+            )
         try:
             validate_history_request_events(session_events)
         except (TypeError, ValueError) as error:
@@ -149,9 +174,7 @@ class CoreInvariantChecker:
                         )
                     )
                 else:
-                    previous = product_contexts.setdefault(
-                        context.order_key, context.context_id
-                    )
+                    previous = product_contexts.setdefault(context.order_key, context.context_id)
                     if previous != context.context_id:
                         violations.append(
                             InvariantViolation(
@@ -197,8 +220,12 @@ class CoreInvariantChecker:
                     composition = CompositionSnapshot.from_dict(event.data)
                     if event.composition_revision != composition.revision:
                         raise ValueError("composition-revision-binding")
-                    read_context_input(
+                    from traceh.runtime.request_builder import build_request_from_events
+                    from traceh.session.surface import SurfaceProjector
+
+                    build_request_from_events(
                         session_events[: index + 1],
+                        SurfaceProjector(),
                         session_id=event.stream_id.removeprefix("session:"),
                         turn_id=open_turn,
                         step_id=open_step,
@@ -216,6 +243,58 @@ class CoreInvariantChecker:
                 compositions[key] = event
 
             if event.type == "request/snapshot":
+                if "summary_input_seq" in event.data:
+                    from traceh.runtime.request_builder import build_request_from_events
+                    from traceh.session.surface import SurfaceProjector
+
+                    data = event.data
+                    try:
+                        if (
+                            set(data) != request_snapshot_keys(data)
+                            or (data["turn_id"], data["step_id"]) != (open_turn, open_step)
+                            or type(data["source_seq"]) is not int
+                            or data["source_seq"] >= event.seq
+                        ):
+                            raise ValueError("summary-snapshot-shape-invalid")
+                        built = build_request_from_events(
+                            session_events[:index],
+                            SurfaceProjector(),
+                            session_id=event.stream_id.removeprefix("session:"),
+                            turn_id=data["turn_id"],
+                            step_id=data["step_id"],
+                            through_seq=data["source_seq"],
+                        )
+                        dispatch = ModelRequest.from_dict(data["dispatch_request"])
+                        if (
+                            not built.is_summary
+                            or built.request.to_dict() != data["composed_request"]
+                            or built.fingerprint != data["composed_fingerprint"]
+                            or fingerprint(dispatch.to_dict()) != data["dispatch_fingerprint"]
+                            or dispatch.to_dict() != data["dispatch_request"]
+                            or not dispatch_request_matches_composed(built.request, dispatch)
+                            or any(
+                                data[k] != v
+                                for k, v in request_source_fields(built.request.metadata).items()
+                            )
+                            or event.composition_revision
+                            != built.request.metadata["composition_revision"]
+                            or data["composition_revision"] != event.composition_revision
+                        ):
+                            raise ValueError("summary-snapshot-source-invalid")
+                    except (KeyError, TypeError, ValueError):
+                        violations.append(
+                            InvariantViolation(
+                                "request-summary-evidence",
+                                "Summary request does not match its frozen source",
+                                event.seq,
+                            )
+                        )
+                        continue
+                    snapshot_steps.setdefault(
+                        (data.get("turn_id"), data.get("step_id")), []
+                    ).append(event.seq)
+                    request_snapshots[event.seq] = event
+                    continue
                 declared_turn = event.data.get("turn_id")
                 declared_step = event.data.get("step_id")
                 snapshot_valid = True
@@ -281,9 +360,7 @@ class CoreInvariantChecker:
                     try:
                         raw_composed = event.data["composed_request"]
                         raw_dispatch = event.data["dispatch_request"]
-                        if not isinstance(raw_composed, dict) or not isinstance(
-                            raw_dispatch, dict
-                        ):
+                        if not isinstance(raw_composed, dict) or not isinstance(raw_dispatch, dict):
                             raise ValueError
                         composed = ModelRequest.from_dict(raw_composed)
                         dispatch = ModelRequest.from_dict(raw_dispatch)
@@ -294,11 +371,9 @@ class CoreInvariantChecker:
                         if (
                             composed.to_dict() != raw_composed
                             or dispatch.to_dict() != raw_dispatch
-                            or not dispatch_request_matches_composed(
-                                composed, dispatch
-                            )
+                            or not dispatch_request_matches_composed(composed, dispatch)
                             or not composed.messages
-                            or composed.messages[0] != context_message
+                            or composed.messages[-1] != context_message
                             or any(
                                 dispatch.metadata.get(key) != expected
                                 for key, expected in (
@@ -337,9 +412,7 @@ class CoreInvariantChecker:
                             )
                         )
                 if isinstance(declared_turn, str) and isinstance(declared_step, str):
-                    snapshot_steps.setdefault(
-                        (declared_turn, declared_step), []
-                    ).append(event.seq)
+                    snapshot_steps.setdefault((declared_turn, declared_step), []).append(event.seq)
                 request_snapshots[event.seq] = event
 
             if event.type == "turn/start":
@@ -493,9 +566,7 @@ class CoreInvariantChecker:
                                     attempt_id=attempt_id,
                                     ordinal=ordinal,
                                 )
-                                expected_reservation = model_attempt_reservation_id(
-                                    identity
-                                )
+                                expected_reservation = model_attempt_reservation_id(identity)
                             except (TypeError, ValueError):
                                 expected_reservation = None
                             if reservation_id != expected_reservation:
@@ -546,10 +617,7 @@ class CoreInvariantChecker:
                             event.seq,
                         )
                     )
-                elif (
-                    snapshot.data.get("dispatch_fingerprint")
-                    != dispatch_fingerprint
-                ):
+                elif snapshot.data.get("dispatch_fingerprint") != dispatch_fingerprint:
                     violations.append(
                         InvariantViolation(
                             "attempt-dispatch-fingerprint",
@@ -559,11 +627,9 @@ class CoreInvariantChecker:
                     )
                 elif isinstance(snapshot.data.get("dispatch_request"), dict):
                     dispatch_request = snapshot.data["dispatch_request"]
-                    if (
-                        dispatch_request.get("provider")
-                        != event.data.get("provider")
-                        or dispatch_request.get("model") != event.data.get("model")
-                    ):
+                    if dispatch_request.get("provider") != event.data.get(
+                        "provider"
+                    ) or dispatch_request.get("model") != event.data.get("model"):
                         violations.append(
                             InvariantViolation(
                                 "attempt-provider-model-binding",
@@ -649,8 +715,7 @@ class CoreInvariantChecker:
                             violations.append(
                                 InvariantViolation(
                                     "attempt-end-same-scope",
-                                    f"model attempt {attempt_id} ended in a different turn "
-                                    "or step",
+                                    f"model attempt {attempt_id} ended in a different turn or step",
                                     event.seq,
                                 )
                             )
@@ -783,6 +848,42 @@ class CoreInvariantChecker:
             for event in effect_events
             if event.type == "effect/intent"
         }
+        # Optional cross-stream inspection uses the same source resolver as the
+        # production reader. Session-only inspection cannot assert Effect facts.
+        if effect_events:
+            from traceh.session.tool_output import output_reference, resolve_tool_output
+
+            for event in effect_events:
+                if "retained_output" in event.data or "output_ref" in event.data:
+                    try:
+                        output_reference(event)
+                    except ValueError:
+                        violations.append(
+                            InvariantViolation(
+                                "tool-output-reference-invalid",
+                                "retained Tool output is invalid",
+                                event.seq,
+                            )
+                        )
+            for event in session_events:
+                if event.type == "tool/result" and "output_ref" in event.data:
+                    try:
+                        reference = event.data["output_ref"]
+                        resolve_tool_output(
+                            session_events,
+                            effect_events,
+                            session_id=event.stream_id.removeprefix("session:"),
+                            effect_id=reference["effect_id"],
+                            digest=reference["digest"],
+                        )
+                    except (KeyError, TypeError, ValueError):
+                        violations.append(
+                            InvariantViolation(
+                                "tool-output-source-binding",
+                                "Tool output source does not match its result",
+                                event.seq,
+                            )
+                        )
         for event in effect_events:
             if event.type in {"effect/outcome", "effect/reconciled"}:
                 effect_id = str(event.data.get("effect_id"))
@@ -842,6 +943,15 @@ class CoreInvariantChecker:
 
         try:
             replacement = parse_surface_replacement(event)
+            if isinstance(replacement, SurfaceToolFold):
+                fold = validate_tool_fold(event, prior_events)
+                source_seq = fold.source_seqs[0]
+                if source_seq not in surface_positions or source_seq >= event.seq:
+                    raise ValueError("tool-fold-source-position-invalid")
+                surface_positions[event.seq] = surface_positions[source_seq]
+                hidden_sources.add(source_seq)
+                tool_links.results[fold.message.tool_call_id] = event.seq
+                return ()
         except (TypeError, ValueError):
             return (
                 InvariantViolation(
@@ -852,9 +962,7 @@ class CoreInvariantChecker:
             )
         violations: list[InvariantViolation] = []
         unknown = [
-            seq
-            for seq in replacement.source_seqs
-            if seq not in seen_seqs or seq >= event.seq
+            seq for seq in replacement.source_seqs if seq not in seen_seqs or seq >= event.seq
         ]
         if unknown:
             violations.append(
@@ -923,14 +1031,11 @@ class CoreInvariantChecker:
                     violations.append(
                         InvariantViolation(
                             "surface-replacement-derivation",
-                            f"surface replacement {name} does not match the history "
-                            "it replaced",
+                            f"surface replacement {name} does not match the history it replaced",
                             event.seq,
                         )
                     )
-        split = split_tool_calls(
-            tool_links, replacement.source_seqs, hidden=hidden_sources
-        )
+        split = split_tool_calls(tool_links, replacement.source_seqs, hidden=hidden_sources)
         if split:
             violations.append(
                 InvariantViolation(
@@ -940,9 +1045,7 @@ class CoreInvariantChecker:
                 )
             )
         known = [
-            surface_positions[seq]
-            for seq in replacement.source_seqs
-            if seq in surface_positions
+            surface_positions[seq] for seq in replacement.source_seqs if seq in surface_positions
         ]
         if known:
             surface_positions[event.seq] = min(known)

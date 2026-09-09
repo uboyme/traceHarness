@@ -84,9 +84,7 @@ def sanitize(value: str, *, limit: int = MAX_DETAIL_CHARS) -> str:
     push real information off screen.
     """
 
-    scrubbed = "".join(
-        " " if is_unsafe_character(character) else character for character in value
-    )
+    scrubbed = "".join(" " if is_unsafe_character(character) else character for character in value)
     flat = " ".join(scrubbed.split())
     if len(flat) <= limit:
         return flat
@@ -189,6 +187,18 @@ class TimelineRenderer:
         return f"Step {number}" if number is not None else "Step"
 
     # -- handlers ---------------------------------------------------------
+    def _token_measurement(self, data: dict) -> str:
+        measured = data.get("measurement")
+        if not isinstance(measured, dict) or any(
+            type(measured.get(key)) is not int or measured[key] < 0
+            for key in ("input_tokens", "input_limit")
+        ):
+            return "Request token measurement unavailable"
+        return (
+            f"Request input estimate {measured['input_tokens']}/{measured['input_limit']} tokens"
+            + ("; over limit, not dispatched" if measured.get("over_limit") is True else "")
+        )
+
     # Each returns the text after the event number, or None to show nothing.
 
     def _turn_start(self, data: dict) -> str:
@@ -279,7 +289,9 @@ class TimelineRenderer:
         method = payload_text(data, "method")
         sources = data.get("source_seqs")
         kept = data.get("kept_recent_turns")
-        if method not in ("manual", "automatic") or not isinstance(sources, list):
+        if method == "tool-fold":
+            return "Older Tool result folded (call/result pair and original output preserved)"
+        if method not in ("manual", "automatic", "semantic") or not isinstance(sources, list):
             return "Context compacted"
         shape = f"{len(sources)} messages -> 1 summary"
         if method == "automatic" and isinstance(kept, int) and not isinstance(kept, bool):
@@ -298,7 +310,11 @@ class TimelineRenderer:
         if committed is False:
             outcome = "history unchanged"
         elif committed is True:
-            outcome = "a replacement was committed but could not be read back"
+            outcome = (
+                "earlier Tool folds committed; later compaction failed"
+                if code.startswith("compaction-after-tool-fold-")
+                else "a replacement was committed but could not be read back"
+            )
         else:
             outcome = "commit status unknown; check the session with inspect"
         return f"Automatic context compaction failed ({code}); {outcome}"
@@ -326,6 +342,9 @@ class TimelineRenderer:
 #: can see, and a user who is never told would have no way to explain a later
 #: answer. Only its counts are rendered, never its summary.
 _HANDLERS = {
+    "summary/input": lambda renderer, data: "Preparing semantic history summary",
+    "summary/response": lambda renderer, data: "Summary model response recorded; validating",
+    "request/token-measurement": TimelineRenderer._token_measurement,
     "turn/start": TimelineRenderer._turn_start,
     "turn/end": TimelineRenderer._turn_end,
     "step/start": TimelineRenderer._step_start,

@@ -54,3 +54,5 @@ family for every arm and the report records which one.
   it if the interpreter you want is called something else on your `PATH`.
 * Three tasks with a handful of repetitions is a sanity measurement, not a
   ranking.
+
+当前根 benchmark protocol 为 2，必须有 retrieval；本编码基线设为 null。旧根 1 拒绝，内层 Verifier protocol 仍为 1。检索基线见 [retrieval_v1](../retrieval_v1/README.md)。

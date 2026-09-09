@@ -16,9 +16,10 @@ class ToolRunResult:
     data: dict[str, JsonValue] = field(default_factory=dict)
     effect_id: str | None = None
     error_type: str | None = None
+    output_ref: dict[str, JsonValue] | None = None
 
     def to_event_data(self, *, step_id: str) -> dict[str, JsonValue]:
-        return {
+        result = {
             "step_id": step_id,
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
@@ -28,3 +29,6 @@ class ToolRunResult:
             "effect_id": self.effect_id,
             "error_type": self.error_type,
         }
+        if self.output_ref is not None:
+            result["output_ref"] = self.output_ref
+        return result

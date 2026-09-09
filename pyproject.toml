@@ -29,6 +29,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+tokens = [
+  "tiktoken>=0.9,<1",
+]
 tui = [
   "textual>=8.2.8,<9",
 ]

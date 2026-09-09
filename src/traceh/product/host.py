@@ -263,6 +263,8 @@ async def build_product_chat_host(
     read_models: ProductReadModels | None = None,
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
     project_scope=None,
+    context_input=None,
+    memory_config=None,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
 
@@ -340,7 +342,18 @@ async def build_product_chat_host(
             or project_scope.resolver is not workspace_provider
         ):
             raise ProductInputError("product-project-owner-mismatch", "project_scope")
-        project_binding = ProductProjectBinding(project_scope, workspaces, actor_id=approver_id)
+        if memory_config is not None and (
+            memory_config.source_resolver is not workspace_provider
+            or memory_config.project_limits != project_scope.limits
+        ):
+            raise ProductInputError("product-memory-owner-mismatch", "memory_config")
+        project_binding = ProductProjectBinding(
+            project_scope, workspaces, actor_id=approver_id,
+            memory_config=memory_config,
+            retrieval_policy=context_input.memory if context_input is not None else None,
+        )
+    elif memory_config is not None:
+        raise ProductInputError("product-project-scope-required", "memory_config")
     budgets = BudgetLedgerService(store)
     runtime_factory = ProductAgentRuntimeFactory(
         store,
@@ -350,6 +363,8 @@ async def build_product_chat_host(
         data_dir=data_dir,
         providers=providers,
         retry_policy=model_retry_policy,
+        context_input=context_input,
+        memory_config=memory_config,
     )
     slots = ProcessSlotAuthority(budgets)
     process = ProcessAgentSupervisor(

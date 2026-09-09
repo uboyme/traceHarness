@@ -1,0 +1,397 @@
+[
+  {
+    "run": "context-acceptance-live-01",
+    "completed": false,
+    "returned_calls": 12,
+    "returned_input_tokens": 136249,
+    "returned_output_tokens": 1222,
+    "cases": [
+      {
+        "exit_code": 0,
+        "session_id": "a8a584f8-e222-44eb-a3de-10fe238c424a",
+        "executions": 1,
+        "passed": null,
+        "cancellation": null,
+        "refusal": null,
+        "turns": [
+          {
+            "label": "old-requirements",
+            "steps": 1,
+            "answer": "已收到过期待核对清单，共100项字段（编号000–099），全部以 `candidate_` 开头的唯一标识符形式列出。确认接收完毕，严格遵循离线档案校验要求：不覆盖原件、不联网、检查失败绝不声称通过。\n\n无需执行、不逐条复述、不生成任何校验动作——仅完成确认接收。",
+            "tools": []
+          },
+          {
+            "label": "recent-request",
+            "steps": 1,
+            "answer": "确认：最终答复将严格区分“检查成功”与“检查失败”，绝不自动修复。",
+            "tools": []
+          },
+          {
+            "label": "tool-then-maintenance",
+            "steps": 3,
+            "answer": "END_RECORD=99b59a0707d3; exit_code=0",
+            "tools": [
+              "shell"
+            ]
+          },
+          {
+            "label": "restart-and-topic",
+            "steps": 1,
+            "answer": "31",
+            "tools": []
+          },
+          {
+            "label": "history-original",
+            "steps": 2,
+            "answer": "过期待核对字段 037: candidate_29879d016a84",
+            "tools": [
+              "request_history_page"
+            ]
+          },
+          {
+            "label": "retained-output-keyword",
+            "steps": 4,
+            "answer": "EVIDENCE_ANCHOR=c4fd78414997",
+            "tools": [
+              "shell",
+              "search_tool_output"
+            ]
+          }
+        ],
+        "attempts": 12,
+        "unknown_attempts": 0,
+        "durable_summary_tokens": 15350,
+        "semantic_replacements": 1,
+        "summary_rejections": [
+          {
+            "step_id": "ff299331-f2bb-4206-90c5-0899a4df3b4c",
+            "code": "semantic-summary-evidence-invalid"
+          }
+        ],
+        "same_request_estimates": [
+          {
+            "replacement_seq": 56,
+            "with_old_history": 14381,
+            "after_summary": 12708
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "run": "context-acceptance-live-02",
+    "completed": false,
+    "returned_calls": 30,
+    "returned_input_tokens": 359687,
+    "returned_output_tokens": 5722,
+    "cases": [
+      {
+        "exit_code": 0,
+        "session_id": "d3278831-08ed-4607-82a4-1ec12d00f7d6",
+        "executions": {
+          "verify.py": "x",
+          "huge.py": "x"
+        },
+        "passed": true,
+        "cancellation": {
+          "interrupted": true,
+          "boundary": "real response received, before Runtime delivery",
+          "returned_usage": [
+            {
+              "input_tokens": 14074,
+              "output_tokens": 845,
+              "total_tokens": 14919,
+              "quality": "exact"
+            }
+          ]
+        },
+        "refusal": {
+          "display": "上下文空间不足，本次请求未发送给模型。\n本地估算输入 44064 token，允许 16000，超出 28064；另预留输出 3072、安全余量 2048。\n占用：对话与工具结果 26573；参考与当前问题回显 15171；任务状态 0；系统说明 1141；工具定义 1156；请求封装 23。\n本轮维护：旧工具折叠 0 次，旧历史摘录 0 次，语义摘要 0 次；维护失败 1 次；本次因 token 排除参考 1 项。\n可缩短当前输入；在配置中按模型实际容量调整 Token 窗口、输出预留及自动压缩。本轮工具结果过大时，可在新一轮改问具体片段，或新建会话继续。\n原日志和已执行工具结果仍保留；不会自动重跑工具。估算不等于模型实际计费。"
+        },
+        "turns": [
+          {
+            "label": "old-requirements",
+            "steps": 1,
+            "answer": "已收到过期待核对清单，共100项字段（000–099），全部以 `candidate_` 开头的唯一标识符形式确认无误。\n\n严格遵循离线档案校验要求：  \n✅ 不覆盖原件  \n✅ 不联网  \n✅ 检查失败绝不声称通过  \n\n等待进一步指令开展校验工作。",
+            "tools": []
+          },
+          {
+            "label": "recent-request",
+            "steps": 1,
+            "answer": "确认：最终答复将明确区分“检查成功”或“检查失败”，不执行任何自动修复。",
+            "tools": []
+          },
+          {
+            "label": "tool-then-maintenance",
+            "steps": 3,
+            "answer": "END_RECORD=97a94521a056; exit_code=0",
+            "tools": [
+              "shell"
+            ]
+          },
+          {
+            "label": "restart-and-topic",
+            "steps": 1,
+            "answer": "31",
+            "tools": []
+          },
+          {
+            "label": "history-original",
+            "steps": 2,
+            "answer": "过期待核对字段 037: candidate_8bff0932d9e5",
+            "tools": [
+              "request_history_page"
+            ]
+          },
+          {
+            "label": "retained-output-keyword",
+            "steps": 5,
+            "answer": "EVIDENCE_ANCHOR=d497ff0c604f  \nCHECK_DETAIL=88a1b6570e48",
+            "tools": [
+              "shell",
+              "search_tool_output",
+              "read_tool_output"
+            ]
+          },
+          {
+            "label": "restart-topic-again",
+            "steps": 2,
+            "answer": "41",
+            "tools": []
+          },
+          {
+            "label": "after-cancel",
+            "steps": 2,
+            "answer": "33",
+            "tools": []
+          }
+        ],
+        "attempts": 19,
+        "unknown_attempts": 1,
+        "durable_summary_tokens": 58059,
+        "semantic_replacements": 1,
+        "summary_rejections": [
+          {
+            "step_id": "3d043495-f633-4632-832f-bff6b41ba47d",
+            "code": "semantic-summary-evidence-invalid"
+          },
+          {
+            "step_id": "0fcd43b7-8fb4-4bf1-af48-3c0c1c620426",
+            "code": "semantic-summary-evidence-invalid"
+          },
+          {
+            "step_id": "8169456a-023c-4c88-8e08-8496493b6705",
+            "code": "semantic-summary-list-invalid"
+          },
+          {
+            "step_id": "5d18e6aa-ada5-4856-a867-03c64a839b86",
+            "code": "semantic-summary-evidence-invalid"
+          }
+        ],
+        "same_request_estimates": [
+          {
+            "replacement_seq": 56,
+            "with_old_history": 14374,
+            "after_summary": 12740
+          }
+        ],
+        "invariants": [],
+        "replay": [],
+        "refusal_current": "上下文空间不足，本次请求未发送给模型。\n本地估算输入 44064 token，允许 16000，超出 28064；另预留输出 3072、安全余量 2048。\n占用：对话与工具结果 26573；参考与当前问题回显 15171；任务状态 0；系统说明 1141；工具定义 1156；请求封装 23。\n本轮维护：旧工具折叠 0 次，旧历史摘录 0 次，语义摘要 0 次；维护失败 1 次；本次记录的参考 token 排除 1 项。\n可缩短当前输入；在配置中按模型实际容量调整 Token 窗口、输出预留及自动压缩。本轮工具结果过大时，可在新一轮改问具体片段，或新建会话继续。\n原日志和已执行工具结果仍保留；不会自动重跑工具。估算不等于模型实际计费。"
+      },
+      {
+        "exit_code": 7,
+        "session_id": "8f93eef4-54c2-4b00-95c7-dc9210bb161d",
+        "executions": 1,
+        "passed": null,
+        "cancellation": null,
+        "refusal": null,
+        "turns": [
+          {
+            "label": "old-requirements",
+            "steps": 1,
+            "answer": "已收到过期待核对清单，共100个字段（编号000至099），全部以 `candidate_` 开头的唯一标识符形式列出。  \n确认接收完毕，后续将严格遵循离线档案校验要求：不覆盖原件、不联网、检查失败绝不声称通过。",
+            "tools": []
+          },
+          {
+            "label": "recent-request",
+            "steps": 1,
+            "answer": "确认：最终答复将明确区分“检查成功”或“检查失败”，不执行任何自动修复。",
+            "tools": []
+          },
+          {
+            "label": "tool-then-maintenance",
+            "steps": 3,
+            "answer": "检查已执行，输出末尾为：\n\n`END_RECORD=d9c177735920; exit_code=7`\n\n实际 `exit_code=7`，表示检查失败。  \n如实报告：**检查失败**。",
+            "tools": [
+              "shell"
+            ]
+          },
+          {
+            "label": "restart-and-topic",
+            "steps": 1,
+            "answer": "31",
+            "tools": []
+          },
+          {
+            "label": "history-original",
+            "steps": 2,
+            "answer": "从历史原文页中直接查得：  \n过期待核对字段 037: `candidate_c4071d05177e`\n\n因此，第037项的 candidate 编码是：**candidate_c4071d05177e**",
+            "tools": [
+              "request_history_page"
+            ]
+          },
+          {
+            "label": "retained-output-keyword",
+            "steps": 3,
+            "answer": "根据当前参考信息，我需要查找 `huge.py` 执行输出中的 `EVIDENCE_ANCHOR` 值。但提供的历史页面导航信息中没有包含 `huge.py` 的执行输出。\n\n由于 `list_tool_outputs` 返回空列表，且当前参考中只有历史页面导航信息（关于过期待核对清单），没有 `huge.py` 的执行输出，我无法找到 `EVIDENCE_ANCHOR` 和 `CHECK_DETAIL` 的值。\n\n因此，`EVIDENCE_ANCHOR` 的值无法确定，`CHECK_DETAIL` 的值也无法确定。",
+            "tools": [
+              "list_tool_outputs"
+            ]
+          }
+        ],
+        "attempts": 11,
+        "unknown_attempts": 0,
+        "durable_summary_tokens": 15410,
+        "semantic_replacements": 1,
+        "summary_rejections": [
+          {
+            "step_id": "b04f3c53-e308-4bc5-9434-dac302f07539",
+            "code": "semantic-summary-evidence-invalid"
+          }
+        ],
+        "same_request_estimates": [
+          {
+            "replacement_seq": 56,
+            "with_old_history": 14407,
+            "after_summary": 12774
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "run": "context-acceptance-live-03",
+    "completed": true,
+    "returned_calls": 20,
+    "returned_input_tokens": 250114,
+    "returned_output_tokens": 5105,
+    "cases": [
+      {
+        "exit_code": 7,
+        "session_id": "00405f6d-f3c8-478d-a9b2-7bb824720880",
+        "executions": {
+          "verify.py": "x",
+          "huge.py": "x"
+        },
+        "passed": true,
+        "cancellation": {
+          "interrupted": true,
+          "boundary": "real response received, before Runtime delivery",
+          "returned_usage": [
+            {
+              "input_tokens": 14689,
+              "output_tokens": 754,
+              "total_tokens": 15443,
+              "quality": "exact"
+            }
+          ]
+        },
+        "refusal": {
+          "display": "上下文空间不足，本次请求未发送给模型。\n本地估算输入 44759 token，允许 16000，超出 28759；另预留输出 3072、安全余量 2048。\n占用：对话与工具结果 27268；参考与当前问题回显 15171；任务状态 0；系统说明 1141；工具定义 1156；请求封装 23。\n本轮维护：旧工具折叠 0 次，旧历史摘录 0 次，语义摘要 0 次；维护失败 1 次；本次记录的参考 token 排除 1 项。\n可缩短当前输入；在配置中按模型实际容量调整 Token 窗口、输出预留及自动压缩。本轮工具结果过大时，可在新一轮改问具体片段，或新建会话继续。\n原日志和已执行工具结果仍保留；不会自动重跑工具。估算不等于模型实际计费。"
+        },
+        "turns": [
+          {
+            "label": "old-requirements",
+            "steps": 1,
+            "answer": "已收到过期待核对清单，共100项（字段 000 至 099），全部 candidate ID 已确认无误。  \n严格遵循离线档案校验要求：不覆盖原件、不联网、检查失败绝不标记为通过。  \n当前仅作接收确认，不执行任何校验动作。\n\n✅ 确认完毕。",
+            "tools": []
+          },
+          {
+            "label": "recent-request",
+            "steps": 1,
+            "answer": "✅ 已确认：最终答复将明确区分“检查成功”与“检查失败”，且绝不自动修复。",
+            "tools": []
+          },
+          {
+            "label": "tool-then-maintenance",
+            "steps": 4,
+            "answer": "根据执行 `C:/mydownload/anaconda/python.exe verify.py` 的输出：\n\n- 输出末尾的 `END_RECORD` 是：`1c58f3fd50b8`\n- 实际 `exit_code` 是：`7`\n\n检查失败（`exit_code=7` ≠ 0），已如实说明，未重跑或修复。",
+            "tools": [
+              "list_files",
+              "shell"
+            ]
+          },
+          {
+            "label": "restart-and-topic",
+            "steps": 1,
+            "answer": "31",
+            "tools": []
+          },
+          {
+            "label": "history-original",
+            "steps": 2,
+            "answer": "根据压缩历史原文页中的过期待核对清单，第037项（字段 037）的 candidate 编码是：`candidate_577296d48fc6`",
+            "tools": [
+              "request_history_page"
+            ]
+          },
+          {
+            "label": "retained-output-keyword",
+            "steps": 5,
+            "answer": "根据执行 `C:/mydownload/anaconda/python.exe huge.py` 的输出：\n\n- `EVIDENCE_ANCHOR` 的值是：`1b90a9caec10`\n- 附近的 `CHECK_DETAIL` 的值是：`27fc80c3fd9d`",
+            "tools": [
+              "shell",
+              "search_tool_output",
+              "read_tool_output"
+            ]
+          },
+          {
+            "label": "restart-topic-again",
+            "steps": 2,
+            "answer": "41",
+            "tools": []
+          },
+          {
+            "label": "after-cancel",
+            "steps": 2,
+            "answer": "33",
+            "tools": []
+          }
+        ],
+        "attempts": 21,
+        "unknown_attempts": 2,
+        "durable_summary_tokens": 60285,
+        "semantic_replacements": 1,
+        "summary_rejections": [
+          {
+            "step_id": "c4e9f7dc-b7eb-4c1a-80f5-6b7bc2c4024e",
+            "code": "semantic-summary-evidence-invalid"
+          },
+          {
+            "step_id": "cfd5bdf0-f0c7-4a93-93db-4bd47a108fad",
+            "code": "semantic-summary-evidence-invalid"
+          },
+          {
+            "step_id": "fa5cb0da-1caf-46bf-8e5f-1638184c2ae5",
+            "code": "semantic-summary-evidence-invalid"
+          },
+          {
+            "step_id": "e657f62e-aa83-4a61-8fbe-423083e3724c",
+            "code": "semantic-summary-evidence-invalid"
+          }
+        ],
+        "same_request_estimates": [
+          {
+            "replacement_seq": 70,
+            "with_old_history": 14510,
+            "after_summary": 12905
+          }
+        ],
+        "invariants": [],
+        "replay": [],
+        "refusal_current": "上下文空间不足，本次请求未发送给模型。\n本地估算输入 44759 token，允许 16000，超出 28759；另预留输出 3072、安全余量 2048。\n占用：对话与工具结果 27268；参考与当前问题回显 15171；任务状态 0；系统说明 1141；工具定义 1156；请求封装 23。\n本轮维护：旧工具折叠 0 次，旧历史摘录 0 次，语义摘要 0 次；维护失败 1 次；本次记录的参考 token 排除 1 项。\n可缩短当前输入；在配置中按模型实际容量调整 Token 窗口、输出预留及自动压缩。本轮工具结果过大时，可在新一轮改问具体片段，或新建会话继续。\n原日志和已执行工具结果仍保留；不会自动重跑工具。估算不等于模型实际计费。"
+      }
+    ]
+  }
+]

@@ -62,8 +62,7 @@ def test_importing_core_tui_boundary_does_not_import_textual() -> None:
         (
             sys.executable,
             "-c",
-            "import sys; import traceh.tui; "
-            "raise SystemExit(1 if 'textual' in sys.modules else 0)",
+            "import sys; import traceh.tui; raise SystemExit(1 if 'textual' in sys.modules else 0)",
         ),
         cwd=Path(__file__).parents[1],
         check=False,
@@ -97,6 +96,22 @@ def test_textual_is_an_optional_bounded_dependency() -> None:
     )["project"]
     assert "textual" not in " ".join(project["dependencies"])
     assert project["optional-dependencies"]["tui"] == ["textual>=8.2.8,<9"]
+
+
+def test_launch_profile_owner_does_not_import_textual() -> None:
+    probe = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['textual'] = None; "
+            "from traceh.cli.tui_config import load_profile; "
+            "from traceh.cli.tui_entry import initial_settings; "
+            "from traceh.cli.main import build_parser; build_parser()",
+        ),
+        cwd=Path(__file__).parents[1],
+        check=False,
+    )
+    assert probe.returncode == 0
 
 
 def test_untrusted_display_is_markup_inert_control_safe_and_bounded() -> None:

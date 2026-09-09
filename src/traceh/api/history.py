@@ -7,7 +7,7 @@ from typing import Literal
 
 from traceh.api.json_types import JsonValue, fingerprint
 
-HISTORY_PAGE_POLICY_VERSION = "history-turn-pages-v1"
+HISTORY_PAGE_POLICY_VERSION = "history-turn-pages-v2"
 
 
 def _digest(value: object, code: str) -> None:

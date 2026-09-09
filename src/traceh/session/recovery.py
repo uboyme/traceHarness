@@ -8,6 +8,7 @@ from traceh.api.events import EventEnvelope, attempt_identity
 from traceh.api.json_types import JsonValue
 from traceh.session.projections import StateProjector
 from traceh.session.service import SessionService
+from traceh.session.tool_output import output_reference
 
 
 def _is_evidence_for(candidate: EventEnvelope, start: EventEnvelope) -> bool:
@@ -38,7 +39,7 @@ class RecoveryReport:
 
 
 _ATTEMPT_RECOVERED_FROM_MESSAGE = (
-    "The process stopped before the model attempt was closed, but a complete assistant message "
+    "The process stopped before the model attempt was closed, but a complete model response "
     "for this attempt is already durable, so the attempt is closed as succeeded. Token usage and "
     "the original finish reason were not recorded and are not reconstructed."
 )
@@ -65,7 +66,7 @@ class RecoveryService:
         """Append a `model/attempt-end` for every attempt that never got one.
 
         Evidence, not optimism, decides the status: an attempt is only closed as
-        succeeded when a complete `assistant/message` for exactly the same
+        succeeded when a complete `assistant/message` or `summary/response` for the same
         attempt, turn and step is already durable. Otherwise the outcome is
         genuinely unknown and is recorded as such. The provider is never called
         again and partial chunks are never merged into a message.
@@ -89,7 +90,7 @@ class RecoveryService:
                 continue
             elif event.type == "model/attempt-end":
                 ended.add(attempt_id)
-            elif event.type == "assistant/message":
+            elif event.type in {"assistant/message", "summary/response"}:
                 messages.setdefault(attempt_id, []).append(event)
             elif event.type == "assistant/chunk":
                 chunks.setdefault(attempt_id, []).append(event)
@@ -129,7 +130,9 @@ class RecoveryService:
             }
             if durable_message:
                 data["status"] = "succeeded"
-                data["recovered_from"] = "assistant/message"
+                data["recovered_from"] = next(
+                    event.type for event in messages[attempt_id] if _is_evidence_for(event, start)
+                )
                 data["message"] = _ATTEMPT_RECOVERED_FROM_MESSAGE
                 notes.append(
                     f"closed model attempt {attempt_id} as succeeded from a durable "
@@ -161,9 +164,7 @@ class RecoveryService:
         projection = self.state.project(session_events)
 
         notes: list[str] = []
-        closed_model_attempts = await self._close_model_attempts(
-            session_id, session_events, notes
-        )
+        closed_model_attempts = await self._close_model_attempts(session_id, session_events, notes)
 
         calls = {
             str(event.data.get("tool_call_id")): event
@@ -191,9 +192,7 @@ class RecoveryService:
             outcome = outcomes.get(call_id)
             intent = intents.get(call_id)
             effect_id = (
-                str((outcome or intent).data.get("effect_id"))
-                if (outcome or intent)
-                else None
+                str((outcome or intent).data.get("effect_id")) if (outcome or intent) else None
             )
             if outcome is not None:
                 status = str(outcome.data.get("status", "unknown"))
@@ -229,6 +228,7 @@ class RecoveryService:
                     )
                 notes.append(f"marked tool result {call_id} unknown after crash")
 
+            retained_reference = output_reference(outcome) if outcome is not None else None
             await self.sessions.append_session(
                 session_id,
                 "tool/result",
@@ -242,6 +242,9 @@ class RecoveryService:
                     "data": data,
                     "effect_id": effect_id,
                     "error_type": "RecoveredAfterCrash",
+                    **(
+                        {"output_ref": retained_reference} if retained_reference is not None else {}
+                    ),
                 },
             )
             synthesized += 1

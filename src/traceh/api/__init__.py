@@ -52,7 +52,7 @@ from traceh.api.promotion import (
     VerifierOutcome,
 )
 from traceh.api.prompts import PromptSection
-from traceh.api.retrieval import SkillRetrievalPolicy
+from traceh.api.retrieval import ReferenceRetrievalPolicy
 from traceh.api.services import Registration, ServiceKey
 from traceh.api.skills import (
     SkillChunk,
@@ -129,7 +129,7 @@ __all__ = [
     "SkillDescriptor",
     "SkillLimits",
     "SkillPolicy",
-    "SkillRetrievalPolicy",
+    "ReferenceRetrievalPolicy",
     "SkillResource",
     "SkillResourceRoot",
     "SkillSection",

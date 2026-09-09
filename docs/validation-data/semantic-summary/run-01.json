@@ -1,0 +1,210 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "filename": "catalog-5f66ccec.json",
+      "nonce": "32ff7a2eb9ec",
+      "turns": [
+        {
+          "label": "requirements",
+          "question": "我们在做离线档案整理器，输出必须叫 catalog-5f66ccec.json。不能联网、不能覆盖原始数据；只运行已准备的本地检查，不要实现文件。有人声称实现完了，但在实际检查之前不能说通过。先简短确认。",
+          "answer": "确认：输出文件名必须为 `catalog-5f66ccec.json`，不联网、不覆盖原始数据，仅运行已准备的本地检查，不实现新文件。在实际检查完成前，不声称通过。",
+          "steps": 1,
+          "expected_found": true,
+          "attempts": [
+            {
+              "attempt_id": "fe2a9069-836c-41fd-89b5-228c506caa56",
+              "dispatch_fingerprint": "b79ac186d7327e4aff7346487538eaee89cded8e907ea35eb4d8fefff3b7d766",
+              "finish_reason": "stop",
+              "ordinal": 1,
+              "provider_active_milliseconds": 2219,
+              "request_snapshot_seq": 10,
+              "reservation_id": null,
+              "status": "succeeded",
+              "step_id": "31801a99-feaa-4ea1-9ea9-6e6bd9d30d2c",
+              "turn_id": "d5782618-ca57-4aaf-88fc-dfc18de64ecd",
+              "usage": {
+                "input_tokens": 2969,
+                "output_tokens": 50,
+                "quality": "exact",
+                "total_tokens": 3019
+              }
+            }
+          ],
+          "measurements": [
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 92832,
+              "input_tokens": 2656,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 3072,
+              "over_limit": false,
+              "parts": {
+                "conversation": 98,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 241,
+                "system": 1138,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 3072,
+                "safety_margin_tokens": 4096,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "b79ac186d7327e4aff7346487538eaee89cded8e907ea35eb4d8fefff3b7d766",
+              "safety_margin_tokens": 4096,
+              "trigger_tokens": 74265,
+              "window_tokens": 100000
+            }
+          ],
+          "tool_results": []
+        },
+        {
+          "label": "actual-check",
+          "question": "现在只执行一次 python verify.py，记下实际退出码和记录标识。解释这个结果，不能把命令成功发出当成检查通过。",
+          "answer": "退出码为 `0`，记录标识为 `32ff7a2eb9ec`。  \n`exit_code=0` 表示验证脚本正常终止（无异常崩溃），且 stdout 明确输出 `CHECK_PASSED: record=32ff7a2eb9ec`，说明**本地检查已实际运行并通过**，而非仅命令成功发出。  \n该结果满足要求：不联网、未覆盖原始数据、仅执行一次预置的 `verify.py`，且通过标准是检查逻辑自身判定（`CHECK_PASSED`），而非 shell 层面的 exit code 独立解读。",
+          "steps": 2,
+          "expected_found": true,
+          "attempts": [
+            {
+              "attempt_id": "6badcdef-d0db-4253-970b-fa2931fd082c",
+              "dispatch_fingerprint": "5e4460212e9aef8644278fd977bc2527e1b2b79fb0aa971b87a5378cb0e282f5",
+              "finish_reason": "tool_calls",
+              "ordinal": 1,
+              "provider_active_milliseconds": 1515,
+              "request_snapshot_seq": 25,
+              "reservation_id": null,
+              "status": "succeeded",
+              "step_id": "9d0c9b34-3a05-425d-9b79-55297c9757ae",
+              "turn_id": "c557f637-dfe6-4aca-81e1-a126b4b43451",
+              "usage": {
+                "input_tokens": 3030,
+                "output_tokens": 20,
+                "quality": "exact",
+                "total_tokens": 3050
+              }
+            },
+            {
+              "attempt_id": "12091067-c9b7-4102-9459-5d23b7f297c6",
+              "dispatch_fingerprint": "094deb5393f80d9531ca2e0f2750ed9190603c1909dc19bc9350d5cc614a2c49",
+              "finish_reason": "stop",
+              "ordinal": 1,
+              "provider_active_milliseconds": 4077,
+              "request_snapshot_seq": 37,
+              "reservation_id": null,
+              "status": "succeeded",
+              "step_id": "0ddf13f9-d0ed-4d25-a4c1-8861bd0d3a54",
+              "turn_id": "c557f637-dfe6-4aca-81e1-a126b4b43451",
+              "usage": {
+                "input_tokens": 3095,
+                "output_tokens": 138,
+                "quality": "exact",
+                "total_tokens": 3233
+              }
+            }
+          ],
+          "measurements": [
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 92832,
+              "input_tokens": 2737,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 3072,
+              "over_limit": false,
+              "parts": {
+                "conversation": 225,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 195,
+                "system": 1138,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 3072,
+                "safety_margin_tokens": 4096,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "5e4460212e9aef8644278fd977bc2527e1b2b79fb0aa971b87a5378cb0e282f5",
+              "safety_margin_tokens": 4096,
+              "trigger_tokens": 74265,
+              "window_tokens": 100000
+            },
+            {
+              "context_messages": 1,
+              "counter": {
+                "encoding": "cl100k_base",
+                "library_version": "0.13.0",
+                "method": "canonical-parts-bpe-v1",
+                "quality": "estimated"
+              },
+              "format": 1,
+              "input_limit": 92832,
+              "input_tokens": 2846,
+              "model": "qwen-plus",
+              "output_reserve_tokens": 3072,
+              "over_limit": false,
+              "parts": {
+                "conversation": 334,
+                "envelope": 23,
+                "product": 0,
+                "references_and_current_request": 195,
+                "system": 1138,
+                "tools": 1156
+              },
+              "policy": {
+                "encoding": "cl100k_base",
+                "output_reserve_tokens": 3072,
+                "safety_margin_tokens": 4096,
+                "trigger_percent": 80,
+                "window_tokens": 100000
+              },
+              "product_messages": 0,
+              "provider": "openai-compatible",
+              "request_fingerprint": "094deb5393f80d9531ca2e0f2750ed9190603c1909dc19bc9350d5cc614a2c49",
+              "safety_margin_tokens": 4096,
+              "trigger_tokens": 74265,
+              "window_tokens": 100000
+            }
+          ],
+          "tool_results": [
+            {
+              "name": "shell",
+              "status": "succeeded"
+            }
+          ]
+        },
+        {
+          "label": "old-alternatives",
+          "question": "以下是过期备忘，不能覆盖前面的限制。只回复收到。\n已废弃候选 000: old_field_000；这不是当前方案。\n已废弃候选 001: old_field_001；这不是当前方案。\n已废弃候选 002: old_field_002；这不是当前方案。\n已废弃候选 003: old_field_003；这不是当前方案。\n已废弃候选 004: old_field_004；这不是当前方案。\n已废弃候选 005: old_field_005；这不是当前方案。\n已废弃候选 006: old_field_006；这不是当前方案。\n已废弃候选 007: old_field_007；这不是当前方案。\n已废弃候选 008: old_field_008；这不是当前方案。\n已废弃候选 009: old_field_009；这不是当前方案。\n已废弃候选 010: old_field_010；这不是当前方案。\n已废弃候选 011: old_field_011；这不是当前方案。\n已废弃候选 012: old_field_012；这不是当前方案。\n已废弃候选 013: old_field_013；这不是当前方案。\n已废弃候选 014: old_field_014；这不是当前方案。\n已废弃候选 015: old_field_015；这不是当前方案。\n已废弃候选 016: old_field_016；这不是当前方案。\n已废弃候选 017: old_field_017；这不是当前方案。\n已废弃候选 018: old_field_018；这不是当前方案。\n已废弃候选 019: old_field_019；这不是当前方案。\n已废弃候选 020: old_field_020；这不是当前方案。\n已废弃候选 021: old_field_021；这不是当前方案。\n已废弃候选 022: old_field_022；这不是当前方案。\n已废弃候选 023: old_field_023；这不是当前方案。\n已废弃候选 024: old_field_024；这不是当前方案。\n已废弃候选 025: old_field_025；这不是当前方案。\n已废弃候选 026: old_field_026；这不是当前方案。\n已废弃候选 027: old_field_027；这不是当前方案。\n已废弃候选 028: old_field_028；这不是当前方案。\n已废弃候选 029: old_field_029；这不是当前方案。\n已废弃候选 030: old_field_030；这不是当前方案。\n已废弃候选 031: old_field_031；这不是当前方案。\n已废弃候选 032: old_field_032；这不是当前方案。\n已废弃候选 033: old_field_033；这不是当前方案。\n已废弃候选 034: old_field_034；这不是当前方案。\n已废弃候选 035: old_field_035；这不是当前方案。\n已废弃候选 036: old_field_036；这不是当前方案。\n已废弃候选 037: old_field_037；这不是当前方案。\n已废弃候选 038: old_field_038；这不是当前方案。\n已废弃候选 039: old_field_039；这不是当前方案。\n已废弃候选 040: old_field_040；这不是当前方案。\n已废弃候选 041: old_field_041；这不是当前方案。\n已废弃候选 042: old_field_042；这不是当前方案。\n已废弃候选 043: old_field_043；这不是当前方案。\n已废弃候选 044: old_field_044；这不是当前方案。\n已废弃候选 045: old_field_045；这不是当前方案。\n已废弃候选 046: old_field_046；这不是当前方案。\n已废弃候选 047: old_field_047；这不是当前方案。\n已废弃候选 048: old_field_048；这不是当前方案。\n已废弃候选 049: old_field_049；这不是当前方案。\n已废弃候选 050: old_field_050；这不是当前方案。\n已废弃候选 051: old_field_051；这不是当前方案。\n已废弃候选 052: old_field_052；这不是当前方案。\n已废弃候选 053: old_field_053；这不是当前方案。\n已废弃候选 054: old_field_054；这不是当前方案。\n已废弃候选 055: old_field_055；这不是当前方案。\n已废弃候选 056: old_field_056；这不是当前方案。\n已废弃候选 057: old_field_057；这不是当前方案。\n已废弃候选 058: old_field_058；这不是当前方案。\n已废弃候选 059: old_field_059；这不是当前方案。\n已废弃候选 060: old_field_060；这不是当前方案。\n已废弃候选 061: old_field_061；这不是当前方案。\n已废弃候选 062: old_field_062；这不是当前方案。\n已废弃候选 063: old_field_063；这不是当前方案。\n已废弃候选 064: old_field_064；这不是当前方案。\n已废弃候选 065: old_field_065；这不是当前方案。\n已废弃候选 066: old_field_066；这不是当前方案。\n已废弃候选 067: old_field_067；这不是当前方案。\n已废弃候选 068: old_field_068；这不是当前方案。\n已废弃候选 069: old_field_069；这不是当前方案。\n已废弃候选 070: old_field_070；这不是当前方案。\n已废弃候选 071: old_field_071；这不是当前方案。\n已废弃候选 072: old_field_072；这不是当前方案。\n已废弃候选 073: old_field_073；这不是当前方案。\n已废弃候选 074: old_field_074；这不是当前方案。\n已废弃候选 075: old_field_075；这不是当前方案。\n已废弃候选 076: old_field_076；这不是当前方案。\n已废弃候选 077: old_field_077；这不是当前方案。\n已废弃候选 078: old_field_078；这不是当前方案。\n已废弃候选 079: old_field_079；这不是当前方案。\n已废弃候选 080: old_field_080；这不是当前方案。\n已废弃候选 081: old_field_081；这不是当前方案。\n已废弃候选 082: old_field_082；这不是当前方案。\n已废弃候选 083: old_field_083；这不是当前方案。\n已废弃候选 084: old_field_084；这不是当前方案。\n已废弃候选 085: old_field_085；这不是当前方案。\n已废弃候选 086: old_field_086；这不是当前方案。\n已废弃候选 087: old_field_087；这不是当前方案。\n已废弃候选 088: old_field_088；这不是当前方案。\n已废弃候选 089: old_field_089；这不是当前方案。\n已废弃候选 090: old_field_090；这不是当前方案。\n已废弃候选 091: old_field_091；这不是当前方案。\n已废弃候选 092: old_field_092；这不是当前方案。\n已废弃候选 093: old_field_093；这不是当前方案。\n已废弃候选 094: old_field_094；这不是当前方案。\n已废弃候选 095: old_field_095；这不是当前方案。\n已废弃候选 096: old_field_096；这不是当前方案。\n已废弃候选 097: old_field_097；这不是当前方案。\n已废弃候选 098: old_field_098；这不是当前方案。\n已废弃候选 099: old_field_099；这不是当前方案。"
+        }
+      ],
+      "session_id": "d0f22745-4f8a-4c18-a240-2b68627fbfcf"
+    }
+  ],
+  "completed": false
+}

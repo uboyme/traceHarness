@@ -71,6 +71,9 @@ class AgentLoop:
         retry_scheduler: RetryScheduler | None = None,
         compaction: CompactionService | None = None,
         context_policy: ContextInputPolicy | None = None,
+        read_memory_context=None,
+        recheck_memory_context=None,
+        observe_workspace=None,
     ) -> None:
         self.sessions = sessions
         self.compositions = compositions
@@ -85,15 +88,20 @@ class AgentLoop:
         self.retry_policy = retry_policy
         self.retry_scheduler = retry_scheduler or RetryScheduler.real()
         #: The one compaction owner, shared with `AgentRuntime`. It is consulted
-        #: before a Turn opens and never during one.
+        #: before a Turn opens in byte mode, or from first-Step preparation in
+        #: token mode. Both paths may replace only closed older history.
         self.compaction = compaction
         self.context_policy = context_policy or ContextInputPolicy.empty()
         # Only this Session's read capability reaches the source service. The
         # loop retains the append owner, and retries remain below this freeze.
         self.context_inputs = ContextInputService(
-            sessions.read_session, policy=self.context_policy,
+            sessions.read_session,
+            policy=self.context_policy,
             read_selection=sessions.read_skill_selection,
             query_index=sessions.query_context_index,
+            read_memory=read_memory_context,
+            recheck_memory=recheck_memory_context,
+            observe_workspace=observe_workspace,
         )
 
     async def run_turn(self, session_id: str, task: str | TurnInput) -> TurnResult:
@@ -110,11 +118,11 @@ class AgentLoop:
             raise ValueError("history-request-resource-limit")
         await self.sessions.ensure_session(session_id)
         workspace = await self.sessions.workspace_for(session_id)
-        # The only safe linearization point for automatic compaction: this owner
-        # already holds the single active Turn for the Session, no Turn is open
-        # yet, and the replacement therefore lands before this Turn's user
-        # message and before every request this Turn will freeze.
-        await self._compact_before_turn(session_id)
+        # Byte mode can decide before opening a Turn. Token mode needs complete
+        # request composition and references, so the same owner is consulted
+        # during first-Step preparation under this single Turn ownership.
+        if self.request_builder.token_meter is None:
+            await self._compact_before_turn(session_id)
         turn_id = str(uuid4())
         message_id = turn_input.message_id
         correlation_id = uuid4()
@@ -191,9 +199,12 @@ class AgentLoop:
 
                     assert user_message is not None and self.context_policy.history is not None
                     await self.sessions.append_history_requests(
-                        session_id, turn_id=turn_id, step_id=current_step_id,
+                        session_id,
+                        turn_id=turn_id,
+                        step_id=current_step_id,
                         user_message_ref=event_ref(user_message),
-                        requests=turn_input.history_requests, policy=self.context_policy.history,
+                        requests=turn_input.history_requests,
+                        policy=self.context_policy.history,
                         correlation_id=correlation_id,
                     )
 
@@ -204,33 +215,25 @@ class AgentLoop:
                     step_id=current_step_id,
                 ) as active_composition:
                     composition = active_composition.snapshot
-                    context = await self.context_inputs.freeze(
+                    built = await self.request_builder.prepare(
                         session_id=session_id,
                         turn_id=turn_id,
                         step_id=current_step_id,
                         composition=composition,
                         active_composition=active_composition,
-                    )
-                    context_data = context.to_dict()
-                    await self.sessions.append_context_input(
-                        session_id,
-                        context_data,
-                        expected_seq=context_data["observed_session_seq"],
+                        context_inputs=self.context_inputs,
                         correlation_id=correlation_id,
-                    )
-                    composition_event = await self.sessions.append_session(
-                        session_id,
-                        "composition/snapshot",
-                        composition.to_dict(),
-                        correlation_id=correlation_id,
-                        composition_revision=composition.revision,
-                    )
-                    built = await self.request_builder.build(
-                        session_id=session_id,
-                        turn_id=turn_id,
-                        step_id=current_step_id,
-                        composition=composition,
-                        through_seq=composition_event.seq,
+                        compaction=self.compaction,
+                        allow_compaction=(
+                            steps < self.max_steps
+                            or self.compaction is None
+                            or not self.compaction.semantic_summary
+                        )
+                        and not (
+                            turn_input.history_requests
+                            and self.compaction is not None
+                            and self.compaction.semantic_summary
+                        ),
                     )
                     retry_window_started = self.retry_scheduler.monotonic()
                     frozen_dispatch_request = None
@@ -268,20 +271,15 @@ class AgentLoop:
                             )
                             dispatch_provider = admission.provider
                             dispatch_request = admission.request
-                            dispatch_fingerprint = fingerprint(
-                                dispatch_request.to_dict()
-                            )
+                            dispatch_fingerprint = fingerprint(dispatch_request.to_dict())
                             if frozen_dispatch_request is None:
                                 frozen_dispatch_request = dispatch_request
                                 frozen_dispatch_fingerprint = dispatch_fingerprint
                             elif (
                                 dispatch_request != frozen_dispatch_request
-                                or dispatch_fingerprint
-                                != frozen_dispatch_fingerprint
+                                or dispatch_fingerprint != frozen_dispatch_fingerprint
                             ):
-                                raise ModelRetryRequestDriftError(
-                                    "model-retry-request-drift"
-                                )
+                                raise ModelRetryRequestDriftError("model-retry-request-drift")
                             _, attempt_start = await self.sessions.start_model_attempt(
                                 session_id,
                                 attempt=attempt,
@@ -297,9 +295,7 @@ class AgentLoop:
                                     None if retry_failure is None else retry_failure.code
                                 ),
                                 retry_failure_category=(
-                                    None
-                                    if retry_failure is None
-                                    else retry_failure.category.value
+                                    None if retry_failure is None else retry_failure.category.value
                                 ),
                                 correlation_id=correlation_id,
                             )
@@ -342,7 +338,7 @@ class AgentLoop:
                             response = await admission.dispatch(
                                 provider=dispatch_provider,
                                 request=dispatch_request,
-                                on_text_delta=record_text_delta,
+                                on_text_delta=None if built.is_summary else record_text_delta,
                             )
                         except asyncio.CancelledError:
                             # One outer owner closes Attempt -> Step -> Turn in
@@ -361,9 +357,7 @@ class AgentLoop:
                                 "step_id": current_step_id,
                                 "attempt_id": attempt_id,
                                 "ordinal": attempt.ordinal,
-                                "request_snapshot_seq": attempt_start.data[
-                                    "request_snapshot_seq"
-                                ],
+                                "request_snapshot_seq": attempt_start.data["request_snapshot_seq"],
                                 "dispatch_fingerprint": dispatch_fingerprint,
                                 "reservation_id": admission.reservation_id,
                                 "status": "failed",
@@ -390,10 +384,7 @@ class AgentLoop:
                                 correlation_id=correlation_id,
                                 composition_revision=composition.revision,
                             )
-                            elapsed = (
-                                self.retry_scheduler.monotonic()
-                                - retry_window_started
-                            )
+                            elapsed = self.retry_scheduler.monotonic() - retry_window_started
                             decision = self.retry_policy.decide(
                                 error,
                                 completed_ordinal=ordinal,
@@ -411,9 +402,7 @@ class AgentLoop:
                                 > self.retry_policy.max_elapsed_seconds
                             ):
                                 raise
-                            retry_wait_milliseconds = int(
-                                (wait_finished - wait_started) * 1000
-                            )
+                            retry_wait_milliseconds = int((wait_finished - wait_started) * 1000)
                             retry_failure = error
                             ordinal += 1
                             continue
@@ -423,17 +412,20 @@ class AgentLoop:
                         current_provider_active_milliseconds = (
                             admission.provider_active_milliseconds
                         )
-                        await self.sessions.append_session(
+                        response_event = await self.sessions.append_session(
                             session_id,
-                            "assistant/message",
+                            "summary/response" if built.is_summary else "assistant/message",
                             {
                                 "turn_id": turn_id,
                                 "step_id": current_step_id,
                                 "attempt_id": attempt_id,
                                 "content": response.content,
-                                "tool_calls": [
-                                    call.to_dict() for call in response.tool_calls
-                                ],
+                                "tool_calls": [call.to_dict() for call in response.tool_calls],
+                                **(
+                                    {"finish_reason": response.finish_reason}
+                                    if built.is_summary
+                                    else {}
+                                ),
                             },
                             correlation_id=correlation_id,
                             composition_revision=composition.revision,
@@ -446,9 +438,7 @@ class AgentLoop:
                                 "step_id": current_step_id,
                                 "attempt_id": attempt_id,
                                 "ordinal": attempt.ordinal,
-                                "request_snapshot_seq": attempt_start.data[
-                                    "request_snapshot_seq"
-                                ],
+                                "request_snapshot_seq": attempt_start.data["request_snapshot_seq"],
                                 "dispatch_fingerprint": dispatch_fingerprint,
                                 "reservation_id": admission.reservation_id,
                                 "status": "succeeded",
@@ -462,6 +452,43 @@ class AgentLoop:
                             composition_revision=composition.revision,
                         )
                         break
+
+                    if built.is_summary:
+                        assert self.compaction is not None
+                        try:
+                            await self.compaction.commit_semantic(session_id, response_event)
+                        except (CompactionError, ValueError) as error:
+                            await self.sessions.append_session(
+                                session_id,
+                                "surface/compaction-failed",
+                                {
+                                    "method": "semantic",
+                                    "code": getattr(error, "code", "semantic-summary-rejected"),
+                                    "committed": getattr(error, "committed", False),
+                                },
+                            )
+                        await self.sessions.append_session(
+                            session_id,
+                            "step/end",
+                            {
+                                "turn_id": turn_id,
+                                "step_id": current_step_id,
+                                "reason": "semantic_summary",
+                            },
+                            correlation_id=correlation_id,
+                            composition_revision=composition.revision,
+                        )
+                        step_open = False
+                        await self.hooks.notify(
+                            STEP_FINISHED,
+                            {
+                                "session_id": session_id,
+                                "turn_id": turn_id,
+                                "step_id": current_step_id,
+                                "step_number": steps,
+                            },
+                        )
+                        continue
 
                     if response.tool_calls:
                         tool_context = ToolExecutionContext(
@@ -585,9 +612,7 @@ class AgentLoop:
                     current_step_id,
                     current_attempt_id=current_attempt_id,
                     current_attempt_revision=current_attempt_revision,
-                    current_provider_active_milliseconds=(
-                        current_provider_active_milliseconds
-                    ),
+                    current_provider_active_milliseconds=(current_provider_active_milliseconds),
                     correlation_id=correlation_id,
                 ),
                 name=f"traceh-turn-cancel-finalize-{turn_id}",
@@ -606,10 +631,7 @@ class AgentLoop:
                 raise combined from None
             raise cancellation
         except Exception as error:
-            if (
-                isinstance(error, ModelAttemptConflictError)
-                and error.ownership_lost
-            ):
+            if isinstance(error, ModelAttemptConflictError) and error.ownership_lost:
                 raise
             try:
                 runtime_error = {
@@ -641,9 +663,7 @@ class AgentLoop:
                     current_step_id,
                     current_attempt_id=current_attempt_id,
                     current_attempt_revision=current_attempt_revision,
-                    current_provider_active_milliseconds=(
-                        current_provider_active_milliseconds
-                    ),
+                    current_provider_active_milliseconds=(current_provider_active_milliseconds),
                     correlation_id=correlation_id,
                     status="unknown_after_failure",
                     error_type="InterruptedBeforeAttemptEnd",
@@ -727,8 +747,7 @@ class AgentLoop:
             None,
         )
         ended = any(
-            event.type == "model/attempt-end"
-            and event.data.get("attempt_id") == current_attempt_id
+            event.type == "model/attempt-end" and event.data.get("attempt_id") == current_attempt_id
             for event in events
         )
         if start is not None and not ended:
@@ -746,9 +765,7 @@ class AgentLoop:
                     "status": status,
                     "error_type": error_type,
                     "message": message,
-                    "provider_active_milliseconds": (
-                        current_provider_active_milliseconds
-                    ),
+                    "provider_active_milliseconds": (current_provider_active_milliseconds),
                 },
                 correlation_id=correlation_id,
                 composition_revision=current_attempt_revision,
@@ -804,31 +821,31 @@ class AgentLoop:
             step_id,
             current_attempt_id=current_attempt_id,
             current_attempt_revision=current_attempt_revision,
-            current_provider_active_milliseconds=(
-                current_provider_active_milliseconds
-            ),
+            current_provider_active_milliseconds=(current_provider_active_milliseconds),
             correlation_id=correlation_id,
             status="cancelled",
             error_type="CancelledError",
             message="Model attempt was cancelled",
         )
-        step_open = step_id is not None and any(
-            event.type == "step/start"
-            and event.data.get("turn_id") == turn_id
-            and event.data.get("step_id") == step_id
-            for event in events
-        ) and not any(
-            event.type == "step/end"
-            and event.data.get("turn_id") == turn_id
-            and event.data.get("step_id") == step_id
-            for event in events
+        step_open = (
+            step_id is not None
+            and any(
+                event.type == "step/start"
+                and event.data.get("turn_id") == turn_id
+                and event.data.get("step_id") == step_id
+                for event in events
+            )
+            and not any(
+                event.type == "step/end"
+                and event.data.get("turn_id") == turn_id
+                and event.data.get("step_id") == step_id
+                for event in events
+            )
         )
         turn_open = any(
-            event.type == "turn/start" and event.data.get("turn_id") == turn_id
-            for event in events
+            event.type == "turn/start" and event.data.get("turn_id") == turn_id for event in events
         ) and not any(
-            event.type == "turn/end" and event.data.get("turn_id") == turn_id
-            for event in events
+            event.type == "turn/end" and event.data.get("turn_id") == turn_id for event in events
         )
         await self._close_interrupted(
             session_id,

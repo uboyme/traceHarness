@@ -1,0 +1,22 @@
+[
+  {
+    "session_id": "9ff55cc3-bfd6-4e33-a15e-9c96d8299411",
+    "events": 155,
+    "valid": true,
+    "events_unchanged": true,
+    "same_request_counterfactual_input_estimate": 6766,
+    "actual_request_input_estimate": 4099,
+    "estimated_input_reduction_percent": 39.42,
+    "method": "Same request with only summary message expanded; local estimate, not billed usage"
+  },
+  {
+    "session_id": "0d33b7d4-14d8-48f8-a0e7-172729cc2c6b",
+    "events": 155,
+    "valid": true,
+    "events_unchanged": true,
+    "same_request_counterfactual_input_estimate": 6708,
+    "actual_request_input_estimate": 3983,
+    "estimated_input_reduction_percent": 40.62,
+    "method": "Same request with only summary message expanded; local estimate, not billed usage"
+  }
+]

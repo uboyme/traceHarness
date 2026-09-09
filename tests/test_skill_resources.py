@@ -190,7 +190,20 @@ async def test_activation_rejects_resource_mismatch_without_publishing(tmp_path,
         )
     elif change == "chunk-utf8":
         fragment = body.encode()[:1]
-        resource = replace(resource, chunks=(SkillChunk("broken", 0, 1, digest(fragment), 1),))
+        resource = replace(
+            resource,
+            chunks=(
+                SkillChunk(
+                    "broken",
+                    0,
+                    1,
+                    digest(fragment),
+                    1,
+                    title="Fixture navigation",
+                    summary="Explicit fixture content description",
+                ),
+            ),
+        )
     elif change == "missing":
         path.unlink()
     elif change == "root-version":
@@ -238,7 +251,14 @@ async def test_activation_rejects_resource_mismatch_without_publishing(tmp_path,
 )
 def test_descriptor_refuses_nonportable_or_escaping_paths(path):
     with pytest.raises(ValueError, match="path-invalid"):
-        SkillResource("resource", path, digest("body"), 4)
+        SkillResource(
+            "resource",
+            path,
+            digest("body"),
+            4,
+            title="Fixture navigation",
+            summary="Explicit fixture content description",
+        )
 
 
 async def test_resource_symlink_is_rejected_before_activation(tmp_path):
@@ -267,14 +287,65 @@ async def test_resource_symlink_is_rejected_before_activation(tmp_path):
 @pytest.mark.parametrize("offset", [-1, True])
 def test_chunks_refuse_invalid_offsets(offset):
     with pytest.raises(ValueError):
-        SkillChunk("chunk", offset, 4, digest("body"), 4)
+        SkillChunk(
+            "chunk",
+            offset,
+            4,
+            digest("body"),
+            4,
+            title="Fixture navigation",
+            summary="Explicit fixture content description",
+        )
 
 
 def test_chunk_identity_overlap_and_order_are_explicit():
-    chunk = SkillChunk("first", 0, 3, digest("abc"), 3)
-    for other in (chunk, SkillChunk("next", 2, 4, digest("cd"), 2)):
+    chunk = SkillChunk(
+        "first",
+        0,
+        3,
+        digest("abc"),
+        3,
+        title="Fixture navigation",
+        summary="Explicit fixture content description",
+    )
+    for other in (
+        chunk,
+        SkillChunk(
+            "next",
+            2,
+            4,
+            digest("cd"),
+            2,
+            title="Fixture navigation",
+            summary="Explicit fixture content description",
+        ),
+    ):
         with pytest.raises(ValueError):
-            SkillResource("resource", "guide.md", digest("abcd"), 4, (chunk, other))
-    later = SkillChunk("later", 3, 4, digest("d"), 1)
+            SkillResource(
+                "resource",
+                "guide.md",
+                digest("abcd"),
+                4,
+                (chunk, other),
+                title="Fixture navigation",
+                summary="Explicit fixture content description",
+            )
+    later = SkillChunk(
+        "later",
+        3,
+        4,
+        digest("d"),
+        1,
+        title="Fixture navigation",
+        summary="Explicit fixture content description",
+    )
     with pytest.raises(ValueError):
-        SkillResource("resource", "guide.md", digest("abcd"), 4, (later, chunk))
+        SkillResource(
+            "resource",
+            "guide.md",
+            digest("abcd"),
+            4,
+            (later, chunk),
+            title="Fixture navigation",
+            summary="Explicit fixture content description",
+        )

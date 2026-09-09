@@ -106,6 +106,9 @@ async def recorded_attempt(tmp_path):
     sessions = SessionService(InMemoryEventStore())
     session_id = await sessions.create_session(tmp_path, session_id="s")
     await sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
+    await sessions.append_session(
+        session_id, "user/message", {"turn_id": "t", "content": "Inspect the current source."}
+    )
     await sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "a"})
     composition = RuntimeComposition(
         provider="scripted", model="model", system_prompt="Follow host policy.", tools=()

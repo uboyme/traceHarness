@@ -1,0 +1,41 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "turns": [
+        {
+          "label": "read-new-output",
+          "question": "请运行一次 python telemetry.py，查一下日志中 R0164 的设备标签和复核码。另外告诉我程序的退出码。请依据实际执行结果回答。",
+          "error_type": "ProviderFailure",
+          "partial_tool_results": [
+            {
+              "tool": "list_files",
+              "status": "succeeded"
+            },
+            {
+              "tool": "shell",
+              "status": "succeeded"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded"
+            }
+          ],
+          "failure_code": "provider-tls-eof"
+        }
+      ],
+      "session_id": "71e0976a-f776-4bb5-a66e-47777e879cb3"
+    }
+  ],
+  "completed": false
+}

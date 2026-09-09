@@ -34,7 +34,7 @@ async def execute_request(runtime, provider, sid, request):
     return await runtime.run_existing(sid, "request that disclosed page")
 
 
-async def test_tool_returns_only_receipt_and_next_step_gets_raw_once(tmp_path):
+async def test_tool_returns_only_receipt_and_body_exits_at_turn_boundary(tmp_path):
     runtime, provider, sid, _, request = await disclosed(tmp_path)
     try:
         outcome = await execute_request(runtime, provider, sid, request)
@@ -51,12 +51,12 @@ async def test_tool_returns_only_receipt_and_next_step_gets_raw_once(tmp_path):
             for e in events
             if e.type == "context/input" and any(b["tier"] == "section" for b in e.data["blocks"])
         )
-        assert "old telemetry" in provider.requests[-1].messages[0].content
+        assert "old telemetry" in provider.requests[-1].messages[-1].content
         assert all(
             "old telemetry" not in message.content for message in runtime.surface.project(events)
         )
         await runtime.run_existing(sid, "later turn")
-        assert "old telemetry" not in provider.requests[-1].messages[0].content
+        assert "old telemetry" not in provider.requests[-1].messages[-1].content
         assert runtime.invariants.check(await runtime.sessions.read_session(sid)) == ()
     finally:
         await runtime.dispose()
@@ -71,7 +71,7 @@ async def test_undisclosed_cursor_fails_tool_without_raw_or_accepted_receipt(tmp
         result = next(e for e in events if e.type == "tool/result")
         assert result.data["status"] == "failed"
         assert "history_receipt" not in result.data["data"]
-        assert "old telemetry" not in provider.requests[-1].messages[0].content
+        assert "old telemetry" not in provider.requests[-1].messages[-1].content
         assert runtime.invariants.check(events) == ()
     finally:
         await runtime.dispose()
@@ -144,7 +144,7 @@ async def test_max_steps_receipt_expires_without_next_context_and_recovery_reexe
         )
         assert not (await RecoveryService(runtime.sessions).recover(sid)).changed
         await runtime.run_existing(sid, "a new turn")
-        assert "old telemetry" not in provider.requests[-1].messages[0].content
+        assert "old telemetry" not in provider.requests[-1].messages[-1].content
     finally:
         await runtime.dispose()
 
@@ -196,7 +196,7 @@ async def test_crash_recovery_restores_receipt_from_effect_without_replaying_or_
             event_store=store,
         )
         await recovered_runtime.run_existing(sid, "new turn after crash")
-        assert "old telemetry" not in later_provider.requests[-1].messages[0].content
+        assert "old telemetry" not in later_provider.requests[-1].messages[-1].content
         assert await sessions.read_effects(sid) == before_effects
         assert recovered_runtime.invariants.check(await sessions.read_session(sid)) == ()
     finally:
@@ -252,14 +252,14 @@ async def test_oversized_page_cannot_be_forged_into_accepted_failure_prefix(tmp_
                 "error_type": None,
                 "data": {
                     "history_receipt": {
-                        "format": 1,
+                        "format": 2,
                         "status": "accepted",
                         "session_id": sid,
                         "turn_id": call.data["turn_id"],
                         "source_step_id": call.data["step_id"],
                         "tool_call_id": call.data["tool_call_id"],
                         **request.to_dict(),
-                        "target_rule": "immediate-next-step",
+                        "target_rule": "next-step-then-bounded-turn",
                     }
                 },
             },
@@ -312,7 +312,7 @@ async def test_next_cursor_disclosure_requires_verified_raw_page_sources(tmp_pat
             for key in ("composed", "dispatch"):
                 request_data = frozen_data[f"{key}_request"]
                 request_data["metadata"]["context_input_digest"] = snapshot.context_digest
-                request_data["messages"][0] = render_context_message(snapshot).to_dict()
+                request_data["messages"][-1] = render_context_message(snapshot).to_dict()
                 frozen_data[f"{key}_fingerprint"] = fingerprint(request_data)
             events[frozen.seq - 1] = replace(frozen, data=frozen_data)
             with pytest.raises(HistoryRequestError, match="history-disclosure-invalid"):

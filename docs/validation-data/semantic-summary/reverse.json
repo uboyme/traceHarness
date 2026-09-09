@@ -1,0 +1,12 @@
+[
+  {
+    "guard": "tool-rejection",
+    "test": "tests/test_semantic_summary.py::test_bad_model_summary_preserves_history_and_never_executes_tools[tool]",
+    "exit_code": 1
+  },
+  {
+    "guard": "provenance",
+    "test": "tests/test_semantic_summary.py::test_forged_semantic_replacement_and_wrong_response_cause_are_rejected",
+    "exit_code": 1
+  }
+]

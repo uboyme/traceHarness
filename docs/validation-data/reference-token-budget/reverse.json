@@ -1,0 +1,14 @@
+[
+  {
+    "guard": "whole-body-token-admission",
+    "test": "tests/test_reference_token_budget.py::test_reference_admission_uses_tokens_without_changing_source_or_active_request[orbital telemetry-1400-False]",
+    "exit_code": 1,
+    "expected_failure": "assert True is False"
+  },
+  {
+    "guard": "original-fixed-source",
+    "test": "tests/test_reference_token_budget.py::test_forged_reference_allowance_cannot_rebind_the_original_surface[fixed-count]",
+    "exit_code": 1,
+    "expected_failure": "DID NOT RAISE"
+  }
+]

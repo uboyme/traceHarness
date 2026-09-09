@@ -189,6 +189,13 @@ class SessionService:
             if events[-1].seq != expected_seq:
                 raise ConcurrencyConflict("context source boundary changed")
             validate_context_input_sources(snapshot, events)
+            from traceh.memory.context import read_frozen_source, verify_blocks
+            from traceh.session.context_input import _parse_policy
+
+            memory_source = await read_frozen_source(data, self.store.read, events)
+            if memory_source is not None:
+                verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory)
+
             open_turn: str | None = None
             open_step: str | None = None
             step_start_seq: int | None = None
@@ -448,8 +455,9 @@ class SessionService:
                     raise ValueError("request-context-binding-mismatch")
             except (KeyError, TypeError, ValueError):
                 raise ModelAttemptConflictError(ownership_lost=True) from None
-            context_input_seq = rebuilt.request.metadata["context_input_seq"]
-            context_input_digest = rebuilt.request.metadata["context_input_digest"]
+            from traceh.api.llm import request_source_fields
+
+            input_fields = request_source_fields(rebuilt.request.metadata)
 
             open_turn: str | None = None
             open_step: str | None = None
@@ -519,8 +527,7 @@ class SessionService:
                     "step_id": attempt.step_id,
                     "source_seq": source_seq,
                     "composition_revision": composition_revision,
-                    "context_input_seq": context_input_seq,
-                    "context_input_digest": context_input_digest,
+                    **input_fields,
                     "composed_fingerprint": composed_fingerprint,
                     "dispatch_fingerprint": dispatch_fingerprint,
                     "composed_request": composed_request.to_dict(),
@@ -612,16 +619,24 @@ class SessionService:
                 from traceh.session.skill_retrieval import receipt_skill_ids
 
                 data = parse_context_input(event.data).to_dict()
+                from traceh.memory.context import read_frozen_source, verify_blocks
+                from traceh.session.context_input import _parse_policy
+
+                memory_source = await read_frozen_source(data, self.store.read, events)
+                if memory_source is not None:
+                    verify_blocks(data, memory_source, _parse_policy(data["policy"]).memory)
                 reference = data.get("selection_head")
                 validate_head(reference, session_id)
                 prefix = selections[: reference["head_seq"]]
                 if head_ref(session_id, prefix) != reference:
                     raise ValueError("context-selection-binding-mismatch")
                 selection = project_selection(prefix, session_id)
-                if data["retrieval"] is not None:
+                skill_receipt = data["retrieval"]["skill"] if data["retrieval"] else None
+                if skill_receipt is not None:
                     from traceh.kernel.composition import CompositionSnapshot
                     from traceh.session.context_input import _parse_policy
-                    from traceh.session.skill_retrieval import prepare_corpus
+                    from traceh.session.retrieval import validate_coverage
+                    from traceh.session.skill_retrieval import exact_values, prepare_corpus
 
                     following = []
                     for following_event in events[event.seq :]:
@@ -631,19 +646,27 @@ class SessionService:
                             following.append(following_event)
                     if len(following) == 1:
                         composition = CompositionSnapshot.from_dict(following[0].data)
-                        corpus = prepare_corpus(
-                            composition, prefix, session_id, _parse_policy(data["policy"]).skills
-                        )[0]
+                        policy = _parse_policy(data["policy"]).skills
+                        corpus, _, rows, descriptors, _ = prepare_corpus(
+                            composition, prefix, session_id, policy
+                        )
                         import json
 
                         manifest = json.loads(corpus.manifest_json)
                         if (
-                            data["retrieval"]["corpus_key"] != corpus.key
-                            or data["retrieval"]["corpus_digest"] != manifest["corpus_digest"]
-                            or data["retrieval"]["eligible_count"] != manifest["item_count"]
+                            skill_receipt["corpus_key"] != corpus.key
+                            or skill_receipt["corpus_digest"] != manifest["corpus_digest"]
+                            or skill_receipt["eligible_count"] != manifest["item_count"]
                         ):
                             raise ValueError("context-retrieval-source-mismatch")
-                for skill_id, version in receipt_skill_ids(data["retrieval"]):
+                        validate_coverage(
+                            skill_receipt,
+                            rows,
+                            exact_values(descriptors),
+                            data["query"]["text"],
+                            policy,
+                        )
+                for skill_id, version in receipt_skill_ids(skill_receipt):
                     if (
                         selection is None
                         or selection["catalog_digest"] != data["skill_catalog_digest"]

@@ -1,0 +1,228 @@
+{
+  "format": 1,
+  "purpose": "Explicit bounded E semantic retest, not production defaults",
+  "encoders": [
+    {
+      "id": "zh",
+      "model_id": "BAAI/bge-small-zh-v1.5",
+      "revision": "7999e1d3359715c523056ef9478215996d62a620",
+      "dimension": 512,
+      "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+      "max_length": 512,
+      "pooling": "cls",
+      "normalization": "l2",
+      "dtype": "float32",
+      "device": "cpu"
+    },
+    {
+      "id": "en",
+      "model_id": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "dimension": 384,
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "max_length": 512,
+      "pooling": "cls",
+      "normalization": "l2",
+      "dtype": "float32",
+      "device": "cpu"
+    }
+  ],
+  "threads": 2,
+  "candidates": [
+    {
+      "id": "zh-0.6",
+      "encoders": [
+        "zh"
+      ],
+      "cosine_min": 0.6
+    },
+    {
+      "id": "zh-0.7",
+      "encoders": [
+        "zh"
+      ],
+      "cosine_min": 0.7
+    },
+    {
+      "id": "zh-0.8",
+      "encoders": [
+        "zh"
+      ],
+      "cosine_min": 0.8
+    },
+    {
+      "id": "en-0.6",
+      "encoders": [
+        "en"
+      ],
+      "cosine_min": 0.6
+    },
+    {
+      "id": "en-0.7",
+      "encoders": [
+        "en"
+      ],
+      "cosine_min": 0.7
+    },
+    {
+      "id": "en-0.8",
+      "encoders": [
+        "en"
+      ],
+      "cosine_min": 0.8
+    },
+    {
+      "id": "dual-max-0.6",
+      "encoders": [
+        "zh",
+        "en"
+      ],
+      "cosine_min": 0.6
+    },
+    {
+      "id": "dual-max-0.7",
+      "encoders": [
+        "zh",
+        "en"
+      ],
+      "cosine_min": 0.7
+    },
+    {
+      "id": "dual-max-0.8",
+      "encoders": [
+        "zh",
+        "en"
+      ],
+      "cosine_min": 0.8
+    }
+  ],
+  "acceptance": {
+    "original_nonsemantic_thresholds_unchanged": true,
+    "original_semantic_recall": 1.0,
+    "original_semantic_precision": 1.0,
+    "original_semantic_mrr": 1.0,
+    "added_semantic_recall_per_language": 0.75,
+    "added_semantic_precision_per_language": 0.75,
+    "scope_violations": 0,
+    "warm_query_p95_ms": 500,
+    "cold_load_ms": 120000,
+    "rebuild_ms": 120000,
+    "model_assets_bytes": 268435456,
+    "vector_bytes_per_item": 4096,
+    "minimum_gain_over_lexical_semantic_recall": 0.25
+  },
+  "additional_queries": [
+    {
+      "id": "zh-transport",
+      "language": "zh",
+      "query": "机动车上路需要加什么能源？",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zh-diagnostic",
+      "language": "zh",
+      "query": "函数抛异常的诱因是什么？",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zh-boundary",
+      "language": "zh",
+      "query": "职责划分的原则有哪些？",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zh-stage",
+      "language": "zh",
+      "query": "现阶段在忙什么？",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-transport",
+      "language": "en",
+      "query": "Which liquid powers a car?",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "mobility.note",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-diagnostic",
+      "language": "en",
+      "query": "Why does the URL handler fail?",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "route.error",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-boundary",
+      "language": "en",
+      "query": "How should responsibilities be separated?",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "goals.code",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-stage",
+      "language": "en",
+      "query": "What delivery milestone are we currently at?",
+      "relevant": [
+        {
+          "kind": "memory",
+          "id": "current.phase",
+          "tiers": [
+            "summary"
+          ]
+        }
+      ]
+    }
+  ]
+}

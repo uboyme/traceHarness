@@ -1,0 +1,1002 @@
+[
+  {
+    "run": "01",
+    "completed": false,
+    "turns": 3,
+    "passed_turns": 2,
+    "attempts": {
+      "succeeded": 8
+    },
+    "known_total_tokens": 53745,
+    "usage_unknown": 0,
+    "refused_requests": 1,
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 2,
+      "read_tool_output:succeeded": 2
+    },
+    "execution_counts": [
+      1
+    ],
+    "comparisons_count": 8,
+    "mean_absolute_percentage_error": 14.9982,
+    "relative_error_min_percent": -11.843,
+    "relative_error_max_percent": 22.3694,
+    "comparisons": [
+      {
+        "input_estimate": 2583,
+        "actual_input": 2930,
+        "actual_output": 64,
+        "error": -347,
+        "relative_error_percent": -11.843,
+        "parts": {
+          "conversation": 61,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "1b59cc08-1df2-41c8-a0db-f393396cd896"
+      },
+      {
+        "input_estimate": 2705,
+        "actual_input": 3011,
+        "actual_output": 37,
+        "error": -306,
+        "relative_error_percent": -10.1627,
+        "parts": {
+          "conversation": 183,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7a3ab7fc-5448-4f54-87bc-77ebde7aa804"
+      },
+      {
+        "input_estimate": 7305,
+        "actual_input": 6234,
+        "actual_output": 223,
+        "error": 1071,
+        "relative_error_percent": 17.18,
+        "parts": {
+          "conversation": 4783,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "29847cc7-f51f-4b7c-bf44-51bf5b0635b2"
+      },
+      {
+        "input_estimate": 7787,
+        "actual_input": 6798,
+        "actual_output": 172,
+        "error": 989,
+        "relative_error_percent": 14.5484,
+        "parts": {
+          "conversation": 5265,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "572824b8-ee9a-48d0-8d3c-c4d8ce4c0d00"
+      },
+      {
+        "input_estimate": 11920,
+        "actual_input": 9741,
+        "actual_output": 85,
+        "error": 2179,
+        "relative_error_percent": 22.3694,
+        "parts": {
+          "conversation": 9398,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "77d0c78b-7a7b-411d-92d4-b62d58a25065"
+      },
+      {
+        "input_estimate": 11990,
+        "actual_input": 9819,
+        "actual_output": 1,
+        "error": 2171,
+        "relative_error_percent": 22.1102,
+        "parts": {
+          "conversation": 9506,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 166,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "e35f3bbe-b3fb-4aa7-8be9-016a3c42a11a"
+      },
+      {
+        "input_estimate": 7713,
+        "actual_input": 6896,
+        "actual_output": 168,
+        "error": 817,
+        "relative_error_percent": 11.8474,
+        "parts": {
+          "conversation": 5210,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "98b61a1d-1821-4aad-99d5-14e08c3ce384"
+      },
+      {
+        "input_estimate": 8141,
+        "actual_input": 7406,
+        "actual_output": 160,
+        "error": 735,
+        "relative_error_percent": 9.9244,
+        "parts": {
+          "conversation": 5638,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "6e223dd8-ce88-467e-a6ea-5fc86c757fc3"
+      }
+    ]
+  },
+  {
+    "run": "02",
+    "completed": false,
+    "turns": 3,
+    "passed_turns": 3,
+    "attempts": {
+      "succeeded": 9
+    },
+    "known_total_tokens": 63963,
+    "usage_unknown": 0,
+    "refused_requests": 0,
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 1,
+      "search_tool_output:succeeded": 2,
+      "read_tool_output:succeeded": 2
+    },
+    "execution_counts": [
+      1
+    ],
+    "comparisons_count": 9,
+    "mean_absolute_percentage_error": 15.7186,
+    "relative_error_min_percent": -11.843,
+    "relative_error_max_percent": 22.716,
+    "comparisons": [
+      {
+        "input_estimate": 2583,
+        "actual_input": 2930,
+        "actual_output": 66,
+        "error": -347,
+        "relative_error_percent": -11.843,
+        "parts": {
+          "conversation": 61,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "8898b7a9-3002-4b5d-b4fd-d382b28f9dc4"
+      },
+      {
+        "input_estimate": 2709,
+        "actual_input": 3013,
+        "actual_output": 37,
+        "error": -304,
+        "relative_error_percent": -10.0896,
+        "parts": {
+          "conversation": 187,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "774c198f-d6e0-4fa1-890a-83af8fb4f67c"
+      },
+      {
+        "input_estimate": 7308,
+        "actual_input": 6232,
+        "actual_output": 205,
+        "error": 1076,
+        "relative_error_percent": 17.2657,
+        "parts": {
+          "conversation": 4786,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7c6ed99c-6d5d-44f8-9190-77368c667bf0"
+      },
+      {
+        "input_estimate": 7777,
+        "actual_input": 6772,
+        "actual_output": 158,
+        "error": 1005,
+        "relative_error_percent": 14.8405,
+        "parts": {
+          "conversation": 5255,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "22887b12-2e89-463b-b04c-3a86a5c991d3"
+      },
+      {
+        "input_estimate": 11901,
+        "actual_input": 9698,
+        "actual_output": 111,
+        "error": 2203,
+        "relative_error_percent": 22.716,
+        "parts": {
+          "conversation": 9379,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "ab2062db-56c1-4975-869b-86619f0835e2"
+      },
+      {
+        "input_estimate": 12006,
+        "actual_input": 9802,
+        "actual_output": 1,
+        "error": 2204,
+        "relative_error_percent": 22.4852,
+        "parts": {
+          "conversation": 9522,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 166,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "37483fe5-8688-474c-8c51-b0057e848f15"
+      },
+      {
+        "input_estimate": 7734,
+        "actual_input": 6880,
+        "actual_output": 164,
+        "error": 854,
+        "relative_error_percent": 12.4128,
+        "parts": {
+          "conversation": 5231,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "2cb5660b-303d-4c13-8c45-48649fa6fe1d"
+      },
+      {
+        "input_estimate": 8163,
+        "actual_input": 7380,
+        "actual_output": 158,
+        "error": 783,
+        "relative_error_percent": 10.6098,
+        "parts": {
+          "conversation": 5660,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "c5f9ed87-7e50-4894-b0c8-51b8a85b3acb"
+      },
+      {
+        "input_estimate": 12290,
+        "actual_input": 10310,
+        "actual_output": 46,
+        "error": 1980,
+        "relative_error_percent": 19.2047,
+        "parts": {
+          "conversation": 9787,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7b0c2ec4-52da-4234-8e28-f111694a9ddb"
+      }
+    ]
+  },
+  {
+    "run": "03",
+    "completed": true,
+    "turns": 14,
+    "passed_turns": 14,
+    "attempts": {
+      "succeeded": 37
+    },
+    "known_total_tokens": 456929,
+    "usage_unknown": 0,
+    "refused_requests": 0,
+    "tool_results": {
+      "list_files:succeeded": 1,
+      "shell:succeeded": 2,
+      "search_tool_output:succeeded": 10,
+      "read_tool_output:succeeded": 10
+    },
+    "execution_counts": [
+      1,
+      1
+    ],
+    "comparisons_count": 37,
+    "mean_absolute_percentage_error": 19.6418,
+    "relative_error_min_percent": -11.843,
+    "relative_error_max_percent": 26.7299,
+    "comparisons": [
+      {
+        "input_estimate": 2583,
+        "actual_input": 2930,
+        "actual_output": 68,
+        "error": -347,
+        "relative_error_percent": -11.843,
+        "parts": {
+          "conversation": 61,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "9fb98858-6c53-4a7f-8fd3-3d4f677aa9bf"
+      },
+      {
+        "input_estimate": 2713,
+        "actual_input": 3015,
+        "actual_output": 63,
+        "error": -302,
+        "relative_error_percent": -10.0166,
+        "parts": {
+          "conversation": 191,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7d9339f3-e9c6-44e0-9bd4-f593338c9351"
+      },
+      {
+        "input_estimate": 7339,
+        "actual_input": 6265,
+        "actual_output": 194,
+        "error": 1074,
+        "relative_error_percent": 17.1429,
+        "parts": {
+          "conversation": 4817,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7e44cc4d-7748-4cd6-a21b-801ce07be4ed"
+      },
+      {
+        "input_estimate": 7797,
+        "actual_input": 6798,
+        "actual_output": 182,
+        "error": 999,
+        "relative_error_percent": 14.6955,
+        "parts": {
+          "conversation": 5275,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "1092ae89-dedf-4744-bf62-b8a5e8291c74"
+      },
+      {
+        "input_estimate": 11928,
+        "actual_input": 9742,
+        "actual_output": 141,
+        "error": 2186,
+        "relative_error_percent": 22.4389,
+        "parts": {
+          "conversation": 9406,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "bdc2174b-9033-4837-907d-60cc470166c7"
+      },
+      {
+        "input_estimate": 12053,
+        "actual_input": 9876,
+        "actual_output": 1,
+        "error": 2177,
+        "relative_error_percent": 22.0433,
+        "parts": {
+          "conversation": 9569,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 166,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "d15c1208-4403-4e5e-a36b-865da7d96a33"
+      },
+      {
+        "input_estimate": 7782,
+        "actual_input": 6951,
+        "actual_output": 173,
+        "error": 831,
+        "relative_error_percent": 11.9551,
+        "parts": {
+          "conversation": 5279,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "68355682-4fb0-4f31-8a3d-2b50982f9058"
+      },
+      {
+        "input_estimate": 8220,
+        "actual_input": 7463,
+        "actual_output": 161,
+        "error": 757,
+        "relative_error_percent": 10.1434,
+        "parts": {
+          "conversation": 5717,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "ff26b199-c91d-4112-81ad-9e4cb6a83ac7"
+      },
+      {
+        "input_estimate": 12334,
+        "actual_input": 10389,
+        "actual_output": 56,
+        "error": 1945,
+        "relative_error_percent": 18.7217,
+        "parts": {
+          "conversation": 9831,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "0c6ed687-ac91-4434-b5ad-7b1664924c38"
+      },
+      {
+        "input_estimate": 12410,
+        "actual_input": 10471,
+        "actual_output": 173,
+        "error": 1939,
+        "relative_error_percent": 18.5178,
+        "parts": {
+          "conversation": 9919,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "789a70ee-86c8-4eb4-8885-97a0fd946dda"
+      },
+      {
+        "input_estimate": 12848,
+        "actual_input": 10983,
+        "actual_output": 161,
+        "error": 1865,
+        "relative_error_percent": 16.9808,
+        "parts": {
+          "conversation": 10357,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "d6856670-17b4-4d4e-92d2-2dd924a33190"
+      },
+      {
+        "input_estimate": 16971,
+        "actual_input": 13914,
+        "actual_output": 54,
+        "error": 3057,
+        "relative_error_percent": 21.9707,
+        "parts": {
+          "conversation": 14480,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "72b4c50f-3303-462f-b143-de2f986fe0fb"
+      },
+      {
+        "input_estimate": 17078,
+        "actual_input": 14002,
+        "actual_output": 166,
+        "error": 3076,
+        "relative_error_percent": 21.9683,
+        "parts": {
+          "conversation": 14579,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "b52ae8a1-d5c0-417f-823a-c9ac10243071"
+      },
+      {
+        "input_estimate": 17672,
+        "actual_input": 14694,
+        "actual_output": 200,
+        "error": 2978,
+        "relative_error_percent": 20.2668,
+        "parts": {
+          "conversation": 15173,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "33f9c9dc-b7f4-4ac2-990c-47094da5e697"
+      },
+      {
+        "input_estimate": 21835,
+        "actual_input": 17671,
+        "actual_output": 161,
+        "error": 4164,
+        "relative_error_percent": 23.564,
+        "parts": {
+          "conversation": 19336,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "728b8dd4-913c-47fb-84b0-fa3b25790f29"
+      },
+      {
+        "input_estimate": 25969,
+        "actual_input": 20603,
+        "actual_output": 101,
+        "error": 5366,
+        "relative_error_percent": 26.0448,
+        "parts": {
+          "conversation": 23470,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "c7fa4c7a-8ac6-4a8b-aeca-4acf6f6f7dfa"
+      },
+      {
+        "input_estimate": 26106,
+        "actual_input": 20742,
+        "actual_output": 153,
+        "error": 5364,
+        "relative_error_percent": 25.8606,
+        "parts": {
+          "conversation": 23604,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 184,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "bc609c04-7d1d-4316-be77-53889d70a057"
+      },
+      {
+        "input_estimate": 26384,
+        "actual_input": 21051,
+        "actual_output": 2,
+        "error": 5333,
+        "relative_error_percent": 25.3337,
+        "parts": {
+          "conversation": 23882,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 184,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "48c48e53-7d62-4774-a396-bce1c5dfbed9"
+      },
+      {
+        "input_estimate": 26414,
+        "actual_input": 21076,
+        "actual_output": 2,
+        "error": 5338,
+        "relative_error_percent": 25.3274,
+        "parts": {
+          "conversation": 23923,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "30ea0a1f-1f65-4965-897d-3b9465907389"
+      },
+      {
+        "input_estimate": 2583,
+        "actual_input": 2930,
+        "actual_output": 54,
+        "error": -347,
+        "relative_error_percent": -11.843,
+        "parts": {
+          "conversation": 61,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "3feec021-6f1d-4462-8ad8-3ffc604ed8b9"
+      },
+      {
+        "input_estimate": 7195,
+        "actual_input": 6163,
+        "actual_output": 205,
+        "error": 1032,
+        "relative_error_percent": 16.7451,
+        "parts": {
+          "conversation": 4673,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7907d45d-debf-43d2-a712-9d1b35858d98"
+      },
+      {
+        "input_estimate": 7663,
+        "actual_input": 6695,
+        "actual_output": 221,
+        "error": 968,
+        "relative_error_percent": 14.4586,
+        "parts": {
+          "conversation": 5141,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "956c1a96-832c-4ead-baac-376fd73fc68c"
+      },
+      {
+        "input_estimate": 11841,
+        "actual_input": 9661,
+        "actual_output": 139,
+        "error": 2180,
+        "relative_error_percent": 22.565,
+        "parts": {
+          "conversation": 9319,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 204,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "0231dbdc-3610-47f5-ad9f-c4db2f445ef7"
+      },
+      {
+        "input_estimate": 11972,
+        "actual_input": 9793,
+        "actual_output": 1,
+        "error": 2179,
+        "relative_error_percent": 22.2506,
+        "parts": {
+          "conversation": 9488,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 166,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7ffafd76-e560-4d39-8e14-c86f35fff409"
+      },
+      {
+        "input_estimate": 7698,
+        "actual_input": 6870,
+        "actual_output": 164,
+        "error": 828,
+        "relative_error_percent": 12.0524,
+        "parts": {
+          "conversation": 5195,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "766e88b0-684e-4053-ab04-141d38765af3"
+      },
+      {
+        "input_estimate": 8131,
+        "actual_input": 7361,
+        "actual_output": 179,
+        "error": 770,
+        "relative_error_percent": 10.4605,
+        "parts": {
+          "conversation": 5628,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "8a4e477a-a65f-42b5-b7a7-ce20a2849d62"
+      },
+      {
+        "input_estimate": 12273,
+        "actual_input": 10298,
+        "actual_output": 57,
+        "error": 1975,
+        "relative_error_percent": 19.1785,
+        "parts": {
+          "conversation": 9770,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 185,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "7ffcae6a-b02e-4359-9f93-5d047828bf4e"
+      },
+      {
+        "input_estimate": 12357,
+        "actual_input": 10381,
+        "actual_output": 164,
+        "error": 1976,
+        "relative_error_percent": 19.0348,
+        "parts": {
+          "conversation": 9866,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "baac889c-b9cd-4d22-9ba8-4e89cbe43f36"
+      },
+      {
+        "input_estimate": 12789,
+        "actual_input": 10873,
+        "actual_output": 179,
+        "error": 1916,
+        "relative_error_percent": 17.6216,
+        "parts": {
+          "conversation": 10298,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "b6fe47a7-5b18-460b-9695-0a0a27b9c268"
+      },
+      {
+        "input_estimate": 16931,
+        "actual_input": 13818,
+        "actual_output": 60,
+        "error": 3113,
+        "relative_error_percent": 22.5286,
+        "parts": {
+          "conversation": 14440,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "fab0189a-d7ae-4687-aa88-2b10deb1b390"
+      },
+      {
+        "input_estimate": 17040,
+        "actual_input": 13912,
+        "actual_output": 176,
+        "error": 3128,
+        "relative_error_percent": 22.4842,
+        "parts": {
+          "conversation": 14541,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "d43996cd-1de0-4915-8ca6-905f1e4e7ac7"
+      },
+      {
+        "input_estimate": 17636,
+        "actual_input": 14594,
+        "actual_output": 199,
+        "error": 3042,
+        "relative_error_percent": 20.8442,
+        "parts": {
+          "conversation": 15137,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "34c7d752-d627-4dce-ba9b-241d60924e0d"
+      },
+      {
+        "input_estimate": 21807,
+        "actual_input": 17552,
+        "actual_output": 154,
+        "error": 4255,
+        "relative_error_percent": 24.2423,
+        "parts": {
+          "conversation": 19308,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "619b412e-d998-438d-bec7-10701ce6dc14"
+      },
+      {
+        "input_estimate": 25934,
+        "actual_input": 20464,
+        "actual_output": 122,
+        "error": 5470,
+        "relative_error_percent": 26.7299,
+        "parts": {
+          "conversation": 23435,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 181,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "e2db48c3-c729-4eda-b03d-b4e025f44056"
+      },
+      {
+        "input_estimate": 26111,
+        "actual_input": 20624,
+        "actual_output": 147,
+        "error": 5487,
+        "relative_error_percent": 26.6049,
+        "parts": {
+          "conversation": 23609,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 184,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "99de0133-01f2-4e56-860e-fe73ed05443b"
+      },
+      {
+        "input_estimate": 26389,
+        "actual_input": 20921,
+        "actual_output": 2,
+        "error": 5468,
+        "relative_error_percent": 26.1364,
+        "parts": {
+          "conversation": 23887,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 184,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "f92fa682-414b-4dae-a45a-5f73cc015ea6"
+      },
+      {
+        "input_estimate": 26419,
+        "actual_input": 20946,
+        "actual_output": 2,
+        "error": 5473,
+        "relative_error_percent": 26.1291,
+        "parts": {
+          "conversation": 23928,
+          "envelope": 23,
+          "product": 0,
+          "references_and_current_request": 173,
+          "system": 1139,
+          "tools": 1156
+        },
+        "quality": "estimated",
+        "step_id": "0ef012f1-b616-4082-a34e-5d64db51343f"
+      }
+    ]
+  }
+]

@@ -131,9 +131,10 @@ def parse_env_file(text: str) -> dict[str, str]:
     return values
 
 
-def load_env_file(path: Path | None, *, override: bool = False) -> EnvLoadReport:
+def load_env_file(path: Path | None, *, override: bool = False, environment=None) -> EnvLoadReport:
     """Load a dotenv file without replacing existing process variables by default."""
 
+    environment = os.environ if environment is None else environment
     if path is None:
         return EnvLoadReport(None, False)
     resolved = path.expanduser().resolve()
@@ -144,7 +145,7 @@ def load_env_file(path: Path | None, *, override: bool = False) -> EnvLoadReport
     values = parse_env_file(resolved.read_text(encoding="utf-8"))
     applied: list[str] = []
     for name, value in values.items():
-        if override or name not in os.environ:
-            os.environ[name] = value
+        if override or name not in environment:
+            environment[name] = value
             applied.append(name)
     return EnvLoadReport(resolved, True, tuple(applied))

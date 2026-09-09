@@ -85,19 +85,24 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "17076c64650d24cba5c0c28733b45877086962abd947b68964e47796f9b21e18"
+        "8ddf6930875fbe7fc5b6ca27ae46ec352e1f6ed1cd63c4e0947d7aa0c81c7057"
     ),
     "runtime/agent_runtime.py": (
-        "d2e9b572562b836bc48ada05825d9b2b4f306040c6a32898d1d4220f90b109f2"
+        "d1a8eaf278775d46b00faf7ec1a8769622aac569d291000874387b4dcbf09b7f"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
+    # F5: pre-enable Manifest review uses the same loader and activation path.
     "plugins/manager.py": (
-        "30a524258d42dcaad8f4b5919e3235927b5868092c3ae775b0df4854dfc6608e"
+        "5f982e4655e44e6b15d4465b3aa874c83fc2f46a8e833110116c64a5edc26cee"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+ADR-0057 D extends the existing model Step with frozen summary/input requests,
+sharing admission, Budget and cancellation. E0 metering and D do not add Product
+state or a parallel model lifecycle. Pins match test_product_architecture.
 
 These four own the v0.6 concurrency kernel. The product surface is built
 entirely above their public seams. v0.8-F0 changes ``AgentLoop`` only at its
@@ -105,6 +110,10 @@ generic Model admission/Session dispatch-permit, host Provider/Attempt binding,
 and failure-convergence seam. v0.8-F2 adds same-Step typed retry ownership there
 and passes an explicit retry policy through ``AgentRuntime`` composition; neither
 file gains Product state or a Product dependency.
+
+v0.9-F4 adds only read/recheck/observation callbacks to AgentLoop and assembles
+the qualified Memory reader and optional Git observer in AgentRuntime. Existing
+Session, Tool and Lease owners remain; no Product state or new lifecycle enters.
 
 v0.9-F3 adds explicit ProjectMemoryConfig, a proposal-only Tool callback and a
 host Memory control facade borrowing the existing Lease. No Product import,
@@ -368,7 +377,8 @@ def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
     # the optional host, ``chat`` drives a UI-neutral Turn, and ``product`` is
     # the one Line-terminal adapter. No second command or Product authority is
     # introduced.
-    assert cli_consumers == {"chat.py", "main.py", "product.py"}
+    # The existing configuration form validates the same Product host file.
+    assert cli_consumers == {"chat.py", "main.py", "product.py", "tui_config.py"}
 
 
 def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:

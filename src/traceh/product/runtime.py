@@ -119,6 +119,8 @@ class ProductAgentRuntimeFactory:
         "_retry_policy",
         "_store",
         "_workspaces",
+        "_context_input",
+        "_memory_config",
     )
 
     def __init__(
@@ -131,6 +133,8 @@ class ProductAgentRuntimeFactory:
         data_dir: Path,
         providers: Mapping[str, LlmProvider],
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+        context_input=None,
+        memory_config=None,
     ) -> None:
         self._store = store
         self._workspaces = workspaces
@@ -139,6 +143,8 @@ class ProductAgentRuntimeFactory:
         self._data_dir = Path(data_dir).absolute()
         self._providers = dict(providers)
         self._retry_policy = retry_policy
+        self._context_input = context_input
+        self._memory_config = memory_config
 
     async def provision(
         self,
@@ -220,6 +226,8 @@ class ProductAgentRuntimeFactory:
                 max_steps=limits.max_steps,
                 max_output_tokens=binding.max_output_tokens,
                 model_retry_policy=self._retry_policy,
+                context_input=self._context_input,
+                memory=self._memory_config,
             ),
             provider=provider,
             event_store=self._store,

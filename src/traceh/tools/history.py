@@ -16,7 +16,9 @@ class HistoryDisclosureTool:
     description = (
         "Request one already disclosed page of this Session's compacted history. "
         "Only a receipt is returned; the immediate next Step may receive the page as "
-        "historical reference. Use exactly a disclosed cursor, never a sequence range."
+        "historical reference in the LAST user message's current host reference context. "
+        "Admitted pages may remain within this Turn while within budget, with current freshness "
+        "labels. Use exactly a disclosed cursor, never a sequence range."
     )
     effect_kind = EffectKind.PURE_READ
     input_schema = {
@@ -63,8 +65,9 @@ class HistoryDisclosureTool:
         )
         return ToolOutput(
             content=(
-                "History page request accepted for this Turn's immediate next Step only. "
-                "No historical page content is returned by this tool."
+                "History page accepted for this Turn's immediate next Step. Read the LAST "
+                "user message's current reference. Admitted pages may remain this Turn "
+                "within budget; check freshness. This receipt contains no page body."
             ),
             data={"history_receipt": receipt},
         )

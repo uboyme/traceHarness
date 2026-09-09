@@ -1,0 +1,370 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "turns": [
+        {
+          "label": "read-new-output",
+          "question": "请运行一次 python telemetry.py，查一下日志中 R0164 的设备标签和复核码。另外告诉我程序的退出码。请依据实际执行结果回答。",
+          "answer": "From the telemetry.py execution output, I found the information for R0164:\n\n- Device label (设备标签): \"仪表-479f114d00\"\n- Verification code (复核码): \"de0d43f6585d\"\n\nThe program's exit code was 0, as shown in the initial output: \"exit_code=0 timed_out=false\"\n\nSo the answer is:\n- R0164 device label: 仪表-479f114d00\n- R0164 verification code: de0d43f6585d\n- Program exit code: 0",
+          "steps": 4,
+          "tool_results": [
+            {
+              "tool": "shell",
+              "status": "succeeded",
+              "call_id": "call_6a197df5a8394aa3add9d8"
+            },
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_76f6053891884a8ca359e2"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_4fd2fb5ed1374ddda96585"
+            }
+          ],
+          "read_offsets": [
+            51050
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "shell",
+              "arguments": {
+                "command": "python telemetry.py"
+              }
+            },
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "part": "content",
+                "query": "R0164"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "offset": 51050,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+              "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 1971,
+                  "match_end": 51058,
+                  "match_start": 51053,
+                  "matched_lines": "记录 R0164\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                      "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                      "offset": 51050,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 51050
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R0164",
+              "total_chars": 80925
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "restart-after-compaction",
+          "question": "刚才那份日志里 R0239 的设备标签和复核码是什么？请查当时的记录。",
+          "answer": "From the diagnostic log, I found the information for R0239:\n\n- Device label: \"仪表-db810dfe11\"\n- Verification code: \"6ae7c1f36bf6\"\n\nThe log shows:\n```\n记录 R0239\n...\n{\"设备标签\": \"仪表-db810dfe11\", \"复核码\": \"6ae7c1f36bf6\"}\n```",
+          "steps": 5,
+          "tool_results": [
+            {
+              "tool": "request_history_page",
+              "status": "failed",
+              "call_id": "call_0eb6642611d848078f4e1f"
+            },
+            {
+              "tool": "list_tool_outputs",
+              "status": "succeeded",
+              "call_id": "call_1ae93bf98da3413cb96e86"
+            },
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_d889244c10ee43d4bb6693"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_2cd7c977a85141f1b7faa9"
+            }
+          ],
+          "read_offsets": [
+            74378
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "request_history_page",
+              "arguments": {
+                "block_id": "bc21790502ed831f1c727e0df8659508eb67addb3b87e532af02ef3811a46fcb",
+                "cursor": {
+                  "block_id": "bc21790502ed831f1c727e0df8659508eb67addb3b87e532af02ef3811a46fcb",
+                  "index": 0,
+                  "policy_digest": "91fa6cbbed5d290898f383007318cc972988bd01506a26261d5bbb9b316e0e5b"
+                },
+                "requested_tier": "chunk"
+              }
+            },
+            {
+              "tool": "list_tool_outputs",
+              "arguments": {
+                "count": 10,
+                "offset": 0
+              }
+            },
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "part": "content",
+                "query": "R0239"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "offset": 74378,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+              "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 2871,
+                  "match_end": 74386,
+                  "match_start": 74381,
+                  "matched_lines": "记录 R0239\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                      "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                      "offset": 74378,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 74378
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R0239",
+              "total_chars": 80925
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "repeated-keyword",
+          "question": "这份日志中标了复检的记录有哪些？列出每条的设备标签和复核码。",
+          "answer": "From the diagnostic log, I found two records marked for re-inspection (\"复检\"):\n\n- **R0078**: Device label \"仪表-0701ff9ad3\", Verification code \"0c8af99f2c21\"\n- **R0207**: Device label \"仪表-0a81b7b691\", Verification code \"6cbb45300d92\"",
+          "steps": 4,
+          "tool_results": [
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_5292699efa9a44cf9ce1e5"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_2f9d20cd29cc4e94808948"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_b708100febe84c03bbf200"
+            }
+          ],
+          "read_offsets": [
+            24301,
+            64423
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "part": "content",
+                "query": "复检"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "offset": 24301,
+                "part": "content"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "offset": 64423,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+              "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 939,
+                  "match_end": 24312,
+                  "match_start": 24310,
+                  "matched_lines": "记录 R0078 复检\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                      "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                      "offset": 24301,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 24301
+                },
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 2487,
+                  "match_end": 64434,
+                  "match_start": 64432,
+                  "matched_lines": "记录 R0207 复检\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                      "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                      "offset": 64423,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 64423
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "复检",
+              "total_chars": 80925
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "absent-keyword",
+          "question": "这份日志有没有 R9999 这条记录？没有就明确告诉我没找到，不要猜内容。",
+          "answer": "No, R9999 was not found in the log.",
+          "steps": 2,
+          "tool_results": [
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_c2599a8979854ad3a93534"
+            }
+          ],
+          "read_offsets": [],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+                "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+                "part": "content",
+                "query": "R9999"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "f89c003cd19b192cb72f34d738ac92413bc902d6a38a9beac872d0ac73115691",
+              "effect_id": "2332c9f0-24dc-4f38-8b1a-58e782ab3d8f",
+              "matches": [],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R9999",
+              "total_chars": 80925
+            }
+          ],
+          "replay_and_invariants": true
+        }
+      ],
+      "session_id": "cca66fe5-722f-4fed-b713-3ff25cad74bf"
+    }
+  ],
+  "completed": false,
+  "keyword_search": true,
+  "retry_max_attempts": 6,
+  "provider_timeout_seconds": 45
+}

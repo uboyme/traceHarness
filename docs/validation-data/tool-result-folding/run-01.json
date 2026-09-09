@@ -1,0 +1,127 @@
+{
+  "model": "qwen-plus",
+  "scripted_provider": false,
+  "cases": [
+    {
+      "exit_code": 0,
+      "turns": [
+        {
+          "label": "read-new-output",
+          "question": "请运行一次 python telemetry.py，查一下日志中 R0164 的设备标签和复核码。另外告诉我程序的退出码。请依据实际执行结果回答。",
+          "answer": "From the telemetry.py execution output, I found the information for R0164:\n\n- Device label: \"仪表-79b52f6cc1\"\n- Verification code: \"5892773f2f3e\"\n\nThe program's exit code was 0 (as shown in the first line of the output: \"exit_code=0 timed_out=false\").\n\nSo the answer is:\n- Device label for R0164: 仪表-79b52f6cc1\n- Verification code for R0164: 5892773f2f3e\n- Program exit code: 0",
+          "steps": 4,
+          "tool_results": [
+            {
+              "tool": "shell",
+              "status": "succeeded",
+              "call_id": "call_c1a271ab0df74faf973ab6"
+            },
+            {
+              "tool": "search_tool_output",
+              "status": "succeeded",
+              "call_id": "call_9093af1cf4ea4873b0be27"
+            },
+            {
+              "tool": "read_tool_output",
+              "status": "succeeded",
+              "call_id": "call_103d793ca4fe4e3f811919"
+            }
+          ],
+          "read_offsets": [
+            51050
+          ],
+          "expected_found": true,
+          "tool_calls": [
+            {
+              "tool": "shell",
+              "arguments": {
+                "command": "python telemetry.py"
+              }
+            },
+            {
+              "tool": "search_tool_output",
+              "arguments": {
+                "digest": "298100e939a009d5e85bef06c430aae5f00b6b84ffcb33c626da66b3cffebcc2",
+                "effect_id": "be251b93-3f13-400e-91cf-75bae48e808f",
+                "part": "content",
+                "query": "R0164"
+              }
+            },
+            {
+              "tool": "read_tool_output",
+              "arguments": {
+                "count": 4096,
+                "digest": "298100e939a009d5e85bef06c430aae5f00b6b84ffcb33c626da66b3cffebcc2",
+                "effect_id": "be251b93-3f13-400e-91cf-75bae48e808f",
+                "offset": 51050,
+                "part": "content"
+              }
+            }
+          ],
+          "search_pages": [
+            {
+              "case_sensitive": true,
+              "digest": "298100e939a009d5e85bef06c430aae5f00b6b84ffcb33c626da66b3cffebcc2",
+              "effect_id": "be251b93-3f13-400e-91cf-75bae48e808f",
+              "matches": [
+                {
+                  "after_context": "",
+                  "before_context": "",
+                  "context_truncated": false,
+                  "line_number": 1971,
+                  "match_end": 51058,
+                  "match_start": 51053,
+                  "matched_lines": "记录 R0164\n",
+                  "read_action": {
+                    "arguments": {
+                      "count": 4096,
+                      "digest": "298100e939a009d5e85bef06c430aae5f00b6b84ffcb33c626da66b3cffebcc2",
+                      "effect_id": "be251b93-3f13-400e-91cf-75bae48e808f",
+                      "offset": 51050,
+                      "part": "content"
+                    },
+                    "tool": "read_tool_output"
+                  },
+                  "text_offset": 51050
+                }
+              ],
+              "next_offset": null,
+              "offset": 0,
+              "offset_unit": "unicode-codepoints",
+              "part": "content",
+              "query": "R0164",
+              "total_chars": 80925
+            }
+          ],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "recent-conversation",
+          "question": "先停一下查询。请只回答：好的。",
+          "answer": "好的",
+          "steps": 1,
+          "tool_results": [],
+          "read_offsets": [],
+          "expected_found": true,
+          "tool_calls": [],
+          "search_pages": [],
+          "replay_and_invariants": true
+        },
+        {
+          "label": "restart-after-compaction",
+          "question": "刚才那份日志里 R0239 的设备标签和复核码是什么？请查当时的记录。",
+          "error_type": "HistoryReadError",
+          "partial_tool_results": [],
+          "failure_code": "history-block-unavailable"
+        }
+      ],
+      "session_id": "39939eac-3c79-4cb3-adbc-f21ee4ce7136",
+      "before_fold_bytes": 24713
+    }
+  ],
+  "completed": false,
+  "keyword_search": true,
+  "fold_tools": true,
+  "retry_max_attempts": 6,
+  "provider_timeout_seconds": 45
+}

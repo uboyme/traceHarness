@@ -65,7 +65,7 @@ async def test_tool_continuation_and_later_history_use_one_reconstructable_conte
         events = await runtime.sessions.read_session(first.session_id)
         assert any(e.type == "tool/result" for e in events)
         old_request = provider.requests[-1]
-        old_context = old_request.messages[0].content
+        old_context = old_request.messages[-1].content
         assert subject in old_context
         await runtime.compaction.replace_through(
             first.session_id,
@@ -74,8 +74,8 @@ async def test_tool_continuation_and_later_history_use_one_reconstructable_conte
         )
         await runtime.run_existing(first.session_id, "continue from the new summary")
         events = await runtime.sessions.read_session(first.session_id)
-        assert provider.requests[-1].messages[0].content != old_context
-        assert "quoted boundary" not in provider.requests[-1].messages[0].content
+        assert provider.requests[-1].messages[-1].content != old_context
+        assert "quoted boundary" not in provider.requests[-1].messages[-1].content
         contexts = [e for e in events if e.type == "context/input"]
         compositions = [e for e in events if e.type == "composition/snapshot"]
         requests = [e for e in events if e.type == "request/snapshot"]
@@ -91,8 +91,8 @@ async def test_tool_continuation_and_later_history_use_one_reconstructable_conte
             assert request.data["context_input_seq"] == context.seq
             assert context.data["context_digest"] == request.data["context_input_digest"]
             projected = runtime.surface.project(events, through_seq=composition.seq)
-            assert observed.messages[0].role == "user"
-            assert observed.messages[1:] == projected
+            assert observed.messages[-1].role == "user"
+            assert observed.messages[:-1] == projected
             rebuilt = await reconstruct_request(
                 runtime.sessions,
                 runtime.surface,
@@ -101,7 +101,7 @@ async def test_tool_continuation_and_later_history_use_one_reconstructable_conte
             )
             assert canonical_json(rebuilt.request.to_dict()) == canonical_json(observed.to_dict())
         # The Step after the real Tool has no fresh user/message to anchor an
-        # insertion; Context still precedes every Surface message in that Step.
+        # insertion; Context still follows every Surface message in that Step.
         tool_step = requests[2].data["step_id"]
         assert not any(
             e.type == "user/message" and e.data.get("step_id") == tool_step for e in events

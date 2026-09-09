@@ -2,7 +2,7 @@
 
 > 状态：**2026-08-29 冻结产品路线，2026-09-05 纳入 M3 History Evidence；2026-09-07 按 v0.8.0
 > 发布基线修订身份、失败前缀、索引、评测与阶段合同；同日完成获授权的 F0-A ADR／设计冻结。
-> F0-A/B/C 本轮授权实现与最终限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露已实现并完成限定验证；F3 项目归属与 Memory authority 已实现；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4–F5 未开工，Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认，未执行发布级全量或 L2。**
+> F0-A/B/C 本轮授权实现与最终限定门禁已收口；F1 Skill 贡献与 F2 选择／检索／披露已实现并完成限定验证；F3 项目归属与 Memory authority 已实现；B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已实现（§11.4）；F5 治理和冻结评估已实现，精度整改及冻结复验完成，11 条均达到原阈值（§12.5）；Stop C 已通过限定验收（§12.7），发布门禁仍待授权。Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认，未执行发布级全量或 L2。**
 >
 > 前置：v0.8.0 已完成发布，源码版本、发布 tag 与记录已核对。F0-A 仅交付设计文档；19 项现有接缝
 > 定向测试通过，不代表新协议实现。F0-B 的 59 项新主线已包含在最终 36 文件门禁中：
@@ -12,7 +12,7 @@
 >
 > 本文冻结 Skill、Memory、M3 压缩历史证据、渐进式披露与 RAG 的单一 Context Input 主线，区分
 > 已发布基线、计划合同与尚待验证的实现；版本目标和三个 Release Stop 保持不变。
-> 它不表示 F4–F5 能力已实现或 v0.9 已发布；Release Stop B 修复后独立复审已通过，也不授权 commit、push、tag、release、联网或真实模型运行。
+> 它不表示 F5 的质量/发布门禁已通过或 v0.9 已发布；Release Stop B 修复后独立复审已通过，也不授权 commit、push、tag、release、联网或真实模型运行。
 
 F0-A 的决定与字段合同已冻结为 [ADR-0043](../adr/0043-step-scoped-context-input-and-retrieval.md)、
 [ADR-0044](../adr/0044-host-owned-project-scope-and-memory-authority.md) 和
@@ -206,7 +206,7 @@ START、Memory approve/supersede/revoke、Tool grant、Approval 与 Promotion �
 5. Memory。
 
 这里是纳入/预算优先级，不表示历史证据可以覆盖当前事实。Skill/Memory/History Evidence 都通过固定宿主
-header 作为 messages 中第一条 request-only user-role context 注入，不能用正文伪造 system/tool 边界。
+header 作为完整 Surface 后最后一条 request-only user-role context 注入（当前 C1 合同见设计合同 §20），不能用正文伪造 system/tool 边界。
 History block 还必须在固定尾部重申观察截止点、freshness 和“只证明过去”；正文即使包含旧的宿主声明或
 工具成功，也不能越过这个边界。三类内容有各自的显式配额和总配额；
 优先按完整 item/section 原子纳入，不把一个安全限定句截掉只留下前半段。超额时按确定性规则排除并记录
@@ -274,7 +274,7 @@ fresh 选择，不声称 Session Context append 与各领域读取是跨流原�
 
 按阶段启用，所有 lane 都只返回 identity + score/匹配证据：
 
-- exact lane：显式 id、符号、路径片段、错误标识和精确 metadata；
+- exact lane：显式 id、完整符号/路径、错误标识和精确 metadata；
 - lexical lane：SQLite FTS/BM25，索引只含通过 eligibility 的 canonical 文本投影；
 - semantic lane（可选）：本地 embedding；
 - rerank lane（可选）：只对融合后的有界 top candidates 使用本地 reranker；
@@ -289,6 +289,11 @@ fresh 选择，不声称 Session Context append 与各领域读取是跨流原�
 向量如需持久化，只作为 SQLite 内可重建 derived table；删除后从 canonical facts/resources 重建。不得
 增加 Chroma、Pinecone、PostgreSQL/pgvector、独立 JSON cache 或插件私库作为第二事实源。
 
+F5 精度修订已把完整代码字面量保留为查询原子；包含字面量时，候选至少命中其中一个完整值，
+自然语言查询仍保留 OR 召回。来源 receipt 记录实际覆盖词项，全局融合先比较覆盖数量，再比较原 RRF
+与内容身份；只有实际通过最终预算的自动块才会排除覆盖集合为其严格子集的后续自动候选。
+相等/互补覆盖保留，显式披露不参与该排除。具体字段及重放规则只在设计合同 §18 定义。
+
 ### 5.3 四级渐进披露
 
 为避免与插件 L2 候选验证混淆，不使用 L0/L1/L2 命名。四级是：
@@ -301,13 +306,13 @@ fresh 选择，不声称 Session Context append 与各领域读取是跨流原�
 
 每次请求只注入需要的级别。目录不等于正文，命中 Skill 名字也不自动加载全部 Wheel；Memory 相关也不
 等于把整个 Workspace history 塞进 prompt；命中历史摘要也不自动把整段旧对话塞回 Surface。History 原文
-是 request-only、Step-scoped 输入，用完即退；EventStore 永久保留不等于 Prompt 永久驻留。
+是 request-only 输入；已准入正文在同 Turn 按当前 C1 合同逐步复核和保留，结束即退；EventStore 永久保留不等于 Prompt 永久驻留。
 
 ### 5.4 派生索引与 SQLite owner
 
-当前 [`SqliteEventStore`](../../src/traceh/session/sqlite.py) 严格校验 schema 中只有 `streams` 与
-`events`。FTS 不能直接加表后继续使用原开库合同。F0-A 已在设计合同 §7 决定 F2 使用同库 schema 2、
-精确 FTS5/shadow 对象与 Store-owned 生命周期；以下是所属阶段的实现义务：
+F0-A 时 [`SqliteEventStore`](../../src/traceh/session/sqlite.py) 只接受 `streams` 与 `events`。F2 已按设计合同
+§7/§14 唯一切到同库 schema 2，严格接受两张事实表以及精确的派生 manifest/items、FTS5/shadow 对象，
+仍由原 Store 拥有生命周期。以下义务持续适用于当前实现：
 
 - 同库 schema/version cutover、FTS 虚表及其派生对象的精确集合；未知版本／对象仍拒绝，旧数据按
   pre-1.0 政策明确拒绝，未经授权不迁移、不自动改写或删除；
@@ -528,7 +533,7 @@ eligible exact+FTS/BM25/RRF、四级披露及紧邻下一 Step 的 receipt。
 Context 与索引的详细当前字段只在设计合同 §14 定义：Session 3、Context 2、
 f2-context-policy-v1/context-json-v3、SQLite 2；拒绝旧版本，无自动迁移。
 SkillRetrievalPolicy 全部十五项由宿主明确配置，semantic/reranker 未实现，不自动装包；
-跨来源 Memory/History 通用配置留到 F4。未新增 CLI/TUI 治理（F5）。
+F2 时跨来源配置留到 F4；当前 F4 的显式细化见 §11.4。未新增 CLI/TUI 治理（F5）。
 
 本轮使用隔离空临时 cwd、绝对测试路径、独立 cache/basetemp，不读取真实 .env。
 显式 40 文件集合共 **896 项，893 passed / 3 skipped in 50.33s**；
@@ -629,7 +634,7 @@ owner 回答。阶段、路线或决定变化时追加 supersede/revoke，不原
 
 ### 10.4 Release Stop B
 
-修复后独立复审 P0=0/P1=0/P2=0，B-P1-01 已关闭，Stop B 通过；F4 未开始。
+修复后独立复审 P0=0/P1=0/P2=0，B-P1-01 已关闭，Stop B 通过；该历史检查点尚未开始 F4；当前实现见 §11.4。
 
 Memory authority 独立 P0/P1 审查清零后，才允许把它交给 RAG。检索质量不能补救错误 authority。
 
@@ -638,7 +643,7 @@ Memory authority 独立 P0/P1 审查清零后，才允许把它交给 RAG。检�
 F3 初次实现新增六文件 100 项通过：核心五文件 94 passed in 4.86s；真实本地 Product/Git 六项
 6 passed in 34.09s。字段、错误 source/scope/digest/head、同槽竞争、重复操作、未知提交、重复取消、
 重开 SQLite、released 历史证据与当前访问隔离、model-only proposal、Store/Session/resolver owner
-错配均覆盖。释放后的历史来源不撤销或复活现有事实；F4 的 Context 选择尚未接入。
+错配均覆盖。释放后的历史来源不撤销或复活现有事实；F3 时尚未接入 F4 Context；当前实现见 §11.4。
 
 明确限定以下 27 文件，不扩展为全量：
 
@@ -688,7 +693,7 @@ LocalGitWorkspaceProvider 统一 source/consumer/mapping-only 的 Git 注册和�
 唯一 skip 为 Windows 目录符号链接权限。临时恢复旧 provider 后 8 failed / 1 passed，
 按原字节恢复后完成最终限定验证。compileall、修改范围 Ruff、反硬编码通过，详见
 [审查记录 §7](TRACEHARNESS_V0.9_RELEASE_STOP_B_REVIEW.md#7-b-p1-01-修复与定向确认)。
-该阶段修复与定向确认不替代独立复审；后续复审见 §10.8，F4 未开始。没有全量、L2–L4、Wheel、
+该阶段修复与定向确认不替代独立复审；后续复审见 §10.8，该历史检查点尚未开始 F4；当前实现见 §11.4。没有全量、L2–L4、Wheel、
 联网、真实 Provider、commit/push/tag/release。
 
 ### 10.8 Release Stop B 修复后独立复审
@@ -751,6 +756,18 @@ provenance，不压成无法审计的通用文本列表。
   历史正文覆盖；
 - 删除 History derived directory 后能从 `surface/replace` 和原始 Session 事件重建，canonical history 零变化。
 
+### 11.4 当前实现与验收边界
+
+F4 已在原 Context/Request、Session/Store、Memory authority、ToolRuntime/Git runner 主线实现。
+共享 ReferenceRetrievalPolicy/exact/eligible BM25/RRF，来源独立语料统计与配额，统一最终预算；
+Memory active 资格、只读次步披露、冻结历史前缀证明；真实 Git/Tool 观察驱动 History 三态。
+配置目标按 ADR-0045 显式细化为十二项 Context 和两个同类型来源策略，semantic/reranker 明确关闭，
+启用未选实现拒绝。F4 时点协议为 Session 4、Context 3、f4-context-policy-v1/context-json-v4；
+F5 精度修订后的当前协议见 §12.5，SQLite 仍为 2。
+来源变化/撤销/取消/跨项目、精确字面量、历史重建与统一预算已有定向覆盖；三项核心保护已反向验证。
+完整验证与未运行门禁见[上下文 §15.1](../note/project-context.md#151-本地标准检查)。
+未运行全量、L2–L4、Wheel、联网或真实 Provider；F4 当时未包含 F5；当前 F5 开发状态见 §12.5，Release Stop C 当前结果见 §12.7，不宣称发布通过。
+
 ## 12. v0.9-F5：治理体验、冻结检索评测与发布
 
 ### 12.1 Line/TUI 治理
@@ -778,8 +795,7 @@ provenance，不压成无法审计的通用文本列表。
 不得新增 `traceh rag-eval`、第二 Runner 或模型自评。若 manifest 需要扩展，进行一次唯一 schema cutover，
 同步 shipped benchmark 并明确拒绝旧 schema，不保留双 reader。
 
-冻结语料的唯一装载 owner 是现有 `evaluation/attempt.py::run_attempt` 主线。当前代码先构造 Product
-host，再在 `_prepare()` 创建 requester Session；不能直接在 host 前插 seeding 就声称已有合法 scope。
+冻结语料的唯一装载 owner 是现有 `evaluation/attempt.py::run_attempt` 主线。F5 已把原先的 host-first 顺序切换为合法 requester/scope 先行（§12.5），不能用自报 source 代替注册证明。
 F0-A 已冻结以下顺序，F5 在同一 attempt owner 内实现：创建 SQLite store 和受控 Runtime → 创建 requester
 Session／宿主项目 scope binding → 按 exact-key manifest/digest 使用生产 Plugin/Memory service 完成
 seeding → 构造 Product host → 通过同一 Session 发起请求。tool-free requester 使用 attempt source
@@ -854,6 +870,39 @@ EventStore。
 独立 L2 后又无意在全量内重复。确需独立 L2 的发布证据时，必须明确记录原因与授权。
 用户禁止全量／L2 时保持禁止，报告相应门禁未运行；不得把有筛选结果称为最终无筛选全量。
 
+### 12.5 F5 开发状态与精度修订
+
+共享 Line/TUI 治理、--context-config、Plugin setup 前 Manifest 审阅、原 Memory/Skill/Project
+确认写入、History 原有界展开、实际 Context 透明度和唯一 eval seeding/度量已接入。
+设计细化见 [ADR-0046](../adr/0046-shared-context-governance-and-frozen-retrieval-evaluation.md)，
+当前工程事实见正式上下文 7.8–7.10/12.5/13.10。
+根 benchmark protocol 唯一为 2，旧 1 拒绝；内层 Verifier 1、冻结 corpus format 1 不变。导航协议修订仅重冻结 catalog 绑定及依赖文件摘要，原质量输入不变。
+当前 C2 唯一协议为 Session 9、Context 8、f5-context-policy-v5、renderer context-json-v8；披露 Tool receipt 2，
+History page policy v2。来源检索 receipt 2、tokenizer v3/ranker v2、SQLite 2、M3 2 与原配置字段结构不变。
+旧 Session 1–8 明确拒绝；当前参考位置与本轮正文保留合同见设计合同 §20，精简模型视图与阅读动作见 §21。
+C2 真实核心为 27/28、28/28、28/28，Skill 回归为 24/24、23/24、24/24，均达到原门槛；接入后定向门禁完成。
+C3 本地四候选筛查未达到冻结质量/增益门槛，按计划不接入、保持语义关闭；原 11 题 Runtime 复验通过。
+C3 结果见 [C3 记录](../validation-v0.9-stop-c-c3.md)。C4 受控调查无确认 Adapter 缺陷，历史具体原因未知与
+3 次网络失败保留，见 [C4 记录](../validation-v0.9-stop-c-c4.md)；C5 独立审查已完成，最终结果见 §12.7。
+
+11 条冻结 baseline 在结果前固定 query/corpus/policy/judgments/阈值。首次真实本地 attempt 网格的
+Product 成功 11/11、隔离违规 0；但 5 条未达检索精度/zero-hit 阈值（部分词面重叠带入额外参考）。
+保留原始题目和阈值，不降低成功线。semantic 词法基线最低分 0 是事前约定，不能声称语义检索达标。
+F5 实现验证与质量门禁分别报告，不能据此宣称整个 F5 收口或 v0.9 可发布。
+
+精度整改及冻结复验已完成。实现按 [ADR-0047](../adr/0047-literal-query-coverage-admission.md) 和设计合同 §18
+保留完整标识符/路径查询，来源收据证明覆盖，全局排序与最终预算共同排除严格子集自动候选。
+修订没有新增词表、示例 ID 例外或阈值；自然语言的部分匹配、相等/互补覆盖和显式披露仍有独立路径。
+复验沿同一 run_attempt 使用原冻结输入，11/11 Product 成功、11/11 quality_passed、隔离违规 0。
+四条原精度失败的 precision/全 Context precision 从 0.5 到 1，Recall/MRR 保持 1；退役目录题 zero-hit
+从 0 到 1。语义题 Recall/MRR/precision 仍为 0，只达到事前词法底线，不证明语义能力或泛化精度 100%。
+最终 16 个具名文件 `303 passed in 973.99s`，含 19 项非样本 Runtime 回归、唯一 11-attempt 冻结网格及
+seed/Product index 失败取消；三组根因反向验证失败后逐字节恢复，源文件与最终测试一致。
+后续 C5 已完成 Release Stop C 独立审查与定向确认（§12.7）；本轮未提交。
+不得按上述具体示例添加排除名单、改 relevance 或用新阈值伪装成原 baseline 通过。
+上述 F5 精度阶段未运行全量、L2–L4、Wheel、联网/真实 Provider 或发布操作；后续 C1/C2/C4 的真实 Provider 证据另列。
+验证证据见 [F5 验证记录](../validation-v0.9-f5.md)。
+
 ## 13. 完成定义与拆版规则
 
 v0.9 完成必须证明：
@@ -918,3 +967,25 @@ v0.9 完成必须证明：
 
 最终产品行为应同时满足：默认上下文短而新，Workspace 长期事实可治理，Skill 按需披露，M3 原文随时可
 追溯但不会长期驻留；用户和模型都能知道“有什么、为什么命中、实际注入了什么、它在什么时刻有效”。
+
+
+### 12.6 F5 导航修订的限定验证
+
+章节/资源/分块必填标题与说明，目录和回执共用原冻结元数据；live/frozen prompt 装配共用宿主引用
+指导。此节记录 ADR-0048 当时的单 Step 披露；当前 C1 位置与保留合同见设计合同 §20。真实调用发现的
+数字表示和散文冒号问题在原 reader/tokenizer 修复，无领域样本例外。
+用户已明确授权本轮真实 Provider：使用 `tests/live_skill_navigation/` 的显式集成测试，从自然语言
+自主生成工具调用，保留模型差异、原失败和移除导航对照；没有新增产品 Runner 或扩展后续阶段。
+原检索基准只更新必需的目录绑定与摘要，题目、judgments、阈值、预算和初始工作区不修改。
+结果见 [验证记录](../validation-v0.9-skill-navigation.md)，合同见 [ADR-0048](../adr/0048-skill-navigation-and-real-provider-disclosure.md)。
+仍禁止全量/L2–L4/Wheel，Stop C 和发布门禁单独执行。
+
+
+### 12.7 Release Stop C 限定验收完成
+
+项目所有者已授权按 [C1–C5 执行计划](TRACEHARNESS_V0.9_RELEASE_STOP_C_EXECUTION.md) 顺序推进。
+C1/C2 的真实披露与混合旅程达到预定门槛；C3 四候选未达质量/增益要求，按计划不接入；
+C4 无确认 Adapter 缺陷，历史原始字节缺失与网络失败保留。C5 三路独立审查生产 P0/P1/P2 为 0，
+测试适配及文档问题已修复，相关确认和两份上下文同步完成，Release Stop C 通过。
+完整范围、原失败、实际测试与未运行门禁见 [最终记录](../validation-v0.9-stop-c.md)。
+当前授权禁止全量、L2–L4、Wheel/安装和 Git 提交发布；本计划后续发布门禁不构成另行执行授权。

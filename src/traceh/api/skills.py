@@ -7,7 +7,7 @@ Activation/Generation owner and never assembled as system prompt sections.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
@@ -26,6 +26,17 @@ def _text(value: object) -> None:
     if type(value) is not str or not value:
         raise ValueError("skill-text-invalid")
     value.encode("utf-8")
+
+
+def _navigation_text(title: str, summary: str) -> None:
+    _text(title)
+    _text(summary)
+    if not title.strip() or not summary.strip():
+        raise ValueError("skill-navigation-text-invalid")
+
+
+def _navigation_entry(value, key: str) -> dict[str, JsonValue]:
+    return {name: getattr(value, name) for name in (key, "title", "summary", "content_bytes")}
 
 
 def _content(digest: object, size: object) -> None:
@@ -56,9 +67,12 @@ class SkillChunk:
     byte_end: int
     content_digest: str
     content_bytes: int
+    title: str = field(kw_only=True)
+    summary: str = field(kw_only=True)
 
     def __post_init__(self) -> None:
         _id(self.chunk_id)
+        _navigation_text(self.title, self.summary)
         _content(self.content_digest, self.content_bytes)
         if (
             type(self.byte_start) is not int
@@ -82,10 +96,13 @@ class SkillResource:
     relative_path: str
     content_digest: str
     content_bytes: int
+    title: str = field(kw_only=True)
+    summary: str = field(kw_only=True)
     chunks: tuple[SkillChunk, ...] = ()
 
     def __post_init__(self) -> None:
         _id(self.resource_id)
+        _navigation_text(self.title, self.summary)
         _content(self.content_digest, self.content_bytes)
         _text(self.relative_path)
         path = PurePosixPath(self.relative_path)
@@ -115,6 +132,8 @@ class SkillResource:
             "relative_path": self.relative_path,
             "content_digest": self.content_digest,
             "content_bytes": self.content_bytes,
+            "title": self.title,
+            "summary": self.summary,
             "chunks": [chunk.to_dict() for chunk in self.chunks],
         }
 
@@ -132,9 +151,12 @@ class SkillSection:
     tier: Literal["section"]
     content_digest: str
     content_bytes: int
+    title: str = field(kw_only=True)
+    summary: str = field(kw_only=True)
 
     def __post_init__(self) -> None:
         _id(self.section_id)
+        _navigation_text(self.title, self.summary)
         _content(self.content_digest, self.content_bytes)
         if self.tier != "section":
             raise ValueError("skill-section-tier-invalid")
@@ -178,6 +200,35 @@ class SkillDescriptor:
             raise ValueError("skill-tags-invalid")
         _unique(self.sections, SkillSection, "section_id")
         _unique(self.resources, SkillResource, "resource_id")
+
+    def navigation(self) -> dict[str, JsonValue]:
+        """Bounded author metadata, derived only from this frozen descriptor.
+
+        Shared by directory Context and the disclosure receipt. Never read or
+        summarize body bytes, infer meaning from IDs, or expose host paths.
+        """
+        return {
+            "sections": [_navigation_entry(section, "section_id") for section in self.sections],
+            "resources": [
+                {
+                    **_navigation_entry(resource, "resource_id"),
+                    "relative_path": resource.relative_path,
+                    "chunks": [_navigation_entry(chunk, "chunk_id") for chunk in resource.chunks],
+                }
+                for resource in self.resources
+            ],
+        }
+
+    def directory(self) -> dict[str, JsonValue]:
+        return {
+            "skill_id": self.skill_id,
+            "version": self.version,
+            "plugin": self.plugin.to_dict(),
+            "title": self.title,
+            "summary": self.summary,
+            "tags": list(self.tags),
+            **self.navigation(),
+        }
 
     def to_dict(self) -> dict[str, JsonValue]:
         return {

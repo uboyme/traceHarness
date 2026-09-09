@@ -236,6 +236,11 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
     session_id = await setup.create_session(tmp_path)
     await setup.sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
     await setup.sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "s"})
+    await setup.sessions.append_session(
+        session_id,
+        "user/message",
+        {"turn_id": "t", "step_id": "s", "content": "Recover this turn."},
+    )
     composition = RuntimeComposition(
         provider="scripted", model="model", system_prompt="", tools=()
     ).snapshot()
@@ -289,7 +294,7 @@ async def test_chat_continues_an_existing_session_after_recovery(tmp_path: Path)
     # Recovery converged the crash, but no new turn was started for the user.
     assert event_types(events).count("turn/start") == 1
     assert "runtime/recovered" in event_types(events)
-    assert user_messages(events) == []
+    assert user_messages(events) == ["Recover this turn."]
 
 
 async def test_existing_session_only_starts_a_turn_when_the_user_types(tmp_path: Path) -> None:

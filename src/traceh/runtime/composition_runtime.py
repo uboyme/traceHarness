@@ -27,7 +27,7 @@ from traceh.kernel.scope import Scope
 from traceh.llm.registry import LlmRegistry
 from traceh.plugins.errors import PluginDisposeError
 from traceh.plugins.skills import FrozenSkill, LeasedSkillReader
-from traceh.runtime.prompt import PromptAssembler
+from traceh.runtime.prompt import PromptAssembler, assemble_prompt_sections
 from traceh.runtime.verification import CompletionVerifier
 from traceh.session.service import SessionService
 from traceh.tools.registry import ToolRegistry
@@ -422,19 +422,7 @@ class _FrozenPromptAssembler:
         return self._sections
 
     def assemble(self, *, workspace: str) -> str:
-        runtime_section = PromptSection(
-            "traceh.runtime.workspace",
-            f"Workspace root: {workspace}\n"
-            "All file and process operations must stay in this workspace.",
-            50,
-        )
-        sections = sorted(
-            (*self._sections, runtime_section),
-            key=lambda item: (item.priority, item.section_id),
-        )
-        return "\n\n".join(
-            f"## {section.section_id}\n{section.content.strip()}" for section in sections
-        )
+        return assemble_prompt_sections(self._sections, workspace=workspace)
 
 
 class _FrozenLlmRegistry:
@@ -952,9 +940,7 @@ class _FrozenToolRuntime:
         if policy_names is None:
             policy_names = tuple(policy.name for policy in source.policies)
         if middleware_names is None:
-            middleware_names = tuple(
-                middleware.name for middleware in source.middlewares
-            )
+            middleware_names = tuple(middleware.name for middleware in source.middlewares)
         if len(policy_names) != len(source.policies):
             raise ValueError("frozen policy identity count does not match candidate")
         if len(middleware_names) != len(source.middlewares):
@@ -987,6 +973,7 @@ class _FrozenToolRuntime:
             timeout_seconds=source.timeout_seconds,
             max_output_chars=source.max_output_chars,
             admission_gate=source.admission_gate,
+            workspace_observer=source.workspace_observer,
         )
 
     @property
@@ -1016,6 +1003,10 @@ class _FrozenToolRuntime:
     @property
     def admission_gate(self):
         return self._delegate.admission_gate
+
+    @property
+    def workspace_observer(self):
+        return self._delegate.workspace_observer
 
     async def execute_batch(self, *args, **kwargs):
         return await self._delegate.execute_batch(*args, **kwargs)

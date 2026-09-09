@@ -1,0 +1,45 @@
+{
+  "format": 1,
+  "purpose": "Explicit C3 feasibility screen, not product defaults or a release benchmark.",
+  "embedding": {"max_length": 256, "pooling": "attention-mask-mean", "normalization": "l2", "dimension": 384, "dtype": "float32", "device": "cpu", "threads": 2},
+  "reranker": {"max_length": 512, "activation": "identity", "dtype": "float32", "device": "cpu"},
+  "candidates": [
+    {"id": "cosine-050", "cosine_min": 0.5, "reranker_min": null},
+    {"id": "cosine-060", "cosine_min": 0.6, "reranker_min": null},
+    {"id": "cosine-070", "cosine_min": 0.7, "reranker_min": null},
+    {"id": "cosine-050-cross-0", "cosine_min": 0.5, "reranker_min": 0.0}
+  ],
+  "acceptance": {
+    "original_nonsemantic_thresholds_unchanged": true,
+    "original_semantic_recall": 1.0,
+    "original_semantic_precision": 1.0,
+    "original_semantic_mrr": 1.0,
+    "added_semantic_recall_per_language": 0.75,
+    "added_semantic_precision_per_language": 0.75,
+    "scope_violations": 0,
+    "warm_query_p95_ms": 500,
+    "cold_load_ms": 120000,
+    "rebuild_ms": 120000,
+    "model_assets_bytes": 268435456,
+    "vector_bytes_per_item": 4096,
+    "minimum_gain_over_lexical_semantic_recall": 0.25
+  },
+  "rules": [
+    "Use the exact eligible canonical corpus captured inside the original Runtime; never encode unapproved, revoked, superseded, foreign or retired records.",
+    "Preserve the original lexical admission result. Semantic additions are considered only for queries without complete literal anchors and with no lexical admissions. This is an explicit conservative candidate, not a claim that this policy solves every mixed-evidence query.",
+    "Score every eligible document before semantic top-K. Cosine thresholds are absolute; no per-query or case-name tuning.",
+    "Allow zero lexical coverage for screened semantic additions. Use the original Context budget and renderer. Never forge a production retrieval receipt or persist screened results into a Session.",
+    "Screening success is only a prerequisite for production integration and full same-input Runtime evaluation; screening failure leaves semantic and reranker lanes disabled.",
+    "Keep every candidate, failure and timing. Do not replace results or lower criteria after observing scores. No model downloads or remote vector services."
+  ],
+  "additional_queries": [
+    {"id": "zh-transport", "language": "zh", "query": "机动车上路需要加什么能源？", "relevant": [{"kind": "memory", "id": "mobility.note", "tiers": ["summary"]}]},
+    {"id": "zh-diagnostic", "language": "zh", "query": "函数抛异常的诱因是什么？", "relevant": [{"kind": "memory", "id": "route.error", "tiers": ["summary"]}]},
+    {"id": "zh-boundary", "language": "zh", "query": "职责划分的原则有哪些？", "relevant": [{"kind": "memory", "id": "goals.code", "tiers": ["summary"]}]},
+    {"id": "zh-stage", "language": "zh", "query": "现阶段在忙什么？", "relevant": [{"kind": "memory", "id": "current.phase", "tiers": ["summary"]}]},
+    {"id": "en-transport", "language": "en", "query": "Which liquid powers a car?", "relevant": [{"kind": "memory", "id": "mobility.note", "tiers": ["summary"]}]},
+    {"id": "en-diagnostic", "language": "en", "query": "Why does the URL handler fail?", "relevant": [{"kind": "memory", "id": "route.error", "tiers": ["summary"]}]},
+    {"id": "en-boundary", "language": "en", "query": "How should responsibilities be separated?", "relevant": [{"kind": "memory", "id": "goals.code", "tiers": ["summary"]}]},
+    {"id": "en-stage", "language": "en", "query": "What delivery milestone are we currently at?", "relevant": [{"kind": "memory", "id": "current.phase", "tiers": ["summary"]}]}
+  ]
+}

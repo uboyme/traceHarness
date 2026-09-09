@@ -77,6 +77,11 @@ async def start_attempt(
 
 async def freeze_request(sessions, session_id, *, turn_id, step_id):
     """Freeze current production Context/Composition before constructing a request."""
+    events = await sessions.read_session(session_id)
+    if not any(e.type == "user/message" and e.data.get("turn_id") == turn_id for e in events):
+        await sessions.append_session(session_id, "user/message", {
+            "turn_id": turn_id, "content": "Recover this interrupted fixture task.",
+        })
     composition = RuntimeComposition(
         provider="scripted",
         model="scripted-model",

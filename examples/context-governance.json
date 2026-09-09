@@ -1,0 +1,94 @@
+{
+  "format": 1,
+  "context": {
+    "history": null,
+    "history_bytes": 0,
+    "history_tier": null,
+    "item_bytes": 12000,
+    "local_lanes": {
+      "semantic": null,
+      "reranker": null
+    },
+    "max_blocks": 20,
+    "max_exclusions": 40,
+    "max_query_bytes": 4000,
+    "memory": {
+      "unicode_version": "15.0.0",
+      "default_tier": "summary",
+      "match_fields": [
+        "id",
+        "tag",
+        "path",
+        "symbol",
+        "error"
+      ],
+      "k1": 1.2,
+      "b": 0.75,
+      "rrf_constant": 60,
+      "exact_weight": 2,
+      "fts_weight": 1,
+      "context_bytes": 20000,
+      "max_catalog_bytes": 20000,
+      "max_terms": 100,
+      "max_corpus_items": 40,
+      "max_corpus_bytes": 40000,
+      "max_candidates": 20,
+      "max_requests": 8
+    },
+    "skills": {
+      "unicode_version": "15.0.0",
+      "default_tier": "summary",
+      "match_fields": [
+        "id",
+        "tag",
+        "path",
+        "symbol",
+        "error"
+      ],
+      "k1": 1.2,
+      "b": 0.75,
+      "rrf_constant": 60,
+      "exact_weight": 2,
+      "fts_weight": 1,
+      "context_bytes": 20000,
+      "max_catalog_bytes": 20000,
+      "max_terms": 100,
+      "max_corpus_items": 40,
+      "max_corpus_bytes": 40000,
+      "max_candidates": 20,
+      "max_requests": 8
+    },
+    "total_bytes": 30000,
+    "workspace_observations": false
+  },
+  "skill_policy": {
+    "limits": {
+      "max_skills": 8,
+      "max_catalog_bytes": 16000,
+      "max_summary_bytes": 300,
+      "max_content_bytes": 8000,
+      "max_resource_bytes": 4000
+    },
+    "resource_roots": []
+  },
+  "project": {
+    "sources": {
+      "example-source": "./source"
+    },
+    "managed_root": "./managed",
+    "limits": {
+      "max_catalog_events": 200,
+      "max_label_bytes": 200
+    },
+    "memory_policy": {
+      "max_body_bytes": 1024,
+      "max_sources": 4,
+      "max_source_events": 400,
+      "max_source_bytes": 400000,
+      "max_memory_events": 120,
+      "denied_patterns": [
+        "fixture-private-input"
+      ]
+    }
+  }
+}

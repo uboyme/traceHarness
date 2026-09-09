@@ -1,6 +1,6 @@
 # v0.9.0：主动检索与上下文容量管理收口
 
-日期：2026-09-10。定位：Educational alpha，本地发行。
+日期：2026-09-10。定位：Educational alpha；本地验收后发布到 GitHub Releases。
 
 ## 发布决定
 
@@ -29,7 +29,7 @@ Session 13 / Context 12，旧 Session 1–12 明确拒绝，保留原数据并�
 不将这些结果称为完整发布门禁或重新独立审查。精确结果见
 [发布验证](../validation-v0.9.0.md)。
 
-源码提交、标签和发行包在本地完成；未向远程仓库或包索引上传。
+源码提交、标签和发行包先在本地完成。用户随后明确要求远程发版，本次将 main、v0.9.0 标签、Wheel 与源码 ZIP 发布到现有 GitHub 仓库 Releases；不上传 PyPI。实际发布状态以 [GitHub Release](https://github.com/uboyme/traceHarness/releases/tag/v0.9.0) 为准。发布提交使用 `[skip ci]`，遵守本轮不运行全量/L2 的约束。
 原始实验数据库、事件导出及隔离源码保留本地；Git 收录报告、判定和校验清单，
 不提交缓存、活动 SQLite 文件和用户无关笔记。原始证据保留策略见
 [证据目录说明](../validation-data/active-retrieval/README.md)。

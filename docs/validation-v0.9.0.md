@@ -1,4 +1,4 @@
-# v0.9.0 本地发行验证
+# v0.9.0 发行验证
 
 日期：2026-09-10。用户接受已知检索限制，授权提交发版。
 [发布决定](deal/011-v090-release.md)明确接受原 66/72 门槛未达标；评分和历史证据不改写。
@@ -26,4 +26,4 @@ metadata，定向回归重新完整执行成功；没有终止用户 TUI。首�
 正式版与通俗版同步第 1、7.11、15、16 节；README 和验收页按当前 Session 13 / Context 12 更新。
 
 未运行：全量测试、L2–L4、新一轮真实 Provider 网格、跨平台全套发行门禁。
-未执行：远程 push、远程 Release 或包索引上传。本地 commit/tag/发行包不表示这些远程操作已发生。
+上述检查在本地发布准备阶段完成。用户随后授权远程发行：main、v0.9.0 标签与本轮发行包发布至 [GitHub Releases](https://github.com/uboyme/traceHarness/releases/tag/v0.9.0)，不上传 PyPI。此次仅补充发布范围说明，生产源码和 Wheel 不变；推送通过 `[skip ci]` 跳过自动全量 CI。远程发布结果以 Release 页面为准。

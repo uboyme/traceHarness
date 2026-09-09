@@ -34,7 +34,7 @@
 
 ## 1. 当前项目状态
 
-**当前版本：0.9.0（Educational alpha，本地发行）。** 用户接受 55/72 的已知检索限制，授权提交和发版，并转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
+**当前版本：0.9.0（Educational alpha，GitHub Release）。** 用户接受 55/72 的已知检索限制，授权提交并发布至现有 GitHub 仓库 Releases（不上传 PyPI），随后转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
 
 **当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 
@@ -64,7 +64,7 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `v0.9.0` Educational alpha 本地发行；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
+| 当前版本 | `v0.9.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
@@ -1389,7 +1389,7 @@ Release Stop C 已通过，实际范围、失败及未运行门禁见 [Stop C �
 
 ### 7.11 主动检索：三类来源已接入，55/72 与已知限制接受
 
-**当前版本：0.9.0（Educational alpha，本地发行）。** 用户接受 55/72 的已知检索限制，授权提交和发版，并转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
+**当前版本：0.9.0（Educational alpha，GitHub Release）。** 用户接受 55/72 的已知检索限制，授权提交并发布至现有 GitHub 仓库 Releases（不上传 PyPI），随后转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
 
 **当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 

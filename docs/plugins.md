@@ -1,11 +1,11 @@
-# Writing and running TraceHarness plugins (v0.8.0 + unreleased v0.9-F1)
+# Writing and running TraceHarness plugins (v0.9.0 + unreleased v0.10 sandbox)
 
 The design rationale lives in
 [ADR-0007](adr/0007-transactional-plugin-activation.md),
 [ADR-0009](adr/0009-generation-owned-plugin-activation-set.md) and
 [ADR-0010](adr/0010-session-plugin-composition-migration.md), with execution-capability
 ownership in [ADR-0014](adr/0014-generation-scoped-plugin-execution-capabilities.md). This
-page is the author- and operator-facing contract for the `0.8.0` SDK, carried forward
+page is the author- and operator-facing contract for the `0.9.0` SDK and unreleased sandbox extensions, carried forward
 from the public surface introduced in v0.6. The
 source-authoring, validation, comparison and promotion control planes are recorded in
 [ADR-0015](adr/0015-source-only-plugin-candidate-authoring-skill.md),
@@ -38,6 +38,7 @@ Three working, independently buildable distributions live under `examples/plugin
 | Named verifier | `context.register_verifier(name, verifier)` | the Step's Generation Lease; explicit selection required |
 | Cleanup | `context.add_cleanup(callback)` | the plugin's `Activation` |
 | Background task | `context.spawn_owned(coro, name=...)` | the plugin's `OwnedTaskSet` |
+| External process (unreleased) | `await context.open_process(argv, timeout_seconds=..., cwd=...)` | host sandbox resources owned by the original `Activation` |
 
 There is no separate plugin tool runtime and no separate plugin agent loop. A plugin tool
 is admitted, scheduled, wrapped by middleware, and recorded as `tool/call`, `tool/result`,
@@ -48,7 +49,25 @@ is admitted, scheduled, wrapped by middleware, and recorded as `tool/call`, `too
 owned by its activation. EventStore is excluded because it is the process-lifetime Session
 fact source, not a Step Generation capability.
 
-### 1.1 Typed Skill contributions (v0.9-F1, unreleased)
+External processes require a programmatic host `SandboxConfiguration.plugin_grants` entry,
+matching the exact plugin ID and version, or the equivalent format-2 sandbox file/TUI entry.
+The host supplies an absolute workspace,
+`SandboxStdioLimits(input_bytes, frame_bytes)` and `max_processes` attempted launches per
+activation. The policy supplies the pinned local image, explicit Docker context, filesystem
+scope, disabled network and resource limits. The grant editor starts with an empty list;
+granting a process does not enable or import a plugin. Format 1 sandbox files are rejected.
+
+`open_process` is setup-only and returns `SandboxProcessPort`: `write(bytes)`,
+`read(max_bytes, stream="stdout"|"stderr")`, `close_input()`, `wait()` and `aclose()`.
+Read returns available bytes or EOF; applications own message framing and request correlation.
+There is no MCP implementation, implicit restart, native fallback or server workspace export.
+An uncertain write is not replayed. Closing or canceling a connection converges the same
+sandbox execution; an old Generation Lease keeps it alive until the original Drain releases it.
+Execution receipts include plugin/version/activation identity in the original EventStore's
+application-level activation stream. Tool calls still use the ordinary Effect/Session path.
+The trusted adapter itself remains in-process; `isolated` plugins remain unsupported.
+
+### 1.1 Typed Skill contributions (v0.9-F1)
 
 Metadata-only discovery reports `skills={available:false,requires_activation:true}`.
 `plugins list/inspect` says the catalog is available after successful activation; neither

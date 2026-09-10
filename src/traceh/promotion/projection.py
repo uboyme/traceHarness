@@ -18,6 +18,7 @@ from traceh.api.promotion import (
     PatchReviewReport,
     VerifierOutcome,
 )
+from traceh.api.sandbox import SandboxReceiptReference
 from traceh.promotion.errors import PromotionProtocolError
 from traceh.promotion.events import (
     PATCH_APPROVAL_RECORDED,
@@ -233,6 +234,8 @@ def _review(
             stdout_bytes=int(item["stdout_bytes"]),  # type: ignore[arg-type]
             stderr_sha256=str(item["stderr_sha256"]),
             stderr_bytes=int(item["stderr_bytes"]),  # type: ignore[arg-type]
+            execution=(SandboxReceiptReference.from_dict(item["execution"])
+                       if item["execution"] is not None else None),
         )
         for item in payload["results"]  # type: ignore[union-attr]
     )

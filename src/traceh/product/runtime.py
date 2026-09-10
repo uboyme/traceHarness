@@ -121,6 +121,7 @@ class ProductAgentRuntimeFactory:
         "_workspaces",
         "_context_input",
         "_memory_config",
+        "_sandbox",
     )
 
     def __init__(
@@ -135,6 +136,7 @@ class ProductAgentRuntimeFactory:
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
         context_input=None,
         memory_config=None,
+        sandbox=None,
     ) -> None:
         self._store = store
         self._workspaces = workspaces
@@ -145,6 +147,7 @@ class ProductAgentRuntimeFactory:
         self._retry_policy = retry_policy
         self._context_input = context_input
         self._memory_config = memory_config
+        self._sandbox = sandbox
 
     async def provision(
         self,
@@ -228,6 +231,7 @@ class ProductAgentRuntimeFactory:
                 model_retry_policy=self._retry_policy,
                 context_input=self._context_input,
                 memory=self._memory_config,
+                sandbox=self._sandbox,
             ),
             provider=provider,
             event_store=self._store,

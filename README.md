@@ -1,4 +1,4 @@
-# TraceHarness Py v0.9.0
+# TraceHarness Py v0.10.0
 
 大工具输出现可保存在执行账本中，模型通过本会话输出目录按页读回，压缩或重启后仍可定位原文；无需额外绑定项目。分层压缩 A/B 的范围与真实验收见 [验证记录](docs/validation-retained-tool-output.md)。C 已能折叠旧结果，E0 已补完整请求 token 估算，D 可选模型语义摘要；原文保留，支持查证。见 [D 真实验证](docs/validation-semantic-summary.md)。
 
@@ -6,15 +6,21 @@
 
 日常启动只需在工作文件夹运行 `traceh`；首次配置模型一次，以后直接聊天。Ctrl+O 选择历史对话，`/new` 新对话，F2 打开完整配置。已确认并记住的工作区项目选择可自动关联新会话。详见 [启动说明](docs/tui-configuration.md)。
 
+v0.10 已接入宿主管理的 Docker 执行沙箱：shell 和验证命令需要显式沙箱配置，未配置时拒绝执行。
+在 F2 的“执行沙箱”页填写 Docker 连接、已有 Linux 镜像身份、目录范围和额度；聊天输入 `/sandbox`
+查看实际执行回执。命令行使用 `--sandbox-config`，详见[沙箱配置说明](docs/tui-configuration.md#配置执行沙箱)。
+当前只实测 Windows + Docker Desktop + Linux 容器禁网；trusted Python 插件自身仍在宿主进程内。
+
 TraceHarness Py 是一个基于事件溯源、可以重建运行过程的 Python Runtime，用来构建可追踪的 Coding Agent。v0.4 引入事务式插件系统；v0.5 完成 Generation/Lease/Drain、四层宿主装配与执行能力插件化；v0.6 发布 L1–L4 受控能力演进控制面和进程内多 Agent 主线；v0.7 把层级 Budget、managed Git Workspace、immutable Patch、固定 Verification/Review、人工 Approval、bare ref CAS Promotion、Typed Workflow、ProductTask Chat 与唯一 `traceh eval` Benchmark 接入同一条宿主主线；v0.8 再把唯一生产 EventStore 切到 SQLite，加入同 Provider/同模型/同冻结请求的有界 retry、UI-neutral Chat Driver、纯读 Product observation 与可选 Textual TUI。`AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor` 和 `PluginManager` 仍保持原有职责边界。
 
 > 当前状态：Educational alpha。项目已经能够运行并经过测试，但公共 API 尚未承诺可稳定用于第三方生产环境。
 
-当前 v0.9.0 收口 Skill 贡献、项目批准 Memory、History/Memory/Skill 主动字面搜索与分层压缩。
+此前 v0.9.0 收口 Skill 贡献、项目批准 Memory、History/Memory/Skill 主动字面搜索与分层压缩。
 内部固定题库补测后为 **55/72（76.4%）**；用户接受已知限制，按 Educational alpha 发布。
 模型仍可能漏读或错误描述证据范围；原 66/72 门槛未通过，未运行本次全量测试或 L2。
 详见 [发布记录](docs/deal/011-v090-release.md) 与 [验证范围](docs/validation-v0.9.0.md)。
-当前没有 OS 沙箱；下一阶段为 [v0.10 S0](docs/plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
+v0.10 完成 S0–S4（含 S3-A，不含 S3-B），提供固定镜像、受限执行、文件写回与原账本回执。
+发行范围见 [v0.10 发布记录](docs/deal/015-v0100-release.md)和[限定验证](docs/validation-v0.10.0.md)。
 
 工具输出关键词查找（分层压缩 B+）：通过 `search_tool_output` 定位原文，必要时按位置读回；见 [设计](docs/adr/0054-retained-tool-output-keyword-search.md) 与 [验证](docs/validation-tool-output-search.md)。
 
@@ -754,9 +760,9 @@ Tool Runtime 在派发前写入 `effect/intent`，操作完成后写入 `effect/
 
 ### 完成必须有证据
 
-配置 `--verify-command` 后，最终模型响应必须接受真实 Workspace 上的命令检查。Verifier 失败时，其证据会在 Step 与重试预算范围内反馈给下一 Step。
+配置 `--verify-command` 后，最终模型响应必须接受授权工作区副本上的真实沙箱命令检查；还须显式配置 `--sandbox-config`。Verifier 失败时，其证据会在 Step 与重试预算范围内反馈给下一 Step。
 
-取消或超时 Verifier 不会让命令留在后台：子进程会先 terminate，必要时再 kill，直到确认退出后调用方才继续。子进程还会使用 `PYTHONUTF8=1` 和 `PYTHONIOENCODING=utf-8`，因此 Windows 上的 Python 子进程会按 UTF-8 输出非 ASCII 文本，而不是跟随系统代码页。非 Python 原生工具仍然遵循控制台代码页。
+取消或超时由原沙箱 scope 收敛整个容器进程树；不能确认时明确报错，不回退宿主执行。Linux 客体使用显式 UTF-8 环境，父命令结束后也会收掉后台后代。宿主硬退出时客体期限仍有效，但账本可能只有请求记录，不能据此声称已写入完成回执或自动恢复。
 
 ## 项目目录
 

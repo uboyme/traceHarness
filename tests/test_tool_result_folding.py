@@ -5,12 +5,14 @@ import json
 from dataclasses import replace
 
 import pytest
+from sandbox_fixtures import real_sandbox_policy
 from test_history_runtime import policy as history_policy
 from test_retained_tool_output import write_emitter
 
 from traceh.api.history import HistoryReadPolicy
 from traceh.api.json_types import canonical_json
 from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
@@ -40,6 +42,7 @@ def open_runtime(
     runtime = build_default_runtime(
         RuntimeConfig(
             data_dir=root,
+            sandbox=SandboxConfiguration(real_sandbox_policy(), root / "artifacts"),
             max_tool_output_chars=output_limit,
             compaction=CompactionPolicy(enabled, threshold, 400, keep),
             context_input=history_policy(),

@@ -446,6 +446,7 @@ class TracehTuiApp(App[int | RestartChat]):
                         "commands": (
                             *HELP,
                             "/settings (F2 配置)",
+                            "/sandbox 沙箱策略与实际执行回执",
                             "/sessions (Ctrl+O 历史对话)",
                             "/new 新对话",
                         )
@@ -455,6 +456,9 @@ class TracehTuiApp(App[int | RestartChat]):
             return
         if text == "/settings":
             await self.action_settings()
+            return
+        if text == "/sandbox":
+            self._launch(self._show_sandbox(), name="sandbox-inspection")
             return
         if text == "/sessions":
             await self.action_sessions()
@@ -569,6 +573,24 @@ class TracehTuiApp(App[int | RestartChat]):
                 if self.is_mounted and not self._ui_closing:
                     self._refresh_product_view()
                     self.query_one("#chat-input", Input).focus()
+
+    async def _show_sandbox(self) -> None:
+        from traceh.chat.sandbox_inspection import sandbox_report
+        from traceh.tui.sandbox_inspection import SandboxScreen
+
+        configuration = self._runtime.config.sandbox
+        report = await sandbox_report(
+            self._runtime.sessions.store, session_id=self._session.session_id,
+            policy=configuration.policy if configuration is not None else None,
+        )
+        closed = asyncio.get_running_loop().create_future()
+
+        def returned(_):
+            if not closed.done():
+                closed.set_result(None)
+
+        await self.push_screen(SandboxScreen(report), returned)
+        await closed
 
     async def _run_governance(self, text: str) -> None:
         from traceh.chat.governance import ChatGovernance

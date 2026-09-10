@@ -373,7 +373,7 @@ def verification_plan(
             overrides=(("PYTHONIOENCODING", "utf-8"),),
         ),
         max_output_bytes=1024 * 1024,
-        protocol_version=1,
+        protocol_version=2,
     )
 
 

@@ -1,0 +1,91 @@
+{
+  "stage": "S3-A-stdio-lifecycle-connected-S4-in-progress",
+  "checks": [
+    {
+      "suite": "s2-current.xml",
+      "tests": "59",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "94.232"
+    },
+    {
+      "suite": "ui-architecture-current.xml",
+      "tests": "176",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "56.179"
+    },
+    {
+      "suite": "eval-sandbox.xml",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "57.548"
+    },
+    {
+      "suite": "eval-fixture-current.xml",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "721.341"
+    },
+    {
+      "suite": "stdio-current.xml",
+      "tests": "26",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "67.832"
+    },
+    {
+      "suite": "plugin-current.xml",
+      "tests": "140",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "86.454"
+    },
+    {
+      "suite": "plugin-extra-current.xml",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "15.758"
+    }
+  ],
+  "overlapping_suites": true,
+  "real_backend": "Windows / Docker Desktop / Linux Engine 29.2.1, cgroup v2",
+  "reverse_proofs": [
+    "hardlink rejection",
+    "review owner",
+    "review effective policy",
+    "cancelled scope cleanup cause",
+    "exact plugin version admission"
+  ],
+  "pending": [
+    "file/TUI plugin process grants",
+    "S3-A final transport/lifecycle audit",
+    "S4 final acceptance"
+  ],
+  "evaluation_regression": {
+    "original_tests": 74,
+    "original_failures": 2,
+    "failures": [
+      "typed Review fixture",
+      "last frozen baseline missing explicit sandbox"
+    ],
+    "corrected_tests": 2,
+    "corrected_failures": 0,
+    "full_combined_rerun": false
+  },
+  "full_suite_run": false,
+  "L2_run": false,
+  "real_provider_called": false,
+  "committed": false,
+  "released": false
+}

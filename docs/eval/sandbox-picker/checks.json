@@ -1,0 +1,59 @@
+{
+  "scope": "TUI Docker context/image picker and manual references",
+  "checks": [
+    {
+      "suite": "docker-picker-first",
+      "tests": "34",
+      "failures": "2",
+      "errors": "0",
+      "skipped": "0",
+      "time": "56.001"
+    },
+    {
+      "suite": "docker-picker-final",
+      "tests": "133",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "100.024"
+    },
+    {
+      "suite": "docker-picker-restored",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "5.116"
+    }
+  ],
+  "first_failures": "real Docker optional Volumes key absent; corrected and retested",
+  "real_docker_queries": true,
+  "real_textual_picker_save": true,
+  "reverse_proof": "connection switch without clearing old image wrongly saved; restored test passes",
+  "compileall": "passed",
+  "ruff": "passed",
+  "diff_check": "passed",
+  "collect_only": 3744,
+  "full_suite_run": false,
+  "L2_run": false,
+  "real_provider_called": false,
+  "image_build_or_pull": false,
+  "source_sha256": {
+    "src/traceh/tui/config_forms.py": "4dfa629bae46e559b6b55ff0447306c379a98e7fe3a413420d6d0b62345644f8",
+    "src/traceh/tui/docker_choices.py": "c2191eaf269b6af78823295d88ab4cf26071420f8ce4a2cbff36d0575162fffb",
+    "src/traceh/tui/settings.py": "e455e7c9c6d7ef12a18cb9f0d3ef3d9a4b9cfe1a80ab2e9aa24a84bb211cf084",
+    "tests/test_tui_config_forms.py": "92b832d52030337a3281c9e9fda8301ca842ba08e5a81383e18cb04393baeedf",
+    "tests/test_tui_docker_choices.py": "481b9a395b1f46c344e0a3984a6af496ae5eb847f214bf74d33ba8c1f38b4d32",
+    "tests/test_tui_sandbox_picker.py": "2fb4377ff815532a4dc35c66f71aa5d891a80f60c92b12b9f1b779177d453926"
+  },
+  "execution_source_hashes_unchanged_from_s0_s4": true,
+  "user_configuration_modified": false,
+  "commit_push_release": false,
+  "documents": {
+    "count": 6,
+    "chapters": "0-20 correspond",
+    "links": 602,
+    "mermaid_blocks": 59,
+    "errors": []
+  }
+}

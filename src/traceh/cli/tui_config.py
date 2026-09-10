@@ -28,6 +28,7 @@ PATH_FIELDS = frozenset(
         "env_file",
         "context_config",
         "product_config",
+        "sandbox_config",
         "script",
         "project_workspace",
     }
@@ -61,7 +62,9 @@ TOKEN_FIELDS = (
     "context_safety_margin",
     "context_trigger_percent",
 )
-FIELDS = BASE_FIELDS + COMPACTION_FIELDS + PROJECT_FIELDS + TOKEN_FIELDS + ("auto_compact_method",)
+FIELDS = BASE_FIELDS + COMPACTION_FIELDS + PROJECT_FIELDS + TOKEN_FIELDS + (
+    "auto_compact_method", "sandbox_config",
+)
 
 
 def form_values(args: argparse.Namespace) -> dict[str, str]:
@@ -256,6 +259,15 @@ def preflight(args: argparse.Namespace) -> str:
         profile = product.host_profile.profile
         if profile.provider_id != resolved.provider or profile.model_id != model:
             raise CliConfigurationError("Product 配置与本次模型不一致。")
+    if getattr(resolved, "sandbox_config", None) is not None:
+        from traceh.sandbox.config import load_sandbox_file
+
+        try:
+            load_sandbox_file(resolved.sandbox_config)
+        except ValueError:
+            raise LaunchConfigurationError(
+                "沙箱配置无效；请检查 Docker 连接、固定镜像身份、目录授权和资源上限。"
+            ) from None
     from traceh.cli.activity import validate_heartbeat_seconds
 
     validate_heartbeat_seconds(resolved.heartbeat_seconds, timeline=resolved.timeline)

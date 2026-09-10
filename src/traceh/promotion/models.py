@@ -9,6 +9,7 @@ in a payload is rejected instead of becoming a second source of truth.
 from __future__ import annotations
 
 import math
+from dataclasses import asdict
 from datetime import UTC, datetime
 
 from traceh.agents.identity import is_agent_identifier
@@ -20,9 +21,10 @@ from traceh.api.promotion import (
     VerifierEnvironmentPolicy,
     VerifierOutcome,
 )
+from traceh.api.sandbox import SandboxReceiptReference
 from traceh.promotion.errors import PromotionInputError, PromotionProtocolError
 
-PROMOTION_PROTOCOL_VERSION = 1
+PROMOTION_PROTOCOL_VERSION = 2
 """The only promotion protocol this build reads or writes."""
 
 MERGE_POLICY_VERSION = 1
@@ -322,6 +324,8 @@ def verifier_definition_digest(plan: VerificationPlan) -> str:
 def freeze_verifier_outcome(value: object) -> VerifierOutcome:
     if type(value) is not VerifierOutcome:
         raise PromotionInputError("promotion-verifier-result-invalid", "results")
+    if value.execution is not None and type(value.execution) is not SandboxReceiptReference:
+        raise PromotionInputError("promotion-sandbox-reference-invalid", "results")
     require_promotion_identifier(value.command_id, field="command_id")
     require_hex_digest(value.argv_digest, lengths=(64,), field="argv-digest")
     require_hex_digest(value.stdout_sha256, lengths=(64,), field="stdout-digest")
@@ -356,6 +360,7 @@ def verifier_result_data(outcome: VerifierOutcome) -> dict[str, object]:
         "stdout_bytes": outcome.stdout_bytes,
         "stderr_sha256": outcome.stderr_sha256,
         "stderr_bytes": outcome.stderr_bytes,
+        "execution": asdict(outcome.execution) if outcome.execution is not None else None,
     }
 
 

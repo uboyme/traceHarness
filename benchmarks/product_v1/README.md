@@ -7,14 +7,20 @@ verifier, a Review and a Git ref compare-and-swap promotion.
 
 ```powershell
 traceh eval benchmarks/product_v1 --output <new-evidence-directory> `
-  --provider openai-compatible --base-url <url> --model <model>
+  --provider openai-compatible --base-url <url> --model <model> `
+  --sandbox-config <host-policy-file>
 ```
 
 `--output` must not exist. Every attempt writes its own subtree under
-`attempts/<task>/<mode>/<repetition>/`, and the run writes `report.json` and
+numbered `attempts/001/` directories (mapped to task/mode/repetition in the report), and writes `report.json` and
 `report.md` at the root. Nothing is deleted afterwards: an attempt is clean
 because its Budget accounts, worktrees and Activations converged, not because its
 evidence was removed.
+
+The frozen verifier now uses protocol 2 and the explicitly selected host sandbox.
+Its guest environment does not inherit the host PATH or temporary directories.
+Sandbox receipts and output digests use the attempt's original EventStore and CAS;
+missing sandbox configuration refuses process execution. No image is pulled automatically.
 
 ## What the manifest can and cannot say
 

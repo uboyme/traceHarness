@@ -39,6 +39,7 @@ from traceh.api.memory import ProjectMemoryConfig, ProjectScopeLimits
 from traceh.api.product import ProductTaskStatus, RequestedTaskMode
 from traceh.api.promotion import PromotionTargetBinding
 from traceh.api.prompts import PromptSection
+from traceh.api.sandbox import SandboxConfiguration, SandboxPolicy
 from traceh.api.skills import SkillLimits, SkillPolicy
 from traceh.api.turns import TurnInput
 from traceh.artifacts.cas import LocalArtifactCas
@@ -132,6 +133,7 @@ async def run_attempt(
     manifest: BenchmarkManifest,
     providers: Mapping[str, LlmProvider],
     retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+    sandbox: SandboxPolicy | None = None,
     monotonic: Callable[[], float] = time.monotonic,
 ) -> AttemptReport:
     """Execute one attempt and return what its durable facts support."""
@@ -151,6 +153,7 @@ async def run_attempt(
             manifest=manifest,
             providers=providers,
             retry_policy=retry_policy,
+            sandbox=sandbox,
             monotonic=monotonic,
             repositories=repositories,
             store=store,
@@ -175,6 +178,7 @@ async def _run_attempt_with_store(
     manifest: BenchmarkManifest,
     providers: Mapping[str, LlmProvider],
     retry_policy: ModelRetryPolicy,
+    sandbox: SandboxPolicy | None,
     monotonic: Callable[[], float],
     repositories: AttemptRepositories,
     store: SqliteEventStore,
@@ -199,12 +203,16 @@ async def _run_attempt_with_store(
         ProjectScopeLimits(**spec.data["project_limits"]), spec.memory_policy, workspace_provider,
     )
     plugins = None if spec is None else spec.data["plugins"]
+    sandbox_configuration = (
+        SandboxConfiguration(sandbox, request.directory / "cas") if sandbox is not None else None
+    )
     runtime = await build_default_runtime_async(
         RuntimeConfig(
             data_dir=request.directory / "rt",
             provider=REQUESTER_PROVIDER_ID,
             model=REQUESTER_MODEL_ID,
             max_steps=1,
+            sandbox=sandbox_configuration,
             context_input=None if spec is None else spec.context,
             memory=memory_config,
             skill_policy=(None if plugins is None or plugins["limits"] is None
@@ -251,6 +259,7 @@ async def _run_attempt_with_store(
             project_scope=runtime.project_scope,
             context_input=None if spec is None else spec.context,
             memory_config=memory_config,
+            sandbox=sandbox_configuration,
         )
     except BaseException as primary:
         # The Runtime exists from here on and owns a shutdown Task. Host assembly

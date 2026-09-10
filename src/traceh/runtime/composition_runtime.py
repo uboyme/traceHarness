@@ -949,6 +949,7 @@ class _FrozenToolRuntime:
             max_output_chars=source.max_output_chars,
             admission_gate=source.admission_gate,
             workspace_observer=source.workspace_observer,
+            sandbox_service=source.sandbox_service,
         )
 
     @property
@@ -982,6 +983,10 @@ class _FrozenToolRuntime:
     @property
     def workspace_observer(self):
         return self._delegate.workspace_observer
+
+    @property
+    def sandbox_service(self):
+        return self._delegate.sandbox_service
 
     async def execute_batch(self, *args, **kwargs):
         return await self._delegate.execute_batch(*args, **kwargs)

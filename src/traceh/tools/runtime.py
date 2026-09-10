@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import traceback
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from uuid import uuid4
 
 from traceh.api.json_types import JsonValue, canonical_json, fingerprint, to_json_value
@@ -57,6 +57,7 @@ class _PreparedInvocation:
     tool: Tool
     context: ToolExecutionContext
     policy: str | None
+    admission: ToolAdmissionDecision | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +82,7 @@ class ToolRuntime:
         max_output_chars: int = 24_000,
         admission_gate: ToolAdmissionGate | None = None,
         workspace_observer=None,
+        sandbox_service=None,
     ) -> None:
         self.registry = registry
         self.sessions = sessions
@@ -104,6 +106,9 @@ class ToolRuntime:
         self.max_output_chars = max_output_chars
         self.admission_gate = admission_gate
         self.workspace_observer = workspace_observer
+        if sandbox_service is not None and sandbox_service.store is not sessions.store:
+            raise ValueError("sandbox-service-store-owner-mismatch")
+        self.sandbox_service = sandbox_service
 
     async def execute_batch(
         self,
@@ -175,6 +180,8 @@ class ToolRuntime:
             for position, decision in zip(candidate_positions, decisions, strict=True):
                 item = prepared[position]
                 assert isinstance(item, _PreparedInvocation)
+                if decision.admitted:
+                    prepared[position] = replace(item, admission=decision)
                 if not decision.admitted:
                     prepared[position] = ToolRunResult(
                         item.call.id,
@@ -334,6 +341,11 @@ class ToolRuntime:
                     "tool_call_id": item.call.id,
                     "tool_name": item.call.name,
                     "policy": item.policy,
+                    "agent_id": item.admission.agent_id if item.admission else None,
+                    "budget_admission": item.admission.budget_admission if item.admission else None,
+                    "budget_reservation": (
+                        item.admission.budget_reservation if item.admission else None
+                    ),
                 },
                 composition_revision=composition_revision,
             )
@@ -510,6 +522,11 @@ class ToolRuntime:
             ),
             "arguments": call.arguments,
             "retry_safe": tool.effect_kind.is_retry_safe,
+            "agent_id": prepared.admission.agent_id if prepared.admission else None,
+            "budget_admission": prepared.admission.budget_admission if prepared.admission else None,
+            "budget_reservation": (
+                prepared.admission.budget_reservation if prepared.admission else None
+            ),
         }
         intent = await self.sessions.append_effect(
             call_context.session_id,
@@ -530,10 +547,35 @@ class ToolRuntime:
         try:
             async with asyncio.timeout(self.timeout_seconds):
                 try:
-                    output = await invoke_middleware_chain(
-                        self.middlewares,
-                        ToolInvocation(call=call, tool=tool, context=call_context),
-                    )
+                    if tool.effect_kind is EffectKind.PROCESS:
+                        if self.sandbox_service is None:
+                            raise RuntimeError(
+                                "sandbox-not-configured: configure isolated execution"
+                            )
+                        from traceh.api.sandbox import SandboxOwner
+
+                        owner = SandboxOwner(
+                            "effect", effect_id, call_context.session_id, call_context.turn_id,
+                            call_context.step_id, call_context.tool_call_id,
+                            agent_id=intent_data["agent_id"],
+                            budget_admission=intent_data["budget_admission"],
+                            budget_reservation=intent_data["budget_reservation"],
+                        )
+                        async with self.sandbox_service.scope(
+                            owner, stream_id=self.sessions.effect_stream(call_context.session_id),
+                            workspace=call_context.workspace, data_dir=call_context.data_dir,
+                            publish_changes=True,
+                        ) as scope:
+                            output = await invoke_middleware_chain(
+                                self.middlewares,
+                                ToolInvocation(call=call, tool=tool,
+                                               context=replace(call_context, sandbox=scope)),
+                            )
+                    else:
+                        output = await invoke_middleware_chain(
+                            self.middlewares,
+                            ToolInvocation(call=call, tool=tool, context=call_context),
+                        )
                 except TimeoutError as error:
                     # The tool timed itself out and already knows what happened,
                     # including whatever the command printed first. Re-labelled

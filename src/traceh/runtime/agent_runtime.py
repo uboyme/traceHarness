@@ -12,6 +12,7 @@ from traceh.api.json_types import JsonValue
 from traceh.api.llm import LlmProvider, ModelResponse
 from traceh.api.memory import ProjectMemoryConfig
 from traceh.api.plugins import CORE_PLUGIN_IDENTITY, PluginIdentity
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.api.skills import SkillPolicy
 from traceh.api.tools import Tool, ToolAdmissionGate
 from traceh.api.turns import TurnInput
@@ -76,6 +77,8 @@ if TYPE_CHECKING:
         PluginGenerationBuilder,
         PluginManager,
     )
+    from traceh.sandbox.plugins import PluginSandboxFactory
+    from traceh.sandbox.service import SandboxExecutionService
 
 __all__ = [
     "AgentAlreadyRunningError",
@@ -127,8 +130,11 @@ class RuntimeConfig:
     skill_policy: SkillPolicy | None = None
     #: Explicit project resolver and all authority limits. None disables both domains.
     memory: ProjectMemoryConfig | None = None
+    sandbox: SandboxConfiguration | None = None
 
     def __post_init__(self) -> None:
+        if self.sandbox is not None and type(self.sandbox) is not SandboxConfiguration:
+            raise TypeError("sandbox must be SandboxConfiguration")
         if (self.repeated_denial_policy is not None
                 and type(self.repeated_denial_policy) is not RepeatedDenialPolicy):
             raise TypeError("repeated_denial_policy must be RepeatedDenialPolicy or None")
@@ -598,6 +604,8 @@ class _PreparedRuntime:
     retry_scheduler: RetryScheduler
     summarizer: SessionSummarizer
     memory_authority: object | None
+    sandbox_service: SandboxExecutionService | None
+    sandbox_processes: PluginSandboxFactory | None
 
 
 def _prepare_default_runtime(
@@ -645,6 +653,17 @@ def _prepare_default_runtime(
     # callers a feed that never receives anything.
     event_feed = SessionEventFeed()
     sessions = SessionService(PublishingEventStore(actual_event_store, event_feed))
+    from traceh.sandbox.plugins import PluginSandboxFactory
+    from traceh.sandbox.service import build_sandbox_service
+
+    sandbox_service = (
+        build_sandbox_service(sessions.store, config.sandbox)
+        if config.sandbox is not None else None
+    )
+    sandbox_processes = (
+        PluginSandboxFactory(sandbox_service, config.sandbox.plugin_grants, data_dir)
+        if sandbox_service is not None else None
+    )
     memory_authority = None
     if config.memory is not None:
         from traceh.memory.service import MemoryService
@@ -762,6 +781,8 @@ def _prepare_default_runtime(
         data_dir=data_dir,
         sessions=sessions,
         memory_authority=memory_authority,
+        sandbox_service=sandbox_service,
+        sandbox_processes=sandbox_processes,
         surface=surface,
         event_feed=event_feed,
         llms=llms,
@@ -807,6 +828,7 @@ def _finish_default_runtime(
         if config.context_input and config.context_input.workspace_observations
         else None
     )
+    sandbox_service = prepared.sandbox_service
     core_tool_runtime = ToolRuntime(
         prepared.tool_registry,
         prepared.sessions,
@@ -816,6 +838,7 @@ def _finish_default_runtime(
         max_output_chars=config.max_tool_output_chars,
         admission_gate=prepared.tool_admission_gate,
         workspace_observer=observer,
+        sandbox_service=sandbox_service,
     )
     tool_runtime = ToolRuntime(
         activation_set.tools,
@@ -826,6 +849,7 @@ def _finish_default_runtime(
         max_output_chars=config.max_tool_output_chars,
         admission_gate=prepared.tool_admission_gate,
         workspace_observer=observer,
+        sandbox_service=sandbox_service,
     )
     request_builder = RequestBuilder(
         prepared.sessions,
@@ -964,6 +988,7 @@ def build_default_runtime(
         verifier_name=prepared.verifier_name,
         provider_name=prepared.config.provider,
         skill_policy=prepared.config.skill_policy,
+        sandbox_processes=prepared.sandbox_processes,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,
@@ -1043,6 +1068,7 @@ async def build_default_runtime_async(
         verifier_name=prepared.verifier_name,
         provider_name=prepared.config.provider,
         skill_policy=prepared.config.skill_policy,
+        sandbox_processes=prepared.sandbox_processes,
         tool_bindings=prepared.tool_bindings,
         prompt_bindings=prepared.prompt_bindings,
         policy_bindings=prepared.policy_bindings,

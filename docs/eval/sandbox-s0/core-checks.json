@@ -1,0 +1,23 @@
+{
+  "stage": "S1-core-in-progress",
+  "checks": [
+    {
+      "suite": "s1-core.xml",
+      "tests": "47",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "15.425"
+    },
+    {
+      "suite": "cas-adjacent.xml",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.692"
+    }
+  ],
+  "full_suite_run": false,
+  "L2_run": false
+}

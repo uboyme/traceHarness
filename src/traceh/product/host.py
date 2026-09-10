@@ -265,6 +265,7 @@ async def build_product_chat_host(
     project_scope=None,
     context_input=None,
     memory_config=None,
+    sandbox=None,
 ) -> ProductChatHost:
     """Build one explicit F3 host without inventing deployment defaults."""
 
@@ -355,6 +356,17 @@ async def build_product_chat_host(
     elif memory_config is not None:
         raise ProductInputError("product-project-scope-required", "memory_config")
     budgets = BudgetLedgerService(store)
+    sandbox_service = None
+    if sandbox is not None:
+        from traceh.artifacts.cas import LocalArtifactCas
+        from traceh.sandbox.service import SandboxExecutionService
+
+        if (not isinstance(artifact_cas, LocalArtifactCas)
+            or artifact_cas.local_root != sandbox.cas_root):
+            raise ProductInputError("product-sandbox-cas-mismatch", "sandbox")
+        sandbox_service = SandboxExecutionService(
+            store=store, cas=artifact_cas, policy=sandbox.policy,
+        )
     runtime_factory = ProductAgentRuntimeFactory(
         store,
         workspaces,
@@ -365,6 +377,7 @@ async def build_product_chat_host(
         retry_policy=model_retry_policy,
         context_input=context_input,
         memory_config=memory_config,
+        sandbox=sandbox,
     )
     slots = ProcessSlotAuthority(budgets)
     process = ProcessAgentSupervisor(
@@ -394,6 +407,7 @@ async def build_product_chat_host(
         artifact_reader,
         promotion_targets,
         plan=resolved.verification_plan,
+        sandbox_service=sandbox_service,
     )
     workflow_resolver = ProductWorkflowBindingResolver(
         supervisor, max_report_chars=max_report_chars

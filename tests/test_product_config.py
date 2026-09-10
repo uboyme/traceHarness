@@ -89,7 +89,7 @@ def _configuration(tmp_path: Path) -> dict[str, object]:
                 "overrides": {},
             },
             "max_output_bytes": 1_048_576,
-            "protocol_version": 1,
+            "protocol_version": 2,
         },
         "capture_limits": {
             "max_changed_paths": 100,

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import pytest
+from sandbox_fixtures import real_sandbox_policy
 
 from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
@@ -66,6 +68,7 @@ async def test_scripted_coding_agent_modifies_and_verifies_workspace(tmp_path) -
             data_dir=tmp_path / "data",
             provider="scripted",
             model="test-model",
+            sandbox=SandboxConfiguration(real_sandbox_policy(), tmp_path / "cas"),
         ),
         provider=provider,
         event_store=InMemoryEventStore(),

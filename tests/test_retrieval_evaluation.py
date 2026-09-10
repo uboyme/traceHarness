@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from memory_fixtures import memory_policy
 from retrieval_fixtures import context_policy, retrieval_policy
+from sandbox_fixtures import real_sandbox_policy
 from test_product_benchmark_e2e import (
     PRODUCT_MODEL_ID,
     _ProductProvider,
@@ -124,7 +125,8 @@ async def test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps(
     benchmark(root, query=query, relevant=relevant, category=category)
     provider = _ProductProvider(requests=[])
     runner = ProductBenchmarkRunner(
-        root, tmp_path / "out", provider=provider, model_id=PRODUCT_MODEL_ID
+        root, tmp_path / "out", provider=provider, model_id=PRODUCT_MODEL_ID,
+        sandbox=real_sandbox_policy(),
     )
     report = await runner.run()
     result = report.attempts[0].retrieval
@@ -312,6 +314,7 @@ async def test_shipped_frozen_baseline_uses_real_plugin_lifecycle(tmp_path, monk
         tmp_path / "out",
         provider=_ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
+        sandbox=real_sandbox_policy(),
     )
     report = await runner.run()
     assert len(report.attempts) == 11

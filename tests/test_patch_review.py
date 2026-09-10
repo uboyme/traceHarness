@@ -46,11 +46,11 @@ class _GatedRunner:
         self.release = asyncio.Event()
         self.roots: list[Path] = []
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         self.roots.append(cwd)
         self.entered.set()
         await self.release.wait()
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 class _GatedEngine:
@@ -502,7 +502,7 @@ async def test_scratch_cleanup_failure_alone_is_reported(
 
 async def test_a_substituted_verifier_definition_is_refused(tmp_path: Path) -> None:
     class _WrongDefinition:
-        async def run(self, plan, *, cwd):
+        async def run(self, plan, *, cwd, owner, stream_id):
             from traceh.promotion.verification import VerificationEvidence
 
             del plan, cwd
@@ -533,15 +533,15 @@ class _TamperingRunner:
     def __init__(self) -> None:
         self.inner = HostVerificationRunner()
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         (Path(cwd) / "added.txt").write_text("tampered\n", encoding="utf-8")
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 class _ForeignResultRunner:
     """A runner that returns a well-formed result for a command not in the plan."""
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         from traceh.api.promotion import VerifierOutcome
         from traceh.promotion.models import (
             verification_evidence_digest,
@@ -688,11 +688,11 @@ class _WorkspacePollutingRunner:
         self.relative = relative
         self.inner = HostVerificationRunner()
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         target = Path(cwd) / self.relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("residue\n", encoding="utf-8")
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 async def test_even_an_ignored_build_artifact_blocks_a_review(
@@ -719,7 +719,6 @@ async def test_even_an_ignored_build_artifact_blocks_a_review(
 async def test_a_verifier_may_write_to_the_granted_scratch_outside_the_worktree(
     tmp_path: Path,
 ) -> None:
-    import sys
 
     from traceh.api.promotion import VerifierCommand
 
@@ -729,11 +728,11 @@ async def test_a_verifier_may_write_to_the_granted_scratch_outside_the_worktree(
     scratch_check = VerifierCommand(
         command_id="writes-to-granted-scratch",
         argv=(
-            sys.executable,
+            "python",
             "-c",
             "import pathlib, tempfile, sys\n"
             "scratch = pathlib.Path(tempfile.gettempdir())\n"
-            "if 'traceh-verifier-scratch-' not in scratch.name:\n"
+            "if scratch != pathlib.Path('/tmp'):\n"
             "    raise SystemExit('scratch was not granted')\n"
             "if scratch.resolve() in pathlib.Path.cwd().resolve().parents:\n"
             "    raise SystemExit('scratch contains the checkout')\n"
@@ -784,10 +783,10 @@ class _IgnoredHelperRunner:
     def __init__(self) -> None:
         self.inner = HostVerificationRunner()
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         helper = Path(cwd) / "ignored_helper.py"
         helper.write_text("VALUE = 'not in the approved tree'\n", encoding="utf-8")
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 class _AssumeUnchangedRunner:
@@ -796,10 +795,10 @@ class _AssumeUnchangedRunner:
     def __init__(self) -> None:
         self.inner = HostVerificationRunner()
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         git("update-index", "--assume-unchanged", "added.txt", cwd=Path(cwd))
         (Path(cwd) / "added.txt").write_text("tampered\n", encoding="utf-8")
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 async def test_an_ignored_file_cannot_smuggle_code_past_the_worktree_proof(
@@ -880,13 +879,12 @@ async def test_the_verifier_reads_exactly_the_bytes_of_the_approved_tree(
     pass by accident. Reading in text mode would hide exactly that difference.
     """
 
-    import sys
 
     from traceh.api.promotion import VerifierCommand
 
     exact_bytes = VerifierCommand(
         command_id="reads-approved-bytes",
-        argv=(sys.executable, "-c", _EXACT_BYTES_PROGRAM),
+        argv=("python", "-c", _EXACT_BYTES_PROGRAM),
         timeout_ms=60_000,
     )
     _, _, _target, artifact, service = await _assembly(
@@ -928,9 +926,9 @@ class _ModeChangingRunner:
     def __init__(self) -> None:
         self.inner = HostVerificationRunner()
 
-    async def run(self, plan, *, cwd):
+    async def run(self, plan, *, cwd, owner, stream_id):
         git("update-index", "--chmod=-x", "run.sh", cwd=Path(cwd))
-        return await self.inner.run(plan, cwd=cwd)
+        return await self.inner.run(plan, cwd=cwd, owner=owner, stream_id=stream_id)
 
 
 async def test_a_mode_change_is_caught_by_the_git_side_re_derivation(

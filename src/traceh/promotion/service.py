@@ -25,7 +25,7 @@ from typing import Any
 
 from traceh.agents.commit_reconciliation import committed_after_failure
 from traceh.api.events import EventEnvelope, PendingEvent
-from traceh.api.json_types import JsonValue
+from traceh.api.json_types import JsonValue, fingerprint, to_json_value
 from traceh.api.promotion import (
     PatchApproval,
     PatchPromotion,
@@ -35,6 +35,7 @@ from traceh.api.promotion import (
     VerificationPlan,
     VerifierOutcome,
 )
+from traceh.api.sandbox import SandboxOwner, narrow_policy
 from traceh.artifacts.reader import PatchArtifactReader
 from traceh.concurrency import await_worker_convergence
 from traceh.promotion.errors import (
@@ -82,8 +83,12 @@ from traceh.promotion.verification import (
     HostVerificationRunner,
     VerificationEvidence,
     VerificationRunner,
+    verification_status,
 )
+from traceh.sandbox.reader import read_execution
+from traceh.sandbox.service import SandboxExecutionService
 from traceh.session.event_store import ConcurrencyConflict, Durability, EventStore
+from traceh.session.service import SessionService
 from traceh.supervision.execution import durable_log_identity
 
 MAX_APPEND_ATTEMPTS = 8
@@ -110,6 +115,7 @@ class PatchPromotionService:
         "_plan",
         "_resolver",
         "_runner",
+        "_sandbox",
         "_store",
     )
 
@@ -122,6 +128,7 @@ class PatchPromotionService:
         plan: VerificationPlan,
         engine: LocalGitPromotionEngine | None = None,
         runner: VerificationRunner | None = None,
+        sandbox_service: SandboxExecutionService | None = None,
     ) -> None:
         if type(artifacts) is not PatchArtifactReader:
             raise PromotionInputError("promotion-artifact-reader-invalid", "artifacts")
@@ -132,7 +139,13 @@ class PatchPromotionService:
         self._resolver = resolver
         self._plan = freeze_verification_plan(plan)
         self._engine = LocalGitPromotionEngine() if engine is None else engine
-        self._runner = HostVerificationRunner() if runner is None else runner
+        if sandbox_service is not None and (
+            durable_log_identity(store) is not durable_log_identity(sandbox_service.store)
+            or sandbox_service.cas is not artifacts.cas
+        ):
+            raise PromotionInputError("promotion-sandbox-owner-mismatch", "sandbox")
+        self._sandbox = sandbox_service
+        self._runner = HostVerificationRunner(sandbox_service) if runner is None else runner
         self._ledger = PromotionLedgerReader(store)
         self._lock = asyncio.Lock()
         self._definition_digest = verifier_definition_digest(self._plan)
@@ -196,7 +209,11 @@ class PatchPromotionService:
         async with self._engine.integration(
             target, patch=artifact.content, message=message
         ) as environment:
-            evidence = await self._verify(environment.root)
+            owner = SandboxOwner(
+                "promotion", review_id, session_id=artifact.manifest.session_id,
+                agent_id=artifact.manifest.agent_id,
+            )
+            evidence = await self._verify(environment.root, owner)
             build = await environment.reverify()
 
         if (
@@ -258,11 +275,24 @@ class PatchPromotionService:
             review.artifact_id != artifact_id
             or review.target_id != target_id
             or not review_matches_verification_plan(review, self._plan)
+            or not self._matches_sandbox_policy(review)
         ):
             raise PromotionOperationConflictError
 
-    async def _verify(self, root: Path) -> VerificationEvidence:
-        evidence = await self._runner.run(self._plan, cwd=root)
+    def _matches_sandbox_policy(self, review: PatchReviewReport) -> bool:
+        if self._sandbox is None:
+            return all(result.execution is None for result in review.results)
+        return all(
+            result.execution is not None and result.execution.policy_digest == fingerprint(
+                narrow_policy(self._sandbox.policy, timeout_seconds=command.timeout_ms / 1000,
+                              max_output_bytes=self._plan.max_output_bytes)
+            )
+            for command, result in zip(self._plan.commands, review.results, strict=True)
+        )
+
+    async def _verify(self, root: Path, owner: SandboxOwner) -> VerificationEvidence:
+        stream_id = SessionService.effect_stream(owner.session_id)
+        evidence = await self._runner.run(self._plan, cwd=root, owner=owner, stream_id=stream_id)
         if type(evidence) is not VerificationEvidence:
             raise PromotionStateError("promotion-verification-invalid")
         if evidence.definition_digest != self._definition_digest:
@@ -282,6 +312,37 @@ class PatchPromotionService:
                 raise PromotionStateError("promotion-verifier-result-mismatch")
             if outcome.argv_digest != verifier_command_digest(command):
                 raise PromotionStateError("promotion-verifier-result-mismatch")
+            if self._sandbox is not None:
+                reference = outcome.execution
+                if reference is None or reference.stream_id != stream_id:
+                    raise PromotionStateError("promotion-sandbox-reference-mismatch")
+                view = await read_execution(
+                    self._store, self._artifacts.cas, stream_id=stream_id,
+                    execution_id=reference.execution_id,
+                )
+                expected_policy = fingerprint(narrow_policy(
+                    self._sandbox.policy, timeout_seconds=command.timeout_ms / 1000,
+                    max_output_bytes=self._plan.max_output_bytes,
+                ))
+                if (view.outcome is None or view.result is None
+                    or view.outcome["digest"] != reference.receipt_digest
+                    or view.outcome["owner"] != to_json_value(owner)
+                    or view.outcome["policy_digest"] != expected_policy
+                    or reference.policy_digest != expected_policy
+                    or view.request["argv_digest"] != fingerprint(command.argv)
+                    or view.request["retain_output"] is not False
+                    or view.request["export_workspace"] is not False):
+                    raise PromotionStateError("promotion-sandbox-reference-mismatch")
+                payload = view.result.get("payload") or {}
+                if (outcome.status != verification_status(
+                    view.outcome["status"], payload.get("exit_code"))
+                    or outcome.exit_code != payload.get("exit_code")):
+                    raise PromotionStateError("promotion-sandbox-result-mismatch")
+                if payload:
+                    for name in ("stdout", "stderr"):
+                        if (payload.get(f"{name}_sha256") != getattr(outcome, f"{name}_sha256")
+                            or payload.get(f"{name}_bytes") != getattr(outcome, f"{name}_bytes")):
+                            raise PromotionStateError("promotion-sandbox-output-mismatch")
         if evidence.evidence_digest != verification_evidence_digest(
             self._definition_digest, evidence.results
         ):
@@ -350,7 +411,8 @@ class PatchPromotionService:
         review = ledger.review(review_id)
         if review is None:
             raise PromotionNotFoundError("promotion-review-unknown")
-        if not review_matches_verification_plan(review, self._plan):
+        if (not review_matches_verification_plan(review, self._plan)
+            or not self._matches_sandbox_policy(review)):
             raise PromotionApprovalError(
                 "promotion-review-verification-mismatch"
             )
@@ -410,7 +472,8 @@ class PatchPromotionService:
         review = ledger.review(approval.review_id)
         if review is None or not review.passed:
             raise PromotionApprovalError("promotion-review-not-passed")
-        if not review_matches_verification_plan(review, self._plan):
+        if (not review_matches_verification_plan(review, self._plan)
+            or not self._matches_sandbox_policy(review)):
             raise PromotionApprovalError(
                 "promotion-review-verification-mismatch"
             )

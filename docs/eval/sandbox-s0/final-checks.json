@@ -1,0 +1,90 @@
+{
+  "scope": [
+    "S0",
+    "S1",
+    "S2",
+    "S3-A",
+    "S4"
+  ],
+  "excluded": [
+    "S3-B",
+    "MCP",
+    "free Workflow",
+    "untrusted in-process plugin isolation"
+  ],
+  "checks": [
+    {
+      "suite": "final-current.xml",
+      "tests": "463",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "226.741"
+    },
+    {
+      "suite": "inspection-final.xml",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.747"
+    },
+    {
+      "suite": "write-cancel-final.xml",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "9.794"
+    }
+  ],
+  "overlapping_suites": true,
+  "full_suite_run": false,
+  "L2_run": false,
+  "wheel_or_install_run": false,
+  "real_provider_called": false,
+  "commit_push_release": false,
+  "compileall": "passed",
+  "changed_scope_ruff": "passed",
+  "diff_check": "passed",
+  "collect_only": {
+    "exit_code": 0,
+    "tests": 3720
+  },
+  "source_sha256": {
+    "src/traceh/api/sandbox.py": "6c3892aa0fbb55887e6682d7ae81bcd187b951f5d897856f7120cbca044e954d",
+    "src/traceh/sandbox/docker.py": "46b3bd3a907f7412969c568f643fbec133062f8c04bfbd5109895c3feb1da7d5",
+    "src/traceh/sandbox/_guest.py": "732555c8740f9c9f83124af68a9f7854e3f173a2c213bbc2c08f7ff3d7fa021d",
+    "src/traceh/sandbox/_guest_stdio.py": "9913cb6c3be79401fe4d11c42535f743e4f30bea6a316f46d0a0ea74ae80fbc9",
+    "src/traceh/sandbox/stdio.py": "27472d38b9912c09a3054dd90c7ef9bec882ae354d9ca435f865b063b0309e6c",
+    "src/traceh/sandbox/service.py": "9cb726a3fb44b188709edb058be25d8f5c079be91b249f64f42bffc8ea1d773a",
+    "src/traceh/sandbox/plugins.py": "9c4e51f6df8b1e6db50a17f74f7972d39c3af08e834f02afafd434ba66f70df6",
+    "src/traceh/sandbox/config.py": "6a87260158fc4197b0c08b284c699a0dd99cde2c7afaf251fee5088d7c244f8b",
+    "src/traceh/chat/sandbox_inspection.py": "bf3ece781e12ef94cfe1ff527f38670487d50be51e241f8aa8bccc0505c8c0f6",
+    "src/traceh/plugins/manager.py": "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05",
+    "src/traceh/runtime/agent_runtime.py": "15998cc4eab083f131eb0b099528abce572839b15b6562f9cd5567e9d3f941a1"
+  },
+  "reverse_proofs": [
+    "hardlink rejection",
+    "review owner",
+    "review effective policy",
+    "cancel cleanup cause",
+    "exact plugin version",
+    "parent exit convergence"
+  ],
+  "boundaries": [
+    "Windows/Docker Desktop/Linux tested combination only",
+    "network none only",
+    "trusted runtime image",
+    "no atomic multi-file publication",
+    "no automatic cold recovery or orphan cleanup",
+    "eval rejects application-level server grants"
+  ],
+  "documents": {
+    "documents": 14,
+    "chapters": "0-20 correspond",
+    "relative_links": 726,
+    "mermaid_blocks": 61,
+    "errors": []
+  }
+}

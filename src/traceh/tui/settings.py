@@ -56,6 +56,7 @@ _LABELS = {
     "plugins": "启用的已安装插件 ID（空格分隔；清空表示不启用外部插件）",
     "context_config": "Context 配置 JSON 路径（Skill、Memory、History）",
     "product_config": "Product 配置 JSON 路径（可选）",
+    "sandbox_config": "沙箱配置文件路径（可选；关闭时禁止执行进程）",
     "script": "Scripted 响应文件路径（可选，仅 scripted 使用）",
     "auto_compact_bytes": "触发大小（UTF-8 字节；这是历史大小，不是 token 数）",
     "auto_compact_summary_bytes": "压缩后摘要最多多少字节",
@@ -214,6 +215,21 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                     )
                     with Collapsible(title="高级：已有任务配置文件", collapsed=True):
                         yield from self._fields(("product_config",))
+            with TabPane("执行沙箱", id="settings-sandbox"):
+                with VerticalScroll(classes="settings-fields"):
+                    yield Label("启用 Docker 执行沙箱（工具命令与任务验证共用）")
+                    yield Switch(bool(self._values.get("sandbox_config")), id="sandbox-enabled")
+                    yield Button("配置执行沙箱", id="sandbox-form")
+                    yield Static(
+                        "Docker 连接和运行环境可刷新下拉选择，也可手动填写名称或镜像 ID。"
+                        "系统解析并保存固定身份，不需要手动复制 hash。"
+                        "命令在隔离副本中运行，网络关闭；工具改动经检查后回写授权目录，"
+                        "验证命令的改动不回写。关闭后进程命令会被拒绝。"
+                        "刷新和镜像校验只查询 Docker，不启动服务、不下载镜像、不执行任务。",
+                        markup=False,
+                    )
+                    with Collapsible(title="高级：已有沙箱配置文件", collapsed=True):
+                        yield from self._fields(("sandbox_config",))
             with TabPane("自动压缩", id="settings-compaction"):
                 with VerticalScroll(classes="settings-fields"):
                     yield Label("旧对话越来越长时，是否自动腾出上下文空间")
@@ -281,7 +297,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
         values = {name: self.query_one(f"#setting-{name}").value for name in FIELDS}
         if not self.query_one("#plugins-enabled", Switch).value:
             values["plugins"] = ""
-        for kind in ("context", "product"):
+        for kind in ("context", "product", "sandbox"):
             if not self.query_one(f"#{kind}-enabled", Switch).value:
                 values[f"{kind}_config"] = ""
             elif not values[f"{kind}_config"].strip():
@@ -317,7 +333,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                 values = load_profile(path)
                 for name, value in values.items():
                     self.query_one(f"#setting-{name}").value = value
-                for kind in ("context", "product"):
+                for kind in ("context", "product", "sandbox"):
                     self.query_one(f"#{kind}-enabled", Switch).value = bool(
                         values[f"{kind}_config"]
                     )
@@ -331,7 +347,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             if action in {"context-load", "context-save"}:
                 self._context_action(action)
                 return
-            if action in {"context-form", "product-form"}:
+            if action in {"context-form", "product-form", "sandbox-form"}:
                 self._open_form(action.split("-")[0])
                 return
             args, values = self._draft()
@@ -368,7 +384,11 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                 "现有运行环境未修改。"
             )
 
-    @on(Input.Changed, "#setting-context_config, #setting-product_config, #setting-plugins")
+    @on(
+        Input.Changed,
+        "#setting-context_config, #setting-product_config, "
+        "#setting-sandbox_config, #setting-plugins",
+    )
     def _path_changed(self, event):
         kind = event.input.id.removeprefix("setting-").removesuffix("_config")
         self.query_one(f"#{kind}-enabled", Switch).value = bool(event.value.strip())
@@ -386,6 +406,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             ConfigForm,
             context_preset,
             product_preset,
+            sandbox_preset,
             validate_document,
         )
 
@@ -407,6 +428,8 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             raw = (
                 context_preset()
                 if kind == "context"
+                else sandbox_preset()
+                if kind == "sandbox"
                 else product_preset(
                     workspace,
                     data_dir,

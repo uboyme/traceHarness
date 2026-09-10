@@ -85,20 +85,24 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
     "runtime/agent_loop.py": (
-        "47c8f5ac680ed0e935694da9f076ad5df56c35c9c78d83a351b0e7989f7836ca"
+        "f1fda2f5c4ad4efa475934d385a70855abf4bad46442a8c52d9c9af1be1be123"
     ),
     "runtime/agent_runtime.py": (
-        "f598e98d0b2bd3d488f8fa86813f6f7304bf5a5128274604e610e0d34ef9b9ca"
+        "15998cc4eab083f131eb0b099528abce572839b15b6562f9cd5567e9d3f941a1"
     ),
     "supervision/supervisor.py": (
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
     # F5: pre-enable Manifest review uses the same loader and activation path.
     "plugins/manager.py": (
-        "5f982e4655e44e6b15d4465b3aa874c83fc2f46a8e833110116c64a5edc26cee"
+        "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"
     ),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+ADR-0065 passes the host Sandbox service through Runtime assembly and delegates
+completion verification through its owned scope. No Product authority moves into
+AgentLoop; pins match test_product_architecture after reviewing those seams.
 
 ADR-0062 adds only event-derived repeated-denial signals at the Continuation seam;
 AgentLoop records config and forwards evidence, without Product or Tool authority.
@@ -414,7 +418,7 @@ def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
 def test_the_package_version_is_the_v090_release() -> None:
     """The v0.8 release keeps the single package version source."""
 
-    assert __version__ == "0.9.0"
+    assert __version__ == "0.10.0"
 
 
 # --------------------------------------------------- authority boundaries

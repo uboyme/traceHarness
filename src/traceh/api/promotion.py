@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
+from traceh.api.sandbox import SandboxReceiptReference
+
 
 @dataclass(frozen=True, slots=True)
 class VerifierCommand:
@@ -71,6 +73,7 @@ class VerifierOutcome:
     stdout_bytes: int
     stderr_sha256: str
     stderr_bytes: int
+    execution: SandboxReceiptReference | None = None
 
     @property
     def passed(self) -> bool:

@@ -416,18 +416,32 @@ class BudgetToolAdmissionGate:
             agent_id=self._agent_id,
             session_id=self._session_id,
         )
+        operation_id = budget_operation_id(
+            "tool-batch-admission", agent_id=self._agent_id, session_id=self._session_id,
+            turn_id=context.turn_id, step_id=context.step_id,
+            tool_call_ids=tuple(call.tool_call_id for call in calls),
+        )
         admitted = await self._service.admit_tool_calls(
-            operation_id=budget_operation_id(
-                "tool-batch-admission",
-                agent_id=self._agent_id,
-                session_id=self._session_id,
-                turn_id=context.turn_id,
-                step_id=context.step_id,
-                tool_call_ids=tuple(call.tool_call_id for call in calls),
-            ),
+            operation_id=operation_id,
             agent_id=self._agent_id,
             requested=len(calls),
         )
+        wall_reservation = None
+        session_events = await self._service.store.read(
+            SessionService.session_stream(self._session_id)
+        )
+        starts = [e for e in session_events if e.type == "turn/start"
+                  and e.data.get("turn_id") == context.turn_id]
+        if len(starts) == 1:
+            candidate_id = budget_operation_id(
+                "turn-wall-reservation", agent_id=self._agent_id, session_id=self._session_id,
+                message_id=starts[0].data["message_id"],
+            )
+            reservation = (await self._service.ledger()).usage_reservation(candidate_id)
+            if reservation is not None and reservation.agent_id == self._agent_id and (
+                reservation.status is BudgetUsageReservationStatus.STARTED
+            ):
+                wall_reservation = reservation.reservation_id
         return tuple(
             ToolAdmissionDecision(
                 call.tool_call_id,
@@ -435,6 +449,9 @@ class BudgetToolAdmissionGate:
                 code=(
                     None if index < admitted else "budget-tool-calls-exhausted"
                 ),
+                agent_id=self._agent_id,
+                budget_admission=operation_id if index < admitted else None,
+                budget_reservation=wall_reservation if index < admitted else None,
             )
             for index, call in enumerate(calls)
         )

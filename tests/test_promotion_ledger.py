@@ -59,7 +59,7 @@ def _plan(**overrides) -> VerificationPlan:
             policy_id="env-1", passthrough=("PATH",), overrides=(("MODE", "ci"),)
         ),
         "max_output_bytes": 1024,
-        "protocol_version": 1,
+        "protocol_version": 2,
     }
     fields.update(overrides)
     return VerificationPlan(**fields)  # type: ignore[arg-type]
@@ -203,7 +203,7 @@ def test_every_verifier_definition_field_changes_the_definition_digest() -> None
     [
         _plan(commands=()),
         _plan(commands=[]),
-        _plan(protocol_version=2),
+        _plan(protocol_version=1),
         _plan(plan_version=0),
         _plan(plan_version=True),
         _plan(max_output_bytes=0),

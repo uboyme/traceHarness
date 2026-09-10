@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from uuid import uuid4
 
 from traceh.concurrency import await_worker_convergence
 from traceh.kernel.lifespan import CallbackRegistration, Lifespan
@@ -26,6 +27,7 @@ class Activation:
 
     def __init__(self, plugin_id: str) -> None:
         self.plugin_id = plugin_id
+        self.activation_id = uuid4().hex
         self.lifespan = Lifespan()
         self.tasks = OwnedTaskSet()
         self._published = False

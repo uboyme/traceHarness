@@ -17,6 +17,7 @@ from promotion_fixtures import (
     promotion_targets,
     verification_plan,
 )
+from sandbox_fixtures import real_sandbox_policy
 
 from traceh.agents.identity import AGENT_DIRECTORY_STREAM
 from traceh.api.budgets import (
@@ -39,6 +40,7 @@ from traceh.api.product import (
     TaskModeSource,
 )
 from traceh.api.promotion import VerifierCommand, VerifierOutcome
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.artifacts.cas import LocalArtifactCas
@@ -563,13 +565,11 @@ def _profile(mode: RequestedTaskMode) -> ProductTaskProfile:
 
 
 def _host_profile(mode: RequestedTaskMode) -> ProductHostProfile:
-    import sys
-
     plan = verification_plan(
         VerifierCommand(
             command_id="added-file",
             argv=(
-                sys.executable,
+                "python",
                 "-c",
                 "import pathlib,sys;sys.exit(0 if "
                 "pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
@@ -623,6 +623,7 @@ async def _build_host(
         event_feed=observation_feed or connected_feed,
         actions=actions,
         read_models=read_models,
+        sandbox=SandboxConfiguration(real_sandbox_policy(), cas.local_root),
     )
     if line_adapter:
         return LineProductAdapter(host, data_dir=tmp_path / "product-data")

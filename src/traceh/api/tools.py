@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from traceh.api.json_types import JsonValue
+from traceh.api.sandbox import SandboxCommandPort
 
 
-class EffectKind(str, Enum):
+class EffectKind(str, Enum):  # noqa: UP042 - preserve this public Enum's string representation
     PURE_READ = "pure_read"
     WORKSPACE_READ = "workspace_read"
     WORKSPACE_WRITE = "workspace_write"
@@ -35,6 +36,7 @@ class ToolExecutionContext:
     tool_call_id: str
     workspace: Path
     data_dir: Path
+    sandbox: SandboxCommandPort | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +57,9 @@ class ToolAdmissionDecision:
     tool_call_id: str
     admitted: bool
     code: str | None = None
+    agent_id: str | None = None
+    budget_admission: str | None = None
+    budget_reservation: str | None = None
 
 
 @runtime_checkable

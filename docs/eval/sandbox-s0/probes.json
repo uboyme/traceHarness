@@ -1,0 +1,274 @@
+{
+  "stage": "S0",
+  "date": "2026-09-10",
+  "image": "sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b",
+  "cases": [
+    {
+      "case": "basic",
+      "mode": "normal",
+      "container_id": "8ed91471398b1afd16168d7f1b3ce58788bb7382e2c45abd9bcfda3397ff0985",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 214044\nuser_usec 161542\nsystem_usec 52501\nnr_periods 4\nnr_throttled 3\nthrottled_usec 121750\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "filesystem",
+      "mode": "normal",
+      "container_id": "7ffbe0bd419bac05bf56adaa3af722b156167a97b22df72f4a09ab8356a92218",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 194479\nuser_usec 178272\nsystem_usec 16206\nnr_periods 3\nnr_throttled 3\nthrottled_usec 119242\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "network",
+      "mode": "normal",
+      "container_id": "f83b8fd5329024921422ae145e3b2dbd2f30c920daa82a068de0208375e0290d",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 192401\nuser_usec 160988\nsystem_usec 31412\nnr_periods 3\nnr_throttled 3\nthrottled_usec 124636\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "supervisor-protection",
+      "mode": "normal",
+      "container_id": "adb475891f64daea63c2c67a417aff682bb58161adc0cb03d5ed1faeaf6b5f32",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 178476\nuser_usec 150713\nsystem_usec 27762\nnr_periods 4\nnr_throttled 3\nthrottled_usec 134213\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "pids",
+      "mode": "normal",
+      "container_id": "de337ee0fd91d7a0962be8ed32a45d49efc32f7a32ec78c64ea83627e9415e59",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 184764\nuser_usec 144598\nsystem_usec 40166\nnr_periods 3\nnr_throttled 3\nthrottled_usec 124627\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "output-flood",
+      "mode": "normal",
+      "container_id": "bf0804bf0523d228a8c631a60cc708a6973148e5c4d1ef418472f368fc0604e9",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "output-exceeded",
+      "exit_code": null,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 148236\nuser_usec 127647\nsystem_usec 20588\nnr_periods 3\nnr_throttled 2\nthrottled_usec 94833\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "memory",
+      "mode": "normal",
+      "container_id": "96969419e887d81e53eaa41138446066275107dec27a997e6812291d7d0a0783",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": true
+      },
+      "status": "finished",
+      "exit_code": -9,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 287538\nuser_usec 147876\nsystem_usec 139661\nnr_periods 5\nnr_throttled 5\nthrottled_usec 205908\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 49\noom 1\noom_kill 1\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "symlink-output",
+      "mode": "normal",
+      "container_id": "fcd7b7478217fd91bdd770f8cadefa7c5d7438f9f02db8298287e633ccacabb6",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "unsafe-workspace",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 135750\nuser_usec 111794\nsystem_usec 23955\nnr_periods 3\nnr_throttled 2\nthrottled_usec 77796\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "background-child",
+      "mode": "normal",
+      "container_id": "1b2e555436fd861ab8005890ed0b6d2ffb90e3c12b3573c7013799056489c760",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "finished",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 244875\nuser_usec 206006\nsystem_usec 38869\nnr_periods 5\nnr_throttled 4\nthrottled_usec 185586\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "controller-exit",
+      "mode": "detach",
+      "container_id": "26d898e7fbace7d6ff4652f090a97854aa86ec047a96c6df9cc016076468cb42",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "timed-out",
+      "exit_code": null,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 1140434\nuser_usec 1112324\nsystem_usec 28109\nnr_periods 22\nnr_throttled 21\nthrottled_usec 2938452\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "cancel",
+      "mode": "cancel",
+      "container_id": "8b6b0564c5676c7859b141ea963fe4d493632c468574a7e61cc862fd1990b37d",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 137,
+        "OOMKilled": false
+      },
+      "status": null,
+      "exit_code": null,
+      "cgroup": null
+    },
+    {
+      "case": "workspace-byte-limit",
+      "mode": "normal",
+      "container_id": "250d2e7102ca77b66bd5b24947f3c5160d4bb529a56b591b10a3542c888086a2",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "workspace-limit",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 204658\nuser_usec 168542\nsystem_usec 36116\nnr_periods 3\nnr_throttled 3\nthrottled_usec 99391\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    },
+    {
+      "case": "workspace-file-limit",
+      "mode": "normal",
+      "container_id": "877bd232e0a5da131256e20153011e7a2b228680cf46af14b8229cd4b78a650b",
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "OOMKilled": false
+      },
+      "status": "workspace-limit",
+      "exit_code": 0,
+      "cgroup": {
+        "cpu.max": "50000 100000\n",
+        "cpu.stat": "usage_usec 197428\nuser_usec 162587\nsystem_usec 34840\nnr_periods 4\nnr_throttled 3\nthrottled_usec 137761\nnr_bursts 0\nburst_usec 0\n",
+        "memory.max": "134217728\n",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "pids.max": "32\n"
+      }
+    }
+  ]
+}

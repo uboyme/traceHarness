@@ -2,16 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import shlex
-import sys
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import pytest
 
 from traceh.api.llm import ToolCall
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.session.event_store import InMemoryEventStore
-from traceh.session.file_lock import FileLockTimeout, exclusive_file_lock
 from traceh.session.service import SessionService
 from traceh.tools.builtins.shell import ShellTool
 from traceh.tools.policy import AllowByDefaultPolicy, DangerousShellPolicy
@@ -57,37 +54,27 @@ time.sleep(SLEEP_SECONDS)
 """.replace("SLEEP_SECONDS", str(CHILD_DEADLINE_SECONDS))
 
 
-def flushing_child_command(tmp_path: Path) -> tuple[str, Path, Path]:
-    script = tmp_path / "flushing_child.py"
-    script.write_text(FLUSHING_CHILD, encoding="utf-8")
-    marker = tmp_path / "flushed"
-    lock = tmp_path / "child.lock"
-    return shlex.join([sys.executable, str(script), str(marker), str(lock)]), marker, lock
+def flushing_child_command() -> str:
+    return shlex.join(["python", "-c", FLUSHING_CHILD, "flushed", "child.lock"])
 
 
-def assert_child_has_exited(lock: Path) -> None:
-    """The lock is only free once the operating system reaped the process."""
+async def shell_batch(tmp_path, *, command, tool_timeout, runtime_timeout, observe=False):
+    from dataclasses import replace
 
-    try:
-        with exclusive_file_lock(lock, timeout=10.0):
-            pass
-    except FileLockTimeout as error:  # pragma: no cover - only on a real leak
-        raise AssertionError("the shell child is still running") from error
+    from sandbox_fixtures import real_sandbox_service, wait_for_guest
 
+    from traceh.artifacts.cas import LocalArtifactCas
+    from traceh.sandbox.reader import read_execution
 
-async def shell_batch(
-    tmp_path: Path,
-    *,
-    command: str,
-    tool_timeout: float,
-    runtime_timeout: float,
-):
-    """Run one shell call through the real ToolRuntime, not the tool directly."""
-
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
     sessions = SessionService(InMemoryEventStore())
-    session_id = await sessions.create_session(tmp_path)
+    session_id = await sessions.create_session(workspace)
     await sessions.append_session(session_id, "turn/start", {"turn_id": "t"})
     await sessions.append_session(session_id, "step/start", {"turn_id": "t", "step_id": "s"})
+    cas = LocalArtifactCas(tmp_path / "cas")
+    service = real_sandbox_service(sessions.store, cas)
+    service.policy = replace(service.policy, limits=replace(service.policy.limits, wall_seconds=30))
     registry = ToolRegistry()
     registry.register(ShellTool())
     runtime = ToolRuntime(
@@ -95,16 +82,39 @@ async def shell_batch(
         sessions,
         policies=(AllowByDefaultPolicy(),),
         timeout_seconds=runtime_timeout,
+        sandbox_service=service,
     )
-    context = ToolExecutionContext(session_id, "t", "s", "batch", tmp_path, tmp_path)
-    results = await runtime.execute_batch(
-        (ToolCall("c1", "shell", {"command": command, "timeout": tool_timeout}),),
-        context=context,
-        composition_revision="r",
+    context = ToolExecutionContext(session_id, "t", "s", "batch", workspace, tmp_path / "data")
+    running = asyncio.create_task(
+        runtime.execute_batch(
+            (ToolCall("c1", "shell", {"command": command, "timeout": tool_timeout}),),
+            context=context,
+            composition_revision="r",
+        )
     )
-    return results[0], await sessions.read_effects(session_id), await sessions.read_session(
-        session_id
+    try:
+        if observe:
+            await wait_for_guest(
+                sessions.store,
+                sessions.effect_stream(session_id),
+                service.policy,
+                running,
+                relative="flushed",
+            )
+        results = await running
+    finally:
+        if not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
+    effects = await sessions.read_effects(session_id)
+    request = next(e.data for e in effects if e.type == "sandbox/request")
+    view = await read_execution(
+        sessions.store,
+        cas,
+        stream_id=sessions.effect_stream(session_id),
+        execution_id=request["execution_id"],
     )
+    return results[0], effects, await sessions.read_session(session_id), view
 
 
 @dataclass(slots=True)
@@ -196,22 +206,21 @@ async def test_tool_timeout_is_durable(tmp_path) -> None:
 async def test_shell_timeout_keeps_its_output_through_the_tool_runtime(tmp_path) -> None:
     # The real agent path: the tool times itself out well inside the runtime's
     # budget, so the runtime must report the tool's account, not its own.
-    command, marker, lock = flushing_child_command(tmp_path)
+    command = flushing_child_command()
 
-    result, effects, session_events = await shell_batch(
+    result, effects, session_events, view = await shell_batch(
         tmp_path, command=command, tool_timeout=1.0, runtime_timeout=30.0
     )
 
-    assert marker.exists(), "the child never got far enough to flush its output"
+    assert view.outcome["converged"] is True
     assert result.status == "failed"
     assert result.error_type == "TimeoutError"
+    assert view.result["payload"]["files"]["flushed"] == "Zmx1c2hlZA=="
 
     outcome = effects[-1]
     assert outcome.type == "effect/outcome"
     assert outcome.data["reported_by"] == "tool"
-    tool_result = next(
-        event for event in session_events if event.type == "tool/result"
-    )
+    tool_result = next(event for event in session_events if event.type == "tool/result")
 
     for marker_text in ("STDOUT-MARKER", "STDERR-MARKER"):
         assert marker_text in result.content, result.content
@@ -223,30 +232,29 @@ async def test_shell_timeout_keeps_its_output_through_the_tool_runtime(tmp_path)
         assert "timed out after 30.0s" not in carrier
         assert "Tool timed out after" not in carrier
     assert "timed_out=true" in result.content
-    assert_child_has_exited(lock)
+    assert view.outcome["converged"] is True
 
 
 @pytest.mark.asyncio
 async def test_runtime_budget_still_wins_when_it_expires_first(tmp_path) -> None:
     # The reverse direction: the runtime's budget expires long before the tool's
     # own timeout, so the generic runtime timeout semantics stay in place.
-    command, marker, lock = flushing_child_command(tmp_path)
+    command = flushing_child_command()
 
-    result, effects, _ = await shell_batch(
-        tmp_path, command=command, tool_timeout=30.0, runtime_timeout=1.0
+    result, effects, _, view = await shell_batch(
+        tmp_path, command=command, tool_timeout=30.0, runtime_timeout=15.0, observe=True
     )
 
-    # Without this the test could pass on a child that never ran at all: the
-    # marker proves it took the lock, flushed both streams and reached its hang,
-    # which is what makes the convergence assertion below meaningful.
-    assert marker.exists(), "the child never got far enough to flush its output"
+    # observe=True inspected the marker inside this exact container before the
+    # timeout. Thus cleanup cannot pass merely because the child never started.
+    assert view.outcome["converged"] is True
 
     assert result.status == "failed"
     assert result.error_type == "TimeoutError"
-    assert result.content == "Tool timed out after 1.0s"
+    assert result.content == "Tool timed out after 15.0s"
     outcome = effects[-1]
     assert outcome.data["reported_by"] == "runtime"
     assert outcome.data["status"] == "failed"
 
     # The child was converged on the way out rather than left running.
-    assert_child_has_exited(lock)
+    assert view.outcome["converged"] is True

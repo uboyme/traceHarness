@@ -78,6 +78,7 @@ _SEQ_NOTE_LINES = (
 _HELP_LINES = (
     "/help     show these commands",
     "/session  show the session id, workspace, provider, model and resume command",
+    "/sandbox  查看当前沙箱策略和本会话实际执行回执",
     "/task inspect TASK_ID    inspect a durable ProductTask (with --product-config)",
     "/task approve TASK_ID    approve and promote a verified ProductTask",
     "/task reject TASK_ID     reject without moving the target ref",
@@ -128,6 +129,7 @@ class ResumeEnvironment:
     verifier_from_env_file: bool = False
     product_config: Path | None = None
     context_config: Path | None = None
+    sandbox_config: Path | None = None
 
 
 def _safe_base_url(value: str | None) -> tuple[str | None, str | None]:
@@ -365,6 +367,18 @@ async def _handle_command(
         return False
     if text == "/session":
         await _write_session_banner(runtime, console, session, resume_environment)
+        return False
+    if text == "/sandbox":
+        from traceh.chat.sandbox_inspection import sandbox_report
+
+        try:
+            configuration = runtime.config.sandbox
+            console.write(await sandbox_report(
+                runtime.sessions.store, session_id=session.session_id,
+                policy=configuration.policy if configuration is not None else None,
+            ))
+        except (ValueError, KeyError, TypeError):
+            console.write("沙箱证据无法核对；未执行任何命令。")
         return False
     from traceh.chat.governance import ChatGovernance, display, handles
 
@@ -703,6 +717,8 @@ def _write_resume_block(
         ]
     if environment.context_config is not None:
         restore += [Literal("--context-config"), str(Path(environment.context_config).resolve())]
+    if environment.sandbox_config is not None:
+        restore += [Literal("--sandbox-config"), str(Path(environment.sandbox_config).resolve())]
 
     base_url, withheld_reason = _safe_base_url(environment.base_url)
     if base_url:

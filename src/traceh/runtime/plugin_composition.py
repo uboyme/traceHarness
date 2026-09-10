@@ -260,6 +260,7 @@ class PluginCompositionCoordinator:
                 max_output_chars=self._max_tool_output_chars,
                 admission_gate=current.tools.admission_gate,
                 workspace_observer=current.tools.workspace_observer,
+                sandbox_service=current.tools.sandbox_service,
             )
             generation = CompositionGeneration(
                 llms=llms,

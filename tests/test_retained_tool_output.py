@@ -3,14 +3,16 @@
 import asyncio
 import json
 import shlex
-import sys
 from dataclasses import replace
 
 import pytest
+from sandbox_fixtures import real_sandbox_policy, real_sandbox_service
 
 from traceh.api.json_types import canonical_json, fingerprint
 from traceh.api.llm import ModelResponse, ToolCall
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
+from traceh.artifacts.cas import LocalArtifactCas
 from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime
 from traceh.runtime.request_builder import verify_request_snapshots
@@ -39,13 +41,14 @@ def write_emitter(workspace, *, failing=False):
         f'sys.stdout.buffer.write({payload!r}.encode("utf-8"))\nsys.exit({7 if failing else 0})\n',
         encoding="utf-8",
     )
-    return shlex.join([sys.executable, str(script)]), payload
+    return shlex.join(["python", script.name]), payload
 
 
 def make_runtime(root, responses):
     store = SqliteEventStore(root / "events")
     runtime = build_default_runtime(
-        RuntimeConfig(data_dir=root, max_tool_output_chars=1024),
+        RuntimeConfig(data_dir=root, max_tool_output_chars=1024,
+                      sandbox=SandboxConfiguration(real_sandbox_policy(), root / "artifacts")),
         provider=ScriptedLlmProvider(tuple(responses)),
         event_store=store,
     )
@@ -408,7 +411,10 @@ async def raw_batch(tmp_path, *, sessions=None, reader=True, searcher=True):
     if searcher:
         registry.register(SearchToolOutput(sessions, max_chars=1024))
     runtime = ToolRuntime(
-        registry, sessions, policies=(AllowByDefaultPolicy(),), max_output_chars=1024
+        registry, sessions, policies=(AllowByDefaultPolicy(),), max_output_chars=1024,
+        sandbox_service=real_sandbox_service(
+            sessions.store, LocalArtifactCas(tmp_path / "artifacts"),
+        ),
     )
     context = ToolExecutionContext(sid, "turn", "step", "batch", workspace, tmp_path)
     return runtime, sessions, store, context, ToolCall("emit", "shell", {"command": command})

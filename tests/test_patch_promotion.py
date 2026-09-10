@@ -6,7 +6,6 @@ import asyncio
 import contextlib
 import dataclasses
 import os
-import sys
 from pathlib import Path
 
 import pytest
@@ -179,7 +178,7 @@ def _lenient_plan():
         VerifierCommand(
             command_id="base-present",
             argv=(
-                sys.executable,
+                "python",
                 "-c",
                 "import pathlib, sys;"
                 "sys.exit(0 if pathlib.Path('tracked.txt').exists() else 1)",
@@ -411,7 +410,7 @@ async def test_promotion_accepts_a_new_regular_directory(tmp_path: Path) -> None
         VerifierCommand(
             command_id="nested-file-present",
             argv=(
-                sys.executable,
+                "python",
                 "-c",
                 "import pathlib, sys;"
                 "sys.exit(0 if pathlib.Path('package/module.py').read_text() "

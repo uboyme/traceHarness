@@ -34,7 +34,9 @@
 
 ## 1. 当前项目状态
 
-**当前版本：0.9.0（Educational alpha，GitHub Release）。** 用户接受 55/72 的已知检索限制，授权提交并发布至现有 GitHub 仓库 Releases（不上传 PyPI），随后转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
+**v0.10 沙箱目标已完成限定验收：** S0 实验已通过，S1/S2 已接通 Runtime shell、完成验证、Product 固定验证及原预算身份；CLI 的 --sandbox-config、TUI 中文执行沙箱配置页和 /sandbox 只读观察已接入。未配置时进程执行失败关闭，不回退宿主。评估相邻回归已核对修复，S3-A 的有界 stdio 与原 Activation/Lease/Drain 已接通并完成首轮真实检查；配置入口与 S4 生产验收已完成；463 项定向合并检查、观察补查 4 项及部分写入取消 1 项通过，未跑全量或 L2。见 [ADR-0065](../adr/0065-host-owned-sandbox-execution.md)与 [执行记录](../deal/012-sandbox-execution.md)。
+
+**当前版本：0.10.0（Educational alpha，GitHub Release 发行范围）。** S0–S4（含 S3-A、不含 S3-B）沙箱及 TUI 环境选择已完成限定验证，用户已授权提交与发布。Session 13 / Context 12 保持不变；Sandbox 配置格式 2、Promotion 验证协议 2。检索成绩沿用 55/72，未重新计分。未运行全量或 L2，不上传 PyPI。见[发行记录](../deal/015-v0100-release.md)和[限定验证](../validation-v0.10.0.md)。
 
 **当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 
@@ -64,12 +66,12 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `v0.9.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
+| 当前版本 | `v0.10.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
-| 当前开发阶段 | v0.9-F0-A/B/C、F1 Skill 贡献与 F2 持久选择／检索／渐进披露已实现；限定验证见 15.1。F3 项目归属与 Memory authority 已实现，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已接入（7.7）；F5 治理/评估已接入（7.8），检索精度整改及同冻结复验已完成，Release Stop C 已通过限定审查与定向验收，发布门禁仍待授权执行；Release Stop A 独立审查 P0=0/P1=0，门槛通过，2 项 P2 已修复并完成定向确认（15.1、16）。版本已为 `0.9.0`，本次按第 1 节的用户决定限定发行；未运行发布级全量或 L2 |
+| 当前开发阶段 | v0.9 Skill/Memory/History、主动检索与分层压缩已经收口；v0.10 S0–S4（含 S3-A、不含 S3-B）沙箱、原执行回执与 TUI 环境选择完成限定验收。用户已授权 GitHub 发行，具体门禁见第 15 节；未运行本次发布级全量或 L2 |
 | Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；wrapper user message 始终在完整 Surface 之后且不进入 Surface。显式正文首次供紧邻目标 Step，实际准入正文在本 Turn 逐步复核资格与预算后保留；F2 接入宿主持久选择、eligible exact+FTS 与按请求的 section/chunk，Memory authority 与 F4 Context 注入均已实现；见 7.4–7.10、19.16 |
 | 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
@@ -92,7 +94,7 @@ Runtime、第二 Product 状态、第二 EventStore、缓存或 RAG。
 最终候选的独立真实 L2 与无筛选全量均已通过；完整 Provider 网格、clean-input 资产及 core/`[tui]`
 离线安装也已执行。发布收口中 L2 暴露的两个真实契约遗漏（core-only 环境硬导入 Rich、第二份受保护
 Runtime pin 未同步）已在测试 owner 根修并保留反向证据。详细数字见上表与
-[`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节。当前仍没有默认 Product Profile、OS 沙箱、
+[`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节。v0.8.0 发布时没有默认 Product Profile、OS 沙箱、
 跨进程 Session/Workspace lease、冷恢复、stale claim takeover、自动批准、非 bare 推广目标、通用
 Workflow DSL、MCP、流式输出或 Provider/model fallback；这些属于 v0.9 及之后的冻结路线。
 
@@ -144,7 +146,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
-- Docker、远程沙箱或操作系统级安全隔离；
+- 远程沙箱和未验收的宿主后端；当前仅实测 Windows + Docker Desktop + Linux 容器禁网执行（第 3、16 节）；
 - 分布式 Event Store；
 - 完整流式模型输出、重试、Fallback 与限流中间件；
 - 完整 Codex/Claude Code 式终端工作台：F4 已提供最小可交互 Textual TUI，但没有 token streaming、完整历史 Dashboard、拖拽 DAG、Turn 执行中的并发输入或新的“执行前审批”权限；START/Approval 仍是 Product 主线原有的人机边界。
@@ -226,6 +228,34 @@ traceharness/
 
 F5 目录接线：chat/config.py 和 chat/governance.py 管显式输入与共享治理；tui/governance.py 管可选取证据与 Memory 命令草稿表单；
 evaluation/retrieval.py 管冻结校验及度量，attempt.py 仍是唯一 seed owner。详见 7.8、12.5。
+
+沙箱模块：`api/sandbox.py` 定义不可变宿主配置、请求、owner、限制和回执引用；`sandbox/workspace.py` 快照授权普通文件与空目录；`sandbox/docker.py` 持有容器与取消 worker；`sandbox/_guest.py` 是容器内可信监督脚本；`sandbox/reader.py` 核对原事件与 CAS 字节；`sandbox/ledger.py` 在原 owner stream 中核对 request/outcome/publication 身份。`sandbox/service.py` 为原 Tool/Verifier owner 提供有界生命周期的命令能力，调用者只能缩小时间/输出限制，不能扩权；`sandbox/publication.py` 先比对原快照与宿主当前文件，再检查写权限并逐文件发布，部分 I/O 失败记录已完成操作，不承诺整个目录原子回滚。输入/输出使用原 ArtifactCas，没有新增数据库或 runtime.state。`scripts/sandbox_s0/` 是显式运行的实验夹具。
+
+`sandbox/stdio.py`、`_stdio_client.py`、`_guest_stdio.py` 提供有界双向字节连接；固定核心控制程序只访问 PID 1 的 root 专用 socket，业务进程不能访问控制通道。输入总字节和单帧大小由 `SandboxStdioLimits` 限制，输出沿用执行额度。连接只做 byte read/write/close/wait，不实现 MCP；不确定写入不重试，取消收敛同一个执行。关闭 stdin 导致程序立即退出时，通过原终态确认关闭，不重复投递 EOF。
+
+`sandbox/plugins.py` 在原 Runtime 准备装配阶段绑定同一个 SandboxExecutionService，`PluginGenerationBuilder`/`PluginManager` 只向对应 Context 注入受限能力。宿主 `SandboxConfiguration.plugin_grants` 精确授权 plugin_id/version、绝对工作区、stdio 限额及每次 activation 的尝试次数上限；程序化入口与格式 2 配置文件/TUI 中文授权表单共用同一合同；空列表表示未授权，配置不自动启用插件。`PluginContext.open_process()` 仅 setup 期间开放；先把 scope cleanup 注册给原 Activation，再启动外部程序。Activation 的独立 activation_id 与实际插件身份一同进入原 EventStore 的 `plugin-activation:<id>` stream；CAS 仍是原实例，未虚构 Session/Agent/Budget 身份。服务器属于应用级 Activation，工具调用仍走原 Effect/预算主线；Generation Lease 持有时不关闭，rollback、drain、shutdown 由原生命周期收敛。每个连接不自动重启，不回写服务工作区，也不隔离可信 Python 插件本身。
+
+`ToolRuntime` 的 PROCESS 调用先走原 Policy/Budget/Effect intent，再绑定 Sandbox scope；回执引用原 Agent、准入与 Turn 时间 reservation。shell 只调用这个能力，用户代码不走宿主 subprocess。完成验证保留 trusted `verify(workspace)` 接口，由宿主短期绑定命令能力，回调结束立即失效；这种执行能力的 ContextVar 不是事实源。验证在工作区副本执行，不把临时写入带回宿主。
+
+Product Factory 传递同一宿主 Sandbox 配置；固定验证以 Review ID 为 owner，将执行证据写入产物来源 Session 的 Effect stream，复用其原 CAS。Review 的结构化结果绑定执行编号、原 stream、receipt/policy digest，宿主重新核对实际执行 owner、命令摘要、状态和原始输出字节摘要。固定验证原始 stdout/stderr 不持久化，也不导出验证目录；仅存字节数和 SHA-256。更换有效沙箱策略不能复用旧 Review 进行批准或推广。Promotion 协议现为 2（结果增加 execution 引用），旧 1 明确拒绝，不猜测迁移；Product 配置顶层版本仍为 1，其 verification.protocol_version 为 2。上述主线与相邻评估装配已有真实定向验证。
+
+`sandbox/config.py` 是唯一宿主策略文件解析器：format 2、完整 policy/limits/plugin_grants 精确键集、最多 64 KiB；旧格式 1 明确拒绝，不自动迁移；不猜 Docker context、镜像或路径权限。CLI run/chat/resume 与 eval 接受 `--sandbox-config`；普通 Runtime 使用数据目录下 artifacts，Product/每个 benchmark attempt 使用原 ArtifactCas 根。TUI「执行沙箱」页复用该解析器，连接与镜像通过 `tui/docker_choices.py` 的只读查询下拉选择，也可手动填写名称／ID；镜像标签在点更新时解析为固定 sha256，保存时按固定 ID 复核。下拉候选绑定发现时的 ID，同名标签变化不会自动替换；切换连接清空旧镜像，失败刷新丢弃旧候选。每次查询 10 秒、输出 1 MiB，使用临时文件和原 await_worker_convergence 处理取消与收尾；不拉取、构建或运行镜像，不读取镜像环境变量。仅预检 Linux／无自动挂载卷元数据，Python、依赖和 cgroup 仍由实际执行检查。资源预设可编辑，读写权限须明确填写；关闭只取消下一次装配的执行能力，配置应用仍先收尾旧 Runtime。恢复命令保留策略文件路径。eval 只接受空应用级插件授权列表，拒绝把共享服务器工作区混入隔离评估；不会静默丢弃授权。
+
+`chat/sandbox_inspection.py` 为 Line/TUI 的 `/sandbox` 提供共同只读视图：当前选定策略与最近 20 次历史执行分列；历史明确包括当前 Session 执行与原宿主账本中的应用级插件进程，后者不冒充当前 Session 的资源。插件显示 id/version/activation_id 及 stdio 限额。`sandbox/reader.py` 的 record 读取核对原事件摘要和关联，完整读取再核对 CAS；界面只展示前者，不读取命令或输出正文。实际 backend、policy、状态、收敛、失败/cleanup_failures、publication 与回执编号来自原事件。只有 request 时明确未确认启动/收尾，配置成功和 finished 均不等于验证通过。取消仍抛 CancelledError，清理失败保留在异常 cause 与回执中。
+
+```mermaid
+flowchart LR
+    PICK["TUI 下拉或手填 → 只读解析固定镜像 ID"] --> CONFIG["CLI / TUI 显式主机策略"]
+    CONFIG --> PARSER["唯一 Sandbox 配置解析器"]
+    PARSER --> OWNER["原 Tool / Verifier / Product owner"]
+    OWNER --> EXEC["Sandbox scope / Docker 执行"]
+    GRANT["宿主精确插件版本授权"] --> ACTIVATION["原 Activation / Lease / Drain"]
+    ACTIVATION --> STDIO["有界 stdio 连接"]
+    STDIO --> EXEC
+    EXEC --> FACT["原 EventStore stream + CAS"]
+    FACT --> READER["Sandbox Reader"]
+    READER --> UI["Line / TUI 只读观察"]
+```
 
 ## 4. 运行时装配与依赖方向
 
@@ -420,7 +450,7 @@ sequenceDiagram
 - `AgentLoop` 在取消/异常时 fresh read 当前 Attempt；只有 durable start 才补 Attempt End，然后依次关闭
   Step、Turn。admission 未取得 Session CAS permit 时先释放 PENDING reservation，不制造 Attempt；ToolRuntime
   尽量补齐未完成调用的 Tool Result。
-- `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn，然后 Drain Composition，最后卸载插件；完整语义见 5.5。Shell Tool 在取消时先 terminate，超时后 kill 并等待进程退出。
+- `dispose()` 取消并等待当前 Runtime 持有的活跃 Turn，然后 Drain Composition，最后卸载插件；完整语义见 5.5。Shell Tool 的原 scope 在取消返回前收敛容器及其进程树；不能确认时记录 unknown-convergence 并报错。
 
 ### 5.5 `AgentRuntime.dispose()` 的收敛语义
 
@@ -1389,7 +1419,7 @@ Release Stop C 已通过，实际范围、失败及未运行门禁见 [Stop C �
 
 ### 7.11 主动检索：三类来源已接入，55/72 与已知限制接受
 
-**当前版本：0.9.0（Educational alpha，GitHub Release）。** 用户接受 55/72 的已知检索限制，授权提交并发布至现有 GitHub 仓库 Releases（不上传 PyPI），随后转入 v0.10 S0。原 66/72 质量门槛仍未通过，但不再阻断本次发行；历史成绩和 NO-GO 报告保留。本次全量和 L2 未运行，不冒充完整发布门禁。见[发布决定](../deal/011-v090-release.md)、[限定验证](../validation-v0.9.0.md)和[沙箱启动计划](../plan/TRACEHARNESS_V0.10_SANDBOX_S0.md)。
+**当前版本：0.10.0（Educational alpha，GitHub Release 发行范围）。** S0–S4（含 S3-A、不含 S3-B）沙箱及 TUI 环境选择已完成限定验证，用户已授权提交与发布。Session 13 / Context 12 保持不变；Sandbox 配置格式 2、Promotion 验证协议 2。检索成绩沿用 55/72，未重新计分。未运行全量或 L2，不上传 PyPI。见[发行记录](../deal/015-v0100-release.md)和[限定验证](../validation-v0.10.0.md)。
 
 **当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
 
@@ -1666,7 +1696,7 @@ flowchart LR
 | `read_file` | WORKSPACE_READ | 读取 UTF-8 文件 | 真实路径必须位于 Workspace 内 |
 | `search_text` | WORKSPACE_READ | 子串或正则搜索，可限路径和结果数 | 跳过二进制/非 UTF-8 及常见忽略目录 |
 | `apply_patch` | WORKSPACE_WRITE | 精确旧文本替换或显式创建新文件 | 校验替换次数；临时文件 + fsync + 原子 replace；不是 unified diff parser |
-| `shell` | PROCESS | `shlex.split` 后用 `create_subprocess_exec` 执行 | 不使用 `shell=True`；清洗秘密环境变量；超时/取消收敛子进程 |
+| `shell` | PROCESS | `shlex.split` 后调用原 ToolRuntime 绑定的 Sandbox 能力 | 不使用 `shell=True`；显式 Linux guest 环境；缺配置失败关闭；超时/取消收敛容器工作负载 |
 | `list_tool_outputs` | PURE_READ | 本 Session 已保留结果的有界目录 | 以 through_seq 固定翻页边界；不读取别的 Session |
 | `search_tool_output` | PURE_READ | 按 effect_id/digest 搜索 content/data 字面词 | 同源校验；有界命中片段、准确位置和展开动作；无新索引 |
 | `read_tool_output` | PURE_READ | 按 effect_id/digest 读取原 content 或 data | Unicode 字符偏移，整页限长；身份及来源校验，不重跑工具 |
@@ -1765,7 +1795,7 @@ A 冻结的后续预算包括 system、tools、Product、Surface、Context refer
 4. Verifier 持续失败超预算 → `verification_failed`；
 5. 无 Tool Calls 且无失败证据 → `completed`。
 
-`CommandVerifier` 使用参数拆分和 `create_subprocess_exec` 在 Workspace 中运行独立命令，使用清洗后的环境，收集退出码、stdout、stderr；退出码 0 为通过。AgentLoop 把结果写为 `verification/result`。
+`CommandVerifier` 拆分 argv 后调用宿主绑定的 SandboxCommandPort，在授权工作区副本运行；只有 finished 且退出码 0 才通过。结果携带原 Sandbox 回执，AgentLoop 仍只追加 verification/result。未配置沙箱返回明确失败，不回退宿主。
 
 Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以结束 Turn，此时 `verification_passed` 为 `None`，不能把它解释成“外部验证已通过”。
 
@@ -1780,53 +1810,39 @@ AgentLoop 只连接事件投影与 Continuation；默认 Continuation 拥有提�
 
 参考问答的模型侧停止指导见 7.11：证据充分、仅能作范围限定的结论、或者存在真实阻碍时各自如实回答。宿主默认 Continuation 不解析自然语言来判断否定断言，不把模型自评当作新的批准事实或验证结果；`completed` 仍只表示循环结束。
 
-### 10.1 Verifier 的子进程与输出所有权
+### 10.1 Verifier 的执行与输出所有权
 
-`CommandVerifier` 在 Workspace 中运行真实命令。取消或超时时必须把这个子进程带走，否则它会在调用方已经认为该 Turn 结束之后继续改动 Workspace；同时，在**会返回结果的路径**上，它已经产生的输出是证据，不能在收尾过程中丢掉。这两件事由同一个所有权模型解决。
+`invoke_verifier` 保留可信 verify(workspace) 接口，在原 Session/Turn/Step owner 下临时绑定同一个
+SandboxExecutionService。完成验证的执行回执写入原 Session stream；Tool 和固定 Review 使用各自
+原 Effect stream。`/sandbox` 经同一个 Reader 查询这些流及应用级插件 activation stream，不改变写入归属。
 
-**输出只有一个归属**：子进程的 stdout/stderr 不接管道，而是直接写进本进程持有的临时文件（[`capture_output()`](../../src/traceh/tools/process_control.py)）。因此：
+容器 PID 1 监督进程管理内部期限、输出额度与整个 PID namespace。业务命令以 UID 65532 运行，
+使用显式 Linux 环境；不继承宿主 HOME/PATH/密钥，不挂载宿主工作区。可信控制客户端使用有界临时
+文件避免 Docker Desktop 继承输出句柄拖住等待；业务 stdout/stderr 在客体有界捕获，原文进入原 CAS。
 
-- 三条路径共用**同一套捕获机制**，因此不存在“哪条路径拿到的是另一份输出”的问题；子进程 flush 过的内容在超时被察觉之前就已经被捕获、对本进程可见；
-- 读取是普通文件读，不会阻塞在孙进程仍持有的管道上，也可以重复读而不丢字节；
-- 不存在"取消第一次 `communicate()` 再调第二次"的动作，也就不存在第一次已读入缓冲区的输出被丢弃的问题。
+父命令退出是收尾触发条件，不能等待后台后代释放输出管道才认为结束。监督进程先杀死并回收后代，
+再读尽已写入的有界管道尾部；输出超限终止，正常退出不再因后台后代被误报为超时。
 
-**子进程收敛**：超时或取消时先调用 `converge_process()` —— terminate → 有界等待（默认 2 秒）→ kill → 等待退出，返回前直接子进程必定已退出。等待吸收取消并记录“曾经被取消过”，因此收尾过程中到达的取消不会提前放行，而是压到收敛之后再重新抛出 `CancelledError`。
+| 路径 | 收敛与结果 |
+|---|---|
+| 正常完成 | 收敛进程树，返回有界输出、退出码与回执；原 AgentLoop 记录 verification/result |
+| 内部期限 | 客体自行终止，返回 timed-out 与已保留输出；Verifier 失败摘要可进入下一 Step |
+| 取消／Runtime 预算先到 | 原 scope 等待执行 worker 与回执写入收敛，再抛 CancelledError；不制造 verification/result，且不承诺终止前输出完整 |
+| 无法确认清理 | 原回执记录 unknown-convergence；调用失败，不能自动重试或冒充取消成功 |
+| 宿主硬退出 | 客体内部期限仍限制工作；原账本可能只有 request，不补造 outcome，不自动删除停止容器或冷恢复 |
 
-**三条路径各自做什么**（这一点必须精确，不能笼统地说“输出总会被保留”）：
+Shell 自身 timeout 由原 ToolReportedTimeout 边界与 Runtime 总预算超时区分，原 Effect/Tool 记录
+继续保持各自结果语义（9.5）。固定 Review 设置 retain_output=False，只持久化输出字节数/摘要与回执，
+不保存原始固定验证输出。上述所有临时句柄、控制文件和连接均为资源，不成为新的业务事实源。
 
-| 路径 | 直接子进程 | 输出 |
-|---|---|---|
-| 正常完成 | `await process.wait()` 自然返回 | 读取捕获文件，装入 `VerificationResult`；AgentLoop 据此追加 `verification/result` |
-| 超时 | 先 `converge_process()` 收敛，再读 | 读取捕获文件；完整文本进入 `VerificationResult.stdout`/`stderr`，尾部进入 summary，并经 `DefaultContinuationRuntime` 注入下一 Step |
-| 取消 | 只做 `converge_process()` 收敛，保证子进程不逃逸 | **不读取、不返回 `VerificationResult`、不追加 `verification/result`**；随后临时文件关闭，捕获内容随之丢弃 |
+`sanitized_environment()` / `tools/process_control.py` 仍供可信宿主控制和既有 L2 等工具使用，
+不是 shell、CommandVerifier 或默认固定 Review 的 native fallback；本目标没有运行 L2。
 
-换句话说：取消路径的承诺只有“子进程一定不会逃逸”，没有任何输出证据的承诺。只有调用方追加到 Session/Effect Event Log 的事件才是持久化事实（Verifier 路径是 `verification/result`，Tool 路径是 `effect/outcome` 与 `tool/result`，按路径适用）；临时文件里的字节只是本次调用期间的捕获。
-
-**ShellTool 与两类超时的边界**：`ShellTool` 使用同一套捕获与收敛机制，但它归 `ToolRuntime` 调度，因此存在两个不同的超时：
-
-| 超时来源 | 触发方式 | 上报内容 |
-|---|---|---|
-| Tool 自身（`shell` 的 `timeout` 参数） | `ShellTool` 收敛子进程后主动 `raise TimeoutError(content)`，content 含实际命令、`exit_code`、`timed_out=true` 与已捕获的 stdout/stderr | `ToolRuntime` 在嵌套边界上把它重贴为 `ToolReportedTimeout`，据此写 `effect/outcome`（`reported_by=tool`）与 `tool/result`，**保留工具自己的文本与时长**；超出 `max_output_chars` 时完整留在 Effect，Session 展示查找入口与引用（无查询工具时才给前缀预览）（9.5） |
-| Runtime 预算（`ToolRuntime.timeout_seconds`） | `asyncio.timeout()` 到期 | 保持通用语义：`Tool timed out after <预算>s`，`effect/outcome` 标 `reported_by=runtime`；子进程仍由 `ShellTool` 的取消路径收敛 |
-
-两者靠**嵌套异常边界**区分，不靠错误文本匹配：工具自己抛出的 `TimeoutError` 在内层被立即重贴为领域异常 `ToolReportedTimeout`，因此外层负责 Runtime 预算的 `except TimeoutError` 不可能再吞掉它。修复前两者共用一个 `except TimeoutError`，结果是 Shell 的 stdout/stderr 从 `effect/outcome` 与 `tool/result` 中消失，且内部超时被误报成 Runtime 预算时长。
-
-**本地资源不需要私有 API 收尾**：改用临时文件后不存在 stdout/stderr 管道子传输，`await process.wait()` 返回时 subprocess transport 已自行关闭。因此不访问 `process._transport`，也不需要任何手动关闭步骤。实测（Windows，孙进程仍持有继承句柄）：返回时 `transport_closed=True`、`open_pipe_transports=0`，独立解释器跑完后事件循环关闭时 stderr 没有 `unclosed transport` 或 `Event loop is closed`。
-
-**明确不管理孙进程**：子进程派生的孙进程会继承捕获文件句柄，可能在直接子进程退出后继续运行、继续往文件里写。本模块保证的是**直接子进程**已退出。至于输出会不会被保留，取决于调用方走的是哪条路径，只有这两条会读取捕获：**Verifier 正常完成**、以及**组件自己拥有的超时**（`CommandVerifier` 自身超时、`ShellTool` 自身超时）。**直接取消**与 **`ToolRuntime` 预算先到期**都不读取捕获——后者会取消工具，工具走取消路径，最终只产生 Runtime 通用超时结果。对孙进程不作任何承诺；由于输出走文件而不是管道，孙进程的存在不会拖住收尾。
-
-
-`sanitized_environment()` 的两项平台修正：
-
-- 保留 `SYSTEMROOT`、`WINDIR`、`COMSPEC`、`PATHEXT` 等 Windows 必需变量。缺少它们时子进程在 `import asyncio` 阶段就以 WinError 10106 失败，`python -m pytest` 这类最普通的 Verifier 命令在 Windows 上根本无法启动；
-- 设置 `PYTHONUTF8=1` 与 `PYTHONIOENCODING=utf-8`。父进程按 UTF-8 解码捕获到的字节，而 Windows 上的 Python 子进程默认会用系统代码页（中文环境为 CP936）输出，中文会整段变成 U+FFFD。这条只对 **Python 子进程**成立；非 Python 的原生工具仍然遵循系统代码页，其输出可能依旧是乱码。
-
-这些变量描述机器而不是用户，且仍然经过 KEY/TOKEN/SECRET 等敏感名过滤。
 ## 11. 崩溃恢复与生命周期收敛
 
 D 的孤立模型 Attempt 可由同身份的完整 `summary/response` 证明已返回，否则 unknown；恢复不补造 usage、不重调 Provider、不自动提交尚未写入的摘要。已提交的 replacement 保留；取消和 owned append 收敛仍按原规则。
 
-恢复首先经过当前唯一 Session 协议 10 校验；History 请求失效只按原 Turn/Step 与 receipt 派生，不能在
+恢复首先经过当前唯一 Session 协议 13 校验；History 请求失效只按原 Turn/Step 与 receipt 派生，不能在
 恢复后转交下一轮。合法 Context-only／Composition-only 失败前缀按原 Step/Turn
 规则收敛，不重新选择来源、不补写 Context，也不为未开始的后继 Step 发明 Attempt（7.4）。
 
@@ -2244,7 +2260,7 @@ M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓�
 
 ### 12.5 Benchmark
 
-`ProductBenchmarkRunner` 读取 `<benchmark>/benchmark.json`（当前根 schema 2、精确键集），按 `tasks × arms × repetitions` 走一遍网格。每次 attempt 走的是 20.30 的完整 ProductTask 主线：自建一次性源仓库与一次性本地 bare target、真实确认、固定 Workflow、managed worktree、不可变 Patch Artifact、冻结 Verifier、Review、宿主立即批准与 Git ref compare-and-swap。根必须有 `retrieval`（null 或 file/sha256）；旧 schema 1 明确拒绝。嵌套 Verifier 仍是 protocol 1。
+`ProductBenchmarkRunner` 读取 `<benchmark>/benchmark.json`（当前根 schema 2、精确键集），按 `tasks × arms × repetitions` 走一遍网格。每次 attempt 走的是 20.30 的完整 ProductTask 主线：自建一次性源仓库与一次性本地 bare target、真实确认、固定 Workflow、managed worktree、不可变 Patch Artifact、冻结 Verifier、Review、宿主立即批准与 Git ref compare-and-swap。根必须有 `retrieval`（null 或 file/sha256）；旧 schema 1 明确拒绝。嵌套 Verifier 当前为 protocol 2。评估器接受宿主显式 SandboxPolicy 并传入原 Product owner；每次 attempt 的执行仍使用其原 Store/CAS。
 
 输出位于要求尚不存在的 `--output` 目录：
 
@@ -2905,7 +2921,13 @@ flowchart LR
 
 ## 15. 测试与验证基线
 
-本次 v0.9.0 的版本、定向回归、打包和文档检查以[发布验证](../validation-v0.9.0.md)为准；下列数字是各阶段历史证据，不相加、不冒充新全量。
+本机检索体验核对：用户旧夹具存在沙箱 profile 未开启知识、旧检索 profile 固定旧 Session 的配置分歧。新建独立 Session 13 / Context 12 体验 profile 与逐行手册，原 lab 启动、列表、压缩通过显式 --profile 使用同一数据目录；不修改原配置、迁移旧会话或调用真实模型。治理与主动搜索 68 项定向检查通过；脚本 Provider 的临时数据库通路预检不代表自然模型召回成绩。详见 [本机体验记录](../deal/014-retrieval-lab-v13.md)。
+
+环境选择产品改进：连接与镜像下拉／手填、真实 Docker 解析及保存、失败与取消、相邻配置／架构共 133 项定向检查通过（100.024 秒，0 skipped）。移除切换连接时清空镜像保护后，公开表单错误保存新连接与旧镜像的组合；恢复后该用例通过。见 [环境选择记录](../deal/013-sandbox-environment-picker.md)。未运行全量或 L2。
+
+沙箱已完成本轮限定定向验收；以下早期检查保留为阶段证据：S0 的 13 项真实实验、此前 S1 的 65 项通过保留为阶段证据。当前沙箱合同/真实 Docker/发布/Runtime/Product/Verifier/配置/只读观察 9 文件 59 passed（94.232 秒）；配置/Line/Product 合同与架构相邻 8 文件 176 passed（56.179 秒）。更早 Promotion/Budget/Runtime/Plugin 相邻 109 项及 Product 配置/装配/读取 74 项通过。这些集合存在重叠，不相加冒充全量。Review owner/策略与取消清理 cause 三条保护均有按预期失败的反向证明。旧宿主私有管道/进程锁测试已改为公共原 owner 的真实容器、输出、取消和解释器退出证据。评估相邻旧进程 74 项中两处夹具失败已修正并独立复跑 2 项通过；S3-A/stdio/Plugin/Promotion/Runtime/观察/Product 合同相邻 140 项通过（86.454 秒），另有输入额度、期限和精确清理错误的定向补查。错误插件版本授权已反向证明，实际启动后回滚、拒绝断言失败。编译、全库 collect-only、修改范围 Ruff 与 diff 按当前修改更新；最终 25 文件 463 passed（226.741 秒），观察补查 4 passed、部分写入取消 1 passed；没有执行全量或 L2。见 [执行记录](../deal/012-sandbox-execution.md)。
+
+本次 v0.10.0 的版本、定向回归、打包和文档检查以[发布验证](../validation-v0.10.0.md)为准；下列数字是各阶段历史证据，不相加、不冒充新全量。
 
 当前 E 收口与语义复测门禁（集合有重叠，不相加）：E1 最终 176 项、E2 最终 313 项、E3 相邻主线 198 项、
 界面 61 项及最终专项 6 项通过；语义筛查控制 12 项、相邻检索/evaluator 55 项通过。关键保护均有反向验证。
@@ -3279,7 +3301,7 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
-v0.9.0 接受检索漏读和证据范围误述等已知限制，55/72 是内部固定题库合并成绩；仍无 OS 沙箱。v0.10 S0 尚未完成隔离验收，不把 Policy、worktree 或 Job Object 当成完整隔离。
+v0.9.0 接受检索漏读和证据范围误述等已知限制，55/72 是内部固定题库合并成绩。沙箱首个已测组合仅为 Windows/Docker Desktop/Linux 容器与禁网。程序化 shell/Verifier/Product 已接入，未配置时拒绝进程执行；CLI/TUI 配置与只读展示已有定向检查；S3-A/S4 限定定向验收已完成；环境选择仍不自动验证项目依赖。只对授权普通文件做复制及逐文件写回，不提供全目录事务，也不抵御宿主同权限恶意并发写者；部分发布有明确证据。网络 allowlist、其他平台、自动拉镜像和冷恢复没有实现。S3-B/MCP/自由 Workflow 不在本次授权范围，isolated 继续拒绝。
 
 B+ 只搜索一份已定位 retained output 的字面内容；不搜索 inline 小结果，不提供跨输出联合或语义检索。当前会加载 Session/Effect 流并扫描原文，搜索页限额不是磁盘、CPU 或全请求上限。真实模型可能误配相邻记录；命中行分隔和读取动作改善导航，不构成任意模型均正确的保证。
 
@@ -3336,7 +3358,7 @@ token 窗口。Session 必须为 `context_protocol=13`；1/2/3/4/5 和无标记�
 | Feed 可丢失，不是证据 | 内层唯一 SYNC append 已正常返回、尚未发布时进程崩溃，Feed 通知会漏；Feed 不重放历史、不持久化 Offset，也不扩大 SQLite commit 的平台保证 | 恢复与审计继续只读 `EventStore`；需要历史用 `read()` |
 | 中断退出码 | 退出码由宿主 Shell 和 Python 信号处理决定；硬中断（Ctrl+Break/关闭控制台）实测为 `3221225786`，不会运行收敛代码 | 依赖启动时打印的 session_id 与崩溃恢复，不承诺统一退出码 |
 | 模型调用中断 | 取消 OpenAI-Compatible 请求时会等待 HTTP Worker 收敛，最坏等到 `timeout_seconds` | 需要立即中止时改用可中断的 HTTP 客户端 |
-| Shell 安全 | Policy 是黑名单 Guardrail，不是沙箱 | 容器/远程 Sandbox、能力审批 |
+| Shell 安全 | Policy 仍只是 Guardrail；实际 PROCESS 已接显式 Linux 容器，未配置则拒绝 | 容器边界不隔离 trusted 进程内插件；不支持网络 allowlist 或其他未测平台 |
 | Managed Workspace 不是 OS 沙箱 | v0.7-C 的 read-only 只在显式安装 `ManagedWorkspaceAccessPolicy` 后限制 Tool admission；同一用户权限的插件、Python/原生进程仍可直接改物理目录 | 只对可信进程内能力使用；不可信代码需要容器、远程 Sandbox 或独立 OS 身份 |
 | Workspace 协调只在本进程 | `WorkspaceService` 以一把宿主锁串行 Catalog/Git mutation 并使用 Stream CAS，但没有跨进程/跨主机 worktree lease；外部 Git 或另一个 writer 可制造冲突 | 当前检测 identity/state 不一致后 fail closed 或 quarantine；分布式协调必须另行设计，不能把进程锁说成全局锁 |
 | Workspace cleanup 保守 | 只有 exact registered、HEAD 等于 base 且 clean 的 worktree 才删除；dirty、unsafe、Git/append 结果不明都 quarantine。Agent `dispose/aclose()` 刻意保留 worktree | 由后续 Artifact/Promotion 或人工检查决定 release；不得用 force/prune 清掉证据或用户改动 |
@@ -3369,14 +3391,14 @@ token 窗口。Session 必须为 `context_protocol=13`；1/2/3/4/5 和无标记�
 | v0.7-B Budget 是显式宿主装配，不是默认 CLI 或分布式调度 | `budgets:ledger` 已包住 managed create、model、Step、Tool、Turn wall 与 process-local slot；默认 CLI 不猜 root/child grant、tokenizer 或 policy，跨进程同时执行也没有 distributed lease | 产品入口留给后续 Stage；不得把 process-local slot 说成分布式锁，也不得另造余额或在 `AgentLoop` 加分支 |
 | v0.7 D0 是接缝而非能力本身 | `AgentToolAuthority` 和 `ChildProvisioningPolicy` 已进入现有 Toolset；A/B 已在独立域建立/执行 Budget，C 已在独立域实现 managed Git Workspace，D1 已在独立 Artifact 域冻结 Patch，D2 已在独立 Promotion 域完成验证/批准/ref CAS，E 已在独立 Workflow 域组合它们；通用 DSL、CLI 与产品装配仍不存在 | 后续继续复用同一个公共 Supervisor 与各域服务；不得把 D0 本身说成后续能力，也不得把 Stage C 的 Tool policy、D1 capture 或 D2 Verifier 说成 OS 隔离 |
 | v0.7-D1 Patch Artifact 不是验证或推广 | D1 只证明一份 terminal durable evidence 对应的 managed worktree 状态被完整冻结成 Manifest + CAS bytes；Git candidate tree、Patch bytes 和来源身份会重验，但不会判断修改是否正确或安全 | 验证、批准与 ref CAS 推广由独立的 D2 Promotion 域承担；capture service 仍不得自批、自合并或成为模型写 Tool |
-| v0.7-D2 推广是证据边界，不是隔离或分布式锁 | Verifier 以宿主同一用户权限运行，只保证命令、参数、环境和超时是宿主提前冻结的，并只留有界摘要证据；另一个有目标仓库写权限的进程仍可移动 ref，D2 只能检测并 fail closed。`write-tree`/`commit-tree` 会在 ref 移动前写入目标对象库，被拒绝的推广可能留下不可达对象 | 需要真正隔离时使用容器或远程 sandbox；不可达对象的回收仍是运维显式动作，不得由推广路径静默 GC；也不得引入自动批准、非 bare 目标或模型可见的 approve/promote Tool |
+| v0.7-D2 推广是证据边界，不是隔离或分布式锁 | 默认固定 Verifier 已接入 Host Sandbox，命令、参数、环境和超时由宿主冻结，只留摘要与回执证据；另一个有目标仓库写权限的进程仍可移动 ref，D2 只能检测并 fail closed。`write-tree`/`commit-tree` 会在 ref 移动前写入目标对象库，被拒绝的推广可能留下不可达对象 | 执行隔离不等于 Git 分布式锁；不可达对象的回收仍是运维显式动作，不得由推广路径静默 GC；也不得引入自动批准、非 bare 目标或模型可见的 approve/promote Tool |
 | v0.7 Budget 是破坏式切换 | ADR-0025/0026/0027 已落实：不把 v0.6 未执行的 Budget DTO 伪装成新账本，也不保留 legacy/V2/双 Projector/自动迁移路径；执行只由显式宿主适配器接到既有 owned boundary | 新 Agent 使用 schema 2；旧 schema 1 history 明确 fail closed 且永不自动删除旧 `.traceh`；Runtime 与 Supervisor 不保存第二份 balance |
 | Agent Directory 严格 fail closed | 重复 `agent_id`/`session_id`/`request_id`、畸形 payload、未知事件类型、self-owner 和悬空 owner 都会让整份 Directory 读写失败，而不是跳过坏记录。代价是一条坏记录会阻塞该 Store 上的全部 Agent 读取与新建 | 这是事实源应有的行为；未来新增 identity 生命周期事件类型必须显式扩展该投影，通信事件则应放在 per-Agent Stream 而不是这条流上 |
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
 | API 稳定性 | Alpha，协议可能演进 | 每次协议切换明确旧数据拒绝入口；仅在另获迁移授权时设计迁移，v1.0 冻结支持范围，不预设通用 Upcaster |
 
 v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 13、Context 12、context-json-v12、SQLite 2 与 Skill exact/FTS
-主线见第 7 节。F3 已实现跨 Session 项目绑定与 Memory authority，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 Memory 检索已接入；真实 Sandbox、isolated Plugin 与多 coder 集成未实现。
+主线见第 7 节。F3 已实现跨 Session 项目绑定与 Memory authority，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 Memory 检索已接入；Sandbox 的 S0–S3-A 主线已接通并做真实定向验证，S4 生产验收通过；isolated Plugin 与多 coder 集成不在本目标。
 Release Stop A 首审未发现 P0/P1，两项 P2 已在现有 owner 修复并定向确认（15.1）：
 A-P2-01 统一 Skill 内容身份，允许不同层级共存而拒绝真正重复；A-P2-02 保留完整路径字面量和标识边界。
 原始反例与修复证据保存在 [审查记录](../plan/TRACEHARNESS_V0.9_RELEASE_STOP_A_REVIEW.md)。

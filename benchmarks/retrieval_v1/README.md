@@ -5,7 +5,8 @@ SHA-256 固定在 manifest。候选运行前已冻结 11 条查询、相关性�
 全部使用同一 initial tree、同一 Verifier 和 single arm；单样本不作统计显著性结论。
 
 运行仍使用 `traceh eval benchmarks/retrieval_v1 --output <新目录>`，Provider/model 通过该命令的
-显式参数选择。每个样本的模型任务由 initial/README.md 说明；query 通过正常 requirement 输入。
+显式参数选择。当前固定验证协议为 2，运行时还需 `--sandbox-config <宿主策略文件>`；
+沙箱使用每个 attempt 原来的账本/CAS，没有配置就拒绝进程执行。每个样本的模型任务由 initial/README.md 说明；query 通过正常 requirement 输入。
 本目录 corpus 和 judgments 不复制到模型可写工作区。
 
 先在宿主环境显式安装 [typed Skill 示例包](../../examples/plugins/traceh-reference-skills/README.md)。

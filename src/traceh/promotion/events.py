@@ -7,11 +7,13 @@ projector silently reads differently.
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from datetime import UTC, datetime
 
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json
 from traceh.api.promotion import VerifierOutcome
+from traceh.api.sandbox import SandboxReceiptReference
 from traceh.promotion.errors import PromotionInputError, PromotionProtocolError
 from traceh.promotion.models import (
     MAX_OUTPUT_BYTES,
@@ -97,6 +99,7 @@ _RESULT_KEYS = frozenset(
         "stdout_bytes",
         "stderr_sha256",
         "stderr_bytes",
+        "execution",
     }
 )
 
@@ -404,6 +407,8 @@ def _outcome(item: object) -> VerifierOutcome:
         stdout_bytes=int(item["stdout_bytes"]),  # type: ignore[arg-type]
         stderr_sha256=str(item["stderr_sha256"]),
         stderr_bytes=int(item["stderr_bytes"]),  # type: ignore[arg-type]
+        execution=(SandboxReceiptReference.from_dict(item["execution"])
+                   if item["execution"] is not None else None),
     )
 
 
@@ -445,9 +450,19 @@ def _normalized_results(value: object, seq: int) -> list[dict[str, JsonValue]]:
                 "stderr_bytes": _integer(
                     item, "stderr_bytes", seq, minimum=0, maximum=MAX_OUTPUT_BYTES
                 ),
+                "execution": _execution_reference(item["execution"], seq),
             }
         )
     return normalized
+
+
+def _execution_reference(value, seq):
+    if value is None:
+        return None
+    try:
+        return asdict(SandboxReceiptReference.from_dict(value))
+    except (TypeError, ValueError):
+        raise PromotionProtocolError("promotion-sandbox-reference-invalid", seq) from None
 
 
 def _digest(

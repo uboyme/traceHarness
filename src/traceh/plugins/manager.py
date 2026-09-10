@@ -628,6 +628,7 @@ class PluginGenerationBuilder:
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
         skill_policy: SkillPolicy | None = None,
+        sandbox_processes=None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
@@ -651,6 +652,7 @@ class PluginGenerationBuilder:
         self.discovery = discovery
         self.plugin_configs = plugin_configs
         self.skill_policy = skill_policy
+        self.sandbox_processes = sandbox_processes
 
     def _candidate_application(
         self,
@@ -726,6 +728,7 @@ class PluginGenerationBuilder:
             provider_name=self.provider_name,
             composition_overlays=children,
             skill_policy=self.skill_policy,
+            sandbox_processes=self.sandbox_processes,
             discovery=discovery if discovery is not None else self.discovery,
             plugin_configs=(
                 plugin_configs if plugin_configs is not None else self.plugin_configs
@@ -802,9 +805,14 @@ class _PluginContext:
         staged_verifiers: dict[str, CompletionVerifier],
         base_services: ServiceRegistry,
         config: Mapping[str, object],
+        sandbox_processes=None,
     ) -> None:
         self.plugin_id = plugin_id
         self._plugin_identity = plugin_identity
+        self._sandbox_processes = (
+            sandbox_processes.bind(plugin_identity, activation)
+            if sandbox_processes is not None else None
+        )
         self._skill_policy = skill_policy
         self._staged_skills = staged_skills
         self.skills: list[FrozenSkill] = []
@@ -1058,6 +1066,14 @@ class _PluginContext:
         safe_name = f"traceh-plugin-{self.plugin_id}-task-{self._task_index}"
         del name
         return self.activation.tasks.spawn(coroutine, name=safe_name)
+
+    async def open_process(self, argv, *, timeout_seconds: float, cwd: str = "."):
+        self._ensure_contributions_open()
+        if self._sandbox_processes is None:
+            raise ValueError("sandbox-plugin-grant-required")
+        return await self._sandbox_processes.open(
+            argv, timeout_seconds=timeout_seconds, cwd=cwd,
+        )
 
     def get_config(self, key: str, default: object = _MISSING) -> object:
         if not isinstance(key, str) or not key:
@@ -1344,6 +1360,7 @@ class PluginManager:
         discovery: PluginDiscovery | None = None,
         plugin_configs: Mapping[str, Mapping[str, object]] | None = None,
         skill_policy: SkillPolicy | None = None,
+        sandbox_processes=None,
     ) -> None:
         self.tools = tools
         self.prompt = prompt
@@ -1364,6 +1381,7 @@ class PluginManager:
         if skill_policy is not None and type(skill_policy) is not SkillPolicy:
             raise ValueError("skill-policy-invalid")
         self.skill_policy = skill_policy
+        self.sandbox_processes = sandbox_processes
         self._configs = {
             plugin_id: copy.deepcopy(dict(config))
             for plugin_id, config in (plugin_configs or {}).items()
@@ -2015,6 +2033,7 @@ class PluginManager:
             discovery=self.discovery,
             plugin_configs=self._configs,
             skill_policy=self.skill_policy,
+            sandbox_processes=self.sandbox_processes,
         )
         return await builder.prepare(enabled_plugin_ids)
 
@@ -2115,6 +2134,7 @@ class PluginManager:
                     plugin_id=plugin_id,
                     plugin_identity=PluginIdentity(plugin_id, loaded[plugin_id].manifest.version),
                     skill_policy=self.skill_policy,
+                    sandbox_processes=self.sandbox_processes,
                     staged_skills=staged_skills,
                     activation=activation,
                     staged_tools=staged_tools,

@@ -292,8 +292,8 @@ F1 定向与相邻 31 文件 764 通过、3 项 Windows 权限跳过；F2 的 40
 ### 7.1 产品目标
 
 把“在受控 Workspace 中运行代码和命令”从 Policy 声明升级为可证明的执行边界。Sandbox 是 Host/Core
-capability：Tool、Product Agent、受隔离 Plugin 和本地 MCP server 都可复用同一能力，但任何 Plugin 都不能拥有
-或绕过它。
+capability：Tool、Product Agent 与可信 adapter 管理的外部程序复用同一能力，SDK 不授予后端所有权或扩权
+接口。可信进程内 Python 仍与宿主同权限，不能宣称恶意可信插件无法绕过；通用隔离 Plugin 与 MCP 协议另行实现。
 
 ### 7.2 S0：威胁模型与后端可行性冻结
 
@@ -326,7 +326,7 @@ receipt 写入同一 EventStore。OS 临时对象和进程句柄属于执行 own
 
 ### 7.4 S2：Tool 与 Product 执行接入
 
-- effectful Tool 统一通过 Sandbox executor；
+- 启动外部命令的 PROCESS Tool 统一通过 Sandbox executor；可信 Core 文件工具仍走原工作区路径与权限边界；
 - `shell`、测试、构建和用户代码不再有绕过隔离的默认路径；
 - 现有 Tool Policy、Budget、Session request snapshot 与 Sandbox request identity 互相绑定；
 - cancel/timeout 返回前验证进程树收敛，重复取消幂等；

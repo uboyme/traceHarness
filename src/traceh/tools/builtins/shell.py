@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 import shlex
 from dataclasses import dataclass, field
@@ -10,8 +9,6 @@ from urllib.request import url2pathname
 
 from traceh.api.json_types import JsonValue
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
-from traceh.process_control import converge_process
-from traceh.tools.process_control import capture_output
 
 _SENSITIVE_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "AUTH")
 
@@ -98,7 +95,10 @@ def sanitized_environment() -> dict[str, str]:
 @dataclass(slots=True)
 class ShellTool:
     name: str = "shell"
-    description: str = "Run a non-shell command in the workspace and capture stdout/stderr."
+    description: str = (
+        "Run an argv command in the configured isolated Linux workspace; capture stdout/stderr "
+        "and apply authorized file changes. No host shell fallback."
+    )
     effect_kind: EffectKind = EffectKind.PROCESS
     input_schema: dict[str, JsonValue] = field(init=False, repr=False)
     default_timeout: float = 30.0
@@ -121,45 +121,32 @@ class ShellTool:
             raise ValueError("empty command")
         timeout = float(arguments.get("timeout", self.default_timeout))
         timeout = max(0.1, min(timeout, 300.0))
-        # The captured files are the one owner of this command's output, so
-        # whatever it flushed survives a timeout or a cancellation.
-        with capture_output() as capture:
-            process = await asyncio.create_subprocess_exec(
-                *argv,
-                cwd=context.workspace,
-                env=sanitized_environment(),
-                stdout=capture.stdout,
-                stderr=capture.stderr,
-            )
-            timed_out = False
-            try:
-                async with asyncio.timeout(timeout):
-                    await process.wait()
-            except TimeoutError:
-                timed_out = True
-                # Converge first, then read: a cancellation arriving during the
-                # shutdown is absorbed and only re-raised once the child is gone.
-                if await converge_process(process):
-                    raise asyncio.CancelledError from None
-            except asyncio.CancelledError:
-                await converge_process(process)
-                raise
-            stdout_bytes, stderr_bytes = capture.read()
-
-        stdout = stdout_bytes.decode("utf-8", errors="replace")
-        stderr = stderr_bytes.decode("utf-8", errors="replace")
+        if context.sandbox is None:
+            raise RuntimeError("sandbox-not-configured: configure isolated execution")
+        execution = await context.sandbox.run(tuple(argv), timeout_seconds=timeout)
+        stdout = execution.stdout.decode("utf-8", "replace")
+        stderr = execution.stderr.decode("utf-8", "replace")
+        timed_out = execution.status == "timed-out"
         result = {
             "command": command,
             "argv": argv,
-            "exit_code": process.returncode,
+            "exit_code": execution.exit_code,
             "timed_out": timed_out,
             "stdout": stdout,
             "stderr": stderr,
+            "sandbox": execution.receipt,
+            "publication": execution.publication,
         }
         content = (
-            f"exit_code={process.returncode} timed_out={str(timed_out).lower()}\n"
+            f"exit_code={execution.exit_code} timed_out={str(timed_out).lower()} "
+            f"sandbox_status={execution.status}\n"
             f"--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}"
         )
         if timed_out:
             raise TimeoutError(content)
-        return ToolOutput(content, result, evidence=(f"process-exit:{process.returncode}",))
+        if execution.status != "finished":
+            raise RuntimeError(
+                f"{content}\nsandbox_receipt={execution.receipt['digest']} "
+                f"publication={execution.publication}"
+            )
+        return ToolOutput(content, result, evidence=(f"sandbox:{execution.receipt['digest']}",))

@@ -1,6 +1,6 @@
 # v0.10 S0：沙箱后端与威胁边界启动计划
 
-状态：v0.9.0 收口后下一阶段；S0 尚未完成真实隔离验收，不宣称已有沙箱。
+状态：S0 当前 Windows/Docker Desktop/Linux 后端真实实验已通过；S1/S2 已接通 shell、完成验证、Product 与文件写回。CLI/TUI 沙箱配置和只读观察已有定向检查，评估装配相邻回归、S3-A/S4 最终验收仍在进行；未配置的进程执行失败关闭，不宣称整个目标已完成。
 依据：[总计划第 7 节](TRACEHARNESS_V1.0_MASTER_PLAN.md#7-v010sandbox-与隔离执行)。
 
 ## 目标与顺序
@@ -34,6 +34,8 @@ MCP、自由 Workflow 和新检索策略不属于本阶段。
 - S0 不修改 AgentLoop 职责，不开放不可信进程内 Plugin，不自动批准或迁移数据。
 - 先跑相关真实隔离实验，不默认触发全量测试或 L2。
 
-## 当前只读探测
+## 当前实际证据
 
-2026-09-10：本机存在 Docker 和 WSL 命令，但 `docker version` 的 Server 探测退出码为 1，当前后端不可用。未启动服务、安装镜像或调整虚拟化配置；这不是隔离测试通过。S0 下一项是使选定后端可用，然后运行上述真实允许/拒绝/取消实验。
+2026-09-10：已有 Docker Desktop 的临时 IPC endpoint 修复后启动成功，原有镜像和数据保留。Linux Engine 29.2.1 / API 1.53、cgroup v2 可用；13 项真实实验通过，含内存 OOM、CPU 实际节流、进程树、宿主控制进程退出、文件和输出限制。见 [S0 验证](../validation-sandbox-s0.md)、[ADR-0065](../adr/0065-host-owned-sandbox-execution.md)和[执行记录](../deal/012-sandbox-execution.md)。
+
+首版只实现 Linux 容器和禁网，不支持网络 allowlist 或自动拉取镜像。S1/S2 已复用原 owner/账本接通调用：真实 Product START 已到 awaiting_approval，shell 编辑和固定验证均有容器回执；原 Agent/Budget 身份已核对。Promotion 协议 2 绑定回执并拒绝旧 1，原始固定验证输出不持久化。中文配置与只读观察复用同一解析器/Reader，最新沙箱相关 59 项通过。评估装配的夹具修正后独立复跑通过；S3-A 有界 stdio、精确插件版本授权和原 Activation/Lease/Drain 已接通，相关 140 项定向检查通过。文件/TUI 插件授权与 S4 生产验收已完成，最终相关 25 文件 463 项通过；见 [S0–S4 验收](../validation-sandbox-s0-s4.md)。未运行全量或 L2。

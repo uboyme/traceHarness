@@ -30,8 +30,9 @@ from traceh.tui.settings import ConfigurationApp, SettingsScreen
 async def click(app, pilot, selector):
     button = app.screen.query_one(selector, Button)
     button.active_effect_duration = 0
+    await pilot.wait_for_scheduled_animations()
     button.scroll_visible(animate=False)
-    await pilot.pause()
+    await pilot.wait_for_scheduled_animations()
     assert await pilot.click(selector)
     await pilot.pause()
 
@@ -105,6 +106,68 @@ async def test_context_form_enables_readers_edits_lists_sources_and_saves(tmp_pa
         app.screen.query_one("#context-enabled", Switch).value = False
         await click(app, pilot, "#settings-start")
     assert app.return_value.context_config is None
+    assert path.read_bytes() == before
+    assert not args.data_dir.exists()
+
+
+async def test_sandbox_form_requires_identity_and_scopes_then_saves_or_disables(
+    tmp_path, monkeypatch,
+):
+    from traceh.sandbox.config import load_sandbox_file
+
+    async def resolve(context, reference):
+        assert context == "explicit-connection"
+        assert reference == "sha256:" + "b" * 64
+        return reference
+
+    monkeypatch.setattr("traceh.tui.docker_choices.resolve_image", resolve)
+    args = launch_args(tmp_path)
+    app = ConfigurationApp(args, form_values(args), tmp_path / "profile.json")
+    path = tmp_path / ".traceh-sandbox.json"
+    async with app.run_test(size=(125, 45)) as pilot:
+        await open_form(app, pilot, "sandbox")
+        await click(app, pilot, "#config-save")
+        assert isinstance(app.screen, ConfigForm)
+        assert not path.exists()
+        await edit(app, pilot, ("policy", "docker_context"), "explicit-connection")
+        await edit(app, pilot, ("policy", "image"), "sha256:" + "b" * 64)
+        for name in ("read_paths", "write_paths"):
+            await select(app, pilot, ("policy", name))
+            await click(app, pilot, "#config-add")
+            await edit(app, pilot, ("policy", name, 0), "src")
+        await edit(app, pilot, ("policy", "limits", "wall_seconds"), 12.5)
+        await select(app, pilot, ("plugin_grants",))
+        await click(app, pilot, "#config-add")
+        await click(app, pilot, "#config-save")
+        assert isinstance(app.screen, ConfigForm)
+        assert not path.exists()
+        for name, value in (("plugin_id", "external.fixture"), ("version", "3.1.0"),
+                            ("workspace", str(tmp_path / "server-workspace")),
+                            ("max_processes", 2)):
+            await edit(app, pilot, ("plugin_grants", 0, name), value)
+        await edit(app, pilot, ("plugin_grants", 0, "stdio", "input_bytes"), 131072)
+        await click(app, pilot, "#config-save")
+        assert isinstance(app.screen, SettingsScreen)
+        assert app.screen.query_one("#sandbox-enabled", Switch).value
+        policy = load_sandbox_file(path).policy
+        assert policy.read_paths == policy.write_paths == ("src",)
+        assert policy.limits.wall_seconds == 12.5
+        grant = load_sandbox_file(path).plugin_grants[0]
+        assert (grant.plugin_id, grant.version, grant.max_processes) == (
+            "external.fixture", "3.1.0", 2,
+        )
+        assert grant.workspace == tmp_path / "server-workspace"
+        assert grant.stdio.input_bytes == 131072
+        await click(app, pilot, "#settings-save")
+        assert load_profile(tmp_path / "profile.json")["sandbox_config"] == str(path)
+        before = path.read_bytes()
+        await open_form(app, pilot, "sandbox")
+        await edit(app, pilot, ("policy", "limits", "wall_seconds"), 20)
+        await pilot.press("escape")
+        assert path.read_bytes() == before
+        app.screen.query_one("#sandbox-enabled", Switch).value = False
+        await click(app, pilot, "#settings-start")
+    assert app.return_value.sandbox_config is None
     assert path.read_bytes() == before
     assert not args.data_dir.exists()
 

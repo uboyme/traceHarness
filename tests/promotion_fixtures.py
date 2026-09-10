@@ -5,9 +5,10 @@ from __future__ import annotations
 import hashlib
 import os
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from sandbox_fixtures import real_sandbox_service
 
 from traceh.api.artifacts import PatchArtifact, PatchCaptureLimits
 from traceh.api.events import PendingEvent
@@ -27,6 +28,7 @@ from traceh.artifacts.events import (
 from traceh.artifacts.manifest import patch_artifact_id, patch_capture_key
 from traceh.artifacts.reader import PatchArtifactReader
 from traceh.promotion import (
+    HostVerificationRunner,
     LocalBareGitPromotionTargets,
     LocalGitPromotionEngine,
     PatchPromotionService,
@@ -274,7 +276,7 @@ async def record_artifact(
 def environment_policy(policy_id: str = "verifier-env-1") -> VerifierEnvironmentPolicy:
     return VerifierEnvironmentPolicy(
         policy_id=policy_id,
-        passthrough=PASSTHROUGH_ENVIRONMENT,
+        passthrough=(),
         overrides=(("PYTHONIOENCODING", "utf-8"),),
     )
 
@@ -292,7 +294,7 @@ def verification_plan(
         commands=commands if commands else (passing_command(),),
         environment=environment_policy() if environment is None else environment,
         max_output_bytes=max_output_bytes,
-        protocol_version=1,
+        protocol_version=2,
     )
 
 
@@ -302,7 +304,7 @@ def passing_command(
     return VerifierCommand(
         command_id=command_id,
         argv=(
-            sys.executable,
+            "python",
             "-c",
             "import pathlib, sys;"
             "sys.exit(0 if pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
@@ -314,7 +316,7 @@ def passing_command(
 def failing_command(command_id: str = "always-fails") -> VerifierCommand:
     return VerifierCommand(
         command_id=command_id,
-        argv=(sys.executable, "-c", "raise SystemExit(3)"),
+        argv=("python", "-c", "raise SystemExit(3)"),
         timeout_ms=60_000,
     )
 
@@ -322,7 +324,7 @@ def failing_command(command_id: str = "always-fails") -> VerifierCommand:
 def slow_command(command_id: str = "always-hangs") -> VerifierCommand:
     return VerifierCommand(
         command_id=command_id,
-        argv=(sys.executable, "-c", "import time; time.sleep(60)"),
+        argv=("python", "-c", "import time; time.sleep(60)"),
         timeout_ms=400,
     )
 
@@ -348,6 +350,9 @@ def promotion_service(
     engine: LocalGitPromotionEngine | None = None,
     runner=None,
 ) -> PatchPromotionService:
+    sandbox = real_sandbox_service(store, cas)
+    if runner is not None and type(getattr(runner, "inner", None)) is HostVerificationRunner:
+        runner.inner = HostVerificationRunner(sandbox)
     return PatchPromotionService(
         store,
         PatchArtifactReader(store, cas),
@@ -355,6 +360,7 @@ def promotion_service(
         plan=plan,
         engine=engine,
         runner=runner,
+        sandbox_service=sandbox,
     )
 
 

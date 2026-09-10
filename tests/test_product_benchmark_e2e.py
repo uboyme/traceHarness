@@ -10,13 +10,13 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
-import sys
 from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from sandbox_fixtures import real_sandbox_policy
 
 import traceh.evaluation.attempt as attempt_module
 from traceh.api.events import PendingEvent
@@ -25,7 +25,6 @@ from traceh.api.product import (
     ProductTaskStatus,
     ResolvedTaskMode,
 )
-from traceh.api.promotion import VerifierOutcome
 from traceh.api.workflow import WorkflowStatus
 from traceh.evaluation.attempt import REQUESTER_PROVIDER_ID
 from traceh.evaluation.errors import BenchmarkEvidenceError, BenchmarkExecutionError
@@ -48,7 +47,7 @@ PRODUCT_PROVIDER_ID = "benchmark-test-provider"
 PRODUCT_MODEL_ID = "benchmark-test-model"
 
 _VERIFIER_ARGV = (
-    sys.executable,
+    "python",
     "-c",
     "import pathlib,sys;sys.exit(0 if "
     "pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
@@ -332,24 +331,11 @@ def build_benchmark(
             ],
             "environment": {
                 "policy_id": "benchmark-env",
-                "passthrough": [
-                    "PATH",
-                    "PATHEXT",
-                    "SYSTEMROOT",
-                    "SYSTEMDRIVE",
-                    "WINDIR",
-                    "COMSPEC",
-                    "TEMP",
-                    "TMP",
-                    "TMPDIR",
-                    "HOME",
-                    "LANG",
-                    "LC_ALL",
-                ],
+                "passthrough": [],
                 "overrides": {"PYTHONIOENCODING": "utf-8"},
             },
             "max_output_bytes": 1_048_576,
-            "protocol_version": 1,
+            "protocol_version": 2,
         },
         "capture_limits": {
             "max_changed_paths": 100,
@@ -404,6 +390,7 @@ def _runner(
         provider=provider or _ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
         retry_policy=retry_policy,
+        sandbox=real_sandbox_policy(),
         monotonic=lambda: next(clock),
     )
 
@@ -1060,7 +1047,7 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
     assert result["argv_digest"] != replacement
     result["argv_digest"] = replacement
     recorded["data"]["results"] = [result]
-    results = (VerifierOutcome(**result),)
+    results = (replace(review.results[0], argv_digest=replacement),)
     evidence_digest = verification_evidence_digest(
         recorded["data"]["verifier_definition_digest"], results
     )

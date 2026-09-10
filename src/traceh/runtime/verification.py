@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
 import shlex
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from traceh.process_control import converge_process
-from traceh.tools.builtins.shell import sanitized_environment
-from traceh.tools.process_control import CapturedOutput, capture_output
+from traceh.api.json_types import JsonValue
+from traceh.api.sandbox import SandboxCommandPort, SandboxOwner
+
+_current_execution: ContextVar[SandboxCommandPort | None] = ContextVar(
+    "traceh_verification_execution", default=None
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,20 +23,13 @@ class VerificationResult:
     exit_code: int | None = None
     stdout: str = ""
     stderr: str = ""
+    sandbox_receipt: dict[str, JsonValue] | None = None
 
 
 #: How much of each stream a summary carries. The summary is what the
 #: continuation policy feeds back to the model, so it is bounded on purpose;
 #: `VerificationResult.stdout`/`stderr` keep the full text either way.
 SUMMARY_TAIL_CHARS = 4000
-
-
-def _decode(capture: CapturedOutput) -> tuple[str, str]:
-    stdout_bytes, stderr_bytes = capture.read()
-    return (
-        stdout_bytes.decode("utf-8", errors="replace"),
-        stderr_bytes.decode("utf-8", errors="replace"),
-    )
 
 
 def _summary(headline: str, stdout: str, stderr: str) -> str:
@@ -52,8 +48,7 @@ def _summary(headline: str, stdout: str, stderr: str) -> str:
 
 
 class CompletionVerifier(Protocol):
-    async def verify(self, workspace: Path) -> VerificationResult:
-        ...
+    async def verify(self, workspace: Path) -> VerificationResult: ...
 
 
 @dataclass(slots=True)
@@ -65,49 +60,60 @@ class CommandVerifier:
         argv = shlex.split(self.command)
         if not argv:
             return VerificationResult(False, "Verifier command is empty.")
-        # The captured files are the one owner of this command's output, so
-        # whatever it flushed survives a timeout or a cancellation.
-        with capture_output() as capture:
-            process = await asyncio.create_subprocess_exec(
-                *argv,
-                cwd=workspace,
-                env=sanitized_environment(),
-                stdout=capture.stdout,
-                stderr=capture.stderr,
+        execution = _current_execution.get()
+        if execution is None:
+            return VerificationResult(
+                False, "sandbox-not-configured: verification requires isolated execution"
             )
-            try:
-                async with asyncio.timeout(self.timeout_seconds):
-                    await process.wait()
-            except asyncio.CancelledError:
-                # The verifier command runs real tests in the workspace. Letting
-                # it survive cancellation would keep changing the workspace
-                # after the caller was told the turn was over.
-                await converge_process(process)
-                raise
-            except TimeoutError:
-                # Converge first, then read: a cancellation arriving during the
-                # shutdown is absorbed and only re-raised once the child is gone.
-                interrupted = await converge_process(process)
-                stdout, stderr = _decode(capture)
-                if interrupted:
-                    raise asyncio.CancelledError from None
-                return VerificationResult(
-                    False,
-                    _summary(
-                        f"Verifier timed out after {self.timeout_seconds:.1f}s.",
-                        stdout,
-                        stderr,
-                    ),
-                    process.returncode,
-                    stdout,
-                    stderr,
-                )
-            stdout, stderr = _decode(capture)
-
-        passed = process.returncode == 0
-        summary = _summary(
-            f"Verifier {'passed' if passed else 'failed'} with exit code {process.returncode}.",
+        result = await execution.run(tuple(argv), timeout_seconds=self.timeout_seconds)
+        stdout = result.stdout.decode("utf-8", "replace")
+        stderr = result.stderr.decode("utf-8", "replace")
+        passed = result.status == "finished" and result.exit_code == 0
+        return VerificationResult(
+            passed,
+            _summary(
+                f"Verifier {result.status.replace('-', ' ')} with exit code {result.exit_code}.",
+                stdout,
+                stderr,
+            ),
+            result.exit_code,
             stdout,
             stderr,
+            result.receipt,
         )
-        return VerificationResult(passed, summary, process.returncode, stdout, stderr)
+
+
+async def invoke_verifier(
+    verifier: CompletionVerifier,
+    workspace: Path,
+    *,
+    sandbox_service,
+    sessions,
+    session_id: str,
+    turn_id: str,
+    step_id: str,
+    data_dir: Path,
+) -> VerificationResult:
+    """Bind a live execution capability around the existing trusted verifier API.
+
+    ContextVar carries a capability, never facts or messages. Inherited task
+    contexts retain only a port that is closed when this owner exits. This keeps
+    plugin verifier callbacks unchanged without a second execution fallback.
+    """
+    if sandbox_service is None:
+        return await verifier.verify(workspace)
+    if sandbox_service.store is not sessions.store:
+        raise ValueError("sandbox-verifier-store-owner-mismatch")
+    owner = SandboxOwner("verification", step_id, session_id, turn_id, step_id)
+    async with sandbox_service.scope(
+        owner,
+        stream_id=sessions.session_stream(session_id),
+        workspace=workspace,
+        data_dir=data_dir,
+        publish_changes=False,
+    ) as scope:
+        token = _current_execution.set(scope)
+        try:
+            return await verifier.verify(workspace)
+        finally:
+            _current_execution.reset(token)

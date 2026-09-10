@@ -21,6 +21,7 @@ from traceh.api.tools import Tool
 from traceh.version import CORE_PLUGIN_ID, DEFAULT_REQUIRES_TRACEH, __version__
 
 if TYPE_CHECKING:
+    from traceh.api.sandbox import SandboxProcessPort
     from traceh.api.skills import SkillContribution
     from traceh.runtime.verification import CompletionVerifier
     from traceh.tools.middleware import ToolMiddleware
@@ -141,6 +142,16 @@ class PluginContext(Protocol):
         *,
         name: str,
     ) -> asyncio.Task[Any]:
+        ...
+
+    async def open_process(
+        self, argv: tuple[str, ...], *, timeout_seconds: float, cwd: str = "."
+    ) -> SandboxProcessPort:
+        """Setup-only stdio connection under an explicit host sandbox grant.
+
+        The Activation owns cleanup. This grants no backend configuration,
+        workspace selection, environment inheritance or native process fallback.
+        """
         ...
 
     def get_config(self, key: str, default: object = _MISSING) -> object:

@@ -153,7 +153,7 @@ async def _reader(
             policy_id="inspection-environment", passthrough=(), overrides=()
         ),
         max_output_bytes=1024,
-        protocol_version=1,
+        protocol_version=2,
     )
     return (
         ProductInspectionEvidenceReader(

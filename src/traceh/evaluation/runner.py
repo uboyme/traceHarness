@@ -23,6 +23,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from traceh.api.llm import LlmProvider
+from traceh.api.sandbox import SandboxPolicy
 from traceh.evaluation.attempt import AttemptRequest, run_attempt
 from traceh.evaluation.errors import BenchmarkExecutionError, EvaluationError
 from traceh.evaluation.manifest import (
@@ -54,7 +55,9 @@ class ProductBenchmarkRunner:
     constructs a model client of its own.
     """
 
-    __slots__ = ("_manifest", "_monotonic", "_output_dir", "_providers", "_retry_policy")
+    __slots__ = (
+        "_manifest", "_monotonic", "_output_dir", "_providers", "_retry_policy", "_sandbox",
+    )
 
     def __init__(
         self,
@@ -64,6 +67,7 @@ class ProductBenchmarkRunner:
         provider: LlmProvider,
         model_id: str,
         retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+        sandbox: SandboxPolicy | None = None,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         provider_id = getattr(provider, "name", None)
@@ -78,6 +82,7 @@ class ProductBenchmarkRunner:
         self._providers: Mapping[str, LlmProvider] = {provider_id: provider}
         self._monotonic = monotonic
         self._retry_policy = retry_policy
+        self._sandbox = sandbox
 
     @property
     def manifest(self) -> BenchmarkManifest:
@@ -141,6 +146,7 @@ class ProductBenchmarkRunner:
                 request,
                 manifest=self._manifest,
                 providers=self._providers,
+                sandbox=self._sandbox,
                 retry_policy=self._retry_policy,
                 monotonic=self._monotonic,
             )

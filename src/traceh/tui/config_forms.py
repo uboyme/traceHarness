@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import unicodedata
 from copy import deepcopy
 from pathlib import Path
@@ -16,7 +17,11 @@ from textual.widgets import Button, Input, Label, Select, Static, Tree
 
 from traceh.chat.config import parse_context_host_config
 from traceh.cli.tui_config import LaunchConfigurationError, atomic_json
+from traceh.concurrency import await_worker_convergence
 from traceh.product.config import parse_product_host_config
+from traceh.promotion.models import PROMOTION_PROTOCOL_VERSION
+from traceh.sandbox.config import SANDBOX_CONFIG_FORMAT, parse_sandbox_config
+from traceh.tui import docker_choices
 
 # Labels are presentation metadata, not another schema or runtime policy parser.
 LABELS = dict(
@@ -131,10 +136,30 @@ max_file_bytes=单个文件上限（字节）
 max_total_file_bytes=文件合计上限（字节）
 max_patch_bytes=补丁上限（字节）
 max_report_chars=界面报告上限（字符）
+policy=沙箱主机授权策略
+docker_context=Docker 连接（下拉选择或手动填写名称）
+image=运行环境（下拉选择或手动填写镜像名称／ID）
+network=网络访问（当前只支持关闭）
+read_paths=允许读入沙箱的相对目录／文件（添加 . 表示整个工作区）
+write_paths=允许回写的相对目录／文件（必须在读入范围内）
+excluded_paths=额外排除的相对目录／文件（不会读入或回写）
+memory_bytes=容器内存上限（字节，至少 67108864）
+workspace_bytes=工作区文件合计上限（字节）
+workspace_files=工作区节点数量上限（包括目录）
+output_bytes=每路标准输出／错误上限（字节，超出终止）
+pids=容器进程与线程合计上限（至少 4）
+cpus=CPU 配额（1 表示一个逻辑核）
+wall_seconds=单次命令最长秒数（工具／验证只能进一步缩小）
+plugin_grants=允许启动外部进程的插件（空列表表示不授权）
+stdio=标准输入输出连接额度
+input_bytes=这次进程的输入总上限（字节）
+frame_bytes=每次收发上限（字节，不大于输入总上限）
+workspace=插件服务器读取的工作区绝对路径
 """.strip().splitlines()
 )
 
 CHOICES = {
+    "network": [("关闭网络访问", "none")],
     "default_mode": [
         ("自动选择", "auto"),
         ("单个编码角色", "single"),
@@ -243,7 +268,7 @@ def product_preset(workspace: str, data_dir: str, provider: str, model: str):
             commands=[dict(command_id=identity(), argv=[], timeout_ms=60000)],
             environment=dict(policy_id=identity(), passthrough=[], overrides={}),
             max_output_bytes=1048576,
-            protocol_version=1,
+            protocol_version=PROMOTION_PROTOCOL_VERSION,
         ),
         capture_limits=dict(
             max_changed_paths=100,
@@ -256,9 +281,24 @@ def product_preset(workspace: str, data_dir: str, provider: str, model: str):
     )
 
 
+def sandbox_preset():
+    """Visible editable draft; backend identity and path grants require user input."""
+    return dict(format=SANDBOX_CONFIG_FORMAT, plugin_grants=[], policy=dict(
+        docker_context="", image="", network="none",
+        read_paths=[], write_paths=[], excluded_paths=[],
+        limits=dict(memory_bytes=268435456, workspace_bytes=33554432,
+                    workspace_files=2048, output_bytes=1048576, pids=64,
+                    cpus=1.0, wall_seconds=60.0),
+    ))
+
+
 def validate_document(kind, raw, path):
     if kind == "context":
         return parse_context_host_config(raw, path=path)
+    if kind == "sandbox":
+        return parse_sandbox_config(raw)
+    if kind != "product":
+        raise ValueError("unknown-configuration-kind")
     return parse_product_host_config(raw)
 
 
@@ -284,10 +324,13 @@ class ConfigForm(Screen[Path | None]):
         self.expected_bytes = expected_bytes
         self.workspace, self.data_dir = workspace, data_dir
         self.selected_path = ()
+        self._docker_options: dict[str, list[tuple[str, str]]] = {}
+        self._docker_task: asyncio.Task | None = None
 
     def compose(self):
         yield Static(
-            ("知识与记忆配置" if self.kind == "context" else "任务执行配置")
+            {"context": "知识与记忆配置", "product": "任务执行配置",
+             "sandbox": "执行沙箱配置"}[self.kind]
             + " · 左边选项目，右边查看说明并修改。预设值都可检查；不会执行命令或审批。",
             id="config-form-title",
             markup=False,
@@ -296,6 +339,8 @@ class ConfigForm(Screen[Path | None]):
             yield Tree("配置项目", id="config-tree")
             with VerticalScroll(id="config-fields"):
                 yield Static("选择左侧项目。", id="config-help", markup=False)
+                yield Select([], prompt="刷新后选择；也可在下方手动填写", id="docker-options")
+                yield Button("刷新可选项", id="docker-refresh")
                 yield Input(id="config-value")
                 yield Select([], id="config-choice")
                 yield Button("更新这个值", id="config-update")
@@ -361,6 +406,8 @@ class ConfigForm(Screen[Path | None]):
         key = path[-1] if path else ""
         scalar = not isinstance(value, (dict, list))
         title = " → ".join(LABELS.get(k, str(k)) for k in path)
+        if self.kind == "sandbox" and key == "max_processes":
+            title = "这次插件激活最多尝试启动几次（失败也计数，不能留空）"
         hint = "填写该字段的值，然后点更新。路径按保存文件所在目录解析；任务仓库须填绝对路径。"
         if not path:
             hint = "先展开左侧分组，选择要修改的项目。知识功能在「知识检索与预算」中开启。"
@@ -372,6 +419,27 @@ class ConfigForm(Screen[Path | None]):
             hint = "填写数字，单位见标题。角色预算可留空表示不限制；其他限制必须符合原配置规则。"
         if key in {"repository", "revision", "ref", "approver_id"}:
             hint = "此项必须明确填写。不会自动创建仓库、选择目标分支或代替你审批。"
+        docker_field = self.kind == "sandbox" and path in {
+            ("policy", "docker_context"), ("policy", "image"),
+        }
+        picker = self.query_one("#docker-options", Select)
+        picker.display = docker_field
+        self.query_one("#docker-refresh").display = docker_field
+        if docker_field:
+            hint = (
+                "点击刷新后下拉选择，或直接在输入框填写，再点更新。切换连接会清空旧镜像。"
+                if key == "docker_context" else
+                "先更新 Docker 连接，再刷新镜像列表。可手填名称:标签或完整 ID，"
+                "点更新后解析为固定身份；保存时再核对。不会下载或运行镜像，"
+                "镜像中的 Python 和项目依赖仍需在实际执行时验证。"
+            )
+            with self.prevent(Select.Changed):
+                available = self._docker_options.get(key, [])
+                picker.set_options([(Text(label), identity) for label, identity in available])
+                if value in {identity for _, identity in available}:
+                    picker.value = value
+                else:
+                    picker.clear()
         self.query_one("#config-help", Static).update(title + "\n" + hint)
         self.query_one("#config-value", Input).value = "" if value is None else str(value)
         options = CHOICES.get(key, [("开启", True), ("关闭", False)] if type(value) is bool else [])
@@ -402,6 +470,69 @@ class ConfigForm(Screen[Path | None]):
             or (len(path) > 1 and path[-2] in {"sources", "overrides"})
         )
         self.query_one("#config-remove", Button).disabled = not removable
+
+    @on(Select.Changed, "#docker-options")
+    def docker_selected(self, event):
+        event.stop()
+        if not event.select.is_blank():
+            self.query_one("#config-value", Input).value = str(event.value)
+
+    def _start_docker(self, action):
+        if self._docker_task is not None and not self._docker_task.done():
+            return
+        path = self.selected_path
+        text = self.query_one("#config-value", Input).value.strip()
+        self.query_one("#config-form-body").disabled = True
+        self.query_one("#config-save", Button).disabled = True
+        self.query_one("#config-form-status", Static).update(
+            "正在查询所选 Docker 环境；不会下载或执行镜像。Esc 可取消。"
+        )
+        self._docker_task = asyncio.create_task(self._docker_action(action, path, text))
+
+    async def _docker_action(self, action, path, text):
+        try:
+            policy = self.raw["policy"]
+            if action == "docker-refresh":
+                key = path[-1]
+                choices = (
+                    await docker_choices.contexts() if key == "docker_context"
+                    else await docker_choices.images(policy["docker_context"])
+                )
+                self._docker_options[key] = choices
+                message = (
+                    "列表已刷新；请选择一项并点更新，也可手动填写。"
+                    if choices else "未找到可选项；可手动填写已有环境，或在准备好后刷新。"
+                )
+            elif action == "config-update":
+                identity = await docker_choices.resolve_image(policy["docker_context"], text)
+                policy["image"] = identity
+                message = "镜像已解析并固定；点击校验并保存使用才会写文件。"
+            else:
+                # Validate the full draft first. UI convenience never weakens
+                # the existing pinned-image protocol or stale-file protection.
+                validate_document(self.kind, self.raw, self.path)
+                await docker_choices.resolve_image(policy["docker_context"], policy["image"])
+                self._save()
+                return
+            self.rebuild()
+            self.query_one("#config-form-status", Static).update(message)
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:
+            if action == "docker-refresh":
+                self._docker_options.pop(path[-1], None)
+                self.rebuild()
+            self._show_error(error)
+        finally:
+            self.query_one("#config-form-body").disabled = False
+            self.query_one("#config-save", Button).disabled = False
+
+    def _save(self):
+        validate_document(self.kind, self.raw, self.path)
+        if self.path.exists() and self.path.read_bytes() != self.expected_bytes:
+            raise LaunchConfigurationError("文件已有内容或加载后被修改，请重新加载后再保存。")
+        atomic_json(self.path, self.raw)
+        self.dismiss(self.path)
 
     def toggle(self):
         path = self.selected_path
@@ -473,11 +604,17 @@ class ConfigForm(Screen[Path | None]):
             context.update(history_bytes=0, item_bytes=0, max_blocks=0, max_query_bytes=0)
 
     @on(Button.Pressed)
-    def pressed(self, event):
+    async def pressed(self, event):
         event.stop()
         action = event.button.id
         if action == "config-cancel":
-            self.dismiss(None)
+            await self.action_back()
+            return
+        if self.kind == "sandbox" and (
+            action in {"docker-refresh", "config-save"}
+            or (action == "config-update" and self.selected_path == ("policy", "image"))
+        ):
+            self._start_docker(action)
             return
         try:
             path = self.selected_path
@@ -498,6 +635,11 @@ class ConfigForm(Screen[Path | None]):
                     updated = float(text)
                 else:
                     updated = text
+                if path == ("policy", "docker_context") and self.kind == "sandbox":
+                    updated = str(updated).strip()
+                    if updated != value:
+                        self.raw["policy"]["image"] = ""
+                        self._docker_options.pop("image", None)
                 self.assign(path, updated)
             elif action == "config-add":
                 key = path[-1]
@@ -508,6 +650,9 @@ class ConfigForm(Screen[Path | None]):
                     value[name] = self.workspace if key == "sources" else ""
                 else:
                     template = {
+                        "plugin_grants": dict(plugin_id="", version="", workspace="",
+                                              stdio=dict(input_bytes=1048576, frame_bytes=65536),
+                                              max_processes=1),
                         "resource_roots": dict(plugin=dict(plugin_id="", version=""), path=""),
                         "commands": dict(command_id=str(uuid4()), argv=[], timeout_ms=60000),
                     }
@@ -516,30 +661,34 @@ class ConfigForm(Screen[Path | None]):
                 del self.value(path[:-1])[path[-1]]
                 self.selected_path = path[:-1]
             elif action == "config-save":
-                validate_document(self.kind, self.raw, self.path)
-                if self.path.exists() and self.path.read_bytes() != self.expected_bytes:
-                    raise LaunchConfigurationError(
-                        "文件已有内容或加载后被修改，请重新加载后再保存。"
-                    )
-                atomic_json(self.path, self.raw)
-                self.dismiss(self.path)
+                self._save()
                 return
             self.rebuild()
             self.query_one("#config-form-status", Static).update(
                 "草稿已更新；点击校验并保存使用才会写文件。"
             )
         except Exception as error:
-            field = getattr(error, "field", "")
-            # Only trusted labels and fixed messages enter the UI; never exception text.
-            label = (
-                " → ".join(LABELS.get(k, "配置项") for k in str(field).split(".")) if field else ""
-            )
-            message = (
-                str(error)
-                if isinstance(error, LaunchConfigurationError)
-                else (f"{label} 配置未通过校验。检查必填项、数字、仓库路径及命令；现有文件未修改。")
-            )
-            self.query_one("#config-form-status", Static).update(message)
+            self._show_error(error)
 
-    def action_back(self):
+    def _show_error(self, error):
+        field = getattr(error, "field", "")
+        # Only trusted labels and fixed messages enter the UI; never raw Docker stderr.
+        label = " → ".join(LABELS.get(k, "配置项") for k in str(field).split(".")) if field else ""
+        message = (
+            str(error)
+            if isinstance(error, (LaunchConfigurationError, docker_choices.DockerChoiceError))
+            else f"{label} 配置未通过校验。检查必填项、数字、仓库路径及命令；现有文件未修改。"
+        )
+        self.query_one("#config-form-status", Static).update(message)
+
+    async def _stop_docker(self):
+        if self._docker_task is not None and not self._docker_task.done():
+            self._docker_task.cancel()
+            await await_worker_convergence(self._docker_task)
+
+    async def on_unmount(self):
+        await self._stop_docker()
+
+    async def action_back(self):
+        await self._stop_docker()
         self.dismiss(None)

@@ -108,6 +108,8 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--model", default=None)
     parser.add_argument("--script", type=Path)
+    parser.add_argument("--sandbox-config", type=Path,
+                        help="Explicit sandbox policy; process tools fail closed when absent")
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-steps", type=int, default=None)
@@ -563,11 +565,28 @@ async def _runtime(
     additional_tools: tuple[Tool, ...] = (),
     policies: tuple[ToolPolicy, ...] | None = None,
     include_default_tools: bool = True,
+    sandbox_cas_root: Path | None = None,
 ):
     provider, model = (
         _provider_and_model(args) if provider_and_model is None else provider_and_model
     )
     context_settings = getattr(args, "context_settings", None)
+    sandbox = None
+    if getattr(args, "sandbox_config", None) is not None:
+        from traceh.api.sandbox import SandboxConfiguration
+        from traceh.sandbox.config import load_sandbox_file
+
+        try:
+            settings = await asyncio.to_thread(load_sandbox_file, args.sandbox_config)
+            cas_root = sandbox_cas_root
+            if cas_root is None:
+                cas_root = await asyncio.to_thread(Path(args.data_dir).absolute)
+                cas_root /= "artifacts"
+            sandbox = SandboxConfiguration(
+                settings.policy, cas_root, settings.plugin_grants,
+            )
+        except ValueError:
+            raise CliConfigurationError("sandbox-host-config-invalid") from None
     config = RuntimeConfig(
         data_dir=args.data_dir,
         provider=args.provider,
@@ -583,6 +602,7 @@ async def _runtime(
         context_input=context_settings.context if context_settings else None,
         skill_policy=context_settings.skill_policy if context_settings else None,
         memory=context_settings.memory if context_settings else None,
+        sandbox=sandbox,
     )
     return await build_default_runtime_async(
         config,
@@ -777,6 +797,7 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
             additional_tools=additional_tools,
             policies=runtime_policies,
             include_default_tools=include_default_tools,
+            sandbox_cas_root=product_config.cas_root if product_config is not None else None,
         )
         if product_config is not None:
             provider, _ = provider_and_model
@@ -834,6 +855,7 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
                 project_scope=runtime.project_scope,
                 context_input=runtime.config.context_input,
                 memory_config=runtime.config.memory,
+                sandbox=runtime.config.sandbox,
             )
         heartbeat_seconds = validate_heartbeat_seconds(
             args.heartbeat_seconds, timeline=args.timeline
@@ -854,6 +876,7 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
             verifier_from_env_file=bool(getattr(args, "verifier_from_env_file", False)),
             product_config=args.product_config,
             context_config=getattr(args, "context_config", None),
+            sandbox_config=getattr(args, "sandbox_config", None),
         )
         if tui_runner is not None:
             handed_to_chat = True
@@ -1027,6 +1050,17 @@ async def _eval(args: argparse.Namespace) -> int:
         raise CliConfigurationError("eval requires a directly configured built-in provider")
     if args.output.exists():
         raise CliConfigurationError("eval --output must be a directory that does not exist yet")
+    from traceh.sandbox.config import load_sandbox_file
+
+    try:
+        sandbox = (
+            await asyncio.to_thread(load_sandbox_file, args.sandbox_config)
+            if getattr(args, "sandbox_config", None) is not None else None
+        )
+    except ValueError:
+        raise CliConfigurationError("sandbox-host-config-invalid") from None
+    if sandbox is not None and sandbox.plugin_grants:
+        raise CliConfigurationError("eval-application-plugin-process-grants-not-supported")
     try:
         runner = ProductBenchmarkRunner(
             args.benchmark,
@@ -1034,6 +1068,7 @@ async def _eval(args: argparse.Namespace) -> int:
             provider=provider,
             model_id=model,
             retry_policy=_model_retry_policy(args),
+            sandbox=sandbox.policy if sandbox is not None else None,
         )
     except EvaluationError as error:
         raise CliConfigurationError(getattr(error, "code", "benchmark-error")) from None
@@ -1435,6 +1470,8 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--provider", default=None)
     evaluate.add_argument("--model", default=None)
     evaluate.add_argument("--script", type=Path)
+    evaluate.add_argument("--sandbox-config", type=Path,
+                          help="Explicit host sandbox policy for benchmark execution")
     evaluate.add_argument("--base-url", default=None)
     evaluate.add_argument("--api-key-env", default=None)
     _add_model_retry_arguments(evaluate)

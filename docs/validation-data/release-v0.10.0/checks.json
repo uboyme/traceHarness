@@ -1,0 +1,77 @@
+{
+  "version": "0.10.0",
+  "checks": [
+    {
+      "suite": "targeted",
+      "tests": "192",
+      "failures": "2",
+      "errors": "0",
+      "skipped": "0",
+      "time": "120.679"
+    },
+    {
+      "suite": "version-installed",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.459"
+    },
+    {
+      "suite": "ui-isolated",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "4.762"
+    },
+    {
+      "suite": "final",
+      "tests": "192",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "121.575"
+    }
+  ],
+  "first_run_notes": [
+    "Source-first path selected stale editable 0.9.0 distribution metadata; final run explicitly imports installed 0.10.0 wheel and metadata.",
+    "One initial Textual selection assertion failed before Docker lookup; isolated unchanged rerun and entire bounded final suite passed. Intermittent UI test synchronization remains unproven, not claimed fixed."
+  ],
+  "package": {
+    "wheel": "traceharness_py-0.10.0-py3-none-any.whl",
+    "package_files_byte_identical": 285,
+    "isolated_target_install": true,
+    "dependencies": "existing interpreter; no index"
+  },
+  "smoke": [
+    {
+      "check": "imports",
+      "exit_code": 0
+    },
+    {
+      "check": "help",
+      "exit_code": 0
+    },
+    {
+      "check": "doctor",
+      "exit_code": 0
+    }
+  ],
+  "static": {
+    "documents": 18,
+    "relative_links": 733,
+    "mermaid_blocks": 61,
+    "chapters": "0-20 correspond",
+    "preserved_core_hashes": 11,
+    "ruff_files": 83,
+    "compileall": true,
+    "diff_check": true,
+    "secret_shape_scan": true
+  },
+  "collect_only": 3744,
+  "full_suite_run": false,
+  "L2_run": false,
+  "real_provider_called": false,
+  "package_sha256": "0ed1ef2d4dbb2f0f6a72dc9df9e467459487dd6bdb89951e47247aa3d7e8037a"
+}

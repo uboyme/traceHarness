@@ -102,27 +102,14 @@
     ],
     "environment": {
       "policy_id": "benchmark-minimal-v1",
-      "passthrough": [
-        "PATH",
-        "PATHEXT",
-        "SYSTEMROOT",
-        "SYSTEMDRIVE",
-        "WINDIR",
-        "COMSPEC",
-        "TEMP",
-        "TMP",
-        "TMPDIR",
-        "HOME",
-        "LANG",
-        "LC_ALL"
-      ],
+      "passthrough": [],
       "overrides": {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONDONTWRITEBYTECODE": "1"
       }
     },
     "max_output_bytes": 1048576,
-    "protocol_version": 1
+    "protocol_version": 2
   },
   "capture_limits": {
     "max_changed_paths": 100,

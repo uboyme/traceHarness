@@ -519,7 +519,14 @@ class AgentLoop:
                         else self.verifier
                     )
                     if not response.tool_calls and effective_verifier is not None:
-                        verification = await effective_verifier.verify(workspace)
+                        from traceh.runtime.verification import invoke_verifier
+
+                        verification = await invoke_verifier(
+                            effective_verifier, workspace,
+                            sandbox_service=active_composition.tools.sandbox_service,
+                            sessions=self.sessions, session_id=session_id, turn_id=turn_id,
+                            step_id=current_step_id, data_dir=self.data_dir,
+                        )
                         verification_passed = verification.passed
                         await self.sessions.append_session(
                             session_id,
@@ -532,6 +539,7 @@ class AgentLoop:
                                 "exit_code": verification.exit_code,
                                 "stdout": verification.stdout[-8000:],
                                 "stderr": verification.stderr[-8000:],
+                                "sandbox_receipt": verification.sandbox_receipt,
                             },
                             correlation_id=correlation_id,
                             composition_revision=composition.revision,

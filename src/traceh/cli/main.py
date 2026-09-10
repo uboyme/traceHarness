@@ -263,6 +263,11 @@ def _compaction_policy(args: argparse.Namespace) -> CompactionPolicy | None:
 
 def _from_environment(args: argparse.Namespace, attribute: str, variable: str, default=None):
     current = getattr(args, attribute, None)
+    if getattr(args, "_evaluation_options", None) is not None and (
+        attribute in {"provider", "model", "base_url", "api_key_env"}
+        or attribute.startswith("model_retry_")
+    ):
+        return current
     if current is not None:
         return current
     return getattr(args, "_configuration_environment", os.environ).get(variable, default)
@@ -299,6 +304,18 @@ def _nonnegative_float(value: object, *, variable: str) -> float:
 
 
 def _configure_from_environment(args: argparse.Namespace, *, environment=None) -> EnvLoadReport:
+    if any(getattr(args, name, None) is not None for name in ("review", "assess", "compare")):
+        _validate_eval_review(args)
+        return EnvLoadReport(None, False, ())
+    if getattr(args, "command", None) == "eval" and args.env_file is None:
+        args.env_file = Path(".env")
+    if getattr(args, "run_plan", None) is not None:
+        from traceh.evaluation.errors import EvaluationError
+        from traceh.evaluation.plan import configure_cli_plan
+        try:
+            configure_cli_plan(args)
+        except EvaluationError as error:
+            raise CliConfigurationError(error.code) from None
     target = os.environ if environment is None else environment
     args._configuration_environment = dict(target)
     try:
@@ -707,6 +724,8 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
         except (ValueError, OSError, TypeError):
             raise CliConfigurationError("context host configuration invalid") from None
     tui_runner = None
+    if getattr(args, "background_config", None) is not None and not args.tui:
+        raise CliConfigurationError("background optimization currently requires --tui")
     if args.tui:
         # The optional dependency is checked before Store/Runtime/Product
         # assembly, so a missing TUI never creates durable state and never
@@ -905,6 +924,10 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
                 heartbeat_seconds=heartbeat_seconds,
                 product=product_host,
                 settings_args=settings_args,
+                **({
+                    "background_provider": provider_and_model[0],
+                    "background_api_key": getattr(args, "tui_api_key", None),
+                } if getattr(args, "background_config", None) is not None else {}),
             )
         else:
             line_product = (
@@ -1030,6 +1053,20 @@ async def _compact(args: argparse.Namespace) -> int:
 EVAL_INCOMPLETE_EXIT_CODE = 4
 
 
+def _validate_eval_review(args):
+    from traceh.evaluation.plan import RETRY_FIELDS, _retry_attribute
+    fields = ("benchmark", "run_plan", "provider", "model", "base_url", "api_key_env",
+              "script", "sandbox_config", "env_file", "repetitions", "max_trials",
+              "eval_timeout_seconds") + tuple(_retry_attribute(f) for f in RETRY_FIELDS)
+    if (any(getattr(args, name, None) is not None for name in fields)
+            or (args.review is not None and args.judgment_file is not None)
+            or (args.assess is not None and args.judgment_file is None)
+            or (getattr(args, "compare", None) is not None and args.judgment_file is not None)
+            or (getattr(args, "compare", None) is None
+                and getattr(args, "assessments", None) is not None)):
+        raise CliConfigurationError("eval-review-arguments-conflict")
+
+
 async def _eval(args: argparse.Namespace) -> int:
     """Run the ProductTask benchmark and write its two consistent reports.
 
@@ -1042,12 +1079,43 @@ async def _eval(args: argparse.Namespace) -> int:
     # Imported here for the same reason `chat` does it: no other command should
     # pull in Product, Workspace, Artifact and Promotion just by importing this
     # module.
+    from traceh.api.json_types import fingerprint
     from traceh.evaluation.errors import EvaluationError
-    from traceh.evaluation.runner import ProductBenchmarkRunner
+    from traceh.evaluation.plan import RunOptions
+    from traceh.evaluation.runner import EvaluationRunner
 
+    if getattr(args, "compare", None) is not None:
+        _validate_eval_review(args)
+        from traceh.evaluation.comparison import compare_experiment
+        try:
+            result = compare_experiment(args.compare, args.output, assessments=args.assessments)
+        except EvaluationError as error:
+            raise CliConfigurationError(error.code) from None
+        print(json.dumps({"run_id": result["run_id"], "status": result["status"],
+                          "report_json": str((args.output / "report.json").resolve())},
+                         ensure_ascii=False, indent=2))
+        return 4 if result["status"] == "not_comparable" else 0
+    if getattr(args, "review", None) is not None or getattr(args, "assess", None) is not None:
+        _validate_eval_review(args)
+        from traceh.evaluation.review import assess_run, export_review
+        try:
+            result = (export_review(args.review, args.output) if args.review is not None
+                      else assess_run(args.assess, args.judgment_file, args.output))
+        except EvaluationError as error:
+            raise CliConfigurationError(error.code) from None
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    if (args.benchmark is None or getattr(args, "judgment_file", None) is not None
+            or getattr(args, "assessments", None) is not None):
+        raise CliConfigurationError("eval-benchmark-required")
     provider, model = _provider_and_model(args)
     if provider is None:
         raise CliConfigurationError("eval requires a directly configured built-in provider")
+    expected_implementation = getattr(args, "_evaluation_expected_implementation", None)
+    if (expected_implementation is not None
+            and f"{type(provider).__module__}.{type(provider).__qualname__}"
+            != expected_implementation):
+        raise CliConfigurationError("evaluation-run-plan-conflict")
     if args.output.exists():
         raise CliConfigurationError("eval --output must be a directory that does not exist yet")
     from traceh.sandbox.config import load_sandbox_file
@@ -1062,23 +1130,45 @@ async def _eval(args: argparse.Namespace) -> int:
     if sandbox is not None and sandbox.plugin_grants:
         raise CliConfigurationError("eval-application-plugin-process-grants-not-supported")
     try:
-        runner = ProductBenchmarkRunner(
+        runner = EvaluationRunner(
             args.benchmark,
             args.output,
             provider=provider,
             model_id=model,
             retry_policy=_model_retry_policy(args),
             sandbox=sandbox.policy if sandbox is not None else None,
+            options=getattr(args, "_evaluation_options", None) or RunOptions(
+                repetitions=(1 if getattr(args, "repetitions", None) is None else args.repetitions),
+                max_trials=getattr(args, "max_trials", None),
+                timeout_seconds=getattr(args, "eval_timeout_seconds", None),
+            ),
+            provider_binding={"connection_digest": fingerprint({
+                "base_url": args.base_url,
+                "script": None if args.script is None else args.script.read_text(encoding="utf-8"),
+            }), "network_mode": getattr(
+                args, "_evaluation_network_mode", "provider-managed-unverified")},
         )
     except EvaluationError as error:
         raise CliConfigurationError(getattr(error, "code", "benchmark-error")) from None
-    report = await runner.run()
+    try:
+        report = await runner.run()
+    except EvaluationError as error:
+        raise CliConfigurationError(error.code) from None
+    if runner.options.variants:
+        data = report.to_dict()
+        print(json.dumps({"command": "eval", "run_id": data["run_id"],
+                          "complete": data["complete"], "comparison": data["status"],
+                          "report_json": str((args.output / "comparison/report.json").resolve())},
+                         ensure_ascii=False, indent=2))
+        return 0 if report.complete else EVAL_INCOMPLETE_EXIT_CODE
     result = {
         "command": "eval",
         "benchmark_id": report.benchmark_id,
         "complete": report.complete,
-        "attempts_run": len(report.attempts),
-        "attempts_measured": report.measured,
+        "run_id": report.run_id,
+        "task_type": report.task_type,
+        "attempts_run": sum(t.execution.value != "not_started" for t in report.trials),
+        "attempts_measured": sum(t.measured for t in report.trials),
         "report_json": str((args.output / "report.json").resolve()),
         "report_markdown": str((args.output / "report.md").resolve()),
     }
@@ -1401,6 +1491,8 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     _add_runtime_arguments(chat)
+    chat.add_argument("--background-config", type=Path, default=None,
+                      help="Explicit bounded background optimization settings (TUI)")
     chat.add_argument(
         "--context-config",
         type=Path,
@@ -1453,9 +1545,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     evaluate = sub.add_parser(
         "eval",
-        help="Run the ProductTask benchmark defined by a benchmark.json manifest",
+        help="Run a schema-3 ProductTask or retrieval episode evaluation",
     )
-    evaluate.add_argument("benchmark", type=Path)
+    evaluate.add_argument("benchmark", type=Path, nargs="?")
+    review_actions = evaluate.add_mutually_exclusive_group()
+    review_actions.add_argument("--review", type=Path)
+    review_actions.add_argument("--assess", type=Path)
+    review_actions.add_argument("--compare", type=Path)
+    evaluate.add_argument("--assessments", type=Path,
+                          help="Explicit assessment references for offline paired comparison")
+    evaluate.add_argument("--judgment-file", type=Path)
+    evaluate.add_argument(
+        "--run-plan", type=Path, help="Explicit current or baseline/candidate plan")
+    evaluate.add_argument("--repetitions", type=int, default=None)
+    evaluate.add_argument("--max-trials", type=int, default=None)
+    evaluate.add_argument("--eval-timeout-seconds", type=float, default=None)
     evaluate.add_argument(
         "--output",
         type=Path,
@@ -1466,7 +1570,7 @@ def build_parser() -> argparse.ArgumentParser:
     # own data directories, verifier and repositories, so `--data-dir`,
     # `--verify-command`, `--plugin-verifier`, `--max-steps` and `--plugin` would
     # be arguments this command cannot honour.
-    _add_env_file_argument(evaluate)
+    evaluate.add_argument("--env-file", type=Path, default=None)
     evaluate.add_argument("--provider", default=None)
     evaluate.add_argument("--model", default=None)
     evaluate.add_argument("--script", type=Path)

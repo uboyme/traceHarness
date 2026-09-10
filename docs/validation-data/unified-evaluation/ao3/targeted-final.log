@@ -1,0 +1,40 @@
+........................................................................ [ 18%]
+.................s...................................................... [ 37%]
+..................................ssss..s.......sss.....s............... [ 55%]
+..........ss............................................................ [ 74%]
+..........................................F
+================================== FAILURES ===================================
+________________ test_the_package_version_is_the_v090_release _________________
+
+    def test_the_package_version_is_the_v090_release() -> None:
+        """The v0.8 release still has one package version source."""
+    
+>       assert __version__ == "0.10.0"
+E       AssertionError: assert '0.11.0' == '0.10.0'
+E         
+E         - 0.10.0
+E         ?    ^
+E         + 0.11.0
+E         ?    ^
+
+tests\test_product_architecture.py:171: AssertionError
+============================ slowest 15 durations =============================
+26.33s call     tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-late-page]
+25.81s call     tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+23.71s call     tests/test_evaluation_workers.py::test_deliberately_regressed_candidate_uses_real_requests_and_original_memory
+23.61s call     tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-direct]
+23.32s call     tests/test_strategy_optimization.py::test_real_generation_lease_proposal_enters_original_workers
+21.53s call     tests/test_evaluation_workers.py::test_connection_failure_remains_unassessable_and_is_not_a_quality_loss
+21.35s call     tests/test_strategy_optimization.py::test_generated_candidate_cannot_be_replaced_by_edited_receipt
+20.49s call     tests/test_episode_diagnostics.py::test_complete_search_excerpt_is_evidence_without_a_read[h-direct]
+20.14s call     tests/test_strategy_optimization.py::test_unknown_judge_usage_stops_before_other_arm
+18.68s call     tests/test_manual_optimization.py::test_offline_inspector_rejects_another_run_and_corrupted_original_evidence
+18.10s call     tests/test_manual_optimization.py::test_transport_failure_preserves_actual_attempts_and_stops
+17.41s call     tests/test_manual_optimization.py::test_actual_candidate_dispatch_pending_review_and_offline_inspection
+16.65s call     tests/test_manual_optimization.py::test_unknown_usage_stops_without_inventing_zero_cost
+14.85s call     tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[False]
+14.61s call     tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[True]
+=========================== short test summary info ===========================
+FAILED tests/test_product_architecture.py::test_the_package_version_is_the_v090_release
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 318 passed, 12 skipped in 665.84s (0:11:05)

@@ -42,12 +42,15 @@ async def run_tui(
     product: ProductChatHost | None = None,
     clock: Clock | None = None,
     settings_args: Namespace | None = None,
+    background_provider=None,
+    background_api_key=None,
 ) -> int | RestartChat:
     """Open the shared Session, run Textual, then converge shared owners."""
 
     require_textual()
     primary: BaseException | None = None
     result: int | RestartChat | None = None
+    background = None
     try:
         try:
             opened = await open_chat_session(
@@ -62,6 +65,21 @@ async def run_tui(
         except SessionNotFoundError as error:
             raise CliConfigurationError(f"session not found: {session_id}") from error
         from traceh.tui.app import TracehTuiApp
+
+        if settings_args is not None and getattr(settings_args, "background_config", None):
+            from traceh.chat.background import assemble_background, load_background_settings
+
+            settings = load_background_settings(settings_args.background_config)
+            if settings.workspace != opened.session.workspace.resolve():
+                raise CliConfigurationError("后台优化作用域与当前工作区不一致。")
+            if background_provider is None:
+                raise CliConfigurationError("后台优化需要显式内置模型连接。")
+            background = assemble_background(
+                runtime, settings, provider=background_provider, model=runtime.config.model,
+                base_url=settings_args.base_url,
+                api_key=background_api_key,
+            )
+            await background.open()
 
         if settings_args is not None:
             from traceh.chat.workspace_project import restore_workspace_project
@@ -86,6 +104,7 @@ async def run_tui(
             product=product,
             clock=clock or default_clock(),
             settings_args=settings_args,
+            background=background,
         )
         app_result = await app.run_async()
         result = 0 if app_result is None else app_result
@@ -93,11 +112,16 @@ async def run_tui(
         primary = error
     finally:
         cleanup: BaseException | None = None
+        if background is not None:
+            try:
+                await background.aclose()
+            except BaseException as error:
+                cleanup = error
         if product is not None:
             try:
                 await product.aclose()
             except BaseException as error:
-                cleanup = error
+                cleanup = combine_failures(cleanup, error, "TUI product shutdown failed")
         try:
             await runtime.dispose()
         except BaseException as error:

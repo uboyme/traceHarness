@@ -1,0 +1,50 @@
+{
+  "format": 1,
+  "benchmark_digest": "b3b98983c12fda760a2381324c335058b5688797a65200ac9fca5feeeddeb053",
+  "variants": [
+    {
+      "variant_id": "current-example",
+      "role": "current",
+      "source": "current"
+    }
+  ],
+  "model": {
+    "provider": "openai-compatible",
+    "model": "REPLACE_WITH_MODEL_ID",
+    "base_url": "https://provider.example/v1",
+    "api_key_env": "TRACEH_EVAL_API_KEY",
+    "script": null,
+    "retry_policy": {
+      "max_attempts": 1,
+      "max_elapsed_seconds": 0,
+      "base_delay_seconds": 0,
+      "max_delay_seconds": 0,
+      "retry_after_cap_seconds": 0,
+      "jitter_ratio": 0
+    }
+  },
+  "execution": {
+    "sandbox_config": "./sandbox.json",
+    "max_trials": 8,
+    "timeout_seconds": 3600
+  },
+  "trials": {
+    "repetitions": 1,
+    "selection": {
+      "case_ids": [
+        "h-direct",
+        "h-absent",
+        "s-direct",
+        "s-absent",
+        "m-direct",
+        "m-revoked",
+        "o-direct",
+        "o-absent"
+      ],
+      "material_seeds": [
+        113
+      ]
+    }
+  },
+  "comparison": null
+}

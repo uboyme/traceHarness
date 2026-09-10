@@ -181,10 +181,10 @@ EVALUATION_PROMOTION_IMPORTS = {
     "attempt.py": {
         "traceh.promotion.local_git": {"LocalBareGitPromotionTargets"},
     },
-    "manifest.py": {
+    "evaluators/product_manifest.py": {
         "traceh.promotion.models": {"verifier_definition_digest"},
     },
-    "metrics.py": {
+    "evaluators/product_metrics.py": {
         "traceh.promotion.models": {
             "expected_approval_digest",
             "review_matches_verification_plan",
@@ -244,9 +244,10 @@ def test_only_declared_orchestration_seams_import_the_promotion_domain() -> None
                 imports,
             )
             continue
-        if source.parent == package / "evaluation":
-            assert imports == EVALUATION_PROMOTION_IMPORTS.get(source.name, {}), (
-                source.name,
+        if package / "evaluation" in source.parents:
+            relative = source.relative_to(package / "evaluation").as_posix()
+            assert imports == EVALUATION_PROMOTION_IMPORTS.get(relative, {}), (
+                relative,
                 imports,
             )
             continue

@@ -1,0 +1,87 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___ test_original_background_adapter_runs_candidate_in_independent_workers ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5433/test_original_background_adapt0')
+
+    async def test_original_background_adapter_runs_candidate_in_independent_workers(tmp_path):
+        import json
+    
+        from test_control_model_calls import config
+        from test_strategy_optimization import setup
+    
+        from traceh.api.llm import ModelResponse, Usage, UsageQuality
+        from traceh.evolution.background_experiment import (
+            BackgroundExperiment,
+            inspect_background_experiment,
+        )
+        from traceh.llm.scripted import ScriptedLlmProvider
+    
+        runner, contract, observations, proposal = setup(tmp_path)
+        provider = ScriptedLlmProvider(
+            tuple(
+                ModelResponse(content=text, usage=Usage(30, 20, UsageQuality.EXACT))
+                for text in (
+                    json.dumps(proposal),
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                )
+            )
+        )
+        adapter = BackgroundExperiment(
+            runner,
+            provider=provider,
+            analysis_config=config(),
+            judge_config=config(),
+            output=tmp_path / "actual-experiments",
+            timeout_seconds=120,
+            selectors=tuple((e.file, e.selector) for e in contract.editable_text),
+            max_request_bytes=200000,
+        )
+        settlement = await adapter("candidate-fixture", observations, (), contract.deadline_utc)
+        assert settlement.converged and settlement.usage_known and settlement.candidate_digest
+        assert inspect_background_experiment(settlement.evidence_path) == settlement
+        # A broken OS ownership chain is a rejected comparison, not an empty successful run.
+        process = next((Path(settlement.evidence_path) / "experiment").rglob("process.json"))
+        raw = json.loads(process.read_text(encoding="utf-8"))
+        raw["pid"], raw["owner_pid"] = -1, -2
+        process.write_text(json.dumps(raw), encoding="utf-8")
+        from traceh.chat.background import background_experiment_text
+    
+>       assert not inspect_background_experiment(settlement.evidence_path).usage_known
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_background_optimization.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5433/test_original_background_adapt0/actual-experiments/candidate-fixture')
+
+    def inspect_background_experiment(root):
+        """Original inspectors validate requests/grades; this only derives scheduling status."""
+        root = Path(root).resolve()
+        result = inspect_strategy_optimization(root)
+        analysis = result["cost"]["analysis"]
+        known = bool(analysis is not None and analysis["total_tokens"] is not None)
+        converged = False
+        if (root / "analysis/result.json").exists():
+            converged = load_model_call(root / "analysis")[1]["converged"]
+        known = known and result["cost"]["review_tokens"] is not None
+        candidate = None
+        if result["evaluation"]:
+            evaluation = result["evaluation"]
+            converged = converged and evaluation["progress"]["convergence"] == "converged"
+            for row in evaluation["rounds"]:
+                candidate = row.get("candidate_digest", candidate)
+                comparison = row["comparison"]
+                known = (
+                    known
+                    and comparison is not None
+>                   and all(arm["cost"]["total_tokens"] is not None for arm in comparison["arms"])
+                                                                               ^^^^^^^^^^^^^^^^^^
+                )
+E               KeyError: 'arms'
+
+..\..\..\AppData\Local\Temp\traceh-ao3-reverse-xpmo_wit\traceh\evolution\background_experiment.py:109: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+1 failed in 31.98s

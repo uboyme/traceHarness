@@ -1,0 +1,49 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___ test_original_background_adapter_runs_candidate_in_independent_workers ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-5432/test_original_background_adapt0')
+
+    async def test_original_background_adapter_runs_candidate_in_independent_workers(tmp_path):
+        import json
+    
+        from test_control_model_calls import config
+        from test_strategy_optimization import setup
+    
+        from traceh.api.llm import ModelResponse, Usage, UsageQuality
+        from traceh.evolution.background_experiment import (
+            BackgroundExperiment,
+            inspect_background_experiment,
+        )
+        from traceh.llm.scripted import ScriptedLlmProvider
+    
+        runner, contract, observations, proposal = setup(tmp_path)
+        provider = ScriptedLlmProvider(
+            tuple(
+                ModelResponse(content=text, usage=Usage(30, 20, UsageQuality.EXACT))
+                for text in (
+                    json.dumps(proposal),
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                )
+            )
+        )
+        adapter = BackgroundExperiment(
+            runner,
+            provider=provider,
+            analysis_config=config(),
+            judge_config=config(),
+            output=tmp_path / "actual-experiments",
+            timeout_seconds=120,
+            selectors=tuple((e.file, e.selector) for e in contract.editable_text),
+            max_request_bytes=200000,
+        )
+        settlement = await adapter("candidate-fixture", observations, (), contract.deadline_utc)
+>       assert settlement.converged and settlement.usage_known and settlement.candidate_digest
+E       AssertionError: assert (False)
+E        +  where False = EpisodeSettlement(evidence_path='C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-5432\\test_original...13d1c640d50914fbc75253be60f7fe53088e8b4f0d2a38a000203eded37e2', await_review=False, usage_known=False, converged=False).converged
+
+tests\test_background_optimization.py:288: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+1 failed in 26.25s

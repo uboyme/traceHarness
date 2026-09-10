@@ -34,18 +34,28 @@
 
 ## 1. 当前项目状态
 
+**AO-3 运行期后台受限优化已完成限定验收；DA-1～DA-5 已获执行授权、尚未实现。** TUI 与原 AO/评估主线已接入，定向检查、真实安装包测试与重放已完成，准备提交发行。当前 Product 仍为固定 single/multi，没有新协作成绩；见 12.11、14.1–14.2。
+
+**AO-2+ 语义裁判校准实验已完成，候选未采用。** 固定开发对照符合预期为 16/24→15/24；真实 74 次、494,845 tokens，含中止实验与原主线复审。原生产策略已逐字节恢复，证据归档；不代表搜索成绩变化或裁判可靠性达标。见 12.10 与[记录 025](../deal/025-semantic-judge-calibration.md)。
+
+**AO-1 人工候选闭环已接入：** `evolution/optimization.py` 经 AO-0 受限准入后调用原 EvaluationRunner 双进程，依据原 comparison 证据判断无收益、待审或开发候选可交审阅。实验/候选/额度冻结，评分和运行事实不搬家；无自动采用或新检索成绩。AO-2 已接入一次真实策略提案与独立模型语义审阅；真实验收见 12.9。见 12.7–12.8、[AO-1 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO1_CONTRACT.md) 与[记录 023](../deal/023-manual-optimization-loop.md)。
+
+**UE-4 当前单臂真实测量已完成，人工语义评分待审：** 原 72 条全部执行关闭；60 道有答案题暂定 answer+evidence 为 49/60，12 道负例保留范围审阅，全部 72 条仍 pending_review。另四条普通问题均无工具调用；四条来源竞争中两条选对，两条误用 Memory。没有候选、提示调优或自动采用。原 55/72 属历史合成口径，不与本轮拼分。见 [UE-4 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE4_CONTRACT.md)、[记录 021](../deal/021-unified-evaluation-ue4.md) 与 [真实证据](../validation-data/unified-evaluation/ue4/README.md)。
+
+**统一评估 UE-0～UE-3+ 已接入：** 唯一 `traceh eval` / EvaluationRunner 静态接 ProductTaskEvaluator 与 RetrievalEpisodeEvaluator，共享冻结、试次、证据和报告。可冻结受限说明文本候选，用独立进程运行 baseline/candidate，并离线比较原证据或人工评分；检索诊断区分来源候选、实际证据派发与原回答评估，展示读取和查询范围。AO-2 已接入一次受限策略提案；后台优化已接入并完成限定验收（12.11）。见 [UE-3 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_CONTRACT.md)、[UE-3+ 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_PLUS_CONTRACT.md)、12.6、14、15；本版不改写原 55/72，后台能力须显式装配。
+
 **v0.10 沙箱目标已完成限定验收：** S0 实验已通过，S1/S2 已接通 Runtime shell、完成验证、Product 固定验证及原预算身份；CLI 的 --sandbox-config、TUI 中文执行沙箱配置页和 /sandbox 只读观察已接入。未配置时进程执行失败关闭，不回退宿主。评估相邻回归已核对修复，S3-A 的有界 stdio 与原 Activation/Lease/Drain 已接通并完成首轮真实检查；配置入口与 S4 生产验收已完成；463 项定向合并检查、观察补查 4 项及部分写入取消 1 项通过，未跑全量或 L2。见 [ADR-0065](../adr/0065-host-owned-sandbox-execution.md)与 [执行记录](../deal/012-sandbox-execution.md)。
 
-**当前版本：0.10.0（Educational alpha，GitHub Release 发行范围）。** S0–S4（含 S3-A、不含 S3-B）沙箱及 TUI 环境选择已完成限定验证，用户已授权提交与发布。Session 13 / Context 12 保持不变；Sandbox 配置格式 2、Promotion 验证协议 2。检索成绩沿用 55/72，未重新计分。未运行全量或 L2，不上传 PyPI。见[发行记录](../deal/015-v0100-release.md)和[限定验证](../validation-v0.10.0.md)。
+**当前版本：0.11.0（Educational alpha，GitHub Release）。** 本次收口统一 Evaluation、受限 AO 和 AO-3 应用内后台优化；Session 13 / Context 12、Sandbox 配置 2 / Promotion 验证 2 保持，独立评估 worker 回执为 2。旧评估需按冻结源码核验；不迁移或改写用户数据，不自动采用候选，不上传 PyPI。本版不含 DA 或 MCP，不改写旧 55/72 统计。见[限定验证](../validation-v0.11.0.md)和[后台优化记录](../deal/026-runtime-background-optimization.md)。
 
-**当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
+**历史 grid-06 补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。历史计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，该历史合成口径为 55/72；不是 UE-4 新运行的成绩。
 
 **当前执行状态：** AR-A–AR-D、后续定向修复及 RE-0–RE-5 可靠性实验已收口。RE 共完成 112 条真实目标旅程；没有候选满足稳定收益条件，未采用新生产策略。RE-5 完成资格判定，无合格组合，96 条条件性留出验证未启动。原 grid-06 51/72 与 NO-GO 作为历史记录保留；当前按上述用户决定发行；详见[实验记录 008](../deal/008-retrieval-reliability-experiments.md)。 追加授权的一次片段预算追试已收口：16 条真实旅程为 4/8→4/8，未采用候选；关键题未触发有命中搜索，不能据此否定片段机制本身。见[记录 009](../deal/009-search-snippet-budget-followup.md)。
 
 用户已授权依序执行[主动检索计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)。AR-A 已完成
 设计/评测冻结；AR-B 的 History 搜索已接入，AR-C 已接入 Memory/Skill 搜索并完成真实诊断与合并范围门禁。
 上一阶段代码与证据已提交为 `a54d431`，未推送。三个搜索工具共用当前 Step 准入规则；
-最新完整复测 grid-06：基线 20/72、当前候选 51/72 联合通过，分别有 11/6 条 TLS EOF；两臂均无执行错误的 57 对中为 19/57 → 44/57。此前 grid-05 为 21/72 → 45/72，不能跨轮择优或把变化归因于单个补丁。四个独立日常对照每臂均正确回答、零工具调用；详见 7.11 与[最终对照记录](../deal/007-active-retrieval-final-comparison.md)。当前协议不变，语义检索保持关闭。
+历史 AR 完整对照 grid-06：基线 20/72、当前候选 51/72 联合通过，分别有 11/6 条 TLS EOF；两臂均无执行错误的 57 对中为 19/57 → 44/57。此前 grid-05 为 21/72 → 45/72，不能跨轮择优或把变化归因于单个补丁。四个独立日常对照每臂均正确回答、零工具调用；详见 7.11 与[最终对照记录](../deal/007-active-retrieval-final-comparison.md)。当前协议不变，语义检索保持关闭。
 随后授权的职责定位与小规模真实对照已完成。前两项呈现实验未合入生产；拒绝状态呈现实验减少重复但未解决来源选择，仍保留为隔离候选。诊断入口已修复相对目录导致 Skill 准备失败的问题，详见 7.11。
 
 已补齐证据导航的呈现合同（7.11、9.5、ADR-0064）：Skill 导航标记与准确目录动作、大输出引用、读取覆盖范围。长提示重写与强制自评实验未采用；不能保证模型正确判断全来源不存在。
@@ -66,7 +76,7 @@
 |---|---|
 | 包名 | `traceharness-py` |
 | Python 包 | `traceh` |
-| 当前版本 | `v0.10.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
+| 当前版本 | `v0.11.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
 | Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
@@ -83,7 +93,7 @@
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
 | 当前自动化测试 | v0.8.0 最终候选在安装 Textual 8.2.8 的解释器上收集 `2765 tests`；公开真实 L2 独立得到 `1 passed in 1398.14s`，最终无筛选全量得到 `2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。收口期间 L2 先后真实暴露 core-only 环境硬导入 Rich、以及 `test_product_contract.py` 未同步 M3 两个受保护 Runtime pin；两项均在原测试 owner 根修并由公开 L2 反向证明。compileall、修改范围 Ruff、`git diff --check`、文档 QA、Wheel E2E、clean-input 资产预检、core/`[tui]` 离线安装与完整 18-attempt Provider 网格均已执行；详细边界与结果见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节 |
 | Surface 压缩 | M3 起 `CompactionService` 拥有手动／自动 replacement；`surface_prefix()` 唯一派生来源，由不变量重算。字节模式在 Turn 前、token 模式在首 Step 准备时只压缩闭合旧 Turn 前缀，保留显式数量的最近 Turn，不碰 Product context、不拆 Step/Tool 组。format 2 绑定 exact source、cut、policy 与摘要器；拒绝 format 1。摘要按原逻辑位置投影，历史 Request 精确重建；手动 cut 必须命中闭合 Turn。字节模式四项策略显式给出；E0 可另设完整请求 token 估算策略（12.2），物理字节限额保留。默认规则摘录；D 可选语义摘要走原模型 Step/许可/Budget/取消与冻结来源变体（12.2、20.39、ADR-0057）。原始事件保留；F0-C 已在同一来源上接入当前 Session、exact block/cursor、request-only、Step-scoped 原文分页，并通过本轮限定验证（7.4） |
-| 内置 Benchmark | `traceh eval` 是 v0.7-F4 的 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
+| 内置 Benchmark | `traceh eval` 当前由 UE-1 公共框架承接原 v0.7-F4 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 前一版 `v0.8.0` 的完整发布门禁属于历史证据。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
 Provider retry 只复用同一冻结请求，Line/Textual 共用 Driver 与 Product control/observation，format-7
@@ -153,6 +163,10 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 
 ## 3. 仓库目录与职责
 
+AO-3 新增 `evolution/background.py`（原账本上的周期、准入与收尾）、`evolution/background_experiment.py`（接原有限实验）、`chat/background.py`（配置和反馈绑定）、`tui/optimization.py`（F6 管理面板）、`tui/optimization_plan.py`（从真实题库选题并生成计划）。原 Runtime/Evaluation 继续拥有执行和评分；F2 表单复用 `tui/settings.py` / `config_forms.py`，见 12.11。
+
+`docs/plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md` 是已获认可但未实现的 DA-0～DA-5 计划，列出动态委派、Product 收敛、统一评估和受限优化的 owner 与阶段验收；不代表新模块或新运行协议已经实现（14.1）。
+
 D 新增 [`session/semantic_summary.py`](../../src/traceh/session/semantic_summary.py)：冻结摘要输入、纯请求构造和响应/来源验证。它没有 Provider 或写入权；主线仍由 RequestBuilder、AgentLoop、SessionService、CompactionService 各自拥有（12.2）。
 
 `llm/token_meter.py` 负责完整请求的显式本地估算；`runtime/request_builder.py` 负责准备、精确来源计量事件与重建校验；`session/compaction.py` 仍唯一拥有压缩写入。CLI/TUI 只配置和显示这些事实（12.2）。
@@ -190,8 +204,8 @@ traceharness/
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
 │   ├── process_control.py            Tool/Verifier/Git 共用的直接子进程取消与超时收敛
 │   ├── cli/                          命令解析、.env 加载、Line Chat/Product adapter、Timeline/Activity 终端渲染、Shell 命令渲染、插件 CLI 投影和终端编码
-│   ├── evaluation/                   v0.7-F4 ProductTask Benchmark：schema-1 manifest、一次性本地仓库、durable 指标收集、F2 retry/Provider-active 度量、descriptive 报告与唯一 Runner
-│   ├── evolution/                    L2 验证、L3 对比与 L4 人工批准/精确推广/回滚
+│   ├── evaluation/                   共享 Evaluation：根协议 3、公共输入/调度/报告，Product 与检索旅程各自准备/评分，检索派生诊断、受限变体独立进程与离线 review/assess/compare；model_service/evidence 与 model_review/protocol 接独立控制调用和语义审阅（12.6、12.9）
+│   ├── evolution/                    L2 验证、L3 对比、L4 人工批准/精确推广/回滚；AO-0 受限合同，AO-1 人工队列；AO-2 strategy 的一次插件提案接原评估（12.7–12.9）
 │   ├── inspector/                    Session 文本、Replay 和静态 HTML 检查
 │   ├── kernel/                       四层 Service 与 Composition Overlay、含真实 Skill catalog/digest 的严格快照与 revision、显式覆盖诊断、Activation、Hook、Lifespan、Owned Tasks
 │   ├── llm/                          Provider 协议实现、注册表、typed sanitized failure、显式 bounded retry policy/scheduler 与两阶段调用边界
@@ -200,13 +214,14 @@ traceharness/
 │   ├── session/                      EventStore、Event Feed、锁、投影、恢复、不变量与事实重建；`protocol.py` 唯一 Session 协议，`context_input.py` 窄策略／只读冻结／精简模型视图／重建；F0-C `history.py` 纯展开分页、`history_requests.py` 唯一授权及目标派生，写入仍由 SessionService owned/CAS；F2 skill_selection/skill_retrieval/skill_requests/context_index 分别负责选择事实、检索、次步披露和 Store 派生索引；F4 retrieval/reference_requests/stream_heads 为共享规则，F5 retrieval 增加完整查询段/覆盖证明，Context 在预算后排除弱覆盖，history_observation 派生时效；M3 owner 保留
 │   └── tools/                        Tool Registry、Schema、Policy、Middleware、子进程输出捕获与内置工具；F0-C `history.py` 与 F2 `skill.py` 及 F4 memory_reference.py 的普通 PURE_READ 披露工具仅返回 receipt
 ├── tests/                            单元、契约、恢复、取消、跨进程、插件、打包和端到端测试
+│   ├── live_unified_evaluation/    UE-4 显式 current/普通/多来源真实驱动、材料与离线重开；不是生产 evaluator（12.6）
 │   ├── live_skill_navigation/        显式真实 Provider Skill 导航集成测试与合成语料，不由 pytest 自动执行（7.10）
 │   ├── live_reference_journeys/      显式真实 Provider Memory/History/混合旅程与原 SQLite 核算（7.10）
 │   ├── local_retrieval_screen/       C3 及 E 后有界模型复测；capture/screen/retest 沿原资格捕获及离线评分，未接入产品（7.9）
 │   └── provider_argument_probe/      C4 显式历史请求/HTTP 字节诊断；原 Provider、不执行 Tool、不增加生产日志开关（8.3）
 ├── examples/                         无 Key 的确定性 Demo 夹具
 │   └── plugins/                      四个独立插件 Distribution 源码（示例、Python Quality、Plugin Creator Skill、F5 Reference Skills）；前三个有历史安装证据，第四个当前仅验证源码加载
-├── benchmarks/                       `product_v1` 是 `traceh eval` 的 3 个通用任务与唯一 manifest；`evolution/python_quality_v1` 是 L3 的固定对比 Suite
+├── benchmarks/                       `product_v1`/`retrieval_v1` 测 Product/F5，`retrieval_episodes_v1` 是 72 条独立检索开发题；`evolution/python_quality_v1` 是 L3 固定 Suite
 ├── docs/
 │   ├── note/                         当前项目正式版与通俗版上下文
 │   ├── adr/                          已接受设计决定及原因（含 0007 插件事务激活）
@@ -223,11 +238,11 @@ traceharness/
 
 `docs/TraceHarness Py：面向插件化与多 Agent 演进的 Python Harness 实施计划.md` 是长篇实施计划；它不是当前代码事实源。
 
-`CHANGELOG.md` 的 Unreleased 记录本轮 v0.9 F0–F4 能力及当前 Session 协议 7 的旧数据拒绝；v0.8.0 发布记录
-与源码版本保持原值，工作树实现不等于已发布。
+`CHANGELOG.md` 的 0.11.0 节记录本次 UE/AO 发行范围；源码版本由 version.py 唯一维护。
+未提交工作树实现不等于已发布，Session 协议与旧数据拒绝仍以第 6、7 节当前合同为准。
 
 F5 目录接线：chat/config.py 和 chat/governance.py 管显式输入与共享治理；tui/governance.py 管可选取证据与 Memory 命令草稿表单；
-evaluation/retrieval.py 管冻结校验及度量，attempt.py 仍是唯一 seed owner。详见 7.8、12.5。
+evaluation/retrieval.py 管冻结校验及度量，attempt.py 仍是 F5 Product seeding owner。独立检索旅程由 episode_setup.py 准备（12.6）。详见 7.8、12.5。
 
 沙箱模块：`api/sandbox.py` 定义不可变宿主配置、请求、owner、限制和回执引用；`sandbox/workspace.py` 快照授权普通文件与空目录；`sandbox/docker.py` 持有容器与取消 worker；`sandbox/_guest.py` 是容器内可信监督脚本；`sandbox/reader.py` 核对原事件与 CAS 字节；`sandbox/ledger.py` 在原 owner stream 中核对 request/outcome/publication 身份。`sandbox/service.py` 为原 Tool/Verifier owner 提供有界生命周期的命令能力，调用者只能缩小时间/输出限制，不能扩权；`sandbox/publication.py` 先比对原快照与宿主当前文件，再检查写权限并逐文件发布，部分 I/O 失败记录已完成操作，不承诺整个目录原子回滚。输入/输出使用原 ArtifactCas，没有新增数据库或 runtime.state。`scripts/sandbox_s0/` 是显式运行的实验夹具。
 
@@ -256,6 +271,8 @@ flowchart LR
     FACT --> READER["Sandbox Reader"]
     READER --> UI["Line / TUI 只读观察"]
 ```
+
+AO-2+ 研究驱动位于 `tests/live_optimization/calibrate.py`、`calibration_inputs.py`、`reopen_calibration.py`；其样本和期望为显式开发材料，不进入生产评分规则。拒绝的实验源码/测试和完整证据位于 `docs/validation-data/unified-evaluation/ao2plus/`，见 12.10。
 
 ## 4. 运行时装配与依赖方向
 
@@ -483,6 +500,8 @@ flowchart LR
 ```
 
 ## 6. 事件模型与持久化
+
+AO-3 增加同一 Store 内的 `optimization-background:<workspace fingerprint>` 流：只记录后台周期授权、反馈准入、额度预留、结算位置与待审状态。聊天原文、工具结果、评估成绩与实际费用仍在各自原 owner，不能用后台投影代替它们（12.11）。
 
 D 只在原 Session 流增加 `summary/input`、`summary/response` 与 `method=semantic` replacement；真实响应通过 causation_id 被引用，原事件不改。完整冻结字段和协议变体见 12.2。
 
@@ -1419,9 +1438,9 @@ Release Stop C 已通过，实际范围、失败及未运行门禁见 [Stop C �
 
 ### 7.11 主动检索：三类来源已接入，55/72 与已知限制接受
 
-**当前版本：0.10.0（Educational alpha，GitHub Release 发行范围）。** S0–S4（含 S3-A、不含 S3-B）沙箱及 TUI 环境选择已完成限定验证，用户已授权提交与发布。Session 13 / Context 12 保持不变；Sandbox 配置格式 2、Promotion 验证协议 2。检索成绩沿用 55/72，未重新计分。未运行全量或 L2，不上传 PyPI。见[发行记录](../deal/015-v0100-release.md)和[限定验证](../validation-v0.10.0.md)。
+**当前版本：0.11.0（Educational alpha，GitHub Release）。** 本次收口统一 Evaluation、受限 AO 和 AO-3 应用内后台优化；Session 13 / Context 12、Sandbox 配置 2 / Promotion 验证 2 保持，独立评估 worker 回执为 2。旧评估需按冻结源码核验；不迁移或改写用户数据，不自动采用候选，不上传 PyPI。本版不含 DA 或 MCP，不改写旧 55/72 统计。见[限定验证](../validation-v0.11.0.md)和[后台优化记录](../deal/026-runtime-background-optimization.md)。
 
-**当前补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。最新计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，当前总分已更新为 55/72；不是重新跑了全部 72 题。
+**历史 grid-06 补测后成绩：55/72（76.4%）。** 原 51 条通过保留，六条 TLS 失败槽位直连补测新增 4 条通过、2 条回答/依据问题，无最终连接失败；仅跑当前候选，未跑基线。历史计分见[记录 010](../deal/010-grid06-direct-supplement.md)。原 51/72 是历史完整运行记录，该历史合成口径为 55/72；不是 UE-4 新运行的成绩。
 
 **追加追试已停止。** [记录 009](../deal/009-search-snippet-budget-followup.md)在隔离副本尝试减少命中数后重新分配片段上下文。49 项定向检查和公开路径反向验证证明相同预算下可恢复片段、原 Reader 可定位目标；脚本提供精确定位词不算自主检索。真实模型 16 条旅程为 4/8→4/8，没有有命中搜索页，候选关键路径未被真实模型使用，故未验证端到端收益，按用户要求停止追加方案。44 个请求独立重放通过，无最终连接失败，Provider 报告 248,063 tokens；较深连续分页的离线诊断中止、不计通过，其性能与取消收敛不作新保证。未采用生产改动，未跑全量或 L2–L4，未提交。
 
@@ -2260,13 +2279,14 @@ M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓�
 
 ### 12.5 Benchmark
 
-`ProductBenchmarkRunner` 读取 `<benchmark>/benchmark.json`（当前根 schema 2、精确键集），按 `tasks × arms × repetitions` 走一遍网格。每次 attempt 走的是 20.30 的完整 ProductTask 主线：自建一次性源仓库与一次性本地 bare target、真实确认、固定 Workflow、managed worktree、不可变 Patch Artifact、冻结 Verifier、Review、宿主立即批准与 Git ref compare-and-swap。根必须有 `retrieval`（null 或 file/sha256）；旧 schema 1 明确拒绝。嵌套 Verifier 当前为 protocol 2。评估器接受宿主显式 SandboxPolicy 并传入原 Product owner；每次 attempt 的执行仍使用其原 Store/CAS。
+`EvaluationRunner` 读取根协议 3 的 benchmark/dataset，经静态 ProductTaskEvaluator 按 case × mode × replicate 运行。task_settings 保留原 ProductHostSettings 与 retrieval，重复次数来自 RunOptions；直接 CLI 默认一次。每次 attempt 仍走原 ProductTask 的真实确认、Workflow、managed worktree、Patch、冻结 Verifier、Review、立即批准和 Git ref CAS。旧根 1/2 拒绝；嵌套 Verifier 为 2，SandboxPolicy 仍显式传给原 owner，使用原 Store/CAS。
 
 输出位于要求尚不存在的 `--output` 目录：
 
 - `attempts/<NNN>/`：每次 attempt 自己的 `source`、`tgt.git`、`ev/events.sqlite3`、`work`（managed worktree）、`cas`、`rt`（requester Runtime）、`pd`；requester 使用真实 source，不再创建 rw。隔离样本需要时创建独立 foreign-source/foreign.git；
-- `report.json`；
-- `report.md`（由同一个 `to_dict()` 渲染，因此两份输出不可能对同一个数字给出不同答案）。
+- `frozen.json`、`artifacts/source.zip`、`artifacts/materials.zip`：冻结条件、当前生产源码和明确声明的宿主材料，逐项绑定摘要；
+- `evidence-manifest.json`：关闭后原事件流的文件、stream、序号范围和摘要；
+- `report.json`、`report.md`：同一个公共 EvaluationReport 派生，内嵌原 Product task_report；取消/未开始保留在公共 trials 分母。
 
 成功条件是四条互相独立的持久事实同时成立：ProductTask 终态 `completed`、Workflow 终态 `completed`、Review `passed`，以及一条 Promotion 回执且目标 ref 现在确实指向它记录的 new revision。旧 `*/case.json` 布局被明确拒绝，不做升级也不留兼容 reader。完整语义与边界见 20.30。
 
@@ -2286,7 +2306,379 @@ unavailable/unproven 和 attempt/role/query 描述性汇总；无阈值不声称
 覆盖九类；明确启用/退役两个 typed 示例 Skill 插件，缺失或摘要不符拒绝。semantic 的词法基线阈值
 为 0，记录局限；semantic/reranker 仍关闭。没有第二 Runner 或模型自评。
 
+### 12.6 共享评估、检索旅程、派生诊断与变体比较（UE-0～UE-4 测量，ADR-0066）
+
+唯一 `traceh eval` / EvaluationRunner 静态装配 ProductTaskEvaluator 或 RetrievalEpisodeEvaluator。
+公共 inputs/manifest/plan/contracts/runner/report 拥有根协议 3、运行身份、冻结、顺序试次、取消和报告。
+Product 的配置、评分和统计仍归 evaluators/product*.py；原 attempt/repositories 与 Product/Workflow/Review/Promotion 主线不变。
+旧 ProductBenchmarkRunner、根协议 1/2 和旧 metrics 导出不保留兼容分支。
+
+新增 evaluators/episode_manifest.py 校验封闭材料；episode_setup.py 通过原 Runtime/Session、Plugin/Generation、
+Memory 公共服务和 Tool/Sandbox 准备；episode_assessment.py 只读核对派发证据；retrieval_episode.py 适配公共 DTO。
+episode_diagnostics.py 从同一原请求和证据派生来源/派发/范围观测，不评分、不改变 Agent 策略。
+review.py 导出离线审阅包、派生诊断和导入不可变 judgment。没有从 tests 导入的生产夹具或第二个业务状态机。
+具体字段、配置样例与错误语义见 [UE-0/UE-1 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE0_CONTRACT.md) 和
+[UE-2 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE2_CONTRACT.md)；双臂字段和生命周期见
+[UE-3 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_CONTRACT.md)。
+
+检索 dataset 每条绑定 case/group/family/material_seed/question/setup/expectation，actual material digest 与 replicate 分开。
+History 使用真实回合后压缩；Skill typed contribution 经原 PluginManager 激活与选择，资源正文走宿主绑定目录；
+Memory 真正 declare/approve/supersede/revoke，可另建绑定 Session 读取；Output 显式程序只在准备轮经原 Sandbox 执行一次。
+目标轮受 source-isolated Policy 限定，禁止工作区探索或重跑；这是隔离实验条件，不代表开放 Chat 只能查一种来源。
+问题、答案、ID、程序和数值来自显式材料，宿主 expectation/rubric 不放进 Agent 工作区。
+
+run plan format=1 支持 current 单变体（comparison=null）或按 baseline/candidate 顺序的两臂；未知 evaluator 明确拒绝。
+trials 可加 selection={case_ids,material_seeds}；未知/重复/空选择拒绝，先冻结选择的完整试次再核对 max_trials，不截减分母。
+--run-plan 拒绝相同领域 CLI 覆盖，null 不被环境变量补上；Key 仍由原加载器使用。
+冻结源码/明确材料 ZIP、Provider 身份/配置指纹、retry、沙箱、环境和全部试次；源码 ZIP 不是依赖锁定或 Wheel。
+远端模型 revision 未知时为 null，连接路径按实际观测记录。每试次前后核对材料与源码漂移。
+输出不进入 benchmark 根；Git 保留 shipped 冻结材料原始字节。未开始就到期的槽位不虚增执行次数。
+
+variants.py 固定可编辑的 AST 字符串：History/Skill/Memory 搜索工具、输出 list/search/read 工具的 description，
+以及 runtime/prompt.py 的 _REFERENCE_GUIDANCE。候选精确绑定 base_source_digest、file/selector/old_sha256/new_text；
+宿主验证完整 AST 除允许字符串外不变，拒绝 grader、预算、权限、schema、执行逻辑和未知/重复节点修改。
+baseline 为 current；candidate 为 current（A/A）或明确的候选文件与 SHA-256；不是任意代码或 Wheel 装载。
+
+variant_execution.py 冻结 experiment.json、完整 Python 源码与材料归档、两臂派生计划和全部试次，
+顺序持有两个 worker 子进程。worker.py 校验实际源码、环境、计划和 Provider implementation 后仍调用原 CLI/EvaluationRunner，
+不传递父 Provider 的可变对象。每臂都保留原 frozen、事件、CAS、报告；process/worker-receipt 绑定 PID、请求、
+源码、环境、原报告摘要和关闭结果，父执行记录再绑定回执摘要。环境记录解释器字节摘要、平台、SQLite 和已安装依赖清单，
+是观测身份而非可重建依赖锁。模型 Key 只由现有加载器解析后供私有进程继承，原值不落盘。
+双臂 execution 必须有 direct 网络模式、总 timeout_seconds、shutdown_seconds 和覆盖两臂完整分母的 max_trials。
+私有子进程禁用环境/系统代理发现；无失败重跑、并行试次或冷恢复。取消先通知原运行 Task 并等原 owner 收敛，
+重复取消等待同一关闭任务；超时复用 converge_process 终止直接子进程，但强制退出仍是 unproven，停止后续臂。
+源码/进程隔离只针对可信本地文本候选，工具安全边界仍归原 Sandbox。
+
+每条 execute 拥有 Runtime/Store，准备失败同样关闭；重复取消继续等原 owner 收敛，关闭错误与原失败合并保留。
+先从原 SessionService/Reader 采集并核对，再关闭资源、只读评分；公共 Runner 最后读取关闭后的原事件流摘要。
+Context 证据绑定成功目标 Attempt、snapshot、context seq 与实际 dispatch 消息，并由原 render_context_message 重建比较，
+不依赖提示前缀。History 原文、Skill 版本/选择、Memory 批准/归属继续由原 Reader/Projection 解释。
+Output 绑定准备轮原 shell Effect，按原 resolve/render 核对搜索/读取文本；元数据不算业务值。
+目录/Skill 摘要不算正文；完整有效搜索片段允许直接作为证据，不用强制 read 次数替代正确性。
+
+UE-3+ 复用 episode_assessment 的成功回答请求和 Context 渲染校验。candidate 是 source-container 粒度：
+Skill/Memory 按明确 ID，History 用原 Reader 的叶引用映射到宿主已知来源，Output 按准备轮 Effect/digest。
+目录只证明相关来源出现；足够原文也直接证明来源出现，不要求先搜索。evidence 复用既有派发证据，
+并再次绑定成功 Attempt、实际 snapshot 和 Context/Tool 消息，accepted 读取回执不算正文。
+observed 表示已观测，not_observed 仅表示完整的这条轨迹未出现，缺少可靠映射或可核对轨迹则 unknown；负例为 not_applicable。
+gap 描述 evidence-dispatched、candidate-without-evidence、candidate-not-observed、negative-scope-review 或 unresolved，
+不能单凭它断言模型、索引或预算根因，也不等价于模型已理解证据。
+read_requests 保留原调用参数、tier、结果状态和错误；source_views 带版本和原分页/章节 provenance。
+search_coverage 展示实际查询、搜索域、字段、扫描量、命中数及 next_cursor/输出字符范围；每项均不证明全库不存在。
+负例保留原回答并要求范围审阅，不通过否定措辞规则自动判分、不要求遍历全库；没有完整相关性标注，不计算完整 Recall/MRR 或消费率门槛。
+
+公共结果分 execution、assessment、invariants、convergence、usage、evidence；完整测量不是全部答对。
+检索全部完成答案先 pending_review；数值匹配只产生 provisional。执行失败为 unassessable，准备/目标成本和原始失败保留。
+usage 分 preparation/target/all，未知保留 null，另列已知小计。公共 trials 保留失败、取消、未开始，不缩减分母。
+invariants 指本类型检查过的原来源/请求/作用域合同，不声称全系统安全证明。宿主硬退出没有冷恢复承诺。
+
+`eval --review RUN --output NEW` 与 `eval --assess RUN --judgment-file FILE --output NEW` 是互斥离线动作；
+在环境加载前拒绝模型/.env/沙箱/运行参数，不创建 Provider、工具或重跑。核对原冻结、事件摘要及归档材料后导出 rubric/证据。
+judgment 绑定 run/frozen/evidence/report/scorer/rubric、reviewer、逐条身份/结论/原因和可空的确切 supersedes 引用。
+无答案执行不可人工改成 passed，正例没有实际派发证据不可通过；漏项仍 pending。更正明确列本次采用的判断，不猜最新文件。
+新的 judgment/assessment/report 进入新目录，原运行不覆写。业务事实仍仅在原 EventStore/CAS/Git，人工评分是宿主评估工件。
+
+新运行的 episode packet 带 retrieval_diagnostics，Markdown 表格把观测与原 trial assessment/provisional 分开。
+同一 --review/--assess 另写 diagnostics.json/md：从原关闭账本重新派生，保留全部计划试次，缺少 packet 的项为未知，
+并绑定原 run/frozen/evidence/report 和当前分析器 version/source_digest。人工判断仍通过原 judgment 更新；不把新诊断塞回旧报告或评分绑定。
+这是现行协议的离线派生视图，不增加迁移分支、业务事件、CLI 动作、Provider 调用或模型可见提示。
+字段和复核口径见 [UE-3+ 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_PLUS_CONTRACT.md)。
+
+evidence.py 是 review/comparison 共用的原冻结、事件摘要、源码和材料核验入口；comparison.py 只读原账本统计，显式关闭 SQLite 连接。
+`eval --compare EXPERIMENT --output NEW` 同样离线且与 review/assess 互斥。可用 --assessments 指定
+format=1/experiment_digest/assessments 文件；按 variant_id 映射到确切 assessment.json 文件与摘要，评分从原 judgment 重算。
+未填的臂保留原待审状态，不猜“最新评分”。配对键是 case/group/material digest/material seed/replicate/requested mode，
+不按成功交集或 resolved mode 换分母；共同模型/配置/环境/材料不符、越界源码或证据漂移均 not_comparable。
+准备阶段生成文字的摘要不同会单列，不能未经等价性证明就归因于目标策略。
+
+comparison 配置为 format/min_pass_gain/max_token_ratio/max_tool_call_delta，后三者可空表示只描述。
+报告同时给质量 gain/loss/unchanged/unknown 与 quality_status、分组、成本和硬约束；token 区分 exact/estimated/unknown 和已知小计，
+原调用、失败、重复调用和准备/目标成本保留。总状态为 not_comparable/inconclusive/improved/regressed/mixed/no_change；
+待审、未证明或必要成本未知为 inconclusive。质量退步但工具更少也可能 mixed，不能只看总标签。
+JSON/Markdown 来自同一对象；比较结果不授予采用、安装、提交或发布权限。
+Product auto 路由分布与业务统计保留在绑定的每臂原 task_report，由原类型 owner 计算，不改作配对键。
+
+```mermaid
+flowchart LR
+    A[协议 3 / dataset / plan] --> V{变体装配}
+    V -->|current| B[同一 EvaluationRunner]
+    V -->|baseline / candidate| W[冻结受限文本 / 顺序独立 worker]
+    W --> B
+    U[显式 UE-4 验收驱动] --> B
+    U -->|八条辅助对照| T
+    B --> C[ProductTaskEvaluator]
+    B --> R[RetrievalEpisodeEvaluator]
+    C --> D[原 Product / Workflow / Review / Promotion]
+    R --> T[原 Runtime / Session / Context / Tool / Sandbox]
+    D --> E[原 EventStore / CAS / Git]
+    T --> E
+    E --> F[原 Reader / Projection / Request replay]
+    F --> G[公共结果 / 类型测量]
+    G --> H[离线人工 judgment / 新评分报告]
+    F --> J[检索来源 / 派发 / 查询范围诊断]
+    J --> H
+    G --> I[离线 comparison / 全部配对槽位]
+    H --> I
+    W --> I
+```
+
+UE-4 使用 tests/live_unified_evaluation/baseline.py 显式加载已授权连接，经空 ProxyHandler 直连调用原 EvaluationRunner，
+冻结 current 单臂、原 24×3 材料、每题一次、原预算、60 秒模型超时、无重试及 7200 秒运行期限。生产源码未改变。
+controls.py/controls.json 用原 Runtime、Memory、Skill、History 与 Sandbox 准备八条独立辅助对照；
+四类 reference 工具同时可用，但目标轮仍禁止工作区探索与 shell 重跑。这是显式测试驱动，不新增 evaluator、评分器或产品状态。
+原 source-isolated 72 题合同不变，普通/竞争对照不进入其分母；无入围候选不运行第二臂，波动仅引用原 UE-3 A/A。
+reopen.py 在 owner 关闭后独立重开原 Store，调用原 replay/invariants/review，检查原文件摘要未变；
+Codex advisory 单独标识，不导入人工 judgment。完整测量与正式语义评分分开，不能把 pending_review 视为 passed。
+本轮四类正例暂定为 History 15/15、Skill 14/15、Memory 12/15、Tool Output 8/15；
+11 条正例失败涉及未继续搜索、输出元数据误答、拒绝后只口头承诺搜索。负例仍出现局部观察推断全域不存在。
+来源竞争两条失败时，实际请求中正确目录与工具均可用，模型仍误把批准 Memory 当作手册/输出的值；
+这是一组来源适用性实验线索，不是证明 Projection 或唯一事实源被破坏，也未据此改写生产策略。
+执行证据、用量、全部回答与待审事项见 [记录 021](../deal/021-unified-evaluation-ue4.md)。
+
+`evaluation/retrieval.py` 继续测 Product 内 F5 指标。新 retrieval_episodes_v1 为旧 24 模板 × 3 材料组的开发/回归题库。
+UE-2 真实验证明确八题，UE-3 在这八题上执行双臂 A/A；不产生新 72 题得分，原 55/72 仍是历史合成口径。
+UE-3+ 对原 16 条真实 A/A 轨迹离线重算诊断，8 个正例均有来源和派发证据，8 个负例保留范围待审；全部 16 条仍 pending_review，不产生新成绩。
+当前验证详见 15、[记录 018](../deal/018-retrieval-episode-evaluator.md)、[记录 019](../deal/019-unified-evaluation-ue3.md) 与 [记录 020](../deal/020-retrieval-journey-diagnostics.md)。
+UE-4 已完成限定执行与证据复核，正式语义评分仍待人工；AO-0 合同见 12.7，AO-1 人工队列调度见 12.8。原 L3/L4 继续只消费确切 Wheel，不放宽 L2 或安装权限。
+
+### 12.7 AO-0：受限策略服务、提案与停止合同
+
+`api/optimization.py` 是纯 API：EditableText/TextEdit、DevelopmentObservation、CandidateHistory、OptimizationRequest、
+CandidateProposal/NoCandidate、OptimizationAnalysisResult 与两个 Protocol。`traceh.api` 和 `traceh.plugins` 导出同一对象。
+`evolution/optimization_contract.py` 是开发控制面的唯一 AO-0 校验入口，不写事件、文件、缓存状态，也不启动模型或实验。
+它导入原 `evaluation/variants.py` 的 EDITABLE_TEXT/text_node/apply_candidate，复用相同源码清单及 canonical 摘要。
+
+OptimizationContract format=1 绑定 experiment_id、base_source_digest、benchmark_digest、run_plan_digest、
+development_dataset_digest、development_case_ids、editable_text、limits 与规范 UTC deadline_utc。
+原 benchmark/plan 摘要继续绑定模型/Provider、重试、单试次预算、材料和比较条件；AO-0 不替代原工件核验。
+editable_text() 从真实源码提取本轮允许的 file/selector/old_sha256/text，范围只能收窄原 UE-3 的七个字符串节点。
+validate_request() 核对当前完整源码、合同/开发集摘要、确切可改文本、轮次/分析额度、开发案例归属和请求总字节。
+请求只含宿主选取并脱敏的开发失败说明、证据定位、候选历史、可改文本、analysis_max_tokens 与轮次；请求摘要覆盖整个 payload。
+该结构不自动清洗秘密，也不把 locator 当路径执行；宿主不得把 scorer、留出答案或用户会话放进请求。
+
+CandidateProposal 绑定 request_digest/base_source_digest，带 rationale、targeted_failure_classes、edits、expected_tradeoffs。
+admit_proposal() 拒绝错请求/旧基线/旧文字、越界节点、无改动及原 UE-3 拒绝的重复节点/超大文本，
+把 edits 按 file/selector 排序后交原 AST owner。canonical patch 摘要是 candidate_digest；解释和编辑顺序不影响去重。
+seen_candidate_digests 和请求历史均参与去重。AdmittedCandidate 只包含确切 patch_json、candidate_digest、候选 source_digest；
+不代表运行预留、评分、收益或采用权限。NoCandidate 同样绑定请求并说明原因。
+
+OptimizationLimits 九项全部必填、正整数：轮次、候选数、trial 总数、连续无收益、无效提案、重复提案、
+analysis 调用数、analysis token 总数和请求字节上限；字段名与完整合同见 [AO-0 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO0_CONTRACT.md)。
+OptimizationProgress 是调用方从原记录派生的不可变计数及证据/收敛状态，不能持久化成另一个事实源。
+decide_next() 在新轮次前检查整批预留；取消、到期、证据非 passed、收敛非 converged、未知分析用量、NoCandidate 返回 stop。
+有 pending_reviews 返回 await_review，不推进轮次，也不自行记收益或无收益；正式审阅后才判断下一轮。
+其余达到任一上限，或下一整批 trials/analysis token 预留放不下，也返回 stop；满足则 continue。
+这不是并发预留器；AO-1 由单一 owner 核验原工件、先预留再执行（12.8），失败槽位仍保留，不能截短分母或重跑取最好结果。
+纯判定不根据 comparison 总标签打分，收益需要原正式 assessment、质量非退步、明确成本门槛及完整证据。
+
+`traceh.optimization.strategy@1` 由可信插件通过原 provide 注册；`traceh.optimization.analysis@1` 由宿主通过原 Service/Scope 装配，策略 require 借用。
+服务从同一 Generation Lease 读取并在调用结束后释放；插件拥有自身资源，宿主拥有借出的 analysis/Runtime/Store，不能互相 dispose。
+analysis Protocol 只接受冻结 OptimizationRequest，返回同一请求摘要、独立分析 Session/Turn、原证据摘要、text 和原 Usage；DTO 本身不证明证据存在。
+AO-2 已实现原 Runtime/Provider/Budget analysis adapter（12.9），记录实际成本、核验来源、传播错误并等待取消收敛；没有隐藏 Provider 或 SDK 调用。
+AO-0 已用脚本分析替身走原 PluginManager/Generation，核对提案接纳、代际借用、setup 回滚、失败及重复取消；这不冒充真实模型分析测试。
+
+```mermaid
+flowchart LR
+    A[宿主冻结合同 / 开发失败包] --> V[validate_request]
+    V --> S[原 Lease 中的策略服务]
+    S --> P[CandidateProposal / NoCandidate]
+    P --> H[admit_proposal / 本轮范围 / 去重]
+    H --> U[原 UE-3 AST 校验 / 确切 patch]
+    R[原记录派生 Progress] --> D[decide_next]
+    D --> C[continue / await_review / stop]
+    U --> E[AO-1 / 原 EvaluationRunner / comparison]
+```
+
+AO-0 合同仍是纯校验；人工候选调度见 12.8，真实策略入口见 12.9。AO-0 本身无优化 CLI、后台调度或自动采用；后台宿主另见 12.11；AgentLoop、检索算法及原业务权限不变。
+可信同进程 Python 插件的接口约束不是 OS 安全边界；不提前做 S3-B。旧 72 题已曝光，只能作开发/回归材料。
+实际实验仍须显式选择题目、预算、期限和原评估条件，不能从示例猜默认；AO-1 验证人工流程，AO-2 的一次提案与未见验证组见 12.9。
+
+### 12.8 AO-1：人工候选复用原评估闭环
+
+`evolution/optimization.py` 提供 `run_manual_optimization()`、`inspect_optimization()` 和
+`write_optimization_report()`，属于开发控制面。前者接收已配置的 EvaluationRunner、AO-0 合同、
+显式 DevelopmentObservation 和 ManualCandidate 队列。人工提案绑定该轮 request digest 后，仍交
+`admit_proposal()` / 原 `apply_candidate()`；没有策略插件加载、模型分析或新评分器。
+`EvaluationRunner.for_plan()` 重用同类 evaluator 的构造条件，不借用已运行 trial 的状态；原
+`comparison.inspect_experiment()` 是只读核验/比较入口，原写报告入口与优化层消费同一计算。
+
+输入模板必须是 baseline/candidate 都为 current 的双臂计划；合同摘要绑定真实源码、benchmark、
+dataset、原 plan 和确切选题。冻结材料清单、环境、设置、Provider 实现、沙箱、全部试次以及显式
+script/sandbox 输入字节；每批开始前重新核对。比较的 min_pass_gain、max_token_ratio、
+max_tool_call_delta 均须显式非空，不从示例或旧成绩填默认值。analysis_max_tokens 仍是合同上限，
+本阶段实际 analysis_calls/analysis_tokens 均为 0，不能把评估调用费用算成分析费用。
+
+全新输出目录的独占创建是单写者线性化点；同目录不接管、不自动恢复，不并行安排轮次。
+optimization.json、原计划/输入、sources.zip 冻结实验定义；rounds/NNNN 保存请求、提案、规范 patch、
+有效计划和整批 trial 预留。每轮 evaluation/ 下由原双进程执行器生成原工件及原 Session/Effect 账本。
+outcome.json 仅记录执行引用与稳定错误类别；输入漂移的 stop.json 是调度停止回执。
+进度、正式评分、Token、工具调用及收益都重新读取原证据计算，旧 report.json 不是决策事实源。
+完整分母保留，未开始槽位不冒充已执行，未知用量不按 0 算。工件损坏或错实验身份明确拒绝/停止。
+
+候选只有在执行完整、硬约束通过、正式评分全部可判、零质量损失、三项门槛通过且质量或成本至少
+一项改善时，才得到 `review_candidate`；这只是开发候选可交后续审阅，不代表采用或未见留出通过。
+无收益/不达门槛计入连续无收益；重复提案计入重复上限但不运行 trial；越界提案直接停止。
+待语义评分返回 `await_review` 并退出当前循环，不能用 provisional 代替正式审阅；AO-2 可显式提供标明 model 来源的审阅（12.9），不冒充人工。
+离线检查可显式传入按轮次绑定的原 assessment manifest，记录其确切路径和 SHA 后重算；不重跑、
+不自动继续队列。报告的 `execution_resumable=false` 明确这一边界；新执行必须新建显式实验。
+
+总 deadline 同时受初次计算的单调期限和 UTC 截止约束，原单轮预算不被修改。取消/超时只通知同一
+原 worker，并等待其 Runtime/进程收尾；重复取消不能提前返回。执行错误与收尾错误保留稳定类别；
+持久工件写入失败仍报错，不能假装成功。优化层不安装、提交或推广候选，不发布或修改用户聊天配置；
+评估内部 Product 在隔离测试仓库中的 Git/Promotion 活动仍归原 owner。
+
+```mermaid
+flowchart TD
+    A[人工候选 / 显式合同 / 开发观察] --> B[AO-0 预检与整批预留]
+    B --> C[原文本准入 / 冻结 patch]
+    C --> D[原 EvaluationRunner / 两个隔离 worker]
+    D --> E[原 Session / Effect / Product / 检索证据]
+    E --> F[原 comparison 只读核验]
+    F --> G{正式结果与成本}
+    G -->|待审| H[退出调度 / 显式人工审阅 / 离线重算]
+    G -->|无收益且仍有额度| B
+    G -->|开发候选达标| I[交后续审阅 / 无采用权限]
+    G -->|到限或失败| J[停止 / 保留原证据]
+```
+
+真实隔离进程、请求快照、Product/Git/沙箱和失败/取消的限定验证见第 15 节及
+[记录 023](../deal/023-manual-optimization-loop.md)、[AO-1 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO1_CONTRACT.md)。
+本阶段用确定性 Provider 和本地 HTTP 替身验证执行链，不宣称外部模型改进或新的 72 题成绩。
+真实 strategy/analysis adapter 与未见场景验证见 12.9；无新 CLI、自动冷恢复或默认启用项。
+
+### 12.9 AO-2：一次策略提案、独立语义审阅与人工采用
+
+`evolution/strategy.py` 提供 `run_strategy_optimization()` 与只读 `inspect_strategy_optimization()`。
+入口冻结一次提案的合同、请求、分析/裁判配置及整批额度；TextStrategyPlugin 通过原 PluginDiscovery、
+provide/require、Service Scope 与 Generation Lease 借用 HostAnalysis。插件只见 AO-0 的开发观察与可编辑原文，
+不见 gold、rubric、评分实现或未见验证组；没有工作区读写工具、安装或采用权限。宿主信任插件本身，
+本阶段不增加进程插件沙箱。输出严格解析：元数据字符串不接受数组替代；模型返回 NoCandidate、越界或
+格式错误均留证据并停止，不自动修正输出。合法候选仍交原 admit_proposal/apply_candidate，再作为一条
+显式候选进入 AO-1 原执行器；不新增评测循环、评分器或自动连续生成。
+
+| 模块 | 当前职责 |
+|---|---|
+| `evaluation/model_service.py` | 用原 AgentRegistrar、BudgetLedger、Runtime/Provider 运行单次无工具控制任务；独立 Agent/Session、单 Step、显式输出/token/墙钟限制、无重试；通过原 continuation 接缝完成一份响应 |
+| `evaluation/model_evidence.py` | 只读原 SQLite，重建身份/预算、请求及响应；校验原请求指纹、无工具与冻结参数；`result.json` 只是重算核对的收据 |
+| `evaluation/model_review.py` | 显式运行独立裁判，预留整批调用/Token；把判断送回原 assess/comparison，分列裁判成本 |
+| `evaluation/model_review_protocol.py` | 使用原 answer_dispatches/dispatched_context 构造裁判证据；相同正文去重，保留搜索范围和读取轨迹；按固定 rubric 解析并核验模型判断，不把目录当正文 |
+
+ModelCallConfig 必须明确 provider/model、temperature、encoding、token_limit、output_tokens、safety_tokens、
+timeout_seconds、connection_digest。Key 不进入这些值或工件。TokenBudgetPolicy 在请求前估算完整输入压力，
+原 Budget 先预留单次额度，实际用量以 attempt-end 及预算结算为准。未知/估算 usage、超出 grant 的报告
+不能获得自动资格；未知不是零。分析费、裁判费、原试验费分别报告，不能用试验节省掩盖额外控制调用。
+
+取消只向同一个受保护任务通知一次，等待 Provider/Runtime 收敛、预算结算关闭、SQLite 关闭后返回。
+重复取消不能打断收尾；执行和 cleanup 同时失败保留两者。调用失败的原 Session 与收据仍保留。
+缺失证据明确停止，不能因为 report.json 写了成功就继续。原调用和双臂工件可关闭后独立重放。
+
+judgment 格式为 **2**，明确 `origin.kind=human/model`。模型审阅记录固定配置、每题实际 call 定位及摘要；
+只读 assess/load_assessment 会重新关联原答案、rubric、可见证据与原模型输出，不能手改判断后仍通过核验。
+格式 1 明确拒绝；对旧执行补审需重新 export 当前格式，不自动迁移旧判断。模型未执行或没有原依据时不
+伪造人工 reviewer。正例没有实际派发证据，程序直接判 failed，不花一次裁判调用来推翻硬约束；模型失败、
+协议不合法或精确用量未知保留 pending_review，并停止另一臂后续裁判；部分审阅由原比较器保留待审。最终候选采用仍由用户决定；模型判断绝不是 Promotion 授权。
+
+```mermaid
+flowchart TD
+    A[显式开发观察与允许文本] --> B[原 Plugin Scope / Generation Lease]
+    B --> C[宿主分析 / 原 Runtime 与 Budget / 独立 Session]
+    C --> D[严格提案准入 / 一份冻结候选]
+    D --> E[AO-1 / 原 EvaluationRunner 双臂]
+    E --> F[原事实与证据硬门禁]
+    F --> G[独立模型语义审阅 / 固定 rubric]
+    G --> H[origin=model / 原 assess 与 comparison]
+    H --> I[保留基线或交用户审阅 / 不自动采用]
+```
+
+真实实验先冻结开发题和本轮提案未见的新场景，候选冻结后只验证同一 patch；不把已看过的题称作未见集，
+不因失败而删题、放宽门槛或反复选择最高分。相同远端模型分属独立 Session，不等于统计独立；模型裁判仍
+可能有共同偏差，不声称替代最终人工判断。一次入口不连续调优、不自动恢复，无动态 Workflow 或多 Agent
+协作扩展。合同见 [AO-2](../plan/TRACEHARNESS_OPTIMIZATION_AO2_CONTRACT.md)、[ADR 0067](../adr/0067-independent-model-assessment-and-human-adoption.md)，实际验证与边界见 [记录 024](../deal/024-strategy-analysis-and-model-review.md)。
+
+### 12.10 AO-2+：语义裁判校准，未采用实验策略
+
+本阶段只研究 evaluation 裁判的说明与输入呈现，复用 12.9 的原控制模型服务、原证据和
+review/assess/comparison。先审核原 18 份答案，再冻结 12 个开发输入：8 个原答案、4 个合成对照。
+额外期望标签为 Agent 合同审核，不是独立人工 gold，不进入模型输入。两条件的 question、answer、
+expectation、rubric、可见证据与搜索/读取轨迹相同；候选只增加派生范围解释和裁判任务前后说明。
+原验证组已被本次检查，不再称未见集。没有重新运行检索旅程。
+
+首次 9 次真实调用后因输出被评问题的答案而非裁判 JSON 停止；按事前有界修订保留原记录，再冻结
+48 次最终对照与最多 17 次原主线复审。校准的独立样本中，已收敛且精确计费的无效输出保留为失败观测，
+不重试；运输、生命周期或用量失败仍停止。生产 model review 的 pending 即停止语义没有改变。
+
+| 最终固定对照（12 项，每条件两次） | 原裁判 | 实验候选 |
+|---|---:|---:|
+| 符合开发预期 | 16/24 | 15/24 |
+| 误放 / 误拒 / 待审 | 7 / 0 / 1 | 6 / 3 / 0 |
+| 重复结论不一致的样本 | 1 | 1 |
+| 精确 tokens | 146,462 | 171,217 |
+
+候选修正一个目录否定样本，却仍误放另一主题下的目录否定及漏动作答案，并把 value_type/code/number
+误解为只输出单值的格式要求，误拒有依据的 Memory/History 完整回答。范围元数据实际送达不能保证
+模型遵循其含义。单值 expectation 与多项问题要求的关系是后续评分合同应澄清的问题，尚未改协议。
+
+候选未通过 24/24 且不低于原条件的冻结门槛，**生产 model_review_protocol.py 已按阶段前源码逐字节恢复**。
+没有新 evidence_scope 函数、提示或测试专用评分分支留在生产；实验源码、候选测试、输入和判断都归档。
+原 4 份 assessment 在恢复后可重开；实验 4 份 assessment 因策略绑定不同在当前源码下明确拒绝，已用
+对应冻结源码核验通过。不增加旧策略兼容分支，不重写原判断，不把实验复审差值计作检索提升。
+
+真实直连 qwen-plus 共 74 次、494,845 精确 tokens：首次停止 9 次/56,502，最终校准 48 次/317,679，
+原主线复审 17 次/120,664；另 1 个正例由原硬门禁零调用拒绝。没有网络失败、未知用量或资源未收敛。
+原 18 份的实验评分为开发 2/4→3/4、原验证组 3/5→4/5，仅 13/18 符合本次审核，不能证明优化效果。
+AO-2 原实验和旧 72 题口径保持不变。
+
+`tests/live_optimization/calibrate.py` / `calibration_inputs.py` 是这个固定实验的驱动与显式夹具；
+`reopen_calibration.py` 从原调用重建观察并核对两条件证据，再走原请求重放和审阅。当前源码拒绝把
+恢复后的原裁判当历史候选执行；复现须显式加载归档源码及原定位，不自动切换产品策略。
+这些文件不构成新 evaluator、插件、优化 CLI、后台服务或事实源。
+
+所有 74 个 Session/请求离线重放通过，428 个实验文件检查前后不变；原 AO-2 的 1,523 个文件与先前
+归档逐字节相同。生产恢复后 116 项定向回归通过，6 项为校准记录/拒绝/分母/证据等价的离线检查；
+实验专项测试随候选归档。没有全量、L2–L4、Wheel、安装、提交或发布。
+合同见 [AO-2+](../plan/TRACEHARNESS_OPTIMIZATION_AO2_PLUS_CONTRACT.md)，
+解释见 [记录 025](../deal/025-semantic-judge-calibration.md)，原证据见
+[数据索引](../validation-data/unified-evaluation/ao2plus/README.md)。未宣称裁判已达到人工可靠性；采用权仍属用户。
+
+### 12.11 AO-3：宿主托管的运行期后台受限优化（限定验收完成）
+
+`evolution/background.py` 的 `BackgroundOptimizationHost` 持有应用生命周期内唯一活动实验任务；`project_background` 从同一 EventStore 的 `optimization-background:<workspace fingerprint>` 流派生状态。原 Session/Effect 拥有运行证据，原 Evaluation 拥有评分和实际费用。新流只写 period-opened、enabled、observed、admitted、settled、review-dismissed，expected_seq 是跨宿主实验准入线性化点，不新增数据库或复制任务状态。
+
+`chat/background.py` 用显式工作区、题库、双臂 run-plan、允许的文本节点、周期额度、截止时间及控制调用限额装配原能力。初版只接 source-isolated RetrievalEpisodeEvaluator；模型名称、Provider 和 endpoint 必须与本次聊天一致。`evolution/background_experiment.py` 冻结当前源码并复用原 run_strategy_optimization、隔离 worker 和模型审阅。EvaluationRunner 可把进程内借用的 Key 仅传给指定 worker 环境变量，不写到冻结材料，也不修改父进程环境。
+
+`RuntimeObservation` 区分真实反馈与开发 case：只引用已结束 Turn 的 Session、截止序号、证据摘要和说明，不虚构 gold/case_id。自动观察仅包含当前 Turn 工具拒绝/失败计数，明确正常拒绝不等于错误；显式反馈只发送用户填写的说明和定位。两类信号按原证据身份分别去重，完整聊天不自动上传，不回放真实工作区写入。固定题库成绩不能直接证明修复未经标注的反馈。
+
+周期预留累计实验次数、完整 trial 数和分析/裁判 Token 上限；预留不退款、不冒充实际 usage，每题预算仍由原执行合同负责。到期或额度不足等待明确续批，应用重启不能重置额度。续批在原流写入新周期、保持旧反馈去重，默认暂停；候选摘要去重在原提案准入处检查。待审可继续记录反馈但不新增实验；无新反馈等待，无收益冷却，未知费用/未证实收敛阻塞。遗留活动准入不自动接管或重跑。
+
+TUI F2 提供后台优化表单、从真实题库勾选题目与材料版本的计划向导及装配开关，F6 或 `/optimize` 提供状态、开启、反馈、暂停、拒绝待审候选和明确续批。同一 TUI 的前台操作先取消并等待后台收敛；重复取消只通知同一 worker 一次。退出按后台、Chat/Product 与 Runtime 的原 owner 顺序关闭；无 OS daemon。生产仍用当前批准版本，没有自动采用、源码修改或在途热切换。错误和部分费用保留，不能把“没有结果”解释成零成本。
+
+```mermaid
+flowchart LR
+    C["完成的 Chat Turn / 用户反馈"] --> H["宿主：作用域与原证据定位"]
+    H --> S["原 EventStore：后台周期与准入"]
+    S --> A["原 AO：一份受限说明提案"]
+    A --> E["原 Evaluation：隔离双臂与审阅"]
+    E --> W["等待 / 冷却 / 停止 / 用户审阅"]
+    W --> S
+    E --> F["原 Session / Effect / 评估证据"]
+```
+
+真实小样已完成：10 个 Session、21 次模型请求、126,191 exact tokens、0 次失败；原请求重放通过。两题模型评分 1/2→2/2，但任务 Token 27,820→34,498 超过冻结的 1.15 倍门槛，候选未晋级或采用。真实运行后立即退出竞态已通过定向及反向验证；最终发行门禁另见 v0.11.0 验证记录。合同、决策和验证见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)、[ADR 0068](../adr/0068-runtime-background-bounded-optimization.md) 和 [记录 026](../deal/026-runtime-background-optimization.md)。
+
+发行核查补充：独立 worker 回执现为 format 2，记录实际 pid 与 parent_pid；宿主进程记录 owner_pid 与启动 pid。原比较器验证“宿主直接启动 worker”或“宿主启动器→worker”的同一进程所有权链，支持 Windows venv 启动器而不忽略身份。请求摘要、冻结源码、环境、报告及回执摘要仍全部核对。旧 format 1 实验需用其归档冻结源码检查，当前比较器明确拒绝，不改写旧记录。证据不可比较时后台保留未知成本并停止，TUI 显示证据不完整，不把缺失统计当作零。
+
+最终 0.11.0 wheel 在独立 Windows venv 又运行同一规模的小样：10 个 Session、21 次请求、125,128 exact tokens、0 失败，759 个原文件不变且请求重放通过。任务模型评分仍为 1/2→2/2，任务 Token 34,376→28,090、工具 4→3，本轮达到原冻结门槛并进入 review_candidate，未自动采用。前台 24,729、分析 5,942、任务 62,466、裁判 31,991 tokens。这是另一轮独立小样；前一轮成本超标记录仍保留，不拼分、不声称普遍改善。
+
 ## 13. CLI、配置与日常运行
+
+AO-2+ 没有新增 CLI、TUI 开关或默认裁判配置。校准驱动是显式研究入口；当前主线拒绝复跑已撤回的候选，需在独立目录使用对应冻结源码和原证据。离线重放不加载凭据、不调用 Provider，详见 12.10 与[驱动说明](../../tests/live_optimization/README.md)。
+
+AO-0～AO-2 提供 Python 合同、人工队列、一次策略实验及显式模型审阅入口，无新聊天命令或默认启用项。调用方提供原 EvaluationRunner、开发观察、ModelCallConfig 和全新输出目录；不自动读取私人会话。入口见 12.7–12.9，真实驱动见 [AO-2 驱动说明](../../tests/live_optimization/README.md)。
+
+UE-4 显式验收脚本与必填 profile/sandbox/benchmark/output 参数见 [驱动说明](../../tests/live_unified_evaluation/README.md)。它们不随普通 pytest 自动联网，不改用户启动配置；72 题、八条辅助对照和离线复核分开输出。
+
+检索材料选择、单臂/双臂 plan 与互斥离线 --review/--assess/--compare，命令及完整参数见 12.6 与 [UE-3 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_CONTRACT.md)。
+UE-3+ 沿用 --review/--assess，在新的输出目录查看 diagnostics.md/diagnostics.json；无需新配置或重跑模型。原实验与新分析器分别记录身份，见 [诊断合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_PLUS_CONTRACT.md)。
 
 D：F2“自动压缩”页新增“模型语义摘要（使用当前连接）”；CLI 为 `--auto-compact-method semantic`。需开启自动压缩、填齐 Token 预算、至少 2 步，否则给出固定中文说明。profile format 1 可选 `auto_compact_method`，默认规则摘录；保存共 26 项。Ctrl+X 会显示最近请求用途，摘要 JSON 不作为聊天正文。
 
@@ -2309,7 +2701,7 @@ F5 增加 `--context-config` 文件输入及共享治理命令（13.10），不�
 | `traceh replay` | 重放模型 Surface 并检查请求重建 |
 | `traceh compact` | 手动追加 Surface Replacement；`--through-seq` 必须**精确等于**某个闭合 Turn 的 `turn/end` 序号，否则以退出码 3 报出稳定 code（`compaction-boundary-not-closed-turn` / `compaction-no-closed-history`），不会静默前移到更早的 Turn |
 | `traceh sessions` | 列出 Session |
-| `traceh eval` | 运行 `benchmark.json` 定义的 ProductTask Benchmark；`--output` 必须尚不存在，度量不完整时退出码 4 |
+| `traceh eval` | 运行根协议 3 的共享评估（当前 ProductTaskEvaluator）；`--output` 必须尚不存在，度量不完整时退出码 4 |
 | `traceh plugins list` | 列出已安装插件的元数据，**不 import 任何插件** |
 | `traceh plugins inspect <id>` | 同上，针对单个插件；未知或有问题时退出码 6 |
 | `traceh plugins doctor [ids...]` | import、setup、health check 后**立即 dispose**；失败时退出码 7 |
@@ -2319,7 +2711,7 @@ F5 增加 `--context-config` 文件输入及共享治理命令（13.10），不�
 | `traceh plugins rollback` | 按显式当前/未完成推广 ID 恢复上一份精确 Wheel 或卸载首版；失败时退出码 10 |
 | `traceh doctor` | 检查 Python、数据目录和非秘密 Provider 配置状态 |
 
-`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`eval` 只接受 `--output`、`--env-file`、provider 选择（`--provider`、`--model`、`--script`、`--base-url`、`--api-key-env`）与六个 model-retry policy 参数；Benchmark 自己拥有数据目录、Verifier 和仓库，所以 `--data-dir`、`--verify-command`、`--plugin-verifier`、`--max-steps` 和 `--plugin` 是它无法兑现的参数，因此干脆不提供而不是接受后忽略。同一次 Eval 只解析一份 policy 并应用到所有 task/repetition/arm，报告也保存该 policy；它不改变 Product success 或 resolved-arm 归属。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
+`run`、`chat`、`resume` 接受 `--plugin`（可重复）。`recover`、`inspect`、`replay`、`compact`、`sessions` 使用同步的 `build_default_runtime()`、不启用插件，因此也**不接受** `--plugin`——提供该参数会是误导。`eval` 接受 `--output`、`--env-file`、`--sandbox-config`、`--run-plan` 或直接 `--repetitions/--max-trials/--eval-timeout-seconds`、provider 选择（`--provider`、`--model`、`--script`、`--base-url`、`--api-key-env`）与六个 model-retry policy 参数；Benchmark 自己拥有数据目录、Verifier 和仓库，所以 `--data-dir`、`--verify-command`、`--plugin-verifier`、`--max-steps` 和 `--plugin` 是它无法兑现的参数，因此干脆不提供而不是接受后忽略。同一次 Eval 只解析一份 policy 并应用到所有 task/repetition/arm，报告也保存该 policy；它不改变 Product success 或 resolved-arm 归属。`plugins list/inspect/doctor/validate/compare/promote/rollback` 也不接受运行时 `--plugin`；`validate` 的 `--plugin-id` 只在候选声明多个 Entry Point 时显式选定待验证身份，绝不代表启用插件。`compare` 与 `promote` 的目标身份必须来自 L2 证据，不能由命令行替换；`rollback --plugin-id --distribution` 只定位同一规范包所有权下的既有 Registry 记录，仍必须同时给出精确当前推广 ID。
 
 除 `chat` 外的命令都是 run-to-completion：接收一次任务，执行到 Turn 结束，打印最终文本和摘要。`chat` 增加了同一 Session 内的连续输入循环，以及 Turn 运行期间的实时 Step/Tool Timeline（13.6）；但它仍是行式提示符：没有 token 流式输出、执行前审批，也不能在 Turn 运行期间继续输入。`run`/`resume` 本轮**没有**接 Timeline。
 
@@ -2892,6 +3284,13 @@ flowchart LR
 
 ## 14. 已有扩展边界与未来接口
 
+AO-2+ 完成一次受限校准，候选因误判回退；没有新增生产层或扩大优化权限。当前原裁判的语义偏差仍存在，后续评分合同澄清尚未实现（12.10）。
+
+UE-4 执行和证据测量已完成，人工语义待审；辅助驱动不构成新产品能力或优化服务。
+统一 Evaluation 已接 Product 与独立检索旅程；受限文本候选、独立进程与离线 review/assess/compare 可用，UE-3+ 在原评估层提供检索派生诊断。诊断没有评分、策略或采用权限；AO-2 已有一次受限策略提案，后台优化已接入并完成限定验收（12.11），原 Plugin typed service 和 L3/L4 边界不变。
+`api/optimization.py` typed 服务合同及 `evolution/optimization_contract.py` 校验/停止判定已实现（12.7）；`evolution/optimization.py` 人工队列调度和离线重算已实现（12.8）；`evolution/strategy.py` 的真实提案及 evaluation 的模型审阅已接入（12.9）。
+不新增任意 evaluator 插件装载或 Runtime 内优化循环；见 12.6 与[执行设计](../plan/TRACEHARNESS_UNIFIED_EVALUATION_AND_OPTIMIZATION_DESIGN.md)。
+
 当前代码中存在但尚未形成完整产品能力的边界：
 
 | 方向 | 已有协议/原语 | 当前状态 |
@@ -2919,7 +3318,71 @@ flowchart LR
 
 标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
+### 14.1 DA-0～DA-5 动态协作执行计划（总体认可，未实现）
+
+[DA 执行计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md) 已获用户总体认可；它不改变当前生产能力或已冻结历史 ADR。DA 仍建议在 MCP 前推进，AO-3 后台优化可基于现有检索独立实现（14.2），阶段执行已获授权，版本号待阶段验收后确认。
+
+1. ProductTask 保留需求、授权、任务总预算与交付状态；Workflow 保留执行、验证、审批关卡。动态分工仅在执行节点内部发生，不新增任意 DAG 重写或为每个子任务建立 ProductTask。
+2. 主 Agent 按需组织临时只读子任务，自己负责写入/整合。只有主 Agent 可委派；首版无孙 Agent、兄弟自由广播、多写入者或对脏工作区的并行审查。最终目标是 single/adaptive，旧固定 multi/Router 在 DA-5 完成调用方切换后退出，旧记录归档；不静默迁移或删除数据。
+3. 身份、工作指令、投递状态、预算、产物仍由原 Directory/Inbox/Delivery/Budget/Artifact 等 owner 解释。交接视图派生自原报告和获准原文，区分子 Agent 已读、报告可用、主 Agent 已收到；不增加 Memory authority。收尾必须证明子树已收敛再进入产物与验证。
+4. 原 EvaluationRunner 增加正式的执行策略对照，区别于说明文本候选对照；Product 与 RetrievalEpisodeEvaluator 各自定义成功，整树费用和所有失败保留。当前 review/assess 仅接检索旅程，DA-3 计划补 Product 语义审阅适配；不能把当前 Product durable success 直接当作开放语义正确。
+5. 拟准备 12 道开发题与 6 道不同来源留出，按简单、独立调查、依赖/信息不足分组；旧 72 条仅作已见回归。A/A、机制、正式对照与条件性优化/留出分开，最多 116 个任务 trial，提案/裁判费用另计；具体真实额度在阶段合同中冻结。当前没有 DA 实验运行或协作成绩。
+6. AO 只增加批准范围的委派说明文本候选，沿用一次策略提案、原比较与原 review/assess；不自动采用。无收益可以停止，不放宽硬门禁或追逐指定分数；默认切换、提交和发布由用户决定。当前回合仅文档；未来阶段也不运行全量或 L2–L4。
+
+### 14.2 AO-3 后台优化：已接主线，限定验收完成
+
+用户已授权先完成 AO-3 并提交发布，再执行 DA-1～DA-5。后台宿主、F2/F6 入口与原有限实验的当前实现见 12.11，限定门禁、两轮独立真实小样与安装包证据已完成；发行见 0.11.0 验证记录。
+
+后续 DA-4 把获准协作说明接入同一后台 owner；不另造无限调用服务、不自动修改源码或采用候选。DA 的有限实验额度不等于后台长期额度。详见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)。
+
 ## 15. 测试与验证基线
+
+发行定向首批 318 passed / 12 skipped，在一个过期的 0.10 版本重复断言处停止；删除两处重复版本断言、由原 test_version_contract 唯一检查 0.11 版本后，架构/版本/TUI 及相邻合同批次为 110 passed / 18 skipped。未修改已经通过的执行源码，未把两批相加；跳过项是未显式配置的 Docker 测试。另显式使用现有测试镜像，Product 两臂经过真实 Git、Docker 验证与原推广链，1 passed。编译、修改范围 Ruff、collect-only 3,978 条、diff-check 和文档检查通过；五项关键保护的反向检查均因预期根因失败。新 wheel 离线安装后 316 个包文件与源码逐字节一致，CLI/doctor 正常。没有运行全量 pytest 或 L2–L4，也没有把模型语义判断当成人工评分。 见[记录 026](../deal/026-runtime-background-optimization.md)。
+
+AO-2+ 生产恢复后 **116 项定向回归通过**，6 项为本轮新离线检查；实验阶段 116 项、最终候选呈现 47 项分别保留，不累加重复计数。全部 74 份真实请求重放通过，494,845 tokens 含首轮停止成本，428 个实验文件不变、1,523 个原 AO-2 文件不变；候选门槛失败，生产策略恢复。compileall、仅收集、修改范围 Ruff、反向验证及文档/凭据检查见[检查记录](../validation-data/unified-evaluation/ao2plus/checks.json)。未跑全量、L2–L4、Wheel 或发布。
+
+AO-2 一次策略提案与独立模型审阅已完成限定验证。 当前 **193 项不同的相关检查**均已取得通过结果（22 项 AO-2 新测试）；首次相邻回归发现异常类型断言和旧架构断言不一致，修正后复跑 39 项全通过。三项关键保护反向验证通过；compileall、3959 项 collect-only、修改范围 Ruff 和反硬编码扫描通过。真实直连 qwen-plus 共 **63 次请求 / 327,963 exact tokens**，含被拒提案，连接失败 0；39 个 Session / 63 份请求独立重放通过，第二轮 1,542 个原文件级核对不变。开发模型评分 **3/4 → 3/4**，本轮未见五组 **5/5 → 5/5**；开发负例裁判对两臂采用了不一致标准，原分数保留为模型意见，不声称候选真实净增或退步。质量净增门槛未通过，保留基线、无自动采用；原试验 212,566 tokens、分析 11,876、裁判 103,521 分列。定向/反向验证与 SQLite 临时副文件检查见 [记录 024](../deal/024-strategy-analysis-and-model-review.md) 和 [数据索引](../validation-data/unified-evaluation/ao2/README.md)。没有全量、L2–L4、Wheel 或提交发布，不拼接旧 72 题分数。
+
+AO-1 共 **142 项不重复定向检查通过**：人工闭环新增 22 项；AO-0 合同/服务、原 evaluation
+比较/证据/worker/生命周期/架构及 Product benchmark 相邻回归 120 项。真实隔离进程证明候选说明
+仅进入候选请求，原 review/assess 只读补审不重跑；Product 四个正式 trial 经真实 Git、已有固定
+Docker 镜像和原验证/推广账本完成，两次无收益停止，中间重复提案不执行。回复为确定性脚本或
+本地 HTTP 替身，不宣称外部模型效果。Windows Git 验证沿用原 Product 的短临时目录；深路径
+首次触发 workspace-git-failed 被正确保留，未放宽门禁或承诺任意长路径支持。
+三项反向变异分别移除待审判断、确切运行身份核对、质量损失保护，得到三个预期断言失败；
+原字节已恢复。末次调整让不完整/坏证据的 Progress 明确标记 unknown/unproven，相关 21 项复核通过。
+compileall src/tests、五个改动 Python 文件 Ruff、硬编码扫描、仅 collect-only（3937 项）、
+七份文档章节/相对链接/代码块/秘密形态和 diff 检查通过。详见[记录 023](../deal/023-manual-optimization-loop.md)。
+未跑全量、L2–L4、Wheel 或外部 API；没有新 72 题成绩或自动采用。
+
+AO-0 离线 105 项不重复定向检查通过：新合同/服务 53 项、原 Plugin SDK/ActivationSet 与 evaluation 比较/证据/架构相邻回归 52 项。
+临时放宽本轮范围、移除去重、跳过 pending_review 三类保护，四个定向测试按预期失败；恢复后新合同/服务 53 项再次通过。
+compileall src/tests、七个修改源码/测试文件 Ruff、全仓 collect-only 3915 项通过；收集不等于执行全量。
+没有运行全量、L2–L4、Wheel 或真实 API；不宣称检索涨分。AO-2 新入口及真实验收另见 12.9 与记录 024，不与 AO-1 数量或旧 72 题成绩拼接。
+验证及文件范围见[记录 022](../deal/022-bounded-optimization-contract.md)，此前 UE-4 归档与人工待审状态不改。
+
+UE-4 新增显式验收驱动与材料，生产 src 字节保持 UE-3+ 身份。57 项不重复定向检查通过：材料/派发 4、辅助对照正反与失败/重复取消 4、相邻合同/架构/审阅 49。
+编译 src/tests、50 个修改范围源码/测试文件 Ruff、collect-only 3862 项通过；没有执行全量或 L2–L4。
+真实 qwen-plus 直连当前单臂 72 条全部关闭、443 次请求无模型失败、2,085,765 exact tokens；90 个 Session 的 443 份请求独立重放与不变量检查无错误，原 297 个文件摘要不变。
+辅助八条实际用了 52 次请求、307,502 exact tokens，四条普通题目标轮零工具、四条来源竞争两条符合预期来源和值；每条原输出只执行一次。
+两组共 495 次真实请求、2,393,267 exact tokens（含准备），不是 495 个题目。60 道正例暂定联合通过 49，12 道负例未自动评分，正式 72 条仍全部 pending_review。
+原账本/源码/材料、独立复核、逐题 Codex advisory 与人工待审包一同归档，advisory 未导入 judgment；原 A/A 不冒充新重复运行。
+详细门禁、冻结材料扫描边界及归档复核见 [记录 021](../deal/021-unified-evaluation-ue4.md) 和 [证据说明](../validation-data/unified-evaluation/ue4/README.md)。
+
+UE-3+ 诊断/派发/审阅/检索定向 41 项、相邻比较/证据/架构 46 项通过，共 87 项不重复用例。覆盖真实 Docker 输出主线、完整搜索片段、仅目录、失败/错章节读取、失败 Attempt、取消和显式人工评分更新。临时绕过实际派发消息检查，未派发目录被误记 observed，新测试按预期失败；恢复后通过。原 16 条真实 A/A 离线复算：8 个正例均有来源和足够派发证据，8 个负例保留范围审阅，全部仍 pending_review；新增 API 调用 0，原实验 719 个文件哈希不变。归档分析器经实际 CLI 重导两臂，诊断 JSON 与归档完全一致。compileall、Ruff 46 文件、collect-only 3858 项通过；该 UE-3+ 阶段未执行全量、L2–L4 或 UE-4/AO。细节见 [记录 020](../deal/020-retrieval-journey-diagnostics.md) 和 [离线诊断证据](../validation-data/unified-evaluation/ue3-plus/README.md)。
+
+原 UE-3 真实 qwen-plus 直连 A/A 为 8 对/16 条，两臂源码和准备文字相同，全部执行关闭；8/8 正例有实际派发证据、16 条待审，因此 comparison=inconclusive。两臂 241,784/243,031 exact token、21/21 工具调用，102 次模型请求无失败；原阶段关闭后重开 20 个 Session、102 份请求独立重放无错误。原比较/取消/原报告摘要/SQLite 连接关闭验证保留在 [记录 019](../deal/019-unified-evaluation-ue3.md) 与 [真实证据](../validation-data/unified-evaluation/ue3/README.md)，不冒充本轮新增 API 或重放。
+UE-3+ 两版编号章节、相对链接、代码块、秘密形状、反硬编码、归档摘要与 git diff --check 均通过；分析器当前源码身份与归档一致。
+
+UE-2 定向公共/CLI/架构集合 122 项、检索/生命周期/真实沙箱取消集合 20 项及后续定向收口通过（分组有重叠，不累加）；相邻 History/Skill/Memory 47 项、显式 Docker 下工具输出 33 项通过。真实 qwen-plus 八条执行完成，4/4 正例有实际派发证据；关闭后 10 个 Session、50 份请求独立重放无错误，242,709 token。三个负例的结论范围过大已留预审说明；八条仍 pending_review，不算新的 72 题得分。compileall、修改范围 Ruff 35 文件、collect-only 3816 项及文档门禁通过，未运行全量或 L2–L4。见 [记录 018](../deal/018-retrieval-episode-evaluator.md)。
+
+UE-0/UE-1 当前合同/指标/架构集合 84 项通过，相邻 CLI/Product 配置与 Workflow/存储/推广架构 86 项通过。
+Product/F5 和公共生命周期 owner 定向门禁见 [记录 017](../deal/017-unified-evaluation-ue01.md)。
+最终收口 13 项通过，覆盖修正后的归档/重试断言、新报告失败保护、真实 Product 与 F5 正反和取消路径。
+两条旧 Workflow 用例在隔离干净 HEAD 同样失败：夹具漏接沙箱且命令使用宿主解释器；仅修正测试装配后相邻集合通过。
+run-plan 空值保护移除后公开 CLI 反例失败，恢复后通过。真实执行为本机 Git/Docker，模型是确定性替身。
+F5 冻结十一题实际 Product 11/11、检索质量 11/11、隔离违规 0。它属于原 Product 指标，不是 72 条主动检索的新成绩。
+没有全量、L2–L4、真实模型或构建；原 55/72 不变。初次文档调研记录 016 为历史，本次以 017 为准。
 
 本机检索体验核对：用户旧夹具存在沙箱 profile 未开启知识、旧检索 profile 固定旧 Session 的配置分歧。新建独立 Session 13 / Context 12 体验 profile 与逐行手册，原 lab 启动、列表、压缩通过显式 --profile 使用同一数据目录；不修改原配置、迁移旧会话或调用真实模型。治理与主动搜索 68 项定向检查通过；脚本 Provider 的临时数据库通路预检不代表自然模型召回成绩。详见 [本机体验记录](../deal/014-retrieval-lab-v13.md)。
 
@@ -2927,7 +3390,7 @@ flowchart LR
 
 沙箱已完成本轮限定定向验收；以下早期检查保留为阶段证据：S0 的 13 项真实实验、此前 S1 的 65 项通过保留为阶段证据。当前沙箱合同/真实 Docker/发布/Runtime/Product/Verifier/配置/只读观察 9 文件 59 passed（94.232 秒）；配置/Line/Product 合同与架构相邻 8 文件 176 passed（56.179 秒）。更早 Promotion/Budget/Runtime/Plugin 相邻 109 项及 Product 配置/装配/读取 74 项通过。这些集合存在重叠，不相加冒充全量。Review owner/策略与取消清理 cause 三条保护均有按预期失败的反向证明。旧宿主私有管道/进程锁测试已改为公共原 owner 的真实容器、输出、取消和解释器退出证据。评估相邻旧进程 74 项中两处夹具失败已修正并独立复跑 2 项通过；S3-A/stdio/Plugin/Promotion/Runtime/观察/Product 合同相邻 140 项通过（86.454 秒），另有输入额度、期限和精确清理错误的定向补查。错误插件版本授权已反向证明，实际启动后回滚、拒绝断言失败。编译、全库 collect-only、修改范围 Ruff 与 diff 按当前修改更新；最终 25 文件 463 passed（226.741 秒），观察补查 4 passed、部分写入取消 1 passed；没有执行全量或 L2。见 [执行记录](../deal/012-sandbox-execution.md)。
 
-本次 v0.10.0 的版本、定向回归、打包和文档检查以[发布验证](../validation-v0.10.0.md)为准；下列数字是各阶段历史证据，不相加、不冒充新全量。
+本次 v0.11.0 的版本、定向回归、打包和文档检查以[发布验证](../validation-v0.11.0.md)为准；下列数字是各阶段历史证据，不相加、不冒充新全量。
 
 当前 E 收口与语义复测门禁（集合有重叠，不相加）：E1 最终 176 项、E2 最终 313 项、E3 相邻主线 198 项、
 界面 61 项及最终专项 6 项通过；语义筛查控制 12 项、相邻检索/evaluator 55 项通过。关键保护均有反向验证。
@@ -3301,6 +3764,8 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
+AO-2+ 实测确认模型裁判可能混淆目录覆盖与全文、单值参考与多项问题要求，甚至回答被引用问题而非评分。该候选未采用，原裁判也不能视作独立人工 gold；本轮开发一致数不代表搜索准确率或通用裁判准确率。完整事实与拒绝决策见 12.10。
+
 v0.9.0 接受检索漏读和证据范围误述等已知限制，55/72 是内部固定题库合并成绩。沙箱首个已测组合仅为 Windows/Docker Desktop/Linux 容器与禁网。程序化 shell/Verifier/Product 已接入，未配置时拒绝进程执行；CLI/TUI 配置与只读展示已有定向检查；S3-A/S4 限定定向验收已完成；环境选择仍不自动验证项目依赖。只对授权普通文件做复制及逐文件写回，不提供全目录事务，也不抵御宿主同权限恶意并发写者；部分发布有明确证据。网络 allowlist、其他平台、自动拉镜像和冷恢复没有实现。S3-B/MCP/自由 Workflow 不在本次授权范围，isolated 继续拒绝。
 
 B+ 只搜索一份已定位 retained output 的字面内容；不搜索 inline 小结果，不提供跨输出联合或语义检索。当前会加载 Session/Effect 流并扫描原文，搜索页限额不是磁盘、CPU 或全请求上限。真实模型可能误配相邻记录；命中行分隔和读取动作改善导航，不构成任意模型均正确的保证。
@@ -3408,6 +3873,13 @@ exact 仍不提供模糊路径、别名、路径自动修正或越过 selection 
 
 ## 17. 变更影响矩阵
 
+DA 总体方案已认可，当前仍仅有文档，已同步 1、3、14.1、17。AO-3 后台目标见 14.2：AO-3 验收须联合核对宿主生命周期、原证据采样/披露、跨轮准入与费用、原有界 AO/评估、TUI 和重启对账，不能把一次提案循环包装成无限调用。未来实现必须联合核对 Product 装配/资源、公共 Supervisor 与 Inbox/Delivery、Budget/Workspace、交接 Reader/Context、Workflow 收尾、Evaluation 策略配对/整树归因/Product 语义审阅及原 AO；具体 owner、正反例和退出条件见[DA 计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md)。不得以该计划新增第二事实源或提前宣称动态协作已完成。
+
+AO-2+ 校准须核对原模型调用、review_input/原策略绑定、诊断证据范围、候选与基线的输入等价、待审分母及含失败成本；同步 1、3、12.10、13–17。驱动只复用原主线，不更改旧评分，候选不达标就保留证据并恢复原策略。
+
+UE 输入/调度/报告变化同时检查 Product evaluator、CLI、两个 shipped benchmark、F5 采集入口和生命周期定向测试；
+Product 成功规则只在原 metrics owner 修改，不能在公共 report 再写一份。协议切换同步 dataset 与 run-plan 摘要。
+
 修改 D 时还须同时检查摘要来源判别、请求许可/Budget/usage、恢复、History 首 Step 披露、C 折叠、TUI 配置和重放；不能只改摘要 Prompt 而不核对冻结 prompt digest 与持久来源。
 
 修改 token 计量需联查 `llm/token_meter.py`、RequestBuilder/AgentLoop、RuntimeConfig、CompactionService、Session invariant、CLI profile/恢复命令及 TUI reader/presentation。必须重建同一请求对照估算、服务端 usage，并验证 CAS/取消/硬拒绝不产生 Provider 调用；计数算法或库版本变化不能静默重解释历史记录。
@@ -3446,7 +3918,12 @@ F5 精度变更须联查共享 retrieval、Context 最终预算、Skill/Memory �
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
 | Verifier | `verification.py` | 10、12、15、16 |
-| ProductTask Benchmark | `evaluation/*`（`manifest.py`、`repositories.py`、`attempt.py`、`metrics.py`、`report.py`、`runner.py`、`errors.py`）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033/0037 | 1、3、8.4、12.5、13.1、15、16、20.29、20.30、20.34；改 Product host 装配、Workflow 拓扑、Promotion 回执字段、Session Attempt 事件形状或 retry 度量时必须同时核对本域的指标推导 |
+| AO-0 受限策略合同 | `api/optimization.py`、API/Plugin SDK 导出、`evolution/optimization_contract.py`、原 `evaluation/variants.py` 与 Service/Scope/Lease | 1、3、12.7、13、14、15、17、19；只有开发数据和允许文本，无调度/评分/采用权限，去重与待审不能绕过，借用服务的取消及 cleanup 归原 owner |
+| AO-2 一次策略与模型审阅 | `evolution/strategy.py`、原 Plugin/Lease、`evaluation/model_service.py` / `model_evidence.py` / `model_review.py` / `model_review_protocol.py`、原 review/assess/comparison | 1、3、12.7–12.9、13–15、17、19；开发与裁判输入分开，实际调用有预算与原证据，模型判断不能盖过硬门禁，不自动采用 |
+| AO-1 人工候选闭环 | `evolution/optimization.py`、`optimization_contract.py`、原 `EvaluationRunner.for_plan` / `comparison.inspect_experiment` / 两臂 worker | 1、3、12.7–12.8、13–15、17；实验/输入/整批预留有确切身份，原证据派生进度与成本，待审退出、重复不执行、取消等收尾；无自动采用或恢复 |
+| UE-4 显式真实验收 | `tests/live_unified_evaluation/`、`tests/test_ue4_controls.py`、原冻结 run/Source/SQLite/CAS 与 review | 1、3、12.6、13、14、15、17；单臂和辅助对照分开、真实账本不可改写、advisory 不冒充人工评分、无候选不跑第二臂 |
+| 独立检索旅程、诊断与候选比较 | `evaluation/evaluators/episode*.py`（含 `episode_diagnostics.py`）、`retrieval_episode.py`、`review.py`、`evidence.py`、`variants.py`、`variant_execution.py`、`worker.py`、`comparison.py`、共享 runner/plan、CLI、retrieval_episodes_v1 | 1、3、12.6、13、14、15、17；保持原 Reader/Projection/Runtime/Sandbox 身份和生命周期；诊断不能替代评分或改变策略，审阅不能替代机器证据，比较不能授予采用权限 |
+| ProductTask Benchmark | `evaluation/*`（公共 inputs/manifest/plan/contracts/runner/report、`evaluators/product*.py`、原 repositories/attempt/retrieval）、`cli/main.py` 的 `eval` handler 与 parser、`product/config.py` 的 `parse_product_host_settings`、`product/host.py` 的 `control`、`benchmarks/product_v1/*`、`tests/test_product_benchmark.py`、`tests/test_product_benchmark_e2e.py`、ADR-0033/0037 | 1、3、8.4、12.5、13.1、15、16、20.29、20.30、20.34；改 Product host 装配、Workflow 拓扑、Promotion 回执字段、Session Attempt 事件形状或 retry 度量时必须同时核对本域的指标推导 |
 | 插件发现/启用/激活 | `plugins/*`、`api/plugins.py`、`api/prompts.py`、`kernel/activation.py`、`kernel/tasks.py`、`runtime/agent_runtime.py`、`tests/test_plugin_*.py` | 1、2、3、4、7.1、13、14、15、16、19 |
 | Runtime 关闭 / dispose | `runtime/agent_runtime.py`（`_shutdown`、`dispose`）、`plugins/manager.py` 的 `dispose`、`tests/test_runtime_dispose.py` | 5.3、5.5、15、16、19.8 |
 | 插件组合控制面 / Session 迁移 | `runtime/plugin_composition.py`、`runtime/agent_runtime.py` 门面、`tests/test_plugin_composition_coordinator.py`、Stage B/C 控制面测试 | 4、5.3、14、15、16、19.7–19.9 |
@@ -3503,6 +3980,10 @@ flowchart LR
 - 最终交付说明变更、验证、文档同步和剩余边界。
 
 ## 19. 插件系统（v0.4 / Stage A–D3 / v0.9-F1）
+
+AO-2 的 `TextStrategyPlugin` 是显式装配的可信内置插件：使用原 Discovery、provide/require、Service Scope、Generation Lease；借用宿主 `OptimizationAnalysis`，提供 `OptimizationStrategy`。没有新注册中心或默认聊天开关，不自动发现/安装策略 Wheel。分析调用由宿主在独立持久 Session 和原 Budget 中执行；插件不拥有 Key、Runtime 或 Promotion，收到的仅为受限开发请求与结果。原 Plugin owner 负责释放，详情见 12.9。
+
+AO-0 新增 optimization typed 服务与 DTO 的 SDK 导出（12.7），沿用原 provide/require、Service/Scope、Generation Lease 和 cleanup；没有新注册器或策略默认启用。AO-2 的实际分析适配和显式策略插件见 12.9；analysis 仍是宿主借出服务，插件不能替宿主释放它。
 
 作者与运维契约见 [`docs/plugins.md`](../plugins.md)，v0.4 事务原因见 [ADR-0007](../adr/0007-transactional-plugin-activation.md)，Stage B 所有权决定见 [ADR-0009](../adr/0009-generation-owned-plugin-activation-set.md)，Stage C Session 迁移决定见 [ADR-0010](../adr/0010-session-plugin-composition-migration.md)，D0 控制面所有权拆分见 [ADR-0011](../adr/0011-plugin-composition-control-plane-coordinator.md)。本节记录工程事实。
 
@@ -5138,7 +5619,7 @@ F3 本身没有实现 benchmark、旧 eval manifest cutover、重试策略、跨
 
 ### 20.30 v0.7-F4：`traceh eval` 成为 ProductTask 主线的度量入口
 
-本节保留 v0.7-F4 实施记录；当前 v0.9-F5 的根 schema 2、requester/scope/seed 顺序及检索评估见 7.8、12.5。
+本节保留 v0.7-F4 历史决定；当前 UE-1 根协议 3、公共调度和 Product owner 文件迁移见 12.5–12.6，F5 requester/scope/seed 顺序见 7.8。下文旧键集和类名仅解释当时版本。
 
 通俗版对应 [20.24](project-context-plain-zh.md)；两份文档的 20.x 子编号自 v0.7 D0 起有固定偏移，通俗版每个标题都写明了它对应的正式版编号。完整决定见 [ADR-0033](../adr/0033-product-task-benchmark-as-the-single-eval-path.md)。F4 不新增任何产品能力：它把 v0.6 的单 Agent scripted benchmark 换成一个**只度量**的宿主，跑的正是 20.29 那条主线。
 
@@ -5151,8 +5632,8 @@ F3 本身没有实现 benchmark、旧 eval manifest cutover、重试策略、跨
 | [`manifest.py`](../../src/traceh/evaluation/manifest.py) | schema-1 精确键集解析、旧 `case.json` 明确拒绝、Benchmark 自有身份常量 |
 | [`repositories.py`](../../src/traceh/evaluation/repositories.py) | 每次 attempt 的一次性源仓库与一次性本地 bare target，以及有界、无链接的初始树复制 |
 | [`attempt.py`](../../src/traceh/evaluation/attempt.py) | 一次 attempt：两个真实 user Turn、确认、立即批准、相位计时与 owner 收敛 |
-| [`metrics.py`](../../src/traceh/evaluation/metrics.py) | 从各自的事实源推导每个指标，或报告 unavailable |
-| [`report.py`](../../src/traceh/evaluation/report.py) | DTO、descriptive 聚合、实验条件一致性与两份一致的输出 |
+| [`metrics.py`](../../src/traceh/evaluation/evaluators/product_metrics.py) | 从各自的事实源推导每个指标，或报告 unavailable |
+| [`product_report.py`](../../src/traceh/evaluation/evaluators/product_report.py) | Product DTO、descriptive 聚合、实验条件一致性与两份一致的输出 |
 | [`runner.py`](../../src/traceh/evaluation/runner.py) | 唯一 `ProductBenchmarkRunner`：网格顺序、输出目录与报告写入 |
 | [`errors.py`](../../src/traceh/evaluation/errors.py) | 三类稳定失败，均不回显 payload、路径或异常文本 |
 
@@ -5351,7 +5832,7 @@ JSON 与 Markdown 的 18 行、两个 quality arm 和 routing 聚合已逐项核
 
 Chat 可读性修复复用现有事实：确认接受后立即显示 task id/requested mode，已有 `--heartbeat-seconds` 的 host monotonic clock 在长执行中 fresh replay status；Approval 与 `/task inspect` 通过新的 [`ProductInspectionEvidenceReader`](../../src/traceh/product/inspection.py) 读取固定 Workflow、Agent Directory、Artifact CAS 与 Review，展示 node/Session/replay、changed paths、控制字符惰性且按 host report bound 截断的 Patch、Verifier executable/argument count/argv digest/status/exit。Patch CAS 被改写的确定性反例会显示 `artifact-cas-collision` 与 do-not-approve，不会显示伪造 preview。Verifier argv 参数不直接回显，避免宿主错误地把可能含秘密的参数写到 Console；完整命令仍由冻结 host 配置拥有。这些 inspection/display 值不会被 TUI 自动复制进模型请求；20.38 的 format-7 snapshot 默认只放 task handle、公开 status、固定关系/执行主体、最小执行摘要、明细省略范围与非授权说明。模型显式调用同 Session `read_product_task_evidence` 时，受限 path/Tool outcome/Verifier/Promotion 元数据才作为普通 audited Tool result 进入该 Session；原始 Patch、参数/输出和 Workspace 路径仍不提供。
 
-冻结计划绑定也不是 Chat 专用显示规则。Promotion owner 的同一 `review_matches_verification_plan()` 同时保护 Review 重用、approve、promote 与 Product inspection；F4 [`collect_attempt_evidence()`](../../src/traceh/evaluation/metrics.py) 现在必须接收 manifest 的 frozen `VerificationPlan` 并在读取 `review.passed` 前复用该规则。确定性反例同步改写 Review、Approval、Promotion、ProductTask 与 Workflow 的关联摘要和身份，使 durable 链条保持内部及跨域一致，但把结果 `argv_digest` 换成冻结计划之外的值；移除 matcher 后 collector 会把该 attempt 接受为成功，恢复后稳定拒绝为 `benchmark-verifier-evidence-mismatch`。
+冻结计划绑定也不是 Chat 专用显示规则。Promotion owner 的同一 `review_matches_verification_plan()` 同时保护 Review 重用、approve、promote 与 Product inspection；F4 [`collect_attempt_evidence()`](../../src/traceh/evaluation/evaluators/product_metrics.py) 现在必须接收 manifest 的 frozen `VerificationPlan` 并在读取 `review.passed` 前复用该规则。确定性反例同步改写 Review、Approval、Promotion、ProductTask 与 Workflow 的关联摘要和身份，使 durable 链条保持内部及跨域一致，但把结果 `argv_digest` 换成冻结计划之外的值；移除 matcher 后 collector 会把该 attempt 接受为成功，恢复后稳定拒绝为 `benchmark-verifier-evidence-mismatch`。
 
 Promotion receipt 已落盘也不能成为 Product 控制面绕过 owner 的捷径。真实崩溃窗口允许 ref CAS 和 Promotion fact 已完成，而 `product/task-completed` 尚未追加；`approve()` 的恢复分支现在先用当前 frozen plan 调用幂等 `PatchPromotionService.promote()`，只有 owner 重新验证并返回同一 receipt 后才 release 并补写 terminal。公开反例先跑完整 Chat/Promotion，再恢复到这个 durable prefix；临时退回“只查 ledger 就完成”时任务错误变成 `completed`，正确实现保持 `awaiting_approval` 并返回 `promotion-review-verification-mismatch`。
 

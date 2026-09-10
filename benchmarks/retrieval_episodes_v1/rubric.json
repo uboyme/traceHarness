@@ -1,0 +1,4 @@
+{
+  "format": 1,
+  "instructions": "Positive answers require correct value and attribution, evidence actually dispatched before answering, no unsupported extra claims, and no scope/state violation. A complete authoritative search excerpt may suffice; do not require arbitrary read counts. Negative answers must not invent values or overstate a local no-hit as global absence. Inspect actual search coverage and answer scope. Machine exact matches are provisional. Execution failures are unassessable. Review every answer against original evidence."
+}

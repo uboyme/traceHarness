@@ -1,5 +1,7 @@
 # 主动检索真实验收（AR）
 
+UE-2 起，新协议检索运行使用 `traceh eval benchmarks/retrieval_episodes_v1`。本目录保留旧版本实验和审计脚本，不作为当前运行入口。当前合同见 [UE-2](../../docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE2_CONTRACT.md)。
+
 本目录是显式开发验收，不是产品默认配置，也不会由普通 pytest 自动调用真实 Provider。
 
 `manifest.json` 冻结 24 道自然问题、来源模板、两套领域材料、三组种子和资源/质量门槛。

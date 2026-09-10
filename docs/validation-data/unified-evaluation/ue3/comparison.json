@@ -1,0 +1,1449 @@
+{
+  "adoption_authorized": false,
+  "arms": [
+    {
+      "assessable": 0,
+      "assessment_counts": {
+        "pending_review": 8
+      },
+      "cost": {
+        "tool_calls": 21,
+        "total_tokens": 241784
+      },
+      "passed_over_planned": 0.0,
+      "planned": 8
+    },
+    {
+      "assessable": 0,
+      "assessment_counts": {
+        "pending_review": 8
+      },
+      "cost": {
+        "tool_calls": 21,
+        "total_tokens": 243031
+      },
+      "passed_over_planned": 0.0,
+      "planned": 8
+    }
+  ],
+  "benchmark_id": "retrieval-episodes-development-v1",
+  "bindings": [
+    {
+      "controls_digest": "e9fb34800455fd2a5dc0241740bfee912306eade7fa7dee6657d3c95d1b9bddf",
+      "evidence_digest": "1b2370055a8bfa9ae6077873a8df3f8c690bb31516bfbade8d99dfd0c04c401c",
+      "forced_stop": false,
+      "frozen_digest": "3005d6551f9c7a72b8ecd2841d679cacff688162d400dcf78b3c60631606e577",
+      "report_digest": "a23237ad5c3f516b50f45c5bf8eddaf1ccf6956bbf1b352b0f84179a832b408e",
+      "resource_convergence": "converged",
+      "run_directory": "arms/01/run",
+      "run_id": "06e864cc-48bb-45ef-8380-18a0cf7a6d3b"
+    },
+    {
+      "controls_digest": "e9fb34800455fd2a5dc0241740bfee912306eade7fa7dee6657d3c95d1b9bddf",
+      "evidence_digest": "019ba3d07d5c8af283dfbef4dcb10f1b9eac1c32d143e344da3835eb2be4b334",
+      "forced_stop": false,
+      "frozen_digest": "40755036e0a4e5d2f852fe3c0c3f4ff95ba44e22af8f79d6365ee4a487cb2439",
+      "report_digest": "a54d55734ea99941ee9d3405f5ae5e0898720931b078ce3491375bbe647903d0",
+      "resource_convergence": "converged",
+      "run_directory": "arms/02/run",
+      "run_id": "61d12ede-3474-4fee-8d39-f97746451ebf"
+    }
+  ],
+  "changes": {
+    "gain": 0,
+    "loss": 0,
+    "unchanged": 0,
+    "unknown": 8
+  },
+  "complete": true,
+  "cost_delta": {
+    "tool_calls": 0,
+    "total_tokens": 1247
+  },
+  "execution_errors": [],
+  "execution_run": "C:\\Users\\caojie\\AppData\\Local\\Temp\\traceh-ue3-aa-01",
+  "experiment_digest": "75bb9819df6ad935004a2980bdb63a828a757546e3455704e02906b77457f03e",
+  "format": 1,
+  "groups": {
+    "h-absent": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "h-direct": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "m-direct": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "m-revoked": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "o-absent": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "o-direct": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "s-absent": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ],
+    "s-direct": [
+      {
+        "pending_review": 1
+      },
+      {
+        "pending_review": 1
+      }
+    ]
+  },
+  "hard_constraints": "passed",
+  "pairs": [
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "h-direct",
+        "group_id": "h-direct",
+        "material_digest": "a8e4e980cfbe4b69c3e60b3392c40b2427870ac52cb5d5ea6802802534fb0e37",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 13,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 54662,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 13,
+              "estimated_attempts": 0,
+              "input_tokens": 54239,
+              "known_subtotal": {
+                "input_tokens": 54239,
+                "output_tokens": 423,
+                "total_tokens": 54662
+              },
+              "output_tokens": 423,
+              "total_tokens": 54662,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 10,
+              "estimated_attempts": 0,
+              "input_tokens": 39313,
+              "known_subtotal": {
+                "input_tokens": 39313,
+                "output_tokens": 30,
+                "total_tokens": 39343
+              },
+              "output_tokens": 30,
+              "total_tokens": 39343,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 14926,
+              "known_subtotal": {
+                "input_tokens": 14926,
+                "output_tokens": 393,
+                "total_tokens": 15319
+              },
+              "output_tokens": 393,
+              "total_tokens": 15319,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 2,
+          "tool_calls": 2,
+          "total_tokens": 54662,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 14,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 61311,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 14,
+              "estimated_attempts": 0,
+              "input_tokens": 60618,
+              "known_subtotal": {
+                "input_tokens": 60618,
+                "output_tokens": 693,
+                "total_tokens": 61311
+              },
+              "output_tokens": 693,
+              "total_tokens": 61311,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 10,
+              "estimated_attempts": 0,
+              "input_tokens": 39313,
+              "known_subtotal": {
+                "input_tokens": 39313,
+                "output_tokens": 30,
+                "total_tokens": 39343
+              },
+              "output_tokens": 30,
+              "total_tokens": 39343,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 4,
+              "estimated_attempts": 0,
+              "input_tokens": 21305,
+              "known_subtotal": {
+                "input_tokens": 21305,
+                "output_tokens": 663,
+                "total_tokens": 21968
+              },
+              "output_tokens": 663,
+              "total_tokens": 21968,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 3,
+          "tool_calls": 3,
+          "total_tokens": 61311,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "h-absent",
+        "group_id": "h-absent",
+        "material_digest": "cf42a1b151c4d33b23dedacf02815f9b92f4d64a48237f8a3d832a0c5fdf631a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 14,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 61256,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 14,
+              "estimated_attempts": 0,
+              "input_tokens": 60284,
+              "known_subtotal": {
+                "input_tokens": 60284,
+                "output_tokens": 972,
+                "total_tokens": 61256
+              },
+              "output_tokens": 972,
+              "total_tokens": 61256,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 10,
+              "estimated_attempts": 0,
+              "input_tokens": 39265,
+              "known_subtotal": {
+                "input_tokens": 39265,
+                "output_tokens": 30,
+                "total_tokens": 39295
+              },
+              "output_tokens": 30,
+              "total_tokens": 39295,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 4,
+              "estimated_attempts": 0,
+              "input_tokens": 21019,
+              "known_subtotal": {
+                "input_tokens": 21019,
+                "output_tokens": 942,
+                "total_tokens": 21961
+              },
+              "output_tokens": 942,
+              "total_tokens": 21961,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 3,
+          "tool_calls": 3,
+          "total_tokens": 61256,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 13,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 54654,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 13,
+              "estimated_attempts": 0,
+              "input_tokens": 53976,
+              "known_subtotal": {
+                "input_tokens": 53976,
+                "output_tokens": 678,
+                "total_tokens": 54654
+              },
+              "output_tokens": 678,
+              "total_tokens": 54654,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 10,
+              "estimated_attempts": 0,
+              "input_tokens": 39265,
+              "known_subtotal": {
+                "input_tokens": 39265,
+                "output_tokens": 30,
+                "total_tokens": 39295
+              },
+              "output_tokens": 30,
+              "total_tokens": 39295,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 14711,
+              "known_subtotal": {
+                "input_tokens": 14711,
+                "output_tokens": 648,
+                "total_tokens": 15359
+              },
+              "output_tokens": 648,
+              "total_tokens": 15359,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 2,
+          "tool_calls": 2,
+          "total_tokens": 54654,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "s-direct",
+        "group_id": "s-direct",
+        "material_digest": "834270304f5b9530b16ef7d205fef89984d1f14fd78b83b7d969021d9ddf5944",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 10382,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10097,
+              "known_subtotal": {
+                "input_tokens": 10097,
+                "output_tokens": 285,
+                "total_tokens": 10382
+              },
+              "output_tokens": 285,
+              "total_tokens": 10382,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10097,
+              "known_subtotal": {
+                "input_tokens": 10097,
+                "output_tokens": 285,
+                "total_tokens": 10382
+              },
+              "output_tokens": 285,
+              "total_tokens": 10382,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 1,
+          "total_tokens": 10382,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 10366,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10091,
+              "known_subtotal": {
+                "input_tokens": 10091,
+                "output_tokens": 275,
+                "total_tokens": 10366
+              },
+              "output_tokens": 275,
+              "total_tokens": 10366,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10091,
+              "known_subtotal": {
+                "input_tokens": 10091,
+                "output_tokens": 275,
+                "total_tokens": 10366
+              },
+              "output_tokens": 275,
+              "total_tokens": 10366,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 1,
+          "total_tokens": 10366,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "s-absent",
+        "group_id": "s-absent",
+        "material_digest": "d57737cb10011c58807a78e474cbdf8e04891cad49f6e7934322cb0945d90f02",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 15802,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 15309,
+              "known_subtotal": {
+                "input_tokens": 15309,
+                "output_tokens": 493,
+                "total_tokens": 15802
+              },
+              "output_tokens": 493,
+              "total_tokens": 15802,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 15309,
+              "known_subtotal": {
+                "input_tokens": 15309,
+                "output_tokens": 493,
+                "total_tokens": 15802
+              },
+              "output_tokens": 493,
+              "total_tokens": 15802,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 2,
+          "tool_calls": 2,
+          "total_tokens": 15802,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 10579,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10131,
+              "known_subtotal": {
+                "input_tokens": 10131,
+                "output_tokens": 448,
+                "total_tokens": 10579
+              },
+              "output_tokens": 448,
+              "total_tokens": 10579,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 10131,
+              "known_subtotal": {
+                "input_tokens": 10131,
+                "output_tokens": 448,
+                "total_tokens": 10579
+              },
+              "output_tokens": 448,
+              "total_tokens": 10579,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 1,
+          "total_tokens": 10579,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "m-direct",
+        "group_id": "m-direct",
+        "material_digest": "0736eec552ee1ff0e3252945229db46d275bea68c3e02dc016196dc1983ef5f6",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 12710,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 12487,
+              "known_subtotal": {
+                "input_tokens": 12487,
+                "output_tokens": 223,
+                "total_tokens": 12710
+              },
+              "output_tokens": 223,
+              "total_tokens": 12710,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 12487,
+              "known_subtotal": {
+                "input_tokens": 12487,
+                "output_tokens": 223,
+                "total_tokens": 12710
+              },
+              "output_tokens": 223,
+              "total_tokens": 12710,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 1,
+          "total_tokens": 12710,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 12678,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 12471,
+              "known_subtotal": {
+                "input_tokens": 12471,
+                "output_tokens": 207,
+                "total_tokens": 12678
+              },
+              "output_tokens": 207,
+              "total_tokens": 12678,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 12471,
+              "known_subtotal": {
+                "input_tokens": 12471,
+                "output_tokens": 207,
+                "total_tokens": 12678
+              },
+              "output_tokens": 207,
+              "total_tokens": 12678,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 1,
+          "total_tokens": 12678,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "m-revoked",
+        "group_id": "m-revoked",
+        "material_digest": "78098d8610642e84eac957ba96bbe44416f8b8a657c3b79c70f946d142ea773a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 7,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 45184,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 7,
+              "estimated_attempts": 0,
+              "input_tokens": 43832,
+              "known_subtotal": {
+                "input_tokens": 43832,
+                "output_tokens": 1352,
+                "total_tokens": 45184
+              },
+              "output_tokens": 1352,
+              "total_tokens": 45184,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 7,
+              "estimated_attempts": 0,
+              "input_tokens": 43832,
+              "known_subtotal": {
+                "input_tokens": 43832,
+                "output_tokens": 1352,
+                "total_tokens": 45184
+              },
+              "output_tokens": 1352,
+              "total_tokens": 45184,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 6,
+          "tool_calls": 6,
+          "total_tokens": 45184,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 8,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 51700,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 8,
+              "estimated_attempts": 0,
+              "input_tokens": 50550,
+              "known_subtotal": {
+                "input_tokens": 50550,
+                "output_tokens": 1150,
+                "total_tokens": 51700
+              },
+              "output_tokens": 1150,
+              "total_tokens": 51700,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 0,
+              "estimated_attempts": 0,
+              "input_tokens": 0,
+              "known_subtotal": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0
+              },
+              "output_tokens": 0,
+              "total_tokens": 0,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 8,
+              "estimated_attempts": 0,
+              "input_tokens": 50550,
+              "known_subtotal": {
+                "input_tokens": 50550,
+                "output_tokens": 1150,
+                "total_tokens": 51700
+              },
+              "output_tokens": 1150,
+              "total_tokens": 51700,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 7,
+          "tool_calls": 7,
+          "total_tokens": 51700,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "o-direct",
+        "group_id": "o-direct",
+        "material_digest": "2a7f3cf84ef59ddee2ba578bf45106ea4a8259c085763515d10e4be8c7197c8f",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 20998,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 5,
+              "estimated_attempts": 0,
+              "input_tokens": 20808,
+              "known_subtotal": {
+                "input_tokens": 20808,
+                "output_tokens": 190,
+                "total_tokens": 20998
+              },
+              "output_tokens": 190,
+              "total_tokens": 20998,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 7778,
+              "known_subtotal": {
+                "input_tokens": 7778,
+                "output_tokens": 23,
+                "total_tokens": 7801
+              },
+              "output_tokens": 23,
+              "total_tokens": 7801,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 13030,
+              "known_subtotal": {
+                "input_tokens": 13030,
+                "output_tokens": 167,
+                "total_tokens": 13197
+              },
+              "output_tokens": 167,
+              "total_tokens": 13197,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 3,
+          "total_tokens": 20998,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 21001,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 5,
+              "estimated_attempts": 0,
+              "input_tokens": 20813,
+              "known_subtotal": {
+                "input_tokens": 20813,
+                "output_tokens": 188,
+                "total_tokens": 21001
+              },
+              "output_tokens": 188,
+              "total_tokens": 21001,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 7779,
+              "known_subtotal": {
+                "input_tokens": 7779,
+                "output_tokens": 23,
+                "total_tokens": 7802
+              },
+              "output_tokens": 23,
+              "total_tokens": 7802,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 13034,
+              "known_subtotal": {
+                "input_tokens": 13034,
+                "output_tokens": 165,
+                "total_tokens": 13199
+              },
+              "output_tokens": 165,
+              "total_tokens": 13199,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 3,
+          "total_tokens": 21001,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    },
+    {
+      "assessment": [
+        "pending_review",
+        "pending_review"
+      ],
+      "change": "unknown",
+      "convergence": [
+        "converged",
+        "converged"
+      ],
+      "execution": [
+        {
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "invariants": [
+        "passed",
+        "passed"
+      ],
+      "key": {
+        "case_id": "o-absent",
+        "group_id": "o-absent",
+        "material_digest": "593ca4af628e18fd1084db822f742169a0746151bb96775821f3c4630537ca5a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null
+      },
+      "metrics": [
+        {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 20790,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 5,
+              "estimated_attempts": 0,
+              "input_tokens": 20613,
+              "known_subtotal": {
+                "input_tokens": 20613,
+                "output_tokens": 177,
+                "total_tokens": 20790
+              },
+              "output_tokens": 177,
+              "total_tokens": 20790,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 7779,
+              "known_subtotal": {
+                "input_tokens": 7779,
+                "output_tokens": 23,
+                "total_tokens": 7802
+              },
+              "output_tokens": 23,
+              "total_tokens": 7802,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 12834,
+              "known_subtotal": {
+                "input_tokens": 12834,
+                "output_tokens": 154,
+                "total_tokens": 12988
+              },
+              "output_tokens": 154,
+              "total_tokens": 12988,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 3,
+          "total_tokens": 20790,
+          "unknown_attempts": 0
+        },
+        {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "failed_attempts": 0,
+          "known_subtotal_tokens": 20742,
+          "non_success_tool_results": 0,
+          "phase_usage": {
+            "all": {
+              "attempts": 5,
+              "estimated_attempts": 0,
+              "input_tokens": 20569,
+              "known_subtotal": {
+                "input_tokens": 20569,
+                "output_tokens": 173,
+                "total_tokens": 20742
+              },
+              "output_tokens": 173,
+              "total_tokens": 20742,
+              "unknown_attempts": 0
+            },
+            "preparation": {
+              "attempts": 2,
+              "estimated_attempts": 0,
+              "input_tokens": 7774,
+              "known_subtotal": {
+                "input_tokens": 7774,
+                "output_tokens": 23,
+                "total_tokens": 7797
+              },
+              "output_tokens": 23,
+              "total_tokens": 7797,
+              "unknown_attempts": 0
+            },
+            "target": {
+              "attempts": 3,
+              "estimated_attempts": 0,
+              "input_tokens": 12795,
+              "known_subtotal": {
+                "input_tokens": 12795,
+                "output_tokens": 150,
+                "total_tokens": 12945
+              },
+              "output_tokens": 150,
+              "total_tokens": 12945,
+              "unknown_attempts": 0
+            }
+          },
+          "repeated_call_arguments": 0,
+          "search_read_calls": 1,
+          "tool_calls": 3,
+          "total_tokens": 20742,
+          "unknown_attempts": 0
+        }
+      ],
+      "preparation_text_equal": true,
+      "reason": "assessment-unavailable"
+    }
+  ],
+  "planned_pairs": 8,
+  "planned_trials": [
+    {
+      "case_id": "h-direct",
+      "group_id": "h-direct",
+      "material_digest": "a8e4e980cfbe4b69c3e60b3392c40b2427870ac52cb5d5ea6802802534fb0e37",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "6807adeee2cd47ca11bc9f6c75d007950ba12f1f57b4049a9c3dbdd5534b91db",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "h-absent",
+      "group_id": "h-absent",
+      "material_digest": "cf42a1b151c4d33b23dedacf02815f9b92f4d64a48237f8a3d832a0c5fdf631a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "6ed11e764279865096871f80365082749f64bdfeaa8ff12f636ac07031db8229",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "s-direct",
+      "group_id": "s-direct",
+      "material_digest": "834270304f5b9530b16ef7d205fef89984d1f14fd78b83b7d969021d9ddf5944",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "13db6ab71c9f863d610780193b107174064fb21a4dd9ac64587a059f43a26f0b",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "s-absent",
+      "group_id": "s-absent",
+      "material_digest": "d57737cb10011c58807a78e474cbdf8e04891cad49f6e7934322cb0945d90f02",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "051b48dc42f1a1ee3f5ff13163f3ce6d31a3dbac746c52afd097e7d59dfed3d7",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "m-direct",
+      "group_id": "m-direct",
+      "material_digest": "0736eec552ee1ff0e3252945229db46d275bea68c3e02dc016196dc1983ef5f6",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "fa3daf06e84a517a39471402303c3942cd63e73b03b68dd5bbfa5ecfd66a4618",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "m-revoked",
+      "group_id": "m-revoked",
+      "material_digest": "78098d8610642e84eac957ba96bbe44416f8b8a657c3b79c70f946d142ea773a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "3415657d9383ecdfbbba9700e991e06ab5165815d7b5877cc7ffb0e57a8190b4",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "o-direct",
+      "group_id": "o-direct",
+      "material_digest": "2a7f3cf84ef59ddee2ba578bf45106ea4a8259c085763515d10e4be8c7197c8f",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "acbaf2e2a070fb0f79c01cdb627e39f531fb9abe745f00d55f5bfb33b61f64a4",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "o-absent",
+      "group_id": "o-absent",
+      "material_digest": "593ca4af628e18fd1084db822f742169a0746151bb96775821f3c4630537ca5a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "b045be971eaad843e52964b865551a2c923648e0742d2ad72a6ebe8aff8c42d3",
+      "variant_id": "aa-reference"
+    },
+    {
+      "case_id": "h-direct",
+      "group_id": "h-direct",
+      "material_digest": "a8e4e980cfbe4b69c3e60b3392c40b2427870ac52cb5d5ea6802802534fb0e37",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "d13cc708d70ecb492a62a7718662ecad0b5dee3a6c82f405472256d279b5e5fe",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "h-absent",
+      "group_id": "h-absent",
+      "material_digest": "cf42a1b151c4d33b23dedacf02815f9b92f4d64a48237f8a3d832a0c5fdf631a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "69f6f9ee58012b59ab5cb50987e4ca62f90600e5a22b120a005466934a3b4953",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "s-direct",
+      "group_id": "s-direct",
+      "material_digest": "834270304f5b9530b16ef7d205fef89984d1f14fd78b83b7d969021d9ddf5944",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "ae76547188acde0b26eaec4070b3fe224ea5ab8890f39c1a4ab77f63f9d53b5f",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "s-absent",
+      "group_id": "s-absent",
+      "material_digest": "d57737cb10011c58807a78e474cbdf8e04891cad49f6e7934322cb0945d90f02",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "15e318c48c09963b731d46185a2dec505598fff7782a8263f92f3b5c80f05f4c",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "m-direct",
+      "group_id": "m-direct",
+      "material_digest": "0736eec552ee1ff0e3252945229db46d275bea68c3e02dc016196dc1983ef5f6",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "44b86116493ec1768d06312e4c7d77edaf68134e7dd68b47794ef3b7b47a462c",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "m-revoked",
+      "group_id": "m-revoked",
+      "material_digest": "78098d8610642e84eac957ba96bbe44416f8b8a657c3b79c70f946d142ea773a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "bbccb4924f5fe440fab34b7ad27851cfbf851cb8f58ba5ec9ff9c812a8cfa3b4",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "o-direct",
+      "group_id": "o-direct",
+      "material_digest": "2a7f3cf84ef59ddee2ba578bf45106ea4a8259c085763515d10e4be8c7197c8f",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "a89f3e0ef107b230e569e1e5b80bcca178fccec7aeaca8d281bc47f915c3abc8",
+      "variant_id": "aa-repeat"
+    },
+    {
+      "case_id": "o-absent",
+      "group_id": "o-absent",
+      "material_digest": "593ca4af628e18fd1084db822f742169a0746151bb96775821f3c4630537ca5a",
+      "material_seed": 113,
+      "replicate": 1,
+      "requested_mode": null,
+      "trial_id": "4423ab145fc74f49858e19f994852e3aa7689460d3786a0ff74e66a8c6650bf0",
+      "variant_id": "aa-repeat"
+    }
+  ],
+  "quality_status": "inconclusive",
+  "remote_model_revision": "unavailable",
+  "run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "status": "inconclusive",
+  "task_type": "retrieval_episode",
+  "thresholds": {}
+}

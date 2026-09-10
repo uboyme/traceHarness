@@ -26,7 +26,7 @@ missing sandbox configuration refuses process execution. No image is pulled auto
 
 It names the Profile, the three role slots and their Budgets, the Router bounds,
 the aggregate task Budget, the frozen verification plan, the capture limits, the
-arms and the tasks.
+modes and a separately hashed dataset. Repetitions belong to RunOptions / run plan.
 
 It **cannot** name a repository, a promotion target, a Workflow node, an edge, an
 Agent count, a fan-out or an approval digest. The runner creates a throwaway
@@ -61,4 +61,7 @@ family for every arm and the report records which one.
 * Three tasks with a handful of repetitions is a sanity measurement, not a
   ranking.
 
-当前根 benchmark protocol 为 2，必须有 retrieval；本编码基线设为 null。旧根 1 拒绝，内层 Verifier protocol 仍为 1。检索基线见 [retrieval_v1](../retrieval_v1/README.md)。
+当前根 benchmark protocol 为 3，task_settings 必须有 retrieval；本编码基线设为 null。旧根 1/2 拒绝，内层 Verifier protocol 为 2。检索基线见 [retrieval_v1](../retrieval_v1/README.md)。
+
+UE-1 共用 EvaluationRunner；公共 trials 是完整运行分母，原 Product 指标位于 task_report。
+配置示例见 [run-plan](run-plan.example.json)，字段和运行说明见 [UE 合同](../../docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE0_CONTRACT.md)。

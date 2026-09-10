@@ -1,0 +1,9 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_____ test_repeated_cancel_waits_for_actual_provider_and_closes_database ______
+tests\test_control_model_calls.py:160: in test_repeated_cancel_waits_for_actual_provider_and_closes_database
+    assert provider.finished
+E   assert False
+E    +  where False = <test_control_model_calls.GatedProvider object at 0x00000257B4762BD0>.finished
+=========================== short test summary info ===========================
+FAILED tests/test_control_model_calls.py::test_repeated_cancel_waits_for_actual_provider_and_closes_database

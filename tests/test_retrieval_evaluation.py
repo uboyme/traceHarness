@@ -7,6 +7,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import pytest
+from evaluation_fixtures import write_dataset
 from memory_fixtures import memory_policy
 from retrieval_fixtures import context_policy, retrieval_policy
 from sandbox_fixtures import real_sandbox_policy
@@ -18,9 +19,10 @@ from test_product_benchmark_e2e import (
 
 from traceh.api.json_types import fingerprint
 from traceh.evaluation.errors import BenchmarkManifestError
+from traceh.evaluation.evaluators.product_manifest import load_product_suite
 from traceh.evaluation.manifest import load_benchmark_manifest
 from traceh.evaluation.retrieval import score_blocks
-from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.evaluation.runner import EvaluationRunner
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 
@@ -28,7 +30,9 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 def benchmark(root, *, query="goals.code", relevant=True, category="exact"):
     build_benchmark(root, arms=(("single", 1),))
     manifest = json.loads((root / "benchmark.json").read_text(encoding="utf-8"))
-    manifest["tasks"][0]["requirement"] = query
+    cases = json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"]
+    cases[0]["requirement"] = query
+    write_dataset(root, manifest, cases)
     memory = asdict(memory_policy())
     memory["denied_patterns"] = list(memory["denied_patterns"])
     identity = {"kind": "memory", "id": "goals.code", "tiers": ["summary"]}
@@ -81,7 +85,9 @@ def benchmark(root, *, query="goals.code", relevant=True, category="exact"):
         },
         "judgments": [
             {
-                "task_id": manifest["tasks"][0]["task_id"],
+                "task_id": json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"][
+                    0
+                ]["case_id"],
                 "role": "requester",
                 "query": query,
                 "category": category,
@@ -103,7 +109,10 @@ def benchmark(root, *, query="goals.code", relevant=True, category="exact"):
 def write_spec(root, manifest, spec):
     data = json.dumps(spec, ensure_ascii=False, indent=2).encode("utf-8")
     (root / "corpus.json").write_bytes(data)
-    manifest["retrieval"] = {"file": "corpus.json", "sha256": hashlib.sha256(data).hexdigest()}
+    manifest["task_settings"]["retrieval"] = {
+        "file": "corpus.json",
+        "sha256": hashlib.sha256(data).hexdigest(),
+    }
     (root / "benchmark.json").write_text(json.dumps(manifest), encoding="utf-8")
 
 
@@ -124,11 +133,14 @@ async def test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps(
     root = tmp_path / "benchmark"
     benchmark(root, query=query, relevant=relevant, category=category)
     provider = _ProductProvider(requests=[])
-    runner = ProductBenchmarkRunner(
-        root, tmp_path / "out", provider=provider, model_id=PRODUCT_MODEL_ID,
+    runner = EvaluationRunner(
+        root,
+        tmp_path / "out",
+        provider=provider,
+        model_id=PRODUCT_MODEL_ID,
         sandbox=real_sandbox_policy(),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
     result = report.attempts[0].retrieval
     assert result is not None, report.attempts[0].error_code
     assert result["quality_passed"] is True, result
@@ -152,15 +164,21 @@ def test_invalid_frozen_inputs_fail_before_creating_attempt(tmp_path, mutation):
     root = tmp_path / "benchmark"
     manifest, spec = benchmark(root)
     if mutation == "digest":
-        manifest["retrieval"]["sha256"] = "0" * 64
+        manifest["task_settings"]["retrieval"]["sha256"] = "0" * 64
     elif mutation == "escape":
-        manifest["retrieval"]["file"] = "../corpus.json"
+        manifest["task_settings"]["retrieval"]["file"] = "../corpus.json"
     elif mutation == "old":
         manifest["protocol_version"] = 1
     elif mutation == "inside":
-        target = root / manifest["tasks"][0]["initial_dir"] / "corpus.json"
+        target = (
+            root
+            / json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"][0][
+                "initial_tree"
+            ]
+            / "corpus.json"
+        )
         target.write_bytes((root / "corpus.json").read_bytes())
-        manifest["retrieval"]["file"] = target.relative_to(root).as_posix()
+        manifest["task_settings"]["retrieval"]["file"] = target.relative_to(root).as_posix()
     else:
         if mutation == "extra":
             spec["implicit_model"] = "disabled"
@@ -169,19 +187,21 @@ def test_invalid_frozen_inputs_fail_before_creating_attempt(tmp_path, mutation):
         write_spec(root, manifest, spec)
     (root / "benchmark.json").write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(BenchmarkManifestError):
-        load_benchmark_manifest(root, provider_id="scripted", model_id="explicit-test")
+        load_product_suite(
+            load_benchmark_manifest(root), provider_id="scripted", model_id="explicit-test"
+        )
 
 
 async def test_frozen_file_drift_after_load_is_not_seeded(tmp_path):
     root = tmp_path / "benchmark"
     benchmark(root)
-    runner = ProductBenchmarkRunner(
+    runner = EvaluationRunner(
         root, tmp_path / "out", provider=_ProductProvider(), model_id=PRODUCT_MODEL_ID
     )
     (root / "corpus.json").write_text("{}", encoding="utf-8")
-    result = await runner.run()
-    assert result.attempts[0].error_code == "retrieval-frozen-input-changed"
-    assert result.attempts[0].evidence is None
+    with pytest.raises(BenchmarkManifestError, match="retrieval"):
+        await runner.run()
+    assert not (tmp_path / "out").exists()
 
 
 def test_metrics_count_unique_injected_identities_and_forbidden_beyond_k():
@@ -259,7 +279,7 @@ async def test_seed_failure_and_cancel_converge_after_real_approval(tmp_path, mo
     monkeypatch.setattr(attempt, "build_default_runtime_async", capture)
     monkeypatch.setattr(attempt, "build_product_chat_host", observe_host)
     monkeypatch.setattr(MemoryControl, "approve", fail_after_approve)
-    runner = ProductBenchmarkRunner(
+    runner = EvaluationRunner(
         root, tmp_path / "out", provider=_ProductProvider(), model_id=PRODUCT_MODEL_ID
     )
     task = asyncio.create_task(runner.run())
@@ -269,7 +289,7 @@ async def test_seed_failure_and_cancel_converge_after_real_approval(tmp_path, mo
         with pytest.raises(asyncio.CancelledError):
             await task
     else:
-        report = await task
+        report = (await task).task_report
         assert report.attempts[0].error_code == "benchmark-retrieval-preparation-failed"
         assert report.attempts[0].retrieval["expected_judgments"] == 1
         assert len(report.attempts[0].retrieval["unproven"]) == 1
@@ -309,14 +329,14 @@ async def test_shipped_frozen_baseline_uses_real_plugin_lifecycle(tmp_path, monk
         return await build(*args, **kwargs, plugin_discovery=discovery(current, retired))
 
     monkeypatch.setattr(attempt, "build_default_runtime_async", assemble)
-    runner = ProductBenchmarkRunner(
+    runner = EvaluationRunner(
         repository / "benchmarks/retrieval_v1",
         tmp_path / "out",
         provider=_ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
         sandbox=real_sandbox_policy(),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
     assert len(report.attempts) == 11
     assert len(calls) >= 22  # Both contributions actually registered before retirement.
     for attempt_report in report.attempts:
@@ -325,7 +345,7 @@ async def test_shipped_frozen_baseline_uses_real_plugin_lifecycle(tmp_path, monk
         rows = [r for r in result["observations"] if r["status"] == "measured"]
         assert len(rows) == 1 and not result["unproven"]
         row = rows[0]
-        bound = runner.manifest.retrieval.data["evaluator"]["thresholds"][row["category"]]
+        bound = runner.evaluator.suite.retrieval.data["evaluator"]["thresholds"][row["category"]]
         expected = all(
             row["metrics"][key] is None or row["metrics"][key] >= value
             for key, value in bound.items()
@@ -339,4 +359,4 @@ async def test_shipped_frozen_baseline_uses_real_plugin_lifecycle(tmp_path, monk
         for a in report.attempts
         for r in a.retrieval["observations"]
         if r["status"] == "measured"
-    } == set(runner.manifest.retrieval.data["evaluator"]["thresholds"])
+    } == set(runner.evaluator.suite.retrieval.data["evaluator"]["thresholds"])

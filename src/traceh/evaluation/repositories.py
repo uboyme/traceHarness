@@ -22,17 +22,19 @@ from __future__ import annotations
 
 import asyncio
 import os
-import shutil
 import stat
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from traceh.api.json_types import fingerprint
 from traceh.evaluation.errors import BenchmarkExecutionError
-from traceh.evaluation.manifest import BENCHMARK_SOURCE_REVISION, BENCHMARK_TARGET_REF
+from traceh.evaluation.inputs import digest_bytes
 from traceh.process_control import converge_process
 
 GIT_TIMEOUT_SECONDS = 60.0
+BENCHMARK_SOURCE_REVISION = "main"
+BENCHMARK_TARGET_REF = "refs/heads/main"
 MAX_GIT_OUTPUT_BYTES = 64 * 1024
 
 MAX_INITIAL_FILES = 256
@@ -58,11 +60,11 @@ class AttemptRepositories:
 
 
 async def build_attempt_repositories(
-    *, initial_dir: Path, source: Path, target: Path
+    *, initial_dir: Path, source: Path, target: Path, expected_initial_digest: str | None = None
 ) -> AttemptRepositories:
     """Materialize one attempt's source repository and its bare target."""
 
-    _copy_initial_tree(initial_dir, source)
+    _copy_initial_tree(initial_dir, source, expected_digest=expected_initial_digest)
     await _git(("init", "--quiet", f"--initial-branch={BENCHMARK_SOURCE_REVISION}"), cwd=source)
     for name, value in (
         ("user.name", _COMMIT_IDENTITY),
@@ -100,17 +102,19 @@ async def read_target_revision(target: Path, ref: str) -> str | None:
     return await _git(("rev-parse", ref), cwd=target)
 
 
-def _copy_initial_tree(initial_dir: Path, source: Path) -> None:
+def capture_initial_tree(initial_dir: Path) -> tuple[tuple[str, bytes], ...]:
     """Copy a bounded, link-free tree of regular files, or refuse."""
 
-    source.mkdir(parents=True, exist_ok=False)
+    if _is_reparse(initial_dir):
+        raise BenchmarkExecutionError("benchmark-initial-tree-refused")
     files = 0
     total = 0
+    captured = []
     for entry in sorted(_walk(initial_dir)):
         relative = entry.relative_to(initial_dir)
         if any(part in _REFUSED_NAMES for part in relative.parts):
             raise BenchmarkExecutionError("benchmark-initial-tree-refused")
-        if _is_reparse(entry) or not entry.is_file():
+        if _is_reparse(entry) or not entry.is_file() or entry.stat().st_nlink != 1:
             raise BenchmarkExecutionError("benchmark-initial-tree-refused")
         size = entry.stat().st_size
         files += 1
@@ -121,11 +125,29 @@ def _copy_initial_tree(initial_dir: Path, source: Path) -> None:
             or total > MAX_INITIAL_TOTAL_BYTES
         ):
             raise BenchmarkExecutionError("benchmark-initial-tree-too-large")
-        destination = source / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(entry, destination)
+        with entry.open("rb") as handle:
+            data = handle.read(MAX_INITIAL_FILE_BYTES + 1)
+        if len(data) != size:
+            raise BenchmarkExecutionError("evaluation-frozen-input-drift")
+        captured.append((relative.as_posix(), data))
     if files == 0:
         raise BenchmarkExecutionError("benchmark-initial-tree-empty")
+    return tuple(captured)
+
+
+def initial_tree_digest(files: tuple[tuple[str, bytes], ...]) -> str:
+    return fingerprint([{ "file": name, "sha256": digest_bytes(data)} for name, data in files])
+
+
+def _copy_initial_tree(initial_dir: Path, source: Path, *, expected_digest=None) -> None:
+    captured = capture_initial_tree(initial_dir)
+    if expected_digest is not None and initial_tree_digest(captured) != expected_digest:
+        raise BenchmarkExecutionError("evaluation-frozen-input-drift")
+    source.mkdir(parents=True, exist_ok=False)
+    for name, data in captured:
+        destination = source / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(data)
 
 
 def _walk(root: Path):

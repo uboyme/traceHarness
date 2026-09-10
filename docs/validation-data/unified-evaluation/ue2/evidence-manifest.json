@@ -1,0 +1,223 @@
+{
+  "format": 1,
+  "frozen_digest": "8a69e750801a04932d0177b2d396be6bfead02d0550280bb1cebe0d14732be01",
+  "run_id": "b61ef525-435f-4d12-88b1-9a69b639c4b6",
+  "trials": [
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/001/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 12,
+          "sha256": "5a87f25221180095b8c1b6a9a096bdc8e7cbc0a778d05d48edb3ec41b92d6ff4",
+          "stream_id": "effects:e98d664c-76a9-4b8a-b27f-c4d5b9522239"
+        },
+        {
+          "file": "attempts/001/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 219,
+          "sha256": "1f720ecc4f40538e134fbaa3a4cab97ba5cbbe1625b0d48527e437a74238e7d5",
+          "stream_id": "session:e98d664c-76a9-4b8a-b27f-c4d5b9522239"
+        }
+      ],
+      "trial_id": "ae484c137062a97183e70f415aabfbb3bfe346134a1ea0bf59395a5999ede3a0"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/002/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "40ae7505d582ddb7660f9c188ad964c45f005c18db55273afbc41ceb6a85bce5",
+          "stream_id": "effects:a3114b2e-9fd1-4a65-85f1-73492f2b7e2a"
+        },
+        {
+          "file": "attempts/002/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 193,
+          "sha256": "ad2fa922080d428138215c7ca584ed9245af8d1e7f7c0edf13527da16f31a3c0",
+          "stream_id": "session:a3114b2e-9fd1-4a65-85f1-73492f2b7e2a"
+        }
+      ],
+      "trial_id": "0e4bcb5035ab2de0e2100097f0462b594c49e4e329b8c496d0fda26043f6c30a"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "8efd0dba83b280b8a2249711009636c96fb6dcb46b139b5812d098924eca4b09",
+          "stream_id": "context-selection:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        },
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "6febc11fe1be9f48113d2c5e64f814e7fa14876b7db84fdc64eff65d788ef3ae",
+          "stream_id": "effects:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        },
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "3f57cfc0527207707fc3ae813da521532468e35a707c98c5a6d7105f7feae02c",
+          "stream_id": "session:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        }
+      ],
+      "trial_id": "fae76e3870b9ff742e7342feb9c5510414b738b32c378653705b35d7e573f445"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "028d70bc04c51c42b82b0eb63bdfa91e30de7f5c127fdab4059f3ee2b6a1a204",
+          "stream_id": "context-selection:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        },
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "ccd3adc647e215bd71b1b112d12a2b32cbb2ea3a2e0cd69228846d0c39c12bf4",
+          "stream_id": "effects:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        },
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 42,
+          "sha256": "20a7bc22b424750d5fc86dc8f9ff876eed8b96b6f1e4b266ff7d85b2da82187a",
+          "stream_id": "session:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        }
+      ],
+      "trial_id": "050a82e70d28e7b3a50a2919d837c74e43a9c3c618ff3b91459b79cc99b52c74"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "7113bee8bc2f7079d4efb30a4d6ae9808b9f39e8cc55b786624e6a0e73392b8d",
+          "stream_id": "effects:e408c462-7ba5-4817-a1fb-f80824dab41e"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 26,
+          "sha256": "b923f19bfd83d48540bbbde3151f45c265e332e03ff99127bf9d330155833f3b",
+          "stream_id": "memory:project-634a81e1a1"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "05117e8bd733d59607483b205121513cb51bb9ef0b828be6a0e25af44d160991",
+          "stream_id": "projects:catalog"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "6a184779a6a0975967d3c5ef22365f34833531ec714acba5afadc3773d48bbcb",
+          "stream_id": "session:4f801168-1824-47b2-ba0c-96dc7e49f5a5"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "a204f942f8f67294d77cf5f28bd82514ecc09e52f4eb57f36e5e18e3d2f695da",
+          "stream_id": "session:e408c462-7ba5-4817-a1fb-f80824dab41e"
+        }
+      ],
+      "trial_id": "4a03d0c117405ab7162083853009f46fbf7103b95450ba1bffdd753430730b3c"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 18,
+          "sha256": "b2e30f5cd7f8405d17b921b4493fe791e010c8389964d0a5adc1987880fc5447",
+          "stream_id": "effects:01a68443-b62e-4fda-af62-d4da289d5c58"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 27,
+          "sha256": "b38475dd84cafd73d4c1077a5b80c6086fe1743c933cfae5a6c7203831a4edd2",
+          "stream_id": "memory:project-4974c19420"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "146ccca4e356771267f9179834b2c9dc7a5e57d638544f191a2205c5743346b8",
+          "stream_id": "projects:catalog"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 94,
+          "sha256": "d770330694fa8ff2397679fb78d274b898dc80aba24e90a2f7ee0335cf166209",
+          "stream_id": "session:01a68443-b62e-4fda-af62-d4da289d5c58"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "c81e27b3749605b16c47b59c2c5d2f38b683bc4305359f7aa5d1d4aa609eac52",
+          "stream_id": "session:beef2623-fdd6-4af5-b016-0c6bc9829c21"
+        }
+      ],
+      "trial_id": "39b307bf8955b1142bcbdc182642550a11f4b96d21d4a97435680ead6f0d6d03"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/007/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 9,
+          "sha256": "ef6b036e78256b2e81fed8b1e5d1a2ac201a9f29ed079723d9735244461ce830",
+          "stream_id": "effects:c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf"
+        },
+        {
+          "file": "attempts/007/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 55,
+          "sha256": "00a701e529467d499594dca77fbc9c1b952425b01ac28bef839b967b50e992ae",
+          "stream_id": "session:c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf"
+        }
+      ],
+      "trial_id": "3604ca0ca6e7d016a5fc3d683dc17430fd941a8cf6c0ea708be6c10f67dcf345"
+    },
+    {
+      "convergence": "converged",
+      "references": [
+        {
+          "file": "attempts/008/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 9,
+          "sha256": "445239d57e2daf7b26f66c72d1b386c1981dd563f81b0b04b7d423344ad064f5",
+          "stream_id": "effects:6f73e156-ed62-46d4-b1cb-5f740923cb94"
+        },
+        {
+          "file": "attempts/008/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 55,
+          "sha256": "186109a1c86ca6acef37d98171f275bf392e6f799c1026db34c662f3e79f36e1",
+          "stream_id": "session:6f73e156-ed62-46d4-b1cb-5f740923cb94"
+        }
+      ],
+      "trial_id": "29339db31bb7659afecf987577a4ded2806c15ea324d1b2f4946f01663086ff4"
+    }
+  ]
+}

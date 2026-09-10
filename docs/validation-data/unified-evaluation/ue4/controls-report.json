@@ -1,0 +1,570 @@
+{
+  "frozen_digest": "71bfa37bacbe13cdb80cb390688d96163063a12d819643c6630fd81ea4c1dcd3",
+  "rows": [
+    {
+      "case_id": "ordinary-greeting",
+      "family": null,
+      "question": "你好，简单打个招呼就行。",
+      "expected_value": null,
+      "session_id": "e21dea59-bd4a-4d0c-b826-0d3691d854d7",
+      "target_start_seq": 74,
+      "target_turn_id": "cc65e789-20e6-4328-b0d1-68a5c9ec8d72",
+      "answer": "你好！",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "4007f77c08b4502901ed9074296d1768789524510fda9bdaedc00a0f81bb4b32",
+      "calls": [],
+      "usage": {
+        "all": {
+          "attempts": 6,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 34327,
+          "output_tokens": 31,
+          "total_tokens": 34358,
+          "known_subtotal": {
+            "input_tokens": 34327,
+            "output_tokens": 31,
+            "total_tokens": 34358
+          }
+        },
+        "target": {
+          "attempts": 1,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 5992,
+          "output_tokens": 2,
+          "total_tokens": 5994,
+          "known_subtotal": {
+            "input_tokens": 5992,
+            "output_tokens": 2,
+            "total_tokens": 5994
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-arithmetic",
+      "family": null,
+      "question": "18 加 27 等于多少？",
+      "expected_value": "45",
+      "session_id": "d753f708-79d1-4485-be2f-71facbbf2b10",
+      "target_start_seq": 74,
+      "target_turn_id": "e86abbcd-755a-44bb-8b5a-edddf2f68388",
+      "answer": "18 加 27 等于 45。",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "3f9590876494b292e09b2225c17c7c57e7062772977c6f17f6748758ca9ecb49",
+      "calls": [],
+      "usage": {
+        "all": {
+          "attempts": 6,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 34329,
+          "output_tokens": 43,
+          "total_tokens": 34372,
+          "known_subtotal": {
+            "input_tokens": 34329,
+            "output_tokens": 43,
+            "total_tokens": 34372
+          }
+        },
+        "target": {
+          "attempts": 1,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 5990,
+          "output_tokens": 14,
+          "total_tokens": 6004,
+          "known_subtotal": {
+            "input_tokens": 5990,
+            "output_tokens": 14,
+            "total_tokens": 6004
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-translation",
+      "family": null,
+      "question": "把“会议改到下周一”翻译成英文。",
+      "expected_value": null,
+      "session_id": "3d742b50-dbae-4c18-81b8-d665fb350194",
+      "target_start_seq": 74,
+      "target_turn_id": "1ba29d03-09e9-4405-9c7d-d77362f62cf7",
+      "answer": "The English translation of “会议改到下周一” is:\n\n**\"The meeting is rescheduled to next Monday.\"**",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "9413b1925d8a78a81a31554953ad6dc46507a4e8af3c659c40295e5d985620a0",
+      "calls": [],
+      "usage": {
+        "all": {
+          "attempts": 6,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 34329,
+          "output_tokens": 54,
+          "total_tokens": 34383,
+          "known_subtotal": {
+            "input_tokens": 34329,
+            "output_tokens": 54,
+            "total_tokens": 34383
+          }
+        },
+        "target": {
+          "attempts": 1,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 5993,
+          "output_tokens": 25,
+          "total_tokens": 6018,
+          "known_subtotal": {
+            "input_tokens": 5993,
+            "output_tokens": 25,
+            "total_tokens": 6018
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-rewrite",
+      "family": null,
+      "question": "把“麻烦您尽快处理这件事”改得更简洁但礼貌。",
+      "expected_value": null,
+      "session_id": "128b8fb0-f553-4035-bc85-c075822d6e8b",
+      "target_start_seq": 74,
+      "target_turn_id": "2e6f55ab-a1bc-445d-b986-f311e247d07a",
+      "answer": "“请尽快处理。”",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "99dd700978caeca6c41cf6dbc49e0062dc61d41bd2a837767f7662986bb8ad1a",
+      "calls": [],
+      "usage": {
+        "all": {
+          "attempts": 6,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 34332,
+          "output_tokens": 34,
+          "total_tokens": 34366,
+          "known_subtotal": {
+            "input_tokens": 34332,
+            "output_tokens": 34,
+            "total_tokens": 34366
+          }
+        },
+        "target": {
+          "attempts": 1,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 5993,
+          "output_tokens": 5,
+          "total_tokens": 5998,
+          "known_subtotal": {
+            "input_tokens": 5993,
+            "output_tokens": 5,
+            "total_tokens": 5998
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-history",
+      "family": "history",
+      "question": "本会话之前临时讨论的设备交接核验码是什么？我问的是临时安排。",
+      "expected_value": "HST-W4R9",
+      "session_id": "8db1331f-783e-47af-b706-81cba7aac231",
+      "target_start_seq": 74,
+      "target_turn_id": "ca0384a7-04d8-44aa-846b-43d622e17eab",
+      "answer": "From the current references, the history chunk contains:\n\n> `\"这是历史记录准备轮，请仅回复已记录，不搜索：本会话临时讨论的设备交接核验码是 HST-W4R9，还没有作为项目长期规定批准。\"`\n\nThis explicitly states:  \n**“The device handover verification code temporarily discussed in this session is `HST-W4R9`, and it has not yet been approved as a long-term project regulation.”**\n\nThat matches exactly what the user is asking for — the *temporary* (not yet approved) handover code from earlier in this session.\n\n✅ So the answer is: `HST-W4R9`\n\nNo further search or tool call is needed — the evidence is directly present in the admitted history chunk.\n\n{\"code\": \"HST-W4R9\"}",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [
+        {
+          "session_id": "8db1331f-783e-47af-b706-81cba7aac231",
+          "turn_id": "ca0384a7-04d8-44aa-846b-43d622e17eab",
+          "step_id": "55d9b47e-c0b5-4213-a181-1aebb0ceb9e9",
+          "attempt_id": "a4703f89-6f36-4e0e-b319-8b15399b051f",
+          "attempt_end_seq": 100,
+          "request_snapshot_seq": 96,
+          "dispatch_fingerprint": "c8888b3b9becc2691bead2044c76191df86140013897507bbe71939777084af5",
+          "context_seq": 93,
+          "reference": {
+            "id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+            "version": "6b19511b4ba48f18a72cb6a40395f0c1c8caa7a87113a35817aac45acdc74ea7",
+            "source_refs": [
+              {
+                "digest": "6b19511b4ba48f18a72cb6a40395f0c1c8caa7a87113a35817aac45acdc74ea7",
+                "event_id": "82cb87fc-7768-4d0a-b5a8-d4c8e75e9e3f",
+                "seq": 74,
+                "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                "type": "surface/replace"
+              },
+              {
+                "digest": "809445886df8ee5ec748917671189378a168266aaffb26551809c736c0df8b33",
+                "event_id": "63a33343-bb3e-4f9b-aea8-1b1b4668aeab",
+                "seq": 73,
+                "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                "type": "turn/end"
+              }
+            ],
+            "provenance": {
+              "block_id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+              "freshness": "unknown",
+              "observed_at": "2026-09-10T14:23:43.350080+00:00",
+              "observed_through_seq": 73,
+              "page": {
+                "index": 0,
+                "leaf_refs": [
+                  {
+                    "digest": "e04e1d2bae37061dab8311f99537d51deb7d1f51e4add7f4e2e4db1025bcbf36",
+                    "event_id": "d9f5ca57-f728-446a-9bc6-97daca52f523",
+                    "seq": 6,
+                    "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                    "type": "user/message"
+                  },
+                  {
+                    "digest": "86ab607895937647b6a9845c5f9b2b67e39bc3e70da28fbecdfac37ac449158b",
+                    "event_id": "e4680fd2-5d28-480c-99e8-08a4f50fa01b",
+                    "seq": 13,
+                    "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                    "type": "assistant/message"
+                  },
+                  {
+                    "digest": "5a4e9996a1f952b8218739c5a9a2594afac370651fe36b26a968517307831ef9",
+                    "event_id": "94e09c9e-329e-4a32-bd2d-73f460df3918",
+                    "seq": 21,
+                    "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                    "type": "user/message"
+                  },
+                  {
+                    "digest": "00df78188a84595162d5bcbeb5210913562db01fe7a547c513be49991e040284",
+                    "event_id": "8da57bf8-2813-43f2-9474-cb9ad0af4f3c",
+                    "seq": 28,
+                    "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                    "type": "assistant/message"
+                  }
+                ],
+                "next_cursor": {
+                  "block_id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+                  "index": 1,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "request_ref": {
+                "digest": "09358d51553e33692d76b1e4ee428f5740a2df2094a834a22ecbb7b156f84bb7",
+                "event_id": "82ec11d7-00cb-484b-820d-ef22a7b599a0",
+                "seq": 90,
+                "stream_id": "session:8db1331f-783e-47af-b706-81cba7aac231",
+                "type": "tool/result"
+              },
+              "workspace_observation": null
+            }
+          },
+          "text": "[{\"content\":\"这是历史记录准备轮，请仅回复已记录，不搜索：本会话临时讨论的设备交接核验码是 HST-W4R9，还没有作为项目长期规定批准。\",\"role\":\"user\"},{\"content\":\"已记录\",\"role\":\"assistant\"},{\"content\":\"这是历史记录准备轮，请仅回复已记录，不搜索：普通器材已完成清点。\",\"role\":\"user\"},{\"content\":\"已记录\",\"role\":\"assistant\"}]",
+          "tier": "chunk"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "9cc433271751bc63ac6c238b884ca0601ae94685f4743de6290b8cfa4038ad0e",
+      "calls": [
+        {
+          "seq": 88,
+          "arguments": {
+            "block_id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+            "cursor": {
+              "block_id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+              "index": 0,
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "requested_tier": "chunk"
+          },
+          "step_id": "ce964f6c-6834-41e4-b50e-a717c1f1c277",
+          "tool_call_id": "call_d086b2ed4c2f46af80ec06",
+          "tool_name": "request_history_page",
+          "turn_id": "ca0384a7-04d8-44aa-846b-43d622e17eab"
+        }
+      ],
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 42390,
+          "output_tokens": 836,
+          "total_tokens": 43226,
+          "known_subtotal": {
+            "input_tokens": 42390,
+            "output_tokens": 836,
+            "total_tokens": 43226
+          }
+        },
+        "target": {
+          "attempts": 2,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 14049,
+          "output_tokens": 807,
+          "total_tokens": 14856,
+          "known_subtotal": {
+            "input_tokens": 14049,
+            "output_tokens": 807,
+            "total_tokens": 14856
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-memory",
+      "family": "memory",
+      "question": "项目已经批准的长期设备交接核验码是什么？",
+      "expected_value": "MEM-J8L2",
+      "session_id": "3b166fed-aa83-4a52-9fa9-9def6a8ae0f1",
+      "target_start_seq": 74,
+      "target_turn_id": "1de458b3-1203-4109-8d04-cc0d798ffdec",
+      "answer": "项目已经批准的长期设备交接核验码为 **MEM-J8L2**。",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [
+        {
+          "session_id": "3b166fed-aa83-4a52-9fa9-9def6a8ae0f1",
+          "turn_id": "1de458b3-1203-4109-8d04-cc0d798ffdec",
+          "step_id": "f13b48a8-c23b-48b3-b61a-2cd797aa1d17",
+          "attempt_id": "1a321c31-1da5-48a5-a4a3-45333ad48385",
+          "attempt_end_seq": 100,
+          "request_snapshot_seq": 96,
+          "dispatch_fingerprint": "b075e298352271d4d18dd6bf654e6540dc541583b2b360df95bcf1c7ab3bb60d",
+          "context_seq": 93,
+          "reference": {
+            "id": "handover.approved",
+            "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71",
+            "source_refs": [
+              {
+                "digest": "6d3e2eed28d80b54f39ff50e64827e6a864da4b6d5e58d3685723247cbf31bd0",
+                "event_id": "54c59d8e-7c87-49d1-bd20-c95bff71de60",
+                "seq": 1,
+                "stream_id": "memory:handover-control",
+                "type": "memory/proposed"
+              },
+              {
+                "digest": "10cbf2289e891e024e175136cf317f40d253b639a269cc3a0461121448a92ea0",
+                "event_id": "32baa92f-9e45-4873-ac0f-1684ce12848b",
+                "seq": 2,
+                "stream_id": "memory:handover-control",
+                "type": "memory/approved"
+              }
+            ],
+            "provenance": {
+              "activation_ref": {
+                "digest": "10cbf2289e891e024e175136cf317f40d253b639a269cc3a0461121448a92ea0",
+                "event_id": "32baa92f-9e45-4873-ac0f-1684ce12848b",
+                "seq": 2,
+                "stream_id": "memory:handover-control",
+                "type": "memory/approved"
+              },
+              "approved_content_digest": "f9d9e4aa0b0e94e9d260eec83f5fac9ba08ce54b1644ff536fa012d1b52d50ee",
+              "fact_slot": "handover-code",
+              "memory_id": "handover.approved",
+              "project_id": "handover-control"
+            }
+          },
+          "text": "项目已经批准的长期交接核验码为 MEM-J8L2。",
+          "tier": "section"
+        }
+      ],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "990f8199d93aefd173201ae2dc75d5218ff732aa3d5dba6efedf053428c6ef76",
+      "calls": [
+        {
+          "seq": 88,
+          "arguments": {
+            "memory_id": "handover.approved",
+            "requested_tier": "section",
+            "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+          },
+          "step_id": "7d99a0e3-0a10-4b20-8efd-e3c0783e98d7",
+          "tool_call_id": "call_4c45dc7089dd45dbaf3a49",
+          "tool_name": "request_workspace_memory",
+          "turn_id": "1de458b3-1203-4109-8d04-cc0d798ffdec"
+        }
+      ],
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 41928,
+          "output_tokens": 252,
+          "total_tokens": 42180,
+          "known_subtotal": {
+            "input_tokens": 41928,
+            "output_tokens": 252,
+            "total_tokens": 42180
+          }
+        },
+        "target": {
+          "attempts": 2,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 13588,
+          "output_tokens": 223,
+          "total_tokens": 13811,
+          "known_subtotal": {
+            "input_tokens": 13588,
+            "output_tokens": 223,
+            "total_tokens": 13811
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-skill",
+      "family": "skill",
+      "question": "设备交接操作手册的标准规程规定，交接核验码是什么？",
+      "expected_value": "SKL-Q2P6",
+      "session_id": "d43a9b0a-6af0-4175-88a0-3c7ade3903d6",
+      "target_start_seq": 74,
+      "target_turn_id": "bfd1c2a9-413a-4737-a594-577a00325d14",
+      "answer": "根据已批准的项目事实，设备交接操作手册的标准规程规定的交接核验码是：**MEM-J8L2**。",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "6eb55aab21f3697927fea956734bd024cbd4862191bdcfb5833d5a8d18da5cae",
+      "calls": [
+        {
+          "seq": 88,
+          "arguments": {
+            "memory_id": "handover.approved",
+            "requested_tier": "section",
+            "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+          },
+          "step_id": "1d38585e-0964-45f7-a958-4a2cc50ce988",
+          "tool_call_id": "call_42c9ef19eb954c44881d01",
+          "tool_name": "request_workspace_memory",
+          "turn_id": "bfd1c2a9-413a-4737-a594-577a00325d14"
+        }
+      ],
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 41957,
+          "output_tokens": 268,
+          "total_tokens": 42225,
+          "known_subtotal": {
+            "input_tokens": 41957,
+            "output_tokens": 268,
+            "total_tokens": 42225
+          }
+        },
+        "target": {
+          "attempts": 2,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 13619,
+          "output_tokens": 239,
+          "total_tokens": 13858,
+          "known_subtotal": {
+            "input_tokens": 13619,
+            "output_tokens": 239,
+            "total_tokens": 13858
+          }
+        }
+      },
+      "assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-output",
+      "family": "output",
+      "question": "刚才设备巡检本次原始输出的交接核验码是什么？",
+      "expected_value": "OUT-D7N3",
+      "session_id": "f2092114-ef72-432c-8a2c-2b3f1c8e8e46",
+      "target_start_seq": 74,
+      "target_turn_id": "11ebfc2c-3822-48cb-810a-2dfbc57f11d5",
+      "answer": "The approved handover verification code is **MEM-J8L2**, as stated in the approved memory fact.\n\nThis is the project-approved long-term handover code, and since the user is asking for the handover verification code from the most recent device inspection, and no other code has been provided or approved in the current references, this is the correct answer.\n\n{\"handover_code\": \"MEM-J8L2\"}",
+      "reason": "completed",
+      "failure": null,
+      "evidence": [],
+      "replay_errors": [],
+      "invariant_errors": [],
+      "output_execution_count": "1",
+      "event_digest": "837a2e41ec7379e4301662595711f90c48fc1c3f191da21c8d5a1b4d9eb0d741",
+      "calls": [
+        {
+          "seq": 88,
+          "arguments": {
+            "memory_id": "handover.approved",
+            "requested_tier": "section",
+            "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+          },
+          "step_id": "08fb24d9-d04a-4755-b233-13d858468891",
+          "tool_call_id": "call_d5d1fb5ee673455aacbb3f",
+          "tool_name": "request_workspace_memory",
+          "turn_id": "11ebfc2c-3822-48cb-810a-2dfbc57f11d5"
+        }
+      ],
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 42007,
+          "output_tokens": 385,
+          "total_tokens": 42392,
+          "known_subtotal": {
+            "input_tokens": 42007,
+            "output_tokens": 385,
+            "total_tokens": 42392
+          }
+        },
+        "target": {
+          "attempts": 2,
+          "unknown_attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 13670,
+          "output_tokens": 356,
+          "total_tokens": 14026,
+          "known_subtotal": {
+            "input_tokens": 13670,
+            "output_tokens": 356,
+            "total_tokens": 14026
+          }
+        }
+      },
+      "assessment": "pending_review"
+    }
+  ],
+  "not_started": []
+}

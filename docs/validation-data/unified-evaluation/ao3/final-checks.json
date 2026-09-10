@@ -1,0 +1,21 @@
+{
+  "targeted_first": {
+    "passed": 318,
+    "skipped": 12,
+    "failure": "obsolete duplicate release-version assertion"
+  },
+  "targeted_after_test_only_cleanup": {
+    "passed": 110,
+    "skipped": 18
+  },
+  "real_product_git_docker_pair": {
+    "passed": 1
+  },
+  "full_pytest": false,
+  "L2_L4": false,
+  "package_files_byte_equal": 316,
+  "real_runs": 2,
+  "real_requests": 42,
+  "real_tokens": 251319,
+  "candidate_adopted": false
+}

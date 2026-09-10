@@ -1,7 +1,7 @@
 # Frozen retrieval baseline v1
 
-这是显式评估样本，不是系统默认项目。根 manifest protocol 为 **2**；`corpus.json` format 为 **1**，
-SHA-256 固定在 manifest。候选运行前已冻结 11 条查询、相关性、九类阈值、K=3、Context 上限和耗时上限。
+这是显式评估样本，不是系统默认项目。当前根 manifest protocol 为 **3**；`corpus.json` format 为 **1**，
+SHA-256 固定在 task_settings.retrieval；dataset 独立绑定。候选运行前已冻结 11 条查询、相关性、九类阈值、K=3、Context 上限和耗时上限。
 全部使用同一 initial tree、同一 Verifier 和 single arm；单样本不作统计显著性结论。
 
 运行仍使用 `traceh eval benchmarks/retrieval_v1 --output <新目录>`，Provider/model 通过该命令的
@@ -57,3 +57,7 @@ Python、SQLite、Unicode、OS 和机器架构一并记录。History 仍按当�
 原 query、判断、阈值、上限、初始工作区和正文不改；这是显式协议重新绑定，不能称本轮 JSON 字节不变。
 本基准仍使用确定性 Provider 验证 Product 检索合同，真实模型自主导航由显式集成测试单独验证；
 最终回归与真实结果见 [本轮验证记录](../../docs/validation-v0.9-skill-navigation.md)。
+
+UE-1 迁移仅改变评估外壳和 dataset/run-plan 分离，未改题目、judgments 和评分阈值。
+本套仍是 ProductTaskEvaluator 的 F5 指标，不是 UE-2 主动检索旅程。
+配置示例见 [run-plan](run-plan.example.json)；旧运行分数保留为当时记录。

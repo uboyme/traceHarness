@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "case_id": "fix_failing_check",
+      "group_id": "fix_failing_check",
+      "requirement": "The unit tests in this repository currently fail. Fix the source code so that running the test suite passes. Do not change or delete the tests.",
+      "initial_tree": "fix_failing_check/initial",
+      "sha256": "cae68579a64efb22702c04d618804b7fc245e97bda8a007bbbdcfbfe0fae6877"
+    },
+    {
+      "case_id": "add_missing_helper",
+      "group_id": "add_missing_helper",
+      "requirement": "The test suite calls a helper that does not exist yet. Add it to the existing module so that running the test suite passes. Do not change or delete the tests.",
+      "initial_tree": "add_missing_helper/initial",
+      "sha256": "39b4167c8ce32c66c54063413f2a6da61f5b369a79906f5389d585dd080ab1bf"
+    },
+    {
+      "case_id": "guard_invalid_input",
+      "group_id": "guard_invalid_input",
+      "requirement": "A parsing function accepts values the test suite says it must reject. Add the missing validation so that running the test suite passes. Do not change or delete the tests.",
+      "initial_tree": "guard_invalid_input/initial",
+      "sha256": "e149c2b5d67e1fad076b2022fe6d3bc3fe68a2ef2672d7ec32e8e9f94bc95f74"
+    }
+  ]
+}

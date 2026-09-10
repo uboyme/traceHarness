@@ -1,0 +1,51 @@
+{
+  "run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "kind": "agent-advisory-not-human-judgment",
+  "imported_as_assessment": false,
+  "observations": [
+    {
+      "cases": [
+        "h-direct",
+        "s-direct",
+        "m-direct",
+        "o-direct"
+      ],
+      "arms": [
+        "aa-reference",
+        "aa-repeat"
+      ],
+      "observation": "Both arms returned the configured value and each positive has native dispatched evidence. This is a provisional observation, not an imported human grade."
+    },
+    {
+      "cases": [
+        "s-absent"
+      ],
+      "arms": [
+        "aa-reference",
+        "aa-repeat"
+      ],
+      "observation": "Both answers assert absence from the manual topic/summary or navigation search. The repeat arm explicitly claims certainty from the topic; a human must inspect the frozen absence rubric. No behavior correction was made during this A/A."
+    },
+    {
+      "cases": [
+        "h-absent",
+        "m-revoked"
+      ],
+      "arms": [
+        "aa-reference",
+        "aa-repeat"
+      ],
+      "observation": "Answers make absence claims from the available results; their scope must be reviewed against the actual search coverage, not automatically passed using an empty expected value."
+    },
+    {
+      "cases": [
+        "o-absent"
+      ],
+      "arms": [
+        "aa-reference",
+        "aa-repeat"
+      ],
+      "observation": "Answers differ in strength: reference says the output did not provide a number; repeat says it was not found. Both remain pending the original rubric."
+    }
+  ]
+}

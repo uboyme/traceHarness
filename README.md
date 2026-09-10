@@ -1,4 +1,6 @@
-# TraceHarness Py v0.10.0
+# TraceHarness Py v0.11.0
+
+v0.11 接入统一评估、受限候选优化和运行期后台托管。F2 的“后台优化”可以勾选题库题目、生成评估计划并配置额度，F6 或 `/optimize` 开启、提交反馈、暂停和审阅候选。后台复用原隔离双臂与独立语义裁判，退出应用即收尾，不自动采用或修改运行策略。参见 [AO-3 记录](docs/deal/026-runtime-background-optimization.md)；本版不包含 DA 动态协作或 MCP。
 
 大工具输出现可保存在执行账本中，模型通过本会话输出目录按页读回，压缩或重启后仍可定位原文；无需额外绑定项目。分层压缩 A/B 的范围与真实验收见 [验证记录](docs/validation-retained-tool-output.md)。C 已能折叠旧结果，E0 已补完整请求 token 估算，D 可选模型语义摘要；原文保留，支持查证。见 [D 真实验证](docs/validation-semantic-summary.md)。
 
@@ -70,7 +72,7 @@ v0.10 完成 S0–S4（含 S3-A，不含 S3-B），提供固定镜像、受限�
 [上下文 13.10](docs/note/project-context.md#1310-f5-治理入口)。
 
 唯一 `traceh eval` 新增 [11 查询冻结基线](benchmarks/retrieval_v1/README.md)；根 manifest 只接受
-protocol 2，旧 1 拒绝。首次本地网格 Product 11/11 完成、隔离违规 0，但 5 条检索质量未达预设
+protocol 3（UE-1 已迁移），旧 1/2 拒绝。首次本地网格 Product 11/11 完成、隔离违规 0，但 5 条检索质量未达预设
 阈值。精度修订现已接入共享检索：完整标识符/路径保持整体匹配，最终预算通过的自动参考可排除查询
 覆盖为其严格子集的后续候选；相等/互补覆盖和显式披露保留。语料、判断与阈值未改，也没有示例名单或隐藏默认。
 同冻结输入复验现为 Product 11/11、原阈值 quality_passed 11/11、隔离 0，原五条失败已达标。
@@ -556,16 +558,24 @@ traceh run <workspace> "任务" --plugin my.plugin.id --plugin-verifier my.verif
 
 ## 运行内置 Benchmark
 
-`traceh eval` 是**唯一**的 benchmark 通路。它跑的就是 `traceh chat --product-config` 那条 ProductTask 主线：真实确认、固定 Workflow、managed Git worktree、不可变 Patch Artifact、冻结 Verifier、Review 和 Git ref compare-and-swap 推广。
+UE-0/UE-1 已切换根协议 3，统一 EvaluationRunner 负责冻结条件和试次，ProductTaskEvaluator 保留原成功判定。
+支持 `--run-plan`；配置示例和逐字段说明见 [执行合同](docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE0_CONTRACT.md)。
+旧根 1/2 明确拒绝。独立检索旅程与离线 --review/--assess 见 [检索旅程合同](docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE2_CONTRACT.md)。UE-3 支持受限文本候选、baseline/candidate 独立进程与离线 --compare；配置见 [UE-3 合同](docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_CONTRACT.md) 和 [双臂示例](benchmarks/retrieval_episodes_v1/paired-run-plan.example.json)。比较不自动采用候选；AO-2 的一次策略提案见下文，AO-3 的应用内后台托管见 [记录 026](docs/deal/026-runtime-background-optimization.md)。
+AO-0 提供策略/分析合同与受限准入；AO-1 已能把人工文字候选交原评估器分两臂执行，按原证据判断无收益、待审和停止。离线补审不会重跑队列，候选没有自动采用权限。AO-2 已接入一次策略插件提案和独立模型语义审阅，仍用原 Runtime/Budget/Session、evaluation 与 comparison；硬门禁由程序守住，采用由用户决定。后台托管由 F2/F6 显式装配和启用；没有默认启动或自动采用。真实小实验没有证明稳定收益，保留基线；AO-2+ 已做真实校准但候选未达标，生产裁判保持原策略，见 [校准记录](docs/deal/025-semantic-judge-calibration.md)、[AO-2 合同](docs/plan/TRACEHARNESS_OPTIMIZATION_AO2_CONTRACT.md) 与[限定验证记录](docs/deal/024-strategy-analysis-and-model-review.md)。
+UE-4 已完成新 72 条当前单臂与八条辅助对照；有答案题暂定 answer+evidence 为 49/60，12 条负例继续范围审阅，正式 72 条全待人工评分。495 次真实直连请求及原始证据已归档，未改检索策略或自动采用候选。见 [真实验收结果](docs/validation-data/unified-evaluation/ue4/README.md)。
+UE-3+ 在原检索报告及 --review/--assess 输出中增加来源候选、实际证据派发和原回答评估的诊断表。已有运行可离线生成 diagnostics.json/md，无需重新问模型；读取回执不算正文，完整有效搜索片段可直接作为证据，负例保留实际查询/分页范围供审阅。见 [诊断合同](docs/plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_PLUS_CONTRACT.md) 与 [原 16 条真实轨迹的离线诊断](docs/validation-data/unified-evaluation/ue3-plus/README.md)。
+
+`traceh eval` 是**唯一**的 benchmark 通路。其中 Product 类型跑 `traceh chat --product-config` 那条原主线：真实确认、固定 Workflow、managed Git worktree、不可变 Patch Artifact、冻结 Verifier、Review 和 Git ref compare-and-swap 推广。
 
 ```powershell
-PYTHONPATH=src python -m traceh.cli.main eval benchmarks/product_v1 `
+python -m traceh.cli.main eval benchmarks/product_v1 `
   --output <一个尚不存在的证据目录> `
-  --provider openai-compatible --base-url <url> --model <model>
+  --provider openai-compatible --base-url <url> --model <model> `
+  --sandbox-config <宿主沙箱配置文件>
 ```
 
 - `--output` 必须尚不存在；每次 attempt 在 `attempts/<NNN>/` 下留下自己的源仓库、一次性 bare target、事件流、worktree 和 CAS，运行结束后写 `report.json` 与 `report.md`。失败或取消不会删除任何证据：attempt「干净」的含义是所有 owner 已收敛，而不是证据被删掉。
-- Manifest（`benchmarks/product_v1/benchmark.json`，schema 1、精确键集）只能命名 Profile、三个角色槽位与 Budget、Router 上界、任务总 Budget、冻结 VerificationPlan、capture 上限、arms 和 tasks。它**不能**命名仓库、推广目标、provider、model、节点、边、Agent 数量或 approval digest——每次 attempt 的源仓库和一次性本地 bare target 都由 Runner 自己创建，因此这条命令在结构上无法接触真实远端。
+- Manifest（`benchmarks/product_v1/benchmark.json`，根协议 3）将 Profile、角色 Budget、Router、VerificationPlan、capture 上限、modes/retrieval 放在 task_settings，题目放在独立 dataset。它不能命名真实仓库、推广目标、Provider、模型、Workflow 图或 approval digest；一次性源仓库与本地 bare target 仍由原 Product 执行 owner 创建。
 - provider/model 来自 `--provider` / `--model`（或 `TRACEH_PROVIDER` / `TRACEH_MODEL`），一次运行的所有 arm 使用同一个模型族，报告会记录它是哪一个。
 - 报告按**解析后**的模式聚合：`auto` 的结果计入 Router 实际选择的那个 arm，`auto` 只单独报告路由是否严格解析成功、路由 Token 和路由耗时；它不是第三个质量 arm。
 - 只有一次观测的 arm 会在两份报告里标注 `single observation`；聚合只有计数、总和、最小、最大和均值，不声称统计显著性。
@@ -784,7 +794,7 @@ src/traceh/product      v0.7-F1–F3 / v0.8-F5 ProductTask 事实、固定装配
 src/traceh/llm          Provider Registry、Adapter、typed failure 与 bounded retry policy
 src/traceh/tools        Policy、调度、Effect 和内置 Coding Tools
 src/traceh/inspector    文本 Replay 和静态 HTML Trace
-src/traceh/evaluation   v0.7-F4 ProductTask Benchmark：manifest、一次性仓库、durable 指标与报告
+src/traceh/evaluation   共享输入/调度/报告 + Product/检索旅程评估器、离线审阅；原持久证据
 src/traceh/evolution    L2 验证、L3 对比与 L4 人工批准/推广/回滚控制面
 examples/plugins        可独立构建的示例、Python Quality 与 Plugin Creator Distribution
 tests                   契约、恢复、取消、插件和端到端测试

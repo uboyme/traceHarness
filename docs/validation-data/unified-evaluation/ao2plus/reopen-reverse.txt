@@ -1,0 +1,9 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_____ test_frozen_review_conditions_must_contain_identical_evidence[True] _____
+tests\test_judge_calibration.py:93: in test_frozen_review_conditions_must_contain_identical_evidence
+    with pytest.raises(AssertionError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_judge_calibration.py::test_frozen_review_conditions_must_contain_identical_evidence[True]

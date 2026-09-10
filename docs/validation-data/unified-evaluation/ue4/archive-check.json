@@ -1,0 +1,9 @@
+{
+  "artifact_hashes_verified": 10,
+  "source": "archived-source.zip",
+  "entry": "python -m traceh.cli.main eval --review",
+  "review_files_byte_identical": 76,
+  "review_json_identical_except_verified_relocated_execution_run": true,
+  "original_files_unchanged": 297,
+  "provider_calls": 0
+}

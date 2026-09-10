@@ -1,0 +1,361 @@
+{
+  "format": 1,
+  "kind": "agent-advisory-not-human-judgment",
+  "imported_as_assessment": false,
+  "report_digest": "d0db4497ec5de1ba16b2e60f33adb77c33495ad713efb5434486cd668f8fbe53",
+  "rows": [
+    {
+      "case_id": "ordinary-greeting",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "3323a037034bce1af46fb16482807033f2a1e676a2fb7c8ae54c5e6198cc89d1",
+          "tier": "directory",
+          "version": "861e35a3102ca4d5ec2b4585249098d65ec8cabfe66015cf35a3803b10f010cf"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [],
+      "provisional_answer_match": null,
+      "expected_source_evidence_dispatched": null,
+      "agent_advisory": "ordinary-answer-fits-request-no-tools",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-arithmetic",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "7c0a1e0d722436a8530a56578015ece6bc6d0d0252e5c72fffd7b1c2fd4117bb",
+          "tier": "directory",
+          "version": "ef3483a8fa98d94daad665d18dac0f5aebfac2d3d6c1eb13c5fa20a20bd8673e"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [],
+      "provisional_answer_match": true,
+      "expected_source_evidence_dispatched": null,
+      "agent_advisory": "ordinary-answer-fits-request-no-tools",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-translation",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "4b6b0a6aa2c565973414d60118faa1d822f643621aafd1065d61ce4a2423fb68",
+          "tier": "directory",
+          "version": "b6bbe542dd2af126cfff2ace222cf2d6e5719b7a0fe07da0ce7ea6cc0ab14c44"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [],
+      "provisional_answer_match": null,
+      "expected_source_evidence_dispatched": null,
+      "agent_advisory": "ordinary-answer-fits-request-no-tools",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "ordinary-rewrite",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "39e2506fa82219e80a4de36e8e35bacc504441c51ee2e656dd69b09dcbc6cf4e",
+          "tier": "directory",
+          "version": "896e8b53792deff495062e62049afaa651e5a7ca8b07051fd72b8661ba7a87b4"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [],
+      "provisional_answer_match": null,
+      "expected_source_evidence_dispatched": null,
+      "agent_advisory": "ordinary-answer-fits-request-no-tools",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-history",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "0c2c1e5c8ef6e6e5b1bcc4f2fad4eca2a5f3bf44f7f803a95924a18596537ff3",
+          "tier": "directory",
+          "version": "6b19511b4ba48f18a72cb6a40395f0c1c8caa7a87113a35817aac45acdc74ea7"
+        },
+        {
+          "kind": "memory",
+          "id": "handover.approved",
+          "tier": "directory",
+          "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+        },
+        {
+          "kind": "skill",
+          "id": "handover.procedure",
+          "tier": "directory",
+          "version": "1.0.0"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [
+        "request_history_page"
+      ],
+      "provisional_answer_match": true,
+      "expected_source_evidence_dispatched": true,
+      "agent_advisory": "correct-source-and-value",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-memory",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "30030152354e3280873dbc1c9e370e11445c2b4aa28a7efba7ca07141e3de49c",
+          "tier": "directory",
+          "version": "32345b05de3f2caf8c45bb32a7f1cd5b8c07d611e055aba4db5c7396b8677331"
+        },
+        {
+          "kind": "memory",
+          "id": "handover.approved",
+          "tier": "directory",
+          "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+        },
+        {
+          "kind": "skill",
+          "id": "handover.procedure",
+          "tier": "directory",
+          "version": "1.0.0"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [
+        "request_workspace_memory"
+      ],
+      "provisional_answer_match": true,
+      "expected_source_evidence_dispatched": true,
+      "agent_advisory": "correct-source-and-value",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-skill",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "3a6289f9e602771590e8148841d873392d8da065c18503ef773e88e3ab1801bc",
+          "tier": "directory",
+          "version": "11b170fb1c0292c327b3491ada26965665b9e868cee5b0d61d19cfc55fb27dca"
+        },
+        {
+          "kind": "skill",
+          "id": "handover.procedure",
+          "tier": "directory",
+          "version": "1.0.0"
+        },
+        {
+          "kind": "memory",
+          "id": "handover.approved",
+          "tier": "directory",
+          "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [
+        "request_workspace_memory"
+      ],
+      "provisional_answer_match": false,
+      "expected_source_evidence_dispatched": false,
+      "agent_advisory": "approved-memory-misattributed-to-requested-source",
+      "human_assessment": "pending_review"
+    },
+    {
+      "case_id": "competing-output",
+      "target_start_seq": 74,
+      "initial_context_seq": 80,
+      "initial_request_seq": 83,
+      "visible_sources": [
+        {
+          "kind": "history",
+          "id": "947ace257486c1a2be6a4fa06b5a42a933a3f856b3b53feb566c9148845649e0",
+          "tier": "directory",
+          "version": "bd44cc76621e339b9835f3f09a941952d172efcbd3c71b6590fb077a39beb9c7"
+        },
+        {
+          "kind": "memory",
+          "id": "handover.approved",
+          "tier": "directory",
+          "version": "0d2508d53a044d7eeec52a298a0710080fc25be04ff5724dc633ce9bff014b71"
+        },
+        {
+          "kind": "skill",
+          "id": "handover.procedure",
+          "tier": "directory",
+          "version": "1.0.0"
+        }
+      ],
+      "available_tools": [
+        "apply_patch",
+        "list_files",
+        "list_tool_outputs",
+        "propose_workspace_memory",
+        "read_file",
+        "read_tool_output",
+        "request_history_page",
+        "request_skill_reference",
+        "request_workspace_memory",
+        "search_history",
+        "search_memory",
+        "search_skill",
+        "search_text",
+        "search_tool_output",
+        "shell"
+      ],
+      "target_tools": [
+        "request_workspace_memory"
+      ],
+      "provisional_answer_match": false,
+      "expected_source_evidence_dispatched": false,
+      "agent_advisory": "approved-memory-misattributed-to-requested-source",
+      "human_assessment": "pending_review"
+    }
+  ],
+  "totals": {
+    "ordinary": 4,
+    "ordinary_without_tools": 4,
+    "competing": 4,
+    "competing_with_expected_evidence_and_value": 2,
+    "model_attempts": 52,
+    "exact_total_tokens": 307502,
+    "target_tokens": 80565
+  }
+}

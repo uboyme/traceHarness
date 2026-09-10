@@ -1,0 +1,1768 @@
+{
+  "assessment_complete": false,
+  "benchmark_id": "retrieval-episodes-development-v1",
+  "complete": true,
+  "errors": [],
+  "frozen_digest": "8a69e750801a04932d0177b2d396be6bfead02d0550280bb1cebe0d14732be01",
+  "protocol_version": 3,
+  "run_id": "b61ef525-435f-4d12-88b1-9a69b639c4b6",
+  "task_report": {
+    "assessment_counts": {
+      "failed": 0,
+      "passed": 0,
+      "pending_review": 8,
+      "unassessable": 0
+    },
+    "episodes": [
+      {
+        "answer": "从搜索结果中，我找到了设备交接的口令信息：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。",
+        "calls": [
+          {
+            "arguments": {
+              "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+              "cursor": {
+                "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                "index": 0,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "requested_tier": "chunk"
+            },
+            "name": "request_history_page",
+            "seq": 166,
+            "tool_call_id": "call_d2df0b4ca676436f818a24"
+          },
+          {
+            "arguments": {
+              "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+              "cursor": {
+                "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                "index": 1,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "requested_tier": "chunk"
+            },
+            "name": "request_history_page",
+            "seq": 179,
+            "tool_call_id": "call_920994ec29bd48e5991200"
+          },
+          {
+            "arguments": {
+              "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+              "cursor": {
+                "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                "index": 2,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "requested_tier": "chunk"
+            },
+            "name": "request_history_page",
+            "seq": 192,
+            "tool_call_id": "call_657dae521862453f82a7f6"
+          },
+          {
+            "arguments": {
+              "query": "口令"
+            },
+            "name": "search_history",
+            "seq": 205,
+            "tool_call_id": "call_6b1f6c249baa4552a24eb2"
+          }
+        ],
+        "case_id": "h-direct",
+        "dispatched_evidence": [
+          {
+            "attempt_end_seq": 217,
+            "attempt_id": "c14b74ab-003f-464b-9b3a-bdbe5feb7bf5",
+            "context_seq": 210,
+            "dispatch_fingerprint": "1b6afc06ee2c9ff25a126f3e9add8fb9de8124c93b3f91a25976824dca8744b4",
+            "reference": {
+              "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+              "cursor": {
+                "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                "index": 3,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "leaf_ref": {
+                "digest": "8354223949ae319a6c6c99126a8f7b0d6a05a08f0661f56ee04c5706b7fa50cb",
+                "event_id": "d59f2fdc-60a3-4059-a70c-e2516ba2030b",
+                "seq": 111,
+                "stream_id": "session:e98d664c-76a9-4b8a-b27f-c4d5b9522239",
+                "type": "user/message"
+              },
+              "readable": true,
+              "version": "b3bd3f0464110c7aa21a8948f645aae769a3df73a4e40985527a380d62d147c4"
+            },
+            "request_snapshot_seq": 213,
+            "session_id": "e98d664c-76a9-4b8a-b27f-c4d5b9522239",
+            "step_id": "3f211f31-9149-4169-965e-a227ea9868a6",
+            "text": "请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。",
+            "tier": "search",
+            "turn_id": "cd0dca23-08f6-4e67-b256-4f67fc28af9d"
+          }
+        ],
+        "elapsed_seconds": 67.64099999994505,
+        "expectation": {
+          "kind": "value",
+          "reference_id": "",
+          "source_text": "设备交接的口令是 REF-34772572F2。",
+          "value": "REF-34772572F2",
+          "value_type": "code"
+        },
+        "failure": null,
+        "family": "history",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": true,
+        "provisional_joint_pass": true,
+        "question": "之前设备交接的口令是什么？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 4,
+        "searches": [
+          {
+            "kind": "history",
+            "page": {
+              "fields": [
+                "message.content"
+              ],
+              "hits": [
+                {
+                  "match_end": 22,
+                  "match_start": 20,
+                  "read_action": {
+                    "arguments": {
+                      "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                      "cursor": {
+                        "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                        "index": 3,
+                        "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                      },
+                      "requested_tier": "chunk"
+                    },
+                    "tool_name": "request_history_page"
+                  },
+                  "reference": {
+                    "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                    "cursor": {
+                      "block_id": "a698cced31129043a08feee492ab2705f24032f4d7bd46bccad1230e2d63b616",
+                      "index": 3,
+                      "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                    },
+                    "leaf_ref": {
+                      "digest": "8354223949ae319a6c6c99126a8f7b0d6a05a08f0661f56ee04c5706b7fa50cb",
+                      "event_id": "d59f2fdc-60a3-4059-a70c-e2516ba2030b",
+                      "seq": 111,
+                      "stream_id": "session:e98d664c-76a9-4b8a-b27f-c4d5b9522239",
+                      "type": "user/message"
+                    },
+                    "readable": true,
+                    "version": "b3bd3f0464110c7aa21a8948f645aae769a3df73a4e40985527a380d62d147c4"
+                  },
+                  "text": "请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。",
+                  "text_offset": 0,
+                  "truncated": false
+                }
+              ],
+              "next_cursor": null,
+              "query": "口令",
+              "scanned": 20,
+              "status": "matches",
+              "total": 20
+            },
+            "seq": 210
+          }
+        ],
+        "session_id": "e98d664c-76a9-4b8a-b27f-c4d5b9522239",
+        "setup_session_id": "e98d664c-76a9-4b8a-b27f-c4d5b9522239",
+        "target_seconds": 49.54700000002049,
+        "target_start_seq": 152,
+        "target_turn_id": "cd0dca23-08f6-4e67-b256-4f67fc28af9d",
+        "trial_id": "ae484c137062a97183e70f415aabfbb3bfe346134a1ea0bf59395a5999ede3a0",
+        "usage": {
+          "all": {
+            "attempts": 15,
+            "estimated_attempts": 0,
+            "input_tokens": 67536,
+            "known_subtotal": {
+              "input_tokens": 67536,
+              "output_tokens": 956,
+              "total_tokens": 68492
+            },
+            "output_tokens": 956,
+            "total_tokens": 68492,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 10,
+            "estimated_attempts": 0,
+            "input_tokens": 39233,
+            "known_subtotal": {
+              "input_tokens": 39233,
+              "output_tokens": 30,
+              "total_tokens": 39263
+            },
+            "output_tokens": 30,
+            "total_tokens": 39263,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 5,
+            "estimated_attempts": 0,
+            "input_tokens": 28303,
+            "known_subtotal": {
+              "input_tokens": 28303,
+              "output_tokens": 926,
+              "total_tokens": 29229
+            },
+            "output_tokens": 926,
+            "total_tokens": 29229,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "让我检查当前可用的历史记录内容。从提供的参考信息中，我可以看到两个历史记录块：\n\n第一个块包含：\n- \"请记下这条记录，只回复已记下：背景登记 2：本次活动普通器材已经清点。\"\n- \"已记下\"\n- \"请记下这条记录，只回复已记下：背景登记 3：本次活动普通器材已经清点。\"\n- \"已记下\"\n\n第二个块包含：\n- \"请记下这条记录，只回复已记下：背景登记 0：本次活动普通器材已经清点。\"\n- \"已记下\"\n- \"请记下这条记录，只回复已记下：背景登记 1：本次活动普通器材已经清点。\"\n- \"已记下\"\n\n这些历史记录都只涉及\"本次活动普通器材已经清点\"的背景登记，没有任何关于保险柜或开锁口令的内容。\n\n由于历史记录中没有提到保险柜的开锁口令，答案是否定的。\n\n没有。我们之前没有说过保险柜的开锁口令。",
+        "calls": [
+          {
+            "arguments": {
+              "block_id": "578a495bc1fa034e6be44625c9670a121e288a37f0eea939bede7155bbe4fb84",
+              "cursor": {
+                "block_id": "578a495bc1fa034e6be44625c9670a121e288a37f0eea939bede7155bbe4fb84",
+                "index": 0,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "requested_tier": "chunk"
+            },
+            "name": "request_history_page",
+            "seq": 166,
+            "tool_call_id": "call_d8e104c49b2648a9b48156"
+          },
+          {
+            "arguments": {
+              "block_id": "578a495bc1fa034e6be44625c9670a121e288a37f0eea939bede7155bbe4fb84",
+              "cursor": {
+                "block_id": "578a495bc1fa034e6be44625c9670a121e288a37f0eea939bede7155bbe4fb84",
+                "index": 1,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "requested_tier": "chunk"
+            },
+            "name": "request_history_page",
+            "seq": 179,
+            "tool_call_id": "call_7ee936e6d4104b52ab82a0"
+          }
+        ],
+        "case_id": "h-absent",
+        "dispatched_evidence": [],
+        "elapsed_seconds": 52.875,
+        "expectation": {
+          "kind": "no-evidence",
+          "reference_id": "",
+          "source_text": "这次只记录普通活动安排。",
+          "value": "",
+          "value_type": "none"
+        },
+        "failure": null,
+        "family": "history",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": null,
+        "provisional_joint_pass": false,
+        "question": "我们之前说过保险柜的开锁口令吗？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 2,
+        "searches": [],
+        "session_id": "a3114b2e-9fd1-4a65-85f1-73492f2b7e2a",
+        "setup_session_id": "a3114b2e-9fd1-4a65-85f1-73492f2b7e2a",
+        "target_seconds": 33.85999999998603,
+        "target_start_seq": 152,
+        "target_turn_id": "c3b00c8d-f14a-478c-a034-4f4d9d6ef040",
+        "trial_id": "0e4bcb5035ab2de0e2100097f0462b594c49e4e329b8c496d0fda26043f6c30a",
+        "usage": {
+          "all": {
+            "attempts": 13,
+            "estimated_attempts": 0,
+            "input_tokens": 53874,
+            "known_subtotal": {
+              "input_tokens": 53874,
+              "output_tokens": 855,
+              "total_tokens": 54729
+            },
+            "output_tokens": 855,
+            "total_tokens": 54729,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 10,
+            "estimated_attempts": 0,
+            "input_tokens": 39185,
+            "known_subtotal": {
+              "input_tokens": 39185,
+              "output_tokens": 30,
+              "total_tokens": 39215
+            },
+            "output_tokens": 30,
+            "total_tokens": 39215,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 3,
+            "estimated_attempts": 0,
+            "input_tokens": 14689,
+            "known_subtotal": {
+              "input_tokens": 14689,
+              "output_tokens": 825,
+              "total_tokens": 15514
+            },
+            "output_tokens": 825,
+            "total_tokens": 15514,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "设备演练手册规定的签到卡代号是 `REF-CF662C1BCD`。",
+        "calls": [
+          {
+            "arguments": {
+              "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+              "chunk_id": null,
+              "requested_tier": "section",
+              "resource_id": null,
+              "section_id": "section-23",
+              "skill_id": "manual-cf662c1bcd",
+              "version": "1.0.0"
+            },
+            "name": "request_skill_reference",
+            "seq": 15,
+            "tool_call_id": "call_35d5f0afc4fc42a19cf8ea"
+          }
+        ],
+        "case_id": "s-direct",
+        "dispatched_evidence": [
+          {
+            "attempt_end_seq": 27,
+            "attempt_id": "de2706d3-4589-42b1-99df-5ce948b1caae",
+            "context_seq": 20,
+            "dispatch_fingerprint": "ff76260fddd305dfd92dfa1007ab0345b8ea67181fc75244daac7a2e9242f3fb",
+            "reference": {
+              "id": "manual-cf662c1bcd",
+              "provenance": {
+                "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+                "chunk_id": null,
+                "plugin": {
+                  "plugin_id": "reference.author",
+                  "version": "1.0.0"
+                },
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-cf662c1bcd"
+              },
+              "source_refs": [],
+              "version": "1.0.0"
+            },
+            "request_snapshot_seq": 23,
+            "session_id": "d82b1e75-3e1a-477d-ba5d-0631bc5b3af0",
+            "step_id": "3db6755e-d110-4f1c-999a-808effd8ff00",
+            "text": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。",
+            "tier": "section",
+            "turn_id": "c043e82d-77a8-4ff3-8e05-262da3504f62"
+          }
+        ],
+        "elapsed_seconds": 11.172000000020489,
+        "expectation": {
+          "kind": "value",
+          "reference_id": "manual-cf662c1bcd",
+          "source_text": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。",
+          "value": "REF-CF662C1BCD",
+          "value_type": "code"
+        },
+        "failure": null,
+        "family": "skill",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": true,
+        "provisional_joint_pass": true,
+        "question": "设备演练手册规定的签到卡代号是什么？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 1,
+        "searches": [],
+        "session_id": "d82b1e75-3e1a-477d-ba5d-0631bc5b3af0",
+        "setup_session_id": "d82b1e75-3e1a-477d-ba5d-0631bc5b3af0",
+        "target_seconds": 11.078000000095926,
+        "target_start_seq": 1,
+        "target_turn_id": "c043e82d-77a8-4ff3-8e05-262da3504f62",
+        "trial_id": "fae76e3870b9ff742e7342feb9c5510414b738b32c378653705b35d7e573f445",
+        "usage": {
+          "all": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 10078,
+            "known_subtotal": {
+              "input_tokens": 10078,
+              "output_tokens": 275,
+              "total_tokens": 10353
+            },
+            "output_tokens": 275,
+            "total_tokens": 10353,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 0,
+            "estimated_attempts": 0,
+            "input_tokens": 0,
+            "known_subtotal": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 10078,
+            "known_subtotal": {
+              "input_tokens": 10078,
+              "output_tokens": 275,
+              "total_tokens": 10353
+            },
+            "output_tokens": 275,
+            "total_tokens": 10353,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "根据当前可用的档案整理手册目录信息，我检查了手册的各个章节标题和摘要，但没有发现任何与\"车辆加油\"、\"加油\"或\"折扣码\"相关的内容。\n\n手册的目录显示它主要包含\"普通事项\"（0-30）和\"档案整理操作手册\"（section-23），所有普通事项的摘要都显示为\"说明普通器材登记\"，而档案整理操作手册的摘要仅为\"档案整理操作手册\"。\n\n由于搜索\"加油\"和\"车辆加油\"都没有找到匹配结果，且手册目录中没有任何章节标题或摘要暗示与车辆管理、加油或折扣码相关的内容，可以确定：\n\n**档案整理手册中没有规定车辆加油的折扣码。**\n\n档案整理手册的内容聚焦于档案整理操作和普通器材登记，不涉及车辆管理、燃油采购或折扣码等行政后勤事务。",
+        "calls": [
+          {
+            "arguments": {
+              "query": "车辆加油"
+            },
+            "name": "search_skill",
+            "seq": 15,
+            "tool_call_id": "call_792a019c47c64a4f818285"
+          },
+          {
+            "arguments": {
+              "query": "加油"
+            },
+            "name": "search_skill",
+            "seq": 28,
+            "tool_call_id": "call_425c3d8617c445bf9d2a54"
+          }
+        ],
+        "case_id": "s-absent",
+        "dispatched_evidence": [],
+        "elapsed_seconds": 16.43700000003446,
+        "expectation": {
+          "kind": "no-evidence",
+          "reference_id": "manual-593410eb3c",
+          "source_text": "本手册说明档案整理工作。",
+          "value": "",
+          "value_type": "none"
+        },
+        "failure": null,
+        "family": "skill",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": null,
+        "provisional_joint_pass": false,
+        "question": "档案整理手册有没有规定车辆加油的折扣码？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 2,
+        "searches": [
+          {
+            "kind": "skill",
+            "page": {
+              "fields": [
+                "id",
+                "title",
+                "summary",
+                "tags"
+              ],
+              "hits": [],
+              "next_cursor": null,
+              "query": "车辆加油",
+              "scanned": 32,
+              "status": "no-hit",
+              "total": 32
+            },
+            "seq": 20
+          },
+          {
+            "kind": "skill",
+            "page": {
+              "fields": [
+                "id",
+                "title",
+                "summary",
+                "tags"
+              ],
+              "hits": [],
+              "next_cursor": null,
+              "query": "加油",
+              "scanned": 32,
+              "status": "no-hit",
+              "total": 32
+            },
+            "seq": 33
+          }
+        ],
+        "session_id": "bfd316d7-a9b6-46e6-8f7e-707b58a1bc13",
+        "setup_session_id": "bfd316d7-a9b6-46e6-8f7e-707b58a1bc13",
+        "target_seconds": 16.344000000040978,
+        "target_start_seq": 1,
+        "target_turn_id": "7e62ea88-2123-489a-b4d5-4cf370694e5e",
+        "trial_id": "050a82e70d28e7b3a50a2919d837c74e43a9c3c618ff3b91459b79cc99b52c74",
+        "usage": {
+          "all": {
+            "attempts": 3,
+            "estimated_attempts": 0,
+            "input_tokens": 17082,
+            "known_subtotal": {
+              "input_tokens": 17082,
+              "output_tokens": 413,
+              "total_tokens": 17495
+            },
+            "output_tokens": 413,
+            "total_tokens": 17495,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 0,
+            "estimated_attempts": 0,
+            "input_tokens": 0,
+            "known_subtotal": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 3,
+            "estimated_attempts": 0,
+            "input_tokens": 17082,
+            "known_subtotal": {
+              "input_tokens": 17082,
+              "output_tokens": 413,
+              "total_tokens": 17495
+            },
+            "output_tokens": 413,
+            "total_tokens": 17495,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "根据已批准的项目事实，设备演练的人数上限为68人。",
+        "calls": [
+          {
+            "arguments": {
+              "memory_id": "fact-634a81e1a1",
+              "requested_tier": "section",
+              "version": "49c213a5c42ec1b4bb2d9f3d730b05576d195c5ada85fbd06ec7f20b1f39a459"
+            },
+            "name": "request_workspace_memory",
+            "seq": 15,
+            "tool_call_id": "call_25ec92f9c35e453c98150c"
+          }
+        ],
+        "case_id": "m-direct",
+        "dispatched_evidence": [
+          {
+            "attempt_end_seq": 27,
+            "attempt_id": "4133ba5f-3d4a-4ed8-a41c-9fbdd13fc802",
+            "context_seq": 20,
+            "dispatch_fingerprint": "4d7dc5f619f7c11236e985040c76deb4c319efd3e3c09bca0418c6a4b25f186b",
+            "reference": {
+              "id": "fact-634a81e1a1",
+              "provenance": {
+                "activation_ref": {
+                  "digest": "90ca403d94c4a31e9bd6cdb86efb79691e2fb9ebf6fe6af15aa95bb7a2cdee42",
+                  "event_id": "9d8a1e9e-3a13-4dd6-840a-189ae51e311c",
+                  "seq": 26,
+                  "stream_id": "memory:project-634a81e1a1",
+                  "type": "memory/approved"
+                },
+                "approved_content_digest": "7293e286f955fb3b4cb7befa9e83d07709f9eaa667d3ca34ff4d5829a38045a2",
+                "fact_slot": "slot-634a81e1a1",
+                "memory_id": "fact-634a81e1a1",
+                "project_id": "project-634a81e1a1"
+              },
+              "source_refs": [
+                {
+                  "digest": "40d4a6e8ff6093b4193fb13f5a6da1191960738eb290959caabc67d9236ec069",
+                  "event_id": "6df80e0f-3712-4140-a8c0-ad80f75842cd",
+                  "seq": 25,
+                  "stream_id": "memory:project-634a81e1a1",
+                  "type": "memory/proposed"
+                },
+                {
+                  "digest": "90ca403d94c4a31e9bd6cdb86efb79691e2fb9ebf6fe6af15aa95bb7a2cdee42",
+                  "event_id": "9d8a1e9e-3a13-4dd6-840a-189ae51e311c",
+                  "seq": 26,
+                  "stream_id": "memory:project-634a81e1a1",
+                  "type": "memory/approved"
+                }
+              ],
+              "version": "49c213a5c42ec1b4bb2d9f3d730b05576d195c5ada85fbd06ec7f20b1f39a459"
+            },
+            "request_snapshot_seq": 23,
+            "session_id": "e408c462-7ba5-4817-a1fb-f80824dab41e",
+            "step_id": "4a565984-dd3e-406b-9020-83210d174e82",
+            "text": "已批准设备演练的人数上限为 68 人。",
+            "tier": "section",
+            "turn_id": "07dfdf41-a6ed-41f5-9ba2-b0088f26b283"
+          }
+        ],
+        "elapsed_seconds": 11.438000000081956,
+        "expectation": {
+          "kind": "value",
+          "reference_id": "fact-634a81e1a1",
+          "source_text": "已批准设备演练的人数上限为 68 人。",
+          "value": "68",
+          "value_type": "number"
+        },
+        "failure": null,
+        "family": "memory",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": true,
+        "provisional_joint_pass": true,
+        "question": "项目已批准的设备演练人数上限是多少？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 1,
+        "searches": [],
+        "session_id": "e408c462-7ba5-4817-a1fb-f80824dab41e",
+        "setup_session_id": "4f801168-1824-47b2-ba0c-96dc7e49f5a5",
+        "target_seconds": 9.656000000075437,
+        "target_start_seq": 1,
+        "target_turn_id": "07dfdf41-a6ed-41f5-9ba2-b0088f26b283",
+        "trial_id": "4a03d0c117405ab7162083853009f46fbf7103b95450ba1bffdd753430730b3c",
+        "usage": {
+          "all": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 12436,
+            "known_subtotal": {
+              "input_tokens": 12436,
+              "output_tokens": 191,
+              "total_tokens": 12627
+            },
+            "output_tokens": 191,
+            "total_tokens": 12627,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 0,
+            "estimated_attempts": 0,
+            "input_tokens": 0,
+            "known_subtotal": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 12436,
+            "known_subtotal": {
+              "input_tokens": 12436,
+              "output_tokens": 191,
+              "total_tokens": 12627
+            },
+            "output_tokens": 191,
+            "total_tokens": 12627,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "从当前参考中，我检查了所有6个背景内存条目（background-4974c19420-00 到 background-4974c19420-05），但它们全部都是关于\"普通材料保管记录\"的内容，没有提到任何关于联络呼号、备用联络呼号或相关通信协议的信息。\n\n这些内存条目都描述了\"由资料组维护登记\"的普通材料保管记录，与通信呼号无关。\n\n由于当前参考中没有任何信息表明项目有有效批准的备用联络呼号，而且所有可用的背景内存条目都与联络呼号无关，因此可以得出结论：\n\n项目目前没有有效批准的备用联络呼号。",
+        "calls": [
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-00",
+              "requested_tier": "section",
+              "version": "a3a1ea77494df1479ee300d916a8c0c08d61460ea7729b2d6be805dab821bad3"
+            },
+            "name": "request_workspace_memory",
+            "seq": 15,
+            "tool_call_id": "call_1a49eaaaba2f40ab978796"
+          },
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-01",
+              "requested_tier": "section",
+              "version": "e801b2ed54508620f01ec07e2d395a6b43aa5446e9215b1881bee0bc9a99899d"
+            },
+            "name": "request_workspace_memory",
+            "seq": 28,
+            "tool_call_id": "call_5067d4115e8b400cbb930c"
+          },
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-02",
+              "requested_tier": "section",
+              "version": "81dbb763e43084668b82f960eaaad02a0ba9e209fcc68a957eee9f9e3a4d3b5c"
+            },
+            "name": "request_workspace_memory",
+            "seq": 41,
+            "tool_call_id": "call_a4db74f51a3a4a0e99a261"
+          },
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-03",
+              "requested_tier": "section",
+              "version": "0bae271ddaa39055ac5d6e8ee06be585c2a5c784a15871018bfc7fcb7b501193"
+            },
+            "name": "request_workspace_memory",
+            "seq": 54,
+            "tool_call_id": "call_30f031e1dd9542a7bdb53e"
+          },
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-04",
+              "requested_tier": "section",
+              "version": "fef05490a4491d93391048554d1b1a1140bd05dc1e3c82d288dd8f405e7f7def"
+            },
+            "name": "request_workspace_memory",
+            "seq": 67,
+            "tool_call_id": "call_d143ecfa2fca4c4b9e2804"
+          },
+          {
+            "arguments": {
+              "memory_id": "background-4974c19420-05",
+              "requested_tier": "section",
+              "version": "826843ef5994320d0f16b5cc08c5eb1191a054eba069f2f4c3b20861b90d7509"
+            },
+            "name": "request_workspace_memory",
+            "seq": 80,
+            "tool_call_id": "call_eb74f0de54e14443b39692"
+          }
+        ],
+        "case_id": "m-revoked",
+        "dispatched_evidence": [],
+        "elapsed_seconds": 83.15600000007544,
+        "expectation": {
+          "kind": "no-evidence",
+          "reference_id": "fact-4974c19420",
+          "source_text": "备用联络呼号是 REF-4974C19420。",
+          "value": "REF-4974C19420",
+          "value_type": "code"
+        },
+        "failure": null,
+        "family": "memory",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 0,
+        "output_sources": [],
+        "provisional_answer_match": null,
+        "provisional_joint_pass": false,
+        "question": "项目现在有没有有效批准的备用联络呼号？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 6,
+        "searches": [],
+        "session_id": "01a68443-b62e-4fda-af62-d4da289d5c58",
+        "setup_session_id": "beef2623-fdd6-4af5-b016-0c6bc9829c21",
+        "target_seconds": 81.23400000005495,
+        "target_start_seq": 1,
+        "target_turn_id": "5aa16544-8183-4548-923b-1ccb5f3ae67a",
+        "trial_id": "39b307bf8955b1142bcbdc182642550a11f4b96d21d4a97435680ead6f0d6d03",
+        "usage": {
+          "all": {
+            "attempts": 7,
+            "estimated_attempts": 0,
+            "input_tokens": 44826,
+            "known_subtotal": {
+              "input_tokens": 44826,
+              "output_tokens": 1500,
+              "total_tokens": 46326
+            },
+            "output_tokens": 1500,
+            "total_tokens": 46326,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 0,
+            "estimated_attempts": 0,
+            "input_tokens": 0,
+            "known_subtotal": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "total_tokens": 0
+            },
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 7,
+            "estimated_attempts": 0,
+            "input_tokens": 44826,
+            "known_subtotal": {
+              "input_tokens": 44826,
+              "output_tokens": 1500,
+              "total_tokens": 46326
+            },
+            "output_tokens": 1500,
+            "total_tokens": 46326,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "REF-F958326A62",
+        "calls": [
+          {
+            "arguments": {
+              "digest": "59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544",
+              "effect_id": "6cb85a48-1e24-4855-81da-1d189c19ef2e",
+              "part": "content",
+              "query": "交接校验码"
+            },
+            "name": "search_tool_output",
+            "seq": 41,
+            "tool_call_id": "call_72b16146498e4713996320"
+          }
+        ],
+        "case_id": "o-direct",
+        "dispatched_evidence": [
+          {
+            "attempt_end_seq": 53,
+            "attempt_id": "d97b98ab-f966-4c8d-a88b-a238411501dd",
+            "dispatch_fingerprint": "367209c8c7d9066620f082270e999464d957477d430a36d9633d1d63b769f8c4",
+            "reference": {
+              "digest": "59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544",
+              "effect_id": "6cb85a48-1e24-4855-81da-1d189c19ef2e"
+            },
+            "request_snapshot_seq": 49,
+            "session_id": "c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf",
+            "step_id": "ee06bf38-1718-4e79-9a15-618c561969fa",
+            "text": "{\"case_sensitive\":true,\"digest\":\"59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544\",\"effect_id\":\"6cb85a48-1e24-4855-81da-1d189c19ef2e\",\"match_mode\":\"literal-substring\",\"matches\":[{\"after_context\":\"\",\"before_context\":\"\",\"context_truncated\":false,\"line_number\":453,\"match_end\":12222,\"match_start\":12217,\"matched_lines\":\"交接校验码=REF-F958326A62\\n\",\"read_action\":{\"arguments\":{\"count\":1600,\"digest\":\"59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544\",\"effect_id\":\"6cb85a48-1e24-4855-81da-1d189c19ef2e\",\"offset\":12217,\"part\":\"content\"},\"tool\":\"read_tool_output\"},\"text_offset\":12217}],\"next_offset\":null,\"offset\":0,\"offset_unit\":\"unicode-codepoints\",\"part\":\"content\",\"query\":\"交接校验码\",\"total_chars\":16277}",
+            "tool_result_seq": 43,
+            "turn_id": "dec7e308-7193-4f0d-aa60-31b9173b18c2"
+          }
+        ],
+        "elapsed_seconds": 12.796999999904074,
+        "expectation": {
+          "kind": "value",
+          "reference_id": "",
+          "source_text": "交接校验码=REF-F958326A62",
+          "value": "REF-F958326A62",
+          "value_type": "code"
+        },
+        "failure": null,
+        "family": "output",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 1,
+        "output_sources": [
+          {
+            "exit_code": 0,
+            "reference": {
+              "content_chars": 16277,
+              "content_utf8_bytes": 33059,
+              "data_chars": 18890,
+              "digest": "59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544",
+              "effect_id": "6cb85a48-1e24-4855-81da-1d189c19ef2e",
+              "format": 1
+            },
+            "seq": 16,
+            "source_digest": "59e7e2ada27f2af0e40a8401b327d8fe13388fcf6834c12cde2da59479bf5544"
+          }
+        ],
+        "provisional_answer_match": true,
+        "provisional_joint_pass": true,
+        "question": "刚才设备检查输出里的交接校验码是什么？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 1,
+        "searches": [],
+        "session_id": "c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf",
+        "setup_session_id": "c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf",
+        "target_seconds": 6.437999999965541,
+        "target_start_seq": 28,
+        "target_turn_id": "dec7e308-7193-4f0d-aa60-31b9173b18c2",
+        "trial_id": "3604ca0ca6e7d016a5fc3d683dc17430fd941a8cf6c0ea708be6c10f67dcf345",
+        "usage": {
+          "all": {
+            "attempts": 4,
+            "estimated_attempts": 0,
+            "input_tokens": 16301,
+            "known_subtotal": {
+              "input_tokens": 16301,
+              "output_tokens": 163,
+              "total_tokens": 16464
+            },
+            "output_tokens": 163,
+            "total_tokens": 16464,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 7764,
+            "known_subtotal": {
+              "input_tokens": 7764,
+              "output_tokens": 23,
+              "total_tokens": 7787
+            },
+            "output_tokens": 23,
+            "total_tokens": 7787,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 8537,
+            "known_subtotal": {
+              "input_tokens": 8537,
+              "output_tokens": 140,
+              "total_tokens": 8677
+            },
+            "output_tokens": 140,
+            "total_tokens": 8677,
+            "unknown_attempts": 0
+          }
+        }
+      },
+      {
+        "answer": "没有给出保险理赔编号。",
+        "calls": [
+          {
+            "arguments": {
+              "digest": "c5076bd7c5a6a3f76d830d76f8dbc1b8b8508225492ce5ac759770aa176be5cd",
+              "effect_id": "b9399dbe-8100-4b79-aaf4-f42b0cdb7345",
+              "query": "保险理赔编号"
+            },
+            "name": "search_tool_output",
+            "seq": 41,
+            "tool_call_id": "call_43538b0d832c4182ab6a9e"
+          }
+        ],
+        "case_id": "o-absent",
+        "dispatched_evidence": [],
+        "elapsed_seconds": 12.562000000034459,
+        "expectation": {
+          "kind": "no-evidence",
+          "reference_id": "",
+          "source_text": "检查已经完成，没有其他补充项目。",
+          "value": "",
+          "value_type": "none"
+        },
+        "failure": null,
+        "family": "output",
+        "invariant_errors": [],
+        "material_seed": 113,
+        "output_executions": 1,
+        "output_sources": [
+          {
+            "exit_code": 0,
+            "reference": {
+              "content_chars": 16273,
+              "content_utf8_bytes": 33077,
+              "data_chars": 18885,
+              "digest": "c5076bd7c5a6a3f76d830d76f8dbc1b8b8508225492ce5ac759770aa176be5cd",
+              "effect_id": "b9399dbe-8100-4b79-aaf4-f42b0cdb7345",
+              "format": 1
+            },
+            "seq": 16,
+            "source_digest": "c5076bd7c5a6a3f76d830d76f8dbc1b8b8508225492ce5ac759770aa176be5cd"
+          }
+        ],
+        "provisional_answer_match": null,
+        "provisional_joint_pass": false,
+        "question": "刚才归档检查有没有给出保险理赔编号？",
+        "reason": "completed",
+        "replay_errors": [],
+        "scope_violations": [],
+        "search_read_count": 1,
+        "searches": [],
+        "session_id": "6f73e156-ed62-46d4-b1cb-5f740923cb94",
+        "setup_session_id": "6f73e156-ed62-46d4-b1cb-5f740923cb94",
+        "target_seconds": 6.047000000020489,
+        "target_start_seq": 28,
+        "target_turn_id": "44f0c15a-a6ce-4f3e-8255-9116d91ac793",
+        "trial_id": "29339db31bb7659afecf987577a4ded2806c15ea324d1b2f4946f01663086ff4",
+        "usage": {
+          "all": {
+            "attempts": 4,
+            "estimated_attempts": 0,
+            "input_tokens": 16076,
+            "known_subtotal": {
+              "input_tokens": 16076,
+              "output_tokens": 147,
+              "total_tokens": 16223
+            },
+            "output_tokens": 147,
+            "total_tokens": 16223,
+            "unknown_attempts": 0
+          },
+          "preparation": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 7760,
+            "known_subtotal": {
+              "input_tokens": 7760,
+              "output_tokens": 23,
+              "total_tokens": 7783
+            },
+            "output_tokens": 23,
+            "total_tokens": 7783,
+            "unknown_attempts": 0
+          },
+          "target": {
+            "attempts": 2,
+            "estimated_attempts": 0,
+            "input_tokens": 8316,
+            "known_subtotal": {
+              "input_tokens": 8316,
+              "output_tokens": 124,
+              "total_tokens": 8440
+            },
+            "output_tokens": 124,
+            "total_tokens": 8440,
+            "unknown_attempts": 0
+          }
+        }
+      }
+    ],
+    "measured": 8,
+    "planned": 8,
+    "purpose": "development-regression",
+    "scope_profile": "source-isolated"
+  },
+  "task_type": "retrieval_episode",
+  "trials": [
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/001/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 12,
+          "sha256": "5a87f25221180095b8c1b6a9a096bdc8e7cbc0a778d05d48edb3ec41b92d6ff4",
+          "stream_id": "effects:e98d664c-76a9-4b8a-b27f-c4d5b9522239"
+        },
+        {
+          "file": "attempts/001/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 219,
+          "sha256": "1f720ecc4f40538e134fbaa3a4cab97ba5cbbe1625b0d48527e437a74238e7d5",
+          "stream_id": "session:e98d664c-76a9-4b8a-b27f-c4d5b9522239"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "h-direct",
+        "group_id": "h-direct",
+        "material_digest": "a8e4e980cfbe4b69c3e60b3392c40b2427870ac52cb5d5ea6802802534fb0e37",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "ae484c137062a97183e70f415aabfbb3bfe346134a1ea0bf59395a5999ede3a0",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 15,
+          "estimated_attempts": 0,
+          "input_tokens": 67536,
+          "known_subtotal": {
+            "input_tokens": 67536,
+            "output_tokens": 956,
+            "total_tokens": 68492
+          },
+          "output_tokens": 956,
+          "total_tokens": 68492,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39233,
+          "known_subtotal": {
+            "input_tokens": 39233,
+            "output_tokens": 30,
+            "total_tokens": 39263
+          },
+          "output_tokens": 30,
+          "total_tokens": 39263,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "input_tokens": 28303,
+          "known_subtotal": {
+            "input_tokens": 28303,
+            "output_tokens": 926,
+            "total_tokens": 29229
+          },
+          "output_tokens": 926,
+          "total_tokens": 29229,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/002/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "40ae7505d582ddb7660f9c188ad964c45f005c18db55273afbc41ceb6a85bce5",
+          "stream_id": "effects:a3114b2e-9fd1-4a65-85f1-73492f2b7e2a"
+        },
+        {
+          "file": "attempts/002/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 193,
+          "sha256": "ad2fa922080d428138215c7ca584ed9245af8d1e7f7c0edf13527da16f31a3c0",
+          "stream_id": "session:a3114b2e-9fd1-4a65-85f1-73492f2b7e2a"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "h-absent",
+        "group_id": "h-absent",
+        "material_digest": "cf42a1b151c4d33b23dedacf02815f9b92f4d64a48237f8a3d832a0c5fdf631a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "0e4bcb5035ab2de0e2100097f0462b594c49e4e329b8c496d0fda26043f6c30a",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 13,
+          "estimated_attempts": 0,
+          "input_tokens": 53874,
+          "known_subtotal": {
+            "input_tokens": 53874,
+            "output_tokens": 855,
+            "total_tokens": 54729
+          },
+          "output_tokens": 855,
+          "total_tokens": 54729,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39185,
+          "known_subtotal": {
+            "input_tokens": 39185,
+            "output_tokens": 30,
+            "total_tokens": 39215
+          },
+          "output_tokens": 30,
+          "total_tokens": 39215,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 14689,
+          "known_subtotal": {
+            "input_tokens": 14689,
+            "output_tokens": 825,
+            "total_tokens": 15514
+          },
+          "output_tokens": 825,
+          "total_tokens": 15514,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "8efd0dba83b280b8a2249711009636c96fb6dcb46b139b5812d098924eca4b09",
+          "stream_id": "context-selection:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        },
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "6febc11fe1be9f48113d2c5e64f814e7fa14876b7db84fdc64eff65d788ef3ae",
+          "stream_id": "effects:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        },
+        {
+          "file": "attempts/003/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "3f57cfc0527207707fc3ae813da521532468e35a707c98c5a6d7105f7feae02c",
+          "stream_id": "session:d82b1e75-3e1a-477d-ba5d-0631bc5b3af0"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "s-direct",
+        "group_id": "s-direct",
+        "material_digest": "834270304f5b9530b16ef7d205fef89984d1f14fd78b83b7d969021d9ddf5944",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "fae76e3870b9ff742e7342feb9c5510414b738b32c378653705b35d7e573f445",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10078,
+          "known_subtotal": {
+            "input_tokens": 10078,
+            "output_tokens": 275,
+            "total_tokens": 10353
+          },
+          "output_tokens": 275,
+          "total_tokens": 10353,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10078,
+          "known_subtotal": {
+            "input_tokens": 10078,
+            "output_tokens": 275,
+            "total_tokens": 10353
+          },
+          "output_tokens": 275,
+          "total_tokens": 10353,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "028d70bc04c51c42b82b0eb63bdfa91e30de7f5c127fdab4059f3ee2b6a1a204",
+          "stream_id": "context-selection:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        },
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "ccd3adc647e215bd71b1b112d12a2b32cbb2ea3a2e0cd69228846d0c39c12bf4",
+          "stream_id": "effects:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        },
+        {
+          "file": "attempts/004/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 42,
+          "sha256": "20a7bc22b424750d5fc86dc8f9ff876eed8b96b6f1e4b266ff7d85b2da82187a",
+          "stream_id": "session:bfd316d7-a9b6-46e6-8f7e-707b58a1bc13"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "s-absent",
+        "group_id": "s-absent",
+        "material_digest": "d57737cb10011c58807a78e474cbdf8e04891cad49f6e7934322cb0945d90f02",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "050a82e70d28e7b3a50a2919d837c74e43a9c3c618ff3b91459b79cc99b52c74",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 17082,
+          "known_subtotal": {
+            "input_tokens": 17082,
+            "output_tokens": 413,
+            "total_tokens": 17495
+          },
+          "output_tokens": 413,
+          "total_tokens": 17495,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 17082,
+          "known_subtotal": {
+            "input_tokens": 17082,
+            "output_tokens": 413,
+            "total_tokens": 17495
+          },
+          "output_tokens": 413,
+          "total_tokens": 17495,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "7113bee8bc2f7079d4efb30a4d6ae9808b9f39e8cc55b786624e6a0e73392b8d",
+          "stream_id": "effects:e408c462-7ba5-4817-a1fb-f80824dab41e"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 26,
+          "sha256": "b923f19bfd83d48540bbbde3151f45c265e332e03ff99127bf9d330155833f3b",
+          "stream_id": "memory:project-634a81e1a1"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "05117e8bd733d59607483b205121513cb51bb9ef0b828be6a0e25af44d160991",
+          "stream_id": "projects:catalog"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "6a184779a6a0975967d3c5ef22365f34833531ec714acba5afadc3773d48bbcb",
+          "stream_id": "session:4f801168-1824-47b2-ba0c-96dc7e49f5a5"
+        },
+        {
+          "file": "attempts/005/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "a204f942f8f67294d77cf5f28bd82514ecc09e52f4eb57f36e5e18e3d2f695da",
+          "stream_id": "session:e408c462-7ba5-4817-a1fb-f80824dab41e"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "m-direct",
+        "group_id": "m-direct",
+        "material_digest": "0736eec552ee1ff0e3252945229db46d275bea68c3e02dc016196dc1983ef5f6",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "4a03d0c117405ab7162083853009f46fbf7103b95450ba1bffdd753430730b3c",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12436,
+          "known_subtotal": {
+            "input_tokens": 12436,
+            "output_tokens": 191,
+            "total_tokens": 12627
+          },
+          "output_tokens": 191,
+          "total_tokens": 12627,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12436,
+          "known_subtotal": {
+            "input_tokens": 12436,
+            "output_tokens": 191,
+            "total_tokens": 12627
+          },
+          "output_tokens": 191,
+          "total_tokens": 12627,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 18,
+          "sha256": "b2e30f5cd7f8405d17b921b4493fe791e010c8389964d0a5adc1987880fc5447",
+          "stream_id": "effects:01a68443-b62e-4fda-af62-d4da289d5c58"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 27,
+          "sha256": "b38475dd84cafd73d4c1077a5b80c6086fe1743c933cfae5a6c7203831a4edd2",
+          "stream_id": "memory:project-4974c19420"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "146ccca4e356771267f9179834b2c9dc7a5e57d638544f191a2205c5743346b8",
+          "stream_id": "projects:catalog"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 94,
+          "sha256": "d770330694fa8ff2397679fb78d274b898dc80aba24e90a2f7ee0335cf166209",
+          "stream_id": "session:01a68443-b62e-4fda-af62-d4da289d5c58"
+        },
+        {
+          "file": "attempts/006/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "c81e27b3749605b16c47b59c2c5d2f38b683bc4305359f7aa5d1d4aa609eac52",
+          "stream_id": "session:beef2623-fdd6-4af5-b016-0c6bc9829c21"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "m-revoked",
+        "group_id": "m-revoked",
+        "material_digest": "78098d8610642e84eac957ba96bbe44416f8b8a657c3b79c70f946d142ea773a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "39b307bf8955b1142bcbdc182642550a11f4b96d21d4a97435680ead6f0d6d03",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "estimated_attempts": 0,
+          "input_tokens": 44826,
+          "known_subtotal": {
+            "input_tokens": 44826,
+            "output_tokens": 1500,
+            "total_tokens": 46326
+          },
+          "output_tokens": 1500,
+          "total_tokens": 46326,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 7,
+          "estimated_attempts": 0,
+          "input_tokens": 44826,
+          "known_subtotal": {
+            "input_tokens": 44826,
+            "output_tokens": 1500,
+            "total_tokens": 46326
+          },
+          "output_tokens": 1500,
+          "total_tokens": 46326,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/007/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 9,
+          "sha256": "ef6b036e78256b2e81fed8b1e5d1a2ac201a9f29ed079723d9735244461ce830",
+          "stream_id": "effects:c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf"
+        },
+        {
+          "file": "attempts/007/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 55,
+          "sha256": "00a701e529467d499594dca77fbc9c1b952425b01ac28bef839b967b50e992ae",
+          "stream_id": "session:c7b9fdc3-9e9c-44cb-8c76-dc5cc939d2bf"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "o-direct",
+        "group_id": "o-direct",
+        "material_digest": "2a7f3cf84ef59ddee2ba578bf45106ea4a8259c085763515d10e4be8c7197c8f",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "3604ca0ca6e7d016a5fc3d683dc17430fd941a8cf6c0ea708be6c10f67dcf345",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 4,
+          "estimated_attempts": 0,
+          "input_tokens": 16301,
+          "known_subtotal": {
+            "input_tokens": 16301,
+            "output_tokens": 163,
+            "total_tokens": 16464
+          },
+          "output_tokens": 163,
+          "total_tokens": 16464,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7764,
+          "known_subtotal": {
+            "input_tokens": 7764,
+            "output_tokens": 23,
+            "total_tokens": 7787
+          },
+          "output_tokens": 23,
+          "total_tokens": 7787,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 8537,
+          "known_subtotal": {
+            "input_tokens": 8537,
+            "output_tokens": 140,
+            "total_tokens": 8677
+          },
+          "output_tokens": 140,
+          "total_tokens": 8677,
+          "unknown_attempts": 0
+        }
+      }
+    },
+    {
+      "assessment": {
+        "status": "pending_review"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/008/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 9,
+          "sha256": "445239d57e2daf7b26f66c72d1b386c1981dd563f81b0b04b7d423344ad064f5",
+          "stream_id": "effects:6f73e156-ed62-46d4-b1cb-5f740923cb94"
+        },
+        {
+          "file": "attempts/008/events/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 55,
+          "sha256": "186109a1c86ca6acef37d98171f275bf392e6f799c1026db34c662f3e79f36e1",
+          "stream_id": "session:6f73e156-ed62-46d4-b1cb-5f740923cb94"
+        }
+      ],
+      "execution": {
+        "reason": null,
+        "status": "completed"
+      },
+      "identity": {
+        "case_id": "o-absent",
+        "group_id": "o-absent",
+        "material_digest": "593ca4af628e18fd1084db822f742169a0746151bb96775821f3c4630537ca5a",
+        "material_seed": 113,
+        "replicate": 1,
+        "requested_mode": null,
+        "trial_id": "29339db31bb7659afecf987577a4ded2806c15ea324d1b2f4946f01663086ff4",
+        "variant_id": "current-example"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "all": {
+          "attempts": 4,
+          "estimated_attempts": 0,
+          "input_tokens": 16076,
+          "known_subtotal": {
+            "input_tokens": 16076,
+            "output_tokens": 147,
+            "total_tokens": 16223
+          },
+          "output_tokens": 147,
+          "total_tokens": 16223,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7760,
+          "known_subtotal": {
+            "input_tokens": 7760,
+            "output_tokens": 23,
+            "total_tokens": 7783
+          },
+          "output_tokens": 23,
+          "total_tokens": 7783,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 8316,
+          "known_subtotal": {
+            "input_tokens": 8316,
+            "output_tokens": 124,
+            "total_tokens": 8440
+          },
+          "output_tokens": 124,
+          "total_tokens": 8440,
+          "unknown_attempts": 0
+        }
+      }
+    }
+  ]
+}

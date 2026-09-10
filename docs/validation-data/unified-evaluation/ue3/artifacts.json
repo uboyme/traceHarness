@@ -1,0 +1,41 @@
+{
+  "run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "credential_byte_scan": "passed",
+  "files": [
+    {
+      "file": "agent-review-advisory.json",
+      "bytes": 1560,
+      "sha256": "b6fd746af0a1e6c0bdb342180a5aa70a5c9d82174ca4e4a41fff0319b5afd479"
+    },
+    {
+      "file": "comparison.json",
+      "bytes": 42114,
+      "sha256": "d4af5396ee5a819144fff041593f24739229217ac8b9dd678e4ce32192fc6676"
+    },
+    {
+      "file": "independent-replay.json",
+      "bytes": 4646,
+      "sha256": "76352abddcc6505e36f1ed3a542ec799cd6b1e060cac7ce197b4d2fc1c090908"
+    },
+    {
+      "file": "live-experiment.zip",
+      "bytes": 6114477,
+      "sha256": "661da2a83dd89b76ea1462401f0a69e7bf718510a3013ce4fb9110af41bb58a5"
+    },
+    {
+      "file": "review-baseline.zip",
+      "bytes": 441547,
+      "sha256": "c13d71eb0107da06cf01135bac3be5b3ea52126cb127b112b5f7c7e8b6d08c61"
+    },
+    {
+      "file": "review-candidate.zip",
+      "bytes": 452597,
+      "sha256": "4392f510b29263229d571a49d39ac364e8f371cdb793514af4a65889fe6905ce"
+    },
+    {
+      "file": "summary.json",
+      "bytes": 32736,
+      "sha256": "b04a201769f1ccd99722494dd48d1d365b79d71f179695b9841d77008a67d4c7"
+    }
+  ]
+}

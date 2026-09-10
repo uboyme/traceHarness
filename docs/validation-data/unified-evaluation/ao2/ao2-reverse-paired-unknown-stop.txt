@@ -1,0 +1,8 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______________ test_unknown_judge_usage_stops_before_other_arm _______________
+tests\test_strategy_optimization.py:138: in test_unknown_judge_usage_stops_before_other_arm
+    assert result["cost"]["review_calls"] == 1
+E   assert 2 == 1
+=========================== short test summary info ===========================
+FAILED tests/test_strategy_optimization.py::test_unknown_judge_usage_stops_before_other_arm

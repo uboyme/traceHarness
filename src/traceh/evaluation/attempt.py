@@ -45,14 +45,14 @@ from traceh.api.turns import TurnInput
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.concurrency import combine_failures
 from traceh.evaluation.errors import BenchmarkEvidenceError, BenchmarkExecutionError
-from traceh.evaluation.manifest import (
+from traceh.evaluation.evaluators.product_manifest import (
     BENCHMARK_SOURCE_ID,
     BENCHMARK_TARGET_ID,
-    BenchmarkManifest,
     BenchmarkTask,
+    ProductSuite,
 )
-from traceh.evaluation.metrics import collect_attempt_evidence
-from traceh.evaluation.report import AttemptReport, PhaseTiming
+from traceh.evaluation.evaluators.product_metrics import collect_attempt_evidence
+from traceh.evaluation.evaluators.product_report import AttemptReport, PhaseTiming
 from traceh.evaluation.repositories import (
     AttemptRepositories,
     build_attempt_repositories,
@@ -130,7 +130,7 @@ class AttemptRequest:
 async def run_attempt(
     request: AttemptRequest,
     *,
-    manifest: BenchmarkManifest,
+    manifest: ProductSuite,
     providers: Mapping[str, LlmProvider],
     retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
     sandbox: SandboxPolicy | None = None,
@@ -143,6 +143,7 @@ async def run_attempt(
         initial_dir=request.task.initial_dir,
         source=request.directory / "source",
         target=request.directory / "tgt.git",
+        expected_initial_digest=request.task.material_digest,
     )
     store = SqliteEventStore(request.directory / "ev")
     result: AttemptReport | None = None
@@ -175,7 +176,7 @@ async def run_attempt(
 async def _run_attempt_with_store(
     request: AttemptRequest,
     *,
-    manifest: BenchmarkManifest,
+    manifest: ProductSuite,
     providers: Mapping[str, LlmProvider],
     retry_policy: ModelRetryPolicy,
     sandbox: SandboxPolicy | None,
@@ -194,6 +195,7 @@ async def _run_attempt_with_store(
                 initial_dir=request.task.initial_dir,
                 source=request.directory / "foreign-source",
                 target=request.directory / "foreign.git",
+                expected_initial_digest=request.task.material_digest,
             )
             sources["benchmark-isolation-source"] = foreign.source
     workspace_provider = LocalGitWorkspaceProvider(

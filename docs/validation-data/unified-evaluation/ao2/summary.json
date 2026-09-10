@@ -1,0 +1,30 @@
+{
+  "sessions": 39,
+  "requests": 63,
+  "recorded_model_attempts": 63,
+  "failed_attempts": 0,
+  "total_tokens": 327963,
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "network": "direct",
+  "decision": "keep-baseline",
+  "analysis_tokens": 11876,
+  "trial_tokens": 212566,
+  "judge_tokens": 103521,
+  "judge_calls": 17,
+  "trial_calls": 44,
+  "development": {
+    "baseline": 3,
+    "candidate": 3,
+    "denominator": 4
+  },
+  "heldout": {
+    "baseline": 5,
+    "candidate": 5,
+    "denominator": 5
+  },
+  "grade_origin": "model",
+  "semantic_calibration": "not-established; negative grading inconsistency retained",
+  "candidate_digest": "a101ae1f1c7ca3f159a0fe28e3e2c5b423161e185d5f14ad9fe7b9e810c9284e",
+  "real_source_digest": "e0319a748123f2f3d1f890f93bd293e46fdf78006ed57f1cb4a7c2b80298fb98"
+}

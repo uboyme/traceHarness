@@ -7,6 +7,20 @@ break without notice.
 """
 
 from traceh.api.llm import ToolCall
+from traceh.api.optimization import (
+    OPTIMIZATION_ANALYSIS,
+    OPTIMIZATION_STRATEGY,
+    CandidateHistory,
+    CandidateProposal,
+    DevelopmentObservation,
+    EditableText,
+    NoCandidate,
+    OptimizationAnalysis,
+    OptimizationAnalysisResult,
+    OptimizationRequest,
+    OptimizationStrategy,
+    TextEdit,
+)
 from traceh.api.plugins import (
     CORE_PLUGIN_IDENTITY,
     Plugin,
@@ -62,6 +76,18 @@ from traceh.tools.middleware import ToolCallNext, ToolInvocation, ToolMiddleware
 from traceh.tools.policy import DecisionKind, ToolDecision, ToolPolicy
 
 __all__ = [
+    "OPTIMIZATION_ANALYSIS",
+    "OPTIMIZATION_STRATEGY",
+    "CandidateHistory",
+    "CandidateProposal",
+    "DevelopmentObservation",
+    "EditableText",
+    "NoCandidate",
+    "OptimizationAnalysis",
+    "OptimizationAnalysisResult",
+    "OptimizationRequest",
+    "OptimizationStrategy",
+    "TextEdit",
     "CORE_PLUGIN_IDENTITY",
     "CommandVerifier",
     "CompletionVerifier",

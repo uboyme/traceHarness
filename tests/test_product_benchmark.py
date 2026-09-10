@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+from evaluation_fixtures import material_case, write_dataset
 
 from traceh.api.product import (
     ProductRole,
@@ -18,15 +19,13 @@ from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess
 from traceh.cli.main import _configure_from_environment, _model_retry_policy, build_parser
 from traceh.evaluation.errors import BenchmarkManifestError
-from traceh.evaluation.manifest import (
+from traceh.evaluation.evaluators.product_manifest import (
     BENCHMARK_SOURCE_ID,
     BENCHMARK_SOURCE_REVISION,
     BENCHMARK_TARGET_ID,
-    LEGACY_CASE_FILENAME,
-    MANIFEST_FILENAME,
-    load_benchmark_manifest,
+    load_product_suite,
 )
-from traceh.evaluation.metrics import (
+from traceh.evaluation.evaluators.product_metrics import (
     AttemptEvidence,
     BudgetOutcome,
     SessionGroup,
@@ -34,7 +33,7 @@ from traceh.evaluation.metrics import (
     TokenTotals,
     WorkspaceOutcome,
 )
-from traceh.evaluation.report import (
+from traceh.evaluation.evaluators.product_report import (
     APPROVAL_POLICY,
     AttemptReport,
     BenchmarkReport,
@@ -43,6 +42,12 @@ from traceh.evaluation.report import (
     render_markdown,
     summarize,
 )
+from traceh.evaluation.manifest import (
+    LEGACY_CASE_FILENAME,
+    MANIFEST_FILENAME,
+    TOP_KEYS,
+    load_benchmark_manifest,
+)
 from traceh.product.config import PRODUCT_HOST_SETTINGS_KEYS
 from traceh.product.registry import ProductProfileBinding, ProductProfileRegistry
 
@@ -50,47 +55,47 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 SHIPPED_BENCHMARK = REPOSITORY_ROOT / "benchmarks" / "product_v1"
 
 
-def _write(root: Path, manifest: dict[str, object]) -> Path:
-    root.mkdir(parents=True, exist_ok=True)
-    (root / "task-a" / "initial").mkdir(parents=True, exist_ok=True)
-    (root / "task-a" / "initial" / "module.py").write_text("x = 1\n", encoding="utf-8")
-    (root / MANIFEST_FILENAME).write_text(json.dumps(manifest), encoding="utf-8")
+def _write(root, manifest):
+    initial = root / "task-a" / "initial"
+    initial.mkdir(parents=True)
+    (initial / "source.py").write_text("x = 1\n", encoding="utf-8")
+    cases = manifest.pop("_test_cases")
+    for case in cases:
+        case["sha256"] = material_case(root, "task-a", "unused", "task-a/initial")["sha256"]
+    write_dataset(root, manifest, cases)
     return root
 
 
-def _manifest() -> dict[str, object]:
-    raw = json.loads(
-        (SHIPPED_BENCHMARK / MANIFEST_FILENAME).read_text(encoding="utf-8")
-    )
-    raw["tasks"] = [
+def _manifest():
+    raw = json.loads((SHIPPED_BENCHMARK / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+    raw["_test_cases"] = [
         {
-            "task_id": "task-a",
+            "case_id": "task-a",
+            "group_id": "different-domain",
             "requirement": "Do the one thing the frozen checks require.",
-            "initial_dir": "task-a/initial",
+            "initial_tree": "task-a/initial",
+            "sha256": "",
         }
     ]
-    raw["arms"] = [{"requested_mode": "single", "repetitions": 1}]
+    raw["task_settings"]["modes"] = ["single"]
     return raw
 
 
-def _load(root: Path):
-    return load_benchmark_manifest(
-        root, provider_id="a-provider", model_id="a-model"
+def _load(root):
+    return load_product_suite(
+        load_benchmark_manifest(root), provider_id="a-provider", model_id="a-model"
     )
 
 
 # ------------------------------------------------------------------- manifest
 
 
-def test_the_shipped_benchmark_is_a_valid_schema_2_manifest() -> None:
+def test_the_shipped_benchmark_is_a_valid_schema_3_manifest() -> None:
     manifest = _load(SHIPPED_BENCHMARK)
 
     assert manifest.benchmark_id == "traceh-product-v1"
     assert len(manifest.tasks) == 3
-    assert {arm.requested_mode for arm in manifest.arms} == set(RequestedTaskMode)
-    assert manifest.attempt_count == 3 * sum(
-        arm.repetitions for arm in manifest.arms
-    )
+    assert set(manifest.modes) == set(RequestedTaskMode)
     profile = manifest.settings.host_profile.profile
     # Provider, model, source and target are bindings the runner supplies. A
     # manifest that could name them could point this command somewhere real.
@@ -116,9 +121,7 @@ def _keys(value: object) -> set[str]:
 
 
 def test_the_shipped_manifest_cannot_name_a_repository_or_a_graph() -> None:
-    raw = json.loads(
-        (SHIPPED_BENCHMARK / MANIFEST_FILENAME).read_text(encoding="utf-8")
-    )
+    raw = json.loads((SHIPPED_BENCHMARK / MANIFEST_FILENAME).read_text(encoding="utf-8"))
 
     # Checked over the key set at every depth: a requirement is prose and may
     # legitimately contain the word "repository", but no key may.
@@ -138,13 +141,8 @@ def test_the_shipped_manifest_cannot_name_a_repository_or_a_graph() -> None:
             "approval_digest",
         }
     )
-    assert set(raw) == PRODUCT_HOST_SETTINGS_KEYS | {
-        "protocol_version",
-        "benchmark_id",
-        "arms",
-        "tasks",
-        "retrieval",
-    }
+    assert set(raw) == TOP_KEYS
+    assert set(raw["task_settings"]) == PRODUCT_HOST_SETTINGS_KEYS | {"modes", "retrieval"}
 
 
 async def test_the_shipped_profile_resolves_against_the_real_registry() -> None:
@@ -168,15 +166,9 @@ async def test_the_shipped_profile_resolves_against_the_real_registry() -> None:
     resolved = await registry.resolve(manifest.settings.host_profile.profile_id)
 
     assert resolved.router.tool_ids == ()
-    assert resolved.assembly(ProductRole.CODER).workspace_access is (
-        WorkspaceAccess.WRITABLE
-    )
-    assert resolved.assembly(ProductRole.REVIEWER).workspace_access is (
-        WorkspaceAccess.READ_ONLY
-    )
-    assert resolved.assembly(ProductRole.PARENT).workspace_access is (
-        WorkspaceAccess.READ_ONLY
-    )
+    assert resolved.assembly(ProductRole.CODER).workspace_access is (WorkspaceAccess.WRITABLE)
+    assert resolved.assembly(ProductRole.REVIEWER).workspace_access is (WorkspaceAccess.READ_ONLY)
+    assert resolved.assembly(ProductRole.PARENT).workspace_access is (WorkspaceAccess.READ_ONLY)
 
 
 def test_the_v06_case_json_layout_is_refused_without_being_read(
@@ -205,9 +197,7 @@ def test_a_directory_without_a_manifest_is_refused(tmp_path: Path) -> None:
     assert caught.value.code == "benchmark-manifest-missing"
 
 
-@pytest.mark.parametrize(
-    "extra", ["nodes", "edges", "agents", "provider_id", "promotion_target"]
-)
+@pytest.mark.parametrize("extra", ["nodes", "edges", "agents", "provider_id", "promotion_target"])
 def test_an_unknown_manifest_key_is_a_rejection(tmp_path: Path, extra: str) -> None:
     manifest = _manifest()
     manifest[extra] = []
@@ -215,7 +205,7 @@ def test_an_unknown_manifest_key_is_a_rejection(tmp_path: Path, extra: str) -> N
     with pytest.raises(BenchmarkManifestError) as caught:
         _load(_write(tmp_path / "b", manifest))
 
-    assert caught.value.code == "benchmark-manifest-shape-invalid"
+    assert caught.value.code == "evaluation-manifest-invalid"
 
 
 def test_an_unsupported_protocol_version_is_a_rejection(tmp_path: Path) -> None:
@@ -225,17 +215,14 @@ def test_an_unsupported_protocol_version_is_a_rejection(tmp_path: Path) -> None:
     with pytest.raises(BenchmarkManifestError) as caught:
         _load(_write(tmp_path / "b", manifest))
 
-    assert caught.value.code == "benchmark-manifest-version-unsupported"
+    assert caught.value.code == "evaluation-version-unsupported"
 
 
 def test_two_entries_for_one_mode_cannot_become_one_silent_arm(
     tmp_path: Path,
 ) -> None:
     manifest = _manifest()
-    manifest["arms"] = [
-        {"requested_mode": "single", "repetitions": 1},
-        {"requested_mode": "single", "repetitions": 3},
-    ]
+    manifest["task_settings"]["modes"] = ["single", "single"]
 
     with pytest.raises(BenchmarkManifestError) as caught:
         _load(_write(tmp_path / "b", manifest))
@@ -244,20 +231,17 @@ def test_two_entries_for_one_mode_cannot_become_one_silent_arm(
 
 
 @pytest.mark.parametrize("path", ["../outside", "/absolute/outside", "missing/dir"])
-def test_a_task_tree_outside_the_benchmark_is_refused(
-    tmp_path: Path, path: str
-) -> None:
+def test_a_task_tree_outside_the_benchmark_is_refused(tmp_path: Path, path: str) -> None:
     manifest = _manifest()
-    tasks = manifest["tasks"]
+    tasks = manifest["_test_cases"]
     assert isinstance(tasks, list)
-    tasks[0]["initial_dir"] = path
+    tasks[0]["initial_tree"] = path
 
     with pytest.raises(BenchmarkManifestError) as caught:
         _load(_write(tmp_path / "b", manifest))
 
     assert caught.value.code in {
-        "benchmark-manifest-path-invalid",
-        "benchmark-manifest-path-missing",
+        "evaluation-manifest-invalid",
     }
 
 
@@ -265,7 +249,7 @@ def test_a_profile_the_product_domain_refuses_is_refused_here(
     tmp_path: Path,
 ) -> None:
     manifest = _manifest()
-    roles = manifest["roles"]
+    roles = manifest["task_settings"]["roles"]
     assert isinstance(roles, dict)
     roles["coder"]["budget"]["max_tokens"] = -1
 
@@ -309,9 +293,7 @@ def _evidence(
     )
     return AttemptEvidence(
         task_id="product-task-1",
-        product_status=(
-            ProductTaskStatus.COMPLETED if success else ProductTaskStatus.FAILED
-        ),
+        product_status=(ProductTaskStatus.COMPLETED if success else ProductTaskStatus.FAILED),
         requested_mode=RequestedTaskMode.SINGLE,
         mode_source=TaskModeSource.CONFIRMED_PROPOSAL,
         resolved_mode=resolved,
@@ -320,9 +302,7 @@ def _evidence(
         preflight_digest="preflight-1",
         source_base_revision=source_base_revision,
         definition_hash="definition-1",
-        workflow_status=(
-            WorkflowStatus.COMPLETED if success else WorkflowStatus.FAILED
-        ),
+        workflow_status=(WorkflowStatus.COMPLETED if success else WorkflowStatus.FAILED),
         routing=session if routing else None,
         routing_parsed=routing,
         execution=SessionGroup((session,)),
@@ -470,9 +450,7 @@ def test_an_arm_that_never_reached_a_review_leaves_the_verifier_unproven() -> No
         "task-a",
         (
             _attempt(succeeded, requested=RequestedTaskMode.SINGLE),
-            _attempt(
-                failed_before_review, requested=RequestedTaskMode.MULTI, repetition=2
-            ),
+            _attempt(failed_before_review, requested=RequestedTaskMode.MULTI, repetition=2),
         ),
         verifier_definition_digest=FROZEN_VERIFIER_DIGEST,
     )
@@ -542,11 +520,7 @@ def test_a_divergent_experiment_condition_is_named_not_averaged() -> None:
 
 
 def test_an_unmeasured_attempt_keeps_the_run_incomplete() -> None:
-    report = _report(
-        (
-            _attempt(None, requested=RequestedTaskMode.SINGLE),
-        )
-    )
+    report = _report((_attempt(None, requested=RequestedTaskMode.SINGLE),))
 
     assert report.measured == 0
     assert report.complete is False

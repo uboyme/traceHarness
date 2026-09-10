@@ -1,0 +1,188 @@
+{
+  "protocol_version": 3,
+  "benchmark_id": "retrieval-episodes-development-v1",
+  "task_type": "retrieval_episode",
+  "dataset": {
+    "file": "dataset.json",
+    "sha256": "b99364b25522b10bda5a757ee1d9694c8c3646a44834765a44665cf781521d59"
+  },
+  "task_settings": {
+    "setup_version": 1,
+    "scope_profile": "source-isolated",
+    "max_cases": 72,
+    "runtime": {
+      "max_steps": 12,
+      "max_output_tokens": 2048,
+      "temperature": 0,
+      "max_tool_output_chars": 1600,
+      "tool_timeout_seconds": 60,
+      "token_budget": {
+        "encoding": "cl100k_base",
+        "window_tokens": 32000,
+        "output_reserve_tokens": 2048,
+        "safety_margin_tokens": 2048,
+        "trigger_percent": 80
+      }
+    },
+    "contexts": {
+      "history": {
+        "history": {
+          "max_blocks": 16,
+          "max_depth": 16,
+          "page_bytes": 1600,
+          "page_messages": 4,
+          "max_source_events": 4000,
+          "max_source_bytes": 4000000,
+          "max_requests": 8
+        },
+        "history_bytes": 18000,
+        "history_tier": "directory",
+        "item_bytes": 6000,
+        "local_lanes": {
+          "semantic": null,
+          "reranker": null
+        },
+        "max_blocks": 6,
+        "max_exclusions": 40,
+        "max_query_bytes": 512,
+        "memory": null,
+        "skills": null,
+        "total_bytes": 30000,
+        "workspace_observations": false
+      },
+      "skill": {
+        "history": null,
+        "history_bytes": 18000,
+        "history_tier": null,
+        "item_bytes": 6000,
+        "local_lanes": {
+          "semantic": null,
+          "reranker": null
+        },
+        "max_blocks": 6,
+        "max_exclusions": 40,
+        "max_query_bytes": 512,
+        "memory": null,
+        "skills": {
+          "unicode_version": "15.0.0",
+          "default_tier": "directory",
+          "match_fields": [
+            "id",
+            "tag",
+            "path",
+            "symbol",
+            "error"
+          ],
+          "k1": 1.2,
+          "b": 0.75,
+          "rrf_constant": 60,
+          "exact_weight": 2,
+          "fts_weight": 1,
+          "context_bytes": 18000,
+          "max_catalog_bytes": 80000,
+          "max_terms": 100,
+          "max_corpus_items": 80,
+          "max_corpus_bytes": 200000,
+          "max_candidates": 20,
+          "max_requests": 8
+        },
+        "total_bytes": 30000,
+        "workspace_observations": false
+      },
+      "memory": {
+        "history": null,
+        "history_bytes": 18000,
+        "history_tier": null,
+        "item_bytes": 6000,
+        "local_lanes": {
+          "semantic": null,
+          "reranker": null
+        },
+        "max_blocks": 6,
+        "max_exclusions": 40,
+        "max_query_bytes": 512,
+        "memory": {
+          "unicode_version": "15.0.0",
+          "default_tier": "directory",
+          "match_fields": [
+            "id",
+            "tag",
+            "path",
+            "symbol",
+            "error"
+          ],
+          "k1": 1.2,
+          "b": 0.75,
+          "rrf_constant": 60,
+          "exact_weight": 2,
+          "fts_weight": 1,
+          "context_bytes": 18000,
+          "max_catalog_bytes": 80000,
+          "max_terms": 100,
+          "max_corpus_items": 80,
+          "max_corpus_bytes": 200000,
+          "max_candidates": 20,
+          "max_requests": 8
+        },
+        "skills": null,
+        "total_bytes": 30000,
+        "workspace_observations": false
+      },
+      "output": {
+        "history": {
+          "max_blocks": 16,
+          "max_depth": 16,
+          "page_bytes": 1600,
+          "page_messages": 4,
+          "max_source_events": 4000,
+          "max_source_bytes": 4000000,
+          "max_requests": 8
+        },
+        "history_bytes": 18000,
+        "history_tier": "directory",
+        "item_bytes": 6000,
+        "local_lanes": {
+          "semantic": null,
+          "reranker": null
+        },
+        "max_blocks": 6,
+        "max_exclusions": 40,
+        "max_query_bytes": 512,
+        "memory": null,
+        "skills": null,
+        "total_bytes": 30000,
+        "workspace_observations": false
+      }
+    },
+    "skill_limits": {
+      "max_skills": 8,
+      "max_catalog_bytes": 80000,
+      "max_summary_bytes": 300,
+      "max_content_bytes": 8000,
+      "max_resource_bytes": 4000
+    },
+    "memory_policy": {
+      "max_body_bytes": 1024,
+      "max_sources": 4,
+      "max_source_events": 400,
+      "max_source_bytes": 400000,
+      "max_memory_events": 120,
+      "denied_patterns": [
+        "fixture-private-input"
+      ]
+    },
+    "project_limits": {
+      "max_catalog_events": 100,
+      "max_label_bytes": 100
+    }
+  },
+  "assessment": {
+    "scorer_id": "retrieval-evidence-v1",
+    "version": 1,
+    "rubric": {
+      "file": "rubric.json",
+      "sha256": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0"
+    },
+    "requires_review": true
+  }
+}

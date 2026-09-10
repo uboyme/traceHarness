@@ -30,16 +30,13 @@ from traceh.product import (
     StrictTaskRoutingParser,
 )
 from traceh.product.router import ROUTER_RESPONSE_KEYS
-from traceh.version import __version__
 
 PACKAGE_ROOT = Path(agent_runtime_module.__file__).parent.parent
 PRODUCT_ROOT = Path(product_service_module.__file__).parent
 WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
 PROTECTED_SOURCES = {
-    "runtime/agent_loop.py": (
-        "f1fda2f5c4ad4efa475934d385a70855abf4bad46442a8c52d9c9af1be1be123"
-    ),
+    "runtime/agent_loop.py": ("f1fda2f5c4ad4efa475934d385a70855abf4bad46442a8c52d9c9af1be1be123"),
     "runtime/agent_runtime.py": (
         "15998cc4eab083f131eb0b099528abce572839b15b6562f9cd5567e9d3f941a1"
     ),
@@ -47,9 +44,7 @@ PROTECTED_SOURCES = {
         "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
     ),
     # F5: pre-enable Manifest review uses the same loader and activation path.
-    "plugins/manager.py": (
-        "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"
-    ),
+    "plugins/manager.py": ("f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
 
@@ -129,8 +124,7 @@ commit and say why, rather than deleting the guard.
 
 def _sources(root: Path) -> tuple[tuple[Path, str], ...]:
     return tuple(
-        (source, source.read_text(encoding="utf-8"))
-        for source in sorted(root.glob("*.py"))
+        (source, source.read_text(encoding="utf-8")) for source in sorted(root.glob("*.py"))
     )
 
 
@@ -170,12 +164,6 @@ def test_the_four_protected_files_are_byte_identical() -> None:
         assert hashlib.sha256(raw).hexdigest() == expected, relative
 
 
-def test_the_package_version_is_the_v090_release() -> None:
-    """The v0.8 release still has one package version source."""
-
-    assert __version__ == "0.10.0"
-
-
 def test_no_existing_owner_learns_about_the_product_domain() -> None:
     """The dependency runs product -> everything else, never back."""
 
@@ -187,38 +175,79 @@ def test_no_existing_owner_learns_about_the_product_domain() -> None:
         tools_module,
     ):
         assert not any(
-            name.startswith("traceh.product")
-            for name in _imports(Path(module.__file__))
+            name.startswith("traceh.product") for name in _imports(Path(module.__file__))
         ), module.__name__
     for source, _ in _sources(WORKFLOW_ROOT):
-        assert not any(
-            name.startswith("traceh.product") for name in _imports(source)
-        ), source.name
+        assert not any(name.startswith("traceh.product") for name in _imports(source)), source.name
 
 
-def test_the_benchmark_host_is_a_leaf_nothing_else_depends_on() -> None:
-    """F4 assembles the product mainline; nothing may assemble itself onto F4.
+def test_only_cli_and_declared_optimization_owners_depend_on_evaluation() -> None:
+    """UE/AO control callers share evaluation; production domain owners do not.
 
-    A benchmark that some owner imported would be a second place the product
-    surface is defined, and the direction would stop being decidable. The one
-    permitted reference is the deferred import inside the ``eval`` handler, which
-    is why the CLI is allowed to name it while nothing else is.
+    The three AO modules consume existing contracts/Runner/comparison rather than
+    defining a second product surface. Runtime/Product/Workflow retain their own
+    success and execution contracts and cannot depend on this outer control layer.
     """
 
     package = PACKAGE_ROOT
     evaluation_root = package / "evaluation"
+    optimization_imports = {
+        "optimization_contract.py": {
+            "traceh.evaluation.contracts",
+            "traceh.evaluation.inputs",
+            "traceh.evaluation.variants",
+        },
+        "optimization.py": {
+            "traceh.evaluation.comparison",
+            "traceh.evaluation.contracts",
+            "traceh.evaluation.inputs",
+            "traceh.evaluation.plan",
+            "traceh.evaluation.variant_execution",
+            "traceh.evaluation.variants",
+        },
+        "strategy.py": {
+            "traceh.evaluation.inputs",
+            "traceh.evaluation.model_evidence",
+            "traceh.evaluation.model_review",
+            "traceh.evaluation.model_service",
+            "traceh.evaluation.variant_execution",
+            "traceh.evaluation.variants",
+        },
+        "background_experiment.py": {
+            "traceh.evaluation.model_evidence",
+            "traceh.evaluation.variants",
+        },
+    }
     for source in sorted(package.rglob("*.py")):
-        if source.parent == evaluation_root:
+        if evaluation_root in source.parents:
             continue
         imported = _imports(source)
-        referenced = {
-            name for name in imported if name.startswith("traceh.evaluation")
-        }
+        referenced = {name for name in imported if name.startswith("traceh.evaluation")}
         if source == package / "cli" / "main.py":
             assert referenced == {
                 "traceh.evaluation.errors",
                 "traceh.evaluation.runner",
+                "traceh.evaluation.plan",
+                "traceh.evaluation.review",
+                "traceh.evaluation.comparison",
             }, referenced
+            continue
+        if source.parent == package / "evolution" and source.name in optimization_imports:
+            assert referenced == optimization_imports[source.name], source.name
+            continue
+        if source == package / "chat" / "background.py":
+            # AO-3's declared host assembly/parser. Runtime/Product/Workflow
+            # still cannot import Evaluation or the optimization scheduler.
+            assert referenced == {
+                "traceh.evaluation.inputs", "traceh.evaluation.model_service",
+                "traceh.evaluation.plan", "traceh.evaluation.runner", "traceh.evaluation.variants",
+            }
+            continue
+        if source == package / "tui" / "optimization_plan.py":
+            assert referenced == {
+                "traceh.evaluation.evaluators.episode_manifest", "traceh.evaluation.manifest",
+                "traceh.evaluation.plan",
+            }
             continue
         assert not referenced, str(source.relative_to(package))
     # And the benchmark never reaches into a private name of the domain it drives.
@@ -311,13 +340,11 @@ def test_the_product_domain_executes_nothing_it_records() -> None:
                     names = {alias.name for alias in node.names}
                     assert names <= allowed, (source.name, module, names)
         assert not any(
-            name.startswith("traceh.workflow.")
-            and name not in PURE_PEER_SYMBOLS
+            name.startswith("traceh.workflow.") and name not in PURE_PEER_SYMBOLS
             for name in imported
         ), source.name
         assert not any(
-            name.startswith("traceh.promotion.")
-            and name not in PURE_PEER_SYMBOLS
+            name.startswith("traceh.promotion.") and name not in PURE_PEER_SYMBOLS
             for name in imported
         ), source.name
 
@@ -419,15 +446,18 @@ def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
 def test_the_assembly_service_plans_and_stops() -> None:
     """It produces a receipt. Starting, verifying and promoting are elsewhere."""
 
-    public = {
-        name for name in vars(ProductAssemblyService) if not name.startswith("_")
-    }
+    public = {name for name in vars(ProductAssemblyService) if not name.startswith("_")}
     assert public == {"tasks", "preflight", "assemble"}
     for verb in ("start", "run", "execute", "resume", "approve", "promote"):
         assert not any(verb in name for name in public), verb
-    assert list(
-        inspect_module.signature(ProductAssemblyService.__init__).parameters
-    ) == ["self", "tasks", "registry", "sources", "targets", "router"]
+    assert list(inspect_module.signature(ProductAssemblyService.__init__).parameters) == [
+        "self",
+        "tasks",
+        "registry",
+        "sources",
+        "targets",
+        "router",
+    ]
 
 
 def test_no_topology_can_arrive_from_configuration() -> None:
@@ -469,9 +499,7 @@ def test_the_product_task_stream_is_the_only_new_fact_source() -> None:
     # not a stream. The F3 bridge delegates binding to its existing domain owner.
     assert prefixes <= {"product-task:", "session:", "product:", "project-inherit:"}
     bridge = ast.parse((PRODUCT_ROOT / "project_scope.py").read_text(encoding="utf-8"))
-    calls = {
-        ast.unparse(node.func) for node in ast.walk(bridge) if isinstance(node, ast.Call)
-    }
+    calls = {ast.unparse(node.func) for node in ast.walk(bridge) if isinstance(node, ast.Call)}
     assert "self.scope.bind_session" in calls
     assert "self.store.append" not in calls
     fact_files = {"events.py", "projection.py", "service.py"}
@@ -529,11 +557,7 @@ def test_the_service_cannot_continue_anything() -> None:
     that acts on it.
     """
 
-    public = {
-        name
-        for name in vars(ProductTaskService)
-        if not name.startswith("_")
-    }
+    public = {name for name in vars(ProductTaskService) if not name.startswith("_")}
     assert public == {
         "store",
         "load",

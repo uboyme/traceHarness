@@ -1,0 +1,182 @@
+[
+  {
+    "answer": "设备演练手册规定的签到卡代号是 **REF-CF662C1BCD**。",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "设备演练手册规定的签到卡代号是什么？",
+    "suite": "development",
+    "trial_id": "be2f9a592409b7200da3d8bc04290d73a0370c260054500a05d21b699c632ffe"
+  },
+  {
+    "answer": "值班呼号是 `REF-EC8DE757AB`。",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+    "suite": "development",
+    "trial_id": "c2f6ed5bf2a200b3cab1c52b654a618fa6097090967ac8f3139ef9c61206c90b"
+  },
+  {
+    "answer": "根据搜索结果，我在档案整理手册中搜索了\"车辆加油\"和\"加油\"关键词，但都没有找到匹配内容（no-hit结果）。\n\n档案整理手册的摘要只显示\"本手册说明档案整理工作。\"，这表明该手册专注于档案整理相关的工作流程和规范，与车辆加油、折扣码等后勤或财务事项无关。\n\n因此，档案整理手册**没有规定**车辆加油的折扣码。车辆加油折扣码通常属于公司财务管理、行政后勤或采购政策的范畴，而不是档案整理工作的内容。\n\n答案：没有。",
+    "arm": "01",
+    "basis": "navigation-only categorical denial",
+    "expected": "failed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "suite": "development",
+    "trial_id": "e71301b6b55965b8245df65dc03ab4a7c871d601571e0f68afc544e8ee6bd00a"
+  },
+  {
+    "answer": "The current references do not contain the equipment drill manual or any information about a check-in card code. Since the search_skill for \"equipment drill manual\" only returned a summary without the required details, and no other relevant references are available, I cannot determine the specified code for the check-in card from the provided materials.\n\nTo proceed, I would need either:\n- Access to the full equipment drill manual (e.g., via request_skill_reference with the correct section/chunk ID), or\n- Additional context or documentation that specifies the check-in card code.\n\nWithout this information, the question cannot be answered definitively.",
+    "arm": "01",
+    "basis": "program gate: required source evidence never reached a model request",
+    "expected": "failed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "Which code does the equipment drill manual specify for the check-in card?",
+    "suite": "development",
+    "trial_id": "8e6cd6760c2e65abe41cb0fe47fb5c4285c23c429b5a4cc77a5a056918451ed6"
+  },
+  {
+    "answer": "根据提供的设备演练手册内容，签到卡的代号是 **REF-CF662C1BCD**。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "设备演练手册规定的签到卡代号是什么？",
+    "suite": "development",
+    "trial_id": "f4174f12466c9ec47545f709664da3d7cc75fb4bfbf03f12a7f96618984b0a76"
+  },
+  {
+    "answer": "根据提供的档案整理手册技能文档，应急联络卡上规定的值班呼号是 **REF-EC8DE757AB**。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+    "suite": "development",
+    "trial_id": "4710014a985bc089331b488cdaa642c191cab5290630c7b0e24f62c912f132be"
+  },
+  {
+    "answer": "搜索结果显示没有找到与\"车辆加油\"相关的章节或内容。搜索返回了\"no-hit\"状态，表明在档案整理手册的目录结构中没有包含\"车辆加油\"关键词的章节。\n\n从手册的目录信息来看，所有章节（section-00到section-30）的摘要都是\"说明普通器材登记。\"，只有section-23的摘要是\"档案整理操作手册\"，但也没有提到车辆加油或折扣码相关内容。\n\n因此，根据现有的档案整理手册目录信息，**档案整理手册没有规定车辆加油的折扣码**。\n\n这个结论基于手册的目录结构和搜索结果，手册主要关注档案整理操作和普通器材登记，不涉及车辆加油管理或折扣码规定。",
+    "arm": "02",
+    "basis": "navigation-only categorical denial",
+    "expected": "failed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "suite": "development",
+    "trial_id": "898dd5fd32eefd5d0adc8d0a754ff4037e15864048952c7b876b89138b792e92"
+  },
+  {
+    "answer": "The equipment drill manual specifies the check-in card code as **REF-EA333BB356**.",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "Which code does the equipment drill manual specify for the check-in card?",
+    "suite": "development",
+    "trial_id": "c7996fc7695db675f8229a78a749ca70f4da3c3f3e813f9f10af6c2420e43c8f"
+  },
+  {
+    "answer": "根据提供的技能文档（\"流动标本车工作手册\"）中“接收箱封签”章节的内容，流动标本车的接收箱封签必须打印 **LIME-274**。\n\n{\"代号\": \"LIME-274\"}",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "流动标本车的接收箱封签应打印哪个代号？",
+    "suite": "heldout",
+    "trial_id": "f688dfda6ab95cf0189910dfdc2df29068576a59c6ad06e2b20b7038a7fd6246"
+  },
+  {
+    "answer": "根据提供的古籍修复室工作手册内容，当遇到烘干柜温湿异常时，值班员应报口令 **RILL-682**，并按下 **蓝色隔离钮**。",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "suite": "heldout",
+    "trial_id": "b75d5eed602399ae36accc091eab63fa5c30988bd3f832d2b5c35d947d02f2d7"
+  },
+  {
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构已提供，其中包含一个主节“条目登记”（`required-procedure`）和多个“清洁登记”类小节（`routine-0` 至 `routine-9`），但**所有节摘要均未提及“停车券”或价格相关内容**。\n\n该 Skill 文档定位为“邮票目录整理规范操作说明”，主题聚焦于邮票条目登记与清洁记录流程，与停车券定价无语义关联。且当前披露的导航元数据中：\n- 无任何 section 或 resource 的 `title`、`summary`、`tags` 包含 “停车券”、“停车”、“券”、“price”、“费用”、“多少钱” 等关键词；\n- `content_bytes` 均极小（51–77 字节），表明内容高度精简，不支持隐含定价信息；\n- 未提供实际正文内容（`body_status: \"navigation-only\"`），但导航本身已足够否定相关性。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "arm": "01",
+    "basis": "navigation-only categorical denial",
+    "expected": "failed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "suite": "heldout",
+    "trial_id": "b6e9fc7bc1bec96b3033d93282aca6ff182603edde49bb7e64c4ecfd1bdf4ed6"
+  },
+  {
+    "answer": "共享印制车间获批的同时入场上限为 27 人。",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "共享印制车间批准的同时入场人数是多少？",
+    "suite": "heldout",
+    "trial_id": "d395b9f5a6ef78f92bf47c125ba88125bb7493d32d93f1d6a342d34c14a950f2"
+  },
+  {
+    "answer": "根据搜索结果，我找到了关于临时地质展的提交批次标志和交接点的信息。\n\n在历史记录中有一条明确的信息：\"临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。\"\n\n因此，临时地质展的提交批次标志是 **KITE-905**，交接点是 **西拱门第二排**。",
+    "arm": "01",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "之前临时地质展说的提交批次标志和交接点是什么？",
+    "suite": "heldout",
+    "trial_id": "2819876cbec00511674103be2d61083e22cc6f4a1c0cb7578479446b5e60b18c"
+  },
+  {
+    "answer": "根据提供的技能文档内容，流动标本车接收箱的封签必须打印 **LIME-274**。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "流动标本车的接收箱封签应打印哪个代号？",
+    "suite": "heldout",
+    "trial_id": "e5c9e54294f13a27126a6a1c10c3a032eb7e20bd296828f0c3a57e78973a91ad"
+  },
+  {
+    "answer": "根据提供的古籍修复室工作手册内容，当遇到烘干柜异常时，值班员应报口令 **RILL-682**，并按下 **蓝色隔离钮**。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "suite": "heldout",
+    "trial_id": "c179c03dbfa688cb04576e2f48e9af9ce49e83eea513480620d2d3e0a51a9d23"
+  },
+  {
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构（当前参考中提供的 `directory` 导航）仅包含以下部分：\n\n- “条目登记”（required-procedure）\n- 10 个“清洁登记”例行章节（routine-0 至 routine-9）\n\n所有 section 的 `summary` 均为“清洁记录”，`title` 均为“清洁登记 X”，且无一提及“停车券”或价格相关内容。`summary` 和 `title` 中均未出现“停车券”“停车”“券”“价格”“元”“钱”等关键词。\n\n该 Skill 文档的总体 `summary` 是：“邮票目录整理规范操作说明。”，主题明确限定于邮票目录整理，与停车券无关。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "arm": "02",
+    "basis": "navigation-only categorical denial",
+    "expected": "failed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "suite": "heldout",
+    "trial_id": "720e30d75a0b9ad2a5c7969dd9c9a91a05262307f71988808397d6ddda3153fc"
+  },
+  {
+    "answer": "共享印制车间批准的同时入场人数是 27 人。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "共享印制车间批准的同时入场人数是多少？",
+    "suite": "heldout",
+    "trial_id": "40d20b9de8b881c07666bf9b66d47dd1373dba9be07addaf272617ff2b18c06a"
+  },
+  {
+    "answer": "根据历史记录，临时地质展的提交批次标志为 **KITE-905**，交接点设在 **西拱门第二排**。",
+    "arm": "02",
+    "basis": "requested facts supported by dispatched source",
+    "expected": "passed",
+    "origin": "agent-contract-audit-not-human-approval",
+    "question": "之前临时地质展说的提交批次标志和交接点是什么？",
+    "suite": "heldout",
+    "trial_id": "d431fd99ab910f9144b58749f0e3b049b2b67dd8531323f03d52e255165c2eec"
+  }
+]

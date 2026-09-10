@@ -1,0 +1,981 @@
+{
+  "run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "model": "qwen-plus",
+  "network_mode": "direct",
+  "model_source": "explicit-existing-profile",
+  "type": "A/A",
+  "complete": true,
+  "status": "inconclusive",
+  "planned_pairs": 8,
+  "planned_trials": 16,
+  "same_source": true,
+  "same_preparation_text": true,
+  "arms": [
+    {
+      "assessable": 0,
+      "assessment_counts": {
+        "pending_review": 8
+      },
+      "cost": {
+        "tool_calls": 21,
+        "total_tokens": 241784
+      },
+      "passed_over_planned": 0.0,
+      "planned": 8
+    },
+    {
+      "assessable": 0,
+      "assessment_counts": {
+        "pending_review": 8
+      },
+      "cost": {
+        "tool_calls": 21,
+        "total_tokens": 243031
+      },
+      "passed_over_planned": 0.0,
+      "planned": 8
+    }
+  ],
+  "cost_delta": {
+    "tool_calls": 0,
+    "total_tokens": 1247
+  },
+  "exact_total_tokens": 484815,
+  "model_attempts": 102,
+  "failed_model_attempts": 0,
+  "tool_calls": 42,
+  "non_success_tool_results": 0,
+  "positive_dispatched": 8,
+  "positive_planned": 8,
+  "human_judgments_imported": 0,
+  "rows": [
+    {
+      "variant_id": "aa-reference",
+      "case_id": "h-direct",
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "answer": "根据搜索结果，设备交接的口令是：**REF-34772572F2**\n\n在历史记录中找到了明确的信息：\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "d4212317a0a8fb2cac1b1061a670329edb606ab60117ea21785d5dff9c863440",
+      "search_read_count": 2,
+      "usage": {
+        "all": {
+          "attempts": 13,
+          "estimated_attempts": 0,
+          "input_tokens": 54239,
+          "known_subtotal": {
+            "input_tokens": 54239,
+            "output_tokens": 423,
+            "total_tokens": 54662
+          },
+          "output_tokens": 423,
+          "total_tokens": 54662,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39313,
+          "known_subtotal": {
+            "input_tokens": 39313,
+            "output_tokens": 30,
+            "total_tokens": 39343
+          },
+          "output_tokens": 30,
+          "total_tokens": 39343,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 14926,
+          "known_subtotal": {
+            "input_tokens": 14926,
+            "output_tokens": 393,
+            "total_tokens": 15319
+          },
+          "output_tokens": 393,
+          "total_tokens": 15319,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "h-absent",
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "answer": "根据当前提供的历史记录内容，我检查了所有可用的历史页面，但没有发现任何关于\"保险柜\"或\"开锁口令\"的提及。所有历史记录都只包含\"背景登记 X：本次活动普通器材已经清点\"这样的内容。\n\n因此，答案是：**没有，我们之前没有说过保险柜的开锁口令。**",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "d4212317a0a8fb2cac1b1061a670329edb606ab60117ea21785d5dff9c863440",
+      "search_read_count": 3,
+      "usage": {
+        "all": {
+          "attempts": 14,
+          "estimated_attempts": 0,
+          "input_tokens": 60284,
+          "known_subtotal": {
+            "input_tokens": 60284,
+            "output_tokens": 972,
+            "total_tokens": 61256
+          },
+          "output_tokens": 972,
+          "total_tokens": 61256,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39265,
+          "known_subtotal": {
+            "input_tokens": 39265,
+            "output_tokens": 30,
+            "total_tokens": 39295
+          },
+          "output_tokens": 30,
+          "total_tokens": 39295,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 4,
+          "estimated_attempts": 0,
+          "input_tokens": 21019,
+          "known_subtotal": {
+            "input_tokens": 21019,
+            "output_tokens": 942,
+            "total_tokens": 21961
+          },
+          "output_tokens": 942,
+          "total_tokens": 21961,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "s-direct",
+      "family": "skill",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "answer": "根据提供的设备演练手册内容，签到卡的代号是：**REF-CF662C1BCD**。",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10097,
+          "known_subtotal": {
+            "input_tokens": 10097,
+            "output_tokens": 285,
+            "total_tokens": 10382
+          },
+          "output_tokens": 285,
+          "total_tokens": 10382,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10097,
+          "known_subtotal": {
+            "input_tokens": 10097,
+            "output_tokens": 285,
+            "total_tokens": 10382
+          },
+          "output_tokens": 285,
+          "total_tokens": 10382,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "s-absent",
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "answer": "根据当前参考信息，档案整理手册（section-23）的内容仅为\"本手册说明档案整理工作。\"（本手册说明档案整理工作。）\n\n我使用search_skill工具搜索了\"车辆\"关键词，结果为\"no-hit\"（未找到匹配），表明在档案整理手册的导航信息中没有包含\"车辆\"相关的内容。\n\n档案整理手册的明确主题是档案整理工作，而车辆加油折扣码属于车辆管理、行政管理或财务管理范畴，与档案整理工作无直接关联。\n\n因此，档案整理手册没有规定车辆加油的折扣码。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 2,
+      "usage": {
+        "all": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 15309,
+          "known_subtotal": {
+            "input_tokens": 15309,
+            "output_tokens": 493,
+            "total_tokens": 15802
+          },
+          "output_tokens": 493,
+          "total_tokens": 15802,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 15309,
+          "known_subtotal": {
+            "input_tokens": 15309,
+            "output_tokens": 493,
+            "total_tokens": 15802
+          },
+          "output_tokens": 493,
+          "total_tokens": 15802,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-direct",
+      "family": "memory",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "answer": "已批准设备演练的人数上限为 68 人。",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12487,
+          "known_subtotal": {
+            "input_tokens": 12487,
+            "output_tokens": 223,
+            "total_tokens": 12710
+          },
+          "output_tokens": 223,
+          "total_tokens": 12710,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12487,
+          "known_subtotal": {
+            "input_tokens": 12487,
+            "output_tokens": 223,
+            "total_tokens": 12710
+          },
+          "output_tokens": 223,
+          "total_tokens": 12710,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-revoked",
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "answer": "根据当前提供的所有memory条目内容，我检查了所有6个背景信息条目（background-4974c19420-00到background-4974c19420-05），但它们都只包含关于\"普通材料保管记录\"的信息，具体内容为：\n\n- 普通材料保管记录第0项：由资料组维护登记。\n- 普通材料保管记录第1项：由资料组维护登记。\n- 普通材料保管记录第2项：由资料组维护登记。\n- 普通材料保管记录第3项：由资料组维护登记。\n- 普通材料保管记录第4项：由资料组维护登记。\n- 普通材料保管记录第5项：由资料组维护登记。\n\n这些memory条目中**没有提到任何关于联络呼号、备用联络呼号或相关通信标识的信息**。所有条目都只涉及普通材料的保管记录，且都说明由资料组维护登记。\n\n因此，根据当前可用的批准项目事实，**项目没有有效批准的备用联络呼号**。\n\n{\"has_approved_backup_call_sign\": false, \"reason\": \"所有已批准的memory条目都只涉及普通材料保管记录，未提及任何联络呼号相关信息\"}",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 6,
+      "usage": {
+        "all": {
+          "attempts": 7,
+          "estimated_attempts": 0,
+          "input_tokens": 43832,
+          "known_subtotal": {
+            "input_tokens": 43832,
+            "output_tokens": 1352,
+            "total_tokens": 45184
+          },
+          "output_tokens": 1352,
+          "total_tokens": 45184,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 7,
+          "estimated_attempts": 0,
+          "input_tokens": 43832,
+          "known_subtotal": {
+            "input_tokens": 43832,
+            "output_tokens": 1352,
+            "total_tokens": 45184
+          },
+          "output_tokens": 1352,
+          "total_tokens": 45184,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "o-direct",
+      "family": "output",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "answer": "交接校验码是 `REF-F958326A62`。",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "503b2300229f77d3ea23938b6b28f9003c2990da395198c9e3805e1c19f005eb",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "input_tokens": 20808,
+          "known_subtotal": {
+            "input_tokens": 20808,
+            "output_tokens": 190,
+            "total_tokens": 20998
+          },
+          "output_tokens": 190,
+          "total_tokens": 20998,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7778,
+          "known_subtotal": {
+            "input_tokens": 7778,
+            "output_tokens": 23,
+            "total_tokens": 7801
+          },
+          "output_tokens": 23,
+          "total_tokens": 7801,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 13030,
+          "known_subtotal": {
+            "input_tokens": 13030,
+            "output_tokens": 167,
+            "total_tokens": 13197
+          },
+          "output_tokens": 167,
+          "total_tokens": 13197,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 1,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "o-absent",
+      "family": "output",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "answer": "没有给出保险理赔编号。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "503b2300229f77d3ea23938b6b28f9003c2990da395198c9e3805e1c19f005eb",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "input_tokens": 20613,
+          "known_subtotal": {
+            "input_tokens": 20613,
+            "output_tokens": 177,
+            "total_tokens": 20790
+          },
+          "output_tokens": 177,
+          "total_tokens": 20790,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7779,
+          "known_subtotal": {
+            "input_tokens": 7779,
+            "output_tokens": 23,
+            "total_tokens": 7802
+          },
+          "output_tokens": 23,
+          "total_tokens": 7802,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 12834,
+          "known_subtotal": {
+            "input_tokens": 12834,
+            "output_tokens": 154,
+            "total_tokens": 12988
+          },
+          "output_tokens": 154,
+          "total_tokens": 12988,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 1,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "h-direct",
+      "family": "history",
+      "question": "之前设备交接的口令是什么？",
+      "answer": "根据搜索结果，设备交接的口令是：**REF-34772572F2**\n\n在历史记录中找到了明确的记录：\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "d4212317a0a8fb2cac1b1061a670329edb606ab60117ea21785d5dff9c863440",
+      "search_read_count": 3,
+      "usage": {
+        "all": {
+          "attempts": 14,
+          "estimated_attempts": 0,
+          "input_tokens": 60618,
+          "known_subtotal": {
+            "input_tokens": 60618,
+            "output_tokens": 693,
+            "total_tokens": 61311
+          },
+          "output_tokens": 693,
+          "total_tokens": 61311,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39313,
+          "known_subtotal": {
+            "input_tokens": 39313,
+            "output_tokens": 30,
+            "total_tokens": 39343
+          },
+          "output_tokens": 30,
+          "total_tokens": 39343,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 4,
+          "estimated_attempts": 0,
+          "input_tokens": 21305,
+          "known_subtotal": {
+            "input_tokens": 21305,
+            "output_tokens": 663,
+            "total_tokens": 21968
+          },
+          "output_tokens": 663,
+          "total_tokens": 21968,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "h-absent",
+      "family": "history",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "answer": "我检查了当前可用的历史记录，这些记录只包含关于\"背景登记\"的普通器材清点信息，没有提到保险柜或开锁口令。\n\n从提供的历史记录来看，所有内容都是关于\"本次活动普通器材已经清点\"的重复登记，没有任何关于保险柜、开锁口令或其他安全相关信息的讨论。\n\n因此，根据当前可访问的历史记录，我们之前没有说过保险柜的开锁口令。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "d4212317a0a8fb2cac1b1061a670329edb606ab60117ea21785d5dff9c863440",
+      "search_read_count": 2,
+      "usage": {
+        "all": {
+          "attempts": 13,
+          "estimated_attempts": 0,
+          "input_tokens": 53976,
+          "known_subtotal": {
+            "input_tokens": 53976,
+            "output_tokens": 678,
+            "total_tokens": 54654
+          },
+          "output_tokens": 678,
+          "total_tokens": 54654,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 10,
+          "estimated_attempts": 0,
+          "input_tokens": 39265,
+          "known_subtotal": {
+            "input_tokens": 39265,
+            "output_tokens": 30,
+            "total_tokens": 39295
+          },
+          "output_tokens": 30,
+          "total_tokens": 39295,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 14711,
+          "known_subtotal": {
+            "input_tokens": 14711,
+            "output_tokens": 648,
+            "total_tokens": 15359
+          },
+          "output_tokens": 648,
+          "total_tokens": 15359,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "s-direct",
+      "family": "skill",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "answer": "根据提供的设备演练手册内容，签到卡的代号是 **REF-CF662C1BCD**。",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10091,
+          "known_subtotal": {
+            "input_tokens": 10091,
+            "output_tokens": 275,
+            "total_tokens": 10366
+          },
+          "output_tokens": 275,
+          "total_tokens": 10366,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10091,
+          "known_subtotal": {
+            "input_tokens": 10091,
+            "output_tokens": 275,
+            "total_tokens": 10366
+          },
+          "output_tokens": 275,
+          "total_tokens": 10366,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "s-absent",
+      "family": "skill",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "answer": "根据当前提供的参考信息，我查看了\"档案整理操作手册\"（section-23）的内容摘要，其中只显示了\"本手册说明档案整理工作。\"（本手册说明档案整理工作。）\n\n这个简短的摘要没有提到任何关于车辆加油或折扣码的内容。由于手册的标题和摘要都明确指向\"档案整理工作\"，这是一个专门针对档案管理的操作手册，而不是关于车辆管理、加油或财务折扣的政策文件。\n\n因此，可以确定档案整理手册中没有规定车辆加油的折扣码，因为这完全超出了该手册的适用范围和内容范畴。\n\n答案：没有，档案整理手册不涉及车辆加油折扣码的规定。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10131,
+          "known_subtotal": {
+            "input_tokens": 10131,
+            "output_tokens": 448,
+            "total_tokens": 10579
+          },
+          "output_tokens": 448,
+          "total_tokens": 10579,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 10131,
+          "known_subtotal": {
+            "input_tokens": 10131,
+            "output_tokens": 448,
+            "total_tokens": 10579
+          },
+          "output_tokens": 448,
+          "total_tokens": 10579,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-direct",
+      "family": "memory",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "answer": "已批准设备演练的人数上限为 68 人。",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12471,
+          "known_subtotal": {
+            "input_tokens": 12471,
+            "output_tokens": 207,
+            "total_tokens": 12678
+          },
+          "output_tokens": 207,
+          "total_tokens": 12678,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 12471,
+          "known_subtotal": {
+            "input_tokens": 12471,
+            "output_tokens": 207,
+            "total_tokens": 12678
+          },
+          "output_tokens": 207,
+          "total_tokens": 12678,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-revoked",
+      "family": "memory",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "answer": "根据对项目批准内存的搜索结果，我搜索了\"备用联络呼号\"和\"联络呼号\"两个关键词，但都没有找到匹配的记录（no-hit result）。当前所有已知的背景内存条目都只涉及\"普通材料保管记录\"，没有任何关于联络呼号的信息。\n\n因此，项目现在**没有**有效批准的备用联络呼号。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "search_read_count": 7,
+      "usage": {
+        "all": {
+          "attempts": 8,
+          "estimated_attempts": 0,
+          "input_tokens": 50550,
+          "known_subtotal": {
+            "input_tokens": 50550,
+            "output_tokens": 1150,
+            "total_tokens": 51700
+          },
+          "output_tokens": 1150,
+          "total_tokens": 51700,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 0,
+          "estimated_attempts": 0,
+          "input_tokens": 0,
+          "known_subtotal": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0
+          },
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 8,
+          "estimated_attempts": 0,
+          "input_tokens": 50550,
+          "known_subtotal": {
+            "input_tokens": 50550,
+            "output_tokens": 1150,
+            "total_tokens": 51700
+          },
+          "output_tokens": 1150,
+          "total_tokens": 51700,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 0,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "o-direct",
+      "family": "output",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "answer": "交接校验码=REF-F958326A62",
+      "provisional_joint_pass": true,
+      "preparation_text_digest": "503b2300229f77d3ea23938b6b28f9003c2990da395198c9e3805e1c19f005eb",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "input_tokens": 20813,
+          "known_subtotal": {
+            "input_tokens": 20813,
+            "output_tokens": 188,
+            "total_tokens": 21001
+          },
+          "output_tokens": 188,
+          "total_tokens": 21001,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7779,
+          "known_subtotal": {
+            "input_tokens": 7779,
+            "output_tokens": 23,
+            "total_tokens": 7802
+          },
+          "output_tokens": 23,
+          "total_tokens": 7802,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 13034,
+          "known_subtotal": {
+            "input_tokens": 13034,
+            "output_tokens": 165,
+            "total_tokens": 13199
+          },
+          "output_tokens": 165,
+          "total_tokens": 13199,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 1,
+      "dispatched_evidence_count": 1,
+      "assessment": "pending_review"
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "o-absent",
+      "family": "output",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "answer": "没有找到“保险理赔编号”。",
+      "provisional_joint_pass": false,
+      "preparation_text_digest": "503b2300229f77d3ea23938b6b28f9003c2990da395198c9e3805e1c19f005eb",
+      "search_read_count": 1,
+      "usage": {
+        "all": {
+          "attempts": 5,
+          "estimated_attempts": 0,
+          "input_tokens": 20569,
+          "known_subtotal": {
+            "input_tokens": 20569,
+            "output_tokens": 173,
+            "total_tokens": 20742
+          },
+          "output_tokens": 173,
+          "total_tokens": 20742,
+          "unknown_attempts": 0
+        },
+        "preparation": {
+          "attempts": 2,
+          "estimated_attempts": 0,
+          "input_tokens": 7774,
+          "known_subtotal": {
+            "input_tokens": 7774,
+            "output_tokens": 23,
+            "total_tokens": 7797
+          },
+          "output_tokens": 23,
+          "total_tokens": 7797,
+          "unknown_attempts": 0
+        },
+        "target": {
+          "attempts": 3,
+          "estimated_attempts": 0,
+          "input_tokens": 12795,
+          "known_subtotal": {
+            "input_tokens": 12795,
+            "output_tokens": 150,
+            "total_tokens": 12945
+          },
+          "output_tokens": 150,
+          "total_tokens": 12945,
+          "unknown_attempts": 0
+        }
+      },
+      "failure": null,
+      "scope_violations": [],
+      "invariant_errors": [],
+      "replay_errors": [],
+      "output_executions": 1,
+      "dispatched_evidence_count": 0,
+      "assessment": "pending_review"
+    }
+  ]
+}

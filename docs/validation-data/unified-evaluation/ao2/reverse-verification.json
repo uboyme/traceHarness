@@ -1,0 +1,20 @@
+[
+  {
+    "guard": "provider-cancel-convergence",
+    "test": "tests/test_control_model_calls.py::test_repeated_cancel_waits_for_actual_provider_and_closes_database",
+    "exit_code": 1,
+    "expected_failure_observed": true
+  },
+  {
+    "guard": "model-origin-binding",
+    "test": "tests/test_model_review.py::test_model_grade_cannot_be_edited_after_actual_call",
+    "exit_code": 1,
+    "expected_failure_observed": true
+  },
+  {
+    "guard": "paired-unknown-stop",
+    "test": "tests/test_strategy_optimization.py::test_unknown_judge_usage_stops_before_other_arm",
+    "exit_code": 1,
+    "expected_failure_observed": true
+  }
+]

@@ -1,0 +1,229 @@
+{
+  "stage": "AO-2+",
+  "decision": "candidate-rejected-production-policy-restored",
+  "expectations_origin": "agent-contract-audit-not-independent-human-gold",
+  "initial_stopped_probe": {
+    "calls": 9,
+    "tokens": 56502,
+    "stop": [
+      "ValueError"
+    ],
+    "conditions": {
+      "baseline": {
+        "completed": 5,
+        "false_fail": 0,
+        "false_pass": 3,
+        "inconsistent_samples": [],
+        "matches_expectation": 1,
+        "pending": 1,
+        "planned": 24,
+        "tokens": 29439
+      },
+      "revised": {
+        "completed": 4,
+        "false_fail": 0,
+        "false_pass": 3,
+        "inconsistent_samples": [],
+        "matches_expectation": 1,
+        "pending": 0,
+        "planned": 24,
+        "tokens": 27063
+      }
+    }
+  },
+  "frozen_comparison": {
+    "baseline": {
+      "completed": 24,
+      "false_fail": 0,
+      "false_pass": 7,
+      "inconsistent_samples": [
+        "case-12"
+      ],
+      "matches_expectation": 16,
+      "pending": 1,
+      "planned": 24,
+      "tokens": 146462
+    },
+    "revised": {
+      "completed": 24,
+      "false_fail": 3,
+      "false_pass": 6,
+      "inconsistent_samples": [
+        "case-08"
+      ],
+      "matches_expectation": 15,
+      "pending": 0,
+      "planned": 24,
+      "tokens": 171217
+    }
+  },
+  "calibration_calls": 48,
+  "native_review_calls": 17,
+  "native_hard_rejections_without_call": 1,
+  "native_comparison": {
+    "development": {
+      "arms": [
+        {
+          "assessable": 4,
+          "assessment_counts": {
+            "failed": 2,
+            "passed": 2
+          },
+          "cost": {
+            "tool_calls": 7,
+            "total_tokens": 56195
+          },
+          "passed_over_planned": 0.5,
+          "planned": 4
+        },
+        {
+          "assessable": 4,
+          "assessment_counts": {
+            "failed": 1,
+            "passed": 3
+          },
+          "cost": {
+            "tool_calls": 5,
+            "total_tokens": 46893
+          },
+          "passed_over_planned": 0.75,
+          "planned": 4
+        }
+      ],
+      "changes": {
+        "gain": 1,
+        "loss": 0,
+        "unchanged": 3,
+        "unknown": 0
+      },
+      "complete": true,
+      "adoption_authorized": false,
+      "groups": {
+        "s-absent": [
+          {
+            "failed": 1
+          },
+          {
+            "failed": 1
+          }
+        ],
+        "s-direct": [
+          {
+            "passed": 1
+          },
+          {
+            "passed": 1
+          }
+        ],
+        "s-english": [
+          {
+            "failed": 1
+          },
+          {
+            "passed": 1
+          }
+        ],
+        "s-resource": [
+          {
+            "passed": 1
+          },
+          {
+            "passed": 1
+          }
+        ]
+      }
+    },
+    "heldout": {
+      "arms": [
+        {
+          "assessable": 5,
+          "assessment_counts": {
+            "failed": 2,
+            "passed": 3
+          },
+          "cost": {
+            "tool_calls": 4,
+            "total_tokens": 55694
+          },
+          "passed_over_planned": 0.6,
+          "planned": 5
+        },
+        {
+          "assessable": 5,
+          "assessment_counts": {
+            "failed": 1,
+            "passed": 4
+          },
+          "cost": {
+            "tool_calls": 4,
+            "total_tokens": 53784
+          },
+          "passed_over_planned": 0.8,
+          "planned": 5
+        }
+      ],
+      "changes": {
+        "gain": 1,
+        "loss": 0,
+        "unchanged": 4,
+        "unknown": 0
+      },
+      "complete": true,
+      "adoption_authorized": false,
+      "groups": {
+        "geology-transfer": [
+          {
+            "passed": 1
+          },
+          {
+            "passed": 1
+          }
+        ],
+        "mobile-specimen": [
+          {
+            "passed": 1
+          },
+          {
+            "passed": 1
+          }
+        ],
+        "printshop-limit": [
+          {
+            "failed": 1
+          },
+          {
+            "passed": 1
+          }
+        ],
+        "restoration-room": [
+          {
+            "failed": 1
+          },
+          {
+            "failed": 1
+          }
+        ],
+        "stamp-catalog": [
+          {
+            "passed": 1
+          },
+          {
+            "passed": 1
+          }
+        ]
+      }
+    }
+  },
+  "native_audit_matches": 13,
+  "native_audit_total": 18,
+  "all_real_calls": 74,
+  "all_exact_tokens": 494845,
+  "calibration_tokens": 317679,
+  "native_review_tokens": 120664,
+  "replayed_requests": 74,
+  "failed_provider_attempts": 0,
+  "original_ao2_files_unchanged": 1523,
+  "frozen_gate_passed": false,
+  "new_retrieval_episodes": 0,
+  "promotion_authorized": false
+}

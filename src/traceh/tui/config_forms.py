@@ -15,6 +15,7 @@ from textual.containers import Horizontal, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Input, Label, Select, Static, Tree
 
+from traceh.chat.background import parse_background_settings
 from traceh.chat.config import parse_context_host_config
 from traceh.cli.tui_config import LaunchConfigurationError, atomic_json
 from traceh.concurrency import await_worker_convergence
@@ -292,7 +293,54 @@ def sandbox_preset():
     ))
 
 
+def background_preset(workspace, data_dir):
+    """Visible editable starter values; benchmark and plan require user selection."""
+    from datetime import UTC, datetime, timedelta
+
+    return {
+        "format": 1, "period_id": str(uuid4()), "workspace": workspace,
+        "benchmark": "", "run_plan": "",
+        "output": str(Path(data_dir).resolve() / "optimization") if data_dir else "",
+        "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+        "max_episodes": 2, "max_trials": 8, "max_control_tokens": 600000,
+        "max_observations": 100, "cooldown_seconds": 300, "episode_seconds": 1800,
+        "max_request_bytes": 200000,
+        "analysis": {"encoding": "cl100k_base", "token_limit": 32000,
+                     "output_tokens": 6000, "safety_tokens": 1024, "timeout_seconds": 90},
+        "judge": {"encoding": "cl100k_base", "token_limit": 64000,
+                  "output_tokens": 2048, "safety_tokens": 2048, "timeout_seconds": 90},
+        "selectors": [["runtime/prompt.py", "_REFERENCE_GUIDANCE"]],
+    }
+
+
+LABELS.update({
+    "period_id": "额度周期标识（系统生成；重启不重置额度）",
+    "workspace": "允许收集反馈的工作区",
+    "benchmark": "冻结评估题库目录（必填）",
+    "run_plan": "双臂评估运行计划文件（必填，与聊天使用相同模型）",
+    "output": "独立实验输出目录（不能位于评估题库内）",
+    "expires_at": "额度到期时间（含时区，例如 +08:00）",
+    "max_episodes": "此周期最多实验次数",
+    "max_trials": "此周期最多完整评估任务数（包含两臂）",
+    "max_control_tokens": "分析和裁判 Token 预留总上限（不含原每题执行预算）",
+    "max_observations": "最多反馈条数",
+    "cooldown_seconds": "两次实验最短间隔（秒）",
+    "episode_seconds": "单次实验最长时间（秒）",
+    "max_request_bytes": "分析输入大小上限（字节）",
+    "analysis": "提出候选的模型调用预算",
+    "judge": "独立语义裁判的模型调用预算",
+    "encoding": "Token 本地计数编码",
+    "token_limit": "每次调用 Token 上限",
+    "output_tokens": "回答预留 Token",
+    "safety_tokens": "计数误差预留 Token",
+    "timeout_seconds": "单次调用最长秒数",
+    "selectors": "允许优化的说明文本节点（文件与节点名称）",
+})
+
+
 def validate_document(kind, raw, path):
+    if kind == "background":
+        return parse_background_settings(raw, path=path)
     if kind == "context":
         return parse_context_host_config(raw, path=path)
     if kind == "sandbox":
@@ -330,7 +378,7 @@ class ConfigForm(Screen[Path | None]):
     def compose(self):
         yield Static(
             {"context": "知识与记忆配置", "product": "任务执行配置",
-             "sandbox": "执行沙箱配置"}[self.kind]
+             "sandbox": "执行沙箱配置", "background": "后台优化配置"}[self.kind]
             + " · 左边选项目，右边查看说明并修改。预设值都可检查；不会执行命令或审批。",
             id="config-form-title",
             markup=False,

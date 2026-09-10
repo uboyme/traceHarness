@@ -1,0 +1,7 @@
+.                                                                        [100%]
+============================= slowest 3 durations =============================
+66.92s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule
+0.12s setup    tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule
+
+(1 durations < 0.005s hidden.  Use -vv to show these durations.)
+1 passed in 67.70s (0:01:07)

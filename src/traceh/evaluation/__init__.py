@@ -1,26 +1,14 @@
-"""ProductTask benchmark: the single measurement path behind ``traceh eval``."""
+"""Shared host evaluation entry point; task semantics remain with each evaluator."""
 
-from traceh.evaluation.errors import (
-    BenchmarkEvidenceError,
-    BenchmarkExecutionError,
-    BenchmarkManifestError,
-    EvaluationError,
-)
 from traceh.evaluation.manifest import BenchmarkManifest, load_benchmark_manifest
-from traceh.evaluation.metrics import AttemptEvidence, collect_attempt_evidence
-from traceh.evaluation.report import BenchmarkReport, render_markdown
-from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.evaluation.plan import RunOptions
+from traceh.evaluation.report import EvaluationReport
+from traceh.evaluation.runner import EvaluationRunner
 
 __all__ = [
-    "AttemptEvidence",
-    "BenchmarkEvidenceError",
-    "BenchmarkExecutionError",
     "BenchmarkManifest",
-    "BenchmarkManifestError",
-    "BenchmarkReport",
-    "EvaluationError",
-    "ProductBenchmarkRunner",
-    "collect_attempt_evidence",
+    "EvaluationReport",
+    "EvaluationRunner",
+    "RunOptions",
     "load_benchmark_manifest",
-    "render_markdown",
 ]

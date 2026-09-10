@@ -1,0 +1,15 @@
+{
+  "original_package_unmodified": true,
+  "results": [
+    {
+      "guard": "launcher-identity",
+      "exit_code": 1,
+      "expected_root_failure": true
+    },
+    {
+      "guard": "unknown-comparison",
+      "exit_code": 1,
+      "expected_root_failure": true
+    }
+  ]
+}

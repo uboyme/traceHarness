@@ -67,6 +67,28 @@ Execution receipts include plugin/version/activation identity in the original Ev
 application-level activation stream. Tool calls still use the ordinary Effect/Session path.
 The trusted adapter itself remains in-process; `isolated` plugins remain unsupported.
 
+### AO-0 bounded strategy services (unreleased contract)
+
+The SDK now re-exports the same `OptimizationStrategy`, `OptimizationAnalysis`,
+request/proposal/result DTOs and typed keys as `traceh.api.optimization`.
+`OPTIMIZATION_STRATEGY` is `traceh.optimization.strategy@1`: a trusted plugin provides
+the service through the original `PluginContext.provide`. `OPTIMIZATION_ANALYSIS` is
+`traceh.optimization.analysis@1`: the host supplies it through the original Service/Scope
+assembly and the plugin borrows it through `require`; no provider is silently created.
+
+The caller validates a frozen development request and borrows the strategy under the
+same Generation Lease until the call and cancellation cleanup converge. The plugin
+owns its strategy resources; it must not dispose the borrowed host analysis service.
+Analysis results refer to an independent host analysis Session/Turn, evidence digest
+and original `Usage`. A DTO alone is not verification of those records.
+
+AO-0 supplies contracts, proposal validation through the existing UE-3 AST owner,
+canonical edit deduplication and pure stop/review decisions. It does **not** ship an
+optimizer scheduler, model analysis adapter, enabled strategy plugin or optimization
+CLI. The host selects sanitized development data; these interfaces do not automatically
+redact arbitrary text or sandbox malicious in-process Python. See the
+[AO-0 contract](plan/TRACEHARNESS_OPTIMIZATION_AO0_CONTRACT.md) for scope and owner rules.
+
 ### 1.1 Typed Skill contributions (v0.9-F1)
 
 Metadata-only discovery reports `skills={available:false,requires_activation:true}`.
@@ -570,6 +592,13 @@ messages are written by this repository.
 | `conflict` | `tool-publish-conflict`, `prompt-publish-conflict`, `service-publish-conflict`, `provider-publish-conflict`, `policy-publish-conflict`, `middleware-publish-conflict`, `service-override-api-major-mismatch`, `plugin-contribution-identity-changed` (a registered Tool/Provider/Policy/Middleware changed its name), or a host-overlay `tool-*` / `prompt-*` / `policy-*` replacement code; overlay failures retain the responsible plugin id. A public prepared candidate is revalidated again at Generation claim, so post-prepare identity drift is rejected before publication. |
 | `selection` after setup | `provider-not-provided`, `verifier-not-provided` (both checked before health) |
 | `rollback` / `dispose` | `plugin-rollback-failed`, `plugin-cleanup-failed` |
+
+AO-2 explicitly assembles the trusted bundled `TextStrategyPlugin` through the same discovery,
+provide/require, scoped services and Generation Lease. The host lends `OptimizationAnalysis`
+and owns its original Runtime/Budget/Session calls; the plugin provides `OptimizationStrategy`
+and only receives a bounded development request/result. This is not a default Chat plugin,
+a second registry, an automatic Wheel install or an adoption capability. See
+[AO-2 contract](plan/TRACEHARNESS_OPTIMIZATION_AO2_CONTRACT.md).
 
 ## 9. Current limits (including unreleased F1)
 

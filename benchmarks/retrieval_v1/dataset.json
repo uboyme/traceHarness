@@ -1,0 +1,82 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "case_id": "query_01",
+      "group_id": "query_01",
+      "requirement": "goals.code",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_02",
+      "group_id": "query_02",
+      "requirement": "项目目标保持边界清楚",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_03",
+      "group_id": "query_03",
+      "requirement": "src/route.py RouteError",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_04",
+      "group_id": "query_04",
+      "requirement": "vehicle fuel",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_05",
+      "group_id": "query_05",
+      "requirement": "quasarnevermentioned",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_06",
+      "group_id": "query_06",
+      "requirement": "secretneedle",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_07",
+      "group_id": "query_07",
+      "requirement": "revokedneedle",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_08",
+      "group_id": "query_08",
+      "requirement": "priorneedle",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_09",
+      "group_id": "query_09",
+      "requirement": "reference.retired",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_10",
+      "group_id": "query_10",
+      "requirement": "route.error",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    },
+    {
+      "case_id": "query_11",
+      "group_id": "query_11",
+      "requirement": "reference.current",
+      "initial_tree": "initial",
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+    }
+  ]
+}

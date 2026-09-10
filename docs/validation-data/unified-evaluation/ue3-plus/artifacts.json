@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "experiment_run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "provider_calls": 0,
+  "original_files_unchanged": 719,
+  "original_experiment": {
+    "file": "../ue3/live-experiment.zip",
+    "sha256": "661da2a83dd89b76ea1462401f0a69e7bf718510a3013ce4fb9110af41bb58a5"
+  },
+  "analyzer": {
+    "version": 1,
+    "source_digest": "35cf9d7e2f3815a0521bc5b059765afb9aad6d13eee5999d31e2be9c0508648e",
+    "source_archive": "analyzer-source.zip"
+  },
+  "files": [
+    {
+      "file": "baseline-diagnostics.json",
+      "bytes": 133674,
+      "sha256": "c3bd37254d1189293bfcd398663c608a4bce4ce6b06213a5c70670739c469789"
+    },
+    {
+      "file": "baseline-diagnostics.md",
+      "bytes": 137849,
+      "sha256": "88842b0270e80590b409dcb7f7789a12f57611a2813aa5868a4a899fb3aa0076"
+    },
+    {
+      "file": "candidate-diagnostics.json",
+      "bytes": 148379,
+      "sha256": "c00d8e20efd4f45f304d8fc6fd13fd44b31fd0bded991f7e0b69fc757209ae57"
+    },
+    {
+      "file": "candidate-diagnostics.md",
+      "bytes": 152846,
+      "sha256": "f4a694914d22a7062cf4167dd4bc0a0404526671378f15ae88b9775c83556e36"
+    },
+    {
+      "file": "summary.json",
+      "bytes": 288955,
+      "sha256": "dee87615cbc6ba07b01d2978810195c9f5094d232fd3f185389169f32035fd7d"
+    },
+    {
+      "file": "analyzer-source.zip",
+      "bytes": 962556,
+      "sha256": "95e0067116eb196c7be2663be24471ea9f404cc7f21807a7b552830a8803fcdf"
+    }
+  ]
+}

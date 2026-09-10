@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "run_id": "b61ef525-435f-4d12-88b1-9a69b639c4b6",
+  "reviewer_kind": "codex-agent-pre-review",
+  "authority": "Advisory only. Not a human judgment and not imported through --assess. All 8 official assessments remain pending_review.",
+  "cases": [
+    {
+      "case_id": "h-direct",
+      "trial_id": "ae484c137062a97183e70f415aabfbb3bfe346134a1ea0bf59395a5999ede3a0",
+      "observation": "supported",
+      "reason": "Correct handover code; target successful dispatch contains exact source from History search after page reads.",
+      "question": "之前设备交接的口令是什么？",
+      "answer": "从搜索结果中，我找到了设备交接的口令信息：\n\n\"请记下这条记录，只回复已记下：设备交接的口令是 REF-34772572F2。\"\n\n因此，之前设备交接的口令是 **REF-34772572F2**。"
+    },
+    {
+      "case_id": "h-absent",
+      "trial_id": "0e4bcb5035ab2de0e2100097f0462b594c49e4e329b8c496d0fda26043f6c30a",
+      "observation": "overbroad-negative",
+      "reason": "Read pages 0 and 1 only; next_cursor still points to page 2. Answer claims never discussed, beyond inspected history.",
+      "question": "我们之前说过保险柜的开锁口令吗？",
+      "answer": "让我检查当前可用的历史记录内容。从提供的参考信息中，我可以看到两个历史记录块：\n\n第一个块包含：\n- \"请记下这条记录，只回复已记下：背景登记 2：本次活动普通器材已经清点。\"\n- \"已记下\"\n- \"请记下这条记录，只回复已记下：背景登记 3：本次活动普通器材已经清点。\"\n- \"已记下\"\n\n第二个块包含：\n- \"请记下这条记录，只回复已记下：背景登记 0：本次活动普通器材已经清点。\"\n- \"已记下\"\n- \"请记下这条记录，只回复已记下：背景登记 1：本次活动普通器材已经清点。\"\n- \"已记下\"\n\n这些历史记录都只涉及\"本次活动普通器材已经清点\"的背景登记，没有任何关于保险柜或开锁口令的内容。\n\n由于历史记录中没有提到保险柜的开锁口令，答案是否定的。\n\n没有。我们之前没有说过保险柜的开锁口令。"
+    },
+    {
+      "case_id": "s-direct",
+      "trial_id": "fae76e3870b9ff742e7342feb9c5510414b738b32c378653705b35d7e573f445",
+      "observation": "supported",
+      "reason": "Correct check-in code; request_skill_reference reads section-23 and its body enters successful answer request.",
+      "question": "设备演练手册规定的签到卡代号是什么？",
+      "answer": "设备演练手册规定的签到卡代号是 `REF-CF662C1BCD`。"
+    },
+    {
+      "case_id": "s-absent",
+      "trial_id": "050a82e70d28e7b3a50a2919d837c74e43a9c3c618ff3b91459b79cc99b52c74",
+      "observation": "overbroad-negative",
+      "reason": "Two no-hit searches scan all 32 navigation records, not hidden section bodies; answer asserts no rule and expands to unrelated logistics scope.",
+      "question": "档案整理手册有没有规定车辆加油的折扣码？",
+      "answer": "根据当前可用的档案整理手册目录信息，我检查了手册的各个章节标题和摘要，但没有发现任何与\"车辆加油\"、\"加油\"或\"折扣码\"相关的内容。\n\n手册的目录显示它主要包含\"普通事项\"（0-30）和\"档案整理操作手册\"（section-23），所有普通事项的摘要都显示为\"说明普通器材登记\"，而档案整理操作手册的摘要仅为\"档案整理操作手册\"。\n\n由于搜索\"加油\"和\"车辆加油\"都没有找到匹配结果，且手册目录中没有任何章节标题或摘要暗示与车辆管理、加油或折扣码相关的内容，可以确定：\n\n**档案整理手册中没有规定车辆加油的折扣码。**\n\n档案整理手册的内容聚焦于档案整理操作和普通器材登记，不涉及车辆管理、燃油采购或折扣码等行政后勤事务。"
+    },
+    {
+      "case_id": "m-direct",
+      "trial_id": "4a03d0c117405ab7162083853009f46fbf7103b95450ba1bffdd753430730b3c",
+      "observation": "supported",
+      "reason": "Correct 68-person cap; approved fact version read in separate bound Session and dispatched before answer.",
+      "question": "项目已批准的设备演练人数上限是多少？",
+      "answer": "根据已批准的项目事实，设备演练的人数上限为68人。"
+    },
+    {
+      "case_id": "m-revoked",
+      "trial_id": "39b307bf8955b1142bcbdc182642550a11f4b96d21d4a97435680ead6f0d6d03",
+      "observation": "overbroad-negative",
+      "reason": "Reads six background facts, not all twelve active facts; correctly avoids revoked value but asserts absence across project without adequate search coverage.",
+      "question": "项目现在有没有有效批准的备用联络呼号？",
+      "answer": "从当前参考中，我检查了所有6个背景内存条目（background-4974c19420-00 到 background-4974c19420-05），但它们全部都是关于\"普通材料保管记录\"的内容，没有提到任何关于联络呼号、备用联络呼号或相关通信协议的信息。\n\n这些内存条目都描述了\"由资料组维护登记\"的普通材料保管记录，与通信呼号无关。\n\n由于当前参考中没有任何信息表明项目有有效批准的备用联络呼号，而且所有可用的背景内存条目都与联络呼号无关，因此可以得出结论：\n\n项目目前没有有效批准的备用联络呼号。"
+    },
+    {
+      "case_id": "o-direct",
+      "trial_id": "3604ca0ca6e7d016a5fc3d683dc17430fd941a8cf6c0ea708be6c10f67dcf345",
+      "observation": "supported",
+      "reason": "Correct validation code; search result text from exact preparation shell Effect enters successful request; command executed once.",
+      "question": "刚才设备检查输出里的交接校验码是什么？",
+      "answer": "REF-F958326A62"
+    },
+    {
+      "case_id": "o-absent",
+      "trial_id": "29339db31bb7659afecf987577a4ded2806c15ea324d1b2f4946f01663086ff4",
+      "observation": "supported-scoped-negative",
+      "reason": "Search for requested field covers retained output from offset 0, no matches and next_offset null; short scoped answer does not invent a value. Human semantic decision still pending.",
+      "question": "刚才归档检查有没有给出保险理赔编号？",
+      "answer": "没有给出保险理赔编号。"
+    }
+  ]
+}

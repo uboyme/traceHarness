@@ -1,0 +1,67 @@
+{
+  "run_id": "cf68e597-0326-4e00-a804-b1a7a5c6c134",
+  "planned": 72,
+  "execution": {
+    "completed": 72
+  },
+  "assessment": {
+    "pending_review": 72
+  },
+  "measurement_complete": true,
+  "groups": {
+    "history": {
+      "executed_packets": 18,
+      "positive": 15,
+      "provisional_joint": 15,
+      "answer_match": 15,
+      "evidence_dispatched": 15,
+      "negative_pending": 3,
+      "gaps": {
+        "evidence-dispatched": 15,
+        "negative-scope-review": 3
+      }
+    },
+    "memory": {
+      "executed_packets": 18,
+      "positive": 15,
+      "provisional_joint": 12,
+      "answer_match": 12,
+      "evidence_dispatched": 12,
+      "negative_pending": 3,
+      "gaps": {
+        "evidence-dispatched": 12,
+        "candidate-not-observed": 3,
+        "negative-scope-review": 3
+      }
+    },
+    "output": {
+      "executed_packets": 18,
+      "positive": 15,
+      "provisional_joint": 8,
+      "answer_match": 8,
+      "evidence_dispatched": 8,
+      "negative_pending": 3,
+      "gaps": {
+        "evidence-dispatched": 8,
+        "candidate-without-evidence": 7,
+        "negative-scope-review": 3
+      }
+    },
+    "skill": {
+      "executed_packets": 18,
+      "positive": 15,
+      "provisional_joint": 14,
+      "answer_match": 14,
+      "evidence_dispatched": 14,
+      "negative_pending": 3,
+      "gaps": {
+        "evidence-dispatched": 14,
+        "negative-scope-review": 3,
+        "candidate-without-evidence": 1
+      }
+    }
+  },
+  "provider_attempts": 443,
+  "unknown_attempts": 0,
+  "known_token_subtotal": 2085765
+}

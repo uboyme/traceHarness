@@ -1,0 +1,7 @@
+{
+  "production_policy_restored_exactly": true,
+  "restored_sha256": "374da8dc8781318717475d811e6b31c2805e3d2391d2cd094e85ae5685da999a",
+  "experimental_sha256": "5a9fef243ee96ec513048b8a904c9e1b2f3e4c6e5ebbf568547d88e30cc54a93",
+  "experimental_reverse_expected_failure": true,
+  "scope_tests_archived_not_active": true
+}

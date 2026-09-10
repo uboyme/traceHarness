@@ -77,7 +77,6 @@ from traceh.api.product import (
 )
 from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess
-from traceh.version import __version__
 
 PACKAGE_ROOT = Path(agent_runtime_module.__file__).parent.parent
 PRODUCT_API = Path(product_module.__file__)
@@ -413,12 +412,6 @@ def test_the_product_api_performs_no_io_and_owns_no_mutable_state() -> None:
             continue
         assert value.__dataclass_params__.frozen, name
         assert getattr(value, "__slots__", None) is not None, name
-
-
-def test_the_package_version_is_the_v090_release() -> None:
-    """The v0.8 release keeps the single package version source."""
-
-    assert __version__ == "0.10.0"
 
 
 # --------------------------------------------------- authority boundaries

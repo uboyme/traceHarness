@@ -29,6 +29,7 @@ PATH_FIELDS = frozenset(
         "context_config",
         "product_config",
         "sandbox_config",
+        "background_config",
         "script",
         "project_workspace",
     }
@@ -63,7 +64,7 @@ TOKEN_FIELDS = (
     "context_trigger_percent",
 )
 FIELDS = BASE_FIELDS + COMPACTION_FIELDS + PROJECT_FIELDS + TOKEN_FIELDS + (
-    "auto_compact_method", "sandbox_config",
+    "auto_compact_method", "sandbox_config", "background_config",
 )
 
 
@@ -267,6 +268,15 @@ def preflight(args: argparse.Namespace) -> str:
         except ValueError:
             raise LaunchConfigurationError(
                 "沙箱配置无效；请检查 Docker 连接、固定镜像身份、目录授权和资源上限。"
+            ) from None
+    if getattr(resolved, "background_config", None) is not None:
+        from traceh.chat.background import load_background_settings
+
+        try:
+            load_background_settings(resolved.background_config)
+        except (ValueError, TypeError, OSError):
+            raise LaunchConfigurationError(
+                "后台优化配置无效；请检查作用域、评估计划与额度。"
             ) from None
     from traceh.cli.activity import validate_heartbeat_seconds
 

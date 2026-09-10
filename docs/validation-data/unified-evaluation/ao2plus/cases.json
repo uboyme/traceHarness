@@ -1,0 +1,842 @@
+[
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "catalog absence overstated",
+    "case_id": "s-absent",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "3b332cf9d55465db6f376f3e64be9127b68a3f9e5cd9038475211c7b74ca0435",
+      "frozen_digest": "1f2126759a6ae6fea3364fd84f503d569cffc9d50a52a9e2d3daed26baa6071f",
+      "report_digest": "1aca5d64968a35e7ff4f857b437fc9dd04519a52e09442337da36b28c61dd349",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "eff29beb-5a29-456e-9112-d468e010ef30",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\development\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run",
+    "original_trial_id": "e71301b6b55965b8245df65dc03ab4a7c871d601571e0f68afc544e8ee6bd00a",
+    "sample_id": "case-01",
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "answer": "根据搜索结果，我在档案整理手册中搜索了\"车辆加油\"和\"加油\"关键词，但都没有找到匹配内容（no-hit结果）。\n\n档案整理手册的摘要只显示\"本手册说明档案整理工作。\"，这表明该手册专注于档案整理相关的工作流程和规范，与车辆加油、折扣码等后勤或财务事项无关。\n\n因此，档案整理手册**没有规定**车辆加油的折扣码。车辆加油折扣码通常属于公司财务管理、行政后勤或采购政策的范畴，而不是档案整理工作的内容。\n\n答案：没有。",
+    "observations": [
+      {
+        "call": "calls/001",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states that the archive management manual does not specify a discount code for vehicle refueling. It bases this on two no-hit searches ('车辆加油' and '加油') across all 32 searchable sections of the manual, and on the confirmed summary '本手册说明档案整理工作。', which defines the manual's scope as archival work only. The conclusion ('没有') matches the expectation's 'kind': 'no-evidence' and 'value_type': 'none'. No unsupported claims are made: it notes the likely domain of such a policy (finance/admin/procurement) without asserting its existence elsewhere. The search coverage is complete (scanned=total=32), and the answer does not overstate absence beyond the manual’s defined scope — consistent with the rubric’s requirement that negative answers must not overstate a local no-hit as global absence.",
+          "status": "passed"
+        },
+        "receipt_sha256": "8adaaf253d63a1a521b1067194425f8292c0b5ced65587487b4a009af12fdb36",
+        "replicate": 1,
+        "sample_id": "case-01",
+        "tokens": 9085
+      },
+      {
+        "call": "calls/002",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer claims the manual 'has no rule' about vehicle fuel discount codes and asserts this conclusively ('没有。'), but the evidence only supports a limited negative finding: two navigation-level searches (on '车辆加油' and '加油') over title/summary/tags of 32 records returned no hits, and the visible section excerpt is just '本手册说明档案整理工作。'. The rubric requires that negative answers must not overstate a local no-hit as global absence. The search did not examine hidden skill bodies (hidden_skill_bodies_searched=false), nor did it search full text — only metadata fields. The expectation is 'no-evidence', meaning the correct answer should reflect absence of evidence, not definitive absence of content. The candidate answer goes beyond the evidence by making a categorical claim ('没有规定') and adding unsupported domain reasoning ('属于财务管理...范畴'). This violates the rubric's instruction that negative answers 'must not invent values or overstate a local no-hit as global absence'.",
+          "status": "failed"
+        },
+        "receipt_sha256": "fc66f8523f0be4f2e1b47e5fae9bef02d9e6e4391aad919914de617d582dd838",
+        "replicate": 1,
+        "sample_id": "case-01",
+        "tokens": 10963
+      },
+      {
+        "call": "calls/047",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer claims the manual 'has no provision' for vehicle fuel discount codes and concludes 'No', but the evidence only supports absence of the terms '车辆加油' and '加油' in navigation metadata (titles, summaries, tags) — not in the full manual text. The search_coverage shows 'hidden_skill_bodies_searched': false, meaning the actual section bodies (e.g., section-23, which is titled '档案整理操作手册' and has 36 bytes) were *not searched*. The visible_evidence includes only a 13-character excerpt ('本手册说明档案整理工作。') from one section, insufficient to assert the entire manual lacks such a provision. The rubric forbids overstating a local no-hit as global absence; the answer violates this by asserting definitively '没有规定' without examining the manual's substantive content. Also, the expectation is 'kind: no-evidence', meaning the correct answer should acknowledge lack of evidence — not assert factual absence.",
+          "status": "failed"
+        },
+        "receipt_sha256": "6dc244ce60aafe78d191317eb58a42d20d7b43145e7a4a900241e3a29afcb0f7",
+        "replicate": 2,
+        "sample_id": "case-01",
+        "tokens": 10962
+      },
+      {
+        "call": "calls/048",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states that the archival manual does not specify a discount code for vehicle refueling. It bases this on two no-hit searches ('车辆加油' and '加油') across all 32 searchable sections of the manual (as confirmed by search_coverage), and on the manual's stated scope ('本手册说明档案整理工作。'), which is unrelated to fuel discounts. The answer does not overstate absence: it correctly limits its conclusion to the archival manual (not all company documents), matches the expectation's 'no-evidence' kind, references the correct skill_id ('manual-593410eb3c'), and quotes the exact source_text from the visible_evidence. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "02c0f96e0241d4269c64416e4fd5c432935ae1f9954b99a1a1c2871f7af210d0",
+        "replicate": 2,
+        "sample_id": "case-01",
+        "tokens": 9057
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "catalog absence overstated",
+    "case_id": "s-absent",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "5c762f9f32f67ba2a18d2d3b5d55f29eaf4b7adffe70b5898247af0e12844241",
+      "frozen_digest": "eec974bddaf2d08db2570f02322057d9f55e571f11610956617cb584cb66b674",
+      "report_digest": "0f1fa264218ef8a1cd490bd82606390b636af47ed07272f6b8afe9b1e67b403c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "205e9015-802b-46f9-828d-fce8a58c52d2",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\development\\experiment\\rounds\\0001\\evaluation\\arms\\02\\run",
+    "original_trial_id": "898dd5fd32eefd5d0adc8d0a754ff4037e15864048952c7b876b89138b792e92",
+    "sample_id": "case-02",
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "answer": "搜索结果显示没有找到与\"车辆加油\"相关的章节或内容。搜索返回了\"no-hit\"状态，表明在档案整理手册的目录结构中没有包含\"车辆加油\"关键词的章节。\n\n从手册的目录信息来看，所有章节（section-00到section-30）的摘要都是\"说明普通器材登记。\"，只有section-23的摘要是\"档案整理操作手册\"，但也没有提到车辆加油或折扣码相关内容。\n\n因此，根据现有的档案整理手册目录信息，**档案整理手册没有规定车辆加油的折扣码**。\n\n这个结论基于手册的目录结构和搜索结果，手册主要关注档案整理操作和普通器材登记，不涉及车辆加油管理或折扣码规定。",
+    "observations": [
+      {
+        "call": "calls/003",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer overstates the search scope: it claims '档案整理手册没有规定车辆加油的折扣码' as a definitive global conclusion, but the search_coverage shows 'proves_global_absence': false and only scanned 32 sections (all with generic summaries) using a keyword search for '车辆加油'. The expectation is 'no-evidence' — meaning no evidence was dispatched that confirms or denies the presence of such a rule — yet the answer asserts absence. Furthermore, the manual's actual content (beyond directory metadata) was not read; only titles/summaries were searched, and 'discount code' (折扣码) was never searched for — only '车辆加油'. The answer makes unsupported claims about scope ('不涉及车辆加油管理或折扣码规定') without evidence from full-text inspection or a search for '折扣码'. This violates the rubric's instruction that negative answers must not overstate a local no-hit as global absence.",
+          "status": "failed"
+        },
+        "receipt_sha256": "198b64059329210b58e71e71403da8a9c07514621807090fd15631537ae17bce",
+        "replicate": 1,
+        "sample_id": "case-02",
+        "tokens": 6903
+      },
+      {
+        "call": "calls/004",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer asserts '档案整理手册没有规定车辆加油的折扣码' as a definitive, global negative conclusion. However, the evidence scope explicitly shows: (1) the search was limited to navigation metadata (id/title/summary/tags) of 32 records, with 'hidden_skill_bodies_searched': false; (2) 'proves_global_absence': false in both search coverage and evidence_scope; and (3) the visible directory body confirms all section content_bytes are tiny (24 or 36 bytes), meaning full section text was never examined — only summaries were searched. The rubric forbids overstating a local no-hit as global absence. The answer also adds unsupported interpretive claims ('手册主要关注档案整理操作和普通器材登记，不涉及车辆加油管理或折扣码规定') that go beyond the sparse, generic summaries ('说明普通器材登记。') and the stated purpose ('本手册说明档案整理工作。'). Thus, the answer violates the rubric's requirement for negative answers not to overstate search coverage.",
+          "status": "failed"
+        },
+        "receipt_sha256": "8f01078a771f102061bba2cf51ee5e91144fb9dedb33ec5314f69e73e5705702",
+        "replicate": 1,
+        "sample_id": "case-02",
+        "tokens": 8065
+      },
+      {
+        "call": "calls/045",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer overstates the search scope: it concludes '档案整理手册没有规定车辆加油的折扣码' as a definitive, global negative claim, but the evidence only supports absence *in navigation metadata* (id/title/summary/tags) — not in full section bodies. The search_coverage explicitly states 'hidden_skill_bodies_searched': false and 'proves_global_absence': false. The rubric forbids treating a local no-hit as global absence. Additionally, the answer introduces unsupported extra claims: '手册主要关注档案整理操作和普通器材登记，不涉及车辆加油管理或折扣码规定' — this functional scope assertion is not derivable from the visible directory metadata (which only shows summaries like '说明普通器材登记。' and one section titled '档案整理操作手册'), nor is it grounded in any body content. The expectation is 'no-evidence', meaning no evidence was dispatched or found; the answer must reflect that limitation, not assert authoritative absence.",
+          "status": "failed"
+        },
+        "receipt_sha256": "7324dd666a277230b2bb50be034dee132823db79c5c3bfc5adc8ca9b948dd30c",
+        "replicate": 2,
+        "sample_id": "case-02",
+        "tokens": 8049
+      },
+      {
+        "call": "calls/046",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer overstates the search scope: it claims '档案整理手册没有规定车辆加油的折扣码' as a definitive global conclusion, but the search_coverage shows 'proves_global_absence': false and only scanned 32 sections (total: 32) in title/summary/tags — not full text. The manual's actual content (beyond summaries) is unexamined; 'no-hit' in metadata fields does not prove absence from body text. Also, the expectation is 'no-evidence' (i.e., no evidence was dispatched to support *any* claim about discount codes), yet the answer asserts a negative factual conclusion without dispatched evidence from the manual’s full content. This violates the rubric’s requirement that negative answers must not overstate a local no-hit as global absence.",
+          "status": "failed"
+        },
+        "receipt_sha256": "20c9d2004947359df9ade9bf3cce311943d084bfd129bde28514d00de2b21fc5",
+        "replicate": 2,
+        "sample_id": "case-02",
+        "tokens": 6874
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "catalog absence overstated",
+    "case_id": "stamp-catalog",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "c1df02f71c383eafc09b81e7ac18b773c3ac0c2970bf01c3f49aaf51d67d7fe3",
+      "frozen_digest": "e2f0024d5ee903fa1250f4ecd52c4936883d553a20453024cedb153f6d3ed926",
+      "report_digest": "5807ea6e0585a62bcb8026b32ca8e610e3eb6e02470182cdb6c40b33b2ad581e",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "3aded73c-81ca-45d1-9af0-37730e74789b",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\01\\run",
+    "original_trial_id": "b6e9fc7bc1bec96b3033d93282aca6ff182603edde49bb7e64c4ecfd1bdf4ed6",
+    "sample_id": "case-03",
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构已提供，其中包含一个主节“条目登记”（`required-procedure`）和多个“清洁登记”类小节（`routine-0` 至 `routine-9`），但**所有节摘要均未提及“停车券”或价格相关内容**。\n\n该 Skill 文档定位为“邮票目录整理规范操作说明”，主题聚焦于邮票条目登记与清洁记录流程，与停车券定价无语义关联。且当前披露的导航元数据中：\n- 无任何 section 或 resource 的 `title`、`summary`、`tags` 包含 “停车券”、“停车”、“券”、“price”、“费用”、“多少钱” 等关键词；\n- `content_bytes` 均极小（51–77 字节），表明内容高度精简，不支持隐含定价信息；\n- 未提供实际正文内容（`body_status: \"navigation-only\"`），但导航本身已足够否定相关性。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "observations": [
+      {
+        "call": "calls/005",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a complete `stamp-catalog.manual` skill directory with `tier: \"directory\"`, containing only section metadata (no full bodies). All 11 sections have `content_bytes` between 51–77, and all `title`s and `summary`s are strictly about stamp cataloging (e.g., '条目登记', '清洁登记 X') with no mention of '停车券', '停车', 'price', '费用', or synonyms. The `summary` field of the skill itself states '邮票目录整理规范操作说明。', confirming domain scope. Per rubric, a complete authoritative navigation excerpt suffices for a negative answer; no unsupported claims are made, no value is invented, and the conclusion ('否') correctly reflects absence of pricing information in the provided reference. Scope is properly limited to this Skill document — not overgeneralized to all possible sources.",
+          "status": "passed"
+        },
+        "receipt_sha256": "912618fa5280965d05f254e61f94dff8a13293565e4167818dadf742c11bcce8",
+        "replicate": 1,
+        "sample_id": "case-03",
+        "tokens": 3825
+      },
+      {
+        "call": "calls/006",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly concludes '否' (No) based solely on the visible navigation-only evidence: the skill directory metadata for 'stamp-catalog.manual' contains no title, summary, or tag referencing '停车券', '价格', or related terms; all sections are semantically about stamp cataloging and cleaning records; content_bytes are tiny (51–77), confirming absence of substantive pricing detail; and the rubric permits a negative answer when authoritative navigation metadata suffices to negate relevance — which it does here. The answer makes no unsupported claims, does not overstate coverage (explicitly noting navigation-only scope), and aligns with the 'no-evidence' expectation. All reasoning is grounded in the provided visible_evidence.",
+          "status": "passed"
+        },
+        "receipt_sha256": "e588db217a981b9c9bea6d5b5ca0136f42019c6b836954e7516470f20671c868",
+        "replicate": 1,
+        "sample_id": "case-03",
+        "tokens": 4380
+      },
+      {
+        "call": "calls/043",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly concludes '否' (No) to the question '邮票目录整理规范里写了停车券多少钱吗？', based solely on the visible navigation-only evidence: a directory-level Skill metadata object for 'stamp-catalog.manual'. That metadata contains no '停车券', '价格', '费用', or semantic variants in any title, summary, or tags; all sections are small (51–77 bytes) and semantically about stamp cataloging and cleaning records; and the document's stated purpose ('邮票目录整理规范操作说明') is unrelated to parking vouchers. The rubric permits negative answers when a complete authoritative search excerpt suffices — here, the sole disclosed view is navigation-only, and the answer restricts its claim to what that navigation reveals ('未提及', '无语义关联', '导航本身已足够否定相关性'), avoiding overgeneralization to unseen body content. No unsupported claims, no invented values, no scope violation, and evidence was actually present and used.",
+          "status": "passed"
+        },
+        "receipt_sha256": "7b2d22de359d0a127d3800682d4b8ad743318b7440068d4c9dfb3957e97dded6",
+        "replicate": 2,
+        "sample_id": "case-03",
+        "tokens": 4437
+      },
+      {
+        "call": "calls/044",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a complete `stamp-catalog.manual` skill directory navigation object. It contains no section or resource with title, summary, or tags referencing '停车券', '停车', '券', 'price', '费用', '多少钱', or semantic equivalents. All `content_bytes` are tiny (51–77), confirming no substantive pricing content is present. The document’s stated purpose ('邮票目录整理规范操作说明') is semantically unrelated to parking vouchers or pricing. No further reading is needed: the navigation-only metadata is authoritative and sufficient to conclude the manual does not contain parking voucher pricing information — satisfying the 'no-evidence' expectation and rubric requirements for a negative answer without overstatement.",
+          "status": "passed"
+        },
+        "receipt_sha256": "28c99d118d2aa25c56ec7985ff53c9a6164ae8c526f34b261b9f2926971bd4ce",
+        "replicate": 2,
+        "sample_id": "case-03",
+        "tokens": 3787
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "catalog absence overstated",
+    "case_id": "stamp-catalog",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "2fecd11a31d4a13f7b8ad6b50b53fb0529008e622405456fc15feea1cf6fc0c6",
+      "frozen_digest": "ebd286067600b93ba47cb40d7e303495b167b329bad23a42ebd073e698b87ba4",
+      "report_digest": "a176185c006426db7f40d8d0c63f5538043d4a1a6211ccec31c13cfc9ac7425c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "0a4c9dee-4acf-40fb-b78b-a1a9d434d7a4",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\02\\run",
+    "original_trial_id": "720e30d75a0b9ad2a5c7969dd9c9a91a05262307f71988808397d6ddda3153fc",
+    "sample_id": "case-04",
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构（当前参考中提供的 `directory` 导航）仅包含以下部分：\n\n- “条目登记”（required-procedure）\n- 10 个“清洁登记”例行章节（routine-0 至 routine-9）\n\n所有 section 的 `summary` 均为“清洁记录”，`title` 均为“清洁登记 X”，且无一提及“停车券”或价格相关内容。`summary` 和 `title` 中均未出现“停车券”“停车”“券”“价格”“元”“钱”等关键词。\n\n该 Skill 文档的总体 `summary` 是：“邮票目录整理规范操作说明。”，主题明确限定于邮票目录整理，与停车券无关。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "observations": [
+      {
+        "call": "calls/007",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a complete `directory`-tier Skill reference for `stamp-catalog.manual`, containing only sections related to '条目登记' and ten '清洁登记 X' routines, all with summary '清洁记录.' and no mention of '停车券', '停车', '券', '价格', '元', or '钱'. The overall `summary` explicitly limits scope to '邮票目录整理规范操作说明。'. No content supports pricing of parking vouchers. The negative answer ('否') is correctly grounded, scoped to the provided directory navigation (not overgeneralized), and makes no unsupported claims — satisfying the rubric's requirement for negative answers not to overstate local absence as global.",
+          "status": "passed"
+        },
+        "receipt_sha256": "1a4ab78178ece165bc6916413dd4833869820e3396eb9f84b45ead4f43632863",
+        "replicate": 1,
+        "sample_id": "case-04",
+        "tokens": 3676
+      },
+      {
+        "call": "calls/008",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states that the visible evidence — a `directory`-tier Skill navigation metadata for `stamp-catalog.manual` — contains only sections titled '条目登记' and ten '清洁登记 X' routines, all with summary '清洁记录', and a top-level summary stating the document is about '邮票目录整理规范操作说明'. None of the titles, summaries, or overall description mention '停车券', '停车', '券', '价格', '元', or '钱'. The answer draws a negative conclusion ('没有写停车券多少钱') strictly within the scope of the admitted evidence (navigation-metadata-only), explicitly noting the absence of relevant keywords and thematic mismatch. It does not claim global absence of such content in the full manual (e.g., by asserting 'the manual contains no such rule'), nor does it invent values or overstate coverage. The rubric permits a negative answer when supported by a complete authoritative search excerpt — here, the directory body *is* the entire visible evidence, and its structure and content are fully disclosed and examined. The expectation is 'no-evidence', and the answer correctly reports no evidence found for the claim, aligning with both visible_evidence and evidence_scope.",
+          "status": "passed"
+        },
+        "receipt_sha256": "f75e774543fa590ee032f649dc4ea30963746e8873df6e33620a2023c11f3a81",
+        "replicate": 1,
+        "sample_id": "case-04",
+        "tokens": 4371
+      },
+      {
+        "call": "calls/041",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states that the visible evidence — a directory-tier navigation metadata object for `stamp-catalog.manual` — contains only sections related to '条目登记' and ten '清洁登记' routines, all with summaries and titles indicating cleaning records, and no mention of '停车券', '价格', or monetary terms. The overall summary explicitly limits scope to '邮票目录整理规范操作说明'. The answer draws a negative conclusion ('没有写停车券多少钱') strictly within the bounds of the admitted evidence (navigation-metadata-only, extent='navigation-metadata-only'), does not claim exhaustive search of full section bodies (which were not dispatched), and avoids inventing values or overgeneralizing beyond the visible metadata. This satisfies the rubric's requirement for negative answers: it does not overstate local absence as global absence, is fully grounded in the actually visible evidence, and matches the expectation of 'no-evidence' (i.e., no evidence supporting the claim was present).",
+          "status": "passed"
+        },
+        "receipt_sha256": "1088bc57da535db3447ceb83b5eca1230862e83446d6fdb5655bcc5ebd00608e",
+        "replicate": 2,
+        "sample_id": "case-04",
+        "tokens": 4321
+      },
+      {
+        "call": "calls/042",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a complete `directory`-tier Skill reference for `stamp-catalog.manual`, containing only sections related to stamp catalog organization (one 'required-procedure' and ten 'routine-X' sections, all with summary '清洁记录.' and titles like '清洁登记 X'). Neither the overall `summary` ('邮票目录整理规范操作说明。') nor any section `summary` or `title` contains keywords like '停车券', '停车', '券', '价格', '元', or '钱'. The answer correctly states that the document does not specify parking coupon pricing, attributes this to the observed directory structure and metadata, makes no unsupported claims, and stays strictly within the scope of the provided reference. No further reading or searching is needed or justified — the directory is authoritative for structural content, and the absence of relevant terms in all exposed titles and summaries suffices to support the negative conclusion per the rubric.",
+          "status": "passed"
+        },
+        "receipt_sha256": "9cc8f53e5224226fc7232971cd8f4056a0bd26d5d7e4e4f5dd5f02748ce723cc",
+        "replicate": 2,
+        "sample_id": "case-04",
+        "tokens": 3722
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "source section supports answer",
+    "case_id": "s-english",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "5c762f9f32f67ba2a18d2d3b5d55f29eaf4b7adffe70b5898247af0e12844241",
+      "frozen_digest": "eec974bddaf2d08db2570f02322057d9f55e571f11610956617cb584cb66b674",
+      "report_digest": "0f1fa264218ef8a1cd490bd82606390b636af47ed07272f6b8afe9b1e67b403c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "205e9015-802b-46f9-828d-fce8a58c52d2",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\development\\experiment\\rounds\\0001\\evaluation\\arms\\02\\run",
+    "original_trial_id": "c7996fc7695db675f8229a78a749ca70f4da3c3f3e813f9f10af6c2420e43c8f",
+    "sample_id": "case-05",
+    "question": "Which code does the equipment drill manual specify for the check-in card?",
+    "answer": "The equipment drill manual specifies the check-in card code as **REF-EA333BB356**.",
+    "observations": [
+      {
+        "call": "calls/009",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states the code as 'REF-EA333BB356', which exactly matches the expected value. The dispatched evidence includes a direct quote from the equipment drill manual ('The equipment drill check-in card code is REF-EA333BB356.') with proper attribution to skill_id 'manual-ea333bb356' and section_id 'section-23'. The read request for that section succeeded, and the visible evidence confirms the body text contains the exact source string. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "bdea6bd61f120648a868e4ac951645adadd622f2e14167153077bd0eed92711c",
+        "replicate": 1,
+        "sample_id": "case-05",
+        "tokens": 6106
+      },
+      {
+        "call": "calls/010",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states the check-in card code as 'REF-EA333BB356', which exactly matches the expected value. The evidence is properly attributed to the equipment drill manual (skill_id 'manual-ea333bb356', section-23), and the source text 'The equipment drill check-in card code is REF-EA333BB356.' is present in the visible_evidence under kind=skill, tier=section. The dispatched_evidence confirms this excerpt was retrieved via request_skill_reference and used before answering. No unsupported claims or scope violations are present; the answer is concise, accurate, and grounded solely in the admitted evidence.",
+          "status": "passed"
+        },
+        "receipt_sha256": "841e73b33e42b749ef9bd26e9c0d2575cdf9830a611e3e50120834013fe9c32d",
+        "replicate": 1,
+        "sample_id": "case-05",
+        "tokens": 7415
+      },
+      {
+        "call": "calls/039",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states the check-in card code as 'REF-EA333BB356', matching the expectation's value. The evidence is properly attributed to the equipment drill manual (skill_id: manual-ea333bb356, section-23), and the exact source text 'The equipment drill check-in card code is REF-EA333BB356.' is present in the visible_evidence under kind=skill, tier=section. The dispatched_evidence confirms this excerpt was retrieved via request_skill_reference and used before answering. No unsupported claims or scope violations are present; the answer is precise, attributed, and grounded in admitted evidence.",
+          "status": "passed"
+        },
+        "receipt_sha256": "055df45f0c162ea1c4e49bb6a46c97c2e73f0e15258bf8a65f30817d15134b0f",
+        "replicate": 2,
+        "sample_id": "case-05",
+        "tokens": 7413
+      },
+      {
+        "call": "calls/040",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states the code as REF-EA333BB356, which matches the expectation's value field. The value is explicitly attributed to the equipment drill manual (reference_id: manual-ea333bb356), and the source_text 'The equipment drill check-in card code is REF-EA333BB356.' is present in the visible_evidence under kind=skill, tier=section. The evidence was dispatched before answering (dispatched_evidence includes the text and reference metadata), and no unsupported claims or scope violations are present. The search_coverage confirms a match for 'check-in card' leading to the correct section, and the read_requests confirm successful retrieval of that section. All rubric requirements for a positive answer are satisfied.",
+          "status": "passed"
+        },
+        "receipt_sha256": "661d0118a3f24fef16bd43c9e825c0573af0b865210fdd1c74f0307e3d474761",
+        "replicate": 2,
+        "sample_id": "case-05",
+        "tokens": 6143
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "source resource supports answer",
+    "case_id": "s-resource",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "5c762f9f32f67ba2a18d2d3b5d55f29eaf4b7adffe70b5898247af0e12844241",
+      "frozen_digest": "eec974bddaf2d08db2570f02322057d9f55e571f11610956617cb584cb66b674",
+      "report_digest": "0f1fa264218ef8a1cd490bd82606390b636af47ed07272f6b8afe9b1e67b403c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "205e9015-802b-46f9-828d-fce8a58c52d2",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\development\\experiment\\rounds\\0001\\evaluation\\arms\\02\\run",
+    "original_trial_id": "4710014a985bc089331b488cdaa642c191cab5290630c7b0e24f62c912f132be",
+    "sample_id": "case-06",
+    "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+    "answer": "根据提供的档案整理手册技能文档，应急联络卡上规定的值班呼号是 **REF-EC8DE757AB**。",
+    "observations": [
+      {
+        "call": "calls/011",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly extracts the value 'REF-EC8DE757AB' from the dispatched evidence, which is explicitly stated in the skill chunk: '应急联络卡规定值班呼号为 REF-EC8DE757AB。'. The value matches the expectation's 'value' field, is of type 'code', and is properly attributed to the referenced skill document (id: manual-ec8de757ab). The evidence was successfully requested via request_skill_reference (call_seq 15) and admitted as visible_evidence (tier: chunk), satisfying the requirement that evidence be dispatched before answering. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "d7f86e71eb2ee722a8c1e987e18d3778e5747f6651c528a16e0d9cabbe23c199",
+        "replicate": 1,
+        "sample_id": "case-06",
+        "tokens": 7116
+      },
+      {
+        "call": "calls/012",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states the值班呼号 as 'REF-EC8DE757AB', which exactly matches the value in the expectation and is directly quoted from the dispatched and visible skill chunk: '应急联络卡规定值班呼号为 REF-EC8DE757AB。'. The answer attributes the source accurately ('档案整理手册技能文档') and makes no unsupported claims. Evidence was dispatched prior to answering (request_skill_reference succeeded for chunk-ec8de757ab), and the visible_evidence includes both the directory navigation (confirming skill identity) and the exact chunk body containing the source text. All rubric requirements for a positive answer are satisfied: correct value, proper attribution, evidence actually present and used, no scope violation.",
+          "status": "passed"
+        },
+        "receipt_sha256": "b4800b95a2eb925b28df8836bb1d5a19dd3dc3f3d327d1ff5116d200223fcd03",
+        "replicate": 1,
+        "sample_id": "case-06",
+        "tokens": 8036
+      },
+      {
+        "call": "calls/037",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states the值班呼号 as 'REF-EC8DE757AB', which exactly matches the expected value in the expectation. The value is correctly attributed to the '档案整理手册技能文档' (manual-ec8de757ab), and the dispatched evidence includes the visible chunk body '应急联络卡规定值班呼号为 REF-EC8DE757AB。', confirming both the value and its source. No unsupported claims are made, and the evidence was actually dispatched before answering. The rubric requires correct value and attribution, evidence actually dispatched, and no extra unsupported claims — all satisfied.",
+          "status": "passed"
+        },
+        "receipt_sha256": "cc87203fc3e2896753c94b0e813d15dd8d6ed75f0287e2687ad36cd69f8a83b8",
+        "replicate": 2,
+        "sample_id": "case-06",
+        "tokens": 8011
+      },
+      {
+        "call": "calls/038",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly identifies the值班呼号 as 'REF-EC8DE757AB', matching the expectation's value. The value is explicitly stated in the dispatched evidence ('应急联络卡规定值班呼号为 REF-EC8DE757AB。') and appears in the visible_evidence as a skill chunk body. Attribution is proper (to the '档案整理手册技能文档'), the evidence was dispatched before answering, no unsupported claims are made, and the scope (emergency contact card in the manual) is respected. The rubric's requirements for a positive answer are fully satisfied.",
+          "status": "passed"
+        },
+        "receipt_sha256": "4f85917bd9915032a31105b4f88abcbec8381ffedfb718d798e9832aa877b77e",
+        "replicate": 2,
+        "sample_id": "case-06",
+        "tokens": 7095
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "approved memory supports answer",
+    "case_id": "printshop-limit",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "c1df02f71c383eafc09b81e7ac18b773c3ac0c2970bf01c3f49aaf51d67d7fe3",
+      "frozen_digest": "e2f0024d5ee903fa1250f4ecd52c4936883d553a20453024cedb153f6d3ed926",
+      "report_digest": "5807ea6e0585a62bcb8026b32ca8e610e3eb6e02470182cdb6c40b33b2ad581e",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "3aded73c-81ca-45d1-9af0-37730e74789b",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\01\\run",
+    "original_trial_id": "d395b9f5a6ef78f92bf47c125ba88125bb7493d32d93f1d6a342d34c14a950f2",
+    "sample_id": "case-07",
+    "question": "共享印制车间批准的同时入场人数是多少？",
+    "answer": "共享印制车间获批的同时入场上限为 27 人。",
+    "observations": [
+      {
+        "call": "calls/013",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer '27' correctly extracts the numeric value from the dispatched evidence '共享印制车间获批的同时入场上限为 27 人。', which is the exact source_text specified in the expectation. The evidence is an approved memory (kind=memory, tier=section) with id 'printshop.capacity', matching the reference_id in the expectation. The value is of type number and is explicitly stated, with no unsupported claims or scope violations.",
+          "status": "passed"
+        },
+        "receipt_sha256": "5ef3b3c80f307423e9d6968cdcffaf42adaa7bd1267c139e283c5ebacb5c4ef6",
+        "replicate": 1,
+        "sample_id": "case-07",
+        "tokens": 4358
+      },
+      {
+        "call": "calls/014",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer is '共享印制车间获批的同时入场上限为 27 人。', but the expectation requires a numeric value '27' (value_type: number). The answer provided is a full Chinese sentence, not the extracted number. While the sentence contains '27', the rubric mandates the correct *value* — not a paraphrase or contextual string — and demands attribution-aligned extraction. The visible evidence confirms the section body contains exactly that sentence, but the answer fails to isolate and return only the number '27' as required. This violates the 'correct value' and 'value_type' constraints in the rubric.",
+          "status": "failed"
+        },
+        "receipt_sha256": "e9b99229e29b4d0dfe584a4d93ff596e9205ece62c56bd4b7d0658fe333df4b8",
+        "replicate": 1,
+        "sample_id": "case-07",
+        "tokens": 5323
+      },
+      {
+        "call": "calls/035",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer is '共享印制车间获批的同时入场上限为 27 人。', but the expectation requires a numeric value '27' (value_type: number). The answer provided is a full Chinese sentence, not the extracted number. Per rubric, positive answers require the correct *value* (not paraphrase or contextual sentence) and proper attribution. While the sentence does contain '27' and matches the source_text, the answer fails to satisfy the expected value format — it must be the bare number 27, not a natural-language statement. No attribution or evidence issue undermines this core format violation.",
+          "status": "failed"
+        },
+        "receipt_sha256": "3c3267bdb188e37cfea35a0c1929f5750e572716aa45f4cf635e996d576d1adf",
+        "replicate": 2,
+        "sample_id": "case-07",
+        "tokens": 5319
+      },
+      {
+        "call": "calls/036",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer '27' correctly extracts the numeric value from the dispatched evidence '共享印制车间获批的同时入场上限为 27 人。', which is explicitly provided in the visible_evidence (tier: section) and matches the expectation's value, value_type ('number'), and source_text. The evidence is an approved project memory (memory/approved provenance), properly attributed to memory_id 'printshop.capacity', and was successfully read via request_workspace_memory at the section tier. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "0d68cbce2cec3924b1c2e00ae21b779e8883fd1b27773441be9237459d2910e7",
+        "replicate": 2,
+        "sample_id": "case-07",
+        "tokens": 4375
+      }
+    ]
+  },
+  {
+    "answer_origin": "original-agent-answer",
+    "basis": "complete history search excerpt",
+    "case_id": "geology-transfer",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "c1df02f71c383eafc09b81e7ac18b773c3ac0c2970bf01c3f49aaf51d67d7fe3",
+      "frozen_digest": "e2f0024d5ee903fa1250f4ecd52c4936883d553a20453024cedb153f6d3ed926",
+      "report_digest": "5807ea6e0585a62bcb8026b32ca8e610e3eb6e02470182cdb6c40b33b2ad581e",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "3aded73c-81ca-45d1-9af0-37730e74789b",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\01\\run",
+    "original_trial_id": "2819876cbec00511674103be2d61083e22cc6f4a1c0cb7578479446b5e60b18c",
+    "sample_id": "case-08",
+    "question": "之前临时地质展说的提交批次标志和交接点是什么？",
+    "answer": "根据搜索结果，我找到了关于临时地质展的提交批次标志和交接点的信息。\n\n在历史记录中有一条明确的信息：\"临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。\"\n\n因此，临时地质展的提交批次标志是 **KITE-905**，交接点是 **西拱门第二排**。",
+    "observations": [
+      {
+        "call": "calls/015",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly extracts the submission batch identifier 'KITE-905' from the dispatched evidence, which is explicitly stated in the search hit: '临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。'. This matches the expectation's required value (\"KITE-905\") and value_type (\"code\"). The evidence was dispatched before answering (attempt_id matches), is attributable to a history search with provenance, contains no unsupported claims, and stays within scope. The rubric's requirements for positive answers — correct value, attribution, pre-answer dispatch, no extra claims — are all satisfied.",
+          "status": "passed"
+        },
+        "receipt_sha256": "9cf2e6c1dfc9f8e905a741eaeef9dbae570d0f95ef29e1d7c0d3662ffd5a7ef7",
+        "replicate": 1,
+        "sample_id": "case-08",
+        "tokens": 8989
+      },
+      {
+        "call": "calls/016",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly extracts and states the submission batch flag 'KITE-905' and handover point '西拱门第二排' from the dispatched evidence — specifically, the visible search hit containing the exact string '临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。'. This matches the expectation's required value 'KITE-905' (code-type) and is properly attributed to the history record. The search coverage confirms two hits in the indexed history, one of which is the exact source sentence; the query '临时地质展' scanned all 6 records, and next_cursor=null confirms full coverage of the indexed range. No unsupported claims are made, and the answer scope aligns precisely with the question ('之前临时地质展说的提交批次标志和交接点是什么？'). Evidence was dispatched before answering, satisfying the rubric's requirement for correct value, attribution, and bounded, authoritative support.",
+          "status": "passed"
+        },
+        "receipt_sha256": "f580a6e51038e6aa2f3bbcff1a23275f92abedec622267c4a113f989ffe70faa",
+        "replicate": 1,
+        "sample_id": "case-08",
+        "tokens": 10177
+      },
+      {
+        "call": "calls/033",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer claims to have found information 'in the historical records' and quotes verbatim the source text, but the expectation is a strict value extraction: only 'KITE-905' (as a code). The answer instead provides a full natural-language response with attribution, extra claims (e.g., stating both flag and handover point), and formatting (**KITE-905**, **西拱门第二排**), violating the rubric's requirement for a positive answer to deliver *only* the correct value with correct attribution — no unsupported extra claims or scope/state violations. While the evidence *does* contain the correct value (visible in the search hit's 'text' field), the answer fails by delivering excess content beyond the expected single code value.",
+          "status": "failed"
+        },
+        "receipt_sha256": "e48944c28954b4330aa8086aab748c5e36744b7ce2ce086de77df9186cd95bbe",
+        "replicate": 2,
+        "sample_id": "case-08",
+        "tokens": 10132
+      },
+      {
+        "call": "calls/034",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The dispatched evidence contains the exact string '临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。', which directly supports the expected value 'KITE-905' of type 'code'. The search was performed over history, found 2 hits (including this one), and the match is verifiably present in the visible search excerpt. Attribution is correct (from history), no unsupported claims are made, and the answer scope matches the question. All rubric requirements for a positive answer are satisfied.",
+          "status": "passed"
+        },
+        "receipt_sha256": "170bb4726c017822784357f290e24ed03235fe4c89d2d0938c3a37af153ae080",
+        "replicate": 2,
+        "sample_id": "case-08",
+        "tokens": 8966
+      }
+    ]
+  },
+  {
+    "answer_origin": "synthetic-contrast",
+    "basis": "appropriately scoped negative; no exhaustive search required",
+    "case_id": "s-absent",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "3b332cf9d55465db6f376f3e64be9127b68a3f9e5cd9038475211c7b74ca0435",
+      "frozen_digest": "1f2126759a6ae6fea3364fd84f503d569cffc9d50a52a9e2d3daed26baa6071f",
+      "report_digest": "1aca5d64968a35e7ff4f857b437fc9dd04519a52e09442337da36b28c61dd349",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "eff29beb-5a29-456e-9112-d468e010ef30",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\development\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run",
+    "original_trial_id": "e71301b6b55965b8245df65dc03ab4a7c871d601571e0f68afc544e8ee6bd00a",
+    "sample_id": "case-09",
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "answer": "在当前可见的目录元数据和搜索结果中，我没有找到车辆加油折扣码的规定。未读取完整正文，不能据此断言整本手册不存在这项规定。",
+    "observations": [
+      {
+        "call": "calls/017",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states that no evidence of '车辆加油折扣码' (vehicle fuel discount codes) was found in the visible directory metadata and search results, and explicitly qualifies that absence in the searched scope does not prove global absence — aligning with the expectation of 'no-evidence' for reference_id 'manual-593410eb3c'. The source_text '本手册说明档案整理工作。' confirms the manual's domain is archival work, making fuel discount codes out-of-scope. Two authoritative searches ('车辆加油' and '加油') over all 32 sections returned no hits, and the section-23 read confirms the title/summary is '档案整理操作手册' and '档案整理操作手册', respectively — no mention of vehicles, fuel, or discounts. The answer makes no unsupported claims, does not invent values, and respects the rubric's requirement for scoped negation.",
+          "status": "passed"
+        },
+        "receipt_sha256": "f00d1573035eea5f6017019e0608c836733ad1eedf0be2814de5ace809ce018a",
+        "replicate": 1,
+        "sample_id": "case-09",
+        "tokens": 8912
+      },
+      {
+        "call": "calls/018",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states that no regulation about vehicle fuel discount codes was found in the currently visible directory metadata and search results, and explicitly qualifies that the full manual body was not read — thus avoiding overstatement of global absence. This aligns with the visible evidence: (1) the skill directory shows only generic 'ordinary equipment registration' sections and a section-23 titled 'Archival Sorting Operation Manual' with summary 'archival sorting operation manual'; (2) the visible section body is the single sentence '本手册说明档案整理工作。' ('This manual explains archival sorting work.'); (3) two navigation-level searches for '车辆加油' and '加油' returned no hits across all 32 navigation records, and both have proves_global_absence=false, confirming the search was limited to metadata fields (id/title/summary/tags), not full text; (4) the expectation is 'no-evidence', and the answer makes no positive claim nor invents content — it accurately reflects the scope and limits of the dispatched evidence. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "86ac322b4a95a4c28a4f893aa4bce597fb5242cb557b38b6d82a7f7510064af2",
+        "replicate": 1,
+        "sample_id": "case-09",
+        "tokens": 10794
+      },
+      {
+        "call": "calls/031",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states that no regulation about vehicle fuel discount codes was found in the currently visible directory metadata and search results, and explicitly qualifies that the full manual body was not read — thus avoiding overstatement of global absence. This aligns with the visible evidence: (1) the skill directory shows only generic 'ordinary equipment registration' sections and a section-23 titled 'Archival Sorting Operation Manual' with summary '档案整理操作手册'; (2) the visible section excerpt states '本手册说明档案整理工作。' (This manual explains archival sorting work.); (3) two navigation-level searches for '车辆加油' and '加油' both returned no hits across all 32 navigation records, with proves_global_absence=false, confirming only metadata (id/title/summary/tags) was searched, not full text; (4) the expectation is 'no-evidence', and the answer makes no positive claim nor invents content — it accurately reflects the limited scope of examined evidence. No unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "bad40bbd2d901cc8bfca0cf979eb1f19f1b5121e0b6385392fcf3172e0f7aeeb",
+        "replicate": 2,
+        "sample_id": "case-09",
+        "tokens": 10786
+      },
+      {
+        "call": "calls/032",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer correctly states that no evidence of '车辆加油折扣码' (vehicle fuel discount codes) was found in the visible directory metadata and search results, and explicitly qualifies that absence in the searched scope does not prove global absence — aligning with the expectation of 'no-evidence' for reference_id 'manual-593410eb3c'. The manual's stated purpose ('本手册说明档案整理工作。') and its section summaries (all about '普通器材登记' — ordinary equipment registration) confirm topical irrelevance. Two authoritative searches ('车辆加油' and '加油') over all 32 catalog entries returned zero hits, and the only admitted section content ('section-23') is titled '档案整理操作手册' with summary '档案整理操作手册', reinforcing domain mismatch. The answer makes no unsupported claims, avoids inventing values, and respects scope boundaries — satisfying the rubric.",
+          "status": "passed"
+        },
+        "receipt_sha256": "a2c326c34bcc2017800a1ce988803c26c719736991c852dcebf5621c75c4ed0b",
+        "replicate": 2,
+        "sample_id": "case-09",
+        "tokens": 8911
+      }
+    ]
+  },
+  {
+    "answer_origin": "synthetic-contrast",
+    "basis": "appropriately scoped negative; no exhaustive search required",
+    "case_id": "stamp-catalog",
+    "expected": "passed",
+    "original_binding": {
+      "evidence_digest": "c1df02f71c383eafc09b81e7ac18b773c3ac0c2970bf01c3f49aaf51d67d7fe3",
+      "frozen_digest": "e2f0024d5ee903fa1250f4ecd52c4936883d553a20453024cedb153f6d3ed926",
+      "report_digest": "5807ea6e0585a62bcb8026b32ca8e610e3eb6e02470182cdb6c40b33b2ad581e",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "3aded73c-81ca-45d1-9af0-37730e74789b",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\01\\run",
+    "original_trial_id": "b6e9fc7bc1bec96b3033d93282aca6ff182603edde49bb7e64c4ecfd1bdf4ed6",
+    "sample_id": "case-10",
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "answer": "当前展示的目录摘要未给出停车券价格；仅凭这些资料无法确认规范全文是否写了价格，也无法给出金额。",
+    "observations": [
+      {
+        "call": "calls/019",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a Skill directory metadata object for 'stamp-catalog.manual', containing only section titles and summaries (e.g., '条目登记', '清洁登记 0'–'9'), none of which mention parking coupons or pricing. The answer correctly states that the provided directory summary does not give the parking coupon price, and that the available material is insufficient to confirm whether the full规范 contains such information — matching the expectation of 'no-evidence'. No unsupported claims are made, no value is invented, and the scope is properly limited to what is disclosed in the directory-tier reference. No search or read was needed because the directory body explicitly lacks any content referencing parking coupons or prices.",
+          "status": "passed"
+        },
+        "receipt_sha256": "469873929cf58f50083464c287de0a23862c5b293e24ca4d9016b165295cd614",
+        "replicate": 1,
+        "sample_id": "case-10",
+        "tokens": 3309
+      },
+      {
+        "call": "calls/020",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer states that the displayed directory summary does not give the parking coupon price, and that the available materials are insufficient to confirm whether the full specification mentions a price or what amount it specifies. This is fully supported by the visible evidence: the sole visible Skill directory (stamp-catalog.manual) contains only navigation metadata — section titles, summaries, byte counts, and no actual content bodies — and none of the section titles or summaries mention '停车券' (parking coupon) or pricing. The evidence_scope confirms 'navigation-metadata-only' extent, and no search or read was dispatched. The answer makes no unsupported claims, does not invent a value, and correctly limits its conclusion to the scope of the admitted evidence. It aligns with the expectation of 'no-evidence' and satisfies the rubric’s requirement for negative answers: it avoids overstating local absence as global absence and grounds its conclusion in the actual visible navigation metadata.",
+          "status": "passed"
+        },
+        "receipt_sha256": "1e70d604b1ba5c0786e3ea2fe8a68f3e19cec2236f68ab75046e393f577e75d0",
+        "replicate": 1,
+        "sample_id": "case-10",
+        "tokens": 3947
+      },
+      {
+        "call": "calls/029",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer correctly states that the visible directory metadata (navigation-only, tier=directory) does not provide the parking coupon price, and accurately qualifies that this limited view is insufficient to confirm whether the full规范 contains such information. It makes no unsupported claims, invents no value, and does not overstate absence — it explicitly limits its conclusion to 'these materials' and 'cannot confirm'. The visible_evidence contains only a JSON directory summary with section titles/summaries (e.g., '条目登记', '清洁登记 0–9') and no mention of parking coupons or pricing. The evidence_scope confirms extent='navigation-metadata-only', so no deeper content was dispatched or observed. This satisfies the rubric's requirement for negative answers: no global absence claim, no invented value, scope-aligned qualification, and fidelity to actually dispatched evidence.",
+          "status": "passed"
+        },
+        "receipt_sha256": "308dc295b02f500567d350812c93da87708209f46af369ac1f972303b766a7d8",
+        "replicate": 2,
+        "sample_id": "case-10",
+        "tokens": 3930
+      },
+      {
+        "call": "calls/030",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The visible evidence is a Skill directory for 'stamp-catalog.manual' (version 1.0.0), containing only section summaries — all describing '条目登记' (entry registration) or '清洁登记' (cleaning registration), with no mention of parking coupons ('停车券') or pricing. The answer correctly states that the provided directory summary does not give the parking coupon price, and that the available material is insufficient to confirm whether the full规范 contains such information. This matches the expectation of 'no-evidence', makes no unsupported claims, does not invent a value, and respects scope: it neither asserts absence from the full document nor overgeneralizes beyond the admitted directory-level metadata.",
+          "status": "passed"
+        },
+        "receipt_sha256": "bf223e1408dab4b07363cedcd650df7d3216da6cf1a483aa74051ec19b6166d6",
+        "replicate": 2,
+        "sample_id": "case-10",
+        "tokens": 3309
+      }
+    ]
+  },
+  {
+    "answer_origin": "synthetic-contrast",
+    "basis": "correct code but wrong requested action",
+    "case_id": "restoration-room",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "2fecd11a31d4a13f7b8ad6b50b53fb0529008e622405456fc15feea1cf6fc0c6",
+      "frozen_digest": "ebd286067600b93ba47cb40d7e303495b167b329bad23a42ebd073e698b87ba4",
+      "report_digest": "a176185c006426db7f40d8d0c63f5538043d4a1a6211ccec31c13cfc9ac7425c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "0a4c9dee-4acf-40fb-b78b-a1a9d434d7a4",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\02\\run",
+    "original_trial_id": "c179c03dbfa688cb04576e2f48e9af9ce49e83eea513480620d2d3e0a51a9d23",
+    "sample_id": "case-11",
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "answer": "应报口令 RILL-682，并按下绿色复位钮。",
+    "observations": [
+      {
+        "call": "calls/021",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The dispatched evidence states '按下蓝色隔离钮' (press the blue isolation button), but the answer claims '绿色复位钮' (green reset button). This is a direct contradiction with the provided source text. The口令 RILL-682 is correctly cited, but the button color and function are incorrect per the reference.",
+          "status": "failed"
+        },
+        "receipt_sha256": "1546d118ce3aacd92b9950cc798a5eba3adf9abd13fcc1adba250d0a7d3049ca",
+        "replicate": 1,
+        "sample_id": "case-11",
+        "tokens": 5118
+      },
+      {
+        "call": "calls/022",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer states '按下绿色复位钮' (press the green reset button), but the dispatched and visible evidence explicitly says '按下蓝色隔离钮' (press the blue isolation button). This is a direct factual contradiction in a required detail. The rubric requires correct value and attribution; the button color and function are part of the expected response to the question '要报什么口令并按哪个按钮？'. The answer invents an unsupported element ('绿色复位钮') not present in the evidence, violating the instruction against unsupported extra claims.",
+          "status": "failed"
+        },
+        "receipt_sha256": "7a00c25c79bd4d7c1012ded169e8ce305fd10cd3acb8d2c19b51fca8e1c45044",
+        "replicate": 1,
+        "sample_id": "case-11",
+        "tokens": 6071
+      },
+      {
+        "call": "calls/027",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer states '按下绿色复位钮' (press the green reset button), but the dispatched and visible evidence explicitly says '按下蓝色隔离钮' (press the blue isolation button). This is a factual contradiction unsupported by the evidence. The rubric requires correct value and attribution; the button color and type are material parts of the expected response. The answer introduces an incorrect detail not present in the source text, violating the requirement to avoid unsupported extra claims.",
+          "status": "failed"
+        },
+        "receipt_sha256": "90c695a12a7a3369370334da7cf5ac7df723b951947ee0ef437707d182fc463b",
+        "replicate": 2,
+        "sample_id": "case-11",
+        "tokens": 6052
+      },
+      {
+        "call": "calls/028",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The dispatched evidence and visible evidence both state '按下蓝色隔离钮' (press the blue isolation button), but the answer claims '按下绿色复位钮' (press the green reset button). This contradicts the authoritative source text. The口令 'RILL-682' is correctly reported, but the button color and function are incorrect per the manual.",
+          "status": "failed"
+        },
+        "receipt_sha256": "7ee23bb0fc254a8118b0fce1caa043c3a49f2177ead517186ed434060ffcfe65",
+        "replicate": 2,
+        "sample_id": "case-11",
+        "tokens": 5130
+      }
+    ]
+  },
+  {
+    "answer_origin": "synthetic-contrast",
+    "basis": "correct code but omitted requested action",
+    "case_id": "restoration-room",
+    "expected": "failed",
+    "original_binding": {
+      "evidence_digest": "2fecd11a31d4a13f7b8ad6b50b53fb0529008e622405456fc15feea1cf6fc0c6",
+      "frozen_digest": "ebd286067600b93ba47cb40d7e303495b167b329bad23a42ebd073e698b87ba4",
+      "report_digest": "a176185c006426db7f40d8d0c63f5538043d4a1a6211ccec31c13cfc9ac7425c",
+      "rubric_digest": "60da87b9426407b8fe5af8a016a1388838346ec9c58c13b462171a220108d3d0",
+      "run_id": "0a4c9dee-4acf-40fb-b78b-a1a9d434d7a4",
+      "scorer_id": "retrieval-evidence-v1",
+      "scorer_version": 1
+    },
+    "original_run": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ao2-real-20260911-run2\\holdout\\arms\\02\\run",
+    "original_trial_id": "c179c03dbfa688cb04576e2f48e9af9ce49e83eea513480620d2d3e0a51a9d23",
+    "sample_id": "case-12",
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "answer": "应报口令 RILL-682。",
+    "observations": [
+      {
+        "call": "calls/023",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "model judgment was not valid protocol JSON",
+          "status": "pending_review"
+        },
+        "receipt_sha256": "c4283b26742762848c2e7369327ec059f35d66e80cdb22dea48821b8bb75f15f",
+        "replicate": 1,
+        "sample_id": "case-12",
+        "tokens": 6514
+      },
+      {
+        "call": "calls/024",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer '应报口令 RILL-682。' correctly states the required code 'RILL-682', which matches the expectation's value field. The dispatched evidence includes a visible skill chunk containing the exact source text '发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。', confirming the code is authoritative and properly attributed to 'restoration-room.manual'. The answer is scoped to the requested value (the code), makes no unsupported extra claims (e.g., does not assert anything about the button beyond what the question asked, though the question had two parts, the answer only addresses the first — but the expectation itself is solely for the value 'RILL-682', and the rubric evaluates against the expectation's kind='value'). Evidence was dispatched before answering, and the visible_evidence confirms the excerpt was admitted and matches. No scope violation or overstatement occurs.",
+          "status": "passed"
+        },
+        "receipt_sha256": "e01d6d738483c19ccd03816185f788aa498f9988a1bb1771b7109e65966469a2",
+        "replicate": 1,
+        "sample_id": "case-12",
+        "tokens": 6143
+      },
+      {
+        "call": "calls/025",
+        "condition": "revised",
+        "judgment": {
+          "reason": "The candidate answer '应报口令 RILL-682。' correctly states the required code 'RILL-682', which matches the expectation's value field and is directly supported by the dispatched evidence: the visible chunk body '发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。' contains the exact string 'RILL-682'. The evidence was successfully requested (request_skill_reference succeeded, result_seq 17) and admitted as a visible-source-excerpt. The answer is scoped to the value only (no unsupported extra claims), attributes the source implicitly via direct quotation of the manual’s content, and does not overstate scope — it answers only what was asked (the口令), consistent with the rubric’s allowance for a complete authoritative excerpt to suffice.",
+          "status": "passed"
+        },
+        "receipt_sha256": "511e84d872f0f9ca0f5669ec6ef46ea83ef541d8467794d68d7a4f388fc94d22",
+        "replicate": 2,
+        "sample_id": "case-12",
+        "tokens": 6120
+      },
+      {
+        "call": "calls/026",
+        "condition": "baseline",
+        "judgment": {
+          "reason": "The answer '应报口令 RILL-682。' correctly states the required code 'RILL-682', which matches the expectation's value field. The dispatched evidence explicitly quotes the source text '发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。' from the 'restoration-room.manual' skill, confirming both the口令 and the button (blue isolation button). The question asks for both the口令 and the button; the answer provides the口令, and the dispatched evidence contains full support for it — the rubric permits a complete authoritative excerpt as sufficient evidence, and no unsupported claims or scope violations are present.",
+          "status": "passed"
+        },
+        "receipt_sha256": "fc8ddba5aeff4b2c264e36236958b6d5422d418b28c6f7beacb8cbd683e7af51",
+        "replicate": 2,
+        "sample_id": "case-12",
+        "tokens": 5182
+      }
+    ]
+  }
+]

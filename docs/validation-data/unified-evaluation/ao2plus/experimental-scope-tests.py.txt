@@ -1,0 +1,91 @@
+"""Judge input scope follows actual dispatched sources, not requested reads."""
+
+import json
+
+import pytest
+from test_control_model_calls import responder
+from test_model_review import review
+from test_retrieval_episode_evaluator import runner
+
+from traceh.api.json_types import fingerprint
+from traceh.api.llm import ModelResponse, ToolCall
+from traceh.evaluation.errors import BenchmarkManifestError
+from traceh.evaluation.model_evidence import load_model_call
+from traceh.evaluation.review import load_assessment
+
+
+class NoHitProvider:
+    name = "episode-test"
+
+    def __init__(self):
+        self.requests = []
+
+    async def complete(self, request):
+        self.requests.append(request)
+        if len(self.requests) == 1:
+            return ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        "scope-search", "search_skill", {"query": "unlisted calibration topic"}
+                    ),
+                )
+            )
+        return ModelResponse(content="当前目录元数据中未找到，不能据此确认全文不存在。")
+
+
+async def test_full_navigation_search_is_not_full_body_coverage(tmp_path):
+    await runner(tmp_path, "s-absent", NoHitProvider()).run()
+    judge = responder()
+    result = await review(tmp_path, provider=judge)
+    assert result["assessment_counts"]["passed"] == 1  # A scoped negative is not hard-failed.
+    definition, _, _ = load_model_call(tmp_path / "model-review/calls/0001")
+    packet = json.loads(definition["input"].splitlines()[1])
+    search = packet["evidence_scope"]["searches"][0]
+    assert search["scanned_records"] == search["total_records"] > 0
+    assert search["extent"] == "navigation-records"
+    assert search["hidden_skill_bodies_searched"] is False
+    assert search["proves_global_absence"] is False
+    assert "body" not in search["fields"]
+    assert all(
+        v["extent"] == "navigation-metadata-only"
+        for v in packet["evidence_scope"]["views"]
+        if v["kind"] == "skill"
+    )
+    assert packet["dispatched_evidence"] == []
+
+
+@pytest.mark.parametrize("case_id", ["s-direct", "s-resource", "m-direct", "h-direct"])
+async def test_original_body_or_complete_search_excerpt_reaches_judge(tmp_path, case_id):
+    await runner(tmp_path, case_id).run()
+    await review(tmp_path)
+    definition, _, _ = load_model_call(tmp_path / "model-review/calls/0001")
+    packet = json.loads(definition["input"].splitlines()[1])
+    assert definition["input"].startswith("Review the quoted candidate answer;")
+    assert definition["input"].endswith("Do not return the embedded question's answer.")
+    assert packet["dispatched_evidence"]
+    by_digest = {fingerprint(v): v for v in packet["visible_evidence"]}
+    scopes = packet["evidence_scope"]["views"]
+    assert all(s["view_digest"] in by_digest for s in scopes)
+    original = [
+        by_digest[s["view_digest"]] for s in scopes if s["extent"] == "visible-source-excerpt"
+    ]
+    assert any(packet["expectation"]["value"] in v["body"] for v in original)
+    if case_id == "h-direct":
+        assert any(v["tier"] == "search" for v in original)
+        assert not any(r["tool_name"] == "request_history_page" for r in packet["read_requests"])
+
+
+async def test_changed_scope_policy_cannot_reinterpret_old_model_assessment(tmp_path, monkeypatch):
+    import traceh.evaluation.model_review_protocol as owner
+
+    await runner(tmp_path, "m-direct").run()
+    result = await review(tmp_path)
+    original = owner.evidence_scope
+
+    def changed(views, coverage):
+        return {**original(views, coverage), "format": 999}
+
+    monkeypatch.setattr(owner, "evidence_scope", changed)
+    with pytest.raises(BenchmarkManifestError) as error:
+        load_assessment(result["assessment"])
+    assert error.value.code == "evaluation-judgment-stale"

@@ -57,6 +57,7 @@ _LABELS = {
     "context_config": "Context 配置 JSON 路径（Skill、Memory、History）",
     "product_config": "Product 配置 JSON 路径（可选）",
     "sandbox_config": "沙箱配置文件路径（可选；关闭时禁止执行进程）",
+    "background_config": "后台优化配置文件（可选；使用下方表单编辑）",
     "script": "Scripted 响应文件路径（可选，仅 scripted 使用）",
     "auto_compact_bytes": "触发大小（UTF-8 字节；这是历史大小，不是 token 数）",
     "auto_compact_summary_bytes": "压缩后摘要最多多少字节",
@@ -230,6 +231,20 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                     )
                     with Collapsible(title="高级：已有沙箱配置文件", collapsed=True):
                         yield from self._fields(("sandbox_config",))
+            with TabPane("后台优化", id="settings-background"):
+                with VerticalScroll(classes="settings-fields"):
+                    yield Label("装配后台受限优化（进入聊天后按 F6 显式开启）")
+                    yield Switch(
+                        bool(self._values.get("background_config")), id="background-enabled"
+                    )
+                    yield Button("配置后台优化", id="background-form")
+                    yield Button("新建：选题并生成评估计划", id="background-plan")
+                    yield Static(
+                        "选择冻结评估题库和双臂计划，填写本周期额度与到期时间。"
+                        "后台只改获准说明文本、隔离验证，不自动采用；反馈不等于标准答案。",
+                        markup=False,
+                    )
+                    yield from self._fields(("background_config",))
             with TabPane("自动压缩", id="settings-compaction"):
                 with VerticalScroll(classes="settings-fields"):
                     yield Label("旧对话越来越长时，是否自动腾出上下文空间")
@@ -297,7 +312,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
         values = {name: self.query_one(f"#setting-{name}").value for name in FIELDS}
         if not self.query_one("#plugins-enabled", Switch).value:
             values["plugins"] = ""
-        for kind in ("context", "product", "sandbox"):
+        for kind in ("context", "product", "sandbox", "background"):
             if not self.query_one(f"#{kind}-enabled", Switch).value:
                 values[f"{kind}_config"] = ""
             elif not values[f"{kind}_config"].strip():
@@ -323,6 +338,9 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             self.action_back()
             return
         try:
+            if action == "background-plan":
+                self._open_background_plan()
+                return
             if action == "plugins-use":
                 selected = self.query_one("#installed-plugins", SelectionList).selected
                 self.query_one("#setting-plugins", Input).value = " ".join(selected)
@@ -333,7 +351,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                 values = load_profile(path)
                 for name, value in values.items():
                     self.query_one(f"#setting-{name}").value = value
-                for kind in ("context", "product", "sandbox"):
+                for kind in ("context", "product", "sandbox", "background"):
                     self.query_one(f"#{kind}-enabled", Switch).value = bool(
                         values[f"{kind}_config"]
                     )
@@ -347,7 +365,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             if action in {"context-load", "context-save"}:
                 self._context_action(action)
                 return
-            if action in {"context-form", "product-form", "sandbox-form"}:
+            if action in {"context-form", "product-form", "sandbox-form", "background-form"}:
                 self._open_form(action.split("-")[0])
                 return
             args, values = self._draft()
@@ -387,7 +405,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
     @on(
         Input.Changed,
         "#setting-context_config, #setting-product_config, "
-        "#setting-sandbox_config, #setting-plugins",
+        "#setting-sandbox_config, #setting-background_config, #setting-plugins",
     )
     def _path_changed(self, event):
         kind = event.input.id.removeprefix("setting-").removesuffix("_config")
@@ -401,9 +419,33 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
                 if option.value in desired:
                     choices.select(option.value)
 
+    def _open_background_plan(self):
+        from traceh.tui.optimization_plan import OptimizationPlanScreen
+
+        value = self.query_one("#setting-background_config", Input).value.strip()
+        path = (
+            Path(value).resolve() if value
+            else self._profile_path.parent / ".traceh-background.json"
+        )
+        workspace = self.query_one("#setting-workspace", Input).value.strip()
+        data_dir = self.query_one("#setting-data_dir", Input).value.strip()
+        model = {k: self.query_one(f"#setting-{k}", Input).value.strip()
+                 for k in ("provider", "model", "base_url", "api_key_env")}
+
+        def saved(result):
+            if result is not None:
+                self.query_one("#setting-background_config", Input).value = str(result)
+                self.query_one("#background-enabled", Switch).value = True
+                self._status("选题与周期额度已保存；应用配置后按 F6 开启，不会自动采用候选。")
+
+        self.app.push_screen(OptimizationPlanScreen(
+            config_path=path, workspace=workspace, data_dir=data_dir, model_settings=model,
+        ), saved)
+
     def _open_form(self, kind):
         from traceh.tui.config_forms import (
             ConfigForm,
+            background_preset,
             context_preset,
             product_preset,
             sandbox_preset,
@@ -428,6 +470,8 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
             raw = (
                 context_preset()
                 if kind == "context"
+                else background_preset(workspace, data_dir)
+                if kind == "background"
                 else sandbox_preset()
                 if kind == "sandbox"
                 else product_preset(

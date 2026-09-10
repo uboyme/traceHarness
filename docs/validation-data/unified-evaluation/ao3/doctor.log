@@ -1,0 +1,13 @@
+{
+  "python": "3.12.7",
+  "python_supported": true,
+  "data_dir": "C:\\Users\\caojie\\AppData\\Local\\Temp\\traceh-v011-release-l_62d8a4\\doctor-data",
+  "data_dir_writable": true,
+  "env_file": "C:\\Users\\caojie\\AppData\\Local\\Temp\\traceh-v011-release-l_62d8a4\\empty.env",
+  "env_file_loaded": true,
+  "provider": "scripted",
+  "model": null,
+  "base_url": null,
+  "api_key_env": "OPENAI_API_KEY",
+  "openai_key_present": false
+}

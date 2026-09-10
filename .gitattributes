@@ -1,6 +1,18 @@
 # Immutable evaluation evidence keeps the recorded bytes on every checkout.
 docs/validation-data/active-retrieval/** -text whitespace=cr-at-eol
+docs/validation-data/unified-evaluation/** -text whitespace=cr-at-eol
+docs/validation-data/unified-evaluation/**/*.txt whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+docs/validation-data/unified-evaluation/**/*.xml whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+# Verbatim terminal logs and rendered original answers keep their source whitespace.
+docs/validation-data/unified-evaluation/**/*.log whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+docs/validation-data/unified-evaluation/**/cases.md whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
 # Captured pytest output and patches intentionally contain trailing whitespace.
 docs/validation-data/active-retrieval/**/*.txt whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
 docs/validation-data/active-retrieval/**/*.diff whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
 docs/validation-data/active-retrieval/**/*.xml whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
+# Benchmark manifests now bind exact material bytes; checkout must preserve them.
+benchmarks/product_v1/*.json -text whitespace=cr-at-eol
+benchmarks/product_v1/*/initial/** -text whitespace=cr-at-eol
+benchmarks/retrieval_v1/*.json -text whitespace=cr-at-eol
+benchmarks/retrieval_v1/initial/** -text whitespace=cr-at-eol
+benchmarks/retrieval_episodes_v1/** -text whitespace=cr-at-eol

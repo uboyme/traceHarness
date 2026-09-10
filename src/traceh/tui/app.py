@@ -163,6 +163,7 @@ class TracehTuiApp(App[int | RestartChat]):
         Binding("ctrl+x", "context", "上下文", priority=True),
         Binding("f2", "settings", "配置", priority=True),
         Binding("f4", "memory_panel", "项目记忆", priority=True),
+        Binding("f6", "optimization", "后台优化", priority=True),
         Binding("ctrl+o", "sessions", "历史对话", priority=True),
         Binding("escape", "cancel_confirmation", "取消确认", show=False),
     ]
@@ -233,10 +234,12 @@ class TracehTuiApp(App[int | RestartChat]):
         product: ProductChatHost | None,
         clock: Clock,
         settings_args: Namespace | None = None,
+        background=None,
     ) -> None:
         super().__init__()
         self.theme = "textual-light"
         self._settings_args = settings_args
+        self._background = background
         self._restart_request: RestartChat | None = None
         self._runtime = runtime
         self._opened = opened
@@ -349,6 +352,7 @@ class TracehTuiApp(App[int | RestartChat]):
         restored = await self._restore_conversation()
         if self._product is not None:
             await self._restore_product()
+        if self._product is not None or self._background is not None:
             self._pulse_task = asyncio.create_task(
                 self._pulse(), name="traceh-tui-presentation-pulse"
             )
@@ -457,6 +461,9 @@ class TracehTuiApp(App[int | RestartChat]):
         if text == "/settings":
             await self.action_settings()
             return
+        if text == "/optimize":
+            await self.action_optimization()
+            return
         if text == "/sandbox":
             self._launch(self._show_sandbox(), name="sandbox-inspection")
             return
@@ -557,7 +564,11 @@ class TracehTuiApp(App[int | RestartChat]):
         self._refresh_product_view()
 
     async def _own_operation(self, operation: Coroutine[Any, Any, None]) -> None:
+        started = False
         try:
+            if self._background is not None:
+                await self._background.foreground(True)
+            started = True
             await operation
         except asyncio.CancelledError:
             raise
@@ -566,6 +577,10 @@ class TracehTuiApp(App[int | RestartChat]):
             self._operation_error = operation_error_view(code)
             self._write_system(f"宿主操作未完成（{code}）。右侧保留了可核对的状态。")
         finally:
+            if not started:
+                operation.close()
+            if self._background is not None:
+                await self._background.foreground(False)
             if self._operation_task is asyncio.current_task():
                 self._operation_task = None
                 self._operation_name = ""
@@ -681,6 +696,13 @@ class TracehTuiApp(App[int | RestartChat]):
         outcome = await self._chat_driver.run_turn(
             prepared.turn_input if prepared is not None else text
         )
+        if self._background is not None and outcome.result is not None:
+            try:
+                await self._background.observe_completed_turn(
+                    self._session.session_id, outcome.result.turn_id
+                )
+            except Exception:
+                self._write_system("本轮回复已完成，但后台观察未记录；请按 F6 查看额度与状态。")
         if outcome.result is None or prepared is None or self._product is None:
             if prepared is not None and self._product is not None:
                 await self._product.discard_turn(self._session.session_id, None)
@@ -911,6 +933,8 @@ class TracehTuiApp(App[int | RestartChat]):
             if not self.is_mounted:
                 return
             now = self._clock.monotonic()
+            if self._background is not None and not self._busy and not self._ui_closing:
+                await self._background.kick()
             if self._observer is None and not self._busy and now >= self._next_product_discovery_at:
                 await self._retry_product_observation()
             self._refresh_product_view()
@@ -1202,6 +1226,14 @@ class TracehTuiApp(App[int | RestartChat]):
             return
         await self.push_screen(ContextScreen(self._context_reader, self._session.session_id))
 
+    async def action_optimization(self) -> None:
+        if self._background is None:
+            self._write_system("后台优化未配置；按 F2，在后台优化页选择评估计划与额度。")
+            return
+        from traceh.tui.optimization import OptimizationScreen
+
+        await self.push_screen(OptimizationScreen(self._background, self._session.session_id))
+
     async def action_settings(self) -> None:
         if self._ui_closing or self._busy or self._confirmation_action is not None:
             self._write_system("请等待当前操作收敛或先完成权限确认，再打开配置。")
@@ -1341,6 +1373,8 @@ class TracehTuiApp(App[int | RestartChat]):
             operation.cancel()
             await await_worker_convergence(operation)
         self._shutdown_states["operation"] = "已收敛"
+        if self._background is not None:
+            failed |= await self._close_stage("background", self._background.aclose)
         failed |= await self._close_stage("driver", self._chat_driver.aclose)
         failed |= await self._close_stage("observer", self._close_observer)
         if self._product is not None:
@@ -1393,6 +1427,8 @@ class TracehTuiApp(App[int | RestartChat]):
         if operation is not None and not operation.done():
             operation.cancel()
             await await_worker_convergence(operation)
+        if self._background is not None:
+            await self._background.aclose()
         await self._chat_driver.aclose()
         await self._close_observer()
 

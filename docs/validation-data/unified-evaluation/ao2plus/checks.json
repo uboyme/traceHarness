@@ -1,0 +1,55 @@
+{
+  "current_production_source_digest": "16c3ae284b5d42028f38cfbf1d0560e52ed0cd3da482c7702f582a3709ac03c0",
+  "all_production_source_identical_to_pre_stage": true,
+  "final_targeted": {
+    "tests": 116,
+    "failures": 0,
+    "errors": 0,
+    "new_offline_checks": 6
+  },
+  "experimental_only": {
+    "scope_candidate_tests": 116,
+    "final_framing_candidate_tests": 47,
+    "tests_archived_not_active": true
+  },
+  "reverse_checks": {
+    "scope_extent": "expected assertion failure",
+    "evidence_substitution": "expected missing-rejection failure",
+    "both_restored": true
+  },
+  "compileall_src_tests": "passed",
+  "collect_only_count": 3965,
+  "ruff_changed_python": "passed",
+  "git_diff_check": "passed",
+  "anti_hardcoding": "passed; domain strings confined to explicit development fixtures and archived evidence; production identical",
+  "documents": {
+    "files": [
+      "README.md",
+      "CHANGELOG.md",
+      "docs\\note\\project-context.md",
+      "docs\\note\\project-context-plain-zh.md",
+      "docs\\plan\\TRACEHARNESS_UNIFIED_EVALUATION_AND_OPTIMIZATION_DESIGN.md",
+      "docs\\plan\\TRACEHARNESS_OPTIMIZATION_AO2_PLUS_CONTRACT.md",
+      "docs\\deal\\025-semantic-judge-calibration.md",
+      "tests\\live_optimization\\README.md",
+      "docs\\validation-data\\unified-evaluation\\ao2plus\\README.md"
+    ],
+    "matching_sections_0_to_20": true,
+    "relative_links": "passed",
+    "fences": "closed; new record has no new Mermaid flow",
+    "actual_credential_scan": "passed-recursive-in-memory-no-key-written"
+  },
+  "not_run": [
+    "full pytest",
+    "L2",
+    "L3",
+    "L4",
+    "Wheel",
+    "package install",
+    "new retrieval episodes",
+    "commit",
+    "push",
+    "tag",
+    "release"
+  ]
+}

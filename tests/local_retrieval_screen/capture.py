@@ -10,7 +10,7 @@ from unittest.mock import patch
 from skill_fixtures import discovery
 from test_product_benchmark_e2e import PRODUCT_MODEL_ID, _ProductProvider
 
-from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.evaluation.runner import EvaluationRunner
 from traceh.session.retrieval import block_identity
 
 
@@ -99,13 +99,13 @@ async def capture(repository, output):
             (context.ContextInputService, "freeze", observe_freeze),
         ):
             patches.enter_context(patch.object(owner, name, replacement))
-        runner = ProductBenchmarkRunner(
+        runner = EvaluationRunner(
             repository / "benchmarks/retrieval_v1",
             output / "baseline",
             provider=_ProductProvider(),
             model_id=PRODUCT_MODEL_ID,
         )
-        report = await runner.run()
+        report = (await runner.run()).task_report
     if len(report.attempts) != 11 or not all(
         item.success
         and item.retrieval

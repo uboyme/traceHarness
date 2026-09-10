@@ -1,0 +1,11 @@
+{
+  "original_assessments_reopened": 4,
+  "experimental_assessments_rejected_under_restored_policy": 4,
+  "rejection_codes": [
+    "evaluation-judgment-stale",
+    "evaluation-judgment-stale",
+    "evaluation-judgment-stale",
+    "evaluation-judgment-stale"
+  ],
+  "new_provider_calls": 0
+}

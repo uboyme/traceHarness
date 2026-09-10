@@ -1,0 +1,62 @@
+{
+  "action": "review_candidate",
+  "reason": "development-candidate-qualified",
+  "cost": {
+    "analysis": {
+      "attempts": 1,
+      "estimated_attempts": 0,
+      "input_tokens": 5532,
+      "known_subtotal": {
+        "input_tokens": 5532,
+        "output_tokens": 410,
+        "total_tokens": 5942
+      },
+      "output_tokens": 410,
+      "total_tokens": 5942,
+      "unknown_attempts": 0
+    },
+    "review_calls": 4,
+    "review_tokens": 31991
+  },
+  "changes": {
+    "gain": 1,
+    "loss": 0,
+    "unchanged": 1,
+    "unknown": 0
+  },
+  "arms": [
+    {
+      "planned": 2,
+      "assessment_counts": {
+        "passed": 1,
+        "failed": 1
+      },
+      "passed_over_planned": 0.5,
+      "assessable": 2,
+      "cost": {
+        "total_tokens": 34376,
+        "tool_calls": 4
+      }
+    },
+    {
+      "planned": 2,
+      "assessment_counts": {
+        "passed": 2
+      },
+      "passed_over_planned": 1.0,
+      "assessable": 2,
+      "cost": {
+        "total_tokens": 28090,
+        "tool_calls": 3
+      }
+    }
+  ],
+  "reopen": {
+    "sessions": 10,
+    "requests": 21,
+    "recorded_model_attempts": 21,
+    "failed_attempts": 0,
+    "total_tokens": 125128,
+    "original_files_unchanged": 759
+  }
+}

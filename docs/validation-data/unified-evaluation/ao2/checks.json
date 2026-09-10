@@ -1,0 +1,27 @@
+{
+  "targeted_current_tests": 193,
+  "all_current_targeted_latest_passed": true,
+  "ao2_new_tests": 22,
+  "bulk": {
+    "tests": 193,
+    "failures": 2,
+    "resolved": "ProviderFailure normalization assertion; explicit AO caller architecture allowance"
+  },
+  "after_fixes": {
+    "tests": 39,
+    "failures": 0
+  },
+  "full_collection_only": 3959,
+  "full_suite_executed": false,
+  "L2_L4_executed": false,
+  "compileall": "passed",
+  "changed_ruff": "passed",
+  "example_scan": "passed; current example/model/platform strings absent from production additions",
+  "reverse_guards": 3,
+  "real_requests_replayed": 63,
+  "real_provider_calls": 63,
+  "real_tokens": 327963,
+  "doc_checks": "passed: 0-20 corresponding chapters, 800 local links, 69 closed Mermaid blocks",
+  "git_diff_check": "passed",
+  "git_history_changed": false
+}

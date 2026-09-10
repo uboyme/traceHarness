@@ -24,7 +24,7 @@ canonical owner、权限、source boundary 或旧数据拒绝须同步 ADR／合
 | [`TurnInput`](../../src/traceh/api/turns.py)、`ChatDriver`、`request_history_page` Tool | typed 宿主请求透传、原 Session owner 写入；普通 PURE_READ Tool 只返回 receipt | Driver / Tool / Session，F0-C 已完成 |
 | [`SqliteEventStore`](../../src/traceh/session/sqlite.py) | 受控 derived index、schema、worker/close/backup | Store / F2 |
 | [`product/runtime`](../../src/traceh/product/runtime.py)、[`workspaces/supervision`](../../src/traceh/workspaces/supervision.py) | 原创建链首次执行前核对项目继承；不复制生命周期 | 宿主装配 + ProjectScope / F3 |
-| [`evaluation/attempt`](../../src/traceh/evaluation/attempt.py)、[`metrics`](../../src/traceh/evaluation/metrics.py) | 原 attempt 装载语料和收敛；读取 Context 计量 | Evaluation / F5 |
+| [`evaluation/attempt`](../../src/traceh/evaluation/attempt.py)、[`metrics`](../../src/traceh/evaluation/evaluators/product_metrics.py) | 原 attempt 装载语料和收敛；读取 Context 计量（UE-1 迁移后文件位置） | Evaluation / F5 |
 
 下图保留 F0-B/C 与 F2 接入的请求链和 History 来源／授权入口。只有显式配置才开放
 当前 Session 的分页读取。F1 接入目录与资源，F2 接入宿主选择、索引与披露，详见 §14；当前 Memory 接入见 §16，精度修订见 §18：

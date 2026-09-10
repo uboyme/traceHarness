@@ -8,6 +8,7 @@ from pathlib import Path
 from promotion_fixtures import (
     build_source_repository,
     make_bare_target,
+    promotion_service,
     promotion_targets,
     verification_plan,
 )
@@ -20,7 +21,6 @@ from traceh.api.promotion import VerifierCommand
 from traceh.api.workflow import WorkflowDefinition
 from traceh.api.workspaces import WorkspaceAccess, WorkspaceProvisioningRequest
 from traceh.artifacts import LocalArtifactCas, PatchCaptureService
-from traceh.artifacts.reader import PatchArtifactReader
 from traceh.promotion import PatchPromotionService
 from traceh.session.event_store import InMemoryEventStore
 from traceh.supervision import ProcessAgentSupervisor
@@ -123,13 +123,11 @@ class WorkflowAssembly:
 def workflow_plan(marker: str = "workflow"):
     """A fixed host plan that passes only when the Agent's edit really landed."""
 
-    import sys
-
     return verification_plan(
         VerifierCommand(
             command_id="edit-present",
             argv=(
-                sys.executable,
+                "python",
                 "-c",
                 _CHECK_PROGRAM.replace("MARKER", marker),
             ),
@@ -183,9 +181,9 @@ def build_assembly(
     )
     cas = LocalArtifactCas(tmp_path / "cas")
     capture = PatchCaptureService(supervisor, workspaces, cas, limits=_limits())
-    promotion = PatchPromotionService(
+    promotion = promotion_service(
         store,
-        PatchArtifactReader(store, cas),
+        cas,
         promotion_targets("main-target", target),
         plan=workflow_plan() if plan is None else plan,
     )

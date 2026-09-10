@@ -3,7 +3,7 @@
 这是显式开发诊断，不是产品 Runner、新检索事实源或默认模型配置；不会被 pytest 自动调用，也不访问
 真实 Provider。`cases.json` 是候选评分前冻结的试验输入，不进入模型可写的工作区。
 
-`capture.py` 调用原 ProductBenchmarkRunner，沿用原 11 题、Plugin 生命周期、Memory authority、
+`capture.py` 调用唯一 EvaluationRunner / ProductTaskEvaluator，沿用原 11 题、Plugin 生命周期、Memory authority、
 SQLite 索引、Context、预算与确定性 Provider。与原具名测试相同，只用源码 Entry Point 替代已安装包
 的发现元数据；不安装包。观察包装原样返回原结果，以 ContextVar 隔离每次原 freeze 的记录。
 原评估报告、SQLite 和捕获的获准内容保留在显式输出目录。
@@ -43,3 +43,5 @@ python tests/local_retrieval_screen/screen.py run --freeze <冻结文件> --capt
 
 本次四个候选均未达到预注册的语言质量和增益门槛，保持生产语义/重排关闭。原 Runtime 基线与独立
 核算通过。详细结果与首次查询规范化对齐失败保留在 [C3 记录](../../docs/validation-v0.9-stop-c-c3.md)。
+
+UE-1 公共报告将原 Product 结果放在 task_report；采集入口已同步，历史离线分析工件保留原格式。

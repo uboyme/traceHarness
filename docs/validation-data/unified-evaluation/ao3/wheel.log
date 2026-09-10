@@ -1,0 +1,9 @@
+Processing c:\users\caojie\appdata\local\temp\traceh-v011-release-l_62d8a4\build-source
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: traceharness-py
+  Building wheel for traceharness-py (pyproject.toml): started
+  Building wheel for traceharness-py (pyproject.toml): finished with status 'done'
+  Created wheel for traceharness-py: filename=traceharness_py-0.11.0-py3-none-any.whl size=1066665 sha256=069baf3103c278f055c17d0e6677ab5409a0ccf9fb4fbe81f01abcb9b25aa8fa
+  Stored in directory: c:\users\caojie\appdata\local\pip\cache\wheels\98\8b\a8\29ac4f3edd519d12eae3aeae9967102b2d3a16e2085d4aeb10
+Successfully built traceharness-py

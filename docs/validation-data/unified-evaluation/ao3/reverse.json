@@ -1,0 +1,24 @@
+{
+  "source_sha256": "cc647a27199959bb0c875ffe631ab8517d4225afb7925d359f9bf5e677a752f6",
+  "restored": true,
+  "results": [
+    {
+      "guard": "startup-settlement",
+      "test": "test_close_immediately_after_admission_still_settles_owned_episode",
+      "exit_code": 1,
+      "expected_root_failure": true
+    },
+    {
+      "guard": "scope",
+      "test": "test_background_scope_and_enable_are_enforced_before_analysis",
+      "exit_code": 1,
+      "expected_root_failure": true
+    },
+    {
+      "guard": "period-quota",
+      "test": "test_period_episode_limit_survives_new_feedback_and_host_restart",
+      "exit_code": 1,
+      "expected_root_failure": true
+    }
+  ]
+}

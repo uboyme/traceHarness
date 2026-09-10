@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "purpose": "UE-4 auxiliary controls; explicit fixture, outside the 72-case denominator",
+  "skill": {
+    "plugin_id": "control.reference",
+    "skill_id": "handover.procedure",
+    "version": "1.0.0",
+    "title": "设备交接操作手册",
+    "summary": "设备交接的标准操作规程。",
+    "section_id": "identity",
+    "section_title": "交接核验码",
+    "section_summary": "交接时如何核对身份。",
+    "body": "标准设备交接规程规定，交接核验码为 SKL-Q2P6。此值只描述手册规程。",
+    "value": "SKL-Q2P6"
+  },
+  "memory": {
+    "project_id": "handover-control",
+    "source_id": "control-workspace",
+    "label": "设备交接对照项目",
+    "items": [
+      {"memory_id": "handover.approved", "fact_slot": "handover-code", "body": "项目已经批准的长期交接核验码为 MEM-J8L2。", "predecessor_id": null}
+    ],
+    "revoke_id": null,
+    "second_session": false
+  },
+  "history": {
+    "prompt_prefix": "这是历史记录准备轮，请仅回复已记录，不搜索：",
+    "turns": [
+      "本会话临时讨论的设备交接核验码是 HST-W4R9，还没有作为项目长期规定批准。",
+      "普通器材已完成清点。",
+      "背景安排：现场照明正常。"
+    ],
+    "summary": "早先讨论过临时交接安排，也执行过一次设备巡检。具体原文和原输出需要从会话记录中找回。",
+    "value": "HST-W4R9"
+  },
+  "output": {
+    "script_path": "control_check.py",
+    "counter_path": "control-executions.txt",
+    "command": "python control_check.py",
+    "prompt": "执行 python control_check.py 一次，作为本次设备巡检。完成后只回复检查结束，不解读输出。",
+    "script": "from pathlib import Path\np=Path('control-executions.txt')\np.write_text(str(int(p.read_text())+1) if p.exists() else '1')\nfor i in range(100): print('ordinary equipment record', i)\nprint('设备巡检本次输出的交接核验码=OUT-D7N3')\n",
+    "value": "OUT-D7N3",
+    "source_text": "设备巡检本次输出的交接核验码=OUT-D7N3"
+  },
+  "cases": [
+    {"case_id": "ordinary-greeting", "family": null, "question": "你好，简单打个招呼就行。", "expected_value": null},
+    {"case_id": "ordinary-arithmetic", "family": null, "question": "18 加 27 等于多少？", "expected_value": "45"},
+    {"case_id": "ordinary-translation", "family": null, "question": "把“会议改到下周一”翻译成英文。", "expected_value": null},
+    {"case_id": "ordinary-rewrite", "family": null, "question": "把“麻烦您尽快处理这件事”改得更简洁但礼貌。", "expected_value": null},
+    {"case_id": "competing-history", "family": "history", "question": "本会话之前临时讨论的设备交接核验码是什么？我问的是临时安排。", "expected_value": "HST-W4R9"},
+    {"case_id": "competing-memory", "family": "memory", "question": "项目已经批准的长期设备交接核验码是什么？", "expected_value": "MEM-J8L2"},
+    {"case_id": "competing-skill", "family": "skill", "question": "设备交接操作手册的标准规程规定，交接核验码是什么？", "expected_value": "SKL-Q2P6"},
+    {"case_id": "competing-output", "family": "output", "question": "刚才设备巡检本次原始输出的交接核验码是什么？", "expected_value": "OUT-D7N3"}
+  ]
+}

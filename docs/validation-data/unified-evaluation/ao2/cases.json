@@ -1,0 +1,1738 @@
+[
+  {
+    "suite": "development",
+    "arm": "reference",
+    "case_id": "s-direct",
+    "material_seed": 113,
+    "question": "设备演练手册规定的签到卡代号是什么？",
+    "answer": "设备演练手册规定的签到卡代号是 **REF-CF662C1BCD**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states the签到卡代号 as 'REF-CF662C1BCD', which exactly matches the expected value. The dispatched evidence confirms this value is drawn from section-23 of the skill 'manual-cf662c1bcd', with source text '设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。'. The read request for that section succeeded, and the visible evidence includes both the directory metadata (identifying section-23 as '签到卡发放规定') and the full section body containing the value. Attribution is implicit in the context and explicit in the dispatched_evidence; no unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "cbcd62bd-6add-48a7-9730-d9dcd6fec55d",
+        "context_seq": 20,
+        "dispatch_fingerprint": "1f53121eca30217fb0d957fa90daf04cdaf65782dca1d2b9c5ae116481a70231",
+        "reference": {
+          "id": "manual-cf662c1bcd",
+          "provenance": {
+            "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+            "chunk_id": null,
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-cf662c1bcd"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "72afb627-2f9d-4eb5-ab30-beb8495f5224",
+        "step_id": "0d13a313-7a0a-4573-abad-8f2d75c0ee70",
+        "text": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。",
+        "tier": "section",
+        "turn_id": "5e04556c-3a7e-4adc-91fd-844d3988062c"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10132,
+        "known_subtotal": {
+          "input_tokens": 10132,
+          "output_tokens": 273,
+          "total_tokens": 10405
+        },
+        "output_tokens": 273,
+        "total_tokens": 10405,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10132,
+        "known_subtotal": {
+          "input_tokens": 10132,
+          "output_tokens": 273,
+          "total_tokens": 10405
+        },
+        "output_tokens": 273,
+        "total_tokens": 10405,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "reference",
+    "case_id": "s-resource",
+    "material_seed": 113,
+    "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+    "answer": "值班呼号是 `REF-EC8DE757AB`。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer '值班呼号是 `REF-EC8DE757AB`。' correctly states the值班呼号 (duty call sign) as 'REF-EC8DE757AB', matching the expected value 'REF-EC8DE757AB' of type 'code'. The source text '应急联络卡规定值班呼号为 REF-EC8DE757AB。' is present in the visible evidence (tier=chunk, kind=skill, id=manual-ec8de757ab), and was dispatched as evidence. Attribution to the '档案整理手册的应急联络卡' is implicit via the reference ID and provenance, and no unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "c0d76a8b-7989-4c8e-a006-4f031c81eb01",
+        "context_seq": 20,
+        "dispatch_fingerprint": "ff781cf2e3ff510affc6fb8852c850f7e0489d96aeb5d0603301eac71babac32",
+        "reference": {
+          "id": "manual-ec8de757ab",
+          "provenance": {
+            "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+            "chunk_id": "chunk-ec8de757ab",
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": "resource-ec8de757ab",
+            "section_id": null,
+            "skill_id": "manual-ec8de757ab"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "71a87729-0166-4c51-b258-12cc0b54057a",
+        "step_id": "0848fab3-32fc-4e6b-b52c-2bf7ff6d48c9",
+        "text": "应急联络卡规定值班呼号为 REF-EC8DE757AB。",
+        "tier": "chunk",
+        "turn_id": "78ea56d2-c66c-4a29-be40-bb11b097a624"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10486,
+        "known_subtotal": {
+          "input_tokens": 10486,
+          "output_tokens": 517,
+          "total_tokens": 11003
+        },
+        "output_tokens": 517,
+        "total_tokens": 11003,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10486,
+        "known_subtotal": {
+          "input_tokens": 10486,
+          "output_tokens": 517,
+          "total_tokens": 11003
+        },
+        "output_tokens": 517,
+        "total_tokens": 11003,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "reference",
+    "case_id": "s-absent",
+    "material_seed": 113,
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "answer": "根据搜索结果，我在档案整理手册中搜索了\"车辆加油\"和\"加油\"关键词，但都没有找到匹配内容（no-hit结果）。\n\n档案整理手册的摘要只显示\"本手册说明档案整理工作。\"，这表明该手册专注于档案整理相关的工作流程和规范，与车辆加油、折扣码等后勤或财务事项无关。\n\n因此，档案整理手册**没有规定**车辆加油的折扣码。车辆加油折扣码通常属于公司财务管理、行政后勤或采购政策的范畴，而不是档案整理工作的内容。\n\n答案：没有。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states that the archival management manual does not specify a discount code for vehicle refueling. It bases this on two no-hit searches for '车辆加油' and '加油' across all 32 searchable fields of the manual (confirmed by search_coverage entries), and on the manual's stated scope ('本手册说明档案整理工作。'), which is unrelated to vehicle refueling or discount codes. The answer does not overstate absence: it correctly limits its conclusion to the manual's content, aligning with the expectation's 'no-evidence' kind and the provided source_text. No unsupported claims are made; the inference that such codes belong to finance/admin domains is reasonable contextual commentary, not an invented fact. All dispatched evidence (search results and section summary) was available before answering."
+    },
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "kind": "skill",
+        "page": {
+          "fields": [
+            "id",
+            "title",
+            "summary",
+            "tags"
+          ],
+          "hits": [],
+          "next_cursor": null,
+          "query": "车辆加油",
+          "scanned": 32,
+          "status": "no-hit",
+          "total": 32
+        },
+        "seq": 33
+      },
+      {
+        "kind": "skill",
+        "page": {
+          "fields": [
+            "id",
+            "title",
+            "summary",
+            "tags"
+          ],
+          "hits": [],
+          "next_cursor": null,
+          "query": "加油",
+          "scanned": 32,
+          "status": "no-hit",
+          "total": 32
+        },
+        "seq": 46
+      }
+    ],
+    "usage": {
+      "all": {
+        "attempts": 4,
+        "estimated_attempts": 0,
+        "input_tokens": 20779,
+        "known_subtotal": {
+          "input_tokens": 20779,
+          "output_tokens": 571,
+          "total_tokens": 21350
+        },
+        "output_tokens": 571,
+        "total_tokens": 21350,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 4,
+        "estimated_attempts": 0,
+        "input_tokens": 20779,
+        "known_subtotal": {
+          "input_tokens": 20779,
+          "output_tokens": 571,
+          "total_tokens": 21350
+        },
+        "output_tokens": 571,
+        "total_tokens": 21350,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "reference",
+    "case_id": "s-english",
+    "material_seed": 419,
+    "question": "Which code does the equipment drill manual specify for the check-in card?",
+    "answer": "The current references do not contain the equipment drill manual or any information about a check-in card code. Since the search_skill for \"equipment drill manual\" only returned a summary without the required details, and no other relevant references are available, I cannot determine the specified code for the check-in card from the provided materials.\n\nTo proceed, I would need either:\n- Access to the full equipment drill manual (e.g., via request_skill_reference with the correct section/chunk ID), or\n- Additional context or documentation that specifies the check-in card code.\n\nWithout this information, the question cannot be answered definitively.",
+    "assessment": {
+      "status": "failed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "program gate: required source evidence never reached a model request"
+    },
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "kind": "skill",
+        "page": {
+          "fields": [
+            "id",
+            "title",
+            "summary",
+            "tags"
+          ],
+          "hits": [
+            {
+              "match_end": 40,
+              "match_start": 18,
+              "read_action": {
+                "arguments": {
+                  "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                  "chunk_id": null,
+                  "requested_tier": "summary",
+                  "resource_id": null,
+                  "section_id": null,
+                  "skill_id": "manual-ea333bb356",
+                  "version": "1.0.0"
+                },
+                "tool_name": "request_skill_reference"
+              },
+              "reference": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "summary",
+                "resource_id": null,
+                "section_id": null,
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              },
+              "text": "manual-ea333bb356\nEquipment drill manual\nEquipment drill manual的工作说明。",
+              "text_offset": 0,
+              "truncated": false
+            }
+          ],
+          "next_cursor": null,
+          "query": "equipment drill manual",
+          "scanned": 32,
+          "status": "matches",
+          "total": 32
+        },
+        "seq": 20
+      }
+    ],
+    "usage": {
+      "all": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 13016,
+        "known_subtotal": {
+          "input_tokens": 13016,
+          "output_tokens": 421,
+          "total_tokens": 13437
+        },
+        "output_tokens": 421,
+        "total_tokens": 13437,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 13016,
+        "known_subtotal": {
+          "input_tokens": 13016,
+          "output_tokens": 421,
+          "total_tokens": 13437
+        },
+        "output_tokens": 421,
+        "total_tokens": 13437,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "experiment",
+    "case_id": "s-direct",
+    "material_seed": 113,
+    "question": "设备演练手册规定的签到卡代号是什么？",
+    "answer": "根据提供的设备演练手册内容，签到卡的代号是 **REF-CF662C1BCD**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly identifies the sign-in card code as 'REF-CF662C1BCD', which exactly matches the expected value. The evidence is directly dispatched from section-23 of the skill 'manual-cf662c1bcd', with source text '设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。'. The read request for that section succeeded, and the visible evidence confirms the same string. Attribution to the device drill manual is accurate, no unsupported claims are made, and the scope (manual-specified code) is fully satisfied."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "6a1017f8-a805-4cb1-9850-bf9a3660b507",
+        "context_seq": 20,
+        "dispatch_fingerprint": "e5386383cea4cfae2d8c7536d1c4bd8335d713df60f46b0420cf9de238a422af",
+        "reference": {
+          "id": "manual-cf662c1bcd",
+          "provenance": {
+            "catalog_digest": "875a8fd32c461fcdd179ced8364702865e42a35d93eed4a2099e67b771eb41bf",
+            "chunk_id": null,
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-cf662c1bcd"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "245462c7-79c2-49df-b842-a9b13f69084c",
+        "step_id": "8202a8c2-86b5-4133-9242-4f1fb643a612",
+        "text": "设备演练签到后发放代号为 REF-CF662C1BCD 的签到卡。",
+        "tier": "section",
+        "turn_id": "e98f9cbd-c424-450e-b3be-a56ed30f11d7"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10133,
+        "known_subtotal": {
+          "input_tokens": 10133,
+          "output_tokens": 253,
+          "total_tokens": 10386
+        },
+        "output_tokens": 253,
+        "total_tokens": 10386,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10133,
+        "known_subtotal": {
+          "input_tokens": 10133,
+          "output_tokens": 253,
+          "total_tokens": 10386
+        },
+        "output_tokens": 253,
+        "total_tokens": 10386,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "experiment",
+    "case_id": "s-resource",
+    "material_seed": 113,
+    "question": "档案整理手册的应急联络卡上，值班呼号是什么？",
+    "answer": "根据提供的档案整理手册技能文档，应急联络卡上规定的值班呼号是 **REF-EC8DE757AB**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly extracts the value 'REF-EC8DE757AB' from the dispatched evidence, which is explicitly stated in the skill chunk: '应急联络卡规定值班呼号为 REF-EC8DE757AB。'. The value matches the expectation's 'value' field, is of type 'code', and is properly attributed to the referenced skill document (id: manual-ec8de757ab). The read request for that chunk succeeded, and no unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "f9cc2d70-222c-4d55-957e-1ae81eecbed0",
+        "context_seq": 20,
+        "dispatch_fingerprint": "445bfa3b3f1ded539ad84807e9ea2fccf2bc87844537073abc4c03641ed27901",
+        "reference": {
+          "id": "manual-ec8de757ab",
+          "provenance": {
+            "catalog_digest": "3e79f1df4b28f3a35b6d0c2ed1cbaaeed7db68d567d9e266ab57518c4e3223e4",
+            "chunk_id": "chunk-ec8de757ab",
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": "resource-ec8de757ab",
+            "section_id": null,
+            "skill_id": "manual-ec8de757ab"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "187bee9d-6d67-4e75-8cbe-a2fdac3bf2f9",
+        "step_id": "7c0b6e0a-8a48-423f-9f90-1f3abe8ca98c",
+        "text": "应急联络卡规定值班呼号为 REF-EC8DE757AB。",
+        "tier": "chunk",
+        "turn_id": "da220c18-1af8-4a8d-b68c-42f0c2d32008"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10270,
+        "known_subtotal": {
+          "input_tokens": 10270,
+          "output_tokens": 303,
+          "total_tokens": 10573
+        },
+        "output_tokens": 303,
+        "total_tokens": 10573,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10270,
+        "known_subtotal": {
+          "input_tokens": 10270,
+          "output_tokens": 303,
+          "total_tokens": 10573
+        },
+        "output_tokens": 303,
+        "total_tokens": 10573,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "experiment",
+    "case_id": "s-absent",
+    "material_seed": 113,
+    "question": "档案整理手册有没有规定车辆加油的折扣码？",
+    "answer": "搜索结果显示没有找到与\"车辆加油\"相关的章节或内容。搜索返回了\"no-hit\"状态，表明在档案整理手册的目录结构中没有包含\"车辆加油\"关键词的章节。\n\n从手册的目录信息来看，所有章节（section-00到section-30）的摘要都是\"说明普通器材登记。\"，只有section-23的摘要是\"档案整理操作手册\"，但也没有提到车辆加油或折扣码相关内容。\n\n因此，根据现有的档案整理手册目录信息，**档案整理手册没有规定车辆加油的折扣码**。\n\n这个结论基于手册的目录结构和搜索结果，手册主要关注档案整理操作和普通器材登记，不涉及车辆加油管理或折扣码规定。",
+    "assessment": {
+      "status": "failed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer overstates the search scope: it concludes '档案整理手册没有规定车辆加油的折扣码' as a definitive global absence, but the search_coverage shows 'proves_global_absence': false and only scanned 32 sections (all titled '普通事项' or '档案整理操作手册') with generic summaries — none of which mention '折扣码' (discount code) at all, and the search query was only '车辆加油', not '折扣码' or '加油折扣'. The rubric requires negative answers not to overstate a local no-hit as global absence; here, the search did not target '折扣码', so absence of '车辆加油' does not logically entail absence of '车辆加油的折扣码'. Also, the expectation is 'no-evidence' with value_type 'none', but the answer fabricates a positive categorical conclusion unsupported by evidence covering both terms."
+    },
+    "dispatched_evidence": [],
+    "searches": [
+      {
+        "kind": "skill",
+        "page": {
+          "fields": [
+            "id",
+            "title",
+            "summary",
+            "tags"
+          ],
+          "hits": [],
+          "next_cursor": null,
+          "query": "车辆加油",
+          "scanned": 32,
+          "status": "no-hit",
+          "total": 32
+        },
+        "seq": 20
+      }
+    ],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 11275,
+        "known_subtotal": {
+          "input_tokens": 11275,
+          "output_tokens": 347,
+          "total_tokens": 11622
+        },
+        "output_tokens": 347,
+        "total_tokens": 11622,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 11275,
+        "known_subtotal": {
+          "input_tokens": 11275,
+          "output_tokens": 347,
+          "total_tokens": 11622
+        },
+        "output_tokens": 347,
+        "total_tokens": 11622,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "development",
+    "arm": "experiment",
+    "case_id": "s-english",
+    "material_seed": 419,
+    "question": "Which code does the equipment drill manual specify for the check-in card?",
+    "answer": "The equipment drill manual specifies the check-in card code as **REF-EA333BB356**.",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states the code as 'REF-EA333BB356', matching the expectation's value. The value is directly extracted from the dispatched evidence: 'The equipment drill check-in card code is REF-EA333BB356.', which originates from the skill reference with id 'manual-ea333bb356' and section_id 'section-23'. The read request for that exact section succeeded, and the visible_evidence confirms the body contains the source text. Attribution is implicit in the context (equipment drill manual) and explicit in the dispatched_evidence reference metadata. No unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 40,
+        "attempt_id": "17145853-9a2a-4463-87e3-6634cc06a6b6",
+        "context_seq": 33,
+        "dispatch_fingerprint": "7d7b2c668ff736d75ff3647531d5de64357a47914e6eb40d9fd27b8ad423099a",
+        "reference": {
+          "id": "manual-ea333bb356",
+          "provenance": {
+            "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+            "chunk_id": null,
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": null,
+            "section_id": "section-23",
+            "skill_id": "manual-ea333bb356"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 36,
+        "session_id": "af732194-7291-49d9-975a-a6b07ec41a07",
+        "step_id": "59d03db2-f5d6-4940-b78f-6c6f06b23bbf",
+        "text": "The equipment drill check-in card code is REF-EA333BB356.",
+        "tier": "section",
+        "turn_id": "21b50e23-add3-400d-83b0-aa867e5a4129"
+      }
+    ],
+    "searches": [
+      {
+        "kind": "skill",
+        "page": {
+          "fields": [
+            "id",
+            "title",
+            "summary",
+            "tags"
+          ],
+          "hits": [
+            {
+              "match_end": 42,
+              "match_start": 29,
+              "read_action": {
+                "arguments": {
+                  "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                  "chunk_id": null,
+                  "requested_tier": "section",
+                  "resource_id": null,
+                  "section_id": "section-23",
+                  "skill_id": "manual-ea333bb356",
+                  "version": "1.0.0"
+                },
+                "tool_name": "request_skill_reference"
+              },
+              "reference": {
+                "catalog_digest": "2181fa5e05ba14aefec6fd90c937814090cca471c95e33b69bed59cbc64bbfba",
+                "chunk_id": null,
+                "requested_tier": "section",
+                "resource_id": null,
+                "section_id": "section-23",
+                "skill_id": "manual-ea333bb356",
+                "version": "1.0.0"
+              },
+              "text": "manual-ea333bb356\nsection-23\nCheck-in card procedure\nCheck-in card procedure",
+              "text_offset": 0,
+              "truncated": false
+            }
+          ],
+          "next_cursor": null,
+          "query": "check-in card",
+          "scanned": 32,
+          "status": "matches",
+          "total": 32
+        },
+        "seq": 20
+      }
+    ],
+    "usage": {
+      "all": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 13828,
+        "known_subtotal": {
+          "input_tokens": 13828,
+          "output_tokens": 484,
+          "total_tokens": 14312
+        },
+        "output_tokens": 484,
+        "total_tokens": 14312,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 13828,
+        "known_subtotal": {
+          "input_tokens": 13828,
+          "output_tokens": 484,
+          "total_tokens": 14312
+        },
+        "output_tokens": 484,
+        "total_tokens": 14312,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "reference",
+    "case_id": "mobile-specimen",
+    "material_seed": 907,
+    "question": "流动标本车的接收箱封签应打印哪个代号？",
+    "answer": "根据提供的技能文档（\"流动标本车工作手册\"）中“接收箱封签”章节的内容，流动标本车的接收箱封签必须打印 **LIME-274**。\n\n{\"代号\": \"LIME-274\"}",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly identifies 'LIME-274' as the required code for the mobile specimen vehicle's receiving box seal, directly quoting and attributing the source: the 'required-procedure' section of the 'mobile-specimen.manual' skill documentation. The dispatched evidence includes the exact source text '标本车接收箱的封签必须打印 LIME-274。', matching the expectation's source_text and value. No unsupported claims or scope violations are present; attribution is precise and evidence was dispatched before answering."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "90a5adae-ceca-44ff-babf-3010992548dc",
+        "context_seq": 20,
+        "dispatch_fingerprint": "db55e6294e59d08c1fc06750699f387e0fe3768f1b1527f8f282517d5ce18be4",
+        "reference": {
+          "id": "mobile-specimen.manual",
+          "provenance": {
+            "catalog_digest": "e83ea9ea3f778851d0b07fcd019ac08cf9b96fac1152068dbc8c6c7cf6f283eb",
+            "chunk_id": null,
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": null,
+            "section_id": "required-procedure",
+            "skill_id": "mobile-specimen.manual"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "71049934-82b1-4842-abd0-62c68a427a0b",
+        "step_id": "1b37d51f-a2c0-437a-9ae5-690ac8341609",
+        "text": "标本车接收箱的封签必须打印 LIME-274。",
+        "tier": "section",
+        "turn_id": "72fd58e3-dea0-4b05-9417-ea97beec646a"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9445,
+        "known_subtotal": {
+          "input_tokens": 9445,
+          "output_tokens": 307,
+          "total_tokens": 9752
+        },
+        "output_tokens": 307,
+        "total_tokens": 9752,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9445,
+        "known_subtotal": {
+          "input_tokens": 9445,
+          "output_tokens": 307,
+          "total_tokens": 9752
+        },
+        "output_tokens": 307,
+        "total_tokens": 9752,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "reference",
+    "case_id": "restoration-room",
+    "material_seed": 907,
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "answer": "根据提供的古籍修复室工作手册内容，当遇到烘干柜温湿异常时，值班员应报口令 **RILL-682**，并按下 **蓝色隔离钮**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly identifies the口令 as 'RILL-682' and the button as '蓝色隔离钮', directly quoting the dispatched evidence from the restoration-room.manual skill chunk: '发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。'. The expectation specifies value 'RILL-682' of type 'code', which is present and accurately attributed. No unsupported claims or scope violations are made; the answer is fully grounded in the provided reference."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "8d08b075-3afb-4bd8-882c-143cd33dd6da",
+        "context_seq": 20,
+        "dispatch_fingerprint": "7a7a6c218a47d09dd5539fd45aa0b1345ec899f267a61008fed4612fd2614826",
+        "reference": {
+          "id": "restoration-room.manual",
+          "provenance": {
+            "catalog_digest": "80e2c34cdeb3918c9ad22e93b71204cfa1d4629ccb6b65bc647a9c65940f84ae",
+            "chunk_id": "procedure",
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": "response-card",
+            "section_id": null,
+            "skill_id": "restoration-room.manual"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "d39b703e-081b-49f9-9c34-bb3ed2f0815c",
+        "step_id": "55e5c3ca-f8db-4f24-9b94-e3c6a9f4d46c",
+        "text": "发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。",
+        "tier": "chunk",
+        "turn_id": "ff52ffb5-bca4-4354-b42a-831cebcd0d3b"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9527,
+        "known_subtotal": {
+          "input_tokens": 9527,
+          "output_tokens": 298,
+          "total_tokens": 9825
+        },
+        "output_tokens": 298,
+        "total_tokens": 9825,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9527,
+        "known_subtotal": {
+          "input_tokens": 9527,
+          "output_tokens": 298,
+          "total_tokens": 9825
+        },
+        "output_tokens": 298,
+        "total_tokens": 9825,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "reference",
+    "case_id": "stamp-catalog",
+    "material_seed": 907,
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构已提供，其中包含一个主节“条目登记”（`required-procedure`）和多个“清洁登记”类小节（`routine-0` 至 `routine-9`），但**所有节摘要均未提及“停车券”或价格相关内容**。\n\n该 Skill 文档定位为“邮票目录整理规范操作说明”，主题聚焦于邮票条目登记与清洁记录流程，与停车券定价无语义关联。且当前披露的导航元数据中：\n- 无任何 section 或 resource 的 `title`、`summary`、`tags` 包含 “停车券”、“停车”、“券”、“price”、“费用”、“多少钱” 等关键词；\n- `content_bytes` 均极小（51–77 字节），表明内容高度精简，不支持隐含定价信息；\n- 未提供实际正文内容（`body_status: \"navigation-only\"`），但导航本身已足够否定相关性。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states '否' (No) to the question '邮票目录整理规范里写了停车券多少钱吗？', and is fully supported by the visible evidence: the disclosed `stamp-catalog.manual` skill directory contains only navigation metadata (no body content), and all section titles and summaries are about stamp cataloging and cleaning records — none mention '停车券', '停车', '价格', '费用', '多少钱', or semantic equivalents. The answer does not invent values, overstate absence beyond the scope of the provided navigation, or make unsupported claims; it correctly infers irrelevance from topic mismatch and absence of relevant keywords in all searchable fields (title, summary, tags). The rubric requires negative answers to avoid overstating local no-hit as global absence — here, the answer restricts its claim to what the provided directory metadata supports, and explicitly notes the lack of pricing-related terms and semantic alignment. No further reading or search is needed or justified."
+    },
+    "dispatched_evidence": [],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 1,
+        "estimated_attempts": 0,
+        "input_tokens": 4651,
+        "known_subtotal": {
+          "input_tokens": 4651,
+          "output_tokens": 246,
+          "total_tokens": 4897
+        },
+        "output_tokens": 246,
+        "total_tokens": 4897,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 1,
+        "estimated_attempts": 0,
+        "input_tokens": 4651,
+        "known_subtotal": {
+          "input_tokens": 4651,
+          "output_tokens": 246,
+          "total_tokens": 4897
+        },
+        "output_tokens": 246,
+        "total_tokens": 4897,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "reference",
+    "case_id": "printshop-limit",
+    "material_seed": 907,
+    "question": "共享印制车间批准的同时入场人数是多少？",
+    "answer": "共享印制车间获批的同时入场上限为 27 人。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The dispatched evidence contains the exact text '共享印制车间获批的同时入场上限为 27 人。', which directly supports the answer. The expectation specifies a numeric value '27' of type 'number', and the text unambiguously states '27 人', where '27' is the numeral and '人' denotes persons — matching the expected value and type. The evidence is an approved memory (kind=memory, tier=section), properly attributed to memory_id 'printshop.capacity', and was successfully requested via request_workspace_memory in this Turn (call_seq 15, result_seq 17). No unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "544a4b59-b67d-4acc-8be2-3ebd39c87976",
+        "context_seq": 20,
+        "dispatch_fingerprint": "9a53965d8f22b444829029ce2552813181b882ea6cfebe8e4712eb106683cf9a",
+        "reference": {
+          "id": "printshop.capacity",
+          "provenance": {
+            "activation_ref": {
+              "digest": "382d43c9a1fe6c2d49469a30153b9c563e651394ea7c20ab3febaaa47891ce61",
+              "event_id": "1e1997f6-8ce0-410f-ba8f-6fd74da5932f",
+              "seq": 2,
+              "stream_id": "memory:printshop",
+              "type": "memory/approved"
+            },
+            "approved_content_digest": "891f0bca5cd6063d683a5dea04f2125b48aac73bfd63422fbac345bb44c75a29",
+            "fact_slot": "capacity",
+            "memory_id": "printshop.capacity",
+            "project_id": "printshop"
+          },
+          "source_refs": [
+            {
+              "digest": "c8db04eac607659f4c5bbdc424ec2b675e2d6bcb313b4e13529d8e1a3619bb9c",
+              "event_id": "7dc0194e-ce10-4f0b-9cf8-de3a653135e6",
+              "seq": 1,
+              "stream_id": "memory:printshop",
+              "type": "memory/proposed"
+            },
+            {
+              "digest": "382d43c9a1fe6c2d49469a30153b9c563e651394ea7c20ab3febaaa47891ce61",
+              "event_id": "1e1997f6-8ce0-410f-ba8f-6fd74da5932f",
+              "seq": 2,
+              "stream_id": "memory:printshop",
+              "type": "memory/approved"
+            }
+          ],
+          "version": "a83b99580c6cea9f86da2108bcc9a41e903365fd5a2f2dc8057ee11a8cd7bfc6"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "f5dd51bc-6e09-416c-8d9f-eed1b7de8add",
+        "step_id": "348d27ae-32c1-409e-9756-7cd947e224d7",
+        "text": "共享印制车间获批的同时入场上限为 27 人。",
+        "tier": "section",
+        "turn_id": "92af707c-d3a7-409f-b99e-2acc9bcf2bc2"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 8426,
+        "known_subtotal": {
+          "input_tokens": 8426,
+          "output_tokens": 218,
+          "total_tokens": 8644
+        },
+        "output_tokens": 218,
+        "total_tokens": 8644,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 8426,
+        "known_subtotal": {
+          "input_tokens": 8426,
+          "output_tokens": 218,
+          "total_tokens": 8644
+        },
+        "output_tokens": 218,
+        "total_tokens": 8644,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "reference",
+    "case_id": "geology-transfer",
+    "material_seed": 907,
+    "question": "之前临时地质展说的提交批次标志和交接点是什么？",
+    "answer": "根据搜索结果，我找到了关于临时地质展的提交批次标志和交接点的信息。\n\n在历史记录中有一条明确的信息：\"临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。\"\n\n因此，临时地质展的提交批次标志是 **KITE-905**，交接点是 **西拱门第二排**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly extracts the value 'KITE-905' for the submission batch flag from the dispatched evidence, which is explicitly stated in the search hit: '临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。'. The expectation specifies kind='value', reference_id='', source_text matching that exact string, and value='KITE-905' of type 'code' — all satisfied. Attribution is present ('在历史记录中有一条明确的信息'), no unsupported claims are made, and the evidence was dispatched before answering. Search coverage confirms a match with provenance and readable content."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 73,
+        "attempt_id": "e2b70cd1-eb4d-47c6-ac16-11f117d22c17",
+        "context_seq": 66,
+        "dispatch_fingerprint": "c03a56d529b319062866f0b243e7f6c838fa0d5a1b0afe060d781f01d1979b7d",
+        "reference": {
+          "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+          "cursor": {
+            "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+            "index": 0,
+            "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+          },
+          "leaf_ref": {
+            "digest": "7a3652eeb131ac557df590116246f631377ad57d44516f116e784957ab676c11",
+            "event_id": "4f4b02bb-c82a-4e2c-a519-e7d023118582",
+            "seq": 21,
+            "stream_id": "session:7b90d639-e55a-4d9c-8ecc-6e5445dff794",
+            "type": "user/message"
+          },
+          "readable": true,
+          "version": "e5f23063c511a8242704b794d5d9835b5e3e9597b34b477b14aa101b1d7fb26f"
+        },
+        "request_snapshot_seq": 69,
+        "session_id": "7b90d639-e55a-4d9c-8ecc-6e5445dff794",
+        "step_id": "13707cce-7c31-4708-b925-83361c959ffc",
+        "text": "请记下这条测试记录，只回复已记下：临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。",
+        "tier": "search",
+        "turn_id": "7ed6db8f-e120-4edb-a704-3c00dd83c922"
+      }
+    ],
+    "searches": [
+      {
+        "kind": "history",
+        "page": {
+          "fields": [
+            "message.content"
+          ],
+          "hits": [
+            {
+              "match_end": 22,
+              "match_start": 17,
+              "read_action": {
+                "arguments": {
+                  "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                  "cursor": {
+                    "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                    "index": 0,
+                    "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                  },
+                  "requested_tier": "chunk"
+                },
+                "tool_name": "request_history_page"
+              },
+              "reference": {
+                "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                "cursor": {
+                  "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "leaf_ref": {
+                  "digest": "7b3608b010e546e52c87ec56ffeffc5eb243b4912b92862f4d529f866c1557c9",
+                  "event_id": "03fdb2c9-6da3-4d02-a683-762896366cc1",
+                  "seq": 6,
+                  "stream_id": "session:7b90d639-e55a-4d9c-8ecc-6e5445dff794",
+                  "type": "user/message"
+                },
+                "readable": true,
+                "version": "e5f23063c511a8242704b794d5d9835b5e3e9597b34b477b14aa101b1d7fb26f"
+              },
+              "text": "请记下这条测试记录，只回复已记下：临时地质展已核对灯具。",
+              "text_offset": 0,
+              "truncated": false
+            },
+            {
+              "match_end": 22,
+              "match_start": 17,
+              "read_action": {
+                "arguments": {
+                  "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                  "cursor": {
+                    "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                    "index": 0,
+                    "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                  },
+                  "requested_tier": "chunk"
+                },
+                "tool_name": "request_history_page"
+              },
+              "reference": {
+                "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                "cursor": {
+                  "block_id": "44b9ae66c9ed5ff30c8448d89645597d20e961491bcb0d336e94a32b006c4257",
+                  "index": 0,
+                  "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+                },
+                "leaf_ref": {
+                  "digest": "7a3652eeb131ac557df590116246f631377ad57d44516f116e784957ab676c11",
+                  "event_id": "4f4b02bb-c82a-4e2c-a519-e7d023118582",
+                  "seq": 21,
+                  "stream_id": "session:7b90d639-e55a-4d9c-8ecc-6e5445dff794",
+                  "type": "user/message"
+                },
+                "readable": true,
+                "version": "e5f23063c511a8242704b794d5d9835b5e3e9597b34b477b14aa101b1d7fb26f"
+              },
+              "text": "请记下这条测试记录，只回复已记下：临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。",
+              "text_offset": 0,
+              "truncated": false
+            }
+          ],
+          "next_cursor": null,
+          "query": "临时地质展",
+          "scanned": 6,
+          "status": "matches",
+          "total": 6
+        },
+        "seq": 66
+      }
+    ],
+    "usage": {
+      "all": {
+        "attempts": 5,
+        "estimated_attempts": 0,
+        "input_tokens": 22397,
+        "known_subtotal": {
+          "input_tokens": 22397,
+          "output_tokens": 179,
+          "total_tokens": 22576
+        },
+        "output_tokens": 179,
+        "total_tokens": 22576,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 11458,
+        "known_subtotal": {
+          "input_tokens": 11458,
+          "output_tokens": 9,
+          "total_tokens": 11467
+        },
+        "output_tokens": 9,
+        "total_tokens": 11467,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 10939,
+        "known_subtotal": {
+          "input_tokens": 10939,
+          "output_tokens": 170,
+          "total_tokens": 11109
+        },
+        "output_tokens": 170,
+        "total_tokens": 11109,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "experiment",
+    "case_id": "mobile-specimen",
+    "material_seed": 907,
+    "question": "流动标本车的接收箱封签应打印哪个代号？",
+    "answer": "根据提供的技能文档内容，流动标本车接收箱的封签必须打印 **LIME-274**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states 'LIME-274' as the required code, matching the expectation's value. The value is directly quoted from the dispatched evidence ('标本车接收箱的封签必须打印 LIME-274。') and is explicitly attributed to the skill document 'mobile-specimen.manual'. The evidence was successfully requested via request_skill_reference (call_seq 15) and dispatched before answering. No unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "5e41ac6e-5f52-439b-b89a-8a3436672aef",
+        "context_seq": 20,
+        "dispatch_fingerprint": "a024d3190716ab727cdfc483ef2156654e53e406e79503ca106a99cef2a3a5a3",
+        "reference": {
+          "id": "mobile-specimen.manual",
+          "provenance": {
+            "catalog_digest": "e83ea9ea3f778851d0b07fcd019ac08cf9b96fac1152068dbc8c6c7cf6f283eb",
+            "chunk_id": null,
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": null,
+            "section_id": "required-procedure",
+            "skill_id": "mobile-specimen.manual"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "2047d86e-98c9-4aa1-be6d-a55d55207600",
+        "step_id": "aed51fee-5f30-4805-bc14-5edb01a25876",
+        "text": "标本车接收箱的封签必须打印 LIME-274。",
+        "tier": "section",
+        "turn_id": "02243b94-3555-4e16-a294-07b158498dde"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9407,
+        "known_subtotal": {
+          "input_tokens": 9407,
+          "output_tokens": 214,
+          "total_tokens": 9621
+        },
+        "output_tokens": 214,
+        "total_tokens": 9621,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9407,
+        "known_subtotal": {
+          "input_tokens": 9407,
+          "output_tokens": 214,
+          "total_tokens": 9621
+        },
+        "output_tokens": 214,
+        "total_tokens": 9621,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "experiment",
+    "case_id": "restoration-room",
+    "material_seed": 907,
+    "question": "古籍修复室遇到烘干柜异常时，要报什么口令并按哪个按钮？",
+    "answer": "根据提供的古籍修复室工作手册内容，当遇到烘干柜异常时，值班员应报口令 **RILL-682**，并按下 **蓝色隔离钮**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "Answer correctly identifies the口令 'RILL-682' and the action '按下蓝色隔离钮', both directly quoted from the dispatched evidence (chunk of restoration-room.manual) which matches the expectation's source_text and required value. Attribution to the provided manual is explicit, no unsupported claims are made, and the evidence was successfully retrieved via request_skill_reference before answering."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "522043ff-3de2-4b5c-ae77-aef2746011a0",
+        "context_seq": 20,
+        "dispatch_fingerprint": "92956f78580d23dbd8e18420505c9b825715558becbb47764b96935baafde4e1",
+        "reference": {
+          "id": "restoration-room.manual",
+          "provenance": {
+            "catalog_digest": "80e2c34cdeb3918c9ad22e93b71204cfa1d4629ccb6b65bc647a9c65940f84ae",
+            "chunk_id": "procedure",
+            "plugin": {
+              "plugin_id": "reference.author",
+              "version": "1.0.0"
+            },
+            "resource_id": "response-card",
+            "section_id": null,
+            "skill_id": "restoration-room.manual"
+          },
+          "source_refs": [],
+          "version": "1.0.0"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "3b7539e8-6a9f-4dfa-af5a-e4a439973d11",
+        "step_id": "ce50a5d8-4dba-46d5-b690-a06b7d782f1e",
+        "text": "发现烘干柜温湿异常时，值班员应报 RILL-682，并按下蓝色隔离钮。",
+        "tier": "chunk",
+        "turn_id": "106e983c-205d-43a9-a199-d0d205114757"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9545,
+        "known_subtotal": {
+          "input_tokens": 9545,
+          "output_tokens": 295,
+          "total_tokens": 9840
+        },
+        "output_tokens": 295,
+        "total_tokens": 9840,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9545,
+        "known_subtotal": {
+          "input_tokens": 9545,
+          "output_tokens": 295,
+          "total_tokens": 9840
+        },
+        "output_tokens": 295,
+        "total_tokens": 9840,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "experiment",
+    "case_id": "stamp-catalog",
+    "material_seed": 907,
+    "question": "邮票目录整理规范里写了停车券多少钱吗？",
+    "answer": "邮票目录整理规范（`stamp-catalog.manual`）的目录结构（当前参考中提供的 `directory` 导航）仅包含以下部分：\n\n- “条目登记”（required-procedure）\n- 10 个“清洁登记”例行章节（routine-0 至 routine-9）\n\n所有 section 的 `summary` 均为“清洁记录”，`title` 均为“清洁登记 X”，且无一提及“停车券”或价格相关内容。`summary` 和 `title` 中均未出现“停车券”“停车”“券”“价格”“元”“钱”等关键词。\n\n该 Skill 文档的总体 `summary` 是：“邮票目录整理规范操作说明。”，主题明确限定于邮票目录整理，与停车券无关。\n\n因此，**邮票目录整理规范里没有写停车券多少钱**。\n\n答案：否。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The visible evidence is a complete `directory`-tier Skill reference for `stamp-catalog.manual`, containing only 11 sections — one 'required-procedure' and ten 'routine-X' sections — all with `summary` = '清洁记录。' and `title` matching '清洁登记 X'. None contain '停车券', '停车', '券', '价格', '元', or '钱'. The overall `summary` states the document is about '邮票目录整理规范操作说明。', confirming scope irrelevance to parking vouchers or pricing. The answer correctly states 'no', attributes solely to this disclosed directory, makes no unsupported claims, and does not overstate absence beyond the provided authoritative navigation metadata. This satisfies the rubric's requirement for a valid negative answer based on complete authoritative search excerpt."
+    },
+    "dispatched_evidence": [],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 1,
+        "estimated_attempts": 0,
+        "input_tokens": 4662,
+        "known_subtotal": {
+          "input_tokens": 4662,
+          "output_tokens": 191,
+          "total_tokens": 4853
+        },
+        "output_tokens": 191,
+        "total_tokens": 4853,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 1,
+        "estimated_attempts": 0,
+        "input_tokens": 4662,
+        "known_subtotal": {
+          "input_tokens": 4662,
+          "output_tokens": 191,
+          "total_tokens": 4853
+        },
+        "output_tokens": 191,
+        "total_tokens": 4853,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "experiment",
+    "case_id": "printshop-limit",
+    "material_seed": 907,
+    "question": "共享印制车间批准的同时入场人数是多少？",
+    "answer": "共享印制车间批准的同时入场人数是 27 人。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer '27' matches the expected value, is correctly attributed to the memory reference 'printshop.capacity', and is directly supported by the dispatched evidence: '共享印制车间获批的同时入场上限为 27 人。'. The evidence was successfully retrieved via request_workspace_memory (call_seq 15, result_seq 17) and admitted as visible_evidence (tier: section). No unsupported claims or scope violations are present."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 27,
+        "attempt_id": "a62d7767-57cf-45e1-aad7-4b1a0eb32a0e",
+        "context_seq": 20,
+        "dispatch_fingerprint": "2c86cbc3271ae1f48b339a2b96dc22543bb9a8a393300e149efb93cbdf969b50",
+        "reference": {
+          "id": "printshop.capacity",
+          "provenance": {
+            "activation_ref": {
+              "digest": "fa17f7fb51f2e8d8f1635f7286ea836fc98eafd9d24ce10d116b5dcf293e2d57",
+              "event_id": "62c460a7-1bee-4244-aa76-9fcbe32d5811",
+              "seq": 2,
+              "stream_id": "memory:printshop",
+              "type": "memory/approved"
+            },
+            "approved_content_digest": "891f0bca5cd6063d683a5dea04f2125b48aac73bfd63422fbac345bb44c75a29",
+            "fact_slot": "capacity",
+            "memory_id": "printshop.capacity",
+            "project_id": "printshop"
+          },
+          "source_refs": [
+            {
+              "digest": "8998ce5ec9810d8b70e29613e4455298cb965e5f05c603bac7f6404cd7f2488b",
+              "event_id": "7057ad12-8a30-4063-90f4-d2f80ae4d532",
+              "seq": 1,
+              "stream_id": "memory:printshop",
+              "type": "memory/proposed"
+            },
+            {
+              "digest": "fa17f7fb51f2e8d8f1635f7286ea836fc98eafd9d24ce10d116b5dcf293e2d57",
+              "event_id": "62c460a7-1bee-4244-aa76-9fcbe32d5811",
+              "seq": 2,
+              "stream_id": "memory:printshop",
+              "type": "memory/approved"
+            }
+          ],
+          "version": "a83b99580c6cea9f86da2108bcc9a41e903365fd5a2f2dc8057ee11a8cd7bfc6"
+        },
+        "request_snapshot_seq": 23,
+        "session_id": "9dce3023-fed9-4e94-aa81-f145860f6290",
+        "step_id": "e0767b92-2efd-4d65-b6ac-798a8512e86e",
+        "text": "共享印制车间获批的同时入场上限为 27 人。",
+        "tier": "section",
+        "turn_id": "efa51f37-7c37-4bb1-aea3-4449c3c45ab2"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 8381,
+        "known_subtotal": {
+          "input_tokens": 8381,
+          "output_tokens": 172,
+          "total_tokens": 8553
+        },
+        "output_tokens": 172,
+        "total_tokens": 8553,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 0,
+        "estimated_attempts": 0,
+        "input_tokens": 0,
+        "known_subtotal": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0
+        },
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 8381,
+        "known_subtotal": {
+          "input_tokens": 8381,
+          "output_tokens": 172,
+          "total_tokens": 8553
+        },
+        "output_tokens": 172,
+        "total_tokens": 8553,
+        "unknown_attempts": 0
+      }
+    }
+  },
+  {
+    "suite": "heldout",
+    "arm": "experiment",
+    "case_id": "geology-transfer",
+    "material_seed": 907,
+    "question": "之前临时地质展说的提交批次标志和交接点是什么？",
+    "answer": "根据历史记录，临时地质展的提交批次标志为 **KITE-905**，交接点设在 **西拱门第二排**。",
+    "assessment": {
+      "status": "passed",
+      "reviewer": "model:openai-compatible/qwen-plus",
+      "origin": "model",
+      "reason": "The answer correctly states the submission batch identifier 'KITE-905' and handover point '西拱门第二排' as given in the dispatched evidence — specifically, the history chunk containing the user message: '临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。'. This matches the expectation's required value 'KITE-905' (code-type) and fully addresses the question about both the batch flag and handover point. The evidence was dispatched prior to answering, is attributed to history, contains no unsupported claims, and stays within scope."
+    },
+    "dispatched_evidence": [
+      {
+        "attempt_end_seq": 73,
+        "attempt_id": "e6f93f02-0325-496b-81da-09ae2baa5194",
+        "context_seq": 66,
+        "dispatch_fingerprint": "5624ea31d88c7975575b982b15f10ef5367d9874caebc69e69d12beecc536e74",
+        "reference": {
+          "id": "5fc0fffcc7b0d47642a1ceef25475adc6bf59ba291fa6a2a3817d76485c02592",
+          "provenance": {
+            "block_id": "5fc0fffcc7b0d47642a1ceef25475adc6bf59ba291fa6a2a3817d76485c02592",
+            "freshness": "unknown",
+            "observed_at": "2026-09-10T18:38:03.376853+00:00",
+            "observed_through_seq": 46,
+            "page": {
+              "index": 0,
+              "leaf_refs": [
+                {
+                  "digest": "1e5da7e118321b7ab2ecbed79bb0059b3399dfca9d824d84781c36136dc054ac",
+                  "event_id": "3da597ce-3877-46ee-bff1-82481107fb7e",
+                  "seq": 6,
+                  "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+                  "type": "user/message"
+                },
+                {
+                  "digest": "26e9fd8742075a5ace425b3630baf3490d3a30261dbd44593f4e0c4a3bffb4af",
+                  "event_id": "5dbd2a73-7a32-4e10-9a1e-3c25e4ed6cf8",
+                  "seq": 13,
+                  "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+                  "type": "assistant/message"
+                },
+                {
+                  "digest": "895d4d8ab609b8b98f1dc6cdbdc1d43a8eeb577e2200bdac4bbc0609f873296a",
+                  "event_id": "0f742926-b56b-4cf0-9fa0-2562e58bef16",
+                  "seq": 21,
+                  "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+                  "type": "user/message"
+                },
+                {
+                  "digest": "bea6250c08f2e56ed4cad0f8b6b514f2b3a76e19a9d31ece887cae1247929d4f",
+                  "event_id": "d0a95914-b681-416a-9e7d-0b1f9636d79d",
+                  "seq": 28,
+                  "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+                  "type": "assistant/message"
+                }
+              ],
+              "next_cursor": {
+                "block_id": "5fc0fffcc7b0d47642a1ceef25475adc6bf59ba291fa6a2a3817d76485c02592",
+                "index": 1,
+                "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+              },
+              "policy_digest": "e173fd45286d53b81638648235db08d02c7dc184323cc9a6f80c1a4af51f810a"
+            },
+            "request_ref": {
+              "digest": "7c772d3353fa74d921bb52a5c11ff4bfc0c20e39b9e63fb345d93485c9933f51",
+              "event_id": "aaa8f5a7-14fd-41ca-8ef4-7a703ee55e90",
+              "seq": 63,
+              "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+              "type": "tool/result"
+            },
+            "workspace_observation": null
+          },
+          "source_refs": [
+            {
+              "digest": "4850898cb8d2530bfbd78967f923a91ca71cd47e504db37919a2f1cda81cfea7",
+              "event_id": "bb8369f2-6610-4aa7-ac73-0a3c4ca74543",
+              "seq": 47,
+              "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+              "type": "surface/replace"
+            },
+            {
+              "digest": "f49993f79538c2338f765861bb7351c0240be5684533f60ad9757ccf40c054b6",
+              "event_id": "25d45fd9-af81-4c93-9506-b3874d3c4eaa",
+              "seq": 46,
+              "stream_id": "session:4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+              "type": "turn/end"
+            }
+          ],
+          "version": "4850898cb8d2530bfbd78967f923a91ca71cd47e504db37919a2f1cda81cfea7"
+        },
+        "request_snapshot_seq": 69,
+        "session_id": "4b64cb1b-6322-4df7-84f7-94a0e56826fe",
+        "step_id": "fcaf2931-f89d-4484-8185-e7f7f311c074",
+        "text": "[{\"content\":\"请记下这条测试记录，只回复已记下：临时地质展已核对灯具。\",\"role\":\"user\"},{\"content\":\"已记下\",\"role\":\"assistant\"},{\"content\":\"请记下这条测试记录，只回复已记下：临时地质展的新提交批次标志为 KITE-905，交接点设在西拱门第二排。\",\"role\":\"user\"},{\"content\":\"已记下\",\"role\":\"assistant\"}]",
+        "tier": "chunk",
+        "turn_id": "670b4c6d-12c1-4a83-9e30-631ce1769d74"
+      }
+    ],
+    "searches": [],
+    "usage": {
+      "all": {
+        "attempts": 5,
+        "estimated_attempts": 0,
+        "input_tokens": 20621,
+        "known_subtotal": {
+          "input_tokens": 20621,
+          "output_tokens": 296,
+          "total_tokens": 20917
+        },
+        "output_tokens": 296,
+        "total_tokens": 20917,
+        "unknown_attempts": 0
+      },
+      "preparation": {
+        "attempts": 3,
+        "estimated_attempts": 0,
+        "input_tokens": 11458,
+        "known_subtotal": {
+          "input_tokens": 11458,
+          "output_tokens": 9,
+          "total_tokens": 11467
+        },
+        "output_tokens": 9,
+        "total_tokens": 11467,
+        "unknown_attempts": 0
+      },
+      "target": {
+        "attempts": 2,
+        "estimated_attempts": 0,
+        "input_tokens": 9163,
+        "known_subtotal": {
+          "input_tokens": 9163,
+          "output_tokens": 287,
+          "total_tokens": 9450
+        },
+        "output_tokens": 287,
+        "total_tokens": 9450,
+        "unknown_attempts": 0
+      }
+    }
+  }
+]

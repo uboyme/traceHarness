@@ -1,0 +1,170 @@
+{
+  "run_id": "366e729d-c6c4-4f08-a50a-8ecb4cc8b211",
+  "sessions": 20,
+  "requests": 102,
+  "rows": [
+    {
+      "variant_id": "aa-reference",
+      "case_id": "h-direct",
+      "session_id": "61dfcc28-2ec3-4b6c-8c11-0c16baf31c43",
+      "requests": 13,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "h-absent",
+      "session_id": "fd733aa5-e382-4878-b457-24236fc0cecf",
+      "requests": 14,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "s-direct",
+      "session_id": "162ccb1b-96e6-46b4-ae61-4a09b10aa8ae",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "s-absent",
+      "session_id": "15c4fb30-6f0f-4cbe-981f-1e4d059c4989",
+      "requests": 3,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-direct",
+      "session_id": "98cfef98-fb53-4c18-8ed8-f7a011d5ba62",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-direct",
+      "session_id": "7c802090-0fa1-43cc-a9e7-56e894c0a188",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-revoked",
+      "session_id": "ba3517be-01c4-4d07-9bf2-1ec6bdd5d2f4",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "m-revoked",
+      "session_id": "8aa8646e-1347-44d9-8c24-79a7ebba5595",
+      "requests": 7,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "o-direct",
+      "session_id": "50a656ba-a821-4d35-bce6-c3c7a72017a5",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-reference",
+      "case_id": "o-absent",
+      "session_id": "3befb885-2b65-4aa7-a7f1-e43057dc0a99",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "h-direct",
+      "session_id": "0502be93-45eb-413e-8d25-1b6510ada9e2",
+      "requests": 14,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "h-absent",
+      "session_id": "d4303e40-10a1-474e-a9a9-b3dbfcc56f88",
+      "requests": 13,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "s-direct",
+      "session_id": "3e076559-7c98-4491-9c0b-ae6f1d7378ff",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "s-absent",
+      "session_id": "97767e04-b5de-4f7f-9cb1-4050dbe3fd26",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-direct",
+      "session_id": "5bba4c18-c50e-446b-b6a8-3e468c93c599",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-direct",
+      "session_id": "43bb38b1-c119-494f-a7fa-7dbefb7704c9",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-revoked",
+      "session_id": "30f926a0-9bc0-4d5c-83d4-68b20fb8bdd4",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "m-revoked",
+      "session_id": "fc3116dd-dc0f-4014-86b8-a81decc7c311",
+      "requests": 8,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "o-direct",
+      "session_id": "e815327b-cc09-4421-b4dc-0e919b7cdf72",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "variant_id": "aa-repeat",
+      "case_id": "o-absent",
+      "session_id": "15f86367-4e59-4d26-9683-20b804f7508f",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    }
+  ],
+  "provider_calls": 0,
+  "offline_recomparison_equal": true,
+  "json_markdown_equal": true
+}

@@ -1,0 +1,50 @@
+{
+  "format": 1,
+  "run_id": "b61ef525-435f-4d12-88b1-9a69b639c4b6",
+  "purpose": "UE-2 eight-episode owner/dispatch acceptance, not a new 72-case score",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "network": "explicit empty urllib ProxyHandler in isolated driver process",
+  "planned": 8,
+  "executed": 8,
+  "execution_failures": 0,
+  "pending_human_review": 8,
+  "positive_cases": 4,
+  "positives_with_dispatched_source": 4,
+  "negative_cases": 4,
+  "agent_review_overbroad_negatives": [
+    "h-absent",
+    "s-absent",
+    "m-revoked"
+  ],
+  "replayed_sessions": 10,
+  "replayed_requests": 50,
+  "replay_errors": 0,
+  "invariant_errors": 0,
+  "scope_violations": 0,
+  "output_command_executions": 2,
+  "usage": {
+    "preparation": {
+      "attempts": 24,
+      "input_tokens": 93942,
+      "output_tokens": 106,
+      "total_tokens": 94048,
+      "unknown_attempts": 0
+    },
+    "target": {
+      "attempts": 26,
+      "input_tokens": 144267,
+      "output_tokens": 4394,
+      "total_tokens": 148661,
+      "unknown_attempts": 0
+    },
+    "all": {
+      "attempts": 50,
+      "input_tokens": 238209,
+      "output_tokens": 4500,
+      "total_tokens": 242709,
+      "unknown_attempts": 0
+    }
+  },
+  "source_note": "The run owns its archived source.zip. Later changes only enrich offline review export with original run location and target-event files; no runtime, preparation or scoring behavior changed."
+}

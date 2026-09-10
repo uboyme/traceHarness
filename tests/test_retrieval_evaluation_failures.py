@@ -1,15 +1,17 @@
 """F5 negative evidence through production Context and Product owners."""
 
 import asyncio
+import json
 
 import pytest
 from test_memory_context import memory_case
 from test_product_benchmark_e2e import PRODUCT_MODEL_ID, _ProductProvider
 from test_retrieval_evaluation import benchmark, write_spec
 
+from traceh.evaluation.evaluators.product_manifest import load_product_suite
 from traceh.evaluation.manifest import load_benchmark_manifest
 from traceh.evaluation.retrieval import collect_retrieval
-from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.evaluation.runner import EvaluationRunner
 from traceh.session.service import SessionService
 from traceh.session.sqlite import SqliteEventStore
 from traceh.workspaces.catalog import WorkspaceCatalogReader
@@ -20,14 +22,18 @@ async def test_unjudged_dispatched_step_still_checks_isolation_and_missing_denom
     manifest, spec = benchmark(root)
     spec["evaluator"]["thresholds"] = None
     write_spec(root, manifest, spec)
-    frozen = load_benchmark_manifest(root, provider_id="scripted", model_id="explicit").retrieval
+    frozen = load_product_suite(
+        load_benchmark_manifest(root), provider_id="scripted", model_id="explicit"
+    ).retrieval
     async with memory_case(tmp_path) as (runtime, _, _, session, _, _):
         await runtime.run_existing(session, "context-fact")
         result = await collect_retrieval(
             runtime.sessions,
             frozen,
             session_roles={session: "coder"},
-            task_id=manifest["tasks"][0]["task_id"],
+            task_id=json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"][0][
+                "case_id"
+            ],
             seed_receipt={
                 "forbidden": [{"kind": "memory", "id": "context-fact"}],
                 "bindings": {"current": {"project_id": "context-project"}},
@@ -75,9 +81,7 @@ async def test_product_index_preparation_failure_converges_attached_worktree(
 
     monkeypatch.setattr(attempt, "build_product_chat_host", host)
     monkeypatch.setattr(SessionService, "rebuild_context_index", rebuild)
-    runner = ProductBenchmarkRunner(
-        root, tmp_path / "out", provider=provider, model_id=PRODUCT_MODEL_ID
-    )
+    runner = EvaluationRunner(root, tmp_path / "out", provider=provider, model_id=PRODUCT_MODEL_ID)
     task = asyncio.create_task(runner.run())
     await asyncio.wait_for(reached.wait(), 60)
     if cancel:
@@ -86,7 +90,7 @@ async def test_product_index_preparation_failure_converges_attached_worktree(
         with pytest.raises(asyncio.CancelledError):
             await task
     else:
-        report = await task
+        report = (await task).task_report
         assert not report.attempts[0].success
     assert provider.requests == []
     store = SqliteEventStore(tmp_path / "out" / "attempts" / "001" / "ev")

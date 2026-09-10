@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+## 0.11.0 — 2026-09-11
+
+- Independent evaluation worker receipts use format 2 to verify direct and interpreter-launcher ownership; old evidence remains inspectable with its frozen source. Incomparable evidence stops background optimization with unknown usage.
+
+- AO-3：TUI 宿主接入后台受限优化；工作区反馈与结构信号绑定原 Session，周期准入/配额/结算使用同一 EventStore，复用原 AO 与隔离 Evaluation。F2 可选题生成计划，F6 管理反馈、暂停、待审与显式续批；跨宿主准入、即时退出和重复取消有定向检查。真实小样 21 次请求全部重放，模型评分 1/2→2/2 但成本门槛未过，未采用候选。没有后台源码自修改、OS daemon 或自动推广。
+
+- AO-2+：完成有界语义裁判校准，新增显式实验与离线重放驱动、冻结开发对照和完整失败证据。74 次真实调用全部可重放；候选 15/24 低于原条件 16/24，未采用，生产裁判逐字节恢复，旧评分和人工采用边界不变。
+
+- AO-2：可信策略插件的一次受限提案进入原 AO-1/evaluation；独立语义裁判使用原 Runtime/Budget/Session 并标明 model 来源，judgment 格式 2 拒绝旧含糊格式。硬证据门禁、未知停止、取消收敛与原输出绑定有定向及反向验证；真实小实验保留基线，模型评分仍需校准，不自动采用。
+- AO-1：人工候选经 AO-0 准入后复用原 EvaluationRunner 两臂隔离执行与 comparison 核验；冻结完整批次、输入和候选，保留无收益/重复/失败/待审及取消收尾证据。离线显式补审不重跑、不恢复队列；无自动采用、真实策略模型或新 72 题成绩。
+
+- AO-0：新增 typed strategy/analysis 服务合同与 SDK 导出；evolution 冻结开发范围、源码/计划身份和额度，复用 UE-3 文本候选校验，按确切改动去重并区分继续/待审/停止。沿用原插件代际借用与取消收敛；不增加自动调度、模型分析实现、检索改动或采用权限。
+
+- UE-0/UE-1：唯一 eval 切到根协议 3 和 EvaluationRunner，Product 配置/持久评分/统计归 ProductTaskEvaluator；
+  增加严格 dataset/run-plan、冻结工件、完整试次分母、公共执行/评分/收敛/证据结果，保留原 Product 与 F5 主线。
+  旧根 1/2 明确拒绝；不增加自动优化或新运行事实源。
+- UE-2：接独立检索旅程评估器、旧 72 条显式开发材料、试次选择和离线 review/assess；四类来源走原 owner，实际派发证据与人工答案判据分开。
+- UE-3：冻结受限说明文本候选，原 EvaluationRunner 在两个独立进程运行 baseline/candidate；离线 compare 核对原证据、人工评分、完整配对分母与成本，区分条件漂移、未知、质量与成本变化。取消等待原 owner 关闭，强制退出保持未证明；不授予采用权限。
+- UE-4：新增显式单臂、普通/多来源对照及原账本重开驱动；真实 72+8 条与完整待审证据归档。生产策略保持不变，暂定匹配、Codex 意见和正式人工评分分开，不自动采用候选。
+- UE-3+：检索报告和原离线 review/assess 增加来源候选、实际派发、读取状态及查询/分页范围诊断；绑定原证据和当前分析器身份，未知与负例保持独立，不改变评分、Runtime 策略或采用权限。
+
 ## 0.10.0 — 2026-09-10
 
 - TUI 沙箱连接与运行环境支持刷新下拉选择或手动填写名称／ID，标签在配置层解析成原合同的固定镜像身份。

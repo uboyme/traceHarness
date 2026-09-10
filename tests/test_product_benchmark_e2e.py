@@ -16,6 +16,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from evaluation_fixtures import material_case, product_manifest, write_dataset
 from sandbox_fixtures import real_sandbox_policy
 
 import traceh.evaluation.attempt as attempt_module
@@ -28,11 +29,12 @@ from traceh.api.product import (
 from traceh.api.workflow import WorkflowStatus
 from traceh.evaluation.attempt import REQUESTER_PROVIDER_ID
 from traceh.evaluation.errors import BenchmarkEvidenceError, BenchmarkExecutionError
-from traceh.evaluation.manifest import BENCHMARK_TARGET_ID
-from traceh.evaluation.metrics import collect_attempt_evidence
-from traceh.evaluation.report import APPROVAL_POLICY
+from traceh.evaluation.evaluators.product_manifest import BENCHMARK_TARGET_ID
+from traceh.evaluation.evaluators.product_metrics import collect_attempt_evidence
+from traceh.evaluation.evaluators.product_report import APPROVAL_POLICY
+from traceh.evaluation.plan import RunOptions
 from traceh.evaluation.repositories import read_target_revision
-from traceh.evaluation.runner import ProductBenchmarkRunner
+from traceh.evaluation.runner import EvaluationRunner
 from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
 from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
 from traceh.promotion.models import (
@@ -277,17 +279,15 @@ def build_benchmark(
     arms: tuple[tuple[str, int], ...],
     tasks: tuple[str, ...] = ("write_expected_file",),
 ) -> Path:
-    """Write a schema-1 manifest whose verifier is a real local subprocess."""
+    """Write schema-3 material whose verifier uses the real Product sandbox."""
 
     root.mkdir(parents=True, exist_ok=True)
     for task_id in tasks:
         initial = root / task_id / "initial"
         initial.mkdir(parents=True, exist_ok=True)
         (initial / "kept.txt").write_text("kept\n", encoding="utf-8")
-    manifest = {
-        "protocol_version": 2,
+    settings = {
         "retrieval": None,
-        "benchmark_id": "benchmark-under-test",
         "profile_id": "benchmark-profile",
         "approver_id": "benchmark-host",
         "default_mode": "single",
@@ -345,22 +345,12 @@ def build_benchmark(
             "max_patch_bytes": 4_194_304,
         },
         "max_report_chars": 4_096,
-        "arms": [
-            {"requested_mode": mode, "repetitions": repetitions}
-            for mode, repetitions in arms
-        ],
-        "tasks": [
-            {
-                "task_id": task_id,
-                "requirement": "Create the file the frozen check requires.",
-                "initial_dir": f"{task_id}/initial",
-            }
-            for task_id in tasks
-        ],
+        "modes": [mode for mode, _ in arms],
     }
-    (root / "benchmark.json").write_text(
-        json.dumps(manifest, indent=2), encoding="utf-8"
-    )
+    manifest = product_manifest("benchmark-under-test", settings)
+    cases = [material_case(root, task_id, "Create the file the frozen check requires.",
+                           f"{task_id}/initial") for task_id in tasks]
+    write_dataset(root, manifest, cases)
     return root
 
 
@@ -381,15 +371,16 @@ def _runner(
     tasks: tuple[str, ...] = ("write_expected_file",),
     output: str = "evidence",
     retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
-) -> ProductBenchmarkRunner:
+) -> EvaluationRunner:
     benchmark = build_benchmark(tmp_path / "benchmark", arms=arms, tasks=tasks)
     clock = steady_clock()
-    return ProductBenchmarkRunner(
+    return EvaluationRunner(
         benchmark,
         tmp_path / output,
         provider=provider or _ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
         retry_policy=retry_policy,
+        options=RunOptions(repetitions=arms[0][1]),
         sandbox=real_sandbox_policy(),
         monotonic=lambda: next(clock),
     )
@@ -409,7 +400,7 @@ async def test_an_explicit_arm_runs_the_whole_product_mainline(
     tmp_path: Path, requested: str, resolved: ResolvedTaskMode
 ) -> None:
     runner = _runner(tmp_path, arms=((requested, 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     assert report.complete
     (attempt,) = report.attempts
@@ -452,7 +443,7 @@ async def test_benchmark_reports_retry_cost_without_changing_product_success(
         retry_policy=policy,
     ).run()
 
-    data = report.to_dict()
+    data = report.task_report.to_dict()
     attempt = data["attempts"][0]
     execution = attempt["evidence"]["execution"]
     arm = data["quality_arms"][0]
@@ -474,7 +465,7 @@ async def test_the_promoted_revision_is_what_the_target_ref_points_at(
     tmp_path: Path,
 ) -> None:
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     assert attempt.evidence is not None
@@ -488,7 +479,7 @@ async def test_single_and_multi_share_one_experiment_condition(
     tmp_path: Path,
 ) -> None:
     runner = _runner(tmp_path, arms=(("single", 1), ("multi", 1)))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (conditions,) = report.tasks
     assert conditions.coherent
@@ -522,7 +513,7 @@ async def test_auto_is_counted_in_the_arm_its_router_resolved(
         arms=(("multi", 1), ("auto", 1)),
         provider=_ProductProvider(route_to=ResolvedTaskMode.MULTI),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (arm,) = report.quality_arms
     assert arm.resolved_mode is ResolvedTaskMode.MULTI
@@ -543,7 +534,7 @@ async def test_routing_and_execution_tokens_are_separate_measurements(
     tmp_path: Path,
 ) -> None:
     runner = _runner(tmp_path, arms=(("auto", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     evidence = attempt.evidence
@@ -567,7 +558,7 @@ async def test_routing_and_execution_tokens_are_separate_measurements(
 
 async def test_active_elapsed_excludes_the_approval_wait(tmp_path: Path) -> None:
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     timing = attempt.timing
@@ -582,7 +573,7 @@ async def test_repeating_one_arm_aggregates_and_drops_the_n1_label(
     tmp_path: Path,
 ) -> None:
     runner = _runner(tmp_path, arms=(("single", 2),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (arm,) = report.quality_arms
     data = arm.to_dict()
@@ -597,7 +588,7 @@ async def test_repeating_one_arm_aggregates_and_drops_the_n1_label(
 
 async def test_one_observation_is_labelled_in_both_outputs(tmp_path: Path) -> None:
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (arm,) = report.quality_arms
     assert arm.single_observation is True
@@ -609,13 +600,14 @@ async def test_one_observation_is_labelled_in_both_outputs(tmp_path: Path) -> No
 
 async def test_the_two_reports_carry_the_same_values(tmp_path: Path) -> None:
     runner = _runner(tmp_path, arms=(("single", 1), ("auto", 1)))
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     data = json.loads(
         (tmp_path / "evidence" / "report.json").read_text(encoding="utf-8")
     )
     markdown = _markdown(tmp_path / "evidence")
-    assert data == report.to_dict()
+    assert data["task_report"] == report.to_dict()
+    data = data["task_report"]
     for attempt in data["attempts"]:
         assert attempt["attempt_id"] in markdown
         assert str(attempt["timing"]["active_ms"]) in markdown
@@ -658,7 +650,7 @@ async def test_attempt_retains_execution_and_store_close_failures(
     monkeypatch.setattr(attempt_module, "_run_attempt_with_store", fail_attempt)
     request = SimpleNamespace(
         directory=tmp_path / "attempt",
-        task=SimpleNamespace(initial_dir=tmp_path / "initial"),
+        task=SimpleNamespace(initial_dir=tmp_path / "initial", material_digest="fixture-digest"),
     )
 
     with pytest.raises(BaseExceptionGroup) as caught:
@@ -687,7 +679,7 @@ async def test_a_router_failure_is_measured_and_its_owners_converge(
             jitter_ratio=0.0,
         ),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     assert not attempt.success
@@ -742,7 +734,7 @@ async def test_interrupting_a_run_converges_before_it_propagates(
         promotion_target_id=BENCHMARK_TARGET_ID,
         target_ref="refs/heads/main",
         target_revision=await read_target_revision(target, "refs/heads/main"),
-        verification_plan=runner.manifest.settings.host_profile.verification_plan,
+        verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
     )
     assert not evidence.success
     assert evidence.product_status is ProductTaskStatus.CANCELLED
@@ -760,7 +752,7 @@ async def test_untrustworthy_usage_is_unavailable_rather_than_zero(
         arms=(("auto", 1),),
         provider=_UntrustworthyRouterUsageProvider(),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     evidence = attempt.evidence
@@ -794,7 +786,7 @@ async def test_a_role_that_worked_before_failing_still_reports_its_cost(
     runner = _runner(
         tmp_path, arms=(("single", 1),), provider=_FailAfterWritingProvider()
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     evidence = attempt.evidence
@@ -831,7 +823,7 @@ async def test_a_dirty_worktree_quarantined_on_failure_is_converged(
     runner = _runner(
         tmp_path, arms=(("single", 1),), provider=_WrongContentProvider()
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     evidence = attempt.evidence
@@ -853,7 +845,7 @@ async def test_an_arm_failing_before_review_leaves_the_verifier_unproven(
         arms=(("single", 1), ("multi", 1)),
         provider=_FailingParentProvider(),
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     outcomes = {
         attempt.requested_mode.value: attempt for attempt in report.attempts
@@ -865,7 +857,7 @@ async def test_an_arm_failing_before_review_leaves_the_verifier_unproven(
 
     (conditions,) = report.tasks
     assert conditions.verifier_definition_digest == (
-        runner.manifest.verifier_definition_digest
+        runner.evaluator.suite.verifier_definition_digest
     )
     # Proved from the frozen manifest, and the arm that never demonstrated it is
     # named instead of being filtered into apparent agreement.
@@ -883,7 +875,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
     """Each refusal is triggered through the public collector, on a real store."""
 
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     assert attempt.evidence is not None
     store = SqliteEventStore(tmp_path / "evidence" / attempt.directory / "ev")
@@ -895,7 +887,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert unknown.value.code == "benchmark-product-task-missing"
 
@@ -906,7 +898,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id="a-different-target",
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     # A run interpreted through a definition it never agreed to would report node
     # kinds and results that never happened.
@@ -919,7 +911,7 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/somewhere-else",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert ref.value.code == "benchmark-promotion-target-mismatch"
 
@@ -935,7 +927,7 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
     """
 
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
     honest = attempt.evidence.execution.tokens
@@ -975,7 +967,7 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-session-invariants-violated"
 
@@ -990,7 +982,7 @@ async def test_a_review_the_workflow_never_produced_breaks_the_chain(
     """
 
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
     events = tmp_path / "evidence" / attempt.directory / "ev"
@@ -1008,7 +1000,7 @@ async def test_a_review_the_workflow_never_produced_breaks_the_chain(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-review-chain-broken"
 
@@ -1024,7 +1016,7 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
     """
 
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
 
@@ -1094,7 +1086,7 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-verifier-evidence-mismatch"
 
@@ -1112,7 +1104,7 @@ async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
     """
 
     runner = _runner(tmp_path, arms=(("auto", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     evidence = attempt.evidence
     assert evidence is not None and attempt.success
@@ -1135,7 +1127,7 @@ async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=evidence.new_revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-routing-session-mismatch"
 
@@ -1146,7 +1138,7 @@ async def test_success_requires_the_ref_to_hold_the_promoted_revision(
     """A promotion receipt alone is not proof that the repository moved."""
 
     runner = _runner(tmp_path, arms=(("single", 1),))
-    report = await runner.run()
+    report = (await runner.run()).task_report
     (attempt,) = report.attempts
     assert attempt.evidence is not None and attempt.success
     store = SqliteEventStore(tmp_path / "evidence" / attempt.directory / "ev")
@@ -1158,7 +1150,7 @@ async def test_success_requires_the_ref_to_hold_the_promoted_revision(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=revision,
-            verification_plan=runner.manifest.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
         )
         assert evidence.product_status.value == "completed"
         assert evidence.review_passed is True
@@ -1177,7 +1169,7 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
     runner = _runner(
         tmp_path, arms=(("multi", 1),), provider=_ProductProvider(requests)
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     evidence = attempt.evidence
@@ -1214,7 +1206,7 @@ async def test_the_runner_refuses_a_provider_the_profile_cannot_name(
 
     benchmark = build_benchmark(tmp_path / "benchmark", arms=(("single", 1),))
     with pytest.raises(BenchmarkExecutionError) as caught:
-        ProductBenchmarkRunner(
+        EvaluationRunner(
             benchmark,
             tmp_path / "evidence",
             provider=_Anonymous(),
@@ -1230,7 +1222,7 @@ async def test_the_requester_relay_is_not_the_measured_provider(
     runner = _runner(
         tmp_path, arms=(("single", 1),), provider=_ProductProvider(requests)
     )
-    report = await runner.run()
+    report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     assert attempt.evidence is not None

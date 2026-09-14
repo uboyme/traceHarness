@@ -56,32 +56,64 @@ class RequestTokenBudgetExceeded(ValueError):
         self.step_id = step_id
 
 
-class RequestTokenMeter:
-    def __init__(self, policy: TokenBudgetPolicy, *, provider=None, model=None):
+class CanonicalTokenCounter:
+    """The one canonical token count, usable without an input-window policy.
+
+    Budget reservations need to count a request; the input measurement needs to
+    count the same parts under a window policy. Both go through this object so a
+    host can never hold two token counts that disagree. It states no policy of
+    its own: a reservation's safety margin belongs to the Budget host, and the
+    input allowance belongs to `TokenBudgetPolicy`.
+    """
+
+    __slots__ = ("_encoding", "identity")
+
+    def __init__(self, encoding: str) -> None:
+        if not isinstance(encoding, str) or not encoding.strip():
+            raise ValueError("token-encoding-required")
         try:
             import tiktoken
         except ImportError:
             raise ValueError("token-meter-unavailable: install traceharness-py[tokens]") from None
         try:
-            self._encoding = tiktoken.get_encoding(policy.encoding)
+            self._encoding = tiktoken.get_encoding(encoding)
         except Exception:
             raise ValueError("token-encoding-unavailable") from None
-        self.policy = policy
-        self._binding = (provider, model)
         self.identity = {
             "method": "canonical-parts-bpe-v1",
-            "encoding": policy.encoding,
+            "encoding": encoding,
             "library_version": version("tiktoken"),
             "quality": "estimated",
         }
 
-    def _count(self, value):
+    def count(self, value) -> int:
         # Special-looking source strings are ordinary untrusted text.
         return len(self._encoding.encode(canonical_json(value), disallowed_special=()))
+
+    def count_request(self, request: ModelRequest) -> int:
+        """Satisfy the Budget host's `TokenCounter` protocol."""
+
+        return self.count(request.to_dict())
+
+
+class RequestTokenMeter:
+    def __init__(self, policy: TokenBudgetPolicy, *, provider=None, model=None):
+        self._counter = CanonicalTokenCounter(policy.encoding)
+        self.policy = policy
+        self._binding = (provider, model)
+        self.identity = self._counter.identity
+
+    def _count(self, value):
+        return self._counter.count(value)
 
     def count_message(self, message):
         """Count one actual message using the same canonical part as full requests."""
         return self._count(message.to_dict())
+
+    def count_request(self, request: ModelRequest) -> int:
+        """Satisfy `TokenCounter` using the same counting primitive as `measure`."""
+
+        return self._counter.count_request(request)
 
     def measure(self, request: ModelRequest, *, product_messages=0, context_messages=1):
         if self._binding != (None, None) and self._binding != (request.provider, request.model):

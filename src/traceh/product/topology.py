@@ -1,28 +1,9 @@
-"""The two fixed Workflow shapes the product surface runs, and nothing else.
+"""The fixed outer Workflow shared by single and multi execution.
 
-There are exactly two, they are functions of the resolved mode, and no Profile,
-task, Router answer or configuration file can add a node, an edge, an Agent or a
-fan-out. That is the whole point: the router chooses between two values, and the
-two values are written here.
-
-``single`` is ``coder -> verification -> approval``.
-``multi`` is ``parent -> reviewer -> coder -> verification -> approval``.
-
-``single`` is a *shorter* Workflow, not a shortcut past one. Both end in the same
-safety tail - the same frozen verification plan, the same immutable Artifact, the
-same human Approval barrier - because a second "fast path" is exactly where a
-check would later be skipped.
-
-The reviewer runs *before* the coder. A reviewer after the coder produces an
-opinion nothing consumes: the fixed verifier does not read it, the Approval node
-does not read it and no later node runs. Placing it first makes it part of the
-work rather than commentary on it.
-
-Only the coder captures an Artifact, because only the coder may write. Every
-identifier here is derived from the role and the node kind, so two hosts running
-the same mode against the same promotion target produce the same definition and
-the same hash.
-"""
+Both run coder -> verification -> human approval. Multi delegation occurs
+inside the coder execution owner and cannot bypass this tail. Only the coder
+captures an Artifact after its owned children converge. Definitions retain
+strategy-specific identities and exact promotion-target binding."""
 
 from __future__ import annotations
 
@@ -40,17 +21,11 @@ from traceh.product.errors import ProductInputError
 from traceh.product.events import require_product_identifier
 from traceh.workflow.models import freeze_workflow_definition, workflow_definition_hash
 
-PRODUCT_MODE_ROLES: Mapping[ResolvedTaskMode, tuple[ProductRole, ...]] = (
-    MappingProxyType(
-        {
-            ResolvedTaskMode.SINGLE: (ProductRole.CODER,),
-            ResolvedTaskMode.MULTI: (
-                ProductRole.PARENT,
-                ProductRole.REVIEWER,
-                ProductRole.CODER,
-            ),
-        }
-    )
+PRODUCT_MODE_ROLES: Mapping[ResolvedTaskMode, tuple[ProductRole, ...]] = MappingProxyType(
+    {
+        ResolvedTaskMode.SINGLE: (ProductRole.CODER,),
+        ResolvedTaskMode.MULTI: (ProductRole.CODER,),
+    }
 )
 """Which roles each mode runs, in execution order, as a read-only mapping.
 
@@ -94,9 +69,7 @@ def product_workflow_definition(
     roles = PRODUCT_MODE_ROLES.get(mode) if type(mode) is ResolvedTaskMode else None
     if roles is None:
         raise ProductInputError("product-resolved-mode-invalid", "mode")
-    target_id = require_product_identifier(
-        promotion_target_id, field="promotion_target_id"
-    )
+    target_id = require_product_identifier(promotion_target_id, field="promotion_target_id")
     agents: list[AgentTaskNode] = []
     predecessors: tuple[str, ...] = ()
     for role in roles:
@@ -132,9 +105,7 @@ def product_workflow_definition(
     )
 
 
-def product_definition_hash(
-    mode: ResolvedTaskMode, *, promotion_target_id: str
-) -> str:
+def product_definition_hash(mode: ResolvedTaskMode, *, promotion_target_id: str) -> str:
     """The hash a receipt records, taken from the definition that will run.
 
     Recomputed from the built definition rather than stored beside it, so a

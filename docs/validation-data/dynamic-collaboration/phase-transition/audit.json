@@ -1,0 +1,143 @@
+{
+  "format": 1,
+  "kind": "counterfactual-request-probe",
+  "product_evaluation": false,
+  "tool_execution": false,
+  "driver_sha256": "6c0e24da2d13b9184c92dbc0c9746ccd5de00e7b7ea0aa05e31e8c7089d62c3f",
+  "plan_sha256": "d4eb450b675e8a6b80f822905d7d9273358aa1a6b6be1001eb50647ac8505af2",
+  "archive_sha256": "aad0f6ce7ffad4632ddc3c446e236a548e7e4344c82bb8144e41ac64ad2e257e",
+  "real_calls": 12,
+  "exact_tokens": 44477,
+  "provider_failures": 0,
+  "sources": [
+    {
+      "case": "separable-review",
+      "stream_id": "session:wf-session-2b132a43e41ec6b32dbde1884e80b44f1051c83625ae13e03604d9c2e6949bdd",
+      "seq": 34,
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "database_sha256": "25cf54ea8835409999e1c3fc2c16eff54bb515730b875f18a47236615aacd054",
+      "database_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "stream_id": "session:wf-session-eece0d1c3a7995bedd6b7aa5780cc5c1c121f939c8e5f120c691451f5f3bd110",
+      "seq": 34,
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "database_sha256": "8c5299490c95a6559e75806bda7a33f082667d020e1741f973d39562449a4f03",
+      "database_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "stream_id": "session:wf-session-b142219e0876cf353e3a0c7a37ec669846c278e425af2cd1d01cbbfc57e8f7cd",
+      "seq": 34,
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "database_sha256": "b1d98ad01e7ce3b8522c64162be63229a7dce635be0bcdc0f740d2b4433f8d07",
+      "database_unchanged": true
+    }
+  ],
+  "rows": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "request_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "separable-review",
+      "condition": "drop-stale",
+      "request_fingerprint": "3787edaaf25260bc830bfa4457c95f9f814d76ed24fa8c5ce2cef8a3d65ae373",
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "separable-review",
+      "condition": "phase-last",
+      "request_fingerprint": "d35678457e2ba559b34990702463cb3ed538b6e40b2f773e5fad7478e36452ae",
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "separable-review",
+      "condition": "both",
+      "request_fingerprint": "73b94c5bf223292d9194336faf9951977dfbab207cf5bbdc52d705837c76a65d",
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "request_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "condition": "drop-stale",
+      "request_fingerprint": "607b4eb4fd81854297987008de6866c021d956005f9ab4813bf43030734b1dc7",
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "condition": "phase-last",
+      "request_fingerprint": "c1fae0731e36adf40f27bccf6fc1e46bd90ddf3127653a6c5077d92225cf3c0a",
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "condition": "both",
+      "request_fingerprint": "9096b560bbbf5e0072376205cc66793e0c6c65a32f6ea464ce44e6cd7ad3190d",
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "request_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "condition": "drop-stale",
+      "request_fingerprint": "943beee03dc7491a71b6410b6f65f8176d48300f6d3d4c00e96b0fdaf4c64699",
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "condition": "phase-last",
+      "request_fingerprint": "81a277e487b2e287edb25056d85e03b5fc2078107fa39a8d1103b72362c0e62c",
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "condition": "both",
+      "request_fingerprint": "2266f245aa3dd3b8cc027b0b96c94d1a6c7aa2f5bc2c6d39d73354cf464efe59",
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "tool_evidence_unchanged": true,
+      "tools_unchanged": true
+    }
+  ],
+  "validation": {
+    "new_tests": 22,
+    "targeted_and_adjacent_passed": 75,
+    "skipped": 0,
+    "collect_only": 4047,
+    "reverse_changed_conditions_failed": 3
+  }
+}

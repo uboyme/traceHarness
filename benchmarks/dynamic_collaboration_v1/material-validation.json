@@ -1,0 +1,404 @@
+{
+  "format": 1,
+  "image": "sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b",
+  "docker_context": "desktop-linux",
+  "network": "none",
+  "cases": [
+    {
+      "case_id": "bounded-identity",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 4, in <module>\nAssertionError: None\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "b518f62fcbb3c9ac0a4fbc5df347fc41b92c5f995c3e32d613c69efcc029467f",
+      "verification_sha256": "cf71ab936336f13f9924eabadf9b55813348fd32f256f42479fcae6562cbabd5"
+    },
+    {
+      "case_id": "event-payload-isolation",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "04c01381c850f8fadf031dce2b4fde03123a83f0b07101cdacda7ddb69273ae3",
+      "verification_sha256": "2de9b6afc141374a493aa19d04e8b1854d6f1b0f0dfd656b090ac5d77fc75c99"
+    },
+    {
+      "case_id": "unicode-page-cursor",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 3, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "eb35afee4b369e425a7a21c5ea27956be135f61110069a36ca96753f3f75d182",
+      "verification_sha256": "ed3131aa7374c225cdba98ec483424d0b61222947fb259354e5df663570e7df1"
+    },
+    {
+      "case_id": "current-question-order",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 6, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "ddf7cc91a6f7dcc2424b0dab3e65e7e9665e4df76aa25f282e46ad46417c89e5",
+      "verification_sha256": "167cfede0d869bac3d7b2c8af1a9c58433c15c8a92c56522009100638271c5fc"
+    },
+    {
+      "case_id": "memory-scope-and-state",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "c7b93d6965fa9f09aac42d16072bdc5f80e8a9675ad31b73733eb2d24a52bff4",
+      "verification_sha256": "782583fe3111505b53120f02e3294eab6cbf24b0b3b6e3221d602a20f5aeb0d8"
+    },
+    {
+      "case_id": "worker-receipt-identity",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 4, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "2943d7ae95f0abb138db5dce82d2f0992772f5425a48f2fe0af1b8d30951a43e",
+      "verification_sha256": "77a0f72de3ceea3cbbb117bb250b168565cab6a5daa4f0af27ed6a6f23c5026c"
+    },
+    {
+      "case_id": "tool-content-retention",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "6e507f96ca7f4c58a81cfb88634009e0d80e166f0093b2a8e9a9d300906e34c3",
+      "verification_sha256": "36772e97c92c9c2ebc57a4dd4a06aa74e0eab9d3806673f460230eb28a64a47f"
+    },
+    {
+      "case_id": "runtime-profile-binding",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 4, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "ad498e96b0dd006a843322c3bc595cd9c16abbcceee62685dfd8b93ef3e9d53d",
+      "verification_sha256": "58cf2b4c6f15cb7c06597b9c6c8ab54062b2725eda07e8168db85efc87df2333"
+    },
+    {
+      "case_id": "cancel-before-worker-start",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 195, in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/base_events.py\", line 691, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"<string>\", line 11, in check\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "7c22b302a608e0a9ffde116422f55dd278669e0dc6c715aec9008c4a35b1509d",
+      "verification_sha256": "da9cbc8baa989549bf6f1c4f8f12f5b94cab6f6a320fad59d59910ae34b98fa6"
+    },
+    {
+      "case_id": "commit-aware-compensation",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 11, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "36cc62a30cf76fd126e572c99180f025719b337afdd045616959007b708a7965",
+      "verification_sha256": "be861b65150d53c89594cac2a4966890df3720cfe0be09db0d71fcbb72c4857a"
+    },
+    {
+      "case_id": "stale-source-plan",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 11, in <module>\nAssertionError: stale plan refreshed\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "42be45901b954033b7bd62cf30456aa76cbb5d9d31e3a55137efbd028c8373c5",
+      "verification_sha256": "2e184f69293477e5887f735cc57ed786cff4805439010e0e8515c5094a41b68d"
+    },
+    {
+      "case_id": "unknown-usage-qualification",
+      "split": "development",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 6, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "e2e85087eed92d7747ab3bd84b427ec3359abd989055e64d5f0ec79a54e2f018",
+      "verification_sha256": "a8962240c401f7160d3d56155d81cc16b587f10e09841763e9d2856ead2f34e4"
+    },
+    {
+      "case_id": "explicit-integer-quota",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 6, in <module>\nAssertionError: non-integer or invalid quota accepted\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "a0eeb6ac94bbf319d5ce803bf12f8703d6170013088371b5eefd03ecfe9036c1",
+      "verification_sha256": "abc4f007ae15c65d0b51ccd918aa44c15d0af876648d9030c55bd65d8289786d"
+    },
+    {
+      "case_id": "resolved-path-containment",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 14, in <module>\nAssertionError: escape accepted\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "c85c9129734b0b7d6a3e9589150235cf081fcf86b770623f5cb01aa95a9bfc69",
+      "verification_sha256": "75004ac0aa5094abdea85fa02c2993f75e38944ad6c71d0cb47a30b2a73a22d8"
+    },
+    {
+      "case_id": "verification-artifact-binding",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 8, in <module>\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "54642d847c2f98c2c0948e30ebd2d4d8b830d53ce0aa54b4dc33414c364778d1",
+      "verification_sha256": "5268252c33ce84a07d694d7b625817c863926f8bf16e7da4e5d234d24afa33b0"
+    },
+    {
+      "case_id": "skill-resource-revision",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 8, in <module>\nAssertionError: stale reference accepted\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "f6b2c596e90df99bbbb8a6d0541fc6245e938ce9e8dca0100e0106c35389a154",
+      "verification_sha256": "e8b6634e2f3b563e79f3243afe0aabd9013ad294f0d1fa5b7be326cc324b681c"
+    },
+    {
+      "case_id": "atomic-delivery-claim",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 17, in <module>\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 195, in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/base_events.py\", line 691, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"<string>\", line 14, in check\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "20ca43c11957d23a35be363de17f087b173541015c8b30e0aee6c5de82c18bcf",
+      "verification_sha256": "b48812dda7339e0fb7abbc3f9eaceb4495fe8e4d9e0e3c2c5496e718c53ade2d"
+    },
+    {
+      "case_id": "frozen-request-retry",
+      "split": "holdout",
+      "outcomes": [
+        {
+          "reference_repair": false,
+          "exit_code": 1,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 24, in <module>\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 195, in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/asyncio/base_events.py\", line 691, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"<string>\", line 14, in check\nAssertionError\n"
+        },
+        {
+          "reference_repair": true,
+          "exit_code": 0,
+          "contract_verified": true,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "initial_tree_digest": "37dfa35869899962253bcba03d219f8acd93cec98c1e4136fe42ded2f1fcb727",
+      "verification_sha256": "9cadedaf1272da1a10afe764b462c0fbd3a08d9a141700ba043bd705b25a12c6"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "source_digest": "3b1b6675d332ccb12506edec80c3f6b70d961414dfae20d0cef5bd2d8451522a",
+  "driver_digest": "1a23764ff0c871ce038c9f7007ba5f0bf304dfb4f89b628345ac3f8035632ce9",
+  "files": {
+    "sandbox.json": "3788e81e5c93fc574758abb09d6ff992d816988c403fa0cb8000115cb1cbf750",
+    "material/benchmark.json": "2af33f88484bef8ee10a96e794394cf42deb09e2af782ef8aaea37aeed8164b0",
+    "material/dataset.json": "6b7b625a31e8bcad2085bba7f0f722a621ea1fc205ebbb020f9584840b841d2d",
+    "material/initial/.gitignore": "6252093f8103b25bf77e3171bfc9952ba9c964480ae8f326dc9c4bb12e6aea28",
+    "material/initial/INDEX.md": "e7f2ac802128b8e9a2f6ac74f4b65336b5d3d7b8a463e9eb26106efe85d9eff8",
+    "material/initial/replenishment.py": "0ace248305fb2c7814e0ea944154c872c5e826109da5e63034a34472b8910802",
+    "material/initial/rules.md": "ae9b7979dd3ac5a7eadb5e7b7f01dab79b77d771964f5cf57f0cd7273491253b"
+  },
+  "max_real_calls": 16,
+  "timeout_seconds": 600,
+  "connection_timeout_seconds": 60,
+  "retry_attempts": 1,
+  "trials": 1,
+  "network": "direct",
+  "promotion": "isolated-benchmark-only"
+}

@@ -3,8 +3,8 @@
 This domain owns two things and refuses everything between them and execution.
 v0.7-F1 owns what a ProductTask durably *is*: a strict parser, one projector, a
 fresh reader and the single host writer. v0.7-F2 adds what a confirmed task will
-run *as*: the strict mode router, the one Profile Registry, the preflight binding
-and the fixed Workflow definition a receipt is taken from.
+run *as*: explicit mode resolution, the one Profile Registry, the preflight
+binding and the fixed Workflow definition a receipt is taken from.
 
 F3 adds a thin host assembly over the existing Workflow, Agent, Budget,
 Workspace, Artifact and Promotion services.  It does not move those facts or
@@ -12,6 +12,7 @@ lifecycles into this package. Model-visible actions create an ephemeral
 proposal/confirmation note which the host verifies after Turn close; a separate
 Session snapshot records only the canonical Product status the requester model
 was shown, never control authority.
+
 """
 
 from traceh.product.assembly import (
@@ -19,7 +20,6 @@ from traceh.product.assembly import (
     ProductAssemblyService,
     ProductPreflight,
     ProductSourceResolver,
-    product_routing_operation_id,
     require_assemblable,
 )
 from traceh.product.context import (
@@ -34,14 +34,12 @@ from traceh.product.errors import (
     ProductOperationConflictError,
     ProductProfileError,
     ProductProtocolError,
-    ProductRoutingError,
     ProductServiceClosedError,
     ProductStateError,
     ProductStreamConflictError,
     ProductWriteError,
 )
 from traceh.product.events import (
-    MAX_REASON_DISPLAY_CHARS,
     is_product_fact,
     product_event_header,
     product_task_stream,
@@ -54,7 +52,6 @@ from traceh.product.events import (
     task_id_from_stream,
     task_opened_data,
     task_rejected_data,
-    task_routed_data,
     task_started_data,
 )
 from traceh.product.evidence import (
@@ -88,15 +85,6 @@ from traceh.product.registry import (
     ResolvedProductProfile,
     agent_assembly_digest,
     role_assembly_digest,
-    router_assembly_digest,
-)
-from traceh.product.router import (
-    MAX_ROUTER_SUMMARY_CHARS,
-    ProductModeRouter,
-    RouterDecision,
-    RouterResponder,
-    RouterResponse,
-    StrictTaskRoutingParser,
 )
 from traceh.product.service import (
     MAX_APPEND_ATTEMPTS,
@@ -119,8 +107,6 @@ from traceh.product.topology import (
 __all__ = [
     "MAX_APPEND_ATTEMPTS",
     "MAX_PRODUCT_CONTEXT_APPEND_ATTEMPTS",
-    "MAX_REASON_DISPLAY_CHARS",
-    "MAX_ROUTER_SUMMARY_CHARS",
     "PRODUCT_APPROVAL_NODE",
     "PRODUCT_MODE_ROLES",
     "PRODUCT_VERIFICATION_NODE",
@@ -135,7 +121,6 @@ __all__ = [
     "ProductEvidenceError",
     "ProductInputError",
     "ProductHostProfile",
-    "ProductModeRouter",
     "ProductModelContext",
     "ProductObservation",
     "ProductObservationReader",
@@ -147,7 +132,6 @@ __all__ = [
     "ProductProfileError",
     "ProductProfileRegistry",
     "ProductProtocolError",
-    "ProductRoutingError",
     "ProductServiceClosedError",
     "ProductSourceResolver",
     "ProductStateError",
@@ -158,11 +142,7 @@ __all__ = [
     "ProductWriteError",
     "ResolvedAgentAssembly",
     "ResolvedProductProfile",
-    "RouterDecision",
-    "RouterResponder",
-    "RouterResponse",
     "SessionEvidenceReader",
-    "StrictTaskRoutingParser",
     "TaskOwnershipSource",
     "WorkflowStateSource",
     "agent_assembly_digest",
@@ -173,7 +153,6 @@ __all__ = [
     "product_event_header",
     "product_message_binding",
     "product_role_node_id",
-    "product_routing_operation_id",
     "product_spec_binding",
     "product_task_stream",
     "product_workflow_definition",
@@ -182,7 +161,6 @@ __all__ = [
     "require_confirmation_evidence",
     "require_product_identifier",
     "role_assembly_digest",
-    "router_assembly_digest",
     "task_abandoned_data",
     "task_awaiting_data",
     "task_cancelled_data",
@@ -191,7 +169,6 @@ __all__ = [
     "task_id_from_stream",
     "task_opened_data",
     "task_rejected_data",
-    "task_routed_data",
     "task_started_data",
     "validate_product_task",
 ]

@@ -48,17 +48,31 @@ from traceh.supervision.provisioning import (
 )
 
 
-def _operation_id(kind: str, owner_agent_id: str, context: ToolExecutionContext) -> str:
-    value = "\x1f".join(
-        (
-            kind,
-            owner_agent_id,
-            context.session_id,
-            context.turn_id,
-            context.step_id,
-            context.tool_call_id,
-        )
+def _operation_id(
+    kind: str,
+    owner_agent_id: str,
+    context: ToolExecutionContext,
+    discriminator: str = "",
+) -> str:
+    """Derive one operation identity from the caller's exact call.
+
+    ``discriminator`` separates several assignments issued by the *same* call,
+    so one plan can dispatch more than one assistant without two of them
+    deriving the same Agent, Session, message or reservation identity. It is
+    host-recorded plan data, never a permission.
+    """
+
+    parts = (
+        kind,
+        owner_agent_id,
+        context.session_id,
+        context.turn_id,
+        context.step_id,
+        context.tool_call_id,
     )
+    # An empty discriminator keeps the original single-assignment derivation
+    # byte-for-byte, so existing operation identities do not move.
+    value = "\x1f".join(parts if not discriminator else (*parts, discriminator))
     return f"agent-tool-{kind}-{uuid5(NAMESPACE_URL, value)}"
 
 

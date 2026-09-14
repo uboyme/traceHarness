@@ -860,6 +860,7 @@ class TracehTuiApp(App[int | RestartChat]):
         self._start_request = None
         await self._refresh_observation()
         self._write_system(f"ProductTask 已到达 durable 状态：{result.summary.status.value}。")
+        await self._observe_product_optimization(self._task_id)
 
     async def _execute_product(self, command: ProductCommand) -> None:
         assert self._product is not None
@@ -874,11 +875,19 @@ class TracehTuiApp(App[int | RestartChat]):
                 )
         await self._refresh_observation()
         if result.advance is not None:
+            await self._observe_product_optimization(command.task_id)
             operation = _PRODUCT_OPERATION_LABELS[command.operation]
             self._write_system(
                 f"{operation}已完成；ProductTask 已到达 durable 状态："
                 f"{result.advance.summary.status.value}。"
             )
+
+    async def _observe_product_optimization(self, task_id: str) -> None:
+        if self._background is not None and self._product is not None:
+            try:
+                await self._background.observe_product(self._product.observation, task_id)
+            except Exception:
+                self._write_system("任务状态已保存，但后台观察未记录；请按 F6 查看额度与状态。")
 
     async def _ensure_observer(self, task_id: str) -> None:
         if (

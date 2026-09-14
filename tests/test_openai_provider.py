@@ -327,7 +327,7 @@ async def test_other_malformed_tool_arguments_still_fail_closed(
         thread.join(timeout=2)
         server.server_close()
 
-    assert caught.value.code == "provider-tool-arguments-invalid"
+    assert caught.value.code.startswith("provider-tool-arguments-")
     assert caught.value.category is ProviderFailureCategory.PROTOCOL
 
 

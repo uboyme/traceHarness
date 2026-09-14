@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "date": "2026-09-14",
+  "case_id": "autonomous-multi-child-tui-telemetry",
+  "status": "failed",
+  "model": "deepseek-v4-flash",
+  "prompt_names_assistant_count": false,
+  "authorized_assistants": 4,
+  "observed_patch_authors": 4,
+  "real_calls_started": 34,
+  "successful_exact_usage_records": 33,
+  "known_exact_tokens": {
+    "input": 309806,
+    "output": 21952,
+    "total": 331758
+  },
+  "full_token_total_available": false,
+  "elapsed_seconds": 356.266,
+  "assignments": [
+    {
+      "path": "telemetry_parse.py",
+      "patch_bytes": 929
+    },
+    {
+      "path": "telemetry_rules.py",
+      "patch_bytes": 1556
+    },
+    {
+      "path": "telemetry_format.py",
+      "patch_bytes": 1775
+    },
+    {
+      "path": "telemetry_stats.py",
+      "patch_bytes": 825
+    }
+  ],
+  "patches_captured": 4,
+  "integration_receipts_applied": 4,
+  "fixed_verification": {
+    "status": "failed",
+    "exit_code": 1
+  },
+  "review_completed": false,
+  "approval_completed": false,
+  "promotion_completed": false,
+  "tui": {
+    "proposal_observed": true,
+    "start_gate_observed": true,
+    "result_observed": true,
+    "conversation_rendered_from_replay": true,
+    "distinct_patch_author_identities": 4,
+    "additional_model_calls_for_conversation": 0,
+    "failure_line": "任务失败 · 叶子失败：product-role-coder · unavailable"
+  },
+  "resources": {
+    "request_snapshot_replays": 34,
+    "budget_accounts_closed": 6,
+    "usage_reservations_settled": 35,
+    "workspaces_released": 1,
+    "workspaces_quarantined": 5,
+    "sandbox_executions_finished_and_converged": 1,
+    "original_database_sha256": "30857329d646ff4591a3a0cfa470519082b41ecab43788a99ae4f196974551ba"
+  },
+  "target": {
+    "source_revision": "371b6caca426921da859f487f4dcbbf0d1507857",
+    "unchanged": true
+  },
+  "mistaken_explicit_count_probe": {
+    "excluded_from_acceptance": true,
+    "real_calls_started": 18,
+    "elapsed_seconds": 148.375,
+    "termination": "cancelled",
+    "promotion_completed": false
+  },
+  "driver_correction": {
+    "problem": "The second ConfigForm save omitted the expected original bytes, so the optimistic concurrency guard rejected the save while the driver continued.",
+    "repair": "The driver now supplies expected_bytes, edits every frozen task/coder/patch_author limit through the TUI form, and fails immediately when the form does not dismiss.",
+    "zero_model_preflight": "passed",
+    "saved_limits": {
+      "task_tokens": 2000000,
+      "coder_tokens": 1600000,
+      "assistant_tokens_each": 50000,
+      "coder_max_children": 4,
+      "coder_turn_wall_milliseconds": 600000
+    }
+  },
+  "reading": "The no-count requirement led the main Agent to choose four patch authors, all four identities appeared separately in the real TUI conversation and all four patches were integrated. The full run still failed its fixed functional verification, so no review, approval or promotion followed.",
+  "limits": "One task and one completed autonomous TUI attempt with one model. The final cancelled provider attempt has no usage record, so only the known exact token subtotal is reported. This is not a stability, speedup or quality-benefit claim."
+}

@@ -9,6 +9,27 @@ class ToolArgumentError(ValueError):
     pass
 
 
+def _declared_shape(property_schema: dict) -> str:
+    """Name the keys this argument's own schema requires.
+
+    A caller that sent the wrong type has already been given the schema, but the
+    rejection alone does not say which part was wrong. Repeating the declared
+    field names turns a rejection into something correctable in one attempt
+    instead of the same mistake retried; nothing here is new information.
+    """
+
+    required = property_schema.get("required")
+    properties = property_schema.get("properties")
+    names: list[str] = []
+    if isinstance(required, list):
+        names = [str(item) for item in required]
+    elif isinstance(properties, dict):
+        names = [str(key) for key in properties]
+    if not names:
+        return ""
+    return " (an object with keys: " + ", ".join(names) + ")"
+
+
 def _matches_type(value: JsonValue, expected: str) -> bool:
     if expected == "object":
         return isinstance(value, dict)
@@ -63,7 +84,7 @@ def validate_arguments(arguments: dict[str, JsonValue], schema: dict[str, JsonVa
         if expected_types and not any(_matches_type(value, item) for item in expected_types):
             raise ToolArgumentError(
                 f"argument {name!r} must be {' or '.join(expected_types)}, "
-                f"got {type(value).__name__}"
+                f"got {type(value).__name__}{_declared_shape(property_schema)}"
             )
         enum_values = property_schema.get("enum")
         if isinstance(enum_values, list) and value not in enum_values:

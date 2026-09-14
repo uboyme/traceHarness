@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "stage": "DA-9",
+  "candidate_adopted": false,
+  "confirmation_batch_run": false,
+  "totals": {
+    "trials": 3,
+    "real_calls": 18,
+    "exact_tokens": 65117,
+    "task_success": 1,
+    "behavior_pass": 1,
+    "decisions_submitted": 1,
+    "scout_evidence_dispatched": 3,
+    "budget_converged": 3,
+    "live_workspaces": 0,
+    "provider_failures": 0,
+    "child_calls": 0
+  },
+  "corrected_diagnostics": [
+    {
+      "scenario": "coupled-review",
+      "main_provider_calls": 5,
+      "runtime_errors": [
+        {
+          "error_type": "AdaptiveDecompositionError",
+          "message": "product-decomposition-decision-missing"
+        }
+      ],
+      "not_disclosed_calls": 3,
+      "successful_read_paths": [
+        "src/traceh/supervision/investigation_budget.py"
+      ],
+      "actual_product_status": "failed"
+    },
+    {
+      "scenario": "separable-review",
+      "main_provider_calls": 5,
+      "runtime_errors": [
+        {
+          "error_type": "AdaptiveDecompositionError",
+          "message": "product-decomposition-decision-missing"
+        }
+      ],
+      "not_disclosed_calls": 3,
+      "successful_read_paths": [
+        "INDEX.md"
+      ],
+      "actual_product_status": "failed"
+    },
+    {
+      "scenario": "simple-read",
+      "main_provider_calls": 8,
+      "runtime_errors": [],
+      "not_disclosed_calls": 2,
+      "successful_read_paths": [
+        "src/traceh/version.py",
+        "answer.json"
+      ],
+      "actual_product_status": "completed"
+    }
+  ],
+  "display_corrections": {
+    "termination": "Original completed label only excludes provider failure and local cap; the original Product status and runtime errors determine actual completion.",
+    "unknown_role": "The generic provider counter did not recognize narrowed main tool surfaces. Original main Session streams account for all 18 real calls."
+  },
+  "replay": {
+    "sessions": 9,
+    "requests": 24,
+    "original_files_unchanged": 227,
+    "errors": 0
+  },
+  "withdrawal": {
+    "restored_files_byte_equal": 10,
+    "removed_candidate_files": 5,
+    "candidate_archive_sha256": "aad0f6ce7ffad4632ddc3c446e236a548e7e4344c82bb8144e41ac64ad2e257e"
+  },
+  "interpretation": "The two non-simple trials did not submit a decision after tool-surface transition. Reading a file did not establish sufficient decomposition evidence. This batch cannot isolate the effect of reconnaissance on classification quality."
+}

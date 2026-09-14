@@ -36,7 +36,6 @@ from traceh.api.product import (
     PRODUCT_TASK_FAILED,
     PRODUCT_TASK_OPENED,
     PRODUCT_TASK_REJECTED,
-    PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_SCHEMA_VERSION,
     PRODUCT_TASK_STARTED,
     ProductAssemblyReceipt,
@@ -46,7 +45,6 @@ from traceh.api.product import (
     ProductTaskViewStatus,
     ProposalConfirmation,
     RequestedTaskMode,
-    TaskRouting,
     product_event_contract,
     product_required_values,
     product_transition_allowed,
@@ -74,7 +72,6 @@ from traceh.product.events import (
     task_completed_data,
     task_failed_data,
     task_rejected_data,
-    task_routed_data,
     task_started_data,
 )
 from traceh.product.evidence import (
@@ -246,24 +243,6 @@ class ProductTaskService:
         if not same_store:
             raise ProductInputError("product-workflow-store-mismatch", "workflow")
 
-    async def record_routing(
-        self,
-        *,
-        task_id: str,
-        operation_id: str,
-        routing: TaskRouting,
-        router_agent_id: str,
-        routing_session_id: str,
-    ) -> ProductTaskSummary:
-        task_id = require_product_identifier(task_id, field="task_id")
-        data = task_routed_data(
-            task_id=task_id,
-            operation_id=operation_id,
-            routing=routing,
-            router_agent_id=router_agent_id,
-            routing_session_id=routing_session_id,
-        )
-        return await self._write(task_id, PRODUCT_TASK_ROUTED, data)
 
     async def start_task(
         self, *, task_id: str, operation_id: str, receipt: ProductAssemblyReceipt

@@ -1,0 +1,8 @@
+diff --git a/answer.json b/answer.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..a3e21f55b8831f872bcf67d745fc0b03867b555c
+--- /dev/null
++++ b/answer.json
+@@ -0,0 +1 @@
++{"sections":[{"topic":"authority","conclusion":"主方与调查方的权限通过严格的ownership lineage实现，调查方必须是主方的直接owned子节点（delegation.py第124-127行），工作区版本由ChildProvisioningPolicy统一映射和验证（provisioning.py第35-36行），历史继承通过forked_from_session_id字段控制但明确排除在生命周期管理之外（lifecycle.py第27-29行），确保权限边界清晰且不可绕过。","evidence":[{"path":"src/traceh/supervision/delegation.py","start_line":124,"end_line":127},{"path":"src/traceh/supervision/provisioning.py","start_line":35,"end_line":36}]},{"topic":"budget","conclusion":"子任务预算通过reserve_child方法在创建前预留（service.py第109-110行），主方保留收尾额度通过commit_reservation和release_reservation的配对机制实现（service.py第141-142行和167-168行），确保子任务完成或失败后都能正确释放预算，避免资源泄漏。","evidence":[{"path":"src/traceh/budgets/service.py","start_line":109,"end_line":110},{"path":"src/traceh/budgets/service.py","start_line":141,"end_line":142}]},{"topic":"lifecycle","conclusion":"创建/发送取消通过AgentDeliveryService的claim和cancel方法确保原子性（delivery_service.py第102-104行和148-150行），清理失败通过await_worker_convergence保证收敛（delegation.py第112-114行），主方结束时通过AgentLifecycleCoordinator的begin_close和wait_quiescent方法确保无残留工作（lifecycle.py第138-140行和145-147行），产物捕获发生在report method中（delegation.py第252-254行）。","evidence":[{"path":"src/traceh/supervision/delivery_service.py","start_line":102,"end_line":104},{"path":"src/traceh/supervision/delegation.py","start_line":112,"end_line":114}]}]}
+\ No newline at end of file

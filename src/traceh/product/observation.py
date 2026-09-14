@@ -193,9 +193,7 @@ class ProductObservationReader:
         evidence = None
         if summary is not None and summary.definition_hash is not None:
             if summary.resolved_mode is None:
-                raise ProductStateError(
-                    "product-observation-workflow-unbound", task_id
-                )
+                raise ProductStateError("product-observation-workflow-unbound", task_id)
             definition = product_workflow_definition(
                 summary.resolved_mode,
                 promotion_target_id=self._promotion_target_id,
@@ -205,24 +203,18 @@ class ProductObservationReader:
         review_id = None if summary is None else summary.review_id
         if workflow is not None:
             verification = workflow.outcome(PRODUCT_VERIFICATION_NODE)
-            workflow_review_id = (
-                None if verification is None else verification.review_id
-            )
+            workflow_review_id = None if verification is None else verification.review_id
             if review_id is None:
                 review_id = workflow_review_id
             elif workflow_review_id not in {None, review_id}:
-                raise ProductStateError(
-                    "product-observation-review-chain-broken", task_id
-                )
+                raise ProductStateError("product-observation-review-chain-broken", task_id)
         review = None if review_id is None else ledger.review(review_id)
         if review_id is not None and review is None:
             raise ProductStateError("product-review-missing", task_id)
         if summary is not None and workflow is not None:
             evidence = await self._evidence.load(summary, review)
 
-        approval = (
-            None if review is None else ledger.approval_for_review(review.review_id)
-        )
+        approval = None if review is None else ledger.approval_for_review(review.review_id)
         promotion = None
         if summary is not None and summary.promotion_id is not None:
             promotion = ledger.promotion(summary.promotion_id)
@@ -246,14 +238,18 @@ class ProductObservationReader:
         if summary is not None:
             streams.add(f"{SESSION_STREAM_PREFIX}{summary.origin_session_id}")
             streams.add(f"{SESSION_STREAM_PREFIX}{summary.confirmation_session_id}")
-            if summary.routing_session_id is not None:
-                streams.add(f"{SESSION_STREAM_PREFIX}{summary.routing_session_id}")
         if evidence is not None:
             streams.update(
                 f"{SESSION_STREAM_PREFIX}{node.session_id}"
                 for node in evidence.nodes
                 if node.session_id is not None
             )
+        for agent_id in AgentOwnershipGraph(directory).subtree_postorder(
+            product_task_owner_id(task_id)
+        ):
+            record = directory.get(agent_id)
+            if record is not None:
+                streams.add(f"{SESSION_STREAM_PREFIX}{record.session_id}")
         projected_heads = {
             product_task_stream(task_id): 0 if summary is None else summary.head_seq,
             workflow_stream_id(task_id): 0 if workflow is None else workflow.head_seq,
@@ -287,9 +283,7 @@ class ProductObservationReader:
             review=review,
             approval=approval,
             promotion=promotion,
-            approval_digest=(
-                None if review is None else expected_approval_digest(review)
-            ),
+            approval_digest=(None if review is None else expected_approval_digest(review)),
             stream_heads=heads,
             observed_at=datetime.now(UTC),
             usage=_product_usage(budget_ledger, directory, task_id),
@@ -326,9 +320,7 @@ class ProductObservationReader:
             return ObservedStreamHead(stream_id, 0, None, None, task_bound)
         events = await self._store.read(stream_id, from_seq=head)
         if not events or events[0].seq != head:
-            raise ProductStateError(
-                "product-observation-stream-head-missing", stream_id
-            )
+            raise ProductStateError("product-observation-stream-head-missing", stream_id)
         latest = events[-1]
         return ObservedStreamHead(
             stream_id,
@@ -351,9 +343,7 @@ class ProductObservationReader:
             return ObservedStreamHead(stream_id, 0, None, None, task_bound)
         events = await self._store.read(stream_id, from_seq=seq)
         if not events or events[0].seq != seq:
-            raise ProductStateError(
-                "product-observation-stream-head-missing", stream_id
-            )
+            raise ProductStateError("product-observation-stream-head-missing", stream_id)
         projected = events[0]
         return ObservedStreamHead(
             stream_id,
@@ -426,9 +416,7 @@ class ProductObservationSession:
         while True:
             self._dirty.clear()
             observation = await self._reader.load(self._task_id)
-            discovered = set(observation.related_streams).difference(
-                self._subscriptions
-            )
+            discovered = set(observation.related_streams).difference(self._subscriptions)
             if not discovered:
                 return observation
             for stream_id in sorted(discovered):
@@ -506,15 +494,11 @@ def _product_usage(
 ) -> ProductUsage:
     """Project usage only from the task's durable ownership/Budget subtree."""
 
-    members = AgentOwnershipGraph(directory).subtree_postorder(
-        product_task_owner_id(task_id)
-    )
+    members = AgentOwnershipGraph(directory).subtree_postorder(product_task_owner_id(task_id))
     accounts = tuple(ledger.account(agent_id) for agent_id in members)
     if not members or any(account is None for account in accounts):
         return ProductUsage(None, None, None, None)
-    complete_accounts = tuple(
-        account for account in accounts if account is not None
-    )
+    complete_accounts = tuple(account for account in accounts if account is not None)
     member_ids = frozenset(members)
 
     tokens = _charged_dimension(
@@ -536,10 +520,7 @@ def _product_usage(
             token_qualities.append(quality)
         if not unavailable:
             for reservation in ledger.usage_reservations:
-                if (
-                    reservation.agent_id not in member_ids
-                    or not reservation.amounts.tokens
-                ):
+                if reservation.agent_id not in member_ids or not reservation.amounts.tokens:
                     continue
                 if reservation.status in {
                     BudgetUsageReservationStatus.PENDING,
@@ -550,10 +531,7 @@ def _product_usage(
                 if reservation.status is BudgetUsageReservationStatus.RELEASED:
                     continue
                 quality = reservation.usage_quality
-                if (
-                    reservation.settled_amounts is None
-                    or quality in {None, UsageQuality.UNKNOWN}
-                ):
+                if reservation.settled_amounts is None or quality in {None, UsageQuality.UNKNOWN}:
                     unavailable = True
                     break
                 token_qualities.append(quality)
@@ -596,9 +574,7 @@ def _charged_dimension(
     limit_field: str,
     amount_field: str,
 ) -> int | None:
-    if not accounts or any(
-        getattr(account.limits, limit_field) is None for account in accounts
-    ):
+    if not accounts or any(getattr(account.limits, limit_field) is None for account in accounts):
         return None
     return sum(getattr(account.charged, amount_field) for account in accounts)
 

@@ -1,0 +1,208 @@
+{
+  "format": 1,
+  "reviewer": "Codex source review",
+  "human_gold": false,
+  "production_score_overwritten": false,
+  "scope": "All structural-pass complex answers, checked against original CAS patches and frozen source.",
+  "rows": [
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 1,
+      "patch": "reviewed-patches/baseline-explicit-1.patch",
+      "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_captured": true,
+      "structural_success": false,
+      "status": "hard-failure-no-passing-deliverable",
+      "notes": [
+        "没有合格产物，不由语义审阅改成通过。"
+      ]
+    },
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 2,
+      "patch": "reviewed-patches/baseline-explicit-2.patch",
+      "patch_sha256": "b3b5d34da645539d92b9bd2ca9f8f17a43f9ea427e27e42f5710ce953a901226",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "material-semantic-error",
+      "notes": [
+        "把 close_account 的 pending 检查当保留收尾额度；实际是 reserve_child 的 retained_tokens 容量准入。",
+        "把事件账本提交当产物捕获，并把 Reader/identifier 校验当工作区版本与历史继承；多处引用仅为属性或函数声明。"
+      ]
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 1,
+      "patch": "reviewed-patches/baseline-natural-1.patch",
+      "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_captured": true,
+      "structural_success": false,
+      "status": "hard-failure-no-passing-deliverable",
+      "notes": [
+        "没有合格产物，不由语义审阅改成通过。"
+      ]
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 2,
+      "patch": "reviewed-patches/baseline-natural-2.patch",
+      "patch_sha256": "2b56acf760a5e8843e5e2d694c41e010aaa493f6b8d7abaaeb9f46af481b10a2",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "material-semantic-error",
+      "notes": [
+        "把墙钟预留描述成不会被普通工作消耗的独立清理额度；不符合 retained_tokens 的实际规则。",
+        "把 usage settlement 当产物捕获，把 durable_log_identity 当工作区版本校验；引用多处不支持结论。"
+      ]
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 1,
+      "patch": "reviewed-patches/baseline-simple-1.patch",
+      "patch_sha256": "3f2047100c30d600234e89c68e0748d0ceaa1e4d2d85cfbce555663ae1059ae2",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "deterministic-version-pass",
+      "notes": [
+        "原 Verifier 检查实际版本和唯一输出文件；不是语义模型评分。"
+      ]
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 2,
+      "patch": "reviewed-patches/baseline-simple-2.patch",
+      "patch_sha256": "3f2047100c30d600234e89c68e0748d0ceaa1e4d2d85cfbce555663ae1059ae2",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "deterministic-version-pass",
+      "notes": [
+        "原 Verifier 检查实际版本和唯一输出文件；不是语义模型评分。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 1,
+      "patch": null,
+      "patch_sha256": null,
+      "artifact_captured": false,
+      "structural_success": false,
+      "status": "hard-failure-no-passing-deliverable",
+      "notes": [
+        "没有合格产物，不由语义审阅改成通过。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 2,
+      "patch": "reviewed-patches/candidate-explicit-2.patch",
+      "patch_sha256": "883b1f4b4ac7c2c9986816a2f5ba8a5791c0156cfd3c78601fc843260d10c989",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "material-semantic-error",
+      "notes": [
+        "authority 的两处行号与原文相符，但没有回答调查工作区版本和不继承父历史。",
+        "引用 reserve_child 的函数声明 118–120 行，没有读出正文中的 retained_tokens 准入；把单独账户/幂等当保留额度。",
+        "仍把预算事件记录当产物捕获。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 1,
+      "patch": "reviewed-patches/candidate-natural-1.patch",
+      "patch_sha256": "0d4b7d6fd60e37475926fa9f8291a1db1acf26929233d2b4cf1463b54f69c9c9",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "material-semantic-error",
+      "notes": [
+        "把 grant_root 当保留主方收尾额度，把 ownership lineage 当历史继承；实际是不同职责。",
+        "把 AgentExecution.run_turn 返回 TurnResult 当产物捕获，引用仅为协议方法声明。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 2,
+      "patch": "reviewed-patches/candidate-natural-2.patch",
+      "patch_sha256": "7dc918d893b40a5129cf5458ef89f831778c44b61197049e7a8b451d5b6b8dca",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "material-semantic-error",
+      "notes": [
+        "确实引用了 reserve_child 参数中的 retained_tokens，但结论把 _await_owned/_finish_owned 的取消收敛当额度保留。",
+        "把 collect_investigation/supervisor.report 当产物捕获，把 durable_log_identity 当工作区版本与历史继承。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 1,
+      "patch": "reviewed-patches/candidate-simple-1.patch",
+      "patch_sha256": "3f2047100c30d600234e89c68e0748d0ceaa1e4d2d85cfbce555663ae1059ae2",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "deterministic-version-pass",
+      "notes": [
+        "原 Verifier 检查实际版本和唯一输出文件；不是语义模型评分。"
+      ]
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 2,
+      "patch": "reviewed-patches/candidate-simple-2.patch",
+      "patch_sha256": "3f2047100c30d600234e89c68e0748d0ceaa1e4d2d85cfbce555663ae1059ae2",
+      "artifact_captured": true,
+      "structural_success": true,
+      "status": "deterministic-version-pass",
+      "notes": [
+        "原 Verifier 检查实际版本和唯一输出文件；不是语义模型评分。"
+      ]
+    }
+  ],
+  "authoritative_source_anchors": [
+    {
+      "path": "src/traceh/budgets/service.py",
+      "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+      "start_line": 118,
+      "end_line": 169,
+      "text": "118:     async def reserve_child(\n119:         self,\n120:         *,\n121:         operation_id: str,\n122:         reservation_id: str,\n123:         parent_agent_id: str,\n124:         child_agent_id: str,\n125:         creation_request_id: str,\n126:         child_limits: BudgetLimits,\n127:         retained_tokens: int,\n128:     ) -> BudgetReservation:\n129:         data = child_reserved_data(\n130:             operation_id=operation_id,\n131:             reservation_id=reservation_id,\n132:             parent_agent_id=parent_agent_id,\n133:             child_agent_id=child_agent_id,\n134:             creation_request_id=creation_request_id,\n135:             child_limits=freeze_limits(child_limits, field=\"child_limits\"),\n136:             retained_tokens=retained_tokens,\n137:         )\n138:         async with self._lock:\n139:             ledger, directory = await self._reader.load_context()\n140:             if self._operation_matches_or_raise(\n141:                 ledger, operation_id, BUDGET_CHILD_RESERVED, data\n142:             ):\n143:                 reservation = ledger.reservation(reservation_id)\n144:                 assert reservation is not None\n145:                 return reservation\n146:             if ledger.reservation(reservation_id) is not None:\n147:                 raise BudgetOperationConflictError\n148:             if ledger.account(child_agent_id) is not None:\n149:                 raise BudgetOperationConflictError\n150:             if not ledger.reservation_identity_available(\n151:                 child_agent_id=child_agent_id,\n152:                 creation_request_id=creation_request_id,\n153:             ):\n154:                 raise BudgetOperationConflictError\n155:             # Reserve-before-create is an authority boundary, not merely a\n156:             # happy-path ordering convention.  A pre-existing Directory fact\n157:             # cannot be adopted after the effect and assigned a grant later.\n158:             if (\n159:                 directory.get(child_agent_id) is not None\n160:                 or directory.for_request(creation_request_id) is not None\n161:             ):\n162:                 raise BudgetDirectoryMismatchError\n163:             ledger.ensure_reservation_capacity(\n164:                 parent_agent_id, child_limits, retained_tokens=retained_tokens\n165:             )\n166:             await self._append(\n167:                 expected_seq=ledger.head_seq,\n168:                 event_type=BUDGET_CHILD_RESERVED,\n169:                 data=data,"
+    },
+    {
+      "path": "src/traceh/workflow/execution.py",
+      "source_sha256": "91883c18b7881eb5ffc3c0519ebb38de42aa8f1059798d7510e039dc16daf655",
+      "start_line": 179,
+      "end_line": 190,
+      "text": "179:                 raise WorkflowNodeFailedError(\"workflow-agent-message-failed\", node_id)\n180: \n181:             # A main report can finish while descendants still run. Close the\n182:             # owned tree before treating its workspace as a stable artifact.\n183:             # Workspace lifetime is independent and remains available to capture.\n184:             await supervisor.dispose(agent_id)\n185: \n186:             artifact_id: str | None = None\n187:             if capture_artifact:\n188:                 artifact_id = await self._capture(agent_id, message_id, node_id)\n189:         finally:\n190:             # This closes the Activation and its process slot, whatever happened"
+    },
+    {
+      "path": "src/traceh/workflow/execution.py",
+      "source_sha256": "91883c18b7881eb5ffc3c0519ebb38de42aa8f1059798d7510e039dc16daf655",
+      "start_line": 208,
+      "end_line": 218,
+      "text": "208:     async def _capture(\n209:         self, agent_id: str, message_id: str, node_id: str\n210:     ) -> str:\n211:         capture = self._services.capture\n212:         if capture is None:\n213:             raise WorkflowStateError(\"workflow-capture-service-missing\", node_id)\n214:         # Capture is itself idempotent per (agent, message): a re-entry resolves\n215:         # the already recorded Manifest instead of producing a second one.\n216:         artifact = await capture.capture(agent_id, message_id)\n217:         return artifact.manifest.artifact_id\n218: "
+    },
+    {
+      "path": "src/traceh/supervision/delegation.py",
+      "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+      "start_line": 132,
+      "end_line": 142,
+      "text": "132:     async def delegate(self, arguments, context):\n133:         owner = await self.authority.require_caller(context.session_id)\n134:         binding = self.policy.prepare(owner)\n135:         spec = freeze_agent_spec(binding.spec)\n136:         if spec.owner_agent_id != owner.agent_id or spec.forked_from_session_id is not None:\n137:             raise AgentToolBindingError(\"investigation owner or history inheritance is invalid\")\n138:         content = self.work(arguments, binding, owner.agent_id)\n139:         handle = await self.supervisor.create(\n140:             spec,\n141:             request_id=_operation_id(\"investigation-create\", owner.agent_id, context),\n142:             session_id=_operation_id(\"investigation-session\", owner.agent_id, context),"
+    },
+    {
+      "path": "src/traceh/product/resources.py",
+      "source_sha256": "cf8635930166ce8108a9a8d1b8a972c96390e461a1ecbc658b9bff7f5fb97e78",
+      "start_line": 118,
+      "end_line": 155,
+      "text": "118:             runtime=ProductRuntimeBinding(adaptive, freeze_limits(profile.coder.budget),\n119:                 profile.coder.max_output_tokens, profile.coder.max_turn_wall_milliseconds))\n120:         investigator = preflight.profile.assembly(ProductRole.INVESTIGATOR)\n121:         self._investigations[_runtime_key(adaptive_spec)] = _InvestigationTemplate(\n122:             investigator, ProductRuntimeBinding(investigator,\n123:                 freeze_limits(profile.investigator.budget), profile.investigator.max_output_tokens,\n124:                 profile.investigator.max_turn_wall_milliseconds, profile.retained_tokens, True),\n125:             preflight.source.source_id, preflight.source.base_revision,\n126:         )\n127:         return owner\n128: \n129: \n130:     def workspace_for_agent(self, spec: AgentSpec) -> WorkspaceProvisioningRequest:\n131:         frozen = freeze_agent_spec(spec)\n132:         request = self._workspaces.get(agent_spec_request_fingerprint(frozen))\n133:         if request is None:\n134:             raise ProductProfileError(\"product-workspace-binding-missing\", frozen.preset)\n135:         return request\n136: \n137:     def grant_for_child(\n138:         self, *, parent: AgentRecord, child: AgentSpec\n139:     ) -> ChildBudgetGrant:\n140:         frozen = freeze_agent_spec(child)\n141:         if frozen.owner_agent_id != parent.agent_id:\n142:             raise ProductProfileError(\"product-budget-owner-mismatch\", frozen.preset)\n143:         grant = self._budgets.get(agent_spec_request_fingerprint(frozen))\n144:         if grant is None:\n145:             raise ProductProfileError(\"product-budget-binding-missing\", frozen.preset)\n146:         return grant\n147: \n148:     def prepare_investigation(self, owner: AgentRecord) -> InvestigationBinding:\n149:         template = self._investigations.get(_runtime_key(_record_spec(owner)))\n150:         if template is None:\n151:             raise ProductProfileError(\"product-investigation-owner-unbound\", owner.agent_id)\n152:         spec = replace(template.assembly.spec, owner_agent_id=owner.agent_id)\n153:         self._bind_spec(spec, source_id=template.source_id, revision=template.revision,\n154:                         access=WorkspaceAccess.READ_ONLY, runtime=template.runtime)\n155:         return InvestigationBinding(spec, template.source_id, template.revision)"
+    }
+  ]
+}

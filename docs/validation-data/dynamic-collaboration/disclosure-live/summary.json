@@ -1,0 +1,69 @@
+{
+  "case": "disclosure-live-20260913",
+  "product_success": true,
+  "real_calls": 20,
+  "roles": {
+    "main": 15,
+    "child": 5
+  },
+  "error_type": null,
+  "stopped": false,
+  "tokens": {
+    "input_tokens": 163055,
+    "output_tokens": 8995,
+    "quality": "exact",
+    "total_tokens": 172050
+  },
+  "ledger_settled_tokens": 172050,
+  "usage_quality": {
+    "None": 2,
+    "exact": 20
+  },
+  "wall_ms": 193485,
+  "provider_failures": [],
+  "artifacts": [
+    {
+      "artifact_id": "patch-d8c93f85e34e8c11aa59f33054960036141fa2d1d4fd170142384715a2e717a3",
+      "agent_id": "agent-tool-patch-author-f9984c3a-a79c-57f7-8a67-bc4c6ecd4ee4",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "d9a3b022a15e6017a788b3964347aac5b7f9db5596c232db73dd75645cbaab0c",
+      "bytes": 1240
+    },
+    {
+      "artifact_id": "patch-a59dddd58fcad42218459a94840ab044a1f5adbe35a5b120b0bb0fd2ab56ddf1",
+      "agent_id": "wf-agent-6fe5b34b935c62b8c5a656cfbaf0382205cd360ce8c65506168a6370f999b813",
+      "paths": [
+        "telemetry_report.py",
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "3e669faa8c57036a299133452002f1de01c9c2092d6641b74cea22780c49eec8",
+      "bytes": 2103
+    }
+  ],
+  "patch_read_calls": 1,
+  "product_status": "completed",
+  "workflow_status": "completed",
+  "review_passed": true,
+  "promotion_id": "promotion-1554e28d416e96544e432c3a266ab832eb3263a02c3fc548a8cb06095ac5cfcd",
+  "accounts": {
+    "closed": 3
+  },
+  "workspaces": {
+    "released": 3
+  },
+  "usage_reservations": {
+    "settled": 22
+  },
+  "snapshot_replays": 22,
+  "original_sha256": "060914f1065bacaedd9f7a077aa040b03f84cbbb3d3c4860ee0136fd44d7bd9c",
+  "reports_dispatched_to_parent": 1,
+  "fixed_check_passed_first_attempt": true,
+  "public_requirement_recorded": true,
+  "post_verification_model_requests": 0,
+  "failure_feedback_consumed": false,
+  "sandbox_executions": 6,
+  "sandbox_all_converged": true,
+  "interpretation": "One complete bounded trial. No failure-repair or causal benefit claim."
+}

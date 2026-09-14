@@ -870,6 +870,7 @@ async def _chat(args: argparse.Namespace) -> int | RestartChat:
                 actions=actions,
                 read_models=read_models,
                 model_retry_policy=runtime.config.model_retry_policy,
+                token_estimate=product_config.token_estimate,
                 event_feed=runtime.events,
                 project_scope=runtime.project_scope,
                 context_input=runtime.config.context_input,

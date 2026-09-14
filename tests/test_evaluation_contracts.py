@@ -107,7 +107,7 @@ def test_dataset_copy_and_identity_are_detached_from_mutable_callers(tmp_path):
     cases = loaded.dataset.data["cases"]
     cases.append(cases[0])
     document = loaded.document.data
-    write_dataset(root, document, cases)
+    write_dataset(root, document, cases, format_version=2)
     with pytest.raises(BenchmarkManifestError) as raised:
         EvaluationRunner(
             root, tmp_path / "out", provider=_ProductProvider(), model_id=PRODUCT_MODEL_ID
@@ -122,7 +122,7 @@ def test_invalid_repeat_does_not_become_a_default(count):
 
 
 def test_plan_freezes_mode_and_replication_separately(tmp_path):
-    root = build_benchmark(tmp_path / "b", arms=(("single", 1), ("auto", 1)))
+    root = build_benchmark(tmp_path / "b", arms=(("single", 1), ("multi", 1)))
     runner = EvaluationRunner(
         root,
         tmp_path / "out",
@@ -133,8 +133,8 @@ def test_plan_freezes_mode_and_replication_separately(tmp_path):
     assert [(t.requested_mode, t.replicate, t.variant_id) for t in runner.trials] == [
         ("single", 1, "current"),
         ("single", 2, "current"),
-        ("auto", 1, "current"),
-        ("auto", 2, "current"),
+        ("multi", 1, "current"),
+        ("multi", 2, "current"),
     ]
     assert len({t.trial_id for t in runner.trials}) == 4
     with pytest.raises(BenchmarkManifestError) as raised:

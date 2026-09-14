@@ -2,7 +2,7 @@
 
 Three small, unrelated coding tasks measured through the **same** ProductTask
 mainline `traceh chat --product-config` uses: a confirmed proposal, a fixed
-Workflow, a managed Git worktree, an immutable Patch Artifact, one frozen
+Workflow, a managed Git worktree, an immutable Patch Artifact, a case-owned frozen
 verifier, a Review and a Git ref compare-and-swap promotion.
 
 ```powershell
@@ -24,9 +24,10 @@ missing sandbox configuration refuses process execution. No image is pulled auto
 
 ## What the manifest can and cannot say
 
-It names the Profile, the three role slots and their Budgets, the Router bounds,
-the aggregate task Budget, the frozen verification plan, the capture limits, the
-modes and a separately hashed dataset. Repetitions belong to RunOptions / run plan.
+It names the Profile, coder and readonly investigator templates and their Budgets,
+the aggregate task Budget, capture limits, single/multi modes and a separately
+hashed dataset. Each dataset case freezes its own verification plan. Repetitions
+belong to RunOptions / run plan. Removed auto/multi and Router fields are rejected.
 
 It **cannot** name a repository, a promotion target, a Workflow node, an edge, an
 Agent count, a fan-out or an approval digest. The runner creates a throwaway
@@ -39,9 +40,8 @@ family for every arm and the report records which one.
 
 ## Reading the report
 
-* Quality aggregates are keyed by **resolved** mode. An `auto` attempt whose
-  Router chose `multi` is counted in the `multi` arm; `auto` appears separately
-  only as routing cost and routing outcome. It is not a third quality arm.
+* Quality aggregates follow the explicit `single` or `multi` mode. Execution
+  cost includes the complete owned Agent tree, including failed/cancelled children.
 * An arm with one observation is labelled `single observation`. Aggregates are
   counts, totals, minima, maxima and a mean - no significance is claimed.
 * `approval_wait_ms` is measured separately and excluded from `active_ms`. This

@@ -1,0 +1,221 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2979,
+        "output_tokens": 160,
+        "total_tokens": 3139,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "drop-stale",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2874,
+        "output_tokens": 57,
+        "total_tokens": 2931,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "phase-last",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3132,
+        "output_tokens": 156,
+        "total_tokens": 3288,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "both",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3027,
+        "output_tokens": 57,
+        "total_tokens": 3084,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4484,
+        "output_tokens": 64,
+        "total_tokens": 4548,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "drop-stale",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4379,
+        "output_tokens": 78,
+        "total_tokens": 4457,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "phase-last",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4637,
+        "output_tokens": 64,
+        "total_tokens": 4701,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "both",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4532,
+        "output_tokens": 85,
+        "total_tokens": 4617,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "tool_names": [
+        "apply_patch"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3315,
+        "output_tokens": 90,
+        "total_tokens": 3405,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "drop-stale",
+      "tool_names": [
+        "write_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3210,
+        "output_tokens": 85,
+        "total_tokens": 3295,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "phase-last",
+      "tool_names": [
+        "apply_patch"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3468,
+        "output_tokens": 99,
+        "total_tokens": 3567,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "both",
+      "tool_names": [
+        "write_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3363,
+        "output_tokens": 82,
+        "total_tokens": 3445,
+        "quality": "exact"
+      }
+    }
+  ]
+}

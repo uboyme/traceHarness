@@ -49,10 +49,10 @@ from traceh.api.json_types import fingerprint
 from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess
 
-PRODUCT_TASK_PROTOCOL_VERSION = 1
+PRODUCT_TASK_PROTOCOL_VERSION = 6
 """The only ProductTask protocol this build describes."""
 
-PRODUCT_TASK_SCHEMA_VERSION = 1
+PRODUCT_TASK_SCHEMA_VERSION = 5
 """Schema version carried by every ProductTask event; unknown values are refused."""
 
 PRODUCT_TASK_STREAM_PREFIX = "product-task:"
@@ -68,19 +68,14 @@ applied to hostile input.
 
 
 class RequestedTaskMode(StrEnum):
-    """What the confirmed Proposal asked for, before any router has run."""
+    """The execution strategy named by the confirmed Proposal or explicit Profile."""
 
     SINGLE = "single"
     MULTI = "multi"
-    AUTO = "auto"
 
 
 class ResolvedTaskMode(StrEnum):
-    """What will actually run.
-
-    ``auto`` is deliberately not a member. A router returns one of these two and
-    nothing else, so "unresolved" cannot survive into execution.
-    """
+    """The exact confirmed strategy bound into the execution receipt."""
 
     SINGLE = "single"
     MULTI = "multi"
@@ -102,29 +97,30 @@ class TaskModeSource(StrEnum):
 
 
 class ProductRole(StrEnum):
-    """The three fixed roles. There is no fourth, and no host-defined role.
+    """Host execution templates, distinct from task-specific investigation goals.
 
-    ``single`` runs the coder alone; ``multi`` runs
-    ``parent -> reviewer -> coder``. Neither mode uses Map or Join.
-    """
+    Both modes run a coder. Multi creates one explicitly configured readonly
+    investigator or isolated patch author inside that execution node.
+    Neither mode adds Workflow Map or Join nodes."""
 
-    PARENT = "parent"
-    REVIEWER = "reviewer"
     CODER = "coder"
+    INVESTIGATOR = "investigator"
+    PATCH_AUTHOR = "patch_author"
 
     @property
     def workspace_access(self) -> WorkspaceAccess:
         """Write authority follows the role, and this is its only definition.
 
-        Exactly one role may write. :class:`ProductRoleProfile` deliberately has
+        Coder and explicitly granted patch author may write their own workspace.
+        :class:`ProductRoleProfile` deliberately has
         no role or access field of its own, so the only way to ask what a role
         may do is to ask the role - a Profile cannot answer differently.
         """
 
         return (
-            WorkspaceAccess.WRITABLE
-            if self is ProductRole.CODER
-            else WorkspaceAccess.READ_ONLY
+            WorkspaceAccess.READ_ONLY
+            if self is ProductRole.INVESTIGATOR
+            else WorkspaceAccess.WRITABLE
         )
 
 
@@ -139,7 +135,6 @@ class ProductTaskStatus(StrEnum):
     """
 
     OPENED = "opened"
-    ROUTED = "routed"
     STARTED = "started"
     AWAITING_APPROVAL = "awaiting_approval"
     COMPLETED = "completed"
@@ -161,50 +156,43 @@ PRODUCT_TASK_TERMINAL_STATUSES = frozenset(
 """The five durable ends. Nothing may be appended to a task after one of them."""
 
 
-PRODUCT_TASK_TRANSITIONS: Mapping[
-    ProductTaskStatus | None, frozenset[ProductTaskStatus]
-] = MappingProxyType({
-    None: frozenset({ProductTaskStatus.OPENED}),
-    ProductTaskStatus.OPENED: frozenset(
+PRODUCT_TASK_TRANSITIONS: Mapping[ProductTaskStatus | None, frozenset[ProductTaskStatus]] = (
+    MappingProxyType(
         {
-            ProductTaskStatus.ROUTED,
-            ProductTaskStatus.STARTED,
-            ProductTaskStatus.CANCELLED,
-            ProductTaskStatus.FAILED,
-            ProductTaskStatus.ABANDONED,
+            None: frozenset({ProductTaskStatus.OPENED}),
+            ProductTaskStatus.OPENED: frozenset(
+                {
+                    ProductTaskStatus.STARTED,
+                    ProductTaskStatus.CANCELLED,
+                    ProductTaskStatus.FAILED,
+                    ProductTaskStatus.ABANDONED,
+                }
+            ),
+            ProductTaskStatus.STARTED: frozenset(
+                {
+                    ProductTaskStatus.AWAITING_APPROVAL,
+                    ProductTaskStatus.CANCELLED,
+                    ProductTaskStatus.FAILED,
+                    ProductTaskStatus.ABANDONED,
+                }
+            ),
+            ProductTaskStatus.AWAITING_APPROVAL: frozenset(
+                {
+                    ProductTaskStatus.COMPLETED,
+                    ProductTaskStatus.REJECTED,
+                    ProductTaskStatus.CANCELLED,
+                    ProductTaskStatus.FAILED,
+                    ProductTaskStatus.ABANDONED,
+                }
+            ),
+            ProductTaskStatus.COMPLETED: frozenset(),
+            ProductTaskStatus.REJECTED: frozenset(),
+            ProductTaskStatus.CANCELLED: frozenset(),
+            ProductTaskStatus.FAILED: frozenset(),
+            ProductTaskStatus.ABANDONED: frozenset(),
         }
-    ),
-    ProductTaskStatus.ROUTED: frozenset(
-        {
-            ProductTaskStatus.STARTED,
-            ProductTaskStatus.CANCELLED,
-            ProductTaskStatus.FAILED,
-            ProductTaskStatus.ABANDONED,
-        }
-    ),
-    ProductTaskStatus.STARTED: frozenset(
-        {
-            ProductTaskStatus.AWAITING_APPROVAL,
-            ProductTaskStatus.CANCELLED,
-            ProductTaskStatus.FAILED,
-            ProductTaskStatus.ABANDONED,
-        }
-    ),
-    ProductTaskStatus.AWAITING_APPROVAL: frozenset(
-        {
-            ProductTaskStatus.COMPLETED,
-            ProductTaskStatus.REJECTED,
-            ProductTaskStatus.CANCELLED,
-            ProductTaskStatus.FAILED,
-            ProductTaskStatus.ABANDONED,
-        }
-    ),
-    ProductTaskStatus.COMPLETED: frozenset(),
-    ProductTaskStatus.REJECTED: frozenset(),
-    ProductTaskStatus.CANCELLED: frozenset(),
-    ProductTaskStatus.FAILED: frozenset(),
-    ProductTaskStatus.ABANDONED: frozenset(),
-})
+    )
+)
 """Which durable status may follow which, keyed by the current one.
 
 It is a read-only view, not a `dict`. An admission table that any importer can
@@ -236,23 +224,15 @@ def product_transition_allowed(
     *,
     requested_mode: RequestedTaskMode,
 ) -> bool:
-    """Whether ``following`` may be appended to a task currently at ``current``.
+    """Whether the next status is legal for a task with an explicit supported mode.
 
-    ``requested_mode`` participates because two edges depend on it and a
-    status-only table cannot express them: a task that named ``single`` or
-    ``multi`` has nothing to route, and a task that asked for ``auto`` must be
-    routed before it can start. Without this, ``opened -> started`` would silently
-    accept a task whose mode was never resolved by anything.
-    """
+    The transition table owns lifecycle order; product_required_values separately
+    checks that later event payloads preserve the confirmed mode and identities."""
 
     allowed = PRODUCT_TASK_TRANSITIONS.get(current)
     if allowed is None or following not in allowed:
         return False
-    if following is ProductTaskStatus.ROUTED:
-        return requested_mode is RequestedTaskMode.AUTO
-    if following is ProductTaskStatus.STARTED and current is ProductTaskStatus.OPENED:
-        return requested_mode is not RequestedTaskMode.AUTO
-    return True
+    return type(requested_mode) is RequestedTaskMode
 
 
 class ProductTaskViewStatus(StrEnum):
@@ -264,7 +244,6 @@ class ProductTaskViewStatus(StrEnum):
     """
 
     OPENED = "opened"
-    ROUTED = "routed"
     STARTED = "started"
     AWAITING_APPROVAL = "awaiting_approval"
     COMPLETED = "completed"
@@ -312,7 +291,6 @@ class ProductTaskViewStatus(StrEnum):
 
 
 PRODUCT_TASK_OPENED = "product/task-opened"
-PRODUCT_TASK_ROUTED = "product/task-routed"
 PRODUCT_TASK_STARTED = "product/task-started"
 PRODUCT_TASK_AWAITING = "product/task-awaiting"
 PRODUCT_TASK_COMPLETED = "product/task-completed"
@@ -365,21 +343,6 @@ PRODUCT_TASK_EVENTS: tuple[ProductEventContract, ...] = (
             }
         ),
         status=ProductTaskStatus.OPENED,
-    ),
-    ProductEventContract(
-        event_type=PRODUCT_TASK_ROUTED,
-        schema_version=PRODUCT_TASK_SCHEMA_VERSION,
-        keys=frozenset(
-            {
-                "task_id",
-                "operation_id",
-                "router_agent_id",
-                "routing_session_id",
-                "resolved_mode",
-                "reason_display",
-            }
-        ),
-        status=ProductTaskStatus.ROUTED,
     ),
     ProductEventContract(
         event_type=PRODUCT_TASK_STARTED,
@@ -491,14 +454,11 @@ def product_event_contract(event_type: str) -> ProductEventContract | None:
 
 @dataclass(frozen=True, slots=True)
 class ProductTaskFacts:
-    """What earlier facts in one stream have established.
+    """Earlier facts that every later event must preserve.
 
-    Freezing the *order* of statuses is not enough. A task that asked for
-    ``single`` could still record ``product/task-started`` carrying ``multi``,
-    and a rejection could name a review nobody ever waited for - the transition
-    table never looks at a payload. This value is what a later fact must agree
-    with, and :func:`product_required_values` says how.
-    """
+    Legal status order alone cannot prevent single from starting as multi,
+    or a rejection from naming another Review. product_required_values derives
+    the unique values permitted by these earlier facts."""
 
     task_id: str
     requested_mode: RequestedTaskMode
@@ -507,35 +467,14 @@ class ProductTaskFacts:
     awaited_review_id: str | None = None
 
 
-def product_required_values(
-    event_type: str, facts: ProductTaskFacts
-) -> Mapping[str, str] | None:
-    """The values ``event_type`` must carry that **earlier events alone** decide.
+def product_required_values(event_type: str, facts: ProductTaskFacts) -> Mapping[str, str] | None:
+    """Derive values fixed by earlier events, without resolving external identities.
 
-    These are *derived*, not checked against a range: where an earlier fact
-    already decided a value, there is exactly one legal value for the later one,
-    so a writer computes it rather than proposing it and a projector recomputes
-    it rather than trusting it. That is the same rule the Workflow projector
-    applies to derived identities.
-
-    The boundary matters, and stating it wrongly is how an earlier version of
-    this contract overclaimed. A reader holding only this stream can check three
-    things about ``product/task-started``: the mode an explicit request or a
-    routing decision already fixed, that ``workflow_run_id`` is this task, and
-    that ``preflight_digest`` is the one recorded at opening. It cannot check
-    ``definition_hash``, ``assembly_digest`` or ``source_base_revision``, because
-    those are properties of a Receipt it does not have and cannot reconstruct
-    from an opaque digest. Those relations belong to
-    :func:`product_started_values`, which only a caller holding the Receipt can
-    evaluate, and to :meth:`ProductAssemblyReceipt.binds`.
-
-    ``None`` means this fact cannot legally be appended from these facts at all -
-    an ``auto`` task cannot start before routing has produced a mode, and a
-    rejection cannot exist before a review was awaited.
-
-    An empty mapping means the fact carries nothing an earlier fact decided:
-    ``product/task-completed`` names a promotion no previous fact could know.
-    """
+    The Product stream fixes the confirmed mode, task/Workflow identity and
+    preflight digest. A full Receipt is needed to check definition hash, assembly
+    digest and source base; product_started_values and ProductAssemblyReceipt.binds
+    own those checks. None means a required earlier fact is absent; an empty
+    mapping means this event carries no value fixed by the earlier Product facts."""
 
     if event_type == PRODUCT_TASK_STARTED:
         mode = product_started_mode(facts)
@@ -558,16 +497,8 @@ def product_required_values(
 
 
 def product_started_mode(facts: ProductTaskFacts) -> ResolvedTaskMode | None:
-    """The single mode ``product/task-started`` may carry.
+    """Derive the execution mode from the exact confirmed request."""
 
-    An explicit request is its own answer, so ``single`` cannot start as
-    ``multi``. ``auto`` has no answer until a router produced one, so this is
-    ``None`` until ``product/task-routed`` established ``resolved_mode`` - and
-    then it is exactly that mode, not a second opinion about it.
-    """
-
-    if facts.requested_mode is RequestedTaskMode.AUTO:
-        return facts.resolved_mode
     return ResolvedTaskMode(facts.requested_mode.value)
 
 
@@ -576,41 +507,17 @@ def product_started_mode(facts: ProductTaskFacts) -> ResolvedTaskMode | None:
 
 @dataclass(frozen=True, slots=True)
 class ProductRoleProfile:
-    """One role's host-decided identity, grants and capacity.
+    """A bounded host template whose slot determines its authority.
 
-    It deliberately does **not** name its own role, and has no access field. The
-    slot it occupies on :class:`ProductTaskProfile` is what makes it the parent,
-    the reviewer or the coder, so there is no second copy of that fact to
-    disagree with the first. An earlier shape carried a ``role`` field, which
-    meant a host could put a coder-shaped profile in the reviewer slot and read
-    back write authority for the reviewer - the exact thing the topology exists
-    to prevent.
-
-    There is no node list, no edge list and no fan-out here either, because the
-    topology is not configurable: a Profile chooses *who* each role is, never
-    what the graph looks like.
-    """
+    It has no independent role or workspace-access field. Putting a coder-shaped
+    profile in the investigator slot cannot grant write access. Presets and grants
+    are resolved and checked by the existing ProductProfileRegistry."""
 
     preset: str
     capability_grants: tuple[str, ...]
     max_output_tokens: int
     budget: BudgetLimits
-
-
-@dataclass(frozen=True, slots=True)
-class ProductRouterProfile:
-    """The bounded envelope a mode router runs inside.
-
-    It has no ``capability_grants`` field, so a host cannot hand the router a
-    tool through configuration; it decides ``single`` or ``multi`` from one short
-    answer and does nothing else.
-    """
-
-    preset: str
-    max_output_tokens: int
-    budget: BudgetLimits
-    timeout_milliseconds: int
-    max_response_bytes: int
+    max_turn_wall_milliseconds: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -637,17 +544,18 @@ class ProductTaskProfile:
     default_mode: RequestedTaskMode
     provider_id: str
     model_id: str
-    parent: ProductRoleProfile
-    reviewer: ProductRoleProfile
     coder: ProductRoleProfile
-    router: ProductRouterProfile
+    investigator: ProductRoleProfile
+    patch_author: ProductRoleProfile | None
+    retained_tokens: int
+    investigator_initial_tokens: int
     task_budget: BudgetLimits
     source_id: str
     source_revision: str
     verification_plan_id: str
     promotion_target_id: str
 
-    def role_profile(self, role: ProductRole) -> ProductRoleProfile:
+    def role_profile(self, role: ProductRole) -> ProductRoleProfile | None:
         """The profile occupying ``role``'s slot.
 
         This is the only mapping between a role and its configuration, and it
@@ -657,9 +565,9 @@ class ProductTaskProfile:
         """
 
         return {
-            ProductRole.PARENT: self.parent,
-            ProductRole.REVIEWER: self.reviewer,
             ProductRole.CODER: self.coder,
+            ProductRole.INVESTIGATOR: self.investigator,
+            ProductRole.PATCH_AUTHOR: self.patch_author,
         }[role]
 
     @property
@@ -690,44 +598,16 @@ class ProductTaskProfile:
 
 @dataclass(frozen=True, slots=True)
 class ProductPreflightBinding:
-    """What resolving a Profile against the world produced, before a mode is chosen.
+    """Non-secret identities and exact revisions resolved before confirmation.
 
-    This is what a Proposal shows a person and what a task binds to: a Profile
-    says ``main``, this says which commit that was; a Profile names a
-    verification plan and a promotion target, this carries the frozen plan's
-    digest and the target's fingerprint, exact ref and current revision. The ref
-    is separate from the repository fingerprint: two branches in one repository
-    may currently point at the same commit but grant different promotion
-    authority.
-
-    ``role_assembly_digest`` and ``router_assembly_digest`` are the answer to a
-    gap a name-only binding cannot close. A host registry may keep ``preset``
-    spelled the same while rebinding it to a different ``AgentSpec``, different
-    capability grants or a different Tool/Prompt/Policy/Provider composition, and
-    the Workflow definition hash will not notice either - it covers *binding ids*,
-    not what a resolver returns for them. So the host computes these two digests
-    over what it actually resolved:
-
-    * ``role_assembly_digest`` must cover, for all three roles, the resolved
-      ``AgentSpec`` identity, the effective capability grants and the effective
-      Tool/Prompt/Policy/Provider composition;
-    * ``router_assembly_digest`` must cover the same for the router, and is what
-      makes "the router was granted no tool" a checkable fact at resume rather
-      than a claim.
-
-    Both are **supplied**, not computed here: resolving a registry is I/O this
-    module does not do. What is computed is :attr:`digest` over them, so a
-    resolution result cannot be recorded and then quietly disagreed with.
-
-    Every field is a non-secret identity, digest or exact revision. There is no
-    repository path, no verifier argv, no environment value, no endpoint and no
-    credential, so the whole binding is safe to render to a person and safe to
-    keep in durable history.
-    """
+    role_assembly_digest covers the resolved coder, multi coder and investigator
+    compositions, including specs, grants and ordered tools/prompts/policies. Names
+    alone cannot detect registry rebinding. Source, verification and promotion
+    bindings remain separate owner identities; this value stores no local paths
+    or credentials and grants no execution or promotion authority."""
 
     profile_digest: str
     role_assembly_digest: str
-    router_assembly_digest: str
     repository_fingerprint: str
     base_revision: str
     verification_plan_digest: str
@@ -748,20 +628,11 @@ class ProductPreflightBinding:
 
 @dataclass(frozen=True, slots=True)
 class ProductAssemblyReceipt:
-    """The complete binding a started task records.
+    """Bind the confirmed preflight to the execution mode and exact Workflow hash.
 
-    It is the preflight binding plus the two things only choosing a mode
-    produces: which mode won, and the hash of the Workflow definition that mode
-    selects. Splitting it this way is not cosmetic - an ``auto`` Proposal cannot
-    honestly carry a resolved mode, because the router has not run and will not
-    run until the task exists.
-
-    Resuming re-resolves and compares digests. Because
-    ``promotion_expected_revision`` is part of the binding, a task whose target
-    ref has moved does not silently re-base onto the new tip: it fails closed
-    and must be opened again against what the branch is now. That is the same
-    refusal D2 makes when a promotion target drifts, applied one level up.
-    """
+    A Proposal binds what the person reviewed. Assembly re-resolves those bindings
+    and refuses drift before deriving this receipt. The receipt describes the
+    Workflow that can run; it is not itself proof that execution or approval occurred."""
 
     preflight: ProductPreflightBinding
     resolved_mode: ResolvedTaskMode
@@ -805,9 +676,7 @@ class ProductAssemblyReceipt:
         )
 
 
-def product_started_values(
-    *, task_id: str, receipt: ProductAssemblyReceipt
-) -> Mapping[str, str]:
+def product_started_values(*, task_id: str, receipt: ProductAssemblyReceipt) -> Mapping[str, str]:
     """Every value ``product/task-started`` carries, derived from one Receipt.
 
     This is the only place a started payload is built. ``task_id`` and
@@ -904,9 +773,7 @@ class ProposalConfirmation:
     confirming_message_id: str
 
 
-def proposal_confirmable(
-    proposal: ProductTaskProposal, confirmation: ProposalConfirmation
-) -> bool:
+def proposal_confirmable(proposal: ProductTaskProposal, confirmation: ProposalConfirmation) -> bool:
     """Whether ``confirmation`` may open a task from ``proposal``.
 
     Three conditions. The ids must match exactly, so a stale confirmation cannot
@@ -930,10 +797,7 @@ def proposal_confirmable(
     explicit host capability decision, never a model classification.
     """
 
-    if (
-        type(proposal) is not ProductTaskProposal
-        or type(confirmation) is not ProposalConfirmation
-    ):
+    if type(proposal) is not ProductTaskProposal or type(confirmation) is not ProposalConfirmation:
         return False
     values = tuple(
         _plain_proposal_text(value)
@@ -995,28 +859,13 @@ def _plain_proposal_text(value: object) -> str | None:
 
 @dataclass(frozen=True, slots=True)
 class ProductTaskSummary:
-    """One ProductTask as rebuilt from its own stream, and nothing else.
+    """One ProductTask rebuilt solely from its durable stream.
 
-    Every field required here is established by ``product/task-opened``, so a
-    summary can only exist for a task that was opened. There is no "empty
-    summary": a task with no stream has no facts, and a reader says so by
-    returning nothing rather than by inventing a status, a mode and three origin
-    identities that no event ever recorded.
-
-    Every optional field is ``None`` until the fact that establishes it has been
-    appended, so this value never anticipates work.
-
-    The identity fields point outward and are not resolved here: ``review_id``
-    and ``promotion_id`` belong to the promotion ledger, ``router_agent_id`` to
-    the Agent Directory, and the ``origin_*`` and ``confirmation_*`` fields to
-    the Session that asked for the work and the one that agreed to it. A reader
-    that needs what any of them means replays that source freshly.
-
-    ``reason_display`` is carried because it is the one thing in the protocol
-    written *for a person to read*, and a reader that dropped it would leave the
-    chat surface unable to say why a mode was chosen. It remains display-only:
-    no code may branch on it.
-    """
+    Required fields come from task-opened; optional fields remain None until their
+    establishing events exist. An unopened task has no invented empty summary.
+    Review and Promotion identities refer to their original ledger, and origin
+    and confirmation identities refer to their original Sessions. Consumers
+    resolve those owners when they need evidence beyond this Product stream."""
 
     def facts(self) -> ProductTaskFacts:
         """What this task has established, for checking the next fact.
@@ -1031,9 +880,7 @@ class ProductTaskSummary:
             preflight_digest=self.preflight_digest,
             resolved_mode=self.resolved_mode,
             awaited_review_id=(
-                self.review_id
-                if self.status is ProductTaskStatus.AWAITING_APPROVAL
-                else None
+                self.review_id if self.status is ProductTaskStatus.AWAITING_APPROVAL else None
             ),
         )
 
@@ -1052,9 +899,6 @@ class ProductTaskSummary:
     confirmation_message_id: str
     head_seq: int
     resolved_mode: ResolvedTaskMode | None = None
-    reason_display: str | None = None
-    router_agent_id: str | None = None
-    routing_session_id: str | None = None
     definition_hash: str | None = None
     assembly_digest: str | None = None
     source_base_revision: str | None = None
@@ -1079,17 +923,14 @@ class ProductTaskSummary:
         return self.status in PRODUCT_TASK_TERMINAL_STATUSES
 
 
-PRODUCT_TASK_COHERENT_WORKFLOW: Mapping[
-    ProductTaskStatus, frozenset[WorkflowStatus | None]
-] = MappingProxyType(
-    {
-        ProductTaskStatus.OPENED: frozenset({None}),
-        ProductTaskStatus.ROUTED: frozenset({None}),
-        ProductTaskStatus.STARTED: frozenset({WorkflowStatus.RUNNING}),
-        ProductTaskStatus.AWAITING_APPROVAL: frozenset(
-            {WorkflowStatus.AWAITING_APPROVAL}
-        ),
-    }
+PRODUCT_TASK_COHERENT_WORKFLOW: Mapping[ProductTaskStatus, frozenset[WorkflowStatus | None]] = (
+    MappingProxyType(
+        {
+            ProductTaskStatus.OPENED: frozenset({None}),
+            ProductTaskStatus.STARTED: frozenset({WorkflowStatus.RUNNING}),
+            ProductTaskStatus.AWAITING_APPROVAL: frozenset({WorkflowStatus.AWAITING_APPROVAL}),
+        }
+    )
 )
 """Which Workflow state agrees with each non-terminal ProductTask status.
 
@@ -1178,21 +1019,6 @@ class ProductTaskView:
         )
 
 
-@dataclass(frozen=True, slots=True)
-class TaskRouting:
-    """A router's complete answer.
-
-    ``reason_display`` is the one model-influenced string the product protocol
-    admits, and it is display-only: it exists so a person can see why a mode was
-    chosen, and no code may branch on it. The decision is ``resolved_mode``,
-    which is an enum precisely so that the decision and the prose cannot
-    disagree. A host bounds and sanitizes the text before it is recorded.
-    """
-
-    resolved_mode: ResolvedTaskMode
-    reason_display: str | None
-
-
 # ------------------------------------------------------------------- protocols
 
 
@@ -1205,35 +1031,7 @@ class ProductTaskReader(Protocol):
     all three.
     """
 
-    async def load(self, task_id: str) -> ProductTaskSummary | None:
-        ...
-
-
-class TaskRoutingParser(Protocol):
-    """Turn one bounded router response into a resolved mode.
-
-    This parses an answer; it does not obtain one. The caller creates the router
-    Agent, owns its Session and Budget account, enforces the timeout and response
-    bound from :class:`ProductRouterProfile`, and passes only the resulting text.
-
-    It is named for what it does. An earlier name implied this seam *was* the
-    router, and that its synchronous signature proved the router performs no I/O
-    and holds no service handle. It proves neither: a synchronous method may
-    block on a socket, and an object satisfying this Protocol may hold whatever
-    its ``__init__`` was given. What the signature does establish is narrower and
-    still worth having - the seam hands the implementation nothing but a string,
-    so no Supervisor, Workflow, Workspace, Artifact or Promotion handle arrives
-    through it.
-
-    That the router Agent itself is granted no Tool, is charged to its own Budget
-    account and runs within its declared bounds is a property of the concrete
-    implementation and its assembly. It is proven by the resolved
-    ``router_assembly_digest`` and by architecture tests over the implementing
-    stage, not by this declaration.
-    """
-
-    def parse(self, response: str) -> TaskRouting:
-        ...
+    async def load(self, task_id: str) -> ProductTaskSummary | None: ...
 
 
 __all__ = [
@@ -1248,7 +1046,6 @@ __all__ = [
     "PRODUCT_TASK_OPENED",
     "PRODUCT_TASK_PROTOCOL_VERSION",
     "PRODUCT_TASK_REJECTED",
-    "PRODUCT_TASK_ROUTED",
     "PRODUCT_TASK_SCHEMA_VERSION",
     "PRODUCT_TASK_STARTED",
     "PRODUCT_TASK_STREAM_PREFIX",
@@ -1260,7 +1057,6 @@ __all__ = [
     "ProductPreflightBinding",
     "ProductRole",
     "ProductRoleProfile",
-    "ProductRouterProfile",
     "ProductTaskFacts",
     "ProductTaskProfile",
     "ProductTaskProposal",
@@ -1273,8 +1069,6 @@ __all__ = [
     "RequestedTaskMode",
     "ResolvedTaskMode",
     "TaskModeSource",
-    "TaskRouting",
-    "TaskRoutingParser",
     "product_event_contract",
     "product_required_values",
     "product_started_mode",

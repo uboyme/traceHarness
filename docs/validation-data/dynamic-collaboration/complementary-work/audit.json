@@ -1,0 +1,170 @@
+{
+  "format": 1,
+  "product_evaluation": false,
+  "calls": 6,
+  "tokens": 14905,
+  "provider_failures": 0,
+  "tools_executed": 0,
+  "adopted": false,
+  "code_digest": "0886d742abcd8f421f84df8a5639c41e1e1559b4f186f75710a84a1b85797948",
+  "plan_sha256": "6ba9bdd9a6c9b68bdfa1d858373774b4c841573c633e6d58620ec789a865296b",
+  "changed_fields": {
+    "main_goal": "For local, the complete work you will do yourself. For separable, the concrete independently answerable outcome you retain and can advance from the original sources while the child works. Do not restate the entire task, duplicate the child's work, or retain only waiting, supervision, final formatting or merging.",
+    "child_goal": "Empty for local. For separable, a bounded readonly independently answerable outcome complementary to main_goal. Neither branch's substantive investigation may require the other branch's future result to begin. Shared background is allowed; do not delegate all source gathering as a prerequisite for the parent's entire analysis.",
+    "child_deliverable": "Empty for local. For separable, a verifiable answer to the child's own question with source evidence and any unresolved limits. Together the retained main result and this result must cover the requested outcomes; final integration happens after collection. A generic bundle of excerpts for the whole task is not an independent outcome."
+  },
+  "only_field_descriptions_changed": true,
+  "sources": [
+    {
+      "case": "separable-review",
+      "stream_id": "session:wf-session-2b132a43e41ec6b32dbde1884e80b44f1051c83625ae13e03604d9c2e6949bdd",
+      "seq": 34,
+      "database_sha256": "25cf54ea8835409999e1c3fc2c16eff54bb515730b875f18a47236615aacd054",
+      "database_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "stream_id": "session:wf-session-eece0d1c3a7995bedd6b7aa5780cc5c1c121f939c8e5f120c691451f5f3bd110",
+      "seq": 34,
+      "database_sha256": "8c5299490c95a6559e75806bda7a33f082667d020e1741f973d39562449a4f03",
+      "database_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "stream_id": "session:wf-session-b142219e0876cf353e3a0c7a37ec669846c278e425af2cd1d01cbbfc57e8f7cd",
+      "seq": 34,
+      "database_sha256": "b1d98ad01e7ce3b8522c64162be63229a7dce635be0bcdc0f740d2b4433f8d07",
+      "database_unchanged": true
+    }
+  ],
+  "reviews": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "request_fingerprint": "a79c6967887332e039f292b888df7b060c2976761b11a554ba83bf0b9dc4a386",
+      "expected_label": "separable",
+      "label_match": true,
+      "proposal": {
+        "id": "call_25fc111d5695427b9ce2a1",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "separable",
+          "main_goal": "Review two readonly design aspects from the codebase: (1) allocation (budgets/projection.py, budgets/service.py), and (2) handoff (supervision/delegation.py, supervision/investigation_budget.py), each with at least two cited code lines and a conclusion.",
+          "child_goal": "Read and extract relevant code snippets and structural context from the four specified Python files to support analysis of allocation and handoff behaviors.",
+          "child_deliverable": "Four code excerpts — one per file — each containing function signatures, key class definitions, and any comments or logic directly related to budget projection, service-level allocation decisions, delegation protocols, or investigation handoff lifecycles.",
+          "briefing": "The INDEX.md confirms the four target files. We must read all four to gather evidence for both topics. Each file maps cleanly to one or both topics: projection.py and service.py underpin allocation; delegation.py and investigation_budget.py govern handoff. No inter-file dependency exists for initial evidence collection — all can be read in parallel and independently. The conclusions and answer.json synthesis will occur *after* this readonly evidence is obtained.",
+          "independent_readonly": true
+        }
+      },
+      "split_review": "not_demonstrated"
+    },
+    {
+      "case": "separable-review",
+      "condition": "described-fields",
+      "request_fingerprint": "fb66b80699a0ec11acd57d028e22d87d8032c8cb45d9aa03f6cecd5edb864633",
+      "expected_label": "separable",
+      "label_match": true,
+      "proposal": {
+        "id": "call_1b468db4e057456db95191",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "separable",
+          "main_goal": "Extract and verify the two required topics (allocation and handoff) from the source files referenced in INDEX.md, ensuring each has at least two concrete code line references.",
+          "child_goal": "Read and parse INDEX.md to confirm the exact list of four source files and their paths, then validate that all four are present in the file listing evidence.",
+          "child_deliverable": "INDEX.md confirms exactly these four files: src/traceh/budgets/projection.py, src/traceh/budgets/service.py, src/traceh/supervision/delegation.py, src/traceh/supervision/investigation_budget.py — matching the file listing evidence; no discrepancies found.",
+          "briefing": "The task requires dual independent verification: one branch must confirm the authoritative file list from INDEX.md matches observed filesystem state (already partially observed), while the other branch proceeds to analyze content of those exact files for allocation and handoff logic. Both branches can begin immediately from existing readonly evidence — no dependency between them. The child delivers a definitive, verifiable alignment statement; the main branch retains full responsibility for interpreting code semantics and generating answer.json structure.",
+          "independent_readonly": true
+        }
+      },
+      "split_review": "not_demonstrated"
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "request_fingerprint": "09d9f692b04f79985ee5907b16bd386632e7fcb718e6ce5c9da3eed1a31f0ca8",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_a18360870a6b4382839fe9",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Read src/traceh/supervision/investigation_budget.py and analyze the InvestigationBudgetContinuation.after_tool_results state chain to determine its checking logic, when it issues additional budget requests, and when it continues or stops; then write a coherent conclusion and at least three actual code line references into answer.json.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "coupled-review",
+      "condition": "described-fields",
+      "request_fingerprint": "30eadc76d1aaf0dfd06acbbcd7eaf8d87c7b5bff018bbfb8c4d97cc1ef816a5b",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_565ac93f6aae4b31950510",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Read src/traceh/supervision/investigation_budget.py and trace the InvestigationBudgetContinuation.after_tool_results state chain to determine: (1) what it checks first, (2) when it generates an additional quota request, and (3) when it continues or stops; then produce a coherent conclusion and at least three actual code line references in answer.json format with only that file added.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "request_fingerprint": "436b227f848d401b8c6b97622175994ea479cb180d87c9710b2d756c70d4b542",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_c97d40edb35e4bf5995963",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Extract the version string from src/traceh/version.py and write it to answer.json in the specified JSON format.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "simple-read",
+      "condition": "described-fields",
+      "request_fingerprint": "4e0ee0057c46d547bc4d9578f63212c45e3242a74a94fc21593a84c218ea50ad",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_74741e6d2b664588983839",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Extract the version string from src/traceh/version.py and write it to answer.json in the specified JSON format.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    }
+  ],
+  "review_owner": "implementing-agent inspection; not independent judge or human approval",
+  "review_note": "Original child gathers all evidence before parent analysis. Described fields retain both substantive topics with parent and delegate already-observed index/list consistency, failing useful complementary work criteria. No candidate adoption.",
+  "validation": {
+    "new_tests": 10,
+    "targeted_and_adjacent_passed": 101,
+    "skipped": 0,
+    "collect_only": 4073
+  }
+}

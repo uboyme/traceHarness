@@ -32,8 +32,6 @@ from traceh.api.product import (
     ProductTaskStatus,
     ProductTaskViewStatus,
     RequestedTaskMode,
-    ResolvedTaskMode,
-    TaskRouting,
 )
 from traceh.api.workflow import WorkflowStatus
 from traceh.product import (
@@ -409,9 +407,7 @@ async def test_confirmation_must_be_a_message_accepted_after_the_proposal_turn()
             task_id="task-1",
             operation_id="op-open",
             proposal=proposal(),
-            confirmation=confirmation(
-                message_id="message-older", turn_id="turn-older"
-            ),
+            confirmation=confirmation(message_id="message-older", turn_id="turn-older"),
         )
 
     assert raised.value.code == "product-confirmation-not-after-proposal"
@@ -479,9 +475,7 @@ async def test_a_claim_cannot_authorize_a_turn_that_never_started(
                         "turn/start",
                         {"turn_id": turn_id, "message_id": message_id},
                     ),
-                    PendingEvent(
-                        "turn/end", {"turn_id": turn_id, "reason": "completed"}
-                    ),
+                    PendingEvent("turn/end", {"turn_id": turn_id, "reason": "completed"}),
                 )
             )
     await store.append("session:session-alpha", expected_seq=0, events=tuple(events))
@@ -667,9 +661,7 @@ async def test_a_turn_that_closes_over_an_open_step_cannot_authorize() -> None:
             "turn/start",
             {"turn_id": ORIGIN_TURN, "message_id": ORIGIN_MESSAGE},
         ),
-        PendingEvent(
-            "step/start", {"turn_id": ORIGIN_TURN, "step_id": "step-open"}
-        ),
+        PendingEvent("step/start", {"turn_id": ORIGIN_TURN, "step_id": "step-open"}),
         PendingEvent("turn/end", {"turn_id": ORIGIN_TURN, "reason": "completed"}),
         PendingEvent(
             "inbox/accepted",
@@ -732,9 +724,7 @@ async def test_hostile_confirmation_identity_cannot_authorize_another_session() 
             task_id="task-1",
             operation_id="op-open",
             proposal=proposal(session_id="session-alpha"),
-            confirmation=confirmation(
-                session_id=EqualToEverything("session-beta")
-            ),
+            confirmation=confirmation(session_id=EqualToEverything("session-beta")),
         )
 
     assert raised.value.code == "product-confirmation-invalid"
@@ -784,16 +774,6 @@ async def test_the_service_refuses_what_the_projector_would_refuse() -> None:
     assert raised.value.code == "product-task-unknown"
 
     await opened(assembly, requested_mode=RequestedTaskMode.SINGLE)
-    with pytest.raises(ProductStateError) as raised:
-        await assembly.service.record_routing(
-            task_id="task-1",
-            operation_id="op-route",
-            routing=TaskRouting(ResolvedTaskMode.SINGLE, None),
-            router_agent_id="router-agent",
-            routing_session_id="router-session",
-        )
-    assert raised.value.code == "product-transition-invalid"
-
     with pytest.raises(ProductStateError) as raised:
         await assembly.service.complete_task(
             task_id="task-1", operation_id="op-done", promotion_id="promotion-1"
@@ -849,9 +829,7 @@ async def test_a_malformed_receipt_is_refused_before_it_can_damage_the_stream(
 async def test_a_rejection_must_name_the_awaited_review() -> None:
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     await assembly.service.record_awaiting(
         task_id="task-1", operation_id="op-await", review_id="review-1"
     )
@@ -895,9 +873,7 @@ async def test_the_same_operation_id_with_other_content_is_a_conflict() -> None:
 
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     await assembly.service.record_awaiting(
         task_id="task-1", operation_id="op-await", review_id="review-1"
     )
@@ -975,9 +951,7 @@ async def test_a_lost_compare_and_swap_retries_against_the_new_history() -> None
 
     store.append = gated  # type: ignore[method-assign]
     slow = asyncio.create_task(
-        assembly.service.start_task(
-            task_id="task-1", operation_id="op-start", receipt=receipt()
-        )
+        assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     )
     await gate.entered.wait()
     # A second writer wins the race while the first is parked inside append.
@@ -993,7 +967,7 @@ async def test_a_lost_compare_and_swap_retries_against_the_new_history() -> None
                     "operation_id": "op-race",
                     "reason_code": "host-shutdown",
                 },
-                schema_version=1,
+                schema_version=4,
             ),
         ),
     )
@@ -1050,9 +1024,7 @@ async def test_the_cas_expectation_comes_from_the_replayed_history() -> None:
 
     store.armed = True
     slow = asyncio.create_task(
-        assembly.service.start_task(
-            task_id="task-1", operation_id="op-start", receipt=receipt()
-        )
+        assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     )
     await gate.entered.wait()
 
@@ -1068,7 +1040,7 @@ async def test_the_cas_expectation_comes_from_the_replayed_history() -> None:
                     "operation_id": "op-race",
                     "reason_code": "host-shutdown",
                 },
-                schema_version=1,
+                schema_version=4,
             ),
         ),
     )
@@ -1277,9 +1249,7 @@ async def test_close_converges_in_flight_writes_and_admits_no_more() -> None:
 async def test_the_three_view_only_answers_are_all_reachable() -> None:
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
 
     assembly.workflow.status_value = WorkflowStatus.RUNNING
     assembly.ownership.owned = False
@@ -1304,9 +1274,7 @@ async def test_neither_workflow_state_nor_ownership_is_cached() -> None:
 
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     assembly.workflow.status_value = WorkflowStatus.RUNNING
     assembly.ownership.owned = True
 
@@ -1338,9 +1306,7 @@ async def test_abandoning_requires_a_genuinely_derived_interruption() -> None:
 
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
 
     assembly.workflow.status_value = WorkflowStatus.RUNNING
     assembly.ownership.owned = True
@@ -1372,9 +1338,7 @@ async def test_abandoning_a_resumable_task_is_refused() -> None:
 
     assembly = await build_assembly()
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     await assembly.service.record_awaiting(
         task_id="task-1", operation_id="op-await", review_id="review-1"
     )

@@ -43,10 +43,36 @@ class VariantSpec:
 
 def comparison_policy(value):
     object_fields(
-        value, {"format", "min_pass_gain", "max_token_ratio", "max_tool_call_delta"}, "comparison"
+        value,
+        {
+            "format",
+            "kind",
+            "requested_modes",
+            "min_pass_gain",
+            "max_token_ratio",
+            "max_tool_call_delta",
+        },
+        "comparison",
     )
-    if type(value["format"]) is not int or value["format"] != 1:
+    if type(value["format"]) is not int or value["format"] != 3:
         raise BenchmarkManifestError("evaluation-version-unsupported", "comparison")
+    if value["kind"] not in {"text_candidate", "execution_strategy"}:
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "comparison.kind")
+    modes = value["requested_modes"]
+    if modes is not None and (
+        type(modes) is not list
+        or len(modes) != 2
+        or any(type(mode) is not str or mode not in {"single", "multi"} for mode in modes)
+    ):
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "comparison.requested_modes")
+    if (
+        value["kind"] == "execution_strategy"
+        and modes is None
+        or value["kind"] == "text_candidate"
+        and modes is not None
+        and modes[0] != modes[1]
+    ):
+        raise BenchmarkManifestError("evaluation-comparison-incompatible", "requested_modes")
     for name in ("min_pass_gain", "max_tool_call_delta"):
         v = value[name]
         if v is not None and (type(v) is not int or v < 0):
@@ -69,6 +95,7 @@ class RunOptions:
     case_ids: tuple[str, ...] | None = None
     material_seeds: tuple[int, ...] | None = None
     variants: tuple[VariantSpec, ...] = ()
+    requested_modes: tuple[str, ...] | None = None
 
     def __post_init__(self):
         if type(self.repetitions) is not int or not 1 <= self.repetitions <= 25:
@@ -87,7 +114,7 @@ class RunOptions:
             ):
                 raise BenchmarkManifestError("evaluation-manifest-invalid", "timeout_seconds")
         text_field(self.variant_id, "variant_id")
-        for name, cls in (("case_ids", str), ("material_seeds", int)):
+        for name, cls in (("case_ids", str), ("material_seeds", int), ("requested_modes", str)):
             value = getattr(self, name)
             if value is not None and (
                 type(value) is not tuple
@@ -126,6 +153,10 @@ def load_run_options(path: Path) -> RunOptions:
         variants.append(VariantSpec(identifier, role, patch))
     if paired:
         comparison_policy(raw["comparison"])
+        if raw["comparison"]["kind"] == "execution_strategy" and any(
+            v.patch is not None for v in variants
+        ):
+            raise BenchmarkManifestError("evaluation-candidate-scope-invalid", "execution_strategy")
     elif raw["comparison"] is not None:
         raise BenchmarkManifestError("evaluation-stage-unsupported", "comparison")
     model = object_fields(raw["model"], MODEL_FIELDS, "model")
@@ -141,7 +172,7 @@ def load_run_options(path: Path) -> RunOptions:
         raise BenchmarkManifestError("evaluation-manifest-invalid", "retry") from None
     execution_fields = {"sandbox_config", "max_trials", "timeout_seconds"}
     if paired:
-        execution_fields |= {"network_mode", "shutdown_seconds"}
+        execution_fields |= {"network_mode", "shutdown_seconds", "first_arm"}
     execution = object_fields(raw["execution"], execution_fields, "execution")
     if paired:
         from math import isfinite
@@ -149,6 +180,7 @@ def load_run_options(path: Path) -> RunOptions:
         grace = execution["shutdown_seconds"]
         if (
             execution["network_mode"] != "direct"
+            or execution["first_arm"] not in {"baseline", "candidate"}
             or type(grace) not in (int, float)
             or not isfinite(grace)
             or grace <= 0
@@ -159,13 +191,21 @@ def load_run_options(path: Path) -> RunOptions:
     if execution["sandbox_config"] is not None:
         text_field(execution["sandbox_config"], "sandbox_config")
     fields = {"repetitions"}
+    if type(raw["trials"]) is dict and "requested_modes" in raw["trials"]:
+        fields.add("requested_modes")
     if type(raw["trials"]) is dict and "selection" in raw["trials"]:
         fields.add("selection")
     trials = object_fields(raw["trials"], fields, "trials")
+    modes = trials.get("requested_modes")
+    if "requested_modes" in fields and (type(modes) is not list or paired):
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "trials.requested_modes")
     selection = trials.get("selection")
     if "selection" in fields:
         object_fields(selection, {"case_ids", "material_seeds"}, "selection")
-        if any(type(selection[name]) is not list for name in selection):
+        if type(selection["case_ids"]) is not list or (
+            selection["material_seeds"] is not None
+            and type(selection["material_seeds"]) is not list
+        ):
             raise BenchmarkManifestError("evaluation-manifest-invalid", "selection")
     return RunOptions(
         trials["repetitions"],
@@ -174,8 +214,11 @@ def load_run_options(path: Path) -> RunOptions:
         variants[0].variant_id,
         doc,
         None if selection is None else tuple(selection["case_ids"]),
-        None if selection is None else tuple(selection["material_seeds"]),
+        None
+        if selection is None or selection["material_seeds"] is None
+        else tuple(selection["material_seeds"]),
         tuple(variants) if paired else (),
+        None if modes is None else tuple(modes),
     )
 
 

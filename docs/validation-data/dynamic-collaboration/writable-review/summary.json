@@ -1,0 +1,155 @@
+{
+  "format": 1,
+  "accepted": false,
+  "real_calls": 19,
+  "roles": {
+    "main": 14,
+    "child": 5
+  },
+  "exact_tokens": 139444,
+  "wall_ms": 223842,
+  "provider_failures": 0,
+  "retries": 0,
+  "artifacts": [
+    {
+      "artifact_id": "patch-9ea0c419802509b404bc07d236011c7004b37ccfd5740956b491bf6efc882f17",
+      "agent_id": "agent-tool-patch-author-90cf2cb1-26de-5eec-99a6-708a4f6dc5d4",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "5da37d1a3b6e66034547729251d083d884a81df63607e74481c093843288224d",
+      "bytes": 1776
+    },
+    {
+      "artifact_id": "patch-130838e4a075f32d8565163b2d1b5a2233a2c570856250ad01cfa33a66a64e6b",
+      "agent_id": "wf-agent-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595",
+      "paths": [
+        "telemetry_report.py",
+        "telemetry_rules.py",
+        "test_telemetry.py"
+      ],
+      "patch_sha256": "06471d3a3276aa508cc8c06c1f704bddeb1f4cf3c139de5a0594730cb364023e",
+      "bytes": 8709
+    }
+  ],
+  "full_patch_read": {
+    "chars": 1776,
+    "request_refs": [
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@62",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@75",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@88",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@101",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@114",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@127",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@140",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@153",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@166",
+      "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@176"
+    ]
+  },
+  "integration_tool_used": false,
+  "delivery_reviews": [
+    {
+      "request_ref": "session:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595@176",
+      "delivery": {
+        "agent_id": "wf-agent-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595",
+        "base_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+        "candidate_tree": "edfee9cc43c2de1d3d8f14b789ffa79787950f1f",
+        "changed_paths": [
+          "telemetry_report.py",
+          "telemetry_rules.py",
+          "test_telemetry.py"
+        ],
+        "interpretation": "Git-visible candidate at this request; no semantic or scope verdict.",
+        "patch_sha256": "06471d3a3276aa508cc8c06c1f704bddeb1f4cf3c139de5a0594730cb364023e",
+        "session_id": "wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595",
+        "source_id": "benchmark-source",
+        "status": "observed",
+        "workspace_generation": 4,
+        "workspace_id": "ws-ce4f5c02e98d7d58b089c05df68eb9c53925a3ae9bab95d59448bd64de5f6110"
+      }
+    }
+  ],
+  "fixed_review": {
+    "artifact_id": "patch-130838e4a075f32d8565163b2d1b5a2233a2c570856250ad01cfa33a66a64e6b",
+    "expected_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+    "integration_commit": "604c6d3f0cd724cd796f64ab72736456cd8fa39f",
+    "integration_tree": "edfee9cc43c2de1d3d8f14b789ffa79787950f1f",
+    "manifest_digest": "ff243647003bf4dc4e9a725d553ed8ffa113c943ef3280d8da91724d75963868",
+    "merge_policy_version": 1,
+    "passed": false,
+    "patch_sha256": "06471d3a3276aa508cc8c06c1f704bddeb1f4cf3c139de5a0594730cb364023e",
+    "patch_size_bytes": 8709,
+    "promotion_protocol_version": 2,
+    "repository_fingerprint": "c7d2d70fc36573f5a083ae52760c1a7e02c9bcc538556913953ede56205f511e",
+    "results": [
+      {
+        "argv_digest": "3899ad87cccb3d792421c48d7a95315e04253448bcfc5a41a6424f089dc0aaa1",
+        "command_id": "functional-contract",
+        "execution": {
+          "execution_id": "ff43b0a164784c3195d0e5d230c291fa",
+          "policy_digest": "cf9b3d7ba875f7d6c57b19f120aefbad9230b7ad42093daacb24157c6d090fbf",
+          "receipt_digest": "f375da57c601fc89cf74be96bdb9666af23827cba8f4b9d39c25605770a7d913",
+          "stream_id": "effects:wf-session-022e59704c3051aa1a98fb00f83ebf51e0967d2936be36d7d2d24a72e567a595"
+        },
+        "exit_code": 1,
+        "status": "failed",
+        "stderr_bytes": 201,
+        "stderr_sha256": "ef9cfe782a9b1f9259d70d90e798499e1909524b7ccb95f05640647be1484d6b",
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "review_id": "review-d2829e364945e3f59c40cdf6cd5d5f78e32712aca0c50fbbaadb4b333afc009f",
+    "review_request_id": "wf-review-8d809be15a2750d4b94d69718ba383b41a33fcc023f953b914f8a500b71cd9db",
+    "target_id": "benchmark-target",
+    "target_ref": "refs/heads/main",
+    "verification_evidence_digest": "279d72a7926aedaf7793309dd4409b83a29d2caa106e65b2cc4369a1812f7909",
+    "verifier_definition_digest": "74e97952ce7a6c61882edc709fc09f0833ae4282b8f61435415f9f4401ac312c"
+  },
+  "semantic_diagnostic": [
+    {
+      "input": "None",
+      "expected": "ValueError",
+      "exception": "TypeError"
+    },
+    {
+      "input": "{}",
+      "expected": "ValueError",
+      "returned": []
+    },
+    {
+      "input": "()",
+      "expected": "ValueError",
+      "returned": []
+    }
+  ],
+  "test_script_assert_count": 36,
+  "shell_results": [
+    {
+      "tool_call_id": "call_39dfe184d5b84131ba47d3",
+      "exit_code": 1,
+      "command": "python test_telemetry.py"
+    },
+    {
+      "tool_call_id": "call_ed966a04ca8e4014804f13",
+      "exit_code": 0,
+      "command": "python test_telemetry.py"
+    }
+  ],
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 21
+  },
+  "workspaces": {
+    "released": 1,
+    "quarantined": 2
+  },
+  "snapshot_replays": 21,
+  "original_unchanged": true,
+  "original_sha256": "2f2a050afe4434288485a1cf0987a27684687a8c506d652d799d8ebd70ee734c",
+  "contract_sha256": "56314464f6f9bedd3bdc1bac711885bb9c2aa0be3798fb85a62f5e05c040088e",
+  "benefit_measured": false
+}

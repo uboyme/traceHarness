@@ -1,0 +1,207 @@
+{
+  "format": 1,
+  "accepted": false,
+  "real_calls": 25,
+  "roles": {
+    "main": 20,
+    "child": 5
+  },
+  "exact_tokens": 248004,
+  "ledger_settled_tokens": 236301,
+  "wall_ms": 284108,
+  "provider_failures": 0,
+  "retries": 0,
+  "artifacts": [
+    {
+      "artifact_id": "patch-4d0d6b44e9325952f010d1d9c3cd2ded56ce446c290c71c998a8883c4bd37db3",
+      "agent_id": "agent-tool-patch-author-c4e6cdd3-88a4-5581-80a2-502fa235a10a",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "020a143cffc6558f4d5105d36173a66cb76c8334a658b5d316843f63049e36e7",
+      "bytes": 2152
+    }
+  ],
+  "full_patch_read": {
+    "chars": 2152,
+    "request_refs": [
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@75",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@88",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@101",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@114",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@127",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@140",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@153",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@166",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@179",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@192",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@205",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@218",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@231",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@241",
+      "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@255"
+    ]
+  },
+  "integration_tool_used": true,
+  "completion_checks": [
+    {
+      "seq": 248,
+      "passed": false,
+      "candidate_unchanged": true,
+      "delivery": {
+        "agent_id": "wf-agent-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b",
+        "base_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+        "candidate_tree": "0a770e16bdd1a9a36bbb4652e25ab15caa632957",
+        "changed_paths": [
+          "telemetry_report.py",
+          "telemetry_rules.py",
+          "test_telemetry.py"
+        ],
+        "interpretation": "Git-visible candidate at this request; no semantic or scope verdict.",
+        "patch_sha256": "086c06d795f9c24f114cb5c4d104db15987e896a725ff32e8594c5eb1f0f1ddb",
+        "session_id": "wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b",
+        "source_id": "benchmark-source",
+        "status": "observed",
+        "workspace_generation": 4,
+        "workspace_id": "ws-128d99d3864bc5f907ab7ab1620a98657b9741ffd6fec13b2ff24c715b5bf014"
+      },
+      "integration": {
+        "artifact_id": "patch-4d0d6b44e9325952f010d1d9c3cd2ded56ce446c290c71c998a8883c4bd37db3",
+        "effect_id": "f12050ec-f477-450e-b3c6-e37cd9086509",
+        "request_digest": "540f1deb9ed49f950b5fee8184357d0e96e64a096364ff5f685c7056f4c0e2f4",
+        "tool_call_id": "call_7c88d686fc6a4c6ea03db6"
+      },
+      "integration_check": "Applied receipt matches the current handoff and target.",
+      "interpretation": "Fixed host checks on the current workspace snapshot. Only declared checks are covered; this is not an Artifact Review or human approval. Raw fixed verifier output remains private. Repair failures within the existing bound.",
+      "kind": "writable-completion",
+      "results": [
+        {
+          "argv_digest": "3899ad87cccb3d792421c48d7a95315e04253448bcfc5a41a6424f089dc0aaa1",
+          "command_id": "functional-contract",
+          "execution": {
+            "execution_id": "14e56b88ab2a44a380638466896ff87d",
+            "policy_digest": "cf9b3d7ba875f7d6c57b19f120aefbad9230b7ad42093daacb24157c6d090fbf",
+            "receipt_digest": "526610b4278c153354cde275b082b4dfa1adaec3f7b14c8c4685e476e2998d48",
+            "stream_id": "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b"
+          },
+          "exit_code": 1,
+          "status": "failed",
+          "stderr_bytes": 201,
+          "stderr_sha256": "627a68b8a65c7c31cccee07f330c2c9f8c9adfff3f133953cfaa93d08e528cfc",
+          "stdout_bytes": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "verification_evidence_digest": "7e039ff2e1598737063097fce37ee9e261ce23ac3df15288b2cfb741bb648951",
+      "verifier_definition_digest": "74e97952ce7a6c61882edc709fc09f0833ae4282b8f61435415f9f4401ac312c"
+    },
+    {
+      "seq": 262,
+      "passed": false,
+      "candidate_unchanged": true,
+      "delivery": {
+        "agent_id": "wf-agent-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b",
+        "base_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+        "candidate_tree": "0a770e16bdd1a9a36bbb4652e25ab15caa632957",
+        "changed_paths": [
+          "telemetry_report.py",
+          "telemetry_rules.py",
+          "test_telemetry.py"
+        ],
+        "interpretation": "Git-visible candidate at this request; no semantic or scope verdict.",
+        "patch_sha256": "086c06d795f9c24f114cb5c4d104db15987e896a725ff32e8594c5eb1f0f1ddb",
+        "session_id": "wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b",
+        "source_id": "benchmark-source",
+        "status": "observed",
+        "workspace_generation": 4,
+        "workspace_id": "ws-128d99d3864bc5f907ab7ab1620a98657b9741ffd6fec13b2ff24c715b5bf014"
+      },
+      "integration": {
+        "artifact_id": "patch-4d0d6b44e9325952f010d1d9c3cd2ded56ce446c290c71c998a8883c4bd37db3",
+        "effect_id": "f12050ec-f477-450e-b3c6-e37cd9086509",
+        "request_digest": "540f1deb9ed49f950b5fee8184357d0e96e64a096364ff5f685c7056f4c0e2f4",
+        "tool_call_id": "call_7c88d686fc6a4c6ea03db6"
+      },
+      "integration_check": "Applied receipt matches the current handoff and target.",
+      "interpretation": "Fixed host checks on the current workspace snapshot. Only declared checks are covered; this is not an Artifact Review or human approval. Raw fixed verifier output remains private. Repair failures within the existing bound.",
+      "kind": "writable-completion",
+      "results": [
+        {
+          "argv_digest": "3899ad87cccb3d792421c48d7a95315e04253448bcfc5a41a6424f089dc0aaa1",
+          "command_id": "functional-contract",
+          "execution": {
+            "execution_id": "3daf8d930465475382ec39c063c56177",
+            "policy_digest": "cf9b3d7ba875f7d6c57b19f120aefbad9230b7ad42093daacb24157c6d090fbf",
+            "receipt_digest": "493819a10b69440139ecd1964d746702dcdc7f9a07cf02eccf415085425da2d2",
+            "stream_id": "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b"
+          },
+          "exit_code": 1,
+          "status": "failed",
+          "stderr_bytes": 201,
+          "stderr_sha256": "0ec387421b742493f08ac1af6a07552d8ef30441b65ae25d6e766519fcba618d",
+          "stdout_bytes": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "verification_evidence_digest": "26dc80d8e5adad0b6385e2e70486b1d9bf5221026a7cb1ae7af255fbc298131c",
+      "verifier_definition_digest": "74e97952ce7a6c61882edc709fc09f0833ae4282b8f61435415f9f4401ac312c"
+    }
+  ],
+  "feedback_request": "session:wf-session-8a8de0c9e9432a70eb8508f863567d0ba7adcc4288b4d9d72601c7872300f02b@255",
+  "repair_tool_calls": 0,
+  "semantic_diagnostic": {
+    "invalid_top_level": [
+      {
+        "input": "None",
+        "exception": "TypeError"
+      },
+      {
+        "input": "{}",
+        "returned": []
+      },
+      {
+        "input": "()",
+        "returned": []
+      }
+    ],
+    "sorted_devices": [
+      "adevice",
+      "bdevice",
+      "zdevice"
+    ]
+  },
+  "shell_results": [
+    {
+      "tool_call_id": "call_42b865cabffa4efcacb2f4",
+      "exit_code": 1
+    },
+    {
+      "tool_call_id": "call_66b8a5e2456e4044b77bba",
+      "exit_code": 1
+    }
+  ],
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "review_id": null,
+  "promotion_id": null,
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 27
+  },
+  "workspaces": {
+    "released": 1,
+    "quarantined": 2
+  },
+  "snapshot_replays": 27,
+  "original_unchanged": true,
+  "original_sha256": "785cd1b5fff33ed9dc698306afb63306e2a747f198319251dd745298e27122b1",
+  "contract_sha256": "cbec0a0fedb0134ccd1a973efb34a9a5c7fc5694ea0264652ff4f7752585ff0f",
+  "benefit_measured": false,
+  "ledger_token_quality_counts": {
+    "exact": 24,
+    "unknown": 1
+  },
+  "ledger_wall_settlements": 2
+}

@@ -1,0 +1,75 @@
+{
+  "format": 1,
+  "review_origin": "Codex source review of original CAS patches; not user human gold",
+  "automatic_score_update": false,
+  "semantic_scoring_provider_calls": 0,
+  "original_scoring": "structural-only, unchanged",
+  "reviewed_complex_answers": 6,
+  "correct_source_rules": [
+    {
+      "file": "src/traceh/budgets/service.py",
+      "line": 164,
+      "rule": "reserve_child admits retained_tokens through the original ledger projection"
+    },
+    {
+      "file": "src/traceh/workflow/execution.py",
+      "line": 184,
+      "rule": "dispose the owned tree before Artifact capture"
+    },
+    {
+      "file": "src/traceh/supervision/delegation.py",
+      "line": 136,
+      "rule": "the investigator must not inherit parent Session history"
+    }
+  ],
+  "rows": [
+    {
+      "arm": "baseline",
+      "case": "explicit-2",
+      "artifact": "reviewed-patches/base-explicit-2-b0b29474.patch",
+      "blob_sha256": "b0b29474cdf419785a904e424bf0369ef6f6a64b09461443ebf9d7d76139894c",
+      "conclusion": "not-qualified",
+      "reason": "把 grant_root 当作 retained_tokens 的保留机制，把 usage_settled 当作产物捕获；所有权 lineage 也被误当父历史继承。"
+    },
+    {
+      "arm": "baseline",
+      "case": "natural-2",
+      "artifact": "reviewed-patches/base-natural-2-ae89f333.patch",
+      "blob_sha256": "ae89f333722f03c4895f06cce017f18abf9b59c3bc11e3b178085be019fbc207",
+      "conclusion": "not-qualified",
+      "reason": "把 commit/release reservation 当作 retained_tokens 机制，把 collect/report 当作产物捕获。"
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit-1",
+      "artifact": "reviewed-patches/candidate-explicit-1-39680444.patch",
+      "blob_sha256": "3968044486e3dcccea67f9e87e11518f30492c6d4909dbb0c2881968cb708a4c",
+      "conclusion": "not-qualified",
+      "reason": "把 close_account 当作主方收尾额度保留；把 ownership/fork 字段概括成当前调查方继承历史。"
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit-2",
+      "artifact": "reviewed-patches/candidate-explicit-2-4e70069b.patch",
+      "blob_sha256": "4e70069b4c78992eadcde47f4f1b8d471ba7ee3a2fe6043a6e3aca195dca6a64",
+      "conclusion": "not-qualified",
+      "reason": "把 close_account 当作收尾额度保留，把 Supervisor.report 当作产物捕获。"
+    },
+    {
+      "arm": "candidate",
+      "case": "natural-1",
+      "artifact": "reviewed-patches/candidate-natural-1-8a438c02.patch",
+      "blob_sha256": "8a438c02b088d6e7063a8a9b5eff188cdf54802036778d041aa644fd154e126c",
+      "conclusion": "not-qualified",
+      "reason": "把 AgentRunReportReader 当作产物捕获，没有回答 retained_tokens 的创建前保留机制。"
+    },
+    {
+      "arm": "candidate",
+      "case": "natural-2",
+      "artifact": "reviewed-patches/candidate-natural-2-9bc29606.patch",
+      "blob_sha256": "9bc29606a7d8a0d32984adab186c707670ebcf97eaecfea1d789f7ea5db71a6b",
+      "conclusion": "not-qualified",
+      "reason": "把取消 START 的终端化当作保留收尾额度，把 AgentRunReportReader 当作产物捕获。"
+    }
+  ]
+}

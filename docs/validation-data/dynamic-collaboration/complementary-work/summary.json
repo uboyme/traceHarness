@@ -1,0 +1,113 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "separable",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 1478,
+        "output_tokens": 266,
+        "total_tokens": 1744,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "described-fields",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "separable",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 1669,
+        "output_tokens": 270,
+        "total_tokens": 1939,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3211,
+        "output_tokens": 115,
+        "total_tokens": 3326,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "described-fields",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3402,
+        "output_tokens": 133,
+        "total_tokens": 3535,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2010,
+        "output_tokens": 75,
+        "total_tokens": 2085,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "described-fields",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2201,
+        "output_tokens": 75,
+        "total_tokens": 2276,
+        "quality": "exact"
+      }
+    }
+  ]
+}

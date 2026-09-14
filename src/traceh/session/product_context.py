@@ -27,7 +27,7 @@ from traceh.cli.text_safety import is_single_line_safe
 
 PRODUCT_CONTEXT_SNAPSHOT = "product/context-snapshot"
 PRODUCT_CONTEXT_SCHEMA_VERSION = 1
-PRODUCT_CONTEXT_FORMAT_VERSION = 7
+PRODUCT_CONTEXT_FORMAT_VERSION = 8
 MAX_PRODUCT_CONTEXT_TASKS = 6
 MAX_PRODUCT_CONTEXT_EXCERPT_JSON_CHARS = 320
 MAX_PRODUCT_CONTEXT_CONTENT_CHARS = 8_192
@@ -36,10 +36,6 @@ _PRODUCT_STATUS_MEANINGS: Mapping[ProductTaskStatus, str] = MappingProxyType(
     {
         ProductTaskStatus.OPENED: (
             "This exact ProductTask is durably opened. No host-managed "
-            "execution-start fact is recorded yet."
-        ),
-        ProductTaskStatus.ROUTED: (
-            "This exact ProductTask is durably routed. No host-managed "
             "execution-start fact is recorded yet."
         ),
         ProductTaskStatus.STARTED: (

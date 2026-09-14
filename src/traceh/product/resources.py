@@ -19,7 +19,8 @@ from traceh.agents.identity import (
     freeze_agent_spec,
 )
 from traceh.api.agents import AgentRecord, AgentSpec, AgentSupervisor
-from traceh.api.budgets import BudgetLimits
+from traceh.api.budgets import BudgetLimits, ChildBudgetGrant
+from traceh.api.json_types import fingerprint
 from traceh.api.product import ProductRole
 from traceh.api.workspaces import WorkspaceAccess, WorkspaceProvisioningRequest
 from traceh.artifacts.catalog import PatchArtifactCatalogReader
@@ -37,7 +38,9 @@ from traceh.product.registry import (
     agent_assembly_digest,
 )
 from traceh.session.event_store import EventStore
+from traceh.supervision.delegation import InvestigationBinding
 from traceh.supervision.lifecycle import AgentOwnershipGraph
+from traceh.supervision.writable_work import WritableBinding
 from traceh.workspaces.errors import WorkspaceDirtyError
 from traceh.workspaces.service import WorkspaceService
 
@@ -51,22 +54,42 @@ class ProductRuntimeBinding:
     assembly: ResolvedAgentAssembly | None
     budget: BudgetLimits | None
     max_output_tokens: int | None
+    max_turn_wall_milliseconds: int | None = None
+    retained_parent_tokens: int = 0
+    role: ProductRole | None = None
+    initial_tokens: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _InvestigationTemplate:
+    assembly: ResolvedAgentAssembly
+    runtime: ProductRuntimeBinding
+    source_id: str
+    revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class _WritableTemplate:
+    task_id: str
+    assembly: ResolvedAgentAssembly
+    runtime: ProductRuntimeBinding
+    source_id: str
+    revision: str
 
 
 class ProductResourceBindings:
     """One checked translation from resolved assemblies to adapter policies."""
 
-    __slots__ = ("_budgets", "_router_specs", "_runtime", "_workspaces")
+    __slots__ = ("_budgets", "_runtime", "_workspaces", "_investigations", "_patch_authors")
 
     def __init__(self) -> None:
-        self._budgets: dict[str, BudgetLimits] = {}
+        self._budgets: dict[str, ChildBudgetGrant] = {}
         self._workspaces: dict[str, WorkspaceProvisioningRequest] = {}
         self._runtime: dict[str, ProductRuntimeBinding] = {}
-        self._router_specs: dict[str, AgentSpec] = {}
+        self._investigations: dict[str, _InvestigationTemplate] = {}
+        self._patch_authors: dict[str, _WritableTemplate] = {}
 
-    def register(
-        self, task_id: str, preflight: ProductPreflight
-    ) -> AgentSpec:
+    def register(self, task_id: str, preflight: ProductPreflight) -> AgentSpec:
         if type(preflight) is not ProductPreflight:
             raise ProductInputError("product-preflight-invalid", "preflight")
         owner_id = product_task_owner_id(task_id)
@@ -83,6 +106,8 @@ class ProductResourceBindings:
         )
         profile = preflight.profile.profile
         for role in ProductRole:
+            if role is not ProductRole.CODER:
+                continue  # Template only: never a sibling execution node.
             resolved = preflight.profile.assembly(role)
             spec = replace(resolved.spec, owner_agent_id=owner_id)
             self._bind_spec(
@@ -94,32 +119,86 @@ class ProductResourceBindings:
                     resolved,
                     freeze_limits(profile.role_profile(role).budget),
                     profile.role_profile(role).max_output_tokens,
+                    profile.role_profile(role).max_turn_wall_milliseconds,
                 ),
             )
-        router = preflight.profile.router
-        router_spec = replace(router.spec, owner_agent_id=owner_id)
+        multi = preflight.profile.multi
+        multi_spec = replace(multi.spec, owner_agent_id=owner_id)
         self._bind_spec(
-            router_spec,
+            multi_spec,
             source_id=preflight.source.source_id,
             revision=preflight.source.base_revision,
-            access=WorkspaceAccess.READ_ONLY,
+            access=WorkspaceAccess.WRITABLE,
             runtime=ProductRuntimeBinding(
-                router,
-                freeze_limits(profile.router.budget),
-                profile.router.max_output_tokens,
+                multi,
+                freeze_limits(profile.coder.budget),
+                profile.coder.max_output_tokens,
+                profile.coder.max_turn_wall_milliseconds,
             ),
         )
-        current_router = self._router_specs.get(task_id)
-        if current_router is not None and current_router != router_spec:
-            raise ProductProfileError("product-router-binding-conflict", task_id)
-        self._router_specs[task_id] = router_spec
+        investigator = preflight.profile.assembly(ProductRole.INVESTIGATOR)
+        self._investigations[_runtime_key(multi_spec)] = _InvestigationTemplate(
+            investigator,
+            ProductRuntimeBinding(
+                investigator,
+                freeze_limits(profile.investigator.budget),
+                profile.investigator.max_output_tokens,
+                profile.investigator.max_turn_wall_milliseconds,
+                profile.retained_tokens,
+                ProductRole.INVESTIGATOR,
+                profile.investigator_initial_tokens,
+            ),
+            preflight.source.source_id,
+            preflight.source.base_revision,
+        )
+        if profile.patch_author is not None:
+            patch = profile.patch_author
+            assembly = preflight.profile.assembly(ProductRole.PATCH_AUTHOR)
+            self._patch_authors[_runtime_key(multi_spec)] = _WritableTemplate(
+                task_id,
+                assembly,
+                ProductRuntimeBinding(
+                    assembly,
+                    freeze_limits(patch.budget),
+                    patch.max_output_tokens,
+                    patch.max_turn_wall_milliseconds,
+                    profile.retained_tokens,
+                    ProductRole.PATCH_AUTHOR,
+                ),
+                preflight.source.source_id,
+                preflight.source.base_revision,
+            )
         return owner
 
-    def router_spec(self, task_id: str) -> AgentSpec:
-        spec = self._router_specs.get(task_id)
-        if spec is None:
-            raise ProductStateError("product-router-binding-missing", task_id)
-        return spec
+    def has_patch_author(self, spec: AgentSpec) -> bool:
+        return _runtime_key(spec) in self._patch_authors
+
+    def prepare_patch_author(self, owner: AgentRecord) -> WritableBinding:
+        template = self._patch_authors.get(_runtime_key(_record_spec(owner)))
+        if template is None or owner.owner_agent_id != product_task_owner_id(template.task_id):
+            raise ProductProfileError("product-patch-owner-unbound", owner.agent_id)
+        spec = replace(template.assembly.spec, owner_agent_id=owner.agent_id)
+        self._bind_spec(
+            spec,
+            source_id=template.source_id,
+            revision=template.revision,
+            access=WorkspaceAccess.WRITABLE,
+            runtime=template.runtime,
+        )
+        return WritableBinding(
+            spec,
+            template.task_id,
+            template.source_id,
+            template.revision,
+            agent_assembly_digest(template.assembly),
+            fingerprint(
+                ChildBudgetGrant(
+                    template.runtime.budget,
+                    template.runtime.retained_parent_tokens,
+                    template.runtime.initial_tokens,
+                )
+            ),
+        )
 
     def workspace_for_agent(self, spec: AgentSpec) -> WorkspaceProvisioningRequest:
         frozen = freeze_agent_spec(spec)
@@ -128,16 +207,28 @@ class ProductResourceBindings:
             raise ProductProfileError("product-workspace-binding-missing", frozen.preset)
         return request
 
-    def limits_for_child(
-        self, *, parent: AgentRecord, child: AgentSpec
-    ) -> BudgetLimits:
+    def grant_for_child(self, *, parent: AgentRecord, child: AgentSpec) -> ChildBudgetGrant:
         frozen = freeze_agent_spec(child)
         if frozen.owner_agent_id != parent.agent_id:
             raise ProductProfileError("product-budget-owner-mismatch", frozen.preset)
-        limits = self._budgets.get(agent_spec_request_fingerprint(frozen))
-        if limits is None:
+        grant = self._budgets.get(agent_spec_request_fingerprint(frozen))
+        if grant is None:
             raise ProductProfileError("product-budget-binding-missing", frozen.preset)
-        return limits
+        return grant
+
+    def prepare_investigation(self, owner: AgentRecord) -> InvestigationBinding:
+        template = self._investigations.get(_runtime_key(_record_spec(owner)))
+        if template is None:
+            raise ProductProfileError("product-investigation-owner-unbound", owner.agent_id)
+        spec = replace(template.assembly.spec, owner_agent_id=owner.agent_id)
+        self._bind_spec(
+            spec,
+            source_id=template.source_id,
+            revision=template.revision,
+            access=WorkspaceAccess.READ_ONLY,
+            runtime=template.runtime,
+        )
+        return InvestigationBinding(spec, template.source_id, template.revision)
 
     def runtime_for(self, spec: AgentSpec) -> ProductRuntimeBinding:
         frozen = freeze_agent_spec(spec)
@@ -167,17 +258,91 @@ class ProductResourceBindings:
             raise ProductProfileError("product-workspace-binding-conflict", frozen.preset)
         self._workspaces[exact] = workspace
         if runtime.budget is not None:
+            grant = ChildBudgetGrant(
+                runtime.budget, runtime.retained_parent_tokens, runtime.initial_tokens
+            )
             existing_budget = self._budgets.get(exact)
-            if existing_budget is not None and existing_budget != runtime.budget:
+            if existing_budget is not None and existing_budget != grant:
                 raise ProductProfileError("product-budget-binding-conflict", frozen.preset)
-            self._budgets[exact] = runtime.budget
+            self._budgets[exact] = grant
         key = _runtime_key(frozen)
         existing_runtime = self._runtime.get(key)
-        if existing_runtime is not None and not _same_runtime(
-            existing_runtime, runtime
-        ):
+        if existing_runtime is not None and not _same_runtime(existing_runtime, runtime):
             raise ProductProfileError("product-runtime-binding-conflict", frozen.preset)
         self._runtime[key] = runtime
+
+
+class ProductInvestigationPolicy:
+    """Resolve only the approved main's readonly template and current catalog."""
+
+    def __init__(self, bindings: ProductResourceBindings, workspaces: WorkspaceService):
+        self._bindings = bindings
+        self._workspaces = workspaces
+
+    def prepare(self, owner: AgentRecord) -> InvestigationBinding:
+        return self._bindings.prepare_investigation(owner)
+
+    def planned_grant(self, owner: AgentRecord) -> ChildBudgetGrant:
+        return self._bindings.grant_for_child(parent=owner, child=self.prepare(owner).spec)
+
+    async def validate_child(self, owner: AgentRecord, child: AgentRecord) -> InvestigationBinding:
+        binding = self.prepare(owner)
+        if _runtime_key(_record_spec(child)) != _runtime_key(binding.spec):
+            raise ProductProfileError("product-investigation-child-mismatch", child.agent_id)
+        workspace = await self._workspaces.resolve_for_agent(child.agent_id)
+        if (
+            workspace.source_id != binding.source_id
+            or workspace.base_revision != binding.revision
+            or workspace.access is not WorkspaceAccess.READ_ONLY
+        ):
+            raise ProductProfileError("product-investigation-source-mismatch", child.agent_id)
+        return binding
+
+
+class ProductWritablePolicy:
+    def __init__(self, bindings: ProductResourceBindings, workspaces: WorkspaceService):
+        self._bindings = bindings
+        self._workspaces = workspaces
+
+    def prepare(self, owner: AgentRecord) -> WritableBinding:
+        return self._bindings.prepare_patch_author(owner)
+
+    def planned_grant(self, owner: AgentRecord) -> ChildBudgetGrant:
+        return self._bindings.grant_for_child(parent=owner, child=self.prepare(owner).spec)
+
+    async def validate_child(self, owner: AgentRecord, child: AgentRecord) -> WritableBinding:
+        binding = self.prepare(owner)
+        if _runtime_key(_record_spec(child)) != _runtime_key(binding.spec):
+            raise ProductProfileError("product-patch-child-mismatch", child.agent_id)
+        catalog = await self._workspaces.catalog()
+        workspace = catalog.for_agent(child.agent_id)
+        parent = catalog.for_agent(owner.agent_id)
+        if (
+            workspace is None
+            or parent is None
+            or workspace.workspace_id == parent.workspace_id
+            or workspace.owner_agent_id != owner.agent_id
+            or workspace.session_id != child.session_id
+            or workspace.source_id != binding.source_id
+            or parent.source_id != binding.source_id
+            or workspace.base_revision != binding.revision
+            or parent.base_revision != binding.revision
+            or workspace.repository_fingerprint != parent.repository_fingerprint
+            or workspace.access is not WorkspaceAccess.WRITABLE
+        ):
+            raise ProductProfileError("product-patch-source-mismatch", child.agent_id)
+        return binding
+
+
+def _record_spec(record: AgentRecord) -> AgentSpec:
+    return AgentSpec(
+        preset=record.preset,
+        workspace_id=record.workspace_id,
+        owner_agent_id=record.owner_agent_id,
+        forked_from_session_id=record.forked_from_session_id,
+        capability_grants=record.capability_grants,
+        metadata=record.metadata,
+    )
 
 
 class ManagedProductTaskProvisioner:
@@ -259,9 +424,7 @@ class ManagedProductTaskProvisioner:
 
     async def release(self, task_id: str, *, reason: str) -> None:
         owner_id = product_task_owner_id(task_id)
-        workspace_reason = (
-            reason if reason in {"merged", "rejected"} else "explicit-release"
-        )
+        workspace_reason = reason if reason in {"merged", "rejected"} else "explicit-release"
         async with self._lock:
             directory = await self._directory.load()
             postorder = AgentOwnershipGraph(directory).subtree_postorder(owner_id)
@@ -285,9 +448,7 @@ class ManagedProductTaskProvisioner:
                     )
                     if captures:
                         if len(captures) != 1:
-                            raise ProductStateError(
-                                "product-workspace-capture-conflict", task_id
-                            )
+                            raise ProductStateError("product-workspace-capture-conflict", task_id)
                         if reason in {"merged", "rejected"}:
                             await self._workspaces.release_captured(
                                 record.workspace_id,
@@ -357,17 +518,20 @@ def _runtime_key(spec: AgentSpec) -> str:
     # WorkspaceManagedAgentSupervisor replaces only workspace_id before the
     # activation factory sees the spec.  Normalize that delegated field while
     # retaining preset, owner, grants, lineage and metadata.
-    return agent_spec_request_fingerprint(
-        replace(spec, workspace_id="product-managed-workspace")
-    )
+    return agent_spec_request_fingerprint(replace(spec, workspace_id="product-managed-workspace"))
 
 
-def _same_runtime(
-    left: ProductRuntimeBinding, right: ProductRuntimeBinding
-) -> bool:
+def _same_runtime(left: ProductRuntimeBinding, right: ProductRuntimeBinding) -> bool:
     if left.budget != right.budget:
         return False
     if left.max_output_tokens != right.max_output_tokens:
+        return False
+    if (
+        left.max_turn_wall_milliseconds != right.max_turn_wall_milliseconds
+        or left.retained_parent_tokens != right.retained_parent_tokens
+        or left.initial_tokens != right.initial_tokens
+        or left.role != right.role
+    ):
         return False
     if left.assembly is None or right.assembly is None:
         return left.assembly is right.assembly

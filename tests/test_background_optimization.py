@@ -35,7 +35,9 @@ async def fixture(
             PendingEvent("turn/end", {"turn_id": "test-turn", "reason": "completed"}),
         ),
     )
-    now = datetime(2026, 9, 11, tzinfo=UTC)
+    # Keep one frozen host clock, but derive its epoch from the real clock:
+    # BackgroundExperiment also enforces the original AO UTC deadline.
+    now = datetime.now(UTC)
     period = period or BackgroundPeriod(
         "explicit-test-period",
         str(workspace.resolve()),

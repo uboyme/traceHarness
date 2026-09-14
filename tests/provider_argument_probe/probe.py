@@ -146,7 +146,7 @@ def prepare(args):
         event
         for event in events
         if event["type"] == "model/attempt-end"
-        and event["data"].get("failure_code") == "provider-tool-arguments-invalid"
+        and str(event["data"].get("failure_code", "")).startswith("provider-tool-arguments-")
     ]
     if len(failures) != 1:
         raise ValueError("probe-original-failure-not-unique")

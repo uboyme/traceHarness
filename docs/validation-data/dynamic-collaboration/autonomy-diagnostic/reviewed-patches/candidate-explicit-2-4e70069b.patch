@@ -1,0 +1,8 @@
+diff --git a/answer.json b/answer.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b1e6c1e66fd6b3efa519e874c3f30c03c7d7f04
+--- /dev/null
++++ b/answer.json
+@@ -0,0 +1 @@
++{"sections":[{"topic":"authority","conclusion":"主方与调查方的权限基于持久化的所有权图，工作区版本由EventStore保证一致性，历史继承通过forked_from_session_id字段实现。权限检查每次都会加载新鲜的AgentDirectory快照，确保决策基于最新状态，而不是缓存。主方必须是调查方的直接所有者，且所有权关系在每次调用时都重新验证。","evidence":[{"path":"src/traceh/supervision/authority.py","start_line":54,"end_line":69},{"path":"src/traceh/supervision/delegation.py","start_line":128,"end_line":135}]},{"topic":"budget","conclusion":"子任务预算通过reserve_child方法预留，该方法在创建前验证容量并确保父子关系一致性。主方保留收尾额度通过在close_account方法中检查待处理的预留和使用来实现，确保在关闭账户前所有子任务都已收敛。预算操作具有幂等性，通过operation_id进行冲突检测。","evidence":[{"path":"src/traceh/budgets/service.py","start_line":110,"end_line":143},{"path":"src/traceh/budgets/service.py","start_line":575,"end_line":595}]},{"topic":"lifecycle","conclusion":"创建/发送取消、清理失败以及主方结束时，通过AgentLifecycleCoordinator的admission和disposal上下文管理器确保不会留下运行中的工作。产物捕获发生在生命周期操作完成后的报告阶段，通过Supervisor.report方法获取最终结果。Admission lease确保操作在子树关闭前完成，disposal scope等待所有相关操作完成后再进行清理。","evidence":[{"path":"src/traceh/supervision/lifecycle.py","start_line":131,"end_line":158},{"path":"src/traceh/supervision/delegation.py","start_line":278,"end_line":285}]}]}
+\ No newline at end of file

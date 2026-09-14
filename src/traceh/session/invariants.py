@@ -379,12 +379,35 @@ class CoreInvariantChecker:
                         context_message = render_context_message(
                             parse_context_input(context_event.data)
                         )
+                        from traceh.session.request_view import evidence_messages, read_view
+                        from traceh.session.surface import SurfaceProjector
+
+                        view = read_view(
+                            session_events,
+                            session_id=event.stream_id.removeprefix("session:"),
+                            turn_id=declared_turn,
+                            step_id=declared_step,
+                            through_seq=event.data["source_seq"],
+                        )
+                        context_matches = (
+                            composed.messages and composed.messages[-1] == context_message
+                        )
+                        if view is not None:
+                            if view[2].to_dict() != composition_event.data:
+                                raise ValueError("request-view-composition-mismatch")
+                            if view[1].input_mode == "evidence":
+                                context_matches = composed.messages == evidence_messages(
+                                    view[3],
+                                    SurfaceProjector(),
+                                    turn_id=declared_turn,
+                                    context=context_message,
+                                )
                         if (
                             composed.to_dict() != raw_composed
                             or dispatch.to_dict() != raw_dispatch
                             or not dispatch_request_matches_composed(composed, dispatch)
                             or not composed.messages
-                            or composed.messages[-1] != context_message
+                            or not context_matches
                             or any(
                                 dispatch.metadata.get(key) != expected
                                 for key, expected in (

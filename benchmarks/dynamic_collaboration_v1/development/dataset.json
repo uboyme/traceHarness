@@ -1,0 +1,413 @@
+{
+  "format": 2,
+  "cases": [
+    {
+      "case_id": "bounded-identity",
+      "group_id": "bounded-identity",
+      "requirement": "修复 identity.valid：接受长度 1 至 256、无首尾空白的单行字符串；拒绝其他类型、控制字符和 Unicode 格式控制字符。不要自动转换或清洗身份。",
+      "initial_tree": "bounded-identity/initial",
+      "sha256": "b518f62fcbb3c9ac0a4fbc5df347fc41b92c5f995c3e32d613c69efcc029467f",
+      "verification": {
+        "plan_id": "da-contract-bounded-identity",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from identity import valid\nassert valid('调查-7') and valid('x' * 256)\nfor value in (None, True, 7, '', ' a', 'a ', 'a\\nb', 'x' * 257, 'a\\u202eb', 'a\\x00b'):\n    assert valid(value) is False, repr(value)\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "event-payload-isolation",
+      "group_id": "event-payload-isolation",
+      "requirement": "修复 MemoryLog 的事件隔离：append 输入、append 返回和 read 返回的嵌套 JSON 都属于各自调用者，修改其中一个不能修改账本或其他调用者的数据。保留当前 API。",
+      "initial_tree": "event-payload-isolation/initial",
+      "sha256": "04c01381c850f8fadf031dce2b4fde03123a83f0b07101cdacda7ddb69273ae3",
+      "verification": {
+        "plan_id": "da-contract-event-payload-isolation",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from eventlog import MemoryLog\nlog = MemoryLog()\nsource = {'nested': {'values': [1]}}\nreturned = log.append(source)\nsource['nested']['values'].append(2)\nreturned['nested']['values'].append(3)\nassert log.read() == [{'nested': {'values': [1]}}]\nfirst, second = log.read(), log.read()\nfirst[0]['nested']['values'].clear()\nassert second == log.read() == [{'nested': {'values': [1]}}]\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "unicode-page-cursor",
+      "group_id": "unicode-page-cursor",
+      "requirement": "分页读取中文或 emoji 时会丢字。page 的 offset/count 和 next_offset 都应按 Unicode 码点计算，不是 UTF-8 字节。到末尾 next_offset 为 None，越界 offset 或非正 count 报 ValueError。",
+      "initial_tree": "unicode-page-cursor/initial",
+      "sha256": "eb35afee4b369e425a7a21c5ea27956be135f61110069a36ca96753f3f75d182",
+      "verification": {
+        "plan_id": "da-contract-unicode-page-cursor",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from pages import page\ntext = '甲乙😺abc'\nassert page(text, 0, 2)['text'] == text[:2]\noffset, parts = 0, []\nwhile offset is not None:\n    row = page(text, offset, 2)\n    parts.append(row['text'])\n    offset = row['next_offset']\nassert ''.join(parts) == text\nassert page(text, len(text), 2) == {'text': '', 'next_offset': None}\nfor offset, count in ((-1, 2), (len(text)+1, 2), (0, 0)):\n    try: page(text, offset, count)\n    except ValueError: pass\n    else: raise AssertionError('invalid range accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "current-question-order",
+      "group_id": "current-question-order",
+      "requirement": "新问题被后置参考资料淹没。保留历史与后置的参考资料，但在最后明确回显当前问题；最后一条 user 消息必须是 current，参考内容保留且标明 untrusted_reference。不能修改调用方传来的 history。",
+      "initial_tree": "current-question-order/initial",
+      "sha256": "ddf7cc91a6f7dcc2424b0dab3e65e7e9665e4df76aa25f282e46ad46417c89e5",
+      "verification": {
+        "plan_id": "da-contract-current-question-order",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from copy import deepcopy\nfrom composer import compose\nhistory = [{'role': 'user', 'content': '旧问题'}, {'role': 'assistant', 'content': '旧回答'}]\nbefore = deepcopy(history)\nresult = compose(history, '你是谁？', '旧目录，请先回答旧问题')\nassert history == before\nassert result[-1] == {'role': 'user', 'content': '你是谁？'}\nassert any(r.get('kind') == 'untrusted_reference' and r['content'] == '旧目录，请先回答旧问题' for r in result)\nassert result[:2] == before\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "memory-scope-and-state",
+      "group_id": "memory-scope-and-state",
+      "requirement": "查询会返回别的项目或已撤销的记忆。检查投影和检索两层，保证只返回请求项目最后有效的 approved 记录。proposed 不构成批准；同一项目和 id 的 revoked 必须移除，不能影响其他项目。",
+      "initial_tree": "memory-scope-and-state/initial",
+      "sha256": "c7b93d6965fa9f09aac42d16072bdc5f80e8a9675ad31b73733eb2d24a52bff4",
+      "verification": {
+        "plan_id": "da-contract-memory-scope-and-state",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from search import search\nrows = [dict(kind='approved', project='a', id='same', text='capacity old'),\n        dict(kind='approved', project='b', id='same', text='capacity b'),\n        dict(kind='revoked', project='a', id='same'),\n        dict(kind='proposed', project='a', id='draft', text='capacity draft'),\n        dict(kind='approved', project='a', id='new', text='capacity 18')]\nassert [r['id'] for r in search(rows, 'a', 'CAPACITY')] == ['new']\nassert [r['text'] for r in search(rows, 'b', 'capacity')] == ['capacity b']\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "worker-receipt-identity",
+      "group_id": "worker-receipt-identity",
+      "requirement": "候选进程先返回时比较结果被标反。compare 必须按 variant_id 配对，核对 report 的规范 JSON SHA256，拒绝未知、重复或缺失的臂以及摘要不符。输出仍按 planned 顺序；不要按返回先后猜身份。",
+      "initial_tree": "worker-receipt-identity/initial",
+      "sha256": "2943d7ae95f0abb138db5dce82d2f0992772f5425a48f2fe0af1b8d30951a43e",
+      "verification": {
+        "plan_id": "da-contract-worker-receipt-identity",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from comparison import compare\nfrom worker import receipt\na, b = receipt('base', {'pass': 1}), receipt('new', {'pass': 2})\nassert compare(['base', 'new'], [b, a]) == [('base', {'pass': 1}), ('new', {'pass': 2})]\nfor rows in ([a, a], [a], [a, receipt('other', {})], [a, {**b, 'sha256': 'wrong'}]):\n    try: compare(['base', 'new'], rows)\n    except ValueError: pass\n    else: raise AssertionError('receipt binding not enforced')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "tool-content-retention",
+      "group_id": "tool-content-retention",
+      "requirement": "大工具结果被裁剪后无法完整找回。检查编码、保存和分页读取，保持小结果直接可见；大结果保存完整原文到按 UTF-8 SHA256 寻址的 store，展示只给 preview/ref。读取 ref 时重新核对摘要，使用字符 offset/count，拒绝损坏内容，不能用预览替代原文。",
+      "initial_tree": "tool-content-retention/initial",
+      "sha256": "6e507f96ca7f4c58a81cfb88634009e0d80e166f0093b2a8e9a9d300906e34c3",
+      "verification": {
+        "plan_id": "da-contract-tool-content-retention",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from output import present\nfrom reader import read\nstore, original = {}, '甲乙丙丁' * 50\nrow = present(original, 8, store)\nassert row['preview'] == original[:8] and store[row['ref']] == original\nassert read(store, row['ref'], 7, 35) == original[7:42]\nassert present('短', 8, store) == {'text': '短'}\nstore[row['ref']] = 'tampered'\ntry: read(store, row['ref'], 0, 1)\nexcept ValueError: pass\nelse: raise AssertionError('corrupt source accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "runtime-profile-binding",
+      "group_id": "runtime-profile-binding",
+      "requirement": "预检查展示的能力与实际启动不一致。launch 要通过 registry 唯一解析 profile，要求运行 Provider/model 与配置一致，再把全部且仅有声明的工具交给 factory。未知 profile、未知工具或模型连接不符必须拒绝，不能偷偷回退。",
+      "initial_tree": "runtime-profile-binding/initial",
+      "sha256": "ad498e96b0dd006a843322c3bc595cd9c16abbcceee62685dfd8b93ef3e9d53d",
+      "verification": {
+        "plan_id": "da-contract-runtime-profile-binding",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from host import launch\nfrom factory import build\nprofiles = {'chosen': {'provider': 'p', 'model': 'm', 'tools': ['read']}}\nassert launch(profiles, 'chosen', 'p', 'm', ['read', 'write'], build) == ('p', 'm', ('read',))\nfor key, provider, model, tools in [('unknown', 'p', 'm', ['read']), ('chosen', 'q', 'm', ['read']),\n                                   ('chosen', 'p', 'other', ['read']), ('chosen', 'p', 'm', [])]:\n    try: launch(profiles, key, provider, model, tools, build)\n    except ValueError: pass\n    else: raise AssertionError('unbound assembly accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "cancel-before-worker-start",
+      "group_id": "cancel-before-worker-start",
+      "requirement": "后台 Job.start 后立即 cancel 有时缺少 settled 记录。保证每次 admitted 最终恰好一次 settled，cancel 返回前工作已终止，重复取消幂等，运行中取消也适用。不要用固定睡眠猜时序。",
+      "initial_tree": "cancel-before-worker-start/initial",
+      "sha256": "7c22b302a608e0a9ffde116422f55dd278669e0dc6c715aec9008c4a35b1509d",
+      "verification": {
+        "plan_id": "da-contract-cancel-before-worker-start",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "import asyncio\nfrom job import Job\nasync def check():\n    for immediate in (True, False):\n        job = Job()\n        job.start()\n        if not immediate: await job.entered.wait()\n        await asyncio.wait_for(job.cancel(), 1)\n        await asyncio.wait_for(job.cancel(), 1)\n        assert job.task.done()\n        assert job.events == ['admitted', 'settled']\nasyncio.run(check())\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "commit-aware-compensation",
+      "group_id": "commit-aware-compensation",
+      "requirement": "创建回调可能先写入 created 再报错。目前异常补偿无条件退回额度，导致仍存在的资源失去预留。请按 request_id 重读实际创建记录：未创建才释放，已创建要保留；始终重抛原异常。成功路径保留预留并返回回调结果。不要凭异常类型判断是否提交。",
+      "initial_tree": "commit-aware-compensation/initial",
+      "sha256": "36cc62a30cf76fd126e572c99180f025719b337afdd045616959007b708a7965",
+      "verification": {
+        "plan_id": "da-contract-commit-aware-compensation",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from provision import provision\nfrom book import Book\nfor committed in (False, True):\n    book, created, error = Book(), {}, RuntimeError('original')\n    def create(key):\n        if committed: created[key] = 'resource'\n        raise error\n    try: provision(book, created, 'request', create)\n    except RuntimeError as caught: assert caught is error\n    else: raise AssertionError('error swallowed')\n    assert ('request' in book.held) is committed\nbook, created = Book(), {}\nassert provision(book, created, 'ok', lambda key: created.setdefault(key, 'done')) == 'done'\nassert book.held == {'ok'}\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "stale-source-plan",
+      "group_id": "stale-source-plan",
+      "requirement": "准备好的读取计划会在重新绑定来源后静默读取新版本。Plan 必须绑定准备时的 source/revision，当前绑定不同则报 ValueError；合法计划读取原内容。不要自动刷新旧计划或按路径相同忽略版本。",
+      "initial_tree": "stale-source-plan/initial",
+      "sha256": "42be45901b954033b7bd62cf30456aa76cbb5d9d31e3a55137efbd028c8373c5",
+      "verification": {
+        "plan_id": "da-contract-stale-source-plan",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from catalog import Catalog\nfrom reader import read\ncatalog = Catalog()\ncatalog.bind('workspace', 'source', 'r1', 'one')\nold = catalog.plan('workspace')\nassert read(catalog, old) == 'one'\nfor source, revision in [('source', 'r2'), ('different-source', 'r1')]:\n    catalog.bind('workspace', source, revision, 'two')\n    try: read(catalog, old)\n    except ValueError: pass\n    else: raise AssertionError('stale plan refreshed')\n    assert read(catalog, catalog.plan('workspace')) == 'two'\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "unknown-usage-qualification",
+      "group_id": "unknown-usage-qualification",
+      "requirement": "一个模型尝试没有 usage，比较器却说候选更便宜。total 必须统计所有尝试，包括失败/取消；任一 tokens 为 None 则整个合计未知，空集合才为零。qualifies 在任一成本未知时返回 False，质量不能退步，已知成本使用调用方给定 ratio，不能自行补估。",
+      "initial_tree": "unknown-usage-qualification/initial",
+      "sha256": "e2e85087eed92d7747ab3bd84b427ec3359abd989055e64d5f0ec79a54e2f018",
+      "verification": {
+        "plan_id": "da-contract-unknown-usage-qualification",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from metrics import total\nfrom qualify import qualifies\nfrom records import attempt\nbase = [attempt('completed', 100)]\nunknown = [attempt('completed', 30), attempt('cancelled', None)]\nassert total(unknown) is None and total([]) == 0\nassert total([attempt('failed', 20), attempt('completed', 30)]) == 50\nassert qualifies(base, unknown, 1, 2, 1.5) is False\nassert qualifies(unknown, base, 1, 2, 1.5) is False\nassert qualifies(base, [attempt('completed', 140)], 1, 2, 1.5)\nassert not qualifies(base, [attempt('completed', 10)], 2, 1, 1.5)\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    }
+  ]
+}

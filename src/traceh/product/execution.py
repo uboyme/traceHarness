@@ -20,14 +20,12 @@ from traceh.product.assembly import ProductAssembly, ProductPreflight
 from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.events import require_product_identifier
 from traceh.product.topology import (
-    PRODUCT_MODE_ROLES,
     product_message_binding,
     product_role_node_id,
     product_spec_binding,
 )
 from traceh.session.event_store import EventStore
 from traceh.supervision.execution import durable_log_identity
-from traceh.workflow.models import agent_identity
 from traceh.workflow.service import WorkflowService
 
 
@@ -66,15 +64,12 @@ class ProductWorkflowBindingResolver:
     are observations of durable Agent reports, never copied into ProductTask.
     """
 
-    __slots__ = ("_bindings", "_lock", "_max_report_chars", "_supervisor")
+    __slots__ = ("_bindings", "_lock", "_supervisor")
 
     def __init__(
-        self, supervisor: AgentSupervisor, *, max_report_chars: int
+        self, supervisor: AgentSupervisor
     ) -> None:
-        if type(max_report_chars) is not int or max_report_chars < 1:
-            raise ProductInputError("product-report-bound-invalid", "max_report_chars")
         self._supervisor = supervisor
-        self._max_report_chars = max_report_chars
         self._bindings: dict[str, _RunBinding] = {}
         self._lock = asyncio.Lock()
 
@@ -121,7 +116,9 @@ class ProductWorkflowBindingResolver:
         role = _role_for_binding(binding_id, kind="spec")
         _require_role_node(role, node_id, run_id)
         binding = await self._binding(run_id)
-        template = binding.assembly.preflight.profile.assembly(role).spec
+        template = binding.assembly.preflight.profile.execution_assembly(
+            role, binding.assembly.resolved_mode
+        ).spec
         return replace(template, owner_agent_id=binding.owner_agent_id)
 
     async def message_content(
@@ -138,8 +135,7 @@ class ProductWorkflowBindingResolver:
             # this branch means Workflow tried to re-enter unfinished Agent work,
             # which Stage E intentionally refuses rather than reconstructs.
             raise ProductStateError("product-requirement-unavailable", run_id)
-        reports = await self._predecessor_reports(run_id, role)
-        return _role_message(role, requirement, reports)
+        return _role_message(role, requirement)
 
     async def map_keys(
         self, binding_id: str, *, run_id: str, node_id: str
@@ -155,31 +151,6 @@ class ProductWorkflowBindingResolver:
             raise ProductStateError("product-execution-binding-missing", run_id)
         return binding
 
-    async def _predecessor_reports(
-        self, run_id: str, role: ProductRole
-    ) -> tuple[tuple[ProductRole, str], ...]:
-        if role is ProductRole.PARENT:
-            return ()
-        predecessors = (
-            (ProductRole.PARENT,)
-            if role is ProductRole.REVIEWER
-            else (ProductRole.PARENT, ProductRole.REVIEWER)
-        )
-        binding = await self._binding(run_id)
-        available = set(PRODUCT_MODE_ROLES[binding.assembly.resolved_mode])
-        reports: list[tuple[ProductRole, str]] = []
-        for predecessor in predecessors:
-            if predecessor not in available:
-                continue
-            node_id = product_role_node_id(predecessor)
-            agent_id, _, _, message_id = agent_identity(run_id, node_id)
-            report = await self._supervisor.report(agent_id, message_id)
-            if report.status != "completed" or type(report.final_text) is not str:
-                raise ProductStateError("product-predecessor-report-invalid", run_id)
-            reports.append(
-                (predecessor, _bounded_text(report.final_text, self._max_report_chars))
-            )
-        return tuple(reports)
 
 
 class ProductExecutionHost:
@@ -355,36 +326,19 @@ def _require_role_node(role: ProductRole, node_id: str, run_id: str) -> None:
         raise ProductStateError("product-role-node-mismatch", run_id)
 
 
-def _bounded_text(value: str, limit: int) -> str:
-    if len(value) <= limit:
-        return value
-    marker = "\n[report truncated by host]"
-    room = max(0, limit - len(marker))
-    return value[:room] + marker[: limit - room]
 
 
 def _role_message(
     role: ProductRole,
     requirement: str,
-    reports: tuple[tuple[ProductRole, str], ...],
 ) -> str:
     instructions = {
-        ProductRole.PARENT: (
-            "Analyze the requirement and return a concise implementation plan. "
-            "Do not modify the workspace."
-        ),
-        ProductRole.REVIEWER: (
-            "Review the proposed approach for correctness and missing risks. "
-            "Do not modify the workspace."
-        ),
         ProductRole.CODER: (
             "Implement the requirement in the managed workspace, then run the "
             "relevant checks and report the result."
         ),
     }
     parts = [instructions[role], "", "Requirement:", requirement]
-    for report_role, report in reports:
-        parts.extend(("", f"{report_role.value.title()} report:", report))
     return "\n".join(parts)
 
 

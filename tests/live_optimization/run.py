@@ -70,11 +70,13 @@ async def execute(options):
                 "max_trials": count * 2,
                 "timeout_seconds": 1800,
                 "shutdown_seconds": 120,
+                "first_arm": "baseline",
                 "network_mode": "direct",
             }
             raw["trials"] = {"repetitions": 1}
             raw["comparison"] = {
-                "format": 1,
+                "kind": "text_candidate", "requested_modes": None,
+                "format": 2,
                 "min_pass_gain": 1,
                 "max_token_ratio": 1.15,
                 "max_tool_call_delta": 2,

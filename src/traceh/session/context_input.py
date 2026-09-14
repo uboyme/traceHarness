@@ -28,9 +28,9 @@ from traceh.session.surface_replacement import (
 )
 
 CONTEXT_INPUT = "context/input"
-CONTEXT_INPUT_FORMAT = 12
+CONTEXT_INPUT_FORMAT = 13
 CONTEXT_POLICY_VERSION = "active-reference-policy-v8"
-CONTEXT_RENDERER_VERSION = "context-json-v12"
+CONTEXT_RENDERER_VERSION = "context-json-v13"
 
 _HEADER = (
     "Current references for the active user request. Host-generated navigation "
@@ -41,13 +41,13 @@ _HEADER = (
 )
 _SEARCH_GUIDANCE = (
     " The list above is automatically selected and may be empty while searchable sources exist. "
-    "If this question needs missing reference evidence, use the available search_skill for "
-    "manuals, search_memory for approved project facts, or search_history for earlier discussion. "
-    "Search using a short keyword, then use an exact hit read_action when more text is needed. "
-    "These reference sources are separate from workspace files. "
-    "Retained Tool output is separate from this package: use exposed list_tool_outputs, "
-    "search_tool_output or read_tool_output for earlier execution output. Their content "
-    "arrives in Tool messages. An empty array here does not mean that output is unavailable."
+    "Use only the tools listed in the current request, with their declared parameters. "
+    "If a relevant reference search tool is listed, search using a short keyword; follow a "
+    "hit's exact read_action only when that tool is also listed. Reference sources are "
+    "separate from workspace files. Retained Tool output is separate from this package; "
+    "use a listed output reader when available. An empty reference array does not mean "
+    "that earlier output is unavailable. Navigation does not add tools: if no listed tool "
+    "can retrieve needed evidence, state that limitation instead of inventing a tool name."
 )
 _FOOTER = (
     "\nEnd of current references. An unread directory or next page may contain "

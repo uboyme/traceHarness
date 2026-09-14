@@ -1,0 +1,68 @@
+{
+  "case": "closure-20260913",
+  "product_success": false,
+  "real_calls": 24,
+  "roles": {
+    "main": 20,
+    "child": 4
+  },
+  "error_type": null,
+  "stopped": true,
+  "tokens": null,
+  "ledger_settled_tokens": 351143,
+  "usage_quality": {
+    "None": 2,
+    "exact": 23,
+    "unknown": 1
+  },
+  "wall_ms": 315593,
+  "provider_failures": [],
+  "artifacts": [
+    {
+      "artifact_id": "patch-c8f7e9ad715cf49b539725467e7ddf4cd1bc2c83ce7e00e5293ac732bc444131",
+      "agent_id": "agent-tool-patch-author-4b33abab-7b10-5632-9851-46cee9f517bf",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "5e6bc392a35af0b00ad4ba5d4b842b65bf1119fafc0a9a3b84fd5e2ff58e3fc8",
+      "bytes": 1194
+    }
+  ],
+  "patch_read_calls": 1,
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "review_passed": null,
+  "promotion_id": null,
+  "accounts": {
+    "closed": 3
+  },
+  "workspaces": {
+    "released": 1,
+    "quarantined": 2
+  },
+  "usage_reservations": {
+    "settled": 26
+  },
+  "snapshot_replays": 26,
+  "original_sha256": "05fcc3fe1341714c192ba345fc5401ba615fd080576b84a2da26afbbf7bee0b2",
+  "reports_dispatched_to_parent": 1,
+  "known_exact_tokens": 236088,
+  "actual_total_tokens": null,
+  "fixed_check_passed": false,
+  "first_review_reused_evidence": true,
+  "repair_completed": false,
+  "counterexamples": {
+    "none": {
+      "error_type": "TypeError"
+    },
+    "dict": {
+      "returned": []
+    },
+    "tuple": {
+      "returned": []
+    }
+  },
+  "sandbox_executions": 10,
+  "sandbox_all_converged": true,
+  "interpretation": "One bounded probe; no causal attribution or general success rate."
+}

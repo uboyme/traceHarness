@@ -1,0 +1,116 @@
+{
+  "format": 1,
+  "stage": "DA-9",
+  "provider_calls": 0,
+  "sessions": 9,
+  "requests": 24,
+  "original_files_unchanged": 227,
+  "scenarios": [
+    {
+      "scenario": "coupled-review",
+      "main_provider_calls": 5,
+      "runtime_errors": [
+        {
+          "error_type": "AdaptiveDecompositionError",
+          "message": "product-decomposition-decision-missing"
+        }
+      ],
+      "not_disclosed_calls": 3,
+      "successful_read_paths": [
+        "src/traceh/supervision/investigation_budget.py"
+      ],
+      "actual_product_status": "failed"
+    },
+    {
+      "scenario": "separable-review",
+      "main_provider_calls": 5,
+      "runtime_errors": [
+        {
+          "error_type": "AdaptiveDecompositionError",
+          "message": "product-decomposition-decision-missing"
+        }
+      ],
+      "not_disclosed_calls": 3,
+      "successful_read_paths": [
+        "INDEX.md"
+      ],
+      "actual_product_status": "failed"
+    },
+    {
+      "scenario": "simple-read",
+      "main_provider_calls": 8,
+      "runtime_errors": [],
+      "not_disclosed_calls": 2,
+      "successful_read_paths": [
+        "src/traceh/version.py",
+        "answer.json"
+      ],
+      "actual_product_status": "completed"
+    }
+  ],
+  "rows": [
+    {
+      "scenario": "coupled-review",
+      "session_id": "9659fef9-cc09-40da-8ca7-18d1fb33825b",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "coupled-review",
+      "session_id": "product-owner-session-product-task-6ccd3c312cbf9fd8edd69ab44e01cc235be43890d6364f4c35c17793e231d9de",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "coupled-review",
+      "session_id": "wf-session-eece0d1c3a7995bedd6b7aa5780cc5c1c121f939c8e5f120c691451f5f3bd110",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "separable-review",
+      "session_id": "9a9e4a2d-d966-4ea3-bb1c-e13694ceb33f",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "separable-review",
+      "session_id": "product-owner-session-product-task-603b5656c0ed9c05ba9fee1993b7cbb157204d7bf1af230b1f71dc0d06ed1fb5",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "separable-review",
+      "session_id": "wf-session-2b132a43e41ec6b32dbde1884e80b44f1051c83625ae13e03604d9c2e6949bdd",
+      "requests": 5,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "simple-read",
+      "session_id": "1982d6d7-e6b1-437a-af49-f8644bd058b8",
+      "requests": 2,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "simple-read",
+      "session_id": "product-owner-session-product-task-bbd3a708a6e368dbee0b2e9927eef1625b4767c8ade872f16ceddcb3b0ac9bdb",
+      "requests": 0,
+      "replay_errors": [],
+      "invariant_errors": []
+    },
+    {
+      "scenario": "simple-read",
+      "session_id": "wf-session-b142219e0876cf353e3a0c7a37ec669846c278e425af2cd1d01cbbfc57e8f7cd",
+      "requests": 8,
+      "replay_errors": [],
+      "invariant_errors": []
+    }
+  ]
+}

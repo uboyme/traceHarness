@@ -1093,7 +1093,15 @@ class ProcessAgentSupervisor:
 
         agent_id = require_delivery_identifier(agent_id, field="agent_id")
         async with self._lock:
-            if self._close_task is not None:
+            cleanup = self._agent_disposals.get(agent_id)
+            if cleanup is not None and self._lifecycle.cleanup_is_fenced(agent_id):
+                # An ancestor (or close) already quiesced this subtree and
+                # allocated its child-first cleanup. Re-entering disposal's
+                # scope here can deadlock the ancestor waiting for this caller.
+                # Join the exact existing resource owner, including its error.
+                close_task = cleanup
+                task = None
+            elif self._close_task is not None:
                 close_task = self._close_task
                 task = None
             else:

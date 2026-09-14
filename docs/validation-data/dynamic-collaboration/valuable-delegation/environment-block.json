@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "stage": "DA-13",
+  "status": "blocked-before-live",
+  "reason": "Docker Desktop initialization fails on local Windows socket files",
+  "first_failure": "Docker/run/dockerInference inaccessible",
+  "recovery_failure": "docker-secrets-engine/engine.sock inaccessible",
+  "bounded_recovery_attempts": 1,
+  "real_model_calls": 0,
+  "completed_real_trials": 0,
+  "planned_real_trials": 4,
+  "max_real_calls": 68,
+  "tests": {
+    "passed": 30,
+    "skipped": 1,
+    "skip_reason": "explicit real Docker test image and context required",
+    "collect_only": 4087,
+    "compileall": true,
+    "reverse_check": "all-section citation check removed: expected test failure; restored: pass"
+  },
+  "production_changes": false,
+  "adopted": false,
+  "committed": false
+}

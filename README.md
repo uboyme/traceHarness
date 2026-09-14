@@ -2,9 +2,17 @@
 
 v0.11 接入统一评估、受限候选优化和运行期后台托管。F2 的“后台优化”可以勾选题库题目、生成评估计划并配置额度，F6 或 `/optimize` 开启、提交反馈、暂停和审阅候选。后台复用原隔离双臂与独立语义裁判，退出应用即收尾，不自动采用或修改运行策略。参见 [AO-3 记录](docs/deal/026-runtime-background-optimization.md)；本版不包含 DA 动态协作或 MCP。
 
+**未发行工作区：** 当前 single/multi、默认 single；multi 主方自主侦察后按职责分工，一个显式获准的助手在独立工作区交接。WC-2/3 已实现，可写助手通过原 Capture 交 Patch，主方须读完并显式整合；工具导航及分页说明修复见记录 061。Product 6、产品事件 5、宿主配置 6、比较合同 3；Session 15 / Context 13 / SQLite 2。最新真实可写完整验收仍未通过；已发行 v0.11.0 不含这些工作区改动。详见[当前上下文 14.3](docs/note/project-context.md)与[当前交接](docs/plan/TRACEHARNESS_WC2_WC4_HANDOFF.md)。
+
+补充的 [12 个自主委派诊断任务](docs/deal/028-autonomous-delegation-diagnosis.md)证明真实模型能按明确要求中途创建助手；自然任务没有委派，四个助手因预算耗尽失败，完整交接仍未通过。说明候选未采用；下一步建议先补有界源码读取，生产实现和默认模式不变。
+
+DA-6 又以三类冻结材料测试了五轮拆分提示：15 个真实 Product trial、121 次 qwen-plus 调用均未产生主动委派。候选全部撤回，当前生产提示保持实验前文本；结果说明继续叠长提示没有足够证据价值。实验与精确提示见[记录 032](docs/deal/032-adaptive-decomposition-guidance.md)。
+
+DA-7 随后尝试了必经的 `local`/`separable` typed 拆分判断。确定性合同成立，但四轮 12 个真实 trial、68 次 qwen-plus 调用仍是 0 次 `separable`、0 个助手；12/12 Budget 收敛且 Workspace 无泄漏。该生产候选已按冻结停止规则撤回，该轮当时的 single/adaptive 行为不变。见[记录 033](docs/deal/033-typed-adaptive-decomposition.md)。
+
 大工具输出现可保存在执行账本中，模型通过本会话输出目录按页读回，压缩或重启后仍可定位原文；无需额外绑定项目。分层压缩 A/B 的范围与真实验收见 [验证记录](docs/validation-retained-tool-output.md)。C 已能折叠旧结果，E0 已补完整请求 token 估算，D 可选模型语义摘要；原文保留，支持查证。见 [D 真实验证](docs/validation-semantic-summary.md)。
 
-当前请求协议为 Session 13 / Context 12。旧 Session 1–12 不能直接恢复；启动时可点击“创建新版数据空间并开始”，由程序选择新目录并保留旧记录。旧数据不会被自动迁移、删除或改写。后置参考包现在绑定本轮原始问题，真实换题验证与分页边界见 [验证记录](docs/validation-current-turn-anchor.md)。
+当前请求协议为 Session 15 / Context 13。旧 Session 1–14 不能直接恢复；启动时可点击“创建新版数据空间并开始”，使用新目录并保留旧记录。不自动迁移、删除或改写旧数据。后置参考包仍绑定本轮原始问题；当前导航合同见[记录 061](docs/deal/061-tool-guidance-repair.md)。
 
 日常启动只需在工作文件夹运行 `traceh`；首次配置模型一次，以后直接聊天。Ctrl+O 选择历史对话，`/new` 新对话，F2 打开完整配置。已确认并记住的工作区项目选择可自动关联新会话。详见 [启动说明](docs/tui-configuration.md)。
 
@@ -46,7 +54,7 @@ v0.10 完成 S0–S4（含 S3-A，不含 S3-B），提供固定镜像、受限�
 - `traceh chat` 的实时 Tool Timeline：Turn 运行期间即时显示 Step、模型调用、工具生命周期和验证结果，可用 `--no-timeline` 关闭；
 - Activity Heartbeat：模型或工具长时间未结束时，按 `--heartbeat-seconds`（默认 10 秒）打印等待时长，完成行附带实测耗时；
 - 可选 Textual TUI：`traceh chat --tui` 复用同一 Session、ChatDriver 与 Product control/observation，把临时宿主操作、durable facts 与模型自述分层显示，只呈现当前合法且需输入确认的 Product 闸门，并提供 fresh、只读的分角色任务对话和完整身份视图；
-- 同 Session ProductTask 任务记忆：每轮 requester 请求前从同一 EventStore fresh 投影一条原子 format-7 收据，以 system 当前事实加 user 历史参考携带 focus 在内最多六项任务及准确总数/省略数；对需要解释执行结果的当前 focus 只加入最小执行摘要，详细证据按需读取。它不是第二份 Product 状态、Workspace Memory、RAG 或新控制权限；
+- 同 Session ProductTask 任务记忆：每轮 requester 请求前从同一 EventStore fresh 投影一条原子 format-8 收据，以 system 当前事实加 user 历史参考携带 focus 在内最多六项任务及准确总数/省略数；对需要解释执行结果的当前 focus 只加入最小执行摘要，详细证据按需读取。它不是第二份 Product 状态、Workspace Memory、RAG 或新控制权限；
 - Product 请求者权限隔离：启用 `--product-config` 后，START 前的 Chat 只拥有 workspace 读取、Proposal/Confirmation 与只读 `read_product_task_evidence` Tool；后者只能读取由 durable origin/confirmation 证明属于同一 requester Session 的精确 task id。`apply_patch`/`shell` 不进入工具表，声明为写入、进程或外部事务的插件 Tool 也被单调 Policy 拒绝。真正代码副作用只在 START 后由 Product coder 的 managed Workspace owner 执行；不启用 Product 配置的普通 Coding Chat 保持原工具面；
 - 可收敛的 Ctrl+C：有任务在跑时首次 Ctrl+C 只取消当前 Turn 并保留 Session，取消生命周期会完整显示在 Timeline 上；
 - 启动即打印的恢复命令：Banner 直接给出含解析后 `--data-dir` 的可复制命令，硬中断也能从屏幕历史找回 Session；
@@ -175,8 +183,8 @@ Workflow 已 RUNNING 时，仍可通过同一 Product control 正常 Cancel。Pr
 Patch preview。TUI 不保存或
 接收 approval digest。批准、驳回、取消或放弃成功且 fresh 状态读取完成后，左栏会从现有 typed operation
 result 显示一次宿主结果；这不是 Session 消息，不写 SQLite，也不进入模型上下文。`Ctrl+T` 每次打开都
-fresh 读取 Product observation，并精确绑定 Router 与固定
-Workflow 角色 Session；每条 Session 先过 `CoreInvariantChecker`，再按 canonical seq 单遍组合 user/model
+fresh 读取 Product observation，并沿原 Directory/ownership 精确绑定主方与临时调查
+Session；每条 Session 先过 `CoreInvariantChecker`，再按 canonical seq 单遍组合 user/model
 发言与 tool call/result，工具行显示真实 seq 区间，超出一屏时明确报告省略的工具调用与发言数量。该页只读、
 无缓存、无实时 tail；unknown/missing Usage 显示 unavailable，shell 参数和工具结果正文保持遮蔽。
 `Ctrl+P` 同样 fresh 读取并展示完整身份，支持显式复制；剪贴板失败才写独立临时文本文件并显示
@@ -190,10 +198,9 @@ SQLite，因此另一进程更新任务时不会永久停留在旧面板；初�
 消息和 traceback 不进入界面。小于 110 列的终端自动折成单栏摘要；`Ctrl+T`/`Ctrl+P` 都打开同一套
 全宽只读页面，不保留旧 details panel 或窄屏展开兼容行为。
 
-auto Router 的消息已经有 durable terminal fact 后，responder 会把这个可重放结果交回唯一 ProductTask
-writer，并沿原有 `finally` 路径等待 Supervisor dispose Router child；没有把 cleanup 所有权转移给 TUI。
+主 Agent 结束后，原 Workflow 先等待 Supervisor 收敛整棵子树，再捕获产物并继续原验证与审批；没有把 cleanup 所有权转移给 TUI。
 插件 ActivationSet 现在先在 ownership lock 内冻结 `disposing`，释放锁后才启动 cleanup Task，所以 Python
-3.12 eager task scheduling 不会在同一线程重入非重入锁并冻结整个事件循环。Router、ProductTask root、
+3.12 eager task scheduling 不会在同一线程重入非重入锁并冻结整个事件循环。主方、调查方、ProductTask root、
 失败/取消和宿主关闭仍沿既有 owner 收敛，没有后台遗弃 Agent、第二套生命周期或 TUI 特例。
 
 传入 `--product-config` 时，左侧请求者 Chat 即使和配置中的 Product source 指向同一个目录，也只能
@@ -575,9 +582,9 @@ python -m traceh.cli.main eval benchmarks/product_v1 `
 ```
 
 - `--output` 必须尚不存在；每次 attempt 在 `attempts/<NNN>/` 下留下自己的源仓库、一次性 bare target、事件流、worktree 和 CAS，运行结束后写 `report.json` 与 `report.md`。失败或取消不会删除任何证据：attempt「干净」的含义是所有 owner 已收敛，而不是证据被删掉。
-- Manifest（`benchmarks/product_v1/benchmark.json`，根协议 3）将 Profile、角色 Budget、Router、VerificationPlan、capture 上限、modes/retrieval 放在 task_settings，题目放在独立 dataset。它不能命名真实仓库、推广目标、Provider、模型、Workflow 图或 approval digest；一次性源仓库与本地 bare target 仍由原 Product 执行 owner 创建。
+- Manifest（`benchmarks/product_v1/benchmark.json`，根协议 3）将主方/调查模板 Budget、capture 上限及 single/multi 模式放在 task_settings；dataset 2 的每道题绑定自己的验证命令。它不能命名真实仓库、推广目标、Provider、模型、Workflow 图或 approval digest；一次性源仓库与本地 bare target 仍由原 Product 执行 owner 创建。
 - provider/model 来自 `--provider` / `--model`（或 `TRACEH_PROVIDER` / `TRACEH_MODEL`），一次运行的所有 arm 使用同一个模型族，报告会记录它是哪一个。
-- 报告按**解析后**的模式聚合：`auto` 的结果计入 Router 实际选择的那个 arm，`auto` 只单独报告路由是否严格解析成功、路由 Token 和路由耗时；它不是第三个质量 arm。
+- 报告按显式 single/multi 模式聚合；multi 必须完成一次只读分工和完整报告门禁，字段合法仍不能证明分工有用。整树费用包含失败和取消的调查，交接诊断区分报告完成与主方实际收到，不自动判断相关性或正确性。
 - 只有一次观测的 arm 会在两份报告里标注 `single observation`；聚合只有计数、总和、最小、最大和均值，不声称统计显著性。
 - `approval wait` 单独计时并从 `active elapsed` 中扣除；本 Benchmark 使用 `approval_policy: programmatic-immediate`（宿主对自己的一次性本地目标立即批准），两份报告都会写明。普通 Chat 仍然必须由人执行 `/task approve`。
 - 无法从持久事实可靠推出的指标报告为 *unavailable*，绝不填 0。`UsageQuality.UNKNOWN` 的用量报告会让该 Session 的 Token 总数变成 unavailable。

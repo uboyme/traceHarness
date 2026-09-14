@@ -156,7 +156,10 @@ try:
         stderr=subprocess.PIPE,
         preexec_fn=restrict,
     )
-except (ValueError, OSError):
+except (ValueError, OSError) as exc:
+    # Keep the actual launch failure in the existing bounded stderr evidence.
+    # There is no child pipe to drain when Popen itself failed.
+    streams[1].extend(f"{type(exc).__name__}: {exc}".encode("utf-8", "replace")[:limit])
     finish("start-failed")
 if request["stdio"]:
     GuestStdio(process, streams, stream_eof, request["stdio"])  # noqa: F821 -- trusted prelude

@@ -120,7 +120,7 @@ class TaskConversationScreen(Screen[None]):
         if snapshot is None:
             return
         if not snapshot.roles:
-            log.write("本任务尚未建立 Router 或执行角色 Session。")
+            log.write("本任务尚未建立主方或助手 Session。")
         header_rows: dict[int, int] = {}
         for index, role in enumerate(snapshot.roles):
             width = max(
@@ -719,7 +719,12 @@ def _role_header_lines(
     selected: bool,
     width: int,
 ) -> tuple[Text, ...]:
-    left = f"{'▾' if expanded else '▸'} {_safe_full_line(role.role)} "
+    label = (
+        f"只读调查 · {_short_identifier(role.agent_id)}" if role.role == "investigator"
+        else f"可写助手 · {_short_identifier(role.agent_id)}" if role.role == "patch_author"
+        else "主 Agent" if role.role == "coder" else role.role
+    )
+    left = f"{'▾' if expanded else '▸'} {_safe_full_line(label)} "
     left_width = Text(left).cell_len
     facts = " · ".join(
         (
@@ -737,7 +742,7 @@ def _role_header_lines(
         return (header,)
 
     role_rows = prefixed_display_lines(
-        _safe_full_line(role.role),
+        _safe_full_line(label),
         width=width,
         first_prefix=f"{'▾' if expanded else '▸'} ",
         continuation_prefix="  ",

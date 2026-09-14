@@ -1,4 +1,4 @@
-"""ProductTask memory: one deterministic, replayable format-7 snapshot."""
+"""ProductTask memory: one deterministic, replayable format-8 snapshot."""
 
 from __future__ import annotations
 
@@ -198,12 +198,12 @@ async def test_no_product_task_adds_no_model_context_event() -> None:
     assert _context_events(await store.read("session:session-alpha")) == ()
 
 
-def test_snapshot_data_is_format_7_and_has_atomic_system_user_messages() -> None:
+def test_snapshot_data_is_format_8_and_has_atomic_system_user_messages() -> None:
     focus = _task("task-focus", order=8)
     recent = _task("task-recent", order=7, status=ProductTaskStatus.FAILED)
     data = _snapshot_data("session-alpha", focus, (focus, recent), 2)
 
-    assert data["format_version"] == PRODUCT_CONTEXT_FORMAT_VERSION == 7
+    assert data["format_version"] == PRODUCT_CONTEXT_FORMAT_VERSION == 8
     assert data["focus_task_id"] == "task-focus"
     assert data["total_tasks"] == 2
     assert data["omitted_tasks"] == 0
@@ -401,7 +401,6 @@ async def test_cancelling_product_context_read_remains_cancellation() -> None:
     ("status", "meaning"),
     (
         (ProductTaskStatus.OPENED, "No host-managed execution-start fact"),
-        (ProductTaskStatus.ROUTED, "No host-managed execution-start fact"),
         (
             ProductTaskStatus.STARTED,
             "does not assert that a Workflow run-start fact is already durable",
@@ -861,13 +860,13 @@ async def test_cancelled_may_have_committed_append_converges_without_duplicate()
 
 
 @pytest.mark.asyncio
-async def test_legacy_formats_one_through_six_are_rejected_without_rewrite() -> None:
+async def test_legacy_formats_one_through_seven_are_rejected_without_rewrite() -> None:
     store = InMemoryEventStore()
     await seed_session(store)
     focus = _task("task-legacy", order=6)
     current = _snapshot_data("session-alpha", focus, (focus,), 1)
     stream = "session:session-alpha"
-    for version in range(1, 7):
+    for version in range(1, 8):
         legacy = dict(current)
         legacy["format_version"] = version
         legacy["context_id"] = fingerprint({"legacy": version})

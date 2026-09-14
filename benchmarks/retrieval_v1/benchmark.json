@@ -4,49 +4,13 @@
   "task_type": "product_task",
   "dataset": {
     "file": "dataset.json",
-    "sha256": "be2b7dd159f226d148e5cf9ad4645c713947a74a2f41290b7b87632081db2a99"
+    "sha256": "d5498de3863f80ba5d756b0785d65ae10fca2b0aa7ebb47a4943f840ed1f90ff"
   },
   "task_settings": {
     "profile_id": "retrieval-baseline-v1",
     "approver_id": "benchmark-host",
     "default_mode": "single",
     "roles": {
-      "parent": {
-        "preset": "product-benchmark-parent",
-        "capability_grants": [
-          "list_files",
-          "read_file",
-          "search_text"
-        ],
-        "max_output_tokens": 8192,
-        "budget": {
-          "max_tokens": 60000,
-          "max_steps": 12,
-          "max_tool_calls": 40,
-          "max_wall_milliseconds": 300000,
-          "max_children": 0,
-          "max_depth": 0,
-          "max_processes": 4
-        }
-      },
-      "reviewer": {
-        "preset": "product-benchmark-reviewer",
-        "capability_grants": [
-          "list_files",
-          "read_file",
-          "search_text"
-        ],
-        "max_output_tokens": 8192,
-        "budget": {
-          "max_tokens": 60000,
-          "max_steps": 12,
-          "max_tool_calls": 40,
-          "max_wall_milliseconds": 300000,
-          "max_children": 0,
-          "max_depth": 0,
-          "max_processes": 4
-        }
-      },
       "coder": {
         "preset": "product-benchmark-coder",
         "capability_grants": [
@@ -62,26 +26,32 @@
           "max_steps": 24,
           "max_tool_calls": 80,
           "max_wall_milliseconds": 600000,
+          "max_children": 2,
+          "max_depth": 1,
+          "max_processes": 4
+        },
+        "max_turn_wall_milliseconds": 60000
+      },
+      "investigator": {
+        "preset": "product-benchmark-investigator",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 30000,
+          "max_steps": 8,
+          "max_tool_calls": 16,
+          "max_wall_milliseconds": 60000,
           "max_children": 0,
           "max_depth": 0,
-          "max_processes": 4
-        }
-      }
-    },
-    "router": {
-      "preset": "product-benchmark-router",
-      "max_output_tokens": 256,
-      "budget": {
-        "max_tokens": 8000,
-        "max_steps": 2,
-        "max_tool_calls": 0,
-        "max_wall_milliseconds": 60000,
-        "max_children": 0,
-        "max_depth": 0,
-        "max_processes": 4
+          "max_processes": 0
+        },
+        "max_turn_wall_milliseconds": 60000
       },
-      "timeout_milliseconds": 60000,
-      "max_response_bytes": 2048
+      "patch_author": null
     },
     "task_budget": {
       "max_tokens": 500000,
@@ -91,31 +61,6 @@
       "max_children": 8,
       "max_depth": 2,
       "max_processes": 8
-    },
-    "verification": {
-      "plan_id": "benchmark-unittest-v1",
-      "plan_version": 1,
-      "commands": [
-        {
-          "command_id": "expected-file",
-          "argv": [
-            "python",
-            "-c",
-            "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
-          ],
-          "timeout_ms": 120000
-        }
-      ],
-      "environment": {
-        "policy_id": "benchmark-minimal-v1",
-        "passthrough": [],
-        "overrides": {
-          "PYTHONIOENCODING": "utf-8",
-          "PYTHONDONTWRITEBYTECODE": "1"
-        }
-      },
-      "max_output_bytes": 1048576,
-      "protocol_version": 2
     },
     "capture_limits": {
       "max_changed_paths": 100,
@@ -130,8 +75,12 @@
       "sha256": "eef440b9401360cca66aa195403ca1e261acbd56d492f4ba702870673da260f3"
     },
     "modes": [
-      "single"
-    ]
+      "single",
+      "multi"
+    ],
+    "retained_tokens": 16000,
+    "investigator_initial_tokens": 30000,
+    "token_estimate": null
   },
   "assessment": {
     "scorer_id": "product-durable-v1",

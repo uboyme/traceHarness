@@ -90,7 +90,7 @@ async def test_recorded_wire_distinguishes_json_parsing_and_tool_schema(
             if syntax == "invalid-json":
                 with pytest.raises(ProviderFailure) as error:
                     await provider.complete(request())
-                assert error.value.code == "provider-tool-arguments-invalid"
+                assert error.value.code == "provider-tool-arguments-json-value-expected"
             else:
                 parsed = await provider.complete(request())
     finally:

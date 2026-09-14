@@ -1,0 +1,38 @@
+{
+  "format": 2,
+  "cases": [
+    {
+      "case_id": "replenishment",
+      "group_id": "replenishment",
+      "requirement": "实现 replenishment.py 中的 recommend(stock, target, pack, blocked=False) 补货函数。请明确委派一个只读助手检查 rules.md 的规则和边界并给出文件行证据；主方拿到报告后核对并实现函数，不要把编码交给助手。只修改 replenishment.py，保留接口，不改规则，不新增文件，不安装依赖。最终说明实现和验证结果，没有运行的检查不要声称已运行。",
+      "initial_tree": "initial",
+      "sha256": "87220a850527dbd7bf79b63d31d226d61ab428436eff63d39d533f622ac7ebaa",
+      "verification": {
+        "plan_id": "wc1c-replenishment",
+        "plan_version": 1,
+        "protocol_version": 2,
+        "commands": [
+          {
+            "command_id": "functional-contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "import hashlib\nfrom pathlib import Path\nfrom replenishment import recommend\nfixed={'.gitignore': '6252093f8103b25bf77e3171bfc9952ba9c964480ae8f326dc9c4bb12e6aea28', 'INDEX.md': 'e7f2ac802128b8e9a2f6ac74f4b65336b5d3d7b8a463e9eb26106efe85d9eff8', 'rules.md': 'ae9b7979dd3ac5a7eadb5e7b7f01dab79b77d771964f5cf57f0cd7273491253b'}\nassert all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==v for p,v in fixed.items())\nfiles={p.as_posix() for p in Path('.').rglob('*') if p.is_file() and not {'.git','__pycache__'}&set(p.parts)}\nassert files==set(fixed)|{'replenishment.py'},files\nfor args,want in [((2,9,4),8),((10,10,4),0),((12,9,4),0),((0,9,4),12),((1,7,4,True),0),((0,0,3),0),((3,5,1),2)]:\n assert recommend(*args)==want,(args,want)\nfor args in [(-1,8,2),(1,-8,2),(1,8,0),(1,8,-2,True)]:\n try: recommend(*args)\n except ValueError: pass\n else: raise AssertionError(('expected ValueError',args))\nprint('11 functional cases and source boundaries passed')\n"
+            ],
+            "timeout_ms": 30000
+          }
+        ],
+        "environment": {
+          "policy_id": "wc1c-no-dependencies",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONIOENCODING": "utf-8"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    }
+  ]
+}

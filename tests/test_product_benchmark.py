@@ -62,7 +62,7 @@ def _write(root, manifest):
     cases = manifest.pop("_test_cases")
     for case in cases:
         case["sha256"] = material_case(root, "task-a", "unused", "task-a/initial")["sha256"]
-    write_dataset(root, manifest, cases)
+    write_dataset(root, manifest, cases, format_version=2)
     return root
 
 
@@ -75,6 +75,9 @@ def _manifest():
             "requirement": "Do the one thing the frozen checks require.",
             "initial_tree": "task-a/initial",
             "sha256": "",
+            "verification": json.loads(
+                (SHIPPED_BENCHMARK / "dataset.json").read_text(encoding="utf-8")
+            )["cases"][0]["verification"],
         }
     ]
     raw["task_settings"]["modes"] = ["single"]
@@ -96,7 +99,7 @@ def test_the_shipped_benchmark_is_a_valid_schema_3_manifest() -> None:
     assert manifest.benchmark_id == "traceh-product-v1"
     assert len(manifest.tasks) == 3
     assert set(manifest.modes) == set(RequestedTaskMode)
-    profile = manifest.settings.host_profile.profile
+    profile = manifest.tasks[0].settings.host_profile.profile
     # Provider, model, source and target are bindings the runner supplies. A
     # manifest that could name them could point this command somewhere real.
     assert profile.provider_id == "a-provider"
@@ -142,7 +145,10 @@ def test_the_shipped_manifest_cannot_name_a_repository_or_a_graph() -> None:
         }
     )
     assert set(raw) == TOP_KEYS
-    assert set(raw["task_settings"]) == PRODUCT_HOST_SETTINGS_KEYS | {"modes", "retrieval"}
+    assert set(raw["task_settings"]) == (PRODUCT_HOST_SETTINGS_KEYS - {"verification"}) | {
+        "modes",
+        "retrieval",
+    }
 
 
 async def test_the_shipped_profile_resolves_against_the_real_registry() -> None:
@@ -154,21 +160,21 @@ async def test_the_shipped_profile_resolves_against_the_real_registry() -> None:
     registry = ProductProfileRegistry(
         (
             (
-                manifest.settings.host_profile.profile_id,
+                manifest.tasks[0].settings.host_profile.profile_id,
                 ProductProfileBinding(
-                    profile=manifest.settings.host_profile.profile,
-                    verification_plan=manifest.settings.host_profile.verification_plan,
+                    profile=manifest.tasks[0].settings.host_profile.profile,
+                    verification_plan=manifest.tasks[0].settings.host_profile.verification_plan,
                 ),
             ),
         ),
         assemblies=BuiltinProductAssemblyResolver(),
     )
-    resolved = await registry.resolve(manifest.settings.host_profile.profile_id)
+    resolved = await registry.resolve(manifest.tasks[0].settings.host_profile.profile_id)
 
-    assert resolved.router.tool_ids == ()
     assert resolved.assembly(ProductRole.CODER).workspace_access is (WorkspaceAccess.WRITABLE)
-    assert resolved.assembly(ProductRole.REVIEWER).workspace_access is (WorkspaceAccess.READ_ONLY)
-    assert resolved.assembly(ProductRole.PARENT).workspace_access is (WorkspaceAccess.READ_ONLY)
+    assert resolved.assembly(ProductRole.INVESTIGATOR).workspace_access is (
+        WorkspaceAccess.READ_ONLY
+    )
 
 
 def test_the_v06_case_json_layout_is_refused_without_being_read(
@@ -275,7 +281,6 @@ def _evidence(
     retry_wait_milliseconds: int | None = 0,
     provider_active_milliseconds: int | None = 400,
     provider_failure_categories: tuple[str, ...] = (),
-    routing: bool = False,
 ) -> AttemptEvidence:
     session = SessionWork(
         session_id=f"session-{resolved.value}",
@@ -303,8 +308,6 @@ def _evidence(
         source_base_revision=source_base_revision,
         definition_hash="definition-1",
         workflow_status=(WorkflowStatus.COMPLETED if success else WorkflowStatus.FAILED),
-        routing=session if routing else None,
-        routing_parsed=routing,
         execution=SessionGroup((session,)),
         unattributed=SessionGroup(()),
         budget=BudgetOutcome(2, 2, 1, 1, 3, 3, 90, 2, 1),
@@ -372,34 +375,6 @@ def test_an_unavailable_measurement_is_counted_not_zeroed() -> None:
     assert summary.total == 40
     assert summary.mean == 20.0
     # A zero substituted for the missing value would have produced 13.33.
-
-
-def test_auto_never_becomes_a_third_quality_arm() -> None:
-    report = _report(
-        (
-            _attempt(
-                _evidence(resolved=ResolvedTaskMode.MULTI),
-                requested=RequestedTaskMode.MULTI,
-            ),
-            _attempt(
-                _evidence(resolved=ResolvedTaskMode.MULTI, routing=True),
-                requested=RequestedTaskMode.AUTO,
-                repetition=2,
-            ),
-        )
-    )
-    data = report.to_dict()
-
-    assert [arm["resolved_mode"] for arm in data["quality_arms"]] == ["multi"]
-    assert data["quality_arms"][0]["observations"] == 2
-    assert data["quality_arms"][0]["requested_modes"] == {"auto": 1, "multi": 1}
-    assert data["routing_arm"]["observations"] == 1
-    assert data["routing_arm"]["resolved_modes"] == {"multi": 1}
-    assert data["routing_arm"]["final_model_results"] == {
-        "counts": {"succeeded": 1},
-        "unavailable": 0,
-    }
-    assert "routing_final_model_results: succeeded=1" in render_markdown(report)
 
 
 def test_one_observation_is_labelled_and_two_are_not() -> None:
@@ -636,3 +611,19 @@ def test_eval_uses_one_explicit_bounded_retry_policy_for_the_whole_grid(
 def test_the_eval_command_requires_an_output_directory() -> None:
     with pytest.raises(SystemExit):
         build_parser().parse_args(["eval", "benchmarks/product_v1"])
+
+
+def test_quality_arms_follow_explicit_execution_modes() -> None:
+    report = _report(
+        tuple(
+            _attempt(_evidence(resolved=ResolvedTaskMode(mode.value)), requested=mode)
+            for mode in RequestedTaskMode
+        )
+    )
+    data = report.to_dict()
+    arms = {arm["resolved_mode"]: arm for arm in data["quality_arms"]}
+    assert set(arms) == {"single", "multi"}
+    for mode, arm in arms.items():
+        assert arm["observations"] == 1
+        assert arm["requested_modes"] == {mode: 1}
+    assert "routing_arm" not in data

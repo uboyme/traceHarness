@@ -206,10 +206,33 @@ def _context_for_request(
             "context_input_seq": context_seq,
             "context_input_digest": snapshot.context_digest,
         }
+        from traceh.session.request_view import evidence_messages, read_view
+        from traceh.session.surface import SurfaceProjector
+
+        view = read_view(
+            events,
+            session_id=context["session_id"],
+            turn_id=data["turn_id"],
+            step_id=data["step_id"],
+            through_seq=source_seq,
+        )
+        context_matches = composed.messages and composed.messages[-1] == render_context_message(
+            snapshot
+        )
+        if view is not None:
+            if view[2].to_dict() != composition.to_dict():
+                _fail()
+            if view[1].input_mode == "evidence":
+                context_matches = composed.messages == evidence_messages(
+                    view[3],
+                    SurfaceProjector(),
+                    turn_id=data["turn_id"],
+                    context=render_context_message(snapshot),
+                )
         if (
             canonical_json(composed.metadata) != canonical_json(expected_metadata)
             or not composed.messages
-            or composed.messages[-1] != render_context_message(snapshot)
+            or not context_matches
         ):
             _fail()
         return context

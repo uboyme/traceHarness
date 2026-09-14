@@ -158,6 +158,10 @@ class PatchCaptureService:
     def reader(self) -> PatchArtifactReader:
         return self._reader
 
+    @property
+    def limits(self) -> PatchCaptureLimits:
+        return self._limits
+
     async def capture(self, agent_id: str, message_id: str) -> PatchArtifact:
         agent_id = require_artifact_identifier(agent_id, field="agent_id")
         message_id = require_artifact_identifier(message_id, field="message_id")

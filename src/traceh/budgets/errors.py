@@ -121,7 +121,28 @@ class BudgetExhaustedError(BudgetError):
 
     def __init__(self, dimension: str) -> None:
         self.dimension = dimension
-        super().__init__("the Budget account has insufficient capacity")
+        # The refused dimension is host policy metadata, not a secret, and
+        # without it a durable failure cannot say which ceiling stopped the
+        # work. Callers still see one exhaustion error, not a balance.
+        super().__init__(f"the Budget account has insufficient {dimension} capacity")
+
+
+class BudgetUsageOverageError(BudgetError):
+    """Reported usage exceeded what this call reserved.
+
+    A reservation derived from a counted estimate can fall short when the host's
+    tokenizer and the provider's disagree. Charging the reservation and silently
+    dropping the excess would let real spend leave the ledger, so the shortfall
+    is raised instead. The caller still settles the reservation before the error
+    propagates, which keeps the account consistent.
+    """
+
+    code = "budget-usage-overage"
+
+    def __init__(self, reported: int, reserved: int) -> None:
+        self.reported = reported
+        self.reserved = reserved
+        super().__init__("reported token usage exceeded the reservation for this call")
 
 
 class BudgetReservationNotFoundError(BudgetError, LookupError):
@@ -161,6 +182,7 @@ __all__ = [
     "BudgetError",
     "BudgetEvidenceError",
     "BudgetExhaustedError",
+    "BudgetUsageOverageError",
     "BudgetInputError",
     "BudgetLedgerConflictError",
     "BudgetOperationConflictError",

@@ -1,0 +1,79 @@
+{
+  "format": 1,
+  "kind": "valuable-delegation-observation",
+  "source_digest": "665bf6f8f8e083af23dac3df3486c52996d1c84f18171e866db2bacd0ab0a913",
+  "driver_digest": "64fbe8354b9f761c864fcdbd923c4179cb1be204ab057f3faf315a9d7d6ff859",
+  "sandbox_digest": "3788e81e5c93fc574758abb09d6ff992d816988c403fa0cb8000115cb1cbf750",
+  "scenario_order": [
+    "parallel-investigation",
+    "dependent-investigation",
+    "frozen-review",
+    "simple-read"
+  ],
+  "scenarios": {
+    "parallel-investigation": {
+      "kind": "separable",
+      "max_real_calls": 20,
+      "source_paths": [
+        "src/traceh/budgets/projection.py",
+        "src/traceh/budgets/service.py",
+        "src/traceh/supervision/delegation.py",
+        "src/traceh/supervision/investigation_budget.py"
+      ]
+    },
+    "dependent-investigation": {
+      "kind": "coupled",
+      "max_real_calls": 20,
+      "source_paths": [
+        "src/traceh/supervision/investigation_budget.py"
+      ]
+    },
+    "frozen-review": {
+      "kind": "review",
+      "max_real_calls": 20,
+      "source_paths": [
+        "src/traceh/supervision/investigation_budget.py",
+        "src/traceh/supervision/delegation.py"
+      ]
+    },
+    "simple-read": {
+      "kind": "simple",
+      "max_real_calls": 8,
+      "source_paths": [
+        "src/traceh/version.py"
+      ]
+    }
+  },
+  "max_total_real_calls": 68,
+  "retry_attempts": 1,
+  "semantic_judge_calls": 0,
+  "baseline_trials": 0,
+  "adoption_authorized": false,
+  "network": "direct",
+  "materials": {
+    "parallel-investigation": {
+      "manifest_digest": "316d6db5af3dd555f3e2097b2a6fc09b6240dde35eaa7c87ddebc7765b84fb89",
+      "dataset_digest": "42508c2b44cb8489ca6b47691b18b104aaac61387f060bfdef7d2c67e31e2893",
+      "reference_digest": "a24ca02f6e9f5d039289b2721da5a79f7d58a6837ada9239e22308263fd7433e",
+      "initial_tree_digest": "96350f771b40dda37f67d1bd88de3ea8bdeafe84dc7b884d20a4af740eb6841c"
+    },
+    "dependent-investigation": {
+      "manifest_digest": "5cec6af0ef82bfa7e332bc9e7a340451eb3dbebd9bbe46529f42f72e9047ada8",
+      "dataset_digest": "e558075b187378cc873f599f6daba37006d00f2c63a07917208507357f0cc50d",
+      "reference_digest": "20aee906760e393053ccc1c002cb0c612e1e496bdb478094e60834b327bc56b9",
+      "initial_tree_digest": "15fe9b9e30ade7c930a9e72a286c842e9169c023e7b8d9a5531e4d8357f8fc5a"
+    },
+    "frozen-review": {
+      "manifest_digest": "a491dd3df28cebc1ddf9a53e01432c0ada752fc75261db4abc159a4349ea5691",
+      "dataset_digest": "c112d3aede11289646cf3b34272f0f5a8c01914e119e8925f67dc1c556298a1a",
+      "reference_digest": "20aee906760e393053ccc1c002cb0c612e1e496bdb478094e60834b327bc56b9",
+      "initial_tree_digest": "4442b0669ba7d893f3169b48719f9614840e58e271d4bc6a06f596772522e676"
+    },
+    "simple-read": {
+      "manifest_digest": "ebe7d4e8c9c5c1b1335bc503188d6cfcf86f56afa1affbc570e0662cfbe01172",
+      "dataset_digest": "52480542684c11eab88c089fc3ce592c14f722685f43bfa2c968bc2c69f99119",
+      "reference_digest": "309f14182530899e6e184a25acaffd6bfc41bede760d159c3b4c536d649e1573",
+      "initial_tree_digest": "9e63a135d38dbb12f4cc571982f725d0a921795336a3ca52cf597e833ef2e635"
+    }
+  }
+}

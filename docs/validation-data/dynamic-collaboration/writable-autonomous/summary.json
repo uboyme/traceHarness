@@ -1,0 +1,161 @@
+{
+  "format": 1,
+  "accepted": false,
+  "model": "deepseek-v4-flash",
+  "real_calls": 32,
+  "roles": {
+    "main": 26,
+    "child": 6
+  },
+  "error_type": null,
+  "stopped": false,
+  "exact_tokens": 245527,
+  "ledger_settled_tokens": 240000,
+  "usage_quality": {
+    "None": 2,
+    "exact": 30,
+    "unknown": 2
+  },
+  "wall_ms": 224842,
+  "provider_failures": [],
+  "retries": 0,
+  "preparation_batches": [
+    [
+      "read_file",
+      "list_files"
+    ],
+    [
+      "read_file",
+      "read_file"
+    ]
+  ],
+  "plan_result_seq": 47,
+  "handoff_visible_requests": [
+    53,
+    66,
+    78,
+    89,
+    101,
+    113,
+    124,
+    136,
+    147,
+    160,
+    172,
+    184,
+    196,
+    208,
+    221,
+    233,
+    246,
+    258,
+    270,
+    282,
+    293,
+    305,
+    317
+  ],
+  "legacy_report_dispatch_metric": 0,
+  "artifacts": [
+    {
+      "artifact_id": "patch-3d14fe6c6977065bbdaf053461d7904b2c681f3d0862c2952216ffcc40878f5a",
+      "agent_id": "agent-tool-patch-author-39c64cac-675e-58c6-9dc1-f47309c84a38",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "f8221a58a71f8c8b467fa9cdb34983abadb3d29bc5fe99d56fad829076d5e9f9",
+      "bytes": 980
+    }
+  ],
+  "patch_total_chars": 980,
+  "patch_read_chars": 280,
+  "patch_read_calls": 14,
+  "complete_patch_read": false,
+  "denied_calls": [
+    {
+      "seq": 83,
+      "tool": "read_tool_output"
+    },
+    {
+      "seq": 95,
+      "tool": "read_tool_output"
+    },
+    {
+      "seq": 107,
+      "tool": "list_tool_outputs"
+    },
+    {
+      "seq": 118,
+      "tool": "read_tool_output"
+    },
+    {
+      "seq": 130,
+      "tool": "read_tool_output"
+    },
+    {
+      "seq": 141,
+      "tool": "search_tool_output"
+    },
+    {
+      "seq": 202,
+      "tool": "search_tool_output"
+    },
+    {
+      "seq": 287,
+      "tool": "search_tool_output"
+    },
+    {
+      "seq": 299,
+      "tool": "read_tool_output"
+    }
+  ],
+  "read_child_patch_exposed_schema": {
+    "description": "Read an owned child's original immutable Patch page and freeze the target integration request. Read every page; if output is retained, read its complete content through read_tool_output. Receiving an id is not reading the Patch.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "offset": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifact_id"
+      ],
+      "type": "object"
+    },
+    "name": "read_child_patch"
+  },
+  "integration": false,
+  "main_edits": false,
+  "completion_checks": 0,
+  "failure": {
+    "seq": 329,
+    "error_type": "BudgetExhaustedError",
+    "dimension": "max_tokens"
+  },
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "review_id": null,
+  "promotion_id": null,
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 34
+  },
+  "workspaces": {
+    "released": 2,
+    "quarantined": 1
+  },
+  "snapshot_replays": 34,
+  "original_sha256": "25a9f85f752752b0b75e0892f2eb613900fa9b776731c56d462bd3c0fe81f922",
+  "original_unchanged": true,
+  "contract_sha256": "98ac85135c37e9d28709540e13f731960959728f708ded4230c7ee9710ad8da2",
+  "benefit_measured": false
+}

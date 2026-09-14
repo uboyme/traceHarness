@@ -14,7 +14,7 @@ from unicodedata import combining, east_asian_width
 
 from traceh.api.events import EventEnvelope
 from traceh.api.llm import UsageQuality
-from traceh.api.product import ProductTaskStatus, RequestedTaskMode
+from traceh.api.product import ProductTaskStatus
 from traceh.api.workflow import WorkflowStatus
 from traceh.cli.command_line import escape_for_display
 from traceh.product.chat import ProductStartRequest
@@ -177,7 +177,7 @@ def resolve_gate(
         return _unknown_gate(transient, product, workflow)
     if product is None and workflow is None:
         return GateDecision()
-    if product in {ProductTaskStatus.OPENED, ProductTaskStatus.ROUTED} and workflow is None:
+    if product in {ProductTaskStatus.OPENED} and workflow is None:
         return GateDecision(message="任务已打开，宿主正在推进下一条 durable 事实。")
     if product is ProductTaskStatus.STARTED and workflow is WorkflowStatus.RUNNING:
         return GateDecision((ProductGateAction.CANCEL,), "任务正在执行。")
@@ -316,9 +316,6 @@ def product_panel_text(
             observation_received_at=observation_received_at,
         )
         facts.extend(fact_lines or ("  尚无 durable 事实",))
-        symptom = _derived_symptom(observation)
-        if symptom:
-            facts.append(symptom)
         if observation.streams_diverged:
             product = _status_value(observation.product_status)
             workflow = _status_value(observation.workflow_status)
@@ -398,8 +395,6 @@ def product_identity_fields(
         "confirmation_session",
         None if summary is None else summary.confirmation_session_id,
     )
-    add("router_agent", None if summary is None else summary.router_agent_id)
-    add("router_session", None if summary is None else summary.routing_session_id)
     if observation is not None and observation.evidence is not None:
         for node in observation.evidence.nodes:
             if node.agent_id is not None:
@@ -913,9 +908,6 @@ def operation_error_view(code: str) -> OperationErrorView:
             "只读任务观察暂时不可用。durable 事实没有被界面改写；"
             "可稍后刷新或使用 inspect/replay 核对。"
         ),
-        "product-router-agent-failed": (
-            "Router Agent 没有形成可用结果。请查看最近 Session 事实；系统不会自动 fallback。"
-        ),
     }.get(
         code,
         "这是宿主操作错误，不是 durable 任务终态。请根据稳定错误码修复条件后重试。",
@@ -972,13 +964,7 @@ def _subtitle(
         if summary is None
         else summary.requested_mode.value
     )
-    resolved = (
-        None if summary is None or summary.resolved_mode is None else summary.resolved_mode.value
-    )
-    if requested == RequestedTaskMode.AUTO.value:
-        mode = f"auto → {resolved or '待路由'}"
-    else:
-        mode = requested
+    mode = requested
     profile = pending.profile_id if pending is not None else "profile 已冻结"
     target = "target 待建立"
     if pending is not None:
@@ -998,13 +984,6 @@ def _lifecycle(
     proposed = pending is not None or summary is not None
     confirmed = start_request is not None or summary is not None
     transient_track = f"进程内 提议 {'✓' if proposed else '·'} · 确认 {'✓' if confirmed else '·'}"
-    requested = (
-        pending.proposal.requested_mode
-        if pending is not None
-        else None
-        if summary is None
-        else summary.requested_mode
-    )
     stages: list[str] = []
     status = None if summary is None else summary.status
     stages.append(
@@ -1014,10 +993,6 @@ def _lifecycle(
             status is None and transient.kind == "operation_pending",
         )
     )
-    if requested is RequestedTaskMode.AUTO:
-        routed = status is not None and status is not ProductTaskStatus.OPENED
-        routing = status is ProductTaskStatus.OPENED and not summary.settled
-        stages.append(_stage("路由", routed, routing))
     execution_done = status in {
         ProductTaskStatus.AWAITING_APPROVAL,
         ProductTaskStatus.COMPLETED,
@@ -1026,7 +1001,7 @@ def _lifecycle(
         ProductTaskStatus.FAILED,
         ProductTaskStatus.ABANDONED,
     }
-    executing = status in {ProductTaskStatus.ROUTED, ProductTaskStatus.STARTED}
+    executing = status in {ProductTaskStatus.STARTED}
     stages.append(_stage("执行", execution_done, executing))
     approval_done = status in {
         ProductTaskStatus.COMPLETED,
@@ -1057,8 +1032,6 @@ def _fact_lines(
     if summary is not None:
         roles[f"session:{summary.origin_session_id}"] = "chat"
         roles[f"session:{summary.confirmation_session_id}"] = "chat"
-        if summary.routing_session_id is not None:
-            roles[f"session:{summary.routing_session_id}"] = "router"
     if observation.evidence is not None:
         for node in observation.evidence.nodes:
             if node.session_id is not None:
@@ -1139,34 +1112,6 @@ def _latest_fact_age(
         if head.task_bound and head.seq > 0 and head.occurred_at is not None
     ]
     return min(ages) if ages else None
-
-
-def _derived_symptom(observation: ProductObservation) -> str:
-    summary = observation.summary
-    if (
-        summary is None
-        or summary.requested_mode is not RequestedTaskMode.AUTO
-        or summary.status is not ProductTaskStatus.OPENED
-        or summary.routing_session_id is None
-    ):
-        return ""
-    product = _find_head(observation, f"product-task:{observation.task_id}")
-    router = _find_head(observation, f"session:{summary.routing_session_id}")
-    if (
-        product is not None
-        and product.event_type == "product/task-opened"
-        and router is not None
-        and router.event_type == "turn/end"
-    ):
-        return "Router Session 已结束；ProductTask 尚未记录 routing。这是症状描述，不是根因判断。"
-    return ""
-
-
-def _find_head(observation: ProductObservation, stream_id: str) -> ObservedStreamHead | None:
-    return next(
-        (head for head in observation.stream_heads if head.stream_id == stream_id),
-        None,
-    )
 
 
 def _review_lines(observation: ProductObservation | None) -> tuple[str, ...]:
@@ -1325,7 +1270,13 @@ def _leaf_failure_line(observation: ProductObservation | None) -> str:
             )
         if node.leaf_error_type is not None:
             return safe_display_block(
-                f"叶子失败：{node.node_id} · {node.leaf_error_type}",
+                f"叶子失败：{node.node_id} · "
+                + {
+                    "CollaborationPlanInvalid": "分工计划未提交或无效",
+                    "CollaborationDispatchFailed": "助手派发或报告读取失败（见工具记录）",
+                    "CollaborationChildIncomplete": "助手未完成，multi 已停止",
+                    "CollaborationExecutionStopped": "协作执行达到停止条件，未完成交付",
+                }.get(node.leaf_error_type, node.leaf_error_type),
                 limit=300,
                 max_lines=1,
             )

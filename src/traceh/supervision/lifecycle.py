@@ -209,6 +209,19 @@ class AgentLifecycleCoordinator:
             self._closing = True
             self._condition.notify_all()
 
+    def cleanup_is_fenced(self, agent_id: str) -> bool:
+        """Snapshot for joining an already allocated cleanup without yielding.
+
+        A cleanup Task is allocated only after its subtree became quiescent,
+        in descendant-first order. While admission remains fenced, that Task
+        cannot belong to a replaced Activation. Callers must select the Task
+        in the same event-loop turn as this check.
+        """
+
+        return (
+            self._closing or any(agent_id in scope for scope in self._scopes.values())
+        ) and not any(agent_id in lineage for lineage in self._admissions.values())
+
     async def wait_quiescent(self) -> None:
         """Wait until every already-admitted operation has left."""
 

@@ -1,0 +1,167 @@
+{
+  "format": 1,
+  "stage": "WC-4",
+  "accepted": false,
+  "real_calls": 18,
+  "roles": {
+    "main": 13,
+    "child": 5
+  },
+  "exact_tokens": 124609,
+  "wall_ms": 171406,
+  "provider_failures": 0,
+  "retries": 0,
+  "artifact_evidence": [
+    {
+      "artifact_id": "patch-a9fe844abe9ccea5525e64419fdcb18df49bd18a89a1c9cbe149f2ff39d4fccf",
+      "agent_id": "agent-tool-patch-author-abed8b9c-aedc-5a16-87fd-3c456eb7cd41",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "a2a904d597874acf15dde160b6d9fb7a93966c2df41e5174693ca6f3731a4019",
+      "bytes": 1757
+    },
+    {
+      "artifact_id": "patch-b550205130e9449c55d8e520dcdc5990565f1d39f435c16936cbd7e3047eafe4",
+      "agent_id": "wf-agent-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2",
+      "paths": [
+        "telemetry_report.py",
+        "telemetry_rules.py",
+        "test_telemetry.py"
+      ],
+      "patch_sha256": "2d394ee021f37bcbff30969f98219ada1fc2197d199630b4f75ba4190ca28c10",
+      "bytes": 6891
+    }
+  ],
+  "patch_read": {
+    "offset": 0,
+    "end_offset": 1757,
+    "request_refs": [
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@61",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@74",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@87",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@100",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@113",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@126",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@139",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@152",
+      "session:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2@162"
+    ]
+  },
+  "integration": {
+    "files": [
+      {
+        "path": "telemetry_rules.py",
+        "status": "applied"
+      }
+    ],
+    "format": 1,
+    "operation_id": "agent-tool-patch-integrate-4e261ad8-d02a-5bf7-84a0-040fd5063c6e",
+    "outcome": "applied",
+    "request": {
+      "agent_id": "wf-agent-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2",
+      "artifact_id": "patch-a9fe844abe9ccea5525e64419fdcb18df49bd18a89a1c9cbe149f2ff39d4fccf",
+      "base_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+      "files": [
+        {
+          "after": {
+            "exists": true,
+            "mode": "100644",
+            "object_id": "f542c31c4605b4ffcab54e1c7477fb519d447fc6",
+            "sha256": "13e6bcc31502ebbf8885a2ef012311fb5d073c5f60da833c5c407dafb9ae6a45",
+            "size_bytes": 1470
+          },
+          "before": {
+            "exists": true,
+            "mode": "100644",
+            "object_id": "ea4ee4b3b5aa95ee069f9cbf6e479eaf0eb8e1f4",
+            "sha256": "d01aaa7c262e352852901e4a282e4ee593dcb09763d92334e2b983cbdb394712",
+            "size_bytes": 37
+          },
+          "path": "telemetry_rules.py"
+        }
+      ],
+      "format": 1,
+      "manifest_digest": "da0b36a0a201d67426ab9613df159f6c7b4b40e5f9d41817267364edeed03e02",
+      "patch_digest": "a2a904d597874acf15dde160b6d9fb7a93966c2df41e5174693ca6f3731a4019",
+      "repository_fingerprint": "deb3d6cd7519677197e2d49b2e38ab9ce7bfc02a664ae8ad8efc9a56ce948f61",
+      "session_id": "wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2",
+      "source_id": "benchmark-source",
+      "workspace_generation": 4,
+      "workspace_id": "ws-0d30e7cd62c1ac7e8eb3b928a5a1f77cda10a3a79c5c8823b050c1519a632461"
+    },
+    "request_digest": "71a2a91621a50c7edefb14105933dccb912f1ce3fc29efa23aa6e9d52e5da201"
+  },
+  "fixed_review": {
+    "artifact_id": "patch-b550205130e9449c55d8e520dcdc5990565f1d39f435c16936cbd7e3047eafe4",
+    "expected_revision": "9c1ae6330dde94e3c53031f1026b71f8180bb1fb",
+    "integration_commit": "071004c8c8c24213952cadd98ce89cb7279732e9",
+    "integration_tree": "db55274f44424966ae26301af76f588d3aa9212a",
+    "manifest_digest": "a8ccd33430a39a9d91cc6fa792908bff5b9a624fbae4cc64c31beb9c02d557f7",
+    "merge_policy_version": 1,
+    "passed": false,
+    "patch_sha256": "2d394ee021f37bcbff30969f98219ada1fc2197d199630b4f75ba4190ca28c10",
+    "patch_size_bytes": 6891,
+    "promotion_protocol_version": 2,
+    "repository_fingerprint": "a9f864c924853955c147dd2039ca22b5168d7ade4e4f3be1fe34f80507a50695",
+    "results": [
+      {
+        "argv_digest": "3899ad87cccb3d792421c48d7a95315e04253448bcfc5a41a6424f089dc0aaa1",
+        "command_id": "functional-contract",
+        "execution": {
+          "execution_id": "9a0b41343c98472790ef3ae35f026730",
+          "policy_digest": "cf9b3d7ba875f7d6c57b19f120aefbad9230b7ad42093daacb24157c6d090fbf",
+          "receipt_digest": "c088e927a462fac63e78395fb1a266cc222ee88d6e15b6ab91212ad3fff42a8f",
+          "stream_id": "effects:wf-session-7145756860435a66a1f8f213318baba8d8687a7e524024c52fade326e525dad2"
+        },
+        "exit_code": 1,
+        "status": "failed",
+        "stderr_bytes": 201,
+        "stderr_sha256": "54e03dd805d72fd1efbff4d3f51e882edff3a1979de91872e39994a1893af556",
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "review_id": "review-353a6981d180ec5befecffac157432b910ba78b3f1b5b6a1289a95d5da9e7766",
+    "review_request_id": "wf-review-11bf55ef3223e2405592e7078c2bf9026b20e986130c105332549dd9526fb14d",
+    "target_id": "benchmark-target",
+    "target_ref": "refs/heads/main",
+    "verification_evidence_digest": "01dd86201b532c0c14eaed7de5ab00754d48da1cbce3b39f8423c5904d5b73fc",
+    "verifier_definition_digest": "74e97952ce7a6c61882edc709fc09f0833ae4282b8f61435415f9f4401ac312c"
+  },
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "promotion_id": null,
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 20
+  },
+  "workspaces": {
+    "released": 1,
+    "quarantined": 2
+  },
+  "snapshot_replays": 20,
+  "original_unchanged": true,
+  "original_sha256": "09e6a99f91fe383a233dd889c379007bcf8b50994178ce7a983e014ed8d043d9",
+  "semantic_diagnostic": [
+    {
+      "input": "none",
+      "expected": "ValueError",
+      "exception": "TypeError"
+    },
+    {
+      "input": "dict",
+      "expected": "ValueError",
+      "returned": []
+    },
+    {
+      "input": "tuple",
+      "expected": "ValueError",
+      "returned": []
+    }
+  ],
+  "benefit_measured": false,
+  "contract_sha256": "09c6c15535fa0e7df0aa4260f02977c5153cbc1c6cb5aa75e3df6fd3562ff811"
+}

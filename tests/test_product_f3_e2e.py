@@ -9,6 +9,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from collaboration_fixtures import PLAN
 from promotion_fixtures import (
     build_source_repository,
     capture_limits,
@@ -32,7 +33,6 @@ from traceh.api.llm import ModelMessage, ModelRequest, ModelResponse, ToolCall, 
 from traceh.api.product import (
     PRODUCT_TASK_AWAITING,
     ProductRoleProfile,
-    ProductRouterProfile,
     ProductTaskProfile,
     ProductTaskStatus,
     RequestedTaskMode,
@@ -40,7 +40,7 @@ from traceh.api.product import (
     TaskModeSource,
 )
 from traceh.api.promotion import VerifierCommand, VerifierOutcome
-from traceh.api.sandbox import SandboxConfiguration
+from traceh.api.sandbox import SandboxConfiguration, SandboxReceiptReference
 from traceh.api.tools import EffectKind, ToolExecutionContext, ToolOutput
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.artifacts.cas import LocalArtifactCas
@@ -58,7 +58,7 @@ from traceh.cli.product import (
 from traceh.product.activity import ProductToolActivity
 from traceh.product.chat import ProductTurnActions, ReadProductTaskEvidenceTool
 from traceh.product.errors import ProductInputError, ProductStateError
-from traceh.product.events import MAX_REASON_DISPLAY_CHARS, product_task_stream
+from traceh.product.events import product_task_stream
 from traceh.product.host import (
     ProductHostProfile,
     build_product_chat_host,
@@ -137,9 +137,7 @@ class _FailFirstProductAwaitingStore(InMemoryEventStore):
         events: tuple[PendingEvent, ...],
         durability=None,
     ):
-        if not self.failed and any(
-            event.type == PRODUCT_TASK_AWAITING for event in events
-        ):
+        if not self.failed and any(event.type == PRODUCT_TASK_AWAITING for event in events):
             self.failed = True
             raise RuntimeError("injected product awaiting append failure")
         return await super().append(
@@ -230,17 +228,10 @@ class _ChatProvider:
             self.requests.append(request)
         messages = _conversation_messages(request)
         last_user = next(
-            message.content
-            for message in reversed(messages)
-            if message.role == "user"
+            message.content for message in reversed(messages) if message.role == "user"
         )
         after_user = messages[
-            max(
-                index
-                for index, message in enumerate(messages)
-                if message.role == "user"
-            )
-            + 1 :
+            max(index for index, message in enumerate(messages) if message.role == "user") + 1 :
         ]
         if any(message.role == "tool" for message in after_user):
             return _response("host action proposed")
@@ -278,14 +269,10 @@ class _EvidenceReadingChatProvider:
     async def complete(self, request: ModelRequest) -> ModelResponse:
         messages = _conversation_messages(request)
         last_user_index = max(
-            index
-            for index, message in enumerate(messages)
-            if message.role == "user"
+            index for index, message in enumerate(messages) if message.role == "user"
         )
         tool_results = tuple(
-            message
-            for message in messages[last_user_index + 1 :]
-            if message.role == "tool"
+            message for message in messages[last_user_index + 1 :] if message.role == "tool"
         )
         if not tool_results:
             return _response(
@@ -312,15 +299,11 @@ class _SideEffectAttemptingChatProvider:
         self.requests.append(request)
         messages = _conversation_messages(request)
         last_user_index = max(
-            index
-            for index, message in enumerate(messages)
-            if message.role == "user"
+            index for index, message in enumerate(messages) if message.role == "user"
         )
         last_user = messages[last_user_index].content
         tool_results = tuple(
-            message
-            for message in messages[last_user_index + 1 :]
-            if message.role == "tool"
+            message for message in messages[last_user_index + 1 :] if message.role == "tool"
         )
         if last_user == "propose controlled work":
             if not tool_results:
@@ -418,12 +401,21 @@ class _ProductProvider:
     async def complete(self, request: ModelRequest) -> ModelResponse:
         if self.requests is not None:
             self.requests.append(request)
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            return _response('{"mode":"multi","reason":"two reviews reduce risk"}')
         tool_names = {tool.name for tool in request.tools}
+        if "submit_collaboration_plan" in tool_names:
+            return _response(
+                "",
+                ToolCall(
+                    "decision",
+                    "submit_collaboration_plan",
+                    PLAN,
+                ),
+            )
         if "apply_patch" not in tool_names:
             return _response("bounded analysis")
-        if not any(message.role == "tool" for message in request.messages):
+        if not any(
+            message.role == "tool" and message.name == "apply_patch" for message in request.messages
+        ):
             return _response(
                 "",
                 ToolCall(
@@ -440,55 +432,12 @@ class _ProductProvider:
         return _response("implemented and checked")
 
 
-class _InvalidRouterProvider(_ProductProvider):
-    async def complete(self, request: ModelRequest) -> ModelResponse:
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            return _response("not-json")
-        return await super().complete(request)
-
-
-class _ContractAwareRouterProvider(_ProductProvider):
-    """Stay within the reason bound only when the host actually discloses it."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.saw_reason_bound = False
-
-    async def complete(self, request: ModelRequest) -> ModelResponse:
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            last_user = next(
-                message.content
-                for message in reversed(_conversation_messages(request))
-                if message.role == "user"
-            )
-            self.saw_reason_bound = (
-                "reason must be null or" in last_user
-                and f"at most {MAX_REASON_DISPLAY_CHARS} characters" in last_user
-                and "no leading or trailing whitespace" in last_user
-                and "Unicode categories Cc, Cf, Cs, Co, Zl, or Zp" in last_user
-            )
-            reason = (
-                "one bounded role is sufficient"
-                if self.saw_reason_bound
-                else "x" * (MAX_REASON_DISPLAY_CHARS + 1)
-            )
-            return _response(f'{{"mode":"single","reason":"{reason}"}}')
-        return await super().complete(request)
-
-
 class _ThreadedProductProvider(_ProductProvider):
     """Match the production adapter's completed worker-thread boundary."""
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            response = _response(
-                '{"mode":"single","reason":"Task is a focused, linear debugging '
-                'and verification activity requiring sequential execution: inspect '
-                'code, fix reserve_stock logic, then run existing tests without '
-                'modification."}'
-            )
-        else:
-            response = await super().complete(request)
+        response = await super().complete(request)
+
         def complete_in_worker() -> ModelResponse:
             import time
 
@@ -526,33 +475,33 @@ def _profile(mode: RequestedTaskMode) -> ProductTaskProfile:
         default_mode=mode,
         provider_id="product-provider",
         model_id="product-model",
-        parent=ProductRoleProfile(
-            "product-parent",
-            READ_TOOL_IDS,
-            4_096,
-            _limits(max_children=0, max_depth=0),
-        ),
-        reviewer=ProductRoleProfile(
-            "product-reviewer",
-            READ_TOOL_IDS,
-            4_096,
-            _limits(max_children=0, max_depth=0),
-        ),
         coder=ProductRoleProfile(
             "product-coder",
             WRITE_TOOL_IDS,
             4_096,
-            _limits(max_children=0, max_depth=0),
+            _limits(
+                max_children=1 if mode is RequestedTaskMode.MULTI else 0,
+                max_depth=1 if mode is RequestedTaskMode.MULTI else 0,
+            ),
+            max_turn_wall_milliseconds=60_000,
         ),
-        router=ProductRouterProfile(
-            "product-router",
-            256,
-            _limits(max_steps=2, max_tool_calls=0, max_children=0, max_depth=0),
-            30_000,
-            2_048,
+        investigator=ProductRoleProfile(
+            "product-investigator",
+            READ_TOOL_IDS,
+            1024,
+            _limits(
+                max_tokens=6000, max_steps=4, max_tool_calls=6,
+                max_children=0, max_depth=0, max_processes=0,
+                max_wall_milliseconds=30_000,
+            ),
+            20_000,
         ),
+        patch_author=None,
+        retained_tokens=4_000,
+        investigator_initial_tokens=4_000,
         task_budget=_limits(
             max_tokens=100_000,
+            max_depth=2 if mode is RequestedTaskMode.MULTI else 1,
             max_steps=100,
             max_tool_calls=100,
             max_wall_milliseconds=600_000,
@@ -673,20 +622,20 @@ async def _run_to_barrier(
     first = _Console(("please add the accepted file", "yes, do it", "START"))
     chat_workspace = tmp_path / "chat-workspace"
     chat_workspace.mkdir(exist_ok=True)
-    assert await run_chat(
-        runtime,
-        first.console,
-        workspace=chat_workspace,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            first.console,
+            workspace=chat_workspace,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
     assert matched is not None, first.output
     assert "requirement: please add the accepted file" in first.output
-    assert any(
-        f"Start exact ProductTask {matched.group(1)}?" in prompt
-        for prompt in first.prompts
-    )
+    assert any(f"Start exact ProductTask {matched.group(1)}?" in prompt for prompt in first.prompts)
     session_match = re.search(r"session_id=([^ ]+)", first.output)
     assert session_match is not None
     return matched.group(1), session_match.group(1), first.output
@@ -703,7 +652,6 @@ def _proposed_task_id(output: str) -> str:
     (
         (RequestedTaskMode.SINGLE, ResolvedTaskMode.SINGLE),
         (RequestedTaskMode.MULTI, ResolvedTaskMode.MULTI),
-        (RequestedTaskMode.AUTO, ResolvedTaskMode.MULTI),
     ),
 )
 async def test_chat_task_modes_pause_restart_and_promote(
@@ -715,43 +663,36 @@ async def test_chat_task_modes_pause_restart_and_promote(
     target = make_bare_target(source, tmp_path / "target.git")
     store = InMemoryEventStore()
     cas = LocalArtifactCas(tmp_path / "cas")
-    task_id, session_id, _ = await _run_to_barrier(
-        tmp_path, store, source, target, cas, mode
-    )
+    task_id, session_id, _ = await _run_to_barrier(tmp_path, store, source, target, cas, mode)
     summary = await ProductTaskStreamReader(store).load(task_id)
     assert summary is not None and summary.resolved_mode is resolved
 
     # A new host owns no process-local receipt.  It continues only from the
     # ProductTask, Workflow, Artifact and Review facts identified by task_id.
     actions = ProductTurnActions()
-    product = await _build_host(
-        tmp_path, store, source, target, cas, actions, mode
-    )
+    product = await _build_host(tmp_path, store, source, target, cas, actions, mode)
     runtime = _chat_runtime(tmp_path, store, actions)
     second = _Console((f"/task approve {task_id}", "/exit"))
-    assert await run_chat(
-        runtime,
-        second.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            second.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     assert f"task {task_id}: completed" in second.output
     assert git("rev-parse", "refs/heads/main", cwd=target) != base
     workspaces = await WorkspaceCatalogReader(store).load()
     assert workspaces.workspaces
-    assert all(
-        record.status is WorkspaceStatus.RELEASED
-        for record in workspaces.workspaces
-    )
+    assert all(record.status is WorkspaceStatus.RELEASED for record in workspaces.workspaces)
     ledger = await BudgetLedgerReader(store).load()
     assert ledger.accounts
+    assert all(account.status is BudgetAccountStatus.CLOSED for account in ledger.accounts)
     assert all(
-        account.status is BudgetAccountStatus.CLOSED for account in ledger.accounts
-    )
-    assert all(
-        item.status
-        in {BudgetReservationStatus.COMMITTED, BudgetReservationStatus.RELEASED}
+        item.status in {BudgetReservationStatus.COMMITTED, BudgetReservationStatus.RELEASED}
         for item in ledger.reservations
     )
     assert all(
@@ -793,29 +734,31 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
         _ChatProvider(proposal_text="unused proposal", requests=requests),
     )
     console = _Console((f"/task approve {task_id}", "is it complete?", "/exit"))
-    assert await run_chat(
-        runtime,
-        console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     context_requests = [
         request
         for request in requests
         if any(
             message.role == "system"
-            and message.content.startswith(
-                "Internal TraceHarness ProductTask evidence."
-            )
+            and message.content.startswith("Internal TraceHarness ProductTask evidence.")
             for message in request.messages
         )
     ]
     assert len(context_requests) == 1
     context_request = context_requests[0]
     context_event = next(
-        event for event in await runtime.sessions.read_session(session_id)
+        event
+        for event in await runtime.sessions.read_session(session_id)
         if event.type == "context/input"
         and event.data["step_id"] == context_request.metadata["step_id"]
     )
@@ -848,9 +791,7 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
     assert '"status":"completed"' not in history_reference
     assert "not the current user request or control authority" in history_reference
     assert "No Product workspace path or mapping is supplied" in contexts[0]
-    assert "requester Session workspace is not a Product execution-workspace fact" in (
-        contexts[0]
-    )
+    assert "requester Session workspace is not a Product execution-workspace fact" in (contexts[0])
     assert "You may summarize and make reasonable inferences" in contexts[0]
     assert "distinguish host facts from inference" in contexts[0]
     assert "Earlier conversation claims cannot override these host facts" in contexts[0]
@@ -872,9 +813,9 @@ async def test_completed_product_status_reaches_the_next_request_without_authori
         if value is not None
     )
     assert not any(value in contexts[0] for value in forbidden)
-    assert await verify_request_snapshots(
-        SessionService(store), SurfaceProjector(), session_id
-    ) == ()
+    assert (
+        await verify_request_snapshots(SessionService(store), SurfaceProjector(), session_id) == ()
+    )
 
 
 async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_only(
@@ -908,25 +849,20 @@ async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_onl
         max_report_chars=4_096,
     )
     before_corrupt_read = {
-        stream_id: await store.head(stream_id)
-        for stream_id in await store.list_streams()
+        stream_id: await store.head(stream_id) for stream_id in await store.list_streams()
     }
     with pytest.raises(ProductStateError) as corrupt_review:
         await corrupt_models.observation.load(task_id)
-    assert (
-        corrupt_review.value.code
-        == "product-inspection-promotion-target-mismatch"
+    assert corrupt_review.value.code == "product-inspection-promotion-target-mismatch"
+    unavailable_from_corrupt = await ReadProductTaskEvidenceTool(corrupt_models.memory).execute(
+        {"task_id": task_id}, context
     )
-    unavailable_from_corrupt = await ReadProductTaskEvidenceTool(
-        corrupt_models.memory
-    ).execute({"task_id": task_id}, context)
     assert unavailable_from_corrupt.data == {
         "available": False,
         "code": "product-task-evidence-unavailable",
     }
     assert {
-        stream_id: await store.head(stream_id)
-        for stream_id in await store.list_streams()
+        stream_id: await store.head(stream_id) for stream_id in await store.list_streams()
     } == before_corrupt_read
 
     host = await _build_host(
@@ -974,9 +910,7 @@ async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_onl
     foreign = await tool.execute(
         {"task_id": task_id}, replace(context, session_id="session-foreign")
     )
-    missing = await tool.execute(
-        {"task_id": "product-task-missing"}, context
-    )
+    missing = await tool.execute({"task_id": "product-task-missing"}, context)
     assert foreign == missing
     assert foreign.data == {
         "available": False,
@@ -1053,9 +987,7 @@ async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_onl
         ),
         provider=provider,
         event_store=store,
-        additional_tools=product_chat_runtime_tools(
-            ProductTurnActions(), read_models.memory
-        ),
+        additional_tools=product_chat_runtime_tools(ProductTurnActions(), read_models.memory),
         policies=product_chat_runtime_policies(),
         include_default_tools=False,
     )
@@ -1068,31 +1000,7 @@ async def test_read_product_task_evidence_is_session_scoped_bounded_and_read_onl
     assert provider.evidence["product"]["status"] == "completed"
 
 
-async def test_auto_router_receives_the_complete_reason_contract(
-    tmp_path: Path,
-) -> None:
-    source, _ = build_source_repository(tmp_path / "source")
-    target = make_bare_target(source, tmp_path / "target.git")
-    store = InMemoryEventStore()
-    provider = _ContractAwareRouterProvider()
-
-    task_id, _, _ = await _run_to_barrier(
-        tmp_path,
-        store,
-        source,
-        target,
-        LocalArtifactCas(tmp_path / "cas"),
-        RequestedTaskMode.AUTO,
-        provider,
-    )
-
-    assert provider.saw_reason_bound
-    summary = await ProductTaskStreamReader(store).load(task_id)
-    assert summary is not None
-    assert summary.resolved_mode is ResolvedTaskMode.SINGLE
-
-
-async def test_auto_product_mainline_converges_with_the_production_sqlite_store(
+async def test_multi_product_mainline_converges_with_the_production_sqlite_store(
     tmp_path: Path,
 ) -> None:
     source, _ = build_source_repository(tmp_path / "source")
@@ -1106,14 +1014,14 @@ async def test_auto_product_mainline_converges_with_the_production_sqlite_store(
                 source,
                 target,
                 LocalArtifactCas(tmp_path / "cas"),
-                RequestedTaskMode.AUTO,
+                RequestedTaskMode.MULTI,
                 _ThreadedProductProvider(),
             ),
             timeout=30,
         )
         summary = await ProductTaskStreamReader(store).load(task_id)
         assert summary is not None
-        assert summary.resolved_mode is ResolvedTaskMode.SINGLE
+        assert summary.resolved_mode is ResolvedTaskMode.MULTI
         assert summary.status is ProductTaskStatus.AWAITING_APPROVAL
     finally:
         await store.aclose()
@@ -1145,25 +1053,24 @@ async def test_model_confirmation_cannot_start_without_explicit_host_authorizati
     )
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
-    console = _Console(
-        ("please add the accepted file", refusal, "NOT AUTHORIZED", "/exit")
-    )
+    console = _Console(("please add the accepted file", refusal, "NOT AUTHORIZED", "/exit"))
 
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=workspace,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     task_id = _proposed_task_id(console.output)
     assert await store.list_streams(prefix="product-task:") == ()
     assert not (await BudgetLedgerReader(store).load()).accounts
     assert not (await WorkspaceCatalogReader(store).load()).workspaces
-    assert any(
-        f"Start exact ProductTask {task_id}?" in prompt for prompt in console.prompts
-    )
+    assert any(f"Start exact ProductTask {task_id}?" in prompt for prompt in console.prompts)
     assert f"task {task_id}: start not authorized" in console.output
     assert git("rev-parse", "refs/heads/main", cwd=target) == base
     assert all(
@@ -1197,17 +1104,18 @@ async def test_product_chat_cannot_dirty_its_configured_source_before_start(
         actions,
         _SideEffectAttemptingChatProvider(requests),
     )
-    console = _Console(
-        ("propose controlled work", "confirm controlled work", "START", "/exit")
-    )
+    console = _Console(("propose controlled work", "confirm controlled work", "START", "/exit"))
 
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=source,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=source,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     task_id = _proposed_task_id(console.output)
     session_match = re.search(r"session_id=([^ ]+)", console.output)
@@ -1225,11 +1133,11 @@ async def test_product_chat_cannot_dirty_its_configured_source_before_start(
         == {
             "list_files",
             "read_file",
-                "search_text",
-                "propose_product_task",
-                "confirm_product_task",
-                "read_product_task_evidence",
-            }
+            "search_text",
+            "propose_product_task",
+            "confirm_product_task",
+            "read_product_task_evidence",
+        }
         for request in requests
     )
     events = await store.read(f"session:{session_id}")
@@ -1237,13 +1145,10 @@ async def test_product_chat_cannot_dirty_its_configured_source_before_start(
         str(event.data.get("tool_call_id")): event
         for event in events
         if event.type == "tool/result"
-        and event.data.get("tool_call_id")
-        in {"write-before-start", "process-before-start"}
+        and event.data.get("tool_call_id") in {"write-before-start", "process-before-start"}
     }
     assert set(blocked_results) == {"write-before-start", "process-before-start"}
-    assert {
-        event.data.get("error_type") for event in blocked_results.values()
-    } == {"UnknownTool"}
+    assert {event.data.get("error_type") for event in blocked_results.values()} == {"UnknownTool"}
 
     next_actions = ProductTurnActions()
     next_product = await _build_host(
@@ -1256,13 +1161,16 @@ async def test_product_chat_cannot_dirty_its_configured_source_before_start(
         RequestedTaskMode.SINGLE,
     )
     rejection = _Console((f"/task reject {task_id}", "/exit"))
-    assert await run_chat(
-        _chat_runtime(tmp_path, store, next_actions),
-        rejection.console,
-        session_id=session_id,
-        timeline=False,
-        product=next_product,
-    ) == 0
+    assert (
+        await run_chat(
+            _chat_runtime(tmp_path, store, next_actions),
+            rejection.console,
+            session_id=session_id,
+            timeline=False,
+            product=next_product,
+        )
+        == 0
+    )
     assert f"task {task_id}: rejected" in rejection.output
     assert git("rev-parse", "refs/heads/main", cwd=target) == base
     assert git("status", "--porcelain", cwd=source) == ""
@@ -1273,6 +1181,7 @@ async def test_product_chat_policy_denies_a_registered_effectful_tool(
 ) -> None:
     store = InMemoryEventStore()
     actions = ProductTurnActions()
+
     class _UnusedObservationReader:
         def __init__(self) -> None:
             self.store = store
@@ -1310,70 +1219,15 @@ async def test_product_chat_policy_denies_a_registered_effectful_tool(
     denied = next(
         event
         for event in events
-        if event.type == "tool/result"
-        and event.data.get("tool_call_id") == "effectful-probe-call"
+        if event.type == "tool/result" and event.data.get("tool_call_id") == "effectful-probe-call"
     )
     assert denied.data.get("status") == "denied"
     assert denied.data.get("error_type") == "ToolDenied"
-    assert denied.data.get("data") == {
-        "policy": "product-chat-side-effect-boundary"
-    }
+    assert denied.data.get("data") == {"policy": "product-chat-side-effect-boundary"}
     assert not effects
 
 
-async def test_router_failure_releases_resources_and_returns_the_durable_task(
-    tmp_path: Path,
-) -> None:
-    source, _ = build_source_repository(tmp_path / "source")
-    target = make_bare_target(source, tmp_path / "target.git")
-    store = InMemoryEventStore()
-    actions = ProductTurnActions()
-    product = await _build_host(
-        tmp_path,
-        store,
-        source,
-        target,
-        LocalArtifactCas(tmp_path / "cas"),
-        actions,
-        RequestedTaskMode.AUTO,
-        _InvalidRouterProvider(),
-    )
-    runtime = _chat_runtime(tmp_path, store, actions)
-    workspace = tmp_path / "chat-workspace"
-    workspace.mkdir()
-    console = _Console(
-        ("please add the accepted file", "yes, do it", "START", "/exit")
-    )
-
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        timeline=False,
-        product=product,
-    ) == 0
-
-    task_id = _proposed_task_id(console.output)
-    summary = await ProductTaskStreamReader(store).load(task_id)
-    assert summary is not None
-    assert summary.status is ProductTaskStatus.FAILED
-    assert summary.failure_code == "product-router-response-unparsable"
-    assert f"task {task_id}: failed" in console.output
-    assert "failure: product-router-response-unparsable" in console.output
-    ledger = await BudgetLedgerReader(store).load()
-    assert ledger.accounts
-    assert all(
-        account.status is BudgetAccountStatus.CLOSED for account in ledger.accounts
-    )
-    catalog = await WorkspaceCatalogReader(store).load()
-    assert catalog.workspaces
-    assert all(
-        workspace_record.status is WorkspaceStatus.RELEASED
-        for workspace_record in catalog.workspaces
-    )
-
-
-async def test_confirmed_single_mode_bypasses_an_auto_profiles_router(
+async def test_confirmed_single_mode_overrides_multi_profile(
     tmp_path: Path,
 ) -> None:
     source, _ = build_source_repository(tmp_path / "source")
@@ -1388,7 +1242,7 @@ async def test_confirmed_single_mode_bypasses_an_auto_profiles_router(
         target,
         LocalArtifactCas(tmp_path / "cas"),
         actions,
-        RequestedTaskMode.AUTO,
+        RequestedTaskMode.MULTI,
         _ProductProvider(product_requests),
     )
     requirement = "please add the accepted file using single"
@@ -1405,13 +1259,16 @@ async def test_confirmed_single_mode_bypasses_an_auto_profiles_router(
     workspace.mkdir()
     console = _Console((requirement, "yes, do it", "START", "/exit"))
 
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=workspace,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     task_id = _proposed_task_id(console.output)
     summary = await ProductTaskStreamReader(store).load(task_id)
@@ -1421,6 +1278,12 @@ async def test_confirmed_single_mode_bypasses_an_auto_profiles_router(
     assert summary.resolved_mode is ResolvedTaskMode.SINGLE
     assert "mode:     single" in console.output
     assert "mode source: confirmed_proposal" in console.output
+    assert product_requests
+    assert all(
+        "traceh.product.multi-collaboration" not in (request.system_prompt or "")
+        and "delegate_investigation" not in {tool.name for tool in request.tools}
+        for request in product_requests
+    )
     assert not any(
         request.system_prompt and "routing classifier" in request.system_prompt
         for request in product_requests
@@ -1452,13 +1315,16 @@ async def test_rejecting_the_review_does_not_move_the_target(tmp_path: Path) -> 
     )
     runtime = _chat_runtime(tmp_path, store, actions)
     console = _Console((f"/task reject {task_id}", "/exit"))
-    assert await run_chat(
-        runtime,
-        console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     assert f"task {task_id}: rejected" in console.output
     assert git("rev-parse", "refs/heads/main", cwd=target) == base
 
@@ -1502,19 +1368,14 @@ async def test_approval_screen_uses_durable_evidence_and_separate_request_caps(
         source,
         target,
         LocalArtifactCas(tmp_path / "cas"),
-        RequestedTaskMode.AUTO,
+        RequestedTaskMode.MULTI,
         _ProductProvider(requests),
     )
 
-    routing = [
-        request
-        for request in requests
-        if request.system_prompt and "routing classifier" in request.system_prompt
-    ]
-    execution = [request for request in requests if request not in routing]
-    assert routing and execution
-    assert {request.max_output_tokens for request in routing} == {256}
-    assert {request.max_output_tokens for request in execution} == {4_096}
+    assert requests
+    assert {request.max_output_tokens for request in requests} == {4_096}
+    assert {tool.name for tool in requests[0].tools} <= {"list_files", "read_file", "search_text"}
+    assert any(t.name == "submit_collaboration_plan" for r in requests for t in r.tools)
     assert "workflow nodes:" in output
     assert "changed paths (1)" in output
     assert "added.txt" in output
@@ -1560,13 +1421,16 @@ async def test_inspection_marks_tampered_patch_evidence_unavailable(
     runtime = _chat_runtime(tmp_path, store, actions)
     console = _Console((f"/task inspect {task_id}", "/exit"))
 
-    assert await run_chat(
-        runtime,
-        console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     assert "evidence: unavailable (artifact-cas-collision)" in console.output
     assert "do not approve until the durable evidence can be read" in console.output
     assert "decision: do not approve; retry inspection or reject the task" in console.output
@@ -1602,7 +1466,11 @@ async def test_forged_verifier_result_blocks_inspection_and_direct_approval(
     event.data["results"] = [result]
     event.data["verification_evidence_digest"] = verification_evidence_digest(
         event.data["verifier_definition_digest"],
-        (VerifierOutcome(**result),),
+        (
+            VerifierOutcome(
+                **{**result, "execution": SandboxReceiptReference(**result["execution"])}
+            ),
+        ),
     )
 
     actions = ProductTurnActions()
@@ -1616,13 +1484,16 @@ async def test_forged_verifier_result_blocks_inspection_and_direct_approval(
         RequestedTaskMode.SINGLE,
     )
     inspect_console = _Console((f"/task inspect {task_id}", "/exit"))
-    assert await run_chat(
-        _chat_runtime(tmp_path, store, actions),
-        inspect_console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            _chat_runtime(tmp_path, store, actions),
+            inspect_console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     actions = ProductTurnActions()
     product = await _build_host(
@@ -1634,27 +1505,22 @@ async def test_forged_verifier_result_blocks_inspection_and_direct_approval(
         actions,
         RequestedTaskMode.SINGLE,
     )
-    approve_console = _Console(
-        (f"/task approve {task_id}", f"/task reject {task_id}", "/exit")
-    )
-    assert await run_chat(
-        _chat_runtime(tmp_path, store, actions),
-        approve_console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
-    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    approve_console = _Console((f"/task approve {task_id}", f"/task reject {task_id}", "/exit"))
     assert (
-        "evidence: unavailable (product-inspection-verifier-mismatch)"
-        in inspect_console.output
+        await run_chat(
+            _chat_runtime(tmp_path, store, actions),
+            approve_console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
     )
+    assert git("rev-parse", "refs/heads/main", cwd=target) == base
+    assert "evidence: unavailable (product-inspection-verifier-mismatch)" in inspect_console.output
     assert "decision: do not approve" in inspect_console.output
     assert forged not in inspect_console.output
-    assert (
-        "task operation failed: promotion-review-verification-mismatch"
-        in approve_console.output
-    )
+    assert "task operation failed: promotion-review-verification-mismatch" in approve_console.output
     assert f"task {task_id}: rejected" in approve_console.output
 
 
@@ -1692,13 +1558,16 @@ async def test_existing_promotion_recovery_revalidates_the_frozen_plan(
         RequestedTaskMode.SINGLE,
     )
     completed_console = _Console((f"/task approve {task_id}", "/exit"))
-    assert await run_chat(
-        _chat_runtime(tmp_path, store, actions),
-        completed_console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            _chat_runtime(tmp_path, store, actions),
+            completed_console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     completed = await ProductTaskStreamReader(store).load(task_id)
     assert completed is not None
     assert completed.status is ProductTaskStatus.COMPLETED
@@ -1726,7 +1595,9 @@ async def test_existing_promotion_recovery_revalidates_the_frozen_plan(
     replacement = "9" * 64
     assert result["argv_digest"] != replacement
     result["argv_digest"] = replacement
-    results = (VerifierOutcome(**result),)
+    results = (
+        VerifierOutcome(**{**result, "execution": SandboxReceiptReference(**result["execution"])}),
+    )
     evidence_digest = verification_evidence_digest(
         review_event.data["verifier_definition_digest"], results
     )
@@ -1763,20 +1634,22 @@ async def test_existing_promotion_recovery_revalidates_the_frozen_plan(
         RequestedTaskMode.SINGLE,
     )
     recovery_console = _Console((f"/task approve {task_id}", "/exit"))
-    assert await run_chat(
-        _chat_runtime(tmp_path, store, actions),
-        recovery_console.console,
-        session_id=session_id,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            _chat_runtime(tmp_path, store, actions),
+            recovery_console.console,
+            session_id=session_id,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
 
     recovered = await ProductTaskStreamReader(store).load(task_id)
     assert recovered is not None
     assert recovered.status is ProductTaskStatus.AWAITING_APPROVAL
     assert (
-        "task operation failed: promotion-review-verification-mismatch"
-        in recovery_console.output
+        "task operation failed: promotion-review-verification-mismatch" in recovery_console.output
     )
     assert f"task {task_id}: completed" not in recovery_console.output
     assert git("rev-parse", "refs/heads/main", cwd=target) == base
@@ -1800,13 +1673,16 @@ async def test_ordinary_chat_creates_no_product_task(tmp_path: Path) -> None:
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
     console = _Console(("hello, just answer normally", "/exit"))
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        timeline=False,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=workspace,
+            timeline=False,
+            product=product,
+        )
+        == 0
+    )
     assert await store.list_streams(prefix="product-task:") == ()
 
 
@@ -1833,12 +1709,15 @@ async def test_line_observation_start_failure_leaves_no_subscription_or_watcher(
     workspace.mkdir()
     console = _Console(("please add the accepted file", "yes, do it", "START"))
 
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        product=product,
-    ) == 0
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=workspace,
+            product=product,
+        )
+        == 0
+    )
 
     task_id = _proposed_task_id(console.output)
     assert "task operation failed: product-execution-failed" in console.output
@@ -1999,9 +1878,7 @@ class _GatedProductProvider(_ProductProvider):
 class _GatedClock:
     def __init__(self) -> None:
         self.now = 0.0
-        self.waiters: asyncio.Queue[tuple[float, asyncio.Future[None]]] = (
-            asyncio.Queue()
-        )
+        self.waiters: asyncio.Queue[tuple[float, asyncio.Future[None]]] = asyncio.Queue()
 
     def monotonic(self) -> float:
         return self.now
@@ -2071,15 +1948,14 @@ async def test_interrupting_confirmation_converges_owned_work_without_promotion(
         for task in asyncio.all_tasks()
         if task is not asyncio.current_task()
     )
-    assert await store.list_streams(prefix="product-task:") == (
-        f"product-task:{task_id}",
-    )
+    assert await store.list_streams(prefix="product-task:") == (f"product-task:{task_id}",)
     summary = await ProductTaskStreamReader(store).load(task_id)
     assert summary is not None and summary.status.value == "started"
     assert git("rev-parse", "refs/heads/main", cwd=target) == base
     ledger = await BudgetLedgerReader(store).load()
     assert all(
-        item.status in {
+        item.status
+        in {
             BudgetUsageReservationStatus.SETTLED,
             BudgetUsageReservationStatus.RELEASED,
         }
@@ -2109,16 +1985,17 @@ async def test_pure_observation_shows_workflow_approval_before_product_reconcili
     runtime = _chat_runtime(tmp_path, store, actions)
     workspace = tmp_path / "chat-workspace"
     workspace.mkdir()
-    console = _Console(
-        ("please add the accepted file", "yes, do it", "START", "/exit")
+    console = _Console(("please add the accepted file", "yes, do it", "START", "/exit"))
+    assert (
+        await run_chat(
+            runtime,
+            console.console,
+            workspace=workspace,
+            timeline=False,
+            product=product,
+        )
+        == 0
     )
-    assert await run_chat(
-        runtime,
-        console.console,
-        workspace=workspace,
-        timeline=False,
-        product=product,
-    ) == 0
     task_id = _proposed_task_id(console.output)
     assert store.failed
 
@@ -2150,13 +2027,16 @@ async def test_pure_observation_shows_workflow_approval_before_product_reconcili
     next_runtime = _chat_runtime(tmp_path, store, next_actions)
     assert before.summary is not None
     approval = _Console((f"/task approve {task_id}", "/exit"))
-    assert await run_chat(
-        next_runtime,
-        approval.console,
-        session_id=before.summary.origin_session_id,
-        timeline=False,
-        product=next_product,
-    ) == 0
+    assert (
+        await run_chat(
+            next_runtime,
+            approval.console,
+            session_id=before.summary.origin_session_id,
+            timeline=False,
+            product=next_product,
+        )
+        == 0
+    )
     settled = await ProductTaskStreamReader(store).load(task_id)
     assert settled is not None
     assert settled.status is ProductTaskStatus.COMPLETED

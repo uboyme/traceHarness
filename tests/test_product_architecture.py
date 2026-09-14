@@ -24,29 +24,30 @@ import traceh.supervision.tools as tools_module
 import traceh.workflow.service as workflow_service_module
 from traceh.product import (
     ProductAssemblyService,
-    ProductModeRouter,
     ProductTaskService,
-    RouterResponder,
-    StrictTaskRoutingParser,
 )
-from traceh.product.router import ROUTER_RESPONSE_KEYS
 
 PACKAGE_ROOT = Path(agent_runtime_module.__file__).parent.parent
 PRODUCT_ROOT = Path(product_service_module.__file__).parent
 WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
+# WC-2: generic fenced cleanup rejoin, proved by lifecycle cancellation
+# and reverse tests; no Product dependency enters Supervisor (ADR-0072).
 PROTECTED_SOURCES = {
-    "runtime/agent_loop.py": ("f1fda2f5c4ad4efa475934d385a70855abf4bad46442a8c52d9c9af1be1be123"),
+    "runtime/agent_loop.py": ("455be23bf23a5b4b97aa60eabede18a86d1af473bf41e854b9d038ac071eaaf7"),
     "runtime/agent_runtime.py": (
-        "15998cc4eab083f131eb0b099528abce572839b15b6562f9cd5567e9d3f941a1"
+        "51f582071c6beaada35fefbae645d2b6d120ab8a1235252d9a7be1bef8d43851"
     ),
     "supervision/supervisor.py": (
-        "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
+        "b03317a9dbdcd31612ba60dd6e5a1a98e3415ffa6e1d49649b34a9304f105877"
     ),
     # F5: pre-enable Manifest review uses the same loader and activation path.
     "plugins/manager.py": ("f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+ADR-0070 adds a generic source-bound Step view seam only. Product interprets
+collaboration phases; the kernel retains its original execution and resource owners.
 
 ADR-0065 binds the existing completion verifier to a host Sandbox scope and
 records its receipt; Runtime assembly injects that same service into ToolRuntime.
@@ -239,13 +240,18 @@ def test_only_cli_and_declared_optimization_owners_depend_on_evaluation() -> Non
             # AO-3's declared host assembly/parser. Runtime/Product/Workflow
             # still cannot import Evaluation or the optimization scheduler.
             assert referenced == {
-                "traceh.evaluation.inputs", "traceh.evaluation.model_service",
-                "traceh.evaluation.plan", "traceh.evaluation.runner", "traceh.evaluation.variants",
+                "traceh.evaluation.inputs",
+                "traceh.evaluation.model_service",
+                "traceh.evaluation.plan",
+                "traceh.evaluation.runner",
+                "traceh.evaluation.variants",
             }
             continue
         if source == package / "tui" / "optimization_plan.py":
             assert referenced == {
-                "traceh.evaluation.evaluators.episode_manifest", "traceh.evaluation.manifest",
+                "traceh.evaluation.evaluators.episode_manifest",
+                "traceh.evaluation.manifest",
+                "traceh.evaluation.evaluators.product_manifest",
                 "traceh.evaluation.plan",
             }
             continue
@@ -316,7 +322,6 @@ PLANNING_FILES = {
     "evidence.py",
     "projection.py",
     "registry.py",
-    "router.py",
     "service.py",
     "topology.py",
 }
@@ -427,22 +432,6 @@ def test_the_m2_evidence_tool_holds_only_the_pure_shared_reader() -> None:
             assert forbidden not in source
 
 
-def test_the_router_seam_receives_text_and_returns_a_decision() -> None:
-    """No handle reaches the router *through* the seam - it is handed a string."""
-
-    responder = inspect_module.signature(RouterResponder.respond)
-    assert list(responder.parameters) == ["self", "summary", "task_id"]
-    assert responder.parameters["summary"].annotation == "str"
-    parser = inspect_module.signature(StrictTaskRoutingParser.parse)
-    assert list(parser.parameters) == ["self", "response"]
-    assert parser.parameters["response"].annotation == "str"
-    assert list(inspect_module.signature(ProductModeRouter.route).parameters) == [
-        "self",
-        "summary",
-        "task_id",
-    ]
-
-
 def test_the_assembly_service_plans_and_stops() -> None:
     """It produces a receipt. Starting, verifying and promoting are elsewhere."""
 
@@ -456,7 +445,6 @@ def test_the_assembly_service_plans_and_stops() -> None:
         "registry",
         "sources",
         "targets",
-        "router",
     ]
 
 
@@ -466,14 +454,11 @@ def test_no_topology_can_arrive_from_configuration() -> None:
     for value in (
         product_api.ProductTaskProfile,
         product_api.ProductRoleProfile,
-        product_api.ProductRouterProfile,
-        product_api.TaskRouting,
         product_api.ProductTaskProposal,
     ):
         names = {item.name for item in dataclasses.fields(value)}
         for forbidden in ("node", "edge", "graph", "dag", "fan_out", "agents", "count"):
             assert not any(forbidden in name for name in names), (value, forbidden)
-    assert set(ROUTER_RESPONSE_KEYS) == {"mode", "reason"}
 
 
 def test_generic_agent_tools_gain_no_product_authority() -> None:
@@ -563,7 +548,6 @@ def test_the_service_cannot_continue_anything() -> None:
         "load",
         "view",
         "open_task",
-        "record_routing",
         "start_task",
         "record_awaiting",
         "complete_task",

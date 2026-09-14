@@ -6,10 +6,10 @@ from traceh.evaluation.inputs import digest_bytes
 from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
 
 
-def write_dataset(root, manifest, cases):
-    payload = json.dumps({"format": 1, "cases": cases}, ensure_ascii=False, indent=2).encode(
-        "utf-8"
-    )
+def write_dataset(root, manifest, cases, *, format_version=1):
+    payload = json.dumps(
+        {"format": format_version, "cases": cases}, ensure_ascii=False, indent=2
+    ).encode("utf-8")
     (root / "dataset.json").write_bytes(payload)
     manifest["dataset"] = {"file": "dataset.json", "sha256": digest_bytes(payload)}
     (root / "benchmark.json").write_text(

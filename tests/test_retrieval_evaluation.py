@@ -32,7 +32,7 @@ def benchmark(root, *, query="goals.code", relevant=True, category="exact"):
     manifest = json.loads((root / "benchmark.json").read_text(encoding="utf-8"))
     cases = json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"]
     cases[0]["requirement"] = query
-    write_dataset(root, manifest, cases)
+    write_dataset(root, manifest, cases, format_version=2)
     memory = asdict(memory_policy())
     memory["denied_patterns"] = list(memory["denied_patterns"])
     identity = {"kind": "memory", "id": "goals.code", "tiers": ["summary"]}

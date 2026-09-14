@@ -10,6 +10,7 @@ from textual.widgets import Button, Input, Label, Select, SelectionList, Static
 
 from traceh.cli.tui_config import atomic_json
 from traceh.evaluation.evaluators.episode_manifest import load_episode_suite
+from traceh.evaluation.evaluators.product_manifest import load_product_suite
 from traceh.evaluation.manifest import load_benchmark_manifest
 from traceh.tui.config_forms import background_preset, validate_document
 
@@ -22,21 +23,24 @@ class OptimizationPlanScreen(Screen):
     #optimization-plan-status { height: auto; color: $warning; }
     """
 
-    def __init__(self, *, config_path, workspace, data_dir, model_settings):
+    def __init__(self, *, config_path, workspace, data_dir, model_settings, sandbox_config=""):
         super().__init__()
         self.config_path = Path(config_path).resolve()
         self.workspace, self.data_dir, self.model_settings = workspace, data_dir, model_settings
         self.manifest = None
+        self.sandbox_config = sandbox_config
 
     def compose(self):
         with VerticalScroll():
             yield Label("后台优化入门 · 选题、填写额度，自动生成冻结计划")
-            yield Label("检索评估题库目录（包含 benchmark.json，不是你的工作区）")
+            yield Label("检索／产品任务评估题库目录（包含 benchmark.json，不是你的工作区）")
             yield Input(id="optimization-benchmark")
             yield Button("读取可选题目", id="optimization-load-cases")
             yield SelectionList(id="optimization-cases")
             yield Label("材料版本（从题库实际存在的版本中选择）")
             yield Select([], prompt="先读取题库，再明确选择", id="optimization-seed")
+            yield Label("产品任务沙箱配置（必填；隔离执行题库源码，检索题留空）")
+            yield Input(self.sandbox_config, id="optimization-sandbox")
             yield Label("本周期最多尝试几份候选（不会自动采用）")
             yield Input("1", type="integer", id="optimization-episode-cap")
             yield Label("本周期有效几小时（到期不会自动续费）")
@@ -68,22 +72,29 @@ class OptimizationPlanScreen(Screen):
                 manifest = load_benchmark_manifest(
                     Path(self.query_one("#optimization-benchmark", Input).value).resolve()
                 )
-                if manifest.task_type.value != "retrieval_episode":
-                    raise ValueError("retrieval-only")
-                suite = load_episode_suite(manifest)
-                # This no-shell starter selects only knowledge readers. Output cases
-                # require an explicit sandbox plan through the advanced configuration.
-                cases = [c.data for c in suite.cases if c.data["family"] != "output"]
+                if manifest.task_type.value == "product_task":
+                    suite = load_product_suite(
+                        manifest,
+                        provider_id=self.model_settings["provider"],
+                        model_id=self.model_settings["model"],
+                    )
+                    if suite.rubric is None or "multi" not in suite.modes:
+                        raise ValueError("product-multi-semantic-benchmark-required")
+                    names = {c.task_id: c.requirement[:80] for c in suite.tasks}
+                    seeds = [("使用题库冻结源码（没有随机材料版本）", "source")]
+                elif manifest.task_type.value == "retrieval_episode":
+                    suite = load_episode_suite(manifest)
+                    cases = [c.data for c in suite.cases if c.data["family"] != "output"]
+                    names = {c["case_id"]: c["family"] for c in cases}
+                    seeds = [(str(s), s) for s in sorted({c["material_seed"] for c in cases})]
+                else:
+                    raise ValueError("unsupported-task-type")
                 choices = self.query_one("#optimization-cases", SelectionList)
                 choices.clear_options()
-                names = {c["case_id"]: c["family"] for c in cases}
                 choices.add_options(
                     [(f"{key} ({family})", key, False) for key, family in sorted(names.items())]
                 )
-                seeds = sorted({c["material_seed"] for c in cases})
-                self.query_one("#optimization-seed", Select).set_options(
-                    [(str(s), s) for s in seeds]
-                )
+                self.query_one("#optimization-seed", Select).set_options(seeds)
                 self.manifest = manifest
             elif event.button.id == "optimization-save-plan":
                 self.save()
@@ -115,6 +126,17 @@ class OptimizationPlanScreen(Screen):
         if plan_path.exists() or self.config_path.exists():
             raise ValueError("use-new-config-destination")
         count = len(cases) * 2
+        product = self.manifest.task_type.value == "product_task"
+        sandbox = self.query_one("#optimization-sandbox", Input).value.strip()
+        if product:
+            from traceh.sandbox.config import load_sandbox_file
+
+            if seed != "source" or not sandbox:
+                raise ValueError("product-sandbox-required")
+            sandbox = str(Path(sandbox).resolve())
+            parsed = load_sandbox_file(Path(sandbox))
+            if parsed.plugin_grants or parsed.policy.network != "none":
+                raise ValueError("product-sandbox-scope-invalid")
         plan = {
             "format": 1,
             "benchmark_digest": self.manifest.document.sha256,
@@ -135,24 +157,31 @@ class OptimizationPlanScreen(Screen):
                 },
             },
             "execution": {
-                "sandbox_config": None,
+                "sandbox_config": sandbox if product else None,
                 "max_trials": count,
                 "timeout_seconds": 1800,
                 "shutdown_seconds": 120,
+                "first_arm": "baseline",
                 "network_mode": "direct",
             },
             "trials": {
                 "repetitions": 1,
-                "selection": {"case_ids": cases, "material_seeds": [seed]},
+                "selection": {"case_ids": cases, "material_seeds": None if product else [seed]},
             },
             "comparison": {
-                "format": 1,
+                "kind": "text_candidate",
+                "requested_modes": ["multi", "multi"] if product else None,
+                "format": 3,
                 "min_pass_gain": gain,
                 "max_token_ratio": ratio,
                 "max_tool_call_delta": 2,
             },
         }
         raw = background_preset(self.workspace, self.data_dir)
+        if product:
+            from traceh.chat.background import DELEGATION_SELECTORS
+
+            raw["selectors"] = [list(s) for s in DELEGATION_SELECTORS]
         raw.update(
             benchmark=str(self.manifest.directory),
             run_plan=str(plan_path),

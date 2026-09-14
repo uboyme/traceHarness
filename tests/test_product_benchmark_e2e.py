@@ -16,6 +16,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from collaboration_fixtures import PLAN
 from evaluation_fixtures import material_case, product_manifest, write_dataset
 from sandbox_fixtures import real_sandbox_policy
 
@@ -51,8 +52,7 @@ PRODUCT_MODEL_ID = "benchmark-test-model"
 _VERIFIER_ARGV = (
     "python",
     "-c",
-    "import pathlib,sys;sys.exit(0 if "
-    "pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
+    "import pathlib,sys;sys.exit(0 if pathlib.Path('added.txt').read_text() == 'added\\n' else 1)",
 )
 
 
@@ -117,23 +117,27 @@ class _ProductProvider:
     def __init__(
         self,
         requests: list[ModelRequest] | None = None,
-        *,
-        route_to: ResolvedTaskMode = ResolvedTaskMode.MULTI,
     ) -> None:
         self.requests = requests
-        self.route_to = route_to
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
         if self.requests is not None:
             self.requests.append(request)
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            return _response(
-                json.dumps({"mode": self.route_to.value, "reason": "fixed test route"})
-            )
         tool_names = {tool.name for tool in request.tools}
+        if "submit_collaboration_plan" in tool_names:
+            return _response(
+                "",
+                ToolCall(
+                    "decision",
+                    "submit_collaboration_plan",
+                    PLAN,
+                ),
+            )
         if "apply_patch" not in tool_names:
             return _response("bounded analysis")
-        if not any(message.role == "tool" for message in request.messages):
+        if not any(
+            message.role == "tool" and message.name == "apply_patch" for message in request.messages
+        ):
             return _response(
                 "",
                 ToolCall(
@@ -148,27 +152,6 @@ class _ProductProvider:
                 ),
             )
         return _response("implemented and checked")
-
-
-class _UnparsableRouterProvider(_ProductProvider):
-    async def complete(self, request: ModelRequest) -> ModelResponse:
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            return _response("this is not one JSON object")
-        return await super().complete(request)
-
-
-class _UntrustworthyRouterUsageProvider(_ProductProvider):
-    """Routes correctly, but will not stand behind the routing token count."""
-
-    async def complete(self, request: ModelRequest) -> ModelResponse:
-        response = await super().complete(request)
-        if request.system_prompt and "routing classifier" in request.system_prompt:
-            return ModelResponse(
-                content=response.content,
-                tool_calls=response.tool_calls,
-                usage=Usage(0, 0, UsageQuality.UNKNOWN),
-            )
-        return response
 
 
 class _FailAfterWritingProvider(_ProductProvider):
@@ -219,14 +202,13 @@ class _WrongContentProvider(_ProductProvider):
         )
 
 
-class _FailingParentProvider(_ProductProvider):
-    """Fails the read-only parent role, which only ``multi`` runs."""
+class _FailingMultiProvider(_ProductProvider):
+    """Fails the decision request, which only Multi runs."""
 
     async def complete(self, request: ModelRequest) -> ModelResponse:
         tool_names = {tool.name for tool in request.tools}
-        routing = request.system_prompt and "routing classifier" in request.system_prompt
-        if not routing and "apply_patch" not in tool_names and tool_names:
-            raise RuntimeError("read-only role stopped responding")
+        if "submit_collaboration_plan" in tool_names:
+            raise RuntimeError("decision role stopped responding")
         return await super().complete(request)
 
 
@@ -269,6 +251,7 @@ def _role(preset: str, grants: tuple[str, ...]) -> dict[str, object]:
         "preset": preset,
         "capability_grants": list(grants),
         "max_output_tokens": 4_096,
+        "max_turn_wall_milliseconds": 60_000,
         "budget": _budget(),
     }
 
@@ -291,24 +274,18 @@ def build_benchmark(
         "profile_id": "benchmark-profile",
         "approver_id": "benchmark-host",
         "default_mode": "single",
+        "retained_tokens": 4_000,
+        "investigator_initial_tokens": 4_000,
+        # Explicit "do not count": these fixtures must not require the optional
+        # tokenizer. Reservations still use the provable request-size ceiling.
+        "token_estimate": None,
         "roles": {
-            "parent": _role(
-                "bench-parent", ("list_files", "read_file", "search_text")
-            ),
-            "reviewer": _role(
-                "bench-reviewer", ("list_files", "read_file", "search_text")
-            ),
+            "patch_author": None,
+            "investigator": _role("bench-investigator", ("list_files", "read_file", "search_text")),
             "coder": _role(
                 "bench-coder",
                 ("list_files", "read_file", "search_text", "apply_patch", "shell"),
             ),
-        },
-        "router": {
-            "preset": "bench-router",
-            "max_output_tokens": 256,
-            "budget": _budget(max_steps=2, max_tool_calls=0),
-            "timeout_milliseconds": 60_000,
-            "max_response_bytes": 2_048,
         },
         "task_budget": _budget(
             max_tokens=400_000,
@@ -324,6 +301,7 @@ def build_benchmark(
             "plan_version": 1,
             "commands": [
                 {
+                    "public_requirement": None,
                     "command_id": "expected-file",
                     "argv": list(_VERIFIER_ARGV),
                     "timeout_ms": 120_000,
@@ -335,7 +313,7 @@ def build_benchmark(
                 "overrides": {"PYTHONIOENCODING": "utf-8"},
             },
             "max_output_bytes": 1_048_576,
-            "protocol_version": 2,
+            "protocol_version": 3,
         },
         "capture_limits": {
             "max_changed_paths": 100,
@@ -347,10 +325,31 @@ def build_benchmark(
         "max_report_chars": 4_096,
         "modes": [mode for mode, _ in arms],
     }
+    if any(mode == "multi" for mode, _ in arms):
+        settings["roles"]["coder"]["budget"].update(
+            max_children=1, max_depth=1, max_steps=24, max_tool_calls=40, max_tokens=80000
+        )
+        settings["roles"]["investigator"]["budget"].update(
+            max_steps=4,
+            max_tool_calls=4,
+            max_processes=0,
+            max_tokens=12000,
+            max_wall_milliseconds=120000,
+        )
+        settings["roles"]["investigator"]["max_turn_wall_milliseconds"] = 30000
+        settings["roles"]["investigator"]["max_output_tokens"] = 1024
+        settings["investigator_initial_tokens"] = 10000
+    verification = settings.pop("verification")
     manifest = product_manifest("benchmark-under-test", settings)
-    cases = [material_case(root, task_id, "Create the file the frozen check requires.",
-                           f"{task_id}/initial") for task_id in tasks]
-    write_dataset(root, manifest, cases)
+    cases = [
+        material_case(
+            root, task_id, "Create the file the frozen check requires.", f"{task_id}/initial"
+        )
+        for task_id in tasks
+    ]
+    for case in cases:
+        case["verification"] = verification
+    write_dataset(root, manifest, cases, format_version=2)
     return root
 
 
@@ -414,11 +413,7 @@ async def test_an_explicit_arm_runs_the_whole_product_mainline(
     assert evidence.target_revision == evidence.new_revision
     assert evidence.converged
     assert evidence.unavailable == ()
-    # An explicit arm never pays for routing, and says so with an absence.
-    assert evidence.routing is None
-    assert evidence.routing_parsed is False
-    expected_roles = {ResolvedTaskMode.SINGLE: 1, ResolvedTaskMode.MULTI: 3}[resolved]
-    assert len(evidence.execution.sessions) == expected_roles
+    assert len(evidence.execution.sessions) == (2 if requested == "multi" else 1)
     assert evidence.execution.tokens is not None
     assert evidence.execution.tokens.total_tokens > 0
     assert evidence.execution.tokens.quality == "exact"
@@ -470,9 +465,7 @@ async def test_the_promoted_revision_is_what_the_target_ref_points_at(
     (attempt,) = report.attempts
     assert attempt.evidence is not None
     target = tmp_path / "evidence" / attempt.directory / "tgt.git"
-    assert await read_target_revision(target, "refs/heads/main") == (
-        attempt.evidence.new_revision
-    )
+    assert await read_target_revision(target, "refs/heads/main") == (attempt.evidence.new_revision)
 
 
 async def test_single_and_multi_share_one_experiment_condition(
@@ -505,57 +498,6 @@ async def test_single_and_multi_share_one_experiment_condition(
     assert len(digests) == 1
 
 
-async def test_auto_is_counted_in_the_arm_its_router_resolved(
-    tmp_path: Path,
-) -> None:
-    runner = _runner(
-        tmp_path,
-        arms=(("multi", 1), ("auto", 1)),
-        provider=_ProductProvider(route_to=ResolvedTaskMode.MULTI),
-    )
-    report = (await runner.run()).task_report
-
-    (arm,) = report.quality_arms
-    assert arm.resolved_mode is ResolvedTaskMode.MULTI
-    assert arm.observations == 2
-    assert arm.to_dict()["requested_modes"] == {"auto": 1, "multi": 1}
-    routing = report.routing_arm
-    assert routing is not None
-    assert routing.observations == 1
-    assert routing.parsed == 1
-    assert routing.to_dict()["resolved_modes"] == {"multi": 1}
-    # auto is never its own quality arm.
-    assert [item["resolved_mode"] for item in report.to_dict()["quality_arms"]] == [
-        "multi"
-    ]
-
-
-async def test_routing_and_execution_tokens_are_separate_measurements(
-    tmp_path: Path,
-) -> None:
-    runner = _runner(tmp_path, arms=(("auto", 1),))
-    report = (await runner.run()).task_report
-
-    (attempt,) = report.attempts
-    evidence = attempt.evidence
-    assert evidence is not None
-    assert evidence.routing is not None
-    assert evidence.routing.tokens is not None
-    assert evidence.routing.tokens.total_tokens > 0
-    assert evidence.execution.tokens is not None
-    routing_sessions = {evidence.routing.session_id}
-    execution_sessions = {item.session_id for item in evidence.execution.sessions}
-    assert routing_sessions.isdisjoint(execution_sessions)
-    assert evidence.routing.agent_id not in {
-        item.agent_id for item in evidence.execution.sessions
-    }
-    # The ledger's conservative settlement is reported beside, never instead of,
-    # what the provider said it used.
-    assert evidence.budget.settled_tokens >= 0
-    assert evidence.execution.steps > 0
-    assert evidence.execution.tool_calls > 0
-
-
 async def test_active_elapsed_excludes_the_approval_wait(tmp_path: Path) -> None:
     runner = _runner(tmp_path, arms=(("single", 1),))
     report = (await runner.run()).task_report
@@ -580,9 +522,7 @@ async def test_repeating_one_arm_aggregates_and_drops_the_n1_label(
     assert data["observations"] == 2
     assert data["single_observation"] is False
     assert len(data["execution_tokens"]["values"]) == 2
-    assert data["execution_tokens"]["total"] == sum(
-        data["execution_tokens"]["values"]
-    )
+    assert data["execution_tokens"]["total"] == sum(data["execution_tokens"]["values"])
     assert "single observation" not in _markdown(tmp_path / "evidence")
 
 
@@ -593,18 +533,14 @@ async def test_one_observation_is_labelled_in_both_outputs(tmp_path: Path) -> No
     (arm,) = report.quality_arms
     assert arm.single_observation is True
     assert "single observation" in _markdown(tmp_path / "evidence")
-    assert "No statistical significance is claimed." in _markdown(
-        tmp_path / "evidence"
-    )
+    assert "No statistical significance is claimed." in _markdown(tmp_path / "evidence")
 
 
 async def test_the_two_reports_carry_the_same_values(tmp_path: Path) -> None:
-    runner = _runner(tmp_path, arms=(("single", 1), ("auto", 1)))
+    runner = _runner(tmp_path, arms=(("single", 1), ("multi", 1)))
     report = (await runner.run()).task_report
 
-    data = json.loads(
-        (tmp_path / "evidence" / "report.json").read_text(encoding="utf-8")
-    )
+    data = json.loads((tmp_path / "evidence" / "report.json").read_text(encoding="utf-8"))
     markdown = _markdown(tmp_path / "evidence")
     assert data["task_report"] == report.to_dict()
     data = data["task_report"]
@@ -644,9 +580,7 @@ async def test_attempt_retains_execution_and_store_close_failures(
         raise execution_error
 
     monkeypatch.setattr(attempt_module, "SqliteEventStore", FailingCloseStore)
-    monkeypatch.setattr(
-        attempt_module, "build_attempt_repositories", build_repositories
-    )
+    monkeypatch.setattr(attempt_module, "build_attempt_repositories", build_repositories)
     monkeypatch.setattr(attempt_module, "_run_attempt_with_store", fail_attempt)
     request = SimpleNamespace(
         directory=tmp_path / "attempt",
@@ -661,48 +595,6 @@ async def test_attempt_retains_execution_and_store_close_failures(
         )
 
     assert caught.value.exceptions == (execution_error, close_error)
-
-
-async def test_a_router_failure_is_measured_and_its_owners_converge(
-    tmp_path: Path,
-) -> None:
-    runner = _runner(
-        tmp_path,
-        arms=(("auto", 1),),
-        provider=_UnparsableRouterProvider(),
-        retry_policy=ModelRetryPolicy(
-            max_attempts=2,
-            max_elapsed_seconds=10.0,
-            base_delay_seconds=0.0,
-            max_delay_seconds=1.0,
-            retry_after_cap_seconds=1.0,
-            jitter_ratio=0.0,
-        ),
-    )
-    report = (await runner.run()).task_report
-
-    (attempt,) = report.attempts
-    assert not attempt.success
-    assert attempt.measured
-    evidence = attempt.evidence
-    assert evidence is not None
-    assert evidence.product_status.value == "failed"
-    assert evidence.failure_code == "product-router-response-unparsable"
-    assert evidence.converged
-    assert evidence.promotion_id is None
-    # The rejected Router answer still cost tokens. No durable Product fact names
-    # that Agent, so its cost is reported as unattributed rather than relabelled
-    # as routing the task never recorded, or silently dropped.
-    assert evidence.routing is None
-    assert evidence.routing_parsed is False
-    assert len(evidence.unattributed.sessions) == 1
-    assert evidence.unattributed.model_attempts == 1
-    assert evidence.unattributed.tokens is not None
-    assert evidence.unattributed.tokens.total_tokens > 0
-    assert evidence.execution.sessions == ()
-    # A failed attempt is still a measurement, so the run is still complete.
-    assert report.complete
-    assert report.quality_arms == ()
 
 
 async def test_interrupting_a_run_converges_before_it_propagates(
@@ -734,7 +626,7 @@ async def test_interrupting_a_run_converges_before_it_propagates(
         promotion_target_id=BENCHMARK_TARGET_ID,
         target_ref="refs/heads/main",
         target_revision=await read_target_revision(target, "refs/heads/main"),
-        verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+        verification_plan=runner.evaluator.suite.tasks[0].settings.host_profile.verification_plan,
     )
     assert not evidence.success
     assert evidence.product_status is ProductTaskStatus.CANCELLED
@@ -742,35 +634,6 @@ async def test_interrupting_a_run_converges_before_it_propagates(
     # its evidence was removed.
     assert evidence.converged
     assert evidence.promotion_id is None
-
-
-async def test_untrustworthy_usage_is_unavailable_rather_than_zero(
-    tmp_path: Path,
-) -> None:
-    runner = _runner(
-        tmp_path,
-        arms=(("auto", 1),),
-        provider=_UntrustworthyRouterUsageProvider(),
-    )
-    report = (await runner.run()).task_report
-
-    (attempt,) = report.attempts
-    evidence = attempt.evidence
-    assert evidence is not None and attempt.success
-    # A total of 0 in a token column reads as "no tokens were used". The provider
-    # said it did not know, so that one column is empty and the rest is intact.
-    assert evidence.routing is not None
-    assert evidence.routing.tokens is None
-    assert "routing.tokens" in evidence.unavailable
-    assert evidence.execution.tokens is not None
-    assert evidence.execution.tokens.quality == "exact"
-    data = report.to_dict()
-    assert data["attempts_with_unavailable_metrics"] == 1
-    assert data["routing_arm"]["routing_tokens"]["unavailable"] == 1
-    assert data["routing_arm"]["routing_tokens"]["values"] == []
-    assert data["quality_arms"][0]["execution_tokens"]["observations"] == 1
-    assert report.complete
-    assert "attempts with unavailable metrics: 1" in _markdown(tmp_path / "evidence")
 
 
 async def test_a_role_that_worked_before_failing_still_reports_its_cost(
@@ -783,9 +646,7 @@ async def test_a_role_that_worked_before_failing_still_reports_its_cost(
     a confident zero for a role that spent tokens and changed a worktree.
     """
 
-    runner = _runner(
-        tmp_path, arms=(("single", 1),), provider=_FailAfterWritingProvider()
-    )
+    runner = _runner(tmp_path, arms=(("single", 1),), provider=_FailAfterWritingProvider())
     report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
@@ -820,9 +681,7 @@ async def test_a_dirty_worktree_quarantined_on_failure_is_converged(
 ) -> None:
     """Quarantine is the Product contract's terminal for failure evidence."""
 
-    runner = _runner(
-        tmp_path, arms=(("single", 1),), provider=_WrongContentProvider()
-    )
+    runner = _runner(tmp_path, arms=(("single", 1),), provider=_WrongContentProvider())
     report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
@@ -843,13 +702,11 @@ async def test_an_arm_failing_before_review_leaves_the_verifier_unproven(
     runner = _runner(
         tmp_path,
         arms=(("single", 1), ("multi", 1)),
-        provider=_FailingParentProvider(),
+        provider=_FailingMultiProvider(),
     )
     report = (await runner.run()).task_report
 
-    outcomes = {
-        attempt.requested_mode.value: attempt for attempt in report.attempts
-    }
+    outcomes = {attempt.requested_mode.value: attempt for attempt in report.attempts}
     assert outcomes["single"].success
     assert not outcomes["multi"].success
     assert outcomes["multi"].evidence is not None
@@ -857,7 +714,7 @@ async def test_an_arm_failing_before_review_leaves_the_verifier_unproven(
 
     (conditions,) = report.tasks
     assert conditions.verifier_definition_digest == (
-        runner.evaluator.suite.verifier_definition_digest
+        runner.evaluator.suite.tasks[0].verifier_definition_digest
     )
     # Proved from the frozen manifest, and the arm that never demonstrated it is
     # named instead of being filtered into apparent agreement.
@@ -887,7 +744,9 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     assert unknown.value.code == "benchmark-product-task-missing"
 
@@ -898,7 +757,9 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id="a-different-target",
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     # A run interpreted through a definition it never agreed to would report node
     # kinds and results that never happened.
@@ -911,7 +772,9 @@ async def test_evidence_is_refused_when_the_durable_facts_do_not_support_it(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/somewhere-else",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     assert ref.value.code == "benchmark-promotion-target-mismatch"
 
@@ -967,7 +830,9 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-session-invariants-violated"
 
@@ -1000,7 +865,9 @@ async def test_a_review_the_workflow_never_produced_breaks_the_chain(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-review-chain-broken"
 
@@ -1031,9 +898,7 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
     promotion = ledger.promotion(attempt.evidence.promotion_id)
     assert promotion is not None
     records = _read_stream_records(events, "patch-promotions:ledger")
-    recorded = next(
-        record for record in records if record["type"] == "patch/review-recorded"
-    )
+    recorded = next(record for record in records if record["type"] == "patch/review-recorded")
     result = dict(recorded["data"]["results"][0])
     replacement = "9" * 64
     assert result["argv_digest"] != replacement
@@ -1086,50 +951,11 @@ async def test_a_review_result_outside_the_frozen_plan_is_refused(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=attempt.evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
     assert caught.value.code == "benchmark-verifier-evidence-mismatch"
-
-
-async def test_a_routing_session_the_router_agent_does_not_own_is_refused(
-    tmp_path: Path,
-) -> None:
-    """The Directory decides which Session an Agent owns, not the payload.
-
-    ``product/task-routed`` names both, so taking the pair on trust lets the
-    routing identity point at a role Session of the same task. That Session
-    parses cleanly and passes the invariant check, so the same tokens would be
-    counted once as routing and once as execution - which is exactly the
-    separation the two metrics exist to keep.
-    """
-
-    runner = _runner(tmp_path, arms=(("auto", 1),))
-    report = (await runner.run()).task_report
-    (attempt,) = report.attempts
-    evidence = attempt.evidence
-    assert evidence is not None and attempt.success
-    assert evidence.routing is not None
-    coder = evidence.execution.sessions[-1]
-    assert coder.session_id != evidence.routing.session_id
-
-    events = tmp_path / "evidence" / attempt.directory / "ev"
-    _replace_stream_value(
-        events,
-        f"product-task:{evidence.task_id}",
-        evidence.routing.session_id,
-        coder.session_id,
-    )
-
-    with pytest.raises(BenchmarkEvidenceError) as caught:
-        await collect_attempt_evidence(
-            SqliteEventStore(events),
-            task_id=evidence.task_id,
-            promotion_target_id=BENCHMARK_TARGET_ID,
-            target_ref="refs/heads/main",
-            target_revision=evidence.new_revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
-        )
-    assert caught.value.code == "benchmark-routing-session-mismatch"
 
 
 async def test_success_requires_the_ref_to_hold_the_promoted_revision(
@@ -1150,7 +976,9 @@ async def test_success_requires_the_ref_to_hold_the_promoted_revision(
             promotion_target_id=BENCHMARK_TARGET_ID,
             target_ref="refs/heads/main",
             target_revision=revision,
-            verification_plan=runner.evaluator.suite.settings.host_profile.verification_plan,
+            verification_plan=runner.evaluator.suite.tasks[
+                0
+            ].settings.host_profile.verification_plan,
         )
         assert evidence.product_status.value == "completed"
         assert evidence.review_passed is True
@@ -1166,9 +994,7 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
     tmp_path: Path,
 ) -> None:
     requests: list[ModelRequest] = []
-    runner = _runner(
-        tmp_path, arms=(("multi", 1),), provider=_ProductProvider(requests)
-    )
+    runner = _runner(tmp_path, arms=(("multi", 1),), provider=_ProductProvider(requests))
     report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
@@ -1185,7 +1011,6 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
         evidence.review_id,
         evidence.promotion_id,
         evidence.new_revision,
-        evidence.previous_revision,
         evidence.target_ref,
         evidence.verifier_definition_digest,
         _VERIFIER_ARGV[2],
@@ -1193,6 +1018,11 @@ async def test_no_evaluator_approval_or_promotion_value_reaches_the_model(
     for value in secrets:
         assert value is not None
         assert value not in surface
+    # The source revision is legitimate child input, even when the isolated
+    # target starts at that same revision. It grants no promotion authority.
+    assert any(
+        evidence.source_base_revision in m.content for request in requests for m in request.messages
+    )
 
 
 async def test_the_runner_refuses_a_provider_the_profile_cannot_name(
@@ -1219,17 +1049,13 @@ async def test_the_requester_relay_is_not_the_measured_provider(
     tmp_path: Path,
 ) -> None:
     requests: list[ModelRequest] = []
-    runner = _runner(
-        tmp_path, arms=(("single", 1),), provider=_ProductProvider(requests)
-    )
+    runner = _runner(tmp_path, arms=(("single", 1),), provider=_ProductProvider(requests))
     report = (await runner.run()).task_report
 
     (attempt,) = report.attempts
     assert attempt.evidence is not None
     assert all(request.provider == PRODUCT_PROVIDER_ID for request in requests)
-    assert all(
-        request.provider != REQUESTER_PROVIDER_ID for request in requests
-    )
+    assert all(request.provider != REQUESTER_PROVIDER_ID for request in requests)
     # The requirement the model saw is the manifest's, not one a model authored.
     assert any(
         "Create the file the frozen check requires." in message.content

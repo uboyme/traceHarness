@@ -76,8 +76,10 @@ class AgentLoop:
         read_memory_context=None,
         recheck_memory_context=None,
         observe_workspace=None,
+        step_view=None,
     ) -> None:
         self.sessions = sessions
+        self.step_view = step_view
         self.compositions = compositions
         self.request_builder = request_builder
         self.llm_runtime = llm_runtime
@@ -163,11 +165,15 @@ class AgentLoop:
         await self.sessions.append_session(
             session_id,
             "turn/start",
-            {"turn_id": turn_id, "message_id": message_id,
-             "repeated_denial_policy": (
-                 self.repeated_denial_policy.to_dict()
-                 if self.repeated_denial_policy is not None else None
-             )},
+            {
+                "turn_id": turn_id,
+                "message_id": message_id,
+                "repeated_denial_policy": (
+                    self.repeated_denial_policy.to_dict()
+                    if self.repeated_denial_policy is not None
+                    else None
+                ),
+            },
             correlation_id=correlation_id,
         )
         turn_open = True
@@ -221,6 +227,17 @@ class AgentLoop:
                     turn_id=turn_id,
                     step_id=current_step_id,
                 ) as active_composition:
+                    if self.step_view is not None:
+                        from traceh.runtime.step_view import freeze_step_view
+
+                        active_composition = await freeze_step_view(
+                            self.sessions,
+                            self.step_view,
+                            active_composition,
+                            session_id=session_id,
+                            turn_id=turn_id,
+                            step_id=current_step_id,
+                        )
                     composition = active_composition.snapshot
                     built = await self.request_builder.prepare(
                         session_id=session_id,
@@ -522,10 +539,14 @@ class AgentLoop:
                         from traceh.runtime.verification import invoke_verifier
 
                         verification = await invoke_verifier(
-                            effective_verifier, workspace,
+                            effective_verifier,
+                            workspace,
                             sandbox_service=active_composition.tools.sandbox_service,
-                            sessions=self.sessions, session_id=session_id, turn_id=turn_id,
-                            step_id=current_step_id, data_dir=self.data_dir,
+                            sessions=self.sessions,
+                            session_id=session_id,
+                            turn_id=turn_id,
+                            step_id=current_step_id,
+                            data_dir=self.data_dir,
                         )
                         verification_passed = verification.passed
                         await self.sessions.append_session(
@@ -582,7 +603,8 @@ class AgentLoop:
                     verification_failures=verification_failures,
                     max_verification_retries=self.max_verification_retries,
                     repeated_denial=repeated_denial_state(
-                        await self.sessions.read_session(session_id), turn_id=turn_id,
+                        await self.sessions.read_session(session_id),
+                        turn_id=turn_id,
                     ),
                 )
                 if isinstance(directive, Continue):

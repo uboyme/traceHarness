@@ -1,0 +1,127 @@
+{
+  "format": 1,
+  "tests": [
+    {
+      "batch": "targeted",
+      "passed": 107,
+      "skipped": 1,
+      "failed": 0
+    },
+    {
+      "batch": "adjacent",
+      "passed": 23,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "batch": "docker-adjacent",
+      "passed": 5,
+      "skipped": 0,
+      "failed": 0
+    }
+  ],
+  "reverse_checks": [
+    {
+      "guard": "stale-source",
+      "faulty_exit_code": 1,
+      "expected_failure_seen": true
+    },
+    {
+      "guard": "continuation-progress",
+      "faulty_exit_code": 1,
+      "expected_failure_seen": true
+    },
+    {
+      "guard": "cancel-convergence",
+      "faulty_exit_code": 1,
+      "expected_failure_seen": true
+    }
+  ],
+  "freeze": {
+    "changed": [
+      "tools/builtins/file_page.py",
+      "tools/builtins/read_file.py",
+      "tools/builtins/search_text.py"
+    ],
+    "candidate_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+    "baseline_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+    "archive_sha256": "21219a97414a1559d519b5c319804b3e9a03824c7e2106f524ac5164690cc154",
+    "material_and_drivers_unchanged": true
+  },
+  "all_runtime_contract_fields_except_source_identical": true,
+  "preparation_environment_is_trial_environment": false,
+  "runtime_environment_note": "Both real arms used the same unchanged da-final-venv; preparation contract records the preparing interpreter.",
+  "trial_environments_frozen_by_runner_and_identical": true,
+  "material_and_python_drivers_unchanged": true,
+  "all_current_production_bytes_match_frozen_candidate": true,
+  "replay": {
+    "r0": {
+      "sessions": 20,
+      "requests": 88,
+      "total_tokens": 823363,
+      "failed_attempts": 0,
+      "original_files_unchanged": 637
+    },
+    "r1": {
+      "sessions": 20,
+      "requests": 99,
+      "total_tokens": 886141,
+      "failed_attempts": 0,
+      "original_files_unchanged": 644
+    }
+  },
+  "first_reopen_file_set_check": "failed: SQLite removed empty WAL/SHM; durable files unchanged; strict serial recheck passed",
+  "compileall_passed": true,
+  "collect_only": 4000,
+  "full_pytest_run": false,
+  "L2_L4_run": false,
+  "wheel_built": false,
+  "scoped_ruff_passed": true,
+  "anti_example_hardcoding_checked": true,
+  "diff_check_passed": true,
+  "documents": [
+    {
+      "file": "docs/note/project-context.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "docs/note/project-context-plain-zh.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "docs/plan/TRACEHARNESS_BOUNDED_SOURCE_READING_CONTRACT.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "docs/deal/029-bounded-source-reading.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "docs/validation-data/dynamic-collaboration/bounded-reading/README.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "tests/live_dynamic_collaboration/README.md",
+      "links_exist": true,
+      "fences_closed": true
+    },
+    {
+      "file": "CHANGELOG.md",
+      "links_exist": true,
+      "fences_closed": true
+    }
+  ],
+  "top_level_chapters_match": true,
+  "synced_sections": [
+    "0",
+    "9",
+    "12",
+    "14",
+    "15"
+  ]
+}

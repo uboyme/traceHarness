@@ -1,0 +1,65 @@
+{
+  "format": 1,
+  "accepted": false,
+  "model": "deepseek-v4-flash",
+  "real_calls": 3,
+  "roles": {
+    "main": 3,
+    "child": 0
+  },
+  "exact_tokens": 5523,
+  "wall_ms": 16922,
+  "provider_failures": 0,
+  "retries": 0,
+  "requests": [
+    {
+      "seq": 10,
+      "model": "deepseek-v4-flash",
+      "tools": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ]
+    },
+    {
+      "seq": 22,
+      "model": "deepseek-v4-flash",
+      "tools": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ]
+    },
+    {
+      "seq": 37,
+      "model": "deepseek-v4-flash",
+      "tools": [
+        "submit_collaboration_plan"
+      ]
+    }
+  ],
+  "issued_tool_calls": 7,
+  "executed_tool_calls": 1,
+  "denied_tool_calls": 6,
+  "artifacts": [],
+  "failure": "collaboration-plan-invalid-or-missing",
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "review_id": null,
+  "promotion_id": null,
+  "accounts": {
+    "closed": 2
+  },
+  "usage_reservations": {
+    "settled": 4
+  },
+  "workspaces": {
+    "released": 2
+  },
+  "snapshot_replays": 5,
+  "original_sha256": "59bfc34eeadc58418ca00a31a81c3a91a16d8b584ef4dae6fc3679945e66e6b2",
+  "original_unchanged": true,
+  "contract_sha256": "93cf5b9a2db11f41811d7f5cf6b02416b5f6e162d009063e9373f648fdedf906",
+  "material_comparison": "Only Python set literal order differs in the generated verifier; requirements and checks are semantically unchanged.",
+  "benefit_measured": false
+}

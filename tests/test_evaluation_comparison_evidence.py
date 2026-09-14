@@ -114,7 +114,10 @@ def test_pair_key_mismatch_rejected_without_dropping_unmatched_trials():
 
     with pytest.raises(BenchmarkManifestError):
         paired_measurements(
-            [{"trials": [trial("single")]}, {"trials": [trial("multi")]}], [{}, {}], [{}, {}], {}
+            [{"trials": [trial("single")]}, {"trials": [trial("multi")]}],
+            [{}, {}],
+            [{}, {}],
+            {"kind": "text_candidate"},
         )
 
 
@@ -146,7 +149,7 @@ def test_material_digest_is_part_of_pair_identity():
     }
     arms = [{"trials": [{"identity": {**raw, "material_digest": fingerprint(x)}}]} for x in (1, 2)]
     with pytest.raises(BenchmarkManifestError):
-        paired_measurements(arms, [{}, {}], [{}, {}], {})
+        paired_measurements(arms, [{}, {}], [{}, {}], {"kind": "text_candidate"})
 
 
 def test_public_comparison_closes_every_real_read_connection(experiment, tmp_path, monkeypatch):

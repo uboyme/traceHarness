@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "stage": "WC-1G separately authorized confirmation",
+  "same_materials_and_verifier": true,
+  "real_calls": 3,
+  "main_calls": 3,
+  "child_calls": 0,
+  "retries": 0,
+  "known_exact_tokens": 2337,
+  "total_tokens": null,
+  "wall_ms": 31016,
+  "failure": "provider-tool-arguments-json-extra-data",
+  "failure_category": "protocol",
+  "review_reached": false,
+  "behavioral_improvement": "unmeasured",
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "promotion": false,
+  "budget": {
+    "accounts": 2,
+    "accounts_closed": 2,
+    "charged_steps": 3,
+    "charged_tool_calls": 2,
+    "child_reservations": 1,
+    "child_reservations_terminal": 1,
+    "converged": true,
+    "settled_tokens": 240000,
+    "usage_reservations": 4,
+    "usage_reservations_terminal": 4
+  },
+  "workspaces": {
+    "converged": true,
+    "live": 0,
+    "quarantined": 0,
+    "released": 2,
+    "workspaces": 2
+  },
+  "replay": {
+    "requests": 5,
+    "sessions": [
+      {
+        "session_id": "4c0845ff-7754-4675-851c-7ad5104ecf4c",
+        "requests": 2
+      },
+      {
+        "session_id": "product-owner-session-product-task-001badb513b2e58e75f55651e1d1843ea4f59bb4c3c09c84d59c36b51a1e75df",
+        "requests": 0
+      },
+      {
+        "session_id": "wf-session-130e507d0f00cc02994987317f8c098092d823864c7324c2667b37025c74af30",
+        "requests": 3
+      }
+    ],
+    "errors": [],
+    "original_database_unchanged": true,
+    "database_sha256": "e39d42c200410d88cf4027d0205c42910c1026172cbe35360f6bc29a706861d4"
+  }
+}

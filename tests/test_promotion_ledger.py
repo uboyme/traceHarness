@@ -59,7 +59,7 @@ def _plan(**overrides) -> VerificationPlan:
             policy_id="env-1", passthrough=("PATH",), overrides=(("MODE", "ci"),)
         ),
         "max_output_bytes": 1024,
-        "protocol_version": 2,
+        "protocol_version": 3,
     }
     fields.update(overrides)
     return VerificationPlan(**fields)  # type: ignore[arg-type]
@@ -399,6 +399,13 @@ def test_a_forged_review_identity_is_recomputed_and_refused() -> None:
     with pytest.raises(PromotionProtocolError) as raised:
         _rebuild(_envelope(1, PATCH_REVIEW_RECORDED, data))
     assert raised.value.code == "promotion-review-id-invalid"
+
+
+def test_previous_promotion_protocol_is_explicitly_rejected() -> None:
+    data = dict(_review_data())
+    data['promotion_protocol_version'] = 2
+    with pytest.raises(PromotionProtocolError):
+        _rebuild(_envelope(1, PATCH_REVIEW_RECORDED, data))
 
 
 def test_a_forged_passed_flag_is_recomputed_and_refused() -> None:

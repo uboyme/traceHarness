@@ -30,7 +30,6 @@ import traceh.workflow.service as workflow_service_module
 from traceh.api.budgets import BudgetLimits
 from traceh.api.product import (
     PRODUCT_TASK_ABANDONED,
-    PRODUCT_TASK_AWAITING,
     PRODUCT_TASK_CANCELLED,
     PRODUCT_TASK_COHERENT_WORKFLOW,
     PRODUCT_TASK_COMPLETED,
@@ -40,7 +39,6 @@ from traceh.api.product import (
     PRODUCT_TASK_OPENED,
     PRODUCT_TASK_PROTOCOL_VERSION,
     PRODUCT_TASK_REJECTED,
-    PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_SCHEMA_VERSION,
     PRODUCT_TASK_STARTED,
     PRODUCT_TASK_STREAM_PREFIX,
@@ -52,7 +50,6 @@ from traceh.api.product import (
     ProductPreflightBinding,
     ProductRole,
     ProductRoleProfile,
-    ProductRouterProfile,
     ProductTaskFacts,
     ProductTaskProfile,
     ProductTaskProposal,
@@ -65,8 +62,6 @@ from traceh.api.product import (
     RequestedTaskMode,
     ResolvedTaskMode,
     TaskModeSource,
-    TaskRouting,
-    TaskRoutingParser,
     product_event_contract,
     product_required_values,
     product_started_mode,
@@ -82,20 +77,14 @@ PACKAGE_ROOT = Path(agent_runtime_module.__file__).parent.parent
 PRODUCT_API = Path(product_module.__file__)
 WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 
+# WC-1B source-view seams were reviewed in ADR-0070; WC-1E leaves these files unchanged.
+# WC-2: generic fenced cleanup rejoin, proved by lifecycle cancellation
+# and reverse tests; no Product dependency enters Supervisor (ADR-0072).
 PROTECTED_SOURCES = {
-    "runtime/agent_loop.py": (
-        "f1fda2f5c4ad4efa475934d385a70855abf4bad46442a8c52d9c9af1be1be123"
-    ),
-    "runtime/agent_runtime.py": (
-        "15998cc4eab083f131eb0b099528abce572839b15b6562f9cd5567e9d3f941a1"
-    ),
-    "supervision/supervisor.py": (
-        "acc23496367dbe2088021f5d61ca619cc03e0ae0da97c271efa547dfbd5009a0"
-    ),
-    # F5: pre-enable Manifest review uses the same loader and activation path.
-    "plugins/manager.py": (
-        "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"
-    ),
+    "runtime/agent_loop.py": "455be23bf23a5b4b97aa60eabede18a86d1af473bf41e854b9d038ac071eaaf7",
+    "runtime/agent_runtime.py": "51f582071c6beaada35fefbae645d2b6d120ab8a1235252d9a7be1bef8d43851",
+    "supervision/supervisor.py": "b03317a9dbdcd31612ba60dd6e5a1a98e3415ffa6e1d49649b34a9304f105877",
+    "plugins/manager.py": "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05",
 }
 """SHA-256 of each protected file with line endings normalized to LF.
 
@@ -178,25 +167,21 @@ def _role(name: str) -> ProductRoleProfile:
         capability_grants=("read-workspace",),
         max_output_tokens=4_096,
         budget=_limits(max_children=0, max_depth=0),
+        max_turn_wall_milliseconds=60_000,
     )
 
 
 def _profile() -> ProductTaskProfile:
     return ProductTaskProfile(
         profile_version=1,
-        default_mode=RequestedTaskMode.AUTO,
+        default_mode=RequestedTaskMode.MULTI,
         provider_id="registered-provider",
         model_id="registered-model",
-        parent=_role("parent"),
-        reviewer=_role("reviewer"),
         coder=_role("coder"),
-        router=ProductRouterProfile(
-            preset="preset-router",
-            max_output_tokens=256,
-            budget=_limits(max_tokens=2_000, max_steps=2, max_tool_calls=0),
-            timeout_milliseconds=30_000,
-            max_response_bytes=2_048,
-        ),
+        investigator=_role("investigator"),
+        patch_author=None,
+        retained_tokens=4_000,
+        investigator_initial_tokens=4_000,
         task_budget=_limits(),
         source_id="registered-source",
         source_revision="main",
@@ -209,7 +194,6 @@ def _preflight(profile: ProductTaskProfile) -> ProductPreflightBinding:
     return ProductPreflightBinding(
         profile_digest=profile.digest,
         role_assembly_digest="1" * 64,
-        router_assembly_digest="2" * 64,
         repository_fingerprint="b" * 64,
         base_revision="c" * 40,
         verification_plan_digest="d" * 64,
@@ -235,7 +219,7 @@ def _proposal(**overrides: object) -> ProductTaskProposal:
         "origin_message_id": "message-1",
         "proposed_turn_id": "turn-1",
         "requirement_digest": "1" * 64,
-        "requested_mode": RequestedTaskMode.AUTO,
+        "requested_mode": RequestedTaskMode.MULTI,
         "mode_source": TaskModeSource.PROFILE,
         "preflight": _preflight(_profile()),
     }
@@ -258,7 +242,7 @@ def _summary(**overrides: object) -> ProductTaskSummary:
     base: dict[str, object] = {
         "task_id": "task-1",
         "status": ProductTaskStatus.OPENED,
-        "requested_mode": RequestedTaskMode.AUTO,
+        "requested_mode": RequestedTaskMode.MULTI,
         "mode_source": TaskModeSource.PROFILE,
         "requirement_digest": "1" * 64,
         "profile_digest": "2" * 64,
@@ -277,8 +261,7 @@ def _summary(**overrides: object) -> ProductTaskSummary:
 
 def _sources(root: Path) -> tuple[tuple[Path, str], ...]:
     return tuple(
-        (source, source.read_text(encoding="utf-8"))
-        for source in sorted(root.glob("*.py"))
+        (source, source.read_text(encoding="utf-8")) for source in sorted(root.glob("*.py"))
     )
 
 
@@ -360,7 +343,7 @@ def test_the_contract_stays_out_of_the_implementation_that_uses_it() -> None:
 
     implementation = PACKAGE_ROOT / "product"
     assert implementation.is_dir()
-    for name in ("service.py", "router.py", "registry.py", "assembly.py"):
+    for name in ("service.py", "registry.py", "assembly.py"):
         assert (implementation / name).exists(), name
 
     # The contract module still contains no implementation of its own. A
@@ -457,87 +440,12 @@ def test_the_host_rendered_evidence_never_appears_in_a_product_value() -> None:
         assert forbidden not in fields, forbidden
 
 
-def test_a_router_can_only_choose_between_the_two_real_modes() -> None:
-    assert {mode.value for mode in ResolvedTaskMode} == {"single", "multi"}
-    assert "auto" in {mode.value for mode in RequestedTaskMode}
-    assert not hasattr(ResolvedTaskMode, "AUTO")
-    with pytest.raises(ValueError):
-        ResolvedTaskMode("auto")
-
-
-def test_the_routing_seam_receives_a_string_and_claims_nothing_more() -> None:
-    """The seam hands the implementation a string - that is all it establishes.
-
-    A synchronous method may still block on a socket, and an object satisfying
-    this Protocol may hold whatever its ``__init__`` was given. What is provable
-    here is only that no Supervisor, Workflow, Workspace, Artifact or Promotion
-    handle arrives *through the seam*; that the router Agent holds no Tool is a
-    property of the implementing stage and its resolved assembly digest.
-    """
-
-    methods = [
-        name
-        for name in vars(TaskRoutingParser)
-        if not name.startswith("_") and callable(getattr(TaskRoutingParser, name))
-    ]
-    assert methods == ["parse"]
-    signature = inspect.signature(TaskRoutingParser.parse)
-    assert list(signature.parameters) == ["self", "response"]
-    hints = get_type_hints(TaskRoutingParser.parse)
-    assert hints["response"] is str
-    assert hints["return"] is TaskRouting
-
-    # The name says what it does. "Router" would imply it obtains the answer.
-    assert "Router" not in TaskRoutingParser.__name__
-    assert "Parser" in TaskRoutingParser.__name__
-
-
-def test_the_seam_does_not_pretend_a_signature_constrains_an_instance() -> None:
-    """A conforming implementation *can* hold a service handle - say so.
-
-    This is the finding that produced :class:`TaskRoutingParser`'s name. The
-    earlier contract claimed its signature proved the router performed no I/O
-    and held no handles; it proved neither. Keeping the counter-example in the
-    suite stops that claim from quietly coming back.
-    """
-
-    class _HoldsAService:
-        def __init__(self, supervisor: object) -> None:
-            self.supervisor = supervisor
-
-        def parse(self, response: str) -> TaskRouting:
-            del response
-            return TaskRouting(ResolvedTaskMode.SINGLE, None)
-
-    holder = _HoldsAService(supervisor=object())
-    assert holder.supervisor is not None
-    assert holder.parse("anything").resolved_mode is ResolvedTaskMode.SINGLE
-
-    docs = TaskRoutingParser.__doc__ or ""
-    assert "architecture tests" in docs
-    assert "router_assembly_digest" in docs
-
-
-def test_the_routing_decision_and_its_prose_are_separate_fields() -> None:
-    routing = TaskRouting(
-        resolved_mode=ResolvedTaskMode.SINGLE, reason_display="one small edit"
-    )
-    hints = get_type_hints(TaskRouting)
-    assert hints["resolved_mode"] is ResolvedTaskMode
-    assert routing.reason_display == "one small edit"
-    # The display string is optional, so a host that refuses to record model
-    # prose still produces a complete, usable answer.
-    assert TaskRouting(ResolvedTaskMode.MULTI, None).resolved_mode is (
-        ResolvedTaskMode.MULTI
-    )
-
-
 # ------------------------------------------------------- durable contract
 
 
 def test_every_product_event_type_is_distinct_and_exactly_shaped() -> None:
-    assert len(PRODUCT_TASK_EVENTS) == 9
-    assert len(set(PRODUCT_TASK_EVENT_TYPES)) == 9
+    assert len(PRODUCT_TASK_EVENTS) == 8
+    assert len(set(PRODUCT_TASK_EVENT_TYPES)) == 8
     for contract in PRODUCT_TASK_EVENTS:
         assert isinstance(contract, ProductEventContract)
         assert contract.event_type.startswith("product/")
@@ -570,19 +478,11 @@ def test_the_five_ends_are_five_types_not_one_optional_field_blob() -> None:
     assert PRODUCT_TASK_TERMINAL_EVENT_TYPES == terminals
 
     by_type = {
-        contract.event_type: contract.keys
-        for contract in PRODUCT_TASK_EVENTS
-        if contract.terminal
+        contract.event_type: contract.keys for contract in PRODUCT_TASK_EVENTS if contract.terminal
     }
-    assert by_type[PRODUCT_TASK_COMPLETED] == frozenset(
-        {"task_id", "operation_id", "promotion_id"}
-    )
-    assert by_type[PRODUCT_TASK_REJECTED] == frozenset(
-        {"task_id", "operation_id", "review_id"}
-    )
-    assert by_type[PRODUCT_TASK_FAILED] == frozenset(
-        {"task_id", "operation_id", "failure_code"}
-    )
+    assert by_type[PRODUCT_TASK_COMPLETED] == frozenset({"task_id", "operation_id", "promotion_id"})
+    assert by_type[PRODUCT_TASK_REJECTED] == frozenset({"task_id", "operation_id", "review_id"})
+    assert by_type[PRODUCT_TASK_FAILED] == frozenset({"task_id", "operation_id", "failure_code"})
     # No terminal may carry another terminal's evidence.
     assert "promotion_id" not in by_type[PRODUCT_TASK_REJECTED]
     assert "review_id" not in by_type[PRODUCT_TASK_COMPLETED]
@@ -621,7 +521,7 @@ def test_the_opening_fact_binds_the_protocol_and_the_requirements_origin() -> No
     # The requirement itself never enters the stream; only its digest does.
     assert "requirement" not in opened.keys
     assert "requirement_digest" in opened.keys
-    assert PRODUCT_TASK_PROTOCOL_VERSION == 1
+    assert PRODUCT_TASK_PROTOCOL_VERSION == 6
 
 
 def test_opening_binds_what_the_person_actually_confirmed() -> None:
@@ -648,12 +548,8 @@ def test_opening_binds_what_the_person_actually_confirmed() -> None:
     assert receipt.binds(receipt.preflight.digest)
     assert not receipt.binds("0" * 64)
 
-    drifted = dataclasses.replace(
-        receipt.preflight, base_revision="9" * 40
-    )
-    assert not dataclasses.replace(receipt, preflight=drifted).binds(
-        receipt.preflight.digest
-    )
+    drifted = dataclasses.replace(receipt.preflight, base_revision="9" * 40)
+    assert not dataclasses.replace(receipt, preflight=drifted).binds(receipt.preflight.digest)
 
 
 def test_the_started_fact_binds_the_run_the_definition_and_the_commit() -> None:
@@ -665,29 +561,6 @@ def test_the_started_fact_binds_the_run_the_definition_and_the_commit() -> None:
         "assembly_digest",
         "source_base_revision",
     } <= started.keys
-
-
-def test_the_human_facing_reason_reaches_the_reader() -> None:
-    """It is the one thing written for a person; a reader that drops it is useless."""
-
-    routed = product_event_contract(PRODUCT_TASK_ROUTED)
-    assert routed is not None and "reason_display" in routed.keys
-    names = {field.name for field in dataclasses.fields(ProductTaskSummary)}
-    assert "reason_display" in names
-    assert _summary(reason_display="one small edit").reason_display == "one small edit"
-    # Still optional: a host that refuses to record model prose stays valid.
-    assert _summary().reason_display is None
-
-
-def test_the_routed_fact_records_the_router_identity_and_its_decision() -> None:
-    routed = product_event_contract(PRODUCT_TASK_ROUTED)
-    assert routed is not None
-    assert {"router_agent_id", "routing_session_id", "resolved_mode"} <= routed.keys
-    assert "reason_display" in routed.keys
-    # The awaiting fact points at a review the promotion ledger owns.
-    awaiting = product_event_contract(PRODUCT_TASK_AWAITING)
-    assert awaiting is not None
-    assert awaiting.keys == frozenset({"task_id", "operation_id", "review_id"})
 
 
 def test_one_stream_per_task_inside_the_existing_store() -> None:
@@ -702,9 +575,7 @@ def test_one_stream_per_task_inside_the_existing_store() -> None:
 
 def test_the_only_first_fact_is_opening_the_task() -> None:
     for status in ProductTaskStatus:
-        allowed = product_transition_allowed(
-            None, status, requested_mode=RequestedTaskMode.MULTI
-        )
+        allowed = product_transition_allowed(None, status, requested_mode=RequestedTaskMode.MULTI)
         assert allowed is (status is ProductTaskStatus.OPENED), status
 
 
@@ -718,7 +589,7 @@ def test_the_transition_table_cannot_be_rewritten_by_an_importer() -> None:
     assert not product_transition_allowed(
         ProductTaskStatus.OPENED,
         ProductTaskStatus.COMPLETED,
-        requested_mode=RequestedTaskMode.AUTO,
+        requested_mode=RequestedTaskMode.MULTI,
     )
 
 
@@ -727,9 +598,10 @@ def test_nothing_may_follow_a_terminal_status() -> None:
         assert PRODUCT_TASK_TRANSITIONS[terminal] == frozenset()
         for status in ProductTaskStatus:
             for mode in RequestedTaskMode:
-                assert not product_transition_allowed(
-                    terminal, status, requested_mode=mode
-                ), (terminal, status)
+                assert not product_transition_allowed(terminal, status, requested_mode=mode), (
+                    terminal,
+                    status,
+                )
 
 
 def test_no_progress_status_may_repeat() -> None:
@@ -738,39 +610,6 @@ def test_no_progress_status_may_repeat() -> None:
     for status in ProductTaskStatus:
         for mode in RequestedTaskMode:
             assert not product_transition_allowed(status, status, requested_mode=mode)
-
-
-def test_an_explicit_mode_is_never_routed_and_auto_is_never_skipped() -> None:
-    """The two edges a status-only table could not express."""
-
-    for explicit in (RequestedTaskMode.SINGLE, RequestedTaskMode.MULTI):
-        assert not product_transition_allowed(
-            ProductTaskStatus.OPENED,
-            ProductTaskStatus.ROUTED,
-            requested_mode=explicit,
-        ), explicit
-        assert product_transition_allowed(
-            ProductTaskStatus.OPENED,
-            ProductTaskStatus.STARTED,
-            requested_mode=explicit,
-        ), explicit
-
-    # auto must be routed first: starting straight from opened is refused.
-    assert product_transition_allowed(
-        ProductTaskStatus.OPENED,
-        ProductTaskStatus.ROUTED,
-        requested_mode=RequestedTaskMode.AUTO,
-    )
-    assert not product_transition_allowed(
-        ProductTaskStatus.OPENED,
-        ProductTaskStatus.STARTED,
-        requested_mode=RequestedTaskMode.AUTO,
-    )
-    assert product_transition_allowed(
-        ProductTaskStatus.ROUTED,
-        ProductTaskStatus.STARTED,
-        requested_mode=RequestedTaskMode.AUTO,
-    )
 
 
 def test_a_review_outcome_requires_having_waited_for_one() -> None:
@@ -784,7 +623,6 @@ def test_a_review_outcome_requires_having_waited_for_one() -> None:
         )
         for earlier in (
             ProductTaskStatus.OPENED,
-            ProductTaskStatus.ROUTED,
             ProductTaskStatus.STARTED,
         ):
             assert not product_transition_allowed(
@@ -797,7 +635,7 @@ def test_a_review_outcome_requires_having_waited_for_one() -> None:
         ProductTaskStatus.AWAITING_APPROVAL,
         requested_mode=RequestedTaskMode.MULTI,
     )
-    for earlier in (ProductTaskStatus.OPENED, ProductTaskStatus.ROUTED):
+    for earlier in (ProductTaskStatus.OPENED,):
         assert not product_transition_allowed(
             earlier,
             ProductTaskStatus.AWAITING_APPROVAL,
@@ -813,27 +651,22 @@ def test_work_can_stop_at_any_point_before_it_ends() -> None:
     )
     for current in (
         ProductTaskStatus.OPENED,
-        ProductTaskStatus.ROUTED,
         ProductTaskStatus.STARTED,
         ProductTaskStatus.AWAITING_APPROVAL,
     ):
         for status in stoppable:
             assert product_transition_allowed(
-                current, status, requested_mode=RequestedTaskMode.AUTO
+                current, status, requested_mode=RequestedTaskMode.MULTI
             ), (current, status)
 
 
 def test_the_sequences_a_shape_only_contract_would_have_accepted() -> None:
     """Concrete counter-examples the transition contract now refuses."""
 
-    mode = RequestedTaskMode.AUTO
+    mode = RequestedTaskMode.MULTI
     # opened -> completed: an outcome for a review nobody ever waited for.
     assert not product_transition_allowed(
         ProductTaskStatus.OPENED, ProductTaskStatus.COMPLETED, requested_mode=mode
-    )
-    # started -> routed: routing a task that is already running.
-    assert not product_transition_allowed(
-        ProductTaskStatus.STARTED, ProductTaskStatus.ROUTED, requested_mode=mode
     )
     # awaiting -> started: restarting work that is at the human barrier.
     assert not product_transition_allowed(
@@ -868,26 +701,6 @@ def test_an_explicit_request_decides_its_own_started_mode() -> None:
         }
 
 
-def test_auto_has_no_started_mode_until_routing_produced_one() -> None:
-    unrouted = ProductTaskFacts(
-        task_id="task-1",
-        requested_mode=RequestedTaskMode.AUTO,
-        preflight_digest="0" * 64,
-    )
-    assert product_started_mode(unrouted) is None
-    assert product_required_values(PRODUCT_TASK_STARTED, unrouted) is None
-
-    for resolved in ResolvedTaskMode:
-        routed = dataclasses.replace(unrouted, resolved_mode=resolved)
-        # Exactly the routed mode - not a second opinion about it.
-        assert product_started_mode(routed) is resolved
-        assert product_required_values(PRODUCT_TASK_STARTED, routed) == {
-            "mode": resolved.value,
-            "workflow_run_id": "task-1",
-            "preflight_digest": "0" * 64,
-        }
-
-
 def test_a_rejection_must_name_the_review_that_was_awaited() -> None:
     nothing_awaited = ProductTaskFacts(
         task_id="task-1",
@@ -897,9 +710,7 @@ def test_a_rejection_must_name_the_review_that_was_awaited() -> None:
     assert product_required_values(PRODUCT_TASK_REJECTED, nothing_awaited) is None
 
     awaited = dataclasses.replace(nothing_awaited, awaited_review_id="review-9")
-    assert product_required_values(PRODUCT_TASK_REJECTED, awaited) == {
-        "review_id": "review-9"
-    }
+    assert product_required_values(PRODUCT_TASK_REJECTED, awaited) == {"review_id": "review-9"}
 
 
 def test_a_fact_nothing_earlier_decided_carries_no_required_value() -> None:
@@ -920,13 +731,13 @@ def test_the_established_facts_come_from_the_summary_itself() -> None:
 
     awaiting = _summary(
         status=ProductTaskStatus.AWAITING_APPROVAL,
-        requested_mode=RequestedTaskMode.AUTO,
+        requested_mode=RequestedTaskMode.MULTI,
         resolved_mode=ResolvedTaskMode.MULTI,
         review_id="review-9",
     )
     facts = awaiting.facts()
     assert facts.task_id == awaiting.task_id
-    assert facts.requested_mode is RequestedTaskMode.AUTO
+    assert facts.requested_mode is RequestedTaskMode.MULTI
     assert facts.resolved_mode is ResolvedTaskMode.MULTI
     assert facts.preflight_digest == awaiting.preflight_digest
     assert facts.awaited_review_id == "review-9"
@@ -1031,9 +842,7 @@ def test_interrupted_is_derived_and_can_never_be_written_down() -> None:
     assert durable <= view
 
     # It is not a terminal either: an interrupted task is still un-finished.
-    assert "interrupted" not in {
-        status.value for status in PRODUCT_TASK_TERMINAL_STATUSES
-    }
+    assert "interrupted" not in {status.value for status in PRODUCT_TASK_TERMINAL_STATUSES}
     for contract in PRODUCT_TASK_EVENTS:
         assert "interrupt" not in contract.event_type
 
@@ -1077,9 +886,7 @@ def test_the_workflow_state_actually_changes_the_derived_answer() -> None:
 
     started = _summary(status=ProductTaskStatus.STARTED)
     answers = {
-        workflow: product_view_status(
-            started, workflow_status=workflow, owned_by_this_host=False
-        )
+        workflow: product_view_status(started, workflow_status=workflow, owned_by_this_host=False)
         for workflow in (None, *WorkflowStatus)
     }
     assert answers[WorkflowStatus.RUNNING] is ProductTaskViewStatus.INTERRUPTED
@@ -1097,18 +904,24 @@ def test_a_clean_approval_barrier_is_resumable_not_interrupted() -> None:
     """The one interrupted state Stage E can continue must be distinguishable."""
 
     awaiting = _summary(status=ProductTaskStatus.AWAITING_APPROVAL)
-    assert product_view_status(
-        awaiting,
-        workflow_status=WorkflowStatus.AWAITING_APPROVAL,
-        owned_by_this_host=False,
-    ) is ProductTaskViewStatus.RESUMABLE
+    assert (
+        product_view_status(
+            awaiting,
+            workflow_status=WorkflowStatus.AWAITING_APPROVAL,
+            owned_by_this_host=False,
+        )
+        is ProductTaskViewStatus.RESUMABLE
+    )
 
     # A Workflow that already ran past the barrier is a reconciliation, not a resume.
-    assert product_view_status(
-        awaiting,
-        workflow_status=WorkflowStatus.COMPLETED,
-        owned_by_this_host=False,
-    ) is ProductTaskViewStatus.UNRECONCILED
+    assert (
+        product_view_status(
+            awaiting,
+            workflow_status=WorkflowStatus.COMPLETED,
+            owned_by_this_host=False,
+        )
+        is ProductTaskViewStatus.UNRECONCILED
+    )
 
 
 def test_a_lagging_product_stream_is_unreconciled_whoever_owns_it() -> None:
@@ -1116,20 +929,26 @@ def test_a_lagging_product_stream_is_unreconciled_whoever_owns_it() -> None:
 
     started = _summary(status=ProductTaskStatus.STARTED)
     for owned in (True, False):
-        assert product_view_status(
-            started,
-            workflow_status=WorkflowStatus.AWAITING_APPROVAL,
-            owned_by_this_host=owned,
-        ) is ProductTaskViewStatus.UNRECONCILED, owned
+        assert (
+            product_view_status(
+                started,
+                workflow_status=WorkflowStatus.AWAITING_APPROVAL,
+                owned_by_this_host=owned,
+            )
+            is ProductTaskViewStatus.UNRECONCILED
+        ), owned
 
 
 def test_a_run_that_exists_too_early_is_also_unreconciled() -> None:
-    for early in (ProductTaskStatus.OPENED, ProductTaskStatus.ROUTED):
-        assert product_view_status(
-            _summary(status=early),
-            workflow_status=WorkflowStatus.RUNNING,
-            owned_by_this_host=True,
-        ) is ProductTaskViewStatus.UNRECONCILED, early
+    for early in (ProductTaskStatus.OPENED,):
+        assert (
+            product_view_status(
+                _summary(status=early),
+                workflow_status=WorkflowStatus.RUNNING,
+                owned_by_this_host=True,
+            )
+            is ProductTaskViewStatus.UNRECONCILED
+        ), early
 
 
 def test_abandoning_is_legitimate_only_where_the_view_says_interrupted() -> None:
@@ -1160,16 +979,17 @@ def test_the_coherence_table_is_frozen_and_covers_every_live_status() -> None:
 
 def test_the_derived_view_is_a_different_type_from_the_durable_summary() -> None:
     summary = _summary()
-    view = ProductTaskView(
-        summary=summary, workflow_status=None, owned_by_this_host=False
-    )
+    view = ProductTaskView(summary=summary, workflow_status=None, owned_by_this_host=False)
     assert view.status is ProductTaskViewStatus.INTERRUPTED
     # The view forwards all three reads, not two.
-    assert ProductTaskView(
-        summary=_summary(status=ProductTaskStatus.AWAITING_APPROVAL),
-        workflow_status=WorkflowStatus.AWAITING_APPROVAL,
-        owned_by_this_host=False,
-    ).status is ProductTaskViewStatus.RESUMABLE
+    assert (
+        ProductTaskView(
+            summary=_summary(status=ProductTaskStatus.AWAITING_APPROVAL),
+            workflow_status=WorkflowStatus.AWAITING_APPROVAL,
+            owned_by_this_host=False,
+        ).status
+        is ProductTaskViewStatus.RESUMABLE
+    )
     assert view.summary is summary
     assert not hasattr(summary, "owned_by_this_host")
     assert get_type_hints(ProductTaskSummary)["status"] is ProductTaskStatus
@@ -1216,9 +1036,7 @@ def test_the_workflow_run_id_is_the_task_id() -> None:
 
     summary = _summary(task_id="task-87af2c")
     assert summary.workflow_run_id == "task-87af2c"
-    assert "workflow_run_id" not in {
-        field.name for field in dataclasses.fields(ProductTaskSummary)
-    }
+    assert "workflow_run_id" not in {field.name for field in dataclasses.fields(ProductTaskSummary)}
 
 
 def test_an_unopened_task_reads_as_nothing_rather_than_as_an_invented_summary() -> None:
@@ -1266,19 +1084,16 @@ def test_the_slot_decides_the_role_and_the_profile_cannot_argue() -> None:
         assert profile.role_profile(role) is getattr(profile, role.value)
 
     # Whatever a host puts in the reviewer slot, the reviewer is read-only.
-    coder_shaped = dataclasses.replace(profile, reviewer=profile.coder)
-    assert coder_shaped.role_profile(ProductRole.REVIEWER) is profile.coder
-    assert ProductRole.REVIEWER.workspace_access is WorkspaceAccess.READ_ONLY
+    coder_shaped = dataclasses.replace(profile, investigator=profile.coder)
+    assert coder_shaped.role_profile(ProductRole.INVESTIGATOR) is profile.coder
+    assert ProductRole.INVESTIGATOR.workspace_access is WorkspaceAccess.READ_ONLY
 
 
 def test_write_authority_follows_the_role_and_has_one_definition() -> None:
     assert ProductRole.CODER.workspace_access is WorkspaceAccess.WRITABLE
-    assert ProductRole.PARENT.workspace_access is WorkspaceAccess.READ_ONLY
-    assert ProductRole.REVIEWER.workspace_access is WorkspaceAccess.READ_ONLY
-    writable = [
-        role for role in ProductRole if role.workspace_access is WorkspaceAccess.WRITABLE
-    ]
-    assert writable == [ProductRole.CODER]
+    assert ProductRole.INVESTIGATOR.workspace_access is WorkspaceAccess.READ_ONLY
+    writable = [role for role in ProductRole if role.workspace_access is WorkspaceAccess.WRITABLE]
+    assert writable == [ProductRole.CODER, ProductRole.PATCH_AUTHOR]
 
     # ``ProductRole`` is the only value in the module that answers this
     # question. A second answer is how the reviewer got write access before.
@@ -1293,7 +1108,7 @@ def test_write_authority_follows_the_role_and_has_one_definition() -> None:
 def test_the_profile_declares_no_graph_structure() -> None:
     """A Profile chooses who each role is, never what the topology looks like."""
 
-    for value in (ProductTaskProfile, ProductRoleProfile, ProductRouterProfile):
+    for value in (ProductTaskProfile, ProductRoleProfile):
         names = {field.name for field in dataclasses.fields(value)}
         for forbidden in (
             "nodes",
@@ -1313,12 +1128,6 @@ def test_the_profile_declares_no_graph_structure() -> None:
             assert "workflow" not in str(hint).lower(), (value.__name__, hint)
 
 
-def test_the_router_profile_cannot_grant_a_capability() -> None:
-    names = {field.name for field in dataclasses.fields(ProductRouterProfile)}
-    assert "capability_grants" not in names
-    assert {"budget", "timeout_milliseconds", "max_response_bytes"} <= names
-
-
 def test_every_budget_dimension_must_be_stated_explicitly() -> None:
     """An omitted host decision cannot become a permissive default."""
 
@@ -1329,7 +1138,7 @@ def test_every_budget_dimension_must_be_stated_explicitly() -> None:
         assert field.default_factory is dataclasses.MISSING, field.name
 
     profile = _profile()
-    for accounts in (profile.task_budget, profile.router.budget, profile.coder.budget):
+    for accounts in (profile.task_budget, profile.investigator.budget, profile.coder.budget):
         assert [field.name for field in dataclasses.fields(accounts)] == dimensions
 
     for omitted in dimensions:
@@ -1351,21 +1160,18 @@ def test_the_profile_digest_covers_every_decision_it_holds() -> None:
         "default_mode": RequestedTaskMode.SINGLE,
         "provider_id": "other-provider",
         "model_id": "other-model",
-        "parent": dataclasses.replace(profile.parent, preset="other-preset"),
-        "reviewer": dataclasses.replace(
-            profile.reviewer, capability_grants=("read-workspace", "extra")
-        ),
         "coder": dataclasses.replace(profile.coder, budget=_limits(max_tokens=1)),
-        "router": dataclasses.replace(profile.router, max_response_bytes=4_096),
+        "investigator": dataclasses.replace(profile.investigator, max_turn_wall_milliseconds=10),
+        "patch_author": profile.coder,
+        "retained_tokens": 8000,
+        "investigator_initial_tokens": 3000,
         "task_budget": _limits(max_depth=9),
         "source_id": "other-source",
         "source_revision": "release",
         "verification_plan_id": "other-plan",
         "promotion_target_id": "other-target",
     }
-    assert set(replacements) == {
-        field.name for field in dataclasses.fields(ProductTaskProfile)
-    }
+    assert set(replacements) == {field.name for field in dataclasses.fields(ProductTaskProfile)}
     for name, value in replacements.items():
         changed = dataclasses.replace(profile, **{name: value})
         assert changed.digest != profile.digest, name
@@ -1394,19 +1200,9 @@ def test_a_name_only_digest_cannot_see_a_registry_rebinding() -> None:
 
     profile = _profile()
     unchanged_names = _preflight(profile)
-    rebound_roles = dataclasses.replace(
-        unchanged_names, role_assembly_digest="9" * 64
-    )
-    rebound_router = dataclasses.replace(
-        unchanged_names, router_assembly_digest="9" * 64
-    )
-
+    rebound_roles = dataclasses.replace(unchanged_names, role_assembly_digest="9" * 64)
     assert rebound_roles.profile_digest == unchanged_names.profile_digest
-    assert rebound_router.profile_digest == unchanged_names.profile_digest
     assert rebound_roles.digest != unchanged_names.digest
-    assert rebound_router.digest != unchanged_names.digest
-    # And a role rebinding is distinguishable from a router rebinding.
-    assert rebound_roles.digest != rebound_router.digest
 
 
 def test_the_binding_holds_only_non_secret_identities_and_exact_revisions() -> None:
@@ -1432,17 +1228,10 @@ def test_the_binding_holds_only_non_secret_identities_and_exact_revisions() -> N
     assert binding.promotion_expected_revision == "f" * 40
 
 
-def test_an_auto_proposal_cannot_pretend_to_know_its_mode() -> None:
-    """Splitting the binding is what keeps a Proposal honest.
+def test_a_proposal_does_not_claim_an_executed_workflow() -> None:
+    """A confirmed mode is not proof that its Workflow has started."""
 
-    The router runs after the task exists, so a Proposal has no resolved mode
-    and no definition hash. Those live on the receipt, which only a started task
-    has.
-    """
-
-    preflight_fields = {
-        field.name for field in dataclasses.fields(ProductPreflightBinding)
-    }
+    preflight_fields = {field.name for field in dataclasses.fields(ProductPreflightBinding)}
     assert "resolved_mode" not in preflight_fields
     assert "workflow_definition_hash" not in preflight_fields
 
@@ -1466,9 +1255,7 @@ def test_the_assembly_digest_covers_every_binding_it_records() -> None:
         "resolved_mode": ResolvedTaskMode.SINGLE,
         "workflow_definition_hash": "1" * 64,
     }
-    assert set(replacements) == {
-        field.name for field in dataclasses.fields(ProductAssemblyReceipt)
-    }
+    assert set(replacements) == {field.name for field in dataclasses.fields(ProductAssemblyReceipt)}
     for name, value in replacements.items():
         changed = dataclasses.replace(receipt, **{name: value})
         assert changed.digest != receipt.digest, name
@@ -1476,9 +1263,7 @@ def test_the_assembly_digest_covers_every_binding_it_records() -> None:
     # Every preflight field reaches the receipt digest.
     for field in dataclasses.fields(ProductPreflightBinding):
         moved = dataclasses.replace(receipt.preflight, **{field.name: "7" * 64})
-        assert (
-            dataclasses.replace(receipt, preflight=moved).digest != receipt.digest
-        ), field.name
+        assert dataclasses.replace(receipt, preflight=moved).digest != receipt.digest, field.name
 
 
 def test_a_profile_change_reaches_the_assembly_digest() -> None:
@@ -1494,7 +1279,7 @@ def test_a_profile_change_reaches_the_assembly_digest() -> None:
         ),
         dataclasses.replace(
             profile,
-            reviewer=dataclasses.replace(profile.reviewer, capability_grants=()),
+            investigator=dataclasses.replace(profile.investigator, capability_grants=()),
         ),
         dataclasses.replace(profile, task_budget=_limits(max_tool_calls=1)),
     ):
@@ -1523,9 +1308,7 @@ def test_a_proposal_is_a_value_no_event_can_carry() -> None:
     carried = {key for contract in PRODUCT_TASK_EVENTS for key in contract.keys}
     for forbidden in ("proposal_id", "proposal", "preflight"):
         assert forbidden not in carried, forbidden
-    assert not any(
-        "proposal" in contract.event_type for contract in PRODUCT_TASK_EVENTS
-    )
+    assert not any("proposal" in contract.event_type for contract in PRODUCT_TASK_EVENTS)
 
 
 def test_confirming_requires_the_exact_proposal() -> None:
@@ -1534,9 +1317,7 @@ def test_confirming_requires_the_exact_proposal() -> None:
     # A stale confirmation cannot accept a Proposal that has been replaced.
     assert not proposal_confirmable(proposal, _confirmation(proposal_id="proposal-0"))
     # A real requirement message is not also evidence that the offer was accepted.
-    assert not proposal_confirmable(
-        proposal, _confirmation(confirming_message_id="message-1")
-    )
+    assert not proposal_confirmable(proposal, _confirmation(confirming_message_id="message-1"))
 
 
 def test_confirmation_comparisons_use_plain_values_not_hostile_string_equality() -> None:
@@ -1579,9 +1360,7 @@ def test_confirmation_comparisons_use_plain_values_not_hostile_string_equality()
 
 def test_a_confirmation_from_another_conversation_is_not_this_person() -> None:
     proposal = _proposal()
-    assert not proposal_confirmable(
-        proposal, _confirmation(confirming_session_id="session-9")
-    )
+    assert not proposal_confirmable(proposal, _confirmation(confirming_session_id="session-9"))
 
 
 def test_a_model_cannot_propose_and_confirm_in_one_breath() -> None:
@@ -1600,9 +1379,7 @@ def test_a_model_cannot_propose_and_confirm_in_one_breath() -> None:
 
     # The requirement Turn is not the barrier, so reusing it is not what matters.
     same_turn = _proposal(origin_turn_id="turn-1", proposed_turn_id="turn-1")
-    assert not proposal_confirmable(
-        same_turn, _confirmation(confirming_turn_id="turn-1")
-    )
+    assert not proposal_confirmable(same_turn, _confirmation(confirming_turn_id="turn-1"))
     assert proposal_confirmable(same_turn, _confirmation(confirming_turn_id="turn-2"))
 
 
@@ -1688,3 +1465,18 @@ def test_no_example_identity_leaks_into_the_contract() -> None:
                 value.__name__,
                 field.name,
             )
+
+
+def test_only_explicit_single_and_multi_modes_are_supported() -> None:
+    assert {mode.value for mode in RequestedTaskMode} == {"single", "multi"}
+    assert {mode.value for mode in ResolvedTaskMode} == {"single", "multi"}
+    for legacy in ("auto", "adaptive"):
+        with pytest.raises(ValueError):
+            RequestedTaskMode(legacy)
+        with pytest.raises(ValueError):
+            ResolvedTaskMode(legacy)
+    for mode in RequestedTaskMode:
+        assert product_transition_allowed(
+            ProductTaskStatus.OPENED, ProductTaskStatus.STARTED, requested_mode=mode
+        )
+    assert product_event_contract("product/task-routed") is None

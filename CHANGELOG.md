@@ -2,6 +2,165 @@
 
 ## Unreleased
 
+- Three corrections where the host withheld what it already knew (record 076). The prompt's
+  reference-source policy was assembled unconditionally while the table naming those sources
+  was already tool-aware, so an agent with five workspace tools received 5,969 characters
+  about ten tools it did not have - 79% of its system prompt, about 1,546 tokens per request;
+  it now follows the same condition, taking a Product coder's prompt from 7,583 to 1,397
+  characters while leaving hosts that do expose those sources byte-identical. A refused tool
+  batch reported only that it was outside the Step view because the view check returned
+  before the registry lookup, so an unknown-tool message could never appear and a model
+  called a non-existent write_file five times; it now distinguishes a name no tool has from
+  a real tool this Step hides, and lists what is callable. read_file gained an outline mode
+  returning a file's definition and heading lines with line numbers and no bodies - 4.9% of
+  the cost of paging every body across 221 files. All three are reverse-verified.
+- Seven paired rounds on a read-heavy comprehension task over a 68,125-line corpus with no
+  summary document (record 076). Rounds 1-6 were void, every one of them from a host defect
+  or fixture setting rather than the mechanism under test, including a fixed check that
+  refused a legitimate line-range anchor after the single arm had completed the whole
+  mainline. Round 7 is the first valid reading: the single arm passed with 69 real cited
+  files, 13 packages and 61 resolvable anchors and nothing invented; the multi arm failed
+  after five plan submissions rejected on one argument shape, so it never reached a
+  comparable execution and this is not evidence about the value of delegation. Rounds 8-10
+  closed it: round 9 changed only the model and produced the first cleared plan gate and the
+  first use of the outline mode, and round 10 raised the per-assistant ceilings two
+  assistants had exactly exhausted. In round 10 both arms passed and both deliverables were
+  promoted - single 41 min / 10,414,873 exact tokens / 116 cited files / 188 anchors, multi
+  38 min / 10,864,026 / 92 / 207, neither with a single unresolvable citation. Against record
+  074, where multi cost 6.2x the tokens on small coding units, this is the project's first
+  evidence-backed answer to when delegation pays: it depends on whether what an assistant
+  returns has to be re-read verbatim by the main agent.
+
+- Budget reservations are now a provable ceiling for the call, not the account balance
+  (ADR-0080). Without a token counter one attempt reserved everything remaining, no
+  production path supplied a counter (nothing implemented `TokenCounter`), and a provider
+  timeout carries no usage, so a single zero-byte failure was charged the whole account and
+  the host's own retry policy became unsatisfiable at admission. Counted hosts now declare
+  `token_estimate` (`{encoding, margin_percent}` or an explicit `null`) in the Product
+  Profile (profile_version 7, documents missing the key are refused by name); the margin pads
+  only the counted input. Uncounted hosts reserve `min(remaining, utf8_bytes + output_limit)`,
+  a mathematical upper bound because every byte-level BPE token maps to at least one byte, so
+  admission stays as permissive as before while a failure can no longer consume the account.
+  Reported usage above the reservation now raises `BudgetUsageOverageError` instead of being
+  silently capped, and the failure branch gained the protection the success branch already
+  had, so a provider error is never masked. `CanonicalTokenCounter` is extracted from
+  `RequestTokenMeter` so input measurement and reservation share one counting primitive.
+  Verified by 11 new targeted tests, one updated contract test and reverse verification of
+  both protections. The overage refusal applies to every path, so runs that previously
+  continued past an overspend now fail: a deliberate behaviour change, not only a fix.
+
+- The in-call wait for `await_report` now follows what the host authorized (ADR-0079).
+  It was a fixed `CHILD_REPORT_WAIT_SECONDS = 300` that production could never reach: every
+  product tool call runs inside `ToolRuntime`'s `asyncio.timeout(tool_timeout_seconds)`, which
+  the product path left at the 60s default, so a batch whose assistants ran longer was cut
+  down at 60s, `_converge` stopped assistants still inside their own budget, and the plan
+  failed with a non-correctable TimeoutError that ended the run. The wait is now derived in
+  the existing capacity pre-check from the longest authorized child `max_wall_milliseconds`
+  (the batch is concurrent, so the maximum, not the sum), the plan tool is told how long one
+  call may hold from the same `TOOL_TIMEOUT_SECONDS` the product gives `RuntimeConfig`, and an
+  `await_report` plan whose authorization cannot fit is refused before any assistant is
+  created, naming `dispatch_and_continue` and the collect tools. Reverse verification with the
+  fixed wait restored reproduces the old path: 60.10s, `('failed', 'TimeoutError')`, one
+  assistant created and destroyed, run aborted. No protocol version changes.
+
+- One plan, several direct assistants (ADR-0078). The plan's single `child` becomes a non-empty
+  `children` list: each entry carries a plan-local `assignment_id`, an authorized `role`
+  (`investigator`/`patch_author`) and, for writable entries, exact non-overlapping paths. The host
+  derives every assistant's Agent/Session/message/create-request identity from the caller's call
+  plus that entry, validates the whole batch (fields, role authorization, id uniqueness, count
+  against `coder.budget.max_children`, path overlap) before any dispatch, and converges the batch
+  if a later dispatch fails. `await_report` waits for the whole batch under one shared deadline;
+  `dispatch_and_continue` returns every accepted identity at once. Collection, the delivery gate
+  and the writable completion receipt are per assignment: one report never settles another, and
+  every writable assignment needs its own applied receipt. Work envelopes reject the old shapes
+  (writable-assignment 2, readonly-investigation 3); generated hosts now authorize one assistant
+  by default. Verified by targeted tests and reverse verification, then by an authorized real
+  round (record 072): after two host-sizing refusals (wall clock, then ancestor process slots)
+  the third run completed the whole mechanism - one plan, two patch authors on disjoint paths,
+  two captured Patches, two explicit integrations and one applied receipt per assignment - in
+  25 calls / 297,928 exact tokens / 255s, while the frozen functional check failed twice because
+  an assistant skipped top-level input validation, so nothing was promoted. The round also found
+  and fixed three host defects: the batch capacity pre-check covered only max_children, a
+  BudgetExhaustedError recorded no dimension, and the handoff evaluator shadowed its result list.
+  The requirement names the assistant count, so this is mechanism evidence only; no benefit was
+  measured and the real-terminal path is still uncovered. Follow-up: the plan pre-check now
+  also reads the activation process-slot authority, so a batch that exceeds the live-Agent
+  ceiling is a correctable rejection instead of a create-time failure, and the allocation
+  guidance states positive decomposition criteria (one assignment per independently
+  deliverable unit) rather than only warning against asking for more. With that guidance in
+  place, a probe whose requirement never names a count (record 073) had the model choose four
+  assignments matching the task's four independently specified units, with disjoint file sets,
+  in both runs; all four Patches were captured and explicitly integrated. The frozen check
+  still failed on an assistant skipping top-level input validation, so nothing was promoted.
+  A paired execution_strategy comparison then measured the benefit for the first time
+  (record 074): on the same frozen task, ceilings and model, both arms passed the fixed
+  check while multi spent 6.2x the tokens, 3.5x the tool calls and 3.2x the wall time, so the
+  original comparison owner recorded `regressed` (quality unchanged, cost up, adoption not
+  authorized). The cost sits with the main agent's read-and-integrate work, not the
+  assistants; the result is an observation about small-unit tasks, not a general verdict.
+
+- On-demand concurrency for the one main / one child handoff (ADR-0077). The plan's optional
+  `handoff` field keeps the existing serial `await_report` shape by default; `dispatch_and_continue`
+  returns the accepted child identity immediately so the main can do retained work while the child
+  runs. The main then collects on demand with `collect_investigation`, or the new host-owned
+  `collect_child_patch` for a writable child (bounded 0-30s wait, pending is not an answer, capture
+  and Artifact identity stay with their original owners). Views expose exactly that one collect
+  control; delivery is refused without a collected completed report. Dispatch, waiting, budget and
+  cancellation keep their existing owners - no new scheduler, fact source, agent, permission or
+  budget. Mechanism verified by targeted tests, then by one authorized real run (record 071):
+  the real model chose `dispatch_and_continue` on a requirement that never named a mode, worked
+  on its own module while the child ran, then collected, integrated and passed the fixed check
+  in 15 calls / 115,656 exact tokens / 114.5s, with budgets and workspaces converged. Observed
+  main/child model-call overlap was ~7s from two independent measurements; with no serial
+  baseline for that requirement, no speedup or quality benefit is claimed.
+
+- WC-1D/E replaces adaptive with mandatory multi allocation: one source-bound plan,
+  one readonly child, a complete bound report, then main execution. Missing plans and
+  failed/partial children fail through original Session/Supervisor owners. Single remains default.
+  Work envelopes carry both parties' goals, scope, exclusions and expected outputs.
+  Product 5 / event 4 / host config 5 / comparison 3 / readonly work 2 reject old contracts;
+  Session 14 / Context 12 / SQLite 2 are unchanged. AO may edit allocation guidance only.
+  WC-1F used 11 real calls (7 main, 4 child), 56,551 exact tokens: handoff observed,
+  but implementation and verification claims failed acceptance. No retry or WC-2 expansion.
+
+- WC-1C ran one real qwen-plus task: 7 main calls, 23,786 exact tokens, Product completed,
+  but the model chose local and created no assistant. Collaboration acceptance failed; no retry
+  or WC-2 expansion. Added structured-report visibility instrumentation and frozen evidence.
+
+- WC-1B replaces Adaptive free delegation with bounded scout, one source-bound local/delegate
+  decision, host dispatch/report collection, then main execution. Reports retain statement and
+  evidence; failed/partial reports do not grant continuation or budget. Single mode is unchanged.
+  Session 14 rejects earlier Sessions without migration; Context 12 and SQLite 2 remain unchanged.
+  Deterministic Git/Docker/Supervisor validation is separate from pending WC-1C real-model acceptance.
+
+- Adaptive 主方沿原装配获得明确的主动委派、等待、报告核实和最终交付职责说明；single/只读助手隔离，权限和默认模式不变。DA-14 四题真实 Product 门禁 4/4，但自然委派仍为 0，不宣称协作收益。
+
+- DA-12 tested descriptions for retained main work and complementary child outcomes in six
+  real calls (14,905 exact tokens). Both arms kept correct decision labels, but neither
+  separable proposal demonstrated useful independent work allocation; no production adoption.
+
+- DA-11 tested independent decision inputs in nine real calls (30,509 exact tokens).
+  Both independent-input conditions submitted the expected labels in 3/3 cases versus 0/3
+  for original requests; separable proposals still lacked clear independent work allocation.
+  Added source-bound diagnostic tests and evidence only, with no production adoption.
+
+- DA-10 completed a bounded four-condition phase-transition request diagnostic: 12 real calls,
+  44,477 exact tokens, and no valid first-step decision in any condition. Added an opt-in probe
+  and evidence-preservation/failure tests; no production policy change or automatic adoption.
+
+- DA-9 完成有界只读侦察后独占决定的受控实验：20 项候选检查及真实 Docker 主线通过，但三道真实题只有简单题完整通过；18 次 qwen-plus 调用、65117 tokens，无网络失败、预算与 Workspace 收敛。可拆与耦合题在切换后仍请求读取，未提交决定；按冻结条件撤回候选，保留原请求与离线重放证据。当前 adaptive、默认 single、事实源与人工 Promotion 不变。
+- DA-8 完成 Adaptive 独占拆分界面的受控实验：候选在首 Step 只公开 typed 决定，确定性与真实 Docker Product 主线可运行；两轮六个 qwen-plus trial、54 次调用却先出现已创建助手未收回，收口修复后又出现可拆题误判 local。六次 Budget 收敛、Workspace 无泄漏、Provider 无失败。按冻结条件撤回候选，原 adaptive、默认 single、AgentLoop 和事实源不变。
+- DA-7 完成 Adaptive 类型化拆分决策的受控实验：候选在确定性合同中能强制 `local`/`separable`、复用原 Session/Effect 与只读调查 owner，并 fail closed；四轮 12 个真实 qwen-plus trial、68 次 Provider 调用却没有一次 `separable` 或助手创建。12/12 Budget 收敛、Workspace 无泄漏。按冻结停止规则撤回候选，原 adaptive、默认 single、AgentLoop、Product/Workflow ownership 与事实源不变；后续独占决策界面需另立合同。
+- DA-6 完成 Adaptive 自然拆分提示的五轮受控实测：15 个 Product trial、121 次真实 qwen-plus 调用均未产生委派；请求快照、中文 Unicode、Budget/Workspace 收敛和 153 份请求重放已核对。所有无效候选均撤回，生产说明、默认 single、AgentLoop 与事实源不变；后续若继续需另立 typed 拆分决策合同。
+- 补充真实主模型/只读助手小样：明确委派可创建真实助手并收回报告，最小题产物离线验证通过；自然复杂题仍未委派，所有双模型 Product trial 均在冻结调用上限前停止，不声明完整任务通过或协作收益。57 次真实调用、71 份请求重放证据见记录 031。
+- 只读助手可查询额度并提交带进展的申请；主方在原账本批准或拒绝，再显式续派。初始分配与累计硬上限分离，重试不重复拨款，其他预算不重置。Product 4 / Budget 3 明确拒绝旧协议；不改变默认 single 或人工推广。
+
+- 公共 `read_file` 增加带真实行号的范围读取、有界分页、长行续读和来源变化检测；`search_text` 补充命中后阅读附近正文的导航。仍走原 Workspace/ToolRuntime/Effect/Session。十二次真实对照实际使用范围参数，结构通过 4/6→5/6，但复杂语义错误与助手预算耗尽仍在，不声明协作或成本收益；详见记录 029。
+- DA：Product 执行阶段支持主 Agent 按需委派只读调查，复用原 Supervisor、Inbox/Delivery、Budget 和 Workspace；主方整树收敛后才捕获产物，仍走原验证与人工审批。默认 single，adaptive 显式可选；没有孙 Agent、共享脏工作区或自动合并。
+- Product 协议/事件/配置为 4、Product Context 为 8、Budget 为 3；删除旧 auto/multi Router 及固定 parent/reviewer 角色，旧数据明确拒绝且不迁移。Session 13 / Context 输入格式 12 保持。
+- 原 Evaluation 增加同源码执行策略对照、按题验证、Product 语义审阅与整树费用/交接诊断；原 AO-3 可接收任务结构线索，候选只准改四项委派说明文本。DA 完成 68 个真实任务 trial，独立重放 777 份请求；真实模型没有委派，一次优化提案返回 no-candidate。保留默认 single，不声明协作收益，不采用候选或启动未达资格的留出。
+- 补充实际源码上的明确/自然/简单委派诊断及失败前证据可见性，沿原评估器完成另 12 个真实任务、150 次真实 API、174 份请求重放；明确要求时中途创建助手 4/4，自然条件 0/4，完整报告交接 0/4。两个说明常量的隔离候选未采用；结构通过不代表语义正确，生产源码未因本轮诊断改变。
+
 ## 0.11.0 — 2026-09-11
 
 - Independent evaluation worker receipts use format 2 to verify direct and interpreter-launcher ownership; old evidence remains inspectable with its frozen source. Incomparable evidence stops background optimization with unknown usage.

@@ -1,0 +1,123 @@
+{
+ "arms": [
+  {
+   "arm": "single",
+   "artifacts": [
+    [
+     "telemetry_format.py",
+     "telemetry_parse.py",
+     "telemetry_report.py",
+     "telemetry_rules.py",
+     "telemetry_stats.py"
+    ]
+   ],
+   "assessment": "passed",
+   "assignments": [],
+   "convergence": "converged",
+   "database_sha256": "89aa82b78cf87e4a87a0b9930eb39fdfbbea7626348fba5950f8ab2ac362c505",
+   "exact_tokens": 50902,
+   "execution": {
+    "reason": null,
+    "status": "completed"
+   },
+   "integrations": [],
+   "invariants": "passed",
+   "model_calls": 11,
+   "requested_mode": "single",
+   "tool_calls": 13,
+   "wall_ms": 62702
+  },
+  {
+   "arm": "multi",
+   "artifacts": [
+    [
+     "telemetry_parse.py"
+    ],
+    [
+     "telemetry_rules.py"
+    ],
+    [
+     "telemetry_format.py"
+    ],
+    [
+     "telemetry_stats.py"
+    ],
+    [
+     "telemetry_format.py",
+     "telemetry_parse.py",
+     "telemetry_report.py",
+     "telemetry_rules.py",
+     "telemetry_stats.py"
+    ]
+   ],
+   "assessment": "passed",
+   "assignments": [
+    {
+     "assignment_id": "parse_module",
+     "paths": [
+      "telemetry_parse.py"
+     ]
+    },
+    {
+     "assignment_id": "rules_module",
+     "paths": [
+      "telemetry_rules.py"
+     ]
+    },
+    {
+     "assignment_id": "format_module",
+     "paths": [
+      "telemetry_format.py"
+     ]
+    },
+    {
+     "assignment_id": "stats_module",
+     "paths": [
+      "telemetry_stats.py"
+     ]
+    }
+   ],
+   "convergence": "converged",
+   "database_sha256": "5229dc830d3279540a0a4a20fe9482877c6f130f6f3fe1cc7364d4d11834161f",
+   "exact_tokens": 315438,
+   "execution": {
+    "reason": null,
+    "status": "completed"
+   },
+   "integrations": [
+    "succeeded",
+    "succeeded",
+    "succeeded",
+    "succeeded"
+   ],
+   "invariants": "passed",
+   "model_calls": 32,
+   "requested_mode": "multi",
+   "tool_calls": 46,
+   "wall_ms": 199766
+  }
+ ],
+ "case_id": "strategy-comparison-telemetry",
+ "date": "2026-09-14",
+ "limits": "One task, one replicate per arm, one model. This is an observation about this task class, not a general result: the five modules are small, so the main's read-and-integrate cost dominates whatever the four assistants save.",
+ "model": "deepseek-v4-flash",
+ "question": "same frozen task, same ceilings: does multi beat single?",
+ "reading": "Both arms passed the same frozen functional check. Multi spent 6.2x the tokens, 3.5x the tool calls and 3.2x the wall time for the same outcome, so the original comparison owner records a regression: cost up, quality unchanged.",
+ "round": "execution-strategy-paired-comparison",
+ "verdict": {
+  "adoption_authorized": false,
+  "changes": {
+   "gain": 0,
+   "loss": 0,
+   "unchanged": 1,
+   "unknown": 0
+  },
+  "cost_delta": {
+   "tool_calls": 33,
+   "total_tokens": 264536
+  },
+  "hard_constraints": "passed",
+  "quality_status": "no_change",
+  "status": "regressed"
+ }
+}

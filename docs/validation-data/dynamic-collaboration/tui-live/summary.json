@@ -1,0 +1,70 @@
+{
+  "calls": 24,
+  "completed": true,
+  "elapsed_seconds": 262.047,
+  "exit_code": 130,
+  "usage": {
+    "input_tokens": 180537,
+    "output_tokens": 13392,
+    "total_tokens": 193929
+  },
+  "role_usage": {
+    "coder": 155234,
+    "patch_author": 25567
+  },
+  "product_status": "completed",
+  "snapshot_replays": 24,
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 22
+  },
+  "workspaces": {
+    "released": 3
+  },
+  "artifacts": [
+    {
+      "artifact_id": "patch-8d5298f4e61ecff3066664274c647fa58dae8f8bc2d73d84348860d886dfbc17",
+      "agent_id": "agent-tool-patch-author-f0aebc43-5ace-5a3d-bebf-a5e58aadedcc",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "c0fe413385a81822f2ff96ebb3e5f0a711d25ecfa18a9738f169b651e4fa854f",
+      "bytes": 1519
+    },
+    {
+      "artifact_id": "patch-c70f7c5e5f3a1f42a5e66edc7a137f974576db82821bacca3686c2b7aa309fed",
+      "agent_id": "wf-agent-b51971dd3a314dd272b0a3827f4cd25f6c9ec63623eda152dd29d9aea3ff9cd7",
+      "paths": [
+        "telemetry_report.py",
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "66987fdc5a82436603e12db796d0c44500df516086f16937393a99c1232c70f4",
+      "bytes": 2442
+    }
+  ],
+  "sandbox_executions": 6,
+  "sandbox_converged": true,
+  "database_sha256": "bf7b0d1784291de0b8a509d57130f1404e038bbe9cfc96eaa83dc13f500f28d5",
+  "interpretation": "One real PTY task. Config form is programmatic. Ctrl+Q intentionally returns 130 after completion. No stability claim.",
+  "calls_by_role": {
+    "chat": 4,
+    "coder": 15,
+    "patch_author": 5
+  },
+  "limits": {
+    "max_real_calls": 40,
+    "timeout_seconds": 720,
+    "connection_timeout_seconds": 60,
+    "retry_attempts": 1,
+    "trials": 1
+  },
+  "targeted_tests": {
+    "passed": 86,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 143.75
+  },
+  "collect_only": 4230
+}

@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "stage": "DA-8",
+  "candidate_adopted": false,
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "totals": {
+    "trials": 6,
+    "real_calls": 54,
+    "exact_tokens": 438103,
+    "task_success": 4,
+    "expected_decisions": 5,
+    "corrected_behavior_pass": 3,
+    "budget_converged": 6,
+    "live_workspaces": 0,
+    "provider_failures": 0
+  },
+  "run_1": {
+    "real_calls": 22,
+    "task_success": 3,
+    "expected_decisions": 3,
+    "corrected_behavior_pass": 2,
+    "first_step_tools_correction": "Read-only inspection of the decision-call Session shows decide_task_decomposition was the sole first-Step tool in all three trials; the original summary selected another Session's first composition.",
+    "failure": "The separable trial created and ran a child but dispatched no collect result to the parent."
+  },
+  "run_2": {
+    "real_calls": 32,
+    "task_success": 1,
+    "expected_decisions": 2,
+    "corrected_behavior_pass": 1,
+    "first_step_tools_verified": 3,
+    "failure": "The separable trial selected local and failed; the coupled trial selected local but failed hard verification."
+  },
+  "withdrawal_reason": "The frozen acceptance requires all three hard passes and stable separable/local/local decisions with a collected child report. The second run directly disproved stable classification.",
+  "interpretation": "Exclusive presentation prevents skipping the decision surface, but this model did not reliably decide task topology. This artifact has no scoring or promotion authority."
+}

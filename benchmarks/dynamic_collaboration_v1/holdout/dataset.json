@@ -1,0 +1,209 @@
+{
+  "format": 2,
+  "cases": [
+    {
+      "case_id": "explicit-integer-quota",
+      "group_id": "explicit-integer-quota",
+      "requirement": "quota.parse 只接受 1 到 max_value 的真正整数。JSON true/false、浮点数、字符串都必须拒绝，不能被转换成额度。max_value 是显式正整数，非法时同样报 ValueError。",
+      "initial_tree": "explicit-integer-quota/initial",
+      "sha256": "a0eeb6ac94bbf319d5ce803bf12f8703d6170013088371b5eefd03ecfe9036c1",
+      "verification": {
+        "plan_id": "da-contract-explicit-integer-quota",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from quota import parse\nassert parse(1, 8) == 1 and parse(8, 8) == 8\nfor value, maximum in [(True, 8), (False, 8), (1.2, 8), ('2', 8), (0, 8), (9, 8), (1, True), (1, 0)]:\n    try: parse(value, maximum)\n    except ValueError: pass\n    else: raise AssertionError('non-integer or invalid quota accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "resolved-path-containment",
+      "group_id": "resolved-path-containment",
+      "requirement": "文件读取目前只看字符串前缀，存在同名前缀目录、.. 和符号链接绕出工作区的问题。resolve(root, relative) 应解析真实路径，允许指向根内部的相对路径，拒绝绝对路径以及最终位置在根外的路径。保持返回 pathlib.Path，越界报 ValueError。",
+      "initial_tree": "resolved-path-containment/initial",
+      "sha256": "c85c9129734b0b7d6a3e9589150235cf081fcf86b770623f5cb01aa95a9bfc69",
+      "verification": {
+        "plan_id": "da-contract-resolved-path-containment",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from pathlib import Path\nfrom tempfile import TemporaryDirectory\nfrom paths import resolve\nwith TemporaryDirectory() as folder:\n    root = Path(folder) / 'root'\n    root.mkdir()\n    outside = Path(folder) / 'root-other'\n    outside.mkdir()\n    (root / 'link').symlink_to(outside, target_is_directory=True)\n    assert resolve(root, 'inside') == root / 'inside'\n    for path in ('../root-other/file', 'link/file', str(outside / 'file')):\n        try: resolve(root, path)\n        except ValueError: pass\n        else: raise AssertionError('escape accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "verification-artifact-binding",
+      "group_id": "verification-artifact-binding",
+      "requirement": "通过了旧补丁的验证报告被用于新补丁。review.accept 必须核对 request 中的 artifact_id、patch_sha、target 和 verifier_digest 全部相同且 passed 为 True；其他情况拒绝。status 字段或模型宣称不能代替这些绑定。",
+      "initial_tree": "verification-artifact-binding/initial",
+      "sha256": "54642d847c2f98c2c0948e30ebd2d4d8b830d53ce0aa54b4dc33414c364778d1",
+      "verification": {
+        "plan_id": "da-contract-verification-artifact-binding",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from request import request\nfrom report import result\nfrom review import accept\nrequest = request('a', 'sha', 'target', 'verifier')\nreport = result(request, True)\nassert accept(request, report) is True\nfor field in request:\n    assert accept(request, {**report, field: 'other'}) is False\nassert accept(request, {**report, 'passed': False}) is False\nassert accept(request, {**report, 'passed': 'true'}) is False\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "skill-resource-revision",
+      "group_id": "skill-resource-revision",
+      "requirement": "Skill 卸载或更新后，旧目录引用仍能读取资源。read(catalog, reference) 必须核对插件仍活跃、version 与 catalog_digest 都与引用匹配，再返回该资源；缺失插件或资源、旧版本、旧目录都报 ValueError。",
+      "initial_tree": "skill-resource-revision/initial",
+      "sha256": "f6b2c596e90df99bbbb8a6d0541fc6245e938ce9e8dca0100e0106c35389a154",
+      "verification": {
+        "plan_id": "da-contract-skill-resource-revision",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "from reader import read\ncatalog = {'guide': {'active': True, 'version': 'v2', 'catalog_digest': 'new', 'resources': {'a': 'body'}}}\nref = {'plugin': 'guide', 'version': 'v2', 'catalog_digest': 'new', 'path': 'a'}\nassert read(catalog, ref) == 'body'\nfor field, value in [('version', 'v1'), ('catalog_digest', 'old'), ('plugin', 'missing'), ('path', 'missing')]:\n    try: read(catalog, {**ref, field: value})\n    except ValueError: pass\n    else: raise AssertionError('stale reference accepted')\ncatalog['guide']['active'] = False\ntry: read(catalog, ref)\nexcept ValueError: pass\nelse: raise AssertionError('inactive plugin accepted')\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "atomic-delivery-claim",
+      "group_id": "atomic-delivery-claim",
+      "requirement": "两个协程可能同时领取一条消息。Queue.claim 在存在 await 的检查路径上仍须保证同一消息只有一个调用返回 True；另一个返回 False。消息未存在同样 False，领取后状态为 claimed。保留异步 checkpoint 注入以便验证并发，不要删除它或用固定 sleep。",
+      "initial_tree": "atomic-delivery-claim/initial",
+      "sha256": "20ca43c11957d23a35be363de17f087b173541015c8b30e0aee6c5de82c18bcf",
+      "verification": {
+        "plan_id": "da-contract-atomic-delivery-claim",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "import asyncio\nfrom queueing import Queue\nasync def check():\n    queue = Queue(['one'])\n    entered, release = asyncio.Event(), asyncio.Event()\n    async def checkpoint():\n        entered.set()\n        await release.wait()\n    first = asyncio.create_task(queue.claim('one', checkpoint))\n    await entered.wait()\n    second = asyncio.create_task(queue.claim('one', checkpoint))\n    release.set()\n    results = await asyncio.wait_for(asyncio.gather(first, second), 1)\n    assert sorted(results) == [False, True]\n    assert queue.states['one'] == 'claimed'\n    assert not await queue.claim('absent', checkpoint)\nasyncio.run(check())\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    },
+    {
+      "case_id": "frozen-request-retry",
+      "group_id": "frozen-request-retry",
+      "requirement": "瞬时失败重试时重新生成 request，导致一次重试变成了不同请求。run(build, send, attempts) 应只 build 一次，所有 send 收到同一请求对象；仅重试 Transient，次数耗尽重抛最后异常，其他错误立即传播。不要因重试重复构造请求或吞掉取消。",
+      "initial_tree": "frozen-request-retry/initial",
+      "sha256": "37dfa35869899962253bcba03d219f8acd93cec98c1e4136fe42ded2f1fcb727",
+      "verification": {
+        "plan_id": "da-contract-frozen-request-retry",
+        "plan_version": 1,
+        "protocol_version": 3,
+        "commands": [
+          {
+            "command_id": "contract",
+            "argv": [
+              "python",
+              "-B",
+              "-c",
+              "import asyncio\nfrom retrying import run, Transient\nasync def check():\n    built, sent = [], []\n    def build():\n        value = {'id': len(built)}\n        built.append(value)\n        return value\n    async def send(value):\n        sent.append(value)\n        if len(sent) < 3: raise Transient('retry')\n        return 'ok'\n    assert await run(build, send, 3) == 'ok'\n    assert len(built) == 1 and all(value is built[0] for value in sent)\n    error = ValueError('permanent')\n    calls = []\n    async def fail(value):\n        calls.append(value)\n        raise error\n    try: await run(build, fail, 3)\n    except ValueError as caught: assert caught is error\n    else: raise AssertionError('permanent error swallowed')\n    assert len(calls) == 1\nasyncio.run(check())\n"
+            ],
+            "timeout_ms": 30000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "da-isolated-python-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576
+      }
+    }
+  ]
+}

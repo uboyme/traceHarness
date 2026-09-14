@@ -8,7 +8,13 @@ from pathlib import Path
 
 from traceh.api.product import RequestedTaskMode
 from traceh.evaluation.errors import BenchmarkManifestError
-from traceh.evaluation.inputs import confined_path
+from traceh.evaluation.inputs import (
+    FrozenFile,
+    confined_path,
+    object_fields,
+    referenced_input,
+    text_field,
+)
 from traceh.evaluation.repositories import BENCHMARK_SOURCE_REVISION
 from traceh.evaluation.retrieval import FrozenRetrieval, load_retrieval
 from traceh.product.config import (
@@ -17,7 +23,7 @@ from traceh.product.config import (
     parse_product_host_settings,
 )
 from traceh.product.errors import ProductError
-from traceh.product.router import MAX_ROUTER_SUMMARY_CHARS
+from traceh.product.events import MAX_PRODUCT_REQUIREMENT_CHARS
 from traceh.promotion.models import verifier_definition_digest
 
 #: Identities the runner owns because it creates the repositories they name.
@@ -27,7 +33,13 @@ BENCHMARK_TARGET_ID = "benchmark-target"
 MAX_TASKS = 16
 MAX_ARMS = len(RequestedTaskMode)
 
-_TASK_KEYS = frozenset({"case_id", "group_id", "requirement", "initial_tree", "sha256"})
+PRODUCT_SUITE_SETTINGS_KEYS = (PRODUCT_HOST_SETTINGS_KEYS - {"verification"}) | {
+    "modes",
+    "retrieval",
+}
+_TASK_KEYS = frozenset(
+    {"case_id", "group_id", "requirement", "initial_tree", "sha256", "verification"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +55,11 @@ class BenchmarkTask:
     material_digest: str
     requirement: str
     initial_dir: Path
+    settings: ProductHostSettings
+
+    @property
+    def verifier_definition_digest(self) -> str:
+        return verifier_definition_digest(self.settings.host_profile.verification_plan)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,63 +67,76 @@ class ProductSuite:
     """A complete, validated benchmark definition."""
 
     benchmark_id: str
-    settings: ProductHostSettings
+    profile_id: str
+    provider_id: str
+    model_id: str
     modes: tuple[RequestedTaskMode, ...]
     tasks: tuple[BenchmarkTask, ...]
     directory: Path
     retrieval: FrozenRetrieval | None = None
-
-    @property
-    def verifier_definition_digest(self) -> str:
-        """The frozen plan's own digest, computed before any attempt runs.
-
-        This is what makes "every arm used the same verifier" provable from the
-        host's input rather than inferred from whichever attempts survived long
-        enough to produce a Review. It reuses the Promotion domain's single
-        definition of that digest instead of computing a second one.
-        """
-
-        return verifier_definition_digest(self.settings.host_profile.verification_plan)
+    rubric: FrozenFile | None = None
 
 
 def load_product_suite(manifest, *, provider_id: str, model_id: str) -> ProductSuite:
-    root = _object(
-        manifest.task_settings, PRODUCT_HOST_SETTINGS_KEYS | {"modes", "retrieval"}, "task_settings"
-    )
-    if manifest.assessment != {
+    root = _object(manifest.task_settings, PRODUCT_SUITE_SETTINGS_KEYS, "task_settings")
+    assessment = manifest.assessment
+    semantic = assessment["requires_review"] is True
+    if not semantic and assessment != {
         "scorer_id": "product-durable-v1",
         "version": 1,
         "rubric": None,
         "requires_review": False,
     }:
         raise BenchmarkManifestError("evaluation-manifest-invalid", "assessment")
+    if semantic and (
+        assessment["scorer_id"] != "product-durable-semantic-v1"
+        or assessment["version"] != 1
+        or assessment["rubric"] is None
+    ):
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "assessment")
     if (
         type(manifest.assessment["version"]) is not int
         or type(manifest.assessment["requires_review"]) is not bool
     ):
         raise BenchmarkManifestError("evaluation-manifest-invalid", "assessment")
-    try:
-        settings = parse_product_host_settings(
-            root,
-            provider_id=provider_id,
-            model_id=model_id,
-            source_id=BENCHMARK_SOURCE_ID,
-            source_revision=BENCHMARK_SOURCE_REVISION,
-            promotion_target_id=BENCHMARK_TARGET_ID,
-        )
-    except ProductError as error:
-        raise BenchmarkManifestError(error.code, "profile") from None
     dataset = _object(manifest.dataset.data, {"format", "cases"}, "dataset")
-    if type(dataset["format"]) is not int or dataset["format"] != 1:
+    if type(dataset["format"]) is not int or dataset["format"] != 2:
         raise BenchmarkManifestError("evaluation-version-unsupported", "dataset")
-    tasks = _tasks(dataset["cases"], manifest.directory)
+    tasks = _tasks(
+        dataset["cases"],
+        manifest.directory,
+        shared=root,
+        provider_id=provider_id,
+        model_id=model_id,
+    )
+    rubric = referenced_input(manifest.directory, assessment["rubric"]) if semantic else None
+    if rubric is not None:
+        raw = object_fields(rubric.data, {"format", "criteria"}, "product-rubric")
+        if (
+            type(raw["format"]) is not int
+            or raw["format"] != 1
+            or type(raw["criteria"]) is not dict
+        ):
+            raise BenchmarkManifestError("evaluation-manifest-invalid", "product-rubric")
+        if set(raw["criteria"]) != {task.task_id for task in tasks}:
+            raise BenchmarkManifestError("evaluation-manifest-invalid", "product-rubric-cases")
+        for criteria in raw["criteria"].values():
+            if type(criteria) is not list or not criteria:
+                raise BenchmarkManifestError(
+                    "evaluation-manifest-invalid", "product-rubric-criteria"
+                )
+            for criterion in criteria:
+                text_field(criterion, "product-rubric-criterion")
     return ProductSuite(
         benchmark_id=manifest.benchmark_id,
-        settings=settings,
+        profile_id=root["profile_id"],
+        provider_id=provider_id,
+        model_id=model_id,
         modes=_modes(root["modes"]),
         tasks=tasks,
         directory=manifest.directory,
         retrieval=load_retrieval(root["retrieval"], manifest.directory, tasks),
+        rubric=rubric,
     )
 
 
@@ -125,7 +155,9 @@ def _modes(value):
     return tuple(modes)
 
 
-def _tasks(value: object, directory: Path) -> tuple[BenchmarkTask, ...]:
+def _tasks(
+    value: object, directory: Path, *, shared, provider_id, model_id
+) -> tuple[BenchmarkTask, ...]:
     if type(value) is not list or not value or len(value) > MAX_TASKS:
         raise BenchmarkManifestError("benchmark-manifest-tasks-invalid", "tasks")
     tasks: list[BenchmarkTask] = []
@@ -138,10 +170,21 @@ def _tasks(value: object, directory: Path) -> tuple[BenchmarkTask, ...]:
             raise BenchmarkManifestError("benchmark-manifest-task-duplicate", f"{field}.task_id")
         seen.add(task_id)
         requirement = _text(entry["requirement"], f"{field}.requirement")
-        if len(requirement) > MAX_ROUTER_SUMMARY_CHARS:
+        if len(requirement) > MAX_PRODUCT_REQUIREMENT_CHARS:
             raise BenchmarkManifestError(
                 "benchmark-manifest-requirement-invalid", f"{field}.requirement"
             )
+        try:
+            settings = parse_product_host_settings(
+                {**shared, "verification": entry["verification"]},
+                provider_id=provider_id,
+                model_id=model_id,
+                source_id=BENCHMARK_SOURCE_ID,
+                source_revision=BENCHMARK_SOURCE_REVISION,
+                promotion_target_id=BENCHMARK_TARGET_ID,
+            )
+        except ProductError as error:
+            raise BenchmarkManifestError(error.code, f"{field}.profile") from None
         tasks.append(
             BenchmarkTask(
                 task_id=task_id,
@@ -149,6 +192,7 @@ def _tasks(value: object, directory: Path) -> tuple[BenchmarkTask, ...]:
                 material_digest=_text(entry["sha256"], "sha256"),
                 requirement=requirement,
                 initial_dir=_initial_dir(entry["initial_tree"], directory, f"{field}.initial_dir"),
+                settings=settings,
             )
         )
     return tuple(tasks)

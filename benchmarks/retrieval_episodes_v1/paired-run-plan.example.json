@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "benchmark_digest": "b3b98983c12fda760a2381324c335058b5688797a65200ac9fca5feeeddeb053",
+  "benchmark_digest": "c8e726b7b42e35cd2ff57907a96f94b96885ad4571ee6a97c4afa1f1ff44c03f",
   "variants": [
     {
       "variant_id": "baseline-example",
@@ -33,7 +33,8 @@
     "max_trials": 16,
     "timeout_seconds": 3600,
     "network_mode": "direct",
-    "shutdown_seconds": 150
+    "shutdown_seconds": 150,
+    "first_arm": "baseline"
   },
   "trials": {
     "repetitions": 1,
@@ -54,9 +55,11 @@
     }
   },
   "comparison": {
-    "format": 1,
+    "format": 3,
     "min_pass_gain": null,
     "max_token_ratio": null,
-    "max_tool_call_delta": null
+    "max_tool_call_delta": null,
+    "kind": "text_candidate",
+    "requested_modes": null
   }
 }

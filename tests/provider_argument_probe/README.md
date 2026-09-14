@@ -1,7 +1,7 @@
 # C4 Provider 参数诊断
 
 这是显式开发诊断，不是产品日志开关、第二 Provider 或新的 Tool 执行入口。脚本不由 pytest 自动运行。
-它从显式提供的历史事件导出中定位唯一 `provider-tool-arguments-invalid`，核对原 Attempt、Step、
+它从显式提供的历史事件导出中定位唯一 `provider-tool-arguments-` 码族失败（包含历史 `provider-tool-arguments-invalid`），核对原 Attempt、Step、
 Turn、Stream、snapshot 引用和 dispatch fingerprint，再逐字段重现原 `ModelRequest`。
 当前 Session 仍拒绝旧协议；读取合成历史请求做直接 Provider 诊断不恢复或改写旧 Session。
 

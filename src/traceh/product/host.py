@@ -49,15 +49,14 @@ from traceh.product.observation import (
 )
 from traceh.product.registry import ProductProfileBinding, ProductProfileRegistry
 from traceh.product.resources import ManagedProductTaskProvisioner, ProductResourceBindings
-from traceh.product.router import ProductModeRouter, StrictTaskRoutingParser
 from traceh.product.runtime import (
     BuiltinProductAssemblyResolver,
     ProductAgentRuntimeFactory,
-    ProductRouterAgentResponder,
 )
 from traceh.product.service import ProductTaskService
 from traceh.promotion.models import freeze_verification_plan, verifier_definition_digest
 from traceh.promotion.service import PatchPromotionService
+from traceh.promotion.verification import HostVerificationRunner
 from traceh.session.event_feed import EventFeed, PublishingEventStore
 from traceh.session.event_store import EventStore
 from traceh.session.service import SessionService
@@ -153,7 +152,6 @@ class ProductChatHost:
         "_event_feed",
         "_promotion",
         "_observation",
-        "_router",
         "_surface",
         "_tasks",
     )
@@ -164,7 +162,6 @@ class ProductChatHost:
         surface: ProductChatSurface,
         control: ProductTaskControlPlane,
         tasks: ProductTaskService,
-        router: ProductModeRouter,
         capture: PatchCaptureService,
         promotion: PatchPromotionService,
         observation: ProductObservationReader,
@@ -173,7 +170,6 @@ class ProductChatHost:
         self._surface = surface
         self._control = control
         self._tasks = tasks
-        self._router = router
         self._capture = capture
         self._promotion = promotion
         self._observation = observation
@@ -230,7 +226,6 @@ class ProductChatHost:
         failures: list[BaseException] = []
         for close in (
             self._control.aclose,
-            self._router.aclose,
             self._tasks.aclose,
             self._promotion.aclose,
             self._capture.aclose,
@@ -262,6 +257,7 @@ async def build_product_chat_host(
     actions: ProductTurnActions | None = None,
     read_models: ProductReadModels | None = None,
     model_retry_policy: ModelRetryPolicy = NO_MODEL_RETRY,
+    token_estimate=None,
     project_scope=None,
     context_input=None,
     memory_config=None,
@@ -375,11 +371,15 @@ async def build_product_chat_host(
         data_dir=data_dir,
         providers=providers,
         retry_policy=model_retry_policy,
+        token_estimate=token_estimate,
         context_input=context_input,
         memory_config=memory_config,
         sandbox=sandbox,
+        verification_plan=resolved.verification_plan,
+        verification_runner=HostVerificationRunner(sandbox_service),
     )
     slots = ProcessSlotAuthority(budgets)
+    runtime_factory.bind_process_slots(slots)
     process = ProcessAgentSupervisor(
         store=store,
         factory=BudgetedActivationFactory(runtime_factory, slots),
@@ -395,12 +395,14 @@ async def build_product_chat_host(
         budgets,
         child_budget_policy=bindings,
     )
+    runtime_factory.bind_supervisor(supervisor)
     capture = PatchCaptureService(
         workspace_supervisor,
         workspaces,
         artifact_cas,
         limits=capture_limits,
     )
+    runtime_factory.bind_capture(capture)
     artifact_reader = read_models.artifact_reader
     promotion = PatchPromotionService(
         store,
@@ -410,7 +412,7 @@ async def build_product_chat_host(
         sandbox_service=sandbox_service,
     )
     workflow_resolver = ProductWorkflowBindingResolver(
-        supervisor, max_report_chars=max_report_chars
+        supervisor
     )
     workflow = WorkflowService(
         store,
@@ -436,19 +438,11 @@ async def build_product_chat_host(
         workflow=workflow,
         ownership=execution,
     )
-    responder = ProductRouterAgentResponder(supervisor, bindings)
-    router = ProductModeRouter(
-        responder,
-        StrictTaskRoutingParser(),
-        profile=resolved.profile.router,
-        assembly=resolved.router,
-    )
     assembly = ProductAssemblyService(
         tasks,
         registry=registry,
         sources=workspace_provider,
         targets=promotion_targets,
-        router=router,
     )
     control = ProductTaskControlPlane(
         tasks,
@@ -471,7 +465,6 @@ async def build_product_chat_host(
         surface=surface,
         control=control,
         tasks=tasks,
-        router=router,
         capture=capture,
         promotion=promotion,
         observation=observation,

@@ -24,6 +24,9 @@ REVIEW_SYSTEM = (
 
 
 def hard_rejection(trial, packet):
+    if packet.get("task_type") == "product_task":
+        from traceh.evaluation.evaluators.product_review import hard_rejection as product_gate
+        return product_gate(trial, packet)
     if trial["invariants"] != "passed" or trial["convergence"] != "converged":
         return "program gate: invariants or convergence did not pass"
     if packet["expectation"]["kind"] == "value" and not packet["dispatched_evidence"]:
@@ -32,6 +35,9 @@ def hard_rejection(trial, packet):
 
 
 def review_input(rubric, packet, events):
+    if packet.get("task_type") == "product_task":
+        from traceh.evaluation.evaluators.product_review import review_input as product_input
+        return product_input(packet, events)
     # Blind the arm label, proposed change, exact-match provisional grade and costs.
     # Retain the actual visible message sequence for scope/coverage verification.
     original = tuple(EventEnvelope.from_dict(e) for e in events)
@@ -95,8 +101,17 @@ def call_judgment(receipt):
     return parse_judgment(observed["text"])
 
 
+def review_system(task_type):
+    if task_type == "product_task":
+        from traceh.evaluation.evaluators.product_review import PRODUCT_REVIEW_SYSTEM
+        return PRODUCT_REVIEW_SYSTEM
+    if task_type != "retrieval_episode":
+        raise ValueError("evaluation-task-type-unsupported")
+    return REVIEW_SYSTEM
+
+
 def validate_model_origin(root, report, binding, rubric, judgment):
-    from traceh.evaluation.review import _episode_events
+    from traceh.evaluation.review import _episode_events, _review_packets
 
     origin = object_fields(judgment["origin"], {"kind", "config", "calls"}, "model-origin")
     calls = {}
@@ -104,7 +119,7 @@ def validate_model_origin(root, report, binding, rubric, judgment):
         object_fields(call, {"trial_id", "directory", "sha256"}, "model-call")
         require(call["trial_id"] not in calls)
         calls[call["trial_id"]] = call
-    packets = {p["trial_id"]: p for p in report["task_report"]["episodes"]}
+    packets = _review_packets(root, report, rubric)
     trials = {t["identity"]["trial_id"]: t for t in report["trials"]}
     used = set()
     for item in judgment["judgments"]:
@@ -118,7 +133,7 @@ def validate_model_origin(root, report, binding, rubric, judgment):
             _, events = _episode_events(root, trial, packet)
             input_text = review_input(rubric, packet, events)
             require(
-                definition["system"] == REVIEW_SYSTEM
+                definition["system"] == review_system(report["task_type"])
                 and definition["input"] == input_text
                 and definition["config"] == origin["config"]
                 and definition["binding"]

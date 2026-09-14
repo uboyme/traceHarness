@@ -1,0 +1,101 @@
+{
+  "format": 1,
+  "contract_digest": "ac6ef6bdc99d08ee6996b0a7c390fcd79c37f42df2a1597589ff6ccaa4aa1401",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "outcomes": [
+    {
+      "scenario": "separable-review",
+      "task_success": true,
+      "error": null,
+      "real_calls": 11,
+      "provider_calls_by_role": {
+        "unknown": 1,
+        "main": 7,
+        "child": 3
+      },
+      "first_step_tools": [],
+      "decision_count": 1,
+      "decision": "separable",
+      "expected_decision": "separable",
+      "decision_digest": "a7a0127e2cdf809cb0e06d4a25d549712fbc129c1ffee92db052aa466e63beb9",
+      "decision_child_created": true,
+      "decision_failed": 0,
+      "delegate_succeeded_after_decision": 0,
+      "collect_succeeded": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 63806,
+        "output_tokens": 3611,
+        "quality": "exact",
+        "total_tokens": 67417
+      },
+      "provider_failure_categories": [],
+      "behavior_pass": false
+    },
+    {
+      "scenario": "coupled-review",
+      "task_success": true,
+      "error": null,
+      "real_calls": 6,
+      "provider_calls_by_role": {
+        "unknown": 6
+      },
+      "first_step_tools": [],
+      "decision_count": 1,
+      "decision": "local",
+      "expected_decision": "local",
+      "decision_digest": "8be181fc4b5f6eed188c52abec272edee10cda960fd84f55bea57885aaea8035",
+      "decision_child_created": false,
+      "decision_failed": 0,
+      "delegate_succeeded_after_decision": 0,
+      "collect_succeeded": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 31445,
+        "output_tokens": 1574,
+        "quality": "exact",
+        "total_tokens": 33019
+      },
+      "provider_failure_categories": [],
+      "behavior_pass": false
+    },
+    {
+      "scenario": "simple-read",
+      "task_success": true,
+      "error": null,
+      "real_calls": 5,
+      "provider_calls_by_role": {
+        "unknown": 5
+      },
+      "first_step_tools": [],
+      "decision_count": 1,
+      "decision": "local",
+      "expected_decision": "local",
+      "decision_digest": "995e08313ecef8dc13eb51dd4c34770ac2b63e9d2b84d2fbe86d3ce14a5a4683",
+      "decision_child_created": false,
+      "decision_failed": 0,
+      "delegate_succeeded_after_decision": 0,
+      "collect_succeeded": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 15931,
+        "output_tokens": 544,
+        "quality": "exact",
+        "total_tokens": 16475
+      },
+      "provider_failure_categories": [],
+      "behavior_pass": false
+    }
+  ],
+  "stopped": null,
+  "total_real_calls": 22,
+  "all_behavior_pass": false,
+  "interpretation": "Three frozen observations of the exclusive typed checkpoint; no baseline, semantic judge, statistical claim, or adoption authority."
+}

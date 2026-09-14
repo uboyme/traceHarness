@@ -24,7 +24,7 @@ from traceh.api.promotion import (
 from traceh.api.sandbox import SandboxReceiptReference
 from traceh.promotion.errors import PromotionInputError, PromotionProtocolError
 
-PROMOTION_PROTOCOL_VERSION = 2
+PROMOTION_PROTOCOL_VERSION = 3
 """The only promotion protocol this build reads or writes."""
 
 MERGE_POLICY_VERSION = 1
@@ -206,6 +206,13 @@ def freeze_verifier_command(value: object) -> VerifierCommand:
     if type(value) is not VerifierCommand:
         raise PromotionInputError("promotion-verifier-command-invalid", "commands")
     require_promotion_identifier(value.command_id, field="command_id")
+    requirement = value.public_requirement
+    if requirement is not None and (
+        type(requirement) is not str or not requirement.strip()
+        or len(requirement) > 1000
+        or any(ord(c) < 32 or ord(c) == 127 for c in requirement)
+    ):
+        raise PromotionInputError("promotion-public-requirement-invalid", "public_requirement")
     if (
         type(value.argv) is not tuple
         or not value.argv
@@ -287,6 +294,7 @@ def verifier_command_digest(command: VerifierCommand) -> str:
             "command_id": command.command_id,
             "argv": list(command.argv),
             "timeout_ms": command.timeout_ms,
+            "public_requirement": command.public_requirement,
         }
     )
 
@@ -314,6 +322,7 @@ def verifier_definition_digest(plan: VerificationPlan) -> str:
                     "command_id": command.command_id,
                     "argv": list(command.argv),
                     "timeout_ms": command.timeout_ms,
+                    "public_requirement": command.public_requirement,
                 }
                 for command in plan.commands
             ],

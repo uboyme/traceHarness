@@ -5,14 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.agents.identity import is_agent_identifier
-from traceh.api.budgets import BudgetAmounts, BudgetChargeMode, BudgetLimits
+from traceh.api.budgets import BudgetAmounts, BudgetChargeMode, BudgetLimits, ChildTokenDecision
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json
 from traceh.api.llm import UsageQuality
 from traceh.budgets.errors import BudgetInputError, BudgetProtocolError
 
 BUDGET_LEDGER_STREAM = "budgets:ledger"
-BUDGET_SCHEMA_VERSION = 1
+BUDGET_SCHEMA_VERSION = 3
 MAX_BUDGET_VALUE = 2**53 - 1
 
 BUDGET_ROOT_GRANTED = "budget/root-granted"
@@ -25,6 +25,7 @@ BUDGET_USAGE_STARTED = "budget/usage-started"
 BUDGET_USAGE_SETTLED = "budget/usage-settled"
 BUDGET_USAGE_RELEASED = "budget/usage-released"
 BUDGET_ACCOUNT_CLOSED = "budget/account-closed"
+BUDGET_CHILD_TOKEN_DECIDED = "budget/child-token-decided"
 
 _LIMIT_FIELDS = (
     "max_tokens",
@@ -46,6 +47,8 @@ _RESERVE_KEYS = frozenset(
         "child_agent_id",
         "creation_request_id",
         "child_limits",
+        "retained_tokens",
+        "initial_tokens",
     )
 )
 _TERMINAL_KEYS = frozenset(("operation_id", "reservation_id"))
@@ -77,6 +80,8 @@ class ChildReservedFact:
     child_agent_id: str
     creation_request_id: str
     child_limits: BudgetLimits
+    retained_tokens: int
+    initial_tokens: int | None
     seq: int
 
 
@@ -154,7 +159,35 @@ type BudgetFact = (
     | UsageSettledFact
     | UsageReleasedFact
     | AccountClosedFact
+    | ChildTokenDecision
 )
+
+
+def initial_token_limits(limits: BudgetLimits, initial_tokens: int | None) -> BudgetLimits:
+    """None allocates the complete explicit envelope; it creates no new authority."""
+    from dataclasses import replace
+
+    if initial_tokens is None:
+        return limits
+    if (type(initial_tokens) is not int or limits.max_tokens is None
+            or not 0 < initial_tokens <= limits.max_tokens):
+        raise BudgetInputError("budget-initial-tokens-invalid", "initial_tokens")
+    return replace(limits, max_tokens=initial_tokens)
+
+
+def child_token_decision_data(*, operation_id, request_id, parent_agent_id,
+                              child_agent_id, tokens, reason):
+    if type(tokens) is not int or not 0 <= tokens <= MAX_BUDGET_VALUE:
+        raise BudgetInputError("budget-token-increase-invalid", "tokens")
+    if not isinstance(reason, str) or not reason.strip() or len(reason) > 2000:
+        raise BudgetInputError("budget-decision-reason-invalid", "reason")
+    return {
+        "operation_id": require_budget_identifier(operation_id, field="operation_id"),
+        "request_id": require_budget_identifier(request_id, field="request_id"),
+        "parent_agent_id": require_budget_identifier(parent_agent_id, field="parent_agent_id"),
+        "child_agent_id": require_budget_identifier(child_agent_id, field="child_agent_id"),
+        "tokens": tokens, "reason": reason,
+    }
 
 
 def require_budget_identifier(value: object, *, field: str) -> str:
@@ -212,6 +245,13 @@ def _valid_amount(value: object) -> bool:
     )
 
 
+def require_retained_tokens(value: object) -> int:
+    if not _valid_amount(value):
+        raise BudgetInputError("budget-retained-tokens-invalid", "retained_tokens")
+    assert isinstance(value, int)
+    return value
+
+
 def freeze_amounts(value: object, *, require_usage: bool = True) -> BudgetAmounts:
     """Validate and copy a charge vector before the first suspension point."""
 
@@ -266,7 +306,10 @@ def child_reserved_data(
     child_agent_id: str,
     creation_request_id: str,
     child_limits: BudgetLimits,
+    retained_tokens: int,
+    initial_tokens: int | None = None,
 ) -> dict[str, JsonValue]:
+    initial_token_limits(freeze_limits(child_limits), initial_tokens)
     return {
         "operation_id": require_budget_identifier(operation_id, field="operation_id"),
         "reservation_id": require_budget_identifier(reservation_id, field="reservation_id"),
@@ -278,6 +321,8 @@ def child_reserved_data(
             creation_request_id, field="creation_request_id"
         ),
         "child_limits": limits_to_data(child_limits),
+        "retained_tokens": require_retained_tokens(retained_tokens),
+        "initial_tokens": initial_tokens,
     }
 
 
@@ -436,6 +481,12 @@ def _read_budget_fact(event: EventEnvelope) -> BudgetFact:
     if not isinstance(data, dict):
         raise BudgetProtocolError("budget-payload-invalid", event.seq)
 
+    if event.type == BUDGET_CHILD_TOKEN_DECIDED:
+        if set(data) != {"operation_id", "request_id", "parent_agent_id", "child_agent_id",
+                         "tokens", "reason"}:
+            raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        return ChildTokenDecision(**child_token_decision_data(**data), seq=event.seq)
+
     if event.type == BUDGET_ROOT_GRANTED:
         if set(data) != _ROOT_KEYS:
             raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
@@ -448,6 +499,8 @@ def _read_budget_fact(event: EventEnvelope) -> BudgetFact:
     if event.type == BUDGET_CHILD_RESERVED:
         if set(data) != _RESERVE_KEYS:
             raise BudgetProtocolError("budget-payload-keys-unexpected", event.seq)
+        if not _valid_amount(data["retained_tokens"]):
+            raise BudgetProtocolError("budget-retained-tokens-invalid", event.seq)
         return ChildReservedFact(
             operation_id=_read_identifier(data, "operation_id", event.seq),
             reservation_id=_read_identifier(data, "reservation_id", event.seq),
@@ -455,6 +508,8 @@ def _read_budget_fact(event: EventEnvelope) -> BudgetFact:
             child_agent_id=_read_identifier(data, "child_agent_id", event.seq),
             creation_request_id=_read_identifier(data, "creation_request_id", event.seq),
             child_limits=_read_limits(data["child_limits"], event.seq),
+            retained_tokens=data["retained_tokens"],
+            initial_tokens=data["initial_tokens"],
             seq=event.seq,
         )
     if event.type in (BUDGET_RESERVATION_COMMITTED, BUDGET_RESERVATION_RELEASED):

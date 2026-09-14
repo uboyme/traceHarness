@@ -612,6 +612,11 @@ class FixedTokenCounter:
         return 2
 
 
+#: Sentinel so a caller can ask for "no token counter" - the configuration every
+#: Product host currently runs under - without colliding with the default.
+_DEFAULT_COUNTER = FixedTokenCounter()
+
+
 async def build_budgeted_execution(
     tmp_path: Path,
     scheduler: FakeScheduler,
@@ -619,6 +624,7 @@ async def build_budgeted_execution(
     provider: OutcomeProvider,
     *,
     max_tokens: int = 20,
+    token_counter: object | None = _DEFAULT_COUNTER,
 ):
     await AgentRegistrar(store).create_agent(
         AgentSpec(preset="managed", workspace_id="workspace"),
@@ -646,7 +652,7 @@ async def build_budgeted_execution(
         session_id="session-root",
         continuation=DefaultContinuationRuntime(),
         llm_runtime=LlmRuntime(provider_clock=scheduler.monotonic),
-        token_counter=FixedTokenCounter(),
+        token_counter=token_counter,
     )
     runtime = build_default_runtime(
         RuntimeConfig(
@@ -667,6 +673,96 @@ async def build_budgeted_execution(
     await runtime.sessions.create_session(tmp_path, session_id="session-root")
     execution = enforcement.wrap(AgentRuntimeExecution(runtime, "session-root"))
     return runtime, execution, budgets
+
+
+async def test_a_bounded_reservation_leaves_room_for_the_mandated_retry(
+    tmp_path: Path,
+) -> None:
+    """Control: with a token counter the declared retry policy is satisfiable.
+
+    A counted reservation is this call's own estimate, so charging the whole of
+    it for a failure that reported no usage still leaves the account able to
+    admit attempt two.
+    """
+
+    scheduler = FakeScheduler()
+    store = InMemoryEventStore()
+    provider = OutcomeProvider(
+        scheduler,
+        (
+            ProviderFailure("provider-timeout", ProviderFailureCategory.TIMEOUT),
+            ModelResponse(content="done", usage=Usage(1, 1, UsageQuality.EXACT)),
+        ),
+    )
+    runtime, execution, budgets = await build_budgeted_execution(
+        tmp_path, scheduler, store, provider
+    )
+    try:
+        result = await execution.run_turn(TurnInput("perform the task", "message-root"))
+    finally:
+        await execution.dispose()
+
+    assert result.final_text == "done"
+    assert provider.calls == 2
+    starts = [
+        event
+        for event in await runtime.sessions.read_session("session-root")
+        if event.type == "model/attempt-start"
+    ]
+    assert [event.data["ordinal"] for event in starts] == [1, 2]
+
+
+async def test_an_uncounted_reservation_leaves_no_budget_for_the_mandated_retry(
+    tmp_path: Path,
+) -> None:
+    """Records a defect; it is not the behaviour this host should have.
+
+    Without a token counter a single attempt reserves the account's whole
+    remaining capacity (`BudgetedLlmRuntime._bounded_request`), and a failure
+    carrying no usage is charged that whole reservation. The account is then
+    empty, so the retry the host's own policy mandates is refused at admission
+    and the error escapes `AgentLoop` before attempt two is ever recorded.
+
+    Every Product host runs in exactly this configuration: `product/runtime.py`
+    builds its `RuntimeConfig` without `token_budget`, so no counter reaches
+    `BudgetEnforcement`. Both halves are deliberate and separately covered
+    (`test_without_tokenizer_output_is_capped_and_overage_is_unknown`,
+    `test_provider_failure_consumes_the_whole_token_reservation`); what no test
+    covered until now is their composition.
+
+    When this is fixed, replace this test with the assertions in the control
+    case above: `provider.calls == 2` and ordinals `[1, 2]`.
+    """
+
+    scheduler = FakeScheduler()
+    store = InMemoryEventStore()
+    provider = OutcomeProvider(
+        scheduler,
+        (
+            ProviderFailure("provider-timeout", ProviderFailureCategory.TIMEOUT),
+            ModelResponse(content="never-reached", usage=Usage(1, 1, UsageQuality.EXACT)),
+        ),
+    )
+    runtime, execution, budgets = await build_budgeted_execution(
+        tmp_path, scheduler, store, provider, token_counter=None
+    )
+    try:
+        with pytest.raises(BudgetExhaustedError, match="max_tokens"):
+            await execution.run_turn(TurnInput("perform the task", "message-root"))
+    finally:
+        await execution.dispose()
+
+    # The retryable failure was charged the entire account and attempt two never
+    # reached the provider, so the policy's second attempt cannot exist.
+    assert provider.calls == 1
+    account = (await budgets.ledger()).account("agent-root")
+    assert account is not None and account.charged.tokens == 20
+    starts = [
+        event
+        for event in await runtime.sessions.read_session("session-root")
+        if event.type == "model/attempt-start"
+    ]
+    assert [event.data["ordinal"] for event in starts] == [1]
 
 
 async def test_cancellation_after_reservation_commit_never_dispatches(

@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from traceh.agents.directory import AgentDirectory, AgentDirectoryReader
-from traceh.api.product import ProductRole, ProductTaskSummary
+from traceh.api.product import ProductRole, ProductTaskSummary, ResolvedTaskMode
 from traceh.product.errors import ProductInputError, ProductStateError
 from traceh.product.execution import product_task_owner_id
 from traceh.product.observation import ProductObservation
@@ -22,7 +22,7 @@ from traceh.session.service import SessionService
 from traceh.supervision.lifecycle import AgentOwnershipGraph
 from traceh.workflow.models import agent_identity
 
-_ROLE_ORDER = ("router", "parent", "reviewer", "coder")
+_ROLE_ORDER = ("coder", "investigator", "patch_author")
 _ROLE_NODE_LABELS = {product_role_node_id(role): role.value for role in ProductRole}
 _TOOL_RESULT_STATUSES = frozenset(
     {
@@ -96,9 +96,7 @@ class ProductTaskActivityReader:
             raise ProductInputError("product-activity-observation-invalid", "observation")
         summary = observation.summary
         if summary is None or summary.task_id != observation.task_id:
-            raise ProductStateError(
-                "product-activity-summary-unavailable", observation.task_id
-            )
+            raise ProductStateError("product-activity-summary-unavailable", observation.task_id)
         try:
             directory = await self._directory.load()
         except Exception:
@@ -130,17 +128,13 @@ class ProductTaskActivityReader:
             events = await self._store.read(SessionService.session_stream(session_id))
             effects = await self._store.read(SessionService.effect_stream(session_id))
         except Exception:
-            raise ProductStateError(
-                "product-activity-session-unreadable", task_id
-            ) from None
+            raise ProductStateError("product-activity-session-unreadable", task_id) from None
         try:
             if CoreInvariantChecker().check(events, effects):
                 raise ValueError("invalid Session lifecycle")
             tools = _tool_activity(events)
         except Exception:
-            raise ProductStateError(
-                "product-activity-session-invalid", task_id
-            ) from None
+            raise ProductStateError("product-activity-session-invalid", task_id) from None
         return ProductRoleActivity(
             role=role,
             agent_id=agent_id,
@@ -161,30 +155,8 @@ def _role_identities(
     identities: list[tuple[str, str, str]] = []
     known_streams = set(observation.related_streams)
     owned_agents = frozenset(
-        AgentOwnershipGraph(directory).subtree_postorder(
-            product_task_owner_id(observation.task_id)
-        )
+        AgentOwnershipGraph(directory).subtree_postorder(product_task_owner_id(observation.task_id))
     )
-    router_agent = summary.router_agent_id
-    router_session = summary.routing_session_id
-    if (router_agent is None) != (router_session is None):
-        raise ProductStateError(
-            "product-activity-router-identity-incomplete", observation.task_id
-        )
-    if router_agent is not None and router_session is not None:
-        record = directory.get(router_agent)
-        if record is None:
-            raise ProductStateError(
-                "product-activity-agent-record-missing", observation.task_id
-            )
-        if record.session_id != router_session:
-            raise ProductStateError(
-                "product-activity-router-session-mismatch", observation.task_id
-            )
-        _require_owned_agent(owned_agents, router_agent, observation.task_id)
-        _require_observed_stream(known_streams, router_session, observation.task_id)
-        identities.append(("router", router_agent, router_session))
-
     evidence = observation.evidence
     if evidence is not None:
         for node in evidence.nodes:
@@ -209,10 +181,7 @@ def _role_identities(
                 raise ProductStateError(
                     "product-activity-agent-record-missing", observation.task_id
                 )
-            if (
-                record.session_id != expected_session
-                or record.request_id != expected_request
-            ):
+            if record.session_id != expected_session or record.request_id != expected_request:
                 raise ProductStateError(
                     "product-activity-role-session-mismatch", observation.task_id
                 )
@@ -220,24 +189,32 @@ def _role_identities(
             _require_observed_stream(known_streams, expected_session, observation.task_id)
             identities.append((role, expected_agent, expected_session))
 
+    if summary.resolved_mode is ResolvedTaskMode.MULTI:
+        main = next((agent for role, agent, _ in identities if role == "coder"), None)
+        if main is not None:
+            for child_id in AgentOwnershipGraph(directory).subtree_postorder(main):
+                if child_id == main:
+                    continue
+                child = directory.get(child_id)
+                _require_owned_agent(owned_agents, child_id, observation.task_id)
+                _require_observed_stream(known_streams, child.session_id, observation.task_id)
+                role = (
+                    "patch_author" if "apply_patch" in child.capability_grants else "investigator"
+                )
+                identities.append((role, child_id, child.session_id))
+
     session_ids = [session_id for _, _, session_id in identities]
     if len(session_ids) != len(set(session_ids)):
-        raise ProductStateError(
-            "product-activity-session-duplicate", observation.task_id
-        )
+        raise ProductStateError("product-activity-session-duplicate", observation.task_id)
     return tuple(identities)
 
 
-def _require_owned_agent(
-    owned_agents: frozenset[str], agent_id: str, task_id: str
-) -> None:
+def _require_owned_agent(owned_agents: frozenset[str], agent_id: str, task_id: str) -> None:
     if agent_id not in owned_agents:
         raise ProductStateError("product-activity-agent-owner-mismatch", task_id)
 
 
-def _require_observed_stream(
-    known_streams: set[str], session_id: str, task_id: str
-) -> None:
+def _require_observed_stream(known_streams: set[str], session_id: str, task_id: str) -> None:
     if SessionService.session_stream(session_id) not in known_streams:
         raise ProductStateError("product-activity-session-unbound", task_id)
 
@@ -265,9 +242,7 @@ def _tool_activity(events) -> tuple[ProductToolActivity, ...]:
             exit_code = data.get("exit_code") if isinstance(data, dict) else None
             if type(exit_code) is not int:
                 exit_code = None
-            completed.append(
-                ProductToolActivity(name, call_seq, event.seq, str(status), exit_code)
-            )
+            completed.append(ProductToolActivity(name, call_seq, event.seq, str(status), exit_code))
     completed.extend(
         ProductToolActivity(name, call_seq, None, "pending", None)
         for call_seq, name in pending.values()

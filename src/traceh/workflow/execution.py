@@ -178,6 +178,11 @@ class NodeExecutor:
             if report.status != "completed":
                 raise WorkflowNodeFailedError("workflow-agent-message-failed", node_id)
 
+            # A main report can finish while descendants still run. Close the
+            # owned tree before treating its workspace as a stable artifact.
+            # Workspace lifetime is independent and remains available to capture.
+            await supervisor.dispose(agent_id)
+
             artifact_id: str | None = None
             if capture_artifact:
                 artifact_id = await self._capture(agent_id, message_id, node_id)

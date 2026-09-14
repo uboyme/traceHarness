@@ -248,6 +248,22 @@ class BackgroundOptimizationHost:
             (f"session:{session_id}@{ended.seq}",),
         )
         identity = fingerprint((session_id, turn_id, ended.seq, failure_class))
+        return await self._accept_observation(identity, observation)
+
+    async def observe_product(self, reader, task_id):
+        """Follow the original Product reader, scoped through its confirming Chat."""
+        if self._closed or not (await self.open())["enabled"]:
+            return False
+        from traceh.evolution.product_feedback import product_observation
+
+        observation = await product_observation(self.sessions, self.period, reader, task_id)
+        if observation is None:
+            return False
+        # One execution signal per task; a later approval must not retrigger it.
+        identity = fingerprint((task_id, observation.failure_class))
+        return await self._accept_observation(identity, observation)
+
+    async def _accept_observation(self, identity, observation):
         async with self._lock:
             state = await self.open()
             if not state["enabled"]:

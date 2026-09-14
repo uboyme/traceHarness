@@ -1,0 +1,31 @@
+{
+  "format": 1,
+  "real_calls": 1,
+  "retries": 0,
+  "execute_tools": false,
+  "original_request_unchanged": true,
+  "status": "parsed",
+  "elapsed_ms": 32975,
+  "wire": {
+    "body_available": true,
+    "body_sha256": "4f27e93792ebf9bc29fa2c59d41944c4db12f44d9123c725d9f62981b25e771c",
+    "body_bytes": 2977,
+    "calls": [],
+    "wire_usage": {
+      "prompt_tokens": 2322,
+      "completion_tokens": 521
+    },
+    "envelope": "decoded"
+  },
+  "offline": {
+    "offline_body_replay": true,
+    "payload_digest_matches": true,
+    "tool_calls": 0,
+    "finish_reason": "stop",
+    "total_tokens": 2843,
+    "original_body_unchanged": true,
+    "network_calls": 0
+  },
+  "original_database_unchanged": true,
+  "interpretation": "No malformed arguments reproduced; model returned refusal text and no tool calls. Earlier failure cause remains unknown."
+}

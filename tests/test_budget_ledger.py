@@ -243,6 +243,7 @@ async def test_cross_stream_reader_never_pairs_old_directory_with_new_budget() -
                     agent_id="concurrent-root",
                     limits=limits(),
                 ),
+                schema_version=BUDGET_SCHEMA_VERSION,
             ),
         ),
     )
@@ -289,6 +290,7 @@ async def test_reservation_holds_capacity_until_released() -> None:
         child_agent_id="child",
         creation_request_id="create-child",
         child_limits=child_limits,
+        retained_tokens=0,
     )
     assert reservation.status is BudgetReservationStatus.PENDING
     assert (await service.ledger()).available("root") == limits(
@@ -319,6 +321,7 @@ async def test_directory_identity_is_the_only_child_commit_point() -> None:
         child_agent_id="child",
         creation_request_id="create-child",
         child_limits=child_limits,
+        retained_tokens=0,
     )
     await create_agent(
         store,
@@ -351,6 +354,7 @@ async def test_commit_without_exact_directory_identity_is_rejected() -> None:
         child_agent_id="child",
         creation_request_id="create-child",
         child_limits=limits(max_depth=2),
+        retained_tokens=0,
     )
     with pytest.raises(BudgetDirectoryMismatchError):
         await service.commit_reservation(
@@ -369,6 +373,7 @@ async def test_release_requires_convergence_and_refuses_a_durable_child() -> Non
         child_agent_id="child",
         creation_request_id="create-child",
         child_limits=limits(max_depth=2),
+        retained_tokens=0,
     )
     with pytest.raises(BudgetReservationStateError):
         await service.release_reservation(
@@ -410,6 +415,7 @@ async def test_child_authority_cannot_exceed_parent_constraints(
             child_agent_id="child",
             creation_request_id="create-child",
             child_limits=child_limits,
+            retained_tokens=0,
         )
     assert error.value.code == "budget-child-limits-invalid"
     assert len(await store.read(BUDGET_LEDGER_STREAM)) == 1
@@ -431,6 +437,7 @@ async def test_usage_and_delegation_share_one_conserved_balance() -> None:
             child_agent_id="child",
             creation_request_id="create-child",
             child_limits=limits(max_tokens=40, max_depth=2),
+            retained_tokens=0,
         )
     assert error.value.dimension == "max_tokens"
     assert len(await store.read(BUDGET_LEDGER_STREAM)) == 2
@@ -449,6 +456,7 @@ async def test_reservation_correlation_identities_cannot_be_reused(
         child_agent_id="child-a",
         creation_request_id="create-child-a",
         child_limits=limits(max_tokens=10, max_depth=2),
+        retained_tokens=0,
     )
     await service.release_reservation(
         operation_id="release-first",
@@ -466,6 +474,7 @@ async def test_reservation_correlation_identities_cannot_be_reused(
                 "create-child-b" if reuse == "child" else "create-child-a"
             ),
             child_limits=limits(max_tokens=10, max_depth=2),
+            retained_tokens=0,
         )
 
     assert len(await store.read(BUDGET_LEDGER_STREAM)) == 3
@@ -485,6 +494,7 @@ async def test_replay_rejects_reused_reservation_correlation_identities(
         child_agent_id="child-a",
         creation_request_id="create-child-a",
         child_limits=limits(max_tokens=10, max_depth=2),
+        retained_tokens=0,
     )
     second = child_reserved_data(
         operation_id="reserve-second",
@@ -495,6 +505,7 @@ async def test_replay_rejects_reused_reservation_correlation_identities(
             "create-child-b" if reuse == "child" else "create-child-a"
         ),
         child_limits=limits(max_tokens=10, max_depth=2),
+        retained_tokens=0,
     )
     events = (
         envelope(
@@ -534,6 +545,7 @@ async def test_direct_child_limit_counts_one_per_durable_reservation() -> None:
             max_children=1,
             max_depth=2,
         ),
+        retained_tokens=0,
     )
     with pytest.raises(BudgetExhaustedError) as error:
         await service.reserve_child(
@@ -550,6 +562,7 @@ async def test_direct_child_limit_counts_one_per_durable_reservation() -> None:
                 max_children=1,
                 max_depth=2,
             ),
+            retained_tokens=0,
         )
     assert error.value.dimension == "max_children"
 
@@ -565,6 +578,7 @@ async def test_zero_parent_depth_is_exhaustion_not_invalid_child_input() -> None
             child_agent_id="child",
             creation_request_id="create-child",
             child_limits=limits(max_depth=0),
+            retained_tokens=0,
         )
     assert error.value.dimension == "max_depth"
     assert len(await store.read(BUDGET_LEDGER_STREAM)) == 1
@@ -594,6 +608,7 @@ async def test_close_is_terminal_and_refuses_pending_reservations() -> None:
         child_agent_id="child",
         creation_request_id="create-child",
         child_limits=limits(max_depth=2),
+        retained_tokens=0,
     )
     with pytest.raises(BudgetReservationStateError):
         await service.close_account(operation_id="close-root", agent_id="root")
@@ -684,6 +699,7 @@ async def test_concurrent_reservations_cannot_overspend_one_parent() -> None:
             child_limits=limits(
                 max_tokens=50, max_children=1, max_depth=2
             ),
+            retained_tokens=0,
         )
 
     calls = [asyncio.create_task(reserve(index)) for index in range(2)]
@@ -948,6 +964,7 @@ async def test_release_fact_plus_durable_child_is_a_protocol_contradiction() -> 
                 child_agent_id="child",
                 creation_request_id="create-child",
                 child_limits=limits(max_depth=2),
+                retained_tokens=0,
             ),
         ),
         envelope(
@@ -1207,6 +1224,7 @@ async def test_replay_rejects_settlement_above_the_reserved_amount() -> None:
                     amounts=BudgetAmounts(tokens=6),
                     usage_quality=UsageQuality.EXACT,
                 ),
+                schema_version=BUDGET_SCHEMA_VERSION,
             ),
         ),
     )

@@ -183,8 +183,16 @@ async def test_conversation_drag_copy_in_place_without_writes(tmp_path, clipboar
 
 
 async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
-    tmp_path, mounted_screens
+    tmp_path, mounted_screens, monkeypatch
 ):
+    copy_mounted = asyncio.Queue()
+    original_mount = CopyMenu.on_mount
+
+    def record_copy_mount(screen):
+        original_mount(screen)
+        copy_mounted.put_nowait(screen)
+
+    monkeypatch.setattr(CopyMenu, "on_mount", record_copy_mount)
     async with memory_case(tmp_path) as (runtime, store, provider, session_id, _, _):
         opened = await open_chat_session(runtime, workspace=None, session_id=session_id)
         app = TracehTuiApp(
@@ -200,6 +208,7 @@ async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
             head = await store.head(f"session:{session_id}")
             log = app.query_one("#conversation", SelectableLog)
             await pilot.click(log, offset=(2, 1), button=3)
+            assert await asyncio.wait_for(copy_mounted.get(), 10) is app.screen
             assert isinstance(app.screen, CopyMenu)
             assert app.screen.query_one("#selection-copy", Button).disabled
             await pilot.press("ctrl+c", "escape")
@@ -212,6 +221,7 @@ async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
             expected = area.selected_text
             assert "可选择" in expected
             await pilot.click(area, offset=(3, 1), button=3)
+            assert await asyncio.wait_for(copy_mounted.get(), 10) is app.screen
             assert isinstance(app.screen, CopyMenu)
             await pilot.click("#selection-copy")
             assert app.clipboard == expected

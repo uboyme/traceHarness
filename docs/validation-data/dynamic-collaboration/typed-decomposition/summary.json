@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "stage": "DA-7",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "rounds": 4,
+  "scenario_trials": 12,
+  "real_provider_calls": 68,
+  "expected_separable_trials": 4,
+  "separable_decisions": 0,
+  "children_created": 0,
+  "correct_typed_choices": 5,
+  "task_successes": 3,
+  "behavior_passes": 2,
+  "budget_converged_trials": 12,
+  "live_workspace_leaks": 0,
+  "production_adopted": false,
+  "outcome": "rejected",
+  "interpretation": "The typed schema and fail-closed policy were mechanically testable, but the real model did not reliably complete the mandatory checkpoint and never chose the separable path. The production candidate was withdrawn under the frozen stop rule.",
+  "next_design_question": "Evaluate an exclusive decision-only checkpoint surface before ordinary tools become visible. This requires a separate architecture contract and must not be introduced as an ad hoc AgentLoop branch."
+}

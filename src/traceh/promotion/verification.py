@@ -17,6 +17,7 @@ from traceh.promotion.models import (
     verifier_definition_digest,
 )
 from traceh.sandbox.service import GUEST_ENVIRONMENT, SandboxExecutionService
+from traceh.session.service import SessionService
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,7 +44,13 @@ class HostVerificationRunner:
         self, plan: VerificationPlan, *, cwd: Path, owner: SandboxOwner, stream_id: str
     ) -> VerificationEvidence:
         plan = freeze_verification_plan(plan)
-        if owner.kind != "promotion" or not cwd.is_absolute():
+        completion_owner = (
+            owner.kind == "verification"
+            and owner.session_id and owner.turn_id and owner.step_id
+            and owner.owner_id == owner.step_id
+            and stream_id == SessionService.session_stream(owner.session_id)
+        )
+        if (owner.kind != "promotion" and not completion_owner) or not cwd.is_absolute():
             raise ValueError("promotion-verifier-owner-invalid")
         results = []
         if self.sandbox_service is None:

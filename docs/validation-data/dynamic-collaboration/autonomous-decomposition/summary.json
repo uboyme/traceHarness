@@ -1,0 +1,242 @@
+{
+ "answer": "4 of 4 independently specified units, in both runs, with disjoint file sets",
+ "attempts": [
+  {
+   "artifacts": [
+    [
+     "telemetry_parse.py"
+    ],
+    [
+     "telemetry_rules.py"
+    ],
+    [
+     "telemetry_format.py"
+    ],
+    [
+     "telemetry_stats.py"
+    ]
+   ],
+   "assignments_chosen": 4,
+   "assistant_count_named_in_requirement": false,
+   "authorized_assistants": 4,
+   "budget_accounts_closed": 6,
+   "budgets": {
+    "assistant_tokens_each": 50000,
+    "assistant_wall_ms_each": 240000,
+    "coder_max_children": 4,
+    "coder_processes": 4,
+    "coder_tokens": 700000,
+    "coder_wall_ms": 1740000,
+    "main_turn_wall_ms": 600000,
+    "retained_main_tokens": 40000,
+    "task_processes": 5,
+    "task_tokens": 900000
+   },
+   "database_sha256": "1e6437829f384c14136153ceebf33fa2e772ca3bcbd5cce86e19b034ff02b7dc",
+   "directory": "autonomy-20260914",
+   "elapsed_seconds": 313.907,
+   "exact_tokens": 613188,
+   "fixed_verification": [],
+   "independently_specified_units": 4,
+   "integrations": [
+    "succeeded",
+    "succeeded",
+    "succeeded",
+    "succeeded"
+   ],
+   "outcome": "granularity answered; main exhausted its own tokens before verification",
+   "plans": [
+    {
+     "assignments": [
+      {
+       "assignment_id": "module_parse",
+       "paths": [
+        "telemetry_parse.py"
+       ]
+      },
+      {
+       "assignment_id": "module_rules",
+       "paths": [
+        "telemetry_rules.py"
+       ]
+      },
+      {
+       "assignment_id": "module_format",
+       "paths": [
+        "telemetry_format.py"
+       ]
+      },
+      {
+       "assignment_id": "module_stats",
+       "paths": [
+        "telemetry_stats.py"
+       ]
+      }
+     ],
+     "handoff": "await_report",
+     "status": "succeeded"
+    }
+   ],
+   "promotion_ledger": [],
+   "real_calls": 41,
+   "request_snapshots": 43,
+   "roles": {
+    "child": 20,
+    "main": 21
+   },
+   "sandbox_converged": true,
+   "tokens": {
+    "assistants": {
+     "input": 100203,
+     "output": 8245
+    },
+    "main": {
+     "input": 486591,
+     "output": 18149
+    }
+   },
+   "workspaces": {
+    "explicit-release": 1,
+    "workspace-dirty": 5
+   }
+  },
+  {
+   "artifacts": [
+    [
+     "telemetry_parse.py"
+    ],
+    [
+     "telemetry_rules.py"
+    ],
+    [
+     "telemetry_format.py"
+    ],
+    [
+     "telemetry_stats.py"
+    ]
+   ],
+   "assignments_chosen": 4,
+   "assistant_count_named_in_requirement": false,
+   "authorized_assistants": 4,
+   "budget_accounts_closed": 6,
+   "budgets": {
+    "assistant_tokens_each": 50000,
+    "assistant_wall_ms_each": 240000,
+    "coder_max_children": 4,
+    "coder_processes": 4,
+    "coder_tokens": 1600000,
+    "coder_wall_ms": 1740000,
+    "main_turn_wall_ms": 600000,
+    "retained_main_tokens": 40000,
+    "task_processes": 5,
+    "task_tokens": 2000000
+   },
+   "database_sha256": "db9cb0f59ed3a275936fc1274ede50ca4ebacf22c8f34d7b6ab72f86cb1c0708",
+   "directory": "autonomy2-20260914",
+   "elapsed_seconds": 290.782,
+   "exact_tokens": 416530,
+   "fixed_verification": [
+    false,
+    false
+   ],
+   "independently_specified_units": 4,
+   "integrations": [
+    "succeeded",
+    "succeeded",
+    "succeeded",
+    "succeeded"
+   ],
+   "outcome": "granularity repeated; fixed check reached and failed twice",
+   "plans": [
+    {
+     "assignments": [
+      {
+       "assignment_id": "parse_author",
+       "paths": null
+      },
+      {
+       "assignment_id": "rules_author",
+       "paths": null
+      },
+      {
+       "assignment_id": "format_author",
+       "paths": null
+      },
+      {
+       "assignment_id": "stats_author",
+       "paths": null
+      }
+     ],
+     "handoff": "await_report",
+     "status": "failed"
+    },
+    {
+     "assignments": [
+      {
+       "assignment_id": "parse_author",
+       "paths": [
+        "telemetry_parse.py"
+       ]
+      },
+      {
+       "assignment_id": "rules_author",
+       "paths": [
+        "telemetry_rules.py"
+       ]
+      },
+      {
+       "assignment_id": "format_author",
+       "paths": [
+        "telemetry_format.py"
+       ]
+      },
+      {
+       "assignment_id": "stats_author",
+       "paths": [
+        "telemetry_stats.py"
+       ]
+      }
+     ],
+     "handoff": "await_report",
+     "status": "succeeded"
+    }
+   ],
+   "promotion_ledger": [],
+   "real_calls": 36,
+   "request_snapshots": 38,
+   "roles": {
+    "child": 20,
+    "main": 16
+   },
+   "sandbox_converged": true,
+   "tokens": {
+    "assistants": {
+     "input": 101339,
+     "output": 8437
+    },
+    "main": {
+     "input": 287153,
+     "output": 19601
+    }
+   },
+   "workspaces": {
+    "explicit-release": 1,
+    "workspace-dirty": 5
+   }
+  }
+ ],
+ "case_id": "autonomy-telemetry-pipeline",
+ "date": "2026-09-14",
+ "functional_result": "Second run reached the frozen check and failed twice: telemetry_parse.parse(None) raises TypeError instead of the specified ValueError. Same defect class as records 044, 054 and 072.",
+ "limits": "Multi mode still requires an allocation, so this measures decomposition granularity, not whether the model would collaborate at all. Two observations are not a rate, no single-assistant baseline was run, and nothing was promoted.",
+ "provider": {
+  "call_limit": 60,
+  "connection_digest": "8b2745bf62ffc25c22839cae7ccd329991f2d07fcd4fd9e86858f97809f05c05",
+  "model": "deepseek-v4-flash",
+  "network_mode": "direct",
+  "provider": "openai-compatible",
+  "timeout_seconds": 60
+ },
+ "question": "with no count in the requirement, how many assignments does the model create?",
+ "round": "autonomous-decomposition-probe"
+}

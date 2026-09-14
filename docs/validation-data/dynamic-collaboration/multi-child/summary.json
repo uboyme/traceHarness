@@ -1,0 +1,266 @@
+{
+ "assistants_required_by_requirement": true,
+ "attempts": [
+  {
+   "artifacts": [],
+   "budget_accounts_closed": 2,
+   "budgets": {
+    "assistant_tokens_each": 60000,
+    "coder_max_children": 2,
+    "coder_tokens": 460000,
+    "retained_main_tokens": 40000,
+    "task_tokens": 600000
+   },
+   "caps": {
+    "connection_timeout_seconds": 60,
+    "max_real_calls": 60,
+    "retry_attempts": 1,
+    "timeout_seconds": 900
+   },
+   "child_reservations": 1,
+   "database_sha256": "4e3fa1b457a5dfad38d0865a4a8aab9792a07dd8d26d83e0e7f9f5c56544c402",
+   "directory": "multi-child-run-20260914",
+   "elapsed_seconds": 45.047,
+   "exact_tokens": 36172,
+   "fixed_verification": [],
+   "integrations": [],
+   "outcome": "host wall-clock ceiling too small for two assistants",
+   "plan_calls": [
+    {
+     "assignments": [
+      {
+       "assignment_id": "rules_impl",
+       "paths": [
+        "telemetry_rules.py"
+       ],
+       "role": "patch_author"
+      },
+      {
+       "assignment_id": "format_impl",
+       "paths": [
+        "telemetry_format.py"
+       ],
+       "role": "patch_author"
+      }
+     ],
+     "handoff": "await_report",
+     "status": "invalid"
+    },
+    {
+     "assignments": [
+      {
+       "assignment_id": "rules_impl",
+       "paths": [
+        "telemetry_rules.py"
+       ],
+       "role": "patch_author"
+      },
+      {
+       "assignment_id": "format_impl",
+       "paths": [
+        "telemetry_format.py"
+       ],
+       "role": "patch_author"
+      }
+     ],
+     "handoff": "await_report",
+     "status": "failed"
+    }
+   ],
+   "promotion_ledger": [],
+   "real_calls": 5,
+   "request_snapshots": 7,
+   "roles": {
+    "main": 5
+   },
+   "sandbox_converged": true,
+   "workspaces": {
+    "explicit-release": 2
+   }
+  },
+  {
+   "artifacts": [],
+   "budget_accounts_closed": 3,
+   "budgets": {
+    "assistant_tokens_each": 60000,
+    "assistant_wall_ms_each": 300000,
+    "coder_max_children": 2,
+    "coder_tokens": 460000,
+    "coder_wall_ms": 1320000,
+    "main_turn_wall_ms": 600000,
+    "retained_main_tokens": 40000,
+    "task_tokens": 600000
+   },
+   "caps": {
+    "connection_timeout_seconds": 60,
+    "max_real_calls": 60,
+    "retry_attempts": 1,
+    "timeout_seconds": 900
+   },
+   "child_reservations": 3,
+   "database_sha256": "81033aaed48aca09fc805144ae4521b8eb01b516c8c8588b6d62b168dec54cf5",
+   "directory": "multi-child-run2-20260914",
+   "elapsed_seconds": 41.203,
+   "exact_tokens": 21578,
+   "fixed_verification": [],
+   "integrations": [],
+   "outcome": "task root max_processes refused the second assistant",
+   "plan_calls": [
+    {
+     "assignments": [
+      {
+       "assignment_id": "rules-impl",
+       "paths": [
+        "telemetry_rules.py"
+       ],
+       "role": "patch_author"
+      },
+      {
+       "assignment_id": "format-impl",
+       "paths": [
+        "telemetry_format.py"
+       ],
+       "role": "patch_author"
+      }
+     ],
+     "handoff": "await_report",
+     "status": "failed"
+    }
+   ],
+   "promotion_ledger": [],
+   "real_calls": 4,
+   "request_snapshots": 6,
+   "roles": {
+    "child": 1,
+    "main": 3
+   },
+   "sandbox_converged": true,
+   "workspaces": {
+    "agent-not-created": 1,
+    "explicit-release": 3
+   }
+  },
+  {
+   "artifacts": [
+    {
+     "agent_id": "agent-tool-patch-author-651cf6cb-0108-5cf4-98c6-ded70ba7b15b",
+     "paths": [
+      "telemetry_rules.py"
+     ]
+    },
+    {
+     "agent_id": "agent-tool-patch-author-3b750ca4-bf3a-54d8-9033-c6af51d6bbc4",
+     "paths": [
+      "telemetry_format.py"
+     ]
+    }
+   ],
+   "budget_accounts_closed": 4,
+   "budgets": {
+    "assistant_tokens_each": 60000,
+    "assistant_wall_ms_each": 300000,
+    "coder_max_children": 2,
+    "coder_processes": 2,
+    "coder_tokens": 460000,
+    "coder_wall_ms": 1320000,
+    "main_turn_wall_ms": 600000,
+    "retained_main_tokens": 40000,
+    "task_processes": 3,
+    "task_tokens": 600000
+   },
+   "caps": {
+    "connection_timeout_seconds": 60,
+    "max_real_calls": 60,
+    "retry_attempts": 1,
+    "timeout_seconds": 900
+   },
+   "child_reservations": 3,
+   "database_sha256": "9017fa459b7cd52b99f97f938d1c4abc9d4daa5891483c4fa966694c5abe3404",
+   "directory": "multi-child-run3-20260914",
+   "elapsed_seconds": 254.922,
+   "exact_tokens": 297928,
+   "fixed_verification": [
+    false,
+    false
+   ],
+   "integrations": [
+    "succeeded",
+    "succeeded"
+   ],
+   "outcome": "mechanism complete; fixed functional check failed",
+   "plan_calls": [
+    {
+     "assignments": [
+      {
+       "assignment_id": "rules-impl",
+       "paths": [
+        "telemetry_rules.py"
+       ],
+       "role": "patch_author"
+      },
+      {
+       "assignment_id": "format-impl",
+       "paths": [
+        "telemetry_format.py"
+       ],
+       "role": "patch_author"
+      }
+     ],
+     "handoff": "await_report",
+     "status": "invalid"
+    },
+    {
+     "assignments": [
+      {
+       "assignment_id": "rules-impl",
+       "paths": [
+        "telemetry_rules.py"
+       ],
+       "role": "patch_author"
+      },
+      {
+       "assignment_id": "format-impl",
+       "paths": [
+        "telemetry_format.py"
+       ],
+       "role": "patch_author"
+      }
+     ],
+     "handoff": "await_report",
+     "status": "succeeded"
+    }
+   ],
+   "promotion_ledger": [],
+   "real_calls": 25,
+   "request_snapshots": 27,
+   "roles": {
+    "child": 8,
+    "main": 17
+   },
+   "sandbox_converged": true,
+   "workspaces": {
+    "explicit-release": 1,
+    "workspace-dirty": 3
+   }
+  }
+ ],
+ "case_id": "multi-child-telemetry",
+ "date": "2026-09-14",
+ "functional_result": "Failed twice on the frozen check: the rules assistant's normalize() does not reject a non-list top-level input, so normalize(None) raises TypeError instead of the specified ValueError. Same class as records 044 and 054.",
+ "host_defects_found_and_fixed": [
+  "batch capacity pre-check covered only max_children, so an unaffordable batch failed the dispatch instead of returning a correctable rejection",
+  "BudgetExhaustedError recorded no dimension, so two rounds could not name the refused ceiling without rebuilding the ledger",
+  "product_handoffs.investigations shadowed its result list while reading a multi-assignment plan receipt, crashing evidence collection after the run"
+ ],
+ "limits": "One task, three attempts, one model. The requirement names the assistant count, so this is mechanism and delivery evidence only: no spontaneous-choice claim, no speedup or quality benefit, and no promotion (the fixed check failed).",
+ "mechanism": "Attempt 3: one plan with two patch_author assignments on disjoint paths, two independent Patches captured, both read and explicitly integrated, and the completion receipt matched one applied receipt per assignment.",
+ "provider": {
+  "call_limit": 60,
+  "connection_digest": "8b2745bf62ffc25c22839cae7ccd329991f2d07fcd4fd9e86858f97809f05c05",
+  "model": "deepseek-v4-flash",
+  "network_mode": "direct",
+  "provider": "openai-compatible",
+  "timeout_seconds": 60
+ },
+ "round": "multi-child-real-acceptance"
+}

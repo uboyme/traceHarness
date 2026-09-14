@@ -1,0 +1,194 @@
+{
+  "format": 1,
+  "kind": "request-probe",
+  "product_evaluation": false,
+  "code_digest": "495629748ac5b516cbc75206d8a1750424c77ba483ff37711a46da90445aedcc",
+  "plan_sha256": "fd6ab9f64c33c1408da207f4ae2ee913b9e44f63c1e2abe383f48b31f3b9c271",
+  "calls": 9,
+  "tokens": 30509,
+  "provider_failures": 0,
+  "tools_executed": 0,
+  "sources": [
+    {
+      "case": "separable-review",
+      "stream_id": "session:wf-session-2b132a43e41ec6b32dbde1884e80b44f1051c83625ae13e03604d9c2e6949bdd",
+      "seq": 34,
+      "original_dispatch_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "database_sha256": "25cf54ea8835409999e1c3fc2c16eff54bb515730b875f18a47236615aacd054",
+      "database_unchanged": true
+    },
+    {
+      "case": "coupled-review",
+      "stream_id": "session:wf-session-eece0d1c3a7995bedd6b7aa5780cc5c1c121f939c8e5f120c691451f5f3bd110",
+      "seq": 34,
+      "original_dispatch_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "database_sha256": "8c5299490c95a6559e75806bda7a33f082667d020e1741f973d39562449a4f03",
+      "database_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "stream_id": "session:wf-session-b142219e0876cf353e3a0c7a37ec669846c278e425af2cd1d01cbbfc57e8f7cd",
+      "seq": 34,
+      "original_dispatch_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "database_sha256": "b1d98ad01e7ce3b8522c64162be63229a7dce635be0bcdc0f740d2b4433f8d07",
+      "database_unchanged": true
+    }
+  ],
+  "reviews": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "request_fingerprint": "1371a620e27ba16c8e775e5260559bd36e1dbd3c9be7c92822a156fb73e90ca0",
+      "expected_label": "separable",
+      "label_match": false,
+      "proposal": null,
+      "split_review": "no_proposal"
+    },
+    {
+      "case": "separable-review",
+      "condition": "evidence-full-system",
+      "request_fingerprint": "0ede174e816b476409ee36d8ec2d144f35b2f4fcd47be84928ce8a9a0106f8a2",
+      "expected_label": "separable",
+      "label_match": true,
+      "proposal": {
+        "id": "call_daa1da4913604ca4b46057",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "separable",
+          "main_goal": "Gather line-annotated code evidence from four source files to support conclusions on allocation and handoff behaviors.",
+          "child_goal": "Read the four source files listed in INDEX.md and identify concrete line ranges illustrating quota/decision/ledger state maintenance (allocation) and investigation creation/delegation/renewal/reporting (handoff).",
+          "child_deliverable": "A set of at least four code citations (path + start_line + end_line), two per topic, drawn from the four specified files.",
+          "briefing": "Read `src/traceh/budgets/projection.py`, `src/traceh/budgets/service.py`, `src/traceh/supervision/delegation.py`, and `src/traceh/supervision/investigation_budget.py`. For each, locate implementation logic related to (1) allocation: how quotas, decisions, and ledger projections maintain current state; and (2) handoff: how read-only investigations are created, delegated, renewed, and reported on by the principal. Extract at least two distinct line ranges per theme, ensuring each citation is from an actual file and line span (start_line/end_line). No code modification or test execution is performed.",
+          "independent_readonly": true
+        }
+      },
+      "split_review": "not_demonstrated"
+    },
+    {
+      "case": "separable-review",
+      "condition": "evidence-focused-system",
+      "request_fingerprint": "a79c6967887332e039f292b888df7b060c2976761b11a554ba83bf0b9dc4a386",
+      "expected_label": "separable",
+      "label_match": true,
+      "proposal": {
+        "id": "call_e30238f7fde643c984eedd",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "separable",
+          "main_goal": "Review two readonly design aspects from the codebase: (1) allocation (budgets/projection.py, budgets/service.py), and (2) handoff (supervision/delegation.py, supervision/investigation_budget.py), each with at least two cited code lines and a conclusion.",
+          "child_goal": "Read and extract relevant code snippets and structural context from the four specified Python files to support analysis of allocation and handoff behaviors.",
+          "child_deliverable": "Four code excerpts — one per file — each containing function signatures, key class definitions, and logic related to budget projection/allocation and delegation/handoff workflows.",
+          "briefing": "The INDEX.md confirms the four target files. We must read all four to gather evidence for both topics. Each file is independent: projection.py and service.py inform 'allocation'; delegation.py and investigation_budget.py inform 'handoff'. No cross-file dependency exists in the reading phase; all can be read in parallel using readonly tools. The conclusions and JSON assembly will happen after evidence collection.",
+          "independent_readonly": true
+        }
+      },
+      "split_review": "not_demonstrated"
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "request_fingerprint": "7fa2d5556f41ff6ba22afa95643a255c6c4ed4c2479297f9a28475aa29ea3914",
+      "expected_label": "local",
+      "label_match": false,
+      "proposal": null,
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "coupled-review",
+      "condition": "evidence-full-system",
+      "request_fingerprint": "cea51b732dad2cd2c38310481faa3ff9501d0e634ab158105ddf13adeb322a92",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_dc36182e40bc45a98168ec",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Read the remainder of src/traceh/supervision/investigation_budget.py to locate and understand InvestigationBudgetContinuation.after_tool_results, then produce the requested answer.json.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "coupled-review",
+      "condition": "evidence-focused-system",
+      "request_fingerprint": "09d9f692b04f79985ee5907b16bd386632e7fcb718e6ce5c9da3eed1a31f0ca8",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_efae5db1acba42168e9c6d",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Read src/traceh/supervision/investigation_budget.py and analyze the InvestigationBudgetContinuation.after_tool_results state chain to determine its checking logic, when it issues additional budget requests, and when it continues or stops; then write a coherent conclusion and at least three actual code line references into answer.json.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "request_fingerprint": "113fe092762dcaf683a992d50d17aff576d2db53fc6bbe3d8719f226e3c407a3",
+      "expected_label": "local",
+      "label_match": false,
+      "proposal": null,
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "simple-read",
+      "condition": "evidence-full-system",
+      "request_fingerprint": "70ab744d90613ec9c112eda7e6b8de3f61fd15d064d1cde1099b530690aebeb1",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_c01f082be43e4f599dd81d",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Write {\"version\":\"0.11.0\"} to answer.json",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    },
+    {
+      "case": "simple-read",
+      "condition": "evidence-focused-system",
+      "request_fingerprint": "436b227f848d401b8c6b97622175994ea479cb180d87c9710b2d756c70d4b542",
+      "expected_label": "local",
+      "label_match": true,
+      "proposal": {
+        "id": "call_d24f649a6df64b009fd53b",
+        "name": "decide_task_decomposition",
+        "arguments": {
+          "decision": "local",
+          "main_goal": "Extract the version string from src/traceh/version.py and write it to answer.json in the specified JSON format.",
+          "child_goal": "",
+          "child_deliverable": "",
+          "briefing": "",
+          "independent_readonly": false
+        }
+      },
+      "split_review": "not_applicable"
+    }
+  ],
+  "review_owner": "implementing-agent-source-and-proposal-inspection; not an independent LLM judge or human approval",
+  "review_limit": "Both separable proposals cover all source files. The full-system proposal duplicates main and child evidence gathering; the focused-system proposal makes the child gather all evidence for main analysis without a clearly retained independent outcome. Independent parallel work is not demonstrated.",
+  "validation": {
+    "new_tests": 16,
+    "targeted_and_adjacent": 91,
+    "skipped": 0,
+    "collect_only": 4063
+  }
+}

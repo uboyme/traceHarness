@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "stage": "WC-1G",
+  "real_calls": 3,
+  "main_calls": 3,
+  "child_calls": 0,
+  "retries": 0,
+  "known_exact_tokens": 2337,
+  "total_tokens": null,
+  "wall_ms": 40936,
+  "failure": "provider-tool-arguments-invalid",
+  "failure_category": "protocol",
+  "review_reached": false,
+  "behavioral_improvement": "unmeasured",
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "promotion": false,
+  "budget": {
+    "accounts": 2,
+    "accounts_closed": 2,
+    "charged_steps": 3,
+    "charged_tool_calls": 2,
+    "child_reservations": 1,
+    "child_reservations_terminal": 1,
+    "converged": true,
+    "settled_tokens": 240000,
+    "usage_reservations": 4,
+    "usage_reservations_terminal": 4
+  },
+  "workspaces": {
+    "converged": true,
+    "live": 0,
+    "quarantined": 0,
+    "released": 2,
+    "workspaces": 2
+  },
+  "replay": {
+    "requests": 5,
+    "sessions": [
+      {
+        "session_id": "df357497-27cb-44cd-b2cc-0d70f81ffbf1",
+        "requests": 2
+      },
+      {
+        "session_id": "product-owner-session-product-task-914d734c040c566384b4cec92f8eac388c24db8b3d1021055436eb0d280a63ee",
+        "requests": 0
+      },
+      {
+        "session_id": "wf-session-77708a8c8c8b09961d85fa31e8a8195e166a8e2fa3ca56b8667be5d8a4c90d55",
+        "requests": 3
+      }
+    ],
+    "errors": [],
+    "original_database_unchanged": true,
+    "database_sha256": "6c99e29d3d7200dce0a515068c0e7f43b3a352739a02aede458eb139f03553a5"
+  },
+  "baseline_runs": 0,
+  "judge_calls": 0
+}

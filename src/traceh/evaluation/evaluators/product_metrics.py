@@ -12,10 +12,8 @@ Where each number comes from:
 success                      ProductTask terminal + Workflow terminal + Review
                              ``passed`` + a Promotion receipt whose new revision
                              is what the bare target ref actually points at
-routing tokens               the Session of the Agent named by
-                             ``product/task-routed``
-execution tokens             the Sessions of the Agents the Workflow's own node
-                             outcomes name
+execution tokens             the Workflow main Agent and all of its owned
+                             investigation Sessions, including failed work
 steps / tool calls           ``step/start`` and ``tool/call`` in those Sessions
 cumulative work duration     durable ``turn/start`` -> ``turn/end`` intervals
 budget outcome               the Budget Ledger, scoped to this task's ownership
@@ -74,8 +72,9 @@ from traceh.promotion.models import (
 from traceh.promotion.projection import PromotionLedgerReader
 from traceh.session.event_store import EventStore
 from traceh.session.invariants import CoreInvariantChecker
+from traceh.session.service import SessionService
 from traceh.supervision.lifecycle import AgentOwnershipGraph
-from traceh.workflow.models import agent_identity, workflow_definition_hash
+from traceh.workflow.models import agent_identity, review_request_identity, workflow_definition_hash
 from traceh.workflow.projection import WorkflowStreamReader
 from traceh.workspaces.catalog import WorkspaceCatalogReader
 
@@ -83,9 +82,7 @@ SESSION_STREAM_PREFIX = "session:"
 
 _QUALITY_ORDER = (UsageQuality.EXACT, UsageQuality.ESTIMATED, UsageQuality.UNKNOWN)
 
-_TRUSTED_QUALITIES = frozenset(
-    {UsageQuality.EXACT.value, UsageQuality.ESTIMATED.value}
-)
+_TRUSTED_QUALITIES = frozenset({UsageQuality.EXACT.value, UsageQuality.ESTIMATED.value})
 """Usage qualities a token total may be built from.
 
 ``estimated`` is reported as a value carrying its label, because it is a real
@@ -161,9 +158,7 @@ class SessionGroup:
         return TokenTotals(
             input_tokens=sum(part.input_tokens for part in parts if part is not None),
             output_tokens=sum(part.output_tokens for part in parts if part is not None),
-            quality=_worst_quality(
-                tuple(part.quality for part in parts if part is not None)
-            ),
+            quality=_worst_quality(tuple(part.quality for part in parts if part is not None)),
         )
 
     @property
@@ -190,9 +185,7 @@ class SessionGroup:
     @property
     def provider_failure_categories(self) -> tuple[str, ...]:
         return tuple(
-            category
-            for item in self.sessions
-            for category in item.provider_failure_categories
+            category for item in self.sessions for category in item.provider_failure_categories
         )
 
 
@@ -260,8 +253,6 @@ class AttemptEvidence:
     source_base_revision: str | None
     definition_hash: str | None
     workflow_status: WorkflowStatus | None
-    routing: SessionWork | None
-    routing_parsed: bool
     execution: SessionGroup
     unattributed: SessionGroup
     budget: BudgetOutcome
@@ -277,6 +268,8 @@ class AttemptEvidence:
     failure_code: str | None
     reason_code: str | None
     unavailable: tuple[str, ...]
+    investigations: tuple[dict, ...] = ()
+    collaboration: dict | None = None
 
     @property
     def success(self) -> bool:
@@ -312,9 +305,7 @@ async def collect_attempt_evidence(
     if summary is None:
         raise BenchmarkEvidenceError("benchmark-product-task-missing", task_id)
 
-    facts = await _workflow_facts(
-        store, summary, promotion_target_id=promotion_target_id
-    )
+    facts = await _workflow_facts(store, summary, promotion_target_id=promotion_target_id)
     workflow_status, role_agents = facts.status, facts.role_agents
     directory = await AgentDirectoryReader(store).load()
     owner_id = product_task_owner_id(task_id)
@@ -322,55 +313,40 @@ async def collect_attempt_evidence(
     # owner was created never had one. What must not happen is a Workflow or
     # routing fact naming an Agent this task does not own, which is what the
     # containment check below decides.
-    subtree = AgentOwnershipGraph(directory).subtree_postorder(owner_id)
+    ownership = AgentOwnershipGraph(directory)
+    subtree = ownership.subtree_postorder(owner_id)
 
     expected = {owner_id, *role_agents.values()}
-    if summary.router_agent_id is not None:
-        expected.add(summary.router_agent_id)
     if not expected - {owner_id} <= set(subtree):
         # A Product or Workflow fact naming an Agent this task does not own means
         # the two sources disagree about what ran, and measuring either alone
         # would attribute somebody else's tokens to this attempt.
         raise BenchmarkEvidenceError("benchmark-agent-set-inconsistent", task_id)
-    # The reverse is *not* an inconsistency. A Router Agent is created before its
-    # answer is parsed, so a rejected answer leaves a real, owned Agent that no
-    # durable Product fact ever named. Its cost is reported separately rather
-    # than either discarded or relabelled as routing this task never recorded.
+    execution_ids = {agent: role.value for role, agent in role_agents.items()}
+    if summary.resolved_mode is ResolvedTaskMode.MULTI:
+        main = role_agents.get(ProductRole.CODER)
+        if main is not None:
+            for child in ownership.subtree_postorder(main):
+                if child != main:
+                    role = (
+                        "patch_author"
+                        if "apply_patch" in directory.get(child).capability_grants
+                        else "investigator"
+                    )
+                    execution_ids[child] = f"{role}.{child}"
+                    expected.add(child)
+    # Partial activation can leave an owned Agent without a completed Workflow
+    # binding. Retain its cost as unattributed instead of dropping it.
     unattributed_ids = sorted(set(subtree) - expected)
 
     unavailable: list[str] = []
-    routing: SessionWork | None = None
-    if summary.router_agent_id is not None:
-        if summary.routing_session_id is None:
-            raise BenchmarkEvidenceError("benchmark-routing-session-missing", task_id)
-        # ``product/task-routed`` names both the Router Agent and its Session,
-        # but only the Directory decides which Session that Agent actually owns.
-        # Reading the pair straight out of the Product payload lets a routing
-        # identity point at some *other* Agent's Session - a role Session of the
-        # same task parses cleanly and passes the invariant check - and its
-        # tokens would then be counted once as routing and once as execution,
-        # collapsing the separation the two metrics exist to keep.
-        router_record = directory.get(summary.router_agent_id)
-        if router_record is None:
-            raise BenchmarkEvidenceError("benchmark-agent-record-missing", task_id)
-        if router_record.session_id != summary.routing_session_id:
-            raise BenchmarkEvidenceError("benchmark-routing-session-mismatch", task_id)
-        routing = await _session_work(
-            store,
-            agent_id=summary.router_agent_id,
-            session_id=router_record.session_id,
-        )
-        _note_unavailable(unavailable, "routing", routing)
-
     sessions: list[SessionWork] = []
-    for role, agent_id in sorted(role_agents.items(), key=lambda item: item[0].value):
+    for agent_id, label in sorted(execution_ids.items(), key=lambda item: item[1]):
         record = directory.get(agent_id)
         if record is None:
             raise BenchmarkEvidenceError("benchmark-agent-record-missing", task_id)
-        work = await _session_work(
-            store, agent_id=agent_id, session_id=record.session_id
-        )
-        _note_unavailable(unavailable, f"execution.{role.value}", work)
+        work = await _session_work(store, agent_id=agent_id, session_id=record.session_id)
+        _note_unavailable(unavailable, f"execution.{label}", work)
         sessions.append(work)
     execution = SessionGroup(tuple(sessions))
 
@@ -379,9 +355,7 @@ async def collect_attempt_evidence(
         record = directory.get(agent_id)
         if record is None:
             raise BenchmarkEvidenceError("benchmark-agent-record-missing", task_id)
-        work = await _session_work(
-            store, agent_id=agent_id, session_id=record.session_id
-        )
+        work = await _session_work(store, agent_id=agent_id, session_id=record.session_id)
         _note_unavailable(unavailable, "unattributed", work)
         unattributed.append(work)
 
@@ -389,20 +363,28 @@ async def collect_attempt_evidence(
     workspaces = await _workspace_outcome(store, subtree)
 
     ledger = await PromotionLedgerReader(store).load()
-    review = None if summary.review_id is None else ledger.review(summary.review_id)
+    review = (
+        ledger.review_for_request(
+            review_request_identity(summary.workflow_run_id, PRODUCT_VERIFICATION_NODE)
+        )
+        if facts.verification_started
+        else None
+    )
     if summary.review_id is not None and review is None:
         raise BenchmarkEvidenceError("benchmark-review-missing", task_id)
-    if review is not None and not review_matches_verification_plan(
-        review, verification_plan
+    if review is not None and (
+        summary.review_id not in (None, review.review_id)
+        or facts.review_id not in (None, review.review_id)
+        or review.target_id != promotion_target_id
     ):
+        raise BenchmarkEvidenceError("benchmark-review-chain-broken", task_id)
+    if review is not None and not review_matches_verification_plan(review, verification_plan):
         # The Promotion projector proves that the Review is internally
         # coherent; the benchmark owns the host-frozen VerificationPlan and
         # must additionally prove that every durable result belongs to that
         # exact plan before it can use ``passed`` as a quality fact.
         raise BenchmarkEvidenceError("benchmark-verifier-evidence-mismatch", task_id)
-    promotion = (
-        None if summary.promotion_id is None else ledger.promotion(summary.promotion_id)
-    )
+    promotion = None if summary.promotion_id is None else ledger.promotion(summary.promotion_id)
     if summary.promotion_id is not None and promotion is None:
         raise BenchmarkEvidenceError("benchmark-promotion-missing", task_id)
     if promotion is not None and promotion.target_ref != target_ref:
@@ -415,6 +397,19 @@ async def collect_attempt_evidence(
         promotion=promotion,
     )
 
+    handoffs = ()
+    if summary.resolved_mode is ResolvedTaskMode.MULTI and ProductRole.CODER in role_agents:
+        from traceh.evaluation.evaluators.product_handoffs import investigations
+
+        handoffs = await investigations(
+            store, role_agents[ProductRole.CODER], summary.source_base_revision
+        )
+    from traceh.evaluation.evaluators.product_handoffs import collaboration_diagnostics
+
+    overlap_events = [
+        await store.read(SessionService.session_stream(work.session_id)) for work in sessions
+    ]
+    collaboration = collaboration_diagnostics(overlap_events, handoffs)
     return AttemptEvidence(
         task_id=task_id,
         product_status=summary.status,
@@ -427,18 +422,13 @@ async def collect_attempt_evidence(
         source_base_revision=summary.source_base_revision,
         definition_hash=summary.definition_hash,
         workflow_status=workflow_status,
-        routing=routing,
-        routing_parsed=summary.router_agent_id is not None
-        and summary.resolved_mode is not None,
         execution=execution,
         unattributed=SessionGroup(tuple(unattributed)),
         budget=budget,
         workspaces=workspaces,
-        review_id=summary.review_id,
+        review_id=None if review is None else review.review_id,
         review_passed=None if review is None else review.passed,
-        verifier_definition_digest=(
-            None if review is None else review.verifier_definition_digest
-        ),
+        verifier_definition_digest=(None if review is None else review.verifier_definition_digest),
         promotion_id=summary.promotion_id,
         previous_revision=None if promotion is None else promotion.previous_revision,
         new_revision=None if promotion is None else promotion.new_revision,
@@ -447,6 +437,8 @@ async def collect_attempt_evidence(
         failure_code=summary.failure_code,
         reason_code=summary.reason_code,
         unavailable=tuple(unavailable),
+        investigations=handoffs,
+        collaboration=collaboration,
     )
 
 
@@ -458,6 +450,7 @@ class _WorkflowFacts:
     role_agents: dict[ProductRole, str]
     review_id: str | None
     approval_digest: str | None
+    verification_started: bool
 
 
 async def _workflow_facts(
@@ -469,7 +462,7 @@ async def _workflow_facts(
     """Read the run through the definition the task itself recorded."""
 
     if summary.resolved_mode is None:
-        return _WorkflowFacts(None, {}, None, None)
+        return _WorkflowFacts(None, {}, None, None, False)
     definition = product_workflow_definition(
         summary.resolved_mode, promotion_target_id=promotion_target_id
     )
@@ -480,12 +473,10 @@ async def _workflow_facts(
         # The task recorded a plan this build does not reproduce. Interpreting
         # its run with a different definition would report node kinds and
         # results the run never agreed to.
-        raise BenchmarkEvidenceError(
-            "benchmark-definition-hash-mismatch", summary.task_id
-        )
+        raise BenchmarkEvidenceError("benchmark-definition-hash-mismatch", summary.task_id)
     projection = await WorkflowStreamReader(store).load(summary.workflow_run_id)
     if projection.status is None:
-        return _WorkflowFacts(None, {}, None, None)
+        return _WorkflowFacts(None, {}, None, None, False)
     run = projection.run(definition)
     run_id = summary.workflow_run_id
     agents: dict[ProductRole, str] = {}
@@ -504,9 +495,7 @@ async def _workflow_facts(
         # agree, which keeps this a cross-check rather than a substitution.
         derived, _, _, _ = agent_identity(run_id, node_id)
         if outcome.agent_id is not None and outcome.agent_id != derived:
-            raise BenchmarkEvidenceError(
-                "benchmark-node-agent-identity-mismatch", summary.task_id
-            )
+            raise BenchmarkEvidenceError("benchmark-node-agent-identity-mismatch", summary.task_id)
         agents[role] = derived
     verification = run.outcome(PRODUCT_VERIFICATION_NODE)
     approval = run.outcome(PRODUCT_APPROVAL_NODE)
@@ -515,6 +504,7 @@ async def _workflow_facts(
         role_agents=agents,
         review_id=None if verification is None else verification.review_id,
         approval_digest=None if approval is None else approval.approval_digest,
+        verification_started=verification is not None,
     )
 
 
@@ -552,9 +542,7 @@ def _require_one_evidence_chain(
             raise BenchmarkEvidenceError("benchmark-approval-chain-broken", task_id)
 
 
-async def _session_work(
-    store: EventStore, *, agent_id: str, session_id: str
-) -> SessionWork:
+async def _session_work(store: EventStore, *, agent_id: str, session_id: str) -> SessionWork:
     events = await store.read(f"{SESSION_STREAM_PREFIX}{session_id}")
     # Counting events without checking the lifecycle they belong to means any
     # stream that merely *looks* like a Session produces numbers. The core
@@ -665,9 +653,7 @@ async def _session_work(
             else None
         ),
         work_duration_ms=duration_ms if duration_available else None,
-        retry_wait_milliseconds=(
-            retry_wait_milliseconds if retry_wait_available else None
-        ),
+        retry_wait_milliseconds=(retry_wait_milliseconds if retry_wait_available else None),
         provider_active_milliseconds=(
             provider_active_milliseconds if provider_active_available else None
         ),
@@ -676,15 +662,11 @@ async def _session_work(
     )
 
 
-async def _budget_outcome(
-    store: EventStore, subtree: tuple[str, ...]
-) -> BudgetOutcome:
+async def _budget_outcome(store: EventStore, subtree: tuple[str, ...]) -> BudgetOutcome:
     ledger = await BudgetLedgerReader(store).load()
     members = set(subtree)
     accounts = [item for item in ledger.accounts if item.agent_id in members]
-    reservations = [
-        item for item in ledger.reservations if item.parent_agent_id in members
-    ]
+    reservations = [item for item in ledger.reservations if item.parent_agent_id in members]
     usage = [item for item in ledger.usage_reservations if item.agent_id in members]
     settled_tokens = 0
     for item in usage:
@@ -694,15 +676,12 @@ async def _budget_outcome(
     charges = [item for item in ledger.charges if item.agent_id in members]
     return BudgetOutcome(
         accounts=len(accounts),
-        accounts_closed=sum(
-            1 for item in accounts if item.status is BudgetAccountStatus.CLOSED
-        ),
+        accounts_closed=sum(1 for item in accounts if item.status is BudgetAccountStatus.CLOSED),
         child_reservations=len(reservations),
         child_reservations_terminal=sum(
             1
             for item in reservations
-            if item.status
-            in {BudgetReservationStatus.COMMITTED, BudgetReservationStatus.RELEASED}
+            if item.status in {BudgetReservationStatus.COMMITTED, BudgetReservationStatus.RELEASED}
         ),
         usage_reservations=len(usage),
         usage_reservations_terminal=sum(
@@ -720,21 +699,13 @@ async def _budget_outcome(
     )
 
 
-async def _workspace_outcome(
-    store: EventStore, subtree: tuple[str, ...]
-) -> WorkspaceOutcome:
+async def _workspace_outcome(store: EventStore, subtree: tuple[str, ...]) -> WorkspaceOutcome:
     catalog = await WorkspaceCatalogReader(store).load()
-    records = [
-        record for record in catalog.workspaces if record.agent_id in set(subtree)
-    ]
+    records = [record for record in catalog.workspaces if record.agent_id in set(subtree)]
     return WorkspaceOutcome(
         workspaces=len(records),
-        released=sum(
-            1 for record in records if record.status is WorkspaceStatus.RELEASED
-        ),
-        quarantined=sum(
-            1 for record in records if record.status is WorkspaceStatus.QUARANTINED
-        ),
+        released=sum(1 for record in records if record.status is WorkspaceStatus.RELEASED),
+        quarantined=sum(1 for record in records if record.status is WorkspaceStatus.QUARANTINED),
     )
 
 

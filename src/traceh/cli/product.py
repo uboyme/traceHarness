@@ -9,7 +9,6 @@ from traceh.api.llm import ToolCall
 from traceh.api.product import (
     ProductTaskStatus,
     ProductTaskView,
-    RequestedTaskMode,
 )
 from traceh.api.tools import EffectKind, Tool, ToolExecutionContext
 from traceh.chat.activity import Clock, default_clock
@@ -397,8 +396,6 @@ def _render_execution_started(
 ) -> None:
     console.write(f"task {pending.task_id}: confirmation accepted; starting execution")
     console.write(f"  requested mode: {pending.proposal.requested_mode.value}")
-    if pending.proposal.requested_mode is RequestedTaskMode.AUTO:
-        console.write("  resolved mode: pending Router decision")
 
 
 async def _emit_product_observation(

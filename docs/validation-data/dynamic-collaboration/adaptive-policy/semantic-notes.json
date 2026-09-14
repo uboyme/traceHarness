@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "reviewer": "implementation-agent-source-review",
+  "independent": false,
+  "changes_formal_scores": false,
+  "rows": [
+    {
+      "case": "parallel-investigation",
+      "finding": "预算结论有引用支持；handoff 的引用覆盖创建和续派，没有直接覆盖 collect 实现，不能把结构通过当作完整证据验收。"
+    },
+    {
+      "case": "dependent-investigation",
+      "finding": "抓到了有效请求返回 Finish、无请求走 inner 的主线，实际产物已写入；引用未直接覆盖主方额度决定与续派实现，未取得独立语义评分。"
+    },
+    {
+      "case": "frozen-review",
+      "finding": "否定自动批准/自动续跑的主要结论有请求说明、决定返回 next_action 和 followup 实现支持；实现者核读不是独立裁判。"
+    },
+    {
+      "case": "simple-read",
+      "finding": "交付 0.11.0，与冻结版本一致。"
+    }
+  ]
+}

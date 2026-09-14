@@ -144,7 +144,20 @@ def assemble_prompt_sections(
                 if navigation
                 else ()
             ),
-            PromptSection("traceh.runtime.references", _REFERENCE_GUIDANCE, 40),
+            # How to use the reference sources belongs with the table that says
+            # which ones exist. `navigation` is already that answer, so a
+            # composition without any of those tools is not told how to use them.
+            # How to use the reference sources belongs with the table that says
+            # which ones exist. `navigation` is already that answer, so a
+            # composition without any of those tools is not told how to use them.
+            # How to use the reference sources belongs with the table that says
+            # which ones exist. `navigation` is already that answer, so a
+            # composition without any of those tools is not told how to use them.
+            *(
+                (PromptSection("traceh.runtime.references", _REFERENCE_GUIDANCE, 40),)
+                if navigation
+                else ()
+            ),
             PromptSection(
                 "traceh.runtime.workspace",
                 f"Workspace root: {workspace}\n"

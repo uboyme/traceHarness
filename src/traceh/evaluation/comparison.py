@@ -95,6 +95,15 @@ def _load(root, assessments):
     frozen = read_input(root, "experiment.json").data
     policy = comparison_policy(frozen["comparison"])
     _require(frozen["format"] == 1 and len(frozen["arms"]) == 2, "experiment")
+    if policy["kind"] == "execution_strategy":
+        _require(
+            frozen["task_type"] == "product_task"
+            and all(
+                a["patch"] is None and a["source_digest"] == frozen["base_source_digest"]
+                for a in frozen["arms"]
+            ),
+            "execution-strategy-source",
+        )
     for ref in (*frozen["artifacts"], *frozen["inputs"]):
         _require(read_input(root, ref["file"]).sha256 == ref["sha256"], "artifact")
     sources = _archive(root, "artifacts/base-source.zip")
@@ -102,6 +111,16 @@ def _load(root, assessments):
     _require(source_digest(sources) == frozen["base_source_digest"], "base-source")
     execution = read_input(root, "execution.json").data
     _require(execution["experiment_digest"] == fingerprint(frozen), "execution")
+    order = (
+        frozen["arms"]
+        if frozen["execution"]["first_arm"] == "baseline"
+        else list(reversed(frozen["arms"]))
+    )
+    _require(
+        [o["variant_id"] for o in execution["outcomes"]]
+        == [a["variant_id"] for a in order[: len(execution["outcomes"])]],
+        "execution-order",
+    )
     judged = {}
     if assessments is not None:
         doc = read_input(Path(assessments).resolve().parent, Path(assessments).name)
@@ -125,6 +144,11 @@ def _load(root, assessments):
     for index, arm in enumerate(frozen["arms"]):
         _require(arm["role"] == ("baseline", "candidate")[index], "variant-role")
         _require(arm["directory"] == f"arms/{index + 1:02d}", "variant-directory")
+        if policy["requested_modes"] is not None:
+            _require(
+                all(t["requested_mode"] == policy["requested_modes"][index] for t in arm["trials"]),
+                "declared-mode",
+            )
         expected = sources
         if arm["patch"] is not None:
             _require(index == 1, "baseline-patch")
@@ -178,10 +202,7 @@ def _load(root, assessments):
             and request["experiment_digest"] == fingerprint(frozen)
             and request["arm"] == arm
             and (
-                (
-                    receipt["pid"] == process["pid"]
-                    and receipt["parent_pid"] == process["owner_pid"]
-                )
+                (receipt["pid"] == process["pid"] and receipt["parent_pid"] == process["owner_pid"])
                 or receipt["parent_pid"] == process["pid"]
             )
             and receipt["source_digest"] == arm["source_digest"]
@@ -189,8 +210,10 @@ def _load(root, assessments):
             "worker",
         )
         _require(receipt["report_digest"] == binding["report_digest"], "worker-report")
-        if index < len(execution["outcomes"]):
-            outcome = execution["outcomes"][index]
+        outcome = next(
+            (o for o in execution["outcomes"] if o["variant_id"] == arm["variant_id"]), None
+        )
+        if outcome is not None:
             _require(
                 outcome.get("receipt_sha256")
                 == read_input(directory, "worker-receipt.json").sha256,
@@ -225,19 +248,13 @@ def _load(root, assessments):
 def paired_measurements(reports, statistics, packets, policy):
     """Pure calculation over validated observations. Keep every planned slot."""
 
+    fields = ("case_id", "group_id", "material_digest", "material_seed", "replicate")
+    if policy["kind"] == "text_candidate":
+        fields += ("requested_mode",)
+
     def key(trial):
         identity = trial["identity"]
-        return tuple(
-            identity[k]
-            for k in (
-                "case_id",
-                "group_id",
-                "material_digest",
-                "material_seed",
-                "replicate",
-                "requested_mode",
-            )
-        )
+        return tuple(identity[k] for k in fields)
 
     indexed = [{key(t): t for t in r["trials"]} for r in reports]
     _require(
@@ -284,19 +301,13 @@ def paired_measurements(reports, statistics, packets, policy):
             {
                 "key": dict(
                     zip(
-                        (
-                            "case_id",
-                            "group_id",
-                            "material_digest",
-                            "material_seed",
-                            "replicate",
-                            "requested_mode",
-                        ),
+                        fields,
                         k,
                         strict=True,
                     )
                 ),
                 "change": change,
+                "requested_modes": [t["identity"]["requested_mode"] for t in trials],
                 "reason": reason,
                 "assessment": states,
                 "execution": [t["execution"] for t in trials],

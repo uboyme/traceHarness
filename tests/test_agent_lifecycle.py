@@ -154,6 +154,44 @@ async def _create(
     )
 
 
+@pytest.mark.parametrize("close", [False, True])
+@pytest.mark.parametrize("child_fails", [False, True])
+async def test_parent_cleanup_can_rejoin_fenced_child(world, monkeypatch, close, child_fails):
+    _, factory, supervisor = world
+    await _create(supervisor, "root")
+    await _create(supervisor, "child", owner_agent_id="root")
+    failure = RuntimeError("child cleanup failed")
+    if child_fails:
+        factory.dispose_errors["child"] = failure
+    original = _ObservedExecution.dispose
+    observed = []
+
+    async def dispose(execution):
+        if execution._agent_id == "root":
+            joining = asyncio.create_task(supervisor.dispose("child"))
+            try:
+                await asyncio.wait_for(asyncio.shield(joining), 2)
+                observed.append("joined")
+            except BaseException as error:
+                observed.append(error)
+                # On a mutant that deadlocks, let the outer scope finish so
+                # the test reports the cause instead of hanging in teardown.
+                joining.add_done_callback(lambda task: task.exception())
+        await original(execution)
+
+    monkeypatch.setattr(_ObservedExecution, "dispose", dispose)
+    operation = supervisor.aclose() if close else supervisor.dispose("root")
+    if child_fails:
+        with pytest.raises(BaseExceptionGroup) as caught:
+            await operation
+        assert failure in _failure_leaves(caught.value)
+        assert len(observed) == 1 and failure in _failure_leaves(observed[0])
+    else:
+        await operation
+        assert observed == ["joined"]
+    assert factory.dispose_counts == {"child": 1, "root": 1}
+
+
 async def test_graph_is_child_first_and_ignores_history_lineage() -> None:
     directory = AgentDirectory(
         (

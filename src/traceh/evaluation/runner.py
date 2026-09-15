@@ -147,11 +147,38 @@ class EvaluationRunner:
         self.options = options or RunOptions()
         identifiers = (
             tuple(v.variant_id for v in self.options.variants)
-            if self.options.variants else (self.options.variant_id,)
+            if self.options.variants
+            else (self.options.variant_id,)
         )
-        self.trials = tuple(t for identifier in identifiers for t in
-                            self.evaluator.trials(identifier, self.options.repetitions))
-        for name, field in (("case_ids", "case_id"), ("material_seeds", "material_seed")):
+        self.trials = tuple(
+            t
+            for identifier in identifiers
+            for t in self.evaluator.trials(identifier, self.options.repetitions)
+        )
+        if self.options.variants:
+            policy = self.options.document.data["comparison"]
+            if (
+                policy["kind"] == "execution_strategy"
+                and self.manifest.task_type is not TaskType.PRODUCT_TASK
+            ):
+                raise BenchmarkManifestError("evaluation-comparison-incompatible", "task_type")
+            if policy["requested_modes"] is not None:
+                modes = dict(zip(identifiers, policy["requested_modes"], strict=True))
+                if any(
+                    not any(t.variant_id == v and t.requested_mode == m for t in self.trials)
+                    for v, m in modes.items()
+                ):
+                    raise BenchmarkManifestError(
+                        "evaluation-comparison-incompatible", "requested_modes"
+                    )
+                self.trials = tuple(
+                    t for t in self.trials if t.requested_mode == modes[t.variant_id]
+                )
+        for name, field in (
+            ("case_ids", "case_id"),
+            ("material_seeds", "material_seed"),
+            ("requested_modes", "requested_mode"),
+        ):
             selected = getattr(self.options, name)
             if selected is not None:
                 if not set(selected) <= {getattr(trial, field) for trial in self.trials}:
@@ -187,9 +214,14 @@ class EvaluationRunner:
         from traceh.evaluation.plan import load_run_options
 
         return EvaluationRunner(
-            self.manifest.directory, output_dir, provider=self._provider,
-            model_id=self.model_id, retry_policy=self.retry_policy, sandbox=self.sandbox,
-            monotonic=self._monotonic, options=load_run_options(plan_file),
+            self.manifest.directory,
+            output_dir,
+            provider=self._provider,
+            model_id=self.model_id,
+            retry_policy=self.retry_policy,
+            sandbox=self.sandbox,
+            monotonic=self._monotonic,
+            options=load_run_options(plan_file),
             provider_binding=self.provider_binding,
             worker_api_key=self.worker_api_key,
         )
@@ -197,6 +229,7 @@ class EvaluationRunner:
     async def run(self):
         if self.options.variants:
             from traceh.evaluation.variant_execution import execute_variants
+
             return await execute_variants(self)
         self.evaluator.verify_inputs()
         if self.options.document is not None:

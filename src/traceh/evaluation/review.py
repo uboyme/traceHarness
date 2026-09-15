@@ -41,9 +41,11 @@ def _run(root):
         frozen, report, base_binding = load_run(root)
     except BenchmarkManifestError:
         stale()
-    if report["task_type"] != "retrieval_episode":
+    if report["task_type"] not in {"retrieval_episode", "product_task"}:
         stale()
     assessment = frozen["settings"]["assessment"]
+    if assessment["rubric"] is None or not assessment["requires_review"]:
+        stale()
     with zipfile.ZipFile(root / "artifacts/materials.zip") as archive:
         rubric_bytes = archive.read(assessment["rubric"]["file"])
         if digest_bytes(rubric_bytes) != assessment["rubric"]["sha256"]:
@@ -67,7 +69,19 @@ def _destination(root, output):
     return root, output
 
 
+def _review_packets(root, report, rubric):
+    if report["task_type"] == "product_task":
+        from traceh.evaluation.evaluators.product_review import packets
+
+        return packets(root, report, rubric)
+    return {p["trial_id"]: p for p in report["task_report"]["episodes"]}
+
+
 def _episode_events(root, trial, packet):
+    if packet.get("task_type") == "product_task":
+        from traceh.evaluation.evaluators.product_review import trial_events
+
+        return trial_events(root, trial)
     stream = "session:" + packet["session_id"]
     ref = next((r for r in trial["evidence"] if r["stream_id"] == stream), None)
     if ref is None:
@@ -85,6 +99,14 @@ def _episode_events(root, trial, packet):
 
 
 def _diagnostics(report, binding, observations):
+    if report["task_type"] == "product_task":
+        from traceh.evaluation.evaluators.product_review import diagnostics
+
+        return {
+            **diagnostics(report, observations),
+            "binding": binding,
+            "analyzer": {"version": 1, "source_digest": source_digest(source_files()[1])},
+        }
     packets = {p["trial_id"]: p for p in report["task_report"]["episodes"]}
     return {
         "format": 1,
@@ -104,7 +126,11 @@ def _diagnostics(report, binding, observations):
 def _write_diagnostics(output, report):
     _write(output / "diagnostics.json", report)
     (output / "diagnostics.md").write_text(
-        diagnostics_markdown(report["rows"])
+        (
+            "# Product task evidence\n\nHard verification and semantic review remain separate.\n"
+            if report.get("task_type") == "product_task"
+            else diagnostics_markdown(report["rows"])
+        )
         + "\n```json\n"
         + json.dumps(report, ensure_ascii=False, indent=2)
         + "\n```\n",
@@ -115,7 +141,7 @@ def _write_diagnostics(output, report):
 def export_review(root, output):
     root, output = _destination(root, output)
     report, binding, rubric = _run(root)
-    packets = {p["trial_id"]: p for p in report["task_report"]["episodes"]}
+    packets = _review_packets(root, report, rubric)
     exports = []
     observations = {}
     for index, trial in enumerate(report["trials"], 1):
@@ -123,11 +149,18 @@ def export_review(root, output):
         if packet is None:
             continue
         ref, events = _episode_events(root, trial, packet)
-        observations[trial["identity"]["trial_id"]] = observe_episode(
-            packet, tuple(EventEnvelope.from_dict(e) for e in events)
+        product = report["task_type"] == "product_task"
+        observations[trial["identity"]["trial_id"]] = (
+            packet
+            if product
+            else observe_episode(packet, tuple(EventEnvelope.from_dict(e) for e in events))
         )
         relative = f"evidence/{index:03d}.json"
-        target = [event for event in events if event["seq"] > packet["target_start_seq"]]
+        target = (
+            events
+            if product
+            else [event for event in events if event["seq"] > packet["target_start_seq"]]
+        )
         exports.append((relative, {"reference": ref, "events": target}))
         packet["target_events"] = relative
     diagnostics = _diagnostics(report, binding, observations)
@@ -144,7 +177,12 @@ def export_review(root, output):
             "execution_run": str(root),
             "rubric": rubric,
             "trials": report["trials"],
-            "episodes": report["task_report"]["episodes"],
+            "task_type": report["task_type"],
+            **{
+                ("tasks" if report["task_type"] == "product_task" else "episodes"): list(
+                    packets.values()
+                )
+            },
         },
     )
     _write(
@@ -159,7 +197,7 @@ def export_review(root, output):
         },
     )
     (output / "README.md").write_text(
-        "# Retrieval review\n\nRead review.json and the original run evidence. "
+        "# Evaluation review\n\nRead review.json and the original run evidence. "
         "Fill reviewer and judgments: trial_id, status (passed/failed/pending_review), reason. "
         "Missing judgments remain pending. Submit with traceh eval --assess. "
         "See diagnostics.md for source/evidence/answer observations and per-query coverage. "
@@ -207,7 +245,7 @@ def reviewed_report(root, judgment_file):
     else:
         stale()
     trials = {t["identity"]["trial_id"]: t for t in report["trials"]}
-    packets = {t["trial_id"]: t for t in report["task_report"]["episodes"]}
+    packets = _review_packets(root, report, rubric)
     seen = set()
     for item in judgment["judgments"]:
         object_fields(item, {"trial_id", "status", "reason"}, "judgment-item")
@@ -225,11 +263,9 @@ def reviewed_report(root, judgment_file):
             stale()
         if status == "passed":
             packet = packets[trial_id]
-            if (
-                trial["invariants"] != "passed"
-                or trial["convergence"] != "converged"
-                or (packet["expectation"]["kind"] == "value" and not packet["dispatched_evidence"])
-            ):
+            from traceh.evaluation.model_review_protocol import hard_rejection
+
+            if hard_rejection(trial, packet):
                 stale()
         trial["assessment"] = {
             "status": status,
@@ -260,14 +296,17 @@ def assess_run(root, judgment_file, output):
     root, output = _destination(root, output)
     report, assessment, document = reviewed_report(root, judgment_file)
     binding = assessment["binding"]
-    packets = {p["trial_id"]: p for p in report["task_report"]["episodes"]}
+    _, _, rubric = _run(root)
+    packets = _review_packets(root, report, rubric)
     observations = {}
     for trial in report["trials"]:
         packet = packets.get(trial["identity"]["trial_id"])
         if packet is not None:
             _, events = _episode_events(root, trial, packet)
-            observations[trial["identity"]["trial_id"]] = observe_episode(
-                packet, tuple(EventEnvelope.from_dict(e) for e in events)
+            observations[trial["identity"]["trial_id"]] = (
+                packet
+                if report["task_type"] == "product_task"
+                else observe_episode(packet, tuple(EventEnvelope.from_dict(e) for e in events))
             )
     diagnostics = _diagnostics(report, binding, observations)
     output.mkdir(parents=True)
@@ -277,7 +316,7 @@ def assess_run(root, judgment_file, output):
     _write(output / "assessment.json", assessment)
     _write(output / "report.json", report)
     lines = [
-        "# Retrieval assessment",
+        "# Evaluation assessment",
         "",
         "Run: " + binding["run_id"],
         "",

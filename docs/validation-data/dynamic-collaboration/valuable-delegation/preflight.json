@@ -1,0 +1,68 @@
+{
+  "format": 1,
+  "image": "sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b",
+  "network": "none",
+  "scenarios": [
+    {
+      "scenario": "parallel-investigation",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    },
+    {
+      "scenario": "dependent-investigation",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    },
+    {
+      "scenario": "frozen-review",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    },
+    {
+      "scenario": "simple-read",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    }
+  ],
+  "contract_digest": "e16bb418c6a64d8a0ecf6eaeafce917e2232fad6a7df963bf4ff82b0d75fc0d4"
+}

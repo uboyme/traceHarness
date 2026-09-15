@@ -1,0 +1,185 @@
+{
+  "format": 1,
+  "rows": [
+    {
+      "case": "dependent-investigation",
+      "database_digest": "1f38be5d28df69b06798dfb4fa7ee971adcdc531b94834c8de554b1d759edb4f",
+      "checks": [
+        {
+          "session_id": "13eccd6f-748e-4436-9621-ffd7527d6a4d",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "product-owner-session-product-task-0d401850a9e9fd7fa0c44f969be1a904dd3e52cfb0f4669d834c44b9bb7a3aad",
+          "requests": 0,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-aeebee7f891d2a158e544a10c10b54814c822abbef5864bc89f50e0606a6f1ed",
+          "requests": 13,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "request_roles": {
+        "control": 2,
+        "main": 13
+      },
+      "adaptive_prompt_exact_in_all_main_requests": true,
+      "adaptive_prompt_absent_elsewhere": true,
+      "tool_calls": {
+        "list_files": 5,
+        "read_file": 2,
+        "search_text": 3,
+        "apply_patch": 2
+      },
+      "exact_usage": {
+        "input_tokens": 98913,
+        "output_tokens": 2257,
+        "total_tokens": 101170
+      },
+      "failed_attempts": {},
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "frozen-review",
+      "database_digest": "6c6ce284501cb7b4e42fa0e878e7363116d1289de72c488d9ed512dee569ef1f",
+      "checks": [
+        {
+          "session_id": "aa11f263-bebd-4700-9541-61dc69799455",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "product-owner-session-product-task-21fc8bcaf7319d5c63f69c1652714286c14c62849854896c81ff1cbebdbce9dc",
+          "requests": 0,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-b3ffdde3dc378ccdd621376f09712a3fd7e6c8141bf0386bd7d9c1c0fd58eca6",
+          "requests": 11,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "request_roles": {
+        "control": 2,
+        "main": 11
+      },
+      "adaptive_prompt_exact_in_all_main_requests": true,
+      "adaptive_prompt_absent_elsewhere": true,
+      "tool_calls": {
+        "list_files": 1,
+        "read_file": 7,
+        "apply_patch": 2
+      },
+      "exact_usage": {
+        "input_tokens": 108376,
+        "output_tokens": 1803,
+        "total_tokens": 110179
+      },
+      "failed_attempts": {},
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "parallel-investigation",
+      "database_digest": "667d257fa7b3037b3f91afe0b64f43fe4b522ffdcc53ddb87efcb5886dee7e0a",
+      "checks": [
+        {
+          "session_id": "e3a98746-bad1-4a60-951f-09662003f0d5",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "product-owner-session-product-task-b737155274aa4d708f9339d8ceb33d4650c21ccbe0e7c32c069b6d91a1436264",
+          "requests": 0,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-1204edee255ac1b7307751004575f850873879a9402d89cd94f46983c4d8068b",
+          "requests": 13,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "request_roles": {
+        "control": 2,
+        "main": 13
+      },
+      "adaptive_prompt_exact_in_all_main_requests": true,
+      "adaptive_prompt_absent_elsewhere": true,
+      "tool_calls": {
+        "list_files": 1,
+        "read_file": 10,
+        "apply_patch": 1
+      },
+      "exact_usage": {
+        "input_tokens": 155601,
+        "output_tokens": 1729,
+        "total_tokens": 157330
+      },
+      "failed_attempts": {},
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "database_digest": "d631f5a9eee9ed5c6558bc633cb38353d5e0aad403bea9195014a7981043c0b2",
+      "checks": [
+        {
+          "session_id": "962a9cdd-50bc-44b6-9940-92b2d73300ab",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "product-owner-session-product-task-1ff068d614c32b530814197c5ff4bf8fa4b5e02d59f1a7d4d7d450be4159dcab",
+          "requests": 0,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-37878536640225432573e7ff7b17ca93f5f15c5ab0628050cd2970da04a42566",
+          "requests": 5,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "request_roles": {
+        "control": 2,
+        "main": 5
+      },
+      "adaptive_prompt_exact_in_all_main_requests": true,
+      "adaptive_prompt_absent_elsewhere": true,
+      "tool_calls": {
+        "list_files": 1,
+        "read_file": 2,
+        "apply_patch": 1
+      },
+      "exact_usage": {
+        "input_tokens": 21608,
+        "output_tokens": 361,
+        "total_tokens": 21969
+      },
+      "failed_attempts": {},
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    }
+  ],
+  "requests": 50,
+  "all_replay_and_invariants_pass": true,
+  "provider_calls": 0
+}

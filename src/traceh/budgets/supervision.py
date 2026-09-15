@@ -21,6 +21,7 @@ from traceh.api.budgets import (
     BudgetLimits,
     BudgetReservation,
     BudgetReservationStatus,
+    ChildBudgetGrant,
 )
 from traceh.budgets.enforcement import budget_operation_id
 from traceh.budgets.errors import (
@@ -29,7 +30,7 @@ from traceh.budgets.errors import (
     BudgetReservationStateError,
     BudgetWriteError,
 )
-from traceh.budgets.events import freeze_limits
+from traceh.budgets.events import freeze_limits, require_retained_tokens
 from traceh.budgets.service import BudgetLedgerService
 from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import EventStore
@@ -45,9 +46,9 @@ from traceh.supervision.lifecycle import AgentOwnershipGraph
 class ChildBudgetPolicy(Protocol):
     """Host-only authority for resolving one child's complete grant."""
 
-    def limits_for_child(
+    def grant_for_child(
         self, *, parent: AgentRecord, child: AgentSpec
-    ) -> BudgetLimits:
+    ) -> ChildBudgetGrant:
         ...
 
 
@@ -156,8 +157,9 @@ class BudgetedAgentSupervisor:
             parent = directory.get(frozen.owner_agent_id)
             if parent is None:
                 raise BudgetDirectoryMismatchError
+            grant = self._policy.grant_for_child(parent=parent, child=frozen)
             child_limits = freeze_limits(
-                self._policy.limits_for_child(parent=parent, child=frozen),
+                grant.limits,
                 field="child_limits",
             )
             await self._reserve_child_for_create(
@@ -166,6 +168,8 @@ class BudgetedAgentSupervisor:
                 child_agent_id=assigned_agent_id,
                 request_id=request_id,
                 child_limits=child_limits,
+                retained_tokens=require_retained_tokens(grant.retained_tokens),
+                initial_tokens=grant.initial_tokens,
             )
             try:
                 handle = await self._inner.create(
@@ -204,6 +208,8 @@ class BudgetedAgentSupervisor:
         child_agent_id: str,
         request_id: str,
         child_limits: BudgetLimits,
+        retained_tokens: int,
+        initial_tokens: int | None,
     ) -> BudgetReservation:
         reserve_task = asyncio.create_task(
             self._service.reserve_child(
@@ -215,6 +221,8 @@ class BudgetedAgentSupervisor:
                 child_agent_id=child_agent_id,
                 creation_request_id=request_id,
                 child_limits=child_limits,
+                retained_tokens=retained_tokens,
+                initial_tokens=initial_tokens,
             ),
             name="traceh-budget-child-reserve",
         )

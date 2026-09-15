@@ -78,8 +78,7 @@ REQUESTER_MODEL_ID = "traceh-benchmark-requester-v1"
 CONFIRMATION_TEXT = "Yes, start that task."
 
 _REQUESTER_REPLY = (
-    "Acknowledged. The benchmark host owns the requirement and the mode for this "
-    "run."
+    "Acknowledged. The benchmark host owns the requirement and the mode for this run."
 )
 _REQUESTER_PROMPT = PromptSection(
     "traceh.benchmark.requester",
@@ -184,7 +183,7 @@ async def _run_attempt_with_store(
     repositories: AttemptRepositories,
     store: SqliteEventStore,
 ) -> AttemptReport:
-    settings = manifest.settings
+    settings = request.task.settings
     spec = manifest.retrieval
     sources = {BENCHMARK_SOURCE_ID: repositories.source}
     foreign = None
@@ -199,10 +198,17 @@ async def _run_attempt_with_store(
             )
             sources["benchmark-isolation-source"] = foreign.source
     workspace_provider = LocalGitWorkspaceProvider(
-        managed_root=request.directory / "work", sources=sources,
+        managed_root=request.directory / "work",
+        sources=sources,
     )
-    memory_config = None if spec is None else ProjectMemoryConfig(
-        ProjectScopeLimits(**spec.data["project_limits"]), spec.memory_policy, workspace_provider,
+    memory_config = (
+        None
+        if spec is None
+        else ProjectMemoryConfig(
+            ProjectScopeLimits(**spec.data["project_limits"]),
+            spec.memory_policy,
+            workspace_provider,
+        )
     )
     plugins = None if spec is None else spec.data["plugins"]
     sandbox_configuration = (
@@ -217,8 +223,11 @@ async def _run_attempt_with_store(
             sandbox=sandbox_configuration,
             context_input=None if spec is None else spec.context,
             memory=memory_config,
-            skill_policy=(None if plugins is None or plugins["limits"] is None
-                          else SkillPolicy(SkillLimits(**plugins["limits"]))),
+            skill_policy=(
+                None
+                if plugins is None or plugins["limits"] is None
+                else SkillPolicy(SkillLimits(**plugins["limits"]))
+            ),
         ),
         provider=BenchmarkRequesterProvider(),
         event_store=store,
@@ -234,8 +243,13 @@ async def _run_attempt_with_store(
         seed_receipt = None
         if spec is not None:
             seed_receipt = await _seed_retrieval(
-                runtime, requester_session, request=request, spec=spec,
-                actor=settings.approver_id, foreign=foreign, monotonic=monotonic,
+                runtime,
+                requester_session,
+                request=request,
+                spec=spec,
+                actor=settings.approver_id,
+                foreign=foreign,
+                monotonic=monotonic,
             )
         host = await build_product_chat_host(
             store=runtime.sessions.store,
@@ -258,6 +272,7 @@ async def _run_attempt_with_store(
             max_report_chars=settings.max_report_chars,
             event_feed=runtime.events,
             model_retry_policy=retry_policy,
+            token_estimate=settings.token_estimate,
             project_scope=runtime.project_scope,
             context_input=None if spec is None else spec.context,
             memory_config=memory_config,
@@ -285,7 +300,10 @@ async def _run_attempt_with_store(
     interrupted: BaseException | None = None
     try:
         prepared = await _prepare(
-            control, runtime=runtime, request=request, session_id=requester_session,
+            control,
+            runtime=runtime,
+            request=request,
+            session_id=requester_session,
         )
         task_id = prepared.task_id
         timing = await _advance(
@@ -305,9 +323,7 @@ async def _run_attempt_with_store(
         # a held process slot or an unreleased worktree behind.
         interrupted = error
     finally:
-        settle_code = (
-            None if task_id is None else await _settle(control, task_id)
-        )
+        settle_code = None if task_id is None else await _settle(control, task_id)
         error_code = error_code or settle_code
         try:
             await _close(host, runtime)
@@ -320,9 +336,7 @@ async def _run_attempt_with_store(
     if interrupted is not None:
         raise interrupted
 
-    target_revision = await read_target_revision(
-        repositories.target, repositories.target_ref
-    )
+    target_revision = await read_target_revision(repositories.target, repositories.target_ref)
     if task_id is None:
         return AttemptReport(
             attempt_id=request.attempt_id,
@@ -333,9 +347,14 @@ async def _run_attempt_with_store(
             error_code=error_code or "benchmark-attempt-not-opened",
             evidence=None,
             timing=timing,
-            retrieval=None if spec is None else await collect_retrieval(
-                runtime.sessions, spec, session_roles={requester_session: "requester"},
-                task_id=request.task.task_id, seed_receipt=seed_receipt,
+            retrieval=None
+            if spec is None
+            else await collect_retrieval(
+                runtime.sessions,
+                spec,
+                session_roles={requester_session: "requester"},
+                task_id=request.task.task_id,
+                seed_receipt=seed_receipt,
             ),
         )
     evidence = await collect_attempt_evidence(
@@ -353,9 +372,7 @@ async def _run_attempt_with_store(
         # The task recorded a base revision other than the one this attempt
         # created. Reporting it would attribute the run to a source that was
         # never used.
-        raise BenchmarkEvidenceError(
-            "benchmark-source-revision-mismatch", request.attempt_id
-        )
+        raise BenchmarkEvidenceError("benchmark-source-revision-mismatch", request.attempt_id)
     return AttemptReport(
         attempt_id=request.attempt_id,
         benchmark_task_id=request.task.task_id,
@@ -365,10 +382,14 @@ async def _run_attempt_with_store(
         error_code=error_code,
         evidence=evidence,
         timing=timing,
-        retrieval=None if spec is None else await collect_retrieval(
-            runtime.sessions, spec,
+        retrieval=None
+        if spec is None
+        else await collect_retrieval(
+            runtime.sessions,
+            spec,
             session_roles=_retrieval_roles(requester_session, evidence),
-            task_id=request.task.task_id, seed_receipt=seed_receipt,
+            task_id=request.task.task_id,
+            seed_receipt=seed_receipt,
         ),
     )
 
@@ -397,9 +418,7 @@ async def _prepare(
     against the stream it opened.
     """
 
-    origin = TurnInput(
-        content=request.task.requirement, message_id=str(uuid4()), source="user"
-    )
+    origin = TurnInput(content=request.task.requirement, message_id=str(uuid4()), source="user")
     origin_result = await runtime.run_existing(session_id, origin)
     pending = await control.offer(
         session_id=session_id,
@@ -409,9 +428,7 @@ async def _prepare(
         requirement=request.task.requirement,
         requested_mode=request.requested_mode,
     )
-    confirmation = TurnInput(
-        content=CONFIRMATION_TEXT, message_id=str(uuid4()), source="user"
-    )
+    confirmation = TurnInput(content=CONFIRMATION_TEXT, message_id=str(uuid4()), source="user")
     confirmation_result = await runtime.run_existing(session_id, confirmation)
     return _PreparedConfirmation(
         task_id=pending.task_id,
@@ -483,9 +500,7 @@ async def _close(host: ProductChatHost, runtime: AgentRuntime) -> None:
     try:
         await runtime.dispose()
     except BaseException as error:
-        combined = combine_failures(
-            primary, error, "benchmark attempt shutdown failed"
-        )
+        combined = combine_failures(primary, error, "benchmark attempt shutdown failed")
         assert combined is not None
         raise combined from None
     if primary is not None:
@@ -508,23 +523,41 @@ async def _seed_retrieval(runtime, requester, *, request, spec, actor, foreign, 
     for name, (session_id, source_id) in targets.items():
         project_id = "eval-" + fingerprint({"attempt": request.attempt_id, "scope": name})
         fields = dict(project_id=project_id, actor_id=actor)
-        await scope.create(**fields, label=name, operation_id=str(uuid4()),
-                           expected_head=(await scope.catalog()).head)
-        await scope.bind_source(**fields, source_id=source_id, operation_id=str(uuid4()),
-                                expected_head=(await scope.catalog()).head)
-        binding = await scope.bind_session(
-            session_id, **fields, operation_id=str(uuid4()),
+        await scope.create(
+            **fields,
+            label=name,
+            operation_id=str(uuid4()),
             expected_head=(await scope.catalog()).head,
         )
-        bindings[name] = {"ref": reference(binding), "project_id": project_id,
-                          "source_binding_ref": binding.data["source_binding_ref"]}
+        await scope.bind_source(
+            **fields,
+            source_id=source_id,
+            operation_id=str(uuid4()),
+            expected_head=(await scope.catalog()).head,
+        )
+        binding = await scope.bind_session(
+            session_id,
+            **fields,
+            operation_id=str(uuid4()),
+            expected_head=(await scope.catalog()).head,
+        )
+        bindings[name] = {
+            "ref": reference(binding),
+            "project_id": project_id,
+            "source_binding_ref": binding.data["source_binding_ref"],
+        }
     for item in spec.data["memories"]:
         session = targets[item["scope"]][0]
 
         async def declare(memory_id, body, session=session):
             event = await runtime.memory.declare(
-                session, proposal_id=memory_id, body=body, statement=body,
-                declaration_id=str(uuid4()), operation_id=str(uuid4()), actor_id=actor,
+                session,
+                proposal_id=memory_id,
+                body=body,
+                statement=body,
+                declaration_id=str(uuid4()),
+                operation_id=str(uuid4()),
+                actor_id=actor,
                 expected_head=(await runtime.memory.read(session)).head,
             )
             receipts.append(reference(event))
@@ -534,35 +567,51 @@ async def _seed_retrieval(runtime, requester, *, request, spec, actor, foreign, 
         if item["status"] == "proposed":
             continue
         activation = await runtime.memory.approve(
-            session, proposal_ref=reference(proposal),
+            session,
+            proposal_ref=reference(proposal),
             proposal_digest=proposal.data["proposal_digest"],
-            memory_id=item["id"], fact_slot=item["slot"], actor_id=actor, operation_id=str(uuid4()),
+            memory_id=item["id"],
+            fact_slot=item["slot"],
+            actor_id=actor,
+            operation_id=str(uuid4()),
             expected_head=(await runtime.memory.read(session)).head,
         )
         receipts.append(reference(activation))
-        predecessor = {"predecessor_ref": reference(activation),
-                       "predecessor_digest": proposal.data["proposal_digest"]}
+        predecessor = {
+            "predecessor_ref": reference(activation),
+            "predecessor_digest": proposal.data["proposal_digest"],
+        }
         if item["status"] == "superseded":
             successor = item["successor"]
             proposal = await declare(successor["id"], successor["body"])
             event = await runtime.memory.supersede(
-                session, **predecessor, proposal_ref=reference(proposal),
-                proposal_digest=proposal.data["proposal_digest"], memory_id=successor["id"],
-                fact_slot=item["slot"], actor_id=actor, operation_id=str(uuid4()),
+                session,
+                **predecessor,
+                proposal_ref=reference(proposal),
+                proposal_digest=proposal.data["proposal_digest"],
+                memory_id=successor["id"],
+                fact_slot=item["slot"],
+                actor_id=actor,
+                operation_id=str(uuid4()),
                 expected_head=(await runtime.memory.read(session)).head,
             )
             receipts.append(reference(event))
         elif item["status"] == "revoked":
             event = await runtime.memory.revoke(
-                session, **predecessor, memory_id=item["id"], fact_slot=item["slot"],
-                actor_id=actor, operation_id=str(uuid4()),
+                session,
+                **predecessor,
+                memory_id=item["id"],
+                fact_slot=item["slot"],
+                actor_id=actor,
+                operation_id=str(uuid4()),
                 expected_head=(await runtime.memory.read(session)).head,
             )
             receipts.append(reference(event))
     plugins = spec.data["plugins"]
     before = await runtime.skill_context.read(requester)
-    retired_ids = [i["skill_id"] for i in before["catalog"]
-                   if i["plugin"]["plugin_id"] in plugins["retired"]]
+    retired_ids = [
+        i["skill_id"] for i in before["catalog"] if i["plugin"]["plugin_id"] in plugins["retired"]
+    ]
     if plugins["retired"]:
         await runtime.migrate_session_plugin_composition(requester, tuple(plugins["enabled"]))
     final = await runtime.skill_context.read(requester)
@@ -573,34 +622,60 @@ async def _seed_retrieval(runtime, requester, *, request, spec, actor, foreign, 
         catalog = {i["skill_id"]: i for i in final["catalog"]}
         if any(i not in catalog for i in plugins["selected"]):
             raise BenchmarkExecutionError("retrieval-seed-selection-mismatch")
-        selected = tuple({"skill_id": i, "version": catalog[i]["version"]}
-                         for i in sorted(plugins["selected"]))
+        selected = tuple(
+            {"skill_id": i, "version": catalog[i]["version"]} for i in sorted(plugins["selected"])
+        )
         event = await runtime.skill_context.select(
-            requester, operation_id=str(uuid4()), actor_id=actor, expected_head=0,
-            expected_catalog_digest=plugins["catalog_digest"], skills=selected,
+            requester,
+            operation_id=str(uuid4()),
+            actor_id=actor,
+            expected_head=0,
+            expected_catalog_digest=plugins["catalog_digest"],
+            skills=selected,
         )
         receipts.append(reference(event))
         index_started = monotonic()
         index = await runtime.skill_context.rebuild_index(requester)
-        indexes.append({"kind": "skill", "manifest": index,
-                        "prepare_and_rebuild_ms": _milliseconds(index_started, monotonic())})
+        indexes.append(
+            {
+                "kind": "skill",
+                "manifest": index,
+                "prepare_and_rebuild_ms": _milliseconds(index_started, monotonic()),
+            }
+        )
     index_started = monotonic()
     index = await runtime.memory.rebuild_index(requester)
-    indexes.append({"kind": "memory", "manifest": index,
-                    "prepare_and_rebuild_ms": _milliseconds(index_started, monotonic())})
+    indexes.append(
+        {
+            "kind": "memory",
+            "manifest": index,
+            "prepare_and_rebuild_ms": _milliseconds(index_started, monotonic()),
+        }
+    )
     spec.verify()
-    return {"input_digest": spec.file_digest, "evaluator_digest": spec.digest,
-            "bindings": bindings, "events": receipts, "catalog_digest": final["catalog_digest"],
-            "retired_skill_ids": retired_ids, "corpus_items": len(spec.data["memories"]),
-            "indexes": indexes,
-            "seed_and_rebuild_ms": _milliseconds(started, monotonic()),
-            "before_product_host": True,
-            "forbidden": [{"kind": "memory", "id": i["id"]} for i in spec.data["memories"]
-                          if i["scope"] != "current" or i["status"] != "active"]
-                         + [{"kind": "memory", "id": i["successor"]["id"]}
-                            for i in spec.data["memories"]
-                            if i["scope"] != "current" and i["successor"] is not None]
-                         + [{"kind": "skill", "id": i} for i in retired_ids]}
+    return {
+        "input_digest": spec.file_digest,
+        "evaluator_digest": spec.digest,
+        "bindings": bindings,
+        "events": receipts,
+        "catalog_digest": final["catalog_digest"],
+        "retired_skill_ids": retired_ids,
+        "corpus_items": len(spec.data["memories"]),
+        "indexes": indexes,
+        "seed_and_rebuild_ms": _milliseconds(started, monotonic()),
+        "before_product_host": True,
+        "forbidden": [
+            {"kind": "memory", "id": i["id"]}
+            for i in spec.data["memories"]
+            if i["scope"] != "current" or i["status"] != "active"
+        ]
+        + [
+            {"kind": "memory", "id": i["successor"]["id"]}
+            for i in spec.data["memories"]
+            if i["scope"] != "current" and i["successor"] is not None
+        ]
+        + [{"kind": "skill", "id": i} for i in retired_ids],
+    }
 
 
 def _retrieval_roles(requester, evidence):
@@ -609,12 +684,17 @@ def _retrieval_roles(requester, evidence):
     from traceh.workflow.models import agent_identity
 
     roles = {requester: "requester"}
-    if evidence.routing is not None:
-        roles[evidence.routing.session_id] = "router"
-    ids = {agent_identity(evidence.task_id, product_role_node_id(role))[0]: role.value
-           for role in ProductRole}
-    for work in (*evidence.execution.sessions, *evidence.unattributed.sessions):
-        roles[work.session_id] = ids.get(work.agent_id, "unattributed")
+    ids = {
+        agent_identity(evidence.task_id, product_role_node_id(role))[0]: role.value
+        for role in ProductRole
+    }
+    child_roles = {item["agent_id"]: item["role"] for item in evidence.investigations}
+    for work in evidence.execution.sessions:
+        roles[work.session_id] = ids.get(
+            work.agent_id, child_roles.get(work.agent_id, "unattributed")
+        )
+    for work in evidence.unattributed.sessions:
+        roles[work.session_id] = "unattributed"
     return roles
 
 

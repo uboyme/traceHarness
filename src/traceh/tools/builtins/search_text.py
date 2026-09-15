@@ -11,7 +11,12 @@ from traceh.tools.builtins.paths import resolve_workspace_path
 @dataclass(slots=True)
 class SearchTextTool:
     name: str = "search_text"
-    description: str = "Search UTF-8 files for a substring or regular expression."
+    description: str = (
+        "Search UTF-8 files for a substring or regular expression. "
+        "Results name the file and its 1-based line number. A matching line may lack context: "
+        "use read_file with that path and start_line/end_line to inspect nearby source "
+        "before drawing a conclusion."
+    )
     effect_kind: EffectKind = EffectKind.WORKSPACE_READ
     input_schema: dict[str, JsonValue] = field(init=False, repr=False)
 
@@ -63,7 +68,8 @@ class SearchTextTool:
                     )
                     if len(matches) >= max_results:
                         break
-        content = "\n".join(
-            f"{item['path']}:{item['line']}: {item['text']}" for item in matches
-        ) or "<no matches>"
+        content = (
+            "\n".join(f"{item['path']}:{item['line']}: {item['text']}" for item in matches)
+            or "<no matches>"
+        )
         return ToolOutput(content, {"matches": matches, "truncated": len(matches) >= max_results})

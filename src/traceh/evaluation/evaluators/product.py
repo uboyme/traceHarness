@@ -43,12 +43,15 @@ class ProductTaskEvaluator:
                 raise BenchmarkManifestError("evaluation-frozen-input-drift", "initial_tree")
         if self.suite.retrieval is not None:
             self.suite.retrieval.verify()
+        if self.suite.rubric is not None:
+            self.suite.rubric.verify()
 
     def frozen_settings(self):
         return {
             "task_settings": self.manifest.task_settings,
             "assessment": self.manifest.assessment,
-            "verifier_definition_digest": self.suite.verifier_definition_digest,
+            "verification_plans": {task.task_id: task.verifier_definition_digest
+                                   for task in self.suite.tasks},
             "retrieval": None if self.suite.retrieval is None else self.suite.retrieval.file_digest,
         }
 
@@ -59,6 +62,10 @@ class ProductTaskEvaluator:
             self.manifest.document.relative: self.manifest.document.content,
             self.manifest.dataset.relative: self.manifest.dataset.content,
         }
+        if self.suite.rubric is not None:
+            rubric = self.suite.rubric
+            rubric.verify()
+            files[rubric.relative] = rubric.content
         for task in self.suite.tasks:
             captured = capture_initial_tree(task.initial_dir)
             if initial_tree_digest(captured) != task.material_digest:
@@ -143,6 +150,8 @@ class ProductTaskEvaluator:
             (
                 AssessmentStatus.UNASSESSABLE
                 if evidence is None
+                else AssessmentStatus.PENDING_REVIEW
+                if result.success and self.suite.rubric is not None
                 else AssessmentStatus.PASSED
                 if result.success
                 else AssessmentStatus.FAILED
@@ -159,7 +168,6 @@ class ProductTaskEvaluator:
                     else (
                         ("execution", evidence.execution),
                         ("unattributed", evidence.unattributed),
-                        ("routing", evidence.routing),
                     )
                 )
             ),
@@ -170,15 +178,15 @@ class ProductTaskEvaluator:
         return BenchmarkReport(
             self.suite.benchmark_id,
             BENCHMARK_PROTOCOL_VERSION,
-            self.suite.settings.host_profile.profile_id,
-            self.suite.settings.host_profile.profile.provider_id,
-            self.suite.settings.host_profile.profile.model_id,
+            self.suite.profile_id,
+            self.suite.provider_id,
+            self.suite.model_id,
             attempts,
             tuple(
                 build_task_conditions(
                     task.task_id,
                     [a for a in attempts if a.benchmark_task_id == task.task_id],
-                    verifier_definition_digest=self.suite.verifier_definition_digest,
+                    verifier_definition_digest=task.verifier_definition_digest,
                 )
                 for task in self.suite.tasks
             ),

@@ -200,6 +200,9 @@ async def execute_variants(runner):
             "execution": execution,
             "comparison": None,
         }
+        modes = raw["comparison"]["requested_modes"]
+        if modes is not None:
+            plan["trials"] = {**plan["trials"], "requested_modes": [modes[index - 1]]}
         write_json(directory / "plan.json", plan)
         arms.append(
             {
@@ -247,7 +250,8 @@ async def execute_variants(runner):
         if key.upper().endswith("_PROXY") or key.upper() in {"PYTHONPATH", "PYTHONHOME"}:
             child_env.pop(key)
     child_env["PYTHONUTF8"] = "1"
-    for arm in arms:
+    ordered_arms = arms if raw["execution"]["first_arm"] == "baseline" else list(reversed(arms))
+    for arm in ordered_arms:
         directory = root / arm["directory"]
         request = {
             "format": 1,
@@ -274,12 +278,13 @@ async def execute_variants(runner):
                 shutdown=raw["execution"]["shutdown_seconds"],
                 environment=child_env,
             )
-            outcomes.append(outcome)
+            outcomes.append({**outcome, "variant_id": arm["variant_id"]})
             if outcome["exit_code"] not in (0, 4) or outcome["forced_stop"] or outcome["timed_out"]:
                 raise BenchmarkExecutionError("evaluation-worker-incomplete")
             receipt_file = read_input(directory, "worker-receipt.json")
             receipt = receipt_file.data
             outcome["receipt_sha256"] = receipt_file.sha256
+            outcomes[-1]["receipt_sha256"] = receipt_file.sha256
             if (
                 receipt["request_digest"] != fingerprint(request)
                 or receipt["source_digest"] != arm["source_digest"]

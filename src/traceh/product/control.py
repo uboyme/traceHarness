@@ -39,8 +39,7 @@ from traceh.product.errors import (
     ProductServiceClosedError,
     ProductStateError,
 )
-from traceh.product.events import require_product_identifier
-from traceh.product.router import MAX_ROUTER_SUMMARY_CHARS
+from traceh.product.events import MAX_PRODUCT_REQUIREMENT_CHARS, require_product_identifier
 from traceh.product.service import ProductTaskService
 from traceh.product.topology import PRODUCT_VERIFICATION_NODE
 from traceh.promotion.models import expected_approval_digest
@@ -316,7 +315,6 @@ class ProductTaskControlPlane:
                 assembly = await self._assembly.assemble(
                     task_id=task_id,
                     profile_id=pending.profile_id,
-                    routing_summary=pending.requirement,
                 )
                 await self._tasks.start_task(
                     task_id=task_id,
@@ -681,7 +679,7 @@ def _require_requirement(value: object) -> str:
     if (
         type(value) is not str
         or not value.strip()
-        or len(value) > MAX_ROUTER_SUMMARY_CHARS
+        or len(value) > MAX_PRODUCT_REQUIREMENT_CHARS
     ):
         raise ProductInputError("product-requirement-invalid", "requirement")
     return value

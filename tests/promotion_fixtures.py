@@ -294,7 +294,7 @@ def verification_plan(
         commands=commands if commands else (passing_command(),),
         environment=environment_policy() if environment is None else environment,
         max_output_bytes=max_output_bytes,
-        protocol_version=2,
+        protocol_version=3,
     )
 
 

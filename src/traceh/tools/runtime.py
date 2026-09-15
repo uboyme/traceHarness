@@ -15,7 +15,9 @@ from traceh.api.tools import (
     Tool,
     ToolAdmissionDecision,
     ToolAdmissionGate,
+    ToolExecutionCancelled,
     ToolExecutionContext,
+    ToolExecutionFailure,
 )
 from traceh.concurrency import await_worker_convergence
 from traceh.session.service import SessionService
@@ -68,6 +70,36 @@ class ToolBatchContext:
     workspace: object
     data_dir: object
     composition_revision: str
+
+
+def _refused_batch_message(
+    outside,
+    *,
+    over_limit: bool,
+    exposed,
+    max_calls,
+    registry,
+) -> str:
+    """Report a refused batch with the facts the caller needs to repair it.
+
+    A name no tool has and a real tool this Step does not expose are different
+    mistakes, and the caller can only act on the difference. Reporting both as
+    one view problem leaves nothing to correct, which is how an invented tool
+    name gets retried instead of dropped. Every name here is already in the
+    caller's own request or its published tool list, so nothing is disclosed.
+    """
+
+    unknown = sorted({name for name in outside if registry.get(name) is None})
+    hidden = sorted({name for name in outside if registry.get(name) is not None})
+    parts = ["Tool batch is outside the frozen Step view. No calls executed."]
+    if unknown:
+        parts.append("No tool is named " + ", ".join(unknown) + ".")
+    if hidden:
+        parts.append("Not callable in this Step: " + ", ".join(hidden) + ".")
+    if over_limit:
+        parts.append(f"This Step allows at most {max_calls} call(s) in one batch.")
+    parts.append("Callable here: " + ", ".join(sorted(exposed)) + ".")
+    return " ".join(parts)
 
 
 class ToolRuntime:
@@ -125,6 +157,31 @@ class ToolRuntime:
         if len(set(call_ids)) != len(call_ids):
             raise ValueError("tool call IDs must be unique within one model response")
 
+        from traceh.session.request_view import read_view
+
+        events = await self.sessions.read_session(context.session_id)
+        view = read_view(
+            events,
+            session_id=context.session_id,
+            turn_id=context.turn_id,
+            step_id=context.step_id,
+            through_seq=events[-1].seq,
+        )
+        view_denial = None
+        if view is not None:
+            _, spec, frozen, _ = view
+            if frozen.revision != composition_revision:
+                raise ValueError("tool-view-composition-mismatch")
+            outside = [c.name for c in calls if c.name not in spec.tool_names]
+            over_limit = spec.max_calls is not None and len(calls) > spec.max_calls
+            if outside or over_limit:
+                view_denial = _refused_batch_message(
+                    outside,
+                    over_limit=over_limit,
+                    exposed=spec.tool_names,
+                    max_calls=spec.max_calls,
+                    registry=self.registry,
+                )
         for call in calls:
             await self.sessions.append_session(
                 context.session_id,
@@ -145,7 +202,7 @@ class ToolRuntime:
             gate_candidates: list[PreparedToolCall] = []
             candidate_positions: list[int] = []
             for call in calls:
-                item = await self._prepare_one(call, context=context)
+                item = await self._prepare_one(call, context=context, view_denial=view_denial)
                 prepared.append(item)
                 if isinstance(item, _PreparedInvocation):
                     candidate_positions.append(len(prepared) - 1)
@@ -304,9 +361,7 @@ class ToolRuntime:
         candidates: list[PreparedToolCall],
     ) -> None:
         if type(decisions) is not tuple or len(decisions) != len(candidates):
-            raise ToolAdmissionProtocolError(
-                "admission decisions do not match prepared calls"
-            )
+            raise ToolAdmissionProtocolError("admission decisions do not match prepared calls")
         for decision, candidate in zip(decisions, candidates, strict=True):
             if (
                 type(decision) is not ToolAdmissionDecision
@@ -318,9 +373,7 @@ class ToolRuntime:
                     and (not isinstance(decision.code, str) or not decision.code)
                 )
             ):
-                raise ToolAdmissionProtocolError(
-                    "admission decisions do not match prepared calls"
-                )
+                raise ToolAdmissionProtocolError("admission decisions do not match prepared calls")
 
     async def _append_admissions(
         self,
@@ -361,9 +414,7 @@ class ToolRuntime:
     ) -> None:
         completed_ids = {result.tool_call_id for result in completed}
         prepared_results = {
-            result.tool_call_id: result
-            for result in prepared
-            if isinstance(result, ToolRunResult)
+            result.tool_call_id: result for result in prepared if isinstance(result, ToolRunResult)
         }
         effect_events = await self.sessions.read_effects(context.session_id)
         outcomes = {
@@ -381,8 +432,7 @@ class ToolRuntime:
                     tool_name=call.name,
                     status="aborted_before_dispatch",
                     content=(
-                        "Tool execution was cancelled before a durable outcome "
-                        "was available."
+                        "Tool execution was cancelled before a durable outcome was available."
                     ),
                     error_type="CancelledError",
                 )
@@ -448,7 +498,10 @@ class ToolRuntime:
         call: ToolCall,
         *,
         context: ToolExecutionContext,
+        view_denial: str | None = None,
     ) -> _PreparedInvocation | ToolRunResult:
+        if view_denial is not None:
+            return ToolRunResult(call.id, call.name, "denied", view_denial, error_type="ToolDenied")
         tool = self.registry.get(call.name)
         if tool is None:
             return ToolRunResult(
@@ -555,21 +608,30 @@ class ToolRuntime:
                         from traceh.api.sandbox import SandboxOwner
 
                         owner = SandboxOwner(
-                            "effect", effect_id, call_context.session_id, call_context.turn_id,
-                            call_context.step_id, call_context.tool_call_id,
+                            "effect",
+                            effect_id,
+                            call_context.session_id,
+                            call_context.turn_id,
+                            call_context.step_id,
+                            call_context.tool_call_id,
                             agent_id=intent_data["agent_id"],
                             budget_admission=intent_data["budget_admission"],
                             budget_reservation=intent_data["budget_reservation"],
                         )
                         async with self.sandbox_service.scope(
-                            owner, stream_id=self.sessions.effect_stream(call_context.session_id),
-                            workspace=call_context.workspace, data_dir=call_context.data_dir,
+                            owner,
+                            stream_id=self.sessions.effect_stream(call_context.session_id),
+                            workspace=call_context.workspace,
+                            data_dir=call_context.data_dir,
                             publish_changes=True,
                         ) as scope:
                             output = await invoke_middleware_chain(
                                 self.middlewares,
-                                ToolInvocation(call=call, tool=tool,
-                                               context=replace(call_context, sandbox=scope)),
+                                ToolInvocation(
+                                    call=call,
+                                    tool=tool,
+                                    context=replace(call_context, sandbox=scope),
+                                ),
                             )
                     else:
                         output = await invoke_middleware_chain(
@@ -592,19 +654,48 @@ class ToolRuntime:
             }
         except ToolReportedTimeout as reported:
             outcome_data = {
-                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
-                "status": "failed", "error_type": type(reported.error).__name__,
-                "message": str(reported), "reported_by": "tool",
+                "effect_id": effect_id,
+                "tool_call_id": call.id,
+                "tool_name": call.name,
+                "status": "failed",
+                "error_type": type(reported.error).__name__,
+                "message": str(reported),
+                "reported_by": "tool",
             }
         except TimeoutError:
             outcome_data = {
-                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
-                "status": "failed", "error_type": "TimeoutError",
+                "effect_id": effect_id,
+                "tool_call_id": call.id,
+                "tool_name": call.name,
+                "status": "failed",
+                "error_type": "TimeoutError",
                 "message": f"Tool timed out after {self.timeout_seconds:.1f}s",
                 "reported_by": "runtime",
             }
         except asyncio.CancelledError as cancelled:
-            async def finalize_cancel() -> None:
+
+            async def finalize_cancel(cancellation=cancelled) -> None:
+                receipt = {}
+                if isinstance(cancellation, ToolExecutionCancelled):
+                    output = cancellation.output
+                    content, data, retained = prepare_tool_output(
+                        effect_id=effect_id,
+                        content=output.content,
+                        tool_name=call.name,
+                        status="cancelled",
+                        data=output.data,
+                        evidence=output.evidence,
+                        max_chars=self.max_output_chars,
+                        reader_available=self.registry.get(OUTPUT_READ_TOOL) is not None,
+                        searcher_available=self.registry.get(OUTPUT_SEARCH_TOOL) is not None,
+                    )
+                    receipt = {
+                        "content": content,
+                        "data": data,
+                        "evidence": list(output.evidence),
+                        "truncated": False,
+                        **retained,
+                    }
                 await self.sessions.append_effect(
                     call_context.session_id,
                     "effect/outcome",
@@ -615,6 +706,7 @@ class ToolRuntime:
                         "status": "cancelled",
                         "error_type": "CancelledError",
                         "message": "Tool execution was cancelled",
+                        **receipt,
                     },
                     causation_id=intent.event_id,
                 )
@@ -632,10 +724,24 @@ class ToolRuntime:
                 if failure is not None:
                     raise cancelled from failure
             raise cancelled
+        except ToolExecutionFailure as error:
+            outcome_data = {
+                "effect_id": effect_id,
+                "tool_call_id": call.id,
+                "tool_name": call.name,
+                "status": "failed",
+                "error_type": type(error).__name__,
+                "content": error.output.content,
+                "data": error.output.data,
+                "evidence": list(error.output.evidence),
+            }
         except Exception as error:
             outcome_data = {
-                "effect_id": effect_id, "tool_call_id": call.id, "tool_name": call.name,
-                "status": "failed", "error_type": type(error).__name__,
+                "effect_id": effect_id,
+                "tool_call_id": call.id,
+                "tool_name": call.name,
+                "status": "failed",
+                "error_type": type(error).__name__,
                 "message": f"{type(error).__name__}: {error}",
                 "traceback": "".join(traceback.format_exception(error))[-8000:],
                 "arguments_json": canonical_json(call.arguments),
@@ -645,8 +751,10 @@ class ToolRuntime:
         # cancelled write must never be relabelled as a failed tool execution.
         field = "content" if "content" in outcome_data else "message"
         content, data, retained = prepare_tool_output(
-            effect_id=effect_id, content=outcome_data[field],
-            tool_name=call.name, status=outcome_data["status"],
+            effect_id=effect_id,
+            content=outcome_data[field],
+            tool_name=call.name,
+            status=outcome_data["status"],
             data=outcome_data.get("data", {}),
             evidence=tuple(outcome_data.get("evidence", [])),
             max_chars=self.max_output_chars,
@@ -659,11 +767,18 @@ class ToolRuntime:
         outcome_data["truncated"] = False
         outcome_data.update(retained)
         await self.sessions.append_effect(
-            call_context.session_id, "effect/outcome", outcome_data,
+            call_context.session_id,
+            "effect/outcome",
+            outcome_data,
             causation_id=intent.event_id,
         )
         return ToolRunResult(
-            call.id, call.name, outcome_data["status"], content, data=data,
-            effect_id=effect_id, error_type=outcome_data.get("error_type"),
+            call.id,
+            call.name,
+            outcome_data["status"],
+            content,
+            data=data,
+            effect_id=effect_id,
+            error_type=outcome_data.get("error_type"),
             output_ref=retained.get("output_ref"),
         )

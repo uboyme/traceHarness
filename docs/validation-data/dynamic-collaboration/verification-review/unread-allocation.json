@@ -1,0 +1,44 @@
+{
+  "format": 1,
+  "real_calls": 1,
+  "retries": 0,
+  "result": {
+    "status": "parsed",
+    "tool_calls": 1,
+    "elapsed_ms": 27295,
+    "request_payload_sha256": "b39cce6e13e6c40c30b5e4aaedc98827bd4827a413ffeb4eab9b317f5d7ec40b",
+    "wire": {
+      "body_available": true,
+      "body_sha256": "d8039adc66e210b630227ffe8eaf10b252fd9e7f23bdaf5c433cf1541567eb7c",
+      "body_bytes": 6461,
+      "calls": [
+        {
+          "index": 0,
+          "tool_name": "submit_collaboration_plan",
+          "wire_type": "str",
+          "syntax": "object",
+          "tool_schema": "valid",
+          "arguments_sha256": "3a0df2d699c56c19d7cd708fb04bf04f3f32c5c6d6d38fd266c8268e31bc5907",
+          "adapter_name_matches": true,
+          "adapter_arguments_match": true
+        }
+      ],
+      "wire_usage": {
+        "prompt_tokens": 2616,
+        "completion_tokens": 1216
+      },
+      "envelope": "decoded"
+    },
+    "original_database_unchanged": true
+  },
+  "offline": {
+    "offline_replay": true,
+    "payload_matches": true,
+    "only_guidance_changed": true,
+    "strict_fields_and_limits_pass": true,
+    "tool_calls": 1,
+    "tools_executed": 0,
+    "total_tokens": 3832
+  },
+  "interpretation": "One legal allocation observed; no child or full task executed. Report completeness and authority wording remain review concerns."
+}

@@ -440,6 +440,7 @@ class SettingsScreen(Screen[argparse.Namespace | None]):
 
         self.app.push_screen(OptimizationPlanScreen(
             config_path=path, workspace=workspace, data_dir=data_dir, model_settings=model,
+            sandbox_config=self.query_one("#setting-sandbox_config", Input).value.strip(),
         ), saved)
 
     def _open_form(self, kind):

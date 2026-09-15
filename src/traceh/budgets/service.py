@@ -15,6 +15,7 @@ from traceh.api.budgets import (
     BudgetReservationStatus,
     BudgetUsageReservation,
     BudgetUsageReservationStatus,
+    ChildTokenDecision,
 )
 from traceh.api.events import EventEnvelope, PendingEvent
 from traceh.api.json_types import JsonValue
@@ -31,10 +32,12 @@ from traceh.budgets.errors import (
 from traceh.budgets.events import (
     BUDGET_ACCOUNT_CLOSED,
     BUDGET_CHILD_RESERVED,
+    BUDGET_CHILD_TOKEN_DECIDED,
     BUDGET_LEDGER_STREAM,
     BUDGET_RESERVATION_COMMITTED,
     BUDGET_RESERVATION_RELEASED,
     BUDGET_ROOT_GRANTED,
+    BUDGET_SCHEMA_VERSION,
     BUDGET_USAGE_CHARGED,
     BUDGET_USAGE_RELEASED,
     BUDGET_USAGE_RESERVED,
@@ -43,6 +46,7 @@ from traceh.budgets.events import (
     MAX_BUDGET_VALUE,
     account_closed_data,
     child_reserved_data,
+    child_token_decision_data,
     freeze_amounts,
     freeze_limits,
     is_budget_fact,
@@ -94,9 +98,7 @@ class BudgetLedgerService:
         )
         async with self._lock:
             ledger, directory = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_ROOT_GRANTED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_ROOT_GRANTED, data):
                 account = ledger.account(agent_id)
                 assert account is not None
                 return account
@@ -123,6 +125,8 @@ class BudgetLedgerService:
         child_agent_id: str,
         creation_request_id: str,
         child_limits: BudgetLimits,
+        retained_tokens: int,
+        initial_tokens: int | None = None,
     ) -> BudgetReservation:
         data = child_reserved_data(
             operation_id=operation_id,
@@ -131,12 +135,12 @@ class BudgetLedgerService:
             child_agent_id=child_agent_id,
             creation_request_id=creation_request_id,
             child_limits=freeze_limits(child_limits, field="child_limits"),
+            retained_tokens=retained_tokens,
+            initial_tokens=initial_tokens,
         )
         async with self._lock:
             ledger, directory = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_CHILD_RESERVED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_CHILD_RESERVED, data):
                 reservation = ledger.reservation(reservation_id)
                 assert reservation is not None
                 return reservation
@@ -157,7 +161,12 @@ class BudgetLedgerService:
                 or directory.for_request(creation_request_id) is not None
             ):
                 raise BudgetDirectoryMismatchError
-            ledger.ensure_reservation_capacity(parent_agent_id, child_limits)
+            ledger.ensure_reservation_capacity(
+                parent_agent_id,
+                child_limits,
+                retained_tokens=retained_tokens,
+                initial_tokens=initial_tokens,
+            )
             await self._append(
                 expected_seq=ledger.head_seq,
                 event_type=BUDGET_CHILD_RESERVED,
@@ -167,12 +176,44 @@ class BudgetLedgerService:
             assert reservation is not None
             return reservation
 
+    async def decide_child_tokens(
+        self,
+        *,
+        operation_id: str,
+        request_id: str,
+        parent_agent_id: str,
+        child_agent_id: str,
+        tokens: int,
+        reason: str,
+    ) -> ChildTokenDecision:
+        """Host-authorized allocation/decline; never creates or resumes an Agent."""
+        data = child_token_decision_data(
+            operation_id=operation_id,
+            request_id=request_id,
+            parent_agent_id=parent_agent_id,
+            child_agent_id=child_agent_id,
+            tokens=tokens,
+            reason=reason,
+        )
+        async with self._lock:
+            ledger, directory = await self._reader.load_context()
+            if self._operation_matches_or_raise(
+                ledger, operation_id, BUDGET_CHILD_TOKEN_DECIDED, data
+            ):
+                return ledger.token_decision(request_id)
+            record = directory.get(child_agent_id)
+            if record is None or record.owner_agent_id != parent_agent_id:
+                raise BudgetDirectoryMismatchError
+            ledger.ensure_token_decision(parent_agent_id, child_agent_id, request_id, tokens)
+            await self._append(
+                expected_seq=ledger.head_seq, event_type=BUDGET_CHILD_TOKEN_DECIDED, data=data
+            )
+            return (await self._reader.load()).token_decision(request_id)
+
     async def commit_reservation(
         self, *, operation_id: str, reservation_id: str
     ) -> BudgetReservation:
-        data = reservation_terminal_data(
-            operation_id=operation_id, reservation_id=reservation_id
-        )
+        data = reservation_terminal_data(operation_id=operation_id, reservation_id=reservation_id)
         async with self._lock:
             ledger, directory = await self._reader.load_context()
             if self._operation_matches_or_raise(
@@ -222,9 +263,7 @@ class BudgetLedgerService:
 
         if creation_converged is not True:
             raise BudgetReservationStateError
-        data = reservation_terminal_data(
-            operation_id=operation_id, reservation_id=reservation_id
-        )
+        data = reservation_terminal_data(operation_id=operation_id, reservation_id=reservation_id)
         async with self._lock:
             ledger, directory = await self._reader.load_context()
             if self._operation_matches_or_raise(
@@ -287,9 +326,7 @@ class BudgetLedgerService:
         without manufacturing usage facts for a limit the host did not enable.
         """
 
-        operation_id = require_budget_identifier(
-            operation_id, field="operation_id"
-        )
+        operation_id = require_budget_identifier(operation_id, field="operation_id")
         agent_id = require_budget_identifier(agent_id, field="agent_id")
         if type(requested) is not int or requested < 1 or requested > MAX_BUDGET_VALUE:
             raise BudgetInputError("budget-tool-request-invalid", "requested")
@@ -364,9 +401,7 @@ class BudgetLedgerService:
     ) -> BudgetCharge:
         async with self._lock:
             ledger, _ = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_USAGE_CHARGED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_USAGE_CHARGED, data):
                 charge = ledger.charge(operation_id)
                 assert charge is not None
                 return charge
@@ -400,9 +435,7 @@ class BudgetLedgerService:
         )
         async with self._lock:
             ledger, _ = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_USAGE_RESERVED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_USAGE_RESERVED, data):
                 reservation = ledger.usage_reservation(reservation_id)
                 assert reservation is not None
                 return reservation
@@ -414,9 +447,7 @@ class BudgetLedgerService:
                 event_type=BUDGET_USAGE_RESERVED,
                 data=data,
             )
-            reservation = (await self._reader.load()).usage_reservation(
-                reservation_id
-            )
+            reservation = (await self._reader.load()).usage_reservation(reservation_id)
             assert reservation is not None
             return reservation
 
@@ -474,9 +505,7 @@ class BudgetLedgerService:
         )
         async with self._lock:
             ledger, _ = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_USAGE_SETTLED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_USAGE_SETTLED, data):
                 reservation = ledger.usage_reservation(reservation_id)
                 assert reservation is not None
                 return reservation
@@ -511,9 +540,7 @@ class BudgetLedgerService:
         )
         async with self._lock:
             ledger, _ = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_USAGE_RELEASED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_USAGE_RELEASED, data):
                 reservation = ledger.usage_reservation(reservation_id)
                 assert reservation is not None
                 return reservation
@@ -531,15 +558,11 @@ class BudgetLedgerService:
             assert result is not None
             return result
 
-    async def close_account(
-        self, *, operation_id: str, agent_id: str
-    ) -> BudgetAccount:
+    async def close_account(self, *, operation_id: str, agent_id: str) -> BudgetAccount:
         data = account_closed_data(operation_id=operation_id, agent_id=agent_id)
         async with self._lock:
             ledger, _ = await self._reader.load_context()
-            if self._operation_matches_or_raise(
-                ledger, operation_id, BUDGET_ACCOUNT_CLOSED, data
-            ):
+            if self._operation_matches_or_raise(ledger, operation_id, BUDGET_ACCOUNT_CLOSED, data):
                 account = ledger.account(agent_id)
                 assert account is not None
                 return account
@@ -593,7 +616,9 @@ class BudgetLedgerService:
             appended = await self._store.append(
                 BUDGET_LEDGER_STREAM,
                 expected_seq=expected_seq,
-                events=(PendingEvent(type=event_type, data=data),),
+                events=(
+                    PendingEvent(type=event_type, data=data, schema_version=BUDGET_SCHEMA_VERSION),
+                ),
                 durability=Durability.SYNC,
             )
         except asyncio.CancelledError as error:
@@ -611,9 +636,7 @@ class BudgetLedgerService:
             raise BudgetWriteError(committed=committed) from None
         return appended[0]
 
-    async def _committed(
-        self, event_type: str, data: dict[str, JsonValue]
-    ) -> bool | None:
+    async def _committed(self, event_type: str, data: dict[str, JsonValue]) -> bool | None:
         def matches(event: EventEnvelope) -> bool:
             return is_budget_fact(event, event_type, data)
 

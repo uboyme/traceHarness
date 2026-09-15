@@ -16,3 +16,4 @@ benchmarks/product_v1/*/initial/** -text whitespace=cr-at-eol
 benchmarks/retrieval_v1/*.json -text whitespace=cr-at-eol
 benchmarks/retrieval_v1/initial/** -text whitespace=cr-at-eol
 benchmarks/retrieval_episodes_v1/** -text whitespace=cr-at-eol
+benchmarks/dynamic_collaboration_v1/** -text whitespace=cr-at-eol

@@ -1,24 +1,10 @@
-"""The benchmark report: descriptive, decomposable and honest about n.
+"""Descriptive ProductTask reports derived from original durable evidence.
 
-Three rules shape this module.
-
-**``auto`` is not a third quality arm.**  A run whose Router chose ``multi`` is a
-``multi`` result that also paid a routing cost.  Quality aggregates are therefore
-keyed by *resolved* mode and contain every attempt that resolved to it, while the
-routing cost of ``auto`` attempts is reported separately.  Comparing three arms
-would compare ``multi`` against itself.
-
-**Small n stays small.**  Aggregates are counts, totals, minima, maxima and a
-mean.  There is no variance, no confidence interval and no significance claim,
-and an arm with one observation says so in both outputs.
-
-**Unavailable is a value.**  A metric the durable facts could not support is
-counted as unavailable rather than folded in as zero, so a mean can never be
-quietly dragged down by measurements that did not happen.
-
-Markdown is rendered from :meth:`BenchmarkReport.to_dict`, not from the objects,
-so the two outputs cannot disagree about a number.
-"""
+Quality arms follow explicit single/multi execution modes. The execution
+group includes the complete owned Agent tree, including failed and cancelled
+work. Unknown measurements stay unavailable rather than becoming zero.
+Aggregates do not imply statistical significance. Markdown is rendered from
+the same report dictionary as JSON; no report grants adoption authority."""
 
 from __future__ import annotations
 
@@ -40,8 +26,7 @@ approve``.
 """
 
 REPORT_NOTES = (
-    "auto is not a third quality arm: each auto attempt is counted in the arm "
-    "its Router resolved to, and its routing cost is reported separately.",
+    "quality arms follow explicit single/multi modes; execution cost includes the owned tree.",
     f"approval policy is {APPROVAL_POLICY}: the benchmark host approves its own "
     "one-shot local bare target as soon as the Approval barrier is reached.",
     "approval wait is measured separately and excluded from active elapsed; "
@@ -191,27 +176,19 @@ class AttemptReport:
             "preflight_digest": evidence.preflight_digest,
             "source_base_revision": evidence.source_base_revision,
             "definition_hash": evidence.definition_hash,
-            "routing": _session_dict(evidence.routing),
-            "routing_parsed": evidence.routing_parsed,
+            "investigations": list(evidence.investigations),
+            "collaboration": evidence.collaboration,
             "execution": {
-                "sessions": [
-                    _session_dict(item) for item in evidence.execution.sessions
-                ],
+                "sessions": [_session_dict(item) for item in evidence.execution.sessions],
                 "steps": evidence.execution.steps,
                 "tool_calls": evidence.execution.tool_calls,
                 "turns": evidence.execution.turns,
                 "model_attempts": evidence.execution.model_attempts,
                 "tokens": _tokens_dict(evidence.execution.tokens),
                 "cumulative_work_duration_ms": evidence.execution.work_duration_ms,
-                "retry_wait_milliseconds": (
-                    evidence.execution.retry_wait_milliseconds
-                ),
-                "provider_active_milliseconds": (
-                    evidence.execution.provider_active_milliseconds
-                ),
-                "provider_failure_categories": list(
-                    evidence.execution.provider_failure_categories
-                ),
+                "retry_wait_milliseconds": (evidence.execution.retry_wait_milliseconds),
+                "provider_active_milliseconds": (evidence.execution.provider_active_milliseconds),
+                "provider_failure_categories": list(evidence.execution.provider_failure_categories),
                 "final_model_results": [
                     {
                         "session_id": item.session_id,
@@ -226,22 +203,16 @@ class AttemptReport:
             # cost is stated rather than folded into a total that would then
             # claim an attribution the streams do not support.
             "unattributed": {
-                "sessions": [
-                    _session_dict(item) for item in evidence.unattributed.sessions
-                ],
+                "sessions": [_session_dict(item) for item in evidence.unattributed.sessions],
                 "tokens": _tokens_dict(evidence.unattributed.tokens),
             },
             "budget": {
                 "accounts": evidence.budget.accounts,
                 "accounts_closed": evidence.budget.accounts_closed,
                 "child_reservations": evidence.budget.child_reservations,
-                "child_reservations_terminal": (
-                    evidence.budget.child_reservations_terminal
-                ),
+                "child_reservations_terminal": (evidence.budget.child_reservations_terminal),
                 "usage_reservations": evidence.budget.usage_reservations,
-                "usage_reservations_terminal": (
-                    evidence.budget.usage_reservations_terminal
-                ),
+                "usage_reservations_terminal": (evidence.budget.usage_reservations_terminal),
                 "settled_tokens": evidence.budget.settled_tokens,
                 "charged_steps": evidence.budget.charged_steps,
                 "charged_tool_calls": evidence.budget.charged_tool_calls,
@@ -289,11 +260,7 @@ class QualityArm:
         return sum(1 for attempt in self.attempts if attempt.success)
 
     def to_dict(self) -> dict[str, JsonValue]:
-        evidences = [
-            attempt.evidence
-            for attempt in self.attempts
-            if attempt.evidence is not None
-        ]
+        evidences = [attempt.evidence for attempt in self.attempts if attempt.evidence is not None]
         timings = [attempt.timing for attempt in self.attempts]
         requested: dict[str, int] = {}
         for attempt in self.attempts:
@@ -315,9 +282,7 @@ class QualityArm:
                 [item.budget.settled_tokens for item in evidences]
             ).to_dict(),
             "steps": summarize([item.execution.steps for item in evidences]).to_dict(),
-            "tool_calls": summarize(
-                [item.execution.tool_calls for item in evidences]
-            ).to_dict(),
+            "tool_calls": summarize([item.execution.tool_calls for item in evidences]).to_dict(),
             "model_attempts": summarize(
                 [item.execution.model_attempts for item in evidences]
             ).to_dict(),
@@ -347,88 +312,6 @@ class QualityArm:
             "active_ms": summarize(
                 [None if item is None else item.active_ms for item in timings]
             ).to_dict(),
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class RoutingArm:
-    """What ``auto`` cost and what it decided - never a quality comparison."""
-
-    attempts: tuple[AttemptReport, ...]
-
-    @property
-    def observations(self) -> int:
-        return len(self.attempts)
-
-    @property
-    def parsed(self) -> int:
-        return sum(
-            1
-            for attempt in self.attempts
-            if attempt.evidence is not None and attempt.evidence.routing_parsed
-        )
-
-    def to_dict(self) -> dict[str, JsonValue]:
-        evidences = [
-            attempt.evidence
-            for attempt in self.attempts
-            if attempt.evidence is not None
-        ]
-        resolved: dict[str, int] = {}
-        for item in evidences:
-            key = "unresolved" if item.resolved_mode is None else item.resolved_mode.value
-            resolved[key] = resolved.get(key, 0) + 1
-        return {
-            "requested_mode": RequestedTaskMode.AUTO.value,
-            "observations": self.observations,
-            "single_observation": self.observations == 1,
-            "parsed": self.parsed,
-            "resolved_modes": dict(sorted(resolved.items())),
-            "routing_tokens": summarize(
-                [
-                    None
-                    if item.routing is None or item.routing.tokens is None
-                    else item.routing.tokens.total_tokens
-                    for item in evidences
-                ]
-            ).to_dict(),
-            "routing_elapsed_ms": summarize(
-                [
-                    None if item.routing is None else item.routing.work_duration_ms
-                    for item in evidences
-                ]
-            ).to_dict(),
-            "model_attempts": summarize(
-                [
-                    None if item.routing is None else item.routing.model_attempts
-                    for item in evidences
-                ]
-            ).to_dict(),
-            "retry_wait_milliseconds": summarize(
-                [
-                    None if item.routing is None else item.routing.retry_wait_milliseconds
-                    for item in evidences
-                ]
-            ).to_dict(),
-            "provider_active_milliseconds": summarize(
-                [
-                    None
-                    if item.routing is None
-                    else item.routing.provider_active_milliseconds
-                    for item in evidences
-                ]
-            ).to_dict(),
-            "provider_failure_categories": sorted(
-                {
-                    category
-                    for item in evidences
-                    if item.routing is not None
-                    for category in item.routing.provider_failure_categories
-                }
-            ),
-            "final_model_results": _session_result_counts(
-                [item.routing for item in evidences]
-            ),
         }
 
 
@@ -488,21 +371,10 @@ class BenchmarkReport:
     def quality_arms(self) -> tuple[QualityArm, ...]:
         arms = []
         for mode in ResolvedTaskMode:
-            selected = tuple(
-                attempt for attempt in self.attempts if attempt.resolved_mode is mode
-            )
+            selected = tuple(attempt for attempt in self.attempts if attempt.resolved_mode is mode)
             if selected:
                 arms.append(QualityArm(mode, selected))
         return tuple(arms)
-
-    @property
-    def routing_arm(self) -> RoutingArm | None:
-        selected = tuple(
-            attempt
-            for attempt in self.attempts
-            if attempt.requested_mode is RequestedTaskMode.AUTO
-        )
-        return RoutingArm(selected) if selected else None
 
     @property
     def measured(self) -> int:
@@ -533,7 +405,6 @@ class BenchmarkReport:
         )
 
     def to_dict(self) -> dict[str, JsonValue]:
-        routing = self.routing_arm
         return {
             "benchmark_id": self.benchmark_id,
             "protocol_version": self.protocol_version,
@@ -549,7 +420,6 @@ class BenchmarkReport:
             "notes": list(REPORT_NOTES),
             "tasks": [task.to_dict() for task in self.tasks],
             "quality_arms": [arm.to_dict() for arm in self.quality_arms],
-            "routing_arm": None if routing is None else routing.to_dict(),
             "attempts": [attempt.to_dict() for attempt in self.attempts],
         }
 
@@ -569,8 +439,7 @@ def render_markdown(report: BenchmarkReport) -> str:
         f"max_attempts={data['retry_policy']['max_attempts']}, "
         f"max_elapsed_seconds={data['retry_policy']['max_elapsed_seconds']}",
         f"- attempts run/measured: {data['attempts_run']} / {data['attempts_measured']}",
-        "- attempts with unavailable metrics: "
-        f"{data['attempts_with_unavailable_metrics']}",
+        f"- attempts with unavailable metrics: {data['attempts_with_unavailable_metrics']}",
         f"- complete: {str(data['complete']).lower()}",
         "",
         "## Notes",
@@ -612,9 +481,7 @@ def render_markdown(report: BenchmarkReport) -> str:
         lines.append(f"- successes: {arm['successes']}")
         lines.append(
             "- requested modes: "
-            + ", ".join(
-                f"{name}={count}" for name, count in arm["requested_modes"].items()
-            )
+            + ", ".join(f"{name}={count}" for name, count in arm["requested_modes"].items())
         )
         for label in (
             "execution_tokens",
@@ -634,68 +501,23 @@ def render_markdown(report: BenchmarkReport) -> str:
             "- provider_failure_categories: "
             + (", ".join(arm["provider_failure_categories"]) or "none")
         )
-        lines.append(
-            "- final_model_results: "
-            + _counts(arm["final_model_results"])
-        )
+        lines.append("- final_model_results: " + _counts(arm["final_model_results"]))
         lines.append("")
-    routing = data["routing_arm"]
-    lines.extend(("## Routing (auto only, not a quality arm)", ""))
-    if routing is None:
-        lines.append("- no auto attempt was requested")
-    else:
-        lines.append(
-            f"- observations: {routing['observations']}"
-            + (" (single observation)" if routing["single_observation"] else "")
-        )
-        lines.append(f"- strictly parsed: {routing['parsed']}")
-        lines.append(
-            "- resolved: "
-            + ", ".join(
-                f"{name}={count}" for name, count in routing["resolved_modes"].items()
-            )
-        )
-        lines.append(f"- routing_tokens: {_summary(routing['routing_tokens'])}")
-        lines.append(
-            f"- routing_elapsed_ms: {_summary(routing['routing_elapsed_ms'])}"
-        )
-        for label in (
-            "model_attempts",
-            "retry_wait_milliseconds",
-            "provider_active_milliseconds",
-        ):
-            lines.append(f"- routing_{label}: {_summary(routing[label])}")
-        lines.append(
-            "- routing_provider_failure_categories: "
-            + (", ".join(routing["provider_failure_categories"]) or "none")
-        )
-        lines.append(
-            "- routing_final_model_results: "
-            + _counts(routing["final_model_results"])
-        )
     lines.extend(("", "## Attempts", ""))
     lines.append(
         "| attempt | directory | requested | resolved | success | measured | "
         "model attempts | retry wait ms | provider active ms | failures | final model | "
         "active_ms | approval_wait_ms | wall_ms | promotion |"
     )
-    lines.append(
-        "|---|---|---|---|---|---|---:|---:|---:|---|---|---:|---:|---:|---|"
-    )
+    lines.append("|---|---|---|---|---|---|---:|---:|---:|---|---|---:|---:|---:|---|")
     for attempt in data["attempts"]:
         evidence = attempt["evidence"]
         timing = attempt["timing"]
         resolved = "-" if evidence is None else _text(evidence["resolved_mode"])
         promotion = "-" if evidence is None else _text(evidence["promotion_id"])
         execution = None if evidence is None else evidence["execution"]
-        model_attempts = (
-            "-" if execution is None else _text(execution["model_attempts"])
-        )
-        retry_wait = (
-            "-"
-            if execution is None
-            else _text(execution["retry_wait_milliseconds"])
-        )
+        model_attempts = "-" if execution is None else _text(execution["model_attempts"])
+        retry_wait = "-" if execution is None else _text(execution["retry_wait_milliseconds"])
         provider_active = (
             "-" if execution is None else _text(execution["provider_active_milliseconds"])
         )
@@ -707,10 +529,7 @@ def render_markdown(report: BenchmarkReport) -> str:
         final_model = (
             "-"
             if execution is None
-            else ", ".join(
-                _text(item["result"])
-                for item in execution["final_model_results"]
-            )
+            else ", ".join(_text(item["result"]) for item in execution["final_model_results"])
         )
         lines.append(
             f"| {attempt['attempt_id']} | {attempt['directory']} | "
@@ -742,21 +561,34 @@ def render_markdown(report: BenchmarkReport) -> str:
         lines.append(f"- {attempt_id}: attempt error {code}")
     retrieval = [a for a in data["attempts"] if a.get("retrieval") is not None]
     if retrieval:
-        lines.extend(("", "## Frozen retrieval observations", "",
-                      "Each row is one Step. Provider retries do not add samples. "
-                      "Candidate ranks and actual injection are reported separately.", ""))
+        lines.extend(
+            (
+                "",
+                "## Frozen retrieval observations",
+                "",
+                "Each row is one Step. Provider retries do not add samples. "
+                "Candidate ranks and actual injection are reported separately.",
+                "",
+            )
+        )
         for attempt in retrieval:
             result = attempt["retrieval"]
-            lines.append(f"- {attempt['attempt_id']}: quality={result['quality_passed']}; "
-                         f"expected={result['expected_judgments']}; "
-                         f"unproven={len(result['unproven'])}; "
-                         f"evaluator={result['evaluator_digest']}")
+            lines.append(
+                f"- {attempt['attempt_id']}: quality={result['quality_passed']}; "
+                f"expected={result['expected_judgments']}; "
+                f"unproven={len(result['unproven'])}; "
+                f"evaluator={result['evaluator_digest']}"
+            )
             for row in result["observations"]:
-                lines.append(f"  - role={row['role']}; step={row['step_id']}; "
-                             f"status={row['status']}; metrics={row['metrics']}")
-        lines.append("Full query provenance, injected tiers/bytes and seeding receipts: "
-                     "report.json. "
-                     "n=1 is a single observation; no statistical significance is claimed.")
+                lines.append(
+                    f"  - role={row['role']}; step={row['step_id']}; "
+                    f"status={row['status']}; metrics={row['metrics']}"
+                )
+        lines.append(
+            "Full query provenance, injected tiers/bytes and seeding receipts: "
+            "report.json. "
+            "n=1 is a single observation; no statistical significance is claimed."
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -819,9 +651,7 @@ def _session_result_counts(
         if session is None or session.final_model_result is None:
             unavailable += 1
         else:
-            counts[session.final_model_result] = (
-                counts.get(session.final_model_result, 0) + 1
-            )
+            counts[session.final_model_result] = counts.get(session.final_model_result, 0) + 1
     return {"counts": dict(sorted(counts.items())), "unavailable": unavailable}
 
 
@@ -871,9 +701,7 @@ def build_task_conditions(
     column: an absent value is not agreement.
     """
 
-    evidences = [
-        attempt.evidence for attempt in attempts if attempt.evidence is not None
-    ]
+    evidences = [attempt.evidence for attempt in attempts if attempt.evidence is not None]
     total = len(attempts)
     fields: dict[str, list[str | None]] = {
         "requirement_digest": [item.requirement_digest for item in evidences],
@@ -881,9 +709,7 @@ def build_task_conditions(
         "source_base_revision": [item.source_base_revision for item in evidences],
         # Compared *against the frozen plan*, so an arm that never reached a
         # Review cannot make a mismatch invisible by simply being absent.
-        "verifier_definition_digest": [
-            item.verifier_definition_digest for item in evidences
-        ],
+        "verifier_definition_digest": [item.verifier_definition_digest for item in evidences],
     }
     divergent: list[str] = []
     unproven: list[str] = []
@@ -921,7 +747,6 @@ __all__ = [
     "NumericSummary",
     "PhaseTiming",
     "QualityArm",
-    "RoutingArm",
     "TaskConditions",
     "build_task_conditions",
     "render_markdown",

@@ -92,7 +92,7 @@ provider_id=模型接入方式
 model_id=模型名称
 default_mode=任务执行模式
 source=要处理的 Git 项目
-source_id=来源标识（与记忆来源一致）
+source_id=本任务的源码来源标识
 repository=仓库绝对路径
 revision=起始 Git 版本或分支
 promotion_target=结果接收仓库（当前要求本地 bare Git 仓库）
@@ -101,9 +101,15 @@ ref=接收分支完整名称（请填写 refs/heads/…）
 managed_workspace_root=隔离工作区存放目录
 cas_root=补丁原文存放目录
 roles=各角色的权限与预算
-parent=协调角色
-reviewer=审查角色
-coder=编码角色
+coder=主 Agent（负责整合与最终交付）
+investigator=只读调查助手模板（实际职责由每次任务决定）
+patch_author=可写助手（默认关闭，独立工作区交回补丁）
+retained_tokens=委派后为主 Agent 至少保留的 token
+investigator_initial_tokens=助手初始 Token 额度（累计上限内可向主 Agent 申请追加）
+token_estimate=预算预留时如何估算 token（留空表示不估算，按请求大小上界预留）
+encoding=分词器名称（需安装可选依赖）
+margin_percent=估算安全余量百分比（0–100）
+max_turn_wall_milliseconds=每次对话最长时间（毫秒）
 preset=内置角色预设
 capability_grants=允许使用的工具
 max_output_tokens=单次回复 token 上限
@@ -114,9 +120,6 @@ max_tool_calls=最多工具调用（空白表示不限制）
 max_wall_milliseconds=最长运行时间（毫秒，空白表示不限制）
 max_children=最多子任务（空白表示不限制）
 max_processes=最多进程（空白表示不限制）
-router=自动选择任务模式
-timeout_milliseconds=选择模式超时（毫秒）
-max_response_bytes=模式选择回复上限（字节）
 task_budget=整个任务的预算
 verification=完成后的验证方案
 plan_id=验证方案标识
@@ -125,6 +128,7 @@ commands=验证命令列表（不会在配置时执行）
 command_id=命令标识
 argv=命令及参数（每项一个参数，不经过 Shell）
 timeout_ms=命令超时（毫秒）
+public_requirement=向 Agent 公开的验证要求（可留空）
 environment=验证命令环境
 policy_id=环境策略标识
 passthrough=允许传入的环境变量名称
@@ -162,9 +166,8 @@ workspace=插件服务器读取的工作区绝对路径
 CHOICES = {
     "network": [("关闭网络访问", "none")],
     "default_mode": [
-        ("自动选择", "auto"),
         ("单个编码角色", "single"),
-        ("协调＋审查＋编码", "multi"),
+        ("主 Agent 自主分工并使用一个或多个获准助手", "multi"),
     ],
     "default_tier": [
         ("目录：只告知资料存在", "directory"),
@@ -229,44 +232,57 @@ def product_preset(workspace: str, data_dir: str, provider: str, model: str):
         max_processes=4,
     )
     roles = {}
-    for name in ("parent", "reviewer", "coder"):
+    for name in ("coder", "investigator"):
         grants = ["list_files", "read_file", "search_text"]
         if name == "coder":
             grants += ["apply_patch", "shell"]
         roles[name] = dict(
-            preset="coding-role",
+            preset=f"product-{name}",
             capability_grants=grants,
             max_output_tokens=4096,
-            budget=deepcopy(budget),
+            budget=dict(
+                budget,
+                max_depth=1 if name == "coder" else 0,
+                # The main's direct-child ceiling is the assistant-count
+                # authorization. A generated host authorizes exactly one; raising
+                # it is an explicit host decision, not a default.
+                max_children=1 if name == "coder" else 0,
+                max_processes=2 if name == "coder" else 0,
+            ),
+            max_turn_wall_milliseconds=120000 if name == "coder" else 60000,
         )
+    roles["investigator"]["budget"].update(
+        max_tokens=30000, max_steps=8, max_tool_calls=16, max_wall_milliseconds=60000
+    )
 
     def identity():
         return str(uuid4())
 
     return dict(
-        protocol_version=1,
+        protocol_version=6,
+        retained_tokens=16000,
+        investigator_initial_tokens=20000,
+        # Counting needs the optional tokenizer, so a generated host states "no"
+        # rather than failing to start. Budget reservations still use the
+        # request's provable size ceiling; a user who installs the tokenizer can
+        # fill this in to get tighter admission.
+        token_estimate=None,
         profile_id=identity(),
         approver_id="",
         provider_id=provider,
         model_id=model,
-        default_mode="auto",
+        default_mode="single",
         source=dict(source_id=identity(), repository=workspace, revision="HEAD"),
         promotion_target=dict(target_id=identity(), repository="", ref=""),
         managed_workspace_root=str(base / "managed"),
         cas_root=str(base / "artifacts"),
-        roles=roles,
-        router=dict(
-            preset="mode-router",
-            max_output_tokens=512,
-            budget=deepcopy(budget),
-            timeout_milliseconds=30000,
-            max_response_bytes=4096,
-        ),
+        roles={**roles, "patch_author": None},
         task_budget=budget,
         verification=dict(
             plan_id=identity(),
             plan_version=1,
-            commands=[dict(command_id=identity(), argv=[], timeout_ms=60000)],
+            commands=[dict(command_id=identity(), argv=[], timeout_ms=60000,
+                           public_requirement=None)],
             environment=dict(policy_id=identity(), passthrough=[], overrides={}),
             max_output_bytes=1048576,
             protocol_version=PROMOTION_PROTOCOL_VERSION,
@@ -284,13 +300,27 @@ def product_preset(workspace: str, data_dir: str, provider: str, model: str):
 
 def sandbox_preset():
     """Visible editable draft; backend identity and path grants require user input."""
-    return dict(format=SANDBOX_CONFIG_FORMAT, plugin_grants=[], policy=dict(
-        docker_context="", image="", network="none",
-        read_paths=[], write_paths=[], excluded_paths=[],
-        limits=dict(memory_bytes=268435456, workspace_bytes=33554432,
-                    workspace_files=2048, output_bytes=1048576, pids=64,
-                    cpus=1.0, wall_seconds=60.0),
-    ))
+    return dict(
+        format=SANDBOX_CONFIG_FORMAT,
+        plugin_grants=[],
+        policy=dict(
+            docker_context="",
+            image="",
+            network="none",
+            read_paths=[],
+            write_paths=[],
+            excluded_paths=[],
+            limits=dict(
+                memory_bytes=268435456,
+                workspace_bytes=33554432,
+                workspace_files=2048,
+                output_bytes=1048576,
+                pids=64,
+                cpus=1.0,
+                wall_seconds=60.0,
+            ),
+        ),
+    )
 
 
 def background_preset(workspace, data_dir):
@@ -298,44 +328,63 @@ def background_preset(workspace, data_dir):
     from datetime import UTC, datetime, timedelta
 
     return {
-        "format": 1, "period_id": str(uuid4()), "workspace": workspace,
-        "benchmark": "", "run_plan": "",
+        "format": 1,
+        "period_id": str(uuid4()),
+        "workspace": workspace,
+        "benchmark": "",
+        "run_plan": "",
         "output": str(Path(data_dir).resolve() / "optimization") if data_dir else "",
         "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
-        "max_episodes": 2, "max_trials": 8, "max_control_tokens": 600000,
-        "max_observations": 100, "cooldown_seconds": 300, "episode_seconds": 1800,
+        "max_episodes": 2,
+        "max_trials": 8,
+        "max_control_tokens": 600000,
+        "max_observations": 100,
+        "cooldown_seconds": 300,
+        "episode_seconds": 1800,
         "max_request_bytes": 200000,
-        "analysis": {"encoding": "cl100k_base", "token_limit": 32000,
-                     "output_tokens": 6000, "safety_tokens": 1024, "timeout_seconds": 90},
-        "judge": {"encoding": "cl100k_base", "token_limit": 64000,
-                  "output_tokens": 2048, "safety_tokens": 2048, "timeout_seconds": 90},
+        "analysis": {
+            "encoding": "cl100k_base",
+            "token_limit": 32000,
+            "output_tokens": 6000,
+            "safety_tokens": 1024,
+            "timeout_seconds": 90,
+        },
+        "judge": {
+            "encoding": "cl100k_base",
+            "token_limit": 64000,
+            "output_tokens": 2048,
+            "safety_tokens": 2048,
+            "timeout_seconds": 90,
+        },
         "selectors": [["runtime/prompt.py", "_REFERENCE_GUIDANCE"]],
     }
 
 
-LABELS.update({
-    "period_id": "额度周期标识（系统生成；重启不重置额度）",
-    "workspace": "允许收集反馈的工作区",
-    "benchmark": "冻结评估题库目录（必填）",
-    "run_plan": "双臂评估运行计划文件（必填，与聊天使用相同模型）",
-    "output": "独立实验输出目录（不能位于评估题库内）",
-    "expires_at": "额度到期时间（含时区，例如 +08:00）",
-    "max_episodes": "此周期最多实验次数",
-    "max_trials": "此周期最多完整评估任务数（包含两臂）",
-    "max_control_tokens": "分析和裁判 Token 预留总上限（不含原每题执行预算）",
-    "max_observations": "最多反馈条数",
-    "cooldown_seconds": "两次实验最短间隔（秒）",
-    "episode_seconds": "单次实验最长时间（秒）",
-    "max_request_bytes": "分析输入大小上限（字节）",
-    "analysis": "提出候选的模型调用预算",
-    "judge": "独立语义裁判的模型调用预算",
-    "encoding": "Token 本地计数编码",
-    "token_limit": "每次调用 Token 上限",
-    "output_tokens": "回答预留 Token",
-    "safety_tokens": "计数误差预留 Token",
-    "timeout_seconds": "单次调用最长秒数",
-    "selectors": "允许优化的说明文本节点（文件与节点名称）",
-})
+LABELS.update(
+    {
+        "period_id": "额度周期标识（系统生成；重启不重置额度）",
+        "workspace": "允许收集反馈的工作区",
+        "benchmark": "冻结评估题库目录（必填）",
+        "run_plan": "双臂评估运行计划文件（必填，与聊天使用相同模型）",
+        "output": "独立实验输出目录（不能位于评估题库内）",
+        "expires_at": "额度到期时间（含时区，例如 +08:00）",
+        "max_episodes": "此周期最多实验次数",
+        "max_trials": "此周期最多完整评估任务数（包含两臂）",
+        "max_control_tokens": "分析和裁判 Token 预留总上限（不含原每题执行预算）",
+        "max_observations": "最多反馈条数",
+        "cooldown_seconds": "两次实验最短间隔（秒）",
+        "episode_seconds": "单次实验最长时间（秒）",
+        "max_request_bytes": "分析输入大小上限（字节）",
+        "analysis": "提出候选的模型调用预算",
+        "judge": "独立语义裁判的模型调用预算",
+        "encoding": "Token 本地计数编码",
+        "token_limit": "每次调用 Token 上限",
+        "output_tokens": "回答预留 Token",
+        "safety_tokens": "计数误差预留 Token",
+        "timeout_seconds": "单次调用最长秒数",
+        "selectors": "允许优化的说明文本节点（文件与节点名称）",
+    }
+)
 
 
 def validate_document(kind, raw, path):
@@ -377,8 +426,12 @@ class ConfigForm(Screen[Path | None]):
 
     def compose(self):
         yield Static(
-            {"context": "知识与记忆配置", "product": "任务执行配置",
-             "sandbox": "执行沙箱配置", "background": "后台优化配置"}[self.kind]
+            {
+                "context": "知识与记忆配置",
+                "product": "任务执行配置",
+                "sandbox": "执行沙箱配置",
+                "background": "后台优化配置",
+            }[self.kind]
             + " · 左边选项目，右边查看说明并修改。预设值都可检查；不会执行命令或审批。",
             id="config-form-title",
             markup=False,
@@ -467,8 +520,19 @@ class ConfigForm(Screen[Path | None]):
             hint = "填写数字，单位见标题。角色预算可留空表示不限制；其他限制必须符合原配置规则。"
         if key in {"repository", "revision", "ref", "approver_id"}:
             hint = "此项必须明确填写。不会自动创建仓库、选择目标分支或代替你审批。"
+        if key == "public_requirement":
+            hint = (
+                "可留空关闭披露；最多 1000 字符，不能含换行等控制字符。"
+                "要求说明不是失败原因，也不公开验证输出。"
+            )
+        if path == ("roles", "patch_author"):
+            hint = (
+                "点击开启／关闭。开启后可编辑权限和预算；助手在独立工作区写补丁，"
+                "主方读完后显式整合，最终仍需人工审批。"
+            )
         docker_field = self.kind == "sandbox" and path in {
-            ("policy", "docker_context"), ("policy", "image"),
+            ("policy", "docker_context"),
+            ("policy", "image"),
         }
         picker = self.query_one("#docker-options", Select)
         picker.display = docker_field
@@ -476,8 +540,8 @@ class ConfigForm(Screen[Path | None]):
         if docker_field:
             hint = (
                 "点击刷新后下拉选择，或直接在输入框填写，再点更新。切换连接会清空旧镜像。"
-                if key == "docker_context" else
-                "先更新 Docker 连接，再刷新镜像列表。可手填名称:标签或完整 ID，"
+                if key == "docker_context"
+                else "先更新 Docker 连接，再刷新镜像列表。可手填名称:标签或完整 ID，"
                 "点更新后解析为固定身份；保存时再核对。不会下载或运行镜像，"
                 "镜像中的 Python 和项目依赖仍需在实际执行时验证。"
             )
@@ -504,11 +568,13 @@ class ConfigForm(Screen[Path | None]):
             or not scalar
             or key in {"format", "protocol_version", "unicode_version", "semantic", "reranker"}
             or path in {("context", "history"), ("context", "skills"), ("context", "memory")}
+            or path == ("roles", "patch_author")
         )
         self.query_one("#config-toggle", Button).display = path in {
             ("context", "history"),
             ("context", "skills"),
             ("context", "memory"),
+            ("roles", "patch_author"),
         }
         dynamic = key in {"sources", "overrides"}
         self.query_one("#config-add", Button).disabled = not isinstance(value, list) and not dynamic
@@ -543,13 +609,15 @@ class ConfigForm(Screen[Path | None]):
             if action == "docker-refresh":
                 key = path[-1]
                 choices = (
-                    await docker_choices.contexts() if key == "docker_context"
+                    await docker_choices.contexts()
+                    if key == "docker_context"
                     else await docker_choices.images(policy["docker_context"])
                 )
                 self._docker_options[key] = choices
                 message = (
                     "列表已刷新；请选择一项并点更新，也可手动填写。"
-                    if choices else "未找到可选项；可手动填写已有环境，或在准备好后刷新。"
+                    if choices
+                    else "未找到可选项；可手动填写已有环境，或在准备好后刷新。"
                 )
             elif action == "config-update":
                 identity = await docker_choices.resolve_image(policy["docker_context"], text)
@@ -585,6 +653,17 @@ class ConfigForm(Screen[Path | None]):
     def toggle(self):
         path = self.selected_path
         key = path[-1]
+        if self.kind == "product" and path == ("roles", "patch_author"):
+            if self.value(path) is not None:
+                self.assign(path, None)
+            else:
+                role = deepcopy(self.raw["roles"]["investigator"])
+                role.update(
+                    preset="product-patch-author",
+                    capability_grants=["list_files", "read_file", "search_text", "apply_patch"],
+                )
+                self.assign(path, role)
+            return
         context = self.raw["context"]
         if self.value(path) is None and not any(
             context[name] is not None for name in ("history", "skills", "memory")
@@ -681,6 +760,8 @@ class ConfigForm(Screen[Path | None]):
                     updated = int(text) if text.strip() else None
                 elif type(value) is float:
                     updated = float(text)
+                elif key == "public_requirement":
+                    updated = text if text.strip() else None
                 else:
                     updated = text
                 if path == ("policy", "docker_context") and self.kind == "sandbox":
@@ -698,11 +779,16 @@ class ConfigForm(Screen[Path | None]):
                     value[name] = self.workspace if key == "sources" else ""
                 else:
                     template = {
-                        "plugin_grants": dict(plugin_id="", version="", workspace="",
-                                              stdio=dict(input_bytes=1048576, frame_bytes=65536),
-                                              max_processes=1),
+                        "plugin_grants": dict(
+                            plugin_id="",
+                            version="",
+                            workspace="",
+                            stdio=dict(input_bytes=1048576, frame_bytes=65536),
+                            max_processes=1,
+                        ),
                         "resource_roots": dict(plugin=dict(plugin_id="", version=""), path=""),
-                        "commands": dict(command_id=str(uuid4()), argv=[], timeout_ms=60000),
+                        "commands": dict(command_id=str(uuid4()), argv=[], timeout_ms=60000,
+                                         public_requirement=None),
                     }
                     value.append(template.get(key, ""))
             elif action == "config-remove":

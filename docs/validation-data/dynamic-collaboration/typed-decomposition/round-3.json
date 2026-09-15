@@ -1,0 +1,108 @@
+{
+  "format": 1,
+  "contract_digest": "ecb28c12ba8794b53a2203783f69318c81e42f3f8d4607229bfa6287037d9457",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "outcomes": [
+    {
+      "scenario": "separable-review",
+      "expected_decision": "separable",
+      "decision": "local",
+      "decision_digest": "2bfcc2827be351c67783573cd38e0f89b80ad49df0412fbf1509b34a5801a24c",
+      "decision_succeeded": 1,
+      "decision_failed": 0,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 13,
+      "provider_calls_by_role": {
+        "main": 13
+      },
+      "task_success": true,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 126921,
+        "output_tokens": 1658,
+        "quality": "exact",
+        "total_tokens": 128579
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false
+    },
+    {
+      "scenario": "coupled-review",
+      "expected_decision": "local",
+      "decision": null,
+      "decision_digest": null,
+      "decision_succeeded": 0,
+      "decision_failed": 0,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 3,
+      "provider_calls_by_role": {
+        "main": 3
+      },
+      "task_success": false,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 12883,
+        "output_tokens": 227,
+        "quality": "exact",
+        "total_tokens": 13110
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false
+    },
+    {
+      "scenario": "simple-read",
+      "expected_decision": "local",
+      "decision": "local",
+      "decision_digest": "eeeb9ade51eadbbf8bbc16dd2de3317d2fa1d2981c4a28d9cb41f843c487e58d",
+      "decision_succeeded": 1,
+      "decision_failed": 0,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 7,
+      "provider_calls_by_role": {
+        "main": 7
+      },
+      "task_success": false,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": null,
+      "provider_failure_categories": [
+        "unknown"
+      ],
+      "termination": "local-call-cap",
+      "behavior_pass": false
+    }
+  ],
+  "stopped": null,
+  "total_real_calls": 23,
+  "all_behavior_pass": false,
+  "interpretation": "Three bounded typed-decision observations; no baseline, semantic judge, significance or automatic adoption."
+}

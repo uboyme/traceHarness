@@ -72,6 +72,12 @@ async def test_tool_pressure_compacts_only_old_turns_without_reexecution(
     sid, before = await history(tmp_path)
     entered, converged = asyncio.Event(), asyncio.Event()
 
+    # 1800 units, not 1400: the reference guidance is no longer assembled for a
+    # composition that has none of the reference tools, which took ~1,091 tokens
+    # out of this prompt. The pressure this case is about must come from the tool
+    # output itself rather than from prompt text that a real run would not carry.
+    EMIT_UNITS = 1800
+
     class Emit:
         name = "emit_records"
         description = "Emit records once and record its execution in the workspace."
@@ -81,7 +87,7 @@ async def test_tool_pressure_compacts_only_old_turns_without_reexecution(
         async def execute(self, arguments, context):
             with (context.workspace / "executions.txt").open("a") as output:
                 output.write("executed\n")
-            return ToolOutput(content="result unit. " * 1400)
+            return ToolOutput(content="result unit. " * EMIT_UNITS)
 
     class Provider(SummaryProvider):
         async def complete(self, request):
@@ -132,7 +138,7 @@ async def test_tool_pressure_compacts_only_old_turns_without_reexecution(
         results = [m for m in messages if m.role == "tool"]
         assert [call.id for call in calls] == ["emit-once"]
         assert len(results) == 1 and results[0].tool_call_id == "emit-once"
-        assert results[0].content == "result unit. " * 1400
+        assert results[0].content == "result unit. " * EMIT_UNITS
         assert any(m.content == "Keep this recent question intact." for m in messages)
         assert any(m.content == "Emit records and explain them." for m in messages)
         assert (tmp_path / "executions.txt").read_text() == "executed\n"

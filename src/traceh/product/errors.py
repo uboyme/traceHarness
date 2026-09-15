@@ -76,18 +76,6 @@ class ProductProfileError(ProductError):
         super().__init__("the product profile could not be resolved")
 
 
-class ProductRoutingError(ProductError):
-    """A router answer this build refuses to read as a decision.
-
-    Every one of these is final. A malformed, over-long, ambiguous or unknown
-    answer is never retried and never guessed at: re-asking would turn one
-    bounded decision into an unbounded loop, and guessing would let prose become
-    the decision that the enum beside it exists to carry.
-    """
-
-    def __init__(self, code: str) -> None:
-        self.code = code
-        super().__init__("the router answer is not a usable decision")
 
 
 class ProductOperationConflictError(ProductError):
@@ -149,7 +137,6 @@ __all__ = [
     "ProductOperationConflictError",
     "ProductProfileError",
     "ProductProtocolError",
-    "ProductRoutingError",
     "ProductServiceClosedError",
     "ProductStateError",
     "ProductStreamConflictError",

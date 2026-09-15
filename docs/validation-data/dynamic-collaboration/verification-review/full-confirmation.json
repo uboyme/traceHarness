@@ -1,0 +1,239 @@
+{
+  "format": 1,
+  "real_calls": 13,
+  "main_calls": 9,
+  "child_calls": 4,
+  "retries": 0,
+  "tokens": 75102,
+  "wall_ms": 144188,
+  "product_success": true,
+  "review_reached": true,
+  "review_steps": 1,
+  "main_functional_checks": 0,
+  "main_compile_checks": 1,
+  "final_claims_unrun_unit_tests": false,
+  "final_cites_tool_call_id": false,
+  "semantic_limitations": [
+    "No functional tests added during review",
+    "Child report includes an unsupported incompleteness claim",
+    "No general reliability or single/multi gain proven"
+  ],
+  "evidence": {
+    "budget": {
+      "accounts": 3,
+      "accounts_closed": 3,
+      "charged_steps": 13,
+      "charged_tool_calls": 10,
+      "child_reservations": 2,
+      "child_reservations_terminal": 2,
+      "converged": true,
+      "settled_tokens": 75102,
+      "usage_reservations": 15,
+      "usage_reservations_terminal": 15
+    },
+    "collaboration": {
+      "available_reports": 1,
+      "identical_work_extra_deliveries": 0,
+      "identical_work_groups": 0,
+      "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+      "observed_peak_active_turns": 2,
+      "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+      "reports_dispatched_to_parent": 1
+    },
+    "definition_hash": "e41e7a0c367eeca1c38d8914c40c843c101f69df19b073ab428ae938969bcedb",
+    "execution": {
+      "cumulative_work_duration_ms": 149385,
+      "final_model_results": [
+        {
+          "agent_id": "wf-agent-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30",
+          "result": "succeeded",
+          "session_id": "wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30"
+        },
+        {
+          "agent_id": "456c821c7665f0109f22d213654a3b434c12e6f8e23aec9f8473c41986f6178f",
+          "result": "succeeded",
+          "session_id": "agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302"
+        }
+      ],
+      "model_attempts": 13,
+      "provider_active_milliseconds": 106557,
+      "provider_failure_categories": [],
+      "retry_wait_milliseconds": 0,
+      "sessions": [
+        {
+          "agent_id": "wf-agent-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30",
+          "final_model_result": "succeeded",
+          "model_attempts": 9,
+          "provider_active_milliseconds": 85934,
+          "provider_failure_categories": [],
+          "retry_wait_milliseconds": 0,
+          "session_id": "wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30",
+          "steps": 9,
+          "tokens": {
+            "input_tokens": 51974,
+            "output_tokens": 3579,
+            "quality": "exact",
+            "total_tokens": 55553
+          },
+          "tool_calls": 7,
+          "turns": 1,
+          "work_duration_ms": 125546
+        },
+        {
+          "agent_id": "456c821c7665f0109f22d213654a3b434c12e6f8e23aec9f8473c41986f6178f",
+          "final_model_result": "succeeded",
+          "model_attempts": 4,
+          "provider_active_milliseconds": 20623,
+          "provider_failure_categories": [],
+          "retry_wait_milliseconds": 0,
+          "session_id": "agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302",
+          "steps": 4,
+          "tokens": {
+            "input_tokens": 18814,
+            "output_tokens": 735,
+            "quality": "exact",
+            "total_tokens": 19549
+          },
+          "tool_calls": 3,
+          "turns": 1,
+          "work_duration_ms": 23839
+        }
+      ],
+      "steps": 13,
+      "tokens": {
+        "input_tokens": 70788,
+        "output_tokens": 4314,
+        "quality": "exact",
+        "total_tokens": 75102
+      },
+      "tool_calls": 10,
+      "turns": 2
+    },
+    "failure_code": null,
+    "investigations": [
+      {
+        "agent_id": "456c821c7665f0109f22d213654a3b434c12e6f8e23aec9f8473c41986f6178f",
+        "child_visible_source_outputs": [
+          {
+            "content_digest": "bae663a78544e5b84f5eb8ad1e040704e18ea28e31b825f8a7e92d939a31bff8",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@21",
+            "tool": "list_files",
+            "tool_call_id": "call_949ee205cb0246cc8c4eee"
+          },
+          {
+            "content_digest": "bae663a78544e5b84f5eb8ad1e040704e18ea28e31b825f8a7e92d939a31bff8",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@33",
+            "tool": "list_files",
+            "tool_call_id": "call_949ee205cb0246cc8c4eee"
+          },
+          {
+            "content_digest": "73554e7dce008d8fda951d449d47623baac3e2d236aea5b64897795623ddc62f",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@33",
+            "tool": "read_file",
+            "tool_call_id": "call_a0aaefceae09440b86d647"
+          },
+          {
+            "content_digest": "bae663a78544e5b84f5eb8ad1e040704e18ea28e31b825f8a7e92d939a31bff8",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@45",
+            "tool": "list_files",
+            "tool_call_id": "call_949ee205cb0246cc8c4eee"
+          },
+          {
+            "content_digest": "73554e7dce008d8fda951d449d47623baac3e2d236aea5b64897795623ddc62f",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@45",
+            "tool": "read_file",
+            "tool_call_id": "call_a0aaefceae09440b86d647"
+          },
+          {
+            "content_digest": "555a6d8cb11fab2245210d6c4b3ed14920c8f25d185d04e1ad0d7040b12d7fbe",
+            "request": "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302@45",
+            "tool": "read_file",
+            "tool_call_id": "call_9b932a93b29e458fb331b8"
+          }
+        ],
+        "goal": "Extract the precise, normative behavioral specifications for coverage(windows, horizon) from validation.md and intervals.md, focusing exclusively on input validation rules, clipping behavior (including bounds, edge cases, and output guarantees), and interval merging behavior (including conditions, ordering, normalization, and output format). Resolve ambiguities by quoting source text and flagging inconsistencies or omissions.",
+        "input_digest": "fbb2772f5004bb985d2e5f0c204a06e1e7eaa7c358f711161cf0efd0590b16e7",
+        "interpretation": "Visibility and completion only; relevance and correctness require assessment.",
+        "message_id": "agent-tool-investigation-message-16af1aaa-2195-5602-ae61-115b51899ca4",
+        "parent_report_dispatches": [
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@101",
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@111",
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@49",
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@62",
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@75",
+          "session:wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30@88"
+        ],
+        "report_available": true,
+        "report_refs": [
+          "agent-inbox:456c821c7665f0109f22d213654a3b434c12e6f8e23aec9f8473c41986f6178f#1",
+          "agent-delivery:456c821c7665f0109f22d213654a3b434c12e6f8e23aec9f8473c41986f6178f#2",
+          "session:agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302#51"
+        ],
+        "report_status": "completed",
+        "revision": "3c94511a0be343a381382d85849f98994ad61312",
+        "session_id": "agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302",
+        "source_id": "benchmark-source",
+        "work_digest": "d95a054ae425f4cba4bd28c73c5940ba1f063df5c476bc73d2a03a44d9d641b3"
+      }
+    ],
+    "mode_source": "confirmed_proposal",
+    "new_revision": "ef9a202cdf90e5297228c16b707b1a29975918c6",
+    "preflight_digest": "10d9feb67424177eea3cefb4b602eda8f01ce7cc150962d9e19a5e6e4553b21f",
+    "previous_revision": "3c94511a0be343a381382d85849f98994ad61312",
+    "product_status": "completed",
+    "profile_digest": "df7534996d3852b0094ed4e3216cce57246f79f57c81071d8e9123f73b4d4de3",
+    "promotion_id": "promotion-e595f180fa948b87786cc97edeb11f3604533b1b29cf66383c51c2b3913c7061",
+    "reason_code": null,
+    "requirement_digest": "b39b08d51cd78a5f4a45a6d2665c6f394433213066d87093391e9d047f75efe7",
+    "resolved_mode": "multi",
+    "review_id": "review-0d21479ddae8064abb1b8a28eb6d17818bd69db562adb317f056010e77dd114a",
+    "review_passed": true,
+    "source_base_revision": "3c94511a0be343a381382d85849f98994ad61312",
+    "target_ref": "refs/heads/main",
+    "target_revision": "ef9a202cdf90e5297228c16b707b1a29975918c6",
+    "task_id": "product-task-4273347f2c8ba116308ae66a2143108e210a70e6dcb2f86be08e3288be938756",
+    "unattributed": {
+      "sessions": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "quality": "exact",
+        "total_tokens": 0
+      }
+    },
+    "unavailable": [],
+    "verifier_definition_digest": "a4b97ff06550ba6cd660ff4ced092c0df85ad657eb5d2f059db9ca90c5ac6b97",
+    "workflow_status": "completed",
+    "workspaces": {
+      "converged": true,
+      "live": 0,
+      "quarantined": 0,
+      "released": 3,
+      "workspaces": 3
+    }
+  },
+  "replay": {
+    "requests": 15,
+    "sessions": [
+      {
+        "session_id": "2c2876fc-5476-420b-a806-13593c8e3ce3",
+        "requests": 2
+      },
+      {
+        "session_id": "agent-tool-investigation-session-23a8f487-7cee-5ca3-bd6f-ab9111c0e302",
+        "requests": 4
+      },
+      {
+        "session_id": "product-owner-session-product-task-4273347f2c8ba116308ae66a2143108e210a70e6dcb2f86be08e3288be938756",
+        "requests": 0
+      },
+      {
+        "session_id": "wf-session-eb516c8662be8fa764f2ef8dd51ab141472d57ea3cdb782d7ee0e5f6f42faa30",
+        "requests": 9
+      }
+    ],
+    "errors": [],
+    "original_database_unchanged": true,
+    "database_sha256": "4a20faa18005332714890233443b818c1473a200c93f16e35e8d0b5519ed8130"
+  }
+}

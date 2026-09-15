@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "image": "sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b",
+  "network": "none",
+  "scenarios": [
+    {
+      "scenario": "separable-review",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    },
+    {
+      "scenario": "coupled-review",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    },
+    {
+      "scenario": "simple-read",
+      "outcomes": [
+        {
+          "reference_output": false,
+          "exit_code": 1,
+          "contract_verified": true
+        },
+        {
+          "reference_output": true,
+          "exit_code": 0,
+          "contract_verified": true
+        }
+      ]
+    }
+  ]
+}

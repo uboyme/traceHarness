@@ -1,0 +1,91 @@
+{
+  "protocol_version": 3,
+  "benchmark_id": "traceh-da-development-v1",
+  "task_type": "product_task",
+  "task_settings": {
+    "profile_id": "da-readonly-development-v1",
+    "approver_id": "benchmark-host",
+    "default_mode": "single",
+    "roles": {
+      "coder": {
+        "preset": "product-benchmark-coder",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text",
+          "apply_patch",
+          "shell"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 300000,
+          "max_steps": 60,
+          "max_tool_calls": 80,
+          "max_wall_milliseconds": 900000,
+          "max_children": 3,
+          "max_depth": 1,
+          "max_processes": 2
+        },
+        "max_turn_wall_milliseconds": 300000
+      },
+      "investigator": {
+        "preset": "product-benchmark-investigator",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        "max_output_tokens": 4096,
+        "budget": {
+          "max_tokens": 60000,
+          "max_steps": 16,
+          "max_tool_calls": 20,
+          "max_wall_milliseconds": 180000,
+          "max_children": 0,
+          "max_depth": 0,
+          "max_processes": 0
+        },
+        "max_turn_wall_milliseconds": 120000
+      },
+      "patch_author": null
+    },
+    "task_budget": {
+      "max_tokens": 600000,
+      "max_steps": 120,
+      "max_tool_calls": 160,
+      "max_wall_milliseconds": 1800000,
+      "max_children": 4,
+      "max_depth": 2,
+      "max_processes": 3
+    },
+    "capture_limits": {
+      "max_changed_paths": 100,
+      "max_path_bytes": 1024,
+      "max_file_bytes": 1048576,
+      "max_total_file_bytes": 4194304,
+      "max_patch_bytes": 4194304
+    },
+    "max_report_chars": 12000,
+    "retrieval": null,
+    "modes": [
+      "single",
+      "multi"
+    ],
+    "retained_tokens": 32000,
+    "investigator_initial_tokens": 60000,
+    "token_estimate": null
+  },
+  "dataset": {
+    "file": "dataset.json",
+    "sha256": "7d05b6b53d0a26af4e97d414ae61fd7d183b754ab807d4f7abf14752a16c2f73"
+  },
+  "assessment": {
+    "scorer_id": "product-durable-semantic-v1",
+    "version": 1,
+    "requires_review": true,
+    "rubric": {
+      "file": "rubric.json",
+      "sha256": "e87aa20912ada34a2fce1130219a299c30c037c0cbf4bc086b5985fddcebdb02"
+    }
+  }
+}

@@ -12,6 +12,7 @@ from traceh.evaluation.errors import BenchmarkManifestError
 from traceh.evaluation.inputs import digest_bytes, object_fields, text_field
 
 EDITABLE_TEXT = {
+    "supervision/structured_collaboration.py": ("ALLOCATION_GUIDANCE",),
     "tools/reference_search.py": (
         "HistorySearchTool.description",
         "SkillSearchTool.description",

@@ -266,7 +266,9 @@ async def test_active_tool_reply_is_kept_when_next_step_exceeds_budget(tmp_path)
         )
     )
     runtime = build_default_runtime(
-        RuntimeConfig(data_dir=tmp_path, max_tool_output_chars=200_000, token_budget=policy(6000)),
+        # read_file now returns a bounded page; choose a window that admits the
+        # first request but cannot also admit that page's active Tool group.
+        RuntimeConfig(data_dir=tmp_path, max_tool_output_chars=200_000, token_budget=policy(4000)),
         provider=provider,
         event_store=store,
     )

@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "kind": "adaptive-exclusive-decomposition-real-observation",
+  "source_digest": "34e90e43c4bfb2555df5c24f9aec64933860118e7c8a226d745cf2a9182974d2",
+  "sandbox_digest": "3788e81e5c93fc574758abb09d6ff992d816988c403fa0cb8000115cb1cbf750",
+  "network": "direct",
+  "retry_attempts": 1,
+  "scenario_order": [
+    "separable-review",
+    "coupled-review",
+    "simple-read"
+  ],
+  "scenarios": {
+    "separable-review": {
+      "kind": "separable",
+      "max_real_calls": 24,
+      "source_paths": [
+        "src/traceh/budgets/projection.py",
+        "src/traceh/budgets/service.py",
+        "src/traceh/supervision/delegation.py",
+        "src/traceh/supervision/investigation_budget.py"
+      ]
+    },
+    "coupled-review": {
+      "kind": "coupled",
+      "max_real_calls": 12,
+      "source_paths": [
+        "src/traceh/supervision/investigation_budget.py"
+      ]
+    },
+    "simple-read": {
+      "kind": "simple",
+      "max_real_calls": 8,
+      "source_paths": [
+        "src/traceh/version.py"
+      ]
+    }
+  },
+  "max_total_real_calls": 44,
+  "semantic_judge_calls": 0,
+  "baseline_trials": 0,
+  "adoption_authorized": false,
+  "interpretation": "Three frozen observations of the exclusive typed checkpoint; no baseline, semantic judge, statistical claim, or adoption authority.",
+  "materials": {
+    "separable-review": {
+      "manifest_digest": "ca57ac3ec60de11278e5d91bd54f00184b13d3be1b63472076f1566f502837cc",
+      "dataset_digest": "733d461fedd809fbbc124b8cc4360ae0b2a1954942898cb03dc18c45aa0c121e",
+      "initial_tree_digest": "d5756f332e1d913122e553912d4b705319b5a742814024630ab7cda855b8df18",
+      "verification_digest": "6aeeaaea3bd8b96b37d670c54b664e76feebd3504babc824bbdaa8660bbed302",
+      "reference_digest": "a24ca02f6e9f5d039289b2721da5a79f7d58a6837ada9239e22308263fd7433e"
+    },
+    "coupled-review": {
+      "manifest_digest": "d37fc73b5b7ea7a3b2f049b0083dbeb1ab74122704a1f62e7b41f067e57e14ba",
+      "dataset_digest": "a52adf53df88da81d384e43bf3bf4f3840dc455e41bcb6fab03f48f090ba15df",
+      "initial_tree_digest": "15fe9b9e30ade7c930a9e72a286c842e9169c023e7b8d9a5531e4d8357f8fc5a",
+      "verification_digest": "397d635bc028e4877fa5b1ba8afb90d9707262b8e3cbc7bb67df5770f840c159",
+      "reference_digest": "20aee906760e393053ccc1c002cb0c612e1e496bdb478094e60834b327bc56b9"
+    },
+    "simple-read": {
+      "manifest_digest": "23062a6fc91e5a6778aa31c3b4e77e80977b7b4d3de6c3b9dd0fa50ea711f0dd",
+      "dataset_digest": "52480542684c11eab88c089fc3ce592c14f722685f43bfa2c968bc2c69f99119",
+      "initial_tree_digest": "9e63a135d38dbb12f4cc571982f725d0a921795336a3ca52cf597e833ef2e635",
+      "verification_digest": "e813bd1b0a85a97c3ce0fa8f0f0c1e1fcdae2dbd72d49fb4fefe2c4f0adc7784",
+      "reference_digest": "309f14182530899e6e184a25acaffd6bfc41bede760d159c3b4c536d649e1573"
+    }
+  },
+  "driver_digest": "a51b7301f6e41710e7e4ae065eb94d95faca8ba142e60c8c76d8a77d20776315",
+  "stage": "DA-8"
+}

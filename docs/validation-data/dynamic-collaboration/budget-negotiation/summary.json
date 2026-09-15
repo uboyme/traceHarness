@@ -1,0 +1,74 @@
+{
+  "scope": "real-child-scripted-parent-mechanism; not an autonomy or quality benchmark",
+  "model": "qwen-plus",
+  "network": "direct",
+  "trials": 1,
+  "real_calls": 4,
+  "real_input_tokens": 14107,
+  "real_output_tokens": 376,
+  "initial_tokens": 20000,
+  "granted_tokens": 5000,
+  "allocated_tokens_after": 25000,
+  "cumulative_ceiling": 30000,
+  "session_count": 4,
+  "replayed_requests": 15,
+  "replay_violations": 0,
+  "mechanism_pass": true,
+  "awaiting_human_approval": true,
+  "promoted": false,
+  "runtime_delta_after_live": "one class docstring only",
+  "source_digest": "462c45202c46e1faa6d69e74528a7d90b3f1c01483bb33ede2809f6b62ccf6bd",
+  "source_archive_sha256": "11af3c42e860acbb86be8a04ff798dc8115ef9c66878c2833b2ba0041c005f83",
+  "checks": [
+    {
+      "name": "budget-targeted",
+      "tests": "280",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "3"
+    },
+    {
+      "name": "budget-final-core",
+      "tests": "123",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "budget-product",
+      "tests": "2",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "budget-integration",
+      "tests": "25",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "budget-final-negotiation",
+      "tests": "16",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0"
+    }
+  ],
+  "collected": 4019,
+  "reverse_checks": [
+    "Removing retained reserve check causes expected DID NOT RAISE",
+    "Removing cumulative ceiling check causes expected DID NOT RAISE"
+  ],
+  "full_suite_run": false,
+  "L2_L4_run": false,
+  "distinct_tests": {
+    "passed": 302,
+    "skipped": 0,
+    "failed": 0
+  },
+  "pending_usage": 0,
+  "retained_workspaces": 3,
+  "retained_workspaces_reason": "Product awaiting human approval; aclose is not release"
+}

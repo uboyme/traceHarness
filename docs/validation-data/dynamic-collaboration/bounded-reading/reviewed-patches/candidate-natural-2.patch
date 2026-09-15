@@ -1,0 +1,8 @@
+diff --git a/answer.json b/answer.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..53f5d54fed39037194e73491a7b16cc59c7d3215
+--- /dev/null
++++ b/answer.json
+@@ -0,0 +1 @@
++{"sections":[{"topic":"authority","conclusion":"主方与调查方的权限通过 AgentToolAuthority 类严格控制，要求调查方必须是主方的直接拥有后代（delegation.py line 91-92）。工作区版本和历史继承通过 durable_log_identity 函数确保一致性（execution.py line 35-55），并且在创建调查时验证 forked_from_session_id 为空（delegation.py line 136）。","evidence":[{"path":"src/traceh/supervision/delegation.py","start_line":91,"end_line":92},{"path":"src/traceh/supervision/execution.py","start_line":35,"end_line":55}]},{"topic":"budget","conclusion":"子任务预算通过 BudgetLedgerService.reserve_child 方法预留（service.py line 118-139），主方保留收尾额度通过 _await_owned 和 _finish_owned 辅助函数确保最终化操作完成（enforcement.py line 182-201, 204-229），这些函数 guarantee convergence before propagating cancellation or errors.","evidence":[{"path":"src/traceh/budgets/service.py","start_line":118,"end_line":139},{"path":"src/traceh/budgets/enforcement.py","start_line":182,"end_line":201}]},{"topic":"lifecycle","conclusion":"创建/发送取消、清理失败以及主方结束时，通过 AgentLifecycleCoordinator 的 admission/disposal scopes（lifecycle.py line 151-174, 176-203）确保不会留下运行中的工作。产物捕获在 collect_investigation 工具中实现，通过 supervisor.report() 调用获取最终报告（delegation.py line 200-230），并在 stop_investigation 中调用 supervisor.dispose() 确保彻底清理（delegation.py line 235）。","evidence":[{"path":"src/traceh/supervision/lifecycle.py","start_line":151,"end_line":174},{"path":"src/traceh/supervision/delegation.py","start_line":200,"end_line":230}]}]}
+\ No newline at end of file

@@ -33,7 +33,7 @@ from traceh.product.observation import (
     ObservedStreamHead,
     ProductObservation,
 )
-from traceh.product.topology import product_role_node_id
+from traceh.product.topology import PRODUCT_MODE_ROLES, product_role_node_id
 from traceh.runtime.request_builder import RequestBuilder
 from traceh.session.context_input import ContextInputService
 from traceh.session.event_store import Durability, InMemoryEventStore
@@ -44,8 +44,6 @@ from traceh.tui.task_conversation import TaskConversationReader
 from traceh.workflow.models import agent_identity
 
 TASK_ID = "task-conversation-projection"
-ROUTER_AGENT_ID = "router-agent-conversation"
-ROUTER_SESSION_ID = "router-session-conversation"
 BASE_TIME = datetime(2026, 8, 31, 6, 0, tzinfo=UTC)
 
 
@@ -110,9 +108,7 @@ async def _append_turn(
             {
                 "id": f"call-{suffix}",
                 "name": "shell",
-                "arguments": {
-                    "command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"
-                },
+                "arguments": {"command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"},
             }
         )
     if with_list_files:
@@ -147,7 +143,8 @@ async def _append_turn(
     ]
     stream = SessionService.session_stream(session_id)
     await store.append(
-        stream, expected_seq=base_seq,
+        stream,
+        expected_seq=base_seq,
         events=tuple(
             replace(event, occurred_at=BASE_TIME + timedelta(seconds=base_seq + index))
             for index, event in enumerate(events, start=1)
@@ -155,29 +152,42 @@ async def _append_turn(
     )
     sessions = SessionService(store)
     composition = RuntimeComposition(
-        provider="deterministic-provider", model="deterministic-model",
-        system_prompt="", tools=(),
+        provider="deterministic-provider",
+        model="deterministic-model",
+        system_prompt="",
+        tools=(),
     ).snapshot()
     context = await ContextInputService(sessions.read_session).freeze(
-        session_id=session_id, turn_id=turn_id, step_id=step_id, composition=composition,
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        composition=composition,
     )
     await sessions.append_context_input(
         session_id, context.to_dict(), expected_seq=context.to_dict()["observed_session_seq"]
     )
     source = await sessions.append_session(
-        session_id, "composition/snapshot", composition.to_dict(),
+        session_id,
+        "composition/snapshot",
+        composition.to_dict(),
         composition_revision=composition.revision,
     )
     built = await RequestBuilder(sessions, SurfaceProjector()).build(
-        session_id=session_id, turn_id=turn_id, step_id=step_id,
-        composition=composition, through_seq=source.seq,
+        session_id=session_id,
+        turn_id=turn_id,
+        step_id=step_id,
+        composition=composition,
+        through_seq=source.seq,
     )
     snapshot, start = await sessions.start_model_attempt(
         session_id,
         attempt=ModelAttemptIdentity(session_id, turn_id, step_id, attempt_id, 1),
-        source_seq=built.source_seq, composition_revision=composition.revision,
-        composed_request=built.request, composed_fingerprint=built.fingerprint,
-        dispatch_request=built.request, dispatch_fingerprint=built.fingerprint,
+        source_seq=built.source_seq,
+        composition_revision=composition.revision,
+        composed_request=built.request,
+        composed_fingerprint=built.fingerprint,
+        dispatch_request=built.request,
+        dispatch_fingerprint=built.fingerprint,
         reservation_id=None,
     )
     snapshot_seq = snapshot.seq
@@ -214,11 +224,7 @@ async def _append_turn(
         ),
     ]
     if with_shell:
-        result_data = (
-            {}
-            if shell_exit_code is None
-            else {"data": {"exit_code": shell_exit_code}}
-        )
+        result_data = {} if shell_exit_code is None else {"data": {"exit_code": shell_exit_code}}
         events.extend(
             (
                 PendingEvent(
@@ -228,9 +234,7 @@ async def _append_turn(
                         "step_id": step_id,
                         "tool_call_id": f"call-{suffix}",
                         "tool_name": "shell",
-                        "arguments": {
-                            "command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"
-                        },
+                        "arguments": {"command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"},
                     },
                 ),
                 PendingEvent(
@@ -309,7 +313,8 @@ async def _append_turn(
         )
     )
     await store.append(
-        stream, expected_seq=start.seq,
+        stream,
+        expected_seq=start.seq,
         events=tuple(
             replace(event, occurred_at=BASE_TIME + timedelta(seconds=start.seq + index))
             for index, event in enumerate(events, start=1)
@@ -379,17 +384,18 @@ async def _append_session(
         ),
     )
     await _append_turn(
-            store, session_id,
-            suffix=role,
-            base_seq=1,
-            input_text=f"input-for-{role}",
-            model_text=f"model-output-for-{role}",
-            usage_quality=usage_quality,
-            with_shell=with_shell,
-            with_list_files=with_list_files,
-            with_search_text=with_search_text,
-            shell_exit_code=shell_exit_code,
-            shell_status=shell_status,
+        store,
+        session_id,
+        suffix=role,
+        base_seq=1,
+        input_text=f"input-for-{role}",
+        model_text=f"model-output-for-{role}",
+        usage_quality=usage_quality,
+        with_shell=with_shell,
+        with_list_files=with_list_files,
+        with_search_text=with_search_text,
+        shell_exit_code=shell_exit_code,
+        shell_status=shell_status,
     )
 
 
@@ -421,10 +427,8 @@ async def _build_fixture(
             request_id="foreign-product-owner-create",
             role="traceh-product-owner",
         )
-    identities = {
-        "router": (ROUTER_AGENT_ID, ROUTER_SESSION_ID, "router-request"),
-    }
-    for role in ProductRole:
+    identities = {}
+    for role in PRODUCT_MODE_ROLES[ResolvedTaskMode.MULTI]:
         node_id = product_role_node_id(role)
         agent_id, session_id, request_id, _ = agent_identity(TASK_ID, node_id)
         identities[role.value] = (agent_id, session_id, request_id)
@@ -436,40 +440,24 @@ async def _build_fixture(
             session_id=session_id,
             request_id=request_id,
             role=role,
-            owner_agent_id=(
-                foreign_owner_id if role == foreign_owner_role else owner_id
-            ),
+            owner_agent_id=(foreign_owner_id if role == foreign_owner_role else owner_id),
         )
         await _append_session(
             store,
             session_id,
             role=role,
-            usage_quality=(
-                coder_usage_quality if role == ProductRole.CODER.value else "exact"
-            ),
+            usage_quality=(coder_usage_quality if role == ProductRole.CODER.value else "exact"),
             with_shell=coder_shell and role == ProductRole.CODER.value,
-            with_list_files=(
-                coder_list_files and role == ProductRole.CODER.value
-            ),
-            with_search_text=(
-                coder_search_text and role == ProductRole.CODER.value
-            ),
-            shell_exit_code=(
-                coder_shell_exit_code
-                if role == ProductRole.CODER.value
-                else None
-            ),
-            shell_status=(
-                coder_shell_status
-                if role == ProductRole.CODER.value
-                else "succeeded"
-            ),
+            with_list_files=(coder_list_files and role == ProductRole.CODER.value),
+            with_search_text=(coder_search_text and role == ProductRole.CODER.value),
+            shell_exit_code=(coder_shell_exit_code if role == ProductRole.CODER.value else None),
+            shell_status=(coder_shell_status if role == ProductRole.CODER.value else "succeeded"),
         )
 
     summary = ProductTaskSummary(
         task_id=TASK_ID,
         status=ProductTaskStatus.COMPLETED,
-        requested_mode=RequestedTaskMode.AUTO,
+        requested_mode=RequestedTaskMode.MULTI,
         mode_source=TaskModeSource.CONFIRMED_PROPOSAL,
         requirement_digest="1" * 64,
         profile_digest="2" * 64,
@@ -482,14 +470,12 @@ async def _build_fixture(
         confirmation_message_id="confirmation-message",
         head_seq=6,
         resolved_mode=ResolvedTaskMode.MULTI,
-        router_agent_id=ROUTER_AGENT_ID,
-        routing_session_id=ROUTER_SESSION_ID,
         definition_hash="4" * 64,
         assembly_digest="5" * 64,
         source_base_revision="6" * 40,
     )
     nodes = []
-    for role in ProductRole:
+    for role in PRODUCT_MODE_ROLES[ResolvedTaskMode.MULTI]:
         node_id = product_role_node_id(role)
         agent_id, session_id, _, _ = agent_identity(TASK_ID, node_id)
         nodes.append(
@@ -507,9 +493,7 @@ async def _build_fixture(
         nodes=tuple(nodes),
         review=None,
     )
-    session_ids = {
-        role: session_id for role, (_agent, session_id, _request) in identities.items()
-    }
+    session_ids = {role: session_id for role, (_agent, session_id, _request) in identities.items()}
     heads = []
     for session_id in session_ids.values():
         events = await store.read(SessionService.session_stream(session_id))
@@ -561,30 +545,31 @@ async def _append_coder_turn(
     stream = SessionService.session_stream(session_id)
     head = await fixture.store.head(stream)
     await _append_turn(
-            fixture.store, session_id,
-            suffix=suffix,
-            base_seq=head,
-            input_text=input_text,
-            model_text=model_text,
+        fixture.store,
+        session_id,
+        suffix=suffix,
+        base_seq=head,
+        input_text=input_text,
+        model_text=model_text,
     )
 
 
 async def _tool_span(fixture: ConversationFixture, tool_name: str) -> str:
-    events = await fixture.store.read(
-        SessionService.session_stream(fixture.sessions["coder"])
-    )
+    events = await fixture.store.read(SessionService.session_stream(fixture.sessions["coder"]))
     call = next(
-        event for event in events
+        event
+        for event in events
         if event.type == "tool/call" and event.data["tool_name"] == tool_name
     )
     result = next(
-        event for event in events
+        event
+        for event in events
         if event.type == "tool/result" and event.data["tool_call_id"] == call.data["tool_call_id"]
     )
     return f"{call.seq}\N{EN DASH}{result.seq}"
 
 
-async def test_projects_exact_router_and_fixed_multi_roles() -> None:
+async def test_multi_without_delegation_projects_only_its_real_main_agent() -> None:
     fixture = await _build_fixture()
 
     snapshot = await TaskConversationReader(fixture.store).load(
@@ -593,9 +578,6 @@ async def test_projects_exact_router_and_fixed_multi_roles() -> None:
     )
 
     assert [role.role for role in snapshot.roles] == [
-        "router",
-        "parent",
-        "reviewer",
         "coder",
     ]
     assert all(role.turns_started == role.turns_completed == 1 for role in snapshot.roles)
@@ -610,8 +592,7 @@ async def test_projects_exact_router_and_fixed_multi_roles() -> None:
 async def test_user_and_assistant_messages_have_no_projection_size_caps() -> None:
     fixture = await _build_fixture()
     input_lines = [
-        f"release-readiness item {number}: preserve the recorded decision"
-        for number in range(64)
+        f"release-readiness item {number}: preserve the recorded decision" for number in range(64)
     ]
     final_line = "FINAL-RELEASE-DECISION: retain the complete durable explanation"
     input_text = "\n".join((*input_lines, final_line))
@@ -660,8 +641,7 @@ async def test_complete_messages_escape_unsafe_characters_without_truncation() -
     assert coder.messages[-2:] == (
         (
             "input",
-            "review\\x1b[31m\\rstatus\\0\\u2028paragraph"
-            "\\u2029override\\u202eend",
+            "review\\x1b[31m\\rstatus\\0\\u2028paragraph\\u2029override\\u202eend",
         ),
         ("model", "result-before\\x1b[32m\\u202e-result-after"),
     )
@@ -670,39 +650,7 @@ async def test_complete_messages_escape_unsafe_characters_without_truncation() -
         assert unsafe not in rendered
 
 
-async def test_router_session_must_belong_to_the_recorded_router_agent() -> None:
-    fixture = await _build_fixture()
-    assert fixture.observation.summary is not None
-    unrelated_session = "session-unrelated-router-claim"
-    await _append_session(fixture.store, unrelated_session, role="unrelated")
-    unrelated_head = await fixture.store.head(
-        SessionService.session_stream(unrelated_session)
-    )
-    tampered = replace(
-        fixture.observation,
-        summary=replace(
-            fixture.observation.summary,
-            routing_session_id=unrelated_session,
-        ),
-        stream_heads=fixture.observation.stream_heads
-        + (
-            ObservedStreamHead(
-                SessionService.session_stream(unrelated_session),
-                unrelated_head,
-                "turn/end",
-                BASE_TIME + timedelta(seconds=11),
-                True,
-            ),
-        ),
-    )
-
-    with pytest.raises(ProductStateError) as raised:
-        await TaskConversationReader(fixture.store).load(tampered)
-
-    assert raised.value.code == "product-conversation-router-session-mismatch"
-
-
-@pytest.mark.parametrize("role", ("router", "coder"))
+@pytest.mark.parametrize("role", ("coder",))
 async def test_projected_agents_must_belong_to_the_product_owner_subtree(
     role: str,
 ) -> None:
@@ -761,9 +709,7 @@ async def test_shell_arguments_and_tool_result_content_are_never_exposed() -> No
     coder = next(role for role in snapshot.roles if role.role == "coder")
     rendered = "\n".join(content for _kind, content in coder.messages)
     expected_size = len(
-        canonical_json(
-            {"command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"}
-        ).encode("utf-8")
+        canonical_json({"command": "echo SECRET-IN-ARGUMENT\x1b[31m\u202e"}).encode("utf-8")
     )
 
     assert coder.tool_calls == 1
@@ -865,9 +811,7 @@ async def test_unrelated_sessions_are_not_scanned_or_projected() -> None:
     )
 
     snapshot = await TaskConversationReader(fixture.store).load(fixture.observation)
-    rendered = "\n".join(
-        content for role in snapshot.roles for _kind, content in role.messages
-    )
+    rendered = "\n".join(content for role in snapshot.roles for _kind, content in role.messages)
 
     assert "unrelated" not in rendered
     assert {role.session_id for role in snapshot.roles} == set(fixture.sessions.values())
@@ -891,11 +835,12 @@ async def test_load_is_read_only_and_reopen_observes_new_durable_facts() -> None
     stream = SessionService.session_stream(coder_session)
     head = await fixture.store.head(stream)
     await _append_turn(
-            fixture.store, coder_session,
-            suffix="coder-followup",
-            base_seq=head,
-            input_text="fresh-followup-input",
-            model_text="fresh-followup-output",
+        fixture.store,
+        coder_session,
+        suffix="coder-followup",
+        base_seq=head,
+        input_text="fresh-followup-input",
+        model_text="fresh-followup-output",
     )
     append_count_after_external_write = fixture.store.append_calls
 

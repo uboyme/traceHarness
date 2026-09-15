@@ -25,13 +25,12 @@ from traceh.product.control import (
     ProductTaskControlPlane,
 )
 from traceh.product.errors import ProductInputError
-from traceh.product.events import require_product_identifier
+from traceh.product.events import MAX_PRODUCT_REQUIREMENT_CHARS, require_product_identifier
 from traceh.product.inspection import (
     ProductInspectionEvidenceReader,
     ProductTaskEvidence,
 )
 from traceh.product.memory import ProductTaskMemoryReader, product_task_evidence_data
-from traceh.product.router import MAX_ROUTER_SUMMARY_CHARS
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,9 +116,7 @@ class ProductTurnActions:
         self._actions: dict[tuple[str, str], _TurnAction] = {}
         self._lock = asyncio.Lock()
 
-    async def record(
-        self, session_id: str, turn_id: str, action: _TurnAction
-    ) -> None:
+    async def record(self, session_id: str, turn_id: str, action: _TurnAction) -> None:
         key = (session_id, turn_id)
         async with self._lock:
             if key in self._actions:
@@ -147,7 +144,7 @@ class ProposeProductTaskTool:
     name = "propose_product_task"
     description = (
         "Suggest turning the user's coding requirement into a controlled task. "
-        "If the user explicitly requested single, multi, or auto, include that "
+        "If the user explicitly requested single or multi, include that "
         "mode; otherwise omit it and let the host Profile decide. This only "
         "asks the host to show a proposal; it does not start work."
     )
@@ -158,7 +155,7 @@ class ProposeProductTaskTool:
             "requirement": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": MAX_ROUTER_SUMMARY_CHARS,
+                "maxLength": MAX_PRODUCT_REQUIREMENT_CHARS,
             },
             "mode": {
                 "type": "string",
@@ -188,17 +185,13 @@ class ProposeProductTaskTool:
             try:
                 requested_mode = RequestedTaskMode(mode)
             except ValueError:
-                raise ProductInputError(
-                    "product-requested-mode-invalid", "mode"
-                ) from None
+                raise ProductInputError("product-requested-mode-invalid", "mode") from None
         await self._actions.record(
             context.session_id,
             context.turn_id,
             _TurnAction("propose", requirement, requested_mode),
         )
-        return ToolOutput(
-            "The host will render the task proposal after this Turn closes."
-        )
+        return ToolOutput("The host will render the task proposal after this Turn closes.")
 
 
 class ConfirmProductTaskTool:
@@ -228,12 +221,8 @@ class ConfirmProductTaskTool:
     ) -> ToolOutput:
         if arguments:
             raise ProductInputError("product-confirmation-arguments-invalid", "arguments")
-        await self._actions.record(
-            context.session_id, context.turn_id, _TurnAction("confirm")
-        )
-        return ToolOutput(
-            "The host will ask the user for an explicit start authorization."
-        )
+        await self._actions.record(context.session_id, context.turn_id, _TurnAction("confirm"))
+        return ToolOutput("The host will ask the user for an explicit start authorization.")
 
 
 class ReadProductTaskEvidenceTool:
@@ -288,8 +277,7 @@ class ReadProductTaskEvidenceTool:
                 data=unavailable,
             )
         return ToolOutput(
-            "Verified ProductTask evidence from the durable log:\n"
-            + canonical_json(data),
+            "Verified ProductTask evidence from the durable log:\n" + canonical_json(data),
             data={"available": True, "task_id": task_id},
         )
 
@@ -408,9 +396,7 @@ class ProductChatSurface:
                 inspection=await self.inspect(task_id),
             )
         if operation is ProductCommandOperation.APPROVE:
-            advance = await self._control.approve(
-                task_id, approver_id=self._approver_id
-            )
+            advance = await self._control.approve(task_id, approver_id=self._approver_id)
         elif operation is ProductCommandOperation.REJECT:
             advance = await self._control.reject(task_id)
         elif operation is ProductCommandOperation.CANCEL:
@@ -424,14 +410,10 @@ class ProductChatSurface:
         evidence = None
         evidence_error = None
         try:
-            evidence = await self._evidence.load(
-                inspection.view.summary, inspection.review
-            )
+            evidence = await self._evidence.load(inspection.view.summary, inspection.review)
         except Exception as error:
             code = getattr(error, "code", None)
-            evidence_error = (
-                code if type(code) is str and code else "product-evidence-unavailable"
-            )
+            evidence_error = code if type(code) is str and code else "product-evidence-unavailable"
         return ProductInspectionResult(inspection, evidence, evidence_error)
 
     async def aclose(self) -> None:

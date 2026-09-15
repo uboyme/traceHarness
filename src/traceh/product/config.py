@@ -25,7 +25,6 @@ from traceh.api.artifacts import PatchCaptureLimits
 from traceh.api.budgets import BudgetLimits
 from traceh.api.product import (
     ProductRoleProfile,
-    ProductRouterProfile,
     ProductTaskProfile,
     RequestedTaskMode,
 )
@@ -38,6 +37,7 @@ from traceh.api.promotion import (
 from traceh.budgets.events import MAX_BUDGET_VALUE
 from traceh.product.errors import ProductInputError
 from traceh.product.host import ProductHostProfile
+from traceh.promotion.models import freeze_verification_plan
 
 PRODUCT_HOST_SETTINGS_KEYS = frozenset(
     {
@@ -45,11 +45,13 @@ PRODUCT_HOST_SETTINGS_KEYS = frozenset(
         "approver_id",
         "default_mode",
         "roles",
-        "router",
         "task_budget",
         "verification",
         "capture_limits",
         "max_report_chars",
+        "retained_tokens",
+        "investigator_initial_tokens",
+        "token_estimate",
     }
 )
 """The keys that describe *what a Profile is*, whatever it is bound to.
@@ -89,6 +91,20 @@ _BUDGET_KEYS = frozenset(
 
 
 @dataclass(frozen=True, slots=True)
+class ProductTokenEstimate:
+    """How this host counts request tokens before reserving Budget.
+
+    Without it a reservation must assume the account's whole remaining balance,
+    because an uncounted request has no upper bound the host can prove. The
+    encoding is stated, never inferred from a model name, and the margin is the
+    host's explicit allowance for its tokenizer disagreeing with the provider's.
+    """
+
+    encoding: str
+    margin_percent: int
+
+
+@dataclass(frozen=True, slots=True)
 class ProductHostSettings:
     """The path-free part of a schema-1 Product host configuration."""
 
@@ -96,6 +112,7 @@ class ProductHostSettings:
     approver_id: str
     capture_limits: PatchCaptureLimits
     max_report_chars: int
+    token_estimate: ProductTokenEstimate | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +127,7 @@ class ProductHostFileConfiguration:
     promotion_target: PromotionTargetBinding
     capture_limits: PatchCaptureLimits
     max_report_chars: int
+    token_estimate: ProductTokenEstimate | None
 
 
 def parse_product_host_settings(
@@ -137,49 +155,25 @@ def parse_product_host_settings(
     try:
         missing = PRODUCT_HOST_SETTINGS_KEYS - set(root)
         if missing:
-            raise ProductInputError(
-                "product-host-config-shape-invalid", sorted(missing)[0]
-            )
+            raise ProductInputError("product-host-config-shape-invalid", sorted(missing)[0])
         roles = _object(
-            root["roles"], frozenset({"parent", "reviewer", "coder"}), "roles"
+            root["roles"], frozenset({"coder", "investigator", "patch_author"}), "roles"
         )
-        role_values = {
-            name: _role(roles[name], name) for name in ("parent", "reviewer", "coder")
-        }
-        router_raw = _object(
-            root["router"],
-            frozenset(
-                {
-                    "preset",
-                    "max_output_tokens",
-                    "budget",
-                    "timeout_milliseconds",
-                    "max_response_bytes",
-                }
-            ),
-            "router",
-        )
-        verification = _verification(root["verification"])
+        role_values = {name: _role(roles[name], name) for name in ("coder", "investigator")}
+        verification = freeze_verification_plan(_verification(root["verification"]))
         profile = ProductTaskProfile(
-            profile_version=1,
+            profile_version=7,
             default_mode=RequestedTaskMode(_text(root["default_mode"], "default_mode")),
             provider_id=_text(provider_id, "provider_id"),
             model_id=_text(model_id, "model_id"),
-            parent=role_values["parent"],
-            reviewer=role_values["reviewer"],
             coder=role_values["coder"],
-            router=ProductRouterProfile(
-                preset=_text(router_raw["preset"], "router.preset"),
-                max_output_tokens=_output_limit(
-                    router_raw["max_output_tokens"], "router.max_output_tokens"
-                ),
-                budget=_budget(router_raw["budget"], "router.budget"),
-                timeout_milliseconds=_integer(
-                    router_raw["timeout_milliseconds"], "router.timeout_milliseconds"
-                ),
-                max_response_bytes=_integer(
-                    router_raw["max_response_bytes"], "router.max_response_bytes"
-                ),
+            investigator=role_values["investigator"],
+            patch_author=None
+            if roles["patch_author"] is None
+            else _role(roles["patch_author"], "patch_author"),
+            retained_tokens=_integer(root["retained_tokens"], "retained_tokens"),
+            investigator_initial_tokens=_integer(
+                root["investigator_initial_tokens"], "investigator_initial_tokens"
             ),
             task_budget=_budget(root["task_budget"], "task_budget"),
             source_id=_text(source_id, "source.source_id"),
@@ -194,6 +188,7 @@ def parse_product_host_settings(
             approver_id=_text(root["approver_id"], "approver_id"),
             capture_limits=_capture_limits(root["capture_limits"]),
             max_report_chars=_positive(root["max_report_chars"], "max_report_chars"),
+            token_estimate=_token_estimate(root["token_estimate"]),
         )
     except ProductInputError:
         raise
@@ -202,7 +197,7 @@ def parse_product_host_settings(
 
 
 def load_product_host_file(path: Path) -> ProductHostFileConfiguration:
-    """Read schema 1 exactly; malformed or partial input has one stable verdict."""
+    """Read Product host protocol 6 exactly; malformed or partial input has one stable verdict."""
 
     try:
         raw_path = Path(path)
@@ -219,7 +214,7 @@ def parse_product_host_config(raw: object) -> ProductHostFileConfiguration:
     """Validate the same host document from disk or an unsaved settings form."""
     try:
         root = _object(raw, _TOP_KEYS, "root")
-        if _integer(root["protocol_version"], "protocol_version") != 1:
+        if _integer(root["protocol_version"], "protocol_version") != 6:
             raise ValueError
         source = _object(
             root["source"],
@@ -258,6 +253,7 @@ def parse_product_host_config(raw: object) -> ProductHostFileConfiguration:
             ),
             capture_limits=settings.capture_limits,
             max_report_chars=settings.max_report_chars,
+            token_estimate=settings.token_estimate,
         )
     except ProductInputError:
         raise
@@ -265,11 +261,32 @@ def parse_product_host_config(raw: object) -> ProductHostFileConfiguration:
         raise ProductInputError("product-host-config-invalid", "product_config") from None
 
 
+def _token_estimate(value: object) -> ProductTokenEstimate | None:
+    """Parse the stated counting decision; `null` is an explicit "do not count"."""
+
+    if value is None:
+        return None
+    item = _object(value, frozenset({"encoding", "margin_percent"}), "token_estimate")
+    encoding = item["encoding"]
+    margin = item["margin_percent"]
+    if type(encoding) is not str or not encoding.strip():
+        raise ProductInputError("product-token-estimate-invalid", "token_estimate.encoding")
+    if type(margin) is not int or not 0 <= margin <= 100:
+        raise ProductInputError("product-token-estimate-invalid", "token_estimate.margin_percent")
+    return ProductTokenEstimate(encoding, margin)
+
+
 def _role(value: object, field: str) -> ProductRoleProfile:
     item = _object(
         value,
         frozenset(
-            {"preset", "capability_grants", "max_output_tokens", "budget"}
+            {
+                "preset",
+                "capability_grants",
+                "max_output_tokens",
+                "budget",
+                "max_turn_wall_milliseconds",
+            }
         ),
         field,
     )
@@ -277,11 +294,12 @@ def _role(value: object, field: str) -> ProductRoleProfile:
     if type(grants) is not list or any(type(value) is not str for value in grants):
         raise ValueError
     return ProductRoleProfile(
+        max_turn_wall_milliseconds=_positive(
+            item["max_turn_wall_milliseconds"], f"{field}.max_turn_wall_milliseconds"
+        ),
         preset=_text(item["preset"], f"{field}.preset"),
         capability_grants=tuple(grants),
-        max_output_tokens=_output_limit(
-            item["max_output_tokens"], f"{field}.max_output_tokens"
-        ),
+        max_output_tokens=_output_limit(item["max_output_tokens"], f"{field}.max_output_tokens"),
         budget=_budget(item["budget"], f"{field}.budget"),
     )
 
@@ -320,7 +338,7 @@ def _verification(value: object) -> VerificationPlan:
     for index, raw in enumerate(commands):
         command = _object(
             raw,
-            frozenset({"command_id", "argv", "timeout_ms"}),
+            frozenset({"command_id", "argv", "timeout_ms", "public_requirement"}),
             f"verification.commands.{index}",
         )
         argv = command["argv"]
@@ -331,6 +349,7 @@ def _verification(value: object) -> VerificationPlan:
                 command_id=_text(command["command_id"], "command_id"),
                 argv=tuple(argv),
                 timeout_ms=_positive(command["timeout_ms"], "timeout_ms"),
+                public_requirement=command["public_requirement"],
             )
         )
     environment = _object(
@@ -343,8 +362,7 @@ def _verification(value: object) -> VerificationPlan:
     if type(passthrough) is not list or any(type(name) is not str for name in passthrough):
         raise ValueError
     if type(overrides) is not dict or any(
-        type(name) is not str or type(setting) is not str
-        for name, setting in overrides.items()
+        type(name) is not str or type(setting) is not str for name, setting in overrides.items()
     ):
         raise ValueError
     return VerificationPlan(
@@ -421,6 +439,7 @@ __all__ = [
     "PRODUCT_HOST_SETTINGS_KEYS",
     "ProductHostFileConfiguration",
     "ProductHostSettings",
+    "ProductTokenEstimate",
     "load_product_host_file",
     "parse_product_host_config",
     "parse_product_host_settings",

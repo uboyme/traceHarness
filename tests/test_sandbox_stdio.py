@@ -7,7 +7,7 @@ from dataclasses import replace
 
 import pytest
 
-from tests.sandbox_fixtures import real_sandbox_service, wait_for_guest
+from sandbox_fixtures import real_sandbox_service, wait_for_guest
 from traceh.api.sandbox import SandboxOwner, SandboxStdioLimits
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.sandbox.reader import read_execution

@@ -1,0 +1,34 @@
+{
+  "format": 1,
+  "origin": "implementation-agent-offline-review",
+  "independent_judge": false,
+  "promotion_authority": false,
+  "cases": {
+    "parallel-investigation": {
+      "product_gate": true,
+      "semantic_note": "Basic ledger/projection and delegation lifecycle descriptions agree with source, but the answer is brief and the collect report claim lacks a direct cited implementation range. Not an independent full semantic pass.",
+      "report_use": "not-applicable; no child"
+    },
+    "dependent-investigation": {
+      "product_gate": false,
+      "semantic_note": "No delivered answer. Proposed text oversimplifies detected budget call versus successful matching durable request. Do not score an intended answer as a delivered artifact.",
+      "failure_chain": [
+        "apply_patch omitted create=true for absent answer.json",
+        "path resolver requires existing target and returns WorkspaceBoundaryError",
+        "shell echo passed > literally as argv; exit_code=0 only proves echo ran",
+        "no output file, empty patch, verification node promotion-patch-invalid"
+      ],
+      "report_use": "not-applicable; no child"
+    },
+    "frozen-review": {
+      "product_gate": true,
+      "semantic_note": "Core rejection of automatic grant/continuation is supported; delegation.py 320-321 explicitly says grant starts no execution and names followup. Other two citations only name the request/decision constants.",
+      "report_use": "not-applicable; no child"
+    },
+    "simple-read": {
+      "product_gate": true,
+      "semantic_note": "Delivered version 0.11.0 matches frozen source and exact verifier.",
+      "report_use": "not-applicable; no child"
+    }
+  }
+}

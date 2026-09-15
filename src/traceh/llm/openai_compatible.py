@@ -230,13 +230,30 @@ def _parse_tool_arguments(
     if isinstance(raw, dict):
         return raw
     if not isinstance(raw, str):
-        raise _protocol_failure("provider-tool-arguments-invalid")
+        raise _protocol_failure("provider-tool-arguments-type-invalid")
     try:
         parsed = _strict_json_loads(raw)
-    except (json.JSONDecodeError, ValueError):
+    except (json.JSONDecodeError, ValueError) as error:
         parsed = _normalize_triple_quoted_arguments(raw, schema)
+        if parsed is None:
+            # Only fixed parser categories cross the Provider boundary. Never
+            # include error.doc, an exception message, or response text in logs.
+            reason = "json-nonfinite"
+            if isinstance(error, json.JSONDecodeError):
+                reason = {
+                    "Expecting ',' delimiter": "json-comma-expected",
+                    "Expecting ':' delimiter": "json-colon-expected",
+                    "Expecting property name enclosed in double quotes": "json-key-expected",
+                    "Expecting value": "json-value-expected",
+                    "Extra data": "json-extra-data",
+                    "Unterminated string starting at": "json-string-unclosed",
+                    "Invalid control character at": "json-control-character",
+                    "Invalid \\escape": "json-escape-invalid",
+                    "Invalid \\uXXXX escape": "json-unicode-escape-invalid",
+                }.get(error.msg, "json-syntax-invalid")
+            raise _protocol_failure("provider-tool-arguments-" + reason) from None
     if not isinstance(parsed, dict):
-        raise _protocol_failure("provider-tool-arguments-invalid")
+        raise _protocol_failure("provider-tool-arguments-not-object")
     return parsed
 
 

@@ -1,0 +1,97 @@
+{
+  "format": 1,
+  "accepted": true,
+  "model": "deepseek-v4-flash",
+  "real_calls": 15,
+  "roles": {
+    "main": 11,
+    "child": 4
+  },
+  "error_type": null,
+  "stopped": false,
+  "exact_tokens": 114367,
+  "ledger_settled_tokens": 114367,
+  "usage_quality": {
+    "None": 2,
+    "exact": 15
+  },
+  "wall_ms": 147875,
+  "provider_failures": [],
+  "retries": 0,
+  "artifacts": [
+    {
+      "artifact_id": "patch-7d6d1b93ad0fd9c27500610bddd814528dee1ff95a3034f961f1c68221f01050",
+      "agent_id": "agent-tool-patch-author-e080e5a0-7382-598f-9fe0-a23388df9bf9",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "20f5b180e885bf19101d62023e0baa1fb2cbc8416b9d677c0601f72b51c8d418",
+      "bytes": 1397
+    },
+    {
+      "artifact_id": "patch-e501625250bb5a8e19359f28615c4fda8c148c3c2bd08af0f459b8ab60ab178d",
+      "agent_id": "wf-agent-95e4e16ee944bb75ad11a148a510c311bb42fe047297e06a0627c75b6ccdb0eb",
+      "paths": [
+        "telemetry_report.py",
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "17c379d30193833de722f09532649994e1765248826fc42fb851ed7edf870cdc",
+      "bytes": 2610
+    }
+  ],
+  "patch_read_calls": 1,
+  "complete_patch_read": true,
+  "integration": true,
+  "shell_calls": 1,
+  "shell_exit_code": 0,
+  "start_failures": 0,
+  "completion_passed": true,
+  "product_status": "completed",
+  "workflow_status": "completed",
+  "review_id": "review-132c6419127bf7032fffb6a2179b6f7e8abb032b800caa0fe7fdb71f3d242607",
+  "review_passed": true,
+  "promotion_id": "promotion-ee1dd5f3a4291cee2bdba931d9a672e2ad3ace0f85f9bf0f614201ba9057ef5b",
+  "promotion_scope": "isolated-benchmark-only",
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 17
+  },
+  "workspaces": {
+    "released": 3
+  },
+  "sandbox": [
+    {
+      "owner": "effect",
+      "status": "finished",
+      "converged": true,
+      "exit_code": 0,
+      "stdout": "All normalize tests passed\nAll summarize tests passed\n=== ALL CHECKS PASSED ===\n"
+    },
+    {
+      "owner": "promotion",
+      "status": "finished",
+      "converged": true,
+      "exit_code": 0,
+      "stdout": ""
+    },
+    {
+      "owner": "verification",
+      "status": "finished",
+      "converged": true,
+      "exit_code": 0,
+      "stdout": ""
+    }
+  ],
+  "snapshot_replays": 17,
+  "original_sha256": "805bcc3316e6f3a019e62185469c2e70e4c2116c0e5ab00a97a19e1d90d7baf0",
+  "original_unchanged": true,
+  "contract_sha256": "f1dbfb5f16093c2a88b48c8d6d56fa3ac54710cc56a09b624186520987ddc08d",
+  "benefit_measured": false,
+  "limitations": [
+    "One frozen case; no reliability or single/multi benefit comparison.",
+    "No launch failure occurred, so real-model correction after an error was not exercised.",
+    "Self-test freshness check alone does not prove non-aliasing; the fixed verifier separately checks identity."
+  ]
+}

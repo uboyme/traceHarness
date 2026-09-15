@@ -24,6 +24,7 @@ from traceh.api.budgets import (
     BudgetReservationStatus,
     BudgetUsageReservation,
     BudgetUsageReservationStatus,
+    ChildTokenDecision,
 )
 from traceh.api.events import EventEnvelope
 from traceh.api.json_types import JsonValue, canonical_json
@@ -38,6 +39,7 @@ from traceh.budgets.errors import (
 from traceh.budgets.events import (
     BUDGET_ACCOUNT_CLOSED,
     BUDGET_CHILD_RESERVED,
+    BUDGET_CHILD_TOKEN_DECIDED,
     BUDGET_LEDGER_STREAM,
     BUDGET_RESERVATION_COMMITTED,
     BUDGET_RESERVATION_RELEASED,
@@ -58,6 +60,7 @@ from traceh.budgets.events import (
     UsageReservedFact,
     UsageSettledFact,
     UsageStartedFact,
+    initial_token_limits,
     parse_budget_fact,
 )
 from traceh.session.event_store import EventStore
@@ -138,6 +141,8 @@ def _usage_settlement_matches(
 
 
 def _event_type(fact: BudgetFact) -> str:
+    if isinstance(fact, ChildTokenDecision):
+        return BUDGET_CHILD_TOKEN_DECIDED
     if isinstance(fact, RootGrantedFact):
         return BUDGET_ROOT_GRANTED
     if isinstance(fact, ChildReservedFact):
@@ -226,6 +231,17 @@ def _ensure_capacity(
         raise BudgetProtocolError("budget-capacity-exceeded", seq)
 
 
+def _ensure_retained_tokens(
+    account: BudgetAccount, debit: BudgetAmounts, retained_tokens: int, seq: int
+) -> None:
+    limit = account.limits.max_tokens
+    if limit is None:
+        return
+    used = account.charged.tokens + account.delegated.tokens + account.reserved.tokens
+    if used + debit.tokens + retained_tokens > limit:
+        raise BudgetProtocolError("budget-retained-tokens-exhausted", seq)
+
+
 def _directory_child(
     directory: AgentDirectory,
     *,
@@ -250,6 +266,25 @@ def _directory_child(
     return by_child
 
 
+def _token_capacity(accounts, reservations, parent_id, child_id, tokens, seq):
+    parent, child = accounts.get(parent_id), accounts.get(child_id)
+    if parent is None or child is None or child.parent_agent_id != parent_id:
+        raise BudgetProtocolError("budget-token-owner-invalid", seq)
+    if parent.status is BudgetAccountStatus.CLOSED or child.status is BudgetAccountStatus.CLOSED:
+        raise BudgetProtocolError("budget-account-closed", seq)
+    reservation = next((r for r in reservations.values() if r.child_agent_id == child_id), None)
+    if (reservation is None or reservation.status is not BudgetReservationStatus.COMMITTED
+            or child.limits.max_tokens is None or reservation.child_limits.max_tokens is None):
+        raise BudgetProtocolError("budget-token-envelope-invalid", seq)
+    if child.limits.max_tokens + tokens > reservation.child_limits.max_tokens:
+        raise BudgetProtocolError("budget-token-ceiling-exceeded", seq)
+    debit = BudgetAmounts(tokens=tokens)
+    if tokens:
+        _ensure_capacity(parent, debit, seq)
+        _ensure_retained_tokens(parent, debit, reservation.retained_tokens, seq)
+    return parent, child
+
+
 class BudgetLedger:
     """An immutable view rebuilt from Budget facts and the Agent Directory."""
 
@@ -260,6 +295,7 @@ class BudgetLedger:
         "_operations",
         "_reservations",
         "_usage_reservations",
+        "_token_decisions",
     )
 
     def __init__(
@@ -271,6 +307,7 @@ class BudgetLedger:
         usage_reservations: dict[str, BudgetUsageReservation],
         operations: dict[str, _Operation],
         head_seq: int,
+        token_decisions: dict[str, ChildTokenDecision],
     ) -> None:
         self._accounts = dict(accounts)
         self._reservations = dict(reservations)
@@ -278,6 +315,7 @@ class BudgetLedger:
         self._usage_reservations = dict(usage_reservations)
         self._operations = dict(operations)
         self._head_seq = head_seq
+        self._token_decisions = dict(token_decisions)
 
     @classmethod
     def rebuild(
@@ -293,6 +331,7 @@ class BudgetLedger:
         child_reservations: dict[str, str] = {}
         request_reservations: dict[str, str] = {}
         head_seq = 0
+        token_decisions: dict[str, ChildTokenDecision] = {}
 
         for expected_seq, event in enumerate(events, start=1):
             try:
@@ -348,9 +387,14 @@ class BudgetLedger:
                         raise BudgetProtocolError(
                             "budget-reservation-request-conflict", fact.seq
                         )
-                    debit = _child_debit(parent.limits, fact.child_limits, fact.seq)
+                    _child_debit(parent.limits, fact.child_limits, fact.seq)
+                    granted_limits = initial_token_limits(fact.child_limits, fact.initial_tokens)
+                    debit = _child_debit(parent.limits, granted_limits, fact.seq)
                     _ensure_capacity(
                         parent, debit.amounts, fact.seq, children=debit.children
+                    )
+                    _ensure_retained_tokens(
+                        parent, debit.amounts, fact.retained_tokens, fact.seq
                     )
                     durable_child = _directory_child(
                         directory,
@@ -370,6 +414,8 @@ class BudgetLedger:
                         child_agent_id=fact.child_agent_id,
                         creation_request_id=fact.creation_request_id,
                         child_limits=fact.child_limits,
+                        retained_tokens=fact.retained_tokens,
+                        initial_tokens=fact.initial_tokens,
                         status=status,
                         reserved_seq=fact.seq,
                         identity_seq=(
@@ -387,7 +433,7 @@ class BudgetLedger:
                         accounts[fact.child_agent_id] = BudgetAccount(
                             agent_id=fact.child_agent_id,
                             parent_agent_id=fact.parent_agent_id,
-                            limits=fact.child_limits,
+                            limits=granted_limits,
                             status=BudgetAccountStatus.OPEN,
                             created_seq=fact.seq,
                         )
@@ -422,7 +468,8 @@ class BudgetLedger:
                         accounts[reservation.child_agent_id] = BudgetAccount(
                             agent_id=reservation.child_agent_id,
                             parent_agent_id=reservation.parent_agent_id,
-                            limits=reservation.child_limits,
+                            limits=initial_token_limits(
+                                reservation.child_limits, reservation.initial_tokens),
                             status=BudgetAccountStatus.OPEN,
                             created_seq=reservation.reserved_seq,
                         )
@@ -451,7 +498,9 @@ class BudgetLedger:
                         raise BudgetProtocolError("budget-release-after-agent", fact.seq)
                     parent = accounts[reservation.parent_agent_id]
                     debit = _child_debit(
-                        parent.limits, reservation.child_limits, reservation.reserved_seq
+                        parent.limits,
+                        initial_token_limits(reservation.child_limits, reservation.initial_tokens),
+                        reservation.reserved_seq
                     )
                     accounts[parent.agent_id] = replace(
                         parent,
@@ -463,6 +512,21 @@ class BudgetLedger:
                         status=BudgetReservationStatus.RELEASED,
                         terminal_seq=fact.seq,
                     )
+                    head_seq = fact.seq
+                    continue
+
+                if isinstance(fact, ChildTokenDecision):
+                    if fact.request_id in token_decisions:
+                        raise BudgetProtocolError("budget-request-already-decided", fact.seq)
+                    parent, child = _token_capacity(
+                        accounts, reservations, fact.parent_agent_id,
+                        fact.child_agent_id, fact.tokens, fact.seq,
+                    )
+                    accounts[parent.agent_id] = replace(parent, delegated=_add(
+                        parent.delegated, BudgetAmounts(tokens=fact.tokens)))
+                    accounts[child.agent_id] = replace(child, limits=replace(
+                        child.limits, max_tokens=child.limits.max_tokens + fact.tokens))
+                    token_decisions[fact.request_id] = fact
                     head_seq = fact.seq
                     continue
 
@@ -639,6 +703,7 @@ class BudgetLedger:
             usage_reservations=usage_reservations,
             operations=operations,
             head_seq=head_seq,
+            token_decisions=token_decisions,
         )
 
     @property
@@ -663,6 +728,30 @@ class BudgetLedger:
 
     def account(self, agent_id: str) -> BudgetAccount | None:
         return self._accounts.get(agent_id)
+
+    def token_decision(self, request_id: str) -> ChildTokenDecision | None:
+        return self._token_decisions.get(request_id)
+
+    def token_ceiling(self, agent_id: str) -> int | None:
+        account = self.require_open_account(agent_id)
+        for reservation in self.reservations:
+            if reservation.child_agent_id == agent_id:
+                return reservation.child_limits.max_tokens
+        return account.limits.max_tokens
+
+    def ensure_token_decision(self, parent_id, child_id, request_id, tokens):
+        if request_id in self._token_decisions:
+            raise BudgetInputError("budget-request-already-decided", "request_id")
+        self.require_open_account(parent_id)
+        self.require_open_account(child_id)
+        try:
+            _token_capacity(self._accounts, self._reservations, parent_id, child_id,
+                            tokens, self.head_seq + 1)
+        except BudgetProtocolError as error:
+            if error.code in {"budget-capacity-exceeded", "budget-retained-tokens-exhausted"}:
+                raise BudgetExhaustedError("retained_tokens" if
+                    error.code == "budget-retained-tokens-exhausted" else "max_tokens") from None
+            raise BudgetInputError(error.code, "tokens") from None
 
     def reservation(self, reservation_id: str) -> BudgetReservation | None:
         return self._reservations.get(reservation_id)
@@ -716,18 +805,27 @@ class BudgetLedger:
         return account
 
     def ensure_reservation_capacity(
-        self, parent_agent_id: str, child_limits: BudgetLimits
+        self, parent_agent_id: str, child_limits: BudgetLimits, *, retained_tokens: int,
+        initial_tokens: int | None = None,
     ) -> _ReservationDebit:
         account = self.require_open_account(parent_agent_id)
         try:
             debit = _child_debit(account.limits, child_limits, self._head_seq + 1)
+            debit = _child_debit(account.limits,
+                                 initial_token_limits(child_limits, initial_tokens),
+                                 self._head_seq + 1)
             _ensure_capacity(
                 account,
                 debit.amounts,
                 self._head_seq + 1,
                 children=debit.children,
             )
+            _ensure_retained_tokens(
+                account, debit.amounts, retained_tokens, self._head_seq + 1
+            )
         except BudgetProtocolError as error:
+            if error.code == "budget-retained-tokens-exhausted":
+                raise BudgetExhaustedError("retained_tokens") from None
             if error.code == "budget-depth-exhausted":
                 raise BudgetExhaustedError("max_depth") from None
             if error.code == "budget-capacity-exceeded":

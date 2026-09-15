@@ -1,0 +1,99 @@
+{
+  "format": 1,
+  "accepted": false,
+  "model": "deepseek-v4-flash",
+  "real_calls": 25,
+  "roles": {
+    "main": 21,
+    "child": 4
+  },
+  "error_type": null,
+  "stopped": false,
+  "exact_tokens": 236855,
+  "ledger_settled_tokens": 232483,
+  "usage_quality": {
+    "None": 2,
+    "exact": 24,
+    "unknown": 1
+  },
+  "wall_ms": 221985,
+  "provider_failures": [],
+  "retries": 0,
+  "artifacts": [
+    {
+      "artifact_id": "patch-cb2a97b5eb58be477e07810c317c881c53017fd289cab49dfcbca7084ce0f8f7",
+      "agent_id": "agent-tool-patch-author-5ea5489b-a652-5aa0-8518-167141367904",
+      "paths": [
+        "telemetry_rules.py"
+      ],
+      "patch_sha256": "c963adfb2d9eafed262685600f0b86f7f2069ac7922c6affd258ac3b8805538e",
+      "bytes": 1146
+    }
+  ],
+  "patch_total_chars": 1146,
+  "patch_read_calls": 1,
+  "complete_patch_read": true,
+  "read_arguments": {
+    "artifact_id": "patch-cb2a97b5eb58be477e07810c317c881c53017fd289cab49dfcbca7084ce0f8f7"
+  },
+  "unavailable_tool_calls": [],
+  "plan_schema_errors": 1,
+  "plan_successes": 1,
+  "handoff_visible_requests": [
+    64,
+    77,
+    90,
+    103,
+    116,
+    129,
+    142,
+    154,
+    166,
+    179,
+    191,
+    203,
+    215,
+    227,
+    239,
+    251,
+    263
+  ],
+  "legacy_report_dispatch_metric": 0,
+  "integration": true,
+  "main_edits": true,
+  "completion_checks": 0,
+  "shell_statuses": {
+    "failed": 8,
+    "succeeded": 4
+  },
+  "sandbox_statuses": {
+    "start-failed": 8,
+    "finished": 4
+  },
+  "sandbox_converged": true,
+  "model_selftest": "normalize assertions exit 0; summarize not tested",
+  "failure": {
+    "seq": 276,
+    "error_type": "BudgetExhaustedError",
+    "dimension": "max_tokens"
+  },
+  "product_status": "failed",
+  "workflow_status": "failed",
+  "review_id": null,
+  "promotion_id": null,
+  "accounts": {
+    "closed": 3
+  },
+  "usage_reservations": {
+    "settled": 27
+  },
+  "workspaces": {
+    "released": 1,
+    "quarantined": 2
+  },
+  "snapshot_replays": 27,
+  "original_sha256": "3471d26a841adc3557ab256f77e156edad812ffcad8207ead5c7c4c62ccf271c",
+  "original_unchanged": true,
+  "contract_sha256": "0bdd7e16473873dce89332e03b611f8432a5acf3f75f7fc1d66836af1d277837",
+  "benefit_measured": false
+}

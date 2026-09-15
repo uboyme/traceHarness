@@ -1,0 +1,1652 @@
+{
+  "format": 1,
+  "diagnostic_not_release_benchmark": true,
+  "adopted": false,
+  "production_source_changed": false,
+  "prior_audit": {
+    "trials": 30,
+    "requests": 276,
+    "all_requests_expose_tools": true,
+    "delegate_calls": 0
+  },
+  "prior_code_lines": [
+    2,
+    16
+  ],
+  "task_material": {
+    "files": 18,
+    "code_bytes": 263560,
+    "code_lines": 6919
+  },
+  "rows": [
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 1,
+      "original_report": ".traceh/nd1/explicit/report.json",
+      "report_sha256": "5e88694de912c401b62a73aff90560167e562a918292e06e93371bff2b40494d",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": false,
+      "error_code": null,
+      "failure_code": "workflow-node-failed",
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_file_read": true,
+      "main_requests": 10,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-70c170ce-3aed-537d-acd7-3512200b2996",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/supervision/lifecycle.py"
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/service.py"
+              }
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/supervision.py"
+              }
+            },
+            {
+              "result_seq": 64,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 76,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {}
+            }
+          ],
+          "distinct_source_output_bytes": 106207,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-60d6ed904cde4a7a7802625f59c11b71974f80d31b0f7c8ecc3a98c08fddb4fa",
+              "request_seq": 117,
+              "status": "pending"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-70c170ce-3aed-537d-acd7-3512200b2996",
+          "seq": 93,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 96712,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-60d6ed904cde4a7a7802625f59c11b71974f80d31b0f7c8ecc3a98c08fddb4fa",
+            "result": "succeeded",
+            "session_id": "wf-session-60d6ed904cde4a7a7802625f59c11b71974f80d31b0f7c8ecc3a98c08fddb4fa"
+          },
+          {
+            "agent_id": "051f53e1978ed350496f1174371226b51a5a943a4952854339fe3e3f389aae73",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-70c170ce-3aed-537d-acd7-3512200b2996"
+          }
+        ],
+        "model_attempts": 17,
+        "provider_active_milliseconds": 65103,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-60d6ed904cde4a7a7802625f59c11b71974f80d31b0f7c8ecc3a98c08fddb4fa",
+            "final_model_result": "succeeded",
+            "model_attempts": 10,
+            "provider_active_milliseconds": 42811,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-60d6ed904cde4a7a7802625f59c11b71974f80d31b0f7c8ecc3a98c08fddb4fa",
+            "steps": 10,
+            "tokens": {
+              "input_tokens": 76012,
+              "output_tokens": 1571,
+              "quality": "exact",
+              "total_tokens": 77583
+            },
+            "tool_calls": 9,
+            "turns": 1,
+            "work_duration_ms": 66729
+          },
+          {
+            "agent_id": "051f53e1978ed350496f1174371226b51a5a943a4952854339fe3e3f389aae73",
+            "final_model_result": "succeeded",
+            "model_attempts": 7,
+            "provider_active_milliseconds": 22292,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-70c170ce-3aed-537d-acd7-3512200b2996",
+            "steps": 8,
+            "tokens": {
+              "input_tokens": 79072,
+              "output_tokens": 650,
+              "quality": "exact",
+              "total_tokens": 79722
+            },
+            "tool_calls": 7,
+            "turns": 1,
+            "work_duration_ms": 29983
+          }
+        ],
+        "steps": 18,
+        "tokens": {
+          "input_tokens": 155084,
+          "output_tokens": 2221,
+          "quality": "exact",
+          "total_tokens": 157305
+        },
+        "tool_calls": 16,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 18,
+        "charged_tool_calls": 16,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 137583,
+        "usage_reservations": 19,
+        "usage_reservations_terminal": 19
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 2,
+      "original_report": ".traceh/nd1/explicit/report.json",
+      "report_sha256": "5e88694de912c401b62a73aff90560167e562a918292e06e93371bff2b40494d",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_file_read": true,
+      "main_requests": 11,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-5d80c4c0-e8e0-524b-8703-1723aa87eaae",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/supervision/lifecycle.py"
+              }
+            },
+            {
+              "result_seq": 51,
+              "request_seq": 92,
+              "tool": "search_text",
+              "data": {
+                "matches": [
+                  {
+                    "line": 18,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "from traceh.api.budgets import ("
+                  },
+                  {
+                    "line": 39,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "from traceh.budgets.errors import ("
+                  },
+                  {
+                    "line": 47,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "from traceh.budgets.events import MAX_BUDGET_VALUE"
+                  },
+                  {
+                    "line": 48,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "from traceh.budgets.service import BudgetLedgerService"
+                  },
+                  {
+                    "line": 82,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "def budget_operation_id(kind: str, **identity: object) -> str:"
+                  },
+                  {
+                    "line": 97,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "async def _validate_model_attempt_budget_evidence("
+                  },
+                  {
+                    "line": 114,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "    token_budgeted = account.limits.max_tokens is not None"
+                  },
+                  {
+                    "line": 151,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            if token_budgeted:"
+                  },
+                  {
+                    "line": 248,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 257,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        name=\"traceh-budget-usage-release\","
+                  },
+                  {
+                    "line": 280,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 289,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 301,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        name=\"traceh-budget-cancelled-start-terminalize\","
+                  },
+                  {
+                    "line": 325,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 331,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        name=\"traceh-budget-usage-start\","
+                  },
+                  {
+                    "line": 419,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        operation_id = budget_operation_id("
+                  },
+                  {
+                    "line": 436,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            candidate_id = budget_operation_id("
+                  },
+                  {
+                    "line": 450,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                    None if index < admitted else \"budget-tool-calls-exhausted\""
+                  },
+                  {
+                    "line": 453,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                budget_admission=operation_id if index < admitted else None,"
+                  },
+                  {
+                    "line": 454,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                budget_reservation=wall_reservation if index < admitted else None,"
+                  },
+                  {
+                    "line": 513,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                return Finish(\"budget_steps_exhausted\")"
+                  },
+                  {
+                    "line": 517,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        await _validate_model_attempt_budget_evidence("
+                  },
+                  {
+                    "line": 549,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            operation_id = budget_operation_id("
+                  },
+                  {
+                    "line": 634,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 666,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                \"budget-estimated-usage-policy-invalid\","
+                  },
+                  {
+                    "line": 730,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        reserve_operation = budget_operation_id("
+                  },
+                  {
+                    "line": 780,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            raise BudgetInputError(\"budget-output-limit-invalid\", \"max_output_tokens\")"
+                  },
+                  {
+                    "line": 787,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            raise BudgetInputError(\"budget-token-counter-failed\", \"token_counter\") from None"
+                  },
+                  {
+                    "line": 789,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            raise BudgetInputError(\"budget-token-counter-invalid\", \"token_counter\")"
+                  },
+                  {
+                    "line": 833,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 841,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            name=\"traceh-budget-token-settle\","
+                  },
+                  {
+                    "line": 878,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            raise ValueError(\"max_turn_wall_milliseconds must be a positive budget value\")"
+                  },
+                  {
+                    "line": 914,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            wall_reservation_id = budget_operation_id("
+                  },
+                  {
+                    "line": 922,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                    operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 984,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            name=\"traceh-budget-turn-finalize\","
+                  },
+                  {
+                    "line": 1006,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                    operation_id=budget_operation_id("
+                  },
+                  {
+                    "line": 6,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "``budget/reservation-committed`` is an audit acknowledgement, not a second"
+                  },
+                  {
+                    "line": 16,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "from traceh.api.budgets import ("
+                  },
+                  {
+                    "line": 31,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "from traceh.budgets.errors import ("
+                  },
+                  {
+                    "line": 38,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "from traceh.budgets.events import ("
+                  },
+                  {
+                    "line": 61,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "    parse_budget_fact,"
+                  },
+                  {
+                    "line": 190,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "            raise BudgetProtocolError(\"budget-child-limits-invalid\", seq)"
+                  },
+                  {
+                    "line": 194,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "            raise BudgetProtocolError(\"budget-depth-exhausted\", seq)"
+                  },
+                  {
+                    "line": 196,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "            raise BudgetProtocolError(\"budget-child-limits-invalid\", seq)"
+                  },
+                  {
+                    "line": 221,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "            raise BudgetProtocolError(\"budget-capacity-exceeded\", seq)"
+                  },
+                  {
+                    "line": 226,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "        raise BudgetProtocolError(\"budget-capacity-exceeded\", seq)"
+                  },
+                  {
+                    "line": 237,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "        raise BudgetProtocolError(\"budget-retained-tokens-exhausted\", seq)"
+                  },
+                  {
+                    "line": 260,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "        raise BudgetProtocolError(\"budget-reservation-directory-conflict\", seq)"
+                  },
+                  {
+                    "line": 311,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                    raise BudgetProtocolError(\"budget-sequence-invalid\", expected_seq)"
+                  },
+                  {
+                    "line": 312,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                fact = parse_budget_fact(event)"
+                  }
+                ],
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 63,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 75,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 87,
+              "request_seq": 92,
+              "tool": "search_text",
+              "data": {
+                "matches": [],
+                "truncated": false
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 64625,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0",
+              "request_seq": 129,
+              "status": "pending"
+            },
+            {
+              "session_id": "wf-session-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0",
+              "request_seq": 129,
+              "status": "failed"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-5d80c4c0-e8e0-524b-8703-1723aa87eaae",
+          "seq": 104,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 116273,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0",
+            "result": "succeeded",
+            "session_id": "wf-session-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0"
+          },
+          {
+            "agent_id": "760fb166dab9508da12ad5218478021ab5feb15548370a3be7ef534328102666",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-5d80c4c0-e8e0-524b-8703-1723aa87eaae"
+          }
+        ],
+        "model_attempts": 19,
+        "provider_active_milliseconds": 77209,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0",
+            "final_model_result": "succeeded",
+            "model_attempts": 11,
+            "provider_active_milliseconds": 59183,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-c3ada4912f244dbd0bdc1b4b2f158994877e47b069a3378dc76690c73d6a30b0",
+            "steps": 11,
+            "tokens": {
+              "input_tokens": 92541,
+              "output_tokens": 2249,
+              "quality": "exact",
+              "total_tokens": 94790
+            },
+            "tool_calls": 10,
+            "turns": 1,
+            "work_duration_ms": 90121
+          },
+          {
+            "agent_id": "760fb166dab9508da12ad5218478021ab5feb15548370a3be7ef534328102666",
+            "final_model_result": "succeeded",
+            "model_attempts": 8,
+            "provider_active_milliseconds": 18026,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-5d80c4c0-e8e0-524b-8703-1723aa87eaae",
+            "steps": 9,
+            "tokens": {
+              "input_tokens": 69600,
+              "output_tokens": 508,
+              "quality": "exact",
+              "total_tokens": 70108
+            },
+            "tool_calls": 8,
+            "turns": 1,
+            "work_duration_ms": 26152
+          }
+        ],
+        "steps": 20,
+        "tokens": {
+          "input_tokens": 162141,
+          "output_tokens": 2757,
+          "quality": "exact",
+          "total_tokens": 164898
+        },
+        "tool_calls": 18,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 20,
+        "charged_tool_calls": 17,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 154790,
+        "usage_reservations": 21,
+        "usage_reservations_terminal": 21
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 1,
+      "original_report": ".traceh/nd1/natural/report.json",
+      "report_sha256": "d61418f206a0260755786115b8ef7cf13c12bc8fb8194baa164d1df91af8f116",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": false,
+      "error_code": null,
+      "failure_code": "workflow-node-failed",
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 16,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [
+        {
+          "stream_id": "session:wf-session-29ce7904497e097ed1d3e27f5056a374b52ce9a4ff5ad43f8beb4a4df14056b6",
+          "seq": 201,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 77904,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-29ce7904497e097ed1d3e27f5056a374b52ce9a4ff5ad43f8beb4a4df14056b6",
+            "result": "succeeded",
+            "session_id": "wf-session-29ce7904497e097ed1d3e27f5056a374b52ce9a4ff5ad43f8beb4a4df14056b6"
+          }
+        ],
+        "model_attempts": 16,
+        "provider_active_milliseconds": 55444,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-29ce7904497e097ed1d3e27f5056a374b52ce9a4ff5ad43f8beb4a4df14056b6",
+            "final_model_result": "succeeded",
+            "model_attempts": 16,
+            "provider_active_milliseconds": 55444,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-29ce7904497e097ed1d3e27f5056a374b52ce9a4ff5ad43f8beb4a4df14056b6",
+            "steps": 17,
+            "tokens": {
+              "input_tokens": 316498,
+              "output_tokens": 1939,
+              "quality": "exact",
+              "total_tokens": 318437
+            },
+            "tool_calls": 16,
+            "turns": 1,
+            "work_duration_ms": 77904
+          }
+        ],
+        "steps": 17,
+        "tokens": {
+          "input_tokens": 316498,
+          "output_tokens": 1939,
+          "quality": "exact",
+          "total_tokens": 318437
+        },
+        "tool_calls": 16,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 17,
+        "charged_tool_calls": 16,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 300000,
+        "usage_reservations": 17,
+        "usage_reservations_terminal": 17
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 2,
+      "original_report": ".traceh/nd1/natural/report.json",
+      "report_sha256": "d61418f206a0260755786115b8ef7cf13c12bc8fb8194baa164d1df91af8f116",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 14,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 96427,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-40ec62f55fd4b7fcaea9468341111a1f963247b414c703971405b07b465353df",
+            "result": "succeeded",
+            "session_id": "wf-session-40ec62f55fd4b7fcaea9468341111a1f963247b414c703971405b07b465353df"
+          }
+        ],
+        "model_attempts": 14,
+        "provider_active_milliseconds": 79490,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-40ec62f55fd4b7fcaea9468341111a1f963247b414c703971405b07b465353df",
+            "final_model_result": "succeeded",
+            "model_attempts": 14,
+            "provider_active_milliseconds": 79490,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-40ec62f55fd4b7fcaea9468341111a1f963247b414c703971405b07b465353df",
+            "steps": 14,
+            "tokens": {
+              "input_tokens": 212795,
+              "output_tokens": 2705,
+              "quality": "exact",
+              "total_tokens": 215500
+            },
+            "tool_calls": 13,
+            "turns": 1,
+            "work_duration_ms": 96427
+          }
+        ],
+        "steps": 14,
+        "tokens": {
+          "input_tokens": 212795,
+          "output_tokens": 2705,
+          "quality": "exact",
+          "total_tokens": 215500
+        },
+        "tool_calls": 13,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 14,
+        "charged_tool_calls": 13,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 215500,
+        "usage_reservations": 15,
+        "usage_reservations_terminal": 15
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 1,
+      "original_report": ".traceh/nd1/simple/report.json",
+      "report_sha256": "ad1008f3b4fcfd02710870a31f1b9ceab3ea5da0ae058a79d63e008e39fb0075",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 4,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 13735,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-4120a3d0d47c08baad90edcd383e9f1b5ff32ebd5427e32a657c4a6918a32dce",
+            "result": "succeeded",
+            "session_id": "wf-session-4120a3d0d47c08baad90edcd383e9f1b5ff32ebd5427e32a657c4a6918a32dce"
+          }
+        ],
+        "model_attempts": 4,
+        "provider_active_milliseconds": 10653,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-4120a3d0d47c08baad90edcd383e9f1b5ff32ebd5427e32a657c4a6918a32dce",
+            "final_model_result": "succeeded",
+            "model_attempts": 4,
+            "provider_active_milliseconds": 10653,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-4120a3d0d47c08baad90edcd383e9f1b5ff32ebd5427e32a657c4a6918a32dce",
+            "steps": 4,
+            "tokens": {
+              "input_tokens": 13877,
+              "output_tokens": 380,
+              "quality": "exact",
+              "total_tokens": 14257
+            },
+            "tool_calls": 3,
+            "turns": 1,
+            "work_duration_ms": 13735
+          }
+        ],
+        "steps": 4,
+        "tokens": {
+          "input_tokens": 13877,
+          "output_tokens": 380,
+          "quality": "exact",
+          "total_tokens": 14257
+        },
+        "tool_calls": 3,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 4,
+        "charged_tool_calls": 3,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 14257,
+        "usage_reservations": 5,
+        "usage_reservations_terminal": 5
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 2,
+      "original_report": ".traceh/nd1/simple/report.json",
+      "report_sha256": "ad1008f3b4fcfd02710870a31f1b9ceab3ea5da0ae058a79d63e008e39fb0075",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 5,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 14933,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-805766ab17b58a615bedad162bbb59b38ef5e8d1fec766b856d653825a096970",
+            "result": "succeeded",
+            "session_id": "wf-session-805766ab17b58a615bedad162bbb59b38ef5e8d1fec766b856d653825a096970"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 10794,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-805766ab17b58a615bedad162bbb59b38ef5e8d1fec766b856d653825a096970",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 10794,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-805766ab17b58a615bedad162bbb59b38ef5e8d1fec766b856d653825a096970",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 17047,
+              "output_tokens": 365,
+              "quality": "exact",
+              "total_tokens": 17412
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 14933
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 17047,
+          "output_tokens": 365,
+          "quality": "exact",
+          "total_tokens": 17412
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 17412,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 1,
+      "original_report": ".traceh/nd2/explicit/report.json",
+      "report_sha256": "b2dd8be9ff3f8d8c9720fdcdc67030876b18611d6c2264e0f06c4fc664209bb3",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_file_read": true,
+      "main_requests": 15,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-3e775b20-8f0a-500c-b141-77f88c935ed4",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/service.py"
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 81,
+              "tool": "search_text",
+              "data": {
+                "matches": [],
+                "truncated": false
+              }
+            },
+            {
+              "result_seq": 76,
+              "request_seq": 81,
+              "tool": "search_text",
+              "data": {
+                "matches": [
+                  {
+                    "line": 539,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "    async def close_account("
+                  }
+                ],
+                "truncated": false
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 49124,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-d2abe42c1908609394ef6c5c14865555eca8a63f26d23630e6c0c5510da0cb81",
+              "request_seq": 177,
+              "status": "pending"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-3e775b20-8f0a-500c-b141-77f88c935ed4",
+          "seq": 93,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 136817,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-d2abe42c1908609394ef6c5c14865555eca8a63f26d23630e6c0c5510da0cb81",
+            "result": "succeeded",
+            "session_id": "wf-session-d2abe42c1908609394ef6c5c14865555eca8a63f26d23630e6c0c5510da0cb81"
+          },
+          {
+            "agent_id": "7201a7a8924624735f2f5d8bb28082b08fd94b42a05e57b91e9d827ced7e91e2",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-3e775b20-8f0a-500c-b141-77f88c935ed4"
+          }
+        ],
+        "model_attempts": 22,
+        "provider_active_milliseconds": 97101,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-d2abe42c1908609394ef6c5c14865555eca8a63f26d23630e6c0c5510da0cb81",
+            "final_model_result": "succeeded",
+            "model_attempts": 15,
+            "provider_active_milliseconds": 80419,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-d2abe42c1908609394ef6c5c14865555eca8a63f26d23630e6c0c5510da0cb81",
+            "steps": 15,
+            "tokens": {
+              "input_tokens": 195108,
+              "output_tokens": 2917,
+              "quality": "exact",
+              "total_tokens": 198025
+            },
+            "tool_calls": 14,
+            "turns": 1,
+            "work_duration_ms": 112805
+          },
+          {
+            "agent_id": "7201a7a8924624735f2f5d8bb28082b08fd94b42a05e57b91e9d827ced7e91e2",
+            "final_model_result": "succeeded",
+            "model_attempts": 7,
+            "provider_active_milliseconds": 16682,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-3e775b20-8f0a-500c-b141-77f88c935ed4",
+            "steps": 8,
+            "tokens": {
+              "input_tokens": 66667,
+              "output_tokens": 498,
+              "quality": "exact",
+              "total_tokens": 67165
+            },
+            "tool_calls": 7,
+            "turns": 1,
+            "work_duration_ms": 24012
+          }
+        ],
+        "steps": 23,
+        "tokens": {
+          "input_tokens": 261775,
+          "output_tokens": 3415,
+          "quality": "exact",
+          "total_tokens": 265190
+        },
+        "tool_calls": 21,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 23,
+        "charged_tool_calls": 21,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 258025,
+        "usage_reservations": 24,
+        "usage_reservations_terminal": 24
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 2,
+      "original_report": ".traceh/nd2/explicit/report.json",
+      "report_sha256": "b2dd8be9ff3f8d8c9720fdcdc67030876b18611d6c2264e0f06c4fc664209bb3",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_file_read": true,
+      "main_requests": 12,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-5b499f56-c113-5539-b429-a0bbe30002cb",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 69,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/service.py"
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 69,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 69,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 64,
+              "request_seq": 69,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/supervision/lifecycle.py"
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 83316,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c",
+              "request_seq": 141,
+              "status": "pending"
+            },
+            {
+              "session_id": "wf-session-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c",
+              "request_seq": 141,
+              "status": "failed"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-5b499f56-c113-5539-b429-a0bbe30002cb",
+          "seq": 81,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 111041,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c",
+            "result": "succeeded",
+            "session_id": "wf-session-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c"
+          },
+          {
+            "agent_id": "879055a888a0db73240d8804f0b5dadb490cbf335064d925a9496de4ae49066f",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-5b499f56-c113-5539-b429-a0bbe30002cb"
+          }
+        ],
+        "model_attempts": 18,
+        "provider_active_milliseconds": 75927,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c",
+            "final_model_result": "succeeded",
+            "model_attempts": 12,
+            "provider_active_milliseconds": 61041,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-c068966432ae1a4c50118ca9ee014a0711f53a6d90c00c447db6e84ac530012c",
+            "steps": 12,
+            "tokens": {
+              "input_tokens": 135946,
+              "output_tokens": 2252,
+              "quality": "exact",
+              "total_tokens": 138198
+            },
+            "tool_calls": 11,
+            "turns": 1,
+            "work_duration_ms": 88936
+          },
+          {
+            "agent_id": "879055a888a0db73240d8804f0b5dadb490cbf335064d925a9496de4ae49066f",
+            "final_model_result": "succeeded",
+            "model_attempts": 6,
+            "provider_active_milliseconds": 14886,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-5b499f56-c113-5539-b429-a0bbe30002cb",
+            "steps": 7,
+            "tokens": {
+              "input_tokens": 65518,
+              "output_tokens": 376,
+              "quality": "exact",
+              "total_tokens": 65894
+            },
+            "tool_calls": 6,
+            "turns": 1,
+            "work_duration_ms": 22105
+          }
+        ],
+        "steps": 19,
+        "tokens": {
+          "input_tokens": 201464,
+          "output_tokens": 2628,
+          "quality": "exact",
+          "total_tokens": 204092
+        },
+        "tool_calls": 17,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 19,
+        "charged_tool_calls": 17,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 198198,
+        "usage_reservations": 20,
+        "usage_reservations_terminal": 20
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 1,
+      "original_report": ".traceh/nd2/natural/report.json",
+      "report_sha256": "0d0b317e3a19633f807b21d474a1150073b678403781e5367d804c645ea00ba9",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 13,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 68834,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-899955e1e14001e88dcf9a0bece0dfe5c0ef90d51572701b2c1d17e542a76c57",
+            "result": "succeeded",
+            "session_id": "wf-session-899955e1e14001e88dcf9a0bece0dfe5c0ef90d51572701b2c1d17e542a76c57"
+          }
+        ],
+        "model_attempts": 13,
+        "provider_active_milliseconds": 53711,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-899955e1e14001e88dcf9a0bece0dfe5c0ef90d51572701b2c1d17e542a76c57",
+            "final_model_result": "succeeded",
+            "model_attempts": 13,
+            "provider_active_milliseconds": 53711,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-899955e1e14001e88dcf9a0bece0dfe5c0ef90d51572701b2c1d17e542a76c57",
+            "steps": 13,
+            "tokens": {
+              "input_tokens": 181694,
+              "output_tokens": 1791,
+              "quality": "exact",
+              "total_tokens": 183485
+            },
+            "tool_calls": 12,
+            "turns": 1,
+            "work_duration_ms": 68834
+          }
+        ],
+        "steps": 13,
+        "tokens": {
+          "input_tokens": 181694,
+          "output_tokens": 1791,
+          "quality": "exact",
+          "total_tokens": 183485
+        },
+        "tool_calls": 12,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 13,
+        "charged_tool_calls": 12,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 183485,
+        "usage_reservations": 14,
+        "usage_reservations_terminal": 14
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 2,
+      "original_report": ".traceh/nd2/natural/report.json",
+      "report_sha256": "0d0b317e3a19633f807b21d474a1150073b678403781e5367d804c645ea00ba9",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 13,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 85118,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-8747896b587db226a8e3496182315b38b859f4e9994af3e85d284e51fb8f2df2",
+            "result": "succeeded",
+            "session_id": "wf-session-8747896b587db226a8e3496182315b38b859f4e9994af3e85d284e51fb8f2df2"
+          }
+        ],
+        "model_attempts": 13,
+        "provider_active_milliseconds": 70197,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-8747896b587db226a8e3496182315b38b859f4e9994af3e85d284e51fb8f2df2",
+            "final_model_result": "succeeded",
+            "model_attempts": 13,
+            "provider_active_milliseconds": 70197,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-8747896b587db226a8e3496182315b38b859f4e9994af3e85d284e51fb8f2df2",
+            "steps": 13,
+            "tokens": {
+              "input_tokens": 172652,
+              "output_tokens": 2558,
+              "quality": "exact",
+              "total_tokens": 175210
+            },
+            "tool_calls": 12,
+            "turns": 1,
+            "work_duration_ms": 85118
+          }
+        ],
+        "steps": 13,
+        "tokens": {
+          "input_tokens": 172652,
+          "output_tokens": 2558,
+          "quality": "exact",
+          "total_tokens": 175210
+        },
+        "tool_calls": 12,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 13,
+        "charged_tool_calls": 12,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 175210,
+        "usage_reservations": 14,
+        "usage_reservations_terminal": 14
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 1,
+      "original_report": ".traceh/nd2/simple/report.json",
+      "report_sha256": "bbf5ce39820c0718a5bde6a72c705bfc59fc4195883017d7b004629f80c372c8",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 4,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 13043,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-d82ad3a2e2c8b3b13397c4544d00c1d9c2bece66c25b68cdd42e488e0b021eb0",
+            "result": "succeeded",
+            "session_id": "wf-session-d82ad3a2e2c8b3b13397c4544d00c1d9c2bece66c25b68cdd42e488e0b021eb0"
+          }
+        ],
+        "model_attempts": 4,
+        "provider_active_milliseconds": 10123,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-d82ad3a2e2c8b3b13397c4544d00c1d9c2bece66c25b68cdd42e488e0b021eb0",
+            "final_model_result": "succeeded",
+            "model_attempts": 4,
+            "provider_active_milliseconds": 10123,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-d82ad3a2e2c8b3b13397c4544d00c1d9c2bece66c25b68cdd42e488e0b021eb0",
+            "steps": 4,
+            "tokens": {
+              "input_tokens": 14480,
+              "output_tokens": 345,
+              "quality": "exact",
+              "total_tokens": 14825
+            },
+            "tool_calls": 3,
+            "turns": 1,
+            "work_duration_ms": 13043
+          }
+        ],
+        "steps": 4,
+        "tokens": {
+          "input_tokens": 14480,
+          "output_tokens": 345,
+          "quality": "exact",
+          "total_tokens": 14825
+        },
+        "tool_calls": 3,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 4,
+        "charged_tool_calls": 3,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 14825,
+        "usage_reservations": 5,
+        "usage_reservations_terminal": 5
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 2,
+      "original_report": ".traceh/nd2/simple/report.json",
+      "report_sha256": "bbf5ce39820c0718a5bde6a72c705bfc59fc4195883017d7b004629f80c372c8",
+      "source_digest": "e57da96b7084d1bea3585484ab5be426f6f8e4b42908d8db21f1d759de784f45",
+      "dataset_digest": "3bc21f33c77963657514d50f3e61f5ac4301fb21d1423d5f7bcf3429a4b722c9",
+      "structural_success": true,
+      "error_code": null,
+      "failure_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_file_read": false,
+      "main_requests": 5,
+      "tools_always_present": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 15271,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-0b98889ee07135a9712dc4ac279228ff6311d2a291ec3d0569a87316d725659d",
+            "result": "succeeded",
+            "session_id": "wf-session-0b98889ee07135a9712dc4ac279228ff6311d2a291ec3d0569a87316d725659d"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 11387,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-0b98889ee07135a9712dc4ac279228ff6311d2a291ec3d0569a87316d725659d",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 11387,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-0b98889ee07135a9712dc4ac279228ff6311d2a291ec3d0569a87316d725659d",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 17884,
+              "output_tokens": 389,
+              "quality": "exact",
+              "total_tokens": 18273
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 15271
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 17884,
+          "output_tokens": 389,
+          "quality": "exact",
+          "total_tokens": 18273
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 18273,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    }
+  ],
+  "interpretation": "Structural success does not establish answer correctness or useful collaboration.",
+  "independent_replay": {
+    "baseline": {
+      "sessions": 20,
+      "requests": 87,
+      "total_tokens": 887809,
+      "failed_attempts": 0,
+      "original_files_unchanged": 636,
+      "report_sha256": "4ffc6aa3ab0ba1c2299fcb07fa18651e4b4cd7a6d33c6d2795b4b9db7c1883b7"
+    },
+    "candidate": {
+      "sessions": 20,
+      "requests": 87,
+      "total_tokens": 861075,
+      "failed_attempts": 0,
+      "original_files_unchanged": 653,
+      "report_sha256": "bb8da77b7a9c6a5761753f0cc3e6641396082231e1c2fb638cc757a0a3605d4b"
+    }
+  },
+  "replay_sidecar_note": "First reopen removed empty WAL/SHM sidecars and failed file-set equality; persistent payloads unchanged. Final serialized reopen passed exact equality.",
+  "source_review": "source-review.json",
+  "validation": {
+    "targeted_passed": 16,
+    "compileall": true,
+    "ruff": true,
+    "collected": 3978,
+    "reverse_rejected_delegation": true,
+    "full_pytest": false,
+    "L2_L4": false
+  }
+}

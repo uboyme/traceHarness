@@ -49,6 +49,15 @@ class BudgetAmounts:
     wall_milliseconds: int = 0
 
 
+@dataclass(frozen=True, slots=True)
+class ChildBudgetGrant:
+    """Host-issued child envelope and capacity retained by its parent."""
+
+    limits: BudgetLimits
+    retained_tokens: int
+    initial_tokens: int | None = None
+
+
 class BudgetAccountStatus(StrEnum):
     OPEN = "open"
     CLOSED = "closed"
@@ -99,10 +108,23 @@ class BudgetReservation:
     child_agent_id: str
     creation_request_id: str
     child_limits: BudgetLimits
+    retained_tokens: int
+    initial_tokens: int | None
     status: BudgetReservationStatus
     reserved_seq: int
     terminal_seq: int | None = None
     identity_seq: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ChildTokenDecision:
+    operation_id: str
+    request_id: str
+    parent_agent_id: str
+    child_agent_id: str
+    tokens: int
+    reason: str
+    seq: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,4 +165,6 @@ __all__ = [
     "BudgetReservationStatus",
     "BudgetUsageReservation",
     "BudgetUsageReservationStatus",
+    "ChildBudgetGrant",
+    "ChildTokenDecision",
 ]

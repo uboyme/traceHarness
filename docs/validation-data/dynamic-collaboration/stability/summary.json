@@ -1,0 +1,289 @@
+{
+  "format": 1,
+  "planned": 3,
+  "executed": 2,
+  "functionally_completed": 1,
+  "stopped_after": "command-recovery",
+  "not_run": [
+    "integration-conflict"
+  ],
+  "real_calls": 40,
+  "exact_provider_tokens": 359981,
+  "sum_wall_ms": 399889,
+  "cases": [
+    {
+      "case": "invoice",
+      "product_success": true,
+      "real_calls": 16,
+      "roles": {
+        "main": 12,
+        "child": 4
+      },
+      "error_type": null,
+      "stopped": false,
+      "tokens": {
+        "input_tokens": 117608,
+        "output_tokens": 7471,
+        "quality": "exact",
+        "total_tokens": 125079
+      },
+      "ledger_settled_tokens": 125079,
+      "usage_quality": {
+        "None": 2,
+        "exact": 16
+      },
+      "wall_ms": 153156,
+      "provider_failures": [],
+      "artifacts": [
+        {
+          "artifact_id": "patch-ca8c2c3aabffedc592395689d8c61251b33d05f291b07dcc534fcb943b109ddc",
+          "agent_id": "agent-tool-patch-author-24896991-b7d3-5e25-a9b5-8ee0469829f9",
+          "paths": [
+            "telemetry_rules.py"
+          ],
+          "patch_sha256": "cf35ba60d1193e08494012dc4c4bb3b1f4ceb239873297257a59adda0926b4e0",
+          "bytes": 1269
+        },
+        {
+          "artifact_id": "patch-e5a51c6617fb73e920df7590be79e8baaeedf4794625c84ede292bdcb0fda531",
+          "agent_id": "wf-agent-6d4c1ee05a9b7dc1574dd175e61d68231a035fc6ed2a67dcb3e21c4de8bba295",
+          "paths": [
+            "telemetry_report.py",
+            "telemetry_rules.py"
+          ],
+          "patch_sha256": "d11346e46fd743c69c2401ee10d489f22d78c0964452c475217a832633ab022b",
+          "bytes": 2227
+        }
+      ],
+      "patch_read_calls": 1,
+      "integration_results": [
+        {
+          "seq": 74,
+          "status": "succeeded",
+          "outcome": "applied"
+        }
+      ],
+      "shell_results": [
+        {
+          "seq": 113,
+          "status": "succeeded"
+        },
+        {
+          "seq": 126,
+          "status": "succeeded"
+        }
+      ],
+      "product_status": "completed",
+      "workflow_status": "completed",
+      "review_passed": true,
+      "promotion_id": "promotion-c03014d3e2526f647e6f37a03a82c0ca3c0aea00e4b092f55f1279ae4af90ea5",
+      "accounts": {
+        "closed": 3
+      },
+      "workspaces": {
+        "released": 3
+      },
+      "usage_reservations": {
+        "settled": 18
+      },
+      "sandbox": [
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "promotion",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "verification",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        }
+      ],
+      "snapshot_replays": 18,
+      "original_sha256": "69ed37a6a97451aec3965cf614cb3055729929ad9414ecff40b3df3de18a9f97",
+      "reports_dispatched_to_parent": 1
+    },
+    {
+      "case": "command-recovery",
+      "product_success": false,
+      "real_calls": 24,
+      "roles": {
+        "main": 20,
+        "child": 4
+      },
+      "error_type": null,
+      "stopped": false,
+      "tokens": {
+        "input_tokens": 222770,
+        "output_tokens": 12132,
+        "quality": "exact",
+        "total_tokens": 234902
+      },
+      "ledger_settled_tokens": 231973,
+      "usage_quality": {
+        "None": 2,
+        "exact": 23,
+        "unknown": 1
+      },
+      "wall_ms": 246733,
+      "provider_failures": [],
+      "artifacts": [
+        {
+          "artifact_id": "patch-4f281183add2a791b68589f751bfb9a0a92779f08dbf092850c4f0e90c3ae464",
+          "agent_id": "agent-tool-patch-author-1ded1ebd-9c6f-54c1-9ec3-00c921e0b3f5",
+          "paths": [
+            "telemetry_rules.py"
+          ],
+          "patch_sha256": "6bf86e1f8c52e67ae4c756018c73115a5ba011be7431e97987520d8b155ca1b4",
+          "bytes": 1653
+        }
+      ],
+      "patch_read_calls": 1,
+      "integration_results": [
+        {
+          "seq": 101,
+          "status": "succeeded",
+          "outcome": "applied"
+        }
+      ],
+      "shell_results": [
+        {
+          "seq": 153,
+          "status": "failed"
+        },
+        {
+          "seq": 179,
+          "status": "succeeded"
+        },
+        {
+          "seq": 192,
+          "status": "succeeded"
+        },
+        {
+          "seq": 205,
+          "status": "succeeded"
+        },
+        {
+          "seq": 218,
+          "status": "succeeded"
+        },
+        {
+          "seq": 232,
+          "status": "succeeded"
+        },
+        {
+          "seq": 233,
+          "status": "succeeded"
+        },
+        {
+          "seq": 276,
+          "status": "succeeded"
+        },
+        {
+          "seq": 277,
+          "status": "succeeded"
+        },
+        {
+          "seq": 278,
+          "status": "succeeded"
+        }
+      ],
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "promotion_id": null,
+      "accounts": {
+        "closed": 3
+      },
+      "workspaces": {
+        "released": 1,
+        "quarantined": 2
+      },
+      "usage_reservations": {
+        "settled": 26
+      },
+      "sandbox": [
+        {
+          "owner": "effect",
+          "status": "start-failed",
+          "converged": true,
+          "exit_code": null
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 1
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 2
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        },
+        {
+          "owner": "effect",
+          "status": "finished",
+          "converged": true,
+          "exit_code": 0
+        }
+      ],
+      "snapshot_replays": 26,
+      "original_sha256": "bb54ed66331937131f26f87103890e94e91d7a507d5d9d1e5573ed894e49313f",
+      "reports_dispatched_to_parent": 1
+    }
+  ],
+  "error_recovery_observed": true,
+  "full_recovery_task_completed": false,
+  "benefit_measured": false,
+  "material_limitation": "Executed invoice prose omitted explicit normalize output keys; fixed verifier expects sku/qty. Current material now clarifies these keys and passed preflight only; frozen trials unchanged."
+}

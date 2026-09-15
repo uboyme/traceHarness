@@ -1,0 +1,8 @@
+diff --git a/answer.json b/answer.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e7ed72fef6aae796ed7bf054b590d49b6b53b470
+--- /dev/null
++++ b/answer.json
+@@ -0,0 +1 @@
++{"sections":[{"topic":"authority","conclusion":"主方与调查方的权限边界通过AgentToolAuthority类严格控制，要求调用者必须是绑定的owner session，并且目标agent必须是严格的owned descendant。工作区版本通过durable_log_identity函数确保事件存储的一致性，历史继承通过AgentOwnershipGraph的lineage方法实现，确保只有直接后代才能被授权。","evidence":[{"path":"src/traceh/supervision/authority.py","start_line":70,"end_line":109},{"path":"src/traceh/supervision/lifecycle.py","start_line":85,"end_line":96}]},{"topic":"budget","conclusion":"子任务预算通过BudgetLedgerService.reserve_child方法预留，主方保留收尾额度通过BudgetLedgerService.grant_root方法在根账户上设置限制。预算预留和使用都基于append-only ledger的投影，确保不可变性和审计追踪。","evidence":[{"path":"src/traceh/budgets/service.py","start_line":118,"end_line":120},{"path":"src/traceh/budgets/service.py","start_line":84,"end_line":116}]},{"topic":"lifecycle","conclusion":"创建/发送取消通过AgentLifecycleCoordinator.admission和disposal上下文管理器确保工作不会遗留，清理失败通过await_worker_convergence等待工作收敛，主方结束时通过begin_close和wait_quiescent确保所有工作完成。产物捕获在AgentExecution.run_turn完成后通过TurnResult返回。","evidence":[{"path":"src/traceh/supervision/lifecycle.py","start_line":151,"end_line":174},{"path":"src/traceh/supervision/execution.py","start_line":74,"end_line":75}]}]}
+\ No newline at end of file

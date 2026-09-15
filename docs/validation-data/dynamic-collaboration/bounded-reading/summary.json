@@ -1,0 +1,4076 @@
+{
+  "format": 1,
+  "diagnostic_not_release_benchmark": true,
+  "raw_evidence_unchanged": true,
+  "scope": "Bounded reading only; same model/budgets/delegation descriptions/material/scorer.",
+  "interpretation": "Visibility, structural success, and semantic source review are separate.",
+  "rows": [
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 1,
+      "original_report": ".traceh/r0/explicit/report.json",
+      "report_sha256": "164e70a2e2ef378831b0289f91f268a627e32f90f992c423e1c00a23eb6fe8be",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": false,
+      "task_status": "failed",
+      "error_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_read": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/supervision/lifecycle.py"
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/service.py"
+              }
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/supervision.py"
+              }
+            },
+            {
+              "result_seq": 64,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 76,
+              "request_seq": 81,
+              "tool": "read_file",
+              "data": {}
+            }
+          ],
+          "distinct_source_output_bytes": 106039,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+              "request_seq": 117,
+              "status": "pending"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "visible_read_pages": [
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "child": true,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 81,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "child": true,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 81,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "child": true,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 81,
+          "arguments": {
+            "path": "src/traceh/budgets/supervision.py"
+          },
+          "content_chars": 22723,
+          "content_sha256": "a7435e0219c02dbfc2eeb2d48b1e8212e728efe88633c80d950834b551b017f8",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "child": true,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 81,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 25381,
+          "content_sha256": "1e3317ad5cd2420163c97cc5366f92d41cc9bb1a7b8123deebf02f3c8c8ce515",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "child": true,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 81,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 25213,
+          "content_sha256": "b2a16025c968b23962f9a9de0988724eb3abebe3b7cdc31a64137520178da362",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 117,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 154,
+          "content_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 3964,
+          "content_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 13310,
+          "content_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 25381,
+          "content_sha256": "9f065d07c544e1a4566544ff5f612899b9d0cde51324b3a472d90b46bfc18d62",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 10,
+      "tools_always_present": true,
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+          "seq": 93,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 100139,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+            "result": "succeeded",
+            "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35"
+          },
+          {
+            "agent_id": "516424b80d80d8cda2b62ec38f61dcda821c8d0536ee041497c0d97baf1f4cf4",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7"
+          }
+        ],
+        "model_attempts": 17,
+        "provider_active_milliseconds": 63001,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+            "final_model_result": "succeeded",
+            "model_attempts": 10,
+            "provider_active_milliseconds": 43521,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-4193e330b7eb90b1005ab39c8e3c4852c80109c571c396539d5ed351d0ab9c35",
+            "steps": 10,
+            "tokens": {
+              "input_tokens": 79340,
+              "output_tokens": 1533,
+              "quality": "exact",
+              "total_tokens": 80873
+            },
+            "tool_calls": 9,
+            "turns": 1,
+            "work_duration_ms": 70919
+          },
+          {
+            "agent_id": "516424b80d80d8cda2b62ec38f61dcda821c8d0536ee041497c0d97baf1f4cf4",
+            "final_model_result": "succeeded",
+            "model_attempts": 7,
+            "provider_active_milliseconds": 19480,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-9f97245f-afc1-5c0e-94f5-c06eace2bbc7",
+            "steps": 8,
+            "tokens": {
+              "input_tokens": 78792,
+              "output_tokens": 544,
+              "quality": "exact",
+              "total_tokens": 79336
+            },
+            "tool_calls": 7,
+            "turns": 1,
+            "work_duration_ms": 29220
+          }
+        ],
+        "steps": 18,
+        "tokens": {
+          "input_tokens": 158132,
+          "output_tokens": 2077,
+          "quality": "exact",
+          "total_tokens": 160209
+        },
+        "tool_calls": 16,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 18,
+        "charged_tool_calls": 16,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 140873,
+        "usage_reservations": 19,
+        "usage_reservations_terminal": 19
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "explicit",
+      "repetition": 2,
+      "original_report": ".traceh/r0/explicit/report.json",
+      "report_sha256": "164e70a2e2ef378831b0289f91f268a627e32f90f992c423e1c00a23eb6fe8be",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_read": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/supervision/lifecycle.py"
+              }
+            },
+            {
+              "result_seq": 63,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/supervision.py"
+              }
+            },
+            {
+              "result_seq": 75,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {}
+            },
+            {
+              "result_seq": 87,
+              "request_seq": 92,
+              "tool": "read_file",
+              "data": {
+                "path": "src/traceh/budgets/service.py"
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 80826,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+              "request_seq": 141,
+              "status": "pending"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "visible_read_pages": [
+        {
+          "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "child": true,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 92,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "child": true,
+          "call_seq": 61,
+          "result_seq": 63,
+          "request_seq": 92,
+          "arguments": {
+            "path": "src/traceh/budgets/supervision.py"
+          },
+          "content_chars": 22723,
+          "content_sha256": "a7435e0219c02dbfc2eeb2d48b1e8212e728efe88633c80d950834b551b017f8",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "child": true,
+          "call_seq": 73,
+          "result_seq": 75,
+          "request_seq": 92,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 25381,
+          "content_sha256": "31cbf00e9a49e00ac4cd9af7f5f08009b3c53619cb5a5ae67ef5ff1203a68b62",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "child": true,
+          "call_seq": 85,
+          "result_seq": 87,
+          "request_seq": 92,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 14,
+          "result_seq": 16,
+          "request_seq": 141,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 154,
+          "content_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 3964,
+          "content_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 13310,
+          "content_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/provisioning.py"
+          },
+          "content_chars": 1869,
+          "content_sha256": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+          "child": false,
+          "call_seq": 122,
+          "result_seq": 124,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/delivery.py"
+          },
+          "content_chars": 12621,
+          "content_sha256": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 12,
+      "tools_always_present": true,
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+          "seq": 104,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 117121,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+            "result": "succeeded",
+            "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4"
+          },
+          {
+            "agent_id": "5cc46f55971c57c8f27d08b244b163dd8c8880ce790ae090c149527e796b8e5b",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1"
+          }
+        ],
+        "model_attempts": 20,
+        "provider_active_milliseconds": 76384,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+            "final_model_result": "succeeded",
+            "model_attempts": 12,
+            "provider_active_milliseconds": 57714,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-70412235d62630187611992a323bfdc77e54ea4df3446ee40b5ecec7fd6732a4",
+            "steps": 12,
+            "tokens": {
+              "input_tokens": 109801,
+              "output_tokens": 2095,
+              "quality": "exact",
+              "total_tokens": 111896
+            },
+            "tool_calls": 11,
+            "turns": 1,
+            "work_duration_ms": 88095
+          },
+          {
+            "agent_id": "5cc46f55971c57c8f27d08b244b163dd8c8880ce790ae090c149527e796b8e5b",
+            "final_model_result": "succeeded",
+            "model_attempts": 8,
+            "provider_active_milliseconds": 18670,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-cdd17db4-9476-5213-96f7-b108049b31a1",
+            "steps": 9,
+            "tokens": {
+              "input_tokens": 66085,
+              "output_tokens": 547,
+              "quality": "exact",
+              "total_tokens": 66632
+            },
+            "tool_calls": 8,
+            "turns": 1,
+            "work_duration_ms": 29026
+          }
+        ],
+        "steps": 21,
+        "tokens": {
+          "input_tokens": 175886,
+          "output_tokens": 2642,
+          "quality": "exact",
+          "total_tokens": 178528
+        },
+        "tool_calls": 19,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 21,
+        "charged_tool_calls": 18,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 171896,
+        "usage_reservations": 22,
+        "usage_reservations_terminal": 22
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 1,
+      "original_report": ".traceh/r0/natural/report.json",
+      "report_sha256": "e335e345fb5b16ff9748acbf34e52f1a3de72df0d88c2157037c644523e95b38",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": false,
+      "task_status": "failed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 201,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 154,
+          "content_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 3964,
+          "content_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 25381,
+          "content_sha256": "6ec53c6759a9419a11c7a75a977437585f028d7d81a7f5d76ae4f2bf40065c17",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 13310,
+          "content_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 6575,
+          "content_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/supervision/provisioning.py"
+          },
+          "content_chars": 1869,
+          "content_sha256": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 201,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 17,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 135533,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+            "result": "succeeded",
+            "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93"
+          }
+        ],
+        "model_attempts": 17,
+        "provider_active_milliseconds": 108966,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+            "final_model_result": "succeeded",
+            "model_attempts": 17,
+            "provider_active_milliseconds": 108966,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-12233a8bf331fa839432233bb10bbdfff8543c943dc9f3a8b582efb8b8147d93",
+            "steps": 17,
+            "tokens": {
+              "input_tokens": 272913,
+              "output_tokens": 4127,
+              "quality": "exact",
+              "total_tokens": 277040
+            },
+            "tool_calls": 16,
+            "turns": 1,
+            "work_duration_ms": 135533
+          }
+        ],
+        "steps": 17,
+        "tokens": {
+          "input_tokens": 272913,
+          "output_tokens": 4127,
+          "quality": "exact",
+          "total_tokens": 277040
+        },
+        "tool_calls": 16,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 17,
+        "charged_tool_calls": 16,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 277040,
+        "usage_reservations": 18,
+        "usage_reservations_terminal": 18
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "natural",
+      "repetition": 2,
+      "original_report": ".traceh/r0/natural/report.json",
+      "report_sha256": "e335e345fb5b16ff9748acbf34e52f1a3de72df0d88c2157037c644523e95b38",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 141,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 154,
+          "content_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 3964,
+          "content_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 13310,
+          "content_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 25381,
+          "content_sha256": "912cc64482d3dcda9b5129c1e3165d7dcf0810c9dbbc20b65e530fb23a5e76d8",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 9054,
+          "content_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 6575,
+          "content_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 25213,
+          "content_sha256": "15be3af1ca570f9b63d9afb195f6d2d7bde3002007809f19606353493490ea19",
+          "retained_reference": true,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 141,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 23668,
+          "content_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 12,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 82511,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+            "result": "succeeded",
+            "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5"
+          }
+        ],
+        "model_attempts": 12,
+        "provider_active_milliseconds": 66978,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+            "final_model_result": "succeeded",
+            "model_attempts": 12,
+            "provider_active_milliseconds": 66978,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-3d3c01a4fafaad16c8988f865963a82c35e83a7e8c5c4a97fb948b5896b5b5a5",
+            "steps": 12,
+            "tokens": {
+              "input_tokens": 170347,
+              "output_tokens": 2347,
+              "quality": "exact",
+              "total_tokens": 172694
+            },
+            "tool_calls": 11,
+            "turns": 1,
+            "work_duration_ms": 82511
+          }
+        ],
+        "steps": 12,
+        "tokens": {
+          "input_tokens": 170347,
+          "output_tokens": 2347,
+          "quality": "exact",
+          "total_tokens": 172694
+        },
+        "tool_calls": 11,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 12,
+        "charged_tool_calls": 11,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 172694,
+        "usage_reservations": 13,
+        "usage_reservations_terminal": 13
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 1,
+      "original_report": ".traceh/r0/simple/report.json",
+      "report_sha256": "e8452e1ffe58f23602c9ee8a3d9e3ce78363714c916c6da32123f527fc2a28dc",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 57,
+          "arguments": {
+            "path": "src/traceh/version.py"
+          },
+          "content_chars": 2090,
+          "content_sha256": "39ea2ab9be26e27b2f185cc82a805bcab05d6d7ce0c0a7fbdb6e352ce348aef7",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 57,
+          "arguments": {
+            "path": "answer.json"
+          },
+          "content_chars": 21,
+          "content_sha256": "0ffe3122784bd8427b7fb6a88adf883706dc61f668d2c67a1639010575abb494",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 5,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 16123,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a",
+            "result": "succeeded",
+            "session_id": "wf-session-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 11151,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 11151,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-0f5477691891c1d0b6786f52a5c9462469c7cbaa0cf364b346ab9e158f5e781a",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 17056,
+              "output_tokens": 390,
+              "quality": "exact",
+              "total_tokens": 17446
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 16123
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 17056,
+          "output_tokens": 390,
+          "quality": "exact",
+          "total_tokens": 17446
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 17446,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "baseline",
+      "case": "simple",
+      "repetition": 2,
+      "original_report": ".traceh/r0/simple/report.json",
+      "report_sha256": "e8452e1ffe58f23602c9ee8a3d9e3ce78363714c916c6da32123f527fc2a28dc",
+      "source_digest": "ea37f0141702e88da53fda7e8923799780a27cc7db6231d46e4ceb25108e0e6a",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 57,
+          "arguments": {
+            "path": "src/traceh/version.py"
+          },
+          "content_chars": 2090,
+          "content_sha256": "39ea2ab9be26e27b2f185cc82a805bcab05d6d7ce0c0a7fbdb6e352ce348aef7",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        },
+        {
+          "session_id": "wf-session-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 57,
+          "arguments": {
+            "path": "answer.json"
+          },
+          "content_chars": 21,
+          "content_sha256": "0ffe3122784bd8427b7fb6a88adf883706dc61f668d2c67a1639010575abb494",
+          "retained_reference": false,
+          "bounded": false,
+          "view": null
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 5,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 15468,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b",
+            "result": "succeeded",
+            "session_id": "wf-session-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 10779,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 10779,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-dfe15ac8cdceda012d4a6abbd61f03984a62853acaf37d1f16bbe281233cd89b",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 17068,
+              "output_tokens": 378,
+              "quality": "exact",
+              "total_tokens": 17446
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 15468
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 17068,
+          "output_tokens": 378,
+          "quality": "exact",
+          "total_tokens": 17446
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 17446,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 1,
+      "original_report": ".traceh/r1/explicit/report.json",
+      "report_sha256": "592e5002ef049000be7c55ad03c97536fe1f19d590d099b8e6ac2338b181e2a6",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": false,
+      "task_status": "failed",
+      "error_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_read": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 10,
+                "end_line": 120,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/budgets/service.py",
+                  "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                  "start_column": 1,
+                  "start_line": 121
+                },
+                "path": "src/traceh/budgets/service.py",
+                "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                "start_column": 1,
+                "start_line": 1,
+                "total_lines": 630,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 70,
+                "end_line": 200,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/budgets/service.py",
+                  "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                  "start_column": 1,
+                  "start_line": 201
+                },
+                "path": "src/traceh/budgets/service.py",
+                "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                "start_column": 1,
+                "start_line": 118,
+                "total_lines": 630,
+                "truncated": false
+              }
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 41,
+                "end_line": 120,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/supervision/lifecycle.py",
+                  "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                  "start_column": 1,
+                  "start_line": 121
+                },
+                "path": "src/traceh/supervision/lifecycle.py",
+                "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                "start_column": 1,
+                "start_line": 1,
+                "total_lines": 246,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 64,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 11,
+                "end_line": 240,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "end_line": 246,
+                  "path": "src/traceh/supervision/lifecycle.py",
+                  "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                  "start_column": 1,
+                  "start_line": 241
+                },
+                "path": "src/traceh/supervision/lifecycle.py",
+                "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                "start_column": 1,
+                "start_line": 121,
+                "total_lines": 246,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 76,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 1,
+                "end_line": 246,
+                "eof": true,
+                "format": 1,
+                "next_read": null,
+                "path": "src/traceh/supervision/lifecycle.py",
+                "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                "start_column": 1,
+                "start_line": 241,
+                "total_lines": 246,
+                "truncated": false
+              }
+            },
+            {
+              "result_seq": 88,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 71,
+                "end_line": 120,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/supervision/execution.py",
+                  "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+                  "start_column": 1,
+                  "start_line": 121
+                },
+                "path": "src/traceh/supervision/execution.py",
+                "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+                "start_column": 1,
+                "start_line": 1,
+                "total_lines": 176,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 100,
+              "request_seq": 105,
+              "tool": "read_file",
+              "data": {
+                "end_column": 1,
+                "end_line": 176,
+                "eof": true,
+                "format": 1,
+                "next_read": null,
+                "path": "src/traceh/supervision/execution.py",
+                "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+                "start_column": 1,
+                "start_line": 121,
+                "total_lines": 176,
+                "truncated": false
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 29307,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+              "request_seq": 237,
+              "status": "pending"
+            },
+            {
+              "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+              "request_seq": 237,
+              "status": "failed"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "visible_read_pages": [
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 105,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 105,
+          "arguments": {
+            "end_line": 200,
+            "path": "src/traceh/budgets/service.py",
+            "start_line": 118
+          },
+          "content_chars": 4577,
+          "content_sha256": "2ef8d1d296ffa1d00248c31f0930e781dfa3fe2753946dc3096af34ce8d34ec2",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 70,
+            "end_line": 200,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 201
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 118,
+            "total_lines": 630,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 105,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 105,
+          "arguments": {
+            "end_line": 246,
+            "path": "src/traceh/supervision/lifecycle.py",
+            "start_line": 121
+          },
+          "content_chars": 5521,
+          "content_sha256": "a5bb986f8e768df14ffdec87d633073018716c345814c616890039d8c1e2d586",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 11,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "end_line": 246,
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 105,
+          "arguments": {
+            "end_line": 246,
+            "path": "src/traceh/supervision/lifecycle.py",
+            "start_line": 241
+          },
+          "content_chars": 480,
+          "content_sha256": "79079cc97f6ea1345c8b383c46108fdc5a0742bb5dd545b192ad891de452d7e9",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 246,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 241,
+            "total_lines": 246,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 105,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 5794,
+          "content_sha256": "da60aca2f5a39f4e79aab0b67a68f383d3190105a9764ee217b5f62243c1b760",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 71,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/execution.py",
+              "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/execution.py",
+            "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 176,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "child": true,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 105,
+          "arguments": {
+            "end_line": 176,
+            "path": "src/traceh/supervision/execution.py",
+            "start_line": 121
+          },
+          "content_chars": 2533,
+          "content_sha256": "8b61f696fc1f5ef03fe3a43c83e1072aca4bd18a2a1a43c74a73b62dbf553fcb",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 176,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/execution.py",
+            "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 176,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 237,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 418,
+          "content_sha256": "8855ddcdf59ff190ae66e65235221f084664465fa50542ac5b9f2e1d527e0d9f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 33,
+            "end_line": 5,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "INDEX.md",
+            "source_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 5,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 4880,
+          "content_sha256": "060fd0e1b6137b082032dd1fd412fd8843c8b0737cffba5f19413d950430b0f9",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 116,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/authority.py",
+            "source_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 116,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 5989,
+          "content_sha256": "822aa58d32784b262d1dbc07342e095b2c1b4f02b08848aaa41ffa3e269d844c",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 14,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/delegation.py",
+              "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/delegation.py",
+            "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 329,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/supervision/provisioning.py"
+          },
+          "content_chars": 2414,
+          "content_sha256": "3ba60a929d3f5ca675df8e63548842bcc9abe7f5e5dd3924d125e12e0946ed3a",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 66,
+            "end_line": 50,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/provisioning.py",
+            "source_sha256": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 50,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 122,
+          "result_seq": 124,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 4583,
+          "content_sha256": "ac08bca1c18a191e5be41ba6b29a7485c4b80c238004f340f60a9073129b1819",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 12,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/enforcement.py",
+              "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/enforcement.py",
+            "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 1129,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 146,
+          "result_seq": 148,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 5794,
+          "content_sha256": "da60aca2f5a39f4e79aab0b67a68f383d3190105a9764ee217b5f62243c1b760",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 71,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/execution.py",
+              "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/execution.py",
+            "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 176,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "child": false,
+          "call_seq": 158,
+          "result_seq": 160,
+          "request_seq": 237,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 4459,
+          "content_sha256": "4b915069564016c66180af97f8d02a47de8d762e2f95e51c325d804215c73608",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/projection.py",
+              "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/projection.py",
+            "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 897,
+            "truncated": true
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 20,
+      "tools_always_present": true,
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+          "seq": 117,
+          "error_type": "BudgetExhaustedError"
+        },
+        {
+          "stream_id": "session:wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+          "seq": 249,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 175305,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+            "result": "succeeded",
+            "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da"
+          },
+          {
+            "agent_id": "4d6a1fb76f1fc1b03320c9efd43cb414955500872f42f2d08b404337821e99d1",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146"
+          }
+        ],
+        "model_attempts": 29,
+        "provider_active_milliseconds": 91708,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+            "final_model_result": "succeeded",
+            "model_attempts": 20,
+            "provider_active_milliseconds": 58804,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-ef308e5b04ae7bbf2f3cfbbb13006938ae66d9c61bef5ecb10da60b62f42c0da",
+            "steps": 21,
+            "tokens": {
+              "input_tokens": 254203,
+              "output_tokens": 1766,
+              "quality": "exact",
+              "total_tokens": 255969
+            },
+            "tool_calls": 20,
+            "turns": 1,
+            "work_duration_ms": 129364
+          },
+          {
+            "agent_id": "4d6a1fb76f1fc1b03320c9efd43cb414955500872f42f2d08b404337821e99d1",
+            "final_model_result": "succeeded",
+            "model_attempts": 9,
+            "provider_active_milliseconds": 32904,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-ed5d66d4-8aad-51ab-9fcb-7069eddff146",
+            "steps": 10,
+            "tokens": {
+              "input_tokens": 71753,
+              "output_tokens": 1123,
+              "quality": "exact",
+              "total_tokens": 72876
+            },
+            "tool_calls": 9,
+            "turns": 1,
+            "work_duration_ms": 45941
+          }
+        ],
+        "steps": 31,
+        "tokens": {
+          "input_tokens": 325956,
+          "output_tokens": 2889,
+          "quality": "exact",
+          "total_tokens": 328845
+        },
+        "tool_calls": 29,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 31,
+        "charged_tool_calls": 29,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 300000,
+        "usage_reservations": 31,
+        "usage_reservations_terminal": 31
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "explicit",
+      "repetition": 2,
+      "original_report": ".traceh/r1/explicit/report.json",
+      "report_sha256": "592e5002ef049000be7c55ad03c97536fe1f19d590d099b8e6ac2338b181e2a6",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 1,
+      "accepted_children": 1,
+      "after_actual_read": true,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "report_status": "failed",
+          "source_results_seen_before_termination": [
+            {
+              "result_seq": 28,
+              "request_seq": 93,
+              "tool": "search_text",
+              "data": {
+                "matches": [
+                  {
+                    "line": 306,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "async def _start_reserved_usage("
+                  },
+                  {
+                    "line": 574,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        return await _start_reserved_usage("
+                  },
+                  {
+                    "line": 592,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        reserved = started.amounts.tokens"
+                  },
+                  {
+                    "line": 597,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                    reserved,"
+                  },
+                  {
+                    "line": 600,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                tokens, quality = reserved, UsageQuality.UNKNOWN"
+                  },
+                  {
+                    "line": 610,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            tokens, quality = self._owner._usage_settlement(response.usage, reserved)"
+                  },
+                  {
+                    "line": 614,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                reserved,"
+                  },
+                  {
+                    "line": 727,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            # either reserves that exact request or does not exist; it cannot"
+                  },
+                  {
+                    "line": 730,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        reserve_operation = budget_operation_id("
+                  },
+                  {
+                    "line": 731,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            \"model-token-reserve\", reservation_id=reservation_id"
+                  },
+                  {
+                    "line": 734,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            reservation = await self._service.reserve_usage("
+                  },
+                  {
+                    "line": 735,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                operation_id=reserve_operation,"
+                  },
+                  {
+                    "line": 797,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        self, usage: Usage, reserved: int"
+                  },
+                  {
+                    "line": 812,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            return reserved, UsageQuality.UNKNOWN"
+                  },
+                  {
+                    "line": 814,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            return reserved, UsageQuality.UNKNOWN"
+                  },
+                  {
+                    "line": 816,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        if total > reserved:"
+                  },
+                  {
+                    "line": 817,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            return reserved, UsageQuality.UNKNOWN"
+                  },
+                  {
+                    "line": 822,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        return reserved, UsageQuality.UNKNOWN"
+                  },
+                  {
+                    "line": 912,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "        wall_reserved = 0"
+                  },
+                  {
+                    "line": 921,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                reservation = await self._service.reserve_usage("
+                  },
+                  {
+                    "line": 923,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                        \"turn-wall-reserve\","
+                  },
+                  {
+                    "line": 940,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            reservation = await _start_reserved_usage("
+                  },
+                  {
+                    "line": 948,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "            wall_reserved = reservation.amounts.wall_milliseconds"
+                  },
+                  {
+                    "line": 957,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                timeout = asyncio.timeout(wall_reserved / 1000)"
+                  },
+                  {
+                    "line": 978,
+                    "path": "src/traceh/budgets/enforcement.py",
+                    "text": "                    min(elapsed, wall_reserved)"
+                  },
+                  {
+                    "line": 215,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "    used = _add(_add(account.charged, account.delegated), account.reserved)"
+                  },
+                  {
+                    "line": 224,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "        and account.reserved_children + children > account.limits.max_children"
+                  },
+                  {
+                    "line": 235,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "    used = account.charged.tokens + account.delegated.tokens + account.reserved.tokens"
+                  },
+                  {
+                    "line": 389,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        reserved_seq=fact.seq,"
+                  },
+                  {
+                    "line": 399,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        reserved_children=parent.reserved_children + debit.children,"
+                  },
+                  {
+                    "line": 442,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                            created_seq=reservation.reserved_seq,"
+                  },
+                  {
+                    "line": 469,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        parent.limits, reservation.child_limits, reservation.reserved_seq"
+                  },
+                  {
+                    "line": 474,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        reserved_children=parent.reserved_children - debit.children,"
+                  },
+                  {
+                    "line": 535,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        reserved_seq=fact.seq,"
+                  },
+                  {
+                    "line": 538,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        account, reserved=_add(account.reserved, fact.amounts)"
+                  },
+                  {
+                    "line": 586,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                        reserved=_subtract(account.reserved, reservation.amounts),"
+                  },
+                  {
+                    "line": 754,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                used = _add(_add(account.charged, account.delegated), account.reserved)"
+                  },
+                  {
+                    "line": 765,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                    and account.reserved_children + debit.children"
+                  },
+                  {
+                    "line": 785,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                used = _add(_add(account.charged, account.delegated), account.reserved)"
+                  },
+                  {
+                    "line": 824,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "        used = _add(_add(account.charged, account.delegated), account.reserved)"
+                  },
+                  {
+                    "line": 837,
+                    "path": "src/traceh/budgets/projection.py",
+                    "text": "                account.limits.max_children, account.reserved_children"
+                  },
+                  {
+                    "line": 46,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "    child_reserved_data,"
+                  },
+                  {
+                    "line": 55,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "    usage_reserved_data,"
+                  },
+                  {
+                    "line": 118,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "    async def reserve_child("
+                  },
+                  {
+                    "line": 129,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "        data = child_reserved_data("
+                  },
+                  {
+                    "line": 391,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "    async def reserve_usage("
+                  },
+                  {
+                    "line": 400,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "        data = usage_reserved_data("
+                  },
+                  {
+                    "line": 434,
+                    "path": "src/traceh/budgets/service.py",
+                    "text": "        \"\"\"Claim one reserved external invocation exactly once."
+                  },
+                  {
+                    "line": 165,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            await self._reserve_child_for_create("
+                  },
+                  {
+                    "line": 202,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "    async def _reserve_child_for_create("
+                  },
+                  {
+                    "line": 212,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "        reserve_task = asyncio.create_task("
+                  },
+                  {
+                    "line": 213,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            self._service.reserve_child("
+                  },
+                  {
+                    "line": 215,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "                    \"child-reserve\", reservation_id=reservation_id"
+                  },
+                  {
+                    "line": 224,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            name=\"traceh-budget-child-reserve\","
+                  },
+                  {
+                    "line": 228,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            await asyncio.shield(reserve_task)"
+                  },
+                  {
+                    "line": 231,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            await await_worker_convergence(reserve_task)"
+                  },
+                  {
+                    "line": 233,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "        if reserve_task.cancelled():"
+                  },
+                  {
+                    "line": 246,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "        failure = reserve_task.exception()"
+                  },
+                  {
+                    "line": 274,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "        reservation = reserve_task.result()"
+                  },
+                  {
+                    "line": 276,
+                    "path": "src/traceh/budgets/supervision.py",
+                    "text": "            # Replaying the reserve fact is idempotent, but a terminal release"
+                  }
+                ],
+                "truncated": false
+              }
+            },
+            {
+              "result_seq": 40,
+              "request_seq": 93,
+              "tool": "read_file",
+              "data": {
+                "end_column": 10,
+                "end_line": 120,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/budgets/service.py",
+                  "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                  "start_column": 1,
+                  "start_line": 121
+                },
+                "path": "src/traceh/budgets/service.py",
+                "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                "start_column": 1,
+                "start_line": 1,
+                "total_lines": 630,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 52,
+              "request_seq": 93,
+              "tool": "read_file",
+              "data": {
+                "end_column": 14,
+                "end_line": 237,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/budgets/service.py",
+                  "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                  "start_column": 1,
+                  "start_line": 238
+                },
+                "path": "src/traceh/budgets/service.py",
+                "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                "start_column": 1,
+                "start_line": 118,
+                "total_lines": 630,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 64,
+              "request_seq": 93,
+              "tool": "read_file",
+              "data": {
+                "end_column": 26,
+                "end_line": 510,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/budgets/service.py",
+                  "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                  "start_column": 1,
+                  "start_line": 511
+                },
+                "path": "src/traceh/budgets/service.py",
+                "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+                "start_column": 1,
+                "start_line": 391,
+                "total_lines": 630,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 76,
+              "request_seq": 93,
+              "tool": "read_file",
+              "data": {
+                "end_column": 41,
+                "end_line": 120,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/supervision/lifecycle.py",
+                  "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                  "start_column": 1,
+                  "start_line": 121
+                },
+                "path": "src/traceh/supervision/lifecycle.py",
+                "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                "start_column": 1,
+                "start_line": 1,
+                "total_lines": 246,
+                "truncated": true
+              }
+            },
+            {
+              "result_seq": 88,
+              "request_seq": 93,
+              "tool": "read_file",
+              "data": {
+                "end_column": 11,
+                "end_line": 240,
+                "eof": false,
+                "format": 1,
+                "next_read": {
+                  "path": "src/traceh/supervision/lifecycle.py",
+                  "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                  "start_column": 1,
+                  "start_line": 241
+                },
+                "path": "src/traceh/supervision/lifecycle.py",
+                "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+                "start_column": 1,
+                "start_line": 121,
+                "total_lines": 246,
+                "truncated": true
+              }
+            }
+          ],
+          "distinct_source_output_bytes": 33456,
+          "collect_states_seen_by_parent": [
+            {
+              "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+              "request_seq": 117,
+              "status": "failed"
+            }
+          ],
+          "interpretation": "Observed visibility, including failed children; not successful handoff."
+        }
+      ],
+      "visible_read_pages": [
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "child": true,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 93,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "child": true,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 93,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py",
+            "start_line": 118
+          },
+          "content_chars": 6281,
+          "content_sha256": "13c461568be0b8d6be71a3a4f8daa4edd2c6922eaee6dfbe650499088d21b64b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 14,
+            "end_line": 237,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 238
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 118,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "child": true,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 93,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py",
+            "start_line": 391
+          },
+          "content_chars": 5651,
+          "content_sha256": "c0eedfaaf5b0cb90734c3f8bc0829bb1f9b20f8c4b26e3bfcffee0e9115e5050",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 26,
+            "end_line": 510,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 511
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 391,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "child": true,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 93,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "child": true,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 93,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py",
+            "start_line": 121
+          },
+          "content_chars": 5506,
+          "content_sha256": "09796aabc66848c263843997e9805c29cf4e448d822f0d60a9c1404c9275f206",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 11,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+          "child": false,
+          "call_seq": 14,
+          "result_seq": 16,
+          "request_seq": 117,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 418,
+          "content_sha256": "8855ddcdf59ff190ae66e65235221f084664465fa50542ac5b9f2e1d527e0d9f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 33,
+            "end_line": 5,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "INDEX.md",
+            "source_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 5,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 4880,
+          "content_sha256": "060fd0e1b6137b082032dd1fd412fd8843c8b0737cffba5f19413d950430b0f9",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 116,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/authority.py",
+            "source_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 116,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 117,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 4459,
+          "content_sha256": "4b915069564016c66180af97f8d02a47de8d762e2f95e51c325d804215c73608",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/projection.py",
+              "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/projection.py",
+            "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 897,
+            "truncated": true
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 10,
+      "tools_always_present": true,
+      "runtime_errors": [
+        {
+          "stream_id": "session:agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+          "seq": 105,
+          "error_type": "BudgetExhaustedError"
+        }
+      ],
+      "execution": {
+        "cumulative_work_duration_ms": 115023,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+            "result": "succeeded",
+            "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510"
+          },
+          {
+            "agent_id": "3b2b57db57ecdb54abc9823fb4528816ace2761d7a2731fa8239bd74054abb8a",
+            "result": "succeeded",
+            "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8"
+          }
+        ],
+        "model_attempts": 18,
+        "provider_active_milliseconds": 63212,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+            "final_model_result": "succeeded",
+            "model_attempts": 10,
+            "provider_active_milliseconds": 42339,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-ee0e247c0a434c1d20b138924d02f0d2a5b3a1603b67fd659464ad0ca6781510",
+            "steps": 10,
+            "tokens": {
+              "input_tokens": 70298,
+              "output_tokens": 1534,
+              "quality": "exact",
+              "total_tokens": 71832
+            },
+            "tool_calls": 9,
+            "turns": 1,
+            "work_duration_ms": 83837
+          },
+          {
+            "agent_id": "3b2b57db57ecdb54abc9823fb4528816ace2761d7a2731fa8239bd74054abb8a",
+            "final_model_result": "succeeded",
+            "model_attempts": 8,
+            "provider_active_milliseconds": 20873,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-e70df4d8-113d-59c7-9266-25583eefc2e8",
+            "steps": 9,
+            "tokens": {
+              "input_tokens": 60722,
+              "output_tokens": 643,
+              "quality": "exact",
+              "total_tokens": 61365
+            },
+            "tool_calls": 8,
+            "turns": 1,
+            "work_duration_ms": 31186
+          }
+        ],
+        "steps": 19,
+        "tokens": {
+          "input_tokens": 131020,
+          "output_tokens": 2177,
+          "quality": "exact",
+          "total_tokens": 133197
+        },
+        "tool_calls": 17,
+        "turns": 2
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 19,
+        "charged_tool_calls": 17,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 131832,
+        "usage_reservations": 20,
+        "usage_reservations_terminal": 20
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 1,
+      "original_report": ".traceh/r1/natural/report.json",
+      "report_sha256": "ee6fe535660a12ceff2a5740e8d8504b87c656f05ba911a0c06549aecc04136a",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 165,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 418,
+          "content_sha256": "8855ddcdf59ff190ae66e65235221f084664465fa50542ac5b9f2e1d527e0d9f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 33,
+            "end_line": 5,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "INDEX.md",
+            "source_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 5,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 4880,
+          "content_sha256": "060fd0e1b6137b082032dd1fd412fd8843c8b0737cffba5f19413d950430b0f9",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 116,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/authority.py",
+            "source_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 116,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 4583,
+          "content_sha256": "ac08bca1c18a191e5be41ba6b29a7485c4b80c238004f340f60a9073129b1819",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 12,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/enforcement.py",
+              "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/enforcement.py",
+            "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 1129,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py",
+            "start_line": 121
+          },
+          "content_chars": 5506,
+          "content_sha256": "09796aabc66848c263843997e9805c29cf4e448d822f0d60a9c1404c9275f206",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 11,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 5989,
+          "content_sha256": "822aa58d32784b262d1dbc07342e095b2c1b4f02b08848aaa41ffa3e269d844c",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 14,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/delegation.py",
+              "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/delegation.py",
+            "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 329,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 5794,
+          "content_sha256": "da60aca2f5a39f4e79aab0b67a68f383d3190105a9764ee217b5f62243c1b760",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 71,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/execution.py",
+              "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/execution.py",
+            "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 176,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 122,
+          "result_seq": 124,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 4459,
+          "content_sha256": "4b915069564016c66180af97f8d02a47de8d762e2f95e51c325d804215c73608",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/projection.py",
+              "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/projection.py",
+            "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 897,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+          "child": false,
+          "call_seq": 134,
+          "result_seq": 136,
+          "request_seq": 165,
+          "arguments": {
+            "path": "src/traceh/supervision/provisioning.py"
+          },
+          "content_chars": 2414,
+          "content_sha256": "3ba60a929d3f5ca675df8e63548842bcc9abe7f5e5dd3924d125e12e0946ed3a",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 66,
+            "end_line": 50,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/provisioning.py",
+            "source_sha256": "6a951d17b218b4132722bbb5a33f2c5d6e665d3d9aac4338b2058c36b9a2ff5d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 50,
+            "truncated": false
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 14,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 90918,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+            "result": "succeeded",
+            "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136"
+          }
+        ],
+        "model_attempts": 14,
+        "provider_active_milliseconds": 71555,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+            "final_model_result": "succeeded",
+            "model_attempts": 14,
+            "provider_active_milliseconds": 71555,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-7d8d779260db75d209174e289a201569845490e972d63c4b464f9e3e39cac136",
+            "steps": 14,
+            "tokens": {
+              "input_tokens": 162908,
+              "output_tokens": 2662,
+              "quality": "exact",
+              "total_tokens": 165570
+            },
+            "tool_calls": 13,
+            "turns": 1,
+            "work_duration_ms": 90918
+          }
+        ],
+        "steps": 14,
+        "tokens": {
+          "input_tokens": 162908,
+          "output_tokens": 2662,
+          "quality": "exact",
+          "total_tokens": 165570
+        },
+        "tool_calls": 13,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 14,
+        "charged_tool_calls": 13,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 165570,
+        "usage_reservations": 15,
+        "usage_reservations_terminal": 15
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "natural",
+      "repetition": 2,
+      "original_report": ".traceh/r1/natural/report.json",
+      "report_sha256": "ee6fe535660a12ceff2a5740e8d8504b87c656f05ba911a0c06549aecc04136a",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 189,
+          "arguments": {
+            "path": "INDEX.md"
+          },
+          "content_chars": 418,
+          "content_sha256": "8855ddcdf59ff190ae66e65235221f084664465fa50542ac5b9f2e1d527e0d9f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 33,
+            "end_line": 5,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "INDEX.md",
+            "source_sha256": "47d6c376fcb2ee8027698e59e2e12f3704a9f9548ef4d1915bea82833c80823c",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 5,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 38,
+          "result_seq": 40,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/authority.py"
+          },
+          "content_chars": 4880,
+          "content_sha256": "060fd0e1b6137b082032dd1fd412fd8843c8b0737cffba5f19413d950430b0f9",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 116,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/supervision/authority.py",
+            "source_sha256": "8447a06aa0c886c56e613b9f776ce49b6d255051d979c9651e609ef05bdabe8b",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 116,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py"
+          },
+          "content_chars": 5989,
+          "content_sha256": "822aa58d32784b262d1dbc07342e095b2c1b4f02b08848aaa41ffa3e269d844c",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 14,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/delegation.py",
+              "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/delegation.py",
+            "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 329,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 62,
+          "result_seq": 64,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py"
+          },
+          "content_chars": 4583,
+          "content_sha256": "ac08bca1c18a191e5be41ba6b29a7485c4b80c238004f340f60a9073129b1819",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 12,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/enforcement.py",
+              "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/enforcement.py",
+            "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 1129,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 74,
+          "result_seq": 76,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py"
+          },
+          "content_chars": 5712,
+          "content_sha256": "b268dedfbb015594d3fda13a38eb9565d38212b031a8976e6a313f3b2b6ffb01",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 41,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 86,
+          "result_seq": 88,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/lifecycle.py",
+            "start_line": 121
+          },
+          "content_chars": 5506,
+          "content_sha256": "09796aabc66848c263843997e9805c29cf4e448d822f0d60a9c1404c9275f206",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 11,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/lifecycle.py",
+              "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/supervision/lifecycle.py",
+            "source_sha256": "22859c815c6d621fedf0c6bf54e8ca7ab2e59350a1cbefa73a56f6f824d39cd1",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 246,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 98,
+          "result_seq": 100,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/execution.py"
+          },
+          "content_chars": 5794,
+          "content_sha256": "da60aca2f5a39f4e79aab0b67a68f383d3190105a9764ee217b5f62243c1b760",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 71,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/execution.py",
+              "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/supervision/execution.py",
+            "source_sha256": "36eb2a8cea9977e61d90144755c97b2e98bbb920833b8d4a5f6256785be7c177",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 176,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 110,
+          "result_seq": 112,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/budgets/service.py"
+          },
+          "content_chars": 4690,
+          "content_sha256": "9a6e42a4ac70e29b614d33e394d23650db2b0632cfb0455a28bc160b2d192e7b",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/service.py",
+              "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/service.py",
+            "source_sha256": "43557bc92c405168dfd1de5d1e81edbd6d04ef84b8868e0532bd9b6eff17993d",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 630,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 122,
+          "result_seq": 124,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/supervision/delegation.py",
+            "start_line": 121
+          },
+          "content_chars": 6871,
+          "content_sha256": "a0b43c6b02ccf4788a193da7314f999707987dabee4798112cd0812a4385fb76",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 0,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/supervision/delegation.py",
+              "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/supervision/delegation.py",
+            "source_sha256": "66023ee3b401d69bab8d7b6e78d5ac6a82dece1b8770a0c6ed7735607bac5599",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 329,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 134,
+          "result_seq": 136,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/budgets/projection.py"
+          },
+          "content_chars": 4459,
+          "content_sha256": "4b915069564016c66180af97f8d02a47de8d762e2f95e51c325d804215c73608",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 10,
+            "end_line": 120,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/projection.py",
+              "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+              "start_column": 1,
+              "start_line": 121
+            },
+            "path": "src/traceh/budgets/projection.py",
+            "source_sha256": "e64405b410f476218c5f25c42c8d67f0a0c17a0a940b4cf618412651f3cc1e8e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 897,
+            "truncated": true
+          }
+        },
+        {
+          "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+          "child": false,
+          "call_seq": 146,
+          "result_seq": 148,
+          "request_seq": 189,
+          "arguments": {
+            "path": "src/traceh/budgets/enforcement.py",
+            "start_line": 121
+          },
+          "content_chars": 5424,
+          "content_sha256": "4710a8e7a04ed54716d2ca15c60997f4c79bb0d23cca133dbb693b7496b51190",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 39,
+            "end_line": 240,
+            "eof": false,
+            "format": 1,
+            "next_read": {
+              "path": "src/traceh/budgets/enforcement.py",
+              "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+              "start_column": 1,
+              "start_line": 241
+            },
+            "path": "src/traceh/budgets/enforcement.py",
+            "source_sha256": "3a58abb07549dff51272169200d4deef1438a364c8145d23dbba85713585ce21",
+            "start_column": 1,
+            "start_line": 121,
+            "total_lines": 1129,
+            "truncated": true
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 16,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 113114,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+            "result": "succeeded",
+            "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d"
+          }
+        ],
+        "model_attempts": 16,
+        "provider_active_milliseconds": 88336,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+            "final_model_result": "succeeded",
+            "model_attempts": 16,
+            "provider_active_milliseconds": 88336,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-b1b18092dceaa9eb77acb50589e666d473d94ef56c1b3599b684a38ee0ec428d",
+            "steps": 16,
+            "tokens": {
+              "input_tokens": 215997,
+              "output_tokens": 3156,
+              "quality": "exact",
+              "total_tokens": 219153
+            },
+            "tool_calls": 15,
+            "turns": 1,
+            "work_duration_ms": 113114
+          }
+        ],
+        "steps": 16,
+        "tokens": {
+          "input_tokens": 215997,
+          "output_tokens": 3156,
+          "quality": "exact",
+          "total_tokens": 219153
+        },
+        "tool_calls": 15,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 16,
+        "charged_tool_calls": 15,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 219153,
+        "usage_reservations": 17,
+        "usage_reservations_terminal": 17
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 1,
+      "original_report": ".traceh/r1/simple/report.json",
+      "report_sha256": "c10caf895d5e826a92bd9c918b81a44fc14f4c4767d8fbe92f13641c6170f645",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 57,
+          "arguments": {
+            "path": "src/traceh/version.py"
+          },
+          "content_chars": 2635,
+          "content_sha256": "c78d95dd6dddb79ece0f9a47b56a3c51c71b075f093761496f89647eb8843d8f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 50,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/version.py",
+            "source_sha256": "691dd7b2a507d3aca46e48e5baaf00b5c075715afc84ea109f10a7d1f79a971e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 50,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 57,
+          "arguments": {
+            "path": "answer.json"
+          },
+          "content_chars": 276,
+          "content_sha256": "657ac100ebc8af969dfc1b42c38ef2b7eef81bcd181c948dec7bf11f6ad3b382",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 20,
+            "end_line": 1,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "answer.json",
+            "source_sha256": "0003a879ddaed21502f70bbca0a06a5dd3d578ad6549c1d9c66161c9d9b17f85",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 1,
+            "truncated": false
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 5,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 15342,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b",
+            "result": "succeeded",
+            "session_id": "wf-session-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 10403,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 10403,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-66802e85ba3c63c00e3bfef91455eff47a365cd573d9c3524d784fb61c10f51b",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 19380,
+              "output_tokens": 339,
+              "quality": "exact",
+              "total_tokens": 19719
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 15342
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 19380,
+          "output_tokens": 339,
+          "quality": "exact",
+          "total_tokens": 19719
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 19719,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    },
+    {
+      "arm": "candidate",
+      "case": "simple",
+      "repetition": 2,
+      "original_report": ".traceh/r1/simple/report.json",
+      "report_sha256": "c10caf895d5e826a92bd9c918b81a44fc14f4c4767d8fbe92f13641c6170f645",
+      "source_digest": "00cce85629b74d7f3f60a35dce88731878dfa4d8ebadf84055002777dfca6a67",
+      "structural_success": true,
+      "task_status": "completed",
+      "error_code": null,
+      "delegate_calls": 0,
+      "accepted_children": 0,
+      "after_actual_read": false,
+      "completed_reports": 0,
+      "completed_reports_seen": 0,
+      "children": [],
+      "visible_read_pages": [
+        {
+          "session_id": "wf-session-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945",
+          "child": false,
+          "call_seq": 26,
+          "result_seq": 28,
+          "request_seq": 57,
+          "arguments": {
+            "path": "src/traceh/version.py"
+          },
+          "content_chars": 2635,
+          "content_sha256": "c78d95dd6dddb79ece0f9a47b56a3c51c71b075f093761496f89647eb8843d8f",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 1,
+            "end_line": 50,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "src/traceh/version.py",
+            "source_sha256": "691dd7b2a507d3aca46e48e5baaf00b5c075715afc84ea109f10a7d1f79a971e",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 50,
+            "truncated": false
+          }
+        },
+        {
+          "session_id": "wf-session-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945",
+          "child": false,
+          "call_seq": 50,
+          "result_seq": 52,
+          "request_seq": 57,
+          "arguments": {
+            "path": "answer.json"
+          },
+          "content_chars": 276,
+          "content_sha256": "657ac100ebc8af969dfc1b42c38ef2b7eef81bcd181c948dec7bf11f6ad3b382",
+          "retained_reference": false,
+          "bounded": true,
+          "view": {
+            "end_column": 20,
+            "end_line": 1,
+            "eof": true,
+            "format": 1,
+            "next_read": null,
+            "path": "answer.json",
+            "source_sha256": "0003a879ddaed21502f70bbca0a06a5dd3d578ad6549c1d9c66161c9d9b17f85",
+            "start_column": 1,
+            "start_line": 1,
+            "total_lines": 1,
+            "truncated": false
+          }
+        }
+      ],
+      "failed_read_calls": [],
+      "main_requests": 5,
+      "tools_always_present": true,
+      "runtime_errors": [],
+      "execution": {
+        "cumulative_work_duration_ms": 15786,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945",
+            "result": "succeeded",
+            "session_id": "wf-session-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945"
+          }
+        ],
+        "model_attempts": 5,
+        "provider_active_milliseconds": 10610,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945",
+            "final_model_result": "succeeded",
+            "model_attempts": 5,
+            "provider_active_milliseconds": 10610,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-65b659d240400cac349c64e87eaa0f1e8c647ffb5fff446961d5a39028f8d945",
+            "steps": 5,
+            "tokens": {
+              "input_tokens": 19313,
+              "output_tokens": 344,
+              "quality": "exact",
+              "total_tokens": 19657
+            },
+            "tool_calls": 4,
+            "turns": 1,
+            "work_duration_ms": 15786
+          }
+        ],
+        "steps": 5,
+        "tokens": {
+          "input_tokens": 19313,
+          "output_tokens": 344,
+          "quality": "exact",
+          "total_tokens": 19657
+        },
+        "tool_calls": 4,
+        "turns": 1
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 5,
+        "charged_tool_calls": 4,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 19657,
+        "usage_reservations": 6,
+        "usage_reservations_terminal": 6
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      }
+    }
+  ]
+}

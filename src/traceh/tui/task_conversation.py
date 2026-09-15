@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -16,7 +17,7 @@ from traceh.session.invariants import CoreInvariantChecker
 from traceh.session.service import SessionService
 from traceh.tui.presentation import safe_display_block
 
-_ROLE_ORDER = ("router", "parent", "reviewer", "coder")
+_ROLE_ORDER = ("coder", "investigator", "patch_author")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,9 +81,7 @@ class TaskConversationReader:
         except ProductStateError as error:
             code = error.code
             if code.startswith("product-activity-"):
-                code = "product-conversation-" + code.removeprefix(
-                    "product-activity-"
-                )
+                code = "product-conversation-" + code.removeprefix("product-activity-")
             raise ProductStateError(code, observation.task_id) from None
         now = datetime.now(UTC) if observed_at is None else observed_at
         if now.tzinfo is None:
@@ -107,35 +106,29 @@ class TaskConversationReader:
         observed_at: datetime,
     ) -> TaskConversationRole:
         try:
-            events = await self._store.read(
-                SessionService.session_stream(activity.session_id)
-            )
-            effects = await self._store.read(
-                SessionService.effect_stream(activity.session_id)
-            )
+            events = await self._store.read(SessionService.session_stream(activity.session_id))
+            effects = await self._store.read(SessionService.effect_stream(activity.session_id))
         except Exception:
-            raise ProductStateError(
-                "product-conversation-session-unreadable", task_id
-            ) from None
+            raise ProductStateError("product-conversation-session-unreadable", task_id) from None
         try:
             if CoreInvariantChecker().check(events, effects):
                 raise ValueError("invalid Session lifecycle")
-            if (
-                (events[-1].seq if events else 0) != activity.event_head_seq
-                or (effects[-1].seq if effects else 0) != activity.effect_head_seq
-            ):
+            if (events[-1].seq if events else 0) != activity.event_head_seq or (
+                effects[-1].seq if effects else 0
+            ) != activity.effect_head_seq:
                 raise ValueError("Session changed during projection")
         except Exception:
-            raise ProductStateError(
-                "product-conversation-session-invalid", task_id
-            ) from None
+            raise ProductStateError("product-conversation-session-invalid", task_id) from None
 
         timeline, entries = TimelineRenderer(), []
         tools = {tool.call_seq: tool for tool in activity.tools}
         for event in events:
             if event.type in {"user/message", "assistant/message"}:
+                value = event.data.get("content", "")
+                if event.type == "user/message" and activity.role == "investigator":
+                    value = _investigation_input(value)
                 content = safe_display_block(
-                    event.data.get("content", ""),
+                    value,
                     limit=None,
                     max_lines=None,
                     line_limit=None,
@@ -153,18 +146,11 @@ class TaskConversationReader:
                     if detail.startswith(" (call "):
                         detail = ""
                     arguments = event.data.get("arguments")
-                    if (
-                        event.data.get("tool_name") == "shell"
-                        and isinstance(arguments, dict)
-                    ):
+                    if event.data.get("tool_name") == "shell" and isinstance(arguments, dict):
                         size = len(canonical_json(arguments).encode("utf-8"))
                         detail = f" <已遮蔽 · 参数 {size} 字节>"
                     if tool.exit_code is not None:
-                        status = (
-                            "成功"
-                            if tool.exit_code == 0
-                            else f"完成 · exit={tool.exit_code}"
-                        )
+                        status = "成功" if tool.exit_code == 0 else f"完成 · exit={tool.exit_code}"
                     else:
                         status = {
                             "succeeded": "成功",
@@ -208,6 +194,32 @@ class TaskConversationReader:
         )
 
 
+def _investigation_input(value):
+    """Present the existing work envelope; this display confers no authority."""
+    try:
+        work = json.loads(value)
+        if work.get("format") != 2 or work.get("kind") != "readonly-investigation":
+            return value
+        labels = (
+            ("goal", "调查目标"),
+            ("scope", "调查范围"),
+            ("exclusions", "不承担的工作"),
+            ("deliverable", "需要交回"),
+            ("briefing", "主方提供的背景（待核实）"),
+            ("source_id", "只读来源"),
+            ("revision", "原始版本"),
+        )
+        if any(type(work.get(key)) is not str for key, _ in labels):
+            return value
+        return (
+            "\n\n".join(f"{label}：{work[key]}" for key, label in labels)
+            + "\n\n主方保留的工作："
+            + canonical_json(work["main_work"])
+        )
+    except (ValueError, TypeError, AttributeError):
+        return value
+
+
 def _usage(events) -> tuple[int | None, str | None, str]:
     starts = [event for event in events if event.type == "model/attempt-start"]
     ends = [event for event in events if event.type == "model/attempt-end"]
@@ -242,11 +254,7 @@ def _usage(events) -> tuple[int | None, str | None, str]:
             return None, None, "unavailable"
         total += recorded_total
         qualities.append(quality)
-    quality = (
-        UsageQuality.ESTIMATED
-        if UsageQuality.ESTIMATED in qualities
-        else UsageQuality.EXACT
-    )
+    quality = UsageQuality.ESTIMATED if UsageQuality.ESTIMATED in qualities else UsageQuality.EXACT
     return total, quality.value, "available"
 
 

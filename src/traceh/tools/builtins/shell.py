@@ -97,7 +97,11 @@ class ShellTool:
     name: str = "shell"
     description: str = (
         "Run an argv command in the configured isolated Linux workspace; capture stdout/stderr "
-        "and apply authorized file changes. No host shell fallback."
+        "and apply authorized file changes. The working directory is already the workspace. "
+        "This tool splits the command into argv; it does not interpret cd, &&, pipes, "
+        "redirection or shell expansion. Invoke the executable directly, using relative paths. "
+        "On start-failed, inspect stderr and correct the executable or arguments before retrying. "
+        "No host shell fallback."
     )
     effect_kind: EffectKind = EffectKind.PROCESS
     input_schema: dict[str, JsonValue] = field(init=False, repr=False)
@@ -107,7 +111,13 @@ class ShellTool:
         self.input_schema = {
             "type": "object",
             "properties": {
-                "command": {"type": "string"},
+                "command": {
+                    "type": "string",
+                    "description": (
+                        "Executable and quoted arguments, run directly in the isolated workspace; "
+                        "not a shell script. Quoting groups arguments; shell operators are literal."
+                    ),
+                },
                 "timeout": {"type": "number"},
             },
             "required": ["command"],

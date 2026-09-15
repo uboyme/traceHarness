@@ -83,7 +83,7 @@ async def test_dispatched_schema_guides_model_to_a_valid_configured_limit(tmp_pa
                 assert "case-insensitive literal substring" in item["search_notice"]
                 assert "source-unavailable is a different" in item["search_notice"]
         assert (
-            "An empty array here does not mean that output is unavailable"
+            "An empty reference array does not mean that earlier output is unavailable"
             in request.messages[-1].content
         )
         schema = next(

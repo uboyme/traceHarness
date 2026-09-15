@@ -32,9 +32,40 @@
 
 从 v0.7-F0 起，本文出现两类内容：**已经在跑的能力**，和**只冻结了合同、尚未实现的协议**。二者不得混写。合同阶段及其历史边界写在自己的章节里；后续阶段真正实现后，再按当前代码同步 Stream、事件类型、目录、状态与验证章节。只有真的能被生产代码写入、重放或执行的东西才算当前能力，计划中的未来 Stream 不能提前进入当前分类。
 
+### 0.5 按范围恢复与文档分工
+
+开发前必读根 AGENTS 和[精简入口](project-overview.md)，再按[模块导航](context-reading-map.md)读取本文相关合同与相邻 owner；不再每次完整读取正式版和通俗版。本文保留完整细节及原锚点，不另复制模块合同。历史实验只在核验证据时读取，不能用旧阶段状态覆盖当前代码。正文需要更新时先正式后通俗；入口只同步全局状态和导航。小节按标题边界完整读取，输出截断须分段补齐。
+
+
 ## 1. 当前项目状态
 
-**AO-3 运行期后台受限优化已完成限定验收；DA-1～DA-5 已获执行授权、尚未实现。** TUI 与原 AO/评估主线已接入，定向检查、真实安装包测试与重放已完成，准备提交发行。当前 Product 仍为固定 single/multi，没有新协作成绩；见 12.11、14.1–14.2。
+TUI 已同步当前多子能力：multi 文案说明主 Agent 可自主使用一个或多个获准助手，任务对话按 agent/session 分开显示同角色多实例。记录 075 的真实 PTY/TUI 运行中，题面不写助手数量，主方自主选择 4 个 patch_author；四个身份、四份 Patch 与四条 applied 回执均可见，但固定功能检查 exit 1，因此无 Review、Approval 或 Promotion。仍默认 single，TUI 新建配置默认 `coder.budget.max_children=1`，宿主显式调大后才允许模型在上限内多开。项目未提交发版。
+
+**WC-1D/E 必经 multi 分工、WC-2 可写交接、WC-3 显式整合、WC-4 固定验收与后续多子扩展均已接入。** 当前 single/multi、默认 single；multi 一次可分配一批直接助手，默认只读，显式 patch_author 可写，所有助手仍受原身份、预算、Workspace、取消、Patch 完整读取与人工 Promotion 边界约束。Product 6 / Product event 5 / host config 6 / comparison 3；Session 15、Context 13、SQLite 2 不变。历史成功与失败均保留，当前多子真实结果见 14.3.20–14.3.23。
+
+**DA-14 已接入 Adaptive 主方职责 PromptSection。** 按原解析能力选择，single/child 隔离；四个真实 Product trial 门禁 4/4、42 次 qwen-plus 调用、390648 exact tokens、委派 0。全部主方真实请求均含提示全文，尚未证明自然协作改善，见 12.23。
+
+**DA-12 互补分工说明配对已结束，未采用。** 只给 main_goal、child_goal、child_deliverable 补语义 description，原输入与其他合同保持不变；六次真实调用、14905 exact tokens，两组各 3/3 合法决定与预期类别，无 Provider 失败。可拆候选仍把两个实质主题留给主方，助手只重复确认已知目录信息，未证明有用的独立分工。生产和默认 single 不变，见 12.21、15 与[记录 038](../deal/038-complementary-work-contract.md)。
+
+**DA-13 四类完整真实任务观察已结束。** 用户手动启动 Docker 后直接复用；37 次真实调用、308480 exact tokens，原 Product 验收 3/4、自然委派 0。主方的 37 份请求均可见委派工具，协作链路本轮未被验证；不宣称语义通过率或多 Agent 收益，见 12.22。
+
+**DA-11 独立决定输入验证结束，决定合规改善，分工尚未证明。** 三类题的原请求均未提交决定；保留原目标和逐字已读证据的两种独立输入各 3/3 合法决定、预期标签匹配。共 9 次真实调用、30509 exact tokens，无 Provider 失败。两份 separable 提案仍有职责重叠或读取后分析的依赖，不能称为已通过独立并行分工。没有执行工具、创建助手或修改生产，仍默认 single，见 12.20、15 与[记录 037](../deal/037-independent-decision-input.md)。
+
+**DA-10 阶段切换归因已完成，未新增生产能力。** 对 DA-9 三份首次决定请求执行原样、移除旧侦察提醒、末尾重申决定、同时两项的四条件真实对照，12 次调用、44477 exact tokens，四条件均 0/3 有效决定提案，无 Provider 失败。提示传输正常，但这两项干预不足以改变继续原任务的行为；不宣称根因已完全定位。没有执行返回工具或恢复 DA-9，详见 12.19、15 与[记录 036](../deal/036-phase-transition-diagnosis.md)。
+
+**AO-3 已提交并发行 v0.11.0；DA-1～DA-5 工程与约定有限实测已完成，工作区未发行。** 发行提交为 `c9ff07d050c85ec198fb1137145f167d9976c24b`，GitHub Release 已上传源码、Wheel 与校验文件。当前未发行工作区已接入只读委派和 Product adaptive 装配，见 12.12；68 个真实任务 trial 和一次优化提案已结束；未证明 adaptive 收益，保留默认 single，见 12.12。
+
+**真实主模型/助手小样已执行，完整双模型 Product task 未通过。** 明确委派可真实创建助手并 collect 报告，最小题产物离线验证正确；自然复杂题没有委派，明确题在冻结调用上限前未完成 Product 状态。57 次真实调用与 71 份请求重放见 12.14、15 和[记录 031](../deal/031-real-main-child-model-smoke.md)；这不改变默认 single，也不构成协作收益。
+
+**DA-6 提示实验已结束，候选全部拒绝。** 工具说明、Adaptive system section、明确分类规则与任务消息提示五轮共 15 个 Product trial、121 次真实 qwen-plus 调用，均未产生自然委派；当时生产提示与装配已恢复实验前状态；当前新增的职责说明另见 12.23。45 个 Session / 153 份请求离线重放通过，见 12.15、15 和[记录 032](../deal/032-adaptive-decomposition-guidance.md)。
+
+**DA-7 类型化拆分决策实验已结束，生产候选撤回。** 候选让显式 adaptive 在普通工作前必须选择 `local` 或 `separable`，确定性合同可运行；四轮 12 个真实 trial、68 次 qwen-plus 调用却没有一次 `separable` 或助手创建。12/12 Budget 收敛、Workspace 无泄漏。当前生产仍使用原 adaptive 与默认 single，不存在必经 typed 拆分检查点。见 12.16、15 和[记录 033](../deal/033-typed-adaptive-decomposition.md)。
+
+**DA-9 有界侦察实验结束，候选撤回。** 三个真实任务共 18 次 qwen-plus 调用、65117 tokens，只有简单题提交 local 并完成；另两题在工具面切换后仍调用读取，未提交决定。预算和 Workspace 全部收敛，无 Provider 失败。两步侦察不能保证取得充分的拆分证据，本轮不能证明分类改善。当前仍是原 adaptive、默认 single，详见 12.18、15 与[记录 035](../deal/035-scout-before-decomposition.md)。
+
+**DA-8 独占拆分界面实验已结束，生产候选撤回。** 候选曾在显式 adaptive 首 Step 只公开一个拆分决策 Tool，决定后才恢复普通工具；确定性合同和真实 Docker Product 主线可运行。两轮六个 qwen-plus trial 共 54 次真实调用：首轮三题均完成且分类符合预期，但可拆题创建助手后没有收回报告；补上按原 Session 事实验证的子工作收口后，第二轮可拆题误判 `local`，耦合题虽判 `local` 但任务失败，只有简单题完整通过。六次 Budget 均收敛、Workspace live=0、无 Provider 失败。独占表面解决“跳过决定”，没有解决分类稳定性，候选已完整撤回；当前仍是原 adaptive、默认 single。见 12.17、15、[记录 034](../deal/034-exclusive-adaptive-decomposition.md)与[验证数据](../validation-data/dynamic-collaboration/exclusive-decomposition/README.md)。
+
+**有界源码读取已完成，工作区未发行。** 公共 read_file 已支持行范围、真实行号、长行/摘要续读，原 Workspace/ToolRuntime/事实源不变；后续十二次真实对照结构通过 4/6→5/6，但五份结构通过的复杂答复仍有关键语义错误，完整交接为零，费用增加 7.6%。135 项定向检查、187 份原请求独立重放通过；不声明协作收益，默认 single。见 9.3、12.13 和[记录 029](../deal/029-bounded-source-reading.md)。此前委派说明诊断及未采用候选的历史结果仍见 12.12。
 
 **AO-2+ 语义裁判校准实验已完成，候选未采用。** 固定开发对照符合预期为 16/24→15/24；真实 74 次、494,845 tokens，含中止实验与原主线复审。原生产策略已逐字节恢复，证据归档；不代表搜索成绩变化或裁判可靠性达标。见 12.10 与[记录 025](../deal/025-semantic-judge-calibration.md)。
 
@@ -60,16 +91,16 @@
 
 已补齐证据导航的呈现合同（7.11、9.5、ADR-0064）：Skill 导航标记与准确目录动作、大输出引用、读取覆盖范围。长提示重写与强制自评实验未采用；不能保证模型正确判断全来源不存在。
 
-已修正来源导航与结果交付说明（7.11、ADR-0063），当前 Session 13 / Context 12；旧会话保留并明确拒绝，需要新的数据空间。
+已修正来源导航与结果交付说明（7.11、ADR-0063），当前 Session 15 / Context 13；旧会话保留并明确拒绝，需要新的数据空间。
 
 已接入连续相同拒绝的 Continuation 保护，默认 2 次提示、3 次停止；真实验证与保守边界见第 10 节。拒绝 JSON 呈现改动仍未合入，AR-D 的 NO-GO 不变。
 
 分层压缩 A/B 已接入：大工具输出在同一 Effect Outcome 中保存完整正文/结构化数据与引用，Session 携带引用及必要的宿主控制回执；默认工具提供本会话输出目录及有界读回。B+ 增加同源关键词搜索与附近展开；C 已接入旧结果折叠，仍超阈值才做 M3 摘录；E0 已前置完整请求 token 估算、触发/拒绝与用量显示，D 已接入可选模型语义摘要；E1 已支持轮内闭合旧历史维护，E2 已按 token 准入参考，E3 已完成超限解释与真实旅程验收，见 9.5、12.2 与 ADR-0053/0054/0055/0056。
 
-本轮问题定位修复已接入唯一请求主线（ADR-0051）：后置参考包末尾逐字引用当前 Turn 的原始输入，防止检索完成后新问题被历史主题覆盖。当前为 Session 13 / Context 12 / `context-json-v12`；旧 Session 1–12 明确拒绝，使用新的数据目录与 Session，不自动迁移或改写旧账。
+本轮问题定位修复已接入唯一请求主线（ADR-0051）：后置参考包末尾逐字引用当前 Turn 的原始输入，防止检索完成后新问题被历史主题覆盖。当前为 Session 15 / Context 13 / `context-json-v13`；旧 Session 1–14 明确拒绝，使用新的数据目录与 Session，不自动迁移或改写旧账。
 
 当前在 Stop C 限定验收之后新增了 TUI 启动配置面板（13.11）：模型连接、会话、插件、自动压缩与功能开关均有中文表单；
-裸 traceh 在连接配置完整时直接进入聊天，首次缺配置才显示简短向导；Context／Product 可按中文字段编辑，F2 可应用配置并恢复当前会话。它不改变 Session 13／Context 12 协议或已有 authority；
+裸 traceh 在连接配置完整时直接进入聊天，首次缺配置才显示简短向导；Context／Product 可按中文字段编辑，F2 可应用配置并恢复当前会话。它不改变 Session 15／Context 12 协议或已有 authority；
 旧 Stop C 的生产字节冻结与独立审查是历史基线，不自动覆盖此后新增的配置面板实现。
 
 | 项目 | 当前事实 |
@@ -83,20 +114,20 @@
 | 开发依赖 | pytest、pytest-asyncio、ruff |
 | 当前开发阶段 | v0.9 Skill/Memory/History、主动检索与分层压缩已经收口；v0.10 S0–S4（含 S3-A、不含 S3-B）沙箱、原执行回执与 TUI 环境选择完成限定验收。用户已授权 GitHub 发行，具体门禁见第 15 节；未运行本次发布级全量或 L2 |
 | Step Context | 同一 Lease 内先写唯一 `context/input`、再写 Composition；wrapper user message 始终在完整 Surface 之后且不进入 Surface。显式正文首次供紧邻目标 Step，实际准入正文在本 Turn 逐步复核资格与预算后保留；F2 接入宿主持久选择、eligible exact+FTS 与按请求的 section/chunk，Memory authority 与 F4 Context 注入均已实现；见 7.4–7.10、19.16 |
-| 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-7 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 7 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
+| 当前 Agent 模型 | v0.8.0 候选保留 v0.7.1 的单进程多 Agent 与 ProductTask 主线（20.19–20.38）。`AgentLoop` 的两阶段 Model admission/Session dispatch permit 冻结 exact Provider/request/Attempt；F2 只在同一 Step 内把候选瞬时 Provider failure 变成后续 Attempt ordinal；F3/F4 让 Line 与 Textual 共用 UI-neutral Driver、Session open/recovery 与 Product control/observation，两个 adapter 都不持有新的 durable 状态或权限。20.38 在下一次 requester Turn 前 fresh replay 同一 Session 相关 ProductTask，把“当前 focus 在内最多六项任务 + 精确总数/省略数”原子冻结为一条 format-8 Session 感知事件；Surface 在旧对话前放置一条 system 当前事实和一条 user-role 历史参考。format 8 只为处于稳定检查点的 focus 加入 Workflow 状态、managed Tool 调用数、changed-path 数、Verifier 结果/数量与 Promotion 是否落盘的最小执行摘要；需要细节时，模型可用同 Session、精确 task id 的纯读 `read_product_task_evidence` fresh 重建受限证据。该 Tool 不返回原始 Patch、Tool 参数/输出、模型 prose 或 Workspace 路径，也不授予 START/Approve/Promote 等控制能力。Product/Workflow/Promotion 原流仍是唯一权威；`ProductTaskMemoryReader` 与 `ProductTaskActivityReader` 只是同一 EventStore 的无状态 fresh join，没有新 Memory Stream、缓存、RAG、FTS 或跨 Session 记忆。模型仍可自然总结和合理推断，但需区分宿主事实、历史原文与推断；确定性测试只证明请求合同，真实 Provider 是否遵从仍属验收边界。`AgentRuntime`、concrete Supervisor 与 `PluginManager` 的职责不变。每个 Agent 最多一个 Live Activation，每个 Activation 同时最多一个 Turn。**没有**冷恢复、stale claim 接管、Provider/model fallback、Workflow/Tool retry 或默认 Product Profile；`NEXT_STEP` 被拒绝而非改写 |
 | 持久化 | stdlib SQLite 是唯一生产 EventStore：一个 current-schema `events.sqlite3` 保存 Session、Effect、Agent Directory、Budget Ledger、Workspace/Artifact/Promotion Catalog、每 Agent Inbox/Delivery、每 Workflow 与每 ProductTask 的 append-only Stream；Patch 原始 bytes 仍在显式内容寻址 CAS，不写入 Event Log。旧 JSONL 明确拒绝且零迁移/零 fallback |
 | 模型接入 | 确定性 Scripted Provider；非流式 OpenAI-Compatible `/chat/completions` Provider。OpenAI-compatible adapter 将 transport/HTTP/strict-response failure 变成稳定、无秘密的 typed category；严格 JSON 解析失败时，只允许按冻结 Tool schema 对顶层 `type=string` 字段的双三引号 multiline lexical form 做一次有界规范化，结果仍须通过标准 JSON object 解析，其他 malformed response 继续 fail closed。CLI composition root 默认最多 3 个同 Provider/同模型/同冻结请求 Attempt，程序化 Runtime 默认显式 `NO_MODEL_RETRY`，没有 fallback |
 | Coding Tools | 普通 Coding Runtime 的默认工具是 `list_files`、`read_file`、`search_text`、`apply_patch`、`shell`，插件可增加更多；Product-configured requester Chat 是显式只读子集：list/read/search + proposal/confirmation + `read_product_task_evidence`，并单调拒绝声明为 effectful 的插件 Tool。证据 Tool 只按同 Session 精确任务关系读取有界元数据，不是控制 Tool；Product coder 在 START 后仍按 Profile 获得 managed Workspace 写权限 |
 | 插件系统 | v0.5 的 `traceh.plugins` Entry Point、事务激活、Generation/Lease/Drain、Session 组合迁移、四层宿主装配与 Provider/Policy/Middleware/命名 Verifier application 贡献全部保留；**v0.6.0 又发布 L1–L4 控制面**：独立 Plugin Creator Skill Wheel、候选构建/审计/测试、精确 baseline/candidate 对比，以及两阶段人工批准、推广与回滚。它们都在 Runtime 外，不进入 `AgentRuntime` 或第二个插件加载器。插件 setup 仍只在 application scope、trusted、进程内运行，不能自行选择子层；EventStore 仍不是插件贡献面；v0.9-F1 新增 typed Skill 目录与受 Lease 保护的资源，见 19.16 |
 | 完成判定 | 可选外部 `CompletionVerifier`；默认实现为命令退出码验证 |
-| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 Router 与固定 Workflow 角色 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条在 E0 启用时显示最近请求输入估算与输入上限，否则显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；F5 两种 adapter 复用共享治理命令（7.8）；仍没有完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
+| CLI 形态 | `traceh chat` 默认仍是连续多轮 Line adapter；`--tui` 选择同一命令的可选 Textual adapter。两者共用 `ChatDriver` 与 UI-neutral Session open/recovery。TUI 只有一套当前浅色 presentation：左栏短对话底部生长，右栏从顶部显示 transient operation、durable Product/Workflow/Session/Review/Promotion facts，底部只显示当前合法闸门；模型文字以低饱和紫色斜体 `模型 ·` 标记，不作为宿主证据，工具活动只给左侧 `▏` 使用既有强调色，工具名和安全参数保持默认文字色。START/Approve/Reject/Cancel 都需 typed confirmation；控制操作返回并完成 fresh observation 后，左栏从 typed `ProductCommandResult.advance` 追加一次进程内宿主结果提示，该 UI 文案本身不写 Session、SQLite 或模型上下文。下一次 requester Turn 使用 20.38 的独立 typed bridge，从同一 EventStore fresh 选择 ProductTask head 并把一条有界状态语义证据写入 Session；它不复制 UI 文案或控制证据。Feed dirty hint 与有界周期都只触发 fresh read；task-bound latest event age、operation wait、叶子失败 code、Workflow 包装失败、分歧和逐 owner closing 可见，refresh 不自动 reconcile。`Ctrl+T` 每次 fresh 打开当前任务的 主 Agent 与只读调查 Session 对话，`Ctrl+P` 每次 fresh 打开完整身份；`Ctrl+D` 每次重新校验 Review→Artifact catalog→CAS 身份链并打开精确完整改动，`Ctrl+E` 可导出同一原始 Patch bytes。M4 增加 topbar 下方一行全宽 Context 状态条与 `Ctrl+X` 上下文详情页（12.3）：状态条在 E0 启用时显示最近请求输入估算与输入上限，否则显示模型可见历史字节数、压缩阈值（仅在启用时）、durable 压缩与失败次数和任务目录计数，详情页每次打开 fresh 重读 Session。当前不提供 `Ctrl+I`/`Ctrl+R`。Approval 仍只向原 control plane 发送 task id，digest 由宿主从 fresh Review 重算。Line 的 `/plugins` 组合切换继续保留；F5 两种 adapter 复用共享治理命令（7.8）；仍没有完整历史 Dashboard、拖拽 DAG、并发输入或 token streaming。其他命令仍一次执行一个 Turn |
 | 事件写入互斥 | SQLite `BEGIN IMMEDIATE` + `(stream_id, seq)` 主键 + `expected_seq` 事务 CAS；同库 writer 跨 Stream 有界串行化，默认 busy timeout 5 秒，超时为稳定 `event-store-busy` |
 | 当前自动化测试 | v0.8.0 最终候选在安装 Textual 8.2.8 的解释器上收集 `2765 tests`；公开真实 L2 独立得到 `1 passed in 1398.14s`，最终无筛选全量得到 `2758 passed, 7 skipped`、退出码 0、耗时 `2712.46s (45:12)`。收口期间 L2 先后真实暴露 core-only 环境硬导入 Rich、以及 `test_product_contract.py` 未同步 M3 两个受保护 Runtime pin；两项均在原测试 owner 根修并由公开 L2 反向证明。compileall、修改范围 Ruff、`git diff --check`、文档 QA、Wheel E2E、clean-input 资产预检、core/`[tui]` 离线安装与完整 18-attempt Provider 网格均已执行；详细边界与结果见 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 8 节 |
 | Surface 压缩 | M3 起 `CompactionService` 拥有手动／自动 replacement；`surface_prefix()` 唯一派生来源，由不变量重算。字节模式在 Turn 前、token 模式在首 Step 准备时只压缩闭合旧 Turn 前缀，保留显式数量的最近 Turn，不碰 Product context、不拆 Step/Tool 组。format 2 绑定 exact source、cut、policy 与摘要器；拒绝 format 1。摘要按原逻辑位置投影，历史 Request 精确重建；手动 cut 必须命中闭合 Turn。字节模式四项策略显式给出；E0 可另设完整请求 token 估算策略（12.2），物理字节限额保留。默认规则摘录；D 可选语义摘要走原模型 Step/许可/Budget/取消与冻结来源变体（12.2、20.39、ADR-0057）。原始事件保留；F0-C 已在同一来源上接入当前 Session、exact block/cursor、request-only、Step-scoped 原文分页，并通过本轮限定验证（7.4） |
-| 内置 Benchmark | `traceh eval` 当前由 UE-1 公共框架承接原 v0.7-F4 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，共用同一份冻结 Verifier，按 single/multi/auto 三个 arm 运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
+| 内置 Benchmark | `traceh eval` 当前由 UE-1 公共框架承接原 v0.7-F4 ProductTask Benchmark：`benchmarks/product_v1` 有 3 个彼此不同的通用编码任务，每道题绑定自己的冻结 Verifier，按 single/multi 两种策略运行（20.30）；F5 已按 ADR-0034 把角色累计 `budget.max_tokens` 与每次请求 `max_output_tokens` 分开，所有 arm 仍共用同一冻结 Profile。L3 另有 1 套宿主固定 Python Quality v1 对比 Suite（3 个合同案例），两者职责不同。v0.6 的 `*/case.json` 布局被明确拒绝 |
 
 前一版 `v0.8.0` 的完整发布门禁属于历史证据。F0–F4、M1–M4 已在同一主线完成：SQLite 是唯一生产 EventStore，
-Provider retry 只复用同一冻结请求，Line/Textual 共用 Driver 与 Product control/observation，format-7
+Provider retry 只复用同一冻结请求，Line/Textual 共用 Driver 与 Product control/observation，format-8
 ProductTask context 提供同 Session 有界目录与按需证据，M3 用 append-only `surface/replace` 自动压缩
 Surface，M4 只读解释当前投影和最近冻结请求。Product/Workflow/Promotion 原流仍是唯一权威；没有第二
 Runtime、第二 Product 状态、第二 EventStore、缓存或 RAG。
@@ -152,7 +183,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - **isolated（跨进程）插件**：Manifest 可以声明 `trust_mode="isolated"`，激活会**明确拒绝**它，而不是降级成 trusted；
 - 插件提供 `EventStore`：D3 已开放 Provider、Policy、Middleware 与命名 Verifier，但 EventStore 仍固定在 Runtime/Session 生命周期，不能跟随 Step Generation 热替换；
 - 插件在 workspace / preset / agent 层执行 setup，或自行声明分层 Tool/Prompt/Policy；D2 只开放宿主装配代码传入的 binding，D3 的新贡献仍属于 application setup，不把 `allowed_scopes` 变成新的激活入口；
-- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Router/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、固定 Workflow、Review/Approval 与 Promotion；v0.7.1（20.32）把模型的确认 Tool 降为提示建议，真正启动必须由终端用户对当前精确 task 输入固定 `START`。启用 Product 配置时，请求者 Chat 只暴露 `list_files/read_file/search_text`、proposal/confirmation 与纯读 `read_product_task_evidence`，并以单调 Policy 拒绝所有声明为写入、进程或外部事务的 core/plugin Tool；代码副作用只能在 `START` 后由 Product Workflow 的隔离 Workspace owner 执行。20.38 在后续 requester Turn 前提供 host-owned、bounded、非授权的当前 Product 摘要与同 Session 任务历史，并允许模型对精确 task id 按需 fresh 读取同 Session 的受限执行证据；它不开放 START/Approve/Promote 或 Workflow 控制能力。未启用配置的普通 Coding Chat 仍保留默认工具。`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile。F4（20.30）的 `traceh eval` 是同一条主线的另一个 composition root：它复用同一个 `ProductChatHost` 与同一个控制面，但由 manifest 而不是模型提供需求与模式，并自己创建一次性本地仓库；
+- 统一 `traceh chat` 产品面：F0–F2 冻结并实现 ProductTask/Profile/Assembly，F3（20.29）再以显式 `--product-config` 接入 Proposal、固定 Workflow、Review/Approval 与 Promotion；v0.7.1（20.32）把模型的确认 Tool 降为提示建议，真正启动必须由终端用户对当前精确 task 输入固定 `START`。启用 Product 配置时，请求者 Chat 只暴露 `list_files/read_file/search_text`、proposal/confirmation 与纯读 `read_product_task_evidence`，并以单调 Policy 拒绝所有声明为写入、进程或外部事务的 core/plugin Tool；代码副作用只能在 `START` 后由 Product Workflow 的隔离 Workspace owner 执行。20.38 在后续 requester Turn 前提供 host-owned、bounded、非授权的当前 Product 摘要与同 Session 任务历史，并允许模型对精确 task id 按需 fresh 读取同 Session 的受限执行证据；它不开放 START/Approve/Promote 或 Workflow 控制能力。未启用配置的普通 Coding Chat 仍保留默认工具。`/task inspect|approve|reject|cancel|abandon TASK_ID` 由宿主先于模型分派。Profile/路径/Budget/Verifier/target 必须显式配置，没有默认 profile。F4（20.30）的 `traceh eval` 是同一条主线的另一个 composition root：它复用同一个 `ProductChatHost` 与同一个控制面，但由 manifest 而不是模型提供需求与模式，并自己创建一次性本地仓库；
 - 通用 Workflow DSL、条件/循环节点与重试策略。v0.7-E 已实现**固定** Typed DAG（五类节点），但不是通用引擎。v0.6 Stage A–E 已实现 Agent 事实、执行、生命周期和五个模型 Tool；v0.7-A/B 已有层级 Budget Ledger 和显式宿主执行装配；v0.7-C 实现 commit-pinned worktree；v0.7-D1 已能把 terminal message 的完整 Git 状态捕获为不可变 Patch Artifact；v0.7-D2 已实现固定验证、人工批准和 Git ref compare-and-swap 推广；v0.7-E 已实现固定 Typed Workflow。因此仍**没有**默认 CLI 装配、冷恢复、stale claim 接管、自动重试、自动批准、自动选择推广目标或通用 Workflow DSL，`MessageTarget.NEXT_STEP` 也未实现；
 - MCP 接入；
 - Git worktree 已由 v0.7-C、不可变 Patch Artifact 已由 v0.7-D1、Review/Approval/Promotion 已由 v0.7-D2 以宿主显式装配方式实现；尚无 Overlay、多父 merge、非 bare 推广目标、CAS/对象垃圾回收或跨进程 lease；
@@ -165,7 +196,7 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 
 AO-3 新增 `evolution/background.py`（原账本上的周期、准入与收尾）、`evolution/background_experiment.py`（接原有限实验）、`chat/background.py`（配置和反馈绑定）、`tui/optimization.py`（F6 管理面板）、`tui/optimization_plan.py`（从真实题库选题并生成计划）。原 Runtime/Evaluation 继续拥有执行和评分；F2 表单复用 `tui/settings.py` / `config_forms.py`，见 12.11。
 
-`docs/plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md` 是已获认可但未实现的 DA-0～DA-5 计划，列出动态委派、Product 收敛、统一评估和受限优化的 owner 与阶段验收；不代表新模块或新运行协议已经实现（14.1）。
+`docs/plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md` 记录已执行的 DA-0～DA-5 合同、owner 与验收顺序，当前实现及收益限制以 12.12/14.1 为准。`tests/live_dynamic_collaboration/diagnosis*.py` 是显式研究入口：实际源码材料、原 EvaluationRunner 运行、闭合账本审计、受限候选冻结和失败前读取可见性；不新增生产评估器，普通 pytest 不调用真实 API。
 
 D 新增 [`session/semantic_summary.py`](../../src/traceh/session/semantic_summary.py)：冻结摘要输入、纯请求构造和响应/来源验证。它没有 Provider 或写入权；主线仍由 RequestBuilder、AgentLoop、SessionService、CompactionService 各自拥有（12.2）。
 
@@ -191,14 +222,14 @@ traceharness/
 │   ├── budgets/                      v0.7 单一层级 Budget 事件/投影/写入，以及 create/model/Step/Tool/process 薄执行适配器
 │   ├── projects/                     F3：同 Store 项目归属事件、唯一纯投影与宿主 ProjectScopeService（7.6）
 │   ├── memory/                       F3 authority（7.6）；F4 context.py 的 qualified reader、active corpus 与历史证明（7.7）
-│   ├── workspaces/                   v0.7-C Workspace Catalog、Git Provider、取消收敛服务、Supervisor 包装器与只读 Tool Policy
-│   ├── artifacts/                    v0.7-D1 Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、fresh reader 与只读报告适配器
+│   ├── workspaces/                   Workspace Catalog、Git Provider、取消收敛服务、受控文件编辑/补偿、Supervisor 包装器与 Tool Policy
+│   ├── artifacts/                    Patch Manifest/Catalog、SHA-256 CAS、临时 Git index 捕获、同源不可变对象物化、fresh reader 与只读报告适配器
 │   ├── promotion/                    v0.7-D2 Promotion Ledger 事件/投影、固定 Verifier 执行、临时 clone 集成、bare 目标解析、共用 scratch 失败组合与 Git ref CAS 推广服务
 │   ├── workflow/                     v0.7-E 固定 Typed DAG：定义冻结与派生身份、编排事件/投影、五类节点执行器与单飞协调器
-│   ├── product/                      v0.7-F1 ProductTask 持久事实层（严格 parser、唯一投影、fresh reader、Session 确认证据与宿主写入服务），加 v0.7-F2 的严格 Router、唯一 Profile Registry、两种固定 Workflow 拓扑与 preflight/Assembly Receipt 装配，以及 v0.7-F3/F5 的宿主控制面、Chat 表面、durable evidence 只读审批投影、schema-1 配置解析与显式装配；`context.py` 在 requester Turn 前 fresh 冻结安全 Product 状态语义证据，`activity.py`/`memory.py` 从同一 EventStore fresh join task-owned Agent Session 与 Product/Workflow/Review/Promotion 证据
+│   ├── product/                      ProductTask 唯一事件/投影/写入；显式 Profile Registry、single/multi Assembly、宿主控制面、协议 6 配置、只读任务证据；context.py 冻结当前状态，activity.py/memory.py/observation.py 从原事实与 owned Agent 子树派生界面
 │   ├── chat/                         UI-neutral Chat Driver、Session open/recovery、typed activity/update 与唯一 ActivityTracker；F0-C 透传 TurnInput.history_requests；不从正文赋权、不保存第二份对话
 │   ├── tui/                          v0.8-F4 可选 Textual adapter：bounded presentation、对话/Product 面板与原控制 owner；F0-B 的 `context_inspection.py` 复用请求重建并分开统计 Context reference、Product 和 conversation
-│   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；另有独立 Authority 与宿主 Provisioning Policy 支撑绑定 owner 的五个子 Agent Tool
+│   ├── supervision/                  进程内 Agent Supervisor：Delivery/Activation/ownership 收敛；原 Authority/Provisioning Policy 支撑子 Agent Tool；可写工作包、Capture 交接与显式 Patch 整合适配
 │   ├── api/                          公共协议、冻结 DTO 和扩展边界（含 `prompts.py`、`plugins.py`、`agents.py`、`budgets.py`、`workspaces.py`、`artifacts.py`、`promotion.py`、`workflow.py`、`product.py`；F0-C `history.py` 的 policy/cursor/page request DTO；F1 `skills.py` 的 descriptor/contribution 与宿主资源策略；F2 `retrieval.py` 显式检索策略）
 │   │                                 `product.py` 是 v0.7-F0 的**纯合同**、没有 I/O；实现位于上面的独立 `product/` 域
 │   ├── concurrency.py                不可取消 Worker 的收敛等待
@@ -252,7 +283,7 @@ evaluation/retrieval.py 管冻结校验及度量，attempt.py 仍是 F5 Product 
 
 `ToolRuntime` 的 PROCESS 调用先走原 Policy/Budget/Effect intent，再绑定 Sandbox scope；回执引用原 Agent、准入与 Turn 时间 reservation。shell 只调用这个能力，用户代码不走宿主 subprocess。完成验证保留 trusted `verify(workspace)` 接口，由宿主短期绑定命令能力，回调结束立即失效；这种执行能力的 ContextVar 不是事实源。验证在工作区副本执行，不把临时写入带回宿主。
 
-Product Factory 传递同一宿主 Sandbox 配置；固定验证以 Review ID 为 owner，将执行证据写入产物来源 Session 的 Effect stream，复用其原 CAS。Review 的结构化结果绑定执行编号、原 stream、receipt/policy digest，宿主重新核对实际执行 owner、命令摘要、状态和原始输出字节摘要。固定验证原始 stdout/stderr 不持久化，也不导出验证目录；仅存字节数和 SHA-256。更换有效沙箱策略不能复用旧 Review 进行批准或推广。Promotion 协议现为 2（结果增加 execution 引用），旧 1 明确拒绝，不猜测迁移；Product 配置顶层版本仍为 1，其 verification.protocol_version 为 2。上述主线与相邻评估装配已有真实定向验证。
+Product Factory 传递同一宿主 Sandbox 配置；固定验证以 Review ID 为 owner，将执行证据写入产物来源 Session 的 Effect stream，复用其原 CAS。Review 的结构化结果绑定执行编号、原 stream、receipt/policy digest，宿主重新核对实际执行 owner、命令摘要、状态和原始输出字节摘要。固定验证原始 stdout/stderr 不持久化，也不导出验证目录；仅存字节数和 SHA-256。更换有效沙箱策略不能复用旧 Review 进行批准或推广。Promotion 协议现为 2（结果增加 execution 引用），旧 1 明确拒绝，不猜测迁移；当前开发版 Product 配置顶层版本为 2，其 verification.protocol_version 仍为 2。上述主线与相邻评估装配已有真实定向验证。
 
 `sandbox/config.py` 是唯一宿主策略文件解析器：format 2、完整 policy/limits/plugin_grants 精确键集、最多 64 KiB；旧格式 1 明确拒绝，不自动迁移；不猜 Docker context、镜像或路径权限。CLI run/chat/resume 与 eval 接受 `--sandbox-config`；普通 Runtime 使用数据目录下 artifacts，Product/每个 benchmark attempt 使用原 ArtifactCas 根。TUI「执行沙箱」页复用该解析器，连接与镜像通过 `tui/docker_choices.py` 的只读查询下拉选择，也可手动填写名称／ID；镜像标签在点更新时解析为固定 sha256，保存时按固定 ID 复核。下拉候选绑定发现时的 ID，同名标签变化不会自动替换；切换连接清空旧镜像，失败刷新丢弃旧候选。每次查询 10 秒、输出 1 MiB，使用临时文件和原 await_worker_convergence 处理取消与收尾；不拉取、构建或运行镜像，不读取镜像环境变量。仅预检 Linux／无自动挂载卷元数据，Python、依赖和 cgroup 仍由实际执行检查。资源预设可编辑，读写权限须明确填写；关闭只取消下一次装配的执行能力，配置应用仍先收尾旧 Runtime。恢复命令保留策略文件路径。eval 只接受空应用级插件授权列表，拒绝把共享服务器工作区混入隔离评估；不会静默丢弃授权。
 
@@ -501,6 +532,8 @@ flowchart LR
 
 ## 6. 事件模型与持久化
 
+当前 Budget schema 3 新增 `budget/child-token-decided`，原 child-reserved 增加初始 Token 分配；Product 当前 protocol 6 / event schema 5。额度、申请与原事实源关系见 12.14。
+
 AO-3 增加同一 Store 内的 `optimization-background:<workspace fingerprint>` 流：只记录后台周期授权、反馈准入、额度预留、结算位置与待审状态。聊天原文、工具结果、评估成绩与实际费用仍在各自原 owner，不能用后台投影代替它们（12.11）。
 
 D 只在原 Session 流增加 `summary/input`、`summary/response` 与 `method=semantic` replacement；真实响应通过 causation_id 被引用，原事件不改。完整冻结字段和协议变体见 12.2。
@@ -563,7 +596,7 @@ C 在同一 `surface/replace` format 2 内新增严格 `method=tool-fold` 变体
 | Workflow Run Stream | `workflow:<run_id>` | 每个 Workflow Run 一条的编排事实：run/node 生命周期、Map 展开与 Approval 等待；只保存指向其它事实源的身份，不复制 Agent 报告、Patch bytes、Review 证据或 Approval（20.25） |
 | ProductTask Stream | `product-task:<task_id>` | 每个产品任务一条的产品事实：产品身份、宿主控制决定、digest 与指向其它域的引用；不保存 Agent 报告、会话用量、Patch bytes、Review 证据或 Approval（20.27） |
 
-v0.7-F1 起 `product-task:<task_id>` **确实会被写入**，由 `traceh.product` 的宿主服务写、由它的唯一投影器读。raw ProductTask 事件仍不直接进入 Model Surface、Session Recovery 或 Request Fingerprint；20.38 的 host bridge 会在下一次 requester Turn 前 fresh 读取 canonical head，把严格白名单的 `product/context-snapshot` 写进 requester Session。format 7 的最小执行摘要和按需证据读取都从同一 EventStore fresh 重建；前者只证明模型当时看见了什么，后者只是普通 ToolRuntime 中的纯读结果，两者都不反向成为 ProductTask 权威。
+v0.7-F1 起 `product-task:<task_id>` **确实会被写入**，由 `traceh.product` 的宿主服务写、由它的唯一投影器读。raw ProductTask 事件仍不直接进入 Model Surface、Session Recovery 或 Request Fingerprint；20.38 的 host bridge 会在下一次 requester Turn 前 fresh 读取 canonical head，把严格白名单的 `product/context-snapshot` 写进 requester Session。format 8 的最小执行摘要和按需证据读取都从同一 EventStore fresh 重建；前者只证明模型当时看见了什么，后者只是普通 ToolRuntime 中的纯读结果，两者都不反向成为 ProductTask 权威。
 
 前两个 Stream 通过 `session_id`、`tool_call_id`、`effect_id`、correlation/causation 等字段关联，但各自有独立序号。其余均为各域自己的控制面流：Directory、Budget Ledger、Workspace Catalog、Patch Artifact Catalog 与 Patch Promotion Ledger 每个 Store 各一条，Inbox 与 Delivery 每个 Agent 各一条，Workflow 与 ProductTask 分别每个 run/task 各一条；这些 raw 控制事件都不直接进入 Model Surface、Session Recovery 或 Request Fingerprint。唯一窄例外是 Product host 写回 Session 的 bounded status-semantics observation；Artifact 原始 bytes 位于显式 SHA-256 CAS，由 Manifest 引用并在读取时重新校验。
 
@@ -586,7 +619,7 @@ F4 的 MemoryContextReader 从获准的生效事实派生 Context（7.7），不
 | Memory authority control | `memory/proposed`、`memory/approved`、`memory/superseded`、`memory/revoked`；memory:project_id，schema/format 1（7.6） |
 | Skill selection control | `skill/selection-set`（format 1，独立 context-selection 流；宿主写，模型不可写，7.5） |
 | History host request | `history/requested`（format 1；typed 用户输入绑定本 Turn 首 Step 与真实 user/message；原 SessionService 写入，不进入 Surface，不能由 source/text 伪造） |
-| 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 7、exact key/messages、当前 Product head causation；原子记录当前 focus 在内最多六项任务、精确总数/省略数、固定状态语义、有界历史 source-request 摘录，并只为稳定检查点 focus 记录最小执行摘要；formats 1–6 拒绝，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
+| 消息与请求 | `user/message`、`product/context-snapshot`（只在 requester Session，envelope schema 1、message format 8、exact key/messages、当前 Product head causation；原子记录当前 focus 在内最多六项任务、精确总数/省略数、固定状态语义、有界历史 source-request 摘录，并只为稳定检查点 focus 记录最小执行摘要；formats 1–6 拒绝，不授予控制权限）、`composition/snapshot`、`request/snapshot` |
 | 模型 | `model/attempt-start`、`assistant/chunk`、`assistant/message`、`model/attempt-end` |
 | 工具 | `tool/call`、`tool/admitted`、`tool/result` |
 | 验证 | `verification/result` |
@@ -600,7 +633,7 @@ F4 的 MemoryContextReader 从获准的生效事实派生 Context（7.7），不
 | Surface | `surface/replace`（schema 1、message format 2、exact key 集；绑定 exact source seq/digest、cut boundary、method、policy digest、摘要器身份与 exact replacement bytes；format 1 拒绝）、`surface/compaction-failed`（宿主证据，只含 method/稳定 code/committed，不进入 Model Surface） |
 | Effect | `effect/intent`、`effect/dispatched`、`effect/outcome`、`effect/reconciled` |
 
-| Product control plane（只在 `product-task:<task_id>`） | `product/task-opened`、`product/task-routed`、`product/task-started`、`product/task-awaiting`、`product/task-completed`、`product/task-rejected`、`product/task-cancelled`、`product/task-failed`、`product/task-abandoned`；schema 1，key 集精确，终态后不可追加；raw 事件不直接进入 Model Surface（20.27、20.38） |
+| Product control plane（只在 `product-task:<task_id>`） | `product/task-opened`、`product/task-started`、`product/task-awaiting`、`product/task-completed`、`product/task-rejected`、`product/task-cancelled`、`product/task-failed`、`product/task-abandoned`；schema 4，key 集精确，终态后不可追加；raw 事件不直接进入 Model Surface（20.27、20.38） |
 
 v0.7-F1 起这九种事件有了真实写入路径。`interrupted` 仍然**不是**事件类型——它只是派生视图状态。
 
@@ -856,7 +889,7 @@ Surface 消息后，包括完整 Tool 续步组；Surface 自身不识别或保�
 ```mermaid
 flowchart LR
     LOG["唯一 EventStore durable log"] --> READ["stateless Product read models / fresh join"]
-    READ --> BRIDGE["ProductModelContext: format-7 catalog + minimal summary"]
+    READ --> BRIDGE["ProductModelContext: format-8 catalog + minimal summary"]
     READ --> TOOL["read_product_task_evidence: same-Session bounded metadata"]
     BRIDGE --> EV
     TOOL --> TR["普通 ToolRuntime audit"]
@@ -884,6 +917,8 @@ Core invariant 另行核对 Attempt ordinal、snapshot seq、dispatch fingerprin
 reservation binding；Budget reconciliation 再把 non-null reservation 与唯一 ledger 交叉验证。
 
 ### 7.4 当前唯一 Context Input 与 F0-C History 接缝
+
+当前工具导航不再枚举未必装配的检索/输出工具，明确仅使用本请求提供的工具及参数；来源 read_action 也不能超越当前工具表。Patch 的读取说明与 schema 明确 Unicode 字符、offset 零基、默认 2000/最大 4000 及 next_offset/null；数值来自原读取 owner 的共享常量。完整页可见性、整合权限及回滚不变。Context renderer 文字属于确定性重放与字节计量合同，因此本次切到 Session 15 / Context 13 / context-json-v13；旧 Session/Context 明确拒绝，需要新数据空间/会话，不迁移、删除或改写旧日志。见 [ADR-0075](../adr/0075-tool-guidance-and-context-renderer.md)。
 
 当前唯一 Context 增加 `active_request={source_ref, content}`：从本 Turn 首条真实 `user/message` 逐字派生，不用检索 query 或摘要替代，后续 verifier 输入也不替换它。同 Turn 的工具续步沿用该任务，新 Turn 重新绑定；空参考包同样保留该定位。来源校验在 observed Session 前缀内重建绑定，改内容或借用其他 Turn 的来源，即使重算 digest 也拒绝。
 
@@ -939,7 +974,7 @@ reader 按 `observed_session_seq` 重建旧来源，不用后来的摘要；精�
 随后 Composition、catalog、query、正文与预算。原文另核 request_ref、cursor、page/leaf_refs 和目标
 Step，未授权 raw、无效或错配 catalog、Memory 来源证明和跨 scope 均拒绝；各领域使用 7.5、7.7 的来源验证。
 
-唯一 `context-json-v12` renderer 从完整合格 block 派生精简模型项，正文仍为 canonical JSON 字符串。
+唯一 `context-json-v13` renderer 从完整合格 block 派生精简模型项，正文仍为 canonical JSON 字符串。
 完整 source_refs/provenance 保存在原 Context 事件，模型不再收到重复的账本证明。宿主头尾区分导航
 与来源正文，导航不授予权限。History 的 read_action 按原首／下一 cursor 生成；无 reader 或末页为 null。
 Memory directory 给当前 ID/version 的完整短事实阅读动作，summary/section 已有完整正文时为 null。
@@ -951,10 +986,10 @@ Memory directory 给当前 ID/version 的完整短事实阅读动作，summary/s
 identity 与 canonical JSON 对账 committed true/false/unknown；unknown 不重投、不派发。Recovery
 不补造 Context 或 Attempt。History accepted/eligible/consumed/expired 从原持久事件与 Step 顺序派生；
 目标超预算、失败、未发生、max_steps、取消或恢复均不顺延，无新增 writer、Lease 或 pending 状态机。
-`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=13`；
+`session/protocol.py` 要求首事件 exact 四字段并含整数 `context_protocol=15`；
 共同 Session reader、invariant、open/recover/inspect/replay/Request 路径拒绝旧 Session，只有列表可列身份。
-EventEnvelope schema 仍为 1、M3 format 与 SQLite schema 仍为 2；当前 Context outer format 为 12。
-Session marker 1–10、旧 Context/policy/renderer 与物理 schema 1 明确拒绝，无迁移或兼容 reader。
+EventEnvelope schema 仍为 1、M3 format 与 SQLite schema 仍为 2；当前 Context outer format 为 13。
+Session marker 1–14、旧 Context/policy/renderer 与物理 schema 1 明确拒绝，无迁移或兼容 reader。
 F3 authority 和 F4 Memory 检索均已实现（7.6、7.7）；F5 共享治理已接入（7.8）。
 
 Product 的 Session 证据与叶失败读取也调用同一 `require_session_protocol()`，不再维护两份旧
@@ -1189,8 +1224,8 @@ append/read 时复用原 project/memory projector 重放 exact 历史前缀，�
 activation、digest 和 eligible corpus。当前观察的 source_identity 必须属于该项目。已冻结 Request
 只使用旧 prefix/receipt/bytes；以后批准、撤销、修改 Git 或丢失索引都不改写旧 Request。
 
-唯一协议现为 Session marker 13、Context format 12、`active-reference-policy-v8`、`context-json-v12`。
-SQLite schema 仍为 2，M3 replacement format 仍为 2；旧 Session 1–12、旧 Context/策略明确拒绝，
+唯一协议现为 Session marker 13、Context format 12、`active-reference-policy-v8`、`context-json-v13`。
+SQLite schema 仍为 2，M3 replacement format 仍为 2；旧 Session 1–14、旧 Context/策略明确拒绝，
 无迁移、别名或兼容 reader。生产 semantic/reranker 目前明确关闭，不加载或下载模型；测试目录中的显式评估资产不属于 Runtime 装配；F5 治理与冻结评测已接入（7.8），发布门禁另计。
 
 ```mermaid
@@ -1307,9 +1342,9 @@ flowchart LR
 
 
 
-精度修订的覆盖证据沿用来源 receipt 2；导航修订后当前唯一协议为 Session 13、Context 12、`active-reference-policy-v8`，
-索引 `traceh-lexical-v3`/`eligible-bm25-v2`。旧 Session 1–12 在原入口明确拒绝，不迁移、改写或删除。
-当前 renderer 为 `context-json-v12`；SQLite 2、M3 2、Context 十二项及来源十五项配置保持原结构。精度阶段冻结 benchmark/
+精度修订的覆盖证据沿用来源 receipt 2；导航修订后当前唯一协议为 Session 15、Context 13、`active-reference-policy-v8`，
+索引 `traceh-lexical-v3`/`eligible-bm25-v2`。旧 Session 1–14 在原入口明确拒绝，不迁移、改写或删除。
+当前 renderer 为 `context-json-v13`；SQLite 2、M3 2、Context 十二项及来源十五项配置保持原结构。精度阶段冻结 benchmark/
 corpus JSON 和阈值不变。SessionService 与 Memory 原历史 reader 验证当时的覆盖和来源前缀，重试／重建
 使用原 receipt 和 bytes，不运行新查询；没有双 reader 或第二事实源。定向验证和冻结复验见 15.1。
 
@@ -1371,9 +1406,9 @@ flowchart LR
 
 真实调用还定位并修复两项：ModelRequest reader 保留 JSON 温度的 int/float 原表示，避免合法 `0`
 变成 `0.0` 导致冻结请求绑定失败；词法分词将无引号普通词尾标点、仅由冒号连接的汉字散文按自然语言
-处理，显式引号、复合标识符和路径仍整体匹配，没有领域词表。当前唯一版本为 Session 13、Context 12、
-renderer `context-json-v12`、tokenizer `traceh-lexical-v3`；policy 为 v8、披露 Tool receipt 为 2、来源检索 receipt/ranker 仍为 v2，SQLite/M3
-仍为 2。旧 Session 1–12 明确拒绝，不迁移、双读、猜测或删除。
+处理，显式引号、复合标识符和路径仍整体匹配，没有领域词表。当前唯一版本为 Session 15、Context 13、
+renderer `context-json-v13`、tokenizer `traceh-lexical-v3`；policy 为 v8、披露 Tool receipt 为 2、来源检索 receipt/ranker 仍为 v2，SQLite/M3
+仍为 2。旧 Session 1–14 明确拒绝，不迁移、双读、猜测或删除。
 
 `tests/live_skill_navigation/` 是显式真实集成测试，使用原 Runtime/Provider/Plugin/SQLite/Tool 和自然
 语言输入；不预写模型响应、不向模型提供判定答案、无语义 ID 随重复变化。它不由 pytest 自动调用，
@@ -1408,8 +1443,8 @@ History 动作复制原首／下一 cursor 申请 chunk，没有 reader 或后�
 页面不可读。模型自行选择需要的动作，经原 Tool/Policy/收据/下一 Context 主线执行，没有新 Tool、
 权限、自动读全资料、缓存或第二事实源。实际精简视图成本仍由同一 renderer 纳入原完整块预算。
 共享完成提示遵守用户指定格式，历史正文中的指令仍是过去记录；不会按评分器裁剪、补值或转换答案。
-当前唯一协议为 Session 13 / Context 12 / renderer v12 / policy v8；Session 8 / Context 7 仅为保留的
-隔离探索，所有旧 Session 1–12 均拒绝，披露收据、History page policy、SQLite、M3 和来源检索协议不变。
+当前唯一协议为 Session 15 / Context 13 / renderer v12 / policy v8；Session 8 / Context 7 仅为保留的
+隔离探索，所有旧 Session 1–14 均拒绝，披露收据、History page policy、SQLite、M3 和来源检索协议不变。
 
 显式开发旅程位于 `tests/live_reference_journeys/`：journey_fixtures 组装隔离 Git、SQLite 与原 Runtime；
 bootstrap 经原宿主审批准备 Memory，用真实模型回合准备和压缩 History；assessment 核对严格 JSON
@@ -1448,7 +1483,7 @@ Release Stop C 已通过，实际范围、失败及未运行门禁见 [Stop C �
 
 新增 `tests/live_active_retrieval/reliability.py` 显式实验入口及固定材料，复用原真实 Runtime/Reader/工具主线；普通 pytest 不隐式联网。112 条目标旅程无最终连接错误，40 条日常保护旅程正确且零工具调用；含准备共 401 个请求在独立 SQLite 副本重放一致，无不变量或 Attempt 收敛错误，命令输出各执行一次。Provider 报告含准备 1,956,458 tokens（目标部分 1,421,171），不含两个探针，unknown/estimated 为 0。运行器/Provider 定向 43 项及各候选 owner 检查通过，3,645 项仅收集；未跑全量、L2–L4 或发布门禁。
 
-实验确认：Memory 可在只扫 2/13 对象且还有下一页时停在背景；模型可能把导航记录名当业务凭证、把来源不可用说成无命中。多词查询的单题改善未重复。题目歧义、附加错误及评分敏感性均单列在[记录 008](../deal/008-retrieval-reliability-experiments.md)，不能归因为存储丢失或靠强制搜索处理。生产 Python 源码与 B0 完全一致，Session 13 / Context 12 协议、原 Projection/Reader、Effect 事实源、预算、停止规则与用户连接配置保持当前主线；语义检索和本轮候选均未采用，原 51/72 与 NO-GO 不变。
+实验确认：Memory 可在只扫 2/13 对象且还有下一页时停在背景；模型可能把导航记录名当业务凭证、把来源不可用说成无命中。多词查询的单题改善未重复。题目歧义、附加错误及评分敏感性均单列在[记录 008](../deal/008-retrieval-reliability-experiments.md)，不能归因为存储丢失或靠强制搜索处理。生产 Python 源码与 B0 完全一致，Session 15 / Context 13 协议、原 Projection/Reader、Effect 事实源、预算、停止规则与用户连接配置保持当前主线；语义检索和本轮候选均未采用，原 51/72 与 NO-GO 不变。
 
 [主动检索执行计划](../plan/TRACEHARNESS_ACTIVE_RETRIEVAL_EXECUTION_PLAN.md)与
 [ADR-0061](../adr/0061-active-reference-search.md)冻结共同合同。AR-A 已完成；AR-B 已接入
@@ -1496,9 +1531,9 @@ Tool result 只存 format-1 search_receipt；成功模型 Tool call、原冻结�
 单条身份/动作也放不下时为 resource-limit，绝不截坏 JSON。统一优先级为新正文 → 新搜索页 →
 已保留正文 → 自动 History → 自动 Skill/Memory；重放重算同一规则。
 
-当前唯一合同已切为 Session 13 / Context 12 / `context-json-v12` / `active-reference-policy-v8`。
+当前唯一合同已切为 Session 15 / Context 13 / `context-json-v13` / `active-reference-policy-v8`。
 普通披露 receipt 2、History page、SQLite/M3 和 retained output 格式不变。
-旧 Session 1–12 明确拒绝，需要新数据目录与新 Session；Line Chat 给出中文说明，TUI 复用原旧数据选择界面。
+旧 Session 1–14 明确拒绝，需要新数据目录与新 Session；Line Chat 给出中文说明，TUI 复用原旧数据选择界面。
 不迁移、猜测、修改或删除用户旧账；历史真实报告保留其原协议，不能拿新版 reader 静默读取旧报告中的会话。
 
 ```mermaid
@@ -1588,7 +1623,7 @@ compileall、Ruff、collect-only 与 diff 检查通过，见 [AR-B 证据](../va
 
 来源导航与交付语义已按 [ADR-0063](../adr/0063-source-navigation-and-delivery-semantics.md) 修订。Composition snapshot 从当前 generation 捕获的工具表生成 system_prompt 中的来源导航，仅列实际暴露的宿主工具；不把暴露解释成获准或存在数据，不调用 Policy。History/Memory/Skill 的回执正文进入下一 Step 参考包，Tool Output 正文仍直接进入工具消息；空参考数组不代表后者不可用。搜索结果旁明确列出原有字面子串匹配与字段范围，区分 no-hit、source-unavailable 和预算未准入，不改查询、排序、Reader 或权限。拒绝反馈没有新增替代工具推断。
 
-当前唯一协议为 Session 13 / Context 12 / active-reference-policy-v8 / context-json-v12，拒绝旧 Session 1–12，保留旧数据、不迁移；历史验证用冻结源码重放。六对自然任务与定向验证见[修复记录](../deal/005-source-navigation-and-delivery-semantics.md)，不替代原 AR-D 分数。来源事实仍由各 Reader 提供，Composition 只冻结说明，Context 只编排呈现，架构层级不变。 本轮六对正例为 1/6 → 6/6，但新增两对无答案反例中候选均过早断言不存在；不宣称整体可靠性达标。290 项定向检查和 84 个真实请求独立重放通过。
+当前唯一协议为 Session 15 / Context 13 / active-reference-policy-v8 / context-json-v13，拒绝旧 Session 1–14，保留旧数据、不迁移；历史验证用冻结源码重放。六对自然任务与定向验证见[修复记录](../deal/005-source-navigation-and-delivery-semantics.md)，不替代原 AR-D 分数。来源事实仍由各 Reader 提供，Composition 只冻结说明，Context 只编排呈现，架构层级不变。 本轮六对正例为 1/6 → 6/6，但新增两对无答案反例中候选均过早断言不存在；不宣称整体可靠性达标。290 项定向检查和 84 个真实请求独立重放通过。
 
 当前新增的是呈现合同（[ADR-0064](../adr/0064-evidence-bounded-retrieval-policy.md)），不是新的检索状态机。Skill summary/directory 明确为 `navigation-only`，section/chunk 为 `source-content`；summary 附精确 `request_skill_reference(directory)` 动作，身份来自当前已准入 block，其他 ID 为 JSON null。动作仍由原 Skill 选择、版本、披露、Lease 与下一 Step 预算规则校验；不直接交付正文，不扩大 search_skill 的导航字段范围。
 
@@ -1596,7 +1631,7 @@ compileall、Ruff、collect-only 与 diff 检查通过，见 [AR-B 证据](../va
 
 证据充分就回答，局部未命中只描述对应范围，有用且获准的查找仍可继续；权限、预算或证据不足时如实说明未解决。这是需要真实检验的模型行为，`completed` 不证明语义正确。静态长提示、后置提醒、一次强制草稿复核均未稳定改善，因此已撤回，没有模型自评批准事实或可变证据账本。相同问句只改变隐藏正文的正反事实暴露了仅看主题/预览的错误；最终对照、失败及成本见[记录 006](../deal/006-evidence-bounded-retrieval-policy.md)，不重算 AR-D，也不把这些已反复使用的诊断题称为独立留出集。
 
-Context 呈现变化使用 Session 13 / Context 12 / active-reference-policy-v8 / context-json-v12。旧 Session 1–12 保留但拒绝，使用新的数据空间；SQLite、M3 和原 output_ref 格式不变。历史实验仅用各自冻结源码重放，没有兼容解释、迁移或删数据。
+Context 呈现变化使用 Session 13 / Context 12 / active-reference-policy-v8 / context-json-v13。旧 Session 1–14 保留但拒绝，使用新的数据空间；SQLite、M3 和原 output_ref 格式不变。历史实验仅用各自冻结源码重放，没有兼容解释、迁移或删数据。
 
 本轮 305 个不同定向用例通过，真实最终导航正例 7/9→8/9；覆盖标记候选 5/5，基线 4/5 的缺失为 TLS EOF，不能归因为准确率改善。共 122 个目标实例、含准备 625 次 Attempt，已知 total_tokens=3,430,669，另有 26 次 usage 未知。负面结论仍未全面可靠，未运行全量或 L2–L4；实验完整证据与限制见记录 006。
 
@@ -1636,11 +1671,15 @@ START/SETTLE；它不再以 Step-scoped reservation 充当外部执行锁，见 
   [ADR-0038](../adr/0038-schema-gated-multiline-tool-arguments.md)；完全缺失 usage 则保留
   `UsageQuality.UNKNOWN`，由 Budget 继续保守结算。
 
+参数诊断现沿原 `ProviderFailure.code` → `model/attempt-end.failure_code` 持久化：区分原始类型错误、JSON 顶层非 object、期待逗号/冒号/键/值、额外数据、字符串未闭合、控制字符、非法转义和非有限数字；未知 JSON 语法使用固定兜底码。只映射解析器的固定类别，不复制 error.doc、原异常消息或响应内容；不记录原始参数、认证信息或第二份响应账本。解析器报告“期待逗号”并不证明根因一定是漏逗号，也不能断言响应被截断。旧三引号规范化范围、拒绝规则、protocol 不重试和未知 usage 结算不变，Session/Context/SQLite 版本不变。旧 WC-1G 仍不能精确追溯；显式取证脚本可识别新诊断码族，真实原文观察需另行按冻结调用合同执行。见 [参数诊断记录](../deal/046-provider-argument-diagnostics.md)。
+
+随后单独授权原分工请求一次响应取证：1 次真实调用、2843 exact tokens、32.975 秒；原 Provider 正常解析，finish_reason=stop、零 tool_calls。模型因两份规格尚未读取而拒绝制定分工，未复现 json-extra-data，不能追认旧失败根因。已保存字节经原 Provider 离线核验，payload 摘要与正文一致，原库未变；未执行 Tool 或完整任务。见[记录 048](../deal/048-planning-response-capture.md)。
+
 当前没有流式读取、Provider 内部/SDK retry、Fallback、并发限流或厂商专属协议适配。
 C4 的 `tests/provider_argument_probe/` 是显式开发取证：绑定原失败的 Stream/Step/Turn/snapshot/
 fingerprint，原样调用当前 Provider，只记录它实际读取的 HTTP body 和请求 payload 摘要；不读取或
 导出认证头/环境值，不执行返回的工具，不恢复旧 Session，也不改变生产的 sanitized 日志合同。
-原 Adapter 源码与历史运行 manifest 字节相同；原失败未保留 HTTP body，不能追认具体非法语法。
+C4 当时 Adapter 源码与历史运行 manifest 字节相同；原失败未保留 HTTP body，不能追认具体非法语法。
 24 次同历史 dispatch 的真实重放中 21 次解析、3 次连接/TLS 中断；18 个工具参数均为合法 object，
 与 Adapter 输出逐字段一致并通过原 JSON Schema。另一个最小文本控制成功；22 份已取得响应全部
 经原 Adapter 离线字节重放核对。没有复现参数协议错误，也没有确认的 Adapter 缺陷，故未放宽 parser。
@@ -1670,6 +1709,8 @@ end append 或 settlement 任一窗口收到取消，都先让当前 owner 收�
 Verifier、EventStore 或 Promotion failure 都不属于本策略。
 
 ## 9. Tool Runtime 与内置工具
+
+只读调查增加两个预算查询/申请工具，adaptive 主方增加决定工具；权限分属子方与直接父方，接线与原 Session 证据见 12.14。
 
 F3 的 opt-in `propose_workspace_memory` 是 EXTERNAL_TRANSACTION，只提出候选，不提供决策能力；
 来源身份、注册开关、policy 和 host-only 门面见 7.6。
@@ -1712,7 +1753,7 @@ flowchart LR
 | 工具 | Effect Kind | 输入与行为 | 关键限制 |
 |---|---|---|---|
 | `list_files` | WORKSPACE_READ | 列出相对文件；可设 `max_files` | 跳过常见缓存、Git、虚拟环境和依赖目录 |
-| `read_file` | WORKSPACE_READ | 读取 UTF-8 文件 | 真实路径必须位于 Workspace 内 |
+| `read_file` | WORKSPACE_READ | UTF-8 文件按实际行号读取；可选起止行、长行列偏移和来源摘要 | 每页最多 120 行/8000 JSON 字符；续读校验来源，真实路径仍须在 Workspace 内 |
 | `search_text` | WORKSPACE_READ | 子串或正则搜索，可限路径和结果数 | 跳过二进制/非 UTF-8 及常见忽略目录 |
 | `apply_patch` | WORKSPACE_WRITE | 精确旧文本替换或显式创建新文件 | 校验替换次数；临时文件 + fsync + 原子 replace；不是 unified diff parser |
 | `shell` | PROCESS | `shlex.split` 后调用原 ToolRuntime 绑定的 Sandbox 能力 | 不使用 `shell=True`；显式 Linux guest 环境；缺配置失败关闭；超时/取消收敛容器工作负载 |
@@ -1724,6 +1765,27 @@ flowchart LR
 
 F2 显式开启 skills 策略且启用默认工具时，增加 PURE_READ `request_skill_reference`；
 只返回下一 Step 的受限披露收据，不返回正文、不改变选择。精确参数与时效见 7.5。
+
+`ReadFileTool` 与 `file_page.py` 只有一条分页主线：path 必填；start_line/end_line 为 1-based 闭区间，未填起点从第一行开始，终点默认文件末尾并按实际 EOF 截止。start_column 为 1-based Unicode 字符位置，source_sha256 可绑定实际原文件字节。只填 path 也是第一页，不保留旧整文件模式。输出 format=1 的 JSON 含 path、source_sha256、total_lines、实际起止行/列、带行号 text、truncated、eof 和完整 next_read 参数；ToolOutput.data 复用同一元数据但不重复正文。空文件为零行空正文、EOF，无虚构尾行。
+
+页同时受 120 行和 canonical JSON 8000 字符限制；超长行用同一行的下一列继续，范围未完成时 next_read 保留 end_line，指定范围读完但未到文件尾时 next_read 从范围之后开始。truncated 只表示请求范围未完整返回，eof 才表示整个文件已到末尾。每次仍经原 resolve_workspace_path；旧摘要与本次原始字节不同则 file-read-source-changed，非法类型/范围/摘要、非 UTF-8、目录、越界或重解析路径均明确失败。摘要不是权限，也不是历史文件快照。
+
+读取与页渲染在工具拥有的线程工作中完成，取消沿原 await_worker_convergence 等待工作结束，重复取消不能提前释放；外层保留 CancelledError，工作失败作为 cause。实现仍读取当前完整文件再选择视图，不宣称总磁盘 I/O、内存或文件大小有界。页字符数也不是 Provider token 预算；原 ToolRuntime 的整体输出处理、Effect/Session、Context 冻结与费用账本不变。search_text 算法/输出不变，说明命中行后可用 read_file 的起止行查看附近正文；调查方仍不获得 shell/read_tool_output。实现与真实对照合同见[有界源码读取](../plan/TRACEHARNESS_BOUNDED_SOURCE_READING_CONTRACT.md)。
+
+```mermaid
+flowchart LR
+    Search["search_text 命中路径与行号"] --> Read["read_file 路径与行范围"]
+    Read --> Bound["原 Workspace 路径边界"]
+    Bound --> Source["当前文件字节 / 来源摘要校验"]
+    Source --> Page["有界行号视图 / next_read"]
+    Page --> Ledger["原 ToolRuntime / Effect / Session"]
+    Ledger --> Request["原 Frozen Request"]
+    Page -->|需要更多原文| Read
+```
+
+WC-3 的主方专用 Patch 读/整合/对账工具也走本管线（14.3.3）。通用 ToolExecutionFailure/ToolExecutionCancelled 可在原 Effect 留下已经收敛的结构化回执；不绕过 Policy/Budget，不自动重试写操作。
+
+ShellTool 的说明与 command schema 明确工作目录已是隔离工作区、命令按 argv 执行，引号仅分组参数，cd/&&/管道/重定向/展开不自动解释。guest 捕获启动 ValueError/OSError 后，把异常类型和消息写入原 stderr，按原 output_bytes 字节限额截断，再由原 finish 收敛；状态保持 start-failed，原 CAS/Outcome/Tool failure/后继请求携带同源错误。无新字段、解析器、自动重试或权限变化，协议保持。见[记录 063](../deal/063-shell-launch-feedback.md)。
 
 ### 9.4 插件 Tool 走同一条管线
 
@@ -1792,7 +1854,7 @@ CoreInvariantChecker 在收到 Effect 流时复用同一验证器；Session-only
 持久化在工具异常处理之外，写入错误不能伪造成另一条工具失败 Outcome。Outcome 已提交但 Result
 未写时，原恢复和取消收敛代码补齐同一呈现/引用；未提交时不发布可读指针，恢复按原规则标记执行未知。
 
-当前 Session 13 / Context 12；SQLite 2 / M3 format 2 不变。已有截断记录不会被改写或伪造丢失原文。
+当前 Session 15 / Context 13；SQLite 2 / M3 format 2 不变。已有截断记录不会被改写或伪造丢失原文。
 C 已实现旧 retained Tool reply 的确定性折叠，仍用这里的 output_ref 搜索和读回；细节见 12.2。E0 已增加完整请求 token 估算及超限拒绝；D 已实现可选 LLM 摘要；E1 已在后续 Step 维护闭合旧历史，E2 已实现参考 token 准入，尚未实现 Provider 超限重试。
 A 冻结的后续预算包括 system、tools、Product、Surface、Context reference、当前任务回显、Provider
 封装和输出预留；字节/估算 token/实际 usage 必须分开。80% 触发、60%–65% 目标只是待验证候选，
@@ -1816,18 +1878,20 @@ A 冻结的后续预算包括 system、tools、Product、Surface、Context refer
 
 `CommandVerifier` 拆分 argv 后调用宿主绑定的 SandboxCommandPort，在授权工作区副本运行；只有 finished 且退出码 0 才通过。结果携带原 Sandbox 回执，AgentLoop 仍只追加 verification/result。未配置沙箱返回明确失败，不回退宿主。
 
-Verifier 是可选的：未配置时，无 Tool Call 的最终模型响应可以结束 Turn，此时 `verification_passed` 为 `None`，不能把它解释成“外部验证已通过”。
+通用 Runtime 的 Verifier 是可选的；Product 可写 multi 的 REVIEW 按 14.3.6 必须绑定原完成检查。未配置时，无 Tool Call 的最终模型响应可以结束 Turn，此时 `verification_passed` 为 `None`，不能把它解释成“外部验证已通过”。
 
 
 `runtime/repeated_denial.py` 从当前 Turn 的 `turn/start` 配置与已闭合 Step 的 Tool Call/Result 派生计数。只有整个批次均为无 Effect 的 `denied`，且工具、参数、拒绝类型/原因/data 与 Composition revision 均相同才连续计数；批次内排序不影响身份，一个 Step 只计一次。参数、结果或 Composition 改变、成功执行、其他失败或未闭合 Step 都打断连续性，不跨 Turn 保存计数。每次调用先经过现有 ToolRuntime 的新鲜权限检查，保护只在结果落账后决定是否继续；不缓存授权，也不能观察未记录的外部权限变更。
 
 默认 `RepeatedDenialPolicy(warn_after=2, stop_after=3)`；`RuntimeConfig.repeated_denial_policy=None` 关闭。CLI 提供 `--denial-warn-after`、`--denial-stop-after` 和 `--disable-repeated-denial-check`，要求整数 `2 <= warn_after < stop_after`，关闭不能同时指定阈值。配置写入原 `turn/start`，旧记录缺少该配置时不补推保护。恢复命令保留配置；本次未增加 TUI 配置表单。
 
-AgentLoop 只连接事件投影与 Continuation；默认 Continuation 拥有提示/停止决定，BudgetContinuation 透传状态并保留原预算结算，自定义 Continuation 需自行处理新增可选状态。提示沿现有 user/message 路径持久化，原始当前任务仍由 Turn 首条用户输入锚定。取消、恢复、新 Turn 与重放沿用原 Session 生命周期，没有第二事实源。Session 13 / Context 12 / `context-json-v12` 不变。
+AgentLoop 只连接事件投影与 Continuation；默认 Continuation 拥有提示/停止决定，BudgetContinuation 透传状态并保留原预算结算，自定义 Continuation 需自行处理新增可选状态。提示沿现有 user/message 路径持久化，原始当前任务仍由 Turn 首条用户输入锚定。取消、恢复、新 Turn 与重放沿用原 Session 生命周期，没有第二事实源。Session 15 / Context 13 / `context-json-v13` 不变。
 
 这不是通用语义无进展检测：交替调用、变更参数、成功轮询不在本保护范围。真实压力例从 6 次相同拒绝降为 2 次后模型自行停止；真实运行没有触发第 3 次硬停止，该分支由确定性与反向测试验证。4 个自然问题两组均通过 2/4，不能宣称检索准确率改善；10 条真实旅程的 65 个请求独立重放通过。当前范围共 210 项定向/相邻检查通过，未跑全量或 L2–L4。见 [ADR-0062](../adr/0062-repeated-denial-continuation.md) 与[修复记录](../deal/004-repeated-denial-continuation.md)。
 
 参考问答的模型侧停止指导见 7.11：证据充分、仅能作范围限定的结论、或者存在真实阻碍时各自如实回答。宿主默认 Continuation 不解析自然语言来判断否定断言，不把模型自评当作新的批准事实或验证结果；`completed` 仍只表示循环结束。
+
+可写主方复核通过 StepViewSelection 只在交付阶段接入 CompletionVerifier，沿用本节失败计数与反馈规则；完成检查不等同于 Artifact Review 或人工批准，详见 14.3.6。
 
 ### 10.1 Verifier 的执行与输出所有权
 
@@ -2061,7 +2125,7 @@ evidence（source_seq/note）。决定只指用户明确采纳的决定；助手
 成功才由同一 `CompactionService` 追加 format-2 `method=semantic` replacement；causation_id 精确
 指向已成功结束的摘要响应。来源、正文、策略、cut 和摘要器身份由 checker 重算。原事件、Product
 当前状态和人工 Memory 权限不变，摘要仍是不可信历史。旧 reader 明确拒绝新请求形状/method；
-Session 13/Context 12/SQLite 2 不变，不迁移、不改写。摘要之后另开普通 Step，重选 Context 并回答当前问题。
+Session 15/Context 13/SQLite 2 不变，不迁移、不改写。摘要之后另开普通 Step，重选 Context 并回答当前问题。
 
 摘要和回答共享同一个 Turn 的步数与费用，最多一条摘要调用链，原重试策略控制传输重试。失败 JSON
 记录 compaction-failed；Provider/Budget/取消沿原生命周期收敛，原文不被失败摘要替换。若 C 已折叠，
@@ -2163,7 +2227,7 @@ source；ADR-0039/0041 的“摘要可以替换对话 prose、不能遮蔽宿主
 C 新增 `method=tool-fold`，仍为 format 2；沿用摘要变体的 key 集，但去掉 summarizer、summary、
 summary_truncated，source_seqs 必须只有原 result 一项，policy_digest 必填，replacement 是配对的
 Tool reply。共享源检查重算完整消息、来源、digest、字节与保留轮边界。旧实现会明确拒绝新 method，
-不会静默忽略；当前 manual/automatic 摘要仍合法。Session 13 / Context 12 / SQLite 2 /
+不会静默忽略；当前 manual/automatic 摘要仍合法。Session 15 / Context 13 / SQLite 2 /
 retained format 1 不变，无迁移或历史改写。此变体不是第二事实源、第二 Projector 或旧格式适配。
 
 `surface/replace` 的摘要变体 key 集精确：`format_version`、`method`（`manual`/`automatic`/`semantic`）、`cut_seq`、
@@ -2307,6 +2371,10 @@ unavailable/unproven 和 attempt/role/query 描述性汇总；无阈值不声称
 为 0，记录局限；semantic/reranker 仍关闭。没有第二 Runner 或模型自评。
 
 ### 12.6 共享评估、检索旅程、派生诊断与变体比较（UE-0～UE-4 测量，ADR-0066）
+
+Product 交接观测改用同一 episode_assessment owner 的 successful_dispatches，保留成功 Attempt、原请求身份/位置/指纹及交接正文核对，不要求最终回答。answer_dispatches 继续限定到最终回答之前，用于原检索答案评估；没有改评分、协议或业务状态。记录 062 副本可重算 17 次已送达请求，原报告不覆写。
+
+WC-4 当前评估识别原 Directory 授权的 patch_author / investigator，校验可写工作输入与 Workspace 归属；原 investigations 容器、整树成本和检索角色归属接入可写助手。原限定通过见 14.3.13，当前稳定性见 14.3.14。
 
 唯一 `traceh eval` / EvaluationRunner 静态装配 ProductTaskEvaluator 或 RetrievalEpisodeEvaluator。
 公共 inputs/manifest/plan/contracts/runner/report 拥有根协议 3、运行身份、冻结、顺序试次、取消和报告。
@@ -2668,6 +2736,208 @@ flowchart LR
 发行核查补充：独立 worker 回执现为 format 2，记录实际 pid 与 parent_pid；宿主进程记录 owner_pid 与启动 pid。原比较器验证“宿主直接启动 worker”或“宿主启动器→worker”的同一进程所有权链，支持 Windows venv 启动器而不忽略身份。请求摘要、冻结源码、环境、报告及回执摘要仍全部核对。旧 format 1 实验需用其归档冻结源码检查，当前比较器明确拒绝，不改写旧记录。证据不可比较时后台保留未知成本并停止，TUI 显示证据不完整，不把缺失统计当作零。
 
 最终 0.11.0 wheel 在独立 Windows venv 又运行同一规模的小样：10 个 Session、21 次请求、125,128 exact tokens、0 失败，759 个原文件不变且请求重放通过。任务模型评分仍为 1/2→2/2，任务 Token 34,376→28,090、工具 4→3，本轮达到原冻结门槛并进入 review_candidate，未自动采用。前台 24,729、分析 5,942、任务 62,466、裁判 31,991 tokens。这是另一轮独立小样；前一轮成本超标记录仍保留，不拼分、不声称普遍改善。
+
+### 12.12 DA：只读动态委派（工程与有限实测完成，未发行）
+
+本节保留 DA 当时的冻结条件与验收结果；当前模式、协议与受限编辑入口由 14.3 覆盖，不再接受旧 adaptive 配置。
+
+`supervision/delegation.py` 提供 delegate_investigation、followup_investigation、collect_investigation、stop_investigation。模型只填 goal/deliverable/briefing 或已返回的子 Agent/消息身份；宿主通过原 Directory、Supervisor.create、Inbox NEW_TURN 和 AgentRunReport 建立工作与交接。创建、消息使用原 Tool 调用派生的稳定身份；收集核对调用 Session、直接 owner、原工作输入摘要和 Workspace 源版本。消息身份必须进入模型可见 content，而不能仅存在 ToolOutput.data。正文是子方声明，completed 不是正确性或批准结论。
+
+ProductResourceBindings 从同一 preflight 的 investigator 只读模板、source/base revision、预算绑定子运行；父历史不继承，子装配不接父 Context/Memory 配置，不获得委派或写入 Tool。ProductProfileRegistry 同时冻结单独的 adaptive 主方装配，只有它追加委派 Tool；single 仍使用原主方工具集。两个模式的基础能力、主方账户与源码相同。调查是在原始 base checkout 中工作，不能看到主方脏修改。DA-5 已删除旧 multi/auto、Router、parent/reviewer 固定角色及其重叠入口；只支持显式 single/adaptive，默认仍为 single。
+
+预算仍由原账本所有。Budget schema 3 的 child-reserved 必填 retained_tokens 与 initial_tokens，ChildBudgetGrant 是宿主的累计 limits、初始分配与 retained_tokens 决策；service 的原子准入及 Projector 回放都检查委派后父方保留量，普通调用显式填零。它不另建余额，也不自动返还已委派包络。BudgetedAgentExecution 支持显式单 Turn 墙钟上限，只预留 min(账户剩余, Turn 上限)，给子方留出可授予的时间；仍通过原 usage-reserved/started/settled 记账和取消收敛。没有设单 Turn 上限的其他宿主仍由整个账户剩余墙钟限制。
+
+Product 协议/事件/配置为 4，角色仅保留 coder/investigator，显式绑定 max_turn_wall_milliseconds、retained_tokens 与 investigator_initial_tokens；Product Context format 8 删除 routed 状态语义，Session 13/Context input format 12 仍保持原合同。旧 Product 1/2/3、Product Context format 7 与多余 Router/角色字段明确拒绝，不能用新代码直接续跑旧 Product 数据；Budget 为 schema 3，旧 Budget 1/2 拒绝。已发行版仍为 v0.11.0，其旧记录应由对应冻结源码检查；不自动迁移或删除。Workflow 的原执行节点现在等待主方整树 dispose 后才 capture Artifact，工作区生命周期仍由原 Workspace 管理。
+
+原 EvaluationRunner 已接入 comparison format 2：execution_strategy 只允许同源码 single/adaptive 装配差异，text_candidate 要求两臂执行模式相同。requested_modes 明确指定各臂；first_arm 决定实际运行顺序，原 worker receipt 绑定 variant_id，比较时按身份配对，不按完成顺序猜测。A/A 可以显式选相同策略；执行策略比较拒绝源码 patch。选题中的 material_seeds 可显式为 null，表示 Product 使用冻结源码而非随机材料种子，不虚构 seed=0。
+
+Product dataset format 2 将完整 VerificationPlan 绑定每个 case，通过原配置解析器冻结；检查命令留在评估材料中，不复制到 Agent 工作区。task_settings 保留共用角色/预算配置。ProductTaskEvaluator 从原 Directory ownership 归因整个主方子树，失败/取消 Session 仍计入，usage 未知不记零；Verification 已开始但失败时仍从原 PromotionLedger 的精确 request identity 读取失败报告，不能因 Product summary 没有 review_id 丢失结果。新增交接诊断沿原 Inbox/Delivery/Session 区分报告可用、子方成功请求里出现的来源工具输出和主方成功请求里出现的精确报告；这些可见性记录不自行证明相关性或正确性。另从原 Session 闭合 Turn 的同宿主 UTC 半开区间派生 observed_peak_active_turns，结束与开始同刻不算重叠；未闭合/反向时间为 unknown。这是观察到的对话重叠，不是 CPU 并行度。按源版本、goal、deliverable、briefing 的摘要统计完全相同的工作输入；重复不自动判为浪费。报告可用数与主方实际收到数继续分列。
+
+需要语义审阅的 Product benchmark 明确声明 product-durable-semantic-v1、requires_review=true 和与全部 case 精确对应的冻结 rubric。原 review/assess/model-review 按 task_type 接入 Product 原源码、CAS 校验的不可变补丁、Verification、最终答复和实际 dispatch 的工具结果。未审保持 pending_review，语义意见不能覆盖硬失败；无需语义审阅的 Product 仍使用原确定性合同。LocalArtifactCas.read_bytes 暴露同一个已验证读取 owner，离线证据不另写一套 CAS 解析器。
+
+ProductObservation/Activity 和原任务对话页已沿 Directory 发现只读子 Session，显示具体调查目标、交付要求与未经验证的背景。后台优化继续使用原 AO-3：Product 模板必须是相同 adaptive 模式、显式 network=none 沙箱、无插件额外授权及 Product 语义评分；候选只可改 supervision/delegation.py 的四个说明常量。F2 选题页可选择 Product 题和显式沙箱，生成原双臂计划，保存不启动实验。任务完成到审批屏障或终态后，原 TUI 将结构性失败/取消线索交给原后台 owner；确认 Chat 必须属于该周期工作区，跨 Store 通过原 durable_log_identity 拒绝，同一任务不因后续批准重复触发。失败/取消可能符合预期，线索不等于标准答案。前台优先、额度、冷却、候选去重和人工采用继续由原 AO-3 管理。
+
+当前定向收口已通过：合同/配置/投影等 277 项、新边界 20 项、真实 Git/Docker Product 48 项、TUI/状态快照 174 项（3 跳过）、独立安装包 88 项、真实 Workflow/原优化 47 项、后台 owner 13 项、评估合同 35 项，以及 Product 经原 AO 候选双臂、真实验证与语义审阅的 1 项完整路径。集合存在重叠，不相加为独立总数。主方保留额度、单 Turn 时间预留、捕获前整树收敛、取消外层类型四项保护做过反向验证。后台测试 UTC 起点过期在明确绑定 HEAD 的副本重现后修正夹具；生产截止规则不变。Windows Git 在深层 worktree 管理路径下仍有长度限制，Product 比较使用明确的短根目录；未宣称支持任意深度。
+
+真实 A/A 8 trials：30 Sessions / 84 requests、276185 tokens；同源码两次出现净增 2 题和一增一减，存在明显自然波动。机制 12 trials：45 Sessions / 146 requests，single 硬验证 6/6、adaptive 3/6；一次 Provider 工具参数协议失败使整批实际 tokens 未知，不能以预算保守结算补齐。开发集 48 trials 已完成：177 Sessions / 546 requests、1817962 tokens、无失败模型请求；第一次配对增 0/退 1/不变 5/待审 6，第二次增 1/退 0/不变 11。任务 Token 分别为 348712→450769 与 356326→432739。三批真实模型都没有调用委派，因此不能宣称验证了自主并行协作或收益。部分真实任务与同宿主 Docker 回归重叠，wall elapsed 仅为观测值。实测来自冻结的 DA 开发 Wheel / Product 2；当前 Product 3 清理版本另外通过安装和工程验证，不把旧源码成绩改称新版本成绩。
+
+原 AO 的一次真实受限提案返回 no-candidate，使用 22014 Token：这是模型认为证据不足以支持通用说明修改，不是宿主证明所有说明已经最优。此前输入预算拒绝发生在派发前（0 次模型调用）；缩短重复评语预览和修正缺失待审评语后再运行，没有提高预算。无候选不启动比较；基础 adaptive 未过冻结资格，因此未运行留出。整个 DA 有 68 个任务 trial、777 份模型请求（含裁判/分析），一个未知用量失败使总体 Token 保留 unknown。独立进程重开 254 个 Session 并重放全部 777 份请求；中间读取曾清理或建立 WAL/SHM 临时文件，持久数据库/CAS/报告/请求文件字节与原批次一致，最终独立复核期间全部原文件不变。Session 轨迹采样改为副本读取，复核与其他 Reader 串行执行。最终干净安装包的 85 项检查与 CLI smoke 通过，包内 319 个文件与当前源码字节一致。详见 [DA 验证记录](../deal/027-dynamic-collaboration.md) 和 [派生汇总](../validation-data/dynamic-collaboration/da-final/summary.json)。没有跑全量或 L2–L4，没有自动采用或发布 DA。
+
+```mermaid
+flowchart TD
+    P[ProductTask 原治理] --> W[Workflow 执行节点]
+    W --> M[主 Agent single 或 adaptive]
+    M -->|adaptive 按需委派| S[原 Supervisor 与 Inbox]
+    S --> C[只读子 Agent 原始版本]
+    C --> R[原 Session 与报告 Reader]
+    R -->|精确消息交接| M
+    M --> D[整棵子树停止并收敛]
+    D --> A[原 Artifact 捕获]
+    A --> V[原 Verification 与人工 Approval]
+```
+
+补充自主委派诊断针对 Product 3，单独于旧 68 个任务记账。旧 30 个 adaptive trial 的 276 份主方请求均包含委派工具，但实际任务源码只有 2～16 行。新实验复制 18 个真实模块、6,919 行源码，用明确委派/自然复杂/简单三个条件各重复两次，再用同材料、同预算复测一个只改 DELEGATE_GUIDANCE/COLLECT_GUIDANCE 的隔离候选。两版明确条件均 2/2 实际读文件后创建并接受子工作，自然和简单条件均 0/2；四个子方都读到原文却因预算耗尽失败，completed 报告和成功报告交接均为零。原版结构通过 4/6、候选 6/6；六份结构通过的复杂答复经 Codex 对原 CAS 补丁与源码核读均发现关键错误，非用户金标、不回写原结构评分。
+
+该次诊断时的读取边界是 `read_file(path)` 整文件、无行号，`search_text` 仅匹配行；调查方不具备 shell/read_tool_output 或范围读取。候选包含范围阅读建议，与真实能力不匹配，且未改善自然委派/完整交接，因此未采用。失败前可见性由诊断脚本按原 Session 成功请求单独派生，原 completed-handoff 指标的空列表不能解释为失败助手没有读过。两版各 75 次真实 API、总计 1,748,884 exact tokens；原 Reader 独立重开 40 Sessions / 174 requests（含 24 份 scripted requester），重建和不变量通过，最终期间 636/653 个原文件不变。首次重开清理空 WAL/SHM 导致文件集合检查失败，持久原文不变，串行复核后通过；12 个任务 Budget 收敛、Workspace live=0。16 项定向/相邻诊断通过，停止条件反向检查有效；没有修改生产源码、增加预算、全量/L2–L4、提交或发行。详见[诊断合同](../plan/TRACEHARNESS_DA_AUTONOMOUS_DELEGATION_DIAGNOSIS.md)、[记录 028](../deal/028-autonomous-delegation-diagnosis.md)及[驱动职责](../../tests/live_dynamic_collaboration/README.md)。
+
+合同见 [DA-0](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_DA0_CONTRACT.md) 与 [ADR 0069](../adr/0069-task-adaptive-readonly-delegation.md)。
+
+### 12.13 有界源码读取：功能验证完成，未证明协作收益
+
+本阶段按用户授权只改公共 ReadFileTool、file_page 渲染 helper 与 SearchTextTool 的阅读导航说明，精确输入/输出、路径和线程取消边界见 9.3。原版运行前冻结生产源码、驱动与材料，新版运行前冻结其三文件差异；其余生产源码逐字节相同。复用原 EvaluationRunner / ProductTaskEvaluator 和 12.12 的实际 18 模块/6919 行题目，每版明确委派/自然复杂/简单条件各两次，固定 qwen-plus、直连、90 秒、每请求一次尝试、600k/300k/60k 配置和 network=none 沙箱；无新增裁判、预算或委派提示。真实任务期间不并行运行 Docker 回归。
+
+结构通过 4/6→5/6（明确 1/2→1/2，自然 1/2→2/2，简单 2/2→2/2）。两版明确条件都在读文件后成功创建两个助手，自然条件未委派；四个助手均读过源码后因原预算耗尽失败，completed 报告及主方完成报告消费均为零。新版明确第 1 次主方也预算耗尽，未捕获产物；原版两次硬失败捕获空补丁。原 Budget 全部收敛、Workspace live=0。新版 51 个独立读取结果进入成功模型请求，均为分页视图、最大 6871 JSON 字符，11 次使用范围参数，读取失败为零；实际模型未使用带来源摘要的 next_read 原样续读。长行及摘要续读由确定性真实文件测试证明，不能冒充模型行为证据。
+
+五份格式通过的复杂答复逐份 Codex 源码核读仍有关键错误：函数声明被当正文，grant_root/取消清理被当保留额度，collect/report/TurnResult 被当产物捕获；未经用户人工金标确认，不回写原评分。四份简单题由原 Verifier 确定性通过。原版 76 次真实 API / 823363 exact tokens，新版 87 / 886141，合计 163 / 1709504，Provider 失败为零；费用增加 7.6%，不宣称效率改善。独立进程按两份冻结源码重开 20/20 Sessions，重放 88/99 requests，共 40/187，含 24 份零用量 requester 请求；重建及不变量通过，最终复核 637/644 个原文件不变。首次重开因清理空 WAL/SHM 报文件集合变化，持久内容未变，串行严格复核后通过。
+
+实现保留通用阅读能力，但自然委派、语义正确性与在预算内交付仍未证实改善；不采用旧说明候选、不切换默认模式、预算收尾的后续进展见 12.14。135 passed / 1 skipped、三项保护反向检查和文档/编译/收集检查见 15 及[记录 029](../deal/029-bounded-source-reading.md)，[逐题证据](../validation-data/dynamic-collaboration/bounded-reading/README.md)与旧 DA/72 题分开。未全量、L2–L4、Wheel、提交或发行。
+
+### 12.14 只读助手额度申请与显式续派
+
+Product protocol 4 明确区分 `investigator_initial_tokens` 初始授予量与 investigator `budget.max_tokens` 累计硬上限。初始量为正且不得超过上限；TUI 模板示例为 20000/30000，可由用户修改。现有 benchmark 初始等于原累计量，保持原分配条件；需要协商的实验单独冻结较小初始量。
+
+宿主给 investigator 装配 `inspect_investigation_budget` 与 `request_investigation_budget`，给 adaptive 主方增加 `decide_investigation_budget`。申请携带额度、部分进展、剩余工作及当前工作身份，原 Session Tool result 是唯一申请证据。InvestigationBudgetContinuation 读取成功结果，以 `investigation_budget_requested` 结束原 Turn，不增加收尾模型调用。collect 沿原 report/source/owner 验证读取申请、预算和决定；completed 只指 Turn 完成，进展仍是不可信子方声明。
+
+Budget schema 3 的原 child-reserved 保存初始量，新增 `budget/child-token-decided` 事实。原 service/CAS 与 projector 保证父方余额、在途预留、retained_tokens 和子方累计硬上限；精确重复不再拨款，冲突、旧消息、未结束或取消的请求拒绝。0 是拒绝；批准不改变消耗、其他维度或原时间限制。模型工具的外部事务调用沿原 ToolRuntime 顺序执行，未另建协商队列或状态机。
+
+主方批准后须显式 followup 才继续；停止先收敛原子执行再关闭账户。若先耗尽而未成功申请，只返回失败与已有证据，不编造申请、不无条件加钱。原 AgentLoop 不新增预算分支，Product/Workflow/Promotion 与人工批准边界保持。
+
+合同及测试范围见[额度申请合同](../plan/TRACEHARNESS_INVESTIGATION_BUDGET_CONTRACT.md)，机制结果见[记录 030](../deal/030-investigation-budget-negotiation.md)。后续真实主子小样见[记录 031](../deal/031-real-main-child-model-smoke.md)：三种自然场景没有委派或额度申请；两种明确委派场景实际调用主模型与助手，delegate/collect 成功，但都在冻结调用上限前未形成 Product completed。最小题已写出并回读正确产物，离线 Verifier 通过；原失败状态不改写。因此当前只证明真实双模型交接链可运行，仍未证明自然申请、协作收益或新检索得分。
+
+### 12.15 DA-6：Adaptive 拆分提示未达到采用条件
+
+DA-6 沿原 ProductTaskEvaluator 冻结可拆双主题、明确紧耦合状态链和简单读取三类材料。每轮连接 Provider 前先冻结生产源码、驱动、题目、调用上限和断网 Docker 身份；空产物必须失败、参考产物必须通过。题目没有写委派工具名或强制委派，真实请求固定 qwen-plus、直连、每请求一次尝试，无基线、语义裁判或自动采用。
+
+五轮依次测试：拆分条件工具说明、条件动作工具说明、同一规则进入 Adaptive 专属 system section、明确“多主题默认可拆且下一动作委派”、Workflow 任务消息提示本次为 Adaptive。后两种装配仍复用同一个规则文本，没有复制第二份判断事实。请求快照证明模型看到了 system section 与工具；文件字节、Python Unicode 对象及事件日志均保留正确中文，事件要求中的替换字符为 0，终端乱码只是 PowerShell 渲染，未修改生产编码。
+
+结果为 15 个 Product trial、121 次真实 Provider 调用，delegate/child/collect 均为 0。五轮简单题全部未误派；最后一轮可拆题未通过，紧耦合题达到本地调用上限，说明进一步提示还可能降低稳定性。121 次 Provider 调用与 30 次零用量本地 requester 的成功记录合计 940445 exact tokens；2 次本地上限拒绝发生在 Provider 调用前。所有 Budget 收敛、Workspace live=0。
+
+候选全部拒绝：`DELEGATE_GUIDANCE` 恢复实验前五句短说明，Adaptive 专属 prompt section 和任务消息模式提示均撤回；Single、AgentLoop、Product/Workflow、事实源、权限、预算和人工 Promotion 不变。离线使用临时 SQLite 副本重开 45 个 Session，重放 153 份请求，请求重建与 CoreInvariant 无错误，原数据库字节不变。
+
+这证明当前问题不能靠继续叠 prompt 可靠解决。后续如获授权，应另立 typed decomposition decision 合同：Adaptive 在普通执行前输出 `local` 或有界 `separable` 提案，程序验证子目标依赖、来源、交付和主方保留工作后再调用现有委派工具；该决策不拥有任务事实或 Promotion。本阶段没有提前实现。完整证据见[合同](../plan/TRACEHARNESS_DA6_ADAPTIVE_DECOMPOSITION_CONTRACT.md)、[记录 032](../deal/032-adaptive-decomposition-guidance.md)和[派生汇总](../validation-data/dynamic-collaboration/adaptive-decomposition/README.md)。
+
+### 12.16 DA-7：类型化拆分协议可执行，真实模型候选未采用
+
+DA-7 按独立合同实现了一个候选检查点：只有显式 adaptive 主 Agent 需要先调用 `decide_task_decomposition`，选择 `local` 或 `separable`。决定写入原 Session Tool/Effect 事实；`separable` 复用现有只读调查 owner，Budget、Workspace、Supervisor、Inbox/Delivery 和 terminal 报告仍由原模块持有。Policy 在决定前拒绝普通工具，漏答最多修复两次；决定本身不增加权限、额度、深度或 Promotion 权力。默认 single 没有进入这条候选路径。
+
+确定性 Provider 覆盖了 local/separable、重复与漏答、非法依赖、错 Session/owner、pending/terminal、失败和取消，证明程序合同能保持现有 owner 边界。真实小样固定 qwen-plus、直连、每请求一次尝试和断网 Docker Verifier，四轮各跑可拆双目标、紧耦合链和简单读取。第一轮修正了 local schema 过严；后续只调整通用字段说明、分类规则、Tool 排序和有界修复。12 个 trial 共 68 次真实调用，预期可拆的四次均未选择 `separable`，助手创建为 0；五次 typed 选择符合冻结期望，三次 Product 成功，只有两次完整行为通过。全部 Budget 收敛，Workspace live=0。
+
+失败模式稳定为两类：模型在必经决定前调用同时可见的普通工具；或者进入决定后仍因“自己能做完”把可拆任务选成 local。typed schema 能约束输出形状，却没有稳定改变模型的工具选择与拆分偏好。冻结合同规定分类仍不可靠时撤回，因此候选 Tool、Policy、Reader、Evaluation 字段与专用真实驱动均已删除；原 adaptive、默认 single、AgentLoop、Product/Workflow 和事实源不变。
+
+下一步若继续，应另立合同研究普通工具可见前的独占决策界面或独立 planner checkpoint，并验证请求冻结、取消和恢复；不能临时在 AgentLoop 加特殊分支，也不能新建 Product 状态、Workflow、预算余额或消息账。该方向仍是假设。完整证据见[DA-7 合同](../plan/TRACEHARNESS_DA7_TYPED_DECOMPOSITION_CONTRACT.md)、[记录 033](../deal/033-typed-adaptive-decomposition.md)和[验证数据](../validation-data/dynamic-collaboration/typed-decomposition/README.md)。
+
+### 12.17 DA-8：独占决策能强制选择，不能稳定决定是否拆分
+
+DA-8 按独立合同实现并撤回了一个实验候选。显式 adaptive 的首 Step 从完整 Generation lease 派生只含 `decide_task_decomposition` 的冻结 Composition；合法 `local`/`separable` 决定仍写入原 Session 的 Tool call、Effect 和 result。`separable` 在同一外部事务中复用原 `delegate_investigation` 创建只读助手，之后恢复原普通与调查工具；`local` 只恢复普通工具。候选 Runtime 接缝不理解 Product 语义，ToolRuntime 还核对模型调用是否属于本 Step 实际公开的 Tool。ProductTask、Workflow、Budget、Workspace、Artifact、Approval 与 Promotion 均未改变。
+
+确定性验证覆盖独占工具面、未公开工具拒绝、local/separable、重复或漏答、预算先停止、子创建和发送失败、取消及整树收敛。使用真实 Git 工作区和固定断网 Docker Verifier 的 Product 回归也证明：创建两个助手后收回报告，或在交付前取消未用助手，两条原 owner 主线均可收口。
+
+第一轮真实观察固定三类材料、qwen-plus 直连、每请求一次尝试和场景调用上限。三题均完成硬验证，决定也分别符合 `separable/local/local`；但可拆题只创建并运行了助手，主方没有调用 `collect_investigation`，所以按 answer+handoff 联合合同不通过。首轮分析器还错误地跨 Session 取了第一个 Composition，保存摘要中的 `first_step_tools=[]` 不是主 Session 事实；重新只读原 SQLite 后确认三题首步均只公开决策 Tool。分析器按 stream 修正，并增加一条通用收口规则：创建的初始助手必须被精确 collect 到非 pending 报告，或由主方显式 stop；原预算、最大步数、验证失败和重复拒绝停止原因优先。
+
+第二轮在新目录重新冻结源码、驱动和同三类材料，共 32 次真实调用。三题首步均只公开决策 Tool，证明独占表面生效；简单题选择 local 并完整通过。可拆题却选择 local 且 Product 失败，耦合题选择 local 但同样未通过硬验证。两轮合计 54 次真实调用，无 Provider failure，六次 Budget 全部收敛、Workspace live=0。第一轮修复前为三项任务成功但仅两项修正后完整行为通过，第二轮为一项完整行为通过。
+
+冻结合同要求可拆题稳定选择 separable、创建并收回助手，分类失败即撤回。第二轮已经给出同一类可拆材料被误判的直接反例，因此不再重跑抽样，也不修改题目或门槛。候选的 Step 接缝、决策 Tool、运行时接线、Tool 表面拦截和专用 live driver 均已删除；撤回后架构保护、Registry/Assembly、ToolRuntime、委派预算、调查工具与真实 Product/Docker 相邻回归通过。当前生产没有独占决策阶段或隐藏状态，仍使用原自由 adaptive 工具面与默认 single。
+
+这个结果还暴露了设计矛盾：首步在读取工作区前就要求模型决定执行拓扑，虽然避免了普通工具抢跑，却可能让它在证据不足时一次性关闭协作路径。由此提出的“有界只读侦察 → 独占 typed 决定 → 执行”已在 DA-9 试验并撤回（12.18），阶段切换问题仍需定位；不得把本次未采用接缝留在 AgentLoop，也不得新增 Product 状态、第二事实源或默认额度。完整证据见[DA-8 合同](../plan/TRACEHARNESS_DA8_EXCLUSIVE_DECOMPOSITION_SURFACE.md)、[记录 034](../deal/034-exclusive-adaptive-decomposition.md)和[验证目录](../validation-data/dynamic-collaboration/exclusive-decomposition/README.md)。
+
+### 12.18 DA-9：有界侦察成立，切换后的决定仍未稳定执行
+
+DA-9 已按[冻结合同](../plan/TRACEHARNESS_DA9_SCOUT_THEN_DECIDE.md)实现、验证并撤回候选。显式 adaptive 主方前两个 Step 仅公开原授权的 list_files/read_file/search_text，每 Step 最多执行两个调用；第三步才进入独占决定。程序从当前 Session/Turn 的成功 read_file 结果提取精确读取身份和来源摘要，写入 format 2 决定回执。Product 拥有阶段含义；Runtime 只提供通用 Composition 收窄和预算结算后的 Continuation 修正，阶段没有独立事实表。决定、委派、报告、取消、Budget 和 Workspace 仍由原 owner 管理。
+
+三类原材料的首次真实实验共 18 次 qwen-plus 调用、65117 exact tokens：可拆题和紧耦合题均经过两步侦察，读取内容也进入独占决定请求，但随后仍调用读取工具，三次未提交决定而失败；简单题在两次隐藏工具拒绝后，第三次选择 local 并完成。Product 与联合行为通过均为 1/3，无助手，Provider failure=0，预算 3/3 收敛、Workspace live=0。不能将缺失决定计为 local，也不能把资料进入请求计为分类成功。
+
+可拆题的两步实际是列目录、读 INDEX.md，没有读到主题源码；紧耦合题只读了源码第一页。固定 Step 数保证资源上限，不能证明已取得足够的任务结构证据。本轮首先暴露阶段切换未被模型遵循，没有充分验证侦察对分类质量的影响。
+
+首组未达到冻结门槛，因此没有确认组、改题或放宽预算。候选及测试已归档后撤回，10 个原文件逐字节恢复、5 个候选文件删除；当前生产仍是原 adaptive、默认 single，没有新增 Prompt、Step 接缝、Product 状态或 Promotion 权限。9 个会话、24 份请求在临时 SQLite 副本中重放和不变量检查通过，227 个原文件不变。原统计的 termination 和 unknown 角色标签只是 driver 展示口径，实际失败原因与主方身份通过原事件校正，见[记录 035](../deal/035-scout-before-decomposition.md)和[验证数据](../validation-data/dynamic-collaboration/scout-decomposition/README.md)。
+
+### 12.19 DA-10：提示生命周期诊断，两个干预均未改善首次决定
+
+对 DA-9 原首次决定请求的离线核查确认：Product 候选的阶段 system 与唯一工具确实进入冻结请求，OpenAI-compatible 序列化没有丢弃这些字段。与此同时，Continue.messages 经 AgentLoop 写成普通 user/message，SurfaceProjector 会保留旧侦察提醒；末尾 Context 参考包又重申完成原用户任务。这是可见的当前动作信号不一致，尚不是已证明的全部因果解释。
+
+`tests/live_dynamic_collaboration/phase_diagnosis.py` 是显式、单步、无 Tool 执行的诊断驱动，不是第二套 EvaluationRunner。它只读取已关闭原日志，验证请求摘要和唯一本轮来源，从归档 AST 读取确切旧提示，冻结原样、只移除旧提醒、只末尾重申相同决定 system、同时两项四条件；保持所有 assistant/tool 配对、读取正文、原目标、参考包、工具 schema 和模型参数。准备与真实运行入口分离，最多 12 calls、每调用 60 秒、无重试，失败/取消传播、未知 usage 停止、目录不复用；调用前落盘独立诊断请求，返回后保存原响应，不把派生请求写回原 Session 或当作 Tool 执行。
+
+三类场景各四条件一次，共 12 次 qwen-plus 直连调用、44477 exact tokens，无 Provider 失败，四条件各 0/3 有效决定提案。复杂题均继续 read_file，简单题继续 apply_patch/write_file；没有决定，不评分 local/separable 正确性，不创建助手。三份原 SQLite 摘要保持不变。原 DA-9 首次决定同样 0/3，但本轮不跑 Product，因此不能与 DA-9 完整任务 1/3 混合计分。
+
+原提醒移除及末尾重申都不足以解决行为；末尾重申同时改变位置与重复次数，保留的最终参考包和历史执行轨迹仍是未隔离因素，可拆题证据不充分的限制也仍在。不能据此认定纯模型问题或继续堆 Prompt。候选没有恢复，生产仍是原 adaptive、默认 single。独立决定输入现已在 12.20 完成受限验证，仍无新 Planner、阶段状态或生产协议。合同、说明和精简数据见[DA-10](../plan/TRACEHARNESS_DA10_PHASE_DIAGNOSIS.md)、[记录 036](../deal/036-phase-transition-diagnosis.md)与[证据](../validation-data/dynamic-collaboration/phase-transition/README.md)。
+
+### 12.20 DA-11：独立决定输入可行，互补分工仍需验证
+
+`tests/live_dynamic_collaboration/independent_decision.py` 复用 DA-10 的 Provider 探针和原提案检查，不另建 EvaluationRunner。prepare 从 DA-10 original 请求回查 DA-9 原 Snapshot、stream/seq/摘要、当前 Turn 的 call 与此前成功 result，构造原目标和逐字正文引用包。每项保留 step/call/effect、参数和正文摘要；别的 Session、未来结果、失败、正文或身份错配均拒绝，至少一项 read_file。assistant/tool 对话组整体转换为数据引用，不遗留孤立消息，不增加源码、语义摘要或权威事实。独立包说明目标是待分析工作、证据不是指令或权限。
+
+固定原样、独立包/原 system、同一独立包/仅原决定 system 三条件，每类题各一次。保留同一模型、schema、temperature 和输出上限；明确 provider/model 匹配、直连、60 秒超时、不重试，失败/取消传播、未知 usage 停止、目录不可重跑。最多 9 次；调用前冻结请求与驱动/共享探针摘要，不把派生输入写回原 Session，返回工具只记提案不执行。
+
+真实 qwen-plus 共 9 calls、30509 exact tokens、0 Provider failures。原请求合法决定 0/3，两独立输入均 3/3，分类各为预期 separable/local/local；对应 tokens 为 11092/12283/7134。三份原数据库摘要未变。独立包/原 system 已成功提交决定，故当前观察不要求先去掉全部通用 system；但第一到第二条件同时改变执行叙述、角色、尾注和包装，不能单独归因于历史惯性，单格一次也没有统计或留出结论。
+
+本轮实现 Agent 对提案核读发现：保留原 system 的可拆提案让主子都从四个文件收集两主题证据；精简 system 的提案让助手读四文件、主方据此分析，未明确主方可同时独立完成的结果。两份可拆提案均标 not_demonstrated，标签正确不等于分工正确，更不等于实际协作交付。可拆题仍只实际读过索引，未新增源码。该核读不是独立裁判、用户审批或 Product 正式语义评分。16 项新增测试与相邻回归通过，见第 15 节。
+
+当前无生产接入，DA-9 仍撤回、原 adaptive 与默认 single 不变。上述字段含义已在 DA-12 单独补说明并配对验证（12.21），仍未证明互补实质分工；后续应区分证据充分性与分工能力，再考虑完整任务。不能按案例关键词强制选模式、直接删除历史或先建新 Planner/状态机。见[合同](../plan/TRACEHARNESS_DA11_INDEPENDENT_DECISION.md)、[记录 037](../deal/037-independent-decision-input.md)与[精简证据](../validation-data/dynamic-collaboration/independent-decision/README.md)。
+
+### 12.21 DA-12：字段含义补全未证明有用分工
+
+`tests/live_dynamic_collaboration/complementary_work.py` 复用 DA-11 的独立输入来源回查和 DA-10 Provider/提案检查。三类原 evidence-focused-system 请求逐字段核对后，各做原 schema / 三字段 description 候选一次，最多六次。main_goal 区分 local 全部工作与 separable 主方保留的独立结果，child_goal 描述互补只读结果，child_deliverable 要求子问题答案及证据；不改字段结构、schema 约束、工具总说明、system、目标、已读正文、模型或参数。案例标签、路径和答案不进入说明。
+
+固定 qwen-plus 直连、60 秒、无重试；失败/取消传播、未知 usage 停止、输出目录不复用、返回工具不执行。真实六次共 14905 exact tokens，原组 7155、候选组 7750；两组均 3/3 合法决定和 separable/local/local 预期类别，服务失败为零。原数据库三份摘要不变，请求与响应独立落盘，不创建 Agent、Workspace 或 Product。
+
+实现 Agent 按冻结语义标准核读：原可拆提案仍是助手收齐全部证据、主方随后分析；候选让主方做两个实质主题，助手只核对已知 INDEX 与文件列表。虽然这个小检查可以独立开始，但它不承担用户要求中互补的实质结果，不能将其当作有用并行，两份可拆分工均为 not_demonstrated。两类 local 没有退化。该核读不等于独立裁判、人工批准或任务质量评估。
+
+候选只留诊断脚本、冻结说明和证据，不进入生产；原 adaptive、默认 single、事实源和 Promotion 边界不变，DA-9 仍撤回。后续已转入 DA-13 的有价值委派观察（12.22），接受依赖式调查并分开核对任务结果与报告使用；不能把字段合法或目标文字不同替代语义判断，也不继续无界堆提示。见[合同](../plan/TRACEHARNESS_DA12_COMPLEMENTARY_WORK.md)、[记录 038](../deal/038-complementary-work-contract.md)与[证据](../validation-data/dynamic-collaboration/complementary-work/README.md)。
+
+### 12.22 DA-13：完整真实任务 3/4，协作链路未被触发
+
+本轮修订 evaluation 的解释合同，不改生产委派逻辑。DA-11/12 的“独立并行分工未证明”不能扩大成“依赖式调查无价值”；主方允许等待助手先交证据，也允许两方为独立复核阅读相同来源。只读助手仍绑定冻结 revision，不能直接复核主方尚未冻结的修改。
+
+`tests/live_dynamic_collaboration/valuable_delegation.py` 只组装四份显式实验材料，复用原 EvaluationRunner / ProductTaskEvaluator、原 VerificationPlan、报告中的 investigations/collaboration 和原主子生命周期。可并行调查、依赖式调查、冻结草稿复核、简单版本读取各一个 adaptive trial，调用上限 20/20/20/8，最多 68 次含整树；每 trial 600 秒、连接直连 60 秒无重试。不给模型预期委派类别，不要求创建助手，不执行新的 typed decision，也不恢复 DA-7/8/9。源码、脚本及依赖、材料、配置、沙箱摘要冻结；原镜像先验证缺交付失败/参考结构通过，运行标记阻止失败或取消后重跑。
+
+程序分别记录 task_success、报告到达与 chain_observation。没有助手时 task_success 仍可为真，chain_observation=not-exercised；报告已实际派发时为 report-visible-use-unreviewed，不能自动变成“已经使用/有价值”。语义、报告实际使用和贡献需核对源码、原请求与交付；实现 Agent 核读不是独立裁判或人工批准。三个分析题的程序检查只覆盖结构、所有引用行范围、代码来源及原文件摘要，简单题核对真实版本；结构参考不是语义 gold。旧材料的方法名 after_tool_results 已不适用于当前源码，新依赖题明确核对实际 decide 链，历史实验不改写。
+
+```mermaid
+flowchart TD
+    A[四份冻结实验材料] --> B[原 Docker 沙箱预检]
+    B -->|不可用| X[记录环境阻塞 / 不调用模型]
+    B -->|通过| C[原 ProductTaskEvaluator / adaptive]
+    C --> D[原 Session / Effect / Budget / 产物]
+    D --> E[任务结果与报告送达分别记录]
+    E --> F[离线核对语义 / 报告使用 / 贡献]
+    F --> G[保留观察 / 不自动采用]
+```
+
+本轮最初因本机 Docker 初始化失败而停止，零请求的历史阻塞记录保留。用户手动启动后，原引擎可用，未再重启或修复 Docker；冻结摘要不变，四题各缺交付/参考结构的八次真实容器预检通过，随后按原合同各运行一次。
+
+| 任务 | 原 Product 验收 | 真实调用 | exact tokens | 委派 |
+|---|---|---:|---:|---:|
+| 可并行调查 | 通过 | 10 | 92087 | 0 |
+| 依赖调查 | 失败 | 10 | 71836 | 0 |
+| 冻结草稿复核 | 通过 | 12 | 123864 | 0 |
+| 简单版本读取 | 通过 | 5 | 20693 | 0 |
+
+共 37 次 qwen-plus 直连、308480 exact tokens，无 Provider 失败或调用封顶。所有主方真实请求都包含原委派工具，四题仍由主方独做，因此只报告 Product 门禁 3/4，不能说验证了主子交接或协作收益。离线实现 Agent 核读：两个分析交付的主要方向有源码支持，但部分引用只指常量或未直接覆盖收集实现，不认定独立语义通过率；版本输出 0.11.0 与冻结文件一致。依赖题没有交付：模型新建 answer.json 漏 create=true，遇到 WorkspaceBoundaryError 后将 echo 重定向直接交给 argv 工具，`>` 被当成普通参数，exit_code=0 仅表示打印成功；未产生文件，空 Patch 在 verification 节点被 promotion-patch-invalid 拒绝。不能把意图文本算交付，亦不在本轮修工具后追跑。
+
+原日志副本独立重放 45 份请求通过（37 份真实执行请求、8 份原产品流程的本地控制请求），CoreInvariant 无错误，四份原数据库摘要不变。四题预算及工作区全部收敛，live workspace=0；无助手及报告消费，not-exercised 保持。无 single 对照、独立语义裁判、全量/L2–L4/Wheel、仓库提交或发行，生产未改、默认仍 single；隔离产品实验内部的程序化批准不代表用户仓库 Promotion 授权。Docker 按用户启动状态保留。见[合同](../plan/TRACEHARNESS_DA13_VALUABLE_DELEGATION.md)、[记录 039](../deal/039-valuable-delegation.md)与[证据](../validation-data/dynamic-collaboration/valuable-delegation/README.md)。
+
+### 12.23 DA-14：Adaptive 主方职责提示
+
+本轮唯一生产变化属于 Product 装配/说明层。`product/runtime.py` 的 BuiltinProductAssemblyResolver 根据原 Registry 已解析的完整 INVESTIGATION_TOOL_IDS 能力集合，为 Adaptive 主方选择 ADAPTIVE_PROMPT_IDS；investigator 仍优先使用原调查 prompt，普通 single 仍用 CODING_PROMPT_IDS。新增 `traceh.product.adaptive-collaboration` section，Prompt ID 进入原 assembly digest，实际全文进入原 RequestSnapshot，没有新的状态源或可变 messages 状态。
+
+提示要求主方在获得必要初始信息后主动发现有价值的有界只读子任务，实际调用 delegate，提供目标、简报和证据交付要求；可继续非重叠工作，也可通过 collect 等待依赖报告。必须按实际 agent_id/message_id 收回并核对，pending 不是答案、completed 报告不是批准或已核实事实。简单任务可本地完成，不制造无用工作。助手只读原冻结 revision；主方仍是唯一写入者、最终验证与交付 owner。原 delegate 工具结尾同步允许等待，避免并行导向措辞冲突。
+
+```mermaid
+flowchart TD
+    A[原 Registry 解析模式与能力] --> B{原角色装配}
+    B -->|single| C[原编码提示]
+    B -->|adaptive 主方| D[原编码提示 + 协作职责]
+    B -->|只读助手| E[原调查提示]
+    C --> F[原 RequestSnapshot / AgentLoop]
+    D --> F
+    E --> F
+    F --> G[原工具 / Supervisor / 账本 / 收敛规则]
+```
+
+不新增 Planner、typed decision、强制分类关卡、关键词路由、共享写入或递归助手。默认仍 single；不修改权限、预算、审批、AgentLoop 或模型选择。确定性验证按不同 preset、实际主子请求、确认 single 覆盖 adaptive profile、SQLite 主线以及取消先于 capture 检查装配和边界；故意移除 section 时，公开执行请求仍有委派工具但缺提示，检查失败，恢复后通过。
+
+真实观察及最终验证见[DA-14 合同与提示全文](../plan/TRACEHARNESS_DA14_ADAPTIVE_POLICY.md)。本轮复用原 DA-13 驱动并重新冻结源码/材料，旧题成绩仅作历史参考，不作为严格 A/B；提示送达与模型实际委派分别判断。
+
+本轮四个真实 trial 的调用/tokens 分别为可并行调查 13/157330、依赖调查 13/101170、冻结复核 11/110179、简单读取 5/21969。Product 门禁 4/4、委派 0、Provider 失败及封顶 0。42 份真实主方请求均含专属提示全文；另 8 份本地控制请求合计 50 份在副本重放与 CoreInvariant 检查通过，四份原数据库摘要不变，预算收敛、live workspace=0。74 项不同定向检查通过、零跳过，compileall、4089 项 collect-only、Ruff、文档检查通过。程序门禁不等于独立语义评分：handoff 引用未直接覆盖 collect 等局限保留在核读记录。没有真实助手，不能声称本轮验证主子交接或自然协作改善；按合同停止，不追加提示追跑。职责说明保留，未跑全量/L2–L4/Wheel、baseline 或独立语义裁判，未提交发行。见[记录 040](../deal/040-adaptive-policy.md)和[证据](../validation-data/dynamic-collaboration/adaptive-policy/README.md)。
+
 
 ## 13. CLI、配置与日常运行
 
@@ -3182,6 +3452,8 @@ Line 与 `--tui` 均可输入 `/context [STEP_ID]`、`/skills`、`/plugins`、`/
 
 ### 13.11 一条命令启动与 TUI 应用配置
 
+TUI Product 表单已对齐 host config 6 / 验证协议 3：新建及追加命令均显式包含 public_requirement，空白保存为 null，非空经原解析器校验。roles.patch_author 默认 null，用户点击开关后生成独立可编辑草稿，复制当前 investigator 预算并明确授予 list_files/read_file/search_text/apply_patch；关闭只撤销草稿角色。未扩展 Shell、递归或审批权限。single/multi 文案现按主 Agent 自主使用一个或多个获准助手描述，主方负责整合与最终交付；任务对话仍读取原 Session/Activity，并按 agent/session 分开呈现同角色多实例。Patch 和身份页面沿用原只读证据，START 与人工批准边界不变。
+
 聊天正文直接支持鼠标拖选和高亮，右键弹出“复制”；Ctrl+C 只复制当前选区，没有选区时不执行操作，
 所有 TUI 页面均不再用它退出。Ctrl+Q 保留完整收尾退出。顶部按钮栏和 F3 独立复制页已删除；Product
 未配置时默认收起右侧 Product 区域，已配置时默认展开。在聊天主界面按 Ctrl+B（Footer“任务面板”）
@@ -3280,6 +3552,8 @@ flowchart LR
     Drain -->|cleanup 失败| Stop[终止切换]
 ```
 
+当前用户明确选择的下一次本地启动模型为 `deepseek-v4-flash`，通过项目 profile 的 model 字段覆盖原继承值；这不是通用默认，不改运行中 Runtime 或旧 Product/Profile/验收事实。百炼 V4.1 模型 ID 尚未确认，后续记录 059 已实际连接并返回三次响应，但未遵守阶段工具约束；思考多轮兼容尚未证明。配置来源见[记录 058](../deal/058-bailian-model-selection.md)。
+
 使用方式见 [TUI 配置说明](../tui-configuration.md)。
 
 ## 14. 已有扩展边界与未来接口
@@ -3318,24 +3592,482 @@ UE-4 执行和证据测量已完成，人工语义待审；辅助驱动不构成
 
 标记为“协议存在但未实现”的行，不得在文档或对外说明中表述为已实现能力。反过来，插件系统本身现在**是**已实现能力，旧文档中“没有完整 PluginManager”的说法已经过时并被本轮改写。
 
-### 14.1 DA-0～DA-5 动态协作执行计划（总体认可，未实现）
 
-[DA 执行计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md) 已获用户总体认可；它不改变当前生产能力或已冻结历史 ADR。DA 仍建议在 MCP 前推进，AO-3 后台优化可基于现有检索独立实现（14.2），阶段执行已获授权，版本号待阶段验收后确认。
+当前模型另完成记录 060 的一次有界试验，已分工并交回助手 Patch，主方在读取阶段耗尽 Token；当前状态见 14.3.9。未改 Provider 或思考参数。
 
-1. ProductTask 保留需求、授权、任务总预算与交付状态；Workflow 保留执行、验证、审批关卡。动态分工仅在执行节点内部发生，不新增任意 DAG 重写或为每个子任务建立 ProductTask。
-2. 主 Agent 按需组织临时只读子任务，自己负责写入/整合。只有主 Agent 可委派；首版无孙 Agent、兄弟自由广播、多写入者或对脏工作区的并行审查。最终目标是 single/adaptive，旧固定 multi/Router 在 DA-5 完成调用方切换后退出，旧记录归档；不静默迁移或删除数据。
-3. 身份、工作指令、投递状态、预算、产物仍由原 Directory/Inbox/Delivery/Budget/Artifact 等 owner 解释。交接视图派生自原报告和获准原文，区分子 Agent 已读、报告可用、主 Agent 已收到；不增加 Memory authority。收尾必须证明子树已收敛再进入产物与验证。
-4. 原 EvaluationRunner 增加正式的执行策略对照，区别于说明文本候选对照；Product 与 RetrievalEpisodeEvaluator 各自定义成功，整树费用和所有失败保留。当前 review/assess 仅接检索旅程，DA-3 计划补 Product 语义审阅适配；不能把当前 Product durable success 直接当作开放语义正确。
-5. 拟准备 12 道开发题与 6 道不同来源留出，按简单、独立调查、依赖/信息不足分组；旧 72 条仅作已见回归。A/A、机制、正式对照与条件性优化/留出分开，最多 116 个任务 trial，提案/裁判费用另计；具体真实额度在阶段合同中冻结。当前没有 DA 实验运行或协作成绩。
-6. AO 只增加批准范围的委派说明文本候选，沿用一次策略提案、原比较与原 review/assess；不自动采用。无收益可以停止，不放宽硬门禁或追逐指定分数；默认切换、提交和发布由用户决定。当前回合仅文档；未来阶段也不运行全量或 L2–L4。
+### 14.1 DA-0～DA-5 动态协作执行计划（已执行，保留收益边界）
+
+本节保留 DA 当时的冻结条件与验收结果；当前模式、协议与受限编辑入口由 14.3 覆盖，不再接受旧 adaptive 配置。
+
+[DA 执行计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md) 已按授权完成 DA-0 合同与 DA-1～DA-5 工程、定向和有限真实验证。已发行版仍为 v0.11.0，DA 为未提交/未发行工作区；当前能力与效果见 12.12，不把完成实施等同于证明协作收益。
+
+1. ProductTask 保留需求、授权、任务总预算与交付状态；Workflow 保留执行、验证和人工审批关卡。动态分工仅在执行节点内，不新增任意 DAG 或子 ProductTask。
+2. 主 Agent 可委派只读调查，自己负责写入/整合；无孙 Agent、兄弟广播、多写入者或共享脏工作区。DA-5 已删除固定 multi/auto Router 与旧角色，只保留 single/adaptive，默认 single。旧协议拒绝，不迁移、不删除用户数据。
+3. Directory/Inbox/Delivery/Budget/Workspace/Artifact 各自保留事实与生命周期。交接区分子方读取、报告可用和父方派发，不产生 Memory authority；整树收敛先于产物捕获。
+4. 原 EvaluationRunner 已支持同源码策略对照和同模式文本候选比较，原 Product evaluator 已接按题验证及语义 review/assess。所有子方、失败和取消成本算入原整树归因，未知使用量不补零。
+5. 12 道开发题和 6 道留出题由仓库合同缩减重建。68 个 A/A、机制、开发 trial 完成；一次真实提案 no-candidate。基础 adaptive 未达到冻结资格，因此没有启动留出或候选比较，不追加运行追分。三批真实模型未委派，不声称协作有效。
+6. 四项委派说明进入原 AO-3 后台受限优化，仍受前台优先、原预算、去重、暂停和人工采用边界。当前不自动采用或提交 DA。未执行全量或 L2–L4；最终 compileall、98 个改动 Python 文件 Ruff、3969 项 collect-only、文档和 diff 检查通过。
+
+DA 后续诊断的说明候选未采用，原结果保留在 12.12；其后单独完成有界源码读取（12.13）和基于原 Budget 投影的额度申请/决定/显式续派（12.14）。后续真实主子小样证明明确委派交接可运行，但自然复杂题仍由主方独做，最小明确题也需要第 9 次模型调用才能输出最终结束消息。DA-6 又用五轮提示实验证明工具说明、system section 和任务消息提示均不能让当前模型可靠自然拆分，所有候选已撤回（12.15）。DA-7 的必经 typed 判断在确定性测试中成立，但四轮真实实验仍未出现 `separable` 或助手，也按冻结规则撤回（12.16）。DA-8 的独占决策表面解决了跳过检查点，却在第二轮把可拆题判成 local；候选也已撤回（12.17）。DA-9 已验证两步有界侦察后再独占决定（12.18），但两个复杂场景没有提交决定，候选已撤回。DA-10 已完成阶段切换请求核查和四条件对照（12.19）：旧提醒移除与末尾重申都未改善首次决定，故未改生产。DA-11 已完成独立决定输入验证（12.20），两个独立条件各 3/3 决定与标签命中，但可拆提案职责重叠或依赖，未证明独立分工。DA-12 对三个字段补说明并真实配对（12.21），类别保持正确，却只把已知目录核对交给助手，未证明互补实质分工。后续已完成 DA-13 四类完整任务观察（12.22），Product 门禁 3/4、委派 0，尚无协作收益证明；不自动增加 Planner、状态机或预算，继续默认 single。
+
+当前 DA-14 仅在原 Product 装配接主方协作 PromptSection（12.23），不恢复已撤回的 typed 决定或 Planner。四题 Product 门禁 4/4、自然委派 0；默认 single 及原治理边界保留，后续需单独定范围。
 
 ### 14.2 AO-3 后台优化：已接主线，限定验收完成
 
 用户已授权先完成 AO-3 并提交发布，再执行 DA-1～DA-5。后台宿主、F2/F6 入口与原有限实验的当前实现见 12.11，限定门禁、两轮独立真实小样与安装包证据已完成；发行见 0.11.0 验证记录。
 
-后续 DA-4 把获准协作说明接入同一后台 owner；不另造无限调用服务、不自动修改源码或采用候选。DA 的有限实验额度不等于后台长期额度。详见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)。
+DA-4 已把获准协作说明接入同一后台 owner；不另造无限调用服务、不自动修改源码或采用候选。DA 的有限实验额度不等于后台长期额度。详见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)。
+
+### 14.3 WC：必经分工与受控可写交接
+
+当前按 [ADR-0071](../adr/0071-required-multi-allocation.md) 实现 single/multi，替换 WC-1B 的 adaptive/local 选择。外层 Product 仍是 coder → verification → approval；WorkflowDefinition 原 AgentTask/Map/Join/Verification/Approval 不变。一次分工可以分配一个或多个直接助手（14.3.20，[ADR-0078](../adr/0078-multi-child-concurrent-allocation.md)），默认仍是派发调用内部等待报告的串行形态；按 [ADR-0077](../adr/0077-on-demand-concurrent-child.md)，主方可在计划里显式选择并发派发，自己继续保留工作后再收报告（14.3.19）。显式 patch_author 槽位为空时助手仍只读，非空时在独立受管工作区编辑并由宿主捕获 Patch（14.3.2）。仍是一层、一次分工、一批助手；助手数量由宿主 `coder.budget.max_children` 授权，默认 1。不增加动态 DAG、递归团队、追加派单或自动合并。WC-1G 最新状态以记录 051 为准；当前授权顺序实施 WC-2～WC-4，历史失败保留。
+
+仅 multi 主方装配 CollaborationPolicy/CollaborationContinuation。按 ADR-0074，准备视图 collaboration-plan 同时开放原 list_files/read_file/search_text 和 submit_collaboration_plan；主方自行决定调查深度和提交时机，可批量只读，不设固定侦察轮数或单工具限制。原总步数、调用、Token、时间及重复拒绝门禁不变。计划表达 main_work 与 child 的职责，不能选择 local；完整助手交接成功后才进入 execute，恢复原实施工具并隐藏全部委派控制。single、Chat、助手和裁判不进入该策略。
+
+WC-1G：execute 首次无工具的正常完成先 Continue 到 collaboration-review；原 request/view 与 assistant/message 推导阶段，无可变标记。review 保留执行工具，可补检查，下一次最终回答正常收口。原预算、失败、取消与重复拒绝优先，不加预算，不循环要求重新自审。此前回答仍留在原日志，作为待核对陈述。每次 review 附当前主方 Turn 最近 8 个 tool/call 与 tool/result 的定位（seq、step_id、tool_call_id）、最多 240 字符参数预览、工具状态、已知退出码及保留输出引用；明确省略数，未知退出码不当零，不取隐藏正文。收据只是原事件派生输入，经原 RequestView 冻结；不另存事实账本。核对说明区分语法检查、功能检查、工具事务成功与命令成功，要求实际结果引用真实调用、未执行则如实说明。结构必经不保证语义真实，固定 Verifier 和人工审批仍独立。见 [WC-1G 合同](../plan/TRACEHARNESS_WC1G_VERIFICATION_REVIEW.md)。
+
+| Owner | 当前职责 |
+|---|---|
+| product/collaboration.py | 从原事件解释自主准备/execute/review；核对必经职责交接和收尾；并发派发时按已派发角色暴露对应收集工具，并在交付前逐个 assignment 要求已收集的完成报告 |
+| product/completion.py | 可写主方复核原整合回执，执行冻结检查，接入原完成验证反馈，不拥有批准权 |
+| product/verification_review.py | 从当前主方 Turn 生成有界调用收据与核对说明，不判断业务成功 |
+| product/runtime.py | 原 Budget 包装保持身份绑定；multi execution 将非 completed 停止报告为失败 |
+| runtime/step_view.py、AgentLoop | 异步选择通用 Step 视图；受管交付观察见 14.3.5，原 Lease、循环和清理保持 |
+| session/request_view.py、RequestBuilder | 绑定来源前缀、Composition 与工具子集，独立输入及请求重放 |
+| ToolRuntime | 整批工具与数量校验，非法批次在副作用前拒绝 |
+| supervision/structured_collaboration.py | 唯一计划工具：按授权角色校验整批分工、assignment_id 唯一性、数量与路径不重叠，经原 Control 逐个派发；等待式整批共享一个截止时间，并发式立即交回全部 accepted 身份；部分派发失败时收敛本批已启动助手 |
+| supervision/writable_collaboration.py | 可写交接与 collect_child_patch：主方按需有界等待（0–30 秒），复用原 CaptureGate 捕获后交回真实 Artifact 身份，pending 不伪造完成 |
+| supervision/investigation_work.py | work 2 的唯一字段/摘要/绑定读取规则，供工具、预算与评估共用 |
+| Supervisor / Budget / Workspace | 原身份、所有权、额度、工作区和进程生命周期 |
+
+request/view format 1、Session 15、Context 13、SQLite 2 不变。准备视图保留原 surface 可见历史，包括用户目标、已披露工具结果和主方叙述；不再切换独立 evidence 输入。历史是模型上下文，不是替代原事件的事实源或权威。大报告仍走原 ToolOutput 预览和读取，不偷读隐藏全文；旧请求仍按当时冻结视图重放。
+
+准备期间的参数错误（invalid/ToolArgumentError）、明确未执行的工具拒绝（denied/ToolDenied）和 delegate 前字段校验错误（failed/CollaborationPlanInputInvalid）可在原预算内修正。多个同批分工在派发前全部拒绝；原 Session 中成功、未知或非上述失败的分工调用阻止再次派发。无计划的纯文本完成、派发失败、报告未完成/partial/预算申请和超时均不能正常交付。原 Session runtime/error、Supervisor Delivery 和 TUI 保留失败原因；原取消清理、身份绑定与非 completed 报告处理不变，不退回 single。工具成功不等于助手完成，仍须 report.status/reason 均为 completed。
+
+```mermaid
+flowchart LR
+    S[主方自主只读调查，可批量] --> P[准备好后提交职责分工]
+    P -->|派发前参数可纠正| S
+    P --> H[原 Supervisor 派发一批获准助手]
+    H -->|handoff=await_report，默认| R[核对报告与身份；可写先捕获 Patch]
+    H -->|handoff=dispatch_and_continue| W[主方先做保留工作，一批助手并发运行]
+    W -->|按需有界收集，pending 不是答案| R
+    R --> E[主方使用证据实施与核验]
+    E --> Q[一次收尾：核对实际收据，可补检查]
+    Q --> V[原 Product 验证与人工审批]
+    Q -->|预算或取消| F
+    P -->|无计划完成或预算耗尽| F[原失败与清理]
+    H -->|失败或取消| F
+    R -->|未完成| F
+```
+
+WC-1C 实际结果：qwen-plus 直连 7 次主方调用、0 次助手调用，23786 exact tokens，没有 Provider 失败；Product/Workflow completed，11 个功能用例与源文件边界通过，预算和 Workspace 已收敛。明确委派要求确实存在于独立决定输入，但模型认为已读全规则，提交合法 local。故协作验收未通过，不进入 WC-2，不改题或补提示重跑。3 个 Session 的 9 份请求重放通过（含 2 份脚本控制请求），原数据库不变。报告可见性仪表新增结构化 child 返回识别，仍回查原身份和正文。见[真实验收记录](../deal/042-structured-real-acceptance.md)。
+
+WC-1F 新合同实测：11 次 qwen-plus 直连调用（主方 7、助手 4），56551 exact tokens，无连接失败或重试。助手实际读两份规格、带行号交报告，主方后续 4 份请求收到并用于实施；但实现遗漏带空格键校验，None/字符串冲突错误触发 TypeError，固定 Review 失败。主方只执行编译，却声称多项功能测试通过，语义核读亦不通过。Product/Workflow failed，无 Promotion；3 个预算账户关闭，Workspace live 0（2 released、1 quarantined 留证），13 份请求副本重放通过，含 2 份脚本控制。按停止规则不追跑、不进入 WC-2。详见[记录 044](../deal/044-required-multi-real-acceptance.md)。
+
+WC-1G 新题一次真实运行在 planning 的第三次调用遇到 provider-tool-arguments-invalid（protocol），没有助手或 review，真实收尾效果未测到。两次成功侦察合计 2337 exact tokens，失败调用用量未知，不能用预算保守结算的 240000 冒充实际用量。约 40.9 秒，Product/Workflow failed，2 个预算账户与 4 个使用预留终结，工作区 live 0；5 份请求副本重放通过（3 真实、2 脚本控制），原库不变。没有重试或补跑，WC-2 不开始。详见 [记录 045](../deal/045-main-verification-review.md)。
+
+参数诊断后用户另行授权一次同题确认，材料/评分/驱动/沙箱未变，重新冻结源码。3 次真实主方调用、0 助手；第三次 planning 返回 provider-tool-arguments-json-extra-data。前两次 2337 exact tokens、失败用量未知，31.016 秒；2 个账户/4 个使用预留终结，工作区 live 0，5 份请求副本重放通过，原库不变。JSON 值后存在额外内容是解析观察，不足以推断具体字符或旧失败原因。仍未进入 review/固定检查，未证明完整闭环；按独立合同停止，无追加调用。见[记录 047](../deal/047-verification-review-confirmation.md)。
+
+随后单独授权原分工请求一次响应取证：1 次真实调用、2843 exact tokens、32.975 秒；原 Provider 正常解析，finish_reason=stop、零 tool_calls。模型因两份规格尚未读取而拒绝制定分工，未复现 json-extra-data，不能追认旧失败根因。已保存字节经原 Provider 离线核验，payload 摘要与正文一致，原库未变；未执行 Tool 或完整任务。见[记录 048](../deal/048-planning-response-capture.md)。
+
+后续完整同题确认：13 次真实调用（主方 9、助手 4）、75102 exact tokens、144188 ms，无 Provider 失败/重试。助手实际读两份规格，完整报告进入主方 6 份请求；主方实施，functional-contract exit 0，25 项功能及文件边界通过，隔离 Product/Workflow completed。review 真实执行 1 次，但未追加功能测试或引用 tool_call_id；主方如实承认未跑单测，没有再次虚报多项命令。助手空区间说明有一处自相矛盾，主方实现正确。工程/固定功能通过与验证行为不充分分开报告。3 账户和 15 预留终结、Workspace live 0，15 份请求副本重放通过，原库不变。见[记录 051](../deal/051-full-collaboration-confirmation.md)。
+
+### 14.3.1 当前分工合同与受限优化边界
+
+只替换分工说明的一次真实请求观察：1 次调用、3832 exact tokens、27295 ms，恰好一个合法 submit_collaboration_plan，助手读取未读规格与实现，主方保留设计/修改/验证；schema、严格字段/长度及原 Provider 离线字节重放通过。未执行工具、原库不变。首尾摘录与 sole authoritative source 措辞仍有交付质量风险，不改变原文件权威，也不证明完整协作或收尾通过。见[记录 050](../deal/050-unread-allocation-probe.md)。
+
+分工说明已澄清：有证据定位、属于助手获准只读能力的来源，其未知内容本身可以成为调查目标。主方描述问题、来源、证据要求及局限，并保留使用结果的工作，不必先读完助手要调查的全部内容。未读不单独构成阻塞，也不等于缺失；来源定位不保证存在或访问权限，助手须报告实际拒绝、缺失与证据不足。本轮只改 ALLOCATION_GUIDANCE，不改 PLAN_REQUIREMENT、程序门禁或解析器；随后完整同题已通过协作与固定功能验收，验证行为质量边界仍单列。见[记录 049](../deal/049-unread-source-allocation.md)。
+
+main_work 为 goal/deliverable/uses_child_report，分别限 4000/2000/2000 字符；child 为 goal/scope/exclusions/deliverable/briefing，分别限 4000/2000/2000/2000/8000 字符。顶层字段为 `main_work` 与 `children`，唯一可选项是 14.3.19 的 `handoff`；每个 children 条目含 `assignment_id`/`role` 与上述语义字段（可写另含 `paths`），其余字段仍被严格拒绝（14.3.20）。严格字段、非空文本；助手 work 2 同时携带全部 child 字段和 main_work、owner/source/revision 与摘要，真实子请求可见。scope 是职责范围，不另造文件 ACL。
+
+Product 6、Product event 5、host config 6、comparison 3、readonly work 2 明确拒绝旧版本。旧 adaptive、固定团队 multi 配置与旧编辑候选不自动映射，原数据不删除、不迁移；历史实验须用冻结源码。当前代码、CLI/TUI 和评估都只接受 single/multi。后台 AO 仅允许修改 structured_collaboration.ALLOCATION_GUIDANCE 的语义说明，不能改 PLAN_REQUIREMENT、权限、程序门禁或评分。
+
+提示要求：主子各有实质交付；不得分配重复的整个任务、要求复述已知答案、伪造来源或把泛泛复核当独立贡献。主方说明如何使用报告；允许共享文件和必要证据核验。助手只能读宿主绑定原 revision，不能依赖主方未来修改。结构/权限/一次派发是硬规则；分工有用、非重复和证据使用由语义核读判断，不靠字符串或路径差异伪造保证。
+
+WC-1F 已按新业务题一次验收，最多 16 次主子调用、600 秒、连接 60 秒、零重试，无基线/额外裁判。题目不额外要求委派，由 multi 模式提供要求。运行前冻结源码、提示、材料和评分，并验证占位实现失败、参考实现通过。各项闭环与收敛通过才进入 WC-2；强制参与不等于质量或效率更好，收益比较留给后续原 Evaluation execution_strategy。
+
+### 14.3.2 WC-2：显式可写助手与不可变交接
+
+合同先冻结于 [ADR-0072](../adr/0072-owned-writable-collaboration.md)。Product/Profile/host 协议为 6、Product event schema 为 5；roles 必须显式携带 patch_author，null 表示未授权，非空为独立完整角色配置。single 不派助手；multi 选择已配置的 patch_author，否则沿原 investigator。旧版本不自动迁移，使用新的配置与数据目录。
+
+Product registry/resolver 将可写角色限制为 list_files/read_file/search_text/apply_patch 的显式子集且必须含 apply_patch；max_children/max_depth/max_processes 为零，无 Shell、网络、安装、递归、批准或推广工具。resources.py 复用原 Budget 与 Workspace 绑定来源、revision、父子 owner 和不同工作区。TUI 从原 Directory 的授权派生“可写助手”标签，不写另一份角色事实。
+
+writable_work.py 的 writable-assignment format 1 精确绑定 task、owner、预派生 agent/session/message、source/revision、budget/assembly 摘要、主方职责和助手语义字段，以及非空的精确相对 paths。缺失、旧格式、摘要或归属不符拒绝。paths 是可接受交付范围，不是 OS 文件沙箱；越界编辑不能成为成功交接。
+
+writable_collaboration.py 复用原一次 submit_collaboration_plan、Supervisor/Inbox/Delivery。助手只执行绑定的一条工作消息，不支持续派；完成报告必须 completed/completed。捕获时机取决于 14.3.19 的 handoff：等待式在派发调用内捕获并交回，并发式在主方调用 collect_child_patch 时捕获，两者走同一个 CaptureGate 和同一套身份校验。宿主沿同一个 CaptureGate 捕获实际 Git 改动并写原 Artifact Catalog/CAS，再读回 Manifest 与原始 bytes 校验，交回真实 Artifact id、Patch digest、base revision、Agent/Session/Message 和 changed_paths。非空产物及范围必须匹配，模型自报 id 不被采用。重复收集复用同一 Capture identity，工作区释放后仍按捕获时的 Catalog generation 验证不可变证据。
+
+WC-2 阶段没有整合工具；现有 WC-3 整合见 14.3.3，收回助手 Patch 本身仍不改变主方文件。原 Product 后续 Capture/Verification/人工 Promotion 仍独立；完成、失败和取消沿原资源 owner 收敛，停止 Activation 不等于释放工作区，未完成证据按原规则隔离保留。重复取消等待真实模型请求和 cleanup 结束；Supervisor 关闭重入修复见 20.15。
+
+WC-2 定向门禁通过：相关重跑 150 passed、Capture/Artifact/TUI 相邻 67 passed，collect-only 4154；集合有重叠，详细正反向证据见[记录 052](../deal/052-writable-child-handoff.md)。覆盖隔离、失败、越界、身份/版本、重复收集、释放后读取与重复取消；未运行真实模型、全量或 L2–L4。WC-3 的整合 identity/前后像/原 Tool Effect 回执已按冻结合同接入，详见 14.3.3；WC-4 仍限定一题、32 次主子调用、600 秒、连接 60 秒、零重试。
+
+### 14.3.3 WC-3：显式读取、精确整合与只读对账
+
+沿 [ADR-0072](../adr/0072-owned-writable-collaboration.md) 接入，不改变 Product 6 / event 5 / host 6、Session 15 / Context 13 / SQLite 2。仅启用 patch_author 的 multi 主方装配 read_child_patch、integrate_child_patch、inspect_patch_integration；调查助手与写助手都没有整合/批准权。原 Assembly digest 覆盖工具变化。
+
+supervision/patch_integration.py 先用 WC-2 的 direct owner、单消息完成与 Manifest/CAS 校验重新确认交接。read_child_patch 的说明与 schema 明确返回原 UTF-8 Patch 的 Unicode 字符页（默认 2000、最多 4000，offset 从 0 开始、next_offset 为 null 才完成），同时把 source/base、Artifact/Manifest/Patch digest、目标 Agent/Session/Workspace/generation、每文件前后像的存在性、Git blob id、字节 SHA-256、size/mode 作为冻结 request 保存到原 read Effect。整合参数显式引用 artifact_id、read_tool_call_id 和 request_digest。相同字符页的原始正文必须出现在该主方实际 dispatch request 中；大输出仅在实际提供输出读取工具时沿原能力读回；否则可缩小字符页，仍不可见就报告限制。原文区间必须完整核对。元数据、预览或只读最后一页都不能冒充读完。
+
+artifacts/materialize.py 仅从同一 repository fingerprint 的不可变 base/candidate tree 生成原 Patch，与 CAS bytes 精确比较，再有界读取 blob；不修改 index、工作区或 ref。对象已不可用就失败，不从网络补取。api/workspace_edits.py 只包含不可变文件前后像和请求值，不是另一份文件状态。
+
+WorkspaceService.edit 在原修改锁内重新解析 Agent/Session/Workspace 身份、可写权限、来源与 generation，交给 workspaces/editing.py。所有前像必须先匹配，才逐文件原子发布；同文件主方改动、路径越界、reparse 或来源漂移拒绝，不自动三方合并。只支持普通文件的创建/替换/删除；实际字节必须精确一致，checkout 换行转换/过滤器差异不能猜测规范化；Windows 无法证明的执行位改变拒绝。替换不扩大已有文件读写权限。
+
+文件发布前登记本次尝试的路径，异常时核对实际前/后像：仍是前像记 unchanged，仍是本次后像才回滚并记 rolled_back，第三方变化保留为 conflict，无法证明记 unknown；成功为 applied。多文件不是全目录原子事务，也不承诺抵御宿主同权限恶意进程。取消设置停止信号，等待正在执行的文件发布与补偿结束后交回逐文件回执。
+
+ToolExecutionFailure / ToolExecutionCancelled 是通用的“已经收敛并带回执”的失败/取消结果，ToolRuntime 将其 data/evidence 留在原 effect/outcome；大回执用既有 retained_output，原取消 finalizer/Recovery 补齐同一个 tool/result。没有整合事件流、applied_patches、重试缓存或新调度器。operation_id 由原 Agent/Session/Turn/Step/tool_call_id 派生，唯一 intent/dispatched 绑定原 read request；已结算或重复派发拒绝。更换 tool_call_id 不能越过前像检查再套一次 Patch。
+
+inspect_patch_integration 只读原 intent/outcome 与当前文件，分别给出原回执、request 是否仍匹配、当前 before/after/conflict/unknown；缺 Outcome 保留 unknown_after_dispatch，不自动执行。主方整合以后又改文件，不拿旧成功回执覆盖当前内容。最终汇总 Artifact、固定 Verifier、人工 Approval 与 Promotion 仍各走原 owner。
+
+```mermaid
+flowchart LR
+    A[原交接与 CAS] --> R[主方读原文页及冻结 request]
+    R --> V[原请求证明全文已可见]
+    V --> I[显式整合：原 Tool Effect intent/dispatched]
+    I --> W[原 Workspace 身份与全部前像检查]
+    W --> P[逐文件发布]
+    P --> O[原 Effect 回执与 Result]
+    P -->|失败或取消| B[核对后像并补偿；保留冲突与未知]
+    B --> O
+    O --> Q[只读对账；不重放]
+    O --> F[原最终 Capture / Verifier / 人工 Promotion]
+```
+
+WC-3 定向验收通过：相邻集合 101 passed、1 个符号链接平台用例 skipped；文件/回执重跑 18 passed，分页追加 1 passed，collect-only 4178；集合有重叠不相加。正反向证据见[记录 053](../deal/053-explicit-patch-integration.md)。WC-3 未运行真实模型、全量或 L2–L4；后续唯一真实轮结果见 14.3.4。
+
+### 14.3.4 WC-4 首轮：有界真实可写协作未通过完整验收
+
+原 Evaluation/Product 主线已识别 patch_author handoff，核对原 Directory、可写输入及 Workspace 身份；执行费用、检索角色与请求归属仍从原事件读取。没有第二运行器或应用状态。一次遥测清洗/汇总任务冻结 32 次主子调用、600 秒、连接 60 秒、零重试；空实现失败、参考实现通过后执行，实际 18 次（主 13、子 5）、124609 exact tokens、171406 ms，无 Provider 失败或重试。
+
+子 Patch 1757 字节，全文进入主方后续 9 份请求，原整合回执 applied；最终 Artifact 保留助手实现。但主方违规新增 test_telemetry.py，固定验证 exit 1，Product/Workflow failed，无 Promotion。离线核验还证明助手漏验顶层 list：None 抛 TypeError，空 dict/tuple 返回 []，不符合要求的 ValueError；主方最终声称没有新增文件且全部通过，与证据冲突。实际运行过测试脚本、退出零，不等于完整功能正确。
+
+3 个预算账户关闭、20 个使用预留终结；工作区 live 0、released 1、quarantined 2，失败证据隔离保留。副本 20 份请求重放通过，原数据库摘要不变。机制观察成立；完整功能验收失败，语义质量有缺陷，收益未测量。按一次冻结停止，不改题、不追加模型或抬高上限；WC-4 尚未验收完成。详细证据与定向门禁见[记录 054](../deal/054-writable-real-acceptance.md)。
+
+### 14.3.5 WC-4 后续修复：当前交付观察与断言式核对
+
+用户在记录 054 失败后授权修复及另一轮同上限真实验收。当前 writable 分工在原 deliverable/briefing 中要求可检查的完整输入、输出、错误、文件范围及主方验证责任；助手提示补齐顶层输入与元素规则区分。收尾提示要求断言/非零退出、禁止新增文件时以内存命令验证，并对照实际变更清单。没有业务案例默认值或新增工作信封字段。
+
+StepViewPolicy.select 当前为异步；原 freeze_step_view 等待 Product 的 WorkspaceDeliveryReader 读取当前候选，再把 delivery 随原 RequestView 冻结。WorkspaceService.inspect_session 在原生命周期/编辑锁内核对 Agent/Session，原 GitPatchBuilder 按原 Capture 上限两次读取稳定候选，提供 workspace/generation、source/base、candidate_tree、patch_sha256、changed_paths。临时索引和候选 Git 对象沿原构建器生成，不改工作文件、索引或 ref，不写 Artifact/CAS/Approval。观察失败或取消沿原 owner 收敛；历史请求重放只读原冻结输入，不读取当前目录。
+
+delivery 是 Git 可见候选观察，不是范围合规或语义通过判定，也不覆盖 ignored 文件。生产 multi 绑定原 Workspace/Capture；非受管测试入口明确 unavailable。原最近八条工具回执、预算、主子权限、固定 Verifier 和人工 Promotion 边界保持。
+
+另一轮题目/评分/权限/沙箱字节与首轮完全相同，仅冻结新源码；32 次、600 秒、连接 60 秒、零重试，预检空实现失败/参考通过。实际 19 次（主 14、子 5）、139444 exact tokens、223842 ms。原文读取成立，但主方未调用 integrate_child_patch，而是普通 apply_patch 复制代码。新的收尾请求明确列出三个文件，主方仍声称只改两个；顶层 list 校验仍遗漏。自测脚本已有 36 个 assert，曾 exit 1、修正自测预期后 exit 0，但最终固定验证仍 exit 1，Product/Workflow failed，无 Promotion。
+
+账户 3 closed、使用预留 21 settled，工作区 live 0、released 1/quarantined 2；副本 21 份请求重放通过，原数据库不变。代码机制定向通过，行为修复与完整验收未通过；不把展示证据当成强制遵守，不追加真实调用或普遍收益结论。记录 054 保留，最新完整证据见[记录 055](../deal/055-delivery-review-observation.md)。
+
+### 14.3.6 WC-4 修复：把完成约束接入原验证与有界反馈
+
+记录 055 后，用户要求继续修改实现。启用 patch_author 的 multi 主方现在绑定 product/completion.py 的 WritableCompletionVerifier；single、只读 multi 和助手不增加这项策略。宿主使用确认 Profile 的冻结 VerificationPlan，不解析需求文本来猜文件白名单，不写死某题的路径、输入类型或答案。
+
+StepViewPolicy.select 返回 StepViewSelection：RequestView 沿原 format 1 冻结，当前 Step 可附宿主 CompletionVerifier 能力。CollaborationPolicy 只在 REVIEW 绑定它；SCOUT/PLAN/EXECUTE 不运行也不制造“跳过但通过”。freeze_step_view 接入原 ActiveComposition.verifier，已有 verifier 冲突拒绝。AgentLoop 不改，原 verification/result、失败计数、DefaultContinuationRuntime 和预算层继续负责反馈与停止。默认 max_verification_retries=1，即至多两次完成检查、一次失败后的修复机会；总 Step、token、调用与墙钟上限照常先收口。
+
+PatchIntegrationControl.completion_receipt 从当前 Turn 的 Effect intent 关联原 outcome，要求唯一完成的交接，重读原 Artifact/CAS、直属 owner 和精确目标 Workspace/generation/source/base/每文件请求，匹配同一 Turn 的 integrate_child_patch applied 回执。缺少成功回执返回明确验证失败；failed/cancelled、其他 Turn、其他产物、普通 apply_patch 复制或模型自述均不算完成整合。没有新的整合账本。
+
+同次完成检查中，Product 还会在原 Workspace 检查锁内调用共享 HostVerificationRunner，使用绑定 Session/Turn/Step 的 verification owner 和原 Sandbox 服务，检查授权工作区副本；沙箱不把检查生成文件回写。缺少整合不会跳过固定检查，所有结果一起反馈；前后候选观察不一致时失败。固定计划的命令、环境和限额不由模型改写；原始 stdout/stderr 继续不保存，摘要只含命令身份、状态、退出码、输出摘要/大小、原执行引用、当前候选和整合引用。失败摘要由原 Runtime 写成下一步消息；持续失败或预算耗尽使 Product 失败，不进入审批。
+
+取消在原 Sandbox worker、回执和 Workspace 锁收敛后返回，不伪造 verification/result。通过只表示该工作区快照满足所声明检查；Git 可见候选不覆盖 ignored 文件，未写进冻结检查的语义需求不获保证。原 Workflow 仍重新捕获最终不可变 Artifact、执行正式 Review，最后等待人工 Approval/Promotion；这个完成检查没有批准权。
+
+```mermaid
+flowchart LR
+    A[主方 REVIEW 交卷] --> I[核对本轮原整合回执]
+    I --> V[原沙箱执行冻结检查]
+    V --> D{回执存在且检查通过}
+    D -->|否| F[原 verification/result 汇总失败]
+    F -->|原预算内一次返工| M[主方用原工具修复]
+    M --> A
+    F -->|耗尽或取消| S[原 owner 收敛并保留失败]
+    D -->|是| C[原 Capture 和正式固定 Review]
+    C --> H[等待人工 Approval 和 Promotion]
+```
+
+确定性公开路径覆盖文件越界、顶层输入错误、组合修复、忽略反馈后有界失败、整合缺失和取消；详细门禁与反向验证见[记录 056](../deal/056-writable-completion-gate.md)，决定见[ADR-0073](../adr/0073-writable-completion-verification.md)。记录 056 实现阶段未调用真实模型；后续第三轮真实结果见 14.3.7，旧失败保留。
+
+### 14.3.7 WC-4 第三轮真实验收：完成拒绝成立，返工未完成
+
+用户另行授权后，以记录 056 的当前源码冻结一题一次、32 次主子调用、600 秒、连接 60 秒、零重试，复用原驱动与 Evaluation/Product 主线；空实现预检失败、参考实现通过，材料与固定评分未修改。
+
+本轮 25 次真实调用（主方 20、助手 5）、248004 Provider 报告 exact tokens、284108 ms，Provider 失败与重试均为 0。原 Budget 结算 236301 tokens，其中一笔超预留报告按既有规则结清预留并标 unknown，不能将结算数当实际调用量。助手 Patch 2152 字节、两页完整读回，原文进入 15 份主方请求；明确整合 applied，完成检查绑定同一交接与目标。
+
+主方新增禁止的 test_telemetry.py，助手仍漏最外层 list 校验。自测两次 exit 1，其中排序预期错误地保留大写；离线只读诊断确认实现按小写排序正确，但 None 抛 TypeError、空 dict/tuple 返回 []，违反输入规格。完成检查 seq 248/262 均失败，候选不变；失败反馈确实进入 seq 255 请求，模型仍重复回答，没有修复工具调用。原一次返工上限随后停止，Product/Workflow failed，没有主方最终 Artifact、正式 Review、Approval 或 Promotion。
+
+3 个账户关闭、27 个使用预留结清，工作区 live 0、released 1/quarantined 2。27 份请求副本重放通过，原数据库不变。机制的读取、整合、拒绝、反馈与收敛有真实证据，功能和完整交付未通过；反馈只给固定检查状态和回执，不提供私有验证器源码或细粒度业务诊断，不能声称已证明模型可自主修好。没有新源码修改、全量/L2、收益比较、额外真实轮或项目提交。证据见[记录 057](../deal/057-writable-completion-real-acceptance.md)。
+
+### 14.3.8 WC-4 DeepSeek V4 Flash：分工前有界失败
+
+用户授权切换后的单轮真实测试，当前同一 Provider/model 供主方与助手使用。冻结一题一次、32 次主子调用、600 秒、连接 60 秒、零重试，预检空实现失败、参考通过。材料生成器未修改；集合字面量元素顺序令新旧 dataset 字节摘要不同，检查语义相同，本轮冻结后未改动。
+
+实际仅主方 3 次调用、5523 exact tokens、16922 ms，Provider 失败/重试 0。第一步 list_files 成功；第二步同时提出三个 read_file，违反 SCOUT 每步一个调用而整批拒绝；第三步原冻结请求只提供 submit_collaboration_plan，仍返回三个 read_file，被拒绝后 CollaborationPlanInvalid 停止。7 个 tool/call 是提出数，真实执行 1、拒绝 6；没有读取规格、启动助手、捕获 Patch、完成检查、正式 Review 或 Promotion。
+
+2 账户关闭、4 使用预留结清、2 工作区释放、live 0；5 份请求副本重放通过，原数据库不变。只证明当前模型/适配/阶段约束组合未走通，不证明编码能力优劣。原 Provider 按 request.tools 序列化，未传 tool_choice 或 parallel_tool_calls；本轮没有放宽权限或更改 Provider 追跑。证据见[记录 059](../deal/059-deepseek-writable-real-acceptance.md)。
+
+
+### 14.3.9 WC-4：自主准备与职责边界
+
+按用户明确要求与 [ADR-0074](../adr/0074-autonomous-collaboration-preparation.md)，已删除固定 scout 阶段和规划独占切换；准备阶段可连续调查、批量只读、纠正派发前错误。状态仍从原 Session 派生；不新增调度器、重试账本或 Provider 特例，不改 AgentLoop、工具权限、工作信封协议、Patch 整合与人工 Promotion。
+
+定向公开路径已验证连续四轮各三次真实文件读取，以及 schema、空白字段、重复分工和混入越权写入后的修正；只产生一个助手，全部请求可重放。恢复单工具上限的进程内反向试验实际拒绝九个读取请求并触发原重复拒绝停止，正确实现恢复通过。主方仍可能过度调查、分工不佳或耗尽总预算，不保证模型成功。新一轮真实验收按一题一次、主子合计 32 次调用、600 秒、连接 60 秒、零重试冻结；结果见下，完整验收未通过。
+
+本轮一次真实 DeepSeek V4 Flash 共 32 次调用（主方 26、助手 6）、245527 Provider exact tokens、224842 ms，无 Provider 失败或重试。前两轮分别成功批量 read_file/list_files 和两个 read_file；第三轮分工完成，助手交出 980 字节 Patch。原交接正文实际进入后续 23 份主方请求；旧 reports_dispatched_to_parent 指标仍为 0，不能据此认定没有送达。
+
+主方 14 次 read_child_patch 均显式请求 count=20，仅连续读到 280/980 字符；另外 9 次请求当前未提供的 read_tool_output/list_tool_outputs/search_tool_output 被拒。公开 schema 没解释 count/offset 单位、默认值或范围，说明又引导 read_tool_output，而本轮实际工具表没有它；这些是可复核的接口表达问题，不能证明模型内部为何选 20。现有实现默认 2000、上限 4000 字符，本 Patch 本可一次读完。主方没有整合、改代码或进入完成检查/正式 Review；最终原 Budget 在下一次 admission 以 max_tokens 耗尽停止，并非 Provider 调用上限包装器触发。源码静态核对还发现助手用 if not rows 返回 []，遗漏最外层 list 校验；本轮未执行功能验收，不能把它报告的“全部满足”算通过。
+
+3 个账户关闭、34 个使用预留结清，2 个工作区释放、1 个隔离留证、live 0。预算结算 240000，与 Provider 报告不同；两笔使用量质量 unknown，不用结算数冒充实际 tokens。34 份请求在数据库副本上重放及不变量检查通过，原库与前四轮证据不变。80 项不同定向/相邻检查、反向验证、compileall、4201 项 collect-only、9 个 Python 文件 Ruff、文档和 diff 检查通过。自主准备实现完成，WC-4 完整验收仍失败；没有追加真实调用、全量/L2、收益对照或项目提交。详见[记录 060](../deal/060-autonomous-preparation-real-acceptance.md)。
+
+### 14.3.10 WC-4：工具导航与分页语义修复
+
+当前工具导航不再枚举未必装配的检索/输出工具，明确仅使用本请求提供的工具及参数；来源 read_action 也不能超越当前工具表。Patch 的读取说明与 schema 明确 Unicode 字符、offset 零基、默认 2000/最大 4000 及 next_offset/null；数值来自原读取 owner 的共享常量。完整页可见性、整合权限及回滚不变。Context renderer 文字属于确定性重放与字节计量合同，因此本次切到 Session 15 / Context 13 / context-json-v13；旧 Session/Context 明确拒绝，需要新数据空间/会话，不迁移、删除或改写旧日志。见 [ADR-0075](../adr/0075-tool-guidance-and-context-renderer.md)。
+
+记录 061 仅完成上述工程修复与定向门禁，当时未追加真实调用；后续新授权结果见 14.3.11。原五轮日志保持原字节，其重放结论属于当时源码，不能用新 renderer 冒充旧请求。验证见[记录 061](../deal/061-tool-guidance-repair.md)。
+
+### 14.3.11 WC-4：工具说明修复后的真实结果
+
+用户另行授权的一轮按原一题一次、32 次/600 秒/连接 60 秒/零重试冻结并完成预检。DeepSeek V4 Flash 实际调用 25 次（主 21、子 4），236855 Provider exact tokens，221985 ms。准备阶段批量读三份文件成功，首次分工 schema 错误可纠正，随后只启动一个助手。1146 字节 Patch 仅传 artifact_id 一次完整读完，显式整合 applied，主方写出另一模块；本轮没有调用未提供的工具。
+
+主方 12 次 shell 中 8 次以 cd /workspace && 开头，均 start-failed；当前合同按 argv 执行，不解释 shell 内建命令。4 次直接 python3 成功，最后 normalize 断言 exit 0，summarize 未测试。下一步原 Budget admission 因 max_tokens 不足停止；不是调用次数封顶、Provider 故障或完成门禁退回。没有完成检查、正式 Review 或 Promotion，Product/Workflow failed，不能用局部自测认证完整功能。
+
+原交接正文进入后续 17 份主方请求，旧送达指标仍为 0。3 账户关闭、27 预留结清，账本 232483 tokens（24 笔 exact、1 笔 unknown、2 笔无 usage），与 Provider 报告分开。工作区 released 1、quarantined 2、live 0；12 份 Sandbox 原 reader/CAS 证据全部收敛，27 份请求副本重放及不变量通过，原库和前五轮日志不变。本轮无生产源码变更、追加真实调用、全量/L2 或提交；记录 061 的定向门禁保持历史归属。详见[记录 062](../deal/062-tool-guidance-real-acceptance.md)。
+
+### 14.3.12 WC-4：命令说明与启动原因
+
+ShellTool 的说明与 command schema 明确工作目录已是隔离工作区、命令按 argv 执行，引号仅分组参数，cd/&&/管道/重定向/展开不自动解释。guest 捕获启动 ValueError/OSError 后，把异常类型和消息写入原 stderr，按原 output_bytes 字节限额截断，再由原 finish 收敛；状态保持 start-failed，原 CAS/Outcome/Tool failure/后继请求携带同源错误。无新字段、解析器、自动重试或权限变化，协议保持。见[记录 063](../deal/063-shell-launch-feedback.md)。
+
+记录 063：命令说明与启动错误反馈修复完成，70 项不同定向/相邻检查通过，覆盖错误后实际成功执行、长错误限长、取消/孙进程、stdio、固定验证、Product、发布、架构和请求重放。反向移除错误输出重现空失败，正常代码复测通过；compileall、4209 项 collect-only、三文件 Ruff、文档及 diff 检查通过。没有新增真实模型调用、全量或 L2。
+
+### 14.3.13 WC-4：本题真实完整验收通过
+
+用户新授权的一轮按 32 次/600 秒/连接 60 秒/零重试冻结并预检，实际 DeepSeek V4 Flash 15 次调用（主 11、子 4）、114367 exact tokens、147875 ms，无 Provider 失败。助手 Patch 1397 字节一次完整读取并显式整合，主方交付另一模块；一次直接 python 自测覆盖两模块且 exit 0，最终报告引用真实调用 ID。完成门禁、固定功能/文件范围、正式 Review 与隔离 benchmark Promotion 全部通过，Product/Workflow completed。最终 Artifact 2610 字节仅含约定两文件。
+
+3 个预算账户关闭、17 笔预留结清，账本与 Provider 总量一致；3 个工作区全部释放，live 0。三份原 Sandbox/CAS 证据全部收敛，17 份请求副本重放及不变量通过，原库和前六轮失败证据不变。本轮没有生产代码修改或新增源码门禁；冻结材料、文档与 diff 核查通过，既有记录 063 的 70 项测试保持历史归属。见[记录 064](../deal/064-shell-feedback-real-acceptance.md)。
+
+当前稳定性限制：普通新任务通过，真实错误后纠正行为已观察，但该练习未完成交付；收尾重复验证仍会消耗预算，冲突真实练习未运行。新发票题目曾未写明 normalize 输出键名，固定检查与第二项实现有差异；当前材料已补明 sku/qty 并在新目录预检，旧试次不改写、不追加模型。不能把题目歧义全算作模型缺陷，也不能推断一般成功率或协作收益。
+
+### 14.3.14 稳定性基准、交接观测与首批试次
+
+Product 交接观测改用同一 episode_assessment owner 的 successful_dispatches，保留成功 Attempt、原请求身份/位置/指纹及交接正文核对，不要求最终回答。answer_dispatches 继续限定到最终回答之前，用于原检索答案评估；没有改评分、协议或业务状态。记录 062 副本可重算 17 次已送达请求，原报告不覆写。
+
+记录 064 的成功基准已归档。新批次冻结三项、每项 32 次/600 秒/连接 60 秒/零重试；实际执行两项共 40 次、359981 Provider exact tokens、399889 ms。新发票任务 16 次通过原完整验收；错误恢复项 24 次，确实从旧命令 FileNotFoundError 改用 Python，但测试预期与命令语法修正、收尾重复验证后 Token 预算不足，未进正式固定检查。第三项冲突练习按失败停止规则未运行。两项共 44 份请求副本重放通过，6 个账户关闭、44 个预留结清，工作区 live 0；第一项全释放，第二项两处隔离留证。
+
+当前稳定性限制：普通新任务通过，真实错误后纠正行为已观察，但该练习未完成交付；收尾重复验证仍会消耗预算，冲突真实练习未运行。新发票题目曾未写明 normalize 输出键名，固定检查与第二项实现有差异；当前材料已补明 sku/qty 并在新目录预检，旧试次不改写、不追加模型。不能把题目歧义全算作模型缺陷，也不能推断一般成功率或协作收益。
+
+记录 065–066：66 项不同定向/相邻检查最终通过，反向恢复旧观测入口确实漏计，正常复测通过；compileall、4211 项 collect-only、5 文件 Ruff、材料正反预检、文档及 diff 检查通过。真实两项按冻结停止，没有全量/L2–L4、收益对照、安装或项目提交。 详见[记录 065](../deal/065-stability-baseline-and-handoff-metric.md)与[记录 066](../deal/066-stability-real-probes.md)。
+
+### 14.3.15 优先复用证据的收尾
+
+Product REVIEW 优先复用已通过且未被后续改动失效的检查，允许引用实际调用直接交卷；进入检查点不要求重读或重测。REVIEW 不再重复 EXECUTE 交接提示，最近八条原回执和候选观察保持；缺失检查、失败结果、固定完成检查和人工 Promotion 边界不放宽。没有新事实源或自动判定测试充分性的算法。
+
+用户授权的一项新 command-recovery 使用明确输出接口的新材料，显式测试配置 task 480000 / coder 子树 360000 / child 30000，主方可用 330000；生产默认预算不改。32 次调用、600 秒试次、60 秒连接、零 Provider 重试，原 Turn 限额保持。新材料正反预检通过；实际 24 次调用，首次复核直接引用证据，固定检查拒绝顶层输入漏验，返工未完成。26 份请求重放及取消收敛已核实，详情见[记录 067](../deal/067-evidence-first-closure.md)。旧三项批次不续跑，冲突项仍未运行。
+
+### 14.3.16 宿主声明的通用验证反馈
+
+VerifierCommand.public_requirement 为宿主显式授权的公开要求说明；None 保持不公开，非空文本最多 1000 字符、无控制字符。JSON 必须明确给出字段，配置入口通过原 freeze_verification_plan 完整验证。说明进入原命令/计划摘要，Promotion/VerificationPlan 协议为 3，旧 1/2 明确拒绝；不迁移或改写历史数据，新执行使用新配置和数据目录。
+
+WritableCompletionVerifier 在原 Workspace/Session 边界执行原固定计划，反馈前核对 definition digest、每项命令 id/digest、数量、evidence digest 与 passed。原 verification/result summary 的 results 加入对应 public_requirement；diagnostic_scope 为 command-result-only，failure_cause 为 unknown，raw_output_availability 为 not-retained。结果只证明这个命令的执行结果，不定位其内部断言；启动失败/超时/超限不构成业务正确性判断。候选发生变化时，原结果不证明新候选正确。
+
+原始 stdout/stderr 仍不保留在 CAS/Event；执行引用只标识原回执，不是可读 stderr 地址。没有新增检索工具或公开私有验证器。宿主可显式拆分多个独立命令以提高定位粒度，框架不解析需求、源码或业务异常来猜检查项。公开说明由配置作者负责与实际检查对应，框架不证明自然语言等价性。
+
+权限、失败返工限额、取消收敛、原 Artifact Review 和人工 Promotion 不变。活动配置与测试材料同步到新协议，历史试次仅以冻结版本核验。本轮定向验证见[记录 068](../deal/068-declared-verification-feedback.md)，决策见[ADR-0076](../adr/0076-declared-verification-disclosure.md)；未新增真实模型验证，不宣称成功率改善。
+
+### 14.3.17 新协议的真实完整验收
+
+记录 069：唯一授权真实试次 20 次调用（主 15、子 5）、172050 exact tokens、193485 ms，Product/Workflow、完成检查、正式 Review 和隔离 Promotion 通过。22 份请求副本重放与不变量通过，3 账户关闭、22 预留结清、3 工作区释放，6 份沙箱证据收敛。公开说明已写入验证事实，但固定检查首次通过、后续模型请求为零，不能证明失败反馈改善。无追加试次或源码修改，详见[记录 069](../deal/069-declared-feedback-real-acceptance.md)。
+
+主方遇到旧命令不可用及 pytest 缺失后采用两条 Python 自测，未安装或扩大权限；收尾重读两文件而未重测。最终报告仍未引用 tool_call_id。原任务和检查代码保持，仅把已有公开要求声明为整体检查说明；没有拆分检查或推断内部失败。旧真实失败不改写。
+
+### 14.3.18 TUI 同步与真实终端验收
+
+记录 070：TUI 新建/追加验证命令对齐 public_requirement，显式 patch_author 启停与角色文案同步。真实 PTY 经原 CLI/TUI/Product 主线完成提议、确认、START、协作、固定验证、Review 与隔离 APPROVE；24 次调用（聊天 4、主 15、子 5）、193929 exact tokens、262.047 秒。24 份请求副本重放通过，3 账户关闭、22 预留结清、3 工作区释放，6 份沙箱证据收敛。任务对话用原账本副本补查加载与展开，零追加模型调用。配置阶段为程序化表单，不能称人工逐项输入；固定检查首次通过，未验证失败反馈返工或稳定性。详见[记录 070](../deal/070-tui-sync-real-acceptance.md)。
+
+### 14.3.19 按需并发的一主一子交接
+
+合同见 [ADR-0077](../adr/0077-on-demand-concurrent-child.md)。计划输入新增可选 `handoff`：缺省或 `await_report` 完全等于原串行行为（派发调用内部等待精确报告并返回 `outcome=completed` 与完整 child 报告；等待时长由宿主授权推导，见 14.3.24 与 [ADR-0079](../adr/0079-authorized-child-report-wait.md)）；`dispatch_and_continue` 在 Supervisor 接受消息后立即返回 `outcome=dispatched` 与 accepted 的 `agent_id`/`message_id`，不等待、不捕获。未知取值在派发前被 schema 或 `CollaborationPlanInputInvalid` 拒绝，属于原可纠正输入，不创建助手。Product/event/host、Session/Context/SQLite、Promotion 协议版本均不变；work 2 与 writable-assignment 1 字段不变。
+
+owner 不变：`Supervisor.create/send` 派发，`Supervisor.wait_message/report` 提供等待与终局报告（未结算即 pending），`BudgetLedgerService`/`BudgetEnforcement` 管额度与步数/时间上限，`Supervisor.dispose` 经原 Product 任务 owner 树做 child-first 收敛。没有新增调度器、等待队列、并行状态机或第二事实源。并发派发调用返回后不再持有等待者，因此不再由它停止助手；主方 Turn 失败、取消或任务结束时，原任务 owner 树收敛该助手，工作区与账户仍按原规则释放或隔离保留。
+
+主方的按需等待用既有收集工具：只读助手用 `collect_investigation`；显式 patch_author 用新增的 `collect_child_patch`（agent_id/message_id/wait_seconds，0–30 秒，零只轮询）。收集先经原 authority 校验直接所属与来源绑定，再等待该一条消息；未结算返回 `status=pending`、`artifact=null`；完成后沿原 CaptureGate/PatchCaptureService 捕获，交回真实 artifact_id、Patch digest、base revision、changed_paths。重复收集返回同一身份且不重复捕获。取消收集只取消调用方的等待，不取消助手。该工具只装配给可写主方，Profile 不能自行声明（registry 与 resolver 都拒绝）。
+
+Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 review 额外暴露唯一一个收集工具（有 patch_author 时优先 `collect_child_patch`），继续隐藏 delegate/followup/stop/预算决定和计划工具，并附加"助手并发运行、pending 不是答案、未收集或未完成不能交付"的说明；串行运行的视图名单与说明与之前完全一致。Continuation 增加交付前门禁：声明并发后，本 Turn 必须存在一次成功收集、`status` 与 `reason` 均为 `completed`、且 agent/message 与派发身份一致的报告，否则 `CollaborationChildIncomplete("collaboration-child-report-not-collected")`。可写完成校验接受"等待式派发"或"显式收集"两种同一身份的交接证据，仍要求本 Turn 的 applied 整合回执；证据缺失或互相不一致时拒绝。
+
+分工说明（`ALLOCATION_GUIDANCE`，AO 唯一可改文本）与 multi 提示已改为正向判据：先识别「有独立验收条件、不依赖兄弟输出、可写时文件互不重叠」的交付单元，每个单元一个 assignment，整合与最终验证留给主方；共享文件、依赖兄弟结果或过小的工作不拆；数量在宿主上限内由模型按工作本身判断，既不是配额也不是越少越好。原有禁止重复整题、复述已知答案、泛泛复核与伪造证据的规则不变。
+
+定向验证（本轮实际运行）：`tests/test_concurrent_collaboration.py` 8 项全部通过。真实循环中主方在助手 Turn 打开期间继续自己的步骤（`Supervisor.report` 未结算、pending 收集、随后 completed）；未收集与只拿到 pending 的交付被拒；未知 handoff 在派发前被拒且零助手；并发期间取消由 owner 树 child-first 收敛为 cancelled；默认省略 handoff 的串行形态视图名单与结果不变；同一份真实事件在授予 patch_author 时选出 `collect_child_patch`。可写侧用真实 Git/Capture（无 Docker）验证 pending→完成捕获→重复同一身份不重复捕获→外部 session 拒绝→越界 wait_seconds 拒绝→取消等待不取消助手；另有一条本地整链：并发派发→主方自己新增文件→收集并捕获→读完原 Patch→显式整合 applied→`completion_receipt` 用收集证据给出同一 artifact 与整合 tool_call_id，异常 turn 仍报 handoff-missing。反向验证：去掉交付门禁后未收集/只 pending 用例变为通过；屏蔽收集工具或拒绝 `dispatched` 后并发用例失败；禁用有界等待后取消等待用例失败；把完成证据限回仅计划工具后整链报 patch-completion-handoff-incomplete。相邻回归（collaboration/structured/investigation/writable/patch integration/capture/workspace editing/product registry 等）221 passed、32 skipped，跳过均为 Docker 门禁。未运行：完整全量、L2–L4、Wheel；`tests/test_concurrent_writable_product.py`（Product 整机并发写协作）需要显式 Docker 镜像，本地按原规则跳过。既有基线失败仍在：`tests/test_product_service.py` 两项仍写 schema_version=4（当前为 5），`tests/test_evaluation_comparison.py` 两项在 GBK 本地化下 `read_text()` 解码失败（`PYTHONUTF8=1` 下通过），二者与本轮改动无关。
+
+真实验收（记录 071）：用户另行授权一次真实试次，驱动 `concurrent_acceptance.py` 复用原 EvaluationRunner/ProductTaskEvaluator 与 WC-4 遥测夹具字节，仅 requirement 声明两模块独立且**不出现任何交接模式名称**。15 次真实调用（主 11、子 4）、115656 exact tokens、114.453 秒、零 Provider 失败、未触 32 次上限。主方自行选择 `dispatch_and_continue`；原日志显示助手 Turn 开始后 0.35 秒主方即发出下一次模型请求，并在助手运行期间用 apply_patch 写完自己的模块，再 `collect_child_patch`（一次即完成）→ `read_child_patch` → `integrate_child_patch` → 自测收尾。两条独立并发度量一致：主/子 Provider 在飞重叠 6.905 秒，整树累计工作 121534 ms 比墙钟 114453 ms 多 7081 ms。Product/Workflow completed、固定功能检查一次通过、Review 通过、隔离目标推广提交；3 账户关闭、17 使用预留与 2 子预留终结、3 工作区释放（live 0）、3 份沙箱证据收敛、17 份请求副本重放通过且原库 SHA-256 未变。**收益（时延或质量）仍未测量**：本轮没有同 requirement 的串行基线，7 秒重叠只是观察量；一题一次不能推断普遍可靠性，推广只在隔离基准目标。详见[记录 071](../deal/071-concurrent-handoff-real-acceptance.md)。
+
+### 14.3.20 一次分工、多个直接助手
+
+合同见 [ADR-0078](../adr/0078-multi-child-concurrent-allocation.md)，交接计划见[多子并发交接](../plan/TRACEHARNESS_MULTI_CHILD_CONCURRENCY_HANDOFF.md)。计划输入把单一 `child` 换成非空 `children` 列表（最多 8 项，真实上限由预算决定），每项含计划内唯一的 `assignment_id`、`role`（`investigator`/`patch_author`）与原有语义字段，可写项另含非空精确 `paths`；`main_work` 与 `handoff` 语义不变。旧 `child` 字段不再接受，不维护双写。
+
+单一 `submit_collaboration_plan` 现在按授权角色装配：`CollaborationPlanTool` 持有一组 `AssignmentRole`（角色 → 原 Control、收集工具、角色说明），只读/可写不再各有一个计划工具类；未授权 patch_author 时该角色不出现在枚举里，计划里写上就在派发前被拒。
+
+身份：`assignment_id` 只是计划内关联键，不授予权限。宿主用 `_operation_id(kind, owner, call, discriminator)` 从真实 owner、调用身份和 assignment_id 派生每个助手的 agent/session/message/**create request**，空 discriminator 保持原单助手派生字节不变。工作信封 `writable-assignment` 升 format 2、`readonly-investigation` 升 format 3，都新增 `assignment_id`/`role` 并拒绝旧结构；直接 delegate 用调用派生键，followup 沿用助手已接受的键。
+
+数量授权与资源：本批助手数量的有效上限是 `coder.budget.max_children` 与**各祖先剩余进程槽**（`max_processes`）的较小值——进程槽由 `ProcessSlotAuthority` 按每个活动 Agent 向每个祖先计租，不进账本，宿主通过 `ProductAgentRuntimeFactory.bind_process_slots` 把同一个授权交给计划预检，因此超出时是可纠正拒绝而不是创建期硬失败（记录 072 第二轮正是被它硬拒的）。`coder.budget.max_children`，原 `_ensure_capacity` 在预留时原子校验累计直接子数，token/步数/工具/时间按子逐份从主方额度永久划出。计划先做可纠正预检：整批累计 tokens/steps/tool_calls/wall 与 `ledger.available()` 比对并点名维度，再按祖先剩余进程槽检查活动助手数；无开放账户或宿主未声明 grant 时跳过对应部分，原准入与租约仍是权威。`BudgetExhaustedError` 现在在消息里记录被拒维度。**TUI 生成的默认宿主配置已把 coder `max_children` 从 3 改为 1**，因此默认仍只授权一个助手；更大的值是宿主显式决定。整批先校验字段、角色授权、assignment_id 唯一性、数量与可写路径不重叠，再逐个创建/发送；第 k 个失败时 `_converge` 停止本批已启动的助手、保留已产生事实并原样抛出失败（取消保持外层类型，cleanup 失败进 ExceptionGroup），不自动重派。
+
+等待与收集：`dispatch_and_continue` 在整批接受后返回全部身份；`await_report` 先派发整批再等待全部，**共享一个由宿主授权推导的截止时间**（各助手 grant 中最长的 `max_wall_milliseconds`，批次并发故取最大值而非求和，见 14.3.24）。视图按已派发角色暴露对应收集工具（只读 `collect_investigation`、可写 `collect_child_patch`），混合角色同时开放两者，其余委派控制继续隐藏。交付门禁按 (agent_id, message_id) 逐个 assignment 校验已收集的 completed 报告，重复收集同一助手不抵充兄弟。
+
+多份 Patch：每个可写助手独立捕获、独立读完、独立整合；`completion_receipt` 返回**每个 assignment 一条** applied 回执，任一缺失回 None（验证按"整合缺失"失败），未被计划接受的捕获、交叉身份、同一助手两个不同 Artifact 或实际 `changed_paths` 跨助手重叠都拒绝。`WorkspaceService.edit` 不改工作区 generation，且整合计划的前/后像取自不可变 base/candidate tree，因此多次整合互不失效。
+
+定向验证（A–E 实施门禁）：`tests/test_multi_child_collaboration.py` 17 项通过——N=2/N=3/乱序收集、每个助手都在真实运行时主方完成自己的工具调用（Gate 确定性，且逐个 `report` 为未结算）、重复收集不抵充未收集兄弟、空批/重复 assignment_id/未授权角色/非法 id/多余字段/声明路径重叠在派发前拒绝、超出授权数量给可纠正失败、第二个 send 失败时第一个被停止且第三个未创建、两个可写助手各自捕获独立 Patch 且交叉身份收集被拒、已派发角色决定可见收集工具。`tests/test_concurrent_collaboration.py` 8 项按新合同重跑通过。反向验证：把门禁改成按数量出队 → 重复收集用例变为通过；去掉可写 child_id 的 assignment 区分 → 两个可写助手冲突；移除 `_converge` → 第一个助手在批次失败后仍在运行。合并回归 415 passed / 33 skipped（跳过均为 Docker 门禁）；compileall、collect-only 4254、修改范围 Ruff 通过。既有基线失败仍在：`tests/test_product_service.py` 两项写 `schema_version=4`（当前 5）、`tests/test_evaluation_comparison.py` 两项 GBK 解码（`PYTHONUTF8=1` 通过），与本轮无关。该实施门禁未调用真实模型；后续 F 阶段与 TUI 结果见 14.3.20–14.3.23。未跑全量与 L2–L4。
+
+真实验收（记录 072）：用户授权后按同一冻结题目跑了三次，题目/评分/镜像/连接/上限全程不变，只修宿主配置与被暴露的源码缺陷，没有改题追分。上限为整树 60 次调用、900 秒、连接 60 秒、零重试；预算逐角色冻结（任务 600000、主方子树 460000、每助手 60000、保留 40000、coder 时钟 1320000 ms、进程槽 root 3/coder 2）。第一次 5 次调用零助手：夹具时钟自相矛盾（主方单 Turn 已预留 600000 ms，coder 上限仅 720000 ms）。第二次 4 次调用一个助手：两个 grant 都成立，第二个助手在创建期被 `ProcessSlotAuthority` 拒绝——进程槽向**每个祖先**计数，任务 root 的 `max_processes=2` 覆盖不了主方加两个助手；补偿完整（工作区 `agent-not-created` 释放、grant 释放、首个助手被 `_converge` 取消、账户全关、Workflow 干净失败）。第三次 25 次调用（主 17、子 8）、297928 exact tokens、254.9 秒：**机制全链通过**——一次计划两个 `patch_author`（路径不重叠）、两份独立 Patch 各自捕获、主方分别读完并两次 `integrate_child_patch` 成功、`completion_receipt` 给出每个 assignment 一条 applied 回执；固定功能检查两次失败（助手 A 的 `normalize` 未校验顶层输入，`normalize(None)` 抛 TypeError 而非 ValueError），因此无 Review 通过、无 Promotion。收敛：4 个预算账户关闭、4 个工作区 1 释放 3 按失败路径隔离留证、6 份沙箱证据收敛、27 份请求快照留存。
+
+记录 072 暴露并修复三个宿主缺陷：①整批资源预检原本只查 `max_children`，额度不足时给硬失败而非可纠正拒绝，现按整批累计 tokens/steps/tool_calls/wall 与 `ledger.available()` 比对并点名维度，策略新增 `planned_grant(owner)` 复用既有 `grant_for_child`；②`BudgetExhaustedError` 不记录维度，落盘只有 insufficient capacity，现消息带维度名；③`product_handoffs.investigations` 读取多 assignment 计划回执时遮蔽了结果列表，导致运行结束后的证据收集崩溃，已修并补离线回归与反向验证。记录 072 的题面点名助手数量，只是隔离机制的脚手架；后续记录 073 已用不点名数量的题目观察模型两次自主选 4，记录 074 已完成同题 single/multi 成本对照，记录 075 已完成真实 PTY/TUI 多身份验证。数量仍由宿主 `coder.budget.max_children` 授权、计划内 1..N 由模型选择（结构上限 `MAX_ASSIGNMENTS=8`）。详见各后续小节。
+
+### 14.3.21 不点名数量时的自主拆分观察
+
+合同与结果见[记录 073](../deal/073-autonomous-decomposition-probe.md)。题目 `autonomy-telemetry-pipeline` 含四个各自独立成节的模块加一个组合模块，requirement 只陈述「每节自足、模块间调用是接口约定」并要求路径不重叠，**全文没有任何数量字样**（契约 `assistant_count_named_in_requirement: false`）；宿主授权 4 个助手。
+
+两次真实试次的拆分结果一致：模型自主提交 **4 个 assignment**，与四个独立单元一一对应、文件互不重叠，组合模块 `telemetry_report.py` 留给自己；四份独立 Patch 全部捕获，主方读完后四次 `integrate_child_patch` 全部成功。第一次 41 次调用（主 21、子 20）、613188 exact tokens、313.9 秒，主方在进入固定验证前耗尽自身 token（新错误消息直接点名 `max_tokens`）。第二次**只把主方 token 上限从 700000 提到 1600000**，其余一律不变：36 次调用（主 16、子 20）、416530 exact tokens、290.8 秒，走到固定验证并两次失败，主方消费反馈返工一轮仍未通过，`CollaborationExecutionStopped: verification_failed`，无 Review 通过、无 Promotion。离线复跑冻结检查定位首个失败断言：`telemetry_parse.parse(None)` 抛 TypeError 而非 ValueError，即助手未校验顶层输入——同一缺陷类第三次出现（记录 044、054、072）。第二次收敛：6 个预算账户关闭、5 次子预留、工作区 1 释放 5 隔离留证、4 份沙箱证据 converged、38 份请求快照、invariants passed。
+
+边界：当前 multi 模式本来就强制分工，因此本轮只说明**拆分粒度**，不说明模型会不会主动协作；两次观察不是比率；没有单助手或串行基线，`await_report` 形态下主子调用重叠为 0 秒，**收益仍未测量**；四路拆分的代价是主方上下文显著膨胀。
+
+### 14.3.22 single 与 multi 的同题配对对照
+
+见[记录 074](../deal/074-strategy-paired-comparison.md)。复用原 `execution_strategy` 配对机制（run-plan 两臂 baseline=single / candidate=multi，判定由原 comparison owner 给出），题目沿用 14.3.21 的五模块流水线，两臂共用同一 Profile、固定检查、镜像、连接与上限，仅 requested_mode 不同，每臂一个复本。
+
+结果：两臂固定检查**均通过**；single 50902 exact tokens / 13 次工具调用 / 62.7 秒，multi 315438 exact tokens / 46 次工具调用 / 199.8 秒。判定 **`regressed`**：`changes {gain:0, loss:0, unchanged:1}`、`cost_delta {total_tokens:+264536, tool_calls:+33}`、`quality_status: no_change`、`hard_constraints: passed`、`adoption_authorized: false`。multi 臂仍自主拆出 4 个 assignment 并成功整合 4 份 Patch，固定检查一次通过。
+
+读数：本题上多助手**净亏**。助手各自只花 2–3 万 token，成本集中在主方读 4 份补丁、做 4 次整合并自测所带来的上下文膨胀——**整合税压过并行收益**，因为每个模块只有几十行；这也解释了 14.3.21 第一次为何被主方自身 token 拖垮。边界：一题、每臂一复本、一个模型，属于**这一类任务**的观察而非普遍结论，不否定机制本身；要证明收益需要单元更大、整合相对更便宜的任务类型与多复本，属后续独立实验。
+
+### 14.3.23 自主多子 Agent 的真实 TUI 验收
+
+见[记录 075](../deal/075-autonomous-multi-child-tui-acceptance.md)。复用记录 073 的无数量提示五模块题，宿主授权最多 4 个直接助手；真实 Textual 配置、聊天、确认、START 与 Product 主线经 PTY 执行。主方自主选择 4 个 patch_author，分别负责 parse/rules/format/stats，组合模块由主方负责；四份 Patch 各自捕获并形成四条 applied 回执。运行后从不可变账本副本打开真实任务对话页，TUI 按 agent/session 展示一个主方和四个同角色助手，各自工具调用与用量没有被 role 覆盖；该补查零模型调用。配置页 multi 标签同步为“一个或多个获准助手”，默认上限仍是 1。
+
+本轮完整端到端为 failed：固定 Verifier exit 1，Product/Workflow 以叶子失败收口，没有 Review、Approval 或 Promotion，目标 ref 保持源 revision。TUI 结果卡只显示 `product-role-coder · unavailable`，未呈现已有固定检查失败细节；这是展示限制，不能解释成 Provider 不可用。共启动 34 次调用，33 次有 exact usage（已知 331758 tokens），最后一次在失败流程退出 TUI 时取消，故完整 token 总数不可得；墙钟 356.266 秒。34 份请求快照重放，6 个预算账户关闭、35 个使用预留结算、1 个工作区释放、5 个失败工作区隔离留证、1 次沙箱执行收敛。自主拆分、TUI 多身份和多 Patch 整合成立，固定功能验收不成立；不据此主张稳定性、提速或质量收益。
+
+验收驱动另修正一处 TUI 配置保存：第二次打开已有配置时现在携带 `expected_bytes`，完整写入任务/主方/助手冻结上限并检查表单成功关闭；零模型预检确认任务 2000000、主方 1600000、每助手 50000 tokens、`max_children=4`、主方单 Turn 600000 ms 均落盘。该修正避免 ConfigForm 的并发保护被驱动静默忽略，不改变产品默认。先前误用“明确要求两个助手”夹具的 18 次调用已取消并排除出本次结论；本轮没有为追求绿灯追加真实运行。
+
+收尾定向门禁：TUI 配置 11 passed；任务对话与 Product 观测 32 passed；账本副本真实 PTY 对话页零模型复开并识别 4 个 patch_author；compileall、4 文件 Ruff、collect-only 4255、文档链接/章节/JSON/秘密/空白与范围 diff 检查通过。未跑全量、L2–L4、Wheel、安装或追加真实模型。
+
+### 14.3.24 派发等待时长与宿主授权对齐
+
+合同见 [ADR-0079](../adr/0079-authorized-child-report-wait.md)。缺陷：`await_report` 原先等待固定的 `CHILD_REPORT_WAIT_SECONDS = 300`，而 Product 每一次工具调用都在 `ToolRuntime` 的 `asyncio.timeout(tool_timeout_seconds)` 内，Product 从未设置该值、沿用 `RuntimeConfig` 默认 **60 秒**，因此那个 300 秒在生产路径上从未生效。宿主授权助手 `max_wall_milliseconds`（实验配置常用 240000），批次一旦超过 60 秒即被外层取消，`_converge` 停掉仍在自身预算内的助手，计划结果为不可纠正的 `TimeoutError`，Continuation 以 `CollaborationDispatchFailed` 终止任务。
+
+修复：等待时长由既有 `_require_capacity` 预检读到的 grant 推导——批次并发，故取各助手 `max_wall_milliseconds` 的**最大值**而非求和；计划工具显式接收 `in_call_wait_seconds`，由 `product/runtime.py` 的单一 `TOOL_TIMEOUT_SECONDS` 同时提供给 `RuntimeConfig.tool_timeout_seconds` 与计划工具，两者不能漂移；`COLLECT_RESERVE_SECONDS = 5` 留给等待结束后仍在同一次调用内的报告收集。授权装不进该上限时，`await_report` 在**任何助手被创建之前**以可纠正的 `CollaborationPlanInputInvalid` 拒绝，消息点名 `dispatch_and_continue` 与对应收集工具；宿主未声明 grant 时 `CHILD_REPORT_WAIT_SECONDS` 退化为兜底上限并仍受该调用上限约束。不变量：**等待不得少于宿主已授权的助手运行时间，也不得承诺运行时会截断的等待。**
+
+定向验证：`tests/test_multi_child_collaboration.py` 新增 2 项（共 20 项通过）——推导规则的边界值与无 grant 兜底；以及真实循环用例：宿主授权 240000 毫秒、调用上限 60 秒时首个 `await_report` 计划被可纠正拒绝、模型改用 `dispatch_and_continue` 后完成收集，目录中**只有 1 个助手**（被拒计划一个也没创建）。反向验证：恢复固定等待后该用例耗时 **60.10 秒**、计划结果 `('failed', 'TimeoutError')`、目录留下一个被创建又被停止的助手、运行以 `CollaborationDispatchFailed` 结束。相邻回归：`test_concurrent_collaboration` / `test_writable_collaboration` / `test_collaboration_runtime` / `test_investigation_tools` / `test_patch_integration` / `test_collaboration_diagnostics` / `test_structured_product` / `test_product_f3_e2e` / `test_autonomous_preparation` 全部通过；compileall、collect-only、修改范围 Ruff、`git diff --check` 通过。未跑全量、L2–L4 与真实模型。
+
+### 14.3.25 预算预留的可证明上界与超支拒绝
+
+合同见 [ADR-0080](../adr/0080-bounded-token-reservation-and-overage-refusal.md)。缺陷链（每环有源码与事件佐证）：`BudgetedLlmRuntime._bounded_request` 在无 token 计数器时把**账户全部剩余**作为单次预留额，而生产里**没有任何路径提供计数器**——`BudgetEnforcement` 仅在 `product/runtime.py` 与 `evaluation/model_service.py` 构造且均不传 `token_counter`，`src/traceh/` 内也没有任何类实现 `TokenCounter` 协议，故该有界分支是只有测试会走的死代码；`llm/openai_compatible.py` 的超时 `ProviderFailure` 不带 usage（同文件 DNS 失败带 `Usage(0, 0, EXACT)`）；失败且无 usage 时按预留全额计费；账户归零后宿主自己声明的重试策略（TIMEOUT 可重试、最多 3 次）在准入处被 `BudgetExhaustedError` 拒绝，异常自 `runtime/agent_loop.py:285` 逃出并使 Turn 失败。实测 `budget/usage-reserved tokens=4653578` → `budget/usage-settled tokens=4653578 quality=unknown` → `runtime/error BudgetExhaustedError`（step_id 与超时尝试相同）。另一相关行为：`_usage_settlement` 在 `total > reserved` 时按预留额封顶，真实超支被静默丢出账本。两条规则单独看都是安全方向，**问题出在叠加**，而既有测试只分别覆盖了每一条。
+
+决定与实现：**预留额必须是本次调用的可证明上界，而不是账户余额；真实超支不得静默离开账本。**①可数路径——Product Profile 新增必填键 `token_estimate`（`{encoding, margin_percent}` 或显式 `null`），宿主据此构造 `CanonicalTokenCounter` 并连同余量交给 `BudgetEnforcement`；预留额为 `padded_input + output_limit`，余量**只加计数出来的输入侧**，并同步压缩可买的输出。②不可数路径——预留额改为 `min(剩余, 规范化请求 UTF-8 字节数 + 输出上限)`；字节级 BPE 的每个 token 至少映射一个字节，故该值是 token 数的数学上界，既不少计费也不再吞掉账户，且以 `remaining` 封顶使准入宽松度不变。③超支拒绝——`total > reserved` 抛 `BudgetUsageOverageError`（`budget-usage-overage`，携带 reported/reserved），成功分支既有的「仍按预留额结算→再抛出」路径直接承接；失败分支原本缺少该保护，本次补上并保守结算，**不遮蔽 Provider 主错误**。④协议——`token_estimate` 必填，`profile_version` 6→7，缺键旧文档明确拒绝（共享设置解析器点名该键）。⑤计数只有一套实现——从 `RequestTokenMeter` 抽出 `CanonicalTokenCounter`，输入计量与预算预留共用同一规范化原语，因此「数 token」不需要宿主编造 `window_tokens`。
+
+定向验证：新增 11 项（协议接受/`null`/缺键拒绝/8 种非法形状、余量只加输入侧、非法余量被拒、字节上界按请求成比例——预留 <1000 且账户仍余 90 万+），更新 1 项（溢出由静默封顶改为抛错，断言 `(reported, reserved) == (13, 10)` 且账户仍一致）。反向验证：两处保护分别撤回 → `DID NOT RAISE` 与预留 30≠40，均因预期根因失败。相邻回归：预算、Product、协作、评估契约、TUI 共 11 个套件通过；compileall、修改范围 Ruff 通过。
+
+边界：计数依赖可选依赖 tiktoken，其编码对非 OpenAI 模型是**估算**，这正是 `margin_percent` 的存在理由，余量由宿主显式声明而非从模型名推断；成功调用仍以 Provider 报告的精确用量结算。超支拒绝对**所有**路径生效，此前「超支后静默继续」的运行现在会失败，属有意的行为变更。仓库自带 benchmark 与 TUI 生成配置均声明 `null`（不强制可选依赖），其预留由字节上界保护。本轮未用真实模型验证。
+
+### 14.3.26 宿主向模型隐瞒已知信息的三处修正
+
+证据见[记录 076](../deal/076-large-codebase-comprehension-rounds.md)。三处同类缺陷：宿主已经掌握模型需要的事实，却不在应当给出的位置给出。
+
+**① 提示按实际工具组装。** `assemble_prompt_sections` 无条件拼入 `traceh.runtime.references`（5,969 字符），而紧邻其上的 `source_navigation(tools)` 早已按真实工具构建、无匹配即返回空串。结果：只有 `apply_patch/list_files/read_file/search_text/shell` 的 Product coder，收到的提示中 **79% 在讲 `search_history`、`read_tool_output`、`request_skill_reference` 等 10 个它没有的工具**，每次请求约 1,091 token（`cl100k_base` 与 `o200k_base` 实测分别为 1,091 与 1,090；早期记录的 1,546 是按每 4 字符 1 token 估算，非实测，已更正）。修正复用 `navigation` 这一既有判断，不新增第二套逻辑：Product coder 的系统提示由 **7,583 降至 1,397 字符**，而有检索工具的宿主一字未变。
+
+**② 拒绝消息带可纠正信息。** `ToolRuntime._prepare_one` 的视图检查**先于**注册表查找返回，因此 `Unknown tool:` 这条本可自纠的消息永不出现，模型只收到 「Tool batch is outside the frozen Step view」。实测第 6 轮 multi 臂据此**调用不存在的 `write_file` 五次**。修正后区分「无此工具」与「本步不可调用」，并附本步可调用清单；所有名字均来自调用方自身请求或其已发布工具表，不构成披露。第 7 轮 `write_file` 未再出现。
+
+**③ `read_file` 增加 `mode=outline`。** 返回文件内定义行与行号、不返回正文；按行谓词而非解析器实现，不会在异常文本上失败，也不宣称语义。实测对 221 个 Python 文件，大纲合计 244,976 字符，为逐页读取正文的 **4.9%**。同受 8000 字符上限约束，超出以 `next_read` 续读；`end_line` 与 `start_column` 在该模式下被拒。
+
+该能力的**成本**须与收益一并记录：`read_file` 的工具 schema 由 44 token 增至 308 token，连同 `shell`（64→150）与 `search_text`（64→103）的描述补充，使每次请求的固定工具 schema 开销**增加 389 token**（`cl100k_base` 实测，默认工具集合计 1,462→1,851）。后果是最小可用上下文窗口相应收窄：同一窄窗口夹具在 5,000 token 下由「保留 directory 层」退化为**一条引用都不admit**，5,500 下行为与原先一致（directory 保留、正文排除），16,000 下不受影响。因此 `test_reference_token_budget` 的窄窗口参数由 5,000 调至 5,500——被保护的不变量（token 排除只降级到 directory，不整条丢弃）未放宽，只是让夹具回到它本来要检验的区间。
+
+定向验证：提示条件化新增一项反向契约用例（无检索工具的组装中该段与相关工具名全部不出现，identity 与 workspace 仍在），并改造既有冻结重放用例使其组装真实拥有该类工具；拒绝消息新增一项用例分别钉住幻觉名与真工具被隐藏两条分支且互不混淆；outline 新增 5 项（定义与行号正确且**正文绝不出现**、无定义文件为空且终止、超限续读衔接、拒绝正文类参数、过期 digest 被拒）。三者均做反向验证；其中一次撤回只得到夹具 `TypeError`，按 §8.2 重做为打行为断言的版本。相邻回归：`test_request_view`、`test_file_reading`、Product 与协作套件通过。
+
+边界：三处修正改变模型可见信息，因此可能改变模型行为；这是有意的，但意味着跨轮次对照必须把它们记为自变量。本节不改任何协议版本。
+
+### 14.3.27 大型代码库理解任务的十轮对照
+
+完整逐轮证据见[记录 076](../deal/076-large-codebase-comprehension-rounds.md)。题目为「读懂 6.8 万行代码库并写出带可解析引用的 `ARCHITECTURE.md`」，语料 253 文件、**刻意不含全项目摘要文档**，判分完全机械（引用必须真实存在，编造即失败）。
+
+**第 1–6 轮全部作废**，失败原因依次为：交付物字数上限与单次回复输出上限矛盾（轮 1、2）、Provider 固定 120 秒超时且不可重试（轮 3）、`outline` 提供了但零次使用（轮 4）、两臂耗尽预算（轮 5）、single 首次走到固定验证却被**检查器拒绝合法行区间锚点**误杀（轮 6）。这些**全部来自宿主侧缺陷或夹具设置**，不是被测机制。
+
+**第 7 轮是唯一有效读数**：single **passed**（13 分钟、102 次工具调用、峰值 115,803 token、3,624,030 exact tokens，交付物 69 个真实引用文件 / 13 个包 / 61 条锚点全部可解析 / 零编造）；multi **failed**。原 comparison owner 判定 **`mixed`**，`changes {gain:0, loss:1}`、`quality_status: regressed`、`adoption_authorized: false`。
+
+**multi 的失败不能读作「协作无收益」**：它五次提交分工计划、五次同一参数形状错误（`argument main_work must be object, got str`），随后死于输出截断；拒绝消息只说类型不对、不给正确形状，与 14.3.26 第②条同类。**它未进入可比较的执行阶段。**
+
+另一项跨轮观察：第 5 轮仅去掉提示噪音后，single 的 `search_text` 由 0 升至 55 次、工具调用由 73 升至 208，multi **首次**提交分工计划（2 次）并**首次**使用 `outline`（6 次）；第 7 轮 multi 的 `outline` 用量为 8 次、计划提交 5 次。样本过小，只能作为方向性观察。
+
+**第 8–10 轮续测**：第 8 轮为类型拒绝补上 schema 已声明的键名后，旧模型仍在分工门放弃；第 9 轮**只换模型**为 `deepseek-v4.1-flash`（端点探针证明与 `v4-flash` 非别名：同一句 `hi` 计 5 与 31 个 prompt token），首次出现 `outline` 被使用（两臂合计 332 次，前八轮零次）与**分工门通过**（被拒两次后自行纠正，建 6 助手、收 18 份报告），但两个助手各自打满 150 万 token 上限而主方仅用 15%；第 10 轮据此把每助手额度提到 500 万、调用提到 400、输出上限提到 32,768。
+
+**第 10 轮两臂均 passed**，是本项目首次取得「两臂都完成」的对照：single 41 分钟 / 10,414,873 exact tokens / 234 次调用，multi 38 分钟 / 10,864,026 / 658 次调用；两份交付物均已推广，从各自目标仓库取出核验为 single 116 个引用文件 / 17 包 / 188 锚点、multi 92 / 16 / 207，**双方均零不可解析引用**。判定 `quality_status: no_change`、`hard_constraints: passed`、`adoption_authorized: false`，`cost_delta {tool_calls: +424, total_tokens: +449,153}`。
+
+**与 14.3.22（记录 074）的对照给出本项目对「多助手何时划算」的第一个有数据支撑的答案**：074 的小模块改码任务中 multi 花 6.2 倍 token、3.2 倍墙钟并判 regressed，本轮大库理解任务中 multi 仅多 4.3% token、墙钟反而快 7%。差异在**整合税**——074 的助手交回不可变 Patch，主方必须逐字读完再逐个整合；本轮助手交回压缩过的证据包，主方无需重读。**判据是交回物是否需要主方逐字重读。**
+
+边界：每臂一个复本、单一端点；第 1–8 轮与第 9–10 轮模型不同，**跨轮 token 与耗时不可比、轮内可比**；第 4 轮起语料随工作区重新生成，实现 outline 的 2/253 个文件与早期轮次不同；multi 读了 253 个文件却只引用 92 个，大量阅读对交付物无用；第 1–9 轮的失败全部来自宿主侧缺陷或夹具设置，本轮成立是因为那六处已逐一修复。
 
 ## 15. 测试与验证基线
+
+记录 070 最终门禁：86 项定向/相邻回归全部通过，无跳过；含真实沙箱审批、取消、SQLite 与 single/multi 推广。compileall、4230 项仅收集、修改范围 Ruff、文档与 diff 检查通过。没有全量、L2–L4 或第二轮真实模型。
+
+记录 070：TUI 新建/追加验证命令对齐 public_requirement，显式 patch_author 启停与角色文案同步。真实 PTY 经原 CLI/TUI/Product 主线完成提议、确认、START、协作、固定验证、Review 与隔离 APPROVE；24 次调用（聊天 4、主 15、子 5）、193929 exact tokens、262.047 秒。24 份请求副本重放通过，3 账户关闭、22 预留结清、3 工作区释放，6 份沙箱证据收敛。任务对话用原账本副本补查加载与展开，零追加模型调用。配置阶段为程序化表单，不能称人工逐项输入；固定检查首次通过，未验证失败反馈返工或稳定性。详见[记录 070](../deal/070-tui-sync-real-acceptance.md)。
+
+记录 069：唯一授权真实试次 20 次调用（主 15、子 5）、172050 exact tokens、193485 ms，Product/Workflow、完成检查、正式 Review 和隔离 Promotion 通过。22 份请求副本重放与不变量通过，3 账户关闭、22 预留结清、3 工作区释放，6 份沙箱证据收敛。公开说明已写入验证事实，但固定检查首次通过、后续模型请求为零，不能证明失败反馈改善。无追加试次或源码修改，详见[记录 069](../deal/069-declared-feedback-real-acceptance.md)。
+
+记录 068：227 项不同定向/相邻检查最终通过，含真实沙箱、多业务公开/私有检查、协议拒绝、配置/摘要绑定、错误命令结果替换拒绝、完成返工、取消和原批准推广路径。反向绕过命令绑定确实越过完成边界，正常实现拒绝；compileall、4230 项仅收集、修改范围 Ruff、文档和 diff 检查通过。本轮无真实模型调用、全量或 L2–L4，真实失败仍见记录 067。详见[记录 068](../deal/068-declared-verification-feedback.md)。
+
+记录 067：39 项定向/相邻检查、compileall、4215 项仅收集、5 文件 Ruff、材料正反预检和文档检查通过。单次真实调用 24 次、315593 ms，已知 exact 236088 tokens，最后一次取消使完整总量未知；账本 351143 不等于实际用量。首次收尾直接引用已有证据，但固定检查拒绝顶层类型漏验，返工未完成；26 份请求副本重放通过，账户/预留收口，工作区 live 0。没有全量、L2–L4 或追加试次。详见[记录 067](../deal/067-evidence-first-closure.md)。
+
+记录 065–066：66 项不同定向/相邻检查最终通过，反向恢复旧观测入口确实漏计，正常复测通过；compileall、4211 项 collect-only、5 文件 Ruff、材料正反预检、文档及 diff 检查通过。真实两项按冻结停止，没有全量/L2–L4、收益对照、安装或项目提交。
+
+历史记录 064：用户新授权的一轮按 32 次/600 秒/连接 60 秒/零重试冻结并预检，实际 DeepSeek V4 Flash 15 次调用（主 11、子 4）、114367 exact tokens、147875 ms，无 Provider 失败。助手 Patch 1397 字节一次完整读取并显式整合，主方交付另一模块；一次直接 python 自测覆盖两模块且 exit 0，最终报告引用真实调用 ID。完成门禁、固定功能/文件范围、正式 Review 与隔离 benchmark Promotion 全部通过，Product/Workflow completed。最终 Artifact 2610 字节仅含约定两文件。 3 个预算账户关闭、17 笔预留结清，账本与 Provider 总量一致；3 个工作区全部释放，live 0。三份原 Sandbox/CAS 证据全部收敛，17 份请求副本重放及不变量通过，原库和前六轮失败证据不变。本轮没有生产代码修改或新增源码门禁；冻结材料、文档与 diff 核查通过，既有记录 063 的 70 项测试保持历史归属。见[记录 064](../deal/064-shell-feedback-real-acceptance.md)。
+
+记录 063：命令说明与启动错误反馈修复完成，70 项不同定向/相邻检查通过，覆盖错误后实际成功执行、长错误限长、取消/孙进程、stdio、固定验证、Product、发布、架构和请求重放。反向移除错误输出重现空失败，正常代码复测通过；compileall、4209 项 collect-only、三文件 Ruff、文档及 diff 检查通过。没有新增真实模型调用、全量或 L2。
+
+历史记录 062：一次真实 DeepSeek V4 Flash 验收共 25 次调用（主 21、子 4）、236855 Provider exact tokens、221985 ms；一次完整读 Patch 并显式整合，没有未提供工具调用。自测 8 次 start-failed 后部分断言通过，原 Token admission 停止，完整验收未通过。27 份请求副本重放与不变量检查通过，12 份 Sandbox 原证据校验且全部收敛，3 账户关闭、27 预留结清、工作区 live 0。冻结源码/材料和文档检查通过；没有源码修改、追加模型调用或全量/L2。
+
+既有记录 061：工具导航和分页说明的 210 项不同定向/相邻用例通过，最终零跳过；反向验证、compileall、4205 项仅收集、5 个 Python 文件 Ruff 通过。本轮未重复这些源码检查。
+
+历史真实验收为记录 057：25 次调用，完成检查两次拒绝，反馈后未修复，完整交付失败；27 份请求副本重放通过，三轮原数据库均未修改。本轮只新增预检、真实验收、只读诊断与文档检查，以下 056 数字为既有实现门禁。
+
+WC-4 完成门禁修复：功能闭环 4 passed，主线/取消/Evaluation 19 passed，架构/请求/装配/owner 71 passed，冻结协议/相邻架构 87 passed，相邻沙箱/收尾 16 passed。反向移除整合门禁和完成反馈均重现公开错误；恢复后定向复验见记录 056。集合不相加；compileall、Ruff、collect-only 4196、diff 与文档检查通过。没有全量/L2 或新真实模型轮。
+
+记录 055 的既有定向集合 13、7、74、27 passed（集合重叠，最后一组 1 skipped）；compileall、Ruff、collect-only 4186、diff 检查通过。唯一新授权真实轮完整验收失败，见记录 055；没有全量/L2 或继续追跑。
+
+WC-4 定向与相邻集合见记录 054；compileall、修改范围 Ruff、collect-only 4183、diff 检查通过。唯一真实轮为失败结果，未跑全量/L2，不覆盖历史门禁。
+
+WC-2/3 当前定向门禁分别见[记录 052](../deal/052-writable-child-handoff.md)和[记录 053](../deal/053-explicit-patch-integration.md)，未跑全量/L2，WC-4 唯一真实轮完整验收失败，详见记录 054。历史发布全量数字不改写。
+
+后续完整同题确认：13 次真实调用（主方 9、助手 4）、75102 exact tokens、144188 ms，无 Provider 失败/重试。助手实际读两份规格，完整报告进入主方 6 份请求；主方实施，functional-contract exit 0，25 项功能及文件边界通过，隔离 Product/Workflow completed。review 真实执行 1 次，但未追加功能测试或引用 tool_call_id；主方如实承认未跑单测，没有再次虚报多项命令。助手空区间说明有一处自相矛盾，主方实现正确。工程/固定功能通过与验证行为不充分分开报告。3 账户和 15 预留终结、Workspace live 0，15 份请求副本重放通过，原库不变。见[记录 051](../deal/051-full-collaboration-confirmation.md)。
+
+只替换分工说明的一次真实请求观察：1 次调用、3832 exact tokens、27295 ms，恰好一个合法 submit_collaboration_plan，助手读取未读规格与实现，主方保留设计/修改/验证；schema、严格字段/长度及原 Provider 离线字节重放通过。未执行工具、原库不变。首尾摘录与 sole authoritative source 措辞仍有交付质量风险，不改变原文件权威，也不证明完整协作或收尾通过。见[记录 050](../deal/050-unread-allocation-probe.md)。
+
+未读来源分工说明：29 项定向/相邻检查通过、零跳过；冻结源码 AST 对照确认只修改 ALLOCATION_GUIDANCE，规划与工具说明共享文本。compileall、4138 项仅收集、Ruff 和文档检查通过。本轮零真实调用，不能宣称行为改善。见[记录 049](../deal/049-unread-source-allocation.md)。
+
+受控分工取证：原请求 1 次真实调用返回纯文字拒绝分工；原响应字节离线重放通过，零工具执行、原库未变，未复现旧参数错误。没有生产修改或新增功能通过结论，见[记录 048](../deal/048-planning-response-capture.md)。
+
+WC-1G 独立确认：同题材料 Docker 正反预检通过，3 次真实调用后因 json-extra-data 失败，5 份请求副本重放通过且原库未变；不是收尾行为通过。本轮源码未改，没有重跑定向套件或全量，文档检查另行通过。见[记录 047](../deal/047-verification-review-confirmation.md)。
+
+Provider 参数诊断：81 项不同定向/相邻检查通过，包含本地 HTTP → 原 Runtime → 失败事件与重放、成功解析、取消/重试边界与 TUI 展示；隔离回退粗粒度诊断后测试按预期失败，正常实现复测通过。本轮不调用外部模型，不改变 WC-1G 的未验证结论。见[记录 046](../deal/046-provider-argument-diagnostics.md)。
+
+WC-1G：56 项不同定向/相邻检查通过、零跳过；隔离删除收尾 Continue 的反向验证有效，正常实现复测通过。compileall、4125 项仅收集、8 个 Python 文件 Ruff、文档与 diff 检查通过。真实新题在 planning 参数协议失败，未进入 review，不宣称语义改善；没有全量、L2–L4、Wheel 或追加真实调用。见[记录 045](../deal/045-main-verification-review.md)。
+
+WC-1D/E：559 项不同定向及相邻检查最终通过，无剩余失败或跳过；1 项隔离源码反向验证有效。compileall、4116 项仅收集、69 个改动 Python 文件 Ruff、文档与 diff 检查通过。没有跑全量、L2–L4 或 Wheel。真实模型验收单列，不与脚本结果混算。见[记录 043](../deal/043-required-multi-allocation.md)。
+
+WC-1C 定向验证累计 65 项不同用例通过，另有 1 项报告可见性反向检查有效；compileall、4104 项仅收集、7 个本轮 Python 文件 Ruff 通过。旧测试夹具已适配当前侦察/决定阶段，真实实验未重跑；示例名称仅用于测试材料，未写入通用生产规则。 真实验收仍为任务完成、未触发助手，见 14.3 和[记录 042](../deal/042-structured-real-acceptance.md)。
+
+WC-1B：244 项不同定向检查通过、零跳过；3 项反向检查有效。编译、4100 项只收集、23 个 Python 文件 Ruff、链接/围栏/主章节对应及 diff 检查通过。详细结果见[实施记录](../deal/041-structured-readonly-collaboration.md)。运行真实 Git/Docker/Supervisor 配合确定性模型；WC-1C 的后续真实结果另列，不能与确定性替身混算。未运行全量、L2–L4、Wheel 或提交发行。历史成绩仍按冻结源码解释。
+
+
+DA-14：74 项不同定向检查通过、零跳过，含真实 Docker 主子请求/取消、single 隔离和 SQLite 相邻主线。漏注入反向检查有效，恢复后通过；compileall、4089 项 collect-only、五个改动 Python 文件 Ruff、文档及 diff 检查通过。四题真实 42 次/390648 exact tokens、Product 门禁 4/4、委派 0；50 份请求副本重放通过，原数据库不变、预算与工作区收敛。未运行全量/L2–L4/Wheel、baseline 或独立裁判，未提交发行。见 12.23 与记录 040。
+
+DA-13 已按原合同完成四个真实 Product trial：37 次 qwen-plus 调用、308480 exact tokens，原门禁 3/4，委派 0，无连接失败。八次真实容器材料预检与 45 份请求副本重放通过，四份原数据库摘要不变，预算/工作区收敛。此前离线检查仍为 30 passed / 1 skipped（原可选 Docker 测试未配置显式测试环境）；本次真实预检另计，不能把两者混算。compileall、4087 项 collect-only、Ruff 与反向引用检查沿用未变代码的已完成结果，本轮重新核对冻结输入、文档/JSON/链接/围栏和 diff。未运行全量/L2–L4/Wheel、基线或语义裁判，未提交发行。详见 12.22 与记录 039。
+
+
+DA-12 于 2026-09-12 完成六次字段说明真实配对，14905 exact tokens，无 Provider 失败，两组决定与预期标签均 3/3，但互补实质分工未证明，不采用。10 项新增测试与原探针/独立输入/Provider/Context/材料相邻回归共 101 passed / 0 skipped；反向移除 description 后差异检查按预期失败，恢复后通过。compileall、4073 项 collect-only、两个新增文件 Ruff、文档/JSON/链接/围栏、反示例范围和 diff 检查通过。三份原数据库和原生产代码未变，六份请求与响应另存。未执行返回工具、完整任务、Docker、全量、L2–L4、Wheel、完整基线或语义裁判，未提交发布，见 12.21 与[记录 038](../deal/038-complementary-work-contract.md)。
+
+DA-11 于 2026-09-12 完成九次独立决定输入探针，30509 exact tokens，无服务失败；原样 0/3、两独立条件各 3/3 合法决定及预期标签，但可拆分工未证明，未执行 Tool 或 Product。16 项新增身份/正文/失败/未来结果反例和取消、九次上限、不重跑测试，加相邻探针/Provider/Context/材料回归共 91 passed / 0 skipped；反向移除正文相等检查后错配反例按预期失败，恢复后通过。compileall、4063 项 collect-only、两个新增文件 Ruff、文档/JSON/链接/围栏、实验常量范围及 diff 检查通过。原数据库三份摘要未变，九份派生请求独立保留来源。没有全量、L2–L4、Wheel、Docker、完整基线、语义裁判、生产改动或提交发布，见 12.20 与[记录 037](../deal/037-independent-decision-input.md)。
+
+DA-10 于 2026-09-12 完成 12 次请求级真实对照，44477 exact tokens，四条件各 0/3 决定提案，无 Provider 失败；不是 Product 验收。22 项新增检查及 Provider、Context、材料相邻回归共 75 passed / 0 skipped；反向移除转换后三个干预条件均按预期失败，恢复后通过。compileall、4047 项 collect-only、两份新增 Python 文件 Ruff、文档/链接/JSON/围栏、实验常量作用域与 diff 检查通过。三个原数据库摘要未变，12 份派生请求保留原来源身份与独立摘要。未执行返回工具、完整任务、Docker、基线套件、语义裁判、全量、L2–L4 或 Wheel，未修改生产或提交发布，详见 12.19 与[记录 036](../deal/036-phase-transition-diagnosis.md)。
+
+DA-9 于 2026-09-12 完成首组有界侦察实验：20 项候选检查通过，隐藏工具保护与侦察调用上限的两项反向测试有效；真实 Docker Product 完成/取消路径及三类材料的正反预检通过。18 次真实 qwen-plus 调用、65117 exact tokens，Product/联合行为 1/3，无助手或网络失败，预算和 Workspace 全部收敛。9 个 Session、24 份 Request Snapshot 在临时库重放与不变量检查通过，227 个原文件未变。候选撤回后的最终相关及相邻回归为 235 passed / 0 skipped，含 Product、Runtime、Generation、重试、取消、释放和真实 Docker 边界；compileall、修改范围 Ruff、4025 项 collect-only、文档/JSON/链接/围栏/反示例扫描与 diff 检查通过。未跑第二组、baseline、语义裁判、旧 72 题、全量、L2–L4、Wheel，未提交发布。详见 12.18 与[记录 035](../deal/035-scout-before-decomposition.md)。
+
+DA-8 于 2026-09-12 完成两轮独占拆分界面实验，见[记录 034](../deal/034-exclusive-adaptive-decomposition.md)。三类冻结材料共 6 个 Product trial、54 次真实 qwen-plus 调用、438103 个精确 tokens；没有 Provider 连接失败。首轮按主 Session 事件修正分析器口径后，三次首 Step 都只公开拆分 Tool，三题分类均符合预期且任务均成功，但可拆题创建助手后没有收回报告，所以联合行为只通过 2/3。候选随后按原 Session 事实增加“已派出就必须收回或明确停止”的收口约束；第二轮可拆题误判 `local` 且任务失败，耦合题虽判 `local` 也未通过文件检查，只有简单题完整通过，联合行为为 1/3。六次 Budget 全部收敛、Workspace live=0。真实结果触发冻结撤回条件，候选源码和实验测试已删除，原 adaptive、默认 single、AgentLoop、事实源与 Promotion 边界不变。撤回后 142 项相关及相邻测试通过，其中包含真实 Docker Product 的完成与取消两条路径；compileall、116 个修改范围 Python 文件 Ruff、4025 项 collect-only、反示例生产扫描、JSON/文档与 diff 检查通过。没有运行 baseline、语义裁判、旧 72 题、全量、L2–L4、Wheel、提交或发布。
+
+DA-7 于 2026-09-12 完成四轮类型化拆分实验，见[记录 033](../deal/033-typed-adaptive-decomposition.md)。三类冻结材料共 12 个 Product trial、68 次真实 qwen-plus 调用；预期可拆四次，实际 `separable`、child 和 collect 均为 0。五次 typed 选择符合预期，三次任务成功，两次同时满足分类与任务结果。12/12 Budget 收敛、Workspace live=0，没有 Provider 连接失败。确定性候选曾覆盖协议、失败与取消，真实结果未达冻结采用条件后已完整撤回；撤回后的 Adaptive、Registry、架构和 Product/Docker 定向回归 47 项通过。compileall、修改范围 Ruff、4025 项 collect-only、JSON/文档与 diff 检查通过。没有运行 baseline、语义裁判、旧 72 题、全量、L2–L4、Wheel、提交或发布。
+
+DA-6 于 2026-09-11 完成五轮提示候选实验，见[记录 032](../deal/032-adaptive-decomposition-guidance.md)。三类冻结材料共 15 个 Product trial、121 次真实 qwen-plus Provider 调用，delegate/child call/collect 均为 0；30 次零用量本地 requester 成功记录计入总成功记录，合计 940445 exact tokens，另有 2 次本地调用上限拒绝发生在 Provider 前。45 个 Session、153 份 Request Snapshot 在临时 SQLite 副本中重放且 CoreInvariant 无错误，所有 Budget 收敛、Workspace live=0。每轮均先以固定断网 Docker 对空产物失败和参考产物通过做反向预检。目标能力未出现，全部提示候选撤回。恢复后 DA-6 合同、Registry、Adaptive Product、调查工具与 Assembly 合计 31 项定向测试通过；compileall、修改范围 Ruff、4025 项 collect-only、反示例硬编码、文档和 diff 检查通过。未运行基线、语义裁判、全量、L2–L4、Wheel、提交或发布。
+
+2026-09-11 真实主子小样见[记录 031](../deal/031-real-main-child-model-smoke.md)。三种自然单次场景与两种明确委派场景合计 57 次真实 qwen-plus 调用，主方 46、助手 11；成功调用精确用量 509179 tokens，外部 Provider 失败 0。自然场景委派 0 次；明确场景各成功 delegate/collect 一次，但大题和最小题都在本地调用上限后保留为 Product failed，完整双模型 Product task 未通过。最小题产物经冻结 Docker Verifier 离线通过，不回写原任务状态。17 个 Session、71 份 Request Snapshot 重放及不变量检查无错误，全部 Budget 收敛、Workspace live=0。没有语义裁判、基线、自动采用、全量、L2–L4、Wheel、提交或发布。
+
+本轮额度协商的定向、反向与真实验证见[记录 030](../deal/030-investigation-budget-negotiation.md)。最终按身份去重为 302 passed / 0 skipped / 0 failed；含 25 项显式 Git/Docker 相邻集成。compileall、修改范围 Ruff、文档及 diff 检查通过，全仓仅 collect-only 4019 项。真实子方 4 次调用、14483 Token，4 个 Session 的 15 份请求重开核验通过；脚本主方的明确协商练习不等于自然策略提分。
+
+有界源码读取：107 passed / 1 skipped、相邻 owner 23 passed、显式真实 Git/Docker 5 passed，三批无重复用例，共 135 passed / 1 skipped；跳过仅为 Windows 符号链接权限。摘要校验、长行前进和重复取消收敛三项保护反向验证有效，Runtime 读取/失败/续读/重开请求证据通过。compileall、4000 项 collect-only、修改范围 Ruff、反示例硬编码、文档章节/链接/围栏与 diff 检查通过。十二次真实对照的 187 份原请求分别用冻结源码独立重放；首次 SQLite 临时副文件断言和语义失败均保留。未跑全量、L2–L4 或 Wheel，未提交发行。详见 12.13 和[记录 029](../deal/029-bounded-source-reading.md)；此前 16 项自主委派诊断检查及其原成绩仍见 12.12。
 
 发行定向首批 318 passed / 12 skipped，在一个过期的 0.10 版本重复断言处停止；删除两处重复版本断言、由原 test_version_contract 唯一检查 0.11 版本后，架构/版本/TUI 及相邻合同批次为 110 passed / 18 skipped。未修改已经通过的执行源码，未把两批相加；跳过项是未显式配置的 Docker 测试。另显式使用现有测试镜像，Product 两臂经过真实 Git、Docker 验证与原推广链，1 passed。编译、修改范围 Ruff、collect-only 3,978 条、diff-check 和文档检查通过；五项关键保护的反向检查均因预期根因失败。新 wheel 离线安装后 316 个包文件与源码逐字节一致，CLI/doctor 正常。没有运行全量 pytest 或 L2–L4，也没有把模型语义判断当成人工评分。 见[记录 026](../deal/026-runtime-background-optimization.md)。
 
@@ -3764,6 +4496,13 @@ Windows Job 不是已删除 JSONL 文件锁实现的遗留门禁。它在受支�
 
 ## 16. 已知限制与风险
 
+当前稳定性限制：记录 067 的顶层漏验与返工失败保留。记录 068 新反馈只提供宿主声明的检查说明和执行结果，不证明具体失败原因；私有原始输出仍不可读取，说明与测试语义是否一致由配置作者负责。记录 069 新试次完整通过，但没有固定失败后的模型请求，仍不能宣称反馈改善或提高成功率。主方报告调用引用仍不充分，冲突真实练习未运行。
+
+记录 054–057 的漏验输入、违规新增文件或报告不实属于对应历史试验；最新记录 062 的停止点是自测阶段预算不足，不能混写为同一轮失败原因。
+
+WC-2/3 工程门禁与记录 064 的 WC-4 本题完整验收已通过。原文阅读、实际整合、固定功能、批准与推广均有原证据；收益另行验证。字节/换行、冲突、未知状态仍不猜测修复，不扩展动态 DAG。
+
+
 AO-2+ 实测确认模型裁判可能混淆目录覆盖与全文、单值参考与多项问题要求，甚至回答被引用问题而非评分。该候选未采用，原裁判也不能视作独立人工 gold；本轮开发一致数不代表搜索准确率或通用裁判准确率。完整事实与拒绝决策见 12.10。
 
 v0.9.0 接受检索漏读和证据范围误述等已知限制，55/72 是内部固定题库合并成绩。沙箱首个已测组合仅为 Windows/Docker Desktop/Linux 容器与禁网。程序化 shell/Verifier/Product 已接入，未配置时拒绝进程执行；CLI/TUI 配置与只读展示已有定向检查；S3-A/S4 限定定向验收已完成；环境选择仍不自动验证项目依赖。只对授权普通文件做复制及逐文件写回，不提供全目录事务，也不抵御宿主同权限恶意并发写者；部分发布有明确证据。网络 allowlist、其他平台、自动拉镜像和冷恢复没有实现。S3-B/MCP/自由 Workflow 不在本次授权范围，isolated 继续拒绝。
@@ -3774,7 +4513,7 @@ B+ 只搜索一份已定位 retained output 的字面内容；不搜索 inline �
 
 简化启动不自动猜测项目或创建 Memory 配置；自动关联仅复用本工作区明确记住的选择并经原来源证明。服务预设不是账号模型可用性验证，网络认证仍由真实请求确认。DPAPI 保存仅支持 Windows 当前用户；其他平台沿用环境凭据。旧数据只提供新空间入口，不迁移（13.11）。
 
-本轮问题回显增加实际模型输入字节；引用配额不因此扩大。Session 13 不兼容旧 Session 1–12，现有旧数据保留，需新数据目录和新 Session。真实模型在每页两条消息的自然问句实验中会停在第一页；修改前呈现的对照同样失败，本次只修复换题重复回答，不保证模型总能按 next_cursor 翻完所需页。
+本轮问题回显增加实际模型输入字节；引用配额不因此扩大。Session 13 不兼容旧 Session 1–14，现有旧数据保留，需新数据目录和新 Session。真实模型在每页两条消息的自然问句实验中会停在第一页；修改前呈现的对照同样失败，本次只修复换题重复回答，不保证模型总能按 next_cursor 翻完所需页。
 
 TUI 直接复制选中显示文字，最多涉及当前保留的 2,000 行；Windows Unicode 系统剪贴板中文/emoji/换行
 往返已验证，剪贴板忙时会提示，其他平台依赖终端 OSC 52。Memory 表单仍要人工 CONFIRM，不自动重建检索索引，见 13.11。
@@ -3796,7 +4535,7 @@ Git registry 无法证明的布局仍不可用，不猜路径；common-dir 指�
 
 F0-C 当前 Session 原文分页／请求已通过限定验证；F1 已提供 typed Skill catalog 与 leased resource reader；F2 已接入 Skill 选择／注入、排名和 FTS；F3 已提供 Workspace Memory authority（7.6），B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 已有 Memory 检索／Context 注入与显式真实版本观察（7.7）；没有 raw-only 模式或跨 Session 原文；未开启观察时为 unknown，
 原文只进授权 Step 的 Context，不驻留 Surface。未配置仍有空 wrapper；F5 治理见 7.8，字节预算不是
-token 窗口。Session 必须为 `context_protocol=13`；1/2/3/4/5 和无标记旧 Session、物理 schema 1 均拒绝，不迁移（7.4）。
+token 窗口。Session 必须为 `context_protocol=15`；1/2/3/4/5 和无标记旧 Session、物理 schema 1 均拒绝，不迁移（7.4）。
 
 | 领域 | 当前限制/风险 | 完善方向 |
 |---|---|---|
@@ -3862,7 +4601,7 @@ token 窗口。Session 必须为 `context_protocol=13`；1/2/3/4/5 和无标记�
 | Agent 创建仍是单 Store 事务 | CAS 只保证一条 `agents:directory` 流内的线性化；跨 EventStore、跨机器没有协调，取消恰好落在写入中途时同样是“可能已提交”，必须按 `request_id` 重读判定 | 与 6.6 是同一条提交点边界；需要跨进程 Agent 协调时应另行设计 |
 | API 稳定性 | Alpha，协议可能演进 | 每次协议切换明确旧数据拒绝入口；仅在另获迁移授权时设计迁移，v1.0 冻结支持范围，不预设通用 Upcaster |
 
-v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 13、Context 12、context-json-v12、SQLite 2 与 Skill exact/FTS
+v0.9-F0-A/B/C、F1/F2 已实现；当前 Session 15、Context 13、context-json-v13、SQLite 2 与 Skill exact/FTS
 主线见第 7 节。F3 已实现跨 Session 项目绑定与 Memory authority，B-P1-01 已修复并经独立复审关闭，Release Stop B 已通过（P0=0/P1=0/P2=0）；F4 Memory 检索已接入；Sandbox 的 S0–S3-A 主线已接通并做真实定向验证，S4 生产验收通过；isolated Plugin 与多 coder 集成不在本目标。
 Release Stop A 首审未发现 P0/P1，两项 P2 已在现有 owner 修复并定向确认（15.1）：
 A-P2-01 统一 Skill 内容身份，允许不同层级共存而拒绝真正重复；A-P2-02 保留完整路径字面量和标识边界。
@@ -3873,7 +4612,7 @@ exact 仍不提供模糊路径、别名、路径自动修正或越过 selection 
 
 ## 17. 变更影响矩阵
 
-DA 总体方案已认可，当前仍仅有文档，已同步 1、3、14.1、17。AO-3 后台目标见 14.2：AO-3 验收须联合核对宿主生命周期、原证据采样/披露、跨轮准入与费用、原有界 AO/评估、TUI 和重启对账，不能把一次提案循环包装成无限调用。未来实现必须联合核对 Product 装配/资源、公共 Supervisor 与 Inbox/Delivery、Budget/Workspace、交接 Reader/Context、Workflow 收尾、Evaluation 策略配对/整树归因/Product 语义审阅及原 AO；具体 owner、正反例和退出条件见[DA 计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md)。不得以该计划新增第二事实源或提前宣称动态协作已完成。
+DA 工程与有限实测已完成，当前 Budget/Product 协议与原 Supervisor/Workflow 装配及收益边界见 12.12；1、3、6、12、14、17 随源码同步。AO-3 后台目标见 14.2：AO-3 验收须联合核对宿主生命周期、原证据采样/披露、跨轮准入与费用、原有界 AO/评估、TUI 和重启对账，不能把一次提案循环包装成无限调用。未来实现必须联合核对 Product 装配/资源、公共 Supervisor 与 Inbox/Delivery、Budget/Workspace、交接 Reader/Context、Workflow 收尾、Evaluation 策略配对/整树归因/Product 语义审阅及原 AO；具体 owner、正反例和退出条件见[DA 计划](../plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md)。不得以该计划新增第二事实源或提前宣称动态协作已完成。
 
 AO-2+ 校准须核对原模型调用、review_input/原策略绑定、诊断证据范围、候选与基线的输入等价、待审分母及含失败成本；同步 1、3、12.10、13–17。驱动只复用原主线，不更改旧评分，候选不达标就保留证据并恢复原策略。
 
@@ -3959,25 +4698,24 @@ F5 治理修改还应覆盖 Line/TUI 的确认与关闭、原 authority 的 CAS�
 ## 18. 当前维护流程
 
 ```mermaid
-flowchart LR
-    START["开始开发"] --> READ["完整读取正式版与通俗版"]
-    READ --> CHECK["检查 Git 与真实代码"]
-    CHECK --> CHANGE["实现最小完整修改"]
-    CHANGE --> VERIFY["编译、测试、定向验证"]
-    VERIFY --> FORMAL["先更新正式版当前事实"]
-    FORMAL --> PLAIN["逐章同步通俗版"]
-    PLAIN --> DOCQA["链接、Mermaid、秘密和一致性检查"]
-    DOCQA --> GIT["代码、测试、两版文档同一提交"]
+flowchart TD
+    A[AGENTS 与精简入口] --> B[Git 状态与模块导航]
+    B --> C[相关正式合同与相邻边界]
+    C --> D[核对源码和测试]
+    D --> E[范围内实现与验证]
+    E --> F[更新受影响正式章节]
+    F --> G[同步通俗解释与必要导航]
+    G --> H[检查链接 图 文档一致性]
+    H --> I[汇报结果 授权后才提交]
 ```
 
-维护完成标准：
+读取路径见[模块导航](context-reading-map.md)，WC 后续任务见[交接入口](../plan/TRACEHARNESS_WC2_WC4_HANDOFF.md)。首次必读入口，细节按 owner 读取，修改范围扩大再补读；不把两本详细文档重复加载作为完成标准。
 
-- 当前代码与测试通过；
-- 本文所有受影响事实已更新，过时事实已删除；
-- 通俗版相同编号章节已同步，且没有引入额外能力；
-- README/CHANGELOG/ADR/专题文档按各自职责更新；
-- 示例只作为示例，秘密未进入 Git；
-- 最终交付说明变更、验证、文档同步和剩余边界。
+AGENTS 管执行规则，正式版管工程事实，通俗版解释同一事实，入口只做导航，计划描述未完成目标，ADR/记录保留决定与实验。保留当前事实的唯一维护位置，不能把缩略入口变成第二合同。
+
+完成时核对相关代码、测试、正式和通俗章节一致；全局状态变化才同步入口。文档任务检查章节对应、相对链接和 Mermaid 闭合，不为文档组织变化启动全量或真实模型。源码任务仍执行 AGENTS 的 owner 门禁，不省略取消、失败、身份与回滚验证。
+
+最终汇报实际变更、验证、文档同步和剩余边界；没有执行的检查如实标明。代码、测试和相关文档应一起交付，只有明确授权才操作 Git 历史和远程。
 
 ## 19. 插件系统（v0.4 / Stage A–D3 / v0.9-F1）
 
@@ -4281,7 +5019,7 @@ ActivationSet／Drain owner 收敛，不提前返回或增加第二个生命周�
 Composition 只持久化有界 descriptor manifest/digest，不保存 section/resource 正文或 host root。
 Context 绑定 exact catalog digest；默认未配置 F2 时，空目录记 source-unavailable，非空目录记 not-selected，
 Skill blocks 与配额仍为零。插件启用不自动注入；F2 经过宿主持久选择、检索与预算才逐级披露（7.5）。
-当前 Session context_protocol=13、Context format=12、context-json-v12、SQLite schema=2，旧版本拒绝。
+当前 Session context_protocol=15、Context format=13、context-json-v13、SQLite schema=2，旧版本拒绝。
 F1/F2 的限定验证与 Release Stop A 独立审查分别记录于 15.1；后者 P0/P1 清零，2 项 P2 已修复并完成定向确认。
 停止点通过不代表 v0.9 发布通过；F1 的五组反向验证也不代替本轮审查。
 
@@ -4714,6 +5452,8 @@ Supervisor 覆盖：accepted→claim→Turn→completed 全链路且 `turn_id` �
 
 **创建与恢复 child 需要 owner live。** 未知 owner 继续由 durable Registrar 报 `AgentOwnerNotFoundError`；owner 有 identity 但在本 Supervisor 中没有非 stopping、非 faulted Activation 时，创建在 provision 之前报稳定的 `agent-owner-not-active`，最终安装处还会在同一 Supervisor 锁内复核。恢复 child 遵守同一规则：先显式恢复 root，再按 ownership 顺序恢复 child。lineage lease 保证检查到安装之间 owner 不会被并发 dispose。
 
+**关闭中的重入收敛。** WC-2 的公开 Product 取消路径发现：父方清理会再次请求 dispose(child)，若排在祖先 scope 后会与祖先等待父方形成环。现在仅当原 lineage admission 已被 scope/close 封闭且无相交在途 admission、原 Supervisor 已分配该 Agent 的 child-first cleanup Task 时，重复请求直接加入同一 Task（包括失败），不再等待第二个 scope。已停止的旧实例不能跨恢复代际复用此捷径；正常 resume 会清除旧 cleanup。没有新的事实源或跳过资源收敛。
+
 **Cleanup 子代优先、恰好一次、失败穷尽。** `dispose(root)` 使用共享 tree Task；相交的父/子 dispose 在 subtree scope 上串行，并在每个 Agent 上加入同一个 cleanup Task，所以不会双重释放。一个 child cleanup 失败只记录错误，兄弟与 owner 仍全部尝试，最后统一报告。调用方连续取消不会打穿内部收敛，清理完成后才重抛最初的 `CancelledError`。`aclose()` 在 Supervisor 锁内创建共享 close Task 的时刻，就接管登记表里仍在途的 tree disposal；公开 `dispose()` 等待者即使随后被取消，也不能在 close 快照和观察结果前移除 task 或失败证据，只有 close 加入这些精确 task 后才清理登记。随后关闭收敛候选与已有 tree disposal，再按整个 durable forest 的 post-order 清理。如果最终 Directory 已损坏，投影错误仍会如实报告，但关闭会退化为释放全部已知 Activation/cleanup Task，不能因为账本不可读就把进程内 Runtime 留活；此时反向安装顺序只是确定性资源回收顺序，不冒充 ownership 事实。关闭按 cleanup Task 来源去重观察：tree aggregate 中属于其已等待 Task 的失败会被剔除，再由最终 Task join 各报告一次；不能按异常对象身份全局去重，因为两个独立 cleanup Task 可以抛出同一个异常实例，二者仍是两次失败。`interrupt()` 仍只取消当前 Turn，**不**被偷换成子树 shutdown。
 
 依赖方向保持不变：`AgentRuntime`、`AgentLoop` 与 `PluginManager` 没有 Stage D diff，也不持有 ownership graph、admission 或 disposal state；未来模型 Tool 必须调用 Supervisor。不同 ownership tree 可以独立 admission/dispose，不使用会阻塞全部 Agent 的全局读写 gate。
@@ -4777,6 +5517,8 @@ Budget 在 D0 **仍未执行**；随后 v0.7-A 已按 ADR-0025 落实破坏式�
 当前版本仍为 `0.6.0`。D0 当时没有创建 managed Workspace、Patch Artifact、Promotion、Workflow、Budget event 或 CLI 产品入口，也不是 OS sandbox。新增 5 项架构守卫；与既有 Tool/Supervisor 的定向门禁为 `96 passed`，全仓为 `1712 collected / 1711 passed / 1 skipped`。三项反向验证分别把 Toolset 协议注解退化为 `object`、绕过 host policy、缓存第一次 Directory；对应守卫均按根因失败，恢复后的两个生产文件 SHA-256 与验证前一致。D0 之后的 v0.7-A/B Budget、v0.7-C Workspace 与 v0.7-D1 Patch Artifact 分别由 20.20–20.23 补上；Workflow 仍未开始。
 
 ### 20.20 v0.7-A：单一 append-only 层级 Budget Ledger
+
+当前账本使用 schema 3，增加初始 Token 分配和 child-token-decided 事实；额度协商见 12.14，历史阶段决定不改写。
 
 完整决定见 [ADR-0026](../adr/0026-append-only-hierarchical-budget-ledger.md)。Stage A 做的是**事实与权限来源切换**，不是执行接线：旧 `AgentSpec.budget`、`AgentRecord.budget` 和公共 `Budget` DTO 已删除；新 `agent/created` 使用 schema version 2 且没有 Budget 字段。schema version 1 的 v0.6 history 明确得到 `agent-budget-history-unsupported`，没有 alias、upcaster、双 reader/writer、自动 grant 推断或删除旧目录。
 
@@ -4858,6 +5600,10 @@ Stage C 的五个专门测试文件共 60 项：Catalog/Service 28、真实 Git 
 
 Stage C 本身仍不是 Patch/merge：当时没有 diff/Patch Artifact、Verifier 输入冻结、人工批准、Git ref CAS promotion、Workspace CLI、跨进程 workspace lease、容器或 OS sandbox。随后 D1 补上 immutable Patch capture，D2 又补上 Verifier、人工批准与 ref CAS promotion（20.24）。一个外部 Git writer 或另一进程仍可能制造冲突；当前会检测后 fail closed/quarantine，而不是声称拥有分布式锁。版本仍为 `0.6.0`，Stage C/D1/D2 已实现但尚未发布。
 
+WC-3 增加 WorkspaceService.edit 与受控文件编辑 owner，在原修改锁内核对身份、前像、发布与补偿；原 Catalog 不新增整合状态，回执归原 Tool Effect，详见 14.3.3。
+
+WC-4 后续增加 inspect_session：原锁内解析同一 Agent/Session 的受管句柄，供宿主读取候选及在同一锁内执行隔离完成检查；不修改 Catalog 或扩大工具权限。Product 将稳定候选清单冻结到原请求，见 14.3.5。
+
 ### 20.23 v0.7-D1：不可变 Patch Artifact 与只读报告关联
 
 完整决定见 [ADR-0029](../adr/0029-immutable-patch-artifact-capture.md)。D1 在 `AgentRuntime`、`AgentLoop`、具体 `ProcessAgentSupervisor` 与 `PluginManager` 之外新增独立 Artifact 域。[`api/artifacts.py`](../../src/traceh/api/artifacts.py) 只定义 Manifest、Artifact、CAS 与 Workspace capture gate 等公共能力；[`artifacts/`](../../src/traceh/artifacts/) 拥有 capture、Git snapshot、Catalog、CAS、reader 与 reporting adapter。它不保存第二份 Agent、Session、Workspace 或 Git 身份事实。
@@ -4877,6 +5623,8 @@ D1 四个专门测试文件共 `40` 项（`39 passed, 1 skipped`）；扩大到 
 D1 本身不是 D2：它没有 Patch Verifier、Review Report、人工批准、integration tree 或 Git ref compare-and-swap promotion，也没有 Workspace/Artifact CLI 或模型 capture Tool。这些能力由 20.24 的 D2 在 Runtime 外单独实现，D1 的 capture 边界没有因此变宽。
 
 ### 20.24 v0.7-D2：固定验证、人工审批与 Git ref CAS 推广
+
+当前 Promotion/验证计划协议为 3，旧 1/2 拒绝。命令的 public_requirement 由宿主显式授权并绑定入命令/计划摘要，改变说明会改变原批准绑定；原输出不保留、原账本 schema 和人工批准机制保持。完整披露边界见 14.3.16。
 
 完整决定见 [ADR-0030](../adr/0030-verified-approved-git-ref-promotion.md)。D2 在 `AgentRuntime`、`AgentLoop`、具体 `ProcessAgentSupervisor` 与 `PluginManager` 之外新增独立 Promotion 域，把 D1 的不可变 Patch Artifact 变成一条可审计的推广主线：
 
@@ -4899,7 +5647,7 @@ PatchArtifact
 
 [`promotion/`](../../src/traceh/promotion/) 拥有实现：`models.py`（身份、digest、冻结校验与协议常量）、`events.py`（三类事件与严格 payload 解析）、`projection.py`（唯一 Projector 与 fresh reader）、`verification.py`（固定 Verifier 执行与有界证据）、`local_git.py`（bare 目标解析、临时 clone 集成、目标内重建与 ref CAS）、`service.py`（review/approve/promote 三个事务）、`errors.py`。
 
-依赖方向是单向的：Promotion 只读地使用 `traceh.artifacts` 的 `PatchArtifactReader` 和公共 `EventStore`，不 import `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager`、CLI 或 `traceh.evolution`；反过来，`traceh` 包内除 Promotion 自身外没有任何模块 import 它。没有第二个调度器、Activation 表或第二份 Session/Workspace/Artifact 事实源。
+依赖方向是单向的：Promotion 只读地使用 `traceh.artifacts` 的 `PatchArtifactReader` 和公共 `EventStore`，不 import `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager`、CLI 或 `traceh.evolution`；Workflow、Product 与声明的宿主装配/只读 Evaluation 边界可以引用它，逐文件符号由架构测试固定；Runtime/Agent/Tool 不导入 Promotion。没有第二个调度器、Activation 表或第二份 Session/Workspace/Artifact 事实源。
 
 #### 事实源与状态
 
@@ -4912,6 +5660,8 @@ PatchArtifact
 | `patch/promotion-committed` | promotion id、review id、approval digest、target id/fingerprint/ref、previous revision、new revision、integration tree、merge policy 版本与协议版本 |
 
 唯一 Projector 每次 `load()` 都从整条流重建 Review、Approval 与 Promotion；没有 mutable balance、状态文件、Registry 或 Runtime cache。replay 会**重算**而不是信任派生字段：`review_id` 由 review request id 重算，`verification_evidence_digest` 由结果重算，`passed` 由结果合取重算，approval digest 由已重建的 Review 重算，`promotion_id` 由 approval digest 重算；promotion 的 target 身份、ref、previous/new revision 与 tree 必须与其 Review 一致。序号跳跃、未知 schema、未知事件类型、多余或缺失 key、重复身份、批准未通过的 Review、无 Approval 的 Promotion 都在 replay 阶段拒绝。Event 只保存 `target_id`、fingerprint、ref 与精确 revision，不保存仓库路径、CAS 路径、临时目录、verifier 输出或环境值。
+
+共享 HostVerificationRunner 同时服务 Product 的可写完成检查（14.3.6）：verification owner 必须绑定同一 Session 流及 Turn/Step，原 Promotion owner/Effect 流不变。两者复用冻结计划、环境、限额、沙箱收敛与输出隐私；完成检查不写本域的 Review/Approval/Promotion 事件。
 
 #### D2-A：固定验证与 Review Report
 
@@ -4946,13 +5696,15 @@ Verifier 实际跑在什么字节上，由**文件系统哈希**证明，不问 
 
 `100755` 只在**平台能表示这一位**时比较文件系统。Windows 不能：可执行 blob checkout 之后 `st_mode` 是 `0o666`，在那里强求这一位只会拒绝所有包含可运行脚本的正常仓库，而且什么都没证明。于是在这类平台上直接沿用 tree 自己的 mode；mode 的保证仍在 Git 侧——`write-tree` 从 index 重建 tree 并与被审阅的 tree 比较，所以 Verifier 改写已记录 mode 仍会被抓住。POSIX 上则额外真实比较该位。
 
-因为现在**任何**新文件都会使证明失败，Verifier 会拿到 checkout **之外**的 scratch：runner 每次运行创建一个自有临时目录，并把 `TMPDIR`/`TEMP`/`TMP` 指向它。passthrough 只是继承宿主进程恰好拥有的值，所以自有 scratch 优先级更高；显式 override 是真正的宿主决定，仍然胜出。commit 的 parent、tree、message、author、committer 与时间戳全部是协议常量或已批准输入（作者/提交者为固定 `TraceHarness Promotion <promotion@traceharness.invalid>`，时间戳固定为 `@0 +0000`），所以同一 Patch 在同一 revision 上总是得到同一个 commit id。集成 raw diff 同样用 `-r` 读取 leaf entry：允许新目录中的普通 `100644`/`100755` 文件，同时仍拒绝真正的 `120000`/`160000` leaf mode，并复用 D1 的 `freeze_changed_paths()` 做路径安全与数量上限检查。
+固定验证现在通过共享 Sandbox 服务检查集成工作区副本，publish_changes=False；验证命令可在客体临时空间或副本写文件，均不回写宿主集成目录。环境从 GUEST_ENVIRONMENT 加冻结 plan 的 passthrough/override 构造，未配置沙箱时明确失败，没有宿主命令回退。
 
-Verifier 证据是有界结构化事实：每条命令记录 command id、argv digest、状态（`passed`/`failed`/`timed-out`/`start-failed`/`output-exceeded`）、exit code，以及 stdout/stderr 的 SHA-256 与字节数。输出只被流式哈希，从不进入内存或 Event Log，因此 verifier 无法把无界文本、终端控制序列、本机路径或秘密写进持久历史。Verifier 环境是正向白名单：只注入 plan 命名的 passthrough 变量与显式 override，且 `GIT_*` 在冻结阶段就被拒绝。
+commit 的 parent、tree、message、author、committer 与时间戳全部是协议常量或已批准输入（作者/提交者为固定 `TraceHarness Promotion <promotion@traceharness.invalid>`，时间戳固定为 `@0 +0000`），所以同一 Patch 在同一 revision 上总是得到同一个 commit id。集成 raw diff 同样用 `-r` 读取 leaf entry：允许新目录中的普通 `100644`/`100755` 文件，同时仍拒绝真正的 `120000`/`160000` leaf mode，并复用 D1 的 `freeze_changed_paths()` 做路径安全与数量上限检查。
 
-输出上限在命令**运行期间**强制：两条管道被持续 drain，第一次越限的读取直接 kill 写入方，因此超出量是每条流一个 chunk，而不是"它能产出多少就是多少"。只在进程退出后统计大小不是上限。
+Verifier 证据是有界结构化事实：每条命令记录 command id、argv digest、状态、exit code、stdout/stderr 的 SHA-256 与字节数和原 Sandbox 执行引用。客体有界捕获输出，runner 可临时读取；retain_output=False 使固定输出原文不进入 CAS 或 Event Log，不能说“从不进入内存”。环境只包含原客体基础值和计划显式授权值，GIT_* 在计划冻结时拒绝。
 
-drain 本身也不能变成绕过 timeout 的途径：管道只有在**所有**持有它的后代都退出后才到 EOF，因此 deadline 同时覆盖 reader 与直接子进程，并在返回命令结果前取消 reader、释放宿主这一侧的管道句柄。被遗弃的孙进程可以随意持有写端，但它既不能延长宿主设定的上限，也不能把宿主句柄一直吊到解释器退出。只有直接子进程属于本域：孙进程不会被杀，而一个停在 checkout 里的孙进程可能让 scratch 删除失败——那会被如实报告，不会被隐藏。
+输出上限和命令期限由原沙箱客体监督进程在执行期间强制；状态、输出摘要与收敛结果使用原回执，具体规则见 10.1。
+
+父进程退出、取消、超时或输出超限都必须收敛整个客体进程树，不能靠后代保留管道延长执行；无法证明清理时明确失败，不自动重试或返回假成功。这里没有另一套宿主 subprocess/drain 实现。
 
 Runner 交回的证据也不被当作整体信任：每条结果按顺序与对应的冻结命令逐项核对（相同 command id、相同 argv digest、形状与边界合法），随后由这些结果重算 evidence digest。报告了 plan 里不存在的命令会被拒绝而不是记录。
 
@@ -4998,15 +5750,15 @@ Envelope 来自可替换 Store，读取属性本身可能失败。Promotion 的�
 
 D2 的四个专门测试文件共 `130` 项（`129 passed, 1 skipped`）：`test_promotion_ledger.py` 61、`test_patch_review.py` 32、`test_patch_promotion.py` 23（1 skip 是当前 Windows 用户无权创建目录 symlink）、`test_promotion_architecture.py` 17。十九项反向验证分别绕过 Approval 检查、从 `update-ref` 去掉 expected-old、把 verifier/evidence 从 approval digest 解绑、在 append 失败后假定 Git 未更新、把 unknown 对账坍缩成 false、恢复继承宿主 `GIT_*`、移除验证后的工作目录完整性复核、按身份而非完整操作定义共享在途任务与已记录报告、把输出上限改成只描述不阻止、直接信任 Runner 交回的结果集，去掉 Envelope 读取的归一化边界、把工作目录证明换回 `git status`、在 reader 上等待管道 EOF 而不是释放、移除 checkout 与 integration tree 的逐 blob 比较、让 Git 继承宿主的行尾配置、在取消路径上收敛清理 Task 却不读取其结果、在所有平台强求文件系统提供可执行位、取消时只看 cleanup 结果而丢弃既有 primary，以及取消时只看 primary 而丢弃 cleanup 失败；对应测试都按各自根因失败，恢复正确实现后源码无临时补丁残留并重新通过定向与全量门禁。
 
-因为验证结束时集成工作目录必须仍等于被审阅的 tree，Verifier 命令**不得**在 checkout 里留下**任何**文件，无论是否被忽略；它们应写入被授予的 scratch 目录——runner 在 checkout 之外创建它，并随本次运行删除。删除失败会被**报告而不是吞掉**：单独发生时是 `promotion-verifier-scratch-cleanup-failed`，与普通错误同时发生时组成 `BaseExceptionGroup`，发生在取消之后则把清理失败链在原 `CancelledError` 之后，原取消仍然交回调用方。
+宿主集成工作目录前后必须仍等于被审阅的 tree；客体副本中的验证临时文件不会回写。原 Sandbox 独占执行、输出限额、取消及回执收敛已替代旧的 native verifier scratch，参见 10.1。Promotion 的临时 integration clone 仍由原 cleanup 规则收敛，失败不能遮蔽原错误。
 
 **清理执行期间**发生取消适用同一条规则，但多一步：收敛清理 Task 不等于读取它。调用方被取消后删除仍在继续，它的真实结果只有在 Task 完成之后才存在；因此代码先等待收敛，再读取该 Task 的异常。重复取消仍然等待同一个 Task。
 
-三件事可能同时成立——工作本身已失败、删除失败、调用方取消——每一件都是真的，所以一件都不能丢：顶层仍是调用方自己的 `CancelledError`；其余发生过的事作为 cause；工作与删除都失败时，cause 同时携带**两者**（`BaseExceptionGroup`）。Promotion 有两处 scratch 生命周期（integration clone 与 Verifier 工作空间），因此这条组合规则收敛到 [`promotion/cleanup.py`](../../src/traceh/promotion/cleanup.py) 一处共用，不写两遍再各自漂移；调用方只提供"删除是唯一失败"时使用的自有错误词汇。
+三件事可能同时成立——工作本身已失败、删除失败、调用方取消——每一件都是真的，所以一件都不能丢：顶层仍是调用方自己的 `CancelledError`；其余发生过的事作为 cause；工作与删除都失败时，cause 同时携带**两者**（`BaseExceptionGroup`）。Promotion integration clone 的组合规则收敛到 [`promotion/cleanup.py`](../../src/traceh/promotion/cleanup.py) 一处共用，不写两遍再各自漂移；调用方只提供"删除是唯一失败"时使用的自有错误词汇。
 
 真正需要行尾转换的仓库在 D2 v1 无法推广：Review 会 fail closed，而不是批准一份没人真正跑过的字节。这是明确的边界，不是遗漏。
 
-D2 本身仍**没有**：CLI、Workflow（由 20.25 的 E 单独实现）、自动批准、自动选择目标、非 bare 目标、tag/note ref、多父 merge、CAS 或 Git 对象垃圾回收、跨进程 lease，以及 OS 沙箱。Verifier 以同一用户权限运行，是能力与证据边界而不是隔离边界；另一个拥有目标仓库写权限的进程仍可能移动 ref，D2 只保证检测并拒绝，不声称拥有分布式锁。`git write-tree`/`commit-tree` 会在 ref 移动前把对象写入目标仓库，因此被拒绝或失败的推广可能留下不可达对象；没有任何 ref 引用它们，垃圾回收仍是运维显式动作。版本仍为 `0.6.0`；D2 完成不等于 v0.7 发布。
+D2 本身仍**没有**：CLI、Workflow（由 20.25 的 E 单独实现）、自动批准、自动选择目标、非 bare 目标、tag/note ref、多父 merge、CAS 或 Git 对象垃圾回收、跨进程 lease；当前固定 Verifier 已接共享 OS 沙箱，Git 目标操作仍由可信宿主执行。另一个拥有目标仓库写权限的进程仍可能移动 ref，D2 只保证检测并拒绝，不声称拥有分布式锁。`git write-tree`/`commit-tree` 会在 ref 移动前把对象写入目标仓库，因此被拒绝或失败的推广可能留下不可达对象；没有任何 ref 引用它们，垃圾回收仍是运维显式动作。版本仍为 `0.6.0`；D2 完成不等于 v0.7 发布。
 
 ### 20.25 v0.7-E：固定 Typed Workflow
 
@@ -5105,452 +5857,47 @@ E 的三个专门测试文件共 `85` 项全部通过：`test_workflow_definitio
 
 E 仍**没有**：CLI、模型可见的 workflow/approve/promote/capture Tool、重试策略、条件或循环节点、跨进程 lease、冷恢复 Activation 与 OS 沙箱。Verifier 仍以宿主同一用户权限运行。版本仍为 `0.6.0`；E 完成不等于 v0.7 发布。Stage F 已开始，但只走完 F0（见 20.26）。
 
-### 20.26 v0.7-F0：只冻结统一 Chat 产品面的合同
+### 20.26 Product 公共合同：当前 single/multi（原 v0.7-F0）
 
-完整决定见 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。
+历史决策见 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)，当前必经分工决策见 [ADR-0071](../adr/0071-required-multi-allocation.md)。本节维护当前合同，原 Router 合同不再可执行。
 
-#### 本轮实现了什么、没实现什么
+`api/product.py` 只拥有纯值、派生身份、状态迁移和精确字段集，不拥有 I/O、可变会话、执行或审批。普通 Chat 仍只有 Session；ProductTask 需要 Proposal 和宿主确认，以 task_id 派生唯一 Workflow run_id。
 
-F0 在**生产代码**上只新增一个公共合同模块 [`api/product.py`](../../src/traceh/api/product.py)，并配一个测试文件 [`tests/test_product_contract.py`](../../tests/test_product_contract.py)。此外还新增了 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md) 并同步修改 `CHANGELOG.md`、`README.md`、`ROADMAP.md` 与两份上下文文档——本轮一共动了 8 个文件，只是其中只有 1 个进入 `src/`。
-
-**没有实现**：`src/traceh/product/` 实现包、事件写入器、事件 parser、Projector、ProductService、Router 实现、Chat Controller、任何 CLI 命令（`/task`、`/start`、`/approve` 都不存在）、默认产品装配、真实模型验收、Benchmark 改造与 v0.7 发布。[`cli/chat.py`](../../src/traceh/cli/chat.py) 一字未改，任何构建都从未写过一条 ProductTask 事件，版本仍是 `0.6.0`。本节描述的是**已冻结的协议**，不是可用的产品。
-
-`api/product.py` 只 import `traceh.api` 内部模块（`budgets`、`json_types`、`workflow`、`workspaces`），因此不做 I/O、不持有可变状态，依赖方向是 product → workflow 且不反向。
-
-#### 产品语义边界
-
-| 决定 | 冻结内容 |
+| 合同 | 当前行为 |
 |---|---|
-| 唯一入口 | 日常产品入口最终是 `traceh chat`。现有 [`_handle_command`](../../src/traceh/cli/chat.py) 已经在模型看到输入**之前**分派 `/exit`、`/help`、`/session`、`/plugins ...`，这就是后续确定性宿主命令要接的既有接缝，不需要另造一条 |
-| 普通聊天 | 只产生 Session，不创建 ProductTask、Workflow、Workspace 或 task Budget account |
-| Proposal | 临时进程内 UI 状态，不进 EventStore，退出即消失。一个没人回答的问题，其诚实的持久记录就是没有记录 |
-| ProductTask 创建 | 只有用户确认 Proposal 之后才写 `product/task-opened` |
-| 事实源 | 每个 task 一条 `product-task:<task_id>`，在**既有** EventStore 内；不新增数据库、状态文件、缓存事实或第二调度器 |
-| Run 身份 | `workflow_run_id == task_id`，由 `ProductTaskSummary.workflow_run_id` **派生**，不是存下来的字段 |
-| 执行引擎 | single 与 multi 都复用同一个 `WorkflowService`。single 固定 `coder → verification → approval`；multi 固定 `parent → reviewer → coder → verification → approval` |
-| 写权限 | `ProductRole.CODER` 是 `WRITABLE`，`PARENT`/`REVIEWER` 是 `READ_ONLY`。角色由 `ProductTaskProfile` 的**槽位**决定，`ProductRoleProfile` 自身既不带 role 也不带 access 字段 |
-| Map/Join | v0.7-F 不使用，也不删除或削弱 Stage E 已有的 Map/Join |
-| Router | 只在 `auto` 时运行，只能返回 `single` 或 `multi`。公共接缝是 `TaskRoutingParser.parse(response: str)`，只解析答案、不获取答案 |
-| 状态迁移 | `PRODUCT_TASK_TRANSITIONS`（只读映射）与 `product_transition_allowed()` 冻结前驱、不可重复与终态封闭；`completed`/`rejected` 只能来自 `awaiting_approval` |
-| 跨事件取值 | `ProductTaskFacts` + `product_required_values()` / `product_started_mode()`：后一条事实里被前一条决定过的字段只有唯一合法值，由**推导**得出而不是被校验。`product_started_values()` 再由一份 Receipt 推出 started 的**全部**取值 |
-| 可验证边界 | 纯 projector 只能核对 `mode`、`workflow_run_id`、`preflight_digest`；`definition_hash`、`assembly_digest`、`source_base_revision` 必须由持有 Receipt 的 Service 核对 |
-| 确认绑定 | `task-opened` 与 `task-started` **都**记录 `preflight_digest`（因此纯 replay 也能比对）；`ProductAssemblyReceipt.binds()` 要求启动用的绑定就是被确认的那一份，但它需要 Receipt，只有 Service 能执行 |
-| 派生视图 | `product_view_status()` 消费 ProductTask、Workflow 与 ownership **三次** fresh read；`PRODUCT_TASK_COHERENT_WORKFLOW` 冻结两条流的相符关系，派生出 `resumable` / `unreconciled` / `interrupted` 三种只属于视图的答案 |
-| Proposal | `ProductTaskProposal` + `ProposalConfirmation` + `proposal_confirmable()`：每 Session 至多一个活跃提议；确认上下文必须点名精确 id、来自**同一个 Session**、使用不同于 origin 的消息且所在 Turn 不同于 `proposed_turn_id`（**提出提议的那个 Turn**，不是陈述需求的那个）；具体 writer 还必须从 Session seq 证明该消息 accepted 于 Proposal Turn 的 durable end 之后。该证据只证明身份/顺序，不证明文本语义；交互式 Chat 的实际 start authority 是随后绑定当前精确 task 的宿主 `START` 手势 |
-| Approval / Promotion | 永远是宿主确定性操作；模型没有 approve/promote Tool，也拿不到 approval digest、Patch SHA-256 或 expected-old/new revision |
-| 推广时机 | Workflow Approval 节点只等人；Run 完成后才由 ProductService 显式调用 Promotion |
-| 恢复边界 | 不放宽 Stage E：只有干净停在 Approval 屏障的 Workflow 可继续 |
-| interrupted | 派生视图状态，**不写 Event** |
-| Benchmark | 复用并重构现有 `traceh eval`，旧 manifest 明确拒绝、不留兼容层；F0 只冻结这条决定，F4 实现（20.30、ADR-0033） |
-| 受保护文件 | `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 一字未改 |
+| 模式 | RequestedTaskMode/ResolvedTaskMode 仅 single/multi；模式来自确认 Proposal 或显式 Profile 默认值；不调用 Router |
+| 工作流 | 两种模式均 coder → verification → approval；multi 的必经分工在 coder 节点内部 |
+| 权限 | coder 与显式 patch_author 各写独立工作区；investigator 仍只读；角色槽位决定权限，模板不能另带 access；写助手只获准 read/search/apply_patch，不能审批或推广 |
+| 事实 | 同一 EventStore 的 product-task:task_id；Proposal 为临时界面状态，进程消失不伪造 durable 提议 |
+| 状态 | opened、started、awaiting_approval、completed、rejected、cancelled、failed、abandoned；终态不可续写，completed/rejected 必须先 awaiting |
+| 协议 | Product protocol 6 / event schema 5 / host config 6；精确字段，拒绝旧 adaptive/auto/固定 multi、路由事件和多余字段，不自动迁移 |
+| 跨事件约束 | ProductTaskFacts/product_required_values 推导已确认 mode、run_id、preflight_digest；写入服务另核对完整 Receipt 的源码、定义与装配摘要 |
+| 审批 | 主方和助手完成都不授予批准；精确 Review/Artifact/target 仍由原人工 Approval/Promotion owner 控制 |
 
-#### 九种事件与它们的精确 key 集
+`ProductTaskSummary` 仅由原任务事件重建。没有流就没有 Summary，外部 Review/Promotion/Session 身份必须从其原 Reader 解析。`ProductTaskView` 再结合 Workflow 与活动 owner 派生 resumable/interrupted/unreconciled，不写第二份状态。实现保护在 `test_product_contract.py`、`test_product_task_stream.py` 和 `test_product_architecture.py`，阶段结果见 12.12。
 
-`PRODUCT_TASK_EVENTS` 是九条 `ProductEventContract`，每条给出 event type、schema version（均为 `1`）、**完整** key 集和是否终态。多一个 key、少一个 key 都拒绝，不做迁移。
+### 20.27 Product 持久事实、写入与投影（原 v0.7-F1）
 
-| 事件 | 精确 key 集 |
+`product/events.py` 生成并精确校验当前 schema 5 的八种事件；`projection.py` 从原流重建任务，`service.py` 是唯一 Product 写入 owner。来源需求与确认身份绑定原 Session；任务仅保存需求摘要和跨域引用，不复制模型全文或工作流状态。
+
+服务先重放当前历史，再以该历史的 head 做 compare-and-swap；并发冲突重新读取，不能把另一次 head 查询拼到旧判断上。同一 operation identity 的精确重复可对账，不同内容不可覆盖。内部 owned task 在取消、部分提交或关闭时先收敛，外部收到取消不等于写入没有发生。
+
+`start_task` 必须绑定确认时 preflight 和完整 Assembly Receipt。`record_awaiting`、`reject_task`、`complete_task`、`cancel_task`、`fail_task`、`abandon_task` 分别受原状态及所属 Review/Promotion 规则限制；没有 record_routing、任意状态覆盖或自动恢复接口。
+
+只读检查重新读取原 Product/Workflow/Promotion 事实，活动 owner 用于判断当前运行是否还在本进程；它不替代 durable 状态。原干净 Approval 屏障可恢复，其他中断不猜测已经完成的外部副作用。失败、重复写入、CAS 竞争和取消由服务/任务流定向测试验证，当前结果见 12.12。
+
+### 20.28 Product Profile Registry 与执行装配（原 v0.7-F2）
+
+| 文件 | 当前职责 |
 |---|---|
-| `product/task-opened` | `task_id`、`operation_id`、`origin_session_id`、`origin_turn_id`、`origin_message_id`、`confirmation_session_id`、`confirmation_turn_id`、`confirmation_message_id`、`requirement_digest`、`profile_digest`、`preflight_digest`、`requested_mode`、`mode_source`、`product_protocol_version` |
-| `product/task-routed` | `task_id`、`operation_id`、`router_agent_id`、`routing_session_id`、`resolved_mode`、`reason_display` |
-| `product/task-started` | `task_id`、`operation_id`、`mode`、`workflow_run_id`、`definition_hash`、`assembly_digest`、`preflight_digest`、`source_base_revision` |
-| `product/task-awaiting` | `task_id`、`operation_id`、`review_id` |
-| `product/task-completed` | `task_id`、`operation_id`、`promotion_id` |
-| `product/task-rejected` | `task_id`、`operation_id`、`review_id` |
-| `product/task-cancelled` | `task_id`、`operation_id`、`reason_code` |
-| `product/task-failed` | `task_id`、`operation_id`、`failure_code` |
-| `product/task-abandoned` | `task_id`、`operation_id`、`reason_code` |
+| [registry.py](../../src/traceh/product/registry.py) | 将显式 profile_id 解析为真实 coder、multi coder、investigator 与可选 patch_author 装配；核对模板、模型、授权、工具及其顺序摘要 |
+| [topology.py](../../src/traceh/product/topology.py) | 两种策略共享 coder/verification/approval 结构，保留策略与推广目标绑定的 definition identity/hash |
+| [assembly.py](../../src/traceh/product/assembly.py) | fresh 解析 source、verification、target 与角色装配，对照用户确认的 preflight；拒绝漂移，产生尚未执行的 Receipt |
+| [runtime.py](../../src/traceh/product/runtime.py) | 实际宿主装配；只有 multi 主方在独占规划阶段获得 submit_collaboration_plan；两类助手均绑定原始版本与宿主限额；patch_author 用独立可写工作区和原 Capture |
 
-五个终态是**五种事件类型**，不是一个带大量 optional 字段的 `settled` blob。blob 会让"completed 却没有 promotion"和"cancelled 却带着 review id"成为**可表达**的形状，然后只能靠约定去拒绝；分成五种类型之后，它们根本表达不出来。`cancelled` 与 `abandoned` 是两件不同的事，因此也是两种类型。
+已移除 router.py 和固定 parent/reviewer 路径，不保留兼容别名。Profile 字段不包含 Workflow 节点/边/拓扑；没有默认 profile_id，未知、重复或歧义配置明确失败。相同名称不能证明相同装配，因此 role_assembly_digest 包含实际解析结果，而非仅 preset 名称。
 
-两处 payload 重复了 Envelope 已有的身份，都是有意的，沿用 Inbox 协议 `agent/message-accepted` 重复 `agent_id` 的做法：`task_id` 让投影器可以**证明** payload 与流名一致，而不是二选一地信任其中之一；`product/task-started` 上的 `workflow_run_id` 让 `run_id == task_id` 成为可核对的事实而不是假设。（本轮曾提出"流名已有 task_id，payload 不必重复"的更小设计，核对 `agents/inbox.py` 的 `_scan()` 后放弃：那里正是**先由流名推出期望值再与 payload 比较**。）
-
-payload 里没有异常字符串、模型输出、路径、秘密或其他域的状态副本。`reason_code`/`failure_code` 是稳定的宿主标识符；`reason_display` 是整个协议里**唯一**一处有界、清洗后的展示文字，只给人看，任何代码都不得对它分支——决定由它旁边的 `resolved_mode` 枚举承担。
-
-写入侧的 `operation_id`、stream CAS 与 may-have-committed 三态对账属于 F1，F0 只定义合同。
-
-#### 两个模式枚举与两个状态枚举
-
-`RequestedTaskMode` 是 `single|multi|auto`；`ResolvedTaskMode` **没有** `auto` 成员，所以"未解析"不可能活到执行阶段。`TaskModeSource` 区分该模式是**这次确认里点名的**（`confirmed_proposal`）还是**落到 Profile 默认值**（`profile`）。
-
-`ProductTaskStatus` 是"只读这条流能得出什么"，九个成员各自对应一个 durable 事件，**没有** `resumable`、`unreconciled` 或 `interrupted`。`ProductTaskViewStatus` 重用这九个持久状态，并只额外提供这三个视图答案；它们由三次 fresh read 派生——非终态的 ProductTask、Workflow 自己的 durable 状态、以及本进程是否仍拥有这个 run。派生结果放在**另一个类型** `ProductTaskView` 上，而且 `status` 是计算属性；`ProductTaskSummary` 里没有可由调用方填写的视图状态。
-
-在那里写 `cancelled` 等于宣称一次没人执行过的收敛：同进程取消能证明 worktree 已释放、hold 已结算，而一个已经死掉的进程什么都证明不了。把 `interrupted` 写成事件则是把一个下次读取就可能被推翻的猜测冻起来。用户可以 inspect，也可以写诚实的 `product/task-abandoned`——它只说明这个 task 已移出活跃列表，并**明确不声称**底层 Agent claim、Budget hold 或 worktree 已释放。
-
-`product_view_status()` 消费的是**三次** fresh read：ProductTask 自己的持久状态、Workflow 自己的持久状态、以及本进程是否仍拥有这次运行。上一版只用了其中两次，于是一个 STARTED 且无人拥有的任务，无论 Workflow 是 running、awaiting_approval、completed 还是 failed，全都被压成同一个 `interrupted`——而这四种情况分别要求"人去看"、"先对账"、"先对账"、"先对账"，答案不可能相同。
-
-`PRODUCT_TASK_COHERENT_WORKFLOW` 冻结了两条流的相符关系：`opened`/`routed` 只应对 `None`（还没有 run），`started` 只应对 `running`，`awaiting_approval` 只应对 Workflow 的 `awaiting_approval`；终态不在表内，因为任务一旦durably 结束，它自己的流就是答案。派生规则因此是：
-
-1. 已终结 → 报自己的终态，不看别的；
-2. 两条流不相符 → `unreconciled`，**与 ownership 无关**（活着的宿主也可能在一次 append 失败后发现自己的流落后了）；
-3. 相符且本进程拥有 → 报持久状态；
-4. 相符、无人拥有、且停在 Approval 屏障 → `resumable`，这正是 Stage E 唯一能继续的那个状态；
-5. 其余无人拥有的情况 → `interrupted`。
-
-`interrupted` 的含义被刻意收窄成"需要人去看"：Stage E 到底允不允许继续，取决于是否存在"有 start 无 terminal"的节点，而 run 级状态看不到这一点，所以这个视图**不声称**自己能判断。`abandoned` 合法的唯一条件仍然是视图给出 `interrupted`。
-
-#### Profile、Preflight Binding 与 Assembly Receipt
-
-`ProductTaskProfile` 是定长 schema：`profile_version`、`default_mode`、`provider_id`、`model_id`、三个 `ProductRoleProfile`、一个 `ProductRouterProfile`、`task_budget`、`source_id`、`source_revision`、`verification_plan_id`、`promotion_target_id`。
-
-它**没有** nodes/edges/fan-out/DAG 字段——拓扑由上面的决定固定，不由配置决定；也没有原始 verifier 命令、仓库路径或凭据：provider/model 是宿主 registry 身份，source 是已注册 id 加 revision intent。所有字段都必填，缺一个就是构造错误，因此 Demo preset、模型名、本机路径或测试夹具不可能变成真实任务使用的值。五个账户的 `BudgetLimits` 七个维度全部必须显式给出——这是 `BudgetLimits` 本来就有的性质，理由相同：漏填的宿主决定不能变成宽松默认。`ProductRouterProfile` **没有** `capability_grants` 字段，所以宿主无法给 Router 任何 Tool。
-
-`ProductRoleProfile` 只有 `preset`、`capability_grants`、`budget` 三个字段，**既不带 role 也不带 access**。它占据 `ProductTaskProfile` 上的哪个槽位，才决定它是 parent、reviewer 还是 coder；`ProductRole.workspace_access` 是"这个角色能做什么"的唯一定义；`ProductTaskProfile.role_profile()` 是二者之间唯一的映射，且只从槽位指向 profile。这是本轮审查修掉的一个真实漏洞：早先 `ProductRoleProfile` 自带 `role` 字段，宿主把一个 `role=CODER` 的 profile 放进 `reviewer` 槽位，就能读回 reviewer 可写——同一个角色有两份互相矛盾的事实。
-
-Profile 里的每个值都是**名字**。这些名字当前解析成什么，是另一回事，而且是本模块看不见的一回事。
-
-`ProductPreflightBinding` 是"把 Profile 对着真实世界解析一次、但还没选模式"的结果：`profile_digest`、`role_assembly_digest`、`router_assembly_digest`、`repository_fingerprint`、`base_revision`（精确 commit）、`verification_plan_digest`、`promotion_target_fingerprint`、`promotion_expected_revision`。
-
-其中两个 assembly digest 补的是名字级绑定看不见的缺口：宿主 registry 完全可以让 `preset`、provider、model 的名字一字不变，却把它解析成另一个 `AgentSpec`、另一组 capability grants 或另一套 Tool/Prompt/Policy/Provider 组合；`profile_digest` 看不出来，`workflow_definition_hash()` 也看不出来——它覆盖的是 **binding id**，不是解析器针对这些 id 返回的东西（见 20.25）。所以宿主必须对**实际解析结果**算两个摘要：`role_assembly_digest` 覆盖三个角色的 resolved `AgentSpec`、有效 grants 与有效组合；`router_assembly_digest` 覆盖 Router 的同一组事实，也正是它让"Router 没有被授予任何 Tool"在恢复时成为可核对的事实而不是一句声明。这两个值是**宿主提供**的（解析 registry 是本模块不做的 I/O），但覆盖它们的 `digest` 仍是计算属性。
-
-`ProductAssemblyReceipt` 则是 preflight binding 加上"只有选定模式才产生"的两件事：`resolved_mode` 与 `workflow_definition_hash`。拆成两层不是美观问题：`auto` 的 Proposal 根本没有 resolved mode，因为 Router 要等 Task 存在之后才跑；硬塞一个进去等于在给人看的那一屏上写一个编造的决定。
-
-两处 `digest` 都是**计算属性**而不是存储字段。宿主提供的 digest 是同一事实的第二个存放点，可能与它所描述的配置不一致，也可能在新增字段后悄悄漏掉它；派生的 digest 做不到这两件事。Provider/model 身份、三个 preset 及其 capability grants、每个 workspace access 决定和五个账户的全部七个维度，都通过 `profile_digest` **传递性**地被覆盖，而不是在 receipt 里再抄一遍。
-
-恢复时重新解析并比对 digest。由于 `promotion_expected_revision` 属于绑定的一部分，目标 ref 一旦移动，任务**不会**悄悄 rebase 到新 tip，而是 fail closed、必须按分支的当前状态重新开一个。所以同一分支上的两个长任务不可能都推广而不经人重新开启。这是 D2 遇到 target drift 时同一条拒绝规则往上抬了一层，是明确代价而不是遗漏。
-
-#### 临时 Proposal 与确认合同
-
-`ProductTaskProposal` 是公共值但**没有对应事件类型**：proposal id、三项 origin 身份、`requirement_digest`、`requested_mode`、`mode_source`，以及一个 `ProductPreflightBinding`。它是进程内状态，退出即消失。
-
-四条规则让确认上下文无歧义：每个 chat Session 至多一个活跃 Proposal，新的替换旧的；`ProposalConfirmation` 精确包含 `proposal_id`、`confirming_session_id`、`confirming_turn_id`、`confirming_message_id` 四个字段，所以能指向一条可重放的后续用户消息，又没有任何字段能改模式、预算、源、验证计划或推广目标；确认必须来自同一个 Session，且不能复用 origin 消息；`proposal_confirmable()` 还要求确认 Turn 不同于产生 Proposal 的 Turn。最后，真正 writer 必须从 Session 的 append-only seq 证明该消息是在 Proposal Turn durable end 之后才 accepted——不同 id 本身不是时间证据。该 replay 不理解自然语言，不能证明消息表达同意；v0.7.1 因此把它保留为上下文证据，并由宿主对当前精确 task 的独立 `START` 输入承担真正启动授权。
-
-#### 状态迁移合同与跨事件取值
-
-只冻结九种事件形状而不冻结顺序，等于把排序决定原样还给它本该约束的那个阶段。`PRODUCT_TASK_TRANSITIONS` 与 `product_transition_allowed()` 补上这一层：
-
-- `None`（还没有流）只允许 `product/task-opened`；
-- 五个终态都映射到空集合，终态之后不能再追加；
-- 没有任何状态映射到自己，因此 `routed`、`started`、`awaiting` 各自至多发生一次；
-- 有两条边依赖 requested mode，纯状态表表达不了，所以函数收这个参数：写明 `single`/`multi` 的任务没有什么可路由，写 `auto` 的任务必须先 routed 才能 started；
-- `completed` 与 `rejected` **只能**来自 `awaiting_approval`。这是对写入方的义务而不是许可：如果进程在 Workflow 写完 `approval-awaited`、产品层还没写 `product/task-awaiting` 之间崩溃，恢复时必须先拿 Workflow 的持久状态对账、补上这条缺失事实，而不是跳过它；
-- `cancelled`、`failed`、`abandoned` 可以从任何非终态进入，因为工作随时可能停。
-
-在纯形状合同下合法、现在被拒绝的序列包括 `opened → completed`、`started → routed`、`awaiting → started`，以及终态之后再追加任何东西。
-
-该表是 `MappingProxyType` **只读映射**而不是 `dict`：一张任何 import 方都能改写的准入表不是合同——改掉一项就会立刻改变之后每一个调用方被允许追加的内容。
-
-**但顺序对了，取值仍可能是错的。** 迁移函数只看状态和 requested mode，看不到 payload：一个写明 `single` 的任务照样可以记一条 `mode` 为 `multi` 的 `product/task-started`，一条 rejected 也可以指向从没被等待过的 review。`ProductTaskFacts` 与 `product_required_values()` 关掉这个口子：
-
-| 事实 | 被前一条决定的取值 |
-|---|---|
-| `product/task-started` | `mode` 只有一个合法值——explicit 请求就是它自己（`single` 不能以 `multi` 启动），`auto` 则**恰好等于** `product/task-routed` 记录的 `resolved_mode`；`auto` 尚未路由时该事实**根本不能追加**（返回 `None`） |
-| `product/task-rejected` | `review_id` 必须等于 `awaiting` 记录的那一个；没有被等待过的 review 时不能追加 |
-| `product/task-completed`、`product/task-opened` 等 | 返回空映射：它们携带的东西没有任何更早的事实能决定（例如 promotion id） |
-| 未知事件类型 | 返回 `None`，没有合同 |
-
-这些值是**推导**出来的而不是拿去校验的：既然更早的事实已经决定了它，那就只有一个合法值，写入方算它、投影器重算它，而不是提出一个再问它对不对。这与 Workflow 投影器对派生身份的做法是同一条规则（20.25）。`ProductTaskSummary.facts()` 是"已经决定了什么"的唯一装配点，写入方与读取方因此不可能对此产生分歧。
-
-#### 确认绑定：启动的必须就是人点头的那一份
-
-`product/task-opened` 除了 `profile_digest`，还记录 `preflight_digest` 以及**确认发生在哪个 Session / Turn / Message**。
-
-没有这几项会开一个真实窗口：提议屏上显示了某个精确 commit、某份验证计划、某个推广目标；用户点头；写完 opened 之后 source 或 registry 漂移、或者进程崩溃；随后的 `product/task-started` 可以绑定**另一份** Preflight，而事件日志里没有任何东西能反驳它。
-
-`ProductAssemblyReceipt.binds(preflight_digest)` 是把这条关上的那个比较：它要求 receipt 所依赖的 preflight 摘要，正好等于 opened 记录的那一个。
-
-**这里必须把能力边界说准，因为上一版说过头了。** `binds()` 需要一份完整 Receipt 才能执行，所以只有持有 Receipt 的 Service 能做；一个只拿到事件流的 projector 面对的是不透明的 `assembly_digest`，它**没法**从摘要反推出 Receipt，因此做不了这次比较。上一版写成"让投影器在 replay 时能做同一次检查"，是不成立的。
-
-真正的补法是让 `product/task-started` **也**记一份 `preflight_digest`。这样纯 replay 的读者至少能把 started 与 opened 的这两个摘要对起来，而不必拥有 Receipt。
-
-因此 started 这条事实的取值分成两层，两层都必须写清楚：
-
-| 关系 | 谁能验证 |
-|---|---|
-| `mode`、`workflow_run_id`、`preflight_digest` | **纯 projector**：由 `product_required_values()` 从更早的事件推导 |
-| `definition_hash`、`assembly_digest`、`source_base_revision` | **只有持有 Receipt 的 Service**：由 `product_started_values()` 从那一份 Receipt 推导 |
-
-`product_started_values(task_id=..., receipt=...)` 是构造 started payload 的**唯一**入口：除 `task_id` 与 `operation_id` 这两项写入身份外，其余每一个字段都由同一份 Receipt 推出，所以写入方不可能拼出一半描述这份绑定、一半描述另一份的 payload。只冻结 `mode` 时，`workflow_run_id`、`definition_hash`、`assembly_digest`、`source_base_revision` 四项可以分别指向别的 task、别的 definition、另一份 receipt 和另一个 commit。
-
-#### 两个 Protocol
-
-`ProductTaskReader.load(task_id) -> ProductTaskSummary | None` 是 fresh replay。未知 task 返回 `None`，不是错误、也不是"空 Summary"：Summary 的每个必填字段都由 `product/task-opened` 建立，在没有这条事件的情况下返回一个 Summary，就必须编造 status、mode、digest、三项 origin 身份和三项确认身份——一批看着像持久事实、背后却什么都没有的值。
-
-`ProductTaskSummary` 还携带 `reason_display`：它是整份协议里唯一一处**写给人看**的内容，读取面把它丢掉，聊天界面就没法告诉用户模式是怎么选的。它仍然是 display-only，任何代码都不得对它分支。
-
-`ProductTaskView.status` 是**计算属性而不是字段**。作为字段时它是可供应的，于是调用方可以交回一个 `summary.status == opened`、`view.status == completed` 的视图——正是这个类型存在的意义所要排除的那种自相矛盾。
-
-`TaskRoutingParser.parse(response: str) -> TaskRouting` **只解析答案，不获取答案**。Router Agent 的创建、Session、Budget account、timeout 与响应字节上限都归调用方，接缝只收那段文本。
-
-这里必须把话说准，因为上一版说过头了：早先它叫 `TaskModeRouter`，并声称"同步签名证明 Router 不做 I/O、不持有服务句柄"。**这两条它都证明不了**——同步方法照样可以阻塞在 socket 上，满足 Protocol 的对象也可以在 `__init__` 里拿到任何东西，写一个带 `self.supervisor` 的合规实现只要三行。签名真正确立的是更窄但仍然有用的一条：接缝交给实现的只有一个字符串，因此没有任何 Supervisor、Workflow、Workspace、Artifact 或 Promotion 句柄**经由它**进入。
-
-Router Agent 本身不持有 Tool、计入自己的 Budget account、跑在声明的上下界内，是**具体实现与装配**的性质，由 `router_assembly_digest` 提供证据，并且必须由写实现那个阶段的架构测试来证明——不能由一个 Protocol 声明代劳。
-
-#### 没有兼容层
-
-没有任何构建写过 ProductTask 事件，所以 F0 直接定义 protocol version `1` 与 schema version `1`，没有 legacy 分支；后续阶段对未知版本明确拒绝而不是猜测。
-
-#### 验证基线与反向验证
-
-F0 完成时 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 为 `72 passed`（首版 33 项，第二轮 51 项，第三轮 62 项，第四轮 72 项）；F1 审查又加入一项敌意确认相等性守卫，当前为 `73 passed`。除既有的受保护文件字节钉、依赖方向、无实现包、无 I/O、版本、无 approve/promote/Tool 能力、九种事件互异、五终态互不携带对方证据、事件不带别人家状态、`interrupted` 只在视图枚举、Profile 无图结构、七个预算维度逐个必填、Profile/Receipt 每个字段都进 digest、digest 是 property 不是字段、字面量无模型名/路径/秘密之外，本轮新增的关键用例是：
-
-- **槽位决定角色**：`ProductRoleProfile` 没有 `role`/`access`/`workspace_access`；把 coder 的 profile 塞进 reviewer 槽位，reviewer 仍然是 `READ_ONLY`；整个模块里只有 `ProductRole` 一个值回答写权限问题；
-- **未知 task 返回 `None`**：`load` 的返回注解是 `ProductTaskSummary | None`，且 `ProductTaskSummary(task_id=..., head_seq=0)` 直接抛 `TypeError`——空 Summary 造不出来；
-- **名字级 digest 看不见 registry 重绑**：`role_assembly_digest` 或 `router_assembly_digest` 变化时 `profile_digest` 不变、但 binding digest 变，且两者可区分；
-- **preflight 与 receipt 分层**：preflight 没有 `resolved_mode`/`workflow_definition_hash`，Proposal 也没有；
-- **状态迁移**：只有 opened 能作为首条事实；终态之后什么都追加不了；没有状态能重复；explicit 模式不得 routed、auto 不得跳过 routed；`completed`/`rejected` 只能来自 `awaiting`；`cancelled`/`failed`/`abandoned` 可从任何非终态进入；四条具体反例序列（`opened→completed`、`started→routed`、`awaiting→started`、终态后追加）全部被拒；
-- **派生 interrupted**：遍历九种状态，owned 时一律等于自身，非 owned 时非终态一律 `INTERRUPTED`、终态一律保持自身；
-- **Proposal 与确认**：确认必须点名精确 id；**同一 Turn 内确认被拒**、下一个 Turn 才允许；`ProposalConfirmation` 只有 proposal id 加确认 Session/Turn/message 四个身份字段，没有任何能改模式/预算/源/目标的位置；没有任何事件 key 里出现 proposal；
-- **接缝不冒充保证**：确定性地构造一个满足 Protocol、同时持有 `self.supervisor` 的实现，证明同步签名约束的是参数而不是实例；并断言文档里写明该性质归架构测试和 `router_assembly_digest`。
-
-第三轮审查又补上四条：**槽位/角色之外的确认绑定**（`opened` 必须带 `preflight_digest` 与三项确认身份，且 `receipt.binds()` 拒绝别的 preflight）、**跨事件取值**（explicit 请求自己决定 started 的 mode；`auto` 未路由时 started 不可追加；rejected 必须指向被等待过的 review；无人决定过的字段返回空映射；未知类型返回 `None`；`summary.facts()` 是唯一装配点）、**确认 Turn 身份**（同 Session、且不同于 `proposed_turn_id`；跨 Session 拒绝）、**视图状态不可供应**（`status` 不是字段、是 property，多传即 `TypeError`，且遍历九种状态都与 summary 一致），外加两条 P2 守卫（迁移表不可被 import 方改写；`reason_display` 必须能被读取面交出）。
-
-第二轮的六项反向验证分别把保护拆掉，确认对应测试**按预期根因**变红后恢复：
-
-1. 给 `ProductRoleProfile` 重新加上 `role` 与 `workspace_access` → `role` 字段断言、"只有 `ProductRole` 回答"断言与夹具构造三处同时变红；
-2. 把 `load` 返回改回 `ProductTaskSummary` → 返回注解断言变红；
-3. 让 preflight digest 只哈希手写子集、跳过两个 assembly digest（**字段仍在**，模拟真实回归形态）→ `test_a_name_only_digest_cannot_see_a_registry_rebinding` 按"两个摘要相等"变红；
-4. 去掉迁移函数里依赖 mode 的两条边 → explicit/auto 用例变红；另单独把 `COMPLETED` 加进 `STARTED` 的后继集合 → "review 结果必须先等待过"用例按 `(STARTED, COMPLETED)` 变红；
-5. 让 `proposal_confirmable()` 只比 id → 同 Turn 自问自答用例变红；
-6. 保留 `TaskRoutingParser` 这个名字、只把过度声称的 docstring 换回去 → "接缝不冒充保证"用例变红。
-
-第 3 项和第 6 项都先试过更粗的改法（直接删字段、直接改回旧类名），得到的只是夹具 `TypeError` 和收集期 `ImportError`——那是"操作根本没发生"式的空验证，不能算数，因此换成上面这两种能触发真实根因的形态。
-
-第三轮另做六项反向验证，同样各自按根因变红后恢复：让 `receipt.binds()` 对任何 preflight 都返回真（"确认绑定"用例变红）；把确认比较改回 `origin_turn_id`（"不能一口气自问自答"用例按 requirement/proposal 分离的反例变红）；让 `product_started_mode()` 无视 explicit 请求（"explicit 请求自己决定 mode"用例变红）；把 `ProductTaskView.status` 改回字段（专门那条守卫按"`status` 仍是字段"变红，同时另一条用例因构造签名变化而失败）；把迁移表从只读映射改回 `dict`（"表不可被改写"用例按 `DID NOT RAISE TypeError` 变红，**而且那次改写真的泄漏进了后续用例**，正好证明可变表的危害）；从 Summary 删掉 `reason_display`（"给人看的解释必须到得了读取面"用例变红）。
-
-第四轮再补两组守卫与三项反向验证：started payload 必须由**一份** Receipt 推出全部取值（删掉其中四项 → 两条用例变红）；started 必须重复 `preflight_digest`（删掉 → 两条用例变红）；`product_view_status()` 必须真的消费 Workflow 状态（改回忽略它 → 五条用例分别按 `awaiting_approval`、`RESUMABLE`、`unreconciled`、过早存在的 run 和视图转发变红）。
-
-恢复后两个新文件的 SHA-256 与验证前逐字节一致，无临时补丁残留。反向验证全程**没有修改任何受保护文件**：hash pin 的有效性是通过临时改测试里的期望摘要来证明的，而不是去动 `agent_loop.py`。
-
-#### F0 之后仍未实现的部分
-
-F1/F2 后续完成了事实层与固定装配，F3 又完成了可选 Chat 产品控制面与确定性真实本地 Git 验收（见 20.29），F4 再把 `traceh eval` 重构成同一条主线的宿主 Benchmark（见 20.30），F5 随后完成真实外部模型网格、独立复审、最终门禁、安全扫描、版本切换、打包与发布（见 20.31）。当前已发布版本是 `0.7.0`。
-
-### 20.27 v0.7-F1：ProductTask 持久事实层
-
-设计决定仍在 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。F1 没有新的设计决定，只是把 F0 冻结的合同变成第一条真实生产主线；ADR 只同步当前实施状态，不改写设计理由。
-
-#### 本轮实现了什么、没实现什么
-
-新增独立域 [`traceh.product`](../../src/traceh/product/)，六个文件：`errors.py`（稳定错误词汇）、`events.py`（stream id、payload 构造、header 校验、精确 key 集、`is_product_fact`）、`projection.py`（唯一投影器与 fresh reader）、`evidence.py`（Session 确认证据）、`service.py`（宿主写入服务与派生视图）、`__init__.py`。
-
-**没有实现**：Router Agent 或任何真实模型调用、Chat Proposal 渲染、`/start`/`/approve`/`/cancel`/`/inspect`/`/abandon`、默认 Profile/Registry/Assembly、从产品层发起的 Workflow 执行或 Promotion 调用、Benchmark 改造、版本升级。`cli/chat.py` 一字未改，四个受保护文件零 diff，版本仍是 `0.6.0`。
-
-架构测试按 import 断言这条边界：`traceh.product` **不 import** `traceh.workflow`、`traceh.promotion`、`traceh.artifacts`、`traceh.workspaces`、`traceh.supervision`、`traceh.runtime`、`traceh.plugins`、`traceh.cli`、`traceh.llm`。它记录关于这些域的事实，但不驱动它们。
-
-#### 严格 parser 与唯一投影
-
-`rebuild_product_task(task_id, events)` 从整条流重建，没有状态文件、缓存或第二个 store。未开启的任务返回 `None`——不是"空 Summary"：Summary 的每个必填字段都由 `product/task-opened` 建立，没有那条事件就得编造 status、mode、三个 digest 和六项身份。
-
-它执行的三类规则被刻意分开，因为这决定了它**够得着什么**：
-
-| 层 | 规则 | 依据 |
-|---|---|---|
-| 形状 | stream、seq 连续、schema 1、事件类型、精确 key 集 | F0 的 `PRODUCT_TASK_EVENTS` |
-| 顺序 | 前驱、不可重复、终态封闭 | `PRODUCT_TASK_TRANSITIONS` |
-| 取值 | 被更早事实决定过的字段重新推导而不是照抄 | `product_required_values()` |
-
-payload 里的 `task_id` 与 stream 名互相印证，两者都不单独被信任；`operation_id` 在整条流内唯一。
-
-**它够不着的那一半也要写清楚。** `product/task-started` 的 `definition_hash`、`assembly_digest`、`source_base_revision` 只有持有 Receipt 才能核对：投影器手里只有不透明摘要，反推不出 Receipt。这正是 started 事实要重复 `preflight_digest` 的原因——纯 replay 至少能把它和 opened 记的那一个对起来。投影器核对 `mode`、`workflow_run_id`、`preflight_digest` 三项；其余三项由持有 Receipt 的 Service 通过 `ProductAssemblyReceipt.binds()` 与 `product_started_values()` 负责。
-
-敌意输入统一归一化：读取 Store 交回的对象本身可能失败，`Exception` 变成稳定的 `ProductProtocolError`，而 `KeyboardInterrupt`、`SystemExit` 与取消**不被吞掉**——它们不是关于 payload 的答案。每条 Envelope 只解析一次，精确 key 与所有字段都转换成 `ParsedProductEvent` 持有的系统自有内建值；同一次写入的投影、operation 幂等与冲突判断共享这份解析结果，不再第二次读取原始 payload。`str` 子类通过内置 `str.__str__` 描述符读取其不可变 Unicode 内容并脱离成普通 `str`，不会调用子类可状态化的 `__str__`；之后才做格式或相等性检查。因此调用方的 `__eq__`/`__ne__` 不能伪造跨事件一致，状态化 `__str__` 也不能让同一个 operation 在两次 replay 中先消失、后变成重复并污染整条流。
-
-#### 宿主写入服务
-
-`ProductTaskService` 提供 `open_task`、`record_routing`、`start_task`、`record_awaiting`、`complete_task`、`reject_task`、`cancel_task`、`fail_task`、`abandon_task`，加只读的 `load`/`view`。它**没有** resume/continue/recover/takeover/retry 一类方法——Stage E 决定什么可以继续，F1 只记录。
-
-四条规则全部复用既有实现，而不是造一个弱化的产品专用版本：
-
-1. **同一次 replay 既做校验又给 CAS 期望**。`head_seq` 来自刚刚验证过这段历史的那个投影，中间没有"先校验旧历史、再单独读 head"的窗口；
-2. **幂等绑定内容**。同 `operation_id` 加逐字节相同的 canonical payload 是同一次写入，返回同一结果；同 id 不同内容在 append **之前**就是 `ProductOperationConflictError`——放它过去会让流里出现重复 operation id，之后永远无法重放；
-3. **三态对账**复用 [`committed_after_failure()`](../../src/traceh/agents/commit_reconciliation.py)：已提交、未提交、**无法判断**。unknown 不被坍缩成"没写"；反过来，append 已经正常返回时 commit 已知为真，随后最终 result reload 失败会稳定得到 `ProductWriteError(committed=True)`，不会泄漏 Store 原始异常或退回 unknown；
-4. **每个任务一个 owned 单飞 Task**。取消的调用方等同一个 Task 收敛后重抛**自己**那个 `CancelledError`；重复取消不能提前放行，也不能打断对账。不同内容的第二个调用方不会共享在途 Task，而是得到冲突。
-
-写入方还必须先于投影器拒绝：`_require_admissible()` 直接调用 `PRODUCT_TASK_TRANSITIONS` 与 `product_required_values()`，所以服务不可能比读取方更宽松。这是刻意的——服务自带一张"允许的前驱表"正是两边漂移的起点。
-
-#### 确认证据必须来自 Session 重放
-
-`ProposalConfirmation` 携带的 Session/Turn/Message 是一个**主张**：某人在那场对话、那个 Turn、用那条消息接受了这个提议。值本身证明不了它。所以 `ProductTaskService` 构造时先要求 Session 与 Workflow source 的 `store` 都是 ProductTask writer 使用的同一个 EventStore 对象，并在真正读取证据/视图前再次复核；两个 Store 即使各自有同名 Session 或 Workflow Run，也不是同一个事实宇宙，不能拼起来授权本地写入、决定 `resumable/interrupted` 或放行 `abandon_task()`。随后 `open_task` 在写任何东西之前重放 `session:<session_id>`，要求：
-
-- Stream id、seq、schema 1、`session/created` 的首事件位置与精确 key 集均合法；
-- `inbox/accepted` / `inbox/claimed` 的精确 key 集、唯一性与先 accepted 后 claimed 的顺序合法；
-- origin 与 confirmation 都是普通字符串 `source="user"` 的消息；Agent 写下的消息即使 durable，也不是人的决定；
-- 两条消息分别被 `inbox/claimed` 绑到**正是**声称的那个 Turn，且一个 Turn 只能归属一条 claimed message；confirmation 不能借用另一消息已经启动过的 Turn；
-- 两条 claim 点名的 Turn 都必须有真实 durable `turn/start`；只有 claim payload、没有 Turn start 的幽灵身份不能授权；
-- 整条 Session 必须通过共享的 `CoreInvariantChecker`，Product 不维护一份弱化的 Step/Turn 状态机；开放 Step 后直接写下的 `turn/end` 不能冒充合法闭合；
-- confirmation 不是 origin 消息，Proposal 所在 Turn 有合法的 `turn/start` 与唯一 durable `turn/end`，且 confirmation 的 `inbox/accepted` seq **严格晚于**这个 end。不同 Turn id 不是时钟；更早的需求消息、或 Proposal 响应尚未结束时已排队的消息都不能被重新解释成人工确认。
-
-Turn claim 是关键但不是 Turn 本身：没有对应 `turn/start`，claim 里的 id 仍然可以是凭空写下的字符串；没有核心生命周期复核，非法 `turn/end` 也能伪装闭合；而没有 end/accepted seq 的顺序比较，即使两个 id 都有锚，更早的真实消息仍能冒充 Proposal 之后的确认。
-
-规则与事实两者都必需：`proposal_confirmable()` 定身份规则（同 Session、不同消息、Turn 不同于 `proposed_turn_id`），重放既定事实也用 seq 证明先后。只有规则会比较无锚点的 id；只证明两条消息存在则会放过来自提议之前的旧消息。`open_task()` 在二者之前只做一次 `NormalizedTaskOpening`：payload、授权判断与 Session 证据读取全部消费同一组普通内建身份；不能出现 payload 已规范成 Session B，而授权仍调用 Session B 那个敌意对象的相等方法、把它当成 Session A 的情况。
-
-证据 parser 不把“出现了熟悉的 type 字符串”当作协议成立：倒序、重复、错误 schema、敌意 container 或不连续 seq 都统一变成稳定的 `product-session-unreadable`。acceptance 的 `source`、`content`、`target` 只接受并立即脱离为精确内建字符串；`target` 必须是 `new_turn`，不能执行 `str` 子类的重载比较把其他投递方式伪装成确认。三个公开证据查询也共用同一个 Store 读取边界：普通读取异常统一为不回显后端细节的 `product-session-unreadable`，`KeyboardInterrupt`、`SystemExit` 和取消仍不会被归成 payload 或读取错误。
-
-#### Receipt 在首次写入前完整验证
-
-`task_opened_data()` 在 append 前验证 `ProductPreflightBinding` 的全部字段与计算摘要；`task_started_data()` 同样验证 `resolved_mode`、preflight、Workflow definition hash 与 Assembly Receipt 的计算摘要。这样畸形 revision、digest 或 registry binding 得到的是 `ProductInputError` 和一条未变化的 ProductTask Stream，而不是先持久化一个 projector 必然拒绝的事实。写入方与 replay 的共同原则是：**已知会破坏协议的值不得先落盘，再靠下一次读取发现。**
-
-#### 派生视图与 abandoned
-
-`view()` 每次都重新读三处：ProductTask 的持久状态、Workflow 的持久状态、本进程是否仍拥有这次运行。三者都**不缓存**——缓存的 Workflow 状态会一直报告一个早已越过的屏障，缓存的 ownership 会一直宣称一个本进程早已不再驱动的运行。测试在两次 `view()` 之间改动底层值并断言答案随之改变。
-
-严格复用 `PRODUCT_TASK_COHERENT_WORKFLOW` 与 `product_view_status()`，因此三种只属于视图的答案都真实可达：`unreconciled`（两条流对不上，与 ownership 无关）、`resumable`（无人拥有、干净停在 Approval 屏障）、`interrupted`（无人拥有且没有干净接续点）。
-
-`abandon_task()` **只在派生视图确实等于 `interrupted` 时**才写。owned 的任务、以及两条流对不上的任务都被拒绝；停在屏障上的可恢复任务同样被拒绝——它可以直接接着跑，不该被推给人去查。
-
-#### 验证基线与反向验证
-
-三个专门测试文件覆盖：九种事件正向 replay、形状/顺序/取值拒绝、敌意 Envelope、终态后追加、未知 schema；确认证据、准入、幂等与内容冲突、CAS 竞争、三态对账、取消与重复取消、关闭收敛、三种视图状态、不缓存、abandoned 条件；以及受保护文件字节钉、依赖方向、不执行所记录之事、无 Router/Chat/CLI、唯一事实源和版本边界。当前精确数量以本节后面的最终门禁为准。
-
-F0 的 [`tests/test_product_contract.py`](../../tests/test_product_contract.py) 在 F1 完成时为 `73 passed`，F1 三个专门文件为 `87 passed`，合并 `160 passed`；那时的工作树收集 `2253` 项，独立复审清零后的最终全量为 `2248 passed, 5 skipped`，退出码 0。其中一项按阶段推进改写：原先断言"`src/traceh/product/` 不存在"，而 F1 正是创建它的阶段。改写后断言它**存在**、合同模块本身仍无 `EventStore`/`PendingEvent`/`.append(`/`.read(`；F2 又把"F2 的 `router.py`/`registry.py`/`assembly.py` 尚不存在"改写为"它们存在、F3 的 `chat.py` 仍不存在"（见 20.28）。
-
-八项反向验证全部经**公开生产路径**触发，各自按预期根因变红后恢复：
-
-1. 投影器不再重算被决定的取值：4 条变红（started 换模式、换 run/preflight、rejected 换 review、auto 路由后换模式）；
-2. 幂等只看 operation id 不看内容：1 条变红；
-3. 三态对账坍缩成"未提交"：2 条变红（已提交仍被重写、unknown 被当成 absent）；
-4. 跳过 Session 重放、直接信任 DTO：4 条证据用例变红；
-5. `view()` 忽略 Workflow 状态：4 条变红；
-6. `abandon_task` 不再要求派生 interrupted：2 条变红；
-7. CAS 改用单独重读的 head：1 条变红；
-8. 取消收敛退化成 `await task`：1 条变红。
-
-本轮加固另有四组确定性反例，均先在旧生产主线上失败、修复后通过：Agent-authored origin/confirmation 不能冒充人类确认；错误 schema/倒序 Session 不能凭 type 名字成为证据；另一个 EventStore 中的同名 Session 不能授权本地 ProductTask；畸形 Workflow definition hash 或 base revision 在 append 前拒绝且 stream 仍只有 opening fact。
-
-独立审查后的本轮又增加五个确定性反例：敌意 `str` 不能把别的 proposal/Session 比成相同；规范 payload、授权和证据不能各读一遍原 DTO；敌意 origin Turn 不能认领一条不相干的持久消息；started 里的错误 run id 不能靠重载相等性绕过跨事件检查；operation id 也不能在投影与幂等对账之间改变比较结果、把重复事实写进流。反向验证分别撤掉纯合同授权规范化、服务层一次性 opening 规范化和事件 parsed representation，三组测试都按各自根因变红后恢复。
-
-最新复审再固定四个 Session payload/读取反例：普通与敌意的非 `new_turn` target 都必须零写入拒绝，且不能调用子类比较；Store 读取的普通异常必须得到同一个稳定 Product 错误且不回显后端文本；`SystemExit` 保持原对象传播。临时恢复直接 target 比较时只有敌意反例错误授权，临时移除读取边界时只有后端异常重新裸露，随后两处正确实现均恢复。
-
-随后两项独立复审 Finding 也通过新的审查准入规则：普通字符串历史即可让 confirmation 借用另一消息已启动的 Turn，真实绕过人工授权；公开 ProductTask reader 则把规范化查询身份只用于选 Stream、随后又用原敌意对象核对 payload 并构造 Summary，真实破坏唯一投影身份。前者在现有 Session replay 中增加 Turn→message 唯一归属，后者在现有 Product replay 入口保留一个内建 `task_id` 并贯穿 Stream、payload 与 Summary，没有新增状态机或专用防御层。两个反例都先在未修改生产代码上错误成功，修复后转绿。
-
-仓库级审查边界现统一写入根目录 [`AGENTS.md`](../../AGENTS.md) 第 8 节：P0/P1 必须同时具备当前公开生产路径、确定性触发、实际错误结果、被破坏合同与影响；P2 默认不阻断；未来能力、设计偏好和未被当前威胁模型接纳的无限敌意对象形态不能冒充实现 Finding。独立审查清零 P0/P1 后即进入一次最终门禁，但任何后来真正满足同一证据标准的缺陷仍必须修复。这条规则限制的是无边界审查，不是降低事实源、人工权限、身份/所有权、生命周期或并发安全标准。
-
-本次复审再固定三个独立根因：旧 user message 即使真实存在也不能复用为 Proposal 之后的确认；`str` 子类的状态化 `__str__` 不能在两次 replay 间改写 operation 身份；append 正常返回后最终 reload 失败必须保留已知的 `committed=True`。反向验证分别临时删掉 seq 顺序比较、恢复动态 `str(value)`、撤掉最终读取错误映射，三项测试都只因对应根因变红，恢复后定向门禁重新通过。
-
-随后又固定两层 Session 授权边界：accepted→claimed 不能凭空创造 durable Turn，origin 与 confirmation 的 Turn 都必须真的 start；Proposal 的 `turn/end` 还必须属于一条通过共享 `CoreInvariantChecker` 的生命周期，不能压在开放 Step 上。反向验证临时撤掉 start 检查时两个幽灵 Turn 都让公开 `open_task()` 错误成功；撤掉核心不变量检查时非法闭合也错误成功。恢复后另有正例证明 confirmation Turn 只需 start，不必为了授权而提前 end。
-
-第 7 项值得单独记：**第一次做时它没有变红**——当时没有任何测试能区分"用 replay 得到的 seq"和"另外读一次 head"。补上一条把 Gate 放在**重放之后、append 之前**的用例才抓住它：正确实现下 CAS 冲突→重试→重新校验→拒绝；退化实现下 head 是新的，`started` 会落在 `cancelled` 之后，随后 `validate_product_task()` 报错。这条空验证如果没被发现，就会是"关键保护看似有测试、实际没有"的典型。
-
-恢复后 `traceh.product` 六个文件的 SHA-256 与验证前逐字节一致。反向验证全程**没有修改任何受保护文件**。
-
-#### F1 之后仍未实现的部分
-
-F2 随后实现了严格 Router、Profile Registry、preflight 绑定与固定 Product Assembly（见 20.28），F3 再接通 Chat/Workflow/Approval/Promotion（见 20.29），F4 完成 benchmark cutover（见 20.30），F5 的真实外部模型验收、独立复审、最终门禁、安全扫描、版本切换、打包与发布见 20.31。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
-
-
-### 20.28 v0.7-F2：严格 Router、Profile Registry 与固定 Product Assembly
-
-设计决定仍在 [ADR-0032](../adr/0032-unified-chat-product-task-surface.md)。F2 没有新的设计决定，只把 F0 冻结、F1 记账的那条主线补上“确认之后、执行之前”的一段：把宿主显式配置和一个已确认的 ProductTask 解析成唯一、精确、可验证但**尚未执行**的 `ProductAssemblyReceipt` 与固定 Workflow definition。
-
-#### 本轮实现了什么、没实现什么
-
-[`traceh.product`](../../src/traceh/product/) 新增四个文件：
-
-| 文件 | 职责 |
-|---|---|
-| [`router.py`](../../src/traceh/product/router.py) | 严格 `TaskRoutingParser` 实现、由 Profile 定界的 owned Router 调用，以及两个只收发文本的接缝 |
-| [`registry.py`](../../src/traceh/product/registry.py) | 唯一 Profile Registry、`ResolvedAgentAssembly` 与三个派生 digest |
-| [`topology.py`](../../src/traceh/product/topology.py) | 两种固定 Workflow 形状与它们的派生节点/binding 身份 |
-| [`assembly.py`](../../src/traceh/product/assembly.py) | preflight 绑定、mode 决定与 receipt 装配 |
-
-`errors.py` 增加 `ProductProfileError` 与 `ProductRoutingError` 两类稳定失败。
-
-**没有实现**：Workflow 执行或恢复、`traceh chat` 改动、任何 Chat 命令、Patch Artifact 捕获、Verification 执行、Approval、Promotion、真实模型/API/凭据调用，以及 F3–F5 的任何部分。`cli/chat.py` 一字未改，四个受保护文件零 diff，版本仍是 `0.6.0`，本轮**没有真实模型验收**。
-
-架构守卫被**收窄而不是放宽**：`traceh.product` 仍然不 import 任何会让事情发生的模块（`traceh.workflow.service`/`execution`/`projection`、`traceh.promotion.service`/`verification`/`local_git`/`projection`、`traceh.artifacts`、`traceh.workspaces.*`、`traceh.supervision.*`、`traceh.runtime`、`traceh.plugins`、`traceh.cli`、`traceh.llm`），只允许五个**具名纯函数**：`traceh.workflow.models` 的 `freeze_workflow_definition`/`workflow_definition_hash`，与 `traceh.promotion.models` 的 `freeze_verification_plan`/`verifier_definition_digest`/`require_target_ref`。理由与 Workflow 域被允许引入 `durable_log_identity` 完全相同：receipt 记的必须是**那一份** definition hash、**那一份** verifier definition digest 和 Promotion 域定义的那一种分支 ref，在产品域另算一遍就是同一个问题的第二个答案，两者迟早分叉。[`tests/test_promotion_architecture.py`](../../tests/test_promotion_architecture.py) 的“只有 promotion 与 workflow 能 import promotion”同样按具名符号扩展，其余名字全部仍然拒绝。另有一条按名字断言域内不出现 `WorkflowService`、`PatchPromotionService`、`PatchCaptureService`、`AgentSupervisor`、`AgentRuntime`、`WorkspaceService`、`PluginManager`。
-
-#### 严格 Router
-
-接受的形状是**恰好一个** JSON 对象，键集恰好是 `mode` 与 `reason`：
-
-- `mode` 只能是 `single` 或 `multi`。`ResolvedTaskMode` 没有 `auto` 成员，所以“未解析”过不了解析器；
-- `reason` 是 `null`，或一段有界、单行安全、不超过 256 字符的展示文字（复用 F1 的 `require_display_text()`）；
-- 只 strip 首尾空白，其余一律拒绝：代码围栏、前后散文、第二个 JSON 对象、JSON 数组、裸字符串与数字全部失败。`json.loads` 本身拒绝尾随内容，因此“两份答案”和“一份答案加一句话”走同一条规则；
-- 多一个键或少一个键都拒绝，不迁移、也不忽略未知键——被忽略的键就是第二条没人读的指令通道。
-
-失败一律是稳定的 `ProductRoutingError`，**不自动重试**、**不从自由文本猜测**。`reason_display` 是整个协议里唯一写给人看的字符串：一条 `mode` 为 `single` 而 `reason` 声称“必须用 multi”的答案仍然解析为 `single`，决定始终来自枚举。F5 的真实网格后来证明，严格 parser 之前的生产 Router 提示也必须把同一份合同完整交给模型；当前 `ProductRouterAgentResponder` 因而明确要求 exact keys、有限 mode、`null` 或非空且不超过 `MAX_REASON_DISPLAY_CHARS` 的单行安全 reason、无首尾空白、无 Unicode `Cc/Cf/Cs/Co/Zl/Zp` 字符，并且不得返回其他文字。上界直接复用事件层常量，没有第二个 `256` 默认值；parser 仍然是最终 fail-closed 边界。
-
-宿主边界 `ProductModeRouter` 的每一个界限都来自显式 `ProductRouterProfile`：`timeout_milliseconds` 与 `max_response_bytes` **没有代码默认值**，缺失或不合法即构造错误；响应字节上界在解析之前生效。构造时传入的是实际 `ResolvedAgentAssembly` 而不是调用方声称的 digest，Router 自己复用 `router_assembly_digest()` 计算身份；`auto` 首次路由前，Assembler 必须同时核对 Profile bounds 与 fresh preflight 的 Router assembly digest，不同 bounds、model 或组合都在花 Token 前拒绝。接缝交给实现的只有一个字符串（`RouterResponder.respond(summary: str) -> RouterResponse`），因此没有 Supervisor、Workflow、Workspace、Artifact、Promotion 或 Registry 句柄**经由它**进入；Router Agent 自身不持 Tool 是由下面的 `router_assembly_digest` 与注册表校验证明的，不是由接缝声明的。
-
-`MAX_ROUTER_SUMMARY_CHARS = 4096` 是协议上界而非宿主策略：它限定这套协议**最多愿意问多长的问题**，方向与 Profile 决定的超时/响应上界相反。
-
-Router 调用是 owned work：超时先取消并**收敛** responder 再抛 `product-router-timeout`；被取消的调用方同样先收敛再重抛自己的 `CancelledError`，重复取消不能提前放行；`aclose()` 拒绝新问题并**等待**已经问出去的那一个——等待而不是取消，因为它属于一个仍在 await 的 `route()` 调用方。
-
-#### 唯一 Profile Registry
-
-`ProductProfileRegistry` 收 `(profile_id, ProductProfileBinding)` **序对序列**而不是 Mapping：Mapping 表达不出重复 id，而对重复 id 静默保留最后一条正是注册表不该做的决定。
-
-**没有默认 profile**：未知 id、空 id、非法 id 全部失败，空注册表什么都解析不出来。
-
-构造期校验 `ProductTaskProfile` 的每个名字是合法标识符、`profile_version >= 1`、`default_mode` 是 `RequestedTaskMode`、三个角色槽位的 preset/grants/budget 与 Router profile 合法，并要求 `VerificationPlan` 能被 `freeze_verification_plan()` 冻结且其 `plan_id` 等于 profile 命名的那一个。五个账户的七个 Budget 维度不在产品域复制一套较弱范围：Registry 直接复用 Budget 域的 `freeze_limits()`，所以 `None`、整数类型、非负与 `MAX_BUDGET_VALUE` 上界和真正写 Ledger 时是同一份合同。
-
-解析期通过宿主 `ProductAssemblyResolver` 得到四份 `ResolvedAgentAssembly`（三个角色加 Router），每一份都必须**回答被问的那个槽位**：resolved `AgentSpec` 的 preset 与 capability grants 必须等于槽位声明的值，provider/model 必须等于 profile 的值。解析器有资格回答“这个 preset 现在是什么”，没有资格回答“我被问的是哪个 preset”。
-
-两条不变量是**强制**而不是记录：
-
-1. **写权限来自槽位**。`workspace_access` 必须等于 `ProductRole.workspace_access`，所以解析器交回一个可写的 reviewer 会被当场拒绝，而不是被记进 digest 等以后发现；
-2. **Router 不持 Tool**。Router assembly 的 `tool_ids` 必须为空、capability grants 必须为空、access 必须是 `READ_ONLY`。
-
-三个派生 digest 都是计算属性：`agent_assembly_digest()` 覆盖 `agent_spec_request_fingerprint()`（复用仓库对“AgentSpec 身份”的唯一定义）、provider/model、Tool/Prompt/Policy 组合与 workspace access；`role_assembly_digest()` 按固定顺序覆盖**全部三个**角色，缺一个就拒绝出 digest——绑定是在选模式之前做的，一个随模式变化的 digest 会变含义；`router_assembly_digest()` 覆盖 Router 那一份；`verification_plan_digest` 直接是 `verifier_definition_digest(plan)`。组合列表**保序不排序**：换了顺序的 policy 链是另一条链，压成集合会让两套实质不同的组合共用一个 digest。
-
-因此“名字一字不改、registry 重绑”是可检测的：`profile_digest` 不变，`role_assembly_digest` 变，preflight digest 随之变。
-
-#### Preflight 与固定 Assembly
-
-`ProductAssemblyService.preflight(profile_id)` 每次都重新解析、不缓存：Registry 解析 → 宿主 `ProductSourceResolver.resolve_source()` 得到精确 commit → `PromotionTargetResolver.resolve()` 得到目标 fingerprint、**精确 branch ref** 与 expected revision，组成 `ProductPreflightBinding` 的九个字段。source 与 target 的回答都必须**对得上被问的 id**，摘要、ref 与 revision 的形状也在这里校验。
-
-返回的 `ProductPreflight` 携带 `WorkspaceSourceSnapshot`（宿主接下来要用精确 commit 开 worktree），但**不携带**解析出来的 `PromotionTarget`——那个值里有仓库路径，而这一层欠外界的只有 fingerprint、精确 ref 与 expected revision，三者都已经在 binding 里。两个窄接缝正是既有实现已经具备的方法：`LocalGitWorkspaceProvider.resolve_source` 与 `LocalBareGitPromotionTargets.resolve`，一条用真实 Git 仓库的用例证明它们直接满足这两个 Protocol。
-
-`assemble(task_id=..., profile_id=..., routing_summary=None)` 的顺序本身就是合同：
-
-1. 通过 F1 的 `ProductTaskService.load()` 读任务；未开启是 `product-task-unknown`，已终结是 `product-task-settled`；
-2. fresh `preflight()`；
-3. `profile_digest` 与 opened 记录的不同 → `product-profile-drifted`；
-4. preflight digest 与 opened 记录的不同 → `product-preflight-drifted`。这一条同时覆盖 source base revision 漂移、VerificationPlan 变更、Promotion target 的**分支身份改变或分支头前进**与 registry 重绑，并且发生在 **Router 之前**：跑不了的任务不该花路由 Token。它比较的正是 `ProductAssemblyReceipt.binds()` 的那两个摘要，只是提前一步；F1 的 `start_task()` 之后还会再比一次；
-5. 决定 mode：explicit 请求就是它自己（Router 根本不被调用）；`auto` 且已有 durable `resolved_mode` 就用那一个；`auto` 且尚未路由时先核对 live Router 的 Profile 与实际 assembly digest 正是 fresh preflight 绑定的那份，再调用 Router，然后**通过 F1 的 `record_routing()`** 写 `product/task-routed`，operation id 由 task id 派生，因此重试是同一次写入而不是第二条事实；
-6. 用 `product_workflow_definition(mode, promotion_target_id=...)` 构建并完整校验定义，再由 `workflow_definition_hash()` 从**这一份**定义算出 receipt 的 `workflow_definition_hash`；
-7. 返回 `ProductAssembly(preflight, receipt, definition)`。
-
-`assemble()` **不写** `product/task-started`，因为 Workflow 尚未启动；架构测试按公开方法集断言这一点（只有 `tasks`、`preflight`、`assemble`，没有任何 start/run/execute/resume/approve/promote）。
-
-写入方必须是真正的 `ProductTaskService`（`type(...) is` 判定），不是 duck-typed 替身。F2 只有这一个 EventStore 支撑的接缝，而它自己已经要求 Session 与 Workflow reader 共享同一个 Store 对象，因此“同一事实宇宙”在这一层是结构性的，不需要再比一次身份。
-
-并发下 routing 仍然只有一个结果：两个调用方都进了 Router、先完成的那个写下事实之后，落后的那个拿到 `ProductStateError`/`ProductOperationConflictError`，重新读到 durable 结果并采用它；两个写入真正同时在途时，输的那个得到确定的 `ProductOperationConflictError`，而流里仍然只有一条 `product/task-routed`。may-have-committed 的 routing 写入复用 F1 的三态对账，没有第二套。
-
-#### 两种固定拓扑
-
-| 模式 | 节点顺序 |
-|---|---|
-| `single` | `product-role-coder` → `product-verification` → `product-approval` |
-| `multi` | `product-role-parent` → `product-role-reviewer` → `product-role-coder` → 同一条安全尾部 |
-
-`single` 是**更短的** Workflow，不是绕过关卡的快车道：同一份冻结验证计划、同一个不可变 Artifact、同一个人工 Approval 屏障。reviewer 在 coder **之前**跑，因为放在之后没有任何东西会消费它的意见。只有 coder 捕获 Artifact，因为只有 coder 可写。两种模式都不使用 Map/Join，Stage E 的 Map/Join 一行未动。
-
-节点 id 与 binding id 全部由角色和节点类型派生（`product-role-*`、`product-spec-*`、`product-message-*`），没有示例硬编码；定义只带 binding id，不带 Prompt、`AgentSpec`、仓库路径或凭据。`VerificationNode.target_id` 是 profile 的 promotion target id，因此它进入 definition hash——两个指向不同仓库的运行不是同一份计划。`PRODUCT_MODE_ROLES` 是只读映射。task 配置、Router 响应与 Profile 里都没有节点、边、Agent 数量或 fan-out 字段，架构测试按字段名断言这一点。
-
-#### 验证基线与反向验证
-
-F2 三个新测试文件共 `69 passed`：[`test_product_router.py`](../../tests/test_product_router.py) 18、[`test_product_registry.py`](../../tests/test_product_registry.py) 21、[`test_product_assembly.py`](../../tests/test_product_assembly.py) 30。跨阶段的 [`test_product_architecture.py`](../../tests/test_product_architecture.py) 为 15。F0 合同仍为 `73 passed`，其中“F2 的 `router.py`/`registry.py`/`assembly.py` 尚不存在”那条按阶段推进改写为“它们存在，而 F3 的 `chat.py` 不存在、CLI 不 import 产品域”。F1 两个专门文件仍为 `76 passed`。产品域定向合计 `233 passed`。
-
-十七项反向验证全部经**公开生产路径**触发，各自按预期根因变红后恢复：
-
-1. 解析器忽略未知键 → 键集用例与“被拒答案不留事实”变红；
-2. JSON 失败后从自由文本捞 mode → “自由文本不被开采”与“两份答案不是答案”变红；
-3. 忽略 Profile 的响应字节上界 → 超长答案用例变红；
-4. 超时不收敛 responder → 超时用例按 `responder.cancelled` 变红；
-5. 取消不收敛 responder → 取消用例按 `InvalidStateError: Exception is not set` 变红，即调用方在 worker 收敛前被放行；
-6. 让解析器决定 workspace access → 槽位权限与 Router 权限两条变红；
-7. 去掉“Router 不持 Tool”检查 → Router 权限用例变红；
-8. `role_assembly_digest()` 只哈希 preset 名字 → registry 重绑的两条（digest 变化与漂移拒绝）变红；
-9. 去掉 preflight digest 漂移比较 → source/target/plan/registry 四条漂移用例变红；
-10. `auto` 忽略已有 durable routing 结果 → “第二次装配复用唯一结果”变红；
-11. 把 Router 调用挪到 preflight 之前 → “角色不可用不花路由 Token”、“source 漂移在 Router 之前失败”、“外部读取失败不留半成品”三条变红；
-12. receipt 的 hash 不来自真正要跑的那份定义 → definition hash 用例变红；
-13. 写入方接受 duck-typed 替身 → 写入方身份用例变红；
-14. explicit 模式也去问 Router → “explicit 不调用 Router”以及三条依赖它的用例变红。
-15. 让 live Router 对任何 Profile/assembly 都声称匹配 → bounds 不同与 model/组合不同的两条用例都错误完成路由；
-16. 从 preflight 身份中丢掉真实 target ref → 同一仓库、同一 commit 下把目标 id 从一个分支重绑到另一分支不再被识别为漂移；
-17. 去掉 Registry 对 Budget owner 合同的复用 → 超过 `MAX_BUDGET_VALUE`、真正 Ledger 无法接受的 Profile 被错误注册。
-
-恢复后四个新文件的 SHA-256 与验证前逐字节一致，反向验证全程**没有修改任何受保护文件**。
-
-当前最终门禁：独立审查无 P0/P1/P2；产品域定向 `233 passed`，Budget/Workflow/Promotion/Product 相邻回归 `375 passed`，最终全量只运行一次并得到 `2326 collected / 2321 passed / 5 skipped`、退出码 0；`python -m compileall -q src tests`、改动范围 `ruff check` 与文档 QA 通过。20.27 记录的 `2253/2248/5` 是 **F1** 的历史检查点。
-
-#### F2 之后仍未实现的部分
-
-F3 已在 20.29 接通 Proposal、宿主 task 命令、固定 Workflow、Approval 与显式 Promotion，并完成确定性真实本地 Git 验收；F4 已在 20.30 重构 `traceh eval` 并明确拒绝旧 manifest；F5 的真实外部模型网格、独立复审、最终门禁、安全扫描、版本切换、打包与发布见 20.31。当前已发布版本是 `0.7.0`；Stage E 的恢复边界没有被放宽。
-后续阶段的唯一执行顺序、不可偏离原则与目标产品效果记录在 [`docs/plan/TRACEHARNESS_V0.7_STAGE_PLAN.md`](../plan/TRACEHARNESS_V0.7_STAGE_PLAN.md)。该计划协调 F3–F5，不替代本文件、源码、测试或 ADR 的当前事实。
-
+Assembly 不执行模型、Git 修改或持久进度写入。源码、验证计划、角色装配或目标 ref 漂移时必须重新获得精确确认，不能替旧 Proposal 自动换绑。并发解析不会产生第二路由决定；取消 source 解析时等待原调用收敛且不写 started。Workflow、Workspace、Budget 和 Promotion 的生命周期仍在各自原 owner，见 12.12 与下一节。
 
 ### 20.29 v0.7-F3：统一 Chat 产品控制面与真实本地执行链
 
@@ -5749,6 +6096,8 @@ F4 新增 [`tests/test_product_benchmark.py`](../../tests/test_product_benchmark
 F4 **本身没有**做真实外部模型验收（该阶段所有 Provider 都是确定性进程内实现，没有读取 `.env`、没有调用外部 API、没有接触真实远端），也没有做 F5 的 v0.7.0 RC/打包/发布、重试策略、跨进程 lease、冷恢复、OS sandbox 或默认 Product Profile。F5 后续真实验收见 20.31。Stage E 的恢复边界没有被放宽。四个核心文件 `AgentLoop`、`AgentRuntime`、`ProcessAgentSupervisor`、`PluginManager` 零 diff；版本仍是 `0.6.0`。独立复审已清零 P0/P1/P2，唯一一次最终全量已通过；F4 已提交为 `a4ed8a6`。
 
 ### 20.31 v0.7-F5：真实模型 ProductTask 验收与发布（通俗版 20.25）
+
+历史验收记录：本节的 Router、auto/multi 与旧格式属于当时冻结版本，不能作为当前配置或新版本测试成绩。当前生产模式及协议以 12.12、20.26–20.28 为准；历史 ADR 和测量不追改。
 
 通俗版对应 [20.25](project-context-plain-zh.md)。本节记录 F4 提交后的 RC 验收与发布事实，不把真实模型的随机质量、外部传输故障或“报告完整”混成同一个结论。当前已发布版本是 `0.7.0`。
 
@@ -6099,7 +6448,7 @@ v0.9 的发布前置与 F0-A/B 已完成；F0-C 当前实施代码与配置见 7
   沿用 `source_seq`。成功零命中仍记录空 blocks；检索／Lease 失败可以零 Context，Context／Composition
   已提交而预算拒绝可以没有 Request/Attempt。append 失败／取消先收敛再对账 True/False/unknown；
   Recovery 不补造 Context 或模型调用。同 Step Provider retry 复用原 Context/source_seq，旧格式缺少
-  Context 不静默合成。当前唯一 Session 标记为 `context_protocol=13`，共同 reader、invariant、
+  Context 不静默合成。当前唯一 Session 标记为 `context_protocol=15`，共同 reader、invariant、
   open/recover/inspect/replay/Request 拒绝旧 1/2/3/4/5 和无标记 Session；EventEnvelope 1、M3 format 2 不变。
   Context outer 为 6、SQLite schema 为 2，policy 十二项；Memory 来源绑定项目，精确重建见 7.4–7.7，
   没有跨流 latest 保证。
@@ -6164,7 +6513,7 @@ clock、sleep 和 entropy 注入同一个 owner，生产用标准 monotonic/`asy
 Event/Gate 与假时钟，不靠任意 `sleep()` 猜时序。CLI `run`/`resume`/`chat`/`eval` 的 shipped 默认是最多
 3 个总 Attempt、30 秒 retry window、0.5 秒 base delay、4 秒单次上限、8 秒 Retry-After 上限和 0.2
 jitter；程序化 Runtime 默认为 no-retry，composition root 必须主动提供 policy。Product host 把同一份
-policy 交给 Router 和所有角色；一个 Eval run 也把同一份 policy 交给全部任务、重复与 arm。
+policy 交给主方与调查模板；一个 Eval run 也把同一份 policy 交给全部任务、重复与 arm。
 Chat 启动时打印的可恢复命令会携带这六个非秘密数值，重新解析后得到同一份 policy，不会在恢复时
 静默回到 shipped 默认。
 
@@ -6284,7 +6633,7 @@ Workflow 两条状态流精确绑定产生该 projection 的 `head_seq`，其他
 不能让旧 status 搭配未来 event。缺少 reported head 的事件会 fail closed，不能用 `0` 或当前时钟伪造。
 
 观察握手先订阅 Product/Workflow/Directory/Artifact/Promotion 的精确 Stream，再 fresh read；如果读出
-Router 或角色 Session 等新 identity，就先订阅这些精确 Stream 并重读，直到集合稳定。Feed payload 永远
+主方或临时调查 Session 等新 identity，就先订阅这些精确 Stream 并重读，直到集合稳定。Feed payload 永远
 不参与投影，只设置 dirty；Line adapter 在 dirty、周期 heartbeat、用户动作前后与 terminal finally 中
 强制 durable refresh。因而通知在 subscribe 前到达、Feed 被丢弃、adapter 暂停或未来 TUI 重启，都只会
 影响刷新时机，不会改变最终 view。`ProductObservationSession.start()` 若在初始订阅后的 fresh read 失败或
@@ -6318,6 +6667,8 @@ Runtime/Session/SQLite schema 或 Provider 副作用，所以按冻结计划不�
 P0/P1/P2 清零，本提交完成 F3；F4 的当前实现见 20.36。
 
 ### 20.36 v0.8-F4：同一 `traceh chat` 的可选 Textual adapter（通俗版 20.30）
+
+历史验收记录：本节的 Router、auto/multi 与旧格式属于当时冻结版本，不能作为当前配置或新版本测试成绩。当前生产模式及协议以 12.12、20.26–20.28 为准；历史 ADR 和测量不追改。
 
 F4 没有新增第二条 Chat/Product 命令、Runtime、Event bus、ProductTask 状态或控制面。唯一入口仍是
 `traceh chat`；`--tui` 只选择第二个 presentation adapter。新
@@ -6469,8 +6820,7 @@ Verifier command id/status/exit/argv digest，以及从这份完整 bytes 单遍
 `Ctrl+T` 在宽屏和窄屏都打开同一个全宽、纯读“任务对话”视图，不再是窄屏布局开关。每次打开先由现有
 `ProductObservationReader` fresh read 当前 task，再由唯一
 [`TaskConversationReader`](../../src/traceh/tui/task_conversation.py) 精确绑定该 observation 已证明的 Session：
-Router 必须经 Agent Directory 证明 `router_agent_id` 拥有 `routing_session_id`；parent/reviewer/coder 则沿
-固定 Workflow node、`agent_identity(workflow_run_id, node_id)` 和 Directory 的 session/create-request 绑定。
+主方沿固定 Workflow 执行 node、`agent_identity(workflow_run_id, node_id)` 与 Directory 的 session/create-request 绑定；临时调查方沿原 ownership 子树、Inbox/Delivery 和精确创建身份绑定。
 它不扫描 Store、不按前缀猜 Session，也不建立缓存、订阅、durable 写入口或第二状态机。每条 Session 在
 投影前 fresh read Session/Effect streams 并通过 `CoreInvariantChecker`，随后按 canonical seq 单遍遍历
 `user/message`、`assistant/message`、`tool/call` 与 `tool/result`，不再先用 `SurfaceProjector` 聚合发言、再用
@@ -6478,7 +6828,7 @@ Router 必须经 Agent Directory 证明 `router_agent_id` 拥有 `routing_sessio
 右缘，否则省略而不挤乱摘要。展开角色会渲染该 Session 的全部可见发言与工具活动：screen 不再只取前
 12 条，`RichLog` 不设总行数上限，reader 也不再对单条 user/assistant message 使用 4000 字符、40 行或
 单行宽度上限。安全转义仍逐物理行执行；超出视口只靠滚动，不再显示“还有 N 条”或保留旧阈值开关。
-视图按 router/parent/reviewer/coder 分段，默认展开最近活跃角色；模型文字仍明确为非宿主证据。Token 只在所有 Attempt 都有可信 Usage 时聚合，任何
+视图按主方和实际创建的临时调查方分段，默认展开最近活跃角色；模型文字仍明确为非宿主证据。Token 只在所有 Attempt 都有可信 Usage 时聚合，任何
 unknown/malformed/missing Usage 都显示 `unavailable`，绝不填零或保留部分和。工具摘要继续复用现有
 Timeline 的 allowlist：`shell` 参数只显示遮蔽后的 canonical JSON UTF-8 字节数；其他工具只显示 allowlist
 允许的安全 path/query，空参数没有目标时只保留工具名，不再伪称“已遮蔽”。shell 的 exact `exit_code=0`
@@ -6634,6 +6984,8 @@ collect-only 已通过，独立短复审为 `P0=0/P1=0/P2=0`；Router/Directory 
 
 ### 20.37 v0.8-F5：`0.8.0` 发布候选整合与门禁（通俗版 20.31）
 
+历史验收记录：本节的 Router、auto/multi 与旧格式属于当时冻结版本，不能作为当前配置或新版本测试成绩。当前生产模式及协议以 12.12、20.26–20.28 为准；历史 ADR 和测量不追改。
+
 本节记录的原始 F5 整合阶段不增加新的 Runtime、Session schema、Product 状态、Workflow、Provider
 策略、TUI 权限或 Benchmark Runner；它只把 F0–F4 已实现且已分别清零停止点 Finding 的同一主线，
 整理成一个可独立审查和可重复构建
@@ -6765,14 +7117,14 @@ canonical JSON 表示限制在 320 字符内并显式记录是否截断，再作
 system 消息明确说明这些摘录只是历史 requester 原文，不是 canonical requirement、当前用户指令或任何控制
 授权；任务头、状态和 mode 才是宿主派生事实。两条消息各自最多 8192 字符。内部 XML wrapper 仍不进入
 provider-visible 文本，模型被要求自然回答而不是复述内部 block/label。
-format 7 只在 focus 为 `awaiting_approval`、`completed`、`rejected`、`cancelled` 或 `failed` 时加入
+format 8 只在 focus 为 `awaiting_approval`、`completed`、`rejected`、`cancelled` 或 `failed` 时加入
 `execution_summary`，字段固定为 `workflow_status`、`managed_tool_call_count`、`changed_path_count`、
 `verification_passed`、`verifier_count` 与 `promotion_recorded`。历史目录项没有该摘要；其他非稳定 focus
 也没有。`completed` 必须有 Promotion，其他这些稳定状态不得借一条 Promotion 冒充自己的结果。摘要提供
 “是否、多少”的最小可靠信号，不放入 path、Tool 名、Verifier 身份、Review/Promotion id 或 Patch 内容。
 `started` 只证明这个 ProductTask 已在
 宿主接受 START 后 durable 进入 STARTED；Product-only context 不声称 `workflow/run-started` 已经落盘，执行
-仍可能处于跨 owner 启动/对账窗口。`completed` 只证明这个精确 ProductTask 已 durable terminal；format 7
+仍可能处于跨 owner 启动/对账窗口。`completed` 只证明这个精确 ProductTask 已 durable terminal；format 8
 通过 fresh evidence join 额外要求 `promotion_recorded=true`，但仍不暴露 receipt 身份。它要求不得把
 completed 当成仍在等 START，也不得再次要求 START。`awaiting_approval`
 只陈述到达人审屏障；failed/cancelled/rejected/abandoned 均不冒充成功。requester 模型自己的 Tool 历史和
@@ -6793,7 +7145,7 @@ failure detail 与 Provider 数据都不进入默认 snapshot；每项只保留 
 [`ReadProductTaskEvidenceTool`](../../src/traceh/product/chat.py) 的 `read_product_task_evidence`。它只接受 exact
 `{"task_id": ...}`，并由 [`ProductTaskMemoryReader`](../../src/traceh/product/memory.py) 对同一 EventStore
 fresh join ProductTask、Workflow/node、task-owned Agent Session activity、Review、Approval、Promotion 与
-Usage；[`ProductTaskActivityReader`](../../src/traceh/product/activity.py) 要求 Router 和固定角色 Agent 都在
+Usage；[`ProductTaskActivityReader`](../../src/traceh/product/activity.py) 要求主方与动态调查 Agent 都在
 当前 `product_task_owner_id(task_id)` 子树，并校验各自 Directory/Session/request 身份及 Session 核心不变量。
 它只接受 Tool Runtime/Recovery 当前会持久化的七种结果状态：`succeeded`、`failed`、`cancelled`、
 `invalid`、`denied`、`aborted_before_dispatch` 与 `unknown_after_crash`；其他 durable 值 fail closed。
@@ -6834,7 +7186,7 @@ conversation 内容和内部顺序均不变。`surface/replace` 不得隐藏这�
 
 format 1–5 的历史设计理由见
 [`ADR-0039`](../adr/0039-host-owned-product-status-in-model-context.md)，format-6 有界多任务投影见
-[`ADR-0040`](../adr/0040-session-scoped-product-task-history-context.md)；当前 format 7、最小执行摘要与同 Session
+[`ADR-0040`](../adr/0040-session-scoped-product-task-history-context.md)；当前 format 8、最小执行摘要与同 Session
 按需证据读取见 [`ADR-0041`](../adr/0041-session-scoped-product-task-evidence-memory.md)。这些修订没有改变
 owner、Surface 前置、重放和控制权限决定。确定性测试保留九种 status、最长 identity、
 read failure、Session CAS、JSON 类型敏感对账、取消前未写和 append 已提交未返回等既有反例，并新增多个
@@ -7002,6 +7354,8 @@ cells、"压缩失败 + 任务计数"46 cells，都会被 Textual 静默裁断�
 **验证。** 见 20.40 验证段与 [`validation-v0.8.0.md`](../validation-v0.8.0.md) 第 7 节。
 
 ### 20.41 v0.8.0 发布收口（通俗版 20.35）
+
+历史验收记录：本节的 Router、auto/multi 与旧格式属于当时冻结版本，不能作为当前配置或新版本测试成绩。当前生产模式及协议以 12.12、20.26–20.28 为准；历史 ADR 和测量不追改。
 
 M3+M4 的联合发布候选以 `1d09acc` 为代码/测试基线完成公开真实 L2 和一次无筛选全量：L2 为
 `1 passed in 1398.14s (23:18)`；全量为 `2758 passed, 7 skipped`、退出码 0、耗时

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from traceh.api.events import EventEnvelope
 
-CONTEXT_PROTOCOL = 13
+CONTEXT_PROTOCOL = 15
 SESSION_CREATED_KEYS = frozenset({"session_id", "workspace", "metadata", "context_protocol"})
 
 

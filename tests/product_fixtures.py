@@ -21,7 +21,6 @@ from traceh.api.product import (
     ProductPreflightBinding,
     ProductRole,
     ProductRoleProfile,
-    ProductRouterProfile,
     ProductTaskProfile,
     ProductTaskProposal,
     ProposalConfirmation,
@@ -39,14 +38,11 @@ from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess, WorkspaceSourceSnapshot
 from traceh.product import (
     ProductAssemblyService,
-    ProductModeRouter,
     ProductProfileBinding,
     ProductProfileRegistry,
     ProductTaskService,
     ResolvedAgentAssembly,
-    RouterResponse,
     SessionEvidenceReader,
-    StrictTaskRoutingParser,
 )
 from traceh.product.errors import ProductProfileError
 from traceh.session.event_store import EventStore, InMemoryEventStore
@@ -64,9 +60,7 @@ SOURCE_FINGERPRINT = "a1" * 32
 SOURCE_BASE_REVISION = "b2" * 20
 TARGET_FINGERPRINT = "c3" * 32
 TARGET_EXPECTED_REVISION = "d4" * 20
-ROUTER_AGENT = "agent-router"
-ROUTER_SESSION = "session-router"
-ROUTING_SUMMARY = "add a configuration check to the tracked module"
+REQUIREMENT = "add a configuration check to the tracked module"
 
 
 def limits(**overrides: int | None) -> BudgetLimits:
@@ -90,23 +84,19 @@ def profile() -> ProductTaskProfile:
             capability_grants=("read-workspace",),
             max_output_tokens=4_096,
             budget=limits(max_children=0, max_depth=0),
+            max_turn_wall_milliseconds=60_000,
         )
 
     return ProductTaskProfile(
         profile_version=1,
-        default_mode=RequestedTaskMode.AUTO,
+        default_mode=RequestedTaskMode.SINGLE,
         provider_id="registered-provider",
         model_id="registered-model",
-        parent=role("parent"),
-        reviewer=role("reviewer"),
         coder=role("coder"),
-        router=ProductRouterProfile(
-            preset="preset-router",
-            max_output_tokens=256,
-            budget=limits(max_tokens=2_000, max_steps=2, max_tool_calls=0),
-            timeout_milliseconds=30_000,
-            max_response_bytes=2_048,
-        ),
+        investigator=role("investigator"),
+        patch_author=None,
+        retained_tokens=4_000,
+        investigator_initial_tokens=4_000,
         task_budget=limits(),
         source_id="registered-source",
         source_revision="main",
@@ -119,7 +109,6 @@ def preflight(**overrides: str) -> ProductPreflightBinding:
     binding = ProductPreflightBinding(
         profile_digest=profile().digest,
         role_assembly_digest="1" * 64,
-        router_assembly_digest="2" * 64,
         repository_fingerprint="3" * 64,
         base_revision="4" * 40,
         verification_plan_digest="5" * 64,
@@ -270,9 +259,7 @@ async def seed_session(
 class RecordingWorkflow:
     """A Workflow state source whose answer a test can change between reads."""
 
-    def __init__(
-        self, store: EventStore, status: WorkflowStatus | None = None
-    ) -> None:
+    def __init__(self, store: EventStore, status: WorkflowStatus | None = None) -> None:
         self.store = store
         self.status_value = status
         self.reads = 0
@@ -325,9 +312,7 @@ async def build_assembly(
         workflow=workflow,
         ownership=ownership,
     )
-    return Assembly(
-        store=store, service=service, workflow=workflow, ownership=ownership
-    )
+    return Assembly(store=store, service=service, workflow=workflow, ownership=ownership)
 
 
 async def opened(assembly: Assembly, *, task_id: str = "task-1", **kwargs: object):
@@ -373,7 +358,7 @@ def verification_plan(
             overrides=(("PYTHONIOENCODING", "utf-8"),),
         ),
         max_output_bytes=1024 * 1024,
-        protocol_version=2,
+        protocol_version=3,
     )
 
 
@@ -390,13 +375,24 @@ def resolved_role(
     policies: tuple[str, ...] = ("policy-role",),
 ) -> ResolvedAgentAssembly:
     slot = profile().role_profile(role)
+    if role is ProductRole.PATCH_AUTHOR:
+        slot = replace(
+            profile().coder,
+            preset="preset-patch-author",
+            capability_grants=("apply_patch",),
+            budget=limits(max_children=0, max_depth=0, max_processes=0),
+        )
+    if role is ProductRole.INVESTIGATOR:
+        from traceh.supervision.investigation_budget import INVESTIGATOR_BUDGET_TOOLS
+
+        slot = replace(
+            slot, capability_grants=(*slot.capability_grants, *INVESTIGATOR_BUDGET_TOOLS)
+        )
     return ResolvedAgentAssembly(
         spec=AgentSpec(
             preset=slot.preset if preset is None else preset,
             workspace_id=f"workspace-{role.value}",
-            capability_grants=(
-                slot.capability_grants if grants is None else grants
-            ),
+            capability_grants=(slot.capability_grants if grants is None else grants),
         ),
         provider_id=provider_id,
         model_id=model_id,
@@ -407,29 +403,6 @@ def resolved_role(
     )
 
 
-def resolved_router(
-    *,
-    tools: tuple[str, ...] = (),
-    grants: tuple[str, ...] = (),
-    access: WorkspaceAccess = WorkspaceAccess.READ_ONLY,
-    preset: str | None = None,
-) -> ResolvedAgentAssembly:
-    router = profile().router
-    return ResolvedAgentAssembly(
-        spec=AgentSpec(
-            preset=router.preset if preset is None else preset,
-            workspace_id="workspace-router",
-            capability_grants=grants,
-        ),
-        provider_id="registered-provider",
-        model_id="registered-model",
-        tool_ids=tools,
-        prompt_ids=("prompt-router",),
-        policy_ids=(),
-        workspace_access=access,
-    )
-
-
 @dataclass(slots=True)
 class RecordingAssemblies:
     """A host resolver whose answers a test controls role by role."""
@@ -437,21 +410,24 @@ class RecordingAssemblies:
     roles: dict[ProductRole, ResolvedAgentAssembly] = field(
         default_factory=lambda: {role: resolved_role(role) for role in ProductRole}
     )
-    router: ResolvedAgentAssembly = field(default_factory=resolved_router)
     unavailable: frozenset[ProductRole] = frozenset()
     calls: list[str] = field(default_factory=list)
 
     async def role_assembly(self, *, role, profile, provider_id, model_id):
-        del profile, provider_id, model_id
+        del provider_id, model_id
         self.calls.append(role.value)
         if role in self.unavailable:
             raise ProductProfileError("product-assembly-unavailable", role.value)
-        return self.roles[role]
+        original = self.roles[role]
+        from traceh.supervision.delegation import INVESTIGATION_TOOL_IDS
 
-    async def router_assembly(self, *, profile, provider_id, model_id):
-        del profile, provider_id, model_id
-        self.calls.append("router")
-        return self.router
+        if set(INVESTIGATION_TOOL_IDS) <= set(profile.capability_grants):
+            return replace(
+                original,
+                spec=replace(original.spec, capability_grants=profile.capability_grants),
+                tool_ids=(*original.tool_ids, *INVESTIGATION_TOOL_IDS),
+            )
+        return original
 
 
 @dataclass(slots=True)
@@ -463,9 +439,7 @@ class RecordingSources:
     source_id: str | None = None
     reads: int = 0
 
-    async def resolve_source(
-        self, source_id: str, revision: str
-    ) -> WorkspaceSourceSnapshot:
+    async def resolve_source(self, source_id: str, revision: str) -> WorkspaceSourceSnapshot:
         self.reads += 1
         return WorkspaceSourceSnapshot(
             source_id=self.source_id if self.source_id is not None else source_id,
@@ -495,32 +469,6 @@ class RecordingTargets:
         )
 
 
-@dataclass(slots=True)
-class ScriptedResponder:
-    """A router Agent stand-in: text in, one bounded answer out."""
-
-    text: str = '{"mode": "multi", "reason": "three roles help here"}'
-    router_agent_id: str = ROUTER_AGENT
-    routing_session_id: str = ROUTER_SESSION
-    gate: Gate | None = None
-    failure: BaseException | None = None
-    calls: list[str] = field(default_factory=list)
-    task_ids: list[str] = field(default_factory=list)
-
-    async def respond(self, summary: str, *, task_id: str) -> RouterResponse:
-        self.calls.append(summary)
-        self.task_ids.append(task_id)
-        if self.gate is not None:
-            await self.gate.wait()
-        if self.failure is not None:
-            raise self.failure
-        return RouterResponse(
-            text=self.text,
-            router_agent_id=self.router_agent_id,
-            routing_session_id=self.routing_session_id,
-        )
-
-
 def registry(
     *,
     assemblies: RecordingAssemblies | None = None,
@@ -539,20 +487,6 @@ def registry(
     )
 
 
-def mode_router(
-    responder: ScriptedResponder | None = None,
-    *,
-    task_profile: ProductTaskProfile | None = None,
-    assembly: ResolvedAgentAssembly | None = None,
-) -> ProductModeRouter:
-    return ProductModeRouter(
-        ScriptedResponder() if responder is None else responder,
-        StrictTaskRoutingParser(),
-        profile=(profile() if task_profile is None else task_profile).router,
-        assembly=resolved_router() if assembly is None else assembly,
-    )
-
-
 @dataclass(slots=True)
 class Plan:
     """One complete F2 host assembly built on one F1 writer."""
@@ -562,8 +496,6 @@ class Plan:
     assemblies: RecordingAssemblies
     sources: RecordingSources
     targets: RecordingTargets
-    responder: ScriptedResponder
-    router: ProductModeRouter
     service: ProductAssemblyService
 
     @property
@@ -575,7 +507,6 @@ class Plan:
         return self.base.service
 
     async def aclose(self) -> None:
-        await self.router.aclose()
         await self.base.aclose()
 
 
@@ -584,7 +515,6 @@ async def build_plan(
     assemblies: RecordingAssemblies | None = None,
     sources: RecordingSources | None = None,
     targets: RecordingTargets | None = None,
-    responder: ScriptedResponder | None = None,
     task_profile: ProductTaskProfile | None = None,
     plan: VerificationPlan | None = None,
 ) -> Plan:
@@ -592,22 +522,12 @@ async def build_plan(
     assemblies = RecordingAssemblies() if assemblies is None else assemblies
     sources = RecordingSources() if sources is None else sources
     targets = RecordingTargets() if targets is None else targets
-    responder = ScriptedResponder() if responder is None else responder
-    profiles = registry(
-        assemblies=assemblies, task_profile=task_profile, plan=plan
-    )
-    resolved = await profiles.resolve(PROFILE_ID)
-    router = mode_router(
-        responder,
-        task_profile=task_profile,
-        assembly=resolved.router,
-    )
+    profiles = registry(assemblies=assemblies, task_profile=task_profile, plan=plan)
     service = ProductAssemblyService(
         base.service,
         registry=profiles,
         sources=sources,
         targets=targets,
-        router=router,
     )
     return Plan(
         base=base,
@@ -615,8 +535,6 @@ async def build_plan(
         assemblies=assemblies,
         sources=sources,
         targets=targets,
-        responder=responder,
-        router=router,
         service=service,
     )
 
@@ -652,9 +570,7 @@ __all__ = [
     "ORIGIN_TURN",
     "PROFILE_ID",
     "PROPOSED_TURN",
-    "ROUTER_AGENT",
-    "ROUTER_SESSION",
-    "ROUTING_SUMMARY",
+    "REQUIREMENT",
     "SOURCE_BASE_REVISION",
     "SOURCE_FINGERPRINT",
     "TARGET_EXPECTED_REVISION",
@@ -667,12 +583,10 @@ __all__ = [
     "RecordingSources",
     "RecordingTargets",
     "RecordingWorkflow",
-    "ScriptedResponder",
     "build_assembly",
     "build_plan",
     "confirmation",
     "limits",
-    "mode_router",
     "open_for_plan",
     "opened",
     "preflight",
@@ -681,7 +595,6 @@ __all__ = [
     "receipt",
     "registry",
     "resolved_role",
-    "resolved_router",
     "seed_session",
     "verification_plan",
 ]

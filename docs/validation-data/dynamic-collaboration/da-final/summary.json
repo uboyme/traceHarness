@@ -1,0 +1,328 @@
+{
+  "format": 1,
+  "stage": "DA-1 through DA-5",
+  "released": false,
+  "ao3_release": "https://github.com/uboyme/traceHarness/releases/tag/v0.11.0",
+  "task_trials": 68,
+  "requests": 777,
+  "sessions": 254,
+  "total_tokens": null,
+  "unknown_usage_reason": "One mechanism Provider tool-arguments protocol failure has unknown actual usage.",
+  "live_delegations": 0,
+  "development": [
+    {
+      "repeat": 1,
+      "status": "inconclusive",
+      "quality_status": "inconclusive",
+      "changes": {
+        "gain": 0,
+        "loss": 1,
+        "unchanged": 5,
+        "unknown": 6
+      },
+      "hard_constraints": "passed",
+      "arms": [
+        {
+          "assessable": 12,
+          "assessment_counts": {
+            "failed": 5,
+            "passed": 7
+          },
+          "cost": {
+            "tool_calls": 89,
+            "total_tokens": 348712
+          },
+          "passed_over_planned": 0.5833333333333334,
+          "planned": 12
+        },
+        {
+          "assessable": 6,
+          "assessment_counts": {
+            "failed": 3,
+            "passed": 3,
+            "pending_review": 6
+          },
+          "cost": {
+            "tool_calls": 96,
+            "total_tokens": 450769
+          },
+          "passed_over_planned": 0.25,
+          "planned": 12
+        }
+      ],
+      "execution_errors": [],
+      "hard_verification": [
+        {
+          "variant_id": "reference",
+          "passed": 9,
+          "planned": 12
+        },
+        {
+          "variant_id": "experiment",
+          "passed": 10,
+          "planned": 12
+        }
+      ],
+      "original_comparison_sha256": "31730bbe12ee9f79be8e2f8121308de1a163dfd7b7fcc58d92c05eff0e954564"
+    },
+    {
+      "repeat": 2,
+      "status": "mixed",
+      "quality_status": "improved",
+      "changes": {
+        "gain": 1,
+        "loss": 0,
+        "unchanged": 11,
+        "unknown": 0
+      },
+      "hard_constraints": "passed",
+      "arms": [
+        {
+          "assessable": 12,
+          "assessment_counts": {
+            "failed": 5,
+            "passed": 7
+          },
+          "cost": {
+            "tool_calls": 89,
+            "total_tokens": 356326
+          },
+          "passed_over_planned": 0.5833333333333334,
+          "planned": 12
+        },
+        {
+          "assessable": 12,
+          "assessment_counts": {
+            "failed": 4,
+            "passed": 8
+          },
+          "cost": {
+            "tool_calls": 95,
+            "total_tokens": 432739
+          },
+          "passed_over_planned": 0.6666666666666666,
+          "planned": 12
+        }
+      ],
+      "execution_errors": [],
+      "hard_verification": [
+        {
+          "variant_id": "reference",
+          "passed": 9,
+          "planned": 12
+        },
+        {
+          "variant_id": "experiment",
+          "passed": 10,
+          "planned": 12
+        }
+      ],
+      "original_comparison_sha256": "a6c7e1b673e5bbeab9678a48944070f44011a94fc1180b152d05037b123576c9"
+    }
+  ],
+  "independent_replays": [
+    {
+      "batch": "aa-02",
+      "sessions": 30,
+      "requests": 84,
+      "recorded_model_attempts": 84,
+      "failed_attempts": 0,
+      "total_tokens": 276185,
+      "original_files_unchanged": 2097,
+      "independent_replay_sha256": "dfb9960645138eaab027e8be1cdbbf16ae2a8417a65855458f8f6420a370641f"
+    },
+    {
+      "batch": "mechanism-01",
+      "sessions": 45,
+      "requests": 146,
+      "recorded_model_attempts": 146,
+      "failed_attempts": 1,
+      "total_tokens": null,
+      "original_files_unchanged": 1663,
+      "independent_replay_sha256": "be46345802842f086911188ec51828c51656880d08df384b6b174522af7604e7"
+    },
+    {
+      "batch": "development-01",
+      "sessions": 177,
+      "requests": 546,
+      "recorded_model_attempts": 546,
+      "failed_attempts": 0,
+      "total_tokens": 1817962,
+      "original_files_unchanged": 5163,
+      "independent_replay_sha256": "489ecb6577cbe6c46a00707d1b0d10bb753b1779d55f35e178bb4e5b391f6080"
+    },
+    {
+      "batch": "d4",
+      "sessions": 1,
+      "requests": 0,
+      "recorded_model_attempts": 0,
+      "failed_attempts": 0,
+      "total_tokens": 0,
+      "original_files_unchanged": 12,
+      "independent_replay_sha256": "c7d851a655d2e62378a7aefea343a675a56a6e13e66ee099069c16b989ba4443"
+    },
+    {
+      "batch": "d4c",
+      "sessions": 1,
+      "requests": 1,
+      "recorded_model_attempts": 1,
+      "failed_attempts": 0,
+      "total_tokens": 22014,
+      "original_files_unchanged": 13,
+      "independent_replay_sha256": "c4e068d07a45485fab92b5506bf2caedbb69a3503316f2854313566f75ebc3d0"
+    }
+  ],
+  "optimization": {
+    "status": "no-candidate",
+    "model_reason": "The provided observations and editable text guidance do not reveal a shared failure mechanism across the listed cases that can be addressed by a small, defensible change to the editable navigation/tool text. All observed failures are case-specific implementation or test issues (e.g., mutable history mutation, incorrect arm matching, event loop errors), not systemic misguidance in the COLLECT/DELEGATE/FOLLOWUP/STOP instructions. The existing guidance is already precise, bounded, and correctly emphasizes readonly authority, local efficiency, and evidence-based collection — which aligns with the stated improvement goals in the summaries. No edit improves collaboration efficiency or evidence handoff without introducing overreach, ambiguity, or redundancy.",
+    "provider_calls": 1,
+    "total_tokens": 22014,
+    "candidate_trials": 0,
+    "adopted": false
+  },
+  "holdout": {
+    "executed": false,
+    "reason": "Base adaptive did not meet the frozen qualification; no candidate was proposed."
+  },
+  "gates": [
+    {
+      "artifact": ".traceh/da-gates/da5-contract-final.xml",
+      "tests": 277,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "cf2432b7a876b363bcc4889feca472f3f48805ff7d0272bc699ff86a5e3f721e"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-new.xml",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "3d8364c728178c0b1a299c112ee740c9457ea42fcd5957d7a886dbcde5c26ae0"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-e2e-real-2.xml",
+      "tests": 48,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "eaafb2d27e9c65a31294c6b47be300fa750678cc9cb39a69424dc89f1264d937"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-tui-final-combined.xml",
+      "tests": 177,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 3,
+      "sha256": "bb42a1b7ad5b6757505556724780587d55d23ca63a1901edc976bb13e8273589"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-installed-final.xml",
+      "tests": 88,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "534a278aeac441e2ed533be0abba6adbc5ddade5d796e5f2e095d544f7a411a9"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-workflow-real.xml",
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1ae4a2f7545d50f13d2bfad7eb98229025e21496a6d77e9d5eb46edce8278e08"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-background-final.xml",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "a56987a6c19fce5baae830c501cca6c0b280ab61c312e8c217cf7a3e6867ad91"
+    },
+    {
+      "artifact": ".traceh/da-gates/da5-evaluation-contract-final.xml",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "30fbb55fa56964763c3ab0db97b9c3d417424a25f6612181d7ff6e10bbba188a"
+    },
+    {
+      "artifact": ".traceh/da-gates/da4-product-owner.xml",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "7d9f643808331c3c7036a31a16778617c47408c26f7326f5b21b1ecb8abc73c8"
+    },
+    {
+      "artifact": ".traceh/da-final-package/targeted.xml",
+      "tests": 85,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "c9c3059c552c4d5b5e09d4656a8e6f77dc2e5a6fd56704ea08f0eb34d9ad4cf3"
+    }
+  ],
+  "gate_sets_overlap": true,
+  "package": {
+    "wheel": "traceharness_py-0.11.0-py3-none-any.whl",
+    "sha256": "133658a727d30f95831f3d855a447bbc2b6097c069259a4849cf20f904036952",
+    "bytes": 1069491,
+    "package_files": 319,
+    "source_bytes_equal": true,
+    "published": false
+  },
+  "not_run": [
+    "full pytest",
+    "L2",
+    "L3",
+    "L4"
+  ],
+  "limitations": [
+    "Contract-reduced cases, not production bug snapshots or a broad benchmark.",
+    "Live records use frozen Product 2 development source; current Product 3 separately verified.",
+    "Six first-repeat semantic assessments remain pending; no forced passing grade.",
+    "Same-host Docker gate activity prevents a controlled wall-speedup claim.",
+    "Windows Git worktree paths require a short experiment root.",
+    "Intermediate overlapping reads changed only SQLite WAL/SHM temporary sidecars; payload files and final independent replay are checked separately."
+  ],
+  "static_checks": {
+    "ruff-final": 0,
+    "compile-final": 0,
+    "collect-final": 0,
+    "docs-final": 0,
+    "diff-final": 0,
+    "changed_python_files": 98,
+    "payload_hash_checks": [
+      {
+        "batch": "aa-02",
+        "persistent_original_files": 2068,
+        "changed": 0
+      },
+      {
+        "batch": "mechanism-01",
+        "persistent_original_files": 1620,
+        "changed": 0
+      },
+      {
+        "batch": "development-01",
+        "persistent_original_files": 5000,
+        "changed": 0
+      },
+      {
+        "batch": "d4",
+        "persistent_original_files": 9,
+        "changed": 0
+      },
+      {
+        "batch": "d4c",
+        "persistent_original_files": 10,
+        "changed": 0
+      }
+    ],
+    "collected_tests": 3969
+  }
+}

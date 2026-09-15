@@ -8,7 +8,7 @@ import tempfile
 import time
 from dataclasses import asdict, replace
 
-from tests.sandbox_fixtures import real_sandbox_service
+from sandbox_fixtures import real_sandbox_service
 from traceh.api.sandbox import SandboxOwner
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.sandbox.reader import read_execution
@@ -99,7 +99,7 @@ async def test_real_production_memory_limit_records_oom(tmp_path):
 
 
 async def test_real_host_crash_leaves_unknown_receipt_but_guest_deadline_converges(tmp_path):
-    from tests.sandbox_fixtures import real_sandbox_policy
+    from sandbox_fixtures import real_sandbox_policy
 
     workspace = tmp_path / "workspace"
     workspace.mkdir()

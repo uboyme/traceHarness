@@ -7,6 +7,7 @@ from dataclasses import replace
 import pytest
 
 from traceh.api.llm import ModelResponse, Usage, UsageQuality
+from traceh.budgets.errors import BudgetUsageOverageError
 from traceh.evaluation.model_evidence import load_model_call, model_events
 from traceh.evaluation.model_service import ModelCallConfig, run_model_call
 from traceh.llm.scripted import ScriptedLlmProvider
@@ -98,13 +99,23 @@ async def test_unknown_usage_is_not_zero(tmp_path):
     await invoke(tmp_path / "call", responder(usage=Usage(0, 0, UsageQuality.UNKNOWN)))
     _, receipt, _ = load_model_call(tmp_path / "call")
     assert receipt["observation"]["usage"]["total_tokens"] is None
-    assert receipt["observation"]["budget"]["charged"]["tokens"] == 16000
+    # ADR-0080: an unknown report is charged its reservation, and the reservation
+    # is a bounded ceiling rather than the whole grant. Charging the grant is what
+    # made one zero-return timeout consume an account and leave no room to retry.
+    charged = receipt["observation"]["budget"]["charged"]["tokens"]
+    assert 0 < charged < 16000
 
 
 async def test_reported_usage_above_grant_cannot_qualify(tmp_path):
-    await invoke(tmp_path / "call", responder(usage=Usage(17000, 2, UsageQuality.EXACT)))
+    # ADR-0080: usage above the reservation is refused instead of silently capped.
+    # Capping would settle a wrong number as if it were the real spend; refusing
+    # keeps the host's mis-estimate visible while the reservation still settles.
+    with pytest.raises(BudgetUsageOverageError):
+        await invoke(tmp_path / "call", responder(usage=Usage(17000, 2, UsageQuality.EXACT)))
     _, receipt, _ = load_model_call(tmp_path / "call")
-    assert receipt["observation"]["usage"]["total_tokens"] == 17002
+    assert receipt["converged"] and "budget-usage-overage" in receipt["errors"]
+    assert not receipt["observation"]["completed"]
+    assert receipt["observation"]["usage"]["total_tokens"] is None
     assert not receipt["observation"]["budget_usage_exact"]
 
 

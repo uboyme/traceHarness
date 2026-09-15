@@ -298,6 +298,19 @@ def build_request_from_events(
     # The current reference follows complete Tool groups and prior conversation.
     # Surface itself never learns to retain these request-only bytes.
     messages = (*surface.project(events, through_seq=through_seq), render_context_message(context))
+    from traceh.session.request_view import evidence_messages, read_view
+
+    view = read_view(
+        events, session_id=session_id, turn_id=turn_id, step_id=step_id, through_seq=through_seq
+    )
+    if view is not None:
+        _, selected, expected, source = view
+        if expected.to_dict() != stored_composition.to_dict():
+            raise ValueError("request-view-composition-mismatch")
+        if selected.input_mode == "evidence":
+            messages = evidence_messages(
+                source, surface, turn_id=turn_id, context=render_context_message(context)
+            )
     request = ModelRequest(
         provider=stored_composition.provider,
         model=stored_composition.model,

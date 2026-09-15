@@ -14,6 +14,9 @@ from traceh.evolution.background import BackgroundOptimizationHost, BackgroundPe
 from traceh.evolution.background_experiment import BackgroundExperiment
 from traceh.evolution.optimization import _inputs
 from traceh.evolution.optimization_contract import editable_text
+from traceh.sandbox.config import parse_sandbox_config
+
+DELEGATION_SELECTORS = (("supervision/structured_collaboration.py", "ALLOCATION_GUIDANCE"),)
 
 
 @dataclass(frozen=True)
@@ -119,10 +122,17 @@ def assemble_background(runtime, settings, *, provider, model, base_url, api_key
         model_settings["provider"] != provider.name
         or model_settings["model"] != model
         or model_settings["base_url"] != base_url
-        or options.document.data["execution"]["sandbox_config"] is not None
     ):
         raise ValueError("background-model-or-evaluation-target-invalid")
-    # Initial AO-3 accepts source-isolated retrieval; no user code/command replay.
+    sandbox_path = options.document.data["execution"]["sandbox_config"]
+    sandbox = None
+    if sandbox_path is not None:
+        path = (settings.run_plan.parent / sandbox_path).resolve()
+        sandbox_document = read_input(path.parent, path.name)
+        parsed = parse_sandbox_config(sandbox_document.data)
+        if parsed.plugin_grants or parsed.policy.network != "none":
+            raise ValueError("background-sandbox-scope-invalid")
+        sandbox = parsed.policy
     connection = fingerprint(model_settings["base_url"])
     template = EvaluationRunner(
         settings.benchmark,
@@ -130,10 +140,22 @@ def assemble_background(runtime, settings, *, provider, model, base_url, api_key
         provider=provider,
         model_id=model,
         options=options,
+        sandbox=sandbox,
         worker_api_key=api_key,
         provider_binding={"connection_digest": connection, "purpose": "background-optimization"},
     )
-    if template.manifest.task_type.value != "retrieval_episode":
+    task_type = template.manifest.task_type.value
+    if task_type == "product_task":
+        comparison = options.document.data["comparison"]
+        if (
+            sandbox is None
+            or comparison["kind"] != "text_candidate"
+            or comparison["requested_modes"] != ["multi", "multi"]
+            or template.manifest.assessment["requires_review"] is not True
+            or not set(tuple(s) for s in raw["selectors"]).issubset(DELEGATION_SELECTORS)
+        ):
+            raise ValueError("background-product-contract-invalid")
+    elif task_type != "retrieval_episode" or sandbox is not None:
         raise ValueError("background-task-type-not-enabled")
     _inputs(template)
     configs = {

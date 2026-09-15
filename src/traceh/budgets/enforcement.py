@@ -20,7 +20,7 @@ from traceh.api.budgets import (
     BudgetUsageReservation,
     BudgetUsageReservationStatus,
 )
-from traceh.api.json_types import fingerprint
+from traceh.api.json_types import canonical_json, fingerprint
 from traceh.api.llm import (
     LlmProvider,
     ModelAttemptIdentity,
@@ -42,6 +42,7 @@ from traceh.budgets.errors import (
     BudgetExhaustedError,
     BudgetInputError,
     BudgetReservationStateError,
+    BudgetUsageOverageError,
     BudgetWriteError,
 )
 from traceh.budgets.events import MAX_BUDGET_VALUE
@@ -591,13 +592,18 @@ class _BudgetedLlmAccounting(LlmAdmissionAccounting):
             raise BudgetReservationStateError
         reserved = started.amounts.tokens
         if error is not None:
+            tokens, quality = reserved, UsageQuality.UNKNOWN
             if type(error) is ProviderFailure and error.usage is not None:
-                tokens, quality = self._owner._usage_settlement(
-                    error.usage,
-                    reserved,
-                )
-            else:
-                tokens, quality = reserved, UsageQuality.UNKNOWN
+                try:
+                    tokens, quality = self._owner._usage_settlement(
+                        error.usage,
+                        reserved,
+                    )
+                except BudgetUsageOverageError:
+                    # A failed call that still reports more usage than it
+                    # reserved settles conservatively. The provider failure is
+                    # the primary error and must not be masked by the overage.
+                    tokens, quality = reserved, UsageQuality.UNKNOWN
             await self._owner._settle_after_outcome(
                 self._reservation_id,
                 tokens,
@@ -608,6 +614,24 @@ class _BudgetedLlmAccounting(LlmAdmissionAccounting):
         assert response is not None
         try:
             tokens, quality = self._owner._usage_settlement(response.usage, reserved)
+        except BudgetUsageOverageError as overage:
+            # Two different facts reach here. When the reservation was the rest
+            # of the balance, the account simply could not cover this call and
+            # the honest report is exhaustion, naming the dimension. Only an
+            # overage under a reservation the balance did not cap means the
+            # host's own estimate was wrong, which is what this error is for.
+            settlement_error: BaseException = overage
+            if await self._owner._reservation_took_the_balance(
+                self._reservation_id, reserved
+            ):
+                settlement_error = BudgetExhaustedError("max_tokens")
+            await self._owner._settle_after_outcome(
+                self._reservation_id,
+                reserved,
+                UsageQuality.UNKNOWN,
+                settlement_error,
+            )
+            raise settlement_error from None
         except BaseException as settlement_error:
             await self._owner._settle_after_outcome(
                 self._reservation_id,
@@ -645,6 +669,7 @@ class BudgetedLlmRuntime(LlmRuntime):
     __slots__ = (
         "_agent_id",
         "_allow_estimated",
+        "_estimate_margin_percent",
         "_inner",
         "_service",
         "_session_id",
@@ -659,6 +684,7 @@ class BudgetedLlmRuntime(LlmRuntime):
         session_id: str,
         inner: LlmRuntime | None = None,
         token_counter: TokenCounter | None = None,
+        estimate_margin_percent: int = 0,
         allow_estimated: bool = False,
     ) -> None:
         if type(allow_estimated) is not bool:
@@ -666,11 +692,18 @@ class BudgetedLlmRuntime(LlmRuntime):
                 "budget-estimated-usage-policy-invalid",
                 "allow_estimated",
             )
+        # The host states this margin; it is never inferred from a model name.
+        if type(estimate_margin_percent) is not int or not 0 <= estimate_margin_percent <= 100:
+            raise BudgetInputError(
+                "budget-estimate-margin-invalid",
+                "estimate_margin_percent",
+            )
         self._service = service
         self._agent_id = agent_id
         self._session_id = session_id
         self._inner = LlmRuntime() if inner is None else inner
         self._token_counter = token_counter
+        self._estimate_margin_percent = estimate_margin_percent
         self._allow_estimated = allow_estimated
 
     async def admit(
@@ -779,19 +812,36 @@ class BudgetedLlmRuntime(LlmRuntime):
         if requested is not None and (type(requested) is not int or requested < 1):
             raise BudgetInputError("budget-output-limit-invalid", "max_output_tokens")
         if self._token_counter is None:
+            # No counter, but a request still has a provable ceiling: a
+            # byte-level BPE token always maps to at least one byte, so the
+            # canonical request's UTF-8 length cannot be below its token count.
+            # Reserving that instead of the whole balance keeps a failure that
+            # reports no usage from consuming the account.
+            # The bound is several times the real token count, so using it to
+            # refuse admission would reject calls the account can comfortably
+            # afford. It is used only to size the reservation; when it does not
+            # fit, the reservation is the rest of the balance and settlement
+            # reports the exhaustion it really is.
             output_limit = min(remaining, requested or remaining)
-            return replace(request, max_output_tokens=output_limit), remaining
+            input_bound = len(canonical_json(request.to_dict()).encode("utf-8"))
+            return replace(request, max_output_tokens=output_limit), min(
+                remaining, input_bound + output_limit
+            )
         try:
             input_tokens = self._token_counter.count_request(request)
         except Exception:
             raise BudgetInputError("budget-token-counter-failed", "token_counter") from None
         if type(input_tokens) is not int or input_tokens < 0:
             raise BudgetInputError("budget-token-counter-invalid", "token_counter")
-        output_capacity = remaining - input_tokens
+        # Only the input side is estimated: the provider is told an exact output
+        # ceiling. The margin therefore pads the counted input, and nothing else,
+        # against a host tokenizer that disagrees with the provider's.
+        padded_input = input_tokens + (input_tokens * self._estimate_margin_percent) // 100
+        output_capacity = remaining - padded_input
         if output_capacity <= 0:
             raise BudgetExhaustedError("max_tokens")
         output_limit = min(output_capacity, requested or output_capacity)
-        return replace(request, max_output_tokens=output_limit), input_tokens + output_limit
+        return replace(request, max_output_tokens=output_limit), padded_input + output_limit
 
     def _usage_settlement(
         self, usage: Usage, reserved: int
@@ -814,12 +864,35 @@ class BudgetedLlmRuntime(LlmRuntime):
             return reserved, UsageQuality.UNKNOWN
         total = input_tokens + output_tokens
         if total > reserved:
-            return reserved, UsageQuality.UNKNOWN
+            # Capping the charge here would drop real spend out of the ledger.
+            # The caller settles the reservation and then re-raises, so the
+            # account stays consistent and the shortfall stays visible.
+            raise BudgetUsageOverageError(total, reserved)
         if quality is UsageQuality.EXACT:
             return total, UsageQuality.EXACT
         if quality is UsageQuality.ESTIMATED and self._allow_estimated:
             return total, UsageQuality.ESTIMATED
         return reserved, UsageQuality.UNKNOWN
+
+    async def _reservation_took_the_balance(self, reservation_id: str, reserved: int) -> bool:
+        """Whether this reservation held everything the account had left.
+
+        Read from the same ledger that granted it: a reservation equal to the
+        account's whole remaining capacity means a larger call was never
+        affordable, which is exhaustion rather than a mis-estimate.
+        """
+
+        ledger = await self._service.ledger()
+        reservation = ledger.usage_reservation(reservation_id)
+        if reservation is None or reserved <= 0:
+            return False
+        account = ledger.account(reservation.agent_id)
+        if account is None or account.closed_seq is not None:
+            return False
+        if account.limits.max_tokens is None:
+            return False
+        # The reservation is still held here, so nothing beyond it is available.
+        return ledger.available(reservation.agent_id).max_tokens == 0
 
     async def _settle_after_outcome(
         self,
@@ -852,6 +925,7 @@ class BudgetedAgentExecution:
         "_service",
         "_session_id",
         "_steps",
+        "_max_turn_wall_milliseconds",
     )
 
     def __init__(
@@ -862,6 +936,7 @@ class BudgetedAgentExecution:
         agent_id: str,
         session_id: str,
         steps: BudgetContinuationRuntime,
+        max_turn_wall_milliseconds: int | None = None,
     ) -> None:
         if execution.session_id != session_id:
             raise BudgetDirectoryMismatchError
@@ -869,6 +944,12 @@ class BudgetedAgentExecution:
             service.store
         ):
             raise BudgetDirectoryMismatchError
+        if max_turn_wall_milliseconds is not None and (
+            type(max_turn_wall_milliseconds) is not int
+            or not 0 < max_turn_wall_milliseconds <= MAX_BUDGET_VALUE
+        ):
+            raise ValueError("max_turn_wall_milliseconds must be a positive budget value")
+        self._max_turn_wall_milliseconds = max_turn_wall_milliseconds
         self._execution = execution
         self._service = service
         self._agent_id = agent_id
@@ -895,6 +976,10 @@ class BudgetedAgentExecution:
         ).max_wall_milliseconds
         if remaining == 0:
             raise BudgetExhaustedError("max_wall_milliseconds")
+
+        turn_limit = self._max_turn_wall_milliseconds
+        if turn_limit is not None:
+            remaining = turn_limit if remaining is None else min(remaining, turn_limit)
 
         wall_reservation_id: str | None = None
         wall_reserved = 0
@@ -1034,6 +1119,7 @@ class BudgetEnforcement:
         continuation: ContinuationRuntime,
         llm_runtime: LlmRuntime | None = None,
         token_counter: TokenCounter | None = None,
+        estimate_margin_percent: int = 0,
         allow_estimated_usage: bool = False,
     ) -> None:
         self._service = service
@@ -1051,6 +1137,7 @@ class BudgetEnforcement:
             session_id=session_id,
             inner=llm_runtime,
             token_counter=token_counter,
+            estimate_margin_percent=estimate_margin_percent,
             allow_estimated=allow_estimated_usage,
         )
         self._tool_admission_gate = BudgetToolAdmissionGate(
@@ -1083,7 +1170,10 @@ class BudgetEnforcement:
     def tool_admission_gate(self) -> BudgetToolAdmissionGate:
         return self._tool_admission_gate
 
-    def wrap(self, execution: AgentRuntimeExecution) -> BudgetedAgentExecution:
+    def wrap(
+        self, execution: AgentRuntimeExecution, *,
+        max_turn_wall_milliseconds: int | None = None,
+    ) -> BudgetedAgentExecution:
         """Verify the runtime uses this exact bundle, then wrap its Turn seam."""
 
         runtime = execution.runtime
@@ -1100,6 +1190,7 @@ class BudgetEnforcement:
             agent_id=self._agent_id,
             session_id=self._session_id,
             steps=self._continuation,
+            max_turn_wall_milliseconds=max_turn_wall_milliseconds,
         )
 
 

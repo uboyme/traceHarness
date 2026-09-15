@@ -1,0 +1,119 @@
+{
+ "artifacts": [
+  {
+   "agent_id": "agent-tool-patch-author-90d808a4-1640-585c-bddf-3f70729ab7b5",
+   "artifact_id": "patch-4a26eb54639c9a8ebed8fbc392ac39572ce66ce89deac9124b1a2d70b37fade0",
+   "blob_address": "sha256/203b1f3fc0ed41a9504d3400263552f065fd1ccb5a21fffbecdafaa6ffb0713f",
+   "paths": [
+    "telemetry_rules.py"
+   ]
+  },
+  {
+   "agent_id": "wf-agent-d50614a64140b2adf5601bb501927c9e16a5294b067afcad6b86db18a5d5ca1f",
+   "artifact_id": "patch-c04f710c340e05bbcce413b9eb2a6d075611b1ab75dfe6b6a89411cc9379b51d",
+   "blob_address": "sha256/fd7dda7148a9a40d1a9e2292963192f5f28793f6054d0dd254385399809addf7",
+   "paths": [
+    "telemetry_report.py",
+    "telemetry_rules.py"
+   ]
+  }
+ ],
+ "assessment": "passed",
+ "budget": {
+  "accounts": 3,
+  "accounts_closed": 3,
+  "charged_steps": 15,
+  "charged_tool_calls": 16,
+  "child_reservations": 2,
+  "child_reservations_terminal": 2,
+  "converged": true,
+  "settled_tokens": 115656,
+  "usage_reservations": 17,
+  "usage_reservations_terminal": 17
+ },
+ "calls": 15,
+ "caps": {
+  "connection_timeout_seconds": 60,
+  "handoff_mode_named_in_requirement": false,
+  "max_real_calls": 32,
+  "retry_attempts": 1,
+  "timeout_seconds": 600,
+  "trials": 1
+ },
+ "case_id": "concurrent-telemetry",
+ "chosen_handoff": "dispatch_and_continue",
+ "concurrency": {
+  "active_ms": 114453,
+  "cumulative_work_duration_ms": 121534,
+  "measurement": "In-flight provider call intervals on one host clock; overlap is concurrency of model calls, not a speedup claim.",
+  "observed_main_child_provider_overlap_seconds": 6.905,
+  "observed_peak_active_turns": 2,
+  "work_minus_active_ms": 7081
+ },
+ "convergence": "converged",
+ "database_sha256": "5803759a481a7698cfbd309e7915395d829bc985d8bc927feef6c3db37ca5a23",
+ "date": "2026-09-13",
+ "elapsed_ms": 114453,
+ "fixed_verification_passed": [
+  true
+ ],
+ "invariants": "passed",
+ "limits": "One task, one run. Mechanism and functional result passed; the model chose the concurrent handoff when the requirement stated the two modules were independent. No serial baseline for this exact requirement, so no speedup or quality benefit is claimed. Promotion was the isolated benchmark target only.",
+ "product_status": "completed",
+ "promotion_committed": true,
+ "promotion_ledger": [
+  "patch/review-recorded",
+  "patch/approval-recorded",
+  "patch/promotion-committed"
+ ],
+ "promotion_target": {
+  "new_revision_is_target": true,
+  "ref": "refs/heads/main",
+  "scope": "isolated-benchmark-only"
+ },
+ "provider": {
+  "call_limit": 32,
+  "connection_digest": "8b2745bf62ffc25c22839cae7ccd329991f2d07fcd4fd9e86858f97809f05c05",
+  "model": "deepseek-v4-flash",
+  "network_mode": "direct",
+  "provider": "openai-compatible",
+  "timeout_seconds": 60
+ },
+ "provider_failures": 0,
+ "review_passed": true,
+ "roles": {
+  "child": 4,
+  "main": 11
+ },
+ "round": "concurrent-handoff-real-probe",
+ "sandbox_converged": true,
+ "sandbox_executions": 3,
+ "snapshot_replay_failures": 0,
+ "snapshot_replays": 17,
+ "stopped_by_cap": false,
+ "tool_call_counts": {
+  "apply_patch": 2,
+  "collect_child_patch": 1,
+  "integrate_child_patch": 1,
+  "list_files": 1,
+  "read_child_patch": 1,
+  "read_file": 8,
+  "shell": 1,
+  "submit_collaboration_plan": 1
+ },
+ "usage": {
+  "input_tokens": 108772,
+  "output_tokens": 6884,
+  "quality": "exact",
+  "total_tokens": 115656,
+  "unattributed_tokens": 0
+ },
+ "workflow_status": "completed",
+ "workspaces": {
+  "converged": true,
+  "live": 0,
+  "quarantined": 0,
+  "released": 3,
+  "workspaces": 3
+ }
+}

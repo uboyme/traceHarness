@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -70,8 +71,7 @@ class ToolAdmissionGate(Protocol):
         self,
         calls: tuple[PreparedToolCall, ...],
         context: ToolExecutionContext,
-    ) -> tuple[ToolAdmissionDecision, ...]:
-        ...
+    ) -> tuple[ToolAdmissionDecision, ...]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +79,22 @@ class ToolOutput:
     content: str
     data: dict[str, JsonValue] = field(default_factory=dict)
     evidence: tuple[str, ...] = ()
+
+
+class ToolExecutionFailure(Exception):
+    """A failed operation with a converged, structured side-effect receipt."""
+
+    def __init__(self, output: ToolOutput):
+        super().__init__(output.content)
+        self.output = output
+
+
+class ToolExecutionCancelled(asyncio.CancelledError):
+    """Cancellation after owned work has converged with an explicit receipt."""
+
+    def __init__(self, output: ToolOutput):
+        super().__init__(output.content)
+        self.output = output
 
 
 class Tool(Protocol):
@@ -91,5 +107,4 @@ class Tool(Protocol):
         self,
         arguments: dict[str, JsonValue],
         context: ToolExecutionContext,
-    ) -> ToolOutput:
-        ...
+    ) -> ToolOutput: ...

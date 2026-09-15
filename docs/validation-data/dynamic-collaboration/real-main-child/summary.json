@@ -1,0 +1,99 @@
+{
+  "format": 1,
+  "date": "2026-09-11",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "network": "direct",
+  "model_retry_attempts": 1,
+  "semantic_judge_calls": 0,
+  "baseline_trials": 0,
+  "adoption_authorized": false,
+  "observations": {
+    "natural_budget_autonomy": [
+      {
+        "scenario": "complex-headroom",
+        "task_success": false,
+        "real_calls": 16,
+        "main_calls": 16,
+        "child_calls": 0,
+        "delegate_succeeded": 0,
+        "termination": "local-call-cap"
+      },
+      {
+        "scenario": "sufficient-simple",
+        "task_success": true,
+        "real_calls": 5,
+        "main_calls": 5,
+        "child_calls": 0,
+        "delegate_succeeded": 0,
+        "tokens": 20753,
+        "termination": "completed"
+      },
+      {
+        "scenario": "constrained-headroom",
+        "task_success": false,
+        "real_calls": 16,
+        "main_calls": 16,
+        "child_calls": 0,
+        "delegate_succeeded": 0,
+        "termination": "local-call-cap"
+      }
+    ],
+    "explicit_large_connectivity": {
+      "task_success": false,
+      "real_calls": 12,
+      "main_calls": 4,
+      "child_calls": 8,
+      "delegate_succeeded": 1,
+      "collect_succeeded": 1,
+      "child_report_terminal": true,
+      "termination": "local-call-cap"
+    },
+    "explicit_minimal_connectivity": {
+      "task_success": false,
+      "real_calls": 8,
+      "main_calls": 5,
+      "child_calls": 3,
+      "delegate_succeeded": 1,
+      "collect_succeeded": 1,
+      "child_report_status": "completed",
+      "generated_output": "answer.json",
+      "generated_output_offline_verifier_exit": 0,
+      "termination": "local-call-cap-before-final-model-message"
+    }
+  },
+  "aggregate": {
+    "real_provider_calls": 57,
+    "main_calls": 46,
+    "child_calls": 11,
+    "completed_call_usage": {
+      "input_tokens": 504957,
+      "output_tokens": 4222,
+      "total_tokens": 509179,
+      "quality": "exact"
+    },
+    "local_cap_failures_without_provider_call": 4,
+    "external_provider_failures": 0,
+    "sessions_reopened": 17,
+    "requests_replayed": 71,
+    "request_replay_errors": 0,
+    "invariant_errors": 0,
+    "budget_converged_all": true,
+    "live_workspaces_all": 0
+  },
+  "conclusions": {
+    "real_main_and_child_model_path_observed": true,
+    "explicit_delegate_collect_path_observed": true,
+    "full_product_trial_passed_with_both_roles": false,
+    "natural_delegation_observed": false,
+    "natural_budget_request_or_decision_observed": false,
+    "interpretation": "The real two-model handoff path works, but this run did not prove autonomous delegation or a completed two-model Product task within the frozen call caps."
+  },
+  "limits": {
+    "full_pytest": "not-run",
+    "l2_l4": "not-run",
+    "wheel": "not-run",
+    "release": "not-run",
+    "commit": "not-authorized"
+  }
+}

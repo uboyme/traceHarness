@@ -1,0 +1,8 @@
+{
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "connection_digest": "8b2745bf62ffc25c22839cae7ccd329991f2d07fcd4fd9e86858f97809f05c05",
+  "network_mode": "direct",
+  "timeout_seconds": 60,
+  "call_limit": 16
+}

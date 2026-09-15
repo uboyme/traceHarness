@@ -1,0 +1,92 @@
+{
+  "format": 1,
+  "split": "holdout",
+  "cases": [
+    {
+      "case_id": "explicit-integer-quota",
+      "group_id": "explicit-integer-quota",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/budgets/events.py",
+          "sha256": "681fd3014861d00943c3c54f6e46b5c7b36ad21dfc651d8628b6e1a5d869b90e"
+        }
+      ]
+    },
+    {
+      "case_id": "resolved-path-containment",
+      "group_id": "resolved-path-containment",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/tools/builtins/paths.py",
+          "sha256": "13004707b9a4c692292ad3be40888bf1a50366f2261d2639f5d661603c3eac43"
+        }
+      ]
+    },
+    {
+      "case_id": "verification-artifact-binding",
+      "group_id": "verification-artifact-binding",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/promotion/models.py",
+          "sha256": "e147cdc4106ac5c0b4cebf7c9c1584fa82130d2dced2565644ad637c55c6c4c9"
+        },
+        {
+          "file": "src/traceh/promotion/verification.py",
+          "sha256": "4afa562032ee838006c59723095dfdf55acb40038afb03b331f897b243334598"
+        }
+      ]
+    },
+    {
+      "case_id": "skill-resource-revision",
+      "group_id": "skill-resource-revision",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/session/skill_retrieval.py",
+          "sha256": "fdc227299c23dee88db8bedce09edf3bc84044a6816188d12d0298359185b6f6"
+        },
+        {
+          "file": "src/traceh/plugins/skills.py",
+          "sha256": "98db96a1fc0bf71bdbe0b02433063a89b033abc3dd2b8bd5546eddcf8ad089f1"
+        }
+      ]
+    },
+    {
+      "case_id": "atomic-delivery-claim",
+      "group_id": "atomic-delivery-claim",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/agents/inbox_service.py",
+          "sha256": "b18a2ee223b19c01aef7ac461d7d785fa84f06c93106261a63b8b5e825e944cf"
+        },
+        {
+          "file": "src/traceh/supervision/delivery.py",
+          "sha256": "bbcbe928469fa364d9467a6dbd5ef0d484ad3580b167c062ad1171b784a3a432"
+        }
+      ]
+    },
+    {
+      "case_id": "frozen-request-retry",
+      "group_id": "frozen-request-retry",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/llm/retry.py",
+          "sha256": "98fcb63e81f73fa410448556ce389acc30eb0c57fcb9b6ca29bdfa7714b480d5"
+        }
+      ]
+    }
+  ],
+  "generator_sha256": "dff0bb3efc8813dd3a746f7671f7025c43cce59aa6a95fa7d152560204f44fe9",
+  "definitions_sha256": "226b69a9bbc2e3b34322561747c4199820cafcac44d2de536de6dd98e4d41b0e"
+}

@@ -33,7 +33,7 @@ CATEGORIES = frozenset(
         "hard-negative",
     }
 )
-ROLES = frozenset({"requester", "parent", "reviewer", "coder", "router"})
+ROLES = frozenset({"requester", "coder", "investigator", "patch_author"})
 EVALUATOR_VERSION = "context-injected-unique-step-v1"
 
 

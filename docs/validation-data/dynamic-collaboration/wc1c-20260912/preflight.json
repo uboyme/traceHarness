@@ -1,0 +1,13 @@
+{
+  "contract_digest": "5248ffb2d7aeefb2b4545c47806436f3a978e5fe5dd470f4a0216da9eb7fc5cd",
+  "outcomes": [
+    {
+      "reference": false,
+      "exit_code": 1
+    },
+    {
+      "reference": true,
+      "exit_code": 0
+    }
+  ]
+}

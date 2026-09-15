@@ -1,0 +1,8 @@
+diff --git a/answer.json b/answer.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..b512345f441b899c21bb2d75c410638221770f70
+--- /dev/null
++++ b/answer.json
+@@ -0,0 +1 @@
++{"sections":[{"topic":"authority","conclusion":"主方与调查方的权限模型基于持久化目录投影，每次决策都加载新鲜的AgentDirectory快照，确保权限检查不依赖于实时状态。工作区版本通过EventStore身份验证确保一致性，历史继承通过owner_agent_id和forked_from_session_id字段实现。主方严格控制调查方的创建和权限范围，确保调查方只能访问其所有权子树内的资源。","evidence":[{"path":"src/traceh/supervision/authority.py","start_line":45,"end_line":52},{"path":"src/traceh/supervision/authority.py","start_line":60,"end_line":78}]},{"topic":"budget","conclusion":"子任务预算通过reserve_child方法在创建前预留，确保资源可用性。主方通过close_account方法保留收尾额度，该方法在关闭账户前检查所有待处理的预留。预算机制采用CAS（比较并交换）和idempotent操作确保并发安全，避免重复预留或释放。","evidence":[{"path":"src/traceh/budgets/service.py","start_line":105,"end_line":135},{"path":"src/traceh/budgets/service.py","start_line":290,"end_line":320}]},{"topic":"lifecycle","conclusion":"创建/发送取消、清理失败以及主方结束时，通过AgentLifecycleCoordinator的admission和disposal机制确保不会留下运行中的工作。admission方法在子树关闭时拒绝新工作，disposal方法提供屏障等待旧工作完成。产物捕获发生在消息完成状态后，通过DeliveryLog确保每个消息只执行一次。","evidence":[{"path":"src/traceh/supervision/lifecycle.py","start_line":103,"end_line":114},{"path":"src/traceh/supervision/delivery.py","start_line":212,"end_line":225}]}]}
+\ No newline at end of file

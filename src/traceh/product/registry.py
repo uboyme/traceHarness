@@ -1,35 +1,11 @@
-"""The one host Profile Registry, and what "resolved" actually means.
+"""Resolve explicit Product profiles and freeze their execution compositions.
 
-A Profile is a list of *names*: a preset, a provider, a model, a source, a
-verification plan, a promotion target. What those names currently resolve to is a
-different fact, and it is the one that decides what a task can really do. A
-registry may keep every name spelled identically while rebinding ``preset`` to a
-different ``AgentSpec``, different grants or a different Tool/Prompt/Policy
-composition - and neither ``profile_digest`` nor ``workflow_definition_hash()``
-would notice, because both cover names and binding ids rather than resolution
-results.
-
-So this module resolves both halves and derives a digest over what it actually
-got. :class:`ProductProfileRegistry` is the only place a ``profile_id`` becomes a
-runnable Profile. There is no default: an unknown id, a duplicate id, a plan that
-does not match the id the Profile named, or an assembly that disagrees with the
-slot it was resolved for are all failures, never fall-throughs.
-
-Two invariants are enforced rather than recorded, because recording them would
-only prove the disagreement later:
-
-* **write authority follows the slot.** ``ProductRole.workspace_access`` is the
-  single definition, so a resolver that hands back a writable reviewer is
-  refused. A Profile has no field with which to grant it and a resolver has no
-  standing to;
-* **the router holds no Tool.** ``ProductRouterProfile`` has no
-  ``capability_grants`` field, and a router assembly carrying a Tool id or a
-  grant is refused here, which is what makes "the router was granted no tool" a
-  checked fact rather than a claim in a docstring.
-
-Nothing here reads or writes an Event Store, starts anything, or performs Git or
-model I/O. It resolves host configuration and stops.
-"""
+Profile names alone do not detect registry rebinding. The one registry checks
+all resolved specs, grants and ordered tool/prompt/policy identities and binds
+their digests. Coder is the single writer; investigator is readonly. Multi
+uses the same coder with host investigation tools. Unknown or duplicate
+profiles, missing templates and identity/authority mismatches fail explicitly.
+This registry starts no Agents and performs no model or Git operations."""
 
 from __future__ import annotations
 
@@ -46,9 +22,9 @@ from traceh.api.product import (
     PRODUCT_TASK_PROTOCOL_VERSION,
     ProductRole,
     ProductRoleProfile,
-    ProductRouterProfile,
     ProductTaskProfile,
     RequestedTaskMode,
+    ResolvedTaskMode,
 )
 from traceh.api.promotion import VerificationPlan
 from traceh.api.workspaces import WorkspaceAccess
@@ -57,6 +33,11 @@ from traceh.budgets.events import MAX_BUDGET_VALUE, freeze_limits
 from traceh.product.errors import ProductProfileError
 from traceh.product.events import require_product_identifier
 from traceh.promotion.models import freeze_verification_plan, verifier_definition_digest
+from traceh.supervision.delegation import INVESTIGATION_TOOL_IDS
+from traceh.supervision.investigation_budget import INVESTIGATOR_BUDGET_TOOLS
+from traceh.supervision.patch_integration import PATCH_INTEGRATION_TOOLS
+from traceh.supervision.structured_collaboration import SUBMIT_COLLABORATION
+from traceh.supervision.writable_collaboration import COLLECT_CHILD_PATCH
 
 MAX_ASSEMBLY_COMPONENTS = 64
 """Bound on each resolved composition list.
@@ -115,13 +96,7 @@ class ProductAssemblyResolver(Protocol):
         profile: ProductRoleProfile,
         provider_id: str,
         model_id: str,
-    ) -> ResolvedAgentAssembly:
-        ...
-
-    async def router_assembly(
-        self, *, profile: ProductRouterProfile, provider_id: str, model_id: str
-    ) -> ResolvedAgentAssembly:
-        ...
+    ) -> ResolvedAgentAssembly: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,7 +126,7 @@ class ResolvedProductProfile:
     profile: ProductTaskProfile
     verification_plan: VerificationPlan
     roles: Mapping[ProductRole, ResolvedAgentAssembly]
-    router: ResolvedAgentAssembly
+    multi: ResolvedAgentAssembly
 
     def assembly(self, role: ProductRole) -> ResolvedAgentAssembly:
         resolved = self.roles.get(role)
@@ -159,13 +134,21 @@ class ResolvedProductProfile:
             raise ProductProfileError("product-role-assembly-missing", role.value)
         return resolved
 
-    @property
-    def role_assembly_digest(self) -> str:
-        return role_assembly_digest(self.roles)
+    def execution_assembly(
+        self, role: ProductRole, mode: ResolvedTaskMode
+    ) -> ResolvedAgentAssembly:
+        if role is ProductRole.CODER and mode is ResolvedTaskMode.MULTI:
+            return self.multi
+        return self.assembly(role)
 
     @property
-    def router_assembly_digest(self) -> str:
-        return router_assembly_digest(self.router)
+    def role_assembly_digest(self) -> str:
+        return fingerprint(
+            {
+                "roles": role_assembly_digest(self.roles),
+                "multi": agent_assembly_digest(self.multi),
+            }
+        )
 
     @property
     def verification_plan_digest(self) -> str:
@@ -211,6 +194,9 @@ def role_assembly_digest(
     entries = []
     for role in sorted(ProductRole, key=lambda member: member.value):
         resolved = roles.get(role)
+        if resolved is None and role is ProductRole.PATCH_AUTHOR:
+            entries.append({"role": role.value, "assembly": None})
+            continue
         if resolved is None:
             raise ProductProfileError("product-role-assembly-missing", role.value)
         entries.append({"role": role.value, "assembly": agent_assembly_digest(resolved)})
@@ -219,16 +205,6 @@ def role_assembly_digest(
             "protocol": PRODUCT_TASK_PROTOCOL_VERSION,
             "purpose": "product-role-assembly",
             "roles": entries,
-        }
-    )
-
-
-def router_assembly_digest(router: ResolvedAgentAssembly) -> str:
-    return fingerprint(
-        {
-            "protocol": PRODUCT_TASK_PROTOCOL_VERSION,
-            "purpose": "product-router-assembly",
-            "assembly": agent_assembly_digest(router),
         }
     )
 
@@ -291,6 +267,12 @@ class ProductProfileRegistry:
         roles: dict[ProductRole, ResolvedAgentAssembly] = {}
         for role in ProductRole:
             slot = profile.role_profile(role)
+            if role is ProductRole.PATCH_AUTHOR and slot is None:
+                continue
+            if role is ProductRole.INVESTIGATOR:
+                slot = replace(
+                    slot, capability_grants=(*slot.capability_grants, *INVESTIGATOR_BUDGET_TOOLS)
+                )
             assembly = await self._assemblies.role_assembly(
                 role=role,
                 profile=slot,
@@ -306,30 +288,39 @@ class ProductProfileRegistry:
                 access=role.workspace_access,
                 field=role.value,
             )
-        router = await self._assemblies.router_assembly(
-            profile=profile.router,
+        multi_slot = replace(
+            profile.coder,
+            capability_grants=(
+                *profile.coder.capability_grants,
+                *INVESTIGATION_TOOL_IDS,
+                SUBMIT_COLLABORATION,
+                *(
+                    (*PATCH_INTEGRATION_TOOLS, COLLECT_CHILD_PATCH)
+                    if profile.patch_author is not None
+                    else ()
+                ),
+            ),
+        )
+        multi = _require_assembly(
+            await self._assemblies.role_assembly(
+                role=ProductRole.CODER,
+                profile=multi_slot,
+                provider_id=profile.provider_id,
+                model_id=profile.model_id,
+            ),
+            preset=multi_slot.preset,
+            grants=multi_slot.capability_grants,
             provider_id=profile.provider_id,
             model_id=profile.model_id,
+            access=WorkspaceAccess.WRITABLE,
+            field="multi",
         )
-        router = _require_assembly(
-            router,
-            preset=profile.router.preset,
-            grants=(),
-            provider_id=profile.provider_id,
-            model_id=profile.model_id,
-            # A router reads a summary and answers with one word. Write access
-            # would be authority it has no use for and no way to spend.
-            access=WorkspaceAccess.READ_ONLY,
-            field="router",
-        )
-        if router.tool_ids:
-            raise ProductProfileError("product-router-tool-granted", "router")
         return ResolvedProductProfile(
             profile_id=profile_id,
             profile=profile,
             verification_plan=binding.verification_plan,
             roles=MappingProxyType(roles),
-            router=router,
+            multi=multi,
         )
 
 
@@ -344,9 +335,7 @@ def _require_plan(binding: ProductProfileBinding, profile_id: str) -> None:
     try:
         plan = freeze_verification_plan(binding.verification_plan)
     except Exception:
-        raise ProductProfileError(
-            "product-verification-plan-invalid", profile_id
-        ) from None
+        raise ProductProfileError("product-verification-plan-invalid", profile_id) from None
     if plan.plan_id != binding.profile.verification_plan_id:
         raise ProductProfileError("product-verification-plan-mismatch", profile_id)
 
@@ -374,15 +363,43 @@ def _require_profile(profile: object, profile_id: str) -> None:
     ):
         _require_identifier(value, profile_id, field)
     for role in ProductRole:
+        if role is ProductRole.PATCH_AUTHOR and profile.patch_author is None:
+            continue
         _require_role_profile(profile.role_profile(role), profile_id, role.value)
-    router = profile.router
-    if type(router) is not ProductRouterProfile:
-        raise ProductProfileError("product-router-profile-invalid", profile_id)
-    _require_identifier(router.preset, profile_id, "router_preset")
-    _require_output_limit(
-        router.max_output_tokens, profile_id, "router_max_output_tokens"
-    )
-    _require_limits(router.budget, profile_id, "router_budget")
+    if profile.patch_author is not None:
+        patch = profile.patch_author
+        if (
+            not set(patch.capability_grants)
+            <= {"list_files", "read_file", "search_text", "apply_patch"}
+            or "apply_patch" not in patch.capability_grants
+            or patch.budget.max_children != 0
+            or patch.budget.max_depth != 0
+            or patch.budget.max_processes != 0
+        ):
+            raise ProductProfileError("product-patch-author-capabilities-invalid", profile_id)
+    if (
+        type(profile.investigator_initial_tokens) is not int
+        or type(profile.investigator.budget.max_tokens) is not int
+        or not 0 < profile.investigator_initial_tokens <= profile.investigator.budget.max_tokens
+    ):
+        raise ProductProfileError("product-investigator-initial-tokens-invalid", "investigator")
+    if (
+        type(profile.retained_tokens) is not int
+        or not 0 <= profile.retained_tokens <= MAX_BUDGET_VALUE
+    ):
+        raise ProductProfileError("product-retained-tokens-invalid", profile_id)
+    if set(profile.coder.capability_grants) & {
+        *INVESTIGATION_TOOL_IDS,
+        SUBMIT_COLLABORATION,
+        COLLECT_CHILD_PATCH,
+    }:
+        raise ProductProfileError("product-delegation-grants-host-owned", profile_id)
+    if any(
+        set(profile.role_profile(role).capability_grants) & set(INVESTIGATOR_BUDGET_TOOLS)
+        for role in ProductRole
+        if profile.role_profile(role) is not None
+    ):
+        raise ProductProfileError("product-budget-grants-host-owned", profile_id)
     _require_limits(profile.task_budget, profile_id, "task_budget")
 
 
@@ -400,6 +417,9 @@ def _require_role_profile(slot: object, profile_id: str, field: str) -> None:
             raise ProductProfileError("product-role-grants-invalid", profile_id)
         seen.add(grant)
     _require_output_limit(slot.max_output_tokens, profile_id, f"{field}_max_output_tokens")
+    _require_output_limit(
+        slot.max_turn_wall_milliseconds, profile_id, f"{field}_max_turn_wall_milliseconds"
+    )
     _require_limits(slot.budget, profile_id, f"{field}_budget")
 
 
@@ -478,9 +498,7 @@ def _require_assembly(
     )
 
 
-def _require_components(
-    values: object, field: str, kind: str
-) -> tuple[str, ...]:
+def _require_components(values: object, field: str, kind: str) -> tuple[str, ...]:
     if type(values) is not tuple or len(values) > MAX_ASSEMBLY_COMPONENTS:
         raise ProductProfileError(f"product-assembly-{kind}-invalid", field)
     seen: set[str] = set()
@@ -488,9 +506,7 @@ def _require_components(
         try:
             identifier = require_product_identifier(value, field=kind)
         except Exception:
-            raise ProductProfileError(
-                f"product-assembly-{kind}-invalid", field
-            ) from None
+            raise ProductProfileError(f"product-assembly-{kind}-invalid", field) from None
         if identifier in seen:
             raise ProductProfileError(f"product-assembly-{kind}-invalid", field)
         seen.add(identifier)
@@ -508,5 +524,4 @@ __all__ = [
     "ResolvedProductProfile",
     "agent_assembly_digest",
     "role_assembly_digest",
-    "router_assembly_digest",
 ]

@@ -35,7 +35,6 @@ from traceh.api.product import (
     PRODUCT_TASK_OPENED,
     PRODUCT_TASK_PROTOCOL_VERSION,
     PRODUCT_TASK_REJECTED,
-    PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_STARTED,
     PRODUCT_TASK_STREAM_PREFIX,
     ProductTaskStatus,
@@ -53,7 +52,6 @@ from traceh.product.events import (
     parse_product_event,
     product_task_stream,
     protocol_digest,
-    protocol_display_text,
     protocol_identifier,
     require_product_identifier,
     task_id_from_stream,
@@ -203,18 +201,6 @@ def _apply(
         )
 
     assert summary is not None
-    if event_type == PRODUCT_TASK_ROUTED:
-        return replace(
-            summary,
-            status=ProductTaskStatus.ROUTED,
-            resolved_mode=_resolved_mode(data.get("resolved_mode"), seq),
-            reason_display=protocol_display_text(data.get("reason_display"), seq),
-            router_agent_id=protocol_identifier(data.get("router_agent_id"), seq),
-            routing_session_id=protocol_identifier(
-                data.get("routing_session_id"), seq
-            ),
-            head_seq=seq,
-        )
     if event_type == PRODUCT_TASK_STARTED:
         return replace(
             summary,

@@ -1,0 +1,112 @@
+{
+  "format": 1,
+  "rows": [
+    {
+      "case": "dependent-investigation",
+      "database_digest": "c88b4f26d9248ca4210c09b01dd7bcfe97094734c15e8d102857f5bc90fa23c6",
+      "checks": [
+        {
+          "session_id": "16574316-b81a-43a3-8161-468b6cdc1c91",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-d5d6945fdf099471c6da5672b4fd7fff132a2a61dfb3d144824333e50be2b8f6",
+          "requests": 10,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "main_requests": 10,
+      "delegation_tools_visible_in_all_main_requests": true,
+      "delegate_calls": 0,
+      "promoted_answer_present": false,
+      "node_failures": [
+        {
+          "failure_code": "promotion-patch-invalid",
+          "kind": "verification",
+          "map_key": null,
+          "node_id": "product-verification"
+        }
+      ],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "frozen-review",
+      "database_digest": "2dadb7905352d412b3b8a458fe615612d94bd5ad85d82f03c02281d89370f716",
+      "checks": [
+        {
+          "session_id": "79696be2-85f1-45f5-b9b5-eb053f530885",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-15f27d0de15b3b26cff693a2d21979e9544512e478ee27ef81dfcadbec7ce32a",
+          "requests": 12,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "main_requests": 12,
+      "delegation_tools_visible_in_all_main_requests": true,
+      "delegate_calls": 0,
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "parallel-investigation",
+      "database_digest": "4a17d075b2852ed8a07b728e4360b3a3d845c81c82430a6580d7a9935d6cff47",
+      "checks": [
+        {
+          "session_id": "d0bc5eb2-320c-4b8c-aa19-140934f65754",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-7be7d85832f19a6e6294c730fc9faa11c6e165bc8864f7f069ee48e07186a859",
+          "requests": 10,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "main_requests": 10,
+      "delegation_tools_visible_in_all_main_requests": true,
+      "delegate_calls": 0,
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    },
+    {
+      "case": "simple-read",
+      "database_digest": "681abd862d1bfb976667ae1ef452cfe01f29adac99c2c4faf9f9542a58154d92",
+      "checks": [
+        {
+          "session_id": "ee159131-8c83-43cf-8a57-b497a659d9f6",
+          "requests": 2,
+          "replay_errors": [],
+          "invariant_errors": []
+        },
+        {
+          "session_id": "wf-session-da83c671e63c121ba34373221865d2c7ddc08f897f32b30e4097c86db7fed8be",
+          "requests": 5,
+          "replay_errors": [],
+          "invariant_errors": []
+        }
+      ],
+      "main_requests": 5,
+      "delegation_tools_visible_in_all_main_requests": true,
+      "delegate_calls": 0,
+      "promoted_answer_present": true,
+      "node_failures": [],
+      "original_database_unchanged": true
+    }
+  ],
+  "requests": 45,
+  "main_requests": 37,
+  "all_replay_and_invariants_pass": true,
+  "provider_calls": 0
+}

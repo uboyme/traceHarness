@@ -1,0 +1,35 @@
+{
+  "format": 1,
+  "criteria": {
+    "explicit-integer-quota": [
+      "quota.parse 只接受 1 到 max_value 的真正整数。JSON true/false、浮点数、字符串都必须拒绝，不能被转换成额度。max_value 是显式正整数，非法时同样报 ValueError。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ],
+    "resolved-path-containment": [
+      "文件读取目前只看字符串前缀，存在同名前缀目录、.. 和符号链接绕出工作区的问题。resolve(root, relative) 应解析真实路径，允许指向根内部的相对路径，拒绝绝对路径以及最终位置在根外的路径。保持返回 pathlib.Path，越界报 ValueError。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ],
+    "verification-artifact-binding": [
+      "通过了旧补丁的验证报告被用于新补丁。review.accept 必须核对 request 中的 artifact_id、patch_sha、target 和 verifier_digest 全部相同且 passed 为 True；其他情况拒绝。status 字段或模型宣称不能代替这些绑定。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ],
+    "skill-resource-revision": [
+      "Skill 卸载或更新后，旧目录引用仍能读取资源。read(catalog, reference) 必须核对插件仍活跃、version 与 catalog_digest 都与引用匹配，再返回该资源；缺失插件或资源、旧版本、旧目录都报 ValueError。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ],
+    "atomic-delivery-claim": [
+      "两个协程可能同时领取一条消息。Queue.claim 在存在 await 的检查路径上仍须保证同一消息只有一个调用返回 True；另一个返回 False。消息未存在同样 False，领取后状态为 claimed。保留异步 checkpoint 注入以便验证并发，不要删除它或用固定 sleep。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ],
+    "frozen-request-retry": [
+      "瞬时失败重试时重新生成 request，导致一次重试变成了不同请求。run(build, send, attempts) 应只 build 一次，所有 send 收到同一请求对象；仅重试 Transient，次数耗尽重抛最后异常，其他错误立即传播。不要因重试重复构造请求或吞掉取消。",
+      "修改应适用于合同内一般输入，不得仅匹配示例值。",
+      "只声明实际执行过的检查；不把助手报告视为独立验证。"
+    ]
+  }
+}

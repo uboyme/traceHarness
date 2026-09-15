@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 from plugin_fixtures import entry_point_for, manifest, provider_for
 
-from tests.sandbox_fixtures import real_sandbox_policy
+from sandbox_fixtures import real_sandbox_policy
 from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.sandbox import SandboxConfiguration, SandboxPluginGrant, SandboxStdioLimits
 from traceh.api.tools import EffectKind, ToolOutput

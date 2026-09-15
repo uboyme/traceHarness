@@ -4,49 +4,13 @@
   "task_type": "product_task",
   "dataset": {
     "file": "dataset.json",
-    "sha256": "ff75e73bfd141d3f1483bcdfcc605040df10f65bff5fce102fd0608c32046661"
+    "sha256": "061d872b54ddc4731109f8a1411c9091c11ba23028643294cb1b7cf1498c4da5"
   },
   "task_settings": {
     "profile_id": "product-benchmark-v1",
     "approver_id": "benchmark-host",
     "default_mode": "single",
     "roles": {
-      "parent": {
-        "preset": "product-benchmark-parent",
-        "capability_grants": [
-          "list_files",
-          "read_file",
-          "search_text"
-        ],
-        "max_output_tokens": 8192,
-        "budget": {
-          "max_tokens": 60000,
-          "max_steps": 12,
-          "max_tool_calls": 40,
-          "max_wall_milliseconds": 300000,
-          "max_children": 0,
-          "max_depth": 0,
-          "max_processes": 4
-        }
-      },
-      "reviewer": {
-        "preset": "product-benchmark-reviewer",
-        "capability_grants": [
-          "list_files",
-          "read_file",
-          "search_text"
-        ],
-        "max_output_tokens": 8192,
-        "budget": {
-          "max_tokens": 60000,
-          "max_steps": 12,
-          "max_tool_calls": 40,
-          "max_wall_milliseconds": 300000,
-          "max_children": 0,
-          "max_depth": 0,
-          "max_processes": 4
-        }
-      },
       "coder": {
         "preset": "product-benchmark-coder",
         "capability_grants": [
@@ -62,26 +26,32 @@
           "max_steps": 24,
           "max_tool_calls": 80,
           "max_wall_milliseconds": 600000,
+          "max_children": 2,
+          "max_depth": 1,
+          "max_processes": 4
+        },
+        "max_turn_wall_milliseconds": 60000
+      },
+      "investigator": {
+        "preset": "product-benchmark-investigator",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 30000,
+          "max_steps": 8,
+          "max_tool_calls": 16,
+          "max_wall_milliseconds": 60000,
           "max_children": 0,
           "max_depth": 0,
-          "max_processes": 4
-        }
-      }
-    },
-    "router": {
-      "preset": "product-benchmark-router",
-      "max_output_tokens": 256,
-      "budget": {
-        "max_tokens": 8000,
-        "max_steps": 2,
-        "max_tool_calls": 0,
-        "max_wall_milliseconds": 60000,
-        "max_children": 0,
-        "max_depth": 0,
-        "max_processes": 4
+          "max_processes": 0
+        },
+        "max_turn_wall_milliseconds": 60000
       },
-      "timeout_milliseconds": 60000,
-      "max_response_bytes": 2048
+      "patch_author": null
     },
     "task_budget": {
       "max_tokens": 500000,
@@ -91,36 +61,6 @@
       "max_children": 8,
       "max_depth": 2,
       "max_processes": 8
-    },
-    "verification": {
-      "plan_id": "benchmark-unittest-v1",
-      "plan_version": 1,
-      "commands": [
-        {
-          "command_id": "unittest",
-          "argv": [
-            "python",
-            "-m",
-            "unittest",
-            "discover",
-            "-s",
-            ".",
-            "-p",
-            "test_*.py"
-          ],
-          "timeout_ms": 180000
-        }
-      ],
-      "environment": {
-        "policy_id": "benchmark-minimal-v1",
-        "passthrough": [],
-        "overrides": {
-          "PYTHONIOENCODING": "utf-8",
-          "PYTHONDONTWRITEBYTECODE": "1"
-        }
-      },
-      "max_output_bytes": 1048576,
-      "protocol_version": 2
     },
     "capture_limits": {
       "max_changed_paths": 100,
@@ -133,9 +73,11 @@
     "retrieval": null,
     "modes": [
       "single",
-      "multi",
-      "auto"
-    ]
+      "multi"
+    ],
+    "retained_tokens": 16000,
+    "investigator_initial_tokens": 30000,
+    "token_estimate": null
   },
   "assessment": {
     "scorer_id": "product-durable-v1",

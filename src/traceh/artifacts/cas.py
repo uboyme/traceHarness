@@ -50,7 +50,7 @@ class LocalArtifactCas:
         if type(blob) is not PatchBlob:
             raise ArtifactCasError("artifact-cas-reference-invalid")
         task = asyncio.create_task(
-            asyncio.to_thread(self._read_sync, blob),
+            asyncio.to_thread(self.read_bytes, blob),
             name="traceh-artifact-cas-read",
         )
         return await _await_owned(task)
@@ -101,7 +101,10 @@ class LocalArtifactCas:
                 except OSError:
                     pass
 
-    def _read_sync(self, blob: PatchBlob) -> bytes:
+    def read_bytes(self, blob: PatchBlob) -> bytes:
+        """Verify and read a frozen blob for synchronous offline evidence consumers."""
+        if type(blob) is not PatchBlob:
+            raise ArtifactCasError("artifact-cas-reference-invalid")
         self._require_root()
         if (
             type(blob.sha256) is not str

@@ -10,7 +10,7 @@ import pytest
 
 from traceh.agents import AgentDirectoryReader, AgentRegistrar
 from traceh.api.agents import AgentRecord, AgentSpec
-from traceh.api.budgets import BudgetLimits, BudgetReservationStatus
+from traceh.api.budgets import BudgetLimits, BudgetReservationStatus, ChildBudgetGrant
 from traceh.api.turns import TurnInput
 from traceh.budgets import (
     BudgetDirectoryMismatchError,
@@ -47,12 +47,13 @@ def limits(**overrides: int | None) -> BudgetLimits:
 @dataclass(frozen=True, slots=True)
 class FixedChildPolicy:
     child_limits: BudgetLimits
+    retained_tokens: int = 0
 
-    def limits_for_child(
+    def grant_for_child(
         self, *, parent: AgentRecord, child: AgentSpec
-    ) -> BudgetLimits:
+    ) -> ChildBudgetGrant:
         del parent, child
-        return self.child_limits
+        return ChildBudgetGrant(self.child_limits, self.retained_tokens)
 
 
 class StubExecution:

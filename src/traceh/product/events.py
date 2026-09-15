@@ -34,7 +34,6 @@ from traceh.api.product import (
     PRODUCT_TASK_OPENED,
     PRODUCT_TASK_PROTOCOL_VERSION,
     PRODUCT_TASK_REJECTED,
-    PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_SCHEMA_VERSION,
     PRODUCT_TASK_STARTED,
     PRODUCT_TASK_STREAM_PREFIX,
@@ -45,20 +44,14 @@ from traceh.api.product import (
     RequestedTaskMode,
     ResolvedTaskMode,
     TaskModeSource,
-    TaskRouting,
     product_event_contract,
     product_started_values,
 )
 from traceh.product.errors import ProductInputError, ProductProtocolError
 from traceh.promotion.models import require_target_ref
 
-MAX_REASON_DISPLAY_CHARS = 256
-"""Bound on the one display-only string the protocol admits.
-
-It exists so a router's prose cannot become unbounded durable history. It is
-also single-line safe, because a value that is eventually rendered must not be
-able to forge a line or hide inside a bidirectional override.
-"""
+MAX_PRODUCT_REQUIREMENT_CHARS = 4096
+"""Bounded requirement text admitted by the Product control plane."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,14 +120,6 @@ def require_hex_digest(value: object, *, lengths: tuple[int, ...], field: str) -
     return value
 
 
-def require_display_text(value: object, *, field: str) -> str | None:
-    if value is None:
-        return None
-    if type(value) is not str or not value or value != value.strip():
-        raise ProductInputError(f"product-{field}-invalid", field)
-    if len(value) > MAX_REASON_DISPLAY_CHARS or not is_agent_identifier(value):
-        raise ProductInputError(f"product-{field}-invalid", field)
-    return str(value)
 
 
 # ------------------------------------------------------------------- writing
@@ -244,30 +229,6 @@ def normalize_task_opening(
     )
 
 
-def task_routed_data(
-    *,
-    task_id: str,
-    operation_id: str,
-    routing: TaskRouting,
-    router_agent_id: str,
-    routing_session_id: str,
-) -> dict[str, JsonValue]:
-    if type(routing) is not TaskRouting:
-        raise ProductInputError("product-routing-invalid", "routing")
-    return {
-        "task_id": require_product_identifier(task_id, field="task_id"),
-        "operation_id": require_product_identifier(operation_id, field="operation_id"),
-        "router_agent_id": require_product_identifier(
-            router_agent_id, field="router_agent_id"
-        ),
-        "routing_session_id": require_product_identifier(
-            routing_session_id, field="routing_session_id"
-        ),
-        "resolved_mode": _resolved_value(routing.resolved_mode),
-        "reason_display": require_display_text(
-            routing.reason_display, field="reason-display"
-        ),
-    }
 
 
 def task_started_data(
@@ -295,7 +256,6 @@ def _validated_preflight(binding: object) -> tuple[str, str]:
     fields = (
         ("profile_digest", binding.profile_digest, (64,)),
         ("role_assembly_digest", binding.role_assembly_digest, (64,)),
-        ("router_assembly_digest", binding.router_assembly_digest, (64,)),
         ("repository_fingerprint", binding.repository_fingerprint, (64,)),
         ("base_revision", binding.base_revision, (40, 64)),
         ("verification_plan_digest", binding.verification_plan_digest, (64,)),
@@ -519,23 +479,6 @@ def _normalized_product_payload(
                 "product_protocol_version": version,
             }
         )
-    elif event_type == PRODUCT_TASK_ROUTED:
-        normalized.update(
-            {
-                "router_agent_id": protocol_identifier(
-                    data.get("router_agent_id"), seq
-                ),
-                "routing_session_id": protocol_identifier(
-                    data.get("routing_session_id"), seq
-                ),
-                "resolved_mode": _protocol_enum_value(
-                    ResolvedTaskMode, data.get("resolved_mode"), seq
-                ),
-                "reason_display": protocol_display_text(
-                    data.get("reason_display"), seq
-                ),
-            }
-        )
     elif event_type == PRODUCT_TASK_STARTED:
         normalized.update(
             {
@@ -602,11 +545,6 @@ def protocol_digest(value: object, *, lengths: tuple[int, ...], seq: int) -> str
         raise ProductProtocolError("product-digest-invalid", seq) from None
 
 
-def protocol_display_text(value: object, seq: int) -> str | None:
-    try:
-        return require_display_text(value, field="reason-display")
-    except ProductInputError:
-        raise ProductProtocolError("product-reason-display-invalid", seq) from None
 
 
 def is_product_fact(
@@ -663,7 +601,6 @@ def _safe_seq(event: object) -> int:
 
 
 __all__ = [
-    "MAX_REASON_DISPLAY_CHARS",
     "NormalizedTaskOpening",
     "ParsedProductEvent",
     "is_product_fact",
@@ -672,9 +609,7 @@ __all__ = [
     "product_event_header",
     "product_task_stream",
     "protocol_digest",
-    "protocol_display_text",
     "protocol_identifier",
-    "require_display_text",
     "require_exact_keys",
     "require_hex_digest",
     "require_product_identifier",
@@ -686,6 +621,5 @@ __all__ = [
     "task_id_from_stream",
     "task_opened_data",
     "task_rejected_data",
-    "task_routed_data",
     "task_started_data",
 ]

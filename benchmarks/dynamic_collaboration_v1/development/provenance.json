@@ -1,0 +1,180 @@
+{
+  "format": 1,
+  "split": "development",
+  "cases": [
+    {
+      "case_id": "bounded-identity",
+      "group_id": "bounded-identity",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/agents/identity.py",
+          "sha256": "aeb16ad349629b99a1c8d17297b66b8938ff5e6cff11f5ec1004534298cd7553"
+        }
+      ]
+    },
+    {
+      "case_id": "event-payload-isolation",
+      "group_id": "event-payload-isolation",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/api/events.py",
+          "sha256": "3314909ddb5f0346e7e59100260e9a196ffef690d9205a226d50b2c3dde002d1"
+        }
+      ]
+    },
+    {
+      "case_id": "unicode-page-cursor",
+      "group_id": "unicode-page-cursor",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/session/tool_output.py",
+          "sha256": "c74ddd30de330a2eeee25330ed0ce8883edceb8e24bd41b2066a46d3de2bee5e"
+        }
+      ]
+    },
+    {
+      "case_id": "current-question-order",
+      "group_id": "current-question-order",
+      "category": "local",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/session/context_input.py",
+          "sha256": "9a4173f1115bfd9d8a058de816b6fe8e80adeaea6742fbae72a3e2851077080f"
+        }
+      ]
+    },
+    {
+      "case_id": "memory-scope-and-state",
+      "group_id": "memory-scope-and-state",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/memory/projection.py",
+          "sha256": "9cfda824024620199dc8450a6c7834e0d7359e66d3896510653d8e1ba1667eb7"
+        },
+        {
+          "file": "src/traceh/memory/context.py",
+          "sha256": "99f072ef08eb521e1770684e91ff26edd0eca3504286d7dfb2a6a03a2af486ec"
+        }
+      ]
+    },
+    {
+      "case_id": "worker-receipt-identity",
+      "group_id": "worker-receipt-identity",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/evaluation/comparison.py",
+          "sha256": "6e17d9de1eb144821ae599d6c002e8d6212fa2c42eca59f4da610002fe1731db"
+        },
+        {
+          "file": "src/traceh/evaluation/variant_execution.py",
+          "sha256": "a96ed511339168fc9a6ff99287bcac6ea8cc0d2ebcc41ae07478b842767d55de"
+        }
+      ]
+    },
+    {
+      "case_id": "tool-content-retention",
+      "group_id": "tool-content-retention",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/session/tool_output.py",
+          "sha256": "c74ddd30de330a2eeee25330ed0ce8883edceb8e24bd41b2066a46d3de2bee5e"
+        },
+        {
+          "file": "src/traceh/session/surface_replacement.py",
+          "sha256": "45db2fa2f71401706cb09d9ddd7ba776d47d76b7c04aced455678fb793999be8"
+        }
+      ]
+    },
+    {
+      "case_id": "runtime-profile-binding",
+      "group_id": "runtime-profile-binding",
+      "category": "independent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/product/registry.py",
+          "sha256": "091c570d7f857722a5ed3e3112058c146ceb7d080f0ff817c5b2fd008a87081f"
+        },
+        {
+          "file": "src/traceh/product/runtime.py",
+          "sha256": "118f63efb1978470ae9c1e53b9508b066440689416e51858bd817657f8fc98f4"
+        }
+      ]
+    },
+    {
+      "case_id": "cancel-before-worker-start",
+      "group_id": "cancel-before-worker-start",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/evolution/background.py",
+          "sha256": "dbcfe82aefc2be49e014e26eb0fc41efb65ace8661fbb973cb5000ec4ec2eee9"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-aware-compensation",
+      "group_id": "commit-aware-compensation",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/budgets/supervision.py",
+          "sha256": "a7435e0219c02dbfc2eeb2d48b1e8212e728efe88633c80d950834b551b017f8"
+        },
+        {
+          "file": "src/traceh/agents/commit_reconciliation.py",
+          "sha256": "739a85fd7b3642b5f127dfebbb26e4c28a27a841887e2294d292e29e3ecd22d5"
+        }
+      ]
+    },
+    {
+      "case_id": "stale-source-plan",
+      "group_id": "stale-source-plan",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/workspaces/catalog.py",
+          "sha256": "9a1259237485b1450aa7867bf6463c60740c7219374c6dd0352a6dc4edbf6e53"
+        },
+        {
+          "file": "src/traceh/product/resources.py",
+          "sha256": "530d0ccf029ef39ffad91c9c9911830c6860a8a42eb6baca8aff6cc32ae420dd"
+        }
+      ]
+    },
+    {
+      "case_id": "unknown-usage-qualification",
+      "group_id": "unknown-usage-qualification",
+      "category": "dependent",
+      "provenance": "Reduced reconstruction of repository contracts; not verbatim historical code.",
+      "source_contracts": [
+        {
+          "file": "src/traceh/evaluation/evaluators/product_metrics.py",
+          "sha256": "6100195d2b914e6e563b84695077cd51dbd3b94fabb20ceea93671d2de479940"
+        },
+        {
+          "file": "src/traceh/evaluation/comparison.py",
+          "sha256": "6e17d9de1eb144821ae599d6c002e8d6212fa2c42eca59f4da610002fe1731db"
+        }
+      ]
+    }
+  ],
+  "generator_sha256": "dff0bb3efc8813dd3a746f7671f7025c43cce59aa6a95fa7d152560204f44fe9",
+  "definitions_sha256": "226b69a9bbc2e3b34322561747c4199820cafcac44d2de536de6dd98e4d41b0e"
+}

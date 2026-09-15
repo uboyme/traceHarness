@@ -1,82 +1,368 @@
 {
-  "format": 1,
+  "format": 2,
   "cases": [
     {
       "case_id": "query_01",
       "group_id": "query_01",
       "requirement": "goals.code",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_02",
       "group_id": "query_02",
       "requirement": "项目目标保持边界清楚",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_03",
       "group_id": "query_03",
       "requirement": "src/route.py RouteError",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_04",
       "group_id": "query_04",
       "requirement": "vehicle fuel",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_05",
       "group_id": "query_05",
       "requirement": "quasarnevermentioned",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_06",
       "group_id": "query_06",
       "requirement": "secretneedle",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_07",
       "group_id": "query_07",
       "requirement": "revokedneedle",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_08",
       "group_id": "query_08",
       "requirement": "priorneedle",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_09",
       "group_id": "query_09",
       "requirement": "reference.retired",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_10",
       "group_id": "query_10",
       "requirement": "route.error",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     },
     {
       "case_id": "query_11",
       "group_id": "query_11",
       "requirement": "reference.current",
       "initial_tree": "initial",
-      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a"
+      "sha256": "591e230816b63e613bbf91bd73a2f5c73f512fb8c3691a8cd9db747297aef53a",
+      "verification": {
+        "plan_id": "benchmark-unittest-v1",
+        "plan_version": 1,
+        "commands": [
+          {
+            "command_id": "expected-file",
+            "argv": [
+              "python",
+              "-c",
+              "from pathlib import Path; assert Path('added.txt').read_text() == 'added\\n'"
+            ],
+            "timeout_ms": 120000,
+            "public_requirement": null
+          }
+        ],
+        "environment": {
+          "policy_id": "benchmark-minimal-v1",
+          "passthrough": [],
+          "overrides": {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          }
+        },
+        "max_output_bytes": 1048576,
+        "protocol_version": 3
+      }
     }
   ]
 }

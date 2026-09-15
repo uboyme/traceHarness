@@ -135,8 +135,10 @@ class RuntimeConfig:
     def __post_init__(self) -> None:
         if self.sandbox is not None and type(self.sandbox) is not SandboxConfiguration:
             raise TypeError("sandbox must be SandboxConfiguration")
-        if (self.repeated_denial_policy is not None
-                and type(self.repeated_denial_policy) is not RepeatedDenialPolicy):
+        if (
+            self.repeated_denial_policy is not None
+            and type(self.repeated_denial_policy) is not RepeatedDenialPolicy
+        ):
             raise TypeError("repeated_denial_policy must be RepeatedDenialPolicy or None")
         if self.compaction is not None and type(self.compaction) is not CompactionPolicy:
             raise TypeError("compaction must be CompactionPolicy")
@@ -601,6 +603,7 @@ class _PreparedRuntime:
     continuation: ContinuationRuntime | None
     llm_runtime: LlmRuntime
     tool_admission_gate: ToolAdmissionGate | None
+    step_view: object | None
     retry_scheduler: RetryScheduler
     summarizer: SessionSummarizer
     memory_authority: object | None
@@ -620,6 +623,7 @@ def _prepare_default_runtime(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    step_view=None,
     retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -658,11 +662,13 @@ def _prepare_default_runtime(
 
     sandbox_service = (
         build_sandbox_service(sessions.store, config.sandbox)
-        if config.sandbox is not None else None
+        if config.sandbox is not None
+        else None
     )
     sandbox_processes = (
         PluginSandboxFactory(sandbox_service, config.sandbox.plugin_grants, data_dir)
-        if sandbox_service is not None else None
+        if sandbox_service is not None
+        else None
     )
     memory_authority = None
     if config.memory is not None:
@@ -800,6 +806,7 @@ def _prepare_default_runtime(
         continuation=continuation,
         llm_runtime=LlmRuntime() if llm_runtime is None else llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        step_view=step_view,
         retry_scheduler=retry_scheduler or RetryScheduler.real(),
         # Deterministic and model-free, so the default is neither a hidden
         # provider call nor a hidden cost. It is only consulted when a host has
@@ -895,6 +902,7 @@ def _finish_default_runtime(
         llm_runtime=prepared.llm_runtime,
         data_dir=prepared.data_dir,
         max_steps=config.max_steps,
+        step_view=prepared.step_view,
         continuation=prepared.continuation,
         verifier=prepared.verifier,
         max_verification_retries=config.max_verification_retries,
@@ -941,6 +949,7 @@ def build_default_runtime(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    step_view=None,
     retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -964,6 +973,7 @@ def build_default_runtime(
         continuation=continuation,
         llm_runtime=llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        step_view=step_view,
         retry_scheduler=retry_scheduler,
         event_store=event_store,
         additional_tools=additional_tools,
@@ -1012,6 +1022,7 @@ async def build_default_runtime_async(
     continuation: ContinuationRuntime | None = None,
     llm_runtime: LlmRuntime | None = None,
     tool_admission_gate: ToolAdmissionGate | None = None,
+    step_view=None,
     retry_scheduler: RetryScheduler | None = None,
     event_store: EventStore | None = None,
     additional_tools: tuple[Tool, ...] = (),
@@ -1043,6 +1054,7 @@ async def build_default_runtime_async(
         continuation=continuation,
         llm_runtime=llm_runtime,
         tool_admission_gate=tool_admission_gate,
+        step_view=step_view,
         retry_scheduler=retry_scheduler,
         event_store=event_store,
         additional_tools=additional_tools,

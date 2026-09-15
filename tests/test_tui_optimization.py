@@ -92,7 +92,10 @@ async def test_tui_chat_then_feedback_panel_starts_background_and_retains_eviden
         await runtime.dispose()
 
 
-async def test_user_case_selection_generates_valid_original_paired_plan_without_calls(tmp_path):
+@pytest.mark.parametrize("product", [False, True])
+async def test_user_case_selection_generates_valid_original_paired_plan_without_calls(
+    tmp_path, product
+):
     from pathlib import Path
     from types import SimpleNamespace
 
@@ -106,6 +109,47 @@ async def test_user_case_selection_generates_valid_original_paired_plan_without_
     from traceh.tui.optimization_plan import OptimizationPlanScreen
 
     benchmark = Path(__file__).parents[1] / "benchmarks/retrieval_episodes_v1"
+    sandbox_config = ""
+    if product:
+        import json
+
+        from evaluation_fixtures import write_dataset
+        from sandbox_fixtures import real_sandbox_policy
+        from test_adaptive_evaluation import _multi_material
+
+        from traceh.api.json_types import to_json_value
+        from traceh.evaluation.inputs import digest_bytes
+
+        benchmark = tmp_path / "benchmark"
+        _multi_material(benchmark)
+        manifest = json.loads((benchmark / "benchmark.json").read_text())
+        cases = json.loads((benchmark / "dataset.json").read_text())["cases"]
+        rubric = benchmark / "rubric.json"
+        rubric.write_text(
+            json.dumps(
+                {
+                    "format": 1,
+                    "criteria": {
+                        c["case_id"]: ["Create the requested file without unsupported claims."]
+                        for c in cases
+                    },
+                }
+            )
+        )
+        manifest["assessment"] = {
+            "scorer_id": "product-durable-semantic-v1",
+            "version": 1,
+            "rubric": {"file": rubric.name, "sha256": digest_bytes(rubric.read_bytes())},
+            "requires_review": True,
+        }
+        write_dataset(benchmark, manifest, cases, format_version=2)
+        sandbox = tmp_path / "sandbox.json"
+        sandbox.write_text(
+            json.dumps(
+                {"format": 2, "policy": to_json_value(real_sandbox_policy()), "plugin_grants": []}
+            )
+        )
+        sandbox_config = str(sandbox)
     model = {
         "provider": "openai-compatible",
         "model": "explicit-offline-fixture",
@@ -117,6 +161,7 @@ async def test_user_case_selection_generates_valid_original_paired_plan_without_
         workspace=str(tmp_path.resolve()),
         data_dir=str(tmp_path / "data"),
         model_settings=model,
+        sandbox_config=sandbox_config,
     )
     app = App()
     async with app.run_test(size=(120, 55)) as pilot:
@@ -132,10 +177,14 @@ async def test_user_case_selection_generates_valid_original_paired_plan_without_
         # Select a material version actually supplied by the manifest, not a hidden default.
         from traceh.evaluation.evaluators.episode_manifest import load_episode_suite
 
-        seed = next(
-            c.data["material_seed"]
-            for c in load_episode_suite(screen.manifest).cases
-            if c.data["case_id"] == case
+        seed = (
+            "source"
+            if product
+            else next(
+                c.data["material_seed"]
+                for c in load_episode_suite(screen.manifest).cases
+                if c.data["case_id"] == case
+            )
         )
         screen.query_one("#optimization-seed", Select).value = seed
         button = screen.query_one("#optimization-save-plan", Button)
@@ -146,7 +195,8 @@ async def test_user_case_selection_generates_valid_original_paired_plan_without_
         await pilot.pause()
     settings = load_background_settings(tmp_path / "background.json")
     options = load_run_options(settings.run_plan)
-    assert options.case_ids == (case,) and options.material_seeds == (seed,)
+    assert options.case_ids == (case,)
+    assert options.material_seeds == (None if product else (seed,))
     assert [v.role for v in options.variants] == ["baseline", "candidate"]
     service = SessionService(InMemoryEventStore())
     host = assemble_background(

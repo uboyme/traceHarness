@@ -108,7 +108,6 @@ def _context_evidence(context, events, case):
 
 def answer_dispatches(events, *, target_start, target_turn):
     """One definition of successful, owned requests before the observed final answer."""
-    by_seq = {e.seq: e for e in events}
     responses = [
         e
         for e in events
@@ -119,6 +118,14 @@ def answer_dispatches(events, *, target_start, target_turn):
     if not responses:
         return
     final = responses[-1]
+    yield from successful_dispatches(
+        events, target_start=target_start, target_turn=target_turn, before_seq=final.seq,
+    )
+
+
+def successful_dispatches(events, *, target_start, target_turn, before_seq=None):
+    """Owned successful attempts, independently of whether the Turn produced a final answer."""
+    by_seq = {e.seq: e for e in events}
     for attempt in events:
         data = attempt.data
         if (
@@ -128,7 +135,7 @@ def answer_dispatches(events, *, target_start, target_turn):
             or data["turn_id"] != target_turn
             or not any(
                 e.type == "assistant/message"
-                and e.seq <= final.seq
+                and (before_seq is None or e.seq <= before_seq)
                 and e.data["attempt_id"] == data["attempt_id"]
                 for e in events
             )
@@ -138,7 +145,8 @@ def answer_dispatches(events, *, target_start, target_turn):
         raw = snapshot.data
         if (
             snapshot.stream_id != attempt.stream_id
-            or snapshot.seq >= final.seq
+            or snapshot.seq >= attempt.seq
+            or (before_seq is not None and snapshot.seq >= before_seq)
             or raw["turn_id"] != target_turn
             or raw["step_id"] != data["step_id"]
             or raw["dispatch_fingerprint"] != data["dispatch_fingerprint"]

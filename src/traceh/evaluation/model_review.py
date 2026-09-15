@@ -9,13 +9,19 @@ from traceh.concurrency import combine_failures
 from traceh.evaluation.inputs import read_input
 from traceh.evaluation.model_evidence import load_model_call
 from traceh.evaluation.model_review_protocol import (
-    REVIEW_SYSTEM,
     call_judgment,
     hard_rejection,
     review_input,
+    review_system,
 )
 from traceh.evaluation.model_service import run_model_call
-from traceh.evaluation.review import _destination, _episode_events, _run, assess_run
+from traceh.evaluation.review import (
+    _destination,
+    _episode_events,
+    _review_packets,
+    _run,
+    assess_run,
+)
 from traceh.evaluation.variant_execution import write_json
 
 
@@ -23,7 +29,8 @@ async def review_with_model(root, output, *, provider, config, max_calls, max_to
     """Freeze all review conditions before calling; return a fresh original assessment."""
     root, output = _destination(root, output)
     report, binding, rubric = _run(root)
-    packets = {p["trial_id"]: p for p in report["task_report"]["episodes"]}
+    packets = _review_packets(root, report, rubric)
+    system = review_system(report["task_type"])
     eligible = [
         t for t in report["trials"] if t["measured"] and t["execution"]["status"] == "completed"
     ]
@@ -49,7 +56,7 @@ async def review_with_model(root, output, *, provider, config, max_calls, max_to
             "deadline_utc": deadline_utc.isoformat(),
             "reserved_calls": calls_needed,
             "rubric": rubric,
-            "system": REVIEW_SYSTEM,
+            "system": system,
         },
     )
     judgments, calls = [], []
@@ -73,7 +80,7 @@ async def review_with_model(root, output, *, provider, config, max_calls, max_to
                     await run_model_call(
                         provider=provider,
                         config=config,
-                        system=REVIEW_SYSTEM,
+                        system=system,
                         input_text=text,
                         binding={
                             "purpose": "semantic-review",

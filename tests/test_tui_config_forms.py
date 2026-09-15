@@ -23,7 +23,7 @@ from traceh.chat.config import load_context_host_file
 from traceh.cli.main import _compaction_policy, _configure_from_environment
 from traceh.cli.tui_config import BASE_FIELDS, apply_values, form_values, load_profile, save_profile
 from traceh.product.config import load_product_host_file
-from traceh.tui.config_forms import ConfigForm
+from traceh.tui.config_forms import CHOICES, ConfigForm
 from traceh.tui.settings import ConfigurationApp, SettingsScreen
 
 
@@ -35,6 +35,13 @@ async def click(app, pilot, selector):
     await pilot.wait_for_scheduled_animations()
     assert await pilot.click(selector)
     await pilot.pause()
+
+
+def test_multi_mode_label_matches_multi_child_capability():
+    assert CHOICES["default_mode"] == [
+        ("单个编码角色", "single"),
+        ("主 Agent 自主分工并使用一个或多个获准助手", "multi"),
+    ]
 
 
 async def select(app, pilot, path):
@@ -195,6 +202,33 @@ async def test_new_product_form_required_fields_and_command_arguments(tmp_path):
         app.screen.query_one("#config-choice", Select).value = "single"
         await click(app, pilot, "#config-update")
         await edit(app, pilot, ("task_budget", "max_tokens"), "")
+        requirement = ("verification", "commands", 0, "public_requirement")
+        assert app.screen.value(requirement) is None
+        await edit(app, pilot, requirement, "x" * 1001)
+        await click(app, pilot, "#config-save")
+        assert isinstance(app.screen, ConfigForm)
+        assert not path.exists()
+        await edit(app, pilot, requirement, "Validate declared behavior")
+        await edit(app, pilot, requirement, "")
+        await select(app, pilot, ("verification", "commands"))
+        await click(app, pilot, "#config-add")
+        assert app.screen.raw["verification"]["commands"][1]["public_requirement"] is None
+        await select(app, pilot, ("verification", "commands", 1))
+        await click(app, pilot, "#config-remove")
+        role = ("roles", "patch_author")
+        await select(app, pilot, role)
+        assert app.screen.value(role) is None
+        assert app.screen.query_one("#config-update", Button).disabled
+        await click(app, pilot, "#config-toggle")
+        assert app.screen.value((*role, "capability_grants")) == [
+            "list_files", "read_file", "search_text", "apply_patch"
+        ]
+        await edit(app, pilot, (*role, "budget", "max_steps"), 12)
+        assert app.screen.raw["roles"]["investigator"]["budget"]["max_steps"] == 8
+        await select(app, pilot, role)
+        await click(app, pilot, "#config-toggle")
+        assert app.screen.value(role) is None
+        await click(app, pilot, "#config-toggle")
         await click(app, pilot, "#config-save")
         assert isinstance(app.screen, SettingsScreen)
         assert app.screen.query_one("#product-enabled", Switch).value
@@ -203,6 +237,8 @@ async def test_new_product_form_required_fields_and_command_arguments(tmp_path):
         raw = json.loads(path.read_text(encoding="utf-8"))
         assert raw["default_mode"] == "single"
         assert raw["task_budget"]["max_tokens"] is None
+        assert raw["roles"]["patch_author"]["budget"]["max_depth"] == 0
+        assert raw["verification"]["commands"][0]["public_requirement"] is None
         assert len(raw["verification"]["commands"][0]["argv"]) == 3
         await pilot.press("escape")
     assert not args.data_dir.exists()

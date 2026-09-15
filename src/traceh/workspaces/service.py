@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from traceh.agents.commit_reconciliation import committed_after_failure
@@ -62,9 +63,7 @@ def workspace_operation_id(purpose: str, **parts: object) -> str:
     try:
         digest = fingerprint(parts)
     except Exception:
-        raise WorkspaceInputError(
-            "workspace-operation-input-invalid", "parts"
-        ) from None
+        raise WorkspaceInputError("workspace-operation-input-invalid", "parts") from None
     return f"ws-{purpose}-{digest}"
 
 
@@ -79,9 +78,7 @@ def workspace_identity(*, operation_id: str, creation_request_id: str) -> str:
     omitted.
     """
 
-    operation_id = require_workspace_identifier(
-        operation_id, field="operation_id"
-    )
+    operation_id = require_workspace_identifier(operation_id, field="operation_id")
     creation_request_id = require_workspace_identifier(
         creation_request_id, field="creation_request_id"
     )
@@ -137,9 +134,7 @@ class WorkspaceService:
         try:
             managed_root = Path(provider.managed_root)
         except Exception:
-            raise WorkspaceInputError(
-                "workspace-path-invalid", "managed_root"
-            ) from None
+            raise WorkspaceInputError("workspace-path-invalid", "managed_root") from None
         if not managed_root.is_absolute():
             raise WorkspaceInputError("workspace-path-invalid", "managed_root")
         self._store = store
@@ -163,6 +158,59 @@ class WorkspaceService:
     async def catalog(self) -> WorkspaceCatalog:
         return await self._catalogs.load()
 
+    @asynccontextmanager
+    async def inspect_session(self, session_id: str, *, agent_id: str):
+        """Hold the existing lifecycle/edit lock for an owned host observation."""
+        async with self._lock:
+            handle = await self.resolve_for_session(session_id)
+            if handle.agent_id != agent_id or handle.session_id != session_id:
+                raise WorkspaceStateError
+            record = (await self.catalog()).get(handle.workspace_id)
+            yield handle, record
+
+    async def edit(self, plan, *, operation_id: str, session_id: str, workspace: Path):
+        """Publish one exact file plan through this workspace's original owner.
+
+        Tool Effect owns dispatch identity and persistence. This service owns
+        identity rechecks, file publication, and cancellation convergence.
+        """
+        from traceh.api.workspace_edits import WorkspaceEditCancelled
+        from traceh.api.workspaces import WorkspaceAccess
+        from traceh.workspaces.editing import apply_files
+
+        stop = asyncio.Event()
+
+        async def perform():
+            async with self._lock:
+                handle = await self.resolve_for_session(session_id)
+                record = (await self.catalog()).get(handle.workspace_id)
+                if (
+                    handle.access is not WorkspaceAccess.WRITABLE
+                    or session_id != plan.session_id
+                    or handle.agent_id != plan.agent_id
+                    or handle.workspace_id != plan.workspace_id
+                    or not _same_path(workspace, handle.root)
+                    or handle.source_id != plan.source_id
+                    or handle.base_revision != plan.base_revision
+                    or record.updated_seq != plan.workspace_generation
+                    or record.repository_fingerprint != plan.repository_fingerprint
+                    or not plan.files
+                ):
+                    raise WorkspaceStateError
+                return await apply_files(plan, handle.root, operation_id, stop)
+
+        task = asyncio.create_task(perform(), name="traceh-workspace-edit")
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError as cancellation:
+            stop.set()
+            await await_worker_convergence(task)
+            if task.cancelled() or task.exception() is not None:
+                if not task.cancelled():
+                    raise cancellation from task.exception()
+                raise cancellation
+            raise WorkspaceEditCancelled(task.result()) from cancellation
+
     async def resolve_for_creation(self, workspace_id: str) -> WorkspaceHandle:
         """Return the exact provisional worktree during the managed create saga.
 
@@ -173,9 +221,7 @@ class WorkspaceService:
         Attached workspaces continue to use ``resolve_for_agent/session``.
         """
 
-        workspace_id = require_workspace_identifier(
-            workspace_id, field="workspace_id"
-        )
+        workspace_id = require_workspace_identifier(workspace_id, field="workspace_id")
         catalog = await self._catalogs.load()
         record = catalog.get(workspace_id)
         if record is None:
@@ -192,9 +238,7 @@ class WorkspaceService:
         request: WorkspaceProvisioningRequest,
         owner_agent_id: str | None,
     ) -> WorkspaceHandle:
-        operation_id = require_workspace_identifier(
-            operation_id, field="operation_id"
-        )
+        operation_id = require_workspace_identifier(operation_id, field="operation_id")
         creation_request_id = require_workspace_identifier(
             creation_request_id, field="creation_request_id"
         )
@@ -202,9 +246,7 @@ class WorkspaceService:
         owner_agent_id = (
             None
             if owner_agent_id is None
-            else require_workspace_identifier(
-                owner_agent_id, field="owner_agent_id"
-            )
+            else require_workspace_identifier(owner_agent_id, field="owner_agent_id")
         )
         entered = False
         try:
@@ -226,9 +268,7 @@ class WorkspaceService:
                     if catalog.for_request(creation_request_id) is not None:
                         raise WorkspaceOperationConflictError
                     snapshot = self._require_source_snapshot(
-                        await self._provider.resolve_source(
-                            frozen.source_id, frozen.revision
-                        ),
+                        await self._provider.resolve_source(frozen.source_id, frozen.revision),
                         frozen,
                     )
                     workspace_id = workspace_identity(
@@ -339,13 +379,9 @@ class WorkspaceService:
         assert result is None or isinstance(result, WorkspaceRecord)
         return result
 
-    async def _finish_agent_creation(
-        self, provision_operation_id: str
-    ) -> WorkspaceRecord | None:
+    async def _finish_agent_creation(self, provision_operation_id: str) -> WorkspaceRecord | None:
         async with self._lock:
-            return await self._finish_agent_creation_locked(
-                provision_operation_id
-            )
+            return await self._finish_agent_creation_locked(provision_operation_id)
 
     async def _finish_agent_creation_locked(
         self, provision_operation_id: str
@@ -372,15 +408,11 @@ class WorkspaceService:
             try:
                 workspace = await self._sessions.workspace_for(durable.session_id)
             except Exception:
-                await self._quarantine_locked(
-                    record, "session-workspace-mismatch"
-                )
+                await self._quarantine_locked(record, "session-workspace-mismatch")
                 raise WorkspaceSessionMismatchError from None
             expected_root = self._managed_root / record.workspace_id
             if not _same_path(workspace, expected_root):
-                await self._quarantine_locked(
-                    record, "session-workspace-mismatch"
-                )
+                await self._quarantine_locked(record, "session-workspace-mismatch")
                 raise WorkspaceSessionMismatchError
             local = await self._safe_inspect(record)
             if local not in {
@@ -390,26 +422,16 @@ class WorkspaceService:
                 await self._quarantine_locked(record, "git-state-unknown")
                 raise WorkspacePathError
             if record.status is WorkspaceStatus.ATTACHED:
-                if (
-                    record.agent_id != durable.agent_id
-                    or record.session_id != durable.session_id
-                ):
+                if record.agent_id != durable.agent_id or record.session_id != durable.session_id:
                     raise WorkspaceDirectoryMismatchError
                 return record
             try:
-                return await self._attach_locked(
-                    record, durable.agent_id, durable.session_id
-                )
+                return await self._attach_locked(record, durable.agent_id, durable.session_id)
             except WorkspaceWriteError:
-                await self._quarantine_locked(
-                    record, "workspace-write-unknown"
-                )
+                await self._quarantine_locked(record, "workspace-write-unknown")
                 raise
 
-        if any(
-            candidate.workspace_id == record.workspace_id
-            for candidate in directory.records
-        ):
+        if any(candidate.workspace_id == record.workspace_id for candidate in directory.records):
             await self._quarantine_locked(record, "agent-identity-conflict")
             raise WorkspaceDirectoryMismatchError
         if record.status is WorkspaceStatus.ATTACHED:
@@ -427,9 +449,7 @@ class WorkspaceService:
             raise
         return await self._release_locked(record, "agent-not-created")
 
-    async def _settle_provision_failure_locked(
-        self, record: WorkspaceRecord
-    ) -> None:
+    async def _settle_provision_failure_locked(self, record: WorkspaceRecord) -> None:
         local = await self._safe_inspect(record)
         if local is WorkspaceLocalState.UNSAFE:
             await self._quarantine_locked(record, "path-unsafe")
@@ -492,9 +512,7 @@ class WorkspaceService:
         return await self.resolve_for_agent(record.agent_id)
 
     async def reconcile(self, workspace_id: str) -> WorkspaceRecord:
-        workspace_id = require_workspace_identifier(
-            workspace_id, field="workspace_id"
-        )
+        workspace_id = require_workspace_identifier(workspace_id, field="workspace_id")
         catalog = await self._catalogs.load()
         record = catalog.get(workspace_id)
         if record is None:
@@ -512,9 +530,7 @@ class WorkspaceService:
     async def release(
         self, workspace_id: str, *, reason: str = "explicit-release"
     ) -> WorkspaceRecord:
-        workspace_id = require_workspace_identifier(
-            workspace_id, field="workspace_id"
-        )
+        workspace_id = require_workspace_identifier(workspace_id, field="workspace_id")
         if type(reason) is not str or reason not in RELEASE_REASONS:
             lifecycle_data(
                 operation_id="invalid",
@@ -538,9 +554,7 @@ class WorkspaceService:
     ) -> WorkspaceRecord:
         """Release a dirty Workspace only through the provider's exact-tree proof."""
 
-        workspace_id = require_workspace_identifier(
-            workspace_id, field="workspace_id"
-        )
+        workspace_id = require_workspace_identifier(workspace_id, field="workspace_id")
         if type(reason) is not str or reason not in {"merged", "rejected"}:
             raise WorkspaceInputError("workspace-release-reason-invalid", "reason")
         result = await converge_workspace_operation(
@@ -563,9 +577,7 @@ class WorkspaceService:
                     raise WorkspaceOperationConflictError
                 return record
             try:
-                await self._provider.remove_captured(
-                    record, candidate_tree=candidate_tree
-                )
+                await self._provider.remove_captured(record, candidate_tree=candidate_tree)
             except WorkspaceDirtyError:
                 await self._quarantine_locked(record, "workspace-dirty")
                 raise
@@ -674,9 +686,7 @@ class WorkspaceService:
             raise WorkspaceWriteError(committed=None)
         return result
 
-    async def _quarantine_locked(
-        self, record: WorkspaceRecord, reason: str
-    ) -> WorkspaceRecord:
+    async def _quarantine_locked(self, record: WorkspaceRecord, reason: str) -> WorkspaceRecord:
         catalog = await self._catalogs.load()
         current = catalog.get(record.workspace_id)
         if current is None:
@@ -698,9 +708,7 @@ class WorkspaceService:
             allowed_reasons=QUARANTINE_REASONS,
         )
         if catalog.operation_exists(operation_id):
-            if not catalog.operation_matches(
-                operation_id, WORKSPACE_QUARANTINED, data
-            ):
+            if not catalog.operation_matches(operation_id, WORKSPACE_QUARANTINED, data):
                 raise WorkspaceOperationConflictError
         else:
             await self._append(
@@ -713,18 +721,14 @@ class WorkspaceService:
             raise WorkspaceWriteError(committed=None)
         return result
 
-    async def _release_locked(
-        self, record: WorkspaceRecord, reason: str
-    ) -> WorkspaceRecord:
+    async def _release_locked(self, record: WorkspaceRecord, reason: str) -> WorkspaceRecord:
         catalog = await self._catalogs.load()
         current = catalog.get(record.workspace_id)
         if current is None:
             raise WorkspaceNotFoundError
         if current.status is WorkspaceStatus.RELEASED:
             return current
-        operation_id = workspace_operation_id(
-            "release", workspace_id=record.workspace_id
-        )
+        operation_id = workspace_operation_id("release", workspace_id=record.workspace_id)
         data = lifecycle_data(
             operation_id=operation_id,
             workspace_id=record.workspace_id,
@@ -732,9 +736,7 @@ class WorkspaceService:
             allowed_reasons=RELEASE_REASONS,
         )
         if catalog.operation_exists(operation_id):
-            if not catalog.operation_matches(
-                operation_id, WORKSPACE_RELEASED, data
-            ):
+            if not catalog.operation_matches(operation_id, WORKSPACE_RELEASED, data):
                 raise WorkspaceOperationConflictError
         else:
             await self._append(
@@ -784,16 +786,12 @@ class WorkspaceService:
             raise WorkspaceSourceError
         return snapshot
 
-    def _require_handle(
-        self, record: WorkspaceRecord, handle: object
-    ) -> WorkspaceHandle:
+    def _require_handle(self, record: WorkspaceRecord, handle: object) -> WorkspaceHandle:
         if type(handle) is not WorkspaceHandle:
             raise WorkspacePathError
         if (
             handle.workspace_id != record.workspace_id
-            or not _same_path(
-                handle.root, self._managed_root / record.workspace_id
-            )
+            or not _same_path(handle.root, self._managed_root / record.workspace_id)
             or handle.source_id != record.source_id
             or handle.base_revision != record.base_revision
             or handle.access is not record.access
@@ -838,9 +836,7 @@ class WorkspaceService:
             raise WorkspaceWriteError(committed=committed) from None
         return appended[0]
 
-    async def _committed(
-        self, event_type: str, data: dict[str, JsonValue]
-    ) -> bool | None:
+    async def _committed(self, event_type: str, data: dict[str, JsonValue]) -> bool | None:
         def matches(event: EventEnvelope) -> bool:
             return is_workspace_fact(event, event_type, data)
 

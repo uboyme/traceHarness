@@ -1,0 +1,167 @@
+{
+  "complete": true,
+  "rows": [
+    {
+      "case": "separable-review",
+      "condition": "original",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2979,
+        "output_tokens": 160,
+        "total_tokens": 3139,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "evidence-full-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "separable",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2944,
+        "output_tokens": 644,
+        "total_tokens": 3588,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "separable-review",
+      "condition": "evidence-focused-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "separable",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 1478,
+        "output_tokens": 245,
+        "total_tokens": 1723,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "original",
+      "tool_names": [
+        "read_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4484,
+        "output_tokens": 64,
+        "total_tokens": 4548,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "evidence-full-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 4674,
+        "output_tokens": 363,
+        "total_tokens": 5037,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "coupled-review",
+      "condition": "evidence-focused-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3211,
+        "output_tokens": 115,
+        "total_tokens": 3326,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "original",
+      "tool_names": [
+        "write_file"
+      ],
+      "only_disclosed_tool": false,
+      "schema_valid": false,
+      "decision_valid": false,
+      "decision": null,
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3315,
+        "output_tokens": 90,
+        "total_tokens": 3405,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "evidence-full-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 3470,
+        "output_tokens": 188,
+        "total_tokens": 3658,
+        "quality": "exact"
+      }
+    },
+    {
+      "case": "simple-read",
+      "condition": "evidence-focused-system",
+      "tool_names": [
+        "decide_task_decomposition"
+      ],
+      "only_disclosed_tool": true,
+      "schema_valid": true,
+      "decision_valid": true,
+      "decision": "local",
+      "tool_executed": false,
+      "usage": {
+        "input_tokens": 2010,
+        "output_tokens": 75,
+        "total_tokens": 2085,
+        "quality": "exact"
+      }
+    }
+  ]
+}

@@ -28,6 +28,9 @@ class VerifierCommand:
     command_id: str
     argv: tuple[str, ...]
     timeout_ms: int
+    # Host-authorized requirement text, not a diagnosis inferred from process output.
+    # None keeps the check opaque. Raw output is never disclosed by this field.
+    public_requirement: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

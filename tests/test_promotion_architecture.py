@@ -128,6 +128,14 @@ def test_no_standalone_patch_promotion_cli_exists() -> None:
 
 
 PRODUCT_PROMOTION_IMPORTS = {
+    "config.py": {"traceh.promotion.models": {"freeze_verification_plan"}},
+    "completion.py": {
+        "traceh.promotion.models": {
+            "freeze_verification_plan", "verifier_result_data",
+            "verification_evidence_digest", "verifier_command_digest",
+            "verifier_definition_digest",
+        },
+    },
     "assembly.py": {
         "traceh.promotion.models": {"require_target_ref"},
     },
@@ -152,6 +160,7 @@ PRODUCT_PROMOTION_IMPORTS = {
             "verifier_definition_digest",
         },
         "traceh.promotion.service": {"PatchPromotionService"},
+        "traceh.promotion.verification": {"HostVerificationRunner"},
     },
     "registry.py": {
         "traceh.promotion.models": {
@@ -178,6 +187,10 @@ CLI_PROMOTION_IMPORTS = {
 
 
 EVALUATION_PROMOTION_IMPORTS = {
+    "evaluators/product_review.py": {
+        "traceh.promotion.events": {"PROMOTION_LEDGER_STREAM"},
+        "traceh.promotion.projection": {"PromotionLedger"},
+    },
     "attempt.py": {
         "traceh.promotion.local_git": {"LocalBareGitPromotionTargets"},
     },

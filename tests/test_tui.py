@@ -97,9 +97,7 @@ from traceh.tui.task_conversation import (
 )
 
 
-async def _wait_for_confirmation_focus(
-    pilot: Pilot[object], confirmation: Input
-) -> None:
+async def _wait_for_confirmation_focus(pilot: Pilot[object], confirmation: Input) -> None:
     """Synchronize with the deferred focus handoff after a gate click."""
 
     for _ in range(20):
@@ -256,8 +254,7 @@ async def test_tui_uses_the_shared_driver_and_durable_session(tmp_path: Path) ->
 
         events = await runtime.sessions.read_session(opened.session.session_id)
         assert any(
-            event.type == "user/message"
-            and event.data.get("content") == "hello from TUI"
+            event.type == "user/message" and event.data.get("content") == "hello from TUI"
             for event in events
         )
         assert any(
@@ -295,9 +292,7 @@ async def test_layout_breakpoint_gives_chat_full_width_without_product(
                 await pilot.pause()
                 panel = app.query_one("#product-column")
                 assert panel.display and panel.region.height > 0
-                assert "ProductTask 未启用" in str(
-                    app.query_one("#product-state", Static).content
-                )
+                assert "ProductTask 未启用" in str(app.query_one("#product-state", Static).content)
                 if not narrow:
                     assert app.query_one("#conversation-column").size.width < width
                 await pilot.press("ctrl+b")
@@ -333,18 +328,13 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
             initial_lines = [line.text for line in log.lines]
             assert initial_lines
             assert initial_lines[0].startswith("宿主 › Session ")
-            assert any(
-                line.startswith(" " * 7 + "Workspace ") for line in initial_lines
-            )
+            assert any(line.startswith(" " * 7 + "Workspace ") for line in initial_lines)
             assert all(
-                line.startswith("宿主 › ") or line.startswith(" " * 7)
-                for line in initial_lines
+                line.startswith("宿主 › ") or line.startswith(" " * 7) for line in initial_lines
             )
             await pilot.pause()
             visible_rows = [
-                row
-                for row in range(log.size.height)
-                if log.render_line(row).text.strip()
+                row for row in range(log.size.height) if log.render_line(row).text.strip()
             ]
 
             assert app.theme == "textual-light"
@@ -405,9 +395,7 @@ async def test_short_conversation_bottom_anchors_and_long_log_auto_scrolls(
             model_lines = log.lines[before:]
             assert len(model_lines) > 1
             assert model_lines[0].text.startswith("  ▏ 模型 · ")
-            assert all(
-                line.text.startswith("  ▏        ") for line in model_lines[1:]
-            )
+            assert all(line.text.startswith("  ▏        ") for line in model_lines[1:])
             assert all(cell_len(line.text) <= width for line in model_lines)
             assert all(
                 line._segments[0].style is not None
@@ -554,18 +542,13 @@ async def test_changes_screen_is_fresh_complete_navigable_and_exactly_exportable
             assert "new-value-224" in rendered
             assert "first-test-line" not in rendered
             assert "…" not in rendered
-            assert not any(
-                line.text and set(line.text) <= {"─"}
-                for line in log.lines
-            )
+            assert not any(line.text and set(line.text) <= {"─"} for line in log.lines)
             assert log.max_lines is None
             assert log.auto_scroll is False
             await pilot.pause()
             await pilot.pause()
             assert log.scroll_y == 0
-            visible = "\n".join(
-                log.render_line(row).text for row in range(log.size.height)
-            )
+            visible = "\n".join(log.render_line(row).text for row in range(log.size.height))
             assert "src/core.py · 修改" in visible
             for metadata in (
                 "diff --git",
@@ -581,9 +564,7 @@ async def test_changes_screen_is_fresh_complete_navigable_and_exactly_exportable
             await pilot.pause()
             await pilot.pause()
             assert log.scroll_y > 0
-            visible = "\n".join(
-                log.render_line(row).text for row in range(log.size.height)
-            )
+            visible = "\n".join(log.render_line(row).text for row in range(log.size.height))
             assert "tests/test_core.py · 新增" in visible
             await pilot.press("enter")
             rendered = "\n".join(line.text for line in log.lines)
@@ -626,17 +607,12 @@ async def test_changes_screen_is_fresh_complete_navigable_and_exactly_exportable
 
 
 async def test_changes_screen_escapes_every_unsafe_terminal_category() -> None:
-    unsafe = (
-        "esc\x1b[31m\u2028rtl\u202eprivate\ue000"
-        "surrogate\ud800surrogateescape\udcff\u2029"
-    )
+    unsafe = "esc\x1b[31m\u2028rtl\u202eprivate\ue000surrogate\ud800surrogateescape\udcff\u2029"
     evidence = _patch_evidence(first_file_lines=1)
     first = evidence.diff.files[0]
     unsafe_file = replace(
         first,
-        lines=(
-            UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, unsafe),
-        ),
+        lines=(UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, unsafe),),
     )
     unsafe_diff = replace(
         evidence.diff,
@@ -685,9 +661,7 @@ async def test_changes_screen_prewraps_long_diff_lines_with_stable_indent() -> N
     first = evidence.diff.files[0]
     wrapped_file = replace(
         first,
-        lines=(
-            UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, body),
-        ),
+        lines=(UnifiedDiffLine(PatchLineKind.ADDITION, None, 7, body),),
     )
     wrapped_evidence = replace(
         evidence,
@@ -717,14 +691,10 @@ async def test_changes_screen_prewraps_long_diff_lines_with_stable_indent() -> N
                 break
 
         first_header = next(
-            index
-            for index, line in enumerate(log.lines)
-            if "src/core.py" in line.text
+            index for index, line in enumerate(log.lines) if "src/core.py" in line.text
         )
         second_header = next(
-            index
-            for index, line in enumerate(log.lines)
-            if "tests/test_core.py" in line.text
+            index for index, line in enumerate(log.lines) if "tests/test_core.py" in line.text
         )
         physical = log.lines[first_header + 1 : second_header]
         assert len(physical) > 1
@@ -732,9 +702,7 @@ async def test_changes_screen_prewraps_long_diff_lines_with_stable_indent() -> N
         assert all(line.cell_length <= available for line in physical)
         assert re.match(r"^\s{4}7 \+ ", physical[0].text)
         assert all(line.text.startswith(" " * 8) for line in physical[1:])
-        restored = physical[0].text[8:] + "".join(
-            line.text[8:] for line in physical[1:]
-        )
+        restored = physical[0].text[8:] + "".join(line.text[8:] for line in physical[1:])
         assert restored == body
         await pilot.press("escape")
 
@@ -764,9 +732,7 @@ async def test_changes_screen_fails_closed_without_exposing_exception_text() -> 
         rendered = "\n".join(line.text for line in log.lines)
         assert "patch-read-unavailable" in rendered
         assert "private artifact path" not in rendered
-        assert "返回后重试" in str(
-            screen.query_one("#changes-status", Static).content
-        )
+        assert "返回后重试" in str(screen.query_one("#changes-status", Static).content)
         await pilot.press("escape")
 
 
@@ -851,10 +817,10 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
     )
     model_content = "alpha\n\n\n\n\n\nbeta\n\n\ngamma"
     input_content = "long-input-content-" * 14
-    router = TaskConversationRole(
-        role="router",
-        agent_id="agent-router",
-        session_id="wf-session-router-" + "8" * 48,
+    investigator = TaskConversationRole(
+        role="investigator",
+        agent_id="agent-investigator",
+        session_id="wf-session-investigator-" + "8" * 48,
         turns_started=1,
         turns_completed=1,
         tool_calls=0,
@@ -883,7 +849,7 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
     )
     snapshot = TaskConversationSnapshot(
         task_id="task-full-conversation",
-        roles=(router, coder),
+        roles=(investigator, coder),
         observed_at=datetime.now(UTC),
     )
     screen = TaskConversationScreen(
@@ -907,21 +873,18 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
         rendered = "\n".join(rendered_lines)
         width = log.scrollable_content_region.width
 
-        router_header = next(line for line in log.lines if "router ─" in line.text)
-        coder_header = next(line for line in log.lines if "coder ─" in line.text)
-        assert router_header.cell_length == width
+        investigator_header = next(line for line in log.lines if "只读调查 ·" in line.text)
+        coder_header = next(line for line in log.lines if "主 Agent ─" in line.text)
+        assert investigator_header.cell_length == width
         assert coder_header.cell_length == width
-        assert router_header._segments[0].style is not None
-        assert router_header._segments[0].style.dim
-        assert not router_header._segments[0].style.reverse
+        assert investigator_header._segments[0].style is not None
+        assert investigator_header._segments[0].style.dim
+        assert not investigator_header._segments[0].style.reverse
         assert coder_header._segments[0].style is not None
         assert coder_header._segments[0].style.color == Color.parse("blue")
         assert coder_header._segments[0].style.bold
         assert not coder_header._segments[0].style.reverse
-        assert not any(
-            line.text.strip() and set(line.text.strip()) == {"─"}
-            for line in log.lines
-        )
+        assert not any(line.text.strip() and set(line.text.strip()) == {"─"} for line in log.lines)
 
         for index in range(20):
             assert f"工具 · operation-{index:02d}" in rendered
@@ -935,32 +898,24 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
         wrongly_indented = [
             line
             for line in rendered_lines
-            if ("▏ 工具 · " in line or "▏ 模型 · " in line)
-            and not line.startswith("  ▏ ")
+            if ("▏ 工具 · " in line or "▏ 模型 · " in line) and not line.startswith("  ▏ ")
         ]
         assert not wrongly_indented, wrongly_indented
         assert "模型自述" not in rendered
 
         alpha_index = next(
-            index
-            for index, line in enumerate(rendered_lines)
-            if "模型 · alpha" in line
+            index for index, line in enumerate(rendered_lines) if "模型 · alpha" in line
         )
         beta_index = next(
             index
             for index, line in enumerate(rendered_lines)
             if "beta" in line and index > alpha_index
         )
-        assert sum(
-            line.strip() == "▏"
-            for line in rendered_lines[alpha_index + 1 : beta_index]
-        ) == 1
-
-        input_index = next(
-            index
-            for index, line in enumerate(rendered_lines)
-            if "输入 · " in line
+        assert (
+            sum(line.strip() == "▏" for line in rendered_lines[alpha_index + 1 : beta_index]) == 1
         )
+
+        input_index = next(index for index, line in enumerate(rendered_lines) if "输入 · " in line)
         input_lines = rendered_lines[input_index:]
         first_prefix = "    输入 · "
         continuation = " " * cell_len(first_prefix)
@@ -979,19 +934,15 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
         assert title_text.endswith("打开时快照 · 不实时 tail")
         assert cell_len(title_text) == title.content_region.width
         assert not list(screen.query("#task-conversation-status"))
-        visible = "\n".join(
-            log.render_line(row).text for row in range(log.size.height)
-        )
-        assert "coder" in visible
+        visible = "\n".join(log.render_line(row).text for row in range(log.size.height))
+        assert "主 Agent" in visible
 
         await pilot.resize_terminal(44, 40)
         for _ in range(20):
             await pilot.pause()
             narrow_width = log.scrollable_content_region.width
             narrow_headers = [
-                line
-                for line in log.lines
-                if line.text.startswith(("▸ router", "▾ coder"))
+                line for line in log.lines if line.text.startswith(("▸ 只读调查", "▾ 主 Agent"))
             ]
             if len(narrow_headers) == 2 and all(
                 line.cell_length == narrow_width for line in narrow_headers
@@ -1000,7 +951,7 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
         assert len(narrow_headers) == 2
         assert all(line.cell_length == narrow_width for line in narrow_headers)
         narrow_lines = list(log.lines)
-        router_header_index = narrow_lines.index(narrow_headers[0])
+        investigator_header_index = narrow_lines.index(narrow_headers[0])
         coder_header_index = narrow_lines.index(narrow_headers[1])
         session_index = next(
             index
@@ -1010,20 +961,18 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
             )
             if short_session_id in line.text
         )
-        router_header_rows = narrow_lines[router_header_index:coder_header_index]
+        investigator_header_rows = narrow_lines[investigator_header_index:coder_header_index]
         coder_header_rows = narrow_lines[coder_header_index:session_index]
-        assert all(line.cell_length <= narrow_width for line in router_header_rows)
+        assert all(line.cell_length <= narrow_width for line in investigator_header_rows)
         assert all(line.cell_length <= narrow_width for line in coder_header_rows)
-        router_facts = re.sub(
-            r"\s+", " ", "".join(line.text for line in router_header_rows)
+        investigator_facts = re.sub(
+            r"\s+", " ", "".join(line.text for line in investigator_header_rows)
         )
-        coder_facts = re.sub(
-            r"\s+", " ", "".join(line.text for line in coder_header_rows)
-        )
-        assert "1/1 turns" in router_facts
-        assert "0 工具" in router_facts
-        assert "120 tok" in router_facts
-        assert "8 秒前" in router_facts
+        coder_facts = re.sub(r"\s+", " ", "".join(line.text for line in coder_header_rows))
+        assert "1/1 turns" in investigator_facts
+        assert "0 工具" in investigator_facts
+        assert "120 tok" in investigator_facts
+        assert "8 秒前" in investigator_facts
         assert "1/1 turns" in coder_facts
         assert "20 工具" in coder_facts
         assert "9876 tok" in coder_facts
@@ -1039,9 +988,7 @@ async def test_task_conversation_shows_every_event_with_r4_hierarchy() -> None:
 
 
 async def test_task_conversation_keeps_more_than_two_thousand_rows_scrollable() -> None:
-    messages = tuple(
-        ("model", f"retained-message-{index:04d}") for index in range(2_105)
-    )
+    messages = tuple(("model", f"retained-message-{index:04d}") for index in range(2_105))
     role = TaskConversationRole(
         role="coder",
         agent_id="agent-coder",
@@ -1087,9 +1034,7 @@ async def test_task_conversation_keeps_more_than_two_thousand_rows_scrollable() 
         log.focus()
         await pilot.press("end")
         await pilot.wait_for_scheduled_animations()
-        visible = "\n".join(
-            log.render_line(row).text for row in range(log.size.height)
-        )
+        visible = "\n".join(log.render_line(row).text for row in range(log.size.height))
         assert "retained-message-2104" in visible
 
         await pilot.press("escape")
@@ -1112,6 +1057,7 @@ def test_footer_advertises_only_implemented_global_actions() -> None:
         "ctrl+x": ("context", "上下文"),
         "f2": ("settings", "配置"),
         "f4": ("memory_panel", "项目记忆"),
+        "f6": ("optimization", "后台优化"),
         "ctrl+o": ("sessions", "历史对话"),
     }
     # Every advertised action must really exist on the app.
@@ -1150,9 +1096,7 @@ async def test_identity_copy_falls_back_to_an_explicit_file(
             await pilot.press("s")
             fallback_path = app.screen.fallback_path
             assert fallback_path is not None
-            assert fallback_path.read_text(encoding="utf-8").strip() == (
-                opened.session.session_id
-            )
+            assert fallback_path.read_text(encoding="utf-8").strip() == (opened.session.session_id)
             assert str(fallback_path) in str(
                 app.screen.query_one("#identity-status", Static).content
             )
@@ -1398,9 +1342,7 @@ class _ProductHost:
 class _RefreshClock:
     def __init__(self) -> None:
         self.now = 0.0
-        self.waiters: asyncio.Queue[tuple[float, asyncio.Future[None]]] = (
-            asyncio.Queue()
-        )
+        self.waiters: asyncio.Queue[tuple[float, asyncio.Future[None]]] = asyncio.Queue()
 
     def monotonic(self) -> float:
         return self.now
@@ -1536,9 +1478,7 @@ async def test_product_view_periodically_refreshes_sqlite_without_a_feed_notific
     )
     try:
         async with app.run_test(size=(110, 30)) as pilot:
-            assert "durable 开 ✓" in str(
-                app.query_one("#product-state", Static).content
-            )
+            assert "durable 开 ✓" in str(app.query_one("#product-state", Static).content)
             await pilot.press("ctrl+b")
             assert not app.query_one("#product-column").display
             await durable_store.append(
@@ -1599,9 +1539,7 @@ async def test_initial_observation_failure_is_visible_and_periodically_recovers(
             assert app._observation is not None
             assert app._observation_error is None
             assert "product-observation-unavailable" not in recovered
-            assert "任务已打开" in str(
-                app.query_one("#gate-message", Static).content
-            )
+            assert "任务已打开" in str(app.query_one("#gate-message", Static).content)
             await pilot.press("ctrl+q")
     finally:
         await runtime.dispose()
@@ -1736,9 +1674,7 @@ async def test_concurrent_product_refreshes_cannot_overwrite_newer_facts(
             observer.first_release.set()
             await asyncio.gather(first, second)
             assert app._observation is fresh
-            assert "审批 ⋯" in str(
-                app.query_one("#product-state", Static).content
-            )
+            assert "审批 ⋯" in str(app.query_one("#product-state", Static).content)
             await pilot.press("ctrl+q")
     finally:
         observer.first_release.set()
@@ -1770,7 +1706,7 @@ async def test_line_adapter_passes_the_same_frozen_start_identity(
     await adapter.aclose()
 
 
-async def test_real_auto_product_host_reaches_approval_through_the_tui(
+async def test_real_multi_product_host_reaches_approval_through_the_tui(
     tmp_path: Path,
 ) -> None:
     source, _base = build_source_repository(tmp_path / "source")
@@ -1784,7 +1720,7 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
         target,
         LocalArtifactCas(tmp_path / "cas"),
         actions,
-        RequestedTaskMode.AUTO,
+        RequestedTaskMode.MULTI,
         line_adapter=False,
     )
     chat_requests: list[ModelRequest] = []
@@ -1810,9 +1746,7 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             proposal_turn = app._operation_task
             if proposal_turn is not None:
                 await asyncio.wait_for(asyncio.shield(proposal_turn), timeout=5)
-            assert "已提议" in str(
-                app.query_one("#gate-message", Static).content
-            )
+            assert "已提议" in str(app.query_one("#gate-message", Static).content)
             app.query_one("#chat-input", Input).value = "confirm controlled work"
             await pilot.press("enter")
             confirmation_turn = app._operation_task
@@ -1828,10 +1762,7 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             await pilot.press("enter")
             await pilot.pause()
             starting_panel = str(app.query_one("#product-state", Static).content)
-            assert (
-                "START 已被宿主接受" in starting_panel
-                or "durable 开 ✓" in starting_panel
-            )
+            assert "START 已被宿主接受" in starting_panel or "durable 开 ✓" in starting_panel
             operation = app._operation_task
             assert operation is not None
             try:
@@ -1844,12 +1775,14 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             panel = str(app.query_one("#product-state", Static).content)
             assert app.query_one("#gate-primary", Button).display, panel
             assert str(app.query_one("#gate-primary", Button).label) == "批准"
-            assert "auto → multi" in panel
+            assert "multi" in panel
             assert "证据" in panel
-            assert sum(
-                bool(line.strip()) and set(line.strip()) == {"─"}
-                for line in panel.splitlines()
-            ) == 3
+            assert (
+                sum(
+                    bool(line.strip()) and set(line.strip()) == {"─"} for line in panel.splitlines()
+                )
+                == 3
+            )
             assert PRODUCT_TASK_AWAITING in panel
             assert git("status", "--porcelain", cwd=source) == ""
             assert chat_requests
@@ -1877,35 +1810,29 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             await pilot.press("ctrl+t")
             assert isinstance(app.screen, TaskConversationScreen)
             await pilot.pause()
-            conversation_log = app.screen.query_one(
-                "#task-conversation-log", RichLog
-            )
+            conversation_log = app.screen.query_one("#task-conversation-log", RichLog)
             for _ in range(20):
                 if conversation_log.lines:
                     break
                 await pilot.pause()
             rendered_roles = "\n".join(line.text for line in conversation_log.lines)
-            for role in ("router", "parent", "reviewer", "coder"):
+            for role in ("主 Agent", "只读调查"):
                 assert role in rendered_roles
             assert "模型 ·" in rendered_roles
             assert "模型自述" not in rendered_roles
             assert "▏" in rendered_roles
             assert "│" not in rendered_roles
             sequenced_tools = [
-                line
-                for line in conversation_log.lines
-                if re.search(r"\d+–\d+$", line.text)
+                line for line in conversation_log.lines if re.search(r"\d+–\d+$", line.text)
             ]
             assert sequenced_tools
             sequence_widths = [cell_len(line.text) for line in sequenced_tools]
             assert all(
-                cell_len(line.text)
-                == conversation_log.scrollable_content_region.width
+                cell_len(line.text) == conversation_log.scrollable_content_region.width
                 for line in sequenced_tools
             ), (sequence_widths, conversation_log.scrollable_content_region.width)
             assert all(
-                line._segments[-1].style is not None
-                and line._segments[-1].style.dim
+                line._segments[-1].style is not None and line._segments[-1].style.dim
                 for line in sequenced_tools
             )
             wide_sequence_count = len(sequenced_tools)
@@ -1913,22 +1840,15 @@ async def test_real_auto_product_host_reaches_approval_through_the_tui(
             for _ in range(20):
                 await pilot.pause()
                 sequenced_tools = [
-                    line
-                    for line in conversation_log.lines
-                    if re.search(r"\d+–\d+$", line.text)
+                    line for line in conversation_log.lines if re.search(r"\d+–\d+$", line.text)
                 ]
                 if len(sequenced_tools) < wide_sequence_count:
                     break
             assert len(sequenced_tools) < wide_sequence_count
             available_width = conversation_log.scrollable_content_region.width
-            indented_message_lines = [
-                line for line in conversation_log.lines if "▏" in line.text
-            ]
+            indented_message_lines = [line for line in conversation_log.lines if "▏" in line.text]
             assert indented_message_lines
-            assert all(
-                line.cell_length <= available_width
-                for line in indented_message_lines
-            )
+            assert all(line.cell_length <= available_width for line in indented_message_lines)
             await pilot.press("escape")
             await pilot.press("ctrl+q")
     finally:
@@ -2050,9 +1970,7 @@ async def test_model_confirmation_cannot_bypass_the_tui_start_gesture(
             confirmation.value = "start"
             await pilot.press("enter")
             assert host.started_requests == []
-            assert "请完整输入 START" in str(
-                app.query_one("#confirmation-label", Static).content
-            )
+            assert "请完整输入 START" in str(app.query_one("#confirmation-label", Static).content)
             confirmation.value = "START"
             await pilot.press("enter")
             await asyncio.wait_for(host.observer_started.wait(), timeout=0.5)
@@ -2068,12 +1986,8 @@ async def test_model_confirmation_cannot_bypass_the_tui_start_gesture(
             assert "START 已被宿主接受 · 等待返回" in str(
                 app.query_one("#product-state", Static).content
             )
-            assert "product/task-opened" in str(
-                app.query_one("#product-state", Static).content
-            )
-            assert "19 秒前" in str(
-                app.query_one("#product-state", Static).content
-            )
+            assert "product/task-opened" in str(app.query_one("#product-state", Static).content)
+            assert "19 秒前" in str(app.query_one("#product-state", Static).content)
             assert app.query_one("#chat-input", Input).disabled
             refresh_clock.now = 24.0
             await refresh_clock.advance_until(1.0)
@@ -2146,9 +2060,7 @@ async def test_new_confirmed_proposal_replaces_a_terminal_task_view(
     )
     try:
         async with app.run_test(size=(110, 34)) as pilot:
-            assert "任务已记录失败" in str(
-                app.query_one("#product-state", Static).content
-            )
+            assert "任务已记录失败" in str(app.query_one("#product-state", Static).content)
 
             app.query_one("#chat-input", Input).value = "propose the next task"
             await pilot.press("enter")
@@ -2263,9 +2175,7 @@ async def test_running_start_keeps_typed_cancel_reachable(tmp_path: Path) -> Non
             confirmation.value = "cancel"
             await pilot.press("enter")
             assert host.commands == []
-            assert "请完整输入 CANCEL" in str(
-                app.query_one("#confirmation-label", Static).content
-            )
+            assert "请完整输入 CANCEL" in str(app.query_one("#confirmation-label", Static).content)
             confirmation.value = "CANCEL"
             await pilot.press("enter")
             await asyncio.wait_for(host.command_started.wait(), timeout=2)
@@ -2334,9 +2244,7 @@ async def test_real_running_product_is_cancelled_through_the_existing_owner(
                 if start.display and str(start.label) == "START":
                     break
             else:
-                raise AssertionError(
-                    str(app.query_one("#product-state", Static).content)
-                )
+                raise AssertionError(str(app.query_one("#product-state", Static).content))
 
             start.press()
             confirmation = app.query_one("#confirmation-input", Input)
@@ -2352,9 +2260,7 @@ async def test_real_running_product_is_cancelled_through_the_existing_owner(
                 if cancel.display and str(cancel.label) == "取消任务":
                     break
             else:
-                raise AssertionError(
-                    str(app.query_one("#product-state", Static).content)
-                )
+                raise AssertionError(str(app.query_one("#product-state", Static).content))
 
             task_id = app._task_id
             assert task_id is not None
@@ -2894,9 +2800,7 @@ async def test_context_detail_rows_do_not_leak_style_into_later_rows(
                 if log.lines:
                     break
             heading = next(
-                index
-                for index, line in enumerate(log.lines)
-                if line.text.strip() == "当前投影"
+                index for index, line in enumerate(log.lines) if line.text.strip() == "当前投影"
             )
             following = log.lines[heading + 1]
             # The row after a bold heading must not inherit bold.

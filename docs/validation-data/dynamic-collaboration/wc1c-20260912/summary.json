@@ -1,0 +1,54 @@
+{
+  "stage": "WC-1C",
+  "acceptance": "failed-no-delegation",
+  "trials": 1,
+  "real_calls": 7,
+  "real_child_calls": 0,
+  "model": "qwen-plus",
+  "network": "direct",
+  "retries": 0,
+  "provider_failures": [],
+  "tokens": {
+    "input_tokens": 22107,
+    "output_tokens": 1679,
+    "quality": "exact",
+    "total_tokens": 23786
+  },
+  "wall_ms": 73375,
+  "product_status": "completed",
+  "functional_cases": 11,
+  "functional_verification": "passed",
+  "decision": {
+    "action": "local",
+    "child": null,
+    "main_work": "Implement recommend(stock, target, pack, blocked=False) in replenishment.py per rules.md lines 1–8: validate inputs (raise ValueError on negative stock/target or non-positive pack), return 0 if blocked or stock >= target, else return smallest multiple of pack >= (target - stock). Preserve interface. Then run python -m py_compile replenishment.py and any available unit checks (e.g., pytest -xvs test_replenishment.py if present); report exact command outputs and success/failure.",
+    "reason": "Full rules.md content (lines 1–8) is already available and verified via prior read_file output; no missing evidence requires delegation. All constraints and behavior are explicit and sufficient to implement and verify locally."
+  },
+  "decision_locator": "session:wf-session-7b6d610c8d6711f2f091700f7ee5939b850468d06b5d75e68bdbab1c20b60f77@41",
+  "assistant_count": 0,
+  "reports_dispatched": 0,
+  "budget": {
+    "accounts": 2,
+    "accounts_closed": 2,
+    "charged_steps": 7,
+    "charged_tool_calls": 6,
+    "child_reservations": 1,
+    "child_reservations_terminal": 1,
+    "converged": true,
+    "settled_tokens": 23786,
+    "usage_reservations": 8,
+    "usage_reservations_terminal": 8
+  },
+  "workspaces": {
+    "converged": true,
+    "live": 0,
+    "quarantined": 0,
+    "released": 2,
+    "workspaces": 2
+  },
+  "requests_replayed": 9,
+  "original_database_unchanged": true,
+  "replay_note": "7 real main calls and 2 scripted evaluation-control requests; no real assistant was called",
+  "next_stage_authorized": false,
+  "interpretation": "Explicit delegation requirement reached the decision request; the model chose local after reading the rules. Dispatch/report path was not exercised; no retry or prompt change."
+}

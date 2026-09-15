@@ -17,7 +17,6 @@ from product_fixtures import (
     profile,
     registry,
     resolved_role,
-    resolved_router,
     verification_plan,
 )
 
@@ -64,8 +63,14 @@ async def test_one_explicit_id_resolves_to_one_complete_profile() -> None:
     assert resolved.profile_id == PROFILE_ID
     assert resolved.profile == profile()
     assert resolved.verification_plan == verification_plan()
-    assert set(resolved.roles) == set(ProductRole)
-    assert sorted(assemblies.calls) == ["coder", "parent", "reviewer", "router"]
+    assert set(resolved.roles) == {ProductRole.CODER, ProductRole.INVESTIGATOR}
+    assert "delegate_investigation" not in resolved.assembly(ProductRole.CODER).tool_ids
+    assert "delegate_investigation" in resolved.multi.tool_ids
+    assert sorted(assemblies.calls) == [
+        "coder",
+        "coder",
+        "investigator",
+    ]
 
 
 async def test_resolving_twice_produces_the_same_digests() -> None:
@@ -73,7 +78,6 @@ async def test_resolving_twice_produces_the_same_digests() -> None:
     first = await profiles.resolve(PROFILE_ID)
     second = await profiles.resolve(PROFILE_ID)
     assert first.role_assembly_digest == second.role_assembly_digest
-    assert first.router_assembly_digest == second.router_assembly_digest
     assert first.verification_plan_digest == second.verification_plan_digest
 
 
@@ -91,9 +95,7 @@ async def test_there_is_no_default_profile() -> None:
 def test_a_repeated_profile_id_is_refused_rather_than_overwritten() -> None:
     """A mapping cannot express this, which is why the registry takes pairs."""
 
-    binding = ProductProfileBinding(
-        profile=profile(), verification_plan=verification_plan()
-    )
+    binding = ProductProfileBinding(profile=profile(), verification_plan=verification_plan())
     with pytest.raises(ProductProfileError) as caught:
         ProductProfileRegistry(
             ((PROFILE_ID, binding), (PROFILE_ID, binding)),
@@ -107,9 +109,7 @@ def test_a_plan_from_another_profile_cannot_be_paired_with_this_one() -> None:
         profile=profile(), verification_plan=verification_plan(plan_id="other-plan")
     )
     with pytest.raises(ProductProfileError) as caught:
-        ProductProfileRegistry(
-            ((PROFILE_ID, binding),), assemblies=RecordingAssemblies()
-        )
+        ProductProfileRegistry(((PROFILE_ID, binding),), assemblies=RecordingAssemblies())
     assert caught.value.code == "product-verification-plan-mismatch"
 
 
@@ -124,7 +124,7 @@ def test_an_incomplete_or_ill_typed_profile_never_becomes_a_registry_entry() -> 
         replace(base, coder=replace(base.coder, preset="")),
         replace(base, coder=replace(base.coder, capability_grants=["a"])),  # type: ignore[arg-type]
         replace(base, coder=replace(base.coder, capability_grants=("a", "a"))),
-        replace(base, router=replace(base.router, budget=None)),  # type: ignore[arg-type]
+        replace(base, investigator=replace(base.investigator, budget=None)),  # type: ignore[arg-type]
         replace(base, default_mode="auto"),  # type: ignore[arg-type]
     ):
         with pytest.raises(ProductProfileError):
@@ -147,8 +147,8 @@ def test_profile_budgets_use_the_ledger_domain_limit_contract() -> None:
     base = profile()
     too_large = replace(
         base,
-        router=replace(
-            base.router,
+        investigator=replace(
+            base.investigator,
             budget=limits(max_tokens=MAX_BUDGET_VALUE + 1),
         ),
     )
@@ -188,7 +188,6 @@ async def test_a_registry_rebinding_changes_the_assembly_digest_alone() -> None:
     after = await registry(assemblies=rebound).resolve(PROFILE_ID)
     assert after.profile.digest == before.profile.digest
     assert after.role_assembly_digest != before.role_assembly_digest
-    assert after.router_assembly_digest == before.router_assembly_digest
 
 
 def test_a_reordered_composition_is_a_different_composition() -> None:
@@ -199,15 +198,15 @@ def test_a_reordered_composition_is_a_different_composition() -> None:
     assert agent_assembly_digest(forward) != agent_assembly_digest(reversed_chain)
 
 
-def test_a_role_digest_needs_all_three_roles() -> None:
-    """The binding is made before a mode is chosen, so all three participate."""
+def test_a_role_digest_requires_both_execution_templates() -> None:
+    """The binding is made before a mode is chosen, so both templates participate."""
 
     with pytest.raises(ProductProfileError) as caught:
         role_assembly_digest(
             {
                 role: resolved_role(role)
                 for role in ProductRole
-                if role is not ProductRole.REVIEWER
+                if role is not ProductRole.INVESTIGATOR
             }
         )
     assert caught.value.code == "product-role-assembly-missing"
@@ -218,10 +217,8 @@ def test_a_role_digest_needs_all_three_roles() -> None:
 
 async def test_write_authority_comes_from_the_slot_not_the_resolver() -> None:
     resolved = await registry().resolve(PROFILE_ID)
-    assert resolved.assembly(ProductRole.CODER).workspace_access is (
-        WorkspaceAccess.WRITABLE
-    )
-    for role in (ProductRole.PARENT, ProductRole.REVIEWER):
+    assert resolved.assembly(ProductRole.CODER).workspace_access is (WorkspaceAccess.WRITABLE)
+    for role in (ProductRole.INVESTIGATOR,):
         assert resolved.assembly(role).workspace_access is WorkspaceAccess.READ_ONLY
 
     writable_reviewer = RecordingAssemblies(
@@ -230,7 +227,7 @@ async def test_write_authority_comes_from_the_slot_not_the_resolver() -> None:
                 role,
                 access=(
                     WorkspaceAccess.WRITABLE
-                    if role is ProductRole.REVIEWER
+                    if role is ProductRole.INVESTIGATOR
                     else role.workspace_access
                 ),
             )
@@ -238,27 +235,7 @@ async def test_write_authority_comes_from_the_slot_not_the_resolver() -> None:
         }
     )
     assert (
-        await refuse(registry(assemblies=writable_reviewer))
-        == "product-assembly-access-mismatch"
-    )
-
-
-async def test_the_router_is_granted_no_tool_and_no_capability() -> None:
-    """This is what makes "the router holds nothing" a checked fact."""
-
-    with_tool = RecordingAssemblies(router=resolved_router(tools=("read-file",)))
-    assert await refuse(registry(assemblies=with_tool)) == "product-router-tool-granted"
-    with_grant = RecordingAssemblies(router=resolved_router(grants=("read-workspace",)))
-    assert (
-        await refuse(registry(assemblies=with_grant))
-        == "product-assembly-grants-mismatch"
-    )
-    writable = RecordingAssemblies(
-        router=resolved_router(access=WorkspaceAccess.WRITABLE)
-    )
-    assert (
-        await refuse(registry(assemblies=writable))
-        == "product-assembly-access-mismatch"
+        await refuse(registry(assemblies=writable_reviewer)) == "product-assembly-access-mismatch"
     )
 
 
@@ -266,76 +243,49 @@ async def test_a_resolution_must_answer_the_question_it_was_asked() -> None:
     """A resolver says what a preset *is*, never which preset it was asked about."""
 
     wrong_preset = RecordingAssemblies(
-        roles={
-            role: resolved_role(role, preset="preset-other")
-            for role in ProductRole
-        }
+        roles={role: resolved_role(role, preset="preset-other") for role in ProductRole}
     )
-    assert (
-        await refuse(registry(assemblies=wrong_preset))
-        == "product-assembly-wrong-preset"
-    )
+    assert await refuse(registry(assemblies=wrong_preset)) == "product-assembly-wrong-preset"
     wrong_model = RecordingAssemblies(
         roles={role: resolved_role(role, model_id="other-model") for role in ProductRole}
     )
-    assert (
-        await refuse(registry(assemblies=wrong_model))
-        == "product-assembly-model-mismatch"
-    )
+    assert await refuse(registry(assemblies=wrong_model)) == "product-assembly-model-mismatch"
     wrong_grants = RecordingAssemblies(
         roles={role: resolved_role(role, grants=("write-anything",)) for role in ProductRole}
     )
-    assert (
-        await refuse(registry(assemblies=wrong_grants))
-        == "product-assembly-grants-mismatch"
-    )
+    assert await refuse(registry(assemblies=wrong_grants)) == "product-assembly-grants-mismatch"
     not_an_assembly = RecordingAssemblies(
         roles=dict.fromkeys(ProductRole, object())  # type: ignore[arg-type]
     )
-    assert await refuse(registry(assemblies=not_an_assembly)) == (
-        "product-assembly-invalid"
-    )
+    assert await refuse(registry(assemblies=not_an_assembly)) == ("product-assembly-invalid")
 
 
 async def test_a_composition_list_is_bounded_and_duplicate_free() -> None:
     duplicated = RecordingAssemblies(
-        roles={
-            role: resolved_role(role, tools=("read-file", "read-file"))
-            for role in ProductRole
-        }
+        roles={role: resolved_role(role, tools=("read-file", "read-file")) for role in ProductRole}
     )
-    assert (
-        await refuse(registry(assemblies=duplicated)) == "product-assembly-tool-invalid"
-    )
+    assert await refuse(registry(assemblies=duplicated)) == "product-assembly-tool-invalid"
     listed = RecordingAssemblies(
         roles={
             role: replace(resolved_role(role), prompt_ids=["prompt-role"])  # type: ignore[arg-type]
             for role in ProductRole
         }
     )
-    assert (
-        await refuse(registry(assemblies=listed)) == "product-assembly-prompt-invalid"
-    )
+    assert await refuse(registry(assemblies=listed)) == "product-assembly-prompt-invalid"
 
 
 # ---------------------------------------------------------- the two topologies
 
 
-def test_single_is_a_shorter_workflow_and_not_a_shortcut_past_one() -> None:
-    single = product_workflow_definition(
-        ResolvedTaskMode.SINGLE, promotion_target_id=TARGET
-    )
-    multi = product_workflow_definition(
-        ResolvedTaskMode.MULTI, promotion_target_id=TARGET
-    )
+def test_both_modes_keep_the_same_verification_and_human_barrier() -> None:
+    single = product_workflow_definition(ResolvedTaskMode.SINGLE, promotion_target_id=TARGET)
+    multi = product_workflow_definition(ResolvedTaskMode.MULTI, promotion_target_id=TARGET)
     assert [node.node_id for node in single.nodes] == [
         product_role_node_id(ProductRole.CODER),
         PRODUCT_VERIFICATION_NODE,
         PRODUCT_APPROVAL_NODE,
     ]
     assert [node.node_id for node in multi.nodes] == [
-        product_role_node_id(ProductRole.PARENT),
-        product_role_node_id(ProductRole.REVIEWER),
         product_role_node_id(ProductRole.CODER),
         PRODUCT_VERIFICATION_NODE,
         PRODUCT_APPROVAL_NODE,
@@ -350,19 +300,6 @@ def test_single_is_a_shorter_workflow_and_not_a_shortcut_past_one() -> None:
         assert approval.predecessors == (PRODUCT_VERIFICATION_NODE,)
 
 
-def test_the_reviewer_runs_before_the_coder_reads_its_report() -> None:
-    multi = product_workflow_definition(
-        ResolvedTaskMode.MULTI, promotion_target_id=TARGET
-    )
-    by_id = {node.node_id: node for node in multi.nodes}
-    assert by_id[product_role_node_id(ProductRole.REVIEWER)].predecessors == (
-        product_role_node_id(ProductRole.PARENT),
-    )
-    assert by_id[product_role_node_id(ProductRole.CODER)].predecessors == (
-        product_role_node_id(ProductRole.REVIEWER),
-    )
-
-
 def test_only_the_one_role_that_may_write_captures_anything() -> None:
     for mode in (ResolvedTaskMode.SINGLE, ResolvedTaskMode.MULTI):
         definition = product_workflow_definition(mode, promotion_target_id=TARGET)
@@ -373,7 +310,8 @@ def test_only_the_one_role_that_may_write_captures_anything() -> None:
         }
         assert capturing == {product_role_node_id(ProductRole.CODER)}
         writable = {
-            role for role in PRODUCT_MODE_ROLES[mode]
+            role
+            for role in PRODUCT_MODE_ROLES[mode]
             if role.workspace_access is WorkspaceAccess.WRITABLE
         }
         assert writable == {ProductRole.CODER}
@@ -388,9 +326,7 @@ def test_neither_mode_uses_map_or_join() -> None:
 
 
 def test_a_definition_carries_binding_ids_rather_than_values() -> None:
-    definition = product_workflow_definition(
-        ResolvedTaskMode.MULTI, promotion_target_id=TARGET
-    )
+    definition = product_workflow_definition(ResolvedTaskMode.MULTI, promotion_target_id=TARGET)
     for node in definition.nodes:
         if type(node) is not AgentTaskNode:
             continue
@@ -400,15 +336,9 @@ def test_a_definition_carries_binding_ids_rather_than_values() -> None:
 
 
 def test_the_definition_hash_is_deterministic_and_names_the_target() -> None:
-    first = product_definition_hash(
-        ResolvedTaskMode.SINGLE, promotion_target_id=TARGET
-    )
-    assert first == product_definition_hash(
-        ResolvedTaskMode.SINGLE, promotion_target_id=TARGET
-    )
-    assert first != product_definition_hash(
-        ResolvedTaskMode.MULTI, promotion_target_id=TARGET
-    )
+    first = product_definition_hash(ResolvedTaskMode.SINGLE, promotion_target_id=TARGET)
+    assert first == product_definition_hash(ResolvedTaskMode.SINGLE, promotion_target_id=TARGET)
+    assert first != product_definition_hash(ResolvedTaskMode.MULTI, promotion_target_id=TARGET)
     assert first != product_definition_hash(
         ResolvedTaskMode.SINGLE, promotion_target_id="other-target"
     )

@@ -1,0 +1,104 @@
+{
+  "format": 1,
+  "date": "2026-09-11",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "network": "direct",
+  "model_retry_attempts": 1,
+  "semantic_judge_calls": 0,
+  "baseline_trials": 0,
+  "production_decision": "reject-all-candidates-and-restore-original-guidance",
+  "rounds": [
+    {
+      "round": 1,
+      "change": "optional-decomposition-tool-description",
+      "separable_task_success": true,
+      "coupled_task_success": false,
+      "simple_task_success": true,
+      "delegate_succeeded": 0,
+      "real_provider_calls": 24
+    },
+    {
+      "round": 2,
+      "change": "conditional-action-tool-description",
+      "separable_task_success": true,
+      "coupled_task_success": true,
+      "simple_task_success": true,
+      "delegate_succeeded": 0,
+      "real_provider_calls": 25
+    },
+    {
+      "round": 3,
+      "change": "shared-guidance-in-adaptive-system-and-tool-description",
+      "separable_task_success": true,
+      "coupled_task_success": true,
+      "simple_task_success": true,
+      "delegate_succeeded": 0,
+      "real_provider_calls": 27
+    },
+    {
+      "round": 4,
+      "change": "explicit-classification-and-next-action-rule",
+      "separable_task_success": true,
+      "coupled_task_success": true,
+      "simple_task_success": true,
+      "delegate_succeeded": 0,
+      "real_provider_calls": 22
+    },
+    {
+      "round": 5,
+      "change": "adaptive-task-message-nudge-plus-shared-rule",
+      "separable_task_success": false,
+      "coupled_task_success": false,
+      "simple_task_success": true,
+      "delegate_succeeded": 0,
+      "real_provider_calls": 23
+    }
+  ],
+  "aggregate": {
+    "product_trials": 15,
+    "real_provider_calls": 121,
+    "main_calls": 121,
+    "child_calls": 0,
+    "delegate_succeeded": 0,
+    "collect_succeeded": 0,
+    "successful_model_attempts_including_local_requester": 151,
+    "local_call_cap_failures_without_provider_call": 2,
+    "completed_call_usage": {
+      "input_tokens": 923978,
+      "output_tokens": 16467,
+      "total_tokens": 940445,
+      "quality": "exact"
+    },
+    "sessions_reopened": 45,
+    "requests_replayed": 153,
+    "request_replay_errors": 0,
+    "invariant_errors": 0,
+    "budget_converged_all": true,
+    "live_workspaces_all": 0
+  },
+  "input_encoding_check": {
+    "dataset_utf8_valid": true,
+    "parsed_requirement_unicode_valid": true,
+    "event_requirement_replacement_character_count": 0,
+    "model_rephrased_both_topics": true,
+    "conclusion": "console-rendering-only-no-production-encoding-change"
+  },
+  "conclusions": {
+    "prompt_only_natural_delegation_proved": false,
+    "simple_task_overdelegation_observed": false,
+    "original_delegate_guidance_restored": true,
+    "single_default_changed": false,
+    "automatic_adoption_performed": false,
+    "next_owner": "typed-adaptive-decomposition-decision-before-task-execution"
+  },
+  "limits": {
+    "statistical_significance": "not-claimed",
+    "semantic_judge": "not-run",
+    "full_pytest": "not-run",
+    "l2_l4": "not-run",
+    "wheel": "not-run",
+    "release": "not-run",
+    "commit": "not-authorized"
+  }
+}

@@ -21,6 +21,7 @@ from traceh.budgets.errors import (
     BudgetProtocolError,
     BudgetReservationNotFoundError,
     BudgetReservationStateError,
+    BudgetUsageOverageError,
     BudgetWriteError,
 )
 from traceh.budgets.events import BUDGET_LEDGER_STREAM
@@ -49,6 +50,7 @@ __all__ = [
     "BudgetContinuationRuntime",
     "BudgetEnforcement",
     "BudgetExhaustedError",
+    "BudgetUsageOverageError",
     "BudgetInputError",
     "BudgetLedger",
     "BudgetLedgerConflictError",

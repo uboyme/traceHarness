@@ -128,6 +128,7 @@ def _inputs(template):
     variants = template.options.variants
     _require(
         len(variants) == 2
+        and doc.data["comparison"]["kind"] == "text_candidate"
         and [v.role for v in variants] == ["baseline", "candidate"]
         and all(v.patch is None for v in variants),
         "optimization-paired-template-required",

@@ -1,0 +1,144 @@
+{
+  "format": 1,
+  "outcomes": [
+    {
+      "task_success": true,
+      "error": null,
+      "product_status": "completed",
+      "investigations": [],
+      "collaboration": {
+        "available_reports": 0,
+        "identical_work_extra_deliveries": 0,
+        "identical_work_groups": 0,
+        "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+        "observed_peak_active_turns": 1,
+        "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+        "reports_dispatched_to_parent": 0
+      },
+      "chain_observation": "not-exercised",
+      "semantic_review": "pending",
+      "report_use_review": "not-observed",
+      "collaboration_value": "unestablished",
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 155601,
+        "output_tokens": 1729,
+        "quality": "exact",
+        "total_tokens": 157330
+      },
+      "provider_failure_categories": [],
+      "scenario": "parallel-investigation",
+      "real_calls": 13,
+      "provider_calls_by_role": {
+        "main": 13
+      },
+      "local_call_cap": false
+    },
+    {
+      "task_success": true,
+      "error": null,
+      "product_status": "completed",
+      "investigations": [],
+      "collaboration": {
+        "available_reports": 0,
+        "identical_work_extra_deliveries": 0,
+        "identical_work_groups": 0,
+        "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+        "observed_peak_active_turns": 1,
+        "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+        "reports_dispatched_to_parent": 0
+      },
+      "chain_observation": "not-exercised",
+      "semantic_review": "pending",
+      "report_use_review": "not-observed",
+      "collaboration_value": "unestablished",
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 98913,
+        "output_tokens": 2257,
+        "quality": "exact",
+        "total_tokens": 101170
+      },
+      "provider_failure_categories": [],
+      "scenario": "dependent-investigation",
+      "real_calls": 13,
+      "provider_calls_by_role": {
+        "main": 13
+      },
+      "local_call_cap": false
+    },
+    {
+      "task_success": true,
+      "error": null,
+      "product_status": "completed",
+      "investigations": [],
+      "collaboration": {
+        "available_reports": 0,
+        "identical_work_extra_deliveries": 0,
+        "identical_work_groups": 0,
+        "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+        "observed_peak_active_turns": 1,
+        "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+        "reports_dispatched_to_parent": 0
+      },
+      "chain_observation": "not-exercised",
+      "semantic_review": "pending",
+      "report_use_review": "not-observed",
+      "collaboration_value": "unestablished",
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 108376,
+        "output_tokens": 1803,
+        "quality": "exact",
+        "total_tokens": 110179
+      },
+      "provider_failure_categories": [],
+      "scenario": "frozen-review",
+      "real_calls": 11,
+      "provider_calls_by_role": {
+        "main": 11
+      },
+      "local_call_cap": false
+    },
+    {
+      "task_success": true,
+      "error": null,
+      "product_status": "completed",
+      "investigations": [],
+      "collaboration": {
+        "available_reports": 0,
+        "identical_work_extra_deliveries": 0,
+        "identical_work_groups": 0,
+        "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+        "observed_peak_active_turns": 1,
+        "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+        "reports_dispatched_to_parent": 0
+      },
+      "chain_observation": "not-exercised",
+      "semantic_review": "pending",
+      "report_use_review": "not-observed",
+      "collaboration_value": "unestablished",
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 21608,
+        "output_tokens": 361,
+        "quality": "exact",
+        "total_tokens": 21969
+      },
+      "provider_failure_categories": [],
+      "scenario": "simple-read",
+      "real_calls": 5,
+      "provider_calls_by_role": {
+        "main": 5
+      },
+      "local_call_cap": false
+    }
+  ],
+  "stopped": null,
+  "last_provider_calls": 5,
+  "interpretation": "Mechanics only. Semantic correctness, report use and value require review."
+}

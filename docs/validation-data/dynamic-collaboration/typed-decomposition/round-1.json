@@ -1,0 +1,111 @@
+{
+  "format": 1,
+  "contract_digest": "da674d35a0549b5a677bbe42834f61bfd795a853a452b9704760fac9b2db2992",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "outcomes": [
+    {
+      "scenario": "separable-review",
+      "expected_decision": "separable",
+      "decision": null,
+      "decision_digest": null,
+      "decision_succeeded": 0,
+      "decision_failed": 1,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 2,
+      "provider_calls_by_role": {
+        "main": 2
+      },
+      "task_success": false,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 8298,
+        "output_tokens": 202,
+        "quality": "exact",
+        "total_tokens": 8500
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false
+    },
+    {
+      "scenario": "coupled-review",
+      "expected_decision": "local",
+      "decision": null,
+      "decision_digest": null,
+      "decision_succeeded": 0,
+      "decision_failed": 1,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 2,
+      "provider_calls_by_role": {
+        "main": 2
+      },
+      "task_success": false,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 8118,
+        "output_tokens": 287,
+        "quality": "exact",
+        "total_tokens": 8405
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false
+    },
+    {
+      "scenario": "simple-read",
+      "expected_decision": "local",
+      "decision": null,
+      "decision_digest": null,
+      "decision_succeeded": 0,
+      "decision_failed": 1,
+      "initial_child_agent_id": null,
+      "initial_child_message_id": null,
+      "initial_child_collection_status": null,
+      "initial_child_collected": false,
+      "direct_delegate_succeeded": 0,
+      "direct_delegate_failed": 0,
+      "collect_succeeded": 0,
+      "provider_calls": 2,
+      "provider_calls_by_role": {
+        "main": 2
+      },
+      "task_success": false,
+      "error": null,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 7870,
+        "output_tokens": 204,
+        "quality": "exact",
+        "total_tokens": 8074
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false
+    }
+  ],
+  "stopped": null,
+  "total_real_calls": 6,
+  "all_behavior_pass": false,
+  "interpretation": "Three bounded typed-decision observations; no baseline, semantic judge, significance or automatic adoption."
+}

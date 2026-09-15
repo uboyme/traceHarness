@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "benchmark_digest": "ac5a09921a48ecafcfe331b6d0356b647531a34dda1fd4570b7a7b2c27af9cba",
+  "benchmark_digest": "70dcd466bb6adcacbc4fecdbc9785e2d3d213c8311f9ce7431ae49b30b3da3fb",
   "variants": [
     {
       "variant_id": "current-example",
@@ -25,7 +25,7 @@
   },
   "execution": {
     "sandbox_config": "./sandbox.json",
-    "max_trials": 9,
+    "max_trials": 6,
     "timeout_seconds": 1800
   },
   "trials": {

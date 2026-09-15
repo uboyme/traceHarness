@@ -1,0 +1,144 @@
+{
+  "format": 1,
+  "contract_digest": "24ecbadee744ac18f7192a52ad5e8d78bf57edfa6aaf109869ac67b0df50b04f",
+  "provider": "openai-compatible",
+  "model": "qwen-plus",
+  "outcomes": [
+    {
+      "scenario": "separable-review",
+      "task_success": false,
+      "error": null,
+      "real_calls": 5,
+      "provider_calls_by_role": {
+        "unknown": 5
+      },
+      "delegate_succeeded": 0,
+      "delegate_failed": 0,
+      "collect_succeeded": 0,
+      "repeated_identical_delegations": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 15187,
+        "output_tokens": 353,
+        "quality": "exact",
+        "total_tokens": 15540
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false,
+      "decision": null,
+      "expected_decision": "separable",
+      "scout_successful_reads": 1,
+      "scout_evidence_dispatched": true,
+      "scout_surfaces": [
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ]
+      ],
+      "scout_max_successful_calls": 1,
+      "decision_requests": 3,
+      "child_created": false
+    },
+    {
+      "scenario": "coupled-review",
+      "task_success": false,
+      "error": null,
+      "real_calls": 5,
+      "provider_calls_by_role": {
+        "unknown": 5
+      },
+      "delegate_succeeded": 0,
+      "delegate_failed": 0,
+      "collect_succeeded": 0,
+      "repeated_identical_delegations": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 19283,
+        "output_tokens": 321,
+        "quality": "exact",
+        "total_tokens": 19604
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": false,
+      "decision": null,
+      "expected_decision": "local",
+      "scout_successful_reads": 1,
+      "scout_evidence_dispatched": true,
+      "scout_surfaces": [
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ]
+      ],
+      "scout_max_successful_calls": 1,
+      "decision_requests": 3,
+      "child_created": false
+    },
+    {
+      "scenario": "simple-read",
+      "task_success": true,
+      "error": null,
+      "real_calls": 8,
+      "provider_calls_by_role": {
+        "unknown": 8
+      },
+      "delegate_succeeded": 0,
+      "delegate_failed": 0,
+      "collect_succeeded": 0,
+      "repeated_identical_delegations": 0,
+      "reports_dispatched_to_parent": 0,
+      "budget_converged": true,
+      "live_workspaces": 0,
+      "total_tokens": {
+        "input_tokens": 29236,
+        "output_tokens": 737,
+        "quality": "exact",
+        "total_tokens": 29973
+      },
+      "provider_failure_categories": [],
+      "termination": "completed",
+      "behavior_pass": true,
+      "decision": "local",
+      "expected_decision": "local",
+      "scout_successful_reads": 1,
+      "scout_evidence_dispatched": true,
+      "scout_surfaces": [
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ],
+        [
+          "list_files",
+          "read_file",
+          "search_text"
+        ]
+      ],
+      "scout_max_successful_calls": 1,
+      "decision_requests": 3,
+      "child_created": false
+    }
+  ],
+  "stopped": null,
+  "total_real_calls": 18,
+  "all_behavior_pass": false,
+  "interpretation": "Observed current Adaptive behavior only. No baseline, semantic judge, significance, or automatic adoption."
+}

@@ -77,13 +77,16 @@ def pair_plan(root, *, patch=False, case_id="s-absent", model=None, execution=No
         max_trials=2,
         timeout_seconds=120,
         shutdown_seconds=30,
+        first_arm="baseline",
         network_mode="direct",
     )
     if execution:
         data["execution"].update(execution)
     data["trials"]["selection"] = {"case_ids": [case_id], "material_seeds": [113]}
     data["comparison"] = {
-        "format": 1,
+        "kind": "text_candidate",
+        "requested_modes": None,
+        "format": 3,
         "min_pass_gain": None,
         "max_token_ratio": 1.1,
         "max_tool_call_delta": 0,
@@ -217,6 +220,16 @@ def test_non_example_unicode_edit_cannot_become_executable_python():
     assert all(changed[p] == b for p, b in files if p != "runtime/prompt.py")
 
 
+@pytest.mark.parametrize("selector", ["PLAN_REQUIREMENT", "CollaborationPlanTool.description"])
+def test_candidate_cannot_edit_mandatory_collaboration_contract(selector):
+    _, files = source_files()
+    patch = candidate_patch()
+    patch["edits"][0].update(file="supervision/structured_collaboration.py", selector=selector)
+    with pytest.raises(BenchmarkManifestError) as refused:
+        apply_candidate(files, patch)
+    assert refused.value.code == "evaluation-candidate-scope-invalid"
+
+
 @pytest.mark.parametrize("change", ["gain", "loss", "unknown-cost", "transport", "mixed", "prep"])
 def test_pure_comparison_keeps_denominator_and_distinguishes_cost_and_failure(change):
     identity = {
@@ -240,7 +253,13 @@ def test_pure_comparison_keeps_denominator_and_distinguishes_cost_and_failure(ch
     reports = [{"trials": [copy.deepcopy(trial)]} for _ in range(2)]
     statistics = [{"test-trial": {"total_tokens": 100, "tool_calls": 1}} for _ in range(2)]
     packets = [{"test-trial": {"preparation_text_digest": "same"}} for _ in range(2)]
-    policy = {"min_pass_gain": None, "max_token_ratio": 1.2, "max_tool_call_delta": 1}
+    policy = {
+        "kind": "text_candidate",
+        "requested_modes": None,
+        "min_pass_gain": None,
+        "max_token_ratio": 1.2,
+        "max_tool_call_delta": 1,
+    }
     if change in ("gain", "mixed"):
         reports[0]["trials"][0]["assessment"]["status"] = "failed"
     elif change == "loss":

@@ -40,6 +40,7 @@ from traceh.budgets import (
     BudgetInputError,
     BudgetLedgerService,
     BudgetToolAdmissionGate,
+    BudgetUsageOverageError,
 )
 from traceh.budgets.events import BUDGET_USAGE_STARTED
 from traceh.llm.failures import ProviderFailure
@@ -289,7 +290,86 @@ async def test_token_counter_caps_output_without_using_character_count() -> None
     assert provider.requests[0].max_output_tokens == 6
 
 
-async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> None:
+async def test_an_uncounted_reservation_is_bounded_by_the_request_size() -> None:
+    """Without a counter the reservation is the request's provable ceiling.
+
+    A byte-level BPE token maps to at least one byte, so the canonical request's
+    UTF-8 length cannot be below its token count. Reserving that instead of the
+    account's whole balance keeps a failure that reports no usage from consuming
+    everything, which is what made a mandated retry impossible to admit.
+    """
+
+    _, service = await root_context(root_limits=limits(max_tokens=1_000_000))
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(4, 6, UsageQuality.EXACT)))
+    runtime = BudgetedLlmRuntime(
+        service,
+        agent_id="agent-root",
+        session_id="session-root",
+    )
+
+    await invoke(runtime, provider, request("step-bound", max_output_tokens=25))
+
+    ledger = await service.ledger()
+    reserved = ledger.usage_reservations[0].amounts.tokens
+    # Proportionate to the request, not to the account.
+    assert reserved < 1_000
+    account = ledger.account("agent-root")
+    assert account is not None
+    assert account.charged.tokens == 10
+    # Enough remains that a retry after an unknown-usage failure can be admitted.
+    assert ledger.available("agent-root").max_tokens > 900_000
+
+
+async def test_the_estimate_margin_pads_only_the_counted_input() -> None:
+    """The margin absorbs tokenizer disagreement on the input side only.
+
+    The provider is told an exact output ceiling, so that side needs no padding;
+    the counted input is the estimated part. Padding the input also shrinks the
+    output the call may buy, so the reservation never exceeds the account.
+    """
+
+    _, service = await root_context(root_limits=limits(max_tokens=100))
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(4, 6, UsageQuality.EXACT)))
+    runtime = BudgetedLlmRuntime(
+        service,
+        agent_id="agent-root",
+        session_id="session-root",
+        token_counter=FixedTokenCounter(20),
+        estimate_margin_percent=50,
+    )
+
+    await invoke(runtime, provider, request("step-margin", max_output_tokens=10))
+
+    # 20 counted input + 50% margin = 30 reserved for input, plus the 10 output
+    # ceiling the provider was actually given.
+    assert provider.requests[0].max_output_tokens == 10
+    ledger = await service.ledger()
+    assert ledger.usage_reservations[0].amounts.tokens == 40
+
+
+async def test_a_margin_that_is_not_an_explicit_percentage_is_refused() -> None:
+    """The margin is host policy; it is never inferred or silently defaulted."""
+
+    _, service = await root_context(root_limits=limits(max_tokens=10))
+    for invalid in (1.5, "30", -1, 101, True):
+        with pytest.raises(BudgetInputError) as refused:
+            BudgetedLlmRuntime(
+                service,
+                agent_id="agent-root",
+                session_id="session-root",
+                estimate_margin_percent=invalid,
+            )
+        assert refused.value.field == "estimate_margin_percent"
+
+
+async def test_a_balance_capped_reservation_reports_exhaustion_not_a_bad_estimate() -> None:
+    """Spending past a reservation that held the whole balance is exhaustion.
+
+    The account could never have covered this call, so the useful report names
+    the dimension that ran out. The reservation is still settled conservatively
+    first, which leaves the ledger consistent with what was authorized.
+    """
+
     _, service = await root_context(root_limits=limits(max_tokens=10))
     provider = CountingProvider(ModelResponse(content="ok", usage=Usage(8, 5, UsageQuality.EXACT)))
     runtime = BudgetedLlmRuntime(
@@ -298,14 +378,46 @@ async def test_without_tokenizer_output_is_capped_and_overage_is_unknown() -> No
         session_id="session-root",
     )
 
-    await invoke(runtime, provider, request("step-overage", max_output_tokens=50))
+    with pytest.raises(BudgetExhaustedError) as raised:
+        await invoke(runtime, provider, request("step-overage", max_output_tokens=50))
 
+    assert raised.value.dimension == "max_tokens"
     assert provider.requests[0].max_output_tokens == 10
     ledger = await service.ledger()
     account = ledger.account("agent-root")
     assert account is not None
     assert account.charged.tokens == 10
+    assert account.reserved.tokens == 0
     assert ledger.usage_reservations[0].usage_quality is UsageQuality.UNKNOWN
+
+
+async def test_usage_above_an_uncapped_reservation_reports_the_bad_estimate() -> None:
+    """A reservation the balance did not cap means the host's counter was wrong.
+
+    Charging only the reservation would drop the excess out of the ledger, so
+    the shortfall is raised instead of silently absorbed. This is the case the
+    overage error exists for; running out of balance is reported separately.
+    """
+
+    _, service = await root_context(root_limits=limits(max_tokens=1_000))
+    provider = CountingProvider(ModelResponse(content="ok", usage=Usage(50, 5, UsageQuality.EXACT)))
+    runtime = BudgetedLlmRuntime(
+        service,
+        agent_id="agent-root",
+        session_id="session-root",
+        token_counter=FixedTokenCounter(1),
+    )
+
+    with pytest.raises(BudgetUsageOverageError) as raised:
+        await invoke(runtime, provider, request("step-estimate", max_output_tokens=5))
+
+    assert (raised.value.reported, raised.value.reserved) == (55, 6)
+    ledger = await service.ledger()
+    account = ledger.account("agent-root")
+    assert account is not None
+    assert account.charged.tokens == 6
+    # Plenty of balance remained, so this was never an exhaustion.
+    assert ledger.available("agent-root").max_tokens == 994
 
 
 async def test_competing_admissions_hold_independent_pending_reservations() -> None:

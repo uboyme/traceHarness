@@ -324,7 +324,11 @@ async def test_memory_token_admission_preserves_complete_fact_and_project_author
 
 # The narrow fixture includes the added active-search schema/instructions while
 # still admitting only navigation; the original body must remain excluded.
-@pytest.mark.parametrize("window,body_expected", [(5000, False), (16000, True)])
+# The narrow window is 5500 rather than 5000 because the paging/outline reader
+# costs ~390 more tokens of fixed tool schema per request than the whole-file
+# reader it replaced. The directory tier still survives token exclusion; it just
+# needs the room the larger schema takes.
+@pytest.mark.parametrize("window,body_expected", [(5500, False), (16000, True)])
 async def test_history_token_exclusion_keeps_directory_but_does_not_grant_retention(
     tmp_path, window, body_expected
 ):

@@ -1,0 +1,53 @@
+{
+  "stage": "WC-1F",
+  "outcome": "failed",
+  "collaboration_observed": true,
+  "complete_delivery_passed": false,
+  "real_calls": 11,
+  "main_calls": 7,
+  "child_calls": 4,
+  "exact_tokens": 56551,
+  "tool_calls": 9,
+  "provider_failures": 0,
+  "retries": 0,
+  "wall_ms": 150344,
+  "budget": {
+    "accounts": 3,
+    "accounts_closed": 3,
+    "charged_steps": 11,
+    "charged_tool_calls": 9,
+    "child_reservations": 2,
+    "child_reservations_terminal": 2,
+    "converged": true,
+    "settled_tokens": 56551,
+    "usage_reservations": 13,
+    "usage_reservations_terminal": 13
+  },
+  "workspaces": {
+    "converged": true,
+    "live": 0,
+    "quarantined": 1,
+    "released": 2,
+    "workspaces": 3
+  },
+  "replay_requests": 13,
+  "scripted_control_requests": 2,
+  "original_database_unchanged": true,
+  "defects": [
+    {
+      "case": "whitespace-key",
+      "expected": "ValueError",
+      "actual": "[{'key': ' a', 'revision': 0, 'value': 'x'}]"
+    },
+    {
+      "case": "tombstone-conflict",
+      "expected": "ValueError",
+      "actual": "TypeError",
+      "detail": "'<' not supported between instances of 'str' and 'NoneType'"
+    }
+  ],
+  "unsubstantiated_verification_claims": true,
+  "promotion": false,
+  "WC_2_started": false,
+  "source_digest": "07a383fd20e11921dc4464dc72f3069d285b7be31b230089eb6cb5faba14d6f4"
+}

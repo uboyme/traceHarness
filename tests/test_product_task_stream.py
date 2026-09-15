@@ -30,14 +30,11 @@ from traceh.api.product import (
     PRODUCT_TASK_FAILED,
     PRODUCT_TASK_OPENED,
     PRODUCT_TASK_REJECTED,
-    PRODUCT_TASK_ROUTED,
     PRODUCT_TASK_SCHEMA_VERSION,
     PRODUCT_TASK_STARTED,
     ProductTaskStatus,
     RequestedTaskMode,
-    ResolvedTaskMode,
     TaskModeSource,
-    TaskRouting,
 )
 from traceh.product import (
     ProductOperationConflictError,
@@ -62,7 +59,9 @@ def envelope(seq: int, event_type: str, data: dict, **overrides: object):
         schema_version=overrides.pop("schema_version", PRODUCT_TASK_SCHEMA_VERSION),  # type: ignore[arg-type]
     )
     built = EventEnvelope.materialize(
-        overrides.pop("stream_id", STREAM), seq, pending  # type: ignore[arg-type]
+        overrides.pop("stream_id", STREAM),
+        seq,
+        pending,  # type: ignore[arg-type]
     )
     return built if not overrides else _replace_envelope(built, overrides)
 
@@ -76,9 +75,7 @@ def _replace_envelope(event: EventEnvelope, overrides: dict) -> EventEnvelope:
 async def _drive_to_completed(assembly, *, task_id: str = "task-1"):
     service = assembly.service
     await opened(assembly, task_id=task_id)
-    await service.start_task(
-        task_id=task_id, operation_id=f"{task_id}-start", receipt=receipt()
-    )
+    await service.start_task(task_id=task_id, operation_id=f"{task_id}-start", receipt=receipt())
     await service.record_awaiting(
         task_id=task_id, operation_id=f"{task_id}-await", review_id="review-1"
     )
@@ -91,7 +88,7 @@ async def _drive_to_completed(assembly, *, task_id: str = "task-1"):
 
 
 async def test_every_event_type_replays_into_the_summary_it_establishes() -> None:
-    """All nine facts, driven through the real service, then replayed."""
+    """All eight facts, driven through the real service, then replayed."""
 
     seen: set[str] = set()
 
@@ -108,29 +105,6 @@ async def test_every_event_type_replays_into_the_summary_it_establishes() -> Non
         PRODUCT_TASK_AWAITING,
         PRODUCT_TASK_COMPLETED,
     }
-    await assembly.aclose()
-
-    # routed path: opened(auto) -> routed -> started
-    assembly = await build_assembly()
-    await opened(assembly, task_id="task-2", requested_mode=RequestedTaskMode.AUTO)
-    routed = await assembly.service.record_routing(
-        task_id="task-2",
-        operation_id="task-2-route",
-        routing=TaskRouting(ResolvedTaskMode.MULTI, "cross-module change"),
-        router_agent_id="router-agent",
-        routing_session_id="router-session",
-    )
-    assert routed.status is ProductTaskStatus.ROUTED
-    assert routed.resolved_mode is ResolvedTaskMode.MULTI
-    assert routed.reason_display == "cross-module change"
-    assert routed.router_agent_id == "router-agent"
-    started = await assembly.service.start_task(
-        task_id="task-2",
-        operation_id="task-2-start",
-        receipt=receipt(mode=ResolvedTaskMode.MULTI),
-    )
-    assert started.status is ProductTaskStatus.STARTED
-    seen |= {PRODUCT_TASK_ROUTED}
     await assembly.aclose()
 
     # rejected
@@ -150,10 +124,20 @@ async def test_every_event_type_replays_into_the_summary_it_establishes() -> Non
 
     # cancelled and failed, each from a live task
     for task_id, method, kwargs, status, code in (
-        ("task-4", "cancel_task", {"reason_code": "user-requested"},
-         ProductTaskStatus.CANCELLED, "reason_code"),
-        ("task-5", "fail_task", {"failure_code": "workflow-failed"},
-         ProductTaskStatus.FAILED, "failure_code"),
+        (
+            "task-4",
+            "cancel_task",
+            {"reason_code": "user-requested"},
+            ProductTaskStatus.CANCELLED,
+            "reason_code",
+        ),
+        (
+            "task-5",
+            "fail_task",
+            {"failure_code": "workflow-failed"},
+            ProductTaskStatus.FAILED,
+            "failure_code",
+        ),
     ):
         await opened(assembly, task_id=task_id)
         settled = await getattr(assembly.service, method)(
@@ -250,7 +234,9 @@ async def test_a_query_identity_is_normalized_once_for_the_whole_replay() -> Non
     await store.append(
         "product-task:task-stream",
         expected_seq=0,
-        events=(PendingEvent(PRODUCT_TASK_OPENED, forged),),
+        events=(
+            PendingEvent(PRODUCT_TASK_OPENED, forged, schema_version=PRODUCT_TASK_SCHEMA_VERSION),
+        ),
     )
 
     with pytest.raises(ProductProtocolError) as raised:
@@ -269,7 +255,9 @@ async def test_a_query_identity_is_normalized_once_for_the_whole_replay() -> Non
     await valid_store.append(
         "product-task:task-stream",
         expected_seq=0,
-        events=(PendingEvent(PRODUCT_TASK_OPENED, valid),),
+        events=(
+            PendingEvent(PRODUCT_TASK_OPENED, valid, schema_version=PRODUCT_TASK_SCHEMA_VERSION),
+        ),
     )
     summary = await ProductTaskStreamReader(valid_store).load(query)
     assert summary is not None
@@ -285,7 +273,7 @@ async def test_an_unknown_schema_version_is_refused_not_upcast() -> None:
         proposal=proposal(),
         confirmation=confirmation(),
     )
-    for version in (0, 2, 99):
+    for version in (0, 1, 2, 3, 4, 99):
         with pytest.raises(ProductProtocolError) as raised:
             rebuild_product_task(
                 "task-1",
@@ -603,9 +591,7 @@ async def test_decided_values_ignore_hostile_string_comparison_methods() -> None
     assembly = await build_assembly(store=store)
     await opened(assembly)
     await assembly.aclose()
-    forged = task_started_data(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    forged = task_started_data(task_id="task-1", operation_id="op-start", receipt=receipt())
     forged["workflow_run_id"] = EqualToEverything("task-other")
     await store.append(
         STREAM,
@@ -640,9 +626,7 @@ async def test_idempotency_compares_a_detached_normalized_event_payload() -> Non
     store = InMemoryEventStore()
     assembly = await build_assembly(store=store)
     await opened(assembly)
-    started = task_started_data(
-        task_id="task-1", operation_id="op-shared", receipt=receipt()
-    )
+    started = task_started_data(task_id="task-1", operation_id="op-shared", receipt=receipt())
     started["operation_id"] = DifferentFromEverything("op-shared")
     await store.append(
         STREAM,
@@ -679,9 +663,7 @@ async def test_stateful_string_conversion_cannot_change_an_operation_between_rep
     store = InMemoryEventStore()
     assembly = await build_assembly(store=store)
     await opened(assembly)
-    started = task_started_data(
-        task_id="task-1", operation_id="op-shared", receipt=receipt()
-    )
+    started = task_started_data(task_id="task-1", operation_id="op-shared", receipt=receipt())
     started["operation_id"] = StatefulString("op-shared")
     await store.append(
         STREAM,
@@ -710,9 +692,7 @@ async def test_a_rejection_naming_another_review_is_refused() -> None:
     store = InMemoryEventStore()
     assembly = await build_assembly(store=store)
     await opened(assembly)
-    await assembly.service.start_task(
-        task_id="task-1", operation_id="op-start", receipt=receipt()
-    )
+    await assembly.service.start_task(task_id="task-1", operation_id="op-start", receipt=receipt())
     await assembly.service.record_awaiting(
         task_id="task-1", operation_id="op-await", review_id="review-1"
     )
@@ -736,36 +716,7 @@ async def test_a_rejection_naming_another_review_is_refused() -> None:
     assert [issue.code for issue in issues] == ["product-decided-value-invalid"]
 
 
-async def test_auto_cannot_start_before_routing_produced_a_mode() -> None:
-    store = InMemoryEventStore()
-    assembly = await build_assembly(store=store)
-    await opened(assembly, requested_mode=RequestedTaskMode.AUTO)
-    await assembly.aclose()
-    await store.append(
-        STREAM,
-        expected_seq=1,
-        events=(
-            PendingEvent(
-                type=PRODUCT_TASK_STARTED,
-                data={
-                    "task_id": "task-1",
-                    "operation_id": "op-start",
-                    "mode": "single",
-                    "workflow_run_id": "task-1",
-                    "definition_hash": "a" * 64,
-                    "assembly_digest": "b" * 64,
-                    "preflight_digest": preflight().digest,
-                    "source_base_revision": "4" * 40,
-                },
-                schema_version=PRODUCT_TASK_SCHEMA_VERSION,
-            ),
-        ),
-    )
-    issues = await validate_product_task(store, "task-1")
-    assert [issue.code for issue in issues] == ["product-transition-invalid"]
-
-
-async def test_an_explicit_request_is_never_routed() -> None:
+async def test_multi_cannot_start_with_a_different_confirmed_mode() -> None:
     store = InMemoryEventStore()
     assembly = await build_assembly(store=store)
     await opened(assembly, requested_mode=RequestedTaskMode.MULTI)
@@ -773,40 +724,6 @@ async def test_an_explicit_request_is_never_routed() -> None:
     await store.append(
         STREAM,
         expected_seq=1,
-        events=(
-            PendingEvent(
-                type=PRODUCT_TASK_ROUTED,
-                data={
-                    "task_id": "task-1",
-                    "operation_id": "op-route",
-                    "router_agent_id": "router-agent",
-                    "routing_session_id": "router-session",
-                    "resolved_mode": "multi",
-                    "reason_display": None,
-                },
-                schema_version=PRODUCT_TASK_SCHEMA_VERSION,
-            ),
-        ),
-    )
-    issues = await validate_product_task(store, "task-1")
-    assert [issue.code for issue in issues] == ["product-transition-invalid"]
-
-
-async def test_a_routed_auto_task_must_start_with_the_routed_mode() -> None:
-    store = InMemoryEventStore()
-    assembly = await build_assembly(store=store)
-    await opened(assembly, requested_mode=RequestedTaskMode.AUTO)
-    await assembly.service.record_routing(
-        task_id="task-1",
-        operation_id="op-route",
-        routing=TaskRouting(ResolvedTaskMode.MULTI, None),
-        router_agent_id="router-agent",
-        routing_session_id="router-session",
-    )
-    await assembly.aclose()
-    await store.append(
-        STREAM,
-        expected_seq=2,
         events=(
             PendingEvent(
                 type=PRODUCT_TASK_STARTED,
@@ -828,31 +745,31 @@ async def test_a_routed_auto_task_must_start_with_the_routed_mode() -> None:
     assert [issue.code for issue in issues] == ["product-decided-value-invalid"]
 
 
-async def test_a_reason_display_that_could_forge_output_is_refused() -> None:
+async def test_an_explicit_request_is_never_routed() -> None:
     store = InMemoryEventStore()
     assembly = await build_assembly(store=store)
-    await opened(assembly, requested_mode=RequestedTaskMode.AUTO)
+    await opened(assembly, requested_mode=RequestedTaskMode.MULTI)
     await assembly.aclose()
     await store.append(
         STREAM,
         expected_seq=1,
         events=(
             PendingEvent(
-                type=PRODUCT_TASK_ROUTED,
+                type="product/task-routed",
                 data={
                     "task_id": "task-1",
                     "operation_id": "op-route",
                     "router_agent_id": "router-agent",
                     "routing_session_id": "router-session",
                     "resolved_mode": "multi",
-                    "reason_display": "line one\nline two",
+                    "reason_display": None,
                 },
                 schema_version=PRODUCT_TASK_SCHEMA_VERSION,
             ),
         ),
     )
     issues = await validate_product_task(store, "task-1")
-    assert [issue.code for issue in issues] == ["product-reason-display-invalid"]
+    assert [issue.code for issue in issues] == ["product-event-type-unknown"]
 
 
 async def test_a_mode_value_outside_the_enum_is_refused() -> None:
@@ -864,6 +781,8 @@ async def test_a_mode_value_outside_the_enum_is_refused() -> None:
     )
     for key, value in (
         ("requested_mode", "sideways"),
+        ("requested_mode", "auto"),
+        ("requested_mode", "adaptive"),
         ("mode_source", "guessed"),
         ("requested_mode", 1),
     ):
@@ -884,7 +803,7 @@ async def test_the_opening_fact_pins_its_protocol_version() -> None:
         proposal=proposal(),
         confirmation=confirmation(),
     )
-    forged = dict(data, product_protocol_version=2)
+    forged = dict(data, product_protocol_version=1)
     with pytest.raises(ProductProtocolError) as raised:
         rebuild_product_task("task-1", (envelope(1, PRODUCT_TASK_OPENED, forged),))
     assert raised.value.code == "product-protocol-version-unsupported"

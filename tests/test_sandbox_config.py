@@ -213,7 +213,7 @@ def test_real_cli_uses_selected_policy_and_original_sqlite_evidence(tmp_path, ca
 def test_real_cli_plugin_grant_reaches_original_activation_and_tool(tmp_path, monkeypatch, capsys):
     from plugin_fixtures import entry_point_for, provider_for
 
-    from tests.test_sandbox_plugins import ServerPlugin
+    from test_sandbox_plugins import ServerPlugin
     from traceh.plugins.discovery import PluginDiscovery
 
     plugin = ServerPlugin()

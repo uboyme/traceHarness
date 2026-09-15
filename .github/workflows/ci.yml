@@ -3,46 +3,80 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+# A superseded push or PR update has nothing left to prove, and this suite is
+# expensive enough that letting runs stack costs real waiting.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # Sharded by file so each job keeps a file's fixtures to itself and runs its
+  # own pytest serially. That is deliberately not `-n auto`: the concurrency,
+  # cancellation, process, SQLite and Git cases in this suite are not safe to
+  # interleave inside one run, but they are safe in separate jobs.
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.12", "3.13"]
+        shard: [1, 2, 3, 4]
+        exclude:
+          # Windows remains an explicit matrix because SQLite/Git subprocess,
+          # terminal, path-length and Textual lifecycle behavior must run on the
+          # supported OS. One interpreter there is enough for that purpose.
+          - os: windows-latest
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
       - run: python -m pip install -e ".[dev,tui]"
       - run: python -m compileall -q src
-      - run: pytest
-      - name: Test Python Quality plugin distribution
-        run: python -m pytest -q
-        working-directory: examples/plugins/traceh-python-quality-plugin
-      - name: Test Plugin Creator Skill distribution
-        run: python -m pytest -q
-        working-directory: examples/plugins/traceh-plugin-creator-skill-plugin
-      - run: traceh doctor --data-dir /tmp/traceh-ci
+      - name: Run pytest shard ${{ matrix.shard }} of 4
+        shell: bash
+        run: pytest -m "not slow" $(python tools/ci_shard.py ${{ matrix.shard }} 4)
 
-  # Windows remains an explicit matrix because SQLite/Git subprocess, terminal,
-  # path-length and Textual lifecycle behavior must run on the supported OS.
-  test-windows:
-    runs-on: windows-latest
+  # Distribution and doctor checks are per-environment, not per-shard.
+  packaging:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - run: python -m pip install -e ".[dev,tui]"
-      - run: python -m compileall -q src
-      - run: pytest
       - name: Test Python Quality plugin distribution
         run: python -m pytest -q
         working-directory: examples/plugins/traceh-python-quality-plugin
       - name: Test Plugin Creator Skill distribution
         run: python -m pytest -q
         working-directory: examples/plugins/traceh-plugin-creator-skill-plugin
-      - run: traceh doctor --data-dir ${{ runner.temp }}/traceh-ci
+      - name: Run traceh doctor
+        shell: bash
+        run: traceh doctor --data-dir "${RUNNER_TEMP}/traceh-ci"
+
+  # Wheel builds, clean-environment installs and the L2 candidate gate are the
+  # release gates AGENTS.md keeps off the per-commit path. Tags and manual runs
+  # only.
+  release-gate:
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[dev,tui]"
+      - run: pytest -m slow

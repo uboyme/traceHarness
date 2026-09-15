@@ -18,6 +18,10 @@ jobs:
   # interleave inside one run, but they are safe in separate jobs.
   test:
     runs-on: ${{ matrix.os }}
+    # A shard that finishes takes under eight minutes; one that hangs used to
+    # burn the full six-hour default before the runner killed it. A hang is a
+    # failure worth reporting quickly, not worth waiting a working day for.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -45,6 +49,7 @@ jobs:
   # Distribution and doctor checks are per-environment, not per-shard.
   packaging:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +77,7 @@ jobs:
   release-gate:
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

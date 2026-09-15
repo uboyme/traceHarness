@@ -3959,11 +3959,13 @@ Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 
 
 证据见[记录 076](../deal/076-large-codebase-comprehension-rounds.md)。三处同类缺陷：宿主已经掌握模型需要的事实，却不在应当给出的位置给出。
 
-**① 提示按实际工具组装。** `assemble_prompt_sections` 无条件拼入 `traceh.runtime.references`（5,969 字符），而紧邻其上的 `source_navigation(tools)` 早已按真实工具构建、无匹配即返回空串。结果：只有 `apply_patch/list_files/read_file/search_text/shell` 的 Product coder，收到的提示中 **79% 在讲 `search_history`、`read_tool_output`、`request_skill_reference` 等 10 个它没有的工具**，每次请求约 1,546 token。修正复用 `navigation` 这一既有判断，不新增第二套逻辑：Product coder 的系统提示由 **7,583 降至 1,397 字符**，而有检索工具的宿主一字未变。
+**① 提示按实际工具组装。** `assemble_prompt_sections` 无条件拼入 `traceh.runtime.references`（5,969 字符），而紧邻其上的 `source_navigation(tools)` 早已按真实工具构建、无匹配即返回空串。结果：只有 `apply_patch/list_files/read_file/search_text/shell` 的 Product coder，收到的提示中 **79% 在讲 `search_history`、`read_tool_output`、`request_skill_reference` 等 10 个它没有的工具**，每次请求约 1,091 token（`cl100k_base` 与 `o200k_base` 实测分别为 1,091 与 1,090；早期记录的 1,546 是按每 4 字符 1 token 估算，非实测，已更正）。修正复用 `navigation` 这一既有判断，不新增第二套逻辑：Product coder 的系统提示由 **7,583 降至 1,397 字符**，而有检索工具的宿主一字未变。
 
 **② 拒绝消息带可纠正信息。** `ToolRuntime._prepare_one` 的视图检查**先于**注册表查找返回，因此 `Unknown tool:` 这条本可自纠的消息永不出现，模型只收到 「Tool batch is outside the frozen Step view」。实测第 6 轮 multi 臂据此**调用不存在的 `write_file` 五次**。修正后区分「无此工具」与「本步不可调用」，并附本步可调用清单；所有名字均来自调用方自身请求或其已发布工具表，不构成披露。第 7 轮 `write_file` 未再出现。
 
 **③ `read_file` 增加 `mode=outline`。** 返回文件内定义行与行号、不返回正文；按行谓词而非解析器实现，不会在异常文本上失败，也不宣称语义。实测对 221 个 Python 文件，大纲合计 244,976 字符，为逐页读取正文的 **4.9%**。同受 8000 字符上限约束，超出以 `next_read` 续读；`end_line` 与 `start_column` 在该模式下被拒。
+
+该能力的**成本**须与收益一并记录：`read_file` 的工具 schema 由 44 token 增至 308 token，连同 `shell`（64→150）与 `search_text`（64→103）的描述补充，使每次请求的固定工具 schema 开销**增加 389 token**（`cl100k_base` 实测，默认工具集合计 1,462→1,851）。后果是最小可用上下文窗口相应收窄：同一窄窗口夹具在 5,000 token 下由「保留 directory 层」退化为**一条引用都不admit**，5,500 下行为与原先一致（directory 保留、正文排除），16,000 下不受影响。因此 `test_reference_token_budget` 的窄窗口参数由 5,000 调至 5,500——被保护的不变量（token 排除只降级到 directory，不整条丢弃）未放宽，只是让夹具回到它本来要检验的区间。
 
 定向验证：提示条件化新增一项反向契约用例（无检索工具的组装中该段与相关工具名全部不出现，identity 与 workspace 仍在），并改造既有冻结重放用例使其组装真实拥有该类工具；拒绝消息新增一项用例分别钉住幻觉名与真工具被隐藏两条分支且互不混淆；outline 新增 5 项（定义与行号正确且**正文绝不出现**、无定义文件为空且终止、超限续读衔接、拒绝正文类参数、过期 digest 被拒）。三者均做反向验证；其中一次撤回只得到夹具 `TypeError`，按 §8.2 重做为打行为断言的版本。相邻回归：`test_request_view`、`test_file_reading`、Product 与协作套件通过。
 

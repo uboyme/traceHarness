@@ -29,6 +29,7 @@ from product_fixtures import (
 from traceh.api.events import PendingEvent
 from traceh.api.product import (
     PRODUCT_TASK_OPENED,
+    PRODUCT_TASK_SCHEMA_VERSION,
     ProductTaskStatus,
     ProductTaskViewStatus,
     RequestedTaskMode,
@@ -967,7 +968,7 @@ async def test_a_lost_compare_and_swap_retries_against_the_new_history() -> None
                     "operation_id": "op-race",
                     "reason_code": "host-shutdown",
                 },
-                schema_version=4,
+                schema_version=PRODUCT_TASK_SCHEMA_VERSION,
             ),
         ),
     )
@@ -1040,7 +1041,7 @@ async def test_the_cas_expectation_comes_from_the_replayed_history() -> None:
                     "operation_id": "op-race",
                     "reason_code": "host-shutdown",
                 },
-                schema_version=4,
+                schema_version=PRODUCT_TASK_SCHEMA_VERSION,
             ),
         ),
     )

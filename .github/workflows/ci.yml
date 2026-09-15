@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: python -m pip install -e ".[dev,tui]"
+      - run: python -m pip install -e ".[dev,tui,tokens]"
       - run: python -m compileall -q src
       - name: Run pytest shard ${{ matrix.shard }} of 4
         shell: bash
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install -e ".[dev,tui]"
+      - run: python -m pip install -e ".[dev,tui,tokens]"
       - name: Test Python Quality plugin distribution
         run: python -m pytest -q
         working-directory: examples/plugins/traceh-python-quality-plugin
@@ -78,5 +78,5 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install -e ".[dev,tui]"
+      - run: python -m pip install -e ".[dev,tui,tokens]"
       - run: pytest -m slow

@@ -4,13 +4,13 @@ import json
 from copy import deepcopy
 
 import pytest
-from evaluation_fixtures import write_dataset
+from evaluation_fixtures import capture_fixture_tree, write_dataset
 from sandbox_fixtures import real_sandbox_policy
 from test_patch_integration import IntegratingProvider
 from test_product_benchmark_e2e import build_benchmark
 
 from traceh.evaluation.plan import RunOptions
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 from traceh.evaluation.runner import EvaluationRunner
 from traceh.llm.retry import NO_MODEL_RETRY
 
@@ -37,13 +37,13 @@ async def test_writable_product_evaluation_counts_child_and_converges(
     initial = root / case["initial_tree"]
     (initial / ".gitattributes").write_bytes(b"* -text\n")
     (initial / "tracked.txt").write_bytes(b"base\n")
-    case["sha256"] = initial_tree_digest(capture_initial_tree(initial))
+    case["sha256"] = initial_tree_digest(capture_fixture_tree(initial))
     settings = manifest["task_settings"]
     child = deepcopy(settings["roles"]["investigator"])
     child["capability_grants"].append("apply_patch")
     child["budget"].update(max_steps=6, max_tool_calls=6)
     settings["roles"]["patch_author"] = child
-    write_dataset(root, manifest, [case], format_version=2)
+    write_dataset(root, manifest, [case], format_version=3)
     report = await EvaluationRunner(
         root,
         tmp_path / "run",

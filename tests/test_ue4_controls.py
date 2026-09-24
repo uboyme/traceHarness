@@ -122,7 +122,15 @@ async def test_repeat_cancel_waits_for_original_runtime_then_closes_store(tmp_pa
             await p.runtime.run_existing(p.session_id, "开始取消测试")
 
     task = asyncio.create_task(run())
-    await entered.wait()
+    reached = asyncio.create_task(entered.wait())
+    try:
+        await asyncio.wait({task, reached}, return_when=asyncio.FIRST_COMPLETED)
+        if task.done():
+            await task  # Surface a setup failure instead of waiting forever.
+        assert entered.is_set()
+    finally:
+        reached.cancel()
+        await asyncio.gather(reached, return_exceptions=True)
     task.cancel()
     await closing.wait()
     task.cancel()

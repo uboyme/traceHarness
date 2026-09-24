@@ -28,6 +28,7 @@ class OptimizationPlanScreen(Screen):
         self.config_path = Path(config_path).resolve()
         self.workspace, self.data_dir, self.model_settings = workspace, data_dir, model_settings
         self.manifest = None
+        self.product_mode = None
         self.sandbox_config = sandbox_config
 
     def compose(self):
@@ -41,7 +42,7 @@ class OptimizationPlanScreen(Screen):
             yield Select([], prompt="先读取题库，再明确选择", id="optimization-seed")
             yield Label("产品任务沙箱配置（必填；隔离执行题库源码，检索题留空）")
             yield Input(self.sandbox_config, id="optimization-sandbox")
-            yield Label("本周期最多尝试几份候选（不会自动采用）")
+            yield Label("本周期最多生成几次建议（不会自动评测或采用）")
             yield Input("1", type="integer", id="optimization-episode-cap")
             yield Label("本周期有效几小时（到期不会自动续费）")
             yield Input("24", type="integer", id="optimization-hours")
@@ -50,9 +51,10 @@ class OptimizationPlanScreen(Screen):
             yield Label("任务 Token 最多为原版的几倍")
             yield Input("1.15", type="number", id="optimization-ratio")
             yield Static(
-                "每道题跑原版与候选各一次。每份候选另预留分析 32,000 Token、"
-                "每次裁判 64,000 Token；任务执行预算来自题库。最多增加 2 次工具调用。"
-                "保存后可在完整表单修改这些显式预设。不会立即调用模型。",
+                "后台只检测问题并生成建议，每次建议预留分析 32,000 Token，不跑评测。"
+                "计划同时写好原版／候选双臂与门槛；要验证某条建议时，把候选来源换成建议文件"
+                "后运行 traceh eval（每题原版与候选各一次，最多增加 2 次工具调用）。"
+                "产品题默认只优化编码指导；保存后可在完整表单修改。不会立即调用模型。",
                 markup=False,
             )
             yield Button("保存选题与此周期额度", id="optimization-save-plan", variant="primary")
@@ -78,8 +80,11 @@ class OptimizationPlanScreen(Screen):
                         provider_id=self.model_settings["provider"],
                         model_id=self.model_settings["model"],
                     )
-                    if suite.rubric is None or "multi" not in suite.modes:
-                        raise ValueError("product-multi-semantic-benchmark-required")
+                    # Single is the default mode; a multi-only benchmark still binds the
+                    # coder guidance, which both modes share.
+                    self.product_mode = "single" if "single" in suite.modes else "multi"
+                    if self.product_mode not in suite.modes:
+                        raise ValueError("product-mode-unsupported")
                     names = {c.task_id: c.requirement[:80] for c in suite.tasks}
                     seeds = [("使用题库冻结源码（没有随机材料版本）", "source")]
                 elif manifest.task_type.value == "retrieval_episode":
@@ -155,6 +160,10 @@ class OptimizationPlanScreen(Screen):
                     "retry_after_cap_seconds": 0,
                     "jitter_ratio": 0,
                 },
+                # Frozen per request like the retry policy (ADR-0086). 300s
+                # leaves room for a full-length reasoning answer; the old 120s
+                # default cut such answers off.
+                "timeout_seconds": 300,
             },
             "execution": {
                 "sandbox_config": sandbox if product else None,
@@ -170,7 +179,7 @@ class OptimizationPlanScreen(Screen):
             },
             "comparison": {
                 "kind": "text_candidate",
-                "requested_modes": ["multi", "multi"] if product else None,
+                "requested_modes": [self.product_mode] * 2 if product else None,
                 "format": 3,
                 "min_pass_gain": gain,
                 "max_token_ratio": ratio,
@@ -179,16 +188,15 @@ class OptimizationPlanScreen(Screen):
         }
         raw = background_preset(self.workspace, self.data_dir)
         if product:
-            from traceh.chat.background import DELEGATION_SELECTORS
+            from traceh.chat.background import CODER_SELECTOR
 
-            raw["selectors"] = [list(s) for s in DELEGATION_SELECTORS]
+            raw["selectors"] = [list(CODER_SELECTOR)]
         raw.update(
             benchmark=str(self.manifest.directory),
             run_plan=str(plan_path),
             expires_at=(datetime.now(UTC) + timedelta(hours=hours)).isoformat(),
             max_episodes=episodes,
-            max_trials=episodes * count,
-            max_control_tokens=episodes * (32000 + 64000 * count),
+            max_control_tokens=episodes * 32000,
         )
         validate_document("background", raw, self.config_path)
         from traceh.evaluation.plan import comparison_policy

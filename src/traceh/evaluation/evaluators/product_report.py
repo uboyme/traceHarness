@@ -542,6 +542,40 @@ def render_markdown(report: BenchmarkReport) -> str:
             f"{_number(timing, 'approval_wait_ms')} | "
             f"{_number(timing, 'wall_ms')} | {promotion} |"
         )
+    lines.extend(
+        (
+            "",
+            "## Context diagnostics",
+            "",
+            "Derived from each Session's own events; descriptive only, never a verdict. "
+            "input_* is provider-reported per dispatched attempt; metered_* is the host's "
+            "pre-dispatch count and exists only for a role with a token policy.",
+            "",
+            "| attempt | session | requests | input peak | input mean | metered peak | "
+            "trigger | over limit | tool folds | summaries | read-backs (repeats) | "
+            "reruns after fold | completions | empty |",
+            "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---:|",
+        )
+    )
+    for attempt in data["attempts"]:
+        evidence = attempt["evidence"]
+        if evidence is None:
+            continue
+        for session in evidence["execution"]["sessions"]:
+            context = session["context"]
+            lines.append(
+                f"| {attempt['attempt_id']} | {session['label']} | {context['requests']} | "
+                f"{_or(context['input_peak'], 'unavailable')} | "
+                f"{_or(context['input_mean'], 'unavailable')} | "
+                f"{_or(context['metered_peak'], 'unmetered')} | "
+                f"{_or(context['trigger_tokens'], 'unmetered')} | "
+                f"{context['over_limit_requests']} | {context['tool_folds']} | "
+                f"{context['summaries']} | "
+                f"{context['readback_calls']} ({context['readback_repeats']}) | "
+                f"{context['reruns_after_fold']} | "
+                f"{_counts({'counts': context['completions'], 'unavailable': 0})} | "
+                f"{context['empty_responses']} |"
+            )
     unavailable = [
         (attempt["attempt_id"], attempt["evidence"]["unavailable"])
         for attempt in data["attempts"]
@@ -610,6 +644,10 @@ def _text(value: object) -> str:
     return "-" if value is None else str(value)
 
 
+def _or(value: object, absent: str) -> str:
+    return absent if value is None else str(value)
+
+
 def _short(value: object) -> str:
     if value is None:
         return "-"
@@ -623,6 +661,7 @@ def _session_dict(work: SessionWork | None) -> JsonValue:
     return {
         "session_id": work.session_id,
         "agent_id": work.agent_id,
+        "label": work.label,
         "turns": work.turns,
         "steps": work.steps,
         "tool_calls": work.tool_calls,
@@ -633,6 +672,7 @@ def _session_dict(work: SessionWork | None) -> JsonValue:
         "provider_active_milliseconds": work.provider_active_milliseconds,
         "provider_failure_categories": list(work.provider_failure_categories),
         "final_model_result": work.final_model_result,
+        "context": work.context.to_dict(),
     }
 
 

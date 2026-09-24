@@ -34,7 +34,7 @@ def _multi_material(root):
     initial = root / cases[0]["initial_tree"]
     (initial / "tracked.txt").write_text("base\n")
     cases[0]["sha256"] = material_case(root, "unused", "unused", cases[0]["initial_tree"])["sha256"]
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
 
 
 @pytest.mark.parametrize("fail_child", [False, True])
@@ -99,7 +99,7 @@ async def test_verifier_belongs_to_each_case_and_is_not_in_the_source_tree(tmp_p
         "-c",
         "from pathlib import Path; assert Path('added.txt').read_text() == 'different'",
     ]
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
     assert all(
         list((root / case["initial_tree"]).iterdir()) == [root / case["initial_tree"] / "kept.txt"]
         for case in cases

@@ -25,7 +25,9 @@ RETRY_FIELDS = frozenset(
         "jitter_ratio",
     }
 )
-MODEL_FIELDS = frozenset({"provider", "model", "base_url", "api_key_env", "script", "retry_policy"})
+MODEL_FIELDS = frozenset(
+    {"provider", "model", "base_url", "api_key_env", "script", "retry_policy", "timeout_seconds"}
+)
 
 
 def _retry_attribute(field: str) -> str:
@@ -170,6 +172,18 @@ def load_run_options(path: Path) -> RunOptions:
         ModelRetryPolicy(**retry)
     except (TypeError, ValueError):
         raise BenchmarkManifestError("evaluation-manifest-invalid", "retry") from None
+    # One model request's wait. It decides whether a long answer arrives or is cut
+    # off, so it is frozen like the retry policy instead of coming from whatever
+    # environment or default the worker happens to inherit (ADR-0086).
+    from math import isfinite
+
+    request_timeout = model["timeout_seconds"]
+    if (
+        type(request_timeout) not in (int, float)
+        or not isfinite(request_timeout)
+        or request_timeout <= 0
+    ):
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "model.timeout_seconds")
     execution_fields = {"sandbox_config", "max_trials", "timeout_seconds"}
     if paired:
         execution_fields |= {"network_mode", "shutdown_seconds", "first_arm"}
@@ -238,12 +252,15 @@ def configure_cli_plan(args):
         "repetitions",
         "max_trials",
         "eval_timeout_seconds",
+        "model_timeout_seconds",
     )
     fields += tuple(_retry_attribute(field) for field in RETRY_FIELDS)
     if any(getattr(args, name, None) is not None for name in fields):
         raise BenchmarkManifestError("evaluation-run-plan-conflict", "cli")
     for name, value in raw["model"].items():
-        if name != "retry_policy":
+        if name == "timeout_seconds":
+            args.model_timeout_seconds = value
+        elif name != "retry_policy":
             setattr(args, name, value)
     for name, value in raw["model"]["retry_policy"].items():
         setattr(args, _retry_attribute(name), value)

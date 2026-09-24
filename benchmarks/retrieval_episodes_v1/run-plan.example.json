@@ -21,7 +21,8 @@
       "max_delay_seconds": 0,
       "retry_after_cap_seconds": 0,
       "jitter_ratio": 0
-    }
+    },
+    "timeout_seconds": 300
   },
   "execution": {
     "sandbox_config": "./sandbox.json",

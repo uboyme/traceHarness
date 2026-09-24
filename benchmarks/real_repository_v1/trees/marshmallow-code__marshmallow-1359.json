@@ -1,0 +1,475 @@
+{
+  "repository": "marshmallow-code/marshmallow",
+  "base_commit": "b40a0f4e33823e6d0f341f7e8684e359a99060d1",
+  "tree_sha": "b40a0f4e33823e6d0f341f7e8684e359a99060d1",
+  "entries": [
+    {
+      "path": ".github/FUNDING.yml",
+      "mode": "100644",
+      "sha": "96d1cfdc462e2e5497bf63ae96ce7a9113042833",
+      "size": 60
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "b1bfe5ede0b2b15dfe628c9d05e97d0bde2530a4",
+      "size": 617
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "mode": "100644",
+      "sha": "1b895e0bf86fd0652d0e8f0773cae48ded660890",
+      "size": 498
+    },
+    {
+      "path": ".readthedocs.yml",
+      "mode": "100644",
+      "sha": "75bf21b97db3282f34262a901c709f4ebd46a094",
+      "size": 169
+    },
+    {
+      "path": "AUTHORS.rst",
+      "mode": "100644",
+      "sha": "754a3ad7774889e4f7e278865eb8a6a9cb05a27f",
+      "size": 7538
+    },
+    {
+      "path": "CHANGELOG.rst",
+      "mode": "100644",
+      "sha": "661f0288a566b7995de115e91e5fc11deb56a7e3",
+      "size": 66336
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "mode": "100644",
+      "sha": "c4fb805b27205b6b8e45bb6c9b1ac86ec39e3b4c",
+      "size": 104
+    },
+    {
+      "path": "CONTRIBUTING.rst",
+      "mode": "100644",
+      "sha": "fe79ddba911a75b706f7efd5040bbca521c4c1a0",
+      "size": 5579
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "d2223c60b6d9124c980166f9c48a748a153a05ed",
+      "size": 1069
+    },
+    {
+      "path": "MANIFEST.in",
+      "mode": "100644",
+      "sha": "f9cd64a36ebc72ad6b4065931264d756d584de7b",
+      "size": 319
+    },
+    {
+      "path": "NOTICE",
+      "mode": "100644",
+      "sha": "472af567fea6849615a93306c1d006c5e1a34dc2",
+      "size": 5435
+    },
+    {
+      "path": "README.rst",
+      "mode": "100644",
+      "sha": "cb3a63a6488bfdec17d13539b500e181aba41f67",
+      "size": 5389
+    },
+    {
+      "path": "RELEASING.md",
+      "mode": "100644",
+      "sha": "7659fc077653d12e54af08744ef028c34ab5aab9",
+      "size": 323
+    },
+    {
+      "path": "azure-pipelines.yml",
+      "mode": "100644",
+      "sha": "7b14caf885e65ef1b2f2ee51b4c3e5ce2c5cf261",
+      "size": 462
+    },
+    {
+      "path": "docs/.gitignore",
+      "mode": "100644",
+      "sha": "50441ab2ca3d20b9691260c50b0b7cdb311460ca",
+      "size": 35
+    },
+    {
+      "path": "docs/Makefile",
+      "mode": "100644",
+      "sha": "0640a02e11e84ade6e4c0cf093533bd001af2252",
+      "size": 6925
+    },
+    {
+      "path": "docs/_static/css/versionwarning.css",
+      "mode": "100644",
+      "sha": "f4d2160acdfee942e0c761b4ae266d9c00b28147",
+      "size": 608
+    },
+    {
+      "path": "docs/_static/marshmallow-logo.png",
+      "mode": "100644",
+      "sha": "1996177b62c5493c120e882b3951af8b65ac29ab",
+      "size": 13908
+    },
+    {
+      "path": "docs/_templates/donate.html",
+      "mode": "100644",
+      "sha": "ecfa3cd01f9c973a1d9e45a02c0435365dc1c290",
+      "size": 1021
+    },
+    {
+      "path": "docs/_templates/useful-links.html",
+      "mode": "100644",
+      "sha": "1a5ba7601f1d7860dd2576765990e3b1ac65920e",
+      "size": 148
+    },
+    {
+      "path": "docs/about.rst.inc",
+      "mode": "100644",
+      "sha": "7d70e039e730c78ede71d9b2b73d84665483f297",
+      "size": 1271
+    },
+    {
+      "path": "docs/api_reference.rst",
+      "mode": "100644",
+      "sha": "dfd4799c5fd6d284a2c73ba46c76b05b75445715",
+      "size": 822
+    },
+    {
+      "path": "docs/authors.rst",
+      "mode": "100644",
+      "sha": "e122f914a87b277e565fc9567af1a7545ec9872b",
+      "size": 28
+    },
+    {
+      "path": "docs/changelog.rst",
+      "mode": "100644",
+      "sha": "13701a344d88145a458a825256c4df74374dc241",
+      "size": 134
+    },
+    {
+      "path": "docs/code_of_conduct.rst",
+      "mode": "100644",
+      "sha": "8b9496c5af92bb670b2a5c88d2f753cf01d86430",
+      "size": 10869
+    },
+    {
+      "path": "docs/conf.py",
+      "mode": "100644",
+      "sha": "4221038d89dff6367b5112932e11b11c394a1d1e",
+      "size": 4363
+    },
+    {
+      "path": "docs/contributing.rst",
+      "mode": "100644",
+      "sha": "e582053ea018c369be05aae96cf730744f1dc616",
+      "size": 33
+    },
+    {
+      "path": "docs/custom_fields.rst",
+      "mode": "100644",
+      "sha": "5f01d4a83f345042cc4e9d0ac104575860eec54c",
+      "size": 5672
+    },
+    {
+      "path": "docs/dashing.json",
+      "mode": "100644",
+      "sha": "66267cccc0922c99a4901a51377abfb454f4d3a0",
+      "size": 469
+    },
+    {
+      "path": "docs/ecosystem.rst",
+      "mode": "100644",
+      "sha": "ef96ae139d9c97f2aa30af9d52a63b55c2230a22",
+      "size": 163
+    },
+    {
+      "path": "docs/examples.rst",
+      "mode": "100644",
+      "sha": "c4a4cb4445319f6bb84024f8866fbca054582ae3",
+      "size": 8038
+    },
+    {
+      "path": "docs/extending.rst",
+      "mode": "100644",
+      "sha": "900747ad27f8c996eba45a71248a91c2d2e001d5",
+      "size": 15619
+    },
+    {
+      "path": "docs/index.rst",
+      "mode": "100644",
+      "sha": "15fb807fb34f6236bec0be959f14ac348b1bef9b",
+      "size": 981
+    },
+    {
+      "path": "docs/install.rst",
+      "mode": "100644",
+      "sha": "d9855f4c08a88914e42189741973329e19f950c5",
+      "size": 704
+    },
+    {
+      "path": "docs/kudos.rst",
+      "mode": "100644",
+      "sha": "7463c5ade0fcbcd2cbd203ac4691152f1d1efc64",
+      "size": 325
+    },
+    {
+      "path": "docs/license.rst",
+      "mode": "100644",
+      "sha": "8f3cf1fb7bcd7c0b4461f0bda1841b90ff8c1a49",
+      "size": 48
+    },
+    {
+      "path": "docs/make.bat",
+      "mode": "100644",
+      "sha": "2df9a8cbbb680a1e83d41f835efafaefffc4888b",
+      "size": 6467
+    },
+    {
+      "path": "docs/nesting.rst",
+      "mode": "100644",
+      "sha": "66da5df703389270aa92389037c30a4c4dccb901",
+      "size": 8369
+    },
+    {
+      "path": "docs/quickstart.rst",
+      "mode": "100644",
+      "sha": "5bd26d68d96f9793f1b55f7ed19b96bed63c7548",
+      "size": 18074
+    },
+    {
+      "path": "docs/upgrading.rst",
+      "mode": "100644",
+      "sha": "28a4e70ddc5917617b7dbf7ddc7c76b2dc4c421e",
+      "size": 51899
+    },
+    {
+      "path": "docs/whos_using.rst",
+      "mode": "100644",
+      "sha": "b2c94e1b0023b311d566e2da47eb3b185caa49c3",
+      "size": 271
+    },
+    {
+      "path": "docs/why.rst",
+      "mode": "100644",
+      "sha": "08444e3019f133b87b76ad854f1cd2dcd7229e28",
+      "size": 5502
+    },
+    {
+      "path": "examples/flask_example.py",
+      "mode": "100644",
+      "sha": "eeac82cf4315526eb2976ede4fbfc355b062bee4",
+      "size": 4064
+    },
+    {
+      "path": "examples/inflection_example.py",
+      "mode": "100644",
+      "sha": "72eeb35b991ea547f3fc55041c39e4fa7871323c",
+      "size": 888
+    },
+    {
+      "path": "examples/package_json_example.py",
+      "mode": "100644",
+      "sha": "ca7abbebaf4327ef15ec37143112d755206410a8",
+      "size": 1433
+    },
+    {
+      "path": "examples/peewee_example.py",
+      "mode": "100644",
+      "sha": "a28c4fefe948e48e7ea0829670d6ac8208737d6f",
+      "size": 5386
+    },
+    {
+      "path": "examples/textblob_example.py",
+      "mode": "100644",
+      "sha": "54d36282c9cc0184a8e7748c26333621081d3bdb",
+      "size": 823
+    },
+    {
+      "path": "performance/benchmark.py",
+      "mode": "100644",
+      "sha": "f165b0fbc661d59933079e1bc19f5e15ba8a35da",
+      "size": 3930
+    },
+    {
+      "path": "pyproject.toml",
+      "mode": "100644",
+      "sha": "a34de3d94d13109bc0c2e855cc9d8a632d4b98ec",
+      "size": 144
+    },
+    {
+      "path": "setup.cfg",
+      "mode": "100644",
+      "sha": "cc02bfbd953998325798d503163e7c2fd00fa743",
+      "size": 276
+    },
+    {
+      "path": "setup.py",
+      "mode": "100644",
+      "sha": "8ad5b97a1131fc4c67f2312d0359a7046328c36e",
+      "size": 2608
+    },
+    {
+      "path": "src/marshmallow/__init__.py",
+      "mode": "100644",
+      "sha": "87af32351ffdf0bf3035e4a9084fb53add01d44a",
+      "size": 716
+    },
+    {
+      "path": "src/marshmallow/base.py",
+      "mode": "100644",
+      "sha": "6e5f8ed20652b3cb44f0537c91a78c548266d984",
+      "size": 1140
+    },
+    {
+      "path": "src/marshmallow/class_registry.py",
+      "mode": "100644",
+      "sha": "e71ab34a0f181ed9c146f74394c7d07cd237fd69",
+      "size": 2567
+    },
+    {
+      "path": "src/marshmallow/decorators.py",
+      "mode": "100644",
+      "sha": "9762627e524921b9220c6b0a799ba6ce185ebc7b",
+      "size": 6748
+    },
+    {
+      "path": "src/marshmallow/error_store.py",
+      "mode": "100644",
+      "sha": "1306ab1b1ea0bee5c8c70abfaaca5e487307a6b9",
+      "size": 2247
+    },
+    {
+      "path": "src/marshmallow/exceptions.py",
+      "mode": "100644",
+      "sha": "a28ceea61442bba98545100f2a654e9fd3a0c5f0",
+      "size": 1754
+    },
+    {
+      "path": "src/marshmallow/fields.py",
+      "mode": "100644",
+      "sha": "0b18e7dd3485f0e70aa0d685f6dfd50b893f974b",
+      "size": 60020
+    },
+    {
+      "path": "src/marshmallow/orderedset.py",
+      "mode": "100644",
+      "sha": "8d997123d622d7e0a849fdd4601da8f391f9bfeb",
+      "size": 2940
+    },
+    {
+      "path": "src/marshmallow/schema.py",
+      "mode": "100644",
+      "sha": "520ffb44447c6534cf07cada1da332d364b6a19a",
+      "size": 46281
+    },
+    {
+      "path": "src/marshmallow/utils.py",
+      "mode": "100644",
+      "sha": "aa7350f891fc1dc384cb035483245d2ce2eb2aa8",
+      "size": 9510
+    },
+    {
+      "path": "src/marshmallow/validate.py",
+      "mode": "100644",
+      "sha": "28dae8db273b366df9a2ee50f037e0364ce0058f",
+      "size": 18611
+    },
+    {
+      "path": "tests/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/base.py",
+      "mode": "100644",
+      "sha": "b1661f3d50b2ced64ad1121a4b819dbfec4310c8",
+      "size": 7978
+    },
+    {
+      "path": "tests/conftest.py",
+      "mode": "100644",
+      "sha": "5c3045c327f1cd97e3eec222c28fd7df1869f713",
+      "size": 565
+    },
+    {
+      "path": "tests/foo_serializer.py",
+      "mode": "100644",
+      "sha": "9a0075b74aff9aca837de50c2d1abc98793450bc",
+      "size": 97
+    },
+    {
+      "path": "tests/test_decorators.py",
+      "mode": "100644",
+      "sha": "0d2ffc6baff0c7f6002ed23a44950a25672bb65a",
+      "size": 30937
+    },
+    {
+      "path": "tests/test_deserialization.py",
+      "mode": "100644",
+      "sha": "7536cf75e33db042a39a655cf7469b4deb3ff1ec",
+      "size": 69674
+    },
+    {
+      "path": "tests/test_error_store.py",
+      "mode": "100644",
+      "sha": "8315bf2a93caacb0026c4dab6fd395e9b7a56e30",
+      "size": 5137
+    },
+    {
+      "path": "tests/test_exceptions.py",
+      "mode": "100644",
+      "sha": "1bbf0ee487f14994c1510488d12459bf6053a58b",
+      "size": 887
+    },
+    {
+      "path": "tests/test_fields.py",
+      "mode": "100644",
+      "sha": "b0a5a7777d6529105e4772762b48ff441d227e11",
+      "size": 16073
+    },
+    {
+      "path": "tests/test_options.py",
+      "mode": "100644",
+      "sha": "2a9ffa79d31fd29b342bdd8a69ad5476051bf3d2",
+      "size": 7586
+    },
+    {
+      "path": "tests/test_registry.py",
+      "mode": "100644",
+      "sha": "755a9ee6d1f83badc869d487cc1166c421e45348",
+      "size": 6849
+    },
+    {
+      "path": "tests/test_schema.py",
+      "mode": "100644",
+      "sha": "839c70e3751059ed19fe4c899d32dd4f5062c431",
+      "size": 84138
+    },
+    {
+      "path": "tests/test_serialization.py",
+      "mode": "100644",
+      "sha": "56952c20af34d1b270b43ba89770e842da4bfa0a",
+      "size": 28334
+    },
+    {
+      "path": "tests/test_utils.py",
+      "mode": "100644",
+      "sha": "fff2257f50bcb3524c789e7d4c5c3b94a15cf101",
+      "size": 7100
+    },
+    {
+      "path": "tests/test_validate.py",
+      "mode": "100644",
+      "sha": "81709b2932fb11762c2e9f6ccd5ced8be2e444e9",
+      "size": 25292
+    },
+    {
+      "path": "tox.ini",
+      "mode": "100644",
+      "sha": "61ab740d2d7f8b725229e6d7f4f2c597957b740f",
+      "size": 710
+    }
+  ]
+}

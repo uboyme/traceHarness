@@ -5,9 +5,12 @@ SHA-256 固定在 task_settings.retrieval；dataset 独立绑定。候选运行�
 全部使用同一 initial tree、同一 Verifier 和 single arm；单样本不作统计显著性结论。
 
 运行仍使用 `traceh eval benchmarks/retrieval_v1 --output <新目录>`，Provider/model 通过该命令的
-显式参数选择。当前固定验证协议为 2，运行时还需 `--sandbox-config <宿主策略文件>`；
+显式参数选择。当前固定验证协议为 3，运行时还需 `--sandbox-config <宿主策略文件>`；
 沙箱使用每个 attempt 原来的账本/CAS，没有配置就拒绝进程执行。每个样本的模型任务由 initial/README.md 说明；query 通过正常 requirement 输入。
 本目录 corpus 和 judgments 不复制到模型可写工作区。
+
+Product dataset 当前为 format 3，每题显式绑定 `initial_tree_limits` 的文件数、单文件 bytes 与总 bytes；
+旧 format 2 拒绝，既有运行目录不会自动迁移。根协议与 corpus 格式不因这次切换改变。
 
 先在宿主环境显式安装 [typed Skill 示例包](../../examples/plugins/traceh-reference-skills/README.md)。
 安装并不自动启用。attempt 按 manifest 先启用两个插件，再退役旧插件，选择当前 Skill；缺失插件、

@@ -10,7 +10,7 @@ from pathlib import Path
 from traceh.api.json_types import fingerprint
 from traceh.evaluation.errors import BenchmarkManifestError
 from traceh.evaluation.evidence import load_run
-from traceh.evaluation.inputs import object_fields, read_input
+from traceh.evaluation.inputs import artifact_digest, object_fields, read_input
 from traceh.evaluation.plan import comparison_policy
 from traceh.evaluation.variants import apply_candidate, source_digest
 
@@ -104,7 +104,9 @@ def _load(root, assessments):
             ),
             "execution-strategy-source",
         )
-    for ref in (*frozen["artifacts"], *frozen["inputs"]):
+    for ref in frozen["artifacts"]:
+        _require(artifact_digest(root, ref["file"]) == ref["sha256"], "artifact")
+    for ref in frozen["inputs"]:
         _require(read_input(root, ref["file"]).sha256 == ref["sha256"], "artifact")
     sources = _archive(root, "artifacts/base-source.zip")
     materials = _archive(root, "artifacts/materials.zip")

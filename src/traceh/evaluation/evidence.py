@@ -4,7 +4,7 @@ import zipfile
 
 from traceh.api.json_types import fingerprint, to_json_value
 from traceh.evaluation.errors import BenchmarkManifestError
-from traceh.evaluation.inputs import read_input
+from traceh.evaluation.inputs import artifact_digest, read_input
 from traceh.evaluation.variants import source_digest
 
 
@@ -40,7 +40,7 @@ def load_run(root):
             == trial["evidence"]
         )
     for artifact in frozen["artifacts"]:
-        require(read_input(root, artifact["file"]).sha256 == artifact["sha256"])
+        require(artifact_digest(root, artifact["file"]) == artifact["sha256"])
     with zipfile.ZipFile(root / "artifacts/source.zip") as archive:
         sources = tuple((name, archive.read(name)) for name in archive.namelist())
         require(source_digest(sources) == frozen["variant"]["source_digest"])

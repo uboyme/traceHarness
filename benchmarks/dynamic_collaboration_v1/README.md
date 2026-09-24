@@ -1,5 +1,8 @@
 # DA：按需协作的任务材料
 
+当前 Product dataset 为 format 3，每题显式绑定 `initial_tree_limits`（文件数、单文件与总字节额度）。
+旧 format 2 拒绝；维护中的材料文件和生成器已同步，不自动修改已有实验目录。
+
 这些是依据 TraceHarness 当前真实合同**缩减重建**的可运行小项目，不是生产仓库的原始缺陷快照，也不是随机抽样的通用能力榜单。每题的 `provenance.json` 条目标明依据文件和当时内容摘要；生成器保留在 `tests/live_dynamic_collaboration`。没有用模型实验结果筛选或删除题目。
 
 `development` 有 12 个不同问题组，`holdout` 有 6 个不同问题组；各自是独立 Product benchmark 目录。优化模板只绑定 development。每个工作区只接收该题的初始文件、需求和 `.gitignore`，不接收隐藏检查、参考修复或其他题目。用户需求不要求委派或指定角色。

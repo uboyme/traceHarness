@@ -39,7 +39,8 @@ class ProductTaskEvaluator:
     def verify_inputs(self):
         self.manifest.verify()
         for task in self.suite.tasks:
-            if initial_tree_digest(capture_initial_tree(task.initial_dir)) != task.material_digest:
+            captured = capture_initial_tree(task.initial_dir, limits=task.initial_tree_limits)
+            if initial_tree_digest(captured) != task.material_digest:
                 raise BenchmarkManifestError("evaluation-frozen-input-drift", "initial_tree")
         if self.suite.retrieval is not None:
             self.suite.retrieval.verify()
@@ -67,7 +68,7 @@ class ProductTaskEvaluator:
             rubric.verify()
             files[rubric.relative] = rubric.content
         for task in self.suite.tasks:
-            captured = capture_initial_tree(task.initial_dir)
+            captured = capture_initial_tree(task.initial_dir, limits=task.initial_tree_limits)
             if initial_tree_digest(captured) != task.material_digest:
                 raise BenchmarkManifestError("evaluation-frozen-input-drift", "initial_tree")
             for name, data in captured:

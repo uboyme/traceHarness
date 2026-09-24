@@ -37,9 +37,19 @@ BENCHMARK_SOURCE_REVISION = "main"
 BENCHMARK_TARGET_REF = "refs/heads/main"
 MAX_GIT_OUTPUT_BYTES = 64 * 1024
 
-MAX_INITIAL_FILES = 256
-MAX_INITIAL_FILE_BYTES = 1024 * 1024
-MAX_INITIAL_TOTAL_BYTES = 8 * 1024 * 1024
+@dataclass(frozen=True, slots=True)
+class InitialTreeLimits:
+    """Explicit host bounds for source material, independent of patch size."""
+
+    max_files: int
+    max_file_bytes: int
+    max_total_bytes: int
+
+    def __post_init__(self):
+        if any(type(value) is not int or value <= 0 for value in (
+            self.max_files, self.max_file_bytes, self.max_total_bytes
+        )) or self.max_file_bytes > self.max_total_bytes:
+            raise ValueError("invalid initial tree limits")
 
 _COMMIT_IDENTITY = "TraceHarness Benchmark"
 _COMMIT_EMAIL = "benchmark@traceharness.invalid"
@@ -60,11 +70,12 @@ class AttemptRepositories:
 
 
 async def build_attempt_repositories(
-    *, initial_dir: Path, source: Path, target: Path, expected_initial_digest: str | None = None
+    *, initial_dir: Path, source: Path, target: Path, limits: InitialTreeLimits,
+    expected_initial_digest: str | None = None
 ) -> AttemptRepositories:
     """Materialize one attempt's source repository and its bare target."""
 
-    _copy_initial_tree(initial_dir, source, expected_digest=expected_initial_digest)
+    _copy_initial_tree(initial_dir, source, limits=limits, expected_digest=expected_initial_digest)
     await _git(("init", "--quiet", f"--initial-branch={BENCHMARK_SOURCE_REVISION}"), cwd=source)
     for name, value in (
         ("user.name", _COMMIT_IDENTITY),
@@ -76,7 +87,9 @@ async def build_attempt_repositories(
         ("core.eol", "lf"),
     ):
         await _git(("config", name, value), cwd=source)
-    await _git(("add", "-A"), cwd=source)
+    # The frozen material is authoritative, including upstream tracked files
+    # that happen to match upstream ignore rules.
+    await _git(("add", "--force", "-A"), cwd=source)
     await _git(("commit", "--quiet", "-m", _COMMIT_MESSAGE), cwd=source)
     base_revision = await _git(("rev-parse", "HEAD"), cwd=source)
     await _git(
@@ -102,7 +115,9 @@ async def read_target_revision(target: Path, ref: str) -> str | None:
     return await _git(("rev-parse", ref), cwd=target)
 
 
-def capture_initial_tree(initial_dir: Path) -> tuple[tuple[str, bytes], ...]:
+def capture_initial_tree(
+    initial_dir: Path, *, limits: InitialTreeLimits
+) -> tuple[tuple[str, bytes], ...]:
     """Copy a bounded, link-free tree of regular files, or refuse."""
 
     if _is_reparse(initial_dir):
@@ -120,13 +135,13 @@ def capture_initial_tree(initial_dir: Path) -> tuple[tuple[str, bytes], ...]:
         files += 1
         total += size
         if (
-            files > MAX_INITIAL_FILES
-            or size > MAX_INITIAL_FILE_BYTES
-            or total > MAX_INITIAL_TOTAL_BYTES
+            files > limits.max_files
+            or size > limits.max_file_bytes
+            or total > limits.max_total_bytes
         ):
             raise BenchmarkExecutionError("benchmark-initial-tree-too-large")
         with entry.open("rb") as handle:
-            data = handle.read(MAX_INITIAL_FILE_BYTES + 1)
+            data = handle.read(limits.max_file_bytes + 1)
         if len(data) != size:
             raise BenchmarkExecutionError("evaluation-frozen-input-drift")
         captured.append((relative.as_posix(), data))
@@ -139,8 +154,10 @@ def initial_tree_digest(files: tuple[tuple[str, bytes], ...]) -> str:
     return fingerprint([{ "file": name, "sha256": digest_bytes(data)} for name, data in files])
 
 
-def _copy_initial_tree(initial_dir: Path, source: Path, *, expected_digest=None) -> None:
-    captured = capture_initial_tree(initial_dir)
+def _copy_initial_tree(
+    initial_dir: Path, source: Path, *, limits: InitialTreeLimits, expected_digest=None
+) -> None:
+    captured = capture_initial_tree(initial_dir, limits=limits)
     if expected_digest is not None and initial_tree_digest(captured) != expected_digest:
         raise BenchmarkExecutionError("evaluation-frozen-input-drift")
     source.mkdir(parents=True, exist_ok=False)
@@ -250,9 +267,7 @@ def _git_environment() -> dict[str, str]:
 
 
 __all__ = [
-    "MAX_INITIAL_FILES",
-    "MAX_INITIAL_FILE_BYTES",
-    "MAX_INITIAL_TOTAL_BYTES",
+    "InitialTreeLimits",
     "AttemptRepositories",
     "build_attempt_repositories",
     "read_target_revision",

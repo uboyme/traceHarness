@@ -116,6 +116,31 @@ async def run_worker(code, request, *, duration_seconds, shutdown, environment):
     return outcome
 
 
+def _arm_stop_reason(run):
+    """Why the next arm must not start after this one, from its own report.
+
+    A Provider failure or a cost nobody can state is exactly the condition under
+    which spending on the paired arm stops being an informed decision: the pair
+    can no longer be compared, and the same connection may fail again. The
+    remaining arm is left unstarted and the comparison reports it as missing.
+    """
+
+    if not (run / "report.json").is_file():
+        return "evaluation-arm-report-missing"
+    report = read_input(run, "report.json").data
+    for trial in report["trials"]:
+        if not trial["measured"] or any(
+            value is None or (isinstance(value, dict) and value.get("unknown_attempts", 0) > 0)
+            for value in trial["usage"].values()
+        ):
+            return "evaluation-arm-usage-unknown"
+    for attempt in report["task_report"].get("attempts", ()):
+        evidence = attempt.get("evidence")
+        if evidence is not None and evidence["execution"]["provider_failure_categories"]:
+            return "evaluation-arm-provider-failure"
+    return None
+
+
 def _archive(path, files):
     with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
         for name, data in files:
@@ -298,6 +323,10 @@ async def execute_variants(runner):
                 doc.verify()
             if source_digest(source_files()[1]) != base_digest:
                 raise BenchmarkExecutionError("evaluation-frozen-input-drift")
+            if arm is not ordered_arms[-1]:
+                reason = _arm_stop_reason(directory / "run")
+                if reason is not None:
+                    raise BenchmarkExecutionError(reason)
         except BaseException as error:
             primary = error
             break

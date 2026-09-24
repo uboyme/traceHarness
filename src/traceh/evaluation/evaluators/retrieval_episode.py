@@ -29,7 +29,7 @@ from traceh.evaluation.evaluators.episode_setup import (
     setup_episode,
 )
 from traceh.runtime.request_builder import verify_request_snapshots
-from traceh.session.tool_output import resolve_tool_output
+from traceh.session.tool_output import RETAINED, resolve_tool_output
 
 
 @dataclass(frozen=True)
@@ -223,10 +223,16 @@ class RetrievalEpisodeEvaluator:
         output_sources = []
         if data["family"] == "output":
             for e in events:
+                # This experiment measures retrieval of output the model was
+                # *not* shown, so its sources are the results the host actually
+                # withheld. Every complete result is addressable now, so the
+                # presence of a reference no longer means "retained"; the
+                # disclosure the host recorded does. Widening this set would
+                # silently rescore the frozen episodes.
                 if (
                     e.type == "tool/result"
                     and e.data["tool_name"] == "shell"
-                    and "output_ref" in e.data
+                    and e.data.get("output_ref", {}).get("disclosure") == RETAINED
                 ):
                     ref = e.data["output_ref"]
                     payload = resolve_tool_output(

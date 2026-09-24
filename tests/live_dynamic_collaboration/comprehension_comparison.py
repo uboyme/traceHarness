@@ -19,6 +19,8 @@ import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from evaluation_fixtures import capture_fixture_tree, fixture_tree_limits
+
 from live_dynamic_collaboration.comprehension_materials import (
     ADR_COUNT,
     DELIVERABLE,
@@ -35,7 +37,7 @@ from live_dynamic_collaboration.comprehension_materials import (
 )
 from live_dynamic_collaboration.materials import budgets, write
 from traceh.evaluation.inputs import digest_bytes, read_input
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 from traceh.sandbox.config import load_sandbox_file
 
 CASE = "comprehension-large-codebase"
@@ -184,14 +186,15 @@ def prepare(repository: Path, sandbox: Path, output: Path, env_file: Path) -> No
     write(
         output / "material/dataset.json",
         {
-            "format": 2,
+            "format": 3,
             "cases": [
                 {
                     "case_id": CASE,
                     "group_id": CASE,
                     "requirement": REQUIREMENT,
                     "initial_tree": "initial",
-                    "sha256": initial_tree_digest(capture_initial_tree(initial)),
+            "initial_tree_limits": fixture_tree_limits(),
+                    "sha256": initial_tree_digest(capture_fixture_tree(initial)),
                     "verification": verification,
                 }
             ],
@@ -275,8 +278,8 @@ def prepare(repository: Path, sandbox: Path, output: Path, env_file: Path) -> No
                 # keeps a long run from dying on a transient limit. Both arms
                 # get the identical policy.
                 #
-                # max_elapsed_seconds must exceed the provider's own 120s HTTP
-                # timeout (openai_compatible.py, not settable from a run plan):
+                # max_elapsed_seconds must exceed the provider's 120s HTTP
+                # timeout (frozen below as model.timeout_seconds since ADR-0086):
                 # retry.py refuses when elapsed >= max_elapsed_seconds, so the
                 # round-2 value of 120 made a 120.27s timeout unretryable by
                 # construction - the exact failure the policy existed to cover.
@@ -288,6 +291,7 @@ def prepare(repository: Path, sandbox: Path, output: Path, env_file: Path) -> No
                     "retry_after_cap_seconds": 60,
                     "jitter_ratio": 0.2,
                 },
+                "timeout_seconds": 120,
             },
             "execution": {
                 "sandbox_config": "../sandbox.json",

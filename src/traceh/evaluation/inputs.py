@@ -113,6 +113,16 @@ def read_input(root: Path, relative: str) -> FrozenFile:
     return FrozenFile(root.resolve(), path.relative_to(root.resolve()).as_posix(), data)
 
 
+def artifact_digest(root: Path, relative: str) -> str:
+    """Hash a frozen binary artifact without applying the JSON document limit."""
+    path = confined_path(root, relative)
+    try:
+        with path.open("rb") as handle:
+            return hashlib.file_digest(handle, "sha256").hexdigest()
+    except OSError:
+        raise BenchmarkManifestError("evaluation-manifest-invalid", "file") from None
+
+
 def referenced_input(root: Path, value: object) -> FrozenFile:
     ref = object_fields(value, {"file", "sha256"}, "reference")
     item = read_input(root, ref["file"])

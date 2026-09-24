@@ -125,8 +125,8 @@ def judge_pair(root, statuses):
         assessment = root.parent / f"assessment-{index}"
         export_review(run, review)
         path = review / "judgment-template.json"
-        data = json.loads(path.read_text())
-        report = json.loads((run / "report.json").read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
+        report = json.loads((run / "report.json").read_text(encoding="utf-8"))
         data["reviewer"] = "fixture-human-review"
         data["judgments"] = [
             {
@@ -149,7 +149,7 @@ def judge_pair(root, statuses):
             {
                 "format": 1,
                 "experiment_digest": fingerprint(
-                    json.loads((root / "experiment.json").read_text())
+                    json.loads((root / "experiment.json").read_text(encoding="utf-8"))
                 ),
                 "assessments": refs,
             }
@@ -161,13 +161,14 @@ def judge_pair(root, statuses):
 @pytest.mark.parametrize("patch", [False, True])
 async def test_public_cli_isolated_workers_load_exact_sources_and_keep_pending(tmp_path, patch):
     root, code = await run_pair(tmp_path, patch=patch)
-    report = json.loads((root / "comparison/report.json").read_text())
+    report = json.loads((root / "comparison/report.json").read_text(encoding="utf-8"))
     assert code == 0, report
     assert report["complete"] and report["status"] == "inconclusive"
     assert report["planned_pairs"] == 1 and report["changes"]["unknown"] == 1
     assert report["cost_delta"] == {"total_tokens": 0, "tool_calls": 0}
     receipts = [
-        json.loads((root / f"arms/{i:02d}/worker-receipt.json").read_text()) for i in (1, 2)
+        json.loads((root / f"arms/{i:02d}/worker-receipt.json").read_text(encoding="utf-8"))
+        for i in (1, 2)
     ]
     assert receipts[0]["pid"] != receipts[1]["pid"] != os.getpid()
     assert all(Path(r["source_root"]).is_relative_to(root) for r in receipts)

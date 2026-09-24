@@ -17,3 +17,6 @@ benchmarks/retrieval_v1/*.json -text whitespace=cr-at-eol
 benchmarks/retrieval_v1/initial/** -text whitespace=cr-at-eol
 benchmarks/retrieval_episodes_v1/** -text whitespace=cr-at-eol
 benchmarks/dynamic_collaboration_v1/** -text whitespace=cr-at-eol
+benchmarks/real_repository_v1/** -text whitespace=cr-at-eol
+docs/validation-data/real-repository-v1/** -text whitespace=cr-at-eol
+benchmarks/task_type_v1/** -text whitespace=cr-at-eol

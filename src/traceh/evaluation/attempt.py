@@ -143,6 +143,7 @@ async def run_attempt(
         source=request.directory / "source",
         target=request.directory / "tgt.git",
         expected_initial_digest=request.task.material_digest,
+        limits=request.task.initial_tree_limits,
     )
     store = SqliteEventStore(request.directory / "ev")
     result: AttemptReport | None = None
@@ -195,6 +196,7 @@ async def _run_attempt_with_store(
                 source=request.directory / "foreign-source",
                 target=request.directory / "foreign.git",
                 expected_initial_digest=request.task.material_digest,
+                limits=request.task.initial_tree_limits,
             )
             sources["benchmark-isolation-source"] = foreign.source
     workspace_provider = LocalGitWorkspaceProvider(

@@ -21,6 +21,7 @@ from traceh.api.json_types import fingerprint
 from traceh.evaluation.errors import BenchmarkManifestError
 from traceh.evaluation.evaluators.product_manifest import load_product_suite
 from traceh.evaluation.manifest import load_benchmark_manifest
+from traceh.evaluation.plan import RunOptions
 from traceh.evaluation.retrieval import score_blocks
 from traceh.evaluation.runner import EvaluationRunner
 
@@ -32,7 +33,7 @@ def benchmark(root, *, query="goals.code", relevant=True, category="exact"):
     manifest = json.loads((root / "benchmark.json").read_text(encoding="utf-8"))
     cases = json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"]
     cases[0]["requirement"] = query
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
     memory = asdict(memory_policy())
     memory["denied_patterns"] = list(memory["denied_patterns"])
     identity = {"kind": "memory", "id": "goals.code", "tiers": ["summary"]}
@@ -335,6 +336,7 @@ async def test_shipped_frozen_baseline_uses_real_plugin_lifecycle(tmp_path, monk
         provider=_ProductProvider(),
         model_id=PRODUCT_MODEL_ID,
         sandbox=real_sandbox_policy(),
+        options=RunOptions(requested_modes=("single",)),
     )
     report = (await runner.run()).task_report
     assert len(report.attempts) == 11

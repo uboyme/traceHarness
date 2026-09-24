@@ -192,9 +192,52 @@ TraceHarness 是可重建、可审计的 Coding Agent Runtime。它把模型决�
 - 完整流式模型输出、重试、Fallback 与限流中间件；
 - 完整 Codex/Claude Code 式终端工作台：F4 已提供最小可交互 Textual TUI，但没有 token streaming、完整历史 Dashboard、拖拽 DAG、Turn 执行中的并发输入或新的“执行前审批”权限；START/Approval 仍是 Product 主线原有的人机边界。
 
+### 2.3 当前量化目标与执行边界（规划）
+
+当前后续目标集中为三项：上下文治理能否在保住正确交付的同时减少完整任务成本；相同资源授权下
+single/multi 的质量、耗时与协作开销；有限分工策略搜索能否选出值得采用的候选。
+最终交付包括冻结条件、逐题结果、原证据索引、根因与取舍说明，以及据实形成的简历表述，
+不预设正收益。负结果可形成研究结论，未执行或证据不足仍须列为未完成。
+
+2026-09-23 起，剩余路线、题量与停止条件维护在[收口计划](../plan/TRACEHARNESS_TASK_TYPE_CONTEXT_EVOLUTION_PLAN.md)：
+Single/Multi 适用性改在自建五类任务（同一 astroid 固定 revision，确定性验收）上逐类对照；
+上下文治理改在确有上下文压力的 Multi 运行中与关闭治理的同条件臂对照，因为 Single 修复类任务
+单请求输入远低于折叠水位（记录 086 三道开发题原版 `surface/replace` 均为 0）；
+有界自进化在 SWE 真实题 3 开发 + 3 验证上验证“后台检测并提出受限建议、人工经 `traceh eval` 验证”。
+付费前先完成零费用 S0；此前[三项目标计划](../plan/TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md)与记录 086 保留为历史。
+S0 已完成（runner 上下文诊断 12.5、臂间停止、后台“检测 + 建议” 12.11/ADR-0082、题库准入）。
+实验 A、B 已按预登记跑完，结果见[记录 087](../deal/087-task-type-context-evolution.md)：
+A 中 Multi 在五类任务上都没有更快，token 按类合计为 Single 的约 2.9–5 倍，只有并行读码一类通过次数更多（2/2 对 1/2）；
+A4/A5 的 Multi 失败混入了已修复的宿主缺陷（ADR-0083 与 14.3.26 的字段拒绝）。96k 窗口下 Multi 峰值 34,529，
+从未触发折叠。B 按回退在 48k 窗口对照：开治理单请求输入均值降 16–22%，但固定验收 0/2 对关治理 2/2，
+全树 token 没有下降；模型没有使用读回，而是重跑原工具，在修复阶段超出 Turn 期限。
+这组治理配置因此不能宣称“质量不降”。
+据此定位的一条颠簸路径由 ADR-0084 修复（折叠后重跑同一调用计为重开需求，见 12.2）。
+同条件复测 B2 开治理 2/2 通过，但只有 1 次走到修复循环并触发新机制，另 1 次首份交付即正确；
+与同样走修复循环的关治理运行相比，主方单请求输入均值 −13%、峰值 −14%、全树 token −12%，墙钟 +5%。
+这是 1 例对照，不是因果证明（记录 087 §3.1）。
+实验 C：开发 3 题 Single 为 0/2、0/2、2/2。后台导入 6 次运行，在 ≥2 个来源上聚类，提出一条白名单文本建议；
+依据是 shell 语法误用导致的工具启动失败。检测摘要只含次数，所以建议是泛化的，主要失败“修错”在检测范围外。
+用户选择验证后，5 组完成配对（1 组因外部回收进程记缺臂）通过数 3/5 对 3/5，整树 token 比 1.001，
+所针对的 shell 启动失败未减少；按预登记采用门**不采用**。链路（检测→聚类→受限建议→人工选择→原 paired 评测→
+采用门）完整走通，限制在检测摘要只含计数；携带错误类别属于 ADR-0082 之外的新决策。
+随后按 ADR-0085 让评测证据的检测附带宿主记录的失败原因（聊天/Product 仍只含计数），C2 在同一开发证据上
+得到点名 `cd` / `PYTHONPATH=src` 的具体建议；按预登记补跑超时配对后 6 组全部有效，通过 2/6 → 4/6、
+无回退，满足采用门（增益集中在 pyvista，每臂两次；采用仍待人工决定，记录 087 §4.5）。
+A4/A5 在宿主缺陷修复后重跑：A4 两组有效配对均为 Single 通过、Multi 失败（token 2.2–2.4 倍）；
+A5 以 300s 请求超时重跑两组均有效，Multi 1/2、Single 0/2，Multi token 约 4 倍（记录 087 §2.1）。实验中的 `provider-timeout` 查明是 120s 请求超时短于满额输出时间，
+并非供应商挂起，ADR-0086 已让运行计划冻结请求超时（记录 087 §5、12.5）。
+分工范围、并发长等待、折叠配置、轮内摘要、增量交付与模型条件是可被证据支持或否定的候选，
+不因列入计划而成为当前能力；后台只检测与建议（12.11、ADR-0082），可改文本仍限 14.3.1 与 12.7 的白名单。
+
+2026-09-22 用户随后授权目标模式完成三项实验、必要修复和简历更新，新增 API 总预算最多 120 元，
+包含诊断、任务、搜索和审阅。集成检查和材料准入已启动，付费试次须逐批冻结；原 C4 停止条件继续有效。
+候选采用仍经过原审批链，不授权主仓库提交或推送。每轮按 §18 从证据和根因出发，
+避免重复试跑代替判断；运行时事实源、完成、取消、预算、审阅和审批合同均不变。
+
 ## 3. 仓库目录与职责
 
-AO-3 新增 `evolution/background.py`（原账本上的周期、准入与收尾）、`evolution/background_experiment.py`（接原有限实验）、`chat/background.py`（配置和反馈绑定）、`tui/optimization.py`（F6 管理面板）、`tui/optimization_plan.py`（从真实题库选题并生成计划）。原 Runtime/Evaluation 继续拥有执行和评分；F2 表单复用 `tui/settings.py` / `config_forms.py`，见 12.11。
+后台由 `evolution/background.py`（原账本上的周期、聚类准入与收尾）、`evolution/detection.py`（从原事件确定性检测失败机制）、`evolution/background_proposal.py`（接原 AO 仅提案入口）、`evolution/product_feedback.py`（Product 任务发现）、`chat/background.py`（配置和反馈绑定）、`tui/optimization.py`（F6 管理面板）、`tui/optimization_plan.py`（从真实题库选题并生成计划）。原 Runtime/Evaluation 继续拥有执行和评分；F2 表单复用 `tui/settings.py` / `config_forms.py`，见 12.11。
 
 `docs/plan/TRACEHARNESS_DYNAMIC_COLLABORATION_EXECUTION_PLAN.md` 记录已执行的 DA-0～DA-5 合同、owner 与验收顺序，当前实现及收益限制以 12.12/14.1 为准。`tests/live_dynamic_collaboration/diagnosis*.py` 是显式研究入口：实际源码材料、原 EvaluationRunner 运行、闭合账本审计、受限候选冻结和失败前读取可见性；不新增生产评估器，普通 pytest 不调用真实 API。
 
@@ -276,6 +319,10 @@ F5 目录接线：chat/config.py 和 chat/governance.py 管显式输入与共享
 evaluation/retrieval.py 管冻结校验及度量，attempt.py 仍是 F5 Product seeding owner。独立检索旅程由 episode_setup.py 准备（12.6）。详见 7.8、12.5。
 
 沙箱模块：`api/sandbox.py` 定义不可变宿主配置、请求、owner、限制和回执引用；`sandbox/workspace.py` 快照授权普通文件与空目录；`sandbox/docker.py` 持有容器与取消 worker；`sandbox/_guest.py` 是容器内可信监督脚本；`sandbox/reader.py` 核对原事件与 CAS 字节；`sandbox/ledger.py` 在原 owner stream 中核对 request/outcome/publication 身份。`sandbox/service.py` 为原 Tool/Verifier owner 提供有界生命周期的命令能力，调用者只能缩小时间/输出限制，不能扩权；`sandbox/publication.py` 先比对原快照与宿主当前文件，再检查写权限并逐文件发布，部分 I/O 失败记录已完成操作，不承诺整个目录原子回滚。输入/输出使用原 ArtifactCas，没有新增数据库或 runtime.state。`scripts/sandbox_s0/` 是显式运行的实验夹具。
+
+工作区快照先校验单文件大小不超过剩余总额度，再按 `before.st_size + 1` 读取；额外字节用于
+检测增长，避免每个小文件都请求 workspace_bytes 级缓冲。原 opened identity、前后 stat、内容长度、
+累计字节/节点限制与发布前完整快照比对不变。读取错误原样失败，不新增跨调用缓存或事实源。
 
 `sandbox/stdio.py`、`_stdio_client.py`、`_guest_stdio.py` 提供有界双向字节连接；固定核心控制程序只访问 PID 1 的 root 专用 socket，业务进程不能访问控制通道。输入总字节和单帧大小由 `SandboxStdioLimits` 限制，输出沿用执行额度。连接只做 byte read/write/close/wait，不实现 MCP；不确定写入不重试，取消收敛同一个执行。关闭 stdin 导致程序立即退出时，通过原终态确认关闭，不重复投递 EOF。
 
@@ -1656,6 +1703,30 @@ START/SETTLE；它不再以 Step-scoped reservation 充当外部执行锁，见 
 
 ### 8.3 OpenAI-Compatible Provider
 
+结束原因现在有公共规范化类别（080-C0 已实施）。`ModelResponse.completion` 是 Runtime 唯一消费的
+`CompletionCategory`（`normal` / `tool_handoff` / `length` / `refusal` / `unknown`），
+`provider_finish_reason` 并列保留供应商原值且可为空。映射由各 adapter 显式承担：
+`openai_compatible` 只认本协议定义的 `stop` / `tool_calls` / `function_call` / `length` /
+`content_filter`，**缺失、空串和未映射拼写一律归 `unknown`，不再补成 stop**。
+Scripted 是宿主自撰的确定性替身，脚本省略 `completion` 时按有无 tool_calls 解析为
+`tool_handoff` / `normal`，未知类别名直接报错；这不构成网络 adapter 的隐式成功。
+`ModelResponse` 的 `completion` 默认值 `normal` 只服务于宿主内部构造的已归一化替身，
+adapter 不依赖它。`model/attempt-end` 与 `summary/response` 事件改写为 `completion` +
+`provider_finish_reason` 两个字段，旧 `finish_reason` 字段不再产生也不被接受。
+
+`Usage.reasoning_tokens` 记录供应商声明的推理分项，是 `output_tokens` 的子集而非附加项，
+不改变任何结算；供应商未给分项时为 `None`，表示未知而不是零。推理正文仍不读入 Session：
+`message.reasoning_content` 不是交付，不会被提升为回答。
+
+C0-2 已执行一次冻结的真实形状探测（1 次调用，百炼 `deepseek-v4.1-flash`，非流式，
+`max_tokens=64`，证据见
+[响应形状探测](../validation-data/real-repository-pilot-v1/c0-response-shape-probe.json)）。
+结果复现了 v10 的签名：`finish_reason=length`、`message.content` 长度 0、零 tool_calls、
+`message.reasoning_content` 长度 241，`completion_tokens=64` 全部记为
+`reasoning_tokens=64`、`text_tokens=0`。**即该模型确实把整份输出额度花在当前 adapter 不读取的
+推理通道上，正文一个字也没开始写。** 边界：一次调用只描述这一次响应，探测把输出额度从试次的
+8192 降到 64 以便廉价复现截断，因此它既不追认 v10 那一次的字节，也不测量试次原配置下的截断频率。
+
 - 使用标准库 `urllib.request`；
 - 发送 `POST <base_url>/chat/completions`；
 - 请求为 `stream: false`，支持 messages、function tools、temperature、max tokens；
@@ -1702,7 +1773,18 @@ category 子集。永久类别不能被 host 加回候选集，所有数值必�
 绑定紧邻 failed Attempt 的稳定 code/category。两层任一不一致都在 Provider 调用前拒绝。
 
 每个 ordinal 都有新的 Attempt/reservation identity 和独立 reserve/start/settle。failure Usage 可信时同时
-进入 durable Attempt 与执行 Token；缺失/UNKNOWN 时执行 Token 明确 unavailable，Ledger 仍结算完整 hold。
+进入 durable Attempt 与执行 Token；缺失/UNKNOWN 时执行 Token 明确 unavailable。
+**不可观测的那一笔由 ordinal 1 承担一次，后续 ordinal 结算为 0**（quality 仍是 UNKNOWN，
+不是 EXACT：扣零是因为这个请求已经被扣过，不是因为知道了该次尝试的用量）。
+保守结算的目的是不让无法观测的花费逃出账本，这对**一个请求**成立，对**一次尝试**不成立：
+有界重试重发的是同一个冻结请求，宿主自己用 `ModelRetryRequestDriftError` 证明了这一点，
+按尝试各扣一次最坏值等于把同一个请求重复计费。实测代价：一次真实运行里 20 次失败尝试结算
+2,000,546 token，超过该运行全部成功工作量 1,699,897，耗尽助手 2,000,000 额度，
+而真实工作只花了 725,467；同批 7 个失败请求中 6 个被重试救回，其中 3 个需要第 3 或第 4 次尝试。
+修复后在真实主线确认：ordinal ≥2 共 3 次结算合计 0 token。
+让出的只是倍数；"一个请求可能白花一次最坏值而无所得"这条保守上限仍然成立。
+相关的另一半缺陷未修：没有 tokenizer 时单次预留会吞掉整个账户，
+仍由 `test_an_uncounted_reservation_leaves_no_budget_for_the_mandated_retry` 记录。
 余额不足以完整预留 frozen request 时不降低输出上限换取调用。delay、reserve、start append、Provider、
 end append 或 settlement 任一窗口收到取消，都先让当前 owner 收敛并且不得生成下一 ordinal。Recovery
 只闭合 open Attempt，不持有 policy/scheduler，也不会继续 retry。严格 Router parse、Tool、Workflow、
@@ -1815,8 +1897,25 @@ flowchart LR
     WRITE --> RECOVER["原 Recovery / 取消 finalizer：补齐同一 Result"]
 ```
 
+**引用资格与首次展示已分开（080-C2，format 2）。** 只要 Effect outcome 完整，每条工具结果都写
+`retained_output` 与 `output_ref`；尺寸只决定**首次给模型看什么**，不再决定这条结果日后能否被找回。
+原因是旧规则按单条结果是否超过 `max_tool_output_chars` 判定资格：长任务里几百条结果各自都不超线，
+于是一条都拿不到引用，也就一条都折不掉，分页再小也只是推迟累积。
+引用新增 `disclosure` 字段：`inline` 表示模型当时已看到全文，引用只为日后折叠和读回；
+`retained` 表示正文一开始就被收起。`output_reference()` 按模式校验不同的不变量——
+`retained` 要求 Session 内联 data 已缩减为控制回执，`inline` 要求内联正文与 data 同存档 payload 逐字节相等，
+任何一侧不符分别以 `tool-output-control-data-mismatch` / `tool-output-inline-payload-mismatch` 拒绝。
+format 1 引用不再通过校验，按 pre-1.0 约定明确拒绝、不转换，旧数据需新数据目录。
+该规则也覆盖有界的 read/search 读回页：页面首次完整 inline，自己的引用供以后折叠与读回，
+不是立即把页面再藏入一个必须追读的占位符。真实 SQLite/Docker 回归按现行 format 2 核对
+每页可解析且与当时展示一致，并保留重启、分页、取消、来源拒绝与原命令仅执行一次的断言。
+`max_tool_output_chars` 的默认值 24000 来自
+[RuntimeConfig](../../src/traceh/runtime/agent_runtime.py) 与
+[ToolRuntime](../../src/traceh/tools/runtime.py) 两处默认参数，Session helper 只接收传入阈值，
+不在 Session 层另设默认。
+
 content 或 canonical data 超过 `max_tool_output_chars` 时，原 content/data/evidence 放进
-`effect/outcome.retained_output`，同事件写 format-1 `output_ref` 和实际呈现。引用含 effect_id、
+`effect/outcome.retained_output`，同事件写 `disclosure=retained` 的 `output_ref` 和实际呈现。引用含 effect_id、
 payload digest、正文字符/UTF-8 字节数与 canonical data 字符数；没有可变文件路径。
 大 Result.data 通常为空，原 data 按 `part=data` 读回；避免 stdout 等再次占满 Session 源事件。
 例外是六个宿主参考搜索/读取工具的成功控制回执：保留对应 history/skill/memory/search_receipt，
@@ -1824,6 +1923,15 @@ payload digest、正文字符/UTF-8 字节数与 canonical data 字符数；没�
 `output_reference` 验证投影与原数据相等；普通工具的同名字段不会被当作宿主控制回执保留。
 原来源、版本、取消和准入规则继续校验回执；此例外不把大正文重新塞进模型，也不产生新的事实源。
 小输出保持 inline。大输出在暴露搜索/读取工具时只给引用和查找入口，避免前缀冒充全文；两者均未装配时保留明确不完整的前缀预览。`truncated=false` 表示 Runtime 未丢弃原内容，不表示当前呈现完整。
+
+读回能力由 `OUTPUT_TOOL_IDS = (read_tool_output, list_tool_outputs, search_tool_output)` 一处命名。
+通用 Runtime 默认装配；`include_default_tools=False` 的宿主（Product 即是）改用
+`build_default_runtime(output_tool_ids=...)` 显式点名，三者绑定的是**同一个** SessionService，
+不新建第二个 Session 服务，未知工具名直接报错。这条通路的存在理由是：以前只能把
+`include_default_tools` 打开才能拿到读回，那会顺带把 shell 和 apply_patch 发给只读调查助手。
+Product 侧 `_output_tools(assembly)` 按 profile 的 `tool_ids` 取交集下发，
+`BuiltinProductAssemblyResolver` 对 coder/investigator/patch_author 三种角色都允许授予，
+但仍是 profile 显式授权才有，读回只能读本 Session 自己的结果。
 
 工具读回默认装配，不依赖项目绑定、Memory 或 ProductTask，也不要求开启 History。目录从本 Session
 原始 Tool Result 派生，所以即使 M3 把整轮对话藏起或 History 原文页太大，也能找到输出引用。
@@ -1870,11 +1978,32 @@ A 冻结的后续预算包括 system、tools、Product、Surface、Context refer
 
 `DefaultContinuationRuntime` 按以下顺序决定继续或结束：
 
+0. 响应不完整 → 直接以该不完整原因收尾（见下）；
 1. 达到 `max_steps` → `max_steps_exceeded`；
 2. 模型响应包含 Tool Calls → 检查事件派生的连续相同拒绝批次；达到停止阈值则 `stalled_repeated_denial`，达到提示阈值则携带反馈进入下一 Step，其他情况正常继续；
 3. 已运行 Verifier 且失败，失败次数仍在重试预算内 → 把结构化验证摘要作为新 user message 注入下一 Step；
 4. Verifier 持续失败超预算 → `verification_failed`；
 5. 无 Tool Calls 且无失败证据 → `completed`。
+
+`runtime/response_completeness.py` 是**响应完整性判定的唯一处**（080-C1）。`judge_response()`
+每个响应只判一次，AgentLoop 在**执行工具与 Verifier 之前**调用，continuation 消费同一结果，
+Product/Supervisor 不再各写一套。判定只看 `completion` 类别，不解析自然语言、不认模型名：
+
+| 类别 | 结果 | 收尾原因 |
+|---|---|---|
+| `length` | 不完整，**其 tool_calls 一律不执行** | `response-truncated` |
+| `refusal` | 不完整 | `response-refused` |
+| `unknown` | 不完整 | `response-completion-unknown` |
+| `tool_handoff` 但无 tool_calls | 不完整（自相矛盾，不解释成正常结束） | `response-tool-handoff-without-calls` |
+| `normal`，或 `tool_handoff` 且有 tool_calls | 完整，走原流程 | 原有原因 |
+
+截断响应里的 tool_calls 是**没写完的意图片段**，把它当授权就是拿半句话执行副作用，因此在副作用前拦截；
+只在 continuation 末尾补 `if` 不够。原响应、usage 与 `model/attempt-end` 仍如实落账，
+HTTP 成功成立，但这不等于 Agent 交付成功。Verifier 也不对不完整响应运行——给不存在的回答贴通过/失败没有意义。
+
+第一版**不自动续写、不自动提高输出上限、不把补预算当成功恢复**；有界收尾请求不是本轮依赖。
+角色级交付合格性不在此判定：通用 Session 不猜业务成功，investigator/coder/patch_author 的要求属于
+Product 合同（见 14.3）。
 
 `CommandVerifier` 拆分 argv 后调用宿主绑定的 SandboxCommandPort，在授权工作区副本运行；只有 finished 且退出码 0 才通过。结果携带原 Sandbox 回执，AgentLoop 仍只追加 verification/result。未配置沙箱返回明确失败，不回退宿主。
 
@@ -1925,7 +2054,7 @@ Shell 自身 timeout 由原 ToolReportedTimeout 边界与 Runtime 总预算超�
 
 D 的孤立模型 Attempt 可由同身份的完整 `summary/response` 证明已返回，否则 unknown；恢复不补造 usage、不重调 Provider、不自动提交尚未写入的摘要。已提交的 replacement 保留；取消和 owned append 收敛仍按原规则。
 
-恢复首先经过当前唯一 Session 协议 13 校验；History 请求失效只按原 Turn/Step 与 receipt 派生，不能在
+恢复首先经过当前唯一 Session 协议 15 校验；History 请求失效只按原 Turn/Step 与 receipt 派生，不能在
 恢复后转交下一轮。合法 Context-only／Composition-only 失败前缀按原 Step/Turn
 规则收敛，不重新选择来源、不补写 Context，也不为未开始的后继 Step 发明 Attempt（7.4）。
 
@@ -2035,18 +2164,193 @@ invocation_status 不等于进程退出码；原文仍走 B/B+ 读取，不重�
 完整旧历史前缀摘要；最近轮、活动组及 Product 状态保持原边界。C 没有独立百分比目标或额外开关，
 不会开启原本关闭的压缩；四项策略参数不变，digest 的配置版本为 3，以绑定新的分层算法。
 
+##### 闭合 Step 切口：一个长 Turn 可以折自己的工具组（080-C3）
+
+旧 tool-fold 只能切在 `turn/end`，`kept_recent_turns` 的计数单位也是 Turn。于是一个跑几百个 Step
+却始终没结束的 Turn，按这套度量**根本没有"已闭合历史"**，每条工具结果都要一路带进后续每次请求——
+这正是试次里两方单 Turn 输入从 5,087/4,638 一路涨到 65,166/67,984 的机制。
+
+tool-fold 的边界因此改为带单位的类型化描述 `boundary = {unit, kept_recent}`，
+`unit ∈ {turn, step}`，替代原 `kept_recent_turns` 字段（这是持久协议的破坏性变更，
+`validate_tool_fold`、parser、invariants、重放与 TUI 读取端同批更新；手动与语义摘要仍只允许 Turn 边界）。
+`closed_step_membership` / `closed_step_ends` 与 Turn 版同形：只认真正开过又正常关闭的 Step。
+闭合 Step 是与闭合 Turn 同样安全的更小单位——它的模型响应已完整、关联工具调用全部落账、组内没有仍在执行的东西。
+
+**完整调用组是资格边界，不是提交原子单元。** 协议保持"一条 replacement 换一条 tool/result"：
+折 N 条就是 N 次 append/CAS，允许出现组内部分已折、部分仍是原文。这是刻意的——
+assistant 的 tool_calls、工具名、call id、参数与顺序全部原样保留，所以半折状态仍是结构完整的对话，
+两次 append 之间崩溃也没有"半条替换"要修。§7.2 因此新增一行：部分提交后取消或 head 变化时，
+已提交的保留、未提交的保持原文，恢复后重算资格，既不回滚整组也不重复替换。
+
+##### 软工作水位与硬窗口分开
+
+模型窗口装得下，不代表每个 Step 都值得携带几十万 token。`TokenBudgetPolicy` 增加两项，
+**二者必须同时给出，缺一报 `token-fold-watermarks-incomplete`；都不给表示关闭轮内折叠，
+不会自己挑水位**：
+
+| 参数 | 含义 |
+|---|---|
+| `trigger_percent`（原有） | 触发高水位，乘的是输入硬上限 |
+| `fold_relief_percent` | 期望回落的低水位，必须**严格小于** `trigger_percent`，否则折了也不解压 |
+| `fold_protect_recent_groups` | 保护最近 N 个已完成工具组，与首次消费保护同时成立 |
+
+`RequestBuilder.prepare()` 在原 Turn 前维护之后、冻结快照之前调用
+`CompactionService.fold_closed_steps()`，从最旧的合法结果折到低水位或无合法候选为止。
+
+**同一个 owner 下的两套失败语义必须分开**：Turn 前维护失败等于什么都没改，历史照旧、Turn 继续，
+记 `surface/compaction-failed(method=automatic)`；而 prepare 内因高水位要求的折叠属于**准入关键路径**，
+不折就要把本来想避免的超大请求发出去，所以解析、引用校验、存储或重试耗尽都
+记 `surface/compaction-failed(method=step-fold)` 后**抛出并停止本次模型准入**，不得复用维护路径
+"记录后继续"的行为。"检查成功但没有合法候选"是有原因的无操作，不是异常，仍交给软/硬水位处理；
+达到硬上限而无合法空间时按原 `RequestTokenBudgetExceeded` 明确拒绝，不静默截断输入。
+
+##### Product 侧装配（否则以上全部不生效）
+
+试次的 `task-settings.json` 里 `token_estimate` 为 null，Product 也从不向角色 RuntimeConfig 传
+`token_budget` / `compaction`，因此 `RequestBuilder.token_meter` 是 `None`——**token 压力压缩与本节的
+轮内折叠在真实 Product 运行中根本不会触发**。这是"为什么试次里输入单调增长却一条 replacement 都没有"的
+装配层原因，与前面的资格层原因（引用只给大输出）相互独立、同时成立。
+
+`ProductRoleProfile` 因此增加可选 `context_policy: ProductContextPolicy | None`：
+编码、窗口、输出预留、安全余量、触发比例、回落比例、保护组数，以及 compaction 的三项。
+`None` 保持历史行为（不计量、不压缩），且这一选择进入冻结的 assembly digest——
+同名 preset 但水位不同不会共用同一 digest，评估不会把"有治理"和"无治理"两次运行当成同一条件。
+JSON 侧 `context_policy` 键**可省略**（省略即 `None`）：把它设为必填会使磁盘上所有已冻结实验 profile
+失效，而那些是本项目不改写的证据；`_object` 因此区分必填键与允许出现的可选键，未知键仍然拒绝。
+策略要么十项全给、要么整体为 null，没有部分形态；折叠水位在已给出的策略内仍可省略
+（只计量不轮内折叠是合法选择，`TokenBudgetPolicy` 自己拒绝半套水位）。
+`_context_governance()` 把它翻译成 Runtime 既有的 `TokenBudgetPolicy` 与 `CompactionPolicy`，
+两者同生同灭：只计量而没有压缩 owner 等于量出压力却无法缓解，只压缩而不计量就是单 Turn 已证明不够用的
+Turn 前字节模式。
+
+离线实测（`tests/test_in_turn_step_folding.py`，同一任务、同一窗口、同六次读取、只改水位）：
+关闭水位时最后一次请求携带 6 份完整正文；开启后为 1 份，期间追加 5 条 Step fold，
+单 Turn 内 `turn/end` 仍只有 1 个，全部历史快照独立重放一致、不变量为空。
+把窗口收紧到同一任务装不下时，关闭水位的一侧按硬上限明确拒绝而不是被悄悄裁剪。
+这是确定性折叠的机械收益，**不等于真实模型上的节省或同等质量**。
+
+##### 真实主线一次验证（C4）：机制成立，收益强烈依赖角色交付形态
+
+同一 astroid 开发题、同一模型，材料从 v10 冻结归档原样解出（记录 081 §6，
+证据 [run1 证据](../validation-data/real-repository-pilot-v1/c4-context-governance-trial-c4-run.json)）。
+运行完成、不变量与收敛通过、95 次调用全部 exact usage。**两处已披露的条件变更
+（输出上限 8192→32768、新增 context_policy）使它不是对 v10 的受控对照。**
+
+成立的部分：全程**零 `length` 截断**；共 156 次 Step fold、零折叠失败；
+主方单次平均输入 40,984 → 25,689；推理分项首次可见（主方输出 60%、助手 69% 是推理 token）。
+
+**未成立且必须记录的部分**：折叠在只读调查助手一侧**诱发了重跑原工具**。
+按"重复同一工具名 + 完全相同参数"统计（该度量事后补加，不是通过的预登记门禁）：
+助手 132 次折叠换来 **22 次折叠后重跑、0 次结果仍可见时重跑**；主方 24 次折叠则是 **0 / 6**。
+助手自述与调用顺序支持“折叠后需要重新取得原文”的解释（"I need to re-read key sources since earlier outputs were folded"，
+并在第 36 步改为逐个文件读取），但不能据此分离提示、交付形态与水位的因果贡献。
+主方输入下降也不等于已证明同等质量的净收益。后续 run3 的分解见[记录 082](../deal/082-c4c-context-and-late-stop-diagnosis.md)，
+不能把问题仅归于角色窗口配置。
+
+##### 由该证据定位并修复的两个折叠根因
+
+C4 暴露的"折叠诱发重跑"不是调参问题，根因有两条，都已修复并各自反向验证：
+
+**根因一：重开比重跑难。** 折叠占位符原本只给 `output_ref`，模型要自己拼一个 UUID 加 64 位
+digest；而产生该结果的 assistant 调用就保留在占位符正上方，重跑只需抄现成的 `path` /
+`start_line`。同一份 `prepare_tool_output` 给大输出的展示**本来就带 `read_action`**，折叠路径缺了它。
+现在 `folded_tool_message` 也携带可直接执行的 `read_action`（只含 reader 的两个必填参数，
+`part` / `offset` 本就默认为整份内容，重复它们等于白付字节）。
+代价已量化：占位符从 588 增至 814 字符，每次折叠净省从 2,172 降到 1,946（−10%）；
+但避免一次重读省约 2,760 字符，是新增开销的 12 倍，而 C4 的实测比例是每 6 次折叠 1 次重跑。
+
+**根因二：重开的证据两次请求后又被折走。** C4 里 9 次 `read_tool_output` 的结果**全部**在 2 次
+请求后被再次折叠。折叠一个读回结果会把模型刚花一次调用逃离的状态原样重建。
+
+该缺陷的**第一版修复是把 `OUTPUT_TOOL_IDS` 的结果整体排除出候选，这是过度纠正并已撤销**：
+记录 082 查明它只是把失败搬了个地方，28 条永久保留占被拒请求的 42.5%。
+当时给出的理由（“折读回结果会让一层引用变两层”）也不成立：真正会套壳的是让占位符指向
+**读回工具自己的输出**；把占位符指回**原始页**——地址就在该次读回调用自身的参数里——
+就是模型已经发过的同一个调用，幂等、一层、不套壳。
+
+**当前实现**：读回结果是普通候选，但受一条**有界的容量保护**。
+`FoldBoundary.kept_recent_readback_utf8_bytes` 给出预算，在该预算内
+**按已证实的需求排序，新近度只作平级次序**：一个页面被重开过几次，就是模型对它的需求，
+次数从事件前缀数出来。装不下的页面跳过而不终止扫描，否则一个超大页面会连带赶走它后面的
+整个工作集。
+
+**为什么需求排序是必要的而不是调优。** 纯新近度保护经真实运行证伪：一次运行里
+60 次读回中 31 次是完全相同的 `(effect_id, digest)`，五个页面各被重开 4 次，
+读回占助手全部动作的 52%——而重跑原工具已降到 1 次。工作集大于容量时，
+纯新近度就是标准的缓存颠簸：刚取回来的页面被更新的东西挤出，随即再取。
+
+**为什么参数写进事件**：本项目承诺历史请求逐字节重放（68 份快照重建是验收项），
+所以保留决策必须是事件前缀的纯函数，重放不能去查今天的配置。这正是与
+[调研 083](../deal/083-open-source-agent-context-research.md) 中四个开源实现的关键差别——
+它们可以用运行期计数器。用字节而非 token，是因为本协议模块不引入 tokenizer，
+且 validator 必须逐条重算出同一集合。
+
+**已知代价**：需求是历史计数，不衰减；曾经热门、后来不再需要的页面会多占一会儿容量，
+直到更热的页面把它挤走。在有界预算内这只影响先后，不产生无界保留。
+
+**折叠后重跑也是重开需求（[ADR-0084](../adr/0084-rerun-after-fold-is-reopen-demand.md)）。**
+收口计划实验 B（记录 087 §3）在 48k 窗口下，主方读回 0 次，而是折叠后重跑同一 `read_file` 11 / 4 次；
+这些重跑结果原来是普通候选，约两步后又被折走、再被重跑，修复阶段因此超出 Turn 期限。
+现在同一字节预算内受保护的“重开证据”有两类：
+
+- 读回页；
+- 某次调用的最新结果，条件是：该调用发起时，同一工具、规范化参数完全相同的调用已有更早结果被 tool-fold 折叠。
+  需求数为当时已被折叠的同调用结果数，与读回页一起按需求优先、新近度次之排序。
+
+同一调用只保护最新副本；结果仍可见时的重复（例如改完再跑测试）不算需求。
+判定只读 Session 前缀中的 `tool/call`、`tool/result` 与 tool-fold，规划器和验证器共用同一函数，
+不读 Effect 流、不认工具名。协议字段不变；旧 Session 若有按新规则受保护的历史折叠，
+会被验证器以 `tool-fold-source-mismatch` 明确拒绝，需用新数据目录（与记录 084 §6 同样处理）。
+定向测试覆盖三点，均经反向验证：重跑副本被保留；预算为 0 时重跑副本照常被折；仍可见时的重复不算需求。
+
+**同条件真实复测结果**（材料、模型、水位、输出上限全不变，记录 081 §6.5）：助手侧模型调用
+50 → 26、exact 输入 1,586,520 → 904,411（−43%）、读回 14 → 28、折叠后重跑 22 → 9，
+每次折叠的读回率 0.106 → 0.418；两方输入合计较 v10 下降 35%。
+激励方向被扭转：修复前重跑多于读回，修复后读回是重跑的 3 倍。
+**这是一次对一次的配对观察，不是速率**——同条件的另一次运行（run2）轨迹完全不同、
+0 次折叠并因 provider 超时中止，已原样保留。
+run3 助手输入峰值 65,759 越过 61,184 硬上限，触发一次 `RequestTokenBudgetExceeded`。
+记录 082 沿原请求构造重建该被拒请求：67 条占位符占 19,766 token，28 条永久豁免的读回结果占
+27,970，其余对话和请求字段占 18,023；这些是本地估算，不能当成 Provider 精确计费。
+单独缩短占位符的离线展示实验可使估算降到 54,478（尚未计入一次公共警示的成本，未实际调用模型），
+因此“不可压缩必需证据约 66k”的旧结论不成立。28 次读回没有相同来源与区间的重复页，不能主要归因于精确页重复。
+
+这四项现已全部实施并各自反向验证（记录 084）：紧凑占位符（232 → 102 token，真实摘要实测）、
+有界读回保留、回到原始页的直接引用、有限收尾。**上下文越限本身此后未再出现**：
+run3 之后每一次运行的峰值输入都落在 61,184 之下。但一次运行不足以声明节省率或质量持平，
+固定 Verifier 在整个序列中一次也没有跑到，因此“补丁是否正确”仍未被判定过。
+
+run1 的助手曾跑满 50 步后取消；**run3 是上下文拒绝**，失败回执仍有 1,077,250 token、73 步额度。
+主方首次收集到 `status=failed/reason=turn-failed` 后又调用模型 17 次、消耗 562,727 token，
+约 18.52 分钟后才被既有 `collaboration-child-report-not-collected` 门禁拒绝。
+**该迟到失败已修复**，现行时机与证据见 §14.3.19。
+run3 当时只读核查 68 份请求快照重建一致、Session/Effect 不变量通过，原库未修改。
+
+后续运行序列（记录 084 §8）逐轮定位下一层根因：run4 起**上下文越限再未出现**，
+峰值输入全部落在 61,184 之下；run5 助手首次交付；run7 暴露抖动从"重跑原工具"搬到"重开同一页"
+（60 次读回中 31 次完全重复，五页各被重开 4 次），据此实现需求加权保留，run8 的重开
+多重度上限降到 2，深度循环消失。run7/run8 均终止于 `provider-tls-eof`；run8 的失败窗口里
+主方连续 5 次尝试、助手 3 次尝试同时失败，是供应商侧的传输中断，不是本项目的机制结果。
+固定 Verifier 在整个序列中一次也没有跑到，**补丁正确性从未被判定过**。
+
+候选方案的公开源码依据见[调研 083](../deal/083-open-source-agent-context-research.md)：OpenClaude 的分层结果保留、
+Gemini CLI 的工具输出容量保护、OpenCode 的清理/摘要分层和 Pi 的单 Turn 前缀摘要。
+这些是外部实现对照，**尚未接入本项目**。当前 Turn 的语义摘要仍受原闭合 Turn 合同限制；
+若扩展，须在既有 Session/Compaction/请求重放主线显式设计 Step 前缀协议，不在 Provider 中改写冻结请求。
+
 ```mermaid
 flowchart TD
-    A[字节模式 Turn 前 / token 模式每个 Step 准备] --> B{显式开启且达到对应触发线?}
-    B -- 否 --> G[继续当前请求准备]
-    B -- 是 --> C{存在可折叠的旧 retained 结果?}
-    C -- 是 --> D[核对原来源并 CAS 写入 tool-fold]
-    D --> B
-    C -- 否 --> E[既有 M3 闭合前缀摘要]
-    E --> G
-    D -- 失败 --> F[记录实际提交状态]
-    E -- 失败 --> F
-    F --> G
+    A[Turn 前维护] --> B[按配置处理闭合 Turn 折叠或摘要]
+    B --> C[每个 Step 准备请求]
+    B -- 失败记录后继续 --> C
+    C --> D{开启 Step 折叠且达到高水位?}
+    D -- 否 --> G[最终计量]
+    D -- 是 --> E[核对来源并逐条 CAS 折叠闭合 Step 结果]
+    E -- 达到低水位或无合法候选 --> G
+    E -- 折叠失败 --> H[记录并停止准入]
+    G --> I{超过输入硬上限?}
+    I -- 是 --> H
+    I -- 否 --> J[继续请求派发]
 ```
 
 每条 fold 独立提交；只有摘要被计为可见摘要和 History 目录根。后续 M3 的来源可以包含 fold，
@@ -2283,6 +2587,16 @@ Line 与 TUI 消费**同一条 durable 事件**，不增加第二套状态：[`c
 
 ### 12.3 TUI 上下文透明度（M4）
 
+080-C3 的 Step 工具结果折叠已实施，本 reader 是它的协议相邻 owner。`ContextInspectionReader` 与模型
+共用同一个 `surface_conversation` 投影——**Context 面板如实展示当前模型可见投影，这是刻意的**：
+它是上下文检查器，若它显示的和模型看到的不是同一份，排查就失去意义。
+`ContextCompactionRecord` 因此把折叠的保护单位单独记为 `fold_unit` / `fold_kept_recent`，
+`presentation.py` 按单位渲染"保留最近 N 个已完成工具组"或"N 轮对话"，
+不再把工具组数量套进"轮"的标签；`kept_recent_turns` 只对摘要有意义。
+折叠条目同时提示原文可用 `search_tool_output` / `read_tool_output` 按引用展开：
+人工展开走同一个 Session resolver 的只读有界入口，不运行模型或原工具，不写模型披露记录，
+也不改变下一次请求的输入。Context 统计面板不等于整个 TUI 任务对话，两者不能混为一谈。
+
 E0 启用后，状态条从最近 `request/token-measurement` 显示“最近请求输入估算 X/Y token”；超限
 显示“超限未发送”，不是当前 Surface 的实时预测。详情按最近已冻结请求显示六项估算、配置窗口、
 预留/余量、提前线、编码及最近 Attempt 的实际输入/输出；失败的新准备请求可能还没有 Snapshot，
@@ -2343,7 +2657,143 @@ M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓�
 
 ### 12.5 Benchmark
 
-`EvaluationRunner` 读取根协议 3 的 benchmark/dataset，经静态 ProductTaskEvaluator 按 case × mode × replicate 运行。task_settings 保留原 ProductHostSettings 与 retrieval，重复次数来自 RunOptions；直接 CLI 默认一次。每次 attempt 仍走原 ProductTask 的真实确认、Workflow、managed worktree、Patch、冻结 Verifier、Review、立即批准和 Git ref CAS。旧根 1/2 拒绝；嵌套 Verifier 为 2，SandboxPolicy 仍显式传给原 owner，使用原 Store/CAS。
+2026-09-22 新授权实验见[记录 086](../deal/086-agent-effectiveness-overnight.md)：新增 API 总预算 120 元，
+原三道开发题加九道已准入、未参与调参的公开 dev 内部验证题已冻结。首个 coder-next Single 因
+重复错误参数/重复读取到达 Turn 截止，固定 Verifier 未执行；末尾 user 引用包的小对照不足以支持
+改协议。第二轮只换 qwen3.6-plus，补丁事后离线裁判 26/26 通过，但原运行超时未交付，仍计失败。
+定位并修复 Product 的 Single 收尾预留漏接线与较短 Turn 时限未绑定（14.3.19）；新源码下第三轮
+Single 完整通过固定 Verifier/Review/Promotion，22 次付费响应、273837 exact tokens，估算 0.614284 元，
+24 份请求重放一致、原库不变。同条件 Multi 正常交付但固定检查失败（离线复核 25/26），
+412604 tokens，较 Single 多 50.7%；助手两次请求即完成，不能归因为子任务拒绝停止。
+首组上下文对照触发 21 次折叠，总 tokens 410909→371597（−9.6%），调用 30→36，
+墙钟 +19.3%；两臂补丁摘要相同，固定检查同为 76/77，不能称为成功交付下的效率收益。
+原生有界优化产生一个 ALLOCATION_GUIDANCE 候选，但两臂均出现畸形参数 protocol 失败，
+用量不完整，优化器以 evaluation-usage-unknown 停止；未采用、没有收益结论。
+该历史停止节点已知 5.519262 元、未知占位 55 元。用户再次授权后，以 Single CODER_GUIDANCE
+进行两次开发候选比较：第一候选两臂到期取消；第二候选 305510→285381 tokens（−6.6%），
+两臂均进入固定验收但失败，未采用。新上下文 astroid 配对 201231→192298 tokens（−4.4%），
+折叠 0→11 次、调用同为 20 次，均验收失败、收敛及不变量通过，不构成正确性交付收益。
+累计已知 12.344993 元、未知保守占位 101 元；冻结第二 Single 候选在 pvlib-1154 完成双臂，
+均验收通过，tokens 147323→166048（+12.7%），原门槛 regressed，不采用；其余八题未运行。
+原比较被归档/文档限额混用误拒（12.6），修复后离线重算，原报告不改。
+后续单独冻结一个根因驱动的 v3 开发批次：pvlib 既已揭盲，降为开发题，不能再次充当
+v3 独立验证。一个新候选在 pvlib 双臂固定验收均失败，115621→129326 tokens、工具
+调用 +1；原比较 regressed，停止，没有运行队列下一道内部验证，也没有采用。最后上下文 pydicom
+配对双臂验收通过，101592→124445 tokens，但两边均零折叠，不能归因于策略；原定三题
+六试次完成，无在途调用或新试次预留。后续批次直连、不并发重型回归；每请求
+仍一次 Attempt。
+原内部验证队列剩余八题准备扩展 Single/Multi；首题 pydicom-901 的 Multi 先行臂
+在响应工具参数解析发生 provider-tool-arguments-json-value-expected（protocol），一次用量未知。
+原双臂执行器只在整对返回后让外层检查停止条件，已经启动 Single 臂；发现后立即中止，
+其七次 exact 响应和一条已开始未结束的请求保留，不记完整配对或 Single 失败。
+子进程清除 `_PROXY` 环境变量并安装空 ProxyHandler，计划 network_mode=direct；事件属于
+Provider 响应协议错误，不支持将其归因为代理传输。完整配对 0/8，后七题未启；
+目前已知加未知占位 113.344993 元，余 6.655007 元不够再预留一对。[失败分类架构提案](../plan/TRACEHARNESS_PROVIDER_SAMPLING_DECISION.md) 未实施。
+上述各一组对照只支持个案观察，墙钟共享本机集成负载，不能报告统计显著或普遍提速。
+原 ae03 事件进一步定位 shell 总区间 298.39 秒：容器运行 10.50 秒，准入后至 sandbox/request
+110.67 秒，outcome 至 publication 117.73 秒；后两段涉及快照/CAS 与发布前快照复核，不能全算模型思考。
+只读 ae02 保留工作区（375 文件、3.2 MB）的单次快照 profile 为 15.02 秒，其中 read 14.58 秒。
+同字节读取对照：按工作区剩余额度读取 17.31 秒，按已知单文件大小加 1 读取 0.062 秒；
+修正原 snapshot 读取长度后，同工作区公开 snapshot 的一次测量为 0.256 秒（原 15.02 秒）；
+29 项快照/权限/发布回归通过，进程内恢复旧读取长度使三条分配边界反例再次失败。
+这是局部 I/O 诊断，不是已修复后的任务收益。原文件、事件、API 调用与成绩均未改变。
+
+`EvaluationRunner` 读取根协议 3 的 benchmark，经静态 ProductTaskEvaluator 按 case × mode × replicate 运行。Product dataset 当前为 format 3。task_settings 保留原 ProductHostSettings 与 retrieval，重复次数来自 RunOptions；直接 CLI 默认一次。每次 attempt 仍走原 ProductTask 的真实确认、Workflow、managed worktree、Patch、冻结 Verifier、Review、立即批准和 Git ref CAS。旧根 1/2 拒绝；嵌套 Verifier 为 3，SandboxPolicy 仍显式传给原 owner，使用原 Store/CAS。
+
+每题必填 `initial_tree_limits={max_files,max_file_bytes,max_total_bytes}`，由 Evaluation 的
+`InitialTreeLimits` 校验正整数（不接受 bool）及单文件不得超过总量。初始树捕获、材料归档和每次 attempt
+复制共用这份明确额度，不借用 changed-path/Patch 额度，也不从题号或样本大小推断。旧 Product dataset
+format 2 明确拒绝；无默认补值、自动迁移或删除旧运行目录。其他 evaluator 的 dataset 协议不变。
+初始树仍拒绝链接、非普通文件、硬链接和 `.git`/`.traceh`；超过额度或摘要漂移在建仓前拒绝。
+新建一次性 Git 源仓库时 force-add 全部已冻结文件，保留上游已跟踪但命中 ignore 的素材；源提交仍是
+本地确定性重建，不能将它的 revision 冒充上游 base commit，也不承诺重现 POSIX executable mode。
+
+真实仓库开发材料入口为 [real_repository_v1](../../benchmarks/real_repository_v1/README.md)，
+准备/准入/参考驱动在 `tests/real_repository_evaluation/`，不新增生产 evaluator、Runner 或生命周期。
+固定上游 base、完整普通文件树、原 Issue 与修复/测试 Patch；参考答案放在宿主材料中，初始工作区不含。
+冻结 Verifier 的 argv 携带独立测试与原测试哈希，在不回写的沙箱副本检查；镜像只含依赖。
+材料 Verifier 当前 plan_version 3：每题在 selection 中显式声明 `writable_test_patterns`，
+普通候选回归测试路径即使位于 protected root 也不要求原哈希；宿主选中运行的 `test_files` 在
+一次性沙箱副本内仍完整替换。显式 `protected_files` 和其余 protected 支撑文件继续检查原哈希。
+固定断言只来自宿主材料，候选自造测试不计入通过。版本 2 仅放行被替换的选中测试文件，仍会
+误拒绝未选入固定测试的正常候选回归文件；两次真实模型试跑暴露该边界，原报告与修复后材料分别
+留证，见记录 078。保护范围属于本评估材料的明确配置，不改变通用 Product Verifier 协议或权限。
+版本 3 已重做三题六项原沙箱材料准入，原 Product 参考 3/3 推广与保留缺陷 3/3 拒绝，
+两组各 12 份请求快照重读；两份被误拒绝的原 CAS Patch 在新材料的独立沙箱诊断分别通过
+26/26、77/77 固定测试。材料生产者的路径段匹配也覆盖嵌套支撑文件反例。
+SWE-bench 历史日志中的截短参数化 ID 通过选题文件的显式唯一映射绑定完整 pytest ID，缺失/跳过/启动失败
+不能充当通过。材料准入必须证明目标 call 失败及参考修复通过，仍不等于模型自主解决或官方榜单得分。
+该检查保护测试材料完整性，不声称 Python 测试框架能抵御任意恶意候选代码对运行时的篡改。
+
+自建任务类型题库 [task_type_v1](../../benchmarks/task_type_v1/README.md)（收口计划 S0-E）复用同一上游
+astroid-1196 完整树、同一 oracle 与材料/准入模式，以控制代码库变量：五类各一题（小任务、并行读码、并行改码、
+先调查再修改、强依赖），由 `tests/task_type_evaluation/spec.py` 的精确单次文本编辑定义注入缺陷与参考实现，
+隐藏测试在 `benchmarks/task_type_v1/hidden/`；并行读码题的判分答案由生成器从原始源码语法树计算，要求
+`astroid/` 与 `tests/` 不变。`calibrate.py` 经生产沙箱测得 F2P（原始树失败、参考通过）与 P2P（两边通过）并
+冻结到 `calibration.json`，与题目定义摘要绑定，改题即拒绝旧标定。2026-09-23 标定 F2P/P2P 为
+2/182、9/0、5/180、5/376、3/187，冻结计划下 10 项准入全部成立（原始树退出 1、参考退出 0），摘要见
+[准入记录](../validation-data/task-type-v1/admission-summary.json)。这只是材料准入，不是模型成绩，也不代表题目
+难度或模式优劣；每类一题的结果只能作为按类观察。
+三题离线准入及原 Product 正负对照已完成，原证据重读与定向回归已通过，见[记录 077](../deal/077-real-repository-evaluation.md)。
+这些是公开开发题的机制验证；真实模型 single/multi 收益、软质量和有界优化效果仍未由本轮证明。
+用户已授权百炼 `deepseek-v4.1-flash` 真实试跑：三题 × 两种固定模式 × 两次独立运行，共 12 个计划槽位。
+六组交错配对已通过原 paired Evaluation 完成；multi 为必经分工、最多两个只读助手。
+配置额度、费用规划、组间停止条件与未知用量边界见[记录 078](../deal/078-real-model-repository-pilot.md)。
+试跑批次 v3（材料 plan_version 2）的原报告为 single 3/6、multi 0/6，305 份请求快照独立重读；其中两次 single
+在固定断言前遭材料误拒绝，新材料的独立诊断只证明其源码补丁分别通过冻结测试，不得改写原
+Product/Review/Promotion 成功事实。故本批次仅用于接线、失败和费用分析，不能作模式收益估计、
+留出成绩或官方 SWE-bench 分数；软件 token 额度也不是外部账单的硬限额。
+首组还暴露无计数配置在余额封顶后的响应用量不可用；旧结果与未知费用原样保留，当前 v3
+显式启用已有 CanonicalTokenCounter（cl100k_base、输入余量 100%），沿原 Budget 准入，不改生产生命周期。
+`expansion-candidates.json` 登记同一来源的完整候选队列，尚非新增可运行题目；材料准入和原审阅规则
+仍见[真实仓库计划](../plan/TRACEHARNESS_REAL_REPOSITORY_EVALUATION_PLAN.md)。当前没有真实仓库
+软裁判校准误判率或有界优化收益证据。旧 RR-6 的 240 次草案已撤回，12 道官方 test 候选配对仍未启动。
+当前后续路线以 §2.3 和[收口计划](../plan/TRACEHARNESS_TASK_TYPE_CONTEXT_EVOLUTION_PLAN.md)为准（原[三项目标计划](../plan/TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md)为历史）：
+单题先区分有效交付、固定验收与产品成功，再开发探索、冻结内部验证；不从旧预算恢复批量运行。
+以下 v5–v10 是此前单题可行性试次，不能合并为模式收益或简历提升比例。
+v5 的 180 万整树/170 万 coder/两名助手各 30 万
+方案在直连模型时仍因 token 耗尽失败；v5 首次经 Windows 系统代理还出现 `tls_eof`，进程局部
+`NO_PROXY=dashscope.aliyuncs.com` 后 Provider 链路可用。v6 提高至整树 500 万/coder 480 万、
+两名助手各 120 万和 600 秒，一名助手完成、另一名达到墙钟上限被取消，故 Product/Workflow
+仍失败。v7 改为单助手 200 万 token 与 1500 秒，却在 coder 单 Turn 墙钟预留后只余 600 秒
+可授予助手，计划未派发，主方因缺计划失败；v8 保留单助手和额度，把助手墙钟调回 600 秒，
+模型用异步交接真正启动一名助手，但该助手仍用满自身时钟被取消，Product/Workflow 失败。
+v9 同时调高任务/coder 累计墙钟并缩小主方单 Turn 预留，给助手 1500 秒且保留异步交接；
+助手完成并被主方收集，主方交回源码与回归测试，但固定 Verifier 在运行断言前因
+`tests/unittest_python3.py` 被列为 protected 而拒绝。排查发现 v5–v9 的试次准备误用旧
+`final-input` 材料，其冻结 payload 同时把该文件列入 `protected` 和会被宿主完整替换的
+`test_files`，预登记自称 version 3 与实际字节不符；当前生产者从最新 selection 生成的正确
+材料没有该重叠。v9 原报告失败不改；相同补丁在正确材料的独立诊断中固定测试 26/26 通过。
+v10 从当前 selection/生产者重新生成材料、离线验证原始失败与参考通过，再用相同资源条件
+另起真实 multi 试次。它在原 Runner/Evaluator 上完成一次全链路：一名助手完成且主方收集，
+Product/Workflow completed、固定 Verifier exit 0、Review passed、Promotion 的目标 ref 确认指向
+回执 new revision；79 次执行模型调用、3,132,713 exact token、无 Provider 失败，3 个预算账户和
+3 个 Workspace 均收敛。81 份请求快照独立重读通过。v5–v9 原报告与失败均保留，
+`report.complete=true` 只表示测量完整，只有 v10 同时满足四项持久成功事实；这是公开开发题
+单次链路验收，不是 single/multi 配对收益或留出成绩。具体冻结条件和失败分类见
+[记录 079](../deal/079-collaboration-budget-correction.md)。
+v10 后续上下文审计进一步区分生命周期完成与有效交付：主方 46 次调用（输入 1,885,301 / 输出 70,706），
+助手 33 次（输入 1,115,140 / 输出 61,566），总用量 95.78% 为输入；两者各一个 Turn，输入分别从
+5,087/4,638 增至 65,166/67,984，均无压缩、摘要或请求窗口计量事件。当时 Product runtime 未装配
+compaction/token_budget/semantic_summary，当时压缩仅接受闭合旧 Turn；本次所有工具结果也都没有
+tool-fold 所需的 output_ref。累计 token_estimate 准入不等于完整请求窗口管理，不能靠打开既有开关
+宣称已经处理当前 Turn 的历史增长（压缩合同见 12.2）。助手最后响应为 length、8,192 输出 token、
+空正文且无工具调用，当时 DefaultContinuationRuntime 仍返回 completed；主方收集的 statement 为空，
+最终回答明确没有获得助手可用发现。故 v10 仅证明现行 Product 证据链通过，不能证明有效协作交付；
+原成功记录不改写。上述问题属于 v10 冻结版本，诊断见记录 079
+与[数据摘要](../validation-data/real-repository-pilot-v1/feasibility-v10-context-audit.json)，不能当作当前未实现清单。
+[方案 080](../deal/080-long-task-context-and-completion-design.md)的 C0–C3 及后续修复已有实现：
+结束分类与推理分项见 §8，不完整响应拦截见 §10，引用/读回与闭合 Step 折叠见 §9.5/§12.2，
+collect 当步停止和有限收尾见 §14.3.19。C0-2 的真实形状探测已执行，但不能追认 v10 未记录的字节。
+C4 记录序列 run4 起未再出现请求越限；14 轮均未到固定 Verifier，仍不能判补丁正确性或宣称总成本收益。
+条件变更与定向验证见[记录 084](../deal/084-fold-maturity-fixes.md)，完整集成全量欠账见
+[交接文件](../plan/TRACEHARNESS_CONTEXT_CONVERGENCE_HANDOFF.md)。下一步按 §2.3 的目标与授权推进，
+不是继续把历史每项失败当作扩大预算或反复试跑的理由。
+原 Product 语义审阅当前仍展开完整 original_files（含二进制转义），真实三题的只读尺寸诊断中
+pydicom 输入约 658.7 万 cl100k token；这是待解决的规模限制，不是已运行语义判断。计划 RR-7
+要求在原 review owner 冻结有界证据包，当前未实现五维评分协议或新的审阅器。
+离线 reference/unfixed 验收脚本只有原 report.complete 且所有 assessment 符合期望才退出 0；
+退出状态不代替完整报告检查，材料准入、原主线验收与真实模型结果仍分开报告。
 
 输出位于要求尚不存在的 `--output` 目录：
 
@@ -2351,6 +2801,7 @@ M4 只增加一层**只读投影**，不新增 durable 事件、事实源、缓�
 - `frozen.json`、`artifacts/source.zip`、`artifacts/materials.zip`：冻结条件、当前生产源码和明确声明的宿主材料，逐项绑定摘要；
 - `evidence-manifest.json`：关闭后原事件流的文件、stream、序号范围和摘要；
 - `report.json`、`report.md`：同一个公共 EvaluationReport 派生，内嵌原 Product task_report；取消/未开始保留在公共 trials 分母。
+- 每个执行 Session 另带 `label`（coder / investigator.* / patch_author.* / unattributed）与只读派生的 `context` 诊断（[`context_diagnostics.py`](../../src/traceh/evaluation/evaluators/context_diagnostics.py)）：按 `model/attempt-end` 已知用量的单请求输入峰值/均值/末次值（任一请求用量未知即整组 unavailable）、`request/token-measurement` 的宿主计量峰值、触发线与越限次数（无 token 策略时为 unmetered）、`surface/replace` 工具折叠与摘要次数、读回调用及重复打开、折叠后以相同工具与规范参数重跑原工具的次数、结束分类与空回复。`report.md` 的 Context diagnostics 表由同一字典渲染。这些量每次从原事件重算、不写回，只用于解释差异，不参与 comparison 胜负判定。
 
 成功条件是四条互相独立的持久事实同时成立：ProductTask 终态 `completed`、Workflow 终态 `completed`、Review `passed`，以及一条 Promotion 回执且目标 ref 现在确实指向它记录的 new revision。旧 `*/case.json` 布局被明确拒绝，不做升级也不留兼容 reader。完整语义与边界见 20.30。
 
@@ -2371,6 +2822,16 @@ unavailable/unproven 和 attempt/role/query 描述性汇总；无阈值不声称
 为 0，记录局限；semantic/reranker 仍关闭。没有第二 Runner 或模型自评。
 
 ### 12.6 共享评估、检索旅程、派生诊断与变体比较（UE-0～UE-4 测量，ADR-0066）
+
+Output 来源收集的口径已随 080-C2 同步。旧代码用"这条 shell 结果**有没有** output_ref"筛选来源，
+在 format 1 下这等价于"宿主当时保留（未展示）的大输出"——而该实验测的正是模型能否找回**没看过**的输出。
+format 2 让每条完整结果都带引用后，这个筛选会悄悄扩成"所有 shell 结果"，在模型行为完全不变的情况下
+改变来源集合与评分口径。因此 `retrieval_episode.py` 改为按 `output_ref.disclosure == "retained"`
+筛选，精确还原冻结实验的原资格；`episode_assessment.py` 的证据匹配本就按具体 effect_id/digest 精确比对，
+`episode_diagnostics.py` 从同一份 `output_sources` 派生，二者随之保持一致。
+只多一个引用不改变评分，72 题口径未漂移（`test_retrieval_episode_evaluator.py`、
+`test_episode_diagnostics.py`、`test_retrieval_evaluation.py` 通过）。
+若将来无法证明等价，必须明确声明不可直接比较并重建基线，不静默重算旧报告。
 
 Product 交接观测改用同一 episode_assessment owner 的 successful_dispatches，保留成功 Attempt、原请求身份/位置/指纹及交接正文核对，不要求最终回答。answer_dispatches 继续限定到最终回答之前，用于原检索答案评估；没有改评分、协议或业务状态。记录 062 副本可重算 17 次已送达请求，原报告不覆写。
 
@@ -2398,6 +2859,11 @@ Memory 真正 declare/approve/supersede/revoke，可另建绑定 Session 读取�
 run plan format=1 支持 current 单变体（comparison=null）或按 baseline/candidate 顺序的两臂；未知 evaluator 明确拒绝。
 trials 可加 selection={case_ids,material_seeds}；未知/重复/空选择拒绝，先冻结选择的完整试次再核对 max_trials，不截减分母。
 --run-plan 拒绝相同领域 CLI 覆盖，null 不被环境变量补上；Key 仍由原加载器使用。
+plan 的 `model` 必须带有限正数 `timeout_seconds`（单次请求等待，[ADR-0086](../adr/0086-frozen-model-request-timeout.md)），
+缺失或非法以 `evaluation-manifest-invalid` 拒绝，不回退到 `TRACEH_MODEL_TIMEOUT_SECONDS` 或 120s 默认；
+与 `--model-timeout-seconds` 同时给出即冲突。Runner 要求联网 Provider 的实际超时等于计划值，
+`frozen.json` 的 `model.request_timeout_seconds` 记录实际值（离线 scripted 为 null）。
+起因：120s 小于 8,192 token 满额输出所需的约 148s（该模型约 18s/千 token），长回答被本地截断，曾被误判为供应商挂起。
 冻结源码/明确材料 ZIP、Provider 身份/配置指纹、retry、沙箱、环境和全部试次；源码 ZIP 不是依赖锁定或 Wheel。
 远端模型 revision 未知时为 null，连接路径按实际观测记录。每试次前后核对材料与源码漂移。
 输出不进入 benchmark 根；Git 保留 shipped 冻结材料原始字节。未开始就到期的槽位不虚增执行次数。
@@ -2415,6 +2881,7 @@ variant_execution.py 冻结 experiment.json、完整 Python 源码与材料归�
 双臂 execution 必须有 direct 网络模式、总 timeout_seconds、shutdown_seconds 和覆盖两臂完整分母的 max_trials。
 私有子进程禁用环境/系统代理发现；无失败重跑、并行试次或冷恢复。取消先通知原运行 Task 并等原 owner 收敛，
 重复取消等待同一关闭任务；超时复用 converge_process 终止直接子进程，但强制退出仍是 unproven，停止后续臂。
+前一臂正常结束后，父执行者在启动下一臂前读取它自己的原报告：任一试次未测量、用量未知（Product 的 token 组为 null、检索旅程 `unknown_attempts>0`），或 Product 执行 Session 记录了 Provider 失败分类，即以 `evaluation-arm-usage-unknown` / `evaluation-arm-provider-failure`（报告缺失为 `evaluation-arm-report-missing`）停止，不启动剩余臂；execution.json 保留该错误码，比较器把缺臂报告为不完整。这修复记录 086 §4.20 中 Multi 臂协议失败后 Single 臂仍被启动的缺口。
 源码/进程隔离只针对可信本地文本候选，工具安全边界仍归原 Sandbox。
 
 每条 execute 拥有 Runtime/Store，准备失败同样关闭；重复取消继续等原 owner 收敛，关闭错误与原失败合并保留。
@@ -2453,6 +2920,9 @@ judgment 绑定 run/frozen/evidence/report/scorer/rubric、reviewer、逐条身�
 字段和复核口径见 [UE-3+ 合同](../plan/TRACEHARNESS_UNIFIED_EVALUATION_UE3_PLUS_CONTRACT.md)。
 
 evidence.py 是 review/comparison 共用的原冻结、事件摘要、源码和材料核验入口；comparison.py 只读原账本统计，显式关闭 SQLite 连接。
+JSON 文档继续使用 4 MiB 上限；源码/材料二进制归档由 inputs.artifact_digest 在原路径约束内流式
+核对 SHA-256，不套用 JSON 上限。否则合法的大材料运行完成后会被离线核验错误拒绝。
+摘要不符、缺失、越界或链接仍拒绝；修复后离线派生报告写新目录，原报告、原成绩和账本不改。
 `eval --compare EXPERIMENT --output NEW` 同样离线且与 review/assess 互斥。可用 --assessments 指定
 format=1/experiment_digest/assessments 文件；按 variant_id 映射到确切 assessment.json 文件与摘要，评分从原 judgment 重算。
 未填的臂保留原待审状态，不猜“最新评分”。配对键是 case/group/material digest/material seed/replicate/requested mode，
@@ -2519,7 +2989,14 @@ CandidateProposal/NoCandidate、OptimizationAnalysisResult 与两个 Protocol。
 OptimizationContract format=1 绑定 experiment_id、base_source_digest、benchmark_digest、run_plan_digest、
 development_dataset_digest、development_case_ids、editable_text、limits 与规范 UTC deadline_utc。
 原 benchmark/plan 摘要继续绑定模型/Provider、重试、单试次预算、材料和比较条件；AO-0 不替代原工件核验。
-editable_text() 从真实源码提取本轮允许的 file/selector/old_sha256/text，范围只能收窄原 UE-3 的七个字符串节点。
+editable_text() 从真实源码提取本轮允许的 file/selector/old_sha256/text，范围只能收窄 UE-3 的显式字符串白名单。
+Single 编码策略可选择 product/execution.py 的 CODER_GUIDANCE：该文字由原角色指令提取，仍由原
+ProductWorkflowBindingResolver 注入角色消息，两种模式共享该入口。候选只改该文字，不改需求、
+权限、预算、固定 Verifier 或审批。ALLOCATION_GUIDANCE 仅用于 Multi 分工研究，不能代替 Single 优化。
+2026-09-24 按 [ADR-0087](../adr/0087-adopt-background-coder-guidance.md) 人工采用了后台候选 `a9837ab4`：
+该候选在 C2 的 3×2 验证中通过数 2/6 → 4/6、无回退，满足采用门。现行文字要求运行检查时使用直接的可执行命令，
+避免 `cd` 等 shell 内建命令和行内环境变量赋值。落地经原 `apply_candidate` 核对 old_sha256 与 AST，
+候选原绑定源码与当前源码只在三个评测文件上不同，本文件逐字节相同。
 validate_request() 核对当前完整源码、合同/开发集摘要、确切可改文本、轮次/分析额度、开发案例归属和请求总字节。
 请求只含宿主选取并脱敏的开发失败说明、证据定位、候选历史、可改文本、analysis_max_tokens 与轮次；请求摘要覆盖整个 payload。
 该结构不自动清洗秘密，也不把 locator 当路径执行；宿主不得把 scorer、留出答案或用户会话放进请求。
@@ -2708,29 +3185,58 @@ AO-2 原实验和旧 72 题口径保持不变。
 解释见 [记录 025](../deal/025-semantic-judge-calibration.md)，原证据见
 [数据索引](../validation-data/unified-evaluation/ao2plus/README.md)。未宣称裁判已达到人工可靠性；采用权仍属用户。
 
-### 12.11 AO-3：宿主托管的运行期后台受限优化（限定验收完成）
+### 12.11 后台检测与受限建议（ADR-0082；AO-3 历史验收保留）
 
-`evolution/background.py` 的 `BackgroundOptimizationHost` 持有应用生命周期内唯一活动实验任务；`project_background` 从同一 EventStore 的 `optimization-background:<workspace fingerprint>` 流派生状态。原 Session/Effect 拥有运行证据，原 Evaluation 拥有评分和实际费用。新流只写 period-opened、enabled、observed、admitted、settled、review-dismissed，expected_seq 是跨宿主实验准入线性化点，不新增数据库或复制任务状态。
+`evolution/background.py` 的 `BackgroundOptimizationHost` 持有应用生命周期内唯一活动的建议任务；
+`project_background` 从同一 EventStore 的 `optimization-background:<workspace fingerprint>` 流派生状态。
+事件为 schema 2：period-opened、enabled、observed、admitted、settled、review-dismissed、blocked-acknowledged；
+schema 1 明确拒绝，需新的数据目录。expected_seq 是跨宿主准入线性化点，不新增数据库或复制任务状态。
+原 Session/Effect 拥有运行证据，评测运行拥有其证据，建议目录拥有分析调用与实际用量。**后台不运行评测或模型审阅。**
 
-`chat/background.py` 用显式工作区、题库、双臂 run-plan、允许的文本节点、周期额度、截止时间及控制调用限额装配原能力。初版只接 source-isolated RetrievalEpisodeEvaluator；模型名称、Provider 和 endpoint 必须与本次聊天一致。`evolution/background_experiment.py` 冻结当前源码并复用原 run_strategy_optimization、隔离 worker 和模型审阅。EvaluationRunner 可把进程内借用的 Key 仅传给指定 worker 环境变量，不写到冻结材料，也不修改父进程环境。
+检测：`evolution/detection.py` 从已结束 Session 的原事件派生封闭类别——`truncated-response`、`empty-response`、
+`rerun-after-fold`、`repeated-readback`、`context-over-limit`、`tool-failed`、`tool-denied`——与评测报告的
+上下文诊断来自同一次扫描（`context_marks`），每条附 `stream@seq` 定位与固定说明，不读模型正文、不判对错。
+聊天与 Product 发现的说明只含计数（用户自己的工作，工具结果可能含其文件或秘密）。
+评测运行的 `tool-failed` / `tool-denied` 另附宿主记录的原因（[ADR-0085](../adr/0085-evaluation-detections-quote-host-causes.md)）：
+取结果正文首行与其后首条含 error 的行，32 位以上十六进制标识改写为 `<id>`，单行、每条 ≤200 字符，
+按原因分组计数、最多 4 种。收口实验 C 的上一条建议只见到“N 次失败”，因而泛化为“诊断并重试”；
+C2 在同一开发证据上得到点名 `cd` / `PYTHONPATH=src`、要求直接调用可执行文件的建议（记录 087 §4.5）。
+来源有三：TUI 已结束 Turn（另可提交显式反馈 `user-feedback-unverified`）；Product 任务（single/multi，
+沿用原 Product/Activity/Inbox 读取器与已结算条件，只读任务绑定的 Session 流）；评测运行目录（先经原 `load_run()`
+核对整份证据，冻结 benchmark 摘要必须等于本周期题库，case 必须属于开发集，结果为按 case 绑定的 `DevelopmentObservation`）。
 
-`RuntimeObservation` 区分真实反馈与开发 case：只引用已结束 Turn 的 Session、截止序号、证据摘要和说明，不虚构 gold/case_id。自动观察仅包含当前 Turn 工具拒绝/失败计数，明确正常拒绝不等于错误；显式反馈只发送用户填写的说明和定位。两类信号按原证据身份分别去重，完整聊天不自动上传，不回放真实工作区写入。固定题库成绩不能直接证明修复未经标注的反馈。
+聚类：观察按（来源, 类别）去重；同一类别须在至少两个不同来源的未消费观察中出现才准入一次建议，只消费该类别观察。
+建议：`evolution/background_proposal.py` 调原 `strategy.propose_strategy()`——冻结请求、经原插件 Generation Lease
+借用 `HostAnalysis` 一次、严格解析、`admit_proposal()` 准入——写 `strategy.json`（mode=proposal-only）、`analysis/`、
+`proposal.json`，合法候选另写 `candidate.json`（原 AO patch，可直接作 text_candidate 计划的 candidate `source`）。
+重开时从原分析响应重新解析提案并由提案确定性重建补丁，被改动的建议文件明确拒绝。验证由用户运行 `traceh eval` 决定。
 
-周期预留累计实验次数、完整 trial 数和分析/裁判 Token 上限；预留不退款、不冒充实际 usage，每题预算仍由原执行合同负责。到期或额度不足等待明确续批，应用重启不能重置额度。续批在原流写入新周期、保持旧反馈去重，默认暂停；候选摘要去重在原提案准入处检查。待审可继续记录反馈但不新增实验；无新反馈等待，无收益冷却，未知费用/未证实收敛阻塞。遗留活动准入不自动接管或重跑。
+`chat/background.py` 用显式工作区、题库、A/A text_candidate run-plan（兼作验证底稿）、允许文本节点、周期额度、
+截止时间与分析调用限额装配；设置 format 2（format 1 拒绝）。Product 题库允许 `CODER_GUIDANCE` 与
+`ALLOCATION_GUIDANCE`（后者要求 multi），检索题库沿用原白名单；模型名称、Provider、endpoint 必须与本次聊天一致。
 
-TUI F2 提供后台优化表单、从真实题库勾选题目与材料版本的计划向导及装配开关，F6 或 `/optimize` 提供状态、开启、反馈、暂停、拒绝待审候选和明确续批。同一 TUI 的前台操作先取消并等待后台收敛；重复取消只通知同一 worker 一次。退出按后台、Chat/Product 与 Runtime 的原 owner 顺序关闭；无 OS daemon。生产仍用当前批准版本，没有自动采用、源码修改或在途热切换。错误和部分费用保留，不能把“没有结果”解释成零成本。
+周期预留累计建议次数与分析 Token 上限；预留不退款、不冒充实际 usage，重启不重置。源码或设置变化后 `open()` 标记
+`stale` 并拒绝准入，用户显式批准新周期时以当前定义写入 period-opened，旧去重历史继续生效。待审建议、冷却、到期、
+额度不足都不准入。分析用量未知、收尾未证实、失败或取消均写入 `blocked`，由用户填写核实说明的
+`blocked-acknowledged` 解除（额度不退）；取消原样传播并等待原 owner 收敛。
+
+TUI F2 的计划向导优先生成 single A/A 计划（题库不支持时用 multi），可改文本默认为 `CODER_GUIDANCE`；F6 或
+`/optimize` 提供状态与待聚类问题、开启、暂停、反馈、导入评测证据、拒绝建议、核实后解除阻塞与批准新周期。
+前台操作期间不准入新建议，但不取消已在运行的单次分析调用（它在独立插件 Runtime 中执行，取消只会让用量未知并
+阻塞宿主）；空闲 pulse 再调用同一 `kick()` 恢复准入，暂停或退出仍取消并等待收敛。F6 的“关闭这条建议”只结束待审，
+采纳后同样先关闭再批准新周期。无 OS daemon，无自动采用、源码修改或热切换。
 
 ```mermaid
 flowchart LR
-    C["完成的 Chat Turn / 用户反馈"] --> H["宿主：作用域与原证据定位"]
-    H --> S["原 EventStore：后台周期与准入"]
-    S --> A["原 AO：一份受限说明提案"]
-    A --> E["原 Evaluation：隔离双臂与审阅"]
-    E --> W["等待 / 冷却 / 停止 / 用户审阅"]
-    W --> S
-    E --> F["原 Session / Effect / 评估证据"]
+    C["已结束 Turn / Product 任务 / 评测运行"] --> D["确定性检测（原事件）"]
+    D --> S["原 EventStore：观察、聚类与准入"]
+    S --> A["原 AO：一次分析、一份受限建议"]
+    A --> P["proposal.json / candidate.json"]
+    P --> U["用户查看；自选 traceh eval 验证"]
+    S --> B["阻塞 / 待审 / 冷却 / 新周期"]
 ```
 
+以下为 AO-3（schema 1，后台内完整评测）的历史验收，按当时归档源码核对，不代表当前实现：
 真实小样已完成：10 个 Session、21 次模型请求、126,191 exact tokens、0 次失败；原请求重放通过。两题模型评分 1/2→2/2，但任务 Token 27,820→34,498 超过冻结的 1.15 倍门槛，候选未晋级或采用。真实运行后立即退出竞态已通过定向及反向验证；最终发行门禁另见 v0.11.0 验证记录。合同、决策和验证见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)、[ADR 0068](../adr/0068-runtime-background-bounded-optimization.md) 和 [记录 026](../deal/026-runtime-background-optimization.md)。
 
 发行核查补充：独立 worker 回执现为 format 2，记录实际 pid 与 parent_pid；宿主进程记录 owner_pid 与启动 pid。原比较器验证“宿主直接启动 worker”或“宿主启动器→worker”的同一进程所有权链，支持 Windows venv 启动器而不忽略身份。请求摘要、冻结源码、环境、报告及回执摘要仍全部核对。旧 format 1 实验需用其归档冻结源码检查，当前比较器明确拒绝，不改写旧记录。证据不可比较时后台保留未知成本并停止，TUI 显示证据不完整，不把缺失统计当作零。
@@ -3463,6 +3969,8 @@ TUI Product 表单已对齐 host config 6 / 验证协议 3：新建及追加命�
 治理证据也支持原处选字和右键复制。选区从当前保留的最多 2,000 行显示日志读取，不是完整会话导出。
 Windows 实际 TUI 直接写系统 Unicode 剪贴板，同时更新 Textual 原有应用内剪贴板；系统剪贴板忙时
 提示失败，应用内仍可粘贴。其他平台沿用 Textual OSC 52，受终端能力限制。headless 测试不写系统剪贴板。
+右键交互回归先观察首屏正文写入后的布局完成，再计算鼠标坐标并断言命中目标；
+事件循环空闲不等于 RichLog 的 auto-height 已更新。此同步仅属于测试，不新增生产状态或延长菜单超时。
 
 F4、`/memory` 在空闲时打开 Memory 表单：从实际提议列表选择 ID，填写槽位和操作人；
 新记忆 ID 留空生成 UUID。替换/撤销选择当前 active 事实，替换保留所选槽位。空字段和缺失选择在表单
@@ -3614,7 +4122,7 @@ DA 后续诊断的说明候选未采用，原结果保留在 12.12；其后单�
 
 ### 14.2 AO-3 后台优化：已接主线，限定验收完成
 
-用户已授权先完成 AO-3 并提交发布，再执行 DA-1～DA-5。后台宿主、F2/F6 入口与原有限实验的当前实现见 12.11，限定门禁、两轮独立真实小样与安装包证据已完成；发行见 0.11.0 验证记录。
+用户已授权先完成 AO-3 并提交发布，再执行 DA-1～DA-5。后台宿主与 F2/F6 入口的当前实现已按 ADR-0082 收窄为检测与建议，见 12.11；AO-3 当时的限定门禁、两轮独立真实小样与安装包证据已完成；发行见 0.11.0 验证记录。
 
 DA-4 已把获准协作说明接入同一后台 owner；不另造无限调用服务、不自动修改源码或采用候选。DA 的有限实验额度不等于后台长期额度。详见 [AO-3 合同](../plan/TRACEHARNESS_OPTIMIZATION_AO3_CONTRACT.md)。
 
@@ -3679,9 +4187,9 @@ WC-1G 新题一次真实运行在 planning 的第三次调用遇到 provider-too
 
 分工说明已澄清：有证据定位、属于助手获准只读能力的来源，其未知内容本身可以成为调查目标。主方描述问题、来源、证据要求及局限，并保留使用结果的工作，不必先读完助手要调查的全部内容。未读不单独构成阻塞，也不等于缺失；来源定位不保证存在或访问权限，助手须报告实际拒绝、缺失与证据不足。本轮只改 ALLOCATION_GUIDANCE，不改 PLAN_REQUIREMENT、程序门禁或解析器；随后完整同题已通过协作与固定功能验收，验证行为质量边界仍单列。见[记录 049](../deal/049-unread-source-allocation.md)。
 
-main_work 为 goal/deliverable/uses_child_report，分别限 4000/2000/2000 字符；child 为 goal/scope/exclusions/deliverable/briefing，分别限 4000/2000/2000/2000/8000 字符。顶层字段为 `main_work` 与 `children`，唯一可选项是 14.3.19 的 `handoff`；每个 children 条目含 `assignment_id`/`role` 与上述语义字段（可写另含 `paths`），其余字段仍被严格拒绝（14.3.20）。严格字段、非空文本；助手 work 2 同时携带全部 child 字段和 main_work、owner/source/revision 与摘要，真实子请求可见。scope 是职责范围，不另造文件 ACL。
+主方工作在计划参数中是三个顶层字符串 `main_goal`/`main_deliverable`/`main_uses_child_report`，分别限 4000/2000/2000 字符，宿主校验后组装回原 `main_work` 对象（goal/deliverable/uses_child_report）写入工作包（[ADR-0083](../adr/0083-flat-collaboration-plan-main-work.md)：真实 Provider 对嵌套对象参数 8 次重放 7 次产生非法 JSON，拆平后 8/8 合法）；child 为 goal/scope/exclusions/deliverable/briefing，分别限 4000/2000/2000/2000/8000 字符。必填顶层字段为这三个主方字段与 `children`，唯一可选项是 14.3.19 的 `handoff`；旧的 `main_work` 参数形状按字段集不合法被可纠正拒绝；每个 children 条目含 `assignment_id`/`role` 与上述语义字段（可写另含 `paths`），其余字段仍被严格拒绝（14.3.20）。严格字段、非空文本；助手 work 2 同时携带全部 child 字段和 main_work、owner/source/revision 与摘要，真实子请求可见。scope 是职责范围，不另造文件 ACL。
 
-Product 6、Product event 5、host config 6、comparison 3、readonly work 2 明确拒绝旧版本。旧 adaptive、固定团队 multi 配置与旧编辑候选不自动映射，原数据不删除、不迁移；历史实验须用冻结源码。当前代码、CLI/TUI 和评估都只接受 single/multi。后台 AO 仅允许修改 structured_collaboration.ALLOCATION_GUIDANCE 的语义说明，不能改 PLAN_REQUIREMENT、权限、程序门禁或评分。
+Product 6、Product event 5、host config 6、comparison 3、readonly work 2 明确拒绝旧版本。旧 adaptive、固定团队 multi 配置与旧编辑候选不自动映射，原数据不删除、不迁移；历史实验须用冻结源码。当前代码、CLI/TUI 和评估都只接受 single/multi。后台建议只可改 product/execution.CODER_GUIDANCE 与 structured_collaboration.ALLOCATION_GUIDANCE（后者需 multi 计划）的语义说明，不能改 PLAN_REQUIREMENT、权限、程序门禁或评分（12.11）。
 
 提示要求：主子各有实质交付；不得分配重复的整个任务、要求复述已知答案、伪造来源或把泛泛复核当独立贡献。主方说明如何使用报告；允许共享文件和必要证据核验。助手只能读宿主绑定原 revision，不能依赖主方未来修改。结构/权限/一次派发是硬规则；分工有用、非重复和证据使用由语义核读判断，不靠字符串或路径差异伪造保证。
 
@@ -3885,6 +4393,53 @@ owner 不变：`Supervisor.create/send` 派发，`Supervisor.wait_message/report
 
 Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 review 额外暴露唯一一个收集工具（有 patch_author 时优先 `collect_child_patch`），继续隐藏 delegate/followup/stop/预算决定和计划工具，并附加"助手并发运行、pending 不是答案、未收集或未完成不能交付"的说明；串行运行的视图名单与说明与之前完全一致。Continuation 增加交付前门禁：声明并发后，本 Turn 必须存在一次成功收集、`status` 与 `reason` 均为 `completed`、且 agent/message 与派发身份一致的报告，否则 `CollaborationChildIncomplete("collaboration-child-report-not-collected")`。可写完成校验接受"等待式派发"或"显式收集"两种同一身份的交接证据，仍要求本 Turn 的 applied 整合回执；证据缺失或互相不一致时拒绝。
 
+080-C1 在同一门禁上增加**交付实质检查**：生命周期到达 `completed` 不等于交付了可用正文。
+对身份匹配且 `status/reason` 均为 `completed` 的 collect 报告，`statement` 缺失或只有空白时，
+判 `CollaborationChildDeliveryEmpty("collaboration-child-delivery-empty")`。
+**判定已从"最终交付检查"移到"每个 Step"。** 旧实现只在最终 `Finish(completed)` 时调用
+`_require_collected_report`，工具步一律放行，因此它是最终交付检查而不是及时停止：
+记录 082 的 run3 中主方收到失败终态后仍发出 17 次模型请求、562,727 token、18.52 分钟。
+现在 `CollaborationContinuation.decide` 每个 Step 都调用 `_stop_on_undeliverable_report`，
+核验本 Step 的 collect 结果：
+
+- 身份必须匹配本 Turn 已派发的 `(agent_id, message_id)`，否则忽略——杂散载荷不能停掉运行；
+- `status == "pending"` 不是终态，交给既有异步等待与墙钟边界，不算不合格终态，不自动重派；
+- 终态非 completed → `CollaborationChildIncomplete("collaboration-child-terminal-failure")`；
+- completed 但 `statement` 空白 → `CollaborationChildDeliveryEmpty`。
+
+必须区分的一点：collect **工具结果**的 `status=succeeded` 只表示取报告成功，
+报告**内部**的 `status` 才是助手终态；把两者混为一谈正是旧代码放行的原因。
+
+测试同步修正：旧用例只断言抛出异常、时机写在注释里，属于 AGENTS §7 点名的空验证；
+新用例让脚本主方在拿到终态报告后**故意还想继续干活**，断言 Provider 调用增量为零。
+真实运行已复核该形状：`c4g-run` 中助手因传输失败进入终态，主方在**同一步**停止，
+最后一次 collect 之后模型调用为 0，1.9 秒后记录 `collaboration-child-terminal-failure`。
+
+**有界收尾已实施**（形状取自[调研 083](../deal/083-open-source-agent-context-research.md) 的 OpenClaude，
+而不是 Gemini 的宽限重试——后者仍走普通 `executeTurn`，宿主不保证工具已撤）。
+`supervision/investigation_wrap_up.py` 的 `WrapUpReserve{steps, tool_calls, wall_milliseconds}`
+从已授予额度中预留一段，到线后 Step 视图**给出空工具列表**并附收尾指引。
+撤工具而不是提示"请停止"，是因为那个助手已经证明它不听劝：冻结请求里没有工具可调时，
+唯一能做的动作就是把结论写下来。预留用绝对值而非百分比——大额度的百分之几仍可能不够
+写一份报告，只有宿主知道自己的模型要多久。墙钟从事件时间戳推导而不读时钟，否则决策不可重放；
+最新事件最多落后一个 Step，低估是预留量的安全方向。
+主方同样接线，但收尾视图**保留 collect 工具**直到所有报告到齐，否则协作合同会变成不可满足。
+不自动增加预算，不改变全体 assignment 必须交付的合同。
+2026-09-22 真实 Single 暴露装配缺口：配置了 reserve 却未绑定 StepView；现对显式配置的 Single coder 也装配原收尾视图，不增加协作计划或 collect 义务。各角色墙钟预留以角色额度与单 Turn 截止的较小值为边界，避免角色总时限更长时尚未收尾就被 Turn 取消。工具撤回、拒绝回执、事件重放与固定 Verifier 路径不变；预留不是交付保证，单次长调用仍可能跨过门槛。
+`c4e-run` 中助手因此第一次真正交付（`completed`，12,732 字报告）。
+
+**撤工具是必要的，但不充分。** `c4m-run`（零 Provider 失败）证伪了"没有工具可调就只能写报告"
+这一设计理由：助手在收尾视图里仍发出 6 个 `read_tool_output`，全部被拒、无任何调用执行，
+白花 30.4 秒，下一步即撞墙钟取消。把它拉回去的是宿主自己的折叠占位符——每条都带
+`read to reopen` 与现成 `read` 动作（12.2 §3），该承诺对其它每一步成立、对收尾这一步不成立。
+因此收尾指引现在**显式作废占位符的承诺**：说明 reader 已随其余工具一并撤走，任何调用都会被
+直接拒绝而不执行，尝试只会耗掉仅剩的预算；同时零工具 Step 的拒绝回执改为陈述状态与唯一出路
+（9 节 ③）。执行层原本就正确，缺的是把变化说清楚。
+为此 `collect_investigation` 的 `statement` 从仅存在于渲染 content 改为同时进入规范化 `data`
+（`collect_child_patch` 本来就是这样），门禁读到的是与模型所见同一份原始证据，content 即 `canonical_json(data)`，
+没有第二份事实源。TUI 渲染新增对应中文原因。非空只是机械底线，不能据此宣称"有效贡献"，
+更不能反过来强迫助手编造发现。
+
 分工说明（`ALLOCATION_GUIDANCE`，AO 唯一可改文本）与 multi 提示已改为正向判据：先识别「有独立验收条件、不依赖兄弟输出、可写时文件互不重叠」的交付单元，每个单元一个 assignment，整合与最终验证留给主方；共享文件、依赖兄弟结果或过小的工作不拆；数量在宿主上限内由模型按工作本身判断，既不是配额也不是越少越好。原有禁止重复整题、复述已知答案、泛泛复核与伪造证据的规则不变。
 
 定向验证（本轮实际运行）：`tests/test_concurrent_collaboration.py` 8 项全部通过。真实循环中主方在助手 Turn 打开期间继续自己的步骤（`Supervisor.report` 未结算、pending 收集、随后 completed）；未收集与只拿到 pending 的交付被拒；未知 handoff 在派发前被拒且零助手；并发期间取消由 owner 树 child-first 收敛为 cancelled；默认省略 handoff 的串行形态视图名单与结果不变；同一份真实事件在授予 patch_author 时选出 `collect_child_patch`。可写侧用真实 Git/Capture（无 Docker）验证 pending→完成捕获→重复同一身份不重复捕获→外部 session 拒绝→越界 wait_seconds 拒绝→取消等待不取消助手；另有一条本地整链：并发派发→主方自己新增文件→收集并捕获→读完原 Patch→显式整合 applied→`completion_receipt` 用收集证据给出同一 artifact 与整合 tool_call_id，异常 turn 仍报 handoff-missing。反向验证：去掉交付门禁后未收集/只 pending 用例变为通过；屏蔽收集工具或拒绝 `dispatched` 后并发用例失败；禁用有界等待后取消等待用例失败；把完成证据限回仅计划工具后整链报 patch-completion-handoff-incomplete。相邻回归（collaboration/structured/investigation/writable/patch integration/capture/workspace editing/product registry 等）221 passed、32 skipped，跳过均为 Docker 门禁。未运行：完整全量、L2–L4、Wheel；`tests/test_concurrent_writable_product.py`（Product 整机并发写协作）需要显式 Docker 镜像，本地按原规则跳过。既有基线失败仍在：`tests/test_product_service.py` 两项仍写 schema_version=4（当前为 5），`tests/test_evaluation_comparison.py` 两项在 GBK 本地化下 `read_text()` 解码失败（`PYTHONUTF8=1` 下通过），二者与本轮改动无关。
@@ -3910,6 +4465,8 @@ Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 
 真实验收（记录 072）：用户授权后按同一冻结题目跑了三次，题目/评分/镜像/连接/上限全程不变，只修宿主配置与被暴露的源码缺陷，没有改题追分。上限为整树 60 次调用、900 秒、连接 60 秒、零重试；预算逐角色冻结（任务 600000、主方子树 460000、每助手 60000、保留 40000、coder 时钟 1320000 ms、进程槽 root 3/coder 2）。第一次 5 次调用零助手：夹具时钟自相矛盾（主方单 Turn 已预留 600000 ms，coder 上限仅 720000 ms）。第二次 4 次调用一个助手：两个 grant 都成立，第二个助手在创建期被 `ProcessSlotAuthority` 拒绝——进程槽向**每个祖先**计数，任务 root 的 `max_processes=2` 覆盖不了主方加两个助手；补偿完整（工作区 `agent-not-created` 释放、grant 释放、首个助手被 `_converge` 取消、账户全关、Workflow 干净失败）。第三次 25 次调用（主 17、子 8）、297928 exact tokens、254.9 秒：**机制全链通过**——一次计划两个 `patch_author`（路径不重叠）、两份独立 Patch 各自捕获、主方分别读完并两次 `integrate_child_patch` 成功、`completion_receipt` 给出每个 assignment 一条 applied 回执；固定功能检查两次失败（助手 A 的 `normalize` 未校验顶层输入，`normalize(None)` 抛 TypeError 而非 ValueError），因此无 Review 通过、无 Promotion。收敛：4 个预算账户关闭、4 个工作区 1 释放 3 按失败路径隔离留证、6 份沙箱证据收敛、27 份请求快照留存。
 
 记录 072 暴露并修复三个宿主缺陷：①整批资源预检原本只查 `max_children`，额度不足时给硬失败而非可纠正拒绝，现按整批累计 tokens/steps/tool_calls/wall 与 `ledger.available()` 比对并点名维度，策略新增 `planned_grant(owner)` 复用既有 `grant_for_child`；②`BudgetExhaustedError` 不记录维度，落盘只有 insufficient capacity，现消息带维度名；③`product_handoffs.investigations` 读取多 assignment 计划回执时遮蔽了结果列表，导致运行结束后的证据收集崩溃，已修并补离线回归与反向验证。记录 072 的题面点名助手数量，只是隔离机制的脚手架；后续记录 073 已用不点名数量的题目观察模型两次自主选 4，记录 074 已完成同题 single/multi 成本对照，记录 075 已完成真实 PTY/TUI 多身份验证。数量仍由宿主 `coder.budget.max_children` 授权、计划内 1..N 由模型选择（结构上限 `MAX_ASSIGNMENTS=8`）。详见各后续小节。
+
+真实仓库试跑又暴露了整批预检的一处缺口：累计助手初始授予虽然小于主方余额，第二个助手仍可因 `retained_tokens` 被 Ledger 拒绝，导致第一个已启动后才收敛取消。现在同一计划预检还要求 `整批初始 token 授予 + 本批最大的 retained_tokens <= ledger.available(owner).max_tokens`，并在派发前给出可纠正的不足数值；初始授予按原 `initial_token_limits` 算，不把未来可续派的生命周期上限提前扣除。Ledger 仍独占真实 reserve/commit，预检不另造预算事实源，也不承诺助手后续执行一定完成。新反例用 400,000 主方余额、两份 160,000 初始授予与 100,000 保留复现；撤回检查后该反例因未拒绝而失败，证明检查必要。见[记录 079](../deal/079-collaboration-budget-correction.md)。
 
 ### 14.3.21 不点名数量时的自主拆分观察
 
@@ -3945,15 +4502,32 @@ Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 
 
 定向验证：`tests/test_multi_child_collaboration.py` 新增 2 项（共 20 项通过）——推导规则的边界值与无 grant 兜底；以及真实循环用例：宿主授权 240000 毫秒、调用上限 60 秒时首个 `await_report` 计划被可纠正拒绝、模型改用 `dispatch_and_continue` 后完成收集，目录中**只有 1 个助手**（被拒计划一个也没创建）。反向验证：恢复固定等待后该用例耗时 **60.10 秒**、计划结果 `('failed', 'TimeoutError')`、目录留下一个被创建又被停止的助手、运行以 `CollaborationDispatchFailed` 结束。相邻回归：`test_concurrent_collaboration` / `test_writable_collaboration` / `test_collaboration_runtime` / `test_investigation_tools` / `test_patch_integration` / `test_collaboration_diagnostics` / `test_structured_product` / `test_product_f3_e2e` / `test_autonomous_preparation` 全部通过；compileall、collect-only、修改范围 Ruff、`git diff --check` 通过。未跑全量、L2–L4 与真实模型。
 
-### 14.3.25 预算预留的可证明上界与超支拒绝
+### 14.3.25 预算预留、输入估算与超支拒绝
 
-合同见 [ADR-0080](../adr/0080-bounded-token-reservation-and-overage-refusal.md)。缺陷链（每环有源码与事件佐证）：`BudgetedLlmRuntime._bounded_request` 在无 token 计数器时把**账户全部剩余**作为单次预留额，而生产里**没有任何路径提供计数器**——`BudgetEnforcement` 仅在 `product/runtime.py` 与 `evaluation/model_service.py` 构造且均不传 `token_counter`，`src/traceh/` 内也没有任何类实现 `TokenCounter` 协议，故该有界分支是只有测试会走的死代码；`llm/openai_compatible.py` 的超时 `ProviderFailure` 不带 usage（同文件 DNS 失败带 `Usage(0, 0, EXACT)`）；失败且无 usage 时按预留全额计费；账户归零后宿主自己声明的重试策略（TIMEOUT 可重试、最多 3 次）在准入处被 `BudgetExhaustedError` 拒绝，异常自 `runtime/agent_loop.py:285` 逃出并使 Turn 失败。实测 `budget/usage-reserved tokens=4653578` → `budget/usage-settled tokens=4653578 quality=unknown` → `runtime/error BudgetExhaustedError`（step_id 与超时尝试相同）。另一相关行为：`_usage_settlement` 在 `total > reserved` 时按预留额封顶，真实超支被静默丢出账本。两条规则单独看都是安全方向，**问题出在叠加**，而既有测试只分别覆盖了每一条。
+历史决定见 [ADR-0080](../adr/0080-bounded-token-reservation-and-overage-refusal.md)；当前代码与
+真实试跑边界见[记录 078](../deal/078-real-model-repository-pilot.md)。Product Profile version 7 必填
+`token_estimate`：显式 null，或 `{encoding, margin_percent}`；旧缺键配置拒绝，不推断模型的分词器。
+宿主通过原 ProductRuntimeFactory → BudgetEnforcement 装配计数器，没有新增余额或计费事实源。
 
-决定与实现：**预留额必须是本次调用的可证明上界，而不是账户余额；真实超支不得静默离开账本。**①可数路径——Product Profile 新增必填键 `token_estimate`（`{encoding, margin_percent}` 或显式 `null`），宿主据此构造 `CanonicalTokenCounter` 并连同余量交给 `BudgetEnforcement`；预留额为 `padded_input + output_limit`，余量**只加计数出来的输入侧**，并同步压缩可买的输出。②不可数路径——预留额改为 `min(剩余, 规范化请求 UTF-8 字节数 + 输出上限)`；字节级 BPE 的每个 token 至少映射一个字节，故该值是 token 数的数学上界，既不少计费也不再吞掉账户，且以 `remaining` 封顶使准入宽松度不变。③超支拒绝——`total > reserved` 抛 `BudgetUsageOverageError`（`budget-usage-overage`，携带 reported/reserved），成功分支既有的「仍按预留额结算→再抛出」路径直接承接；失败分支原本缺少该保护，本次补上并保守结算，**不遮蔽 Provider 主错误**。④协议——`token_estimate` 必填，`profile_version` 6→7，缺键旧文档明确拒绝（共享设置解析器点名该键）。⑤计数只有一套实现——从 `RequestTokenMeter` 抽出 `CanonicalTokenCounter`，输入计量与预算预留共用同一规范化原语，因此「数 token」不需要宿主编造 `window_tokens`。
+- 有计数器：`CanonicalTokenCounter` 与 RequestTokenMeter 共用规范化计数原语；输入计数加宿主余量，
+  然后从剩余 token 额度扣除 padded input。容量不足在 dispatch 前拒绝，否则降低本次输出上限至可容纳值，
+  预留 padded input + output limit。余量仅加输入；retry 不能靠改写已冻结请求的输出上限取得另一次调用。
+- 无计数器：预留 `min(剩余, canonical request UTF-8 字节数 + 输出上限)`，输出仅受剩余额度约束。
+  该实现避免一次小请求的未知失败吃掉整个大余额，但余额截断后并不保证输入与输出都装得下，
+  不能将它称为供应商实际计费的数学上界或人民币硬限额。
+- 已报告用量超过预留时，原 settlement 不静默按精确值封顶成功：先保守消费预留并标 UNKNOWN，再抛错。
+  预留占满剩余额度时报 BudgetExhaustedError，否则为 BudgetUsageOverageError；Provider 失败的原错误
+  不被结算错误遮蔽。成功响应在结算异常处被拒时，当前 Attempt 不保证保留完整实际 usage。
+- 取消/响应未知仍沿原 owned boundary 收敛并记未知，不能把 UNKNOWN 计为零、精确费用或账单对账完成。
+  关闭账户、取消收敛和完整费用可观测是不同事实。
 
-定向验证：新增 11 项（协议接受/`null`/缺键拒绝/8 种非法形状、余量只加输入侧、非法余量被拒、字节上界按请求成比例——预留 <1000 且账户仍余 90 万+），更新 1 项（溢出由静默封顶改为抛错，断言 `(reported, reserved) == (13, 10)` 且账户仍一致）。反向验证：两处保护分别撤回 → `DID NOT RAISE` 与预留 30≠40，均因预期根因失败。相邻回归：预算、Product、协作、评估契约、TUI 共 11 个套件通过；compileall、修改范围 Ruff 通过。
-
-边界：计数依赖可选依赖 tiktoken，其编码对非 OpenAI 模型是**估算**，这正是 `margin_percent` 的存在理由，余量由宿主显式声明而非从模型名推断；成功调用仍以 Provider 报告的精确用量结算。超支拒绝对**所有**路径生效，此前「超支后静默继续」的运行现在会失败，属有意的行为变更。仓库自带 benchmark 与 TUI 生成配置均声明 `null`（不强制可选依赖），其预留由字节上界保护。本轮未用真实模型验证。
+记录 078 的首组 multi 已复现三个返回后余额耗尽，原执行 token 汇总为 unavailable；旧证据保留。
+已结束的 v3 冻结试跑显式选择 cl100k_base 与 100% 输入余量，使用原准入前检查，未在同一批次内放大整树预算。
+后续条件拟增加额度并缩小批次，具体资源/费用门禁见计划 RR-6 与记录 079；这是独立新条件，
+不改变旧结果。
+cl100k_base 对百炼模型仍是估算，历史请求上的误差诊断不保证后续；输出、思考与实际账单以 Provider
+合同和返回证据为准。另一组出现派发部分失败后的 HTTP 取消，费用仍不可精确恢复；可依据冻结请求
+单独做保守操作预算规划，但不得回填原精确用量字段。
 
 ### 14.3.26 宿主向模型隐瞒已知信息的三处修正
 
@@ -3963,6 +4537,18 @@ Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 
 
 **② 拒绝消息带可纠正信息。** `ToolRuntime._prepare_one` 的视图检查**先于**注册表查找返回，因此 `Unknown tool:` 这条本可自纠的消息永不出现，模型只收到 「Tool batch is outside the frozen Step view」。实测第 6 轮 multi 臂据此**调用不存在的 `write_file` 五次**。修正后区分「无此工具」与「本步不可调用」，并附本步可调用清单；所有名字均来自调用方自身请求或其已发布工具表，不构成披露。第 7 轮 `write_file` 未再出现。
 
+**③ 本步不发布任何工具时，不渲染空清单。** 一个 Step 故意不发布工具是正当形态——有限收尾
+（14.3.19）就是这样逼出最终答案的。此时原实现输出 `Callable here: .`，一个孤零零的句号，
+等于什么都没说。真实运行的代价已经量化：助手在收尾视图里仍发出 6 个 `read_tool_output`，
+全部被拒（`ToolDenied`，无任何调用执行），白花 30.4 秒；下一步撞墙钟取消，报告始终没有写出来。
+现在改为陈述状态与唯一出路："This Step publishes no tools at all, so no call can succeed here.
+Answer with text only."
+
+拉模型回去调用的正是宿主自己的折叠占位符：每条都带 `read to reopen` 与现成 `read` 动作，
+该承诺对其它每一步成立、对收尾这一步不成立，而此前没有任何地方说明这一点（见 12.2 与 14.3.19）。
+结论是：**撤掉工具拦得住调用，拦不住模型把仅剩的 Step 花在上面**；执行层原本就正确，
+缺的是把变化说清楚。
+
 **③ `read_file` 增加 `mode=outline`。** 返回文件内定义行与行号、不返回正文；按行谓词而非解析器实现，不会在异常文本上失败，也不宣称语义。实测对 221 个 Python 文件，大纲合计 244,976 字符，为逐页读取正文的 **4.9%**。同受 8000 字符上限约束，超出以 `next_read` 续读；`end_line` 与 `start_column` 在该模式下被拒。
 
 该能力的**成本**须与收益一并记录：`read_file` 的工具 schema 由 44 token 增至 308 token，连同 `shell`（64→150）与 `search_text`（64→103）的描述补充，使每次请求的固定工具 schema 开销**增加 389 token**（`cl100k_base` 实测，默认工具集合计 1,462→1,851）。后果是最小可用上下文窗口相应收窄：同一窄窗口夹具在 5,000 token 下由「保留 directory 层」退化为**一条引用都不admit**，5,500 下行为与原先一致（directory 保留、正文排除），16,000 下不受影响。因此 `test_reference_token_budget` 的窄窗口参数由 5,000 调至 5,500——被保护的不变量（token 排除只降级到 directory，不整条丢弃）未放宽，只是让夹具回到它本来要检验的区间。
@@ -3970,6 +4556,8 @@ Step 视图仍由原事件推导：接受的计划声明并发时，execute 与 
 定向验证：提示条件化新增一项反向契约用例（无检索工具的组装中该段与相关工具名全部不出现，identity 与 workspace 仍在），并改造既有冻结重放用例使其组装真实拥有该类工具；拒绝消息新增一项用例分别钉住幻觉名与真工具被隐藏两条分支且互不混淆；outline 新增 5 项（定义与行号正确且**正文绝不出现**、无定义文件为空且终止、超限续读衔接、拒绝正文类参数、过期 digest 被拒）。三者均做反向验证；其中一次撤回只得到夹具 `TypeError`，按 §8.2 重做为打行为断言的版本。相邻回归：`test_request_view`、`test_file_reading`、Product 与协作套件通过。
 
 边界：三处修正改变模型可见信息，因此可能改变模型行为；这是有意的，但意味着跨轮次对照必须把它们记为自变量。本节不改任何协议版本。
+
+2026-09-23 补充：分工条目字段集错误原先只返回 `collaboration-assignment-fields-invalid`；`paths` 是否必填取决于角色，共享 schema 无法表达，实验 A 的一个 Multi 臂因此连续 5 次漏交 `paths` 并耗尽步数。现在拒绝消息写明角色、缺少与不允许的字段（`role patch_author is missing paths; not allowed none`），前缀码不变，仍是可纠正拒绝；定向测试与反向验证见收口计划记录。
 
 ### 14.3.27 大型代码库理解任务的十轮对照
 
@@ -4652,7 +5240,9 @@ F5 精度变更须联查共享 retrieval、Context 最终预算、Skill/Memory �
 | Product UI observation | `product/observation.py`、`product/chat.py`、`product/host.py`、`cli/product.py`、`tests/test_product_observation.py`、`tests/test_product_f3_e2e.py` | 1、3、6.7、13、15、16、20.29、20.35 |
 | Product requester 模型上下文 | `product/context.py`、`session/product_context.py`、`product/chat.py`、`product/host.py`、`session/surface.py`、`session/invariants.py`、`session/compaction.py`、`tests/test_product_model_context.py`、Product F3 E2E、ADR-0039/0040 | 1、3、6.2–6.3、7.2–7.3、12.1–12.2、15、16、20.38 |
 | TUI 上下文透明度 | `tui/context_inspection.py`（只读投影）、`tui/presentation.py`（纯格式化）、`tui/screens.py`（详情 Screen）、`tui/app.py`（装配/刷新/快捷键）、`tests/test_tui_context_inspection.py`、`tests/test_tui.py` | 1、3、12.3、13、15、16、17、20.40；只允许复用既有 parser/projector，不得复制第二套解析、不得新增 durable 事件或缓存，不得显示没有分母的 context-window 百分比 |
-| Surface 压缩 / replacement 协议 | `session/surface_replacement.py`（协议唯一定义处）、`session/compaction.py`、`session/surface.py`、`session/invariants.py`、`runtime/agent_loop.py` / `runtime/request_builder.py`（字节模式 Turn 前、token 模式每个 Step 准备）、`runtime/agent_runtime.py`（policy/summarizer 装配）、`cli/main.py`（四项显式配置与 `compact`）、`cli/timeline.py`、`tui/presentation.py`、`tui/app.py`、`tests/test_compaction.py`、`tests/test_surface_and_invariants.py`、`tests/test_cli_timeline.py`、`tests/test_cli_env.py`、`tests/test_cli_read_only_commands.py`、ADR-0042 | 1、3、6.3、7.2、7.3、12.1、12.2、13.1–13.3、13.6、15、16、17、20.39；改动 replacement 形状必须同时更新 parser、投影、不变量与两套 UI 投影，不得新增第二 parser 或第二 Projector |
+| 响应完整性与结束分类 | `runtime/response_completeness.py`（判定唯一定义处）、`api/llm.py`（`CompletionCategory`/`Usage.reasoning_tokens`）、`llm/openai_compatible.py`、`llm/scripted.py`、`runtime/agent_loop.py`、`runtime/continuation.py`、`budgets/enforcement.py`、`product/collaboration.py`、`supervision/delegation.py`、`session/semantic_summary.py`、`tui/presentation.py`、`tests/test_response_completeness.py`、`tests/test_openai_provider.py`、`tests/test_concurrent_collaboration.py` | 8、10、14.3、15、16、17；结束分类只在 adapter 映射，Runtime 只消费类别；新增 continuation 装饰器必须透传 `completeness`；角色交付合格性归 Product，不得在通用 Session 判业务成功 |
+| Product 上下文治理装配 | `api/product.py`（`ProductContextPolicy`）、`product/config.py`、`product/registry.py`（digest）、`product/runtime.py`、`llm/token_meter.py`、`tests/test_output_reference_eligibility.py`、`tests/test_product_config.py` | 8、9.5、12.2、12.5、15、17；策略十项全给或整体为 null，进入 assembly digest；JSON 键可省略以保住已冻结实验 profile，未知键仍拒绝 |
+| Surface 压缩 / replacement 协议 | `session/surface_replacement.py`（协议唯一定义处）、`session/compaction.py`、`session/surface.py`、`session/invariants.py`、`runtime/agent_loop.py` / `runtime/request_builder.py`（字节模式 Turn 前、token 模式每个 Step 准备）、`runtime/agent_runtime.py`（policy/summarizer 装配）、`cli/main.py`（四项显式配置与 `compact`）、`cli/timeline.py`、`tui/presentation.py`、`tui/app.py`、`tests/test_compaction.py`、`tests/test_surface_and_invariants.py`、`tests/test_cli_timeline.py`、`tests/test_cli_env.py`、`tests/test_cli_read_only_commands.py`、`session/history.py`（`closed_step_membership`）、`tui/context_inspection.py`、`tests/test_in_turn_step_folding.py`、ADR-0042 | 1、3、6.3、7.2、7.3、12.1、12.2、13.1–13.3、13.6、15、16、17、20.39；改动 replacement 形状必须同时更新 parser、投影、不变量与两套 UI 投影，不得新增第二 parser 或第二 Projector |
 | Provider/Request / typed failure | `api/llm.py`、`llm/failures.py`、`llm/openai_compatible.py`、`llm/runtime.py`、`request_builder.py`、`tests/test_openai_provider.py`、ADR-0037/0038 | 7、8、13、15、16、20.34、20.36 |
 | Tool/Policy/Middleware | `api/tools.py`、`tools/*` | 6、9、11、15、16 |
 | CLI/.env | `cli/*`、`.env.example`、README、CLI tests | 1、3、13、15 |
@@ -4714,6 +5304,11 @@ flowchart TD
 AGENTS 管执行规则，正式版管工程事实，通俗版解释同一事实，入口只做导航，计划描述未完成目标，ADR/记录保留决定与实验。保留当前事实的唯一维护位置，不能把缩略入口变成第二合同。
 
 完成时核对相关代码、测试、正式和通俗章节一致；全局状态变化才同步入口。文档任务检查章节对应、相对链接和 Mermaid 闭合，不为文档组织变化启动全量或真实模型。源码任务仍执行 AGENTS 的 owner 门禁，不省略取消、失败、身份与回滚验证。
+
+三项目标研究的每轮行动先记录：目标关联、原证据、原因与替代解释、所属 owner、能区分假设的最小验证、
+授权与停止条件；根因未证实时明确标为假设。优先复用原日志和确定性反例，不用长任务重跑代替定位。
+每个根因关闭和每批结束后回看全局目标，按[收口计划](../plan/TRACEHARNESS_TASK_TYPE_CONTEXT_EVOLUTION_PLAN.md)
+决定继续、转向或结束局部路线；防止重复实验不免除必要门禁，也不允许改评分、删除失败或复用已揭盲题追分。
 
 最终汇报实际变更、验证、文档同步和剩余边界；没有执行的检查如实标明。代码、测试和相关文档应一起交付，只有明确授权才操作 Git 历史和远程。
 
@@ -4866,6 +5461,21 @@ v0.4 之前写下的 Session 没有这个键，等价于“无插件”，可以
 
 ### 19.11 外部插件发行验收
 
+本轮集成测试的 L2 当前源码快照显式安装 `tiktoken>=0.9,<1` 和 `rich>=14.2.0` 测试依赖，
+覆盖真实请求计量及其 Rich 展示；不将这些测试依赖加入核心运行时的必选依赖。取消测试同时
+等候原任务终结与 Provider 进入信号，准备失败直接暴露，不无限等灯。
+Docker Product 夹具按现行 format 3 调查工作、children 列表及逐 assignment integration 回执断言；
+Patch Catalog 分别核对助手捕获和主方最终捕获，不能把主方交付误判为重复助手 Artifact。
+预算协商 Product 夹具使用显式 30 秒助手寿命，符合同步交接的 55 秒 Tool hold；原 120 秒
+配置会在派发前正确拒绝。测试仍要求助手实际执行两步、预算请求未获批、主方当步失败收敛。
+真实 SQLite Product 测试的外层 watchdog 使用夹具已声明的整任务墙钟额度，避免旧 30 秒
+测试计时器在正常 Git/Verifier 路径中途取消；不改变生产预算。审批展示测试逐请求核对角色的
+输出上限（coder 4096、investigator 1024 是该夹具配置），并允许计划阶段现行的只读工具及分工入口。
+
+当前 Python Quality 与 Plugin Creator 两个示例插件的安装依赖和 Manifest 上限同步为 `<0.12`，
+分别保留 `>=0.5`、`>=0.6` 下限，版本仍为 0.2.2；不是发版。Creator 内的历史 v0.8 编写指南与
+候选模板仍明确针对该 SDK，不把宿主兼容范围等同于模板已升级。
+
 [`examples/plugins/traceh-example-skill-plugin/`](../../examples/plugins/traceh-example-skill-plugin/) 是一个**可独立构建安装**的 Distribution，不是仓库内的测试夹具。它有自己的 `pyproject.toml`、`traceh.plugins` Entry Point、`PluginManifest`、一个 `PromptSection`、一个 `PURE_READ` 无副作用 Tool，以及一份打包进 Wheel 的 `SKILL.md` 资源（通过 `importlib.resources` 读取）。
 
 它明确**不**扫描用户的 Codex/Claude 目录、不读环境变量、不访问网络，也**不**因为被安装就成为默认能力。
@@ -4882,6 +5492,11 @@ Verifier 的解析顺序是“项目明确的 `[tool.traceh-python-quality].test
 
 [`evolution/candidate_validation.py`](../../src/traceh/evolution/candidate_validation.py) 接过 L1 明确没有做的“证明”步骤，但没有进入 Runtime 装配。`traceh plugins validate` 要求调用方显式给出 Candidate Workspace、可信 TraceHarness Git 仓库、尚不存在的输出目录，以及 `--allow-index` 或 `--wheelhouse` 之一；三条目录必须互不包含。候选 build/runtime 依赖和额外测试依赖都拒绝 `name @ URL/file` 直接引用，不能绕过所选依赖源。候选复制会按大小写无关规则拒绝符号链接、Windows Junction/其他 reparse point 和 `.env`，排除 VCS、缓存、旧 build/dist、egg-info、Wheel 与 Session 数据，并应用文件数和字节预算。身份来自 `pyproject.toml` 的 Distribution、版本和 `traceh.plugins` Entry Point；有多个 id 时必须 `--plugin-id` 点名，不从文件名或示例猜默认。
 
+真实 L2 集成测试会在测试临时目录冻结当前声明源码、全部测试和配套材料为独立 Git HEAD，
+并保留根目录 `.gitattributes`，使后续 Windows clone 仍按已声明属性保持冻结材料的字节摘要。
+快照显式交给原 Validator；不改主仓库历史，不减少核心回归集合。公开输入读取器仍拒绝字节
+漂移，不能因 JSON 语义相同而放宽。递归保护仍由原 Validator 设置。
+
 可信 evaluator 不是当前脏工作区，也不是运行这条命令的 CLI 版本，而是显式核心仓库的 detached `HEAD` clone：宿主静态解析该 clone 的唯一字面量 `__version__`，候选依赖必须接受这个版本。核心与候选各自建 Wheel；候选 Wheel 再拒绝不安全路径、加密或符号链接成员、`.pyc`/缓存、`.pth`、`sitecustomize.py`/`usercustomize.py`、Entry Point 顶层包之外的模块，以及标准库、`traceh`、`pytest` 等宿主核心/验证控制命名空间。候选合同环境和核心回归环境是两套 venv，且在执行任何候选代码之前均已从同一审计字节完成安装；二者显式移除宿主 `PYTHONPATH`、关闭第三方 pytest 自动加载：前者用宿主复制的 `contract_probe.py` 经公共 `PluginDiscovery` 对照安装元数据，调用现有 `plugins doctor`，并用宿主 pytest 配置收集和运行候选测试；后者安装候选但不启用，只运行可信 clone 自带的完整核心测试。候选自己的 pytest `addopts`、报告与 stdout/stderr 都不能充当宿主证据。
 
 门禁固定为 13 步：源码合同、可信 HEAD、核心 Wheel、候选 Wheel、Wheel 审计、候选环境安装、installed metadata、doctor、候选测试收集、候选测试、回归环境安装、完整核心回归、验证产物发布。初审会把受预算约束的 Wheel 字节与 SHA-256 锚定在宿主进程内存；候选执行结束后，第 13 步重新审计构建文件和安装用快照并核对初始摘要，再只从锚定字节生成产物。Wheel、`report.json`、`report.md` 和可选诊断先写入输出目录的同盘兄弟暂存目录，全部成功后才以一次目录 rename 对外可见；普通门禁失败得到完整无 Wheel 报告，报告写入/最终提交失败则目标输出目录保持不存在。报告只有宿主编写的稳定 code、有界中文摘要和耗时；候选输出不落报告，只有可信核心回归失败时可以另存一份 32 KiB 尾部诊断。
@@ -4889,6 +5504,10 @@ Verifier 的解析顺序是“项目明确的 `[tool.traceh-python-quality].test
 取消沿用现有直接子进程收敛原语：terminate、有界等待、kill、确认退出，重复取消不能提前返回。但 venv 不是 OS 沙箱：build、import、doctor 和测试仍以当前用户权限运行，也只管理直接子进程；`--allow-index` 还允许解析依赖时访问网络。因此本地 L2 只适合受信任的自有候选，不可信源码要放进容器或远程 Sandbox。L2 也不比较能力好坏、不批准或安装插件；精确报告与哈希 Wheel 是 L3/L4 的输入。完整决策见 [ADR-0016](../adr/0016-independent-plugin-candidate-validation.md)。
 
 #### 19.11.2 L3：宿主固定 baseline/candidate 对比
+
+当前限制：该旧 L3 Probe 尚未接入 Sandbox 配置。命令 Verifier 按现行安全合同失败关闭，
+正常返回并留下完整证据不等于验证通过；下文 2/3 对 3/3 是历史宿主执行条件的验收，不能当作
+当前隔离执行已接通。此次仅纠正过时测试的预期，没有放开宿主执行或补造成功。
 
 [`evolution/candidate_comparison.py`](../../src/traceh/evolution/candidate_comparison.py) 只消费成功的 L2 schema-v1 证据：13 个 canonical Gate 必须逐项通过，核心提交、插件身份和 `artifacts/` 下的 Wheel 文件名/大小/SHA-256 必须完整。它先重新审计 Wheel，再从显式核心仓库克隆报告记录的精确提交；Suite 必须是该提交内的相对路径，调用方不能从候选目录另塞 evaluator。候选不会重新构建。
 
@@ -5980,6 +6599,7 @@ F3 本身没有实现 benchmark、旧 eval manifest cutover、重试策略、跨
 | [`repositories.py`](../../src/traceh/evaluation/repositories.py) | 每次 attempt 的一次性源仓库与一次性本地 bare target，以及有界、无链接的初始树复制 |
 | [`attempt.py`](../../src/traceh/evaluation/attempt.py) | 一次 attempt：两个真实 user Turn、确认、立即批准、相位计时与 owner 收敛 |
 | [`metrics.py`](../../src/traceh/evaluation/evaluators/product_metrics.py) | 从各自的事实源推导每个指标，或报告 unavailable |
+| [`context_diagnostics.py`](../../src/traceh/evaluation/evaluators/context_diagnostics.py) | 从单个 Session 事件派生上下文压力、折叠、读回与折叠后重跑；描述性，不判胜负 |
 | [`product_report.py`](../../src/traceh/evaluation/evaluators/product_report.py) | Product DTO、descriptive 聚合、实验条件一致性与两份一致的输出 |
 | [`runner.py`](../../src/traceh/evaluation/runner.py) | 唯一 `ProductBenchmarkRunner`：网格顺序、输出目录与报告写入 |
 | [`errors.py`](../../src/traceh/evaluation/errors.py) | 三类稳定失败，均不回显 payload、路径或异常文本 |
@@ -6821,6 +7441,8 @@ Verifier command id/status/exit/argv digest，以及从这份完整 bytes 单遍
 `ProductObservationReader` fresh read 当前 task，再由唯一
 [`TaskConversationReader`](../../src/traceh/tui/task_conversation.py) 精确绑定该 observation 已证明的 Session：
 主方沿固定 Workflow 执行 node、`agent_identity(workflow_run_id, node_id)` 与 Directory 的 session/create-request 绑定；临时调查方沿原 ownership 子树、Inbox/Delivery 和精确创建身份绑定。
+调查输入展示识别当前 `readonly-investigation` format 3，将同一消息的目标、范围、交付物和来源整理为可读字段；
+不再将当前信封误当普通 JSON 原样显示。该展示不授予权限、不迁移旧信封、不修改 Session 内容。
 它不扫描 Store、不按前缀猜 Session，也不建立缓存、订阅、durable 写入口或第二状态机。每条 Session 在
 投影前 fresh read Session/Effect streams 并通过 `CoreInvariantChecker`，随后按 canonical seq 单遍遍历
 `user/message`、`assistant/message`、`tool/call` 与 `tool/result`，不再先用 `SurfaceProjector` 聚合发言、再用

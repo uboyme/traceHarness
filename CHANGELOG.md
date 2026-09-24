@@ -2,6 +2,194 @@
 
 ## Unreleased
 
+- Single's coder guidance now asks the model to run checks with direct executable
+  commands, without shell built-ins such as `cd` or inline environment assignments
+  (ADR-0087). This is the first background suggestion adopted by a person after it
+  met the pre-registered adoption gate: passes rose from 2/6 to 4/6 on three
+  validation cases with two repetitions each, and no case regressed. It was applied
+  with `apply_candidate`, so the adopted text is exactly the validated text.
+
+- Evaluation run plans freeze the model request timeout as a required
+  `model.timeout_seconds` (ADR-0086). The runner refuses a network provider that
+  waits otherwise, and `frozen.json` records the effective value. The wait used to be
+  the CLI default or `TRACEH_MODEL_TIMEOUT_SECONDS`, and it was frozen nowhere. At
+  120s it cut off any answer longer than about 6,600 tokens: an 8,192-token answer
+  needs about 148s at the observed 18s per 1,000 tokens, so these cut-offs were
+  misread as provider hangs. Plans without the field are refused, not defaulted.
+
+- Detections read from benchmark evaluation runs now quote the host-recorded cause
+  of tool failures and denials (ADR-0085). The cause is the result's first line and
+  its first error line, with long hex identifiers masked, capped at 200 characters and
+  4 grouped causes. Chat and Product findings still carry counts only. Given only
+  "N tool results failed", the analysis had proposed a generic "diagnose and retry";
+  with the causes it named the shell syntax run as executables.
+
+- A re-run of the same invocation after its earlier result was folded now counts as
+  reopen demand (ADR-0084). The newest copy is held under the existing read-back
+  byte budget and ordered by demand. Previously only read-back pages were held, so
+  a model that ignored the placeholder's read action and re-ran `read_file` had the
+  copy folded again two Steps later. A repeat while the result is still visible does
+  not count, and older copies stay foldable. Sessions with a historical fold that the
+  new rule would protect are refused with `tool-fold-source-mismatch`.
+
+- `submit_collaboration_plan` takes the main Agent's retained work as three top-level
+  strings, `main_goal`, `main_deliverable` and `main_uses_child_report`, instead of a
+  nested `main_work` object (ADR-0083). Replaying frozen requests showed that
+  qwen3.6-plus via DashScope could not reliably emit the nested object: it was invalid
+  7 times out of 8, against 0 out of 8 for the flat form. The internal work package is
+  unchanged, and old-shaped plans are refused as an invalid field set with no alias.
+  An assignment with the wrong field set is now refused with its role and the missing
+  and disallowed fields named.
+
+- Background optimization now detects and proposes; it does not run experiments
+  (ADR-0082; settings format 2, ledger schema 2).
+  - It clusters structural failure detections from chat turns, Product tasks and
+    imported evaluation runs, and admits a suggestion only when a class has at least
+    two sources.
+  - It calls the original AO proposal-only entry for one whitelisted text candidate.
+  - A person validates a suggestion with `traceh eval`. An unproven cost or
+    convergence blocks the period until a person acknowledges it.
+
+- Evaluation reports carry per-session context diagnostics derived from the event
+  log: input peak and mean, tool folds, read-backs, reruns after a fold and
+  over-limit refusals. A paired run does not start its next arm after an arm
+  with a missing report, unknown usage or a provider failure.
+
+- Sandbox snapshots size each file read from its validated file length plus one
+  growth-detection byte. Small files no longer request workspace-sized transient
+  buffers. File identity, before/after metadata, total limits, and the complete
+  publication conflict check remain enforced; no cache or new source of truth is added.
+
+- Product Single now applies an explicitly configured wrap-up reserve. Reserve wall
+  time uses the earlier Turn or role deadline for Single, Multi, and investigators,
+  so the runtime can withdraw tools before the actual deadline and leave time to
+  hand back the result. Single keeps its ordinary coding tools before that point
+  without acquiring a collaboration requirement.
+
+- A bounded retry no longer bills the same request several times over. A failed attempt
+  that the provider reported no usage for used to settle the entire worst-case
+  reservation, which is the right answer for *a request* and the wrong one for *an
+  attempt*: retries re-send the identical frozen request, and the host proves it by
+  refusing any attempt whose dispatch drifts. Reliability was therefore paid for out of
+  the task's grant at roughly the cost of a whole call per network hiccup. In one real
+  run twenty failed attempts settled 2,000,546 tokens - more than the entire successful
+  workload of 1,699,897 - and exhausted a two-million grant after 725,467 tokens of
+  actual work, while the retries they belonged to recovered six of seven failing
+  requests. The unobservable charge is now borne once, by the attempt that first met the
+  failure; later ordinals settle at zero, still marked unknown rather than exact, because
+  the charge is zero from having been made already and not from the usage being known.
+  The separate defect where an uncounted reservation takes the whole account on attempt
+  one is unchanged and still recorded by its own test.
+
+- A Step that publishes no tools now says so instead of rendering an empty list as
+  "Callable here: ." - publishing nothing is a deliberate shape, and it is how a bounded
+  wrap-up forces a final answer. The refusal names the state and the only remaining move.
+  Withdrawing the tools was never the whole mechanism: with an empty tool list a real
+  assistant still emitted six reader calls, had every one denied without running, and was
+  cancelled by the wall clock before writing its report. What pulled it back were the
+  host's own folded placeholders, which stay in the conversation advertising a
+  ready-to-run read action - true for every other Step and false for that one. The
+  wrap-up guidance now says so explicitly. Enforcement stops the calls; only saying what
+  changed stops the model spending its last Steps on them.
+
+- Folding stopped costing the model the evidence it was still using. A folded result's
+  placeholder is now a compact, self-contained pointer carrying a ready-to-run read action
+  (232 tokens down to 102 on a real digest), and it addresses the **original** page even
+  when what is being folded is itself a reopened page - taken from that reader call's own
+  recorded arguments, so reopening stays idempotent and one level deep instead of wrapping
+  a page envelope in another page envelope every round. Reopened evidence is protected by
+  an explicit UTF-8 byte capacity rather than the earlier permanent exemption, which had
+  merely moved the failure (28 permanently retained pages were 42.5% of the request that
+  then hit the ceiling). Within that capacity the budget goes to **demonstrated demand**
+  first and recency only as the tie-break: a real run had 31 of 60 reader calls repeating an
+  exact page and five pages opened four times each, because purely recent protection evicts
+  a page the moment anything newer arrives - including one the model just paid to fetch
+  back. The capacity travels inside the fold event, because historical requests must replay
+  byte-for-byte and a replay cannot consult today's configuration (record 084).
+
+- A multi run now ends at the Step where an assistant's report turns out to be
+  undeliverable, not when the main agent eventually tries to hand in. The old check ran only
+  on the final `Finish(completed)` branch, so it was a delivery check wearing a stop's name:
+  in one real run the main agent collected a failed terminal report and then spent 17 more
+  model calls, 562,727 tokens and 18.5 minutes before being refused. Identity must match a
+  dispatch from this Turn (a stray payload cannot stop a run) and `pending` is still not a
+  terminal state. Its test was rewritten too: the old one asserted only that an exception was
+  raised and left the timing in a comment, so the new one makes the main agent deliberately
+  want to keep working and asserts zero further provider calls.
+
+- A read-only investigation now stops investigating before it runs out. `WrapUpReserve`
+  holds back part of the authorization already granted - steps, tool calls and wall clock,
+  whichever runs out first - and on reaching it the Step view is composed **with no tools at
+  all**, leaving writing the report as the only available move. A prompt asking the model to
+  stop is advice, and the assistant that motivated this demonstrably kept searching after
+  saying it already had the core evidence; it burned a whole 25-minute budget across 47 calls
+  and delivered nothing. The main agent has the same reserve but keeps its collect tools
+  until every report is in, or the collaboration contract would become unsatisfiable. Every
+  trigger is derived from the event prefix, wall clock included, so a replay reaches the same
+  decision. First real delivery in the sequence: a completed 12,732-character report.
+
+- A model response that did not finish can no longer be recorded as a completed Turn.
+  `ModelResponse` now carries a normalized `completion` category beside the untranslated
+  `provider_finish_reason`; a missing, empty or unmapped provider value is `unknown`
+  rather than being filled in as `stop`. One shared judgment decides completeness once
+  per response, and the loop consults it **before** dispatching tool calls or running the
+  verifier, so a truncated response's parseable tool calls are never executed as if they
+  were a finished intention. On the Product side a collected assistant report whose
+  statement is blank ends the multi run immediately, with no extra main-agent request and
+  no automatic re-dispatch. Breaking: `model/attempt-end` and `summary/response` replace
+  `finish_reason` with `completion` + `provider_finish_reason` (records 080, 081).
+
+- A single long Turn can now fold its own finished tool groups. Tool-result references no
+  longer depend on one result's size: every result with a complete effect outcome is
+  addressable, and size only decides what the model sees first (`output_ref` format 2 adds
+  `disclosure`). The fold boundary became `{unit, kept_recent}` so a cut may sit at a closed
+  Step rather than only a closed Turn, and `TokenBudgetPolicy` gained an explicit relief
+  mark and protected-group count that must be configured together or not at all. Folding
+  required on the admission path stops the request when it fails, unlike tolerated Turn-front
+  maintenance. Offline, the same six-read task carried six full bodies in its last request
+  without water marks and one with them. Breaking: format 1 references and the old
+  `kept_recent_turns` fold field are rejected, so older data needs a new data directory.
+
+- A frozen single-call probe on the pilot's own model reproduced its failure signature:
+  `finish_reason=length`, empty `content`, no tool calls, and the entire output budget
+  recorded as `reasoning_tokens` against a `reasoning_content` field the adapter does not
+  read. `Usage.reasoning_tokens` now records that split - a subset of `output_tokens` that
+  changes no settlement - so an output budget spent on reasoning is visible instead of
+  looking like a model with nothing to say. One call describes one call: this does not
+  retro-diagnose the original trial (record 081).
+
+- Collaboration plan admission now checks the whole batch's initial token grants plus
+  the main agent's retained token requirement before dispatch. A real-repository pilot
+  had started one assistant and then cancelled it when the second grant failed this
+  Ledger check. The correction preserves Ledger authority and returns a correctable
+  plan error before creating either assistant. The follow-up evaluation now has one
+  complete real-repository multi development trial through the existing Runner,
+  fixed verifier, Review, and Promotion. Earlier failed trials remain separate;
+  a stale prepared verifier was replaced by material freshly generated from the
+  current selection without changing production evaluation code (record 079).
+
+- Real-repository verifier material v2 no longer rejects candidate edits to test files
+  that the host completely replaces in its disposable verification copy. Fixed assertions
+  still decide correctness; unchanged support-file integrity checks remain. A real-model
+  pilot exposed the false rejection; the original trial is retained (record 078).
+  Material v3 additionally permits each case's explicitly declared ordinary regression
+  test paths outside the selected fixed suite. Two more real model patches had been
+  rejected before assertions; both pass the same frozen checks in independent v3
+  diagnostics. Their original Product outcomes remain failed, and protected fixtures
+  still require original hashes.
+  The offline acceptance CLI now exits unsuccessfully when the original report is
+  incomplete or does not match its expected positive/negative assessment.
+
+- Product evaluation datasets now require format 3 with explicit per-case initial-tree
+  quotas. Freezing and attempt construction consume the same quotas; rebuilt repositories
+  include frozen files matching upstream ignore rules. Older Product datasets are rejected.
+  Pinned full-repository development materials and offline admission helpers use the
+  existing Evaluation/ProductTask path: three upstream regressions reproduced, reference
+  repairs promoted, unfixed controls rejected, and original evidence reread (record 077).
+  These are offline mechanism checks, not autonomous model performance claims.
+- The task conversation view now formats current readonly-investigation format-3
+  messages; its display parser had still recognized only the superseded format 2.
+
 - Three corrections where the host withheld what it already knew (record 076). The prompt's
   reference-source policy was assembled unconditionally while the table naming those sources
   was already tool-aware, so an agent with five workspace tools received 5,969 characters

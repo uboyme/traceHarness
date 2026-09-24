@@ -10,6 +10,7 @@ from promotion_fixtures import (
     make_bare_target,
     promotion_targets,
 )
+from sandbox_fixtures import real_sandbox_policy
 from test_product_f3_e2e import (
     _chat_runtime,
     _ChatProvider,
@@ -22,6 +23,7 @@ from test_workspace_supervision import _Factory, _Policy, _repository
 from traceh.api.agents import AgentSpec
 from traceh.api.memory import ProjectScopeLimits
 from traceh.api.product import RequestedTaskMode
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.cli.chat import run_chat
 from traceh.cli.product import LineProductAdapter
@@ -141,6 +143,7 @@ async def test_real_product_worktrees_inherit_before_first_model_dispatch(tmp_pa
         event_feed=runtime.events,
         actions=actions,
         project_scope=scope,
+        sandbox=SandboxConfiguration(real_sandbox_policy(), (tmp_path / "cas").resolve()),
     )
     console = _Console(("please add the accepted file", "yes, do it", "START"))
     assert (

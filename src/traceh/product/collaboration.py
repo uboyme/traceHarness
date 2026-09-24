@@ -21,6 +21,17 @@ DELEGATION_TOOLS = (*INVESTIGATION_TOOL_IDS, SUBMIT_COLLABORATION, COLLECT_CHILD
 PLAN = "collaboration-plan"
 EXECUTE = "collaboration-execute"
 REVIEW = "collaboration-review"
+WRAP_UP = "collaboration-wrap-up"
+MAIN_WRAP_UP_GUIDANCE = (
+    "Your budget for this task is nearly spent, so the working tools have been "
+    "withdrawn. Deliver now from the state your workspace is already in: say what "
+    "you changed, what you actually verified and how, and what remains unverified "
+    "or unfinished. Do not describe intended work as completed, and do not claim a "
+    "check you did not run. The host's own fixed verification runs after you "
+    "deliver; an honest, incomplete handover is worth more than being cut off "
+    "mid-sentence."
+)
+
 CONCURRENT_CHILD_GUIDANCE = (
     "The assignments you dispatched run concurrently; the host is not holding any report "
     "for you. Do the retained work that does not depend on them, then collect each exact "
@@ -81,17 +92,83 @@ def dispatched_roles(events, turn_id):
     )
 
 
+def _every_report_collected(events, turn_id) -> bool:
+    """Whether the delivery contract still needs a collect tool to be reachable."""
+
+    if not dispatched_and_continuing(events, turn_id):
+        return True
+    accepted = accepted_plan(events, turn_id)
+    if accepted is None:
+        return True
+    arguments = accepted[0].data.get("arguments") or {}
+    children = arguments.get("children")
+    if type(children) is not list or not children:
+        return True
+    steps = {
+        e.data["step_id"]
+        for e in events
+        if e.type == "step/start" and e.data.get("turn_id") == turn_id
+    }
+    collected = sum(
+        1
+        for e in events
+        if e.type == "tool/result"
+        and e.data.get("step_id") in steps
+        and e.data.get("tool_name") in COLLECT_TOOLS
+        and e.data.get("status") == "succeeded"
+        and (e.data.get("data") or {}).get("status") == "completed"
+    )
+    return collected >= len(children)
+
+
 class CollaborationPolicy:
-    def __init__(self, delivery=None, *, verifier=None):
+    def __init__(self, delivery=None, *, verifier=None, wrap_up=None, collaboration_required=True):
         self.delivery = delivery
         self.verifier = verifier
+        #: Budget held back so the main Agent can finish rather than be cut off
+        #: mid-sentence. A real trial ended with it cancelled on its own wall
+        #: clock while saying "let me do final verification": all the work done,
+        #: none of it delivered. ``None`` keeps the historical behaviour.
+        self.wrap_up = wrap_up
+        self.collaboration_required = collaboration_required
 
     async def select(self, events, composition, *, turn_id, step_id):
+        wrapped = self._wrap_up_view(events, composition, turn_id)
+        if wrapped is not None:
+            return StepViewSelection(wrapped, self.verifier)
         view = await self._select(events, composition, turn_id=turn_id, step_id=step_id)
         return StepViewSelection(view, self.verifier if view.label == REVIEW else None)
 
+    def _wrap_up_view(self, events, composition, turn_id):
+        """Withdraw the working tools once the reserve is reached.
+
+        The collect controls survive until every dispatched assignment has been
+        collected: the delivery contract requires those reports, so taking the
+        tool away before they exist would make the run unsatisfiable rather than
+        merely short. Everything else goes, because a prompt asking the model to
+        wrap up is advice and the trial showed it working right up to the cut.
+        """
+
+        if self.wrap_up is None or not self.wrap_up.reached(events, turn_id):
+            return None
+        available = {tool.name for tool in composition.tools}
+        keep = (
+            frozenset()
+            if _every_report_collected(events, turn_id)
+            else frozenset(name for name in COLLECT_TOOLS if name in available)
+        )
+        return RequestView(
+            WRAP_UP,
+            tuple(name for name in (t.name for t in composition.tools) if name in keep),
+            composition.system_prompt + "\n" + MAIN_WRAP_UP_GUIDANCE,
+        )
+
     async def _select(self, events, composition, *, turn_id, step_id):
         del step_id
+        if not self.collaboration_required:
+            return RequestView(
+                "coding", tuple(tool.name for tool in composition.tools), composition.system_prompt
+            )
         prior = views(events, turn_id)
         execution_steps = {e.data["step_id"] for e in prior if e.data["label"] == EXECUTE}
         preparation_steps = {e.data["step_id"] for e in prior if e.data["label"] == PLAN}
@@ -186,6 +263,18 @@ class CollaborationChildIncomplete(RuntimeError):
     """A terminal child did not complete its assigned work."""
 
 
+class CollaborationChildDeliveryEmpty(RuntimeError):
+    """A child's Turn ended well but it handed back nothing to act on.
+
+    A lifecycle that reached ``completed`` says the child stopped cleanly; it
+    does not say the child produced a finding. Accepting a blank statement here
+    is what let a main Agent report a successful collaboration it had received
+    no evidence from. This is a terminal stop for the whole multi: the main
+    Agent cannot repair a child's delivery, so re-collecting or re-dispatching
+    would only spend more budget on the same empty answer.
+    """
+
+
 class CollaborationExecutionStopped(RuntimeError):
     """A bounded stop cannot count as completed multi execution."""
 
@@ -236,11 +325,73 @@ class CollaborationContinuation:
             }:
                 raise CollaborationChildIncomplete("collaboration-child-incomplete")
             return Continue()
+        # Judge every report this Step actually collected, before deciding
+        # anything else. Waiting for the model to announce completion made this
+        # a final-delivery check: in one real trial the main Agent held a
+        # "failed" report at 04:55 and went on to spend 17 more model calls and
+        # 562,727 tokens over the next 18 minutes before the delivery gate
+        # refused it. The answer was already known; the spending was not.
+        # Judge every report this Step actually collected, before deciding
+        # anything else. Waiting for the model to announce completion made this
+        # a final-delivery check: in one real trial the main Agent held a
+        # "failed" report at 04:55 and went on to spend 17 more model calls and
+        # 562,727 tokens over the next 18 minutes before the delivery gate
+        # refused it. The answer was already known; the spending was not.
+        await self._stop_on_undeliverable_report(events, current)
         if label == EXECUTE and isinstance(normal, Finish) and normal.reason == "completed":
             return Continue()
         if isinstance(normal, Finish) and normal.reason == "completed":
             await self._require_collected_report(events, current["turn_id"])
         return normal
+
+    async def _stop_on_undeliverable_report(self, events, current) -> None:
+        """End the run on the first collected report that can never be delivered.
+
+        ``status`` on the collect *tool result* only says the host managed to
+        fetch a report; the child's own terminal state lives inside that report.
+        Conflating the two is what let a failed assistant look like a successful
+        collection. Only a report bound to an assignment this Turn actually
+        dispatched can stop the run, so a stray payload cannot.
+        """
+
+        turn_id = current["turn_id"]
+        if not dispatched_and_continuing(events, turn_id):
+            return
+        accepted = accepted_plan(events, turn_id)
+        if accepted is None:
+            return
+        dispatch = await self._payload(accepted[1], events)
+        children = dispatch.get("children") if type(dispatch) is dict else None
+        if type(children) is not list:
+            return
+        dispatched = {
+            (child.get("agent_id"), child.get("message_id"))
+            for child in children
+            if type(child) is dict
+        }
+        for event in events:
+            if (
+                event.type != "tool/result"
+                or event.data.get("step_id") != current["step_id"]
+                or event.data.get("tool_name") not in COLLECT_TOOLS
+                or event.data.get("status") != "succeeded"
+            ):
+                continue
+            report = await self._payload(event, events)
+            if type(report) is not dict:
+                continue
+            if (report.get("agent_id"), report.get("message_id")) not in dispatched:
+                continue
+            status = report.get("status")
+            if status == "pending":
+                # Still running is not a terminal verdict; the existing wait and
+                # wall-clock boundaries own that case.
+                continue
+            if status != "completed" or report.get("reason") != "completed":
+                raise CollaborationChildIncomplete("collaboration-child-terminal-failure")
+            statement = report.get("statement")
+            if not isinstance(statement, str) or not statement.strip():
+                raise CollaborationChildDeliveryEmpty("collaboration-child-delivery-empty")
 
     async def _payload(self, result, events):
         """Read one Tool result's original data, including retained output."""
@@ -290,8 +441,18 @@ class CollaborationContinuation:
                 and report.get("status") == "completed"
                 and report.get("reason") == "completed"
             ):
+                identity = (report.get("agent_id"), report.get("message_id"))
+                if identity not in pending:
+                    continue
+                statement = report.get("statement")
+                if not isinstance(statement, str) or not statement.strip():
+                    # Stop on the first proven-empty delivery rather than
+                    # letting the main Agent collect its way around it.
+                    raise CollaborationChildDeliveryEmpty(
+                        "collaboration-child-delivery-empty"
+                    )
                 # One collected report settles its own exact assignment only; it
                 # can never stand in for a sibling.
-                pending.pop((report.get("agent_id"), report.get("message_id")), None)
+                pending.pop(identity, None)
         if pending:
             raise CollaborationChildIncomplete("collaboration-child-report-not-collected")

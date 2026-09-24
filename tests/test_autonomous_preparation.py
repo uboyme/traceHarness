@@ -5,6 +5,7 @@ import json
 from copy import deepcopy
 
 import pytest
+from collaboration_fixtures import flat_main_work
 from supervision_fixtures import SPEC, GatedProvider, RuntimeFactory
 from test_investigation_tools import WORK, BoundPolicy
 from test_product_f3_e2e import _response
@@ -71,7 +72,7 @@ async def test_batch_reads_continue_until_model_submits_corrected_assignment(tmp
                 )
             args = deepcopy(
                 {
-                    "main_work": WORK["main_work"],
+                    **flat_main_work(WORK["main_work"]),
                     "children": [
                         {
                             "assignment_id": "explicit-test-investigation",

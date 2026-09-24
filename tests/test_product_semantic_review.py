@@ -40,7 +40,7 @@ def material(root):
         "rubric": {"file": path.name, "sha256": digest_bytes(path.read_bytes())},
         "requires_review": True,
     }
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
     return root
 
 

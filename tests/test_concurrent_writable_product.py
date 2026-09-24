@@ -55,7 +55,10 @@ class ConcurrentIntegratingProvider(IntegratingProvider):
             next(m.content for m in request.messages if m.name == "submit_collaboration_plan")
         )
         assert self.dispatch["outcome"] == "dispatched"
-        handle = {key: self.dispatch["child"][key] for key in ("agent_id", "message_id")}
+        assert len(self.dispatch["children"]) == 1
+        child = self.dispatch["children"][0]
+        assert child["assignment_id"] == PLAN["children"][0]["assignment_id"]
+        handle = {key: child[key] for key in ("agent_id", "message_id")}
         calls = {m.tool_call_id for m in request.messages}
         if "add-main" not in calls:
             # Retained work first: the child is still running in its own workspace.
@@ -103,10 +106,18 @@ async def test_concurrent_writable_product_collects_then_integrates(tmp_path, mo
         RequestedTaskMode.MULTI,
         provider,
     )
-    assert provider.dispatch["child"]["status"] == "accepted"
+    assert provider.dispatch["children"][0]["status"] == "accepted"
     artifact = provider.collected[-1]["artifact"]
     assert artifact["changed_paths"] == ["tracked.txt"]
-    assert len(tuple(await PatchArtifactCatalogReader(store).load())) == 1
+    manifests = tuple(await PatchArtifactCatalogReader(store).load())
+    child_manifests = [
+        manifest for manifest in manifests
+        if manifest.agent_id == provider.dispatch["children"][0]["agent_id"]
+    ]
+    assert len(child_manifests) == 1
+    assert child_manifests[0].artifact_id == artifact["artifact_id"]
+    # Product completion also captures the main agent's assembled delivery.
+    assert len(manifests) == 2
     sessions = SessionService(store)
     events = {}
     for stream in await store.list_streams(prefix="session:"):
@@ -137,5 +148,6 @@ async def test_concurrent_writable_product_collects_then_integrates(tmp_path, mo
     verifications = [e for rows in events.values() for e in rows if e.type == "verification/result"]
     assert verifications and all(e.data["passed"] for e in verifications)
     summary = json.loads(verifications[-1].data["summary"])
-    assert summary["integration"]["artifact_id"] == artifact["artifact_id"]
+    assert len(summary["integration"]) == 1
+    assert summary["integration"][0]["artifact_id"] == artifact["artifact_id"]
     assert git("show", "HEAD:tracked.txt", cwd=source) == "base"

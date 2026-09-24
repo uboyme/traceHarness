@@ -24,8 +24,10 @@ from pathlib import Path
 from traceh.api.artifacts import PatchCaptureLimits
 from traceh.api.budgets import BudgetLimits
 from traceh.api.product import (
+    ProductContextPolicy,
     ProductRoleProfile,
     ProductTaskProfile,
+    ProductWrapUpReserve,
     RequestedTaskMode,
 )
 from traceh.api.promotion import (
@@ -289,6 +291,12 @@ def _role(value: object, field: str) -> ProductRoleProfile:
             }
         ),
         field,
+        # Governing the request window is opt-in, so an absent key means the
+        # historical behaviour: no metering and no compaction. Requiring it
+        # would invalidate every frozen experiment profile already on disk,
+        # and those are evidence this project does not rewrite. Presence is
+        # what is explicit, and the assembly digest covers it either way.
+        optional=frozenset({"context_policy", "wrap_up_reserve"}),
     )
     grants = item["capability_grants"]
     if type(grants) is not list or any(type(value) is not str for value in grants):
@@ -301,7 +309,92 @@ def _role(value: object, field: str) -> ProductRoleProfile:
         capability_grants=tuple(grants),
         max_output_tokens=_output_limit(item["max_output_tokens"], f"{field}.max_output_tokens"),
         budget=_budget(item["budget"], f"{field}.budget"),
+        context_policy=_context_policy(item.get("context_policy"), f"{field}.context_policy"),
+        wrap_up_reserve=_wrap_up_reserve(
+            item.get("wrap_up_reserve"), f"{field}.wrap_up_reserve"
+        ),
     )
+
+
+def _wrap_up_reserve(value: object, field: str) -> ProductWrapUpReserve | None:
+    """All three held-back amounts, or an explicit absence."""
+
+    if value is None:
+        return None
+    item = _object(value, frozenset({"steps", "tool_calls", "wall_milliseconds"}), field)
+    return ProductWrapUpReserve(
+        steps=_integer(item["steps"], f"{field}.steps"),
+        tool_calls=_integer(item["tool_calls"], f"{field}.tool_calls"),
+        wall_milliseconds=_integer(item["wall_milliseconds"], f"{field}.wall_milliseconds"),
+    )
+
+
+def _context_policy(value: object, field: str) -> ProductContextPolicy | None:
+    """All ten fields or an explicit null; there is no partial governance."""
+
+    if value is None:
+        return None
+    item = _object(
+        value,
+        frozenset(
+            {
+                "encoding",
+                "window_tokens",
+                "output_reserve_tokens",
+                "safety_margin_tokens",
+                "trigger_percent",
+                "fold_relief_percent",
+                "fold_protect_recent_groups",
+                "fold_protect_readback_utf8_bytes",
+                "compaction_trigger_utf8_bytes",
+                "compaction_max_summary_utf8_bytes",
+                "compaction_keep_recent_turns",
+            }
+        ),
+        field,
+    )
+    optional = {}
+    for name in ("fold_relief_percent", "fold_protect_recent_groups"):
+        raw = item[name]
+        if raw is not None and (type(raw) is not int or type(raw) is bool or raw < 0):
+            raise ProductInputError("product-context-policy-invalid", f"{field}.{name}")
+        optional[name] = raw
+    keep = item["compaction_keep_recent_turns"]
+    if type(keep) is not int or type(keep) is bool or keep < 0:
+        raise ProductInputError(
+            "product-context-policy-invalid", f"{field}.compaction_keep_recent_turns"
+        )
+    try:
+        return ProductContextPolicy(
+            encoding=_text(item["encoding"], f"{field}.encoding"),
+            window_tokens=_positive(item["window_tokens"], f"{field}.window_tokens"),
+            output_reserve_tokens=_positive(
+                item["output_reserve_tokens"], f"{field}.output_reserve_tokens"
+            ),
+            safety_margin_tokens=_positive(
+                item["safety_margin_tokens"], f"{field}.safety_margin_tokens"
+            ),
+            trigger_percent=_positive(item["trigger_percent"], f"{field}.trigger_percent"),
+            compaction_trigger_utf8_bytes=_positive(
+                item["compaction_trigger_utf8_bytes"], f"{field}.compaction_trigger_utf8_bytes"
+            ),
+            compaction_max_summary_utf8_bytes=_positive(
+                item["compaction_max_summary_utf8_bytes"],
+                f"{field}.compaction_max_summary_utf8_bytes",
+            ),
+            compaction_keep_recent_turns=keep,
+            fold_protect_readback_utf8_bytes=_positive(
+                item["fold_protect_readback_utf8_bytes"],
+                f"{field}.fold_protect_readback_utf8_bytes",
+            )
+            if item["fold_protect_readback_utf8_bytes"]
+            else 0,
+            **optional,
+        )
+    except ProductInputError:
+        raise
+    except Exception:
+        raise ProductInputError("product-context-policy-invalid", field) from None
 
 
 def _budget(value: object, field: str) -> BudgetLimits:
@@ -395,8 +488,21 @@ def _capture_limits(value: object) -> PatchCaptureLimits:
     )
 
 
-def _object(value: object, keys: frozenset[str], field: str) -> dict[str, object]:
-    if type(value) is not dict or set(value) != keys:
+def _object(
+    value: object,
+    keys: frozenset[str],
+    field: str,
+    *,
+    optional: frozenset[str] = frozenset(),
+) -> dict[str, object]:
+    """Exact required keys; ``optional`` names may appear but never anything else.
+
+    An unrecognised key is still a rejection rather than an ignored second
+    instruction channel - that property is the point of this check and the
+    allowance does not weaken it.
+    """
+
+    if type(value) is not dict or not keys <= set(value) or not set(value) <= keys | optional:
         raise ProductInputError("product-host-config-shape-invalid", field)
     return value
 

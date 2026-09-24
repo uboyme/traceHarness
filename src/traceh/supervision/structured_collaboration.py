@@ -50,6 +50,26 @@ class CollaborationPlanInputInvalid(ValueError):
     """A correctable plan rejection before delegation has begun."""
 
 
+#: The main Agent's retained work, as three top-level plan arguments.
+#:
+#: A nested ``main_work`` object was the one parameter shape a real Provider
+#: could not emit: replaying the same frozen request eight times, qwen3.6-plus
+#: via DashScope left its value empty, ``null`` or leaked template text seven
+#: times, while the identical plan with these three top-level strings was valid
+#: eight times out of eight. The work package still carries the original
+#: ``main_work`` object; only the tool's input shape changed.
+MAIN_WORK_ARGUMENTS = {
+    "main_goal": "goal",
+    "main_deliverable": "deliverable",
+    "main_uses_child_report": "uses_child_report",
+}
+
+
+def plan_main_work(arguments):
+    """The internal ``main_work`` object assembled from the flat plan arguments."""
+    return {field: arguments[name] for name, field in MAIN_WORK_ARGUMENTS.items()}
+
+
 def correctable_plan_result(data):
     return (data.get("status"), data.get("error_type")) in {
         ("invalid", "ToolArgumentError"),
@@ -60,14 +80,16 @@ def correctable_plan_result(data):
 
 PLAN_REQUIREMENT = (
     "When ready, submit one submit_collaboration_plan call containing main"
-    "_work and children. The confirmed multi mode requires at least one a"
+    "_goal, main_deliverable, main_uses_child_report and children. "
+    "The confirmed multi mode requires at least one a"
     "ssistant assignment; there is no local option. The host validates a"
     "nd executes the whole plan. Existing permissions, budgets and human"
     " approval remain binding."
 )
 ALLOCATION_GUIDANCE = (
     "Submit exactly one submit_collaboration_plan call containing main"
-    "_work and children.\nThere is no local execution option in the confir"
+    "_goal, main_deliverable, main_uses_child_report and children."
+    "\nThere is no local execution option in the confir"
     "med multi mode. Allocate a\nsubstantive, bounded deliverable to each "
     "assignment and retain substantive\nintegration, implementati"
     "on, or analysis for the main agent.\n\nDefine each assignment's goal, sco"
@@ -283,7 +305,10 @@ class CollaborationPlanTool:
         return {
             **object_schema(
                 {
-                    "main_work": object_schema(text_properties(MAIN_LIMITS)),
+                    **{
+                        name: text_properties(MAIN_LIMITS)[field]
+                        for name, field in MAIN_WORK_ARGUMENTS.items()
+                    },
                     "children": {
                         "type": "array",
                         "minItems": 1,
@@ -298,20 +323,18 @@ class CollaborationPlanTool:
                     "handoff": handoff_property(),
                 }
             ),
-            "required": ["main_work", "children"],
+            "required": [*MAIN_WORK_ARGUMENTS, "children"],
         }
 
     def validate(self, arguments):
         """Whole-plan validation before any dispatch; raises ValueError only."""
-        if type(arguments) is not dict or not {"main_work", "children"} <= set(arguments) <= {
-            "main_work",
-            "children",
-            "handoff",
-        }:
+        required = {*MAIN_WORK_ARGUMENTS, "children"}
+        if type(arguments) is not dict or not required <= set(arguments) <= {*required, "handoff"}:
             raise ValueError("collaboration-plan-fields-invalid")
         if arguments.get("handoff", AWAIT_REPORT) not in HANDOFF_MODES:
             raise ValueError("collaboration-plan-handoff-invalid")
-        validate_text_fields(arguments["main_work"], MAIN_LIMITS)
+        main_work = plan_main_work(arguments)
+        validate_text_fields(main_work, MAIN_LIMITS)
         children = arguments["children"]
         if type(children) is not list or not 1 <= len(children) <= MAX_ASSIGNMENTS:
             raise ValueError("collaboration-plan-assignment-count-invalid")
@@ -324,18 +347,26 @@ class CollaborationPlanTool:
             if spec is None:
                 raise ValueError("collaboration-assignment-role-unauthorized")
             if set(entry) != spec.fields():
-                raise ValueError("collaboration-assignment-fields-invalid")
+                # Which fields a role needs is not expressible in the shared schema
+                # (``paths`` only for writable roles), so the refusal must say it:
+                # a real Multi arm resubmitted five times without ``paths`` against
+                # the bare code and spent its step budget guessing.
+                missing = sorted(spec.fields() - set(entry)) or ["none"]
+                unexpected = sorted(set(entry) - spec.fields()) or ["none"]
+                raise ValueError(
+                    "collaboration-assignment-fields-invalid: role "
+                    f"{entry['role']} is missing {', '.join(missing)}; "
+                    f"not allowed {', '.join(unexpected)}"
+                )
             assignment_id = require_assignment_id(entry["assignment_id"])
             if assignment_id in seen:
                 raise ValueError("collaboration-assignment-id-duplicate")
             seen.add(assignment_id)
             work = {key: entry[key] for key in CHILD_LIMITS}
             if not spec.writable:
-                validate_work_fields({**work, "main_work": arguments["main_work"]})
+                validate_work_fields({**work, "main_work": main_work})
                 continue
-            validate_assignment(
-                {**work, "paths": entry["paths"], "main_work": arguments["main_work"]}
-            )
+            validate_assignment({**work, "paths": entry["paths"], "main_work": main_work})
             for path in freeze_changed_paths(entry["paths"], max_paths=128):
                 if path in owners:
                     raise ValueError("collaboration-assignment-paths-overlap")
@@ -378,6 +409,7 @@ class CollaborationPlanTool:
                 f"the host authorization has {remaining.max_children} left"
             )
         needed: dict[str, int] = {}
+        retained_tokens = 0
         longest_child_wall: int | None = None
         for entry in children:
             grant = self.authorized[entry["role"]].planned_grant(owner)
@@ -386,9 +418,11 @@ class CollaborationPlanTool:
                 # reservation can judge the allowance. The live-Agent ceiling
                 # below is independent of that and still applies.
                 needed.clear()
+                retained_tokens = 0
                 longest_child_wall = None
                 break
             limits = initial_token_limits(grant.limits, grant.initial_tokens)
+            retained_tokens = max(retained_tokens, grant.retained_tokens)
             for field in _BATCH_DIMENSIONS:
                 value = getattr(limits, field)
                 if value is not None:
@@ -404,6 +438,17 @@ class CollaborationPlanTool:
                     f"but only {left} remains for this Turn; ask for fewer assistants "
                     "or a smaller batch"
                 )
+        left_tokens = remaining.max_tokens
+        if (
+            left_tokens is not None
+            and needed.get("max_tokens", 0) + retained_tokens > left_tokens
+        ):
+            raise CollaborationPlanInputInvalid(
+                f"this plan's {len(children)} assistants need "
+                f"max_tokens={needed.get('max_tokens', 0)} plus "
+                f"retained_tokens={retained_tokens}, but only {left_tokens} remains "
+                "for this Turn; ask for fewer assistants or a smaller batch"
+            )
         await self._require_process_slots(len(children), owner, ledger)
         return longest_child_wall
 
@@ -530,7 +575,7 @@ class CollaborationPlanTool:
         try:
             for entry in arguments["children"]:
                 spec = self.authorized[entry["role"]]
-                receipt = await spec.dispatch(entry, arguments["main_work"], context)
+                receipt = await spec.dispatch(entry, plan_main_work(arguments), context)
                 accepted.append(
                     {
                         "assignment_id": entry["assignment_id"],

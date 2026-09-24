@@ -266,6 +266,11 @@ class InvestigationControl:
             raise AgentToolBindingError("investigation report identity mismatch")
         data = {
             **_report_data(report),
+            # The statement belongs in the normalized payload, not only in the
+            # rendered content, so the completion gate reads the delivery from
+            # the same original evidence the model was shown. The writable
+            # collect tool already carries it this way.
+            "statement": report.final_text,
             "source_id": binding.source_id,
             "revision": binding.revision,
             "input_digest": work["input_digest"],
@@ -299,7 +304,7 @@ class InvestigationControl:
                     "Decide the exact request, then explicitly follow up if continuing."
                 )
         return ToolOutput(
-            content=canonical_json({**data, "statement": report.final_text}),
+            content=canonical_json(data),
             data=data,
             evidence=report.evidence_refs,
         )

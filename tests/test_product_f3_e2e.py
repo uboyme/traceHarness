@@ -1017,7 +1017,10 @@ async def test_multi_product_mainline_converges_with_the_production_sqlite_store
                 RequestedTaskMode.MULTI,
                 _ThreadedProductProvider(),
             ),
-            timeout=30,
+            # The watchdog must cover the declared whole-task budget, including
+            # Git preparation and the fixed verifier, not interrupt a valid
+            # 60-second Turn at an unrelated 30-second test deadline.
+            timeout=_profile(RequestedTaskMode.MULTI).task_budget.max_wall_milliseconds / 1000,
         )
         summary = await ProductTaskStreamReader(store).load(task_id)
         assert summary is not None
@@ -1373,8 +1376,19 @@ async def test_approval_screen_uses_durable_evidence_and_separate_request_caps(
     )
 
     assert requests
-    assert {request.max_output_tokens for request in requests} == {4_096}
-    assert {tool.name for tool in requests[0].tools} <= {"list_files", "read_file", "search_text"}
+    profile = _profile(RequestedTaskMode.MULTI)
+    assert {request.max_output_tokens for request in requests} == {
+        profile.coder.max_output_tokens, profile.investigator.max_output_tokens,
+    }
+    for request in requests:
+        role = (
+            profile.investigator
+            if "traceh.product.investigation" in request.system_prompt else profile.coder
+        )
+        assert request.max_output_tokens == role.max_output_tokens
+    assert {tool.name for tool in requests[0].tools} <= {
+        "list_files", "read_file", "search_text", "submit_collaboration_plan",
+    }
     assert any(t.name == "submit_collaboration_plan" for r in requests for t in r.tools)
     assert "workflow nodes:" in output
     assert "changed paths (1)" in output

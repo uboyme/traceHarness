@@ -9,18 +9,21 @@ import asyncio
 import json
 
 import pytest
+from collaboration_fixtures import flat_main_work
 from supervision_fixtures import SPEC, GatedProvider, RuntimeFactory, settle
 from test_investigation_tools import WORK, BoundPolicy, context
 from test_product_f3_e2e import _response
 
 from traceh.agents import AgentDirectoryReader, AgentInboxReader
 from traceh.api.agents import AgentSpec
-from traceh.api.llm import ToolCall
+from traceh.api.llm import ModelResponse, ToolCall
 from traceh.api.workspaces import WorkspaceAccess, WorkspaceProvisioningRequest
 from traceh.artifacts import LocalArtifactCas, PatchCaptureService
 from traceh.artifacts.catalog import PatchArtifactCatalogReader
 from traceh.budgets.service import BudgetLedgerService
+from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.product.collaboration import (
+    CollaborationChildDeliveryEmpty,
     CollaborationChildIncomplete,
     CollaborationContinuation,
     CollaborationExecutionStopped,
@@ -63,10 +66,20 @@ ASSIGNMENT = {
     **{k: v for k, v in WORK.items() if k != "main_work"},
 }
 PLAN_ARGUMENTS = {
-    "main_work": WORK["main_work"],
+    **flat_main_work(WORK["main_work"]),
     "children": [ASSIGNMENT],
     "handoff": DISPATCH_AND_CONTINUE,
 }
+
+
+class FailingChild:
+    """A child whose Turn ends in a terminal failure rather than a delivery."""
+
+    name = "scripted"
+
+    async def complete(self, request):
+        del request
+        raise RuntimeError("child-cannot-continue")
 
 
 class ConcurrentMain:
@@ -87,6 +100,7 @@ class ConcurrentMain:
         self.collected = []
         self.execute_views = []
         self.unsettled_while_working = False
+        self.calls_after_terminal = 0
 
     async def complete(self, request):
         self.calls += 1
@@ -141,16 +155,28 @@ class ConcurrentMain:
                     {**self.handle, "wait_seconds": 5},
                 ),
             )
+        if self.mode == "keeps-working-after-terminal":
+            # Deliberately eager: it wants to keep investigating after the
+            # terminal report. If the host lets it, the stop came too late.
+            self.calls_after_terminal += 1
+            return _response("", ToolCall(f"more-{self.calls}", "list_files", {"path": "."}))
         return _response("Used the collected child report and finished the retained work.")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mode", ["parallel", "uncollected", "pending-only", "invalid-handoff", "cancel"]
+    "mode",
+    ["parallel", "uncollected", "pending-only", "invalid-handoff", "cancel", "empty-delivery"],
 )
 async def test_dispatch_and_continue_requires_a_collected_child_report(tmp_path, mode):
     store = InMemoryEventStore()
-    child_gate = GatedProvider()
+    child_gate = GatedProvider(
+        # A child that finishes its Turn cleanly and says nothing. The lifecycle
+        # is genuinely "completed"; the delivery is not.
+        ScriptedLlmProvider((ModelResponse(content=""),), repeat_last=True)
+        if mode == "empty-delivery"
+        else None
+    )
     factory = RuntimeFactory(store, tmp_path, provider=child_gate)
     supervisor = ProcessAgentSupervisor(store=store, factory=factory)
     owner = await supervisor.create(SPEC, request_id="owner")
@@ -190,6 +216,12 @@ async def test_dispatch_and_continue_requires_a_collected_child_report(tmp_path,
         elif mode == "invalid-handoff":
             with pytest.raises(CollaborationExecutionStopped):
                 await running
+        elif mode == "empty-delivery":
+            # Stopped on the first empty report, not carried into a delivery and
+            # not retried: the main Agent cannot fix what the child did not say.
+            with pytest.raises(CollaborationChildDeliveryEmpty) as refused:
+                await running
+            assert "collaboration-child-delivery-empty" in str(refused.value)
         else:
             with pytest.raises(CollaborationChildIncomplete) as refused:
                 await running
@@ -232,7 +264,9 @@ async def test_dispatch_and_continue_requires_a_collected_child_report(tmp_path,
         report = await AgentRunReportReader(store).load(
             child.agent_id, accepted.message.message_id
         )
-        assert report.status == ("completed" if mode == "parallel" else "cancelled")
+        assert report.status == (
+            "completed" if mode in ("parallel", "empty-delivery") else "cancelled"
+        )
         assert not await runtime.check_invariants(owner.session_id)
     finally:
         child_gate.release.set()
@@ -389,7 +423,7 @@ async def test_concurrent_patch_author_is_collected_on_demand(tmp_path):
     assignment = {
         **{k: v for k, v in ASSIGNMENT.items() if k not in ("assignment_id", "role")},
         "paths": ["candidate.py"],
-        "main_work": PLAN_ARGUMENTS["main_work"],
+        "main_work": WORK["main_work"],
     }
     try:
         dispatched = (await control.delegate(assignment, ctx)).data
@@ -454,7 +488,7 @@ class WritableMain:
                     "plan",
                     SUBMIT_COLLABORATION,
                     {
-                        "main_work": PLAN_ARGUMENTS["main_work"],
+                        **flat_main_work(WORK["main_work"]),
                         "children": [{**ASSIGNMENT, "role": "patch_author",
                                       "paths": ["candidate.py"]}],
                         "handoff": DISPATCH_AND_CONTINUE,
@@ -712,5 +746,66 @@ async def test_waiting_handoff_stays_the_default_shape(tmp_path):
         )
         assert not await runtime.check_invariants(owner.session_id)
     finally:
+        await runtime.dispose()
+        await supervisor.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_terminal_child_failure_stops_the_run_at_that_collect(tmp_path) -> None:
+    """The verdict is known the moment the report lands, so spending stops there.
+
+    Holding this check until the main Agent announces completion made it a
+    final-delivery gate. In a real trial the main Agent had a ``failed`` report
+    at 04:55:17 and then spent 17 further model calls and 562,727 tokens over
+    18.52 minutes before being refused. This scripted main is deliberately
+    eager - it asks for more work after the terminal report - so the assertion
+    is about the host refusing, not about the model stopping politely.
+    """
+
+    store = InMemoryEventStore()
+    # A child that fails its Turn rather than delivering.
+    child_gate = GatedProvider(FailingChild())
+    factory = RuntimeFactory(store, tmp_path, provider=child_gate)
+    supervisor = ProcessAgentSupervisor(store=store, factory=factory)
+    owner = await supervisor.create(SPEC, request_id="owner")
+    toolset = InvestigationToolset(
+        supervisor=supervisor,
+        owner_agent_id=owner.agent_id,
+        event_store=store,
+        policy=BoundPolicy(owner.agent_id),
+    )
+    parked = asyncio.Event()
+    provider = ConcurrentMain(
+        "keeps-working-after-terminal",
+        supervisor=supervisor,
+        child_gate=child_gate,
+        parked=parked,
+    )
+    runtime = build_default_runtime(
+        RuntimeConfig(
+            data_dir=tmp_path / "main", provider=provider.name, model="model", max_steps=12
+        ),
+        provider=provider,
+        event_store=store,
+        step_view=CollaborationPolicy(),
+        continuation=CollaborationContinuation(store, owner.session_id),
+        additional_tools=(
+            *toolset.tools,
+            CollaborationPlanTool((investigator_role(toolset.control),)),
+        ),
+    )
+    running = asyncio.create_task(runtime.run_existing(owner.session_id, "Investigate the target"))
+    try:
+        child_gate.release.set()
+        with pytest.raises(CollaborationChildIncomplete) as refused:
+            await running
+        assert "collaboration-child-terminal-failure" in str(refused.value)
+        # The whole point: the eager main never got another request in.
+        assert provider.calls_after_terminal == 0
+    finally:
+        child_gate.release.set()
+        if not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
         await runtime.dispose()
         await supervisor.aclose()

@@ -10,6 +10,7 @@ falling back to a larger tool set.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 
 from traceh.agents.directory import AgentDirectoryReader
@@ -24,6 +25,7 @@ from traceh.api.prompts import PromptSection
 from traceh.budgets.enforcement import BudgetEnforcement
 from traceh.budgets.service import BudgetLedgerService
 from traceh.llm.retry import NO_MODEL_RETRY, ModelRetryPolicy
+from traceh.llm.token_meter import TokenBudgetPolicy
 from traceh.product.collaboration import (
     CollaborationContinuation,
     CollaborationExecutionStopped,
@@ -39,7 +41,9 @@ from traceh.product.resources import (
 from traceh.runtime.agent_runtime import AgentRuntime, RuntimeConfig, build_default_runtime
 from traceh.runtime.continuation import DefaultContinuationRuntime
 from traceh.runtime.prompt import PromptAssembler, default_coding_prompt
+from traceh.session.compaction import CompactionPolicy
 from traceh.session.event_store import EventStore
+from traceh.session.tool_output import OUTPUT_TOOL_IDS
 from traceh.supervision.authority import AgentToolAuthority
 from traceh.supervision.delegation import INVESTIGATION_TOOL_IDS, InvestigationToolset
 from traceh.supervision.execution import AgentExecution, AgentRuntimeExecution, durable_log_identity
@@ -47,6 +51,11 @@ from traceh.supervision.investigation_budget import (
     INVESTIGATOR_BUDGET_TOOLS,
     InvestigationBudgetContinuation,
     InvestigatorBudgetTool,
+)
+from traceh.supervision.investigation_wrap_up import (
+    BoundReserve,
+    InvestigationStepView,
+    WrapUpReserve,
 )
 from traceh.supervision.patch_integration import (
     PATCH_INTEGRATION_TOOLS,
@@ -129,11 +138,12 @@ class BuiltinProductAssemblyResolver:
                 SUBMIT_COLLABORATION,
                 *PATCH_INTEGRATION_TOOLS,
                 COLLECT_CHILD_PATCH,
+                *OUTPUT_TOOL_IDS,
             )
             if role is ProductRole.CODER
-            else (*READ_TOOL_IDS, "apply_patch")
+            else (*READ_TOOL_IDS, "apply_patch", *OUTPUT_TOOL_IDS)
             if role is ProductRole.PATCH_AUTHOR
-            else (*READ_TOOL_IDS, *INVESTIGATOR_BUDGET_TOOLS)
+            else (*READ_TOOL_IDS, *INVESTIGATOR_BUDGET_TOOLS, *OUTPUT_TOOL_IDS)
         )
         if any(tool not in allowed for tool in tools):
             raise ProductProfileError("product-capability-unsupported", role.value)
@@ -157,6 +167,8 @@ class BuiltinProductAssemblyResolver:
             ),
             policy_ids=PRODUCT_POLICY_IDS,
             workspace_access=role.workspace_access,
+            context_policy=profile.context_policy,
+            wrap_up_reserve=profile.wrap_up_reserve,
         )
 
 
@@ -373,6 +385,21 @@ class ProductAgentRuntimeFactory:
         limits = binding.budget
         if limits is None or type(limits.max_steps) is not int or limits.max_steps < 1:
             raise ProductProfileError("product-runtime-step-bound-missing", spec.preset)
+        # The role grant can outlive this Turn. Reserve against the earlier
+        # deadline used by enforcement, or delivery starts after cancellation.
+        reserve_wall = binding.max_turn_wall_milliseconds
+        if limits.max_wall_milliseconds is not None:
+            reserve_wall = min(reserve_wall, limits.max_wall_milliseconds)
+        wrap_up = (
+            None if assembly.wrap_up_reserve is None else BoundReserve(
+                WrapUpReserve(
+                    steps=assembly.wrap_up_reserve.steps,
+                    tool_calls=assembly.wrap_up_reserve.tool_calls,
+                    wall_milliseconds=assembly.wrap_up_reserve.wall_milliseconds,
+                ),
+                replace(limits, max_wall_milliseconds=reserve_wall),
+            )
+        )
         prompt = _prompt(assembly)
         tools = _tools(assembly)
         continuation = DefaultContinuationRuntime()
@@ -438,11 +465,11 @@ class ProductAgentRuntimeFactory:
                     self._workspaces, self._capture.limits, agent_id, session_id
                 ),
                 verifier=completion,
+                wrap_up=wrap_up,
             )
             continuation = CollaborationContinuation(self._store, session_id)
 
-            by_name = {tool.name: tool for tool in (*tools, *dynamic_tools)}
-            tools = tuple(by_name[name] for name in assembly.tool_ids)
+            tools = _role_tools(assembly, tools, dynamic_tools)
         if binding.role is ProductRole.INVESTIGATOR:
             budget_tools = tuple(
                 InvestigatorBudgetTool(
@@ -455,9 +482,20 @@ class ProductAgentRuntimeFactory:
                 for name in INVESTIGATOR_BUDGET_TOOLS
                 if name in assembly.tool_ids
             )
-            by_name = {tool.name: tool for tool in (*tools, *budget_tools)}
-            tools = tuple(by_name[name] for name in assembly.tool_ids)
+            tools = _role_tools(assembly, tools, budget_tools)
             continuation = InvestigationBudgetContinuation(self._store, agent_id, session_id)
+            if wrap_up is not None:
+                # Hold back part of the grant so a cancelled search cannot be
+                # the only outcome: a real trial spent the whole 25-minute wall
+                # clock investigating and delivered nothing at all.
+                step_view = InvestigationStepView(
+                    wrap_up.limits, wrap_up.reserve,
+                )
+        if step_view is None and wrap_up is not None:
+            # A single coder has the same explicit delivery reservation but no
+            # allocation or child-report obligations. Keep the original Step
+            # view/withdrawal path without inventing a second execution loop.
+            step_view = CollaborationPolicy(wrap_up=wrap_up, collaboration_required=False)
         policies = _policies(assembly, self._workspaces)
         enforcement = BudgetEnforcement(
             self._budgets,
@@ -467,6 +505,7 @@ class ProductAgentRuntimeFactory:
             token_counter=self._token_counter,
             estimate_margin_percent=self._token_margin_percent,
         )
+        token_budget, compaction = _context_governance(assembly)
         runtime = build_default_runtime(
             RuntimeConfig(
                 data_dir=self._data_dir,
@@ -475,6 +514,8 @@ class ProductAgentRuntimeFactory:
                 max_steps=limits.max_steps,
                 tool_timeout_seconds=TOOL_TIMEOUT_SECONDS,
                 max_output_tokens=binding.max_output_tokens,
+                token_budget=token_budget,
+                compaction=compaction,
                 model_retry_policy=self._retry_policy,
                 context_input=None
                 if binding.role in (ProductRole.INVESTIGATOR, ProductRole.PATCH_AUTHOR)
@@ -487,6 +528,7 @@ class ProductAgentRuntimeFactory:
             provider=provider,
             event_store=self._store,
             include_default_tools=False,
+            output_tool_ids=_output_tools(assembly),
             additional_tools=tools,
             prompt=prompt,
             policies=policies,
@@ -496,6 +538,26 @@ class ProductAgentRuntimeFactory:
             tool_admission_gate=enforcement.tool_admission_gate,
         )
         return runtime, enforcement
+
+
+def _role_tools(assembly: ResolvedAgentAssembly, static_tools, dynamic_tools) -> tuple:
+    """Order a role's tools by its own grant list, skipping runtime-built ones.
+
+    The read-back tools are assembled by the Runtime from its SessionService, so
+    they are deliberately absent from both tuples here. Looking them up anyway
+    is how the first profile that actually granted them failed at agent
+    creation - after its workspace had already been provisioned - with a bare
+    KeyError. A genuinely unbuildable grant still fails, with the same stable
+    code the static assembler uses.
+    """
+
+    by_name = {tool.name: tool for tool in (*static_tools, *dynamic_tools)}
+    missing = [
+        name for name in assembly.tool_ids if name not in by_name and name not in OUTPUT_TOOL_IDS
+    ]
+    if missing:
+        raise ProductProfileError("product-tool-binding-missing", missing[0])
+    return tuple(by_name[name] for name in assembly.tool_ids if name not in OUTPUT_TOOL_IDS)
 
 
 def _tools(assembly: ResolvedAgentAssembly):
@@ -517,10 +579,53 @@ def _tools(assembly: ResolvedAgentAssembly):
                 COLLECT_CHILD_PATCH,
                 *INVESTIGATOR_BUDGET_TOOLS,
                 *PATCH_INTEGRATION_TOOLS,
+                # Built by the runtime instead, because they need its Session
+                # service; the profile still decides whether a role gets them.
+                *OUTPUT_TOOL_IDS,
             )
         )
     except KeyError as error:
         raise ProductProfileError("product-tool-binding-missing", str(error)) from None
+
+
+def _output_tools(assembly: ResolvedAgentAssembly) -> tuple[str, ...]:
+    """The read-back tools this profile granted, in its own declared order."""
+
+    return tuple(name for name in assembly.tool_ids if name in OUTPUT_TOOL_IDS)
+
+
+def _context_governance(
+    assembly: ResolvedAgentAssembly,
+) -> tuple[TokenBudgetPolicy | None, CompactionPolicy | None]:
+    """Turn one role's stated policy into the Runtime's two existing objects.
+
+    Both are produced together or not at all. Metering without a compaction
+    owner would measure the pressure and be unable to relieve it, and a
+    compaction owner without metering is the Turn-front byte mode the long-task
+    case already showed to be insufficient.
+    """
+
+    policy = assembly.context_policy
+    if policy is None:
+        return None, None
+    return (
+        TokenBudgetPolicy(
+            encoding=policy.encoding,
+            window_tokens=policy.window_tokens,
+            output_reserve_tokens=policy.output_reserve_tokens,
+            safety_margin_tokens=policy.safety_margin_tokens,
+            trigger_percent=policy.trigger_percent,
+            fold_relief_percent=policy.fold_relief_percent,
+            fold_protect_recent_groups=policy.fold_protect_recent_groups,
+            fold_protect_readback_utf8_bytes=policy.fold_protect_readback_utf8_bytes,
+        ),
+        CompactionPolicy(
+            enabled=True,
+            trigger_utf8_bytes=policy.compaction_trigger_utf8_bytes,
+            max_summary_utf8_bytes=policy.compaction_max_summary_utf8_bytes,
+            keep_recent_turns=policy.compaction_keep_recent_turns,
+        ),
+    )
 
 
 def _prompt(assembly: ResolvedAgentAssembly) -> PromptAssembler:

@@ -6,7 +6,7 @@ from dataclasses import replace
 
 import pytest
 import test_product_f3_e2e as product
-from collaboration_fixtures import MAIN_WORK, run_failed_product
+from collaboration_fixtures import MAIN_WORK, flat_main_work, run_failed_product
 from promotion_fixtures import build_source_repository, make_bare_target
 from test_product_adaptive import profile
 
@@ -25,7 +25,7 @@ from traceh.supervision.authority import AgentToolBindingError
 from traceh.supervision.writable_collaboration import WritableControl
 
 PLAN = {
-    "main_work": MAIN_WORK,
+    **flat_main_work(MAIN_WORK),
     "children": [{
         "assignment_id": "explicit-test-rules",
         "role": "patch_author",
@@ -72,8 +72,8 @@ class WritableProvider:
                 for m in request.messages
                 if m.role == "user" and m.content.startswith('{"assembly_digest":')
             )
-            assert work["kind"] == "writable-assignment" and work["format"] == 1
-            assert work["main_work"] == PLAN["main_work"]
+            assert work["kind"] == "writable-assignment" and work["format"] == 2
+            assert work["main_work"] == MAIN_WORK
             assert work["assignment_id"] == PLAN["children"][0]["assignment_id"]
             assert work["role"] == "patch_author"
             if not any(m.role == "tool" for m in request.messages):
@@ -220,7 +220,7 @@ def test_writable_work_rejects_wrong_version_and_binding(changed):
     )
     arguments = {
         **{k: v for k, v in PLAN["children"][0].items() if k not in ("assignment_id", "role")},
-        "main_work": PLAN["main_work"],
+        "main_work": MAIN_WORK,
     }
     content = work_content(arguments, binding, **identities)
     assert validate_writable_work(content, binding, **identities)["paths"] == ["tracked.txt"]

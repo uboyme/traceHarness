@@ -4,6 +4,7 @@ import asyncio
 import json
 
 import pytest
+from collaboration_fixtures import flat_main_work
 from supervision_fixtures import SPEC, GatedProvider, RuntimeFactory
 from test_investigation_tools import WORK, BoundPolicy
 from test_product_f3_e2e import _response
@@ -98,7 +99,7 @@ async def test_decision_loop_and_owned_child_convergence(tmp_path, monkeypatch, 
                 if mode == "text":
                     return _response("I prefer to complete this alone.")
                 args = {
-                    "main_work": WORK["main_work"],
+                    **flat_main_work(WORK["main_work"]),
                     "children": [
                         {
                             "assignment_id": "explicit-test-investigation",

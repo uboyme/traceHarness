@@ -81,12 +81,18 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 # WC-2: generic fenced cleanup rejoin, proved by lifecycle cancellation
 # and reverse tests; no Product dependency enters Supervisor (ADR-0072).
 PROTECTED_SOURCES = {
-    "runtime/agent_loop.py": "455be23bf23a5b4b97aa60eabede18a86d1af473bf41e854b9d038ac071eaaf7",
-    "runtime/agent_runtime.py": "51f582071c6beaada35fefbae645d2b6d120ab8a1235252d9a7be1bef8d43851",
+    "runtime/agent_loop.py": "70b011c94462bb12094401487f455fc6ccd67671eff90b77abcb2ed7f4768d8b",
+    "runtime/agent_runtime.py": "895742f6f0e053099f69b5b9428b127b0bca39fd749fe6620fd4b3dfe1d45893",
     "supervision/supervisor.py": "b03317a9dbdcd31612ba60dd6e5a1a98e3415ffa6e1d49649b34a9304f105877",
     "plugins/manager.py": "f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05",
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+080-C1/C2 changes two of them at their existing seams only, for the reasons
+recorded beside the same pins in ``test_product_architecture``: AgentLoop asks
+the shared response-completeness judgment once per response and gates tool
+dispatch and verification on it, and AgentRuntime lets a host name the Session
+read-back tools it wants without switching on the whole default tool set.
 
 ADR-0065 passes the host Sandbox service through Runtime assembly and delegates
 completion verification through its owned scope. No Product authority moves into

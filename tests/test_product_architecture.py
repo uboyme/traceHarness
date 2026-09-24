@@ -34,9 +34,9 @@ WORKFLOW_ROOT = Path(workflow_service_module.__file__).parent
 # WC-2: generic fenced cleanup rejoin, proved by lifecycle cancellation
 # and reverse tests; no Product dependency enters Supervisor (ADR-0072).
 PROTECTED_SOURCES = {
-    "runtime/agent_loop.py": ("455be23bf23a5b4b97aa60eabede18a86d1af473bf41e854b9d038ac071eaaf7"),
+    "runtime/agent_loop.py": ("70b011c94462bb12094401487f455fc6ccd67671eff90b77abcb2ed7f4768d8b"),
     "runtime/agent_runtime.py": (
-        "51f582071c6beaada35fefbae645d2b6d120ab8a1235252d9a7be1bef8d43851"
+        "895742f6f0e053099f69b5b9428b127b0bca39fd749fe6620fd4b3dfe1d45893"
     ),
     "supervision/supervisor.py": (
         "b03317a9dbdcd31612ba60dd6e5a1a98e3415ffa6e1d49649b34a9304f105877"
@@ -45,6 +45,15 @@ PROTECTED_SOURCES = {
     "plugins/manager.py": ("f99dc33b0b8be370642383acb64381a0faf536d425dc1fd7fa41a4f4e8086c05"),
 }
 """SHA-256 of each protected file with line endings normalized to LF.
+
+080-C1/C2 changes two of them at their existing seams only. ``AgentLoop`` asks
+the shared response-completeness judgment once per response and gates tool
+dispatch and verification on it, so a truncated or unclassifiable response
+cannot run side effects or end a Turn as a success; it keeps no new state and
+learns nothing about Product. ``agent_runtime`` lets a host name the Session
+read-back tools it wants without switching on the whole default set, which is
+what kept a readonly investigator from gaining shell and patch access along
+with them. The tools are the existing ones bound to the same SessionService.
 
 ADR-0070 adds a generic source-bound Step view seam only. Product interprets
 collaboration phases; the kernel retains its original execution and resource owners.
@@ -214,9 +223,16 @@ def test_only_cli_and_declared_optimization_owners_depend_on_evaluation() -> Non
             "traceh.evaluation.variant_execution",
             "traceh.evaluation.variants",
         },
-        "background_experiment.py": {
+        # ADR-0082: the host reads a finished run only through the original
+        # evidence verifier; detection shares the report's own context scan.
+        "background.py": {"traceh.evaluation.evidence"},
+        "background_proposal.py": {
             "traceh.evaluation.model_evidence",
             "traceh.evaluation.variants",
+        },
+        "detection.py": {
+            "traceh.evaluation.evaluators.context_diagnostics",
+            "traceh.evaluation.evidence",
         },
     }
     for source in sorted(package.rglob("*.py")):

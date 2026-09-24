@@ -1,0 +1,109 @@
+{
+  "format": 1,
+  "dataset": "princeton-nlp/SWE-bench_Lite",
+  "split": "dev",
+  "dataset_revision": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+  "parquet_sha256": "8312f321838051849d2fa7c6ca071244733a3e90bb517ff6ca8186f722199b5c",
+  "tasks": [
+    {
+      "instance_id": "marshmallow-code__marshmallow-1359",
+      "instance_file": "instances/marshmallow-code__marshmallow-1359.json",
+      "instance_sha256": "76259f3892bba140fb8a99273b8f764bf8dd6b508d9d80ca6f962fd264012e1d",
+      "archive_url": "https://codeload.github.com/marshmallow-code/marshmallow/tar.gz/b40a0f4e33823e6d0f341f7e8684e359a99060d1",
+      "archive_sha256": "b0d63822614239fc3a5c6eceade8c0517d6934b27b033417a665de66ad1dbe24",
+      "archive_max_bytes": 16777216,
+      "initial_tree_limits": {
+        "max_files": 4096,
+        "max_file_bytes": 8388608,
+        "max_total_bytes": 67108864
+      },
+      "protected_roots": [
+        "tests"
+      ],
+      "writable_test_patterns": [
+        "tests/test_*.py"
+      ],
+      "protected_files": [
+        "setup.cfg"
+      ],
+      "import_roots": [
+        "src"
+      ],
+      "test_files": [
+        "tests/test_fields.py"
+      ],
+      "test_id_map": {
+        "tests/test_fields.py::TestErrorMessages::test_fail[custom-Custom": "tests/test_fields.py::TestErrorMessages::test_fail[custom-Custom error message.]",
+        "tests/test_fields.py::TestErrorMessages::test_fail[null-Field": "tests/test_fields.py::TestErrorMessages::test_fail[null-Field may not be null.]",
+        "tests/test_fields.py::TestErrorMessages::test_fail[required-Missing": "tests/test_fields.py::TestErrorMessages::test_fail[required-Missing data for required field.]",
+        "tests/test_fields.py::TestErrorMessages::test_fail[validator_failed-Invalid": "tests/test_fields.py::TestErrorMessages::test_fail[validator_failed-Invalid value.]",
+        "tests/test_fields.py::TestErrorMessages::test_make_error[custom-Custom": "tests/test_fields.py::TestErrorMessages::test_make_error[custom-Custom error message.]",
+        "tests/test_fields.py::TestErrorMessages::test_make_error[null-Field": "tests/test_fields.py::TestErrorMessages::test_make_error[null-Field may not be null.]",
+        "tests/test_fields.py::TestErrorMessages::test_make_error[required-Missing": "tests/test_fields.py::TestErrorMessages::test_make_error[required-Missing data for required field.]",
+        "tests/test_fields.py::TestErrorMessages::test_make_error[validator_failed-Invalid": "tests/test_fields.py::TestErrorMessages::test_make_error[validator_failed-Invalid value.]"
+      },
+      "tree_file": "trees/marshmallow-code__marshmallow-1359.json",
+      "tree_sha256": "6158a7bf0d0671afbc4523bad91a572f8c5831f323c7576aa383b4c14b5eacfb"
+    },
+    {
+      "instance_id": "pydicom__pydicom-1694",
+      "instance_file": "instances/pydicom__pydicom-1694.json",
+      "instance_sha256": "d24952ef11a5ae98ea5be9d1a8d5681cc34356b0525bf400c599be6f394ae022",
+      "archive_url": "https://codeload.github.com/pydicom/pydicom/tar.gz/f8cf45b6c121e5a4bf4a43f71aba3bc64af3db9c",
+      "archive_sha256": "a4758694c0a92b35da600ae8a9e4760c92533c1c83691c38e8bcd7bc3dde4379",
+      "archive_max_bytes": 16777216,
+      "initial_tree_limits": {
+        "max_files": 4096,
+        "max_file_bytes": 8388608,
+        "max_total_bytes": 67108864
+      },
+      "protected_roots": [
+        "pydicom/tests"
+      ],
+      "writable_test_patterns": [
+        "pydicom/tests/test_*.py"
+      ],
+      "protected_files": [],
+      "import_roots": [
+        "."
+      ],
+      "test_files": [
+        "pydicom/tests/test_json.py"
+      ],
+      "test_id_map": {},
+      "tree_file": "trees/pydicom__pydicom-1694.json",
+      "tree_sha256": "5e2474143d4782a2f8305c6a916348e00ed0bf3110f7a86a2015faffee625557"
+    },
+    {
+      "instance_id": "pylint-dev__astroid-1196",
+      "instance_file": "instances/pylint-dev__astroid-1196.json",
+      "instance_sha256": "d3af4eb20ae7a40df45982aa00ab45bccfef4aa91516fa903b4dff4a1bb35fae",
+      "archive_url": "https://codeload.github.com/pylint-dev/astroid/tar.gz/39c2a9805970ca57093d32bbaf0e6a63e05041d8",
+      "archive_sha256": "46831a597931a096985462350a31f55e9b8b84c4f99efdfd8d0a73ae0c41e770",
+      "archive_max_bytes": 16777216,
+      "initial_tree_limits": {
+        "max_files": 4096,
+        "max_file_bytes": 8388608,
+        "max_total_bytes": 67108864
+      },
+      "protected_roots": [
+        "tests"
+      ],
+      "writable_test_patterns": [
+        "tests/unittest_*.py"
+      ],
+      "protected_files": [
+        "setup.cfg"
+      ],
+      "import_roots": [
+        "."
+      ],
+      "test_files": [
+        "tests/unittest_python3.py"
+      ],
+      "test_id_map": {},
+      "tree_file": "trees/pylint-dev__astroid-1196.json",
+      "tree_sha256": "2ddb5da88fd13a77e955864a6f5fa8d210e90ef3f4d87e0e14d1d0a3e7426edc"
+    }
+  ]
+}

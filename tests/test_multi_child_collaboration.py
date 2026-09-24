@@ -9,6 +9,7 @@ import asyncio
 import json
 
 import pytest
+from collaboration_fixtures import flat_main_work
 from supervision_fixtures import SPEC, GatedProvider, RuntimeFactory
 from test_concurrent_collaboration import (
     ManagedRuntimeFactory,
@@ -30,6 +31,7 @@ from traceh.budgets.service import BudgetLedgerService
 from traceh.product.collaboration import (
     CollaborationChildIncomplete,
     CollaborationContinuation,
+    CollaborationPlanInvalid,
     CollaborationPolicy,
     dispatched_roles,
 )
@@ -75,7 +77,7 @@ def writable(assignment_id, paths):
 
 
 def plan(children, handoff=DISPATCH_AND_CONTINUE):
-    return {"main_work": WORK["main_work"], "children": children, "handoff": handoff}
+    return {**flat_main_work(WORK["main_work"]), "children": children, "handoff": handoff}
 
 
 class GatedChildFactory(RuntimeFactory):
@@ -452,7 +454,90 @@ async def test_a_batch_over_the_declared_grant_is_correctable_per_dimension(tmp_
         await supervisor.aclose()
 
 
-def test_a_wrong_typed_plan_argument_is_refused_with_its_declared_shape():
+@pytest.mark.asyncio
+async def test_batch_retained_tokens_are_checked_before_partial_dispatch(tmp_path):
+    """Two grants fit the balance, but leave too little for the main agent."""
+    from traceh.api.budgets import ChildBudgetGrant
+
+    store = InMemoryEventStore()
+    supervisor = ProcessAgentSupervisor(store=store, factory=RuntimeFactory(store, tmp_path))
+    owner = await supervisor.create(SPEC, request_id="owner")
+    budgets = BudgetLedgerService(store)
+    await budgets.grant_root(
+        operation_id="explicit-test-root",
+        agent_id=owner.agent_id,
+        limits=BudgetLimits(
+            max_tokens=400_000,
+            max_steps=40,
+            max_tool_calls=40,
+            max_wall_milliseconds=400_000,
+            max_children=2,
+            max_depth=1,
+            max_processes=0,
+        ),
+    )
+
+    class GrantingPolicy(BoundPolicy):
+        def planned_grant(self, record):
+            return ChildBudgetGrant(
+                BudgetLimits(
+                    max_tokens=250_000,
+                    max_steps=8,
+                    max_tool_calls=8,
+                    max_wall_milliseconds=60_000,
+                    max_children=0,
+                    max_depth=0,
+                    max_processes=0,
+                ),
+                100_000,
+                160_000,
+            )
+
+    class MainProvider:
+        name = "retained-main"
+
+        def __init__(self):
+            self.calls = 0
+            self.refusal = None
+
+        async def complete(self, request):
+            self.calls += 1
+            if self.calls == 1:
+                return _response(
+                    "",
+                    ToolCall("plan", SUBMIT_COLLABORATION, plan([readonly("a"), readonly("b")])),
+                )
+            self.refusal = next(
+                message.content
+                for message in request.messages
+                if message.name == SUBMIT_COLLABORATION
+            )
+            return _response("No feasible assignment under this allowance.")
+
+    provider = MainProvider()
+    runtime = _readonly_runtime(
+        tmp_path, store, supervisor, owner, provider, policy=GrantingPolicy(owner.agent_id),
+        budgets=budgets, max_steps=4,
+    )
+    try:
+        with pytest.raises(CollaborationPlanInvalid, match="plan-required-before-completion"):
+            await runtime.run_existing(owner.session_id, "Investigate the target")
+        assert provider.calls == 2
+        assert "retained_tokens=100000" in provider.refusal
+        results = [
+            event.data
+            for event in await SessionService(store).read_session(owner.session_id)
+            if event.type == "tool/result" and event.data["tool_name"] == SUBMIT_COLLABORATION
+        ]
+        assert len(results) == 1 and correctable_plan_result(results[0])
+        assert len((await AgentDirectoryReader(store).load()).records) == 1
+        assert (await budgets.ledger()).available(owner.agent_id).max_tokens == 400_000
+    finally:
+        await runtime.dispose()
+        await supervisor.aclose()
+
+
+def test_a_wrong_typed_object_argument_is_refused_with_its_declared_shape():
     """A rejection the caller cannot act on is retried, not corrected.
 
     A real round submitted five plans and was refused five times with only
@@ -460,19 +545,34 @@ def test_a_wrong_typed_plan_argument_is_refused_with_its_declared_shape():
     holds, so naming them turns the refusal into a one-attempt repair.
     """
 
+    from traceh.supervision.investigation_work import object_schema
+    from traceh.tools.schema import ToolArgumentError, validate_arguments
+
+    schema = object_schema(
+        {"work": object_schema({"goal": {"type": "string"}, "deliverable": {"type": "string"}})}
+    )
+    with pytest.raises(ToolArgumentError) as refused:
+        validate_arguments({"work": "a string"}, schema)
+    message = str(refused.value)
+    assert "must be object, got str" in message
+    assert "goal" in message and "deliverable" in message
+
+
+def test_the_flat_plan_names_the_wrong_main_field_and_keeps_shapes_where_declared():
+    """ADR-0083: main work is three top-level strings; a wrong type names the field."""
+
     from traceh.tools.schema import ToolArgumentError, validate_arguments
 
     schema = CollaborationPlanTool((investigator_role(object()),)).input_schema
+    plan = {**flat_main_work(WORK["main_work"]), "children": [], "main_goal": {"goal": "x"}}
     with pytest.raises(ToolArgumentError) as refused:
-        validate_arguments({"main_work": "a string", "children": []}, schema)
-
-    message = str(refused.value)
-    assert "must be object, got str" in message
-    for key in ("goal", "deliverable", "uses_child_report"):
-        assert key in message
-    # The shape is only added where the schema declares one.
+        validate_arguments(plan, schema)
+    assert "main_goal" in str(refused.value) and "must be string" in str(refused.value)
+    # The shape is only added where the schema declares an object.
     with pytest.raises(ToolArgumentError) as plain:
-        validate_arguments({"main_work": {}, "children": "not a list"}, schema)
+        validate_arguments(
+            {**flat_main_work(WORK["main_work"]), "children": "not a list"}, schema
+        )
     assert "must be array, got str" in str(plain.value)
     assert "an object with keys" not in str(plain.value)
 
@@ -900,3 +1000,20 @@ async def test_a_batch_over_the_live_process_slots_is_correctable(tmp_path):
             await lease.release()
     finally:
         await supervisor.aclose()
+
+
+def test_a_role_field_refusal_names_what_is_missing_and_what_is_not_allowed():
+    """A writable assignment without ``paths`` is not visible to the shared schema.
+
+    A real Multi arm resubmitted five plans that omitted ``paths`` against the bare
+    ``collaboration-assignment-fields-invalid`` and spent its step budget guessing.
+    """
+
+    tool = CollaborationPlanTool((investigator_role(object()), patch_author_role(object())))
+    missing_paths = {k: v for k, v in writable("w", ["a.py"]).items() if k != "paths"}
+    with pytest.raises(ValueError) as refused:
+        tool.validate(plan([missing_paths]))
+    assert "role patch_author is missing paths" in str(refused.value)
+    with pytest.raises(ValueError) as extra:
+        tool.validate(plan([{**readonly("r"), "paths": ["a.py"]}]))
+    assert "role investigator is missing none; not allowed paths" in str(extra.value)

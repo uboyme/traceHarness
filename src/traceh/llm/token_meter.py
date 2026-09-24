@@ -23,6 +23,19 @@ class TokenBudgetPolicy:
     output_reserve_tokens: int
     safety_margin_tokens: int
     trigger_percent: int = 80
+    #: In-Turn folding of finished tool groups. ``trigger_percent`` is the high
+    #: mark that starts it; this is the mark it tries to fall back to, and the
+    #: number of most-recent finished groups it must not touch. Both are absent
+    #: by default: a model window large enough to hold a request does not mean
+    #: carrying that request every Step is worth paying for, and that judgment
+    #: belongs to the host. Half a configuration is refused rather than
+    #: completed by guess, and absence disables the behaviour rather than
+    #: silently picking marks.
+    fold_relief_percent: int | None = None
+    fold_protect_recent_groups: int | None = None
+    #: How many UTF-8 bytes of the newest reopened evidence stay out of
+    #: fold candidacy. Zero means reopened pages age like anything else.
+    fold_protect_readback_utf8_bytes: int = 0
 
     def __post_init__(self):
         if not isinstance(self.encoding, str) or not self.encoding.strip():
@@ -35,10 +48,43 @@ class TokenBudgetPolicy:
             raise ValueError("token-budget-no-input-space")
         if type(self.trigger_percent) is not int or not 1 <= self.trigger_percent <= 100:
             raise ValueError("token-trigger-percent-invalid")
+        configured = (self.fold_relief_percent, self.fold_protect_recent_groups)
+        if any(value is not None for value in configured) and any(
+            value is None for value in configured
+        ):
+            raise ValueError("token-fold-watermarks-incomplete")
+        if self.fold_relief_percent is not None:
+            if (
+                type(self.fold_relief_percent) is not int
+                or not 1 <= self.fold_relief_percent < self.trigger_percent
+            ):
+                raise ValueError("token-fold-relief-percent-invalid")
+            if (
+                type(self.fold_protect_recent_groups) is not int
+                or self.fold_protect_recent_groups < 0
+            ):
+                raise ValueError("token-fold-protect-groups-invalid")
+        if (
+            type(self.fold_protect_readback_utf8_bytes) is not int
+            or self.fold_protect_readback_utf8_bytes < 0
+        ):
+            raise ValueError("token-fold-readback-bytes-invalid")
 
     @property
     def input_limit(self):
         return self.window_tokens - self.output_reserve_tokens - self.safety_margin_tokens
+
+    @property
+    def step_fold_enabled(self) -> bool:
+        return self.fold_relief_percent is not None
+
+    @property
+    def relief_tokens(self) -> int | None:
+        """The input size folding aims to get back under, never above the trigger."""
+
+        if self.fold_relief_percent is None:
+            return None
+        return max(1, self.input_limit * self.fold_relief_percent // 100)
 
     def to_dict(self):
         return asdict(self)
@@ -156,6 +202,7 @@ class RequestTokenMeter:
             "input_tokens": count,
             "input_limit": self.policy.input_limit,
             "trigger_tokens": max(1, self.policy.input_limit * self.policy.trigger_percent // 100),
+            "relief_tokens": self.policy.relief_tokens,
             "output_reserve_tokens": self.policy.output_reserve_tokens,
             "safety_margin_tokens": self.policy.safety_margin_tokens,
             "window_tokens": self.policy.window_tokens,

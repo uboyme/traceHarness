@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 import test_product_f3_e2e as product
-from collaboration_fixtures import PLAN
+from collaboration_fixtures import MAIN_WORK, PLAN
 from promotion_fixtures import build_source_repository, make_bare_target
 from test_product_adaptive import profile
 
@@ -16,6 +16,7 @@ from traceh.runtime.request_builder import verify_request_snapshots
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.service import SessionService
 from traceh.session.surface import SurfaceProjector
+from traceh.supervision.investigation_work import read_investigation_work
 from traceh.supervision.structured_collaboration import SUBMIT_COLLABORATION
 
 
@@ -33,16 +34,15 @@ class StructuredProvider:
         if "traceh.product.investigation" in request.system_prompt:
             self.children.append(request)
             work = next(
-                json.loads(m.content)
+                read_investigation_work(m.content)
                 for m in request.messages
-                if m.role == "user" and m.content.startswith('{"briefing":')
+                if m.role == "user" and m.content.startswith('{"assignment_id":')
             )
-            assert work["format"] == 2
-            assert work["main_work"] == PLAN["main_work"]
+            assert work["format"] == 3
+            assert work["main_work"] == MAIN_WORK
             assert all(
                 work[k] == v
                 for k, v in PLAN["children"][0].items()
-                if k not in ("assignment_id", "role")
             )
             assert SUBMIT_COLLABORATION not in names
             if not any(m.role == "tool" for m in request.messages):

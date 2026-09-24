@@ -1,0 +1,126 @@
+{
+  "kind": "material-admission-not-agent-score",
+  "date": "2026-09-23",
+  "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe",
+  "complete": true,
+  "admitted": true,
+  "dataset_sha256": "228d24b5ac0021ba6921af819d28cb3e330abd1f4d761335c5af30b0926e12ca",
+  "calibration_sha256": "0bf72f711c5ca89249c9b8104e0b2630997afead2ac597820cd082e2a5686495",
+  "spec_digest": "c5429340b834a9e87f60f9a3cf5ecb26207c9f96ee119eaf5900ce8255e48eac",
+  "sandbox_config": "docs/validation-data/real-repository-pilot-v1/v3/sandbox.json",
+  "results": [
+    {
+      "case_id": "a1-small-hashlib-blake2",
+      "variant": "baseline",
+      "status": "finished",
+      "exit_code": 1,
+      "admitted": true,
+      "passed": 182,
+      "failed": 2,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a1-small-hashlib-blake2",
+      "variant": "reference",
+      "status": "finished",
+      "exit_code": 0,
+      "admitted": true,
+      "passed": 184,
+      "failed": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "variant": "baseline",
+      "status": "finished",
+      "exit_code": 1,
+      "admitted": true,
+      "passed": 0,
+      "failed": 9,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "variant": "reference",
+      "status": "finished",
+      "exit_code": 0,
+      "admitted": true,
+      "passed": 9,
+      "failed": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a3-parallel-fix-three-brains",
+      "variant": "baseline",
+      "status": "finished",
+      "exit_code": 1,
+      "admitted": true,
+      "passed": 180,
+      "failed": 5,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a3-parallel-fix-three-brains",
+      "variant": "reference",
+      "status": "finished",
+      "exit_code": 0,
+      "admitted": true,
+      "passed": 185,
+      "failed": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a4-investigate-negative-subscript",
+      "variant": "baseline",
+      "status": "finished",
+      "exit_code": 1,
+      "admitted": true,
+      "passed": 376,
+      "failed": 5,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a4-investigate-negative-subscript",
+      "variant": "reference",
+      "status": "finished",
+      "exit_code": 0,
+      "admitted": true,
+      "passed": 381,
+      "failed": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a5-dependent-sample-arguments",
+      "variant": "baseline",
+      "status": "finished",
+      "exit_code": 1,
+      "admitted": true,
+      "passed": 187,
+      "failed": 3,
+      "errors": 0,
+      "missing": 0
+    },
+    {
+      "case_id": "a5-dependent-sample-arguments",
+      "variant": "reference",
+      "status": "finished",
+      "exit_code": 0,
+      "admitted": true,
+      "passed": 190,
+      "failed": 0,
+      "errors": 0,
+      "missing": 0
+    }
+  ],
+  "raw_evidence": ".traceh/tt2-admission (stdout/stderr, sandbox receipts, event store)",
+  "history": "First admission (.traceh/tt1-admission) bound an earlier spec digest that wrongly included a stray bytecode cache; recalibrated with identical F2P/P2P and dataset digest.",
+  "note": "Material admission only: the initial tree fails and the reference passes the frozen plan. Not an Agent score."
+}

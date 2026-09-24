@@ -20,9 +20,11 @@ from traceh.api.agents import AgentSpec
 from traceh.api.json_types import fingerprint
 from traceh.api.product import (
     PRODUCT_TASK_PROTOCOL_VERSION,
+    ProductContextPolicy,
     ProductRole,
     ProductRoleProfile,
     ProductTaskProfile,
+    ProductWrapUpReserve,
     RequestedTaskMode,
     ResolvedTaskMode,
 )
@@ -73,6 +75,12 @@ class ResolvedAgentAssembly:
     prompt_ids: tuple[str, ...]
     policy_ids: tuple[str, ...]
     workspace_access: WorkspaceAccess
+    #: The role's request-window governance, carried through so two runs under
+    #: the same preset name but different water marks cannot share a digest.
+    context_policy: ProductContextPolicy | None = None
+    #: Budget held back for delivery; two runs that differ here are not
+    #: the same run, so the digest must see it.
+    wrap_up_reserve: ProductWrapUpReserve | None = None
 
 
 class ProductAssemblyResolver(Protocol):
@@ -176,6 +184,15 @@ def agent_assembly_digest(assembly: ResolvedAgentAssembly) -> str:
             "prompts": list(assembly.prompt_ids),
             "policies": list(assembly.policy_ids),
             "workspace_access": assembly.workspace_access.value,
+            # Same name, different water marks, is a different run. Leaving
+            # this out would let a metered and an unmetered assembly present
+            # the same digest to an evaluation that compares them.
+            "context_policy": (
+                None if assembly.context_policy is None else assembly.context_policy.to_dict()
+            ),
+            "wrap_up_reserve": (
+                None if assembly.wrap_up_reserve is None else assembly.wrap_up_reserve.to_dict()
+            ),
         }
     )
 

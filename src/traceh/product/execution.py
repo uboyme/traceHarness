@@ -28,6 +28,15 @@ from traceh.session.event_store import EventStore
 from traceh.supervision.execution import durable_log_identity
 from traceh.workflow.service import WorkflowService
 
+#: Adopted from background suggestion a9837ab4 after it met the pre-registered
+#: adoption gate (ADR-0087): the host runs shell commands as argv, and the
+#: models it served kept writing ``cd ... &&`` and ``PYTHONPATH=src ...``.
+CODER_GUIDANCE = (
+    "Implement the requirement in the managed workspace, then run the relevant checks "
+    "using direct executable commands (avoiding shell built-ins like 'cd' or inline "
+    "environment variable assignments) and report the result."
+)
+
 
 class ProductTaskProvisioner(Protocol):
     """Prepare and settle the existing resource domains for one task."""
@@ -333,10 +342,7 @@ def _role_message(
     requirement: str,
 ) -> str:
     instructions = {
-        ProductRole.CODER: (
-            "Implement the requirement in the managed workspace, then run the "
-            "relevant checks and report the result."
-        ),
+        ProductRole.CODER: CODER_GUIDANCE,
     }
     parts = [instructions[role], "", "Requirement:", requirement]
     return "\n".join(parts)

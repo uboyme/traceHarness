@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from traceh.api.llm import ModelMessage, ModelRequest, ToolSchema
+from traceh.api.llm import CompletionCategory, ModelMessage, ModelRequest, ToolSchema
 from traceh.api.turns import TurnInput
 from traceh.llm import openai_compatible
 from traceh.llm.failures import ProviderFailure, ProviderFailureCategory
@@ -748,3 +748,200 @@ async def test_adapter_failure_leaves_only_sanitized_durable_facts(
     assert "message" not in attempt_end.data
     assert "error_type" not in attempt_end.data
     assert runtime_error.data["traceback"] == "ProviderFailure: provider-dns-temporary"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("raw_finish_reason", "expected"),
+    [
+        ("stop", CompletionCategory.NORMAL),
+        ("tool_calls", CompletionCategory.TOOL_HANDOFF),
+        ("function_call", CompletionCategory.TOOL_HANDOFF),
+        ("length", CompletionCategory.LENGTH),
+        ("content_filter", CompletionCategory.REFUSAL),
+        ("", CompletionCategory.UNKNOWN),
+        ("MAX_TOKENS", CompletionCategory.UNKNOWN),
+        (None, CompletionCategory.UNKNOWN),
+    ],
+    ids=(
+        "stop",
+        "tool-calls",
+        "legacy-function-call",
+        "length",
+        "content-filter",
+        "empty-string",
+        "another-vendors-spelling",
+        "absent",
+    ),
+)
+async def test_finish_reason_is_classified_and_never_defaults_to_success(
+    raw_finish_reason: str | None,
+    expected: CompletionCategory,
+) -> None:
+    """An ending this adapter cannot read is UNKNOWN, not a quiet success.
+
+    The absent and empty cases are the ones that used to become ``stop``.  A
+    vendor spelling the adapter has not mapped is the same situation: the host
+    has not been told the answer is finished, so it must not act as if it were.
+    """
+
+    choice: dict[str, object] = {"message": {"role": "assistant", "content": "done"}}
+    if raw_finish_reason is not None:
+        choice["finish_reason"] = raw_finish_reason
+    body = json.dumps(
+        {
+            "id": "response-1",
+            "choices": [choice],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        }
+    ).encode("utf-8")
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        response = await provider.complete(
+            ModelRequest(
+                provider=provider.name,
+                model="test-model",
+                messages=(ModelMessage("user", "hello"),),
+            )
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+    assert response.completion is expected
+    # The vendor's own word survives untranslated, including its absence, so a
+    # later reader can tell "the provider said MAX_TOKENS and we did not map it"
+    # apart from "the provider said nothing at all".
+    assert response.provider_finish_reason == raw_finish_reason
+
+
+@pytest.mark.asyncio
+async def test_an_output_budget_spent_on_reasoning_is_recorded_not_hidden() -> None:
+    """The exact wire shape the C0-2 probe observed on deepseek-v4.1-flash.
+
+    Every output token went to a reasoning channel and none to the answer, so
+    ``content`` arrived empty with ``finish_reason=length``. That is the pilot's
+    signature. The adapter reads only ``content``, which is correct - reasoning
+    is not a delivery - but it must record *where* the budget went, or an empty
+    answer is indistinguishable from a model with nothing to say.
+    """
+
+    body = json.dumps(
+        {
+            "id": "response-1",
+            "choices": [
+                {
+                    "finish_reason": "length",
+                    "message": {
+                        "role": "assistant",
+                        "content": "",
+                        "reasoning_content": "Let me set up the equation. 45t = 72(t - 1.5)",
+                    },
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 82,
+                "completion_tokens": 64,
+                "completion_tokens_details": {"reasoning_tokens": 64, "text_tokens": 0},
+            },
+        }
+    ).encode("utf-8")
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1",
+            api_key="test-key",
+        )
+        response = await provider.complete(
+            ModelRequest(
+                provider=provider.name,
+                model="deepseek-v4.1-flash",
+                messages=(ModelMessage("user", "solve it"),),
+            )
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+    assert response.completion is CompletionCategory.LENGTH
+    assert response.content == ""
+    # The reasoning text is deliberately not promoted into the answer.
+    assert "equation" not in response.content
+    # But the spend is now legible: 64 of 64 output tokens bought no answer.
+    assert response.usage.output_tokens == 64
+    assert response.usage.reasoning_tokens == 64
+
+
+@pytest.mark.asyncio
+async def test_a_provider_without_a_reasoning_split_reports_unknown_not_zero() -> None:
+    """Absent detail is absent, not evidence that nothing was spent there."""
+
+    body = json.dumps(
+        {
+            "id": "response-1",
+            "choices": [
+                {"finish_reason": "stop", "message": {"role": "assistant", "content": "hi"}}
+            ],
+            "usage": {"prompt_tokens": 5, "completion_tokens": 2},
+        }
+    ).encode("utf-8")
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:  # noqa: N802
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server, thread = serve(Handler)
+    try:
+        provider = OpenAICompatibleProvider(
+            f"http://127.0.0.1:{server.server_port}/v1", api_key="test-key"
+        )
+        response = await provider.complete(
+            ModelRequest(
+                provider=provider.name,
+                model="test-model",
+                messages=(ModelMessage("user", "hi"),),
+            )
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+    assert response.usage.reasoning_tokens is None

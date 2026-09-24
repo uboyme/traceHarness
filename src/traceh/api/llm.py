@@ -191,6 +191,14 @@ class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
     quality: UsageQuality = UsageQuality.UNKNOWN
+    #: How much of ``output_tokens`` the provider says went to a reasoning
+    #: channel rather than the answer. ``None`` means the provider did not
+    #: report the split - which is not the same as "none was spent there".
+    #: This is a subset of ``output_tokens``, never an addition to it, so it
+    #: changes no total and no settlement; it exists because an output budget
+    #: consumed entirely by reasoning looks identical to a model with nothing
+    #: to say unless someone records the difference.
+    reasoning_tokens: int | None = None
 
     @property
     def total_tokens(self) -> int:
@@ -202,6 +210,7 @@ class Usage:
             "output_tokens": self.output_tokens,
             "total_tokens": self.total_tokens,
             "quality": self.quality.value,
+            "reasoning_tokens": self.reasoning_tokens,
         }
 
 
@@ -287,11 +296,40 @@ def dispatch_request_matches_composed(
     )
 
 
+class CompletionCategory(StrEnum):
+    """Why the provider stopped producing this response, in host terms.
+
+    A provider's own word for this is a vendor string that differs per
+    protocol, so the Runtime never reads it.  Adapters map their supported
+    protocol onto these categories and keep the original beside it as
+    evidence.  Anything an adapter does not recognise - including a missing
+    or empty value - is ``UNKNOWN`` and never a silent success: a response
+    that did not say it finished has not been shown to have finished.
+    """
+
+    NORMAL = "normal"
+    TOOL_HANDOFF = "tool_handoff"
+    LENGTH = "length"
+    REFUSAL = "refusal"
+    UNKNOWN = "unknown"
+
+
 @dataclass(frozen=True, slots=True)
 class ModelResponse:
+    """One provider response.
+
+    ``completion`` is the contract the Runtime consumes; ``provider_finish_reason``
+    is the untranslated vendor value kept for evidence and may be absent.  The
+    default category suits responses constructed inside the host, which are
+    already normalised stand-ins.  Adapters must not rely on it: they classify
+    every response explicitly, so an unmapped provider value cannot arrive here
+    wearing the default.
+    """
+
     content: str = ""
     tool_calls: tuple[ToolCall, ...] = ()
-    finish_reason: str = "stop"
+    completion: CompletionCategory = CompletionCategory.NORMAL
+    provider_finish_reason: str | None = None
     usage: Usage = field(default_factory=Usage)
     raw: Mapping[str, JsonValue] = field(default_factory=dict)
 
@@ -299,7 +337,8 @@ class ModelResponse:
         return {
             "content": self.content,
             "tool_calls": [call.to_dict() for call in self.tool_calls],
-            "finish_reason": self.finish_reason,
+            "completion": self.completion.value,
+            "provider_finish_reason": self.provider_finish_reason,
             "usage": self.usage.to_dict(),
             "raw": dict(self.raw),
         }

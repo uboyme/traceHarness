@@ -1,0 +1,62 @@
+{
+  "scope": "Static checks of eight affected documents; explicit formal/plain L2 topic correspondence",
+  "rows": [
+    {
+      "file": "docs\\note\\project-context.md",
+      "fences_closed": true,
+      "relative_links_checked": 583,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\note\\project-context-plain-zh.md",
+      "fences_closed": true,
+      "relative_links_checked": 349,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\note\\project-overview.md",
+      "fences_closed": true,
+      "relative_links_checked": 19,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\note\\context-reading-map.md",
+      "fences_closed": true,
+      "relative_links_checked": 18,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\plan\\TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md",
+      "fences_closed": true,
+      "relative_links_checked": 8,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\plan\\TRACEHARNESS_PROVIDER_SAMPLING_DECISION.md",
+      "fences_closed": true,
+      "relative_links_checked": 1,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\deal\\086-agent-effectiveness-overnight.md",
+      "fences_closed": true,
+      "relative_links_checked": 6,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    },
+    {
+      "file": "docs\\validation-data\\agent-effectiveness-v1\\RESULTS.md",
+      "fences_closed": true,
+      "relative_links_checked": 2,
+      "missing_relative_links": [],
+      "suspicious_key_patterns": 0
+    }
+  ],
+  "l2_topic_correspondence": true
+}

@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from live_active_retrieval.grid import (
     setup_source,
     usage,
 )
+from sandbox_fixtures import real_sandbox_policy
 from test_history_runtime import SelectingProvider
 
 from traceh.api.llm import ModelResponse, ToolCall
@@ -22,6 +24,12 @@ from traceh.llm.scripted import ScriptedLlmProvider
 from traceh.runtime.request_builder import verify_request_snapshots
 
 MANIFEST = Path(__file__).parent / "live_active_retrieval/manifest.json"
+
+
+def _sandbox_config():
+    return json.loads(json.dumps({
+        "format": 2, "policy": asdict(real_sandbox_policy()), "plugin_grants": []
+    }))
 
 
 def test_fixture_bytes_repeat_and_values_stay_out_of_questions_and_navigation():
@@ -73,8 +81,11 @@ async def test_frozen_sources_prepare_on_original_owners_without_network(tmp_pat
         else [ModelResponse(content="noted")]
     )
     provider = ScriptedLlmProvider(tuple(responses), repeat_last=True)
+    frozen = {"manifest": manifest}
+    if fixture["family"] == "output":
+        frozen["sandbox_config"] = _sandbox_config()
     runtime, store, session, scope, value = await prepare_runtime(
-        tmp_path, fixture, {"manifest": manifest}, provider, "fixture-model"
+        tmp_path, fixture, frozen, provider, "fixture-model"
     )
     try:
         await setup_source(runtime, session, scope, value, fixture, manifest)
@@ -149,7 +160,8 @@ async def test_output_runner_scores_actual_retained_evidence_and_one_execution(t
         ]
     )
     report = await run_case(
-        tmp_path / "case", fixture, {"manifest": manifest}, provider, "fixture-model"
+        tmp_path / "case", fixture,
+        {"manifest": manifest, "sandbox_config": _sandbox_config()}, provider, "fixture-model"
     )
     assert report["closed"] and report["provisional_joint_pass"], report
     assert report["output_executions"] == 1 and report["evidence"]

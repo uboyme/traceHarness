@@ -1,0 +1,7 @@
+..                                                                       [100%]
+============================= slowest 5 durations =============================
+39.49s call     tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+28.50s call     tests/test_product_f3_e2e.py::test_approval_screen_uses_durable_evidence_and_separate_request_caps
+0.12s setup    tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)

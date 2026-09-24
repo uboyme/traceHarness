@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
-from evaluation_fixtures import material_case, write_dataset
+from evaluation_fixtures import fixture_tree_limits, material_case, write_dataset
 
 from traceh.api.product import (
     ProductRole,
@@ -19,6 +19,7 @@ from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceAccess
 from traceh.cli.main import _configure_from_environment, _model_retry_policy, build_parser
 from traceh.evaluation.errors import BenchmarkManifestError
+from traceh.evaluation.evaluators.context_diagnostics import context_work
 from traceh.evaluation.evaluators.product_manifest import (
     BENCHMARK_SOURCE_ID,
     BENCHMARK_SOURCE_REVISION,
@@ -62,7 +63,7 @@ def _write(root, manifest):
     cases = manifest.pop("_test_cases")
     for case in cases:
         case["sha256"] = material_case(root, "task-a", "unused", "task-a/initial")["sha256"]
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
     return root
 
 
@@ -74,6 +75,7 @@ def _manifest():
             "group_id": "different-domain",
             "requirement": "Do the one thing the frozen checks require.",
             "initial_tree": "task-a/initial",
+            "initial_tree_limits": fixture_tree_limits(),
             "sha256": "",
             "verification": json.loads(
                 (SHIPPED_BENCHMARK / "dataset.json").read_text(encoding="utf-8")
@@ -224,6 +226,29 @@ def test_an_unsupported_protocol_version_is_a_rejection(tmp_path: Path) -> None:
     assert caught.value.code == "evaluation-version-unsupported"
 
 
+def test_old_product_dataset_is_refused_without_migration(tmp_path):
+    root = _write(tmp_path / "b", _manifest())
+    manifest = json.loads((root / "benchmark.json").read_text(encoding="utf-8"))
+    cases = json.loads((root / "dataset.json").read_text(encoding="utf-8"))["cases"]
+    write_dataset(root, manifest, cases, format_version=2)
+    with pytest.raises(BenchmarkManifestError) as caught:
+        _load(root)
+    assert caught.value.code == "evaluation-version-unsupported"
+
+
+@pytest.mark.parametrize("bounds", [None, {}, {"max_files": True, "max_file_bytes": 1,
+                                          "max_total_bytes": 1}])
+def test_missing_or_invalid_initial_tree_limits_are_not_guessed(tmp_path, bounds):
+    manifest = _manifest()
+    case = manifest["_test_cases"][0]
+    if bounds is None:
+        del case["initial_tree_limits"]
+    else:
+        case["initial_tree_limits"] = bounds
+    with pytest.raises(BenchmarkManifestError):
+        _load(_write(tmp_path / "b", manifest))
+
+
 def test_two_entries_for_one_mode_cannot_become_one_silent_arm(
     tmp_path: Path,
 ) -> None:
@@ -285,6 +310,7 @@ def _evidence(
     session = SessionWork(
         session_id=f"session-{resolved.value}",
         agent_id=f"agent-{resolved.value}",
+        label="coder",
         turns=1,
         steps=2,
         tool_calls=1,
@@ -295,6 +321,7 @@ def _evidence(
         provider_active_milliseconds=provider_active_milliseconds,
         provider_failure_categories=provider_failure_categories,
         final_model_result="succeeded",
+        context=context_work(f"session-{resolved.value}", ()),
     )
     return AttemptEvidence(
         task_id="product-task-1",
@@ -520,6 +547,21 @@ def test_the_markdown_reads_the_same_dictionary_the_json_does() -> None:
     assert "unavailable=1" in markdown
     assert str(data["attempts"][0]["timing"]["active_ms"]) in markdown
     assert data["attempts"][0]["timing"]["active_ms"] == 800
+
+
+def test_context_diagnostics_travel_with_each_session_and_absence_is_named() -> None:
+    report = _report(
+        (_attempt(_evidence(resolved=ResolvedTaskMode.SINGLE), requested=RequestedTaskMode.SINGLE),)
+    )
+    session = report.to_dict()["attempts"][0]["evidence"]["execution"]["sessions"][0]
+    markdown = render_markdown(report)
+
+    assert session["label"] == "coder"
+    assert session["context"]["tool_folds"] == 0
+    assert session["context"]["metered_peak"] is None
+    assert "## Context diagnostics" in markdown
+    # No token policy is not a zero-token policy, and no usage is not zero input.
+    assert "| coder | 0 | unavailable | unavailable | unmetered | unmetered |" in markdown
 
 
 def test_retry_metrics_and_failure_categories_are_reported_from_session_facts() -> None:

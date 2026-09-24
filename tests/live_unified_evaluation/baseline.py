@@ -63,6 +63,7 @@ async def execute(options):
         base_url=args.base_url,
         api_key_env=args.api_key_env,
         script=None,
+        timeout_seconds=provider.timeout_seconds,
     )
     plan["execution"].update(
         sandbox_config=str(options.sandbox.resolve()), max_trials=72, timeout_seconds=7200

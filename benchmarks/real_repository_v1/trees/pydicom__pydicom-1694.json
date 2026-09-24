@@ -1,0 +1,2875 @@
+{
+  "repository": "pydicom/pydicom",
+  "base_commit": "f8cf45b6c121e5a4bf4a43f71aba3bc64af3db9c",
+  "tree_sha": "f8cf45b6c121e5a4bf4a43f71aba3bc64af3db9c",
+  "entries": [
+    {
+      "path": ".circleci/config.yml",
+      "mode": "100644",
+      "sha": "5b8c6a38119b81f16a7f5a47491d1b060bf0b3fc",
+      "size": 588
+    },
+    {
+      "path": ".coveragerc",
+      "mode": "100644",
+      "sha": "50226917a5845185f4e755b49b67a8a785a5aa28",
+      "size": 58
+    },
+    {
+      "path": ".github/FUNDING.yml",
+      "mode": "100644",
+      "sha": "a72c8c820b7f142a61af7ce6832b5cc5588fee80",
+      "size": 18
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "mode": "100644",
+      "sha": "86db59e9a7b2c5cd847cca1d780c3c8dc3a93e0d",
+      "size": 902
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/documentation.md",
+      "mode": "100644",
+      "sha": "20c660513aef651c5ff539ce6fb505d0852c19b3",
+      "size": 387
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "mode": "100644",
+      "sha": "ac9994e57d7c128704be564480e07bf34b219607",
+      "size": 386
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/other_issues.md",
+      "mode": "100644",
+      "sha": "716e554de40c58aaf572331d4ea2346f1dcfd85f",
+      "size": 144
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/pixel_issue.md",
+      "mode": "100644",
+      "sha": "7ffaa58d0c2c3edb5f6f9dc6cad396ff74007226",
+      "size": 1398
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "mode": "100644",
+      "sha": "7845dbe02a11e8a503e05dfee6dc1650347c2b49",
+      "size": 626
+    },
+    {
+      "path": ".github/codespell_ignore_words.txt",
+      "mode": "100644",
+      "sha": "de494fd4017c71f3c3b60a2c8a4ab0103fcc4114",
+      "size": 19
+    },
+    {
+      "path": ".github/workflows/merge-pytest.yml",
+      "mode": "100644",
+      "sha": "abe4c1682caaed71a8e76c6d47ea683c8e2a1219",
+      "size": 3445
+    },
+    {
+      "path": ".github/workflows/merge-typing.yml",
+      "mode": "100644",
+      "sha": "ffa82ae5bf631ce4d5e3fc54544fe8fb9e457c31",
+      "size": 724
+    },
+    {
+      "path": ".github/workflows/pr-pytest.yml",
+      "mode": "100644",
+      "sha": "d885b4d0ecd24ae5a3d7ac5a9b86d1858e902565",
+      "size": 5535
+    },
+    {
+      "path": ".github/workflows/pr-type-lint-spell.yml",
+      "mode": "100644",
+      "sha": "38dcc3b409fbc5ddcc34b710a01af43dbad15806",
+      "size": 2269
+    },
+    {
+      "path": ".github/workflows/publish-pypi-deploy.yml",
+      "mode": "100644",
+      "sha": "9a9eb388f2556ea3a3acca939a424ef24dfb6479",
+      "size": 1582
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "e8f35d96b3d3c5013e78931a47ae4b5190b87a18",
+      "size": 674
+    },
+    {
+      "path": ".lgtm.yml",
+      "mode": "100644",
+      "sha": "b34e982730a3ff2539f675ca443f84906b431420",
+      "size": 197
+    },
+    {
+      "path": ".pep8speaks.yml",
+      "mode": "100644",
+      "sha": "6c8574020e2e1d2e7d2bb6adff4c993ecf0c004c",
+      "size": 62
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "sha": "884d895120245003d811f66eed9792c029788755",
+      "size": 9179
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "50716743e35eb117b622e5248eda1490dc973189",
+      "size": 3196
+    },
+    {
+      "path": "MANIFEST.in",
+      "mode": "100644",
+      "sha": "48f916d7e76c4a288e0dbdd61f5e830374c76d3b",
+      "size": 163
+    },
+    {
+      "path": "Makefile",
+      "mode": "100644",
+      "sha": "6315845f6d72bf49c9792829913127642fe879fe",
+      "size": 778
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "sha": "304f308d127745d55666a3e938f1d50e1385c57c",
+      "size": 5469
+    },
+    {
+      "path": "build_tools/circle/build_doc.sh",
+      "mode": "100755",
+      "sha": "0016c576d426f6c736cd8f6e1049b5fc44a7ba53",
+      "size": 3049
+    },
+    {
+      "path": "build_tools/circle/push_doc.sh",
+      "mode": "100755",
+      "sha": "18c1f37ec7503b781ff5a52ca0180cf24809b468",
+      "size": 3520
+    },
+    {
+      "path": "build_tools/sphinx/github_link.py",
+      "mode": "100644",
+      "sha": "dd207ab860af00f3c0bfb7beac401c60bbdbfc50",
+      "size": 2811
+    },
+    {
+      "path": "dicom.py",
+      "mode": "100644",
+      "sha": "208b60247275f1332a09c74a22d4acf434a6108d",
+      "size": 466
+    },
+    {
+      "path": "doc/Makefile",
+      "mode": "100644",
+      "sha": "f75d5d7e29994b88498d29430978d9b47824dd41",
+      "size": 7153
+    },
+    {
+      "path": "doc/README.md",
+      "mode": "100644",
+      "sha": "8627e2fad025c9c619c578512b0cfcbbadc49616",
+      "size": 1209
+    },
+    {
+      "path": "doc/_static/css/pydicom.css",
+      "mode": "100644",
+      "sha": "387d5b25e8438d54a8a1df00707dcda196ba4233",
+      "size": 1751
+    },
+    {
+      "path": "doc/_templates/class.rst",
+      "mode": "100644",
+      "sha": "3eef97467222900287d032493c53eae152d5d599",
+      "size": 290
+    },
+    {
+      "path": "doc/_templates/function.rst",
+      "mode": "100644",
+      "sha": "4ba355d57c873dcd0f43e0471b0df1b8d2a98374",
+      "size": 229
+    },
+    {
+      "path": "doc/assets/img/favicon.ico",
+      "mode": "100644",
+      "sha": "52ea870104bfa2c25597faac37b6f6f69dde3167",
+      "size": 1150
+    },
+    {
+      "path": "doc/assets/img/logo.png",
+      "mode": "100644",
+      "sha": "57d738d1b0b2fa853b881a14414dcbcf69c3580a",
+      "size": 5693
+    },
+    {
+      "path": "doc/assets/img/pydicom_blue_light.png",
+      "mode": "100644",
+      "sha": "24dfccf18ad8b51e2921a093485b55cc73e7d478",
+      "size": 33703
+    },
+    {
+      "path": "doc/assets/img/pydicom_blue_light.svg",
+      "mode": "100644",
+      "sha": "ec8a7bac02489c1ecfe887d5d97b47e096e02467",
+      "size": 12643
+    },
+    {
+      "path": "doc/assets/img/pydicom_flat_black.png",
+      "mode": "100644",
+      "sha": "9aa7556200421238ae261b1cb4b1f526693f841a",
+      "size": 33283
+    },
+    {
+      "path": "doc/assets/img/pydicom_flat_black.svg",
+      "mode": "100644",
+      "sha": "8f26804f632e2df3f27a132267dfdf7de1fa4dff",
+      "size": 12173
+    },
+    {
+      "path": "doc/assets/img/pydicom_flat_black_alpha.png",
+      "mode": "100644",
+      "sha": "ada53d4051d6510b4a4cc271022035340143aeda",
+      "size": 29209
+    },
+    {
+      "path": "doc/conf.py",
+      "mode": "100644",
+      "sha": "94802dd2cdf50f440e17fe50a5ab86db8bb62f48",
+      "size": 10525
+    },
+    {
+      "path": "doc/faq/index.rst",
+      "mode": "100644",
+      "sha": "f66500d5755e97197c1d4d5a00a18f19bae1496a",
+      "size": 3107
+    },
+    {
+      "path": "doc/guides/cli/cli_codify.rst",
+      "mode": "100644",
+      "sha": "fe4a3a595d4988c4f8177deefe8c1a84d20bf4d7",
+      "size": 5015
+    },
+    {
+      "path": "doc/guides/cli/cli_dev.rst",
+      "mode": "100644",
+      "sha": "0941f8ce7f91008878fb64e020b8cdd78efacb3f",
+      "size": 2886
+    },
+    {
+      "path": "doc/guides/cli/cli_guide.rst",
+      "mode": "100644",
+      "sha": "0b1ddc0d8e7dafc1a9a000a185be8b4b0ca13c44",
+      "size": 410
+    },
+    {
+      "path": "doc/guides/cli/cli_intro.rst",
+      "mode": "100644",
+      "sha": "69c161c9a20f9dc25f2c2849420df490d5ad66f9",
+      "size": 7729
+    },
+    {
+      "path": "doc/guides/cli/cli_show.rst",
+      "mode": "100644",
+      "sha": "8a181950048b5237dad4f5c33141122821a956e3",
+      "size": 5852
+    },
+    {
+      "path": "doc/guides/element_value_types.rst",
+      "mode": "100644",
+      "sha": "5d18164ab08fce172368f37bbf73741a14a84f30",
+      "size": 11425
+    },
+    {
+      "path": "doc/guides/encoding/encoder_plugin_options.rst",
+      "mode": "100644",
+      "sha": "ff6272b6d21195a2e25b1d74996cc559dda8b91d",
+      "size": 1932
+    },
+    {
+      "path": "doc/guides/encoding/encoder_plugins.rst",
+      "mode": "100644",
+      "sha": "2e98e91165e8524ad98b46785db74c810b54bd90",
+      "size": 5137
+    },
+    {
+      "path": "doc/guides/encoding/index.rst",
+      "mode": "100644",
+      "sha": "df8170049733aefedd4614d998436afdb6981f5a",
+      "size": 270
+    },
+    {
+      "path": "doc/guides/encoding/rle_lossless.rst",
+      "mode": "100644",
+      "sha": "fab07d478e12b15b787481178049070d6fcccc9f",
+      "size": 7283
+    },
+    {
+      "path": "doc/guides/glossary.rst",
+      "mode": "100644",
+      "sha": "f64d983349c9128955f34c0490b655c8d397679a",
+      "size": 5283
+    },
+    {
+      "path": "doc/guides/index.rst",
+      "mode": "100644",
+      "sha": "83d64fa675d105fab0b90ff7db60ec3ad1cff48a",
+      "size": 245
+    },
+    {
+      "path": "doc/guides/writing_documentation.rst",
+      "mode": "100644",
+      "sha": "983e11000b2cad7b6131ad4f654aabaa81326392",
+      "size": 3998
+    },
+    {
+      "path": "doc/index.rst",
+      "mode": "100644",
+      "sha": "e1fb42e4cf4a4c5fae8251b60f24ea631cfd2492",
+      "size": 1742
+    },
+    {
+      "path": "doc/make.bat",
+      "mode": "100644",
+      "sha": "ac2bd18dec5c0e2bc1bc41a18be585684a37236d",
+      "size": 3073
+    },
+    {
+      "path": "doc/old/base_element.rst",
+      "mode": "100644",
+      "sha": "d687d1804d070732543ed1f0a9b788288e3818d8",
+      "size": 11094
+    },
+    {
+      "path": "doc/old/best_practices.rst",
+      "mode": "100644",
+      "sha": "ee00d80d24b794188b48fccac86180b69889c1a0",
+      "size": 4599
+    },
+    {
+      "path": "doc/old/getting_started.rst",
+      "mode": "100644",
+      "sha": "096188b6e7ce0f75c2fe45d2736a89d8d884f3c8",
+      "size": 2854
+    },
+    {
+      "path": "doc/old/image_data_compression.rst",
+      "mode": "100644",
+      "sha": "c54633731e63d00a75f992c7de636cdb430fa3bb",
+      "size": 5612
+    },
+    {
+      "path": "doc/old/image_data_handlers.rst",
+      "mode": "100644",
+      "sha": "ee5e5ea16cc4f3c0b6ac5c2489fd485447de5f09",
+      "size": 7361
+    },
+    {
+      "path": "doc/old/private_data_elements.rst",
+      "mode": "100644",
+      "sha": "e8c228d43ec5174f2a7dadc3d6b07ccbc821753c",
+      "size": 5176
+    },
+    {
+      "path": "doc/old/pydicom_user_guide.rst",
+      "mode": "100644",
+      "sha": "8fa549763bc37229b71d577b28a76bba7c2ce485",
+      "size": 337
+    },
+    {
+      "path": "doc/old/python2_support.rst",
+      "mode": "100644",
+      "sha": "cf6fae0589011d31f5f2f7729882d547313309c6",
+      "size": 524
+    },
+    {
+      "path": "doc/old/ref_guide.rst",
+      "mode": "100644",
+      "sha": "d5208a6d5db1fbb4c55085208a17f7ec901a2b5a",
+      "size": 1090
+    },
+    {
+      "path": "doc/old/transition_to_pydicom1.rst",
+      "mode": "100644",
+      "sha": "2b7688082936d278773b7c5883cd1e33712065d2",
+      "size": 5049
+    },
+    {
+      "path": "doc/old/viewing_images.rst",
+      "mode": "100644",
+      "sha": "2b228131da9a151ab8a9190ffe5177fceb241216",
+      "size": 2644
+    },
+    {
+      "path": "doc/old/working_with_overlays.rst",
+      "mode": "100644",
+      "sha": "cc8da1858fb5fa4d7cbabe9bd34836bf102b1e57",
+      "size": 3614
+    },
+    {
+      "path": "doc/old/working_with_pixel_data.rst",
+      "mode": "100644",
+      "sha": "5ea5f498b8036338a98dec5d8d531266884884ab",
+      "size": 8221
+    },
+    {
+      "path": "doc/old/working_with_waveforms.rst",
+      "mode": "100644",
+      "sha": "252737b3a78a166cabe919cd41642ba2e5a809c2",
+      "size": 3235
+    },
+    {
+      "path": "doc/old/writing_files.rst",
+      "mode": "100644",
+      "sha": "5dda263de208be93c6104908e1f84f08ac8362d7",
+      "size": 3779
+    },
+    {
+      "path": "doc/reference/charset.rst",
+      "mode": "100644",
+      "sha": "a76fc92f0ecad92abb54bd1956180e55f8398fb4",
+      "size": 327
+    },
+    {
+      "path": "doc/reference/config.rst",
+      "mode": "100644",
+      "sha": "23cef103ba3dde9eb88df85e1af97bbe7c3c0f7e",
+      "size": 774
+    },
+    {
+      "path": "doc/reference/data.rst",
+      "mode": "100644",
+      "sha": "99928ea0aa4fabbc7e161fec1c71bb8e743352b0",
+      "size": 314
+    },
+    {
+      "path": "doc/reference/datadict.rst",
+      "mode": "100644",
+      "sha": "789000226ba6fca9d77c0994568380bf56026d2f",
+      "size": 802
+    },
+    {
+      "path": "doc/reference/dataset.rst",
+      "mode": "100644",
+      "sha": "60cd50521fc5f53d443d94936622a0b30c07cc11",
+      "size": 341
+    },
+    {
+      "path": "doc/reference/dicomdir.rst",
+      "mode": "100644",
+      "sha": "032e08ca05ec86bc3bd5af5cd569cdac824112b4",
+      "size": 233
+    },
+    {
+      "path": "doc/reference/elem.dataelem.rst",
+      "mode": "100644",
+      "sha": "c208fc86a4bee4f1bcef585272abe517dc6ed63a",
+      "size": 280
+    },
+    {
+      "path": "doc/reference/elem.multival.rst",
+      "mode": "100644",
+      "sha": "6dc0db99849012732079ffe6b394e5d3c5b96a4b",
+      "size": 301
+    },
+    {
+      "path": "doc/reference/elem.rst",
+      "mode": "100644",
+      "sha": "7156c2cebb36e43badb2814e645986151b2a0ffe",
+      "size": 224
+    },
+    {
+      "path": "doc/reference/elem.sequence.rst",
+      "mode": "100644",
+      "sha": "447e39f66d5d7213699849c35c23520ce67bf5d2",
+      "size": 335
+    },
+    {
+      "path": "doc/reference/elem.tag.rst",
+      "mode": "100644",
+      "sha": "0548c8c15fbaa544067e50a005e19c0712bc4593",
+      "size": 267
+    },
+    {
+      "path": "doc/reference/elem.valuerep.rst",
+      "mode": "100644",
+      "sha": "d5c6c091fef703e69066456ca97f8fc4154582bb",
+      "size": 484
+    },
+    {
+      "path": "doc/reference/elem.values.rst",
+      "mode": "100644",
+      "sha": "db1ff9e025697c78f2085f01141f53854e3838ac",
+      "size": 589
+    },
+    {
+      "path": "doc/reference/encaps.rst",
+      "mode": "100644",
+      "sha": "ebb0710c5cfeed8da0a27ff959d3cb74bd7376bc",
+      "size": 723
+    },
+    {
+      "path": "doc/reference/encoders.rst",
+      "mode": "100644",
+      "sha": "473869ea0b4ab2908aa403df0725999998e51e70",
+      "size": 574
+    },
+    {
+      "path": "doc/reference/errors.rst",
+      "mode": "100644",
+      "sha": "78b8bdaf803b3ebcded07e424c785a9365ca5d37",
+      "size": 186
+    },
+    {
+      "path": "doc/reference/fileio.base.rst",
+      "mode": "100644",
+      "sha": "b591ac65ca9cdbef6ca492e28157854aaae3c70c",
+      "size": 275
+    },
+    {
+      "path": "doc/reference/fileio.read.rst",
+      "mode": "100644",
+      "sha": "51f2d4a22cc9ff03e88639f9fd00e04c3a51f9ad",
+      "size": 480
+    },
+    {
+      "path": "doc/reference/fileio.rst",
+      "mode": "100644",
+      "sha": "9ed1b74774845a44491244f5552885580972fc31",
+      "size": 221
+    },
+    {
+      "path": "doc/reference/fileio.util.rst",
+      "mode": "100644",
+      "sha": "84f80d0ce37812f981ee93b79542b5fa03d43b9e",
+      "size": 331
+    },
+    {
+      "path": "doc/reference/fileio.write.rst",
+      "mode": "100644",
+      "sha": "1f8d2c6f72c0b1827d2ee6002f01e22d4dd28cb6",
+      "size": 632
+    },
+    {
+      "path": "doc/reference/fileset.rst",
+      "mode": "100644",
+      "sha": "062322f15bb1e64e1dbaec6f2dad8e21cdc5b29f",
+      "size": 325
+    },
+    {
+      "path": "doc/reference/handlers.overlay_data.rst",
+      "mode": "100644",
+      "sha": "d83ac2260c98e68646165537714ccf3ec4b2ca09",
+      "size": 285
+    },
+    {
+      "path": "doc/reference/handlers.pixel_data.rst",
+      "mode": "100644",
+      "sha": "e9c28d2b5f1fbf1e725eb533c4b43f6ff6ca08cc",
+      "size": 398
+    },
+    {
+      "path": "doc/reference/handlers.rst",
+      "mode": "100644",
+      "sha": "baa2e40cf678d3fbcbb68251b900b10a7fba6a31",
+      "size": 615
+    },
+    {
+      "path": "doc/reference/handlers.waveform_data.rst",
+      "mode": "100644",
+      "sha": "2db4b2172de32a3b890232684a48c7f9fc885be5",
+      "size": 276
+    },
+    {
+      "path": "doc/reference/index.rst",
+      "mode": "100644",
+      "sha": "98d0dcab2cabbb56ad58cd60bdfa08a9290e7469",
+      "size": 399
+    },
+    {
+      "path": "doc/reference/misc.rst",
+      "mode": "100644",
+      "sha": "89ef692e334d94eca10b216326f75aa03cb78e27",
+      "size": 218
+    },
+    {
+      "path": "doc/reference/uid.rst",
+      "mode": "100644",
+      "sha": "69f914922f2f6612e71a4a3d40ef34e91e7ada65",
+      "size": 7525
+    },
+    {
+      "path": "doc/release_notes/index.rst",
+      "mode": "100644",
+      "sha": "f969497a7e839365ae1d732e2d6c4b5103fdaffa",
+      "size": 523
+    },
+    {
+      "path": "doc/release_notes/v0.9.2.rst",
+      "mode": "100644",
+      "sha": "77b29d57e185ffca3e932db2137ba5e6dd53d9fe",
+      "size": 1959
+    },
+    {
+      "path": "doc/release_notes/v0.9.3.rst",
+      "mode": "100644",
+      "sha": "e0d2cefb6cb307b689147c58b0d59357a7cbba24",
+      "size": 1625
+    },
+    {
+      "path": "doc/release_notes/v0.9.4.rst",
+      "mode": "100644",
+      "sha": "0dc1e5986c82e32bc37204ced04c212fc5fee220",
+      "size": 3132
+    },
+    {
+      "path": "doc/release_notes/v0.9.5.rst",
+      "mode": "100644",
+      "sha": "9ad9cc939a670b7e3d021f9a6f3263f9d7e10140",
+      "size": 1320
+    },
+    {
+      "path": "doc/release_notes/v0.9.6.rst",
+      "mode": "100644",
+      "sha": "01f6e4c033897921861d2a90d1fd9c3da9c5d2bf",
+      "size": 708
+    },
+    {
+      "path": "doc/release_notes/v0.9.7.rst",
+      "mode": "100644",
+      "sha": "04ea228cef097d34ecc5eea29150a667584ca430",
+      "size": 2522
+    },
+    {
+      "path": "doc/release_notes/v0.9.8.rst",
+      "mode": "100644",
+      "sha": "916e969ac5609dfbfa9d8fbc9667c41eadd0c0ca",
+      "size": 1736
+    },
+    {
+      "path": "doc/release_notes/v0.9.9.rst",
+      "mode": "100644",
+      "sha": "a7b3a244d4f4855eaff8016afde45a7c40661865",
+      "size": 1261
+    },
+    {
+      "path": "doc/release_notes/v1.0.0.rst",
+      "mode": "100644",
+      "sha": "1b0db717a4cd054a0e1076507641d7621687b18e",
+      "size": 3448
+    },
+    {
+      "path": "doc/release_notes/v1.1.0.rst",
+      "mode": "100644",
+      "sha": "0a841b312337a358db3809c0fdca3f18dacbc62d",
+      "size": 2043
+    },
+    {
+      "path": "doc/release_notes/v1.2.0.rst",
+      "mode": "100644",
+      "sha": "601893285414fc837f085c0cb2a58e87235cff75",
+      "size": 3570
+    },
+    {
+      "path": "doc/release_notes/v1.3.0.rst",
+      "mode": "100644",
+      "sha": "ba32b42f781f534e4ee92bc0d978b96c06738809",
+      "size": 3069
+    },
+    {
+      "path": "doc/release_notes/v1.4.0.rst",
+      "mode": "100644",
+      "sha": "23853828430a206ff2e724cd42f5f4dea4fc0e98",
+      "size": 4371
+    },
+    {
+      "path": "doc/release_notes/v1.4.1.rst",
+      "mode": "100644",
+      "sha": "748579f82ef7740b665876dd52ead73b66050f1d",
+      "size": 358
+    },
+    {
+      "path": "doc/release_notes/v2.0.0.rst",
+      "mode": "100644",
+      "sha": "80cad02df44cc2faf46f8ab906987e8ea2efe090",
+      "size": 2806
+    },
+    {
+      "path": "doc/release_notes/v2.1.0.rst",
+      "mode": "100644",
+      "sha": "c310f461c09df4ab28c27308a7bbb25f845ed485",
+      "size": 7542
+    },
+    {
+      "path": "doc/release_notes/v2.1.1.rst",
+      "mode": "100644",
+      "sha": "3b83f5bd2d780cb31ff6381a7009c8405af29020",
+      "size": 219
+    },
+    {
+      "path": "doc/release_notes/v2.2.0.rst",
+      "mode": "100644",
+      "sha": "057f60ab0364733d58a8f3eae0c3d4f9622540e6",
+      "size": 6511
+    },
+    {
+      "path": "doc/release_notes/v2.3.0.rst",
+      "mode": "100644",
+      "sha": "411ce31e9f6844cd9006ecd7349e25043a7224e7",
+      "size": 2893
+    },
+    {
+      "path": "doc/release_notes/v2.4.0.rst",
+      "mode": "100644",
+      "sha": "b11c4d0ec45f14ea37a7d31097f19603685c55bf",
+      "size": 894
+    },
+    {
+      "path": "doc/tutorials/contributing.rst",
+      "mode": "100644",
+      "sha": "b5bc0dfcedbdae3d57f55ab5c5aa2cb06ee9eb45",
+      "size": 1081
+    },
+    {
+      "path": "doc/tutorials/contributing_code.rst",
+      "mode": "100644",
+      "sha": "04d425d78c108fb48fc367824fc2a6926e0bc46a",
+      "size": 10607
+    },
+    {
+      "path": "doc/tutorials/contributing_docs.rst",
+      "mode": "100644",
+      "sha": "d8c8c5dd82e88285b53d9727c46dcd32232ec379",
+      "size": 9568
+    },
+    {
+      "path": "doc/tutorials/dataset_basics.rst",
+      "mode": "100644",
+      "sha": "c2affdd60976362f29361f455420e499c4144522",
+      "size": 22994
+    },
+    {
+      "path": "doc/tutorials/dicom_json.rst",
+      "mode": "100644",
+      "sha": "7986688953ce98604c487e69532c0aec70958e53",
+      "size": 4390
+    },
+    {
+      "path": "doc/tutorials/filesets.rst",
+      "mode": "100644",
+      "sha": "7fe8fc3ad15abbee9bac384b7ed1356cf90173a7",
+      "size": 19508
+    },
+    {
+      "path": "doc/tutorials/index.rst",
+      "mode": "100644",
+      "sha": "dc7a93ba135b9e32a71d2a1e3ad17fa45650f151",
+      "size": 311
+    },
+    {
+      "path": "doc/tutorials/installation.rst",
+      "mode": "100644",
+      "sha": "8950efd855f35f50818fb4c1b8e23eda9ea4571d",
+      "size": 5415
+    },
+    {
+      "path": "doc/tutorials/pixel_data/compressing.rst",
+      "mode": "100644",
+      "sha": "a09ae6f72277cb2af22b8f8d482b232e2d7fb568",
+      "size": 7747
+    },
+    {
+      "path": "doc/tutorials/sr_basics.rst",
+      "mode": "100644",
+      "sha": "069775c80caaa4d67d01b5e4f8d35181f389f7de",
+      "size": 2153
+    },
+    {
+      "path": "doc/tutorials/virtualenvs.rst",
+      "mode": "100644",
+      "sha": "cdfe702ff42f611f9c162e2f60ae03d55d1335df",
+      "size": 9581
+    },
+    {
+      "path": "doc/tutorials/waveforms.rst",
+      "mode": "100644",
+      "sha": "3620436b5e67adf659825913f1a110c56f9363b6",
+      "size": 9196
+    },
+    {
+      "path": "doc/tutorials/waveforms_assets/waveforms_decode.png",
+      "mode": "100644",
+      "sha": "bad87f68865770d684ba52a763fb488709c2018c",
+      "size": 135332
+    },
+    {
+      "path": "doc/tutorials/waveforms_assets/waveforms_encode.png",
+      "mode": "100644",
+      "sha": "655cd98c541eef825fe3ac2d3525b57ddafb9002",
+      "size": 90122
+    },
+    {
+      "path": "examples/README.txt",
+      "mode": "100644",
+      "sha": "697d5bbb3131421824053510574ae647f4dc685b",
+      "size": 77
+    },
+    {
+      "path": "examples/dicomtree.py",
+      "mode": "100644",
+      "sha": "447d7dcbf87af9a47470e96cf3aabc803e0066bb",
+      "size": 3484
+    },
+    {
+      "path": "examples/image_processing/README.txt",
+      "mode": "100644",
+      "sha": "2c994aa55a0b8d7556df4c8e7ccf87db11210bbe",
+      "size": 173
+    },
+    {
+      "path": "examples/image_processing/plot_downsize_image.py",
+      "mode": "100644",
+      "sha": "084eb5f988b0707495092bdbabb6fba3406fc827",
+      "size": 1377
+    },
+    {
+      "path": "examples/image_processing/plot_waveforms.py",
+      "mode": "100644",
+      "sha": "8716aed5c992ab4bd11fe1806521f2de96e20f37",
+      "size": 1541
+    },
+    {
+      "path": "examples/image_processing/reslice.py",
+      "mode": "100644",
+      "sha": "2bf4bdb8ef6a84bb3faa76a3136e6cc2a05bae15",
+      "size": 2126
+    },
+    {
+      "path": "examples/input_output/README.txt",
+      "mode": "100644",
+      "sha": "681e3a0352c44501e82b9589682442f52eb6ddd0",
+      "size": 119
+    },
+    {
+      "path": "examples/input_output/plot_printing_dataset.py",
+      "mode": "100644",
+      "sha": "474124af8251163d46d2654d791571570eb87de3",
+      "size": 1563
+    },
+    {
+      "path": "examples/input_output/plot_read_dicom.py",
+      "mode": "100644",
+      "sha": "c92902cafe85db244ad88161ea481a358e8af59a",
+      "size": 1165
+    },
+    {
+      "path": "examples/input_output/plot_read_dicom_directory.py",
+      "mode": "100644",
+      "sha": "8354ae473a71aeb6a0bf08a26fc839919c183478",
+      "size": 2794
+    },
+    {
+      "path": "examples/input_output/plot_read_fileset.py",
+      "mode": "100644",
+      "sha": "5782aa52a67c23d23f21c5cbb27e5b6789bf9dde",
+      "size": 4465
+    },
+    {
+      "path": "examples/input_output/plot_read_rtplan.py",
+      "mode": "100644",
+      "sha": "820f1387c856c82b61141109a306de99f42371d1",
+      "size": 1123
+    },
+    {
+      "path": "examples/input_output/plot_write_dicom.py",
+      "mode": "100644",
+      "sha": "b7e6da3e31bba91c10cad58c456659f4e043806d",
+      "size": 2401
+    },
+    {
+      "path": "examples/memory_dataset.py",
+      "mode": "100644",
+      "sha": "49c9d554325d8b102f0caa145769bcbc99e4e443",
+      "size": 2392
+    },
+    {
+      "path": "examples/metadata_processing/README.txt",
+      "mode": "100644",
+      "sha": "bd26ced6d5a542df6386d98453e1a73e927e9af4",
+      "size": 177
+    },
+    {
+      "path": "examples/metadata_processing/plot_add_dict_entries.py",
+      "mode": "100644",
+      "sha": "029a1777a72c9233d5c3debcbcbd39a32dace64a",
+      "size": 1410
+    },
+    {
+      "path": "examples/metadata_processing/plot_anonymize.py",
+      "mode": "100644",
+      "sha": "d8ac14103fa3bc175dff20a6c61b2687ed8f2412",
+      "size": 2787
+    },
+    {
+      "path": "examples/metadata_processing/plot_sequences.py",
+      "mode": "100644",
+      "sha": "a3fc70fbe171795058a783a27c24c38e8b5af1fd",
+      "size": 1071
+    },
+    {
+      "path": "examples/plot_dicom_difference.py",
+      "mode": "100644",
+      "sha": "41159c30fb98e3ff6062d504e8658e5a297be610",
+      "size": 1033
+    },
+    {
+      "path": "examples/show_charset_name.py",
+      "mode": "100644",
+      "sha": "a5ac27303069cc721d8571f7042c6642ea1138d2",
+      "size": 1286
+    },
+    {
+      "path": "mypy.ini",
+      "mode": "100644",
+      "sha": "3662de04266c8eab62aa2b542be3456b3207a005",
+      "size": 330
+    },
+    {
+      "path": "pydicom/__init__.py",
+      "mode": "100644",
+      "sha": "f87f34ba5b024758ec82b72651a73b8cec2b50ec",
+      "size": 1577
+    },
+    {
+      "path": "pydicom/_dicom_dict.py",
+      "mode": "100644",
+      "sha": "14688af216c69624fa5fb9fbb24ea729e5403e01",
+      "size": 494937
+    },
+    {
+      "path": "pydicom/_private_dict.py",
+      "mode": "100644",
+      "sha": "02d340a521cde0e0387f225b4c9fe174ffce24ab",
+      "size": 613172
+    },
+    {
+      "path": "pydicom/_storage_sopclass_uids.py",
+      "mode": "100644",
+      "sha": "b678947e89a0eb722f6a4f11fb75c280592c3891",
+      "size": 130
+    },
+    {
+      "path": "pydicom/_uid_dict.py",
+      "mode": "100644",
+      "sha": "449317716ea4f4265e1795c8cf56ff86224683ac",
+      "size": 63470
+    },
+    {
+      "path": "pydicom/_version.py",
+      "mode": "100644",
+      "sha": "de1a85eb682bfee219b252c84c6561081c834c89",
+      "size": 383
+    },
+    {
+      "path": "pydicom/benchmarks/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "pydicom/benchmarks/bench_encaps.py",
+      "mode": "100644",
+      "sha": "9f9e35ba8dfd60122341510870a24ca24fd9281b",
+      "size": 2962
+    },
+    {
+      "path": "pydicom/benchmarks/bench_handler_numpy.py",
+      "mode": "100644",
+      "sha": "07c62e225a7232ff0b1cdb6f509ab9a4b670752d",
+      "size": 7943
+    },
+    {
+      "path": "pydicom/benchmarks/bench_pixel_util.py",
+      "mode": "100644",
+      "sha": "fdb9b9f3a9d85cf6a266ad2175ad10880461950e",
+      "size": 2080
+    },
+    {
+      "path": "pydicom/benchmarks/bench_rle_decode.py",
+      "mode": "100644",
+      "sha": "33c3740848c4e9b77b69b6c551d13efe0b1cda2e",
+      "size": 4160
+    },
+    {
+      "path": "pydicom/benchmarks/bench_rle_encode.py",
+      "mode": "100644",
+      "sha": "3a8370239defc679926c38de2105b3a2278822c9",
+      "size": 3310
+    },
+    {
+      "path": "pydicom/charset.py",
+      "mode": "100644",
+      "sha": "687f8592caee9cbc72e922a86325e9c739b5f035",
+      "size": 31107
+    },
+    {
+      "path": "pydicom/cli/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "pydicom/cli/codify.py",
+      "mode": "100644",
+      "sha": "15115c4f5fea3c4f73e414704a06df0a8d2eda4a",
+      "size": 1001
+    },
+    {
+      "path": "pydicom/cli/main.py",
+      "mode": "100644",
+      "sha": "a97ecd4d95463fea2ad9501920135fa776413709",
+      "size": 7670
+    },
+    {
+      "path": "pydicom/cli/show.py",
+      "mode": "100644",
+      "sha": "27242cee11041d288a47f5d1860908768326773c",
+      "size": 5323
+    },
+    {
+      "path": "pydicom/compat.py",
+      "mode": "100644",
+      "sha": "afeaf13761f4cf4e838e734e41483c9c6687f9af",
+      "size": 607
+    },
+    {
+      "path": "pydicom/config.py",
+      "mode": "100644",
+      "sha": "25250c8b85e628fa8c0d1a593745525857cf4e23",
+      "size": 18383
+    },
+    {
+      "path": "pydicom/data/__init__.py",
+      "mode": "100644",
+      "sha": "2a229a5e64cedee5f29d6193896ca75e999b8462",
+      "size": 403
+    },
+    {
+      "path": "pydicom/data/charset_files/FileInfo.txt",
+      "mode": "100644",
+      "sha": "407ba1f1462827d91abfbfa8e39fbb12a9e919cc",
+      "size": 1896
+    },
+    {
+      "path": "pydicom/data/charset_files/chrArab.dcm",
+      "mode": "100644",
+      "sha": "251f7748be275d2e10e4f366f2ebd64562123f56",
+      "size": 1892
+    },
+    {
+      "path": "pydicom/data/charset_files/chrFren.dcm",
+      "mode": "100644",
+      "sha": "b2f247d6961214ef1e403c4647343483e598b07b",
+      "size": 1890
+    },
+    {
+      "path": "pydicom/data/charset_files/chrFrenMulti.dcm",
+      "mode": "100644",
+      "sha": "a22d04811d592f75efbbd9ead7bcf1e4eae446e8",
+      "size": 1938
+    },
+    {
+      "path": "pydicom/data/charset_files/chrGerm.dcm",
+      "mode": "100644",
+      "sha": "4717a4b6eb5d5f34092f2842c58714ccc8090ca0",
+      "size": 1894
+    },
+    {
+      "path": "pydicom/data/charset_files/chrGreek.dcm",
+      "mode": "100644",
+      "sha": "ab2256d59442755875185fc56f5da5476dcb83cc",
+      "size": 1890
+    },
+    {
+      "path": "pydicom/data/charset_files/chrH31.dcm",
+      "mode": "100644",
+      "sha": "dbbb41b8de575eabb9225bd8876e2ca6f6c80059",
+      "size": 1950
+    },
+    {
+      "path": "pydicom/data/charset_files/chrH32.dcm",
+      "mode": "100644",
+      "sha": "89e8647885f073b0a4625129d33f8483bbe5cc61",
+      "size": 1960
+    },
+    {
+      "path": "pydicom/data/charset_files/chrHbrw.dcm",
+      "mode": "100644",
+      "sha": "038e299641dff84c8ee86a48a948cb796230d3ab",
+      "size": 1890
+    },
+    {
+      "path": "pydicom/data/charset_files/chrI2.dcm",
+      "mode": "100644",
+      "sha": "24a65f38f97447bf825dc45afb4d0e6708a00729",
+      "size": 1934
+    },
+    {
+      "path": "pydicom/data/charset_files/chrJapMulti.dcm",
+      "mode": "100644",
+      "sha": "b22bdbab64cfa921565ee0dbcffe3219712ee1f2",
+      "size": 1918
+    },
+    {
+      "path": "pydicom/data/charset_files/chrJapMultiExplicitIR6.dcm",
+      "mode": "100644",
+      "sha": "9d98788ceb0ec5c8691e054ce82fd4b36cf15170",
+      "size": 1940
+    },
+    {
+      "path": "pydicom/data/charset_files/chrKoreanMulti.dcm",
+      "mode": "100644",
+      "sha": "83c11fedb5102a96479387b3a477c2c9f26bc30c",
+      "size": 1898
+    },
+    {
+      "path": "pydicom/data/charset_files/chrRuss.dcm",
+      "mode": "100644",
+      "sha": "8c13d401198af121e939dbd6ecdee79ab3951c1a",
+      "size": 1890
+    },
+    {
+      "path": "pydicom/data/charset_files/chrSQEncoding.dcm",
+      "mode": "100644",
+      "sha": "54750b975ac168cb1ea1d003d9bf1d0541d2f6fa",
+      "size": 520
+    },
+    {
+      "path": "pydicom/data/charset_files/chrSQEncoding1.dcm",
+      "mode": "100644",
+      "sha": "92707aa65960ec36695217cad1a1e303b1e94dd6",
+      "size": 520
+    },
+    {
+      "path": "pydicom/data/charset_files/chrX1.dcm",
+      "mode": "100644",
+      "sha": "43733b224781ae7dd552106f24dc0b7bcd7fb18d",
+      "size": 1910
+    },
+    {
+      "path": "pydicom/data/charset_files/chrX2.dcm",
+      "mode": "100644",
+      "sha": "caa7685cd2a82d1e3af54e05c46ab2f62ceafc2a",
+      "size": 1904
+    },
+    {
+      "path": "pydicom/data/data_manager.py",
+      "mode": "100644",
+      "sha": "2e42a60bb71ff8347a9ffe6539b4979ccc4d4812",
+      "size": 11895
+    },
+    {
+      "path": "pydicom/data/download.py",
+      "mode": "100644",
+      "sha": "4347e26e3aae23ce7c044750c9de35e97fc6476d",
+      "size": 8205
+    },
+    {
+      "path": "pydicom/data/hashes.json",
+      "mode": "100644",
+      "sha": "531802a4faa169acf7496057842c133fc362a67d",
+      "size": 6297
+    },
+    {
+      "path": "pydicom/data/palettes/README.md",
+      "mode": "100644",
+      "sha": "5450542e9f5b69e23435e20ee2538d3366be4f79",
+      "size": 1725
+    },
+    {
+      "path": "pydicom/data/palettes/fall.dcm",
+      "mode": "100644",
+      "sha": "61f0d48d317cba22f50adda8ad93c6bb594bdfd1",
+      "size": 4078
+    },
+    {
+      "path": "pydicom/data/palettes/hotiron.dcm",
+      "mode": "100644",
+      "sha": "ffb39cdae2946ea84f1cad392bb4470542dd79b3",
+      "size": 4754
+    },
+    {
+      "path": "pydicom/data/palettes/hotmetalblue.dcm",
+      "mode": "100644",
+      "sha": "c4d6d20c27dbf354606ba19c86100515fa25f954",
+      "size": 4776
+    },
+    {
+      "path": "pydicom/data/palettes/pet.dcm",
+      "mode": "100644",
+      "sha": "6808dc75a491f673d27a5e5c0e37ecd52950fdff",
+      "size": 4732
+    },
+    {
+      "path": "pydicom/data/palettes/pet20step.dcm",
+      "mode": "100644",
+      "sha": "9fe6fee0ca7f0dada3a2efc918ed066437fd8707",
+      "size": 4790
+    },
+    {
+      "path": "pydicom/data/palettes/spring.dcm",
+      "mode": "100644",
+      "sha": "841f35978c60e8560774e6955922273484a81450",
+      "size": 4104
+    },
+    {
+      "path": "pydicom/data/palettes/summer.dcm",
+      "mode": "100644",
+      "sha": "cd56d00c65df47b5b63f3eea7d6532837aaec5bf",
+      "size": 4100
+    },
+    {
+      "path": "pydicom/data/palettes/winter.dcm",
+      "mode": "100644",
+      "sha": "0d34e0a42ed5617842d7da6038245589e15f23ce",
+      "size": 4112
+    },
+    {
+      "path": "pydicom/data/retry.py",
+      "mode": "100644",
+      "sha": "3a17e794e3656f79ecad55e117607c78c5b4ff76",
+      "size": 2057
+    },
+    {
+      "path": "pydicom/data/test_files/693_J2KI.dcm",
+      "mode": "100644",
+      "sha": "adca15ec41730073363ed11e059f92e001661514",
+      "size": 3590
+    },
+    {
+      "path": "pydicom/data/test_files/CT_small.dcm",
+      "mode": "100644",
+      "sha": "e2009fd87435d9e9fba2490d89cd8b4ed21cb388",
+      "size": 39206
+    },
+    {
+      "path": "pydicom/data/test_files/ExplVR_BigEnd.dcm",
+      "mode": "100644",
+      "sha": "45d7fa372497f3b4ee41034478a3fa404bbe044e",
+      "size": 15412
+    },
+    {
+      "path": "pydicom/data/test_files/ExplVR_BigEndNoMeta.dcm",
+      "mode": "100644",
+      "sha": "a0891f1641868417971500eaf38e88733d526358",
+      "size": 434
+    },
+    {
+      "path": "pydicom/data/test_files/ExplVR_LitEndNoMeta.dcm",
+      "mode": "100644",
+      "sha": "1a6fe1ff6276b4bc12d6592898c842d7c3c6a5af",
+      "size": 434
+    },
+    {
+      "path": "pydicom/data/test_files/GDCMJ2K_TextGBR.dcm",
+      "mode": "100644",
+      "sha": "eb15e4b724aee70f00e386bde971395f2dc6c9d9",
+      "size": 30706
+    },
+    {
+      "path": "pydicom/data/test_files/J2K_pixelrep_mismatch.dcm",
+      "mode": "100644",
+      "sha": "fd5f3dc77b2aa243f3d18c0a3e9c625b02efd021",
+      "size": 138518
+    },
+    {
+      "path": "pydicom/data/test_files/JPEG-lossy.dcm",
+      "mode": "100644",
+      "sha": "4d91043653728d85f472e95ce19b8845f112b80e",
+      "size": 9844
+    },
+    {
+      "path": "pydicom/data/test_files/JPEG2000-embedded-sequence-delimiter.dcm",
+      "mode": "100644",
+      "sha": "ed356fe8d2702a4dbbc9ed76e53652825c0ba176",
+      "size": 3308
+    },
+    {
+      "path": "pydicom/data/test_files/JPEG2000.dcm",
+      "mode": "100644",
+      "sha": "af09b6d3f3157225eb0b1ecf8b9f9a0173673561",
+      "size": 3308
+    },
+    {
+      "path": "pydicom/data/test_files/JPGExtended.dcm",
+      "mode": "100644",
+      "sha": "46250f401024de45faa69beaa15592de646d2521",
+      "size": 9844
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small.dcm",
+      "mode": "100644",
+      "sha": "d8661a4dea07e9a49674053cdcc78ec069cd3723",
+      "size": 9830
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_RLE.dcm",
+      "mode": "100644",
+      "sha": "1ce4420f9ffd5027c014e366ef434c8b69e3d2c9",
+      "size": 7790
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_bigendian.dcm",
+      "mode": "100644",
+      "sha": "8cb1b0163f95a6e770bf1cf8844ce810eb2fb621",
+      "size": 9708
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_expb.dcm",
+      "mode": "100644",
+      "sha": "1a7f5db3dfd20ee376bb2734b5a97d9e0afed0d1",
+      "size": 9846
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_implicit.dcm",
+      "mode": "100644",
+      "sha": "d228d923db196075ddb3a59213c395c6db24e5b1",
+      "size": 9702
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_jp2klossless.dcm",
+      "mode": "100644",
+      "sha": "fa50ba13e37e9579373f9560b707d0af7a312708",
+      "size": 6008
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_jpeg_ls_lossless.dcm",
+      "mode": "100644",
+      "sha": "dbbb474ac9964a2627a52e5ea5cdb04a9737f8a5",
+      "size": 6124
+    },
+    {
+      "path": "pydicom/data/test_files/MR_small_padded.dcm",
+      "mode": "100644",
+      "sha": "369b5cacf30cab8692c54522aca6d42f02e13538",
+      "size": 9958
+    },
+    {
+      "path": "pydicom/data/test_files/MR_truncated.dcm",
+      "mode": "100644",
+      "sha": "051f76f222412a0c81a2df216b8d70ec99dc6f44",
+      "size": 9630
+    },
+    {
+      "path": "pydicom/data/test_files/README.txt",
+      "mode": "100644",
+      "sha": "8c8635956d332556b6dac3fd52ee75404456cfc2",
+      "size": 15389
+    },
+    {
+      "path": "pydicom/data/test_files/SC_jpeg_no_color_transform.dcm",
+      "mode": "100644",
+      "sha": "8f03759cf8bdc13e3f85f3c98fd0990907059df6",
+      "size": 4316
+    },
+    {
+      "path": "pydicom/data/test_files/SC_jpeg_no_color_transform_2.dcm",
+      "mode": "100644",
+      "sha": "61ea83f6fc688877ace8efd05e60cbea00d5cb78",
+      "size": 4310
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cr.dcm",
+      "mode": "100644",
+      "sha": "1e579744ab6b74b4aa1d7933fbb777f7d128b596",
+      "size": 3626
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cy+n1.dcm",
+      "mode": "100644",
+      "sha": "80f73085666096fe55c2063ffb28c105c9c32d2b",
+      "size": 3136
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cy+n2.dcm",
+      "mode": "100644",
+      "sha": "5323b525619395b2396cb7def9ac072f015d8cee",
+      "size": 3090
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cy+np.dcm",
+      "mode": "100644",
+      "sha": "aea47b93a32ed673a579bda93843355d0c530ed3",
+      "size": 3140
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cy+s2.dcm",
+      "mode": "100644",
+      "sha": "99dad8dba58fd40943774af0f9bc5e572f703dbc",
+      "size": 3094
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_dcmtk_+eb+cy+s4.dcm",
+      "mode": "100644",
+      "sha": "96770bc6c097b23cffd02edf8d2b78f03212267e",
+      "size": 3420
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_gdcm_KY.dcm",
+      "mode": "100644",
+      "sha": "caa3f27c828053e5d814e130a6d270ac40c2c18b",
+      "size": 2998
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg.dcm",
+      "mode": "100644",
+      "sha": "f4337b8b4ff246cdb7e9fcb51914afb9e79a5ff4",
+      "size": 4464
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg_app14_dcmd.dcm",
+      "mode": "100644",
+      "sha": "61ea83f6fc688877ace8efd05e60cbea00d5cb78",
+      "size": 4310
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg_dcmd.dcm",
+      "mode": "100644",
+      "sha": "355390fbb52a072830cb7d4fb707e97cb1ec9df2",
+      "size": 197506
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg_dcmtk.dcm",
+      "mode": "100644",
+      "sha": "77f9c236f997e49ef44250d100c0282e53c86c5a",
+      "size": 3424
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg_gdcm.dcm",
+      "mode": "100644",
+      "sha": "3157e0fcb9dd47de90d8ec5649c550f4bbbba909",
+      "size": 5204
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_jpeg_lossy_gdcm.dcm",
+      "mode": "100644",
+      "sha": "449004c62ad70e8686c51646b0f2a8880c9a23af",
+      "size": 5042
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle.dcm",
+      "mode": "100644",
+      "sha": "510cc46513ab2cb4b8c17820b85e7ea6ae309d9c",
+      "size": 2006
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle_16bit.dcm",
+      "mode": "100644",
+      "sha": "85489e1aace25a4ba47f4baf593ade8ea453c712",
+      "size": 2606
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle_16bit_2frame.dcm",
+      "mode": "100644",
+      "sha": "a6d925e3ddd18f0abda5fdbaf9369cc92c3b4f21",
+      "size": 3896
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle_2frame.dcm",
+      "mode": "100644",
+      "sha": "e2c9f72db4ecd6760144499b422b1449aab18b2b",
+      "size": 2696
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle_32bit.dcm",
+      "mode": "100644",
+      "sha": "a9331c40b29176280d3a7f09673c996cc9d6c475",
+      "size": 3760
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_rle_32bit_2frame.dcm",
+      "mode": "100644",
+      "sha": "2ec2c8ef59fd25997797261972684bcfdc3ffd91",
+      "size": 6246
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_small_odd.dcm",
+      "mode": "100644",
+      "sha": "8eee783ab7ebed15a469367adfca0e8d026cfbbf",
+      "size": 1444
+    },
+    {
+      "path": "pydicom/data/test_files/SC_rgb_small_odd_jpeg.dcm",
+      "mode": "100644",
+      "sha": "a8fa4627b0d1c7f82209ef60b05a7b06cc4d9f79",
+      "size": 2044
+    },
+    {
+      "path": "pydicom/data/test_files/SC_ybr_full_422_uncompressed.dcm",
+      "mode": "100644",
+      "sha": "9db5a5b5db7468a4c3b32f3e88adc003ced9f8a8",
+      "size": 21686
+    },
+    {
+      "path": "pydicom/data/test_files/UN_sequence.dcm",
+      "mode": "100644",
+      "sha": "6635284dbcd7b3acd71d2dde9531701e66695d69",
+      "size": 674
+    },
+    {
+      "path": "pydicom/data/test_files/badVR.dcm",
+      "mode": "100644",
+      "sha": "f71f58b066105c1b8c5b10a2776a486b3c944db4",
+      "size": 7618
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CR1/6154",
+      "mode": "100644",
+      "sha": "a88de78885cd29e1744874559a25b5f6e80a95f2",
+      "size": 2300
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CR2/6247",
+      "mode": "100644",
+      "sha": "67349b235dbcaec3e5b623dc85474170fd32b877",
+      "size": 2298
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CR3/6278",
+      "mode": "100644",
+      "sha": "dfdb9065481eb969413acbe561b03990da6f5b4f",
+      "size": 2298
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CT2/17106",
+      "mode": "100644",
+      "sha": "34c96591477a9aa24ed8cda79931908aaad240a7",
+      "size": 3810
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CT2/17136",
+      "mode": "100644",
+      "sha": "81949d10775852eb1aa25a2b00f0d5ff3b8dc6cc",
+      "size": 3812
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CT2/17166",
+      "mode": "100644",
+      "sha": "e9cbc38b01c742fc5b2646e55f8a4252c723a72a",
+      "size": 3812
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/77654033/CT2/17196",
+      "mode": "100644",
+      "sha": "cc579d5425975c388bb6aab998508ba836984409",
+      "size": 3812
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT2N/6293",
+      "mode": "100644",
+      "sha": "4aefb04d7eeca05dff144a453f615c9b0aa39825",
+      "size": 3920
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT2N/6924",
+      "mode": "100644",
+      "sha": "eb4aa6a7cac1f752e8f376e632e2dff0d05e2e33",
+      "size": 3908
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT5N/2062",
+      "mode": "100644",
+      "sha": "b30501f4bf4a15b7e23342de10779ea84ad968f3",
+      "size": 3936
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT5N/2392",
+      "mode": "100644",
+      "sha": "f366a710dfb9c2d0be858c27c94fc7cbfad5945f",
+      "size": 3936
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT5N/2693",
+      "mode": "100644",
+      "sha": "b8eb4e88f760816899f09996cde3178fa9463c84",
+      "size": 3936
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT5N/3023",
+      "mode": "100644",
+      "sha": "f59cd5dd3a38258b032c29a5a69538906c52287c",
+      "size": 3936
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892001/CT5N/3353",
+      "mode": "100644",
+      "sha": "b26a2e43b93132fbf45755e2a3fc8be7b7347a0f",
+      "size": 3938
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR1/15820",
+      "mode": "100644",
+      "sha": "12eafaf129478d05aa34890608f78a8123cf6296",
+      "size": 2336
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR1/4919",
+      "mode": "100644",
+      "sha": "a41e81450ee98b24773709c65107e5d4866320b0",
+      "size": 2336
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR1/5641",
+      "mode": "100644",
+      "sha": "adc33d479f78aeaf38a31d203508333e908fc1e8",
+      "size": 2330
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/15970",
+      "mode": "100644",
+      "sha": "5a5490c647086db3dca19b8b70e257ad480c524e",
+      "size": 2336
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/4950",
+      "mode": "100644",
+      "sha": "224b0941ae6c7be1371509062f715761f67c1bfc",
+      "size": 2356
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/4981",
+      "mode": "100644",
+      "sha": "9ec7c488ea92744ee77de84659c7395f0e875cf9",
+      "size": 2354
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/5011",
+      "mode": "100644",
+      "sha": "85c757564d321fc776a532398e95e060488fa991",
+      "size": 2354
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/6273",
+      "mode": "100644",
+      "sha": "5bd547f6690c2a223c23e07e64a7c924ed6697bc",
+      "size": 2348
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/6605",
+      "mode": "100644",
+      "sha": "84d871bc2aa4bbfe200ef0fc35614e3612dadec6",
+      "size": 2348
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR2/6935",
+      "mode": "100644",
+      "sha": "97aba10a47e1a43e1693b28357225c2d69d0db6f",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4467",
+      "mode": "100644",
+      "sha": "b9c11856fbc8c4bf4e6df14a9ee85e4143c1d083",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4528",
+      "mode": "100644",
+      "sha": "d387cf6fd18bba3d3cef1049959d704640c6241a",
+      "size": 2348
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4558",
+      "mode": "100644",
+      "sha": "c50950529deae8ca5ae893e7e5e12d61b06c0057",
+      "size": 2348
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4588",
+      "mode": "100644",
+      "sha": "e5c350cc76f3ad32e15d8676356964fef3d9f513",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4618",
+      "mode": "100644",
+      "sha": "39c7b9ee91768307fcf0511a8aa763e10ae2ecce",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4648",
+      "mode": "100644",
+      "sha": "5e43ff8c779576f509eb1e849fe5ed01dce189d7",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/98892003/MR700/4678",
+      "mode": "100644",
+      "sha": "797c56ccdf616f3846500a63f8df6cb172548fb1",
+      "size": 2350
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR",
+      "mode": "100644",
+      "sha": "a4ff1facd8bce2aded90f72e16f1c6314311f790",
+      "size": 11116
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-bigEnd",
+      "mode": "100644",
+      "sha": "10192e69c424b3bf1f1bb6f4caa3bc3a22dfb144",
+      "size": 11116
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-empty.dcm",
+      "mode": "100644",
+      "sha": "ea7500d266bbc1f5a3f949ebbba2173f7a0b4d07",
+      "size": 396
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-implicit",
+      "mode": "100644",
+      "sha": "4fef74c0a708e01af70856f040394972d93edeea",
+      "size": 11110
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-nooffset",
+      "mode": "100644",
+      "sha": "f5276f4c70d97997f5523f093c97b3035b56797e",
+      "size": 11092
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-nopatient",
+      "mode": "100644",
+      "sha": "b1b4774529c89478424adcd1269de1aecc0b6bed",
+      "size": 11116
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/DICOMDIR-reordered",
+      "mode": "100644",
+      "sha": "36b507856406992deb886e48be5ed6b8a4a55f07",
+      "size": 11116
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/README.txt",
+      "mode": "100644",
+      "sha": "f19f085e5ef5db02e81adcf2b6c802a9cc42632c",
+      "size": 719
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/DICOMDIR",
+      "mode": "100644",
+      "sha": "eef945d023fd5761795ca7dbd28b7b6f48a9983b",
+      "size": 13066
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000000",
+      "mode": "100644",
+      "sha": "0fb64f06ce7d19226ad5b41050776f4a4b88066c",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000001",
+      "mode": "100644",
+      "sha": "55a7871caf7b2f1c914deff6fa6d3ef41a85db80",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000002",
+      "mode": "100644",
+      "sha": "a4e357415e8d7a919b8be3c30aa2548a246e3a5e",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000003",
+      "mode": "100644",
+      "sha": "2727f002149eb8332238b666a0be62e07b334c5d",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000004",
+      "mode": "100644",
+      "sha": "ef797400a58ad3606a371d990568064542772739",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000005",
+      "mode": "100644",
+      "sha": "2a309c940ee6605d69633a87fa1ff250fb78df71",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000006",
+      "mode": "100644",
+      "sha": "106826ca0ec3473cae9d44e24742bd778f72a078",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000007",
+      "mode": "100644",
+      "sha": "287b3e8212c5f2762b3235455ce7cbf748d2c9db",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000008",
+      "mode": "100644",
+      "sha": "f7010015e8951faecfdc1bf75c83e4596887fc1a",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000009",
+      "mode": "100644",
+      "sha": "c090e1c39d0c752aa1d8b33e0f531146613f3974",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000A",
+      "mode": "100644",
+      "sha": "0489b20328f408843f391a240b570b8f8fc22884",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000B",
+      "mode": "100644",
+      "sha": "3eff5e2e06a7cf6446008114c8f7597dec5baeaa",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000C",
+      "mode": "100644",
+      "sha": "259c1086b8f4418a2a17df6c458362552d278eaa",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000D",
+      "mode": "100644",
+      "sha": "41689c1ea3a6bf7fe66bd33ccca4c135c05aa614",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000E",
+      "mode": "100644",
+      "sha": "1dd710ba5dd5ca5b072f515be5fb4359bba26b87",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000F",
+      "mode": "100644",
+      "sha": "e3326c2957461692cd104d2670a211c56056b7df",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000G",
+      "mode": "100644",
+      "sha": "0d8489907bbb9fe03d41631464d3f0bd9135b4f1",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000H",
+      "mode": "100644",
+      "sha": "48cc3992d1b5e200a22dd5ebe10d76903bd9a477",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000I",
+      "mode": "100644",
+      "sha": "e15912aa2a7a42337cc63899d84cbe8cdba0c1b3",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000J",
+      "mode": "100644",
+      "sha": "b27b952e86589a03884961897528fe699fbe4053",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000K",
+      "mode": "100644",
+      "sha": "c162abab143f346e7aebc766d55e81b7da4008cd",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000L",
+      "mode": "100644",
+      "sha": "0c0ed4dd34731dca5556ea6faf4d24def0c837e7",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000M",
+      "mode": "100644",
+      "sha": "19333e5713e0f2e7a7cf44d41cf4c0e12ad24e4f",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000N",
+      "mode": "100644",
+      "sha": "119b1626b77a1840cae10a8e79b8a6287edcde0a",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000O",
+      "mode": "100644",
+      "sha": "79786853aac624af74affa3eb2cd525bd93cfc5e",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000P",
+      "mode": "100644",
+      "sha": "c054a227d538e5ee6ca6554513ba16330001eaac",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000Q",
+      "mode": "100644",
+      "sha": "1d03766ff7a28cafd3c7d4aad0d41ce36d7e66dd",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000R",
+      "mode": "100644",
+      "sha": "50582ac77c8e597ad012eab8110a1a5461865d3a",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000S",
+      "mode": "100644",
+      "sha": "69dc4708cdb8e5bedc64944af54156fb3ff7d185",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000T",
+      "mode": "100644",
+      "sha": "3358bd62f14da8341fb4bd6e835322e133b6fdea",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000U",
+      "mode": "100644",
+      "sha": "8c32fc9c8a782e84faed4d9e67f43bb270893e6a",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000V",
+      "mode": "100644",
+      "sha": "3ee129358bb4686d4605e57687b4a2c132a36a72",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000W",
+      "mode": "100644",
+      "sha": "6c089e27beb1418da6b9acbb8a80053e9bd47120",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000X",
+      "mode": "100644",
+      "sha": "50ac74d3026d0a72385171b25ff3a9b4e156f347",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000Y",
+      "mode": "100644",
+      "sha": "c2942fff6eb463933095b0d48d815d569ed2ac08",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00000Z",
+      "mode": "100644",
+      "sha": "8bf1b15f5954d6efba086b0f2a00721425fb4d78",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000010",
+      "mode": "100644",
+      "sha": "4e016882db7242bacfb9bef94a4cbe9723580c11",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000011",
+      "mode": "100644",
+      "sha": "44e87cb0f3e0cf55fd11c8ea8b29b2d522526586",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000012",
+      "mode": "100644",
+      "sha": "890050629ce6cc0f50df2d20619d0c68451aee75",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000013",
+      "mode": "100644",
+      "sha": "4d24c67a8adaad838c434b8ac6e83e9e0fb51175",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000014",
+      "mode": "100644",
+      "sha": "d0afa276e1f0806b7f7965f1dc56b0733895fbab",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000015",
+      "mode": "100644",
+      "sha": "4fa3dd1fac7fc8bd7eb8f8576732c817535c9af9",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000016",
+      "mode": "100644",
+      "sha": "7453bfb0a39fa3fd5df6b46042fe49412df7861f",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000017",
+      "mode": "100644",
+      "sha": "370d85eca239ca017705bcc9ac60182b82c510ad",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000018",
+      "mode": "100644",
+      "sha": "058059b1ac0bdc7f048f0963824ec27c8a747b36",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM000019",
+      "mode": "100644",
+      "sha": "49c283197cd8561747bf9ad2e779b9b344eaacd0",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00001A",
+      "mode": "100644",
+      "sha": "7e0cd74cba60181a18a896cb8491cf463b792186",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00001B",
+      "mode": "100644",
+      "sha": "1e258a616a45c57b18a1a1f84d0a272b469c486f",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00001C",
+      "mode": "100644",
+      "sha": "566f43924c9d4090fc610776a1bdfc6238ab4246",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/PT000000/ST000000/SE000000/IM00001D",
+      "mode": "100644",
+      "sha": "9f96638765357bb34bfb176883fd6189c8e9cebf",
+      "size": 740
+    },
+    {
+      "path": "pydicom/data/test_files/dicomdirtests/TINY_ALPHA/README",
+      "mode": "100644",
+      "sha": "b2c6622bd06bdc732ae001ba933760523455a83d",
+      "size": 1206
+    },
+    {
+      "path": "pydicom/data/test_files/empty_charset_LEI.dcm",
+      "mode": "100644",
+      "sha": "e653fb53597fd4735a5316ad0d083526ddad9755",
+      "size": 276
+    },
+    {
+      "path": "pydicom/data/test_files/image_dfl.dcm",
+      "mode": "100644",
+      "sha": "eaf2826f295a378f573fd24a9502dbac381756fb",
+      "size": 4637
+    },
+    {
+      "path": "pydicom/data/test_files/liver_1frame.dcm",
+      "mode": "100644",
+      "sha": "d3ecc3d6ccad3519fe828c994ecd2584e5bcdd80",
+      "size": 37084
+    },
+    {
+      "path": "pydicom/data/test_files/liver_expb_1frame.dcm",
+      "mode": "100644",
+      "sha": "36a4e50221cdabf4bafdf50249128414ac1d501a",
+      "size": 36532
+    },
+    {
+      "path": "pydicom/data/test_files/meta_missing_tsyntax.dcm",
+      "mode": "100644",
+      "sha": "e2713a7acd4b0579fb1c7c1675392d71b7684438",
+      "size": 317
+    },
+    {
+      "path": "pydicom/data/test_files/nested_priv_SQ.dcm",
+      "mode": "100644",
+      "sha": "056441285d2e9c67e890f6aa5a98925c6814b92a",
+      "size": 343
+    },
+    {
+      "path": "pydicom/data/test_files/no_meta.dcm",
+      "mode": "100644",
+      "sha": "3eb05a6a53c9fa6647f08ed55bcfbd16a1975591",
+      "size": 38871
+    },
+    {
+      "path": "pydicom/data/test_files/no_meta_group_length.dcm",
+      "mode": "100644",
+      "sha": "58fe6bb60820ff922c8013323a0fffd8e2b8515c",
+      "size": 408
+    },
+    {
+      "path": "pydicom/data/test_files/priv_SQ.dcm",
+      "mode": "100644",
+      "sha": "07f642d25ba5dd35780b75058cd4da12a61efe06",
+      "size": 546
+    },
+    {
+      "path": "pydicom/data/test_files/reportsi.dcm",
+      "mode": "100644",
+      "sha": "ac1d42fc4152096464ef4d17f213172f2c77007f",
+      "size": 2968
+    },
+    {
+      "path": "pydicom/data/test_files/reportsi_with_empty_number_tags.dcm",
+      "mode": "100644",
+      "sha": "558e1a81a7b9797524bb5acbf10677683213f62b",
+      "size": 2700
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose.dcm",
+      "mode": "100644",
+      "sha": "21d43ae778f0276a6cb8f874a4504506817a2535",
+      "size": 7568
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose_1frame.dcm",
+      "mode": "100755",
+      "sha": "d3f5b1ec7d863fdcac16570dfddd6ff95e8c0fbd",
+      "size": 1958
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose_expb.dcm",
+      "mode": "100644",
+      "sha": "db0d59ab23a69458614b52383518a28f0886f2e0",
+      "size": 7618
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose_expb_1frame.dcm",
+      "mode": "100644",
+      "sha": "6ab00484e65dfe77eb925e4297bf06dc3d1f5c99",
+      "size": 2008
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose_rle.dcm",
+      "mode": "100644",
+      "sha": "6a8049c04e6144532561ba7f24ca2ac65622eb62",
+      "size": 6816
+    },
+    {
+      "path": "pydicom/data/test_files/rtdose_rle_1frame.dcm",
+      "mode": "100644",
+      "sha": "b36d8db0cee22facdc6e5ec0f5e130f41c36b225",
+      "size": 2122
+    },
+    {
+      "path": "pydicom/data/test_files/rtplan.dcm",
+      "mode": "100644",
+      "sha": "fe47d8455b26fcdd3d0d369bb6a64b9d7172a0f1",
+      "size": 2672
+    },
+    {
+      "path": "pydicom/data/test_files/rtplan.dump",
+      "mode": "100644",
+      "sha": "b921f62d5e47edd8b002d013e9a9126f10b79932",
+      "size": 14474
+    },
+    {
+      "path": "pydicom/data/test_files/rtplan_truncated.dcm",
+      "mode": "100644",
+      "sha": "8e65fb72c3cf7c3e20ef0eb3ba897bde085c1f87",
+      "size": 2129
+    },
+    {
+      "path": "pydicom/data/test_files/rtstruct.dcm",
+      "mode": "100644",
+      "sha": "755a4e08b01a7037b7580086138c9343f5e494df",
+      "size": 2534
+    },
+    {
+      "path": "pydicom/data/test_files/rtstruct.dump",
+      "mode": "100644",
+      "sha": "7e434b19d40788dd18f2729286032bc65ae1734e",
+      "size": 7935
+    },
+    {
+      "path": "pydicom/data/test_files/test-SR.dcm",
+      "mode": "100644",
+      "sha": "ad8f634d388a5ea5dbcd455def25d28af03ad016",
+      "size": 6796
+    },
+    {
+      "path": "pydicom/data/test_files/test1.json",
+      "mode": "100644",
+      "sha": "508fd043f1ecbd370e1b28340a333141f1f9ba4f",
+      "size": 20965
+    },
+    {
+      "path": "pydicom/data/test_files/test_PN.json",
+      "mode": "100644",
+      "sha": "92f3a966c437e59f4dc3d092d327c4c2249c392f",
+      "size": 1841
+    },
+    {
+      "path": "pydicom/data/test_files/waveform_ecg.dcm",
+      "mode": "100755",
+      "sha": "77c0cdf2f50af35d5aee9a9cb9d2ff1155e7d84b",
+      "size": 291088
+    },
+    {
+      "path": "pydicom/data/test_files/zipMR.gz",
+      "mode": "100644",
+      "sha": "26eea3eb3e44d7777a7953d3d5afdf4c749c597b",
+      "size": 6958
+    },
+    {
+      "path": "pydicom/data/urls.json",
+      "mode": "100644",
+      "sha": "6f889b87beca2bee73c51e3871ba91a3b55049ce",
+      "size": 9463
+    },
+    {
+      "path": "pydicom/datadict.py",
+      "mode": "100644",
+      "sha": "ae6898b03736e31d440e3122ddc336901ad3e3a6",
+      "size": 18650
+    },
+    {
+      "path": "pydicom/dataelem.py",
+      "mode": "100644",
+      "sha": "9beb06b2de8ae7a594203e126d8bac0728b204f4",
+      "size": 31098
+    },
+    {
+      "path": "pydicom/dataset.py",
+      "mode": "100644",
+      "sha": "e32315011067273487e0ef87556ee24f67478be8",
+      "size": 106270
+    },
+    {
+      "path": "pydicom/dicomdir.py",
+      "mode": "100644",
+      "sha": "bee90d77219e0699a92deb86f06f7290ba08033a",
+      "size": 5676
+    },
+    {
+      "path": "pydicom/dicomio.py",
+      "mode": "100644",
+      "sha": "13dfcb3f4de7b22b24379503c1759ea083fd49ff",
+      "size": 403
+    },
+    {
+      "path": "pydicom/encaps.py",
+      "mode": "100644",
+      "sha": "609a64c205033e2355836e60617396df8291448d",
+      "size": 26824
+    },
+    {
+      "path": "pydicom/encoders/__init__.py",
+      "mode": "100644",
+      "sha": "9ae67514a625cb478570519e8bb65f7331d71440",
+      "size": 66
+    },
+    {
+      "path": "pydicom/encoders/base.py",
+      "mode": "100644",
+      "sha": "572896e6ded638bc0308454f922c0484b186237d",
+      "size": 36135
+    },
+    {
+      "path": "pydicom/encoders/gdcm.py",
+      "mode": "100644",
+      "sha": "829cbe22b50a8aecea3b4f7af727adcb8bdc7131",
+      "size": 5901
+    },
+    {
+      "path": "pydicom/encoders/native.py",
+      "mode": "100644",
+      "sha": "abfddeb0b3d7a3ee6ec3a471b99a01ea863d0389",
+      "size": 5374
+    },
+    {
+      "path": "pydicom/encoders/pylibjpeg.py",
+      "mode": "100644",
+      "sha": "6155a76093a53295ad6766987bec0e95c8d3107f",
+      "size": 1125
+    },
+    {
+      "path": "pydicom/env_info.py",
+      "mode": "100644",
+      "sha": "ffc4823cc8d31d0a77ea25c4f64d8332a3472017",
+      "size": 1714
+    },
+    {
+      "path": "pydicom/errors.py",
+      "mode": "100644",
+      "sha": "20ac127ea979f76d877ee6b3d5d2a04d27d1e8ec",
+      "size": 771
+    },
+    {
+      "path": "pydicom/filebase.py",
+      "mode": "100644",
+      "sha": "9ac0390457df951b0f34aa468b940cf31d1bd5b1",
+      "size": 7794
+    },
+    {
+      "path": "pydicom/filereader.py",
+      "mode": "100644",
+      "sha": "fd56250e8ef7ea3b1a18225dead2446d59990d0c",
+      "size": 44269
+    },
+    {
+      "path": "pydicom/fileset.py",
+      "mode": "100644",
+      "sha": "5549d6dd8616aa983698b0710bf154177fce9541",
+      "size": 102357
+    },
+    {
+      "path": "pydicom/fileutil.py",
+      "mode": "100644",
+      "sha": "59df6b97bea91d775a3e4468ceed7bf0ba6b328d",
+      "size": 14625
+    },
+    {
+      "path": "pydicom/filewriter.py",
+      "mode": "100644",
+      "sha": "4e9bd7223db2d331e5bcbd8880d27eef24733b48",
+      "size": 44279
+    },
+    {
+      "path": "pydicom/jsonrep.py",
+      "mode": "100644",
+      "sha": "e20512852545d62fe12b661f90aa6b9cf0bb4d05",
+      "size": 12252
+    },
+    {
+      "path": "pydicom/misc.py",
+      "mode": "100644",
+      "sha": "04f42e38f59eff7e07bd5df31c79091191b86df3",
+      "size": 1644
+    },
+    {
+      "path": "pydicom/multival.py",
+      "mode": "100644",
+      "sha": "59fa32d1089685e6b647758a66493e80a80bba35",
+      "size": 5140
+    },
+    {
+      "path": "pydicom/overlay_data_handlers/__init__.py",
+      "mode": "100644",
+      "sha": "3f7a44c36281b2e2bd1e0dc2b91a312a1e258458",
+      "size": 108
+    },
+    {
+      "path": "pydicom/overlays/__init__.py",
+      "mode": "100644",
+      "sha": "1b7751b8318b9aa3319a0f134bea1f449242e38a",
+      "size": 61
+    },
+    {
+      "path": "pydicom/overlays/numpy_handler.py",
+      "mode": "100644",
+      "sha": "e8173b969fd1462968bc60d40b64f19aa5197f51",
+      "size": 9951
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/__init__.py",
+      "mode": "100644",
+      "sha": "e9952af736f4ab7a6ee78e6aa200500c26c4ae02",
+      "size": 262
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/gdcm_handler.py",
+      "mode": "100644",
+      "sha": "e6e58a2bb9a8d53f977abc4e106513094b81536c",
+      "size": 9761
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/jpeg_ls_handler.py",
+      "mode": "100644",
+      "sha": "9701ed5a84296e263c7ca6c9fd39f9adb7ec1fd6",
+      "size": 3404
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/numpy_handler.py",
+      "mode": "100644",
+      "sha": "8cd72fa8eaf1a6d97c5b62fd3fa0967520269274",
+      "size": 11644
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/pillow_handler.py",
+      "mode": "100644",
+      "sha": "ff781025df2ce0c9b64a8275236111e053288cca",
+      "size": 8695
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/pylibjpeg_handler.py",
+      "mode": "100644",
+      "sha": "3eb0d5c0e71f14ab3ad1a4bd2e153690d1a0b1d0",
+      "size": 11053
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/rle_handler.py",
+      "mode": "100644",
+      "sha": "7f8be4c36ea42bf54b52f46a2bba6ceabca592eb",
+      "size": 16581
+    },
+    {
+      "path": "pydicom/pixel_data_handlers/util.py",
+      "mode": "100644",
+      "sha": "a101c31e29f8410b35f4850e9b2af9e2d6bbab9a",
+      "size": 54704
+    },
+    {
+      "path": "pydicom/py.typed",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "pydicom/sequence.py",
+      "mode": "100644",
+      "sha": "43d9d42460359d1594a10627120ecf70151f1cd8",
+      "size": 5980
+    },
+    {
+      "path": "pydicom/sr/__init__.py",
+      "mode": "100644",
+      "sha": "d55d83a2863d56c5975b20d6c6e6e3a41004e831",
+      "size": 38
+    },
+    {
+      "path": "pydicom/sr/_cid_dict.py",
+      "mode": "100644",
+      "sha": "8e20e664622ba45545a7310de3b7c27d20455a44",
+      "size": 788696
+    },
+    {
+      "path": "pydicom/sr/_concepts_dict.py",
+      "mode": "100644",
+      "sha": "cb8f8dc397fa23bfe2fe9a7090e1719412de1adb",
+      "size": 2725654
+    },
+    {
+      "path": "pydicom/sr/_snomed_dict.py",
+      "mode": "100644",
+      "sha": "0078738e82489c49db0636bb4377d1bc7970f7e0",
+      "size": 424514
+    },
+    {
+      "path": "pydicom/sr/codedict.py",
+      "mode": "100644",
+      "sha": "41c0ef763c17f91f3d2fe0595d2ede49734a45e2",
+      "size": 11035
+    },
+    {
+      "path": "pydicom/sr/coding.py",
+      "mode": "100644",
+      "sha": "649c2902aea30e3f93531eca709b18883f2579d3",
+      "size": 2026
+    },
+    {
+      "path": "pydicom/tag.py",
+      "mode": "100644",
+      "sha": "04940a4cfbeefce826bcb6a937100299ed48e023",
+      "size": 8541
+    },
+    {
+      "path": "pydicom/tests/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "pydicom/tests/_write_stds.py",
+      "mode": "100644",
+      "sha": "b7a84ccf9ed811c65f7f33d80d829e2ece97d7e4",
+      "size": 3006
+    },
+    {
+      "path": "pydicom/tests/conftest.py",
+      "mode": "100644",
+      "sha": "10d1dc395098038dbc28e8cacc7e9e1bc2983f9e",
+      "size": 2548
+    },
+    {
+      "path": "pydicom/tests/test_JPEG_LS_transfer_syntax.py",
+      "mode": "100644",
+      "sha": "466d0708a601c9e95ce2775a9ee79c8a27563de0",
+      "size": 7024
+    },
+    {
+      "path": "pydicom/tests/test_charset.py",
+      "mode": "100644",
+      "sha": "e1c03ce82a5dc796accda72469d6760d64cbf4c5",
+      "size": 23452
+    },
+    {
+      "path": "pydicom/tests/test_cli.py",
+      "mode": "100644",
+      "sha": "df53388b11a7051076ba52f19236c007ad8dfa67",
+      "size": 7583
+    },
+    {
+      "path": "pydicom/tests/test_codes.py",
+      "mode": "100644",
+      "sha": "88875eab24ab9cdfda17f37383533d793f19ce95",
+      "size": 12639
+    },
+    {
+      "path": "pydicom/tests/test_config.py",
+      "mode": "100644",
+      "sha": "60c8c4b0e946d217cb43eef4c1ef1bdde9439c52",
+      "size": 7289
+    },
+    {
+      "path": "pydicom/tests/test_data_manager.py",
+      "mode": "100644",
+      "sha": "130fef120dc341101dd4ef4b4f0998b343286890",
+      "size": 11331
+    },
+    {
+      "path": "pydicom/tests/test_dataelem.py",
+      "mode": "100644",
+      "sha": "ed020bfc7a81deaa5a0fdd61661cbbbeb6e725b0",
+      "size": 47119
+    },
+    {
+      "path": "pydicom/tests/test_dataset.py",
+      "mode": "100644",
+      "sha": "c54341020f37b94b24777bd94d9c065bb5bf3116",
+      "size": 84049
+    },
+    {
+      "path": "pydicom/tests/test_dicomdir.py",
+      "mode": "100644",
+      "sha": "cc3ddc5c0a14652f7320f33e6e78ca54e8aeb397",
+      "size": 3522
+    },
+    {
+      "path": "pydicom/tests/test_dictionary.py",
+      "mode": "100644",
+      "sha": "a3ff3ba365f8c617cf6d83718bad6c9f17454e3d",
+      "size": 6632
+    },
+    {
+      "path": "pydicom/tests/test_encaps.py",
+      "mode": "100644",
+      "sha": "4c6cbc81ed5a3c5540084e0b27d7508f2d74a4a1",
+      "size": 51853
+    },
+    {
+      "path": "pydicom/tests/test_encoders.py",
+      "mode": "100644",
+      "sha": "471d67059787f026078568797222c9fe182b314d",
+      "size": 40830
+    },
+    {
+      "path": "pydicom/tests/test_encoders_gdcm.py",
+      "mode": "100644",
+      "sha": "ed50c6397b6daebaee16de2f38afb956d8a2f650",
+      "size": 9907
+    },
+    {
+      "path": "pydicom/tests/test_encoders_pydicom.py",
+      "mode": "100644",
+      "sha": "cebc95f8d0c56b6f03fe90fc41f65b4e9b05a883",
+      "size": 16304
+    },
+    {
+      "path": "pydicom/tests/test_env_info.py",
+      "mode": "100644",
+      "sha": "17bef0d8a325dce606b76a624b165f7d8446cf59",
+      "size": 1077
+    },
+    {
+      "path": "pydicom/tests/test_errors.py",
+      "mode": "100644",
+      "sha": "ef540db3c995de3ee06269f807409be8d0613431",
+      "size": 658
+    },
+    {
+      "path": "pydicom/tests/test_filebase.py",
+      "mode": "100644",
+      "sha": "90899b0e1ff3d02ad67b50c9ad4ccdaa43670368",
+      "size": 9238
+    },
+    {
+      "path": "pydicom/tests/test_filereader.py",
+      "mode": "100644",
+      "sha": "f4dcc63b8b5c7133a4abe03dd934cc45444c9b27",
+      "size": 64476
+    },
+    {
+      "path": "pydicom/tests/test_fileset.py",
+      "mode": "100644",
+      "sha": "1f66d16f5f2f0214c9c941e48186330856572dc3",
+      "size": 103236
+    },
+    {
+      "path": "pydicom/tests/test_fileutil.py",
+      "mode": "100644",
+      "sha": "ef7d8d1f3adac19d6460d40f527e53eaa49cbd73",
+      "size": 956
+    },
+    {
+      "path": "pydicom/tests/test_filewriter.py",
+      "mode": "100644",
+      "sha": "6d497c9933727fd9903dc6e003428c0cdec3ae5a",
+      "size": 108900
+    },
+    {
+      "path": "pydicom/tests/test_gdcm_pixel_data.py",
+      "mode": "100644",
+      "sha": "3a5503f792f493106ab36b43922bfff82710ebbf",
+      "size": 22694
+    },
+    {
+      "path": "pydicom/tests/test_handler_util.py",
+      "mode": "100644",
+      "sha": "6889bdac4324b0c4fe73305d2b55770e8df826d3",
+      "size": 92001
+    },
+    {
+      "path": "pydicom/tests/test_helpers.py",
+      "mode": "100644",
+      "sha": "a0cc491835c400779ea086c13a306d3f48b45a93",
+      "size": 426
+    },
+    {
+      "path": "pydicom/tests/test_jpeg_ls_pixel_data.py",
+      "mode": "100644",
+      "sha": "427f04ede2aeb9c7f6a66aca31a0fa7134c03e9b",
+      "size": 10049
+    },
+    {
+      "path": "pydicom/tests/test_json.py",
+      "mode": "100644",
+      "sha": "0b2cbeff6362025524fe745f9cc7421c4ba36b19",
+      "size": 19207
+    },
+    {
+      "path": "pydicom/tests/test_misc.py",
+      "mode": "100644",
+      "sha": "d604f0fec2b5170c91bb150c451d3b007db4f399",
+      "size": 1839
+    },
+    {
+      "path": "pydicom/tests/test_multival.py",
+      "mode": "100644",
+      "sha": "25bc00ada9f386387212da87793d1e7c5466ff45",
+      "size": 5701
+    },
+    {
+      "path": "pydicom/tests/test_numpy_pixel_data.py",
+      "mode": "100644",
+      "sha": "879ed78caeae96428ce6284183c29ebd3bf984c8",
+      "size": 51663
+    },
+    {
+      "path": "pydicom/tests/test_overlay_np.py",
+      "mode": "100644",
+      "sha": "47211ebaf3451d8cf9a78499183926ac2ab373fa",
+      "size": 15710
+    },
+    {
+      "path": "pydicom/tests/test_pillow_pixel_data.py",
+      "mode": "100644",
+      "sha": "6fc55d0456cac2f5f0c14e90d67062d145084f52",
+      "size": 23921
+    },
+    {
+      "path": "pydicom/tests/test_pylibjpeg.py",
+      "mode": "100644",
+      "sha": "2c6e5b1c3c0e59443e51c08a30cd15528818d8d1",
+      "size": 30823
+    },
+    {
+      "path": "pydicom/tests/test_rawread.py",
+      "mode": "100644",
+      "sha": "170eb47ffd375524860577aae65007e309d6c307",
+      "size": 23320
+    },
+    {
+      "path": "pydicom/tests/test_rle_pixel_data.py",
+      "mode": "100644",
+      "sha": "d6e8d2be358ce010cfaa740b4f0c5622f9cdcf36",
+      "size": 44734
+    },
+    {
+      "path": "pydicom/tests/test_sequence.py",
+      "mode": "100644",
+      "sha": "c5372dee5448652c25802bdaed7e4a5da1379234",
+      "size": 5323
+    },
+    {
+      "path": "pydicom/tests/test_tag.py",
+      "mode": "100644",
+      "sha": "8fb01a23a9f41d90463c8c9f50e3295dfb1ab78e",
+      "size": 16208
+    },
+    {
+      "path": "pydicom/tests/test_uid.py",
+      "mode": "100644",
+      "sha": "f03b51c708937eb0e44cc22f89fa676381eb6921",
+      "size": 16663
+    },
+    {
+      "path": "pydicom/tests/test_unicode.py",
+      "mode": "100644",
+      "sha": "3ac99ae8448f24c9814b895e9784bada750ca394",
+      "size": 845
+    },
+    {
+      "path": "pydicom/tests/test_util.py",
+      "mode": "100644",
+      "sha": "caff06533b8f9bb18fd0355df118884bab64dbae",
+      "size": 19337
+    },
+    {
+      "path": "pydicom/tests/test_valuerep.py",
+      "mode": "100644",
+      "sha": "75286600f2f2c7e2aa9001a9f6f8140aabcdeacf",
+      "size": 60527
+    },
+    {
+      "path": "pydicom/tests/test_values.py",
+      "mode": "100644",
+      "sha": "ca16a479b0bf668512f5eb79dcc12dbe7ef6cf41",
+      "size": 8633
+    },
+    {
+      "path": "pydicom/tests/test_waveform.py",
+      "mode": "100644",
+      "sha": "1c8e6955b4ddb18b5bd5f48c0210e65fa7aaa742",
+      "size": 5250
+    },
+    {
+      "path": "pydicom/uid.py",
+      "mode": "100644",
+      "sha": "11ab28e98a8ac4ea0c7e785bf515d57bfef62d36",
+      "size": 34984
+    },
+    {
+      "path": "pydicom/util/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "pydicom/util/codify.py",
+      "mode": "100644",
+      "sha": "748c66b118252d92efe14a3f783d75381389a04b",
+      "size": 17266
+    },
+    {
+      "path": "pydicom/util/dump.py",
+      "mode": "100644",
+      "sha": "f329ceaecf3b308e21d7d960db67b4b248a62b47",
+      "size": 3956
+    },
+    {
+      "path": "pydicom/util/fixer.py",
+      "mode": "100644",
+      "sha": "592402424c7c73526cf795059200f30e8449254e",
+      "size": 4259
+    },
+    {
+      "path": "pydicom/util/hexutil.py",
+      "mode": "100644",
+      "sha": "7dbaf1f9aff73c6d58a38dbc7b87247299f69afd",
+      "size": 1576
+    },
+    {
+      "path": "pydicom/util/leanread.py",
+      "mode": "100644",
+      "sha": "fbf68c376d48fc5012f70d978c1c9ea3eff11cab",
+      "size": 6448
+    },
+    {
+      "path": "pydicom/valuerep.py",
+      "mode": "100644",
+      "sha": "708fc5a8089cfcb08a73822e3cf0f1374ea5607c",
+      "size": 71989
+    },
+    {
+      "path": "pydicom/values.py",
+      "mode": "100644",
+      "sha": "b9c6e3317e16a66e84537c53f4824eabd11d734a",
+      "size": 25970
+    },
+    {
+      "path": "pydicom/waveforms/__init__.py",
+      "mode": "100644",
+      "sha": "8849cf65679c6431d0abbc0284531a483663c6b9",
+      "size": 88
+    },
+    {
+      "path": "pydicom/waveforms/numpy_handler.py",
+      "mode": "100644",
+      "sha": "fd542ab0579093a0c3d2961590fb5c36034121bb",
+      "size": 8584
+    },
+    {
+      "path": "setup.cfg",
+      "mode": "100644",
+      "sha": "497a237b09cdac7939218ff8f881e45e784d14f9",
+      "size": 165
+    },
+    {
+      "path": "setup.py",
+      "mode": "100755",
+      "sha": "9008989d224f46dfcfe9723bb41f368f5bb114f4",
+      "size": 2711
+    },
+    {
+      "path": "source/generate_cids/generate_concept_dicts.py",
+      "mode": "100755",
+      "sha": "43ca7b9d131b14234934c3545c2e491db37a0b58",
+      "size": 14008
+    },
+    {
+      "path": "source/generate_dict/generate_dicom_dict.py",
+      "mode": "100755",
+      "sha": "a739cb2b7d3288b3443043b0874688ee744a6b44",
+      "size": 11894
+    },
+    {
+      "path": "source/generate_dict/generate_private_dict.py",
+      "mode": "100755",
+      "sha": "e47e92daf019d4b66850945ec5d75f4726630275",
+      "size": 3769
+    },
+    {
+      "path": "source/generate_dict/generate_uid_dict.py",
+      "mode": "100755",
+      "sha": "bc78946c9d4db1fb77ed8c5363ca1de59f67f17e",
+      "size": 7710
+    },
+    {
+      "path": "source/generate_uids/generate_storage_sopclass_uids.py",
+      "mode": "100755",
+      "sha": "d2385539cfea31932ca7ecbd0d5f4accf938d346",
+      "size": 2450
+    },
+    {
+      "path": "source/scripts/charlist.py",
+      "mode": "100644",
+      "sha": "6f24bd6d8b7471af7c2f8c9e107cc52821481706",
+      "size": 1708
+    }
+  ]
+}

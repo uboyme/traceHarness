@@ -56,6 +56,7 @@ from traceh.api.workflow import WorkflowStatus
 from traceh.api.workspaces import WorkspaceStatus
 from traceh.budgets.projection import BudgetLedgerReader
 from traceh.evaluation.errors import BenchmarkEvidenceError
+from traceh.evaluation.evaluators.context_diagnostics import ContextWork, context_work
 from traceh.product.execution import product_task_owner_id
 from traceh.product.projection import ProductTaskStreamReader
 from traceh.product.topology import (
@@ -116,6 +117,7 @@ class SessionWork:
 
     session_id: str
     agent_id: str
+    label: str
     turns: int
     steps: int
     tool_calls: int
@@ -126,6 +128,7 @@ class SessionWork:
     provider_active_milliseconds: int | None
     provider_failure_categories: tuple[str, ...]
     final_model_result: str | None
+    context: ContextWork
 
 
 @dataclass(frozen=True, slots=True)
@@ -345,7 +348,9 @@ async def collect_attempt_evidence(
         record = directory.get(agent_id)
         if record is None:
             raise BenchmarkEvidenceError("benchmark-agent-record-missing", task_id)
-        work = await _session_work(store, agent_id=agent_id, session_id=record.session_id)
+        work = await _session_work(
+            store, agent_id=agent_id, session_id=record.session_id, label=label
+        )
         _note_unavailable(unavailable, f"execution.{label}", work)
         sessions.append(work)
     execution = SessionGroup(tuple(sessions))
@@ -355,7 +360,9 @@ async def collect_attempt_evidence(
         record = directory.get(agent_id)
         if record is None:
             raise BenchmarkEvidenceError("benchmark-agent-record-missing", task_id)
-        work = await _session_work(store, agent_id=agent_id, session_id=record.session_id)
+        work = await _session_work(
+            store, agent_id=agent_id, session_id=record.session_id, label="unattributed"
+        )
         _note_unavailable(unavailable, "unattributed", work)
         unattributed.append(work)
 
@@ -542,7 +549,9 @@ def _require_one_evidence_chain(
             raise BenchmarkEvidenceError("benchmark-approval-chain-broken", task_id)
 
 
-async def _session_work(store: EventStore, *, agent_id: str, session_id: str) -> SessionWork:
+async def _session_work(
+    store: EventStore, *, agent_id: str, session_id: str, label: str
+) -> SessionWork:
     events = await store.read(f"{SESSION_STREAM_PREFIX}{session_id}")
     # Counting events without checking the lifecycle they belong to means any
     # stream that merely *looks* like a Session produces numbers. The core
@@ -643,6 +652,7 @@ async def _session_work(store: EventStore, *, agent_id: str, session_id: str) ->
     return SessionWork(
         session_id=session_id,
         agent_id=agent_id,
+        label=label,
         turns=turns,
         steps=steps,
         tool_calls=tool_calls,
@@ -659,6 +669,7 @@ async def _session_work(store: EventStore, *, agent_id: str, session_id: str) ->
         ),
         provider_failure_categories=tuple(provider_failure_categories),
         final_model_result=final_model_result,
+        context=context_work(session_id, events),
     )
 
 

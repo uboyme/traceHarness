@@ -1,0 +1,56 @@
+{
+  "experiment": "B - context governance inside Multi (collection plan section 6)",
+  "frozen_at_utc": "2026-09-23T13:35:36.958330+00:00",
+  "source_digest": "d16fcdde23f8e01a4fa59d8c1609d630e3f9e5ce496fa407f8c9278f915a1aa8",
+  "selection_rule_result": {
+    "rule": "multi arm with any agent provider-reported input peak >= trigger_tokens (51,456 at 96k) or tool folds > 0",
+    "max_multi_peak": 34529,
+    "any_folds": false,
+    "outcome": "no category qualifies; pre-registered fallback applies: A2 at a 48k window, governance on vs off"
+  },
+  "conditions": {
+    "governed-48k": {
+      "template_sha256": "0cb9aa36be01c7e65c8a6b86b254d2fac52b0d76da0e49b8e03e8d46f3870d61",
+      "context_policy": "window 48000, input_limit 37760, trigger 22656 (60%), relief 35%",
+      "benchmark_digest": "4f47a49c320fdb4a150847ea85488fd7bd21df62a6150406d40d4a66f2478d73"
+    },
+    "ungoverned": {
+      "template_sha256": "0f23e023267679eabc1a693afa80ade94e744b4f80561898658f1f5ac5fc9663",
+      "context_policy": "absent for every role (no metering, no folding)",
+      "benchmark_digest": "ea345abf0b27ba5198ec203e477c3818b1e1303cea208750266c9db5a337099a"
+    }
+  },
+  "only_difference": "context_policy of every role; model, tools, budgets, max_children, verifier identical",
+  "case": "a2-parallel-read-brain-registry",
+  "mode": "multi",
+  "repetitions_per_condition": 2,
+  "amendment_vs_plan": "plan section 6 fallback said one run each; each condition runs as one paired multi/multi plan, i.e. two runs each, so direct connection stays in the private worker",
+  "plans": {
+    "governed-48k": [
+      {
+        "case_id": "a2-parallel-read-brain-registry",
+        "plan": ".traceh\\tt1-plans-b\\governed48\\a2-parallel-read-brain-registry\\run-plan.json",
+        "sha256": "c593cf49af6b7efb4190c7fe0ae603655f88701e167f0f779e2e45e4c7f0ef18"
+      }
+    ],
+    "ungoverned": [
+      {
+        "case_id": "a2-parallel-read-brain-registry",
+        "plan": ".traceh\\tt1-plans-b\\ungoverned\\a2-parallel-read-brain-registry\\run-plan.json",
+        "sha256": "1eb1c5ba6bd4407c2c4e1813a7ecbc98f561e68fcef6b88f58aa3a89137adbac"
+      }
+    ]
+  },
+  "report": [
+    "per-agent provider input peak/mean",
+    "over-limit or context-length errors",
+    "whole-tree tokens",
+    "calls",
+    "wall",
+    "tool folds, read-backs, reruns after fold",
+    "fixed verifier outcome"
+  ],
+  "quality_criterion": "same fixed-verifier outcome counts as no observed regression; not statistical non-inferiority",
+  "stop_rules": "as batch A",
+  "network": "direct: paired plans, private workers with *_PROXY cleared and ProxyHandler({})"
+}

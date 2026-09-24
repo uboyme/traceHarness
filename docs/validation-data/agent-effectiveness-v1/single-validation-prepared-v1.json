@@ -1,0 +1,15 @@
+{
+  "pairs": [
+    {
+      "case_id": "pvlib__pvlib-python-1154",
+      "material": "C:\\Users\\caojie\\tae-sv1i\\material",
+      "plan": "C:\\Users\\caojie\\tae-sv1i\\pair.json",
+      "benchmark_sha256": "26440943051f2df85f0f3d12b66ea14e1b6dbf7f319f301b7455c8e9ca48f4cf",
+      "plan_sha256": "8337eb62220cfff57700281162b7724e66008126d3195383bc8164c47b37b627",
+      "source_digest": "b14349b43ea4f3df167670ca6fbc8ea448924ff8a8cedb073751215180bb4b0c",
+      "run_output": "C:/Users/caojie/tae-sv1",
+      "candidate_source": "C:/Users/caojie/tae-s2/experiment/rounds/0001/candidate.json",
+      "validation_scope": "First case of original frozen internal-validation queue; no candidate regeneration or changes after outcomes."
+    }
+  ]
+}

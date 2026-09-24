@@ -1,0 +1,28 @@
+{
+  "objective": "Estimate Single/Multi quality and whole-task cost across the original frozen internal queue, without strategy tuning or task substitution",
+  "queue_entries": [
+    "pydicom__pydicom-901",
+    "pylint-dev__astroid-1978",
+    "pyvista__pyvista-4315",
+    "marshmallow-code__marshmallow-1343",
+    "pydicom__pydicom-1256",
+    "pvlib__pvlib-python-1072",
+    "pydicom__pydicom-1139",
+    "pylint-dev__astroid-1333"
+  ],
+  "planned_pairs": 8,
+  "planned_trials": 16,
+  "excluded_original_entry": "pvlib__pvlib-python-1154; used for AO v3 development after v2 independent validation",
+  "model": "qwen3.6-plus",
+  "provider": "openai-compatible",
+  "network": "direct with proxy variables cleared and worker ProxyHandler({})",
+  "order": "preserve original pair.json first_arm per case",
+  "outcomes": "retain all successes, failures, unknown usage and missing arms; stop on original evidence/provider/usage/budget conditions",
+  "budget_cny": 120,
+  "prior_known_cny": 11.864005,
+  "prior_unknown_reserved_cny": 73,
+  "per_pair_reserve_cny": 28,
+  "max_new_proposals": 0,
+  "adoption_authorized": false,
+  "source_digest": "feb4d0c807e8b17ead38e116679fac9b6455bae05064f1c89380fda70327d4e6"
+}

@@ -4,7 +4,7 @@
   "task_type": "product_task",
   "dataset": {
     "file": "dataset.json",
-    "sha256": "d5498de3863f80ba5d756b0785d65ae10fca2b0aa7ebb47a4943f840ed1f90ff"
+    "sha256": "ca57f0f131419146b079167db512f1e109cf18816627013150cc53e96ce79317"
   },
   "task_settings": {
     "profile_id": "retrieval-baseline-v1",

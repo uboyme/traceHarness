@@ -192,10 +192,14 @@ class EvaluationRunner:
             if self.options.document.data["benchmark_digest"] != self.manifest.document.sha256:
                 raise BenchmarkManifestError("evaluation-frozen-input-drift", "benchmark_digest")
             supplied = self.options.document.data["model"]
+            waits = getattr(provider, "timeout_seconds", None)
             if (
                 supplied["provider"] != provider_id
                 or supplied["model"] != model_id
                 or ModelRetryPolicy(**supplied["retry_policy"]).to_dict() != retry_policy.to_dict()
+                # A provider that waits on a network request must wait exactly
+                # what the plan froze; an offline one has nothing to wait for.
+                or (waits is not None and waits != supplied["timeout_seconds"])
             ):
                 raise BenchmarkManifestError("evaluation-run-plan-conflict", "model")
         self.provider_id = provider_id
@@ -270,6 +274,7 @@ class EvaluationRunner:
                 "configuration": self.provider_binding,
                 "revision": None,
                 "retry_policy": self.retry_policy.to_dict(),
+                "request_timeout_seconds": getattr(self._provider, "timeout_seconds", None),
             },
             "environment": to_json_value(environment_identity()),
             "sandbox": to_json_value(self.sandbox),

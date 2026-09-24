@@ -1,0 +1,91 @@
+{
+  "format": 1,
+  "kind": "explicit-overnight-material-settings-not-runtime-defaults",
+  "dataset": "princeton-nlp/SWE-bench_Lite",
+  "dataset_revision": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+  "parquet_sha256": "8312f321838051849d2fa7c6ca071244733a3e90bb517ff6ca8186f722199b5c",
+  "network_timeout_seconds": 60,
+  "download_workers": 3,
+  "archive_max_bytes": 134217728,
+  "initial_tree_limits": {
+    "max_files": 8192,
+    "max_file_bytes": 16777216,
+    "max_total_bytes": 134217728
+  },
+  "ordinary_test_patterns": [
+    "test_*.py",
+    "unittest_*.py",
+    "**/test_*.py",
+    "**/unittest_*.py"
+  ],
+  "license_names": [
+    "license",
+    "license.txt",
+    "license.md",
+    "license.rst",
+    "copying",
+    "copying.txt"
+  ],
+  "repositories": {
+    "pvlib/pvlib-python": {
+      "package": "pvlib",
+      "import_root_candidates": [
+        ".",
+        "src"
+      ],
+      "protect_if_present": [
+        "setup.cfg",
+        "pyproject.toml",
+        "tox.ini"
+      ]
+    },
+    "pydicom/pydicom": {
+      "package": "pydicom",
+      "import_root_candidates": [
+        ".",
+        "src"
+      ],
+      "protect_if_present": [
+        "setup.cfg",
+        "pyproject.toml",
+        "tox.ini"
+      ]
+    },
+    "pylint-dev/astroid": {
+      "package": "astroid",
+      "import_root_candidates": [
+        ".",
+        "src"
+      ],
+      "protect_if_present": [
+        "setup.cfg",
+        "pyproject.toml",
+        "tox.ini"
+      ]
+    },
+    "pyvista/pyvista": {
+      "package": "pyvista",
+      "import_root_candidates": [
+        ".",
+        "src"
+      ],
+      "protect_if_present": [
+        "setup.cfg",
+        "pyproject.toml",
+        "tox.ini"
+      ]
+    },
+    "marshmallow-code/marshmallow": {
+      "package": "marshmallow",
+      "import_root_candidates": [
+        ".",
+        "src"
+      ],
+      "protect_if_present": [
+        "setup.cfg",
+        "pyproject.toml",
+        "tox.ini"
+      ]
+    }
+  }
+}

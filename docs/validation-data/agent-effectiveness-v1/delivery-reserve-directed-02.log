@@ -1,0 +1,15 @@
+....FF........                                                           [100%]
+================================== FAILURES ===================================
+_ test_single_reserve_delivers_or_fails_without_bypassing_verification[withdrawn-tool-steps] _
+tests\test_product_delivery_reserve.py:79: in test_single_reserve_delivers_or_fails_without_bypassing_verification
+    assert attempt.evidence.converged
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'converged'
+_ test_single_reserve_delivers_or_fails_without_bypassing_verification[withdrawn-tool-turn-wall] _
+tests\test_product_delivery_reserve.py:79: in test_single_reserve_delivers_or_fails_without_bypassing_verification
+    assert attempt.evidence.converged
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'converged'
+=========================== short test summary info ===========================
+FAILED tests/test_product_delivery_reserve.py::test_single_reserve_delivers_or_fails_without_bypassing_verification[withdrawn-tool-steps]
+FAILED tests/test_product_delivery_reserve.py::test_single_reserve_delivers_or_fails_without_bypassing_verification[withdrawn-tool-turn-wall]

@@ -20,6 +20,7 @@ async def experiment(tmp_path_factory):
     return root
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("fault", ["source", "model", "score", "worker", "evidence"])
 def test_actual_run_drift_is_not_comparable(experiment, tmp_path, fault):
     path = (
@@ -54,6 +55,7 @@ def test_actual_run_drift_is_not_comparable(experiment, tmp_path, fault):
         path.write_bytes(original)
 
 
+@pytest.mark.frozen_unicode
 async def test_comparison_cli_is_offline_and_keeps_original_pending(
     experiment, tmp_path, monkeypatch, capsys
 ):
@@ -72,6 +74,7 @@ async def test_comparison_cli_is_offline_and_keeps_original_pending(
     assert json.loads(capsys.readouterr().out)["status"] == "inconclusive"
 
 
+@pytest.mark.frozen_unicode
 def test_assessment_for_other_experiment_is_rejected(experiment, tmp_path):
     # A binding from another experiment cannot borrow otherwise valid judgments.
     path = tmp_path / "assessments.json"
@@ -80,6 +83,7 @@ def test_assessment_for_other_experiment_is_rejected(experiment, tmp_path):
     assert result["status"] == "not_comparable"
 
 
+@pytest.mark.frozen_unicode
 def test_edited_derived_assessment_cannot_replace_immutable_judgment(experiment, tmp_path):
     manifest = judge_pair(experiment, ("failed", "failed"))
     references = json.loads(manifest.read_text())["assessments"]
@@ -121,6 +125,7 @@ def test_pair_key_mismatch_rejected_without_dropping_unmatched_trials():
         )
 
 
+@pytest.mark.frozen_unicode
 def test_single_field_approval_report_change_is_detected_by_worker_digest(experiment, tmp_path):
     path = experiment / "arms/02/run/report.json"
     original = path.read_bytes()
@@ -152,6 +157,7 @@ def test_material_digest_is_part_of_pair_identity():
         paired_measurements(arms, [{}, {}], [{}, {}], {"kind": "text_candidate"})
 
 
+@pytest.mark.frozen_unicode
 def test_public_comparison_closes_every_real_read_connection(experiment, tmp_path, monkeypatch):
     original = sqlite3.connect
     connections = []

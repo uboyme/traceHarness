@@ -1,0 +1,1639 @@
+{
+  "repository": "pylint-dev/astroid",
+  "base_commit": "39c2a9805970ca57093d32bbaf0e6a63e05041d8",
+  "tree_sha": "39c2a9805970ca57093d32bbaf0e6a63e05041d8",
+  "entries": [
+    {
+      "path": ".coveragerc",
+      "mode": "100644",
+      "sha": "14da165ae98f5ce00745d2bfff11c017504d1dd7",
+      "size": 285
+    },
+    {
+      "path": ".flake8",
+      "mode": "100644",
+      "sha": "afc9e069d6dc9421eb519c9ac5ac17c1f004bd15",
+      "size": 95
+    },
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "sha": "f58fd12e297db31e4399b1f03269f7c3909f348b",
+      "size": 80
+    },
+    {
+      "path": ".github/FUNDING.yml",
+      "mode": "100644",
+      "sha": "0fdf6905a4adc04d96b4ba434fe3deebba5b77c9",
+      "size": 72
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE.md",
+      "mode": "100644",
+      "sha": "6a9f7e2db8f165daf763b1e4a4be2be32efa17c1",
+      "size": 164
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "mode": "100644",
+      "sha": "9263735d28486ba1abe8fa569dcb4f14318ada86",
+      "size": 771
+    },
+    {
+      "path": ".github/SECURITY.md",
+      "mode": "100644",
+      "sha": "bbe6fc2fd06abf514ca9f3cf7cfa134479d35644",
+      "size": 59
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "mode": "100644",
+      "sha": "3434a1720c136524df42ee85db28d5a66a4de31c",
+      "size": 568
+    },
+    {
+      "path": ".github/workflows/ci.yaml",
+      "mode": "100644",
+      "sha": "f615dd8428f04c5e97c21b538eaa064f6e888b48",
+      "size": 9699
+    },
+    {
+      "path": ".github/workflows/codeql-analysis.yml",
+      "mode": "100644",
+      "sha": "da5a1c946608889be5df9241f5eee226e419c695",
+      "size": 2492
+    },
+    {
+      "path": ".github/workflows/release-tests.yml",
+      "mode": "100644",
+      "sha": "5b01829f8b3c90119bf3685465414df36b925ea7",
+      "size": 1067
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "sha": "62557f1a59aa5dbee55cc22e417de2c05f81ad64",
+      "size": 1026
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "13a4a637099ba586669e7506aa6679b939ec0da7",
+      "size": 145
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "mode": "100644",
+      "sha": "810c53bffd0973b10c30ac003f9890dfbeaf4603",
+      "size": 2771
+    },
+    {
+      "path": ".readthedocs.yaml",
+      "mode": "100644",
+      "sha": "f3e25df5f557c51a16fec7f9d2602c2ac5e3554a",
+      "size": 202
+    },
+    {
+      "path": "CONTRIBUTORS.txt",
+      "mode": "100644",
+      "sha": "0fb15ad552b604f44a5b96dbd9897099d6f47ddc",
+      "size": 6858
+    },
+    {
+      "path": "ChangeLog",
+      "mode": "100644",
+      "sha": "c3b3e6b90bc1dff214d6ce9b4508e5b49001ad1c",
+      "size": 103548
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "182e0fbee1eb56b02def2270ecaab5571f264f09",
+      "size": 26516
+    },
+    {
+      "path": "MANIFEST.in",
+      "mode": "100644",
+      "sha": "799a3f0bb269cd347267f11964e8249c77af1518",
+      "size": 144
+    },
+    {
+      "path": "README.rst",
+      "mode": "100644",
+      "sha": "b7c3c232e5cdcfa4e91baddc0d5c7bf590b430c8",
+      "size": 2835
+    },
+    {
+      "path": "astroid/__init__.py",
+      "mode": "100644",
+      "sha": "41b8fffd1e8df311092ad4fbd6274f134b48ebd3",
+      "size": 5090
+    },
+    {
+      "path": "astroid/__pkginfo__.py",
+      "mode": "100644",
+      "sha": "5bd5f72c07aded618a03039779bc54bf53203986",
+      "size": 279
+    },
+    {
+      "path": "astroid/_ast.py",
+      "mode": "100644",
+      "sha": "3a866c2c3363be87f0a48556b097ac3e5dfac224",
+      "size": 4060
+    },
+    {
+      "path": "astroid/arguments.py",
+      "mode": "100644",
+      "sha": "fdbe7aac91e62f94e984b8afa9f36e08bec16674",
+      "size": 12767
+    },
+    {
+      "path": "astroid/astroid_manager.py",
+      "mode": "100644",
+      "sha": "da51de70ab8b884a32d9f627305df8abef4480b2",
+      "size": 568
+    },
+    {
+      "path": "astroid/bases.py",
+      "mode": "100644",
+      "sha": "2fbb11d402ed487e99bb414967d366141f51be66",
+      "size": 19951
+    },
+    {
+      "path": "astroid/brain/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "astroid/brain/brain_argparse.py",
+      "mode": "100644",
+      "sha": "ee0127c7e0b184ae5ec83e6770a42abf7b150279",
+      "size": 1314
+    },
+    {
+      "path": "astroid/brain/brain_attrs.py",
+      "mode": "100644",
+      "sha": "32b8ce0dfe8e8cd2f1520a58966538cd97057f34",
+      "size": 2853
+    },
+    {
+      "path": "astroid/brain/brain_boto3.py",
+      "mode": "100644",
+      "sha": "54faa64e8b376823fcba1cd71a838a8ae00c6d85",
+      "size": 997
+    },
+    {
+      "path": "astroid/brain/brain_builtin_inference.py",
+      "mode": "100644",
+      "sha": "711444c5dfb49c3372609092cd938ab53e6224a1",
+      "size": 31369
+    },
+    {
+      "path": "astroid/brain/brain_collections.py",
+      "mode": "100644",
+      "sha": "43304ecd7d6d080236aa1fe11e89ca2f88acdba4",
+      "size": 4307
+    },
+    {
+      "path": "astroid/brain/brain_crypt.py",
+      "mode": "100644",
+      "sha": "312353c6aa809766f34dc2513efdca0ebd6fcf16",
+      "size": 863
+    },
+    {
+      "path": "astroid/brain/brain_ctypes.py",
+      "mode": "100644",
+      "sha": "323b19cc6aef607e2a09dfca9c31460eada8265d",
+      "size": 2655
+    },
+    {
+      "path": "astroid/brain/brain_curses.py",
+      "mode": "100644",
+      "sha": "66cd5b271578aa6f07020ad06efe2b61bf427719",
+      "size": 3477
+    },
+    {
+      "path": "astroid/brain/brain_dataclasses.py",
+      "mode": "100644",
+      "sha": "b423d7f9e472ca19f1d4961b7bcb45e2a4dbcd47",
+      "size": 14943
+    },
+    {
+      "path": "astroid/brain/brain_dateutil.py",
+      "mode": "100644",
+      "sha": "0d27135a022b0dd7b56ae78b7c56e4a166bdc83f",
+      "size": 766
+    },
+    {
+      "path": "astroid/brain/brain_fstrings.py",
+      "mode": "100644",
+      "sha": "db7dd9583df3ee686f890d61fa9f27a088e95e6f",
+      "size": 2175
+    },
+    {
+      "path": "astroid/brain/brain_functools.py",
+      "mode": "100644",
+      "sha": "cf9c53d41114674823d78a5f4fb98d4985392536",
+      "size": 5875
+    },
+    {
+      "path": "astroid/brain/brain_gi.py",
+      "mode": "100644",
+      "sha": "53491d140009977b77582d265795d251d01d0d00",
+      "size": 7521
+    },
+    {
+      "path": "astroid/brain/brain_hashlib.py",
+      "mode": "100644",
+      "sha": "094e2ab18461abb5d189042dee9f7c3c7858d02a",
+      "size": 2007
+    },
+    {
+      "path": "astroid/brain/brain_http.py",
+      "mode": "100644",
+      "sha": "acf07bd6a0a09c6718ce21b9890de7e458c2f027",
+      "size": 10602
+    },
+    {
+      "path": "astroid/brain/brain_hypothesis.py",
+      "mode": "100644",
+      "sha": "dae83612bfe784c5512fee10df16e4575b33a1ff",
+      "size": 1725
+    },
+    {
+      "path": "astroid/brain/brain_io.py",
+      "mode": "100644",
+      "sha": "9957ce9420387a052f6ecf3c9706b4bf625ad59f",
+      "size": 1517
+    },
+    {
+      "path": "astroid/brain/brain_mechanize.py",
+      "mode": "100644",
+      "sha": "4c86fd9ba3100d13dfb67ef755612164318b8cd6",
+      "size": 2530
+    },
+    {
+      "path": "astroid/brain/brain_multiprocessing.py",
+      "mode": "100644",
+      "sha": "fc98a06c2ff1f8666dbcc7ec23a4e000de085bee",
+      "size": 3181
+    },
+    {
+      "path": "astroid/brain/brain_namedtuple_enum.py",
+      "mode": "100644",
+      "sha": "aeedfcffa632c4b4049992d00c5399d2fdb9aa82",
+      "size": 20498
+    },
+    {
+      "path": "astroid/brain/brain_nose.py",
+      "mode": "100644",
+      "sha": "38e2229ef96238daf7ab28eb436f0d7018d5033a",
+      "size": 2320
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_fromnumeric.py",
+      "mode": "100644",
+      "sha": "19d482244971c1a04be846ee0cd35362abb22d52",
+      "size": 732
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_function_base.py",
+      "mode": "100644",
+      "sha": "31d53cb1a2ecc805f1360f4356271124128e369c",
+      "size": 1298
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_multiarray.py",
+      "mode": "100644",
+      "sha": "487ec471d0781c77b5e543b080395d5600005c70",
+      "size": 4210
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_numeric.py",
+      "mode": "100644",
+      "sha": "140d81ab8fed6f179e8fe9b4518ae0e4d180b6fa",
+      "size": 1629
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_numerictypes.py",
+      "mode": "100644",
+      "sha": "245296e08d5bd71bc9636d532684a13234290a89",
+      "size": 8546
+    },
+    {
+      "path": "astroid/brain/brain_numpy_core_umath.py",
+      "mode": "100644",
+      "sha": "42dfdfa64b28995f0a2b3f8d94ccae361044c860",
+      "size": 4893
+    },
+    {
+      "path": "astroid/brain/brain_numpy_ma.py",
+      "mode": "100644",
+      "sha": "241665c452e614dbb573fcfb43eb94cc750f0b18",
+      "size": 805
+    },
+    {
+      "path": "astroid/brain/brain_numpy_ndarray.py",
+      "mode": "100644",
+      "sha": "f9b611e1ee0cbab26aaab56c08f764cf7fe8ba59",
+      "size": 8882
+    },
+    {
+      "path": "astroid/brain/brain_numpy_random_mtrand.py",
+      "mode": "100644",
+      "sha": "b1f0d4550768f9ff2cada545ae1b41d5b18fbecf",
+      "size": 3436
+    },
+    {
+      "path": "astroid/brain/brain_numpy_utils.py",
+      "mode": "100644",
+      "sha": "91881955a0de4e43133c75b97e4b0ccc5a3f81e6",
+      "size": 2554
+    },
+    {
+      "path": "astroid/brain/brain_pkg_resources.py",
+      "mode": "100644",
+      "sha": "689dd7430e65847568df4c72234c09827cfa36eb",
+      "size": 2200
+    },
+    {
+      "path": "astroid/brain/brain_pytest.py",
+      "mode": "100644",
+      "sha": "78c97799809bccdb438de5590846392abdd11f54",
+      "size": 2223
+    },
+    {
+      "path": "astroid/brain/brain_qt.py",
+      "mode": "100644",
+      "sha": "6b97bf671ae2361ebd7d8549f3493d441bd26db0",
+      "size": 2505
+    },
+    {
+      "path": "astroid/brain/brain_random.py",
+      "mode": "100644",
+      "sha": "e66aa81a0f9c41eb46d402345282a8e9fbe0ae5d",
+      "size": 2692
+    },
+    {
+      "path": "astroid/brain/brain_re.py",
+      "mode": "100644",
+      "sha": "76ad16df177c8df2b36f3b53ea132eba420454fd",
+      "size": 2860
+    },
+    {
+      "path": "astroid/brain/brain_responses.py",
+      "mode": "100644",
+      "sha": "0fb0e4269be14bbe4c9691a266ac6f432fd9f52e",
+      "size": 1869
+    },
+    {
+      "path": "astroid/brain/brain_scipy_signal.py",
+      "mode": "100755",
+      "sha": "578022f6f3e5b73e7881c6cf4e82801cf852c3a7",
+      "size": 2276
+    },
+    {
+      "path": "astroid/brain/brain_signal.py",
+      "mode": "100644",
+      "sha": "5eee7f6cec17d2ce59e9ff675c68cc17f6f1f943",
+      "size": 3859
+    },
+    {
+      "path": "astroid/brain/brain_six.py",
+      "mode": "100644",
+      "sha": "022fcf22e04045cb48b6e7f3e8cb95a062147f78",
+      "size": 7569
+    },
+    {
+      "path": "astroid/brain/brain_sqlalchemy.py",
+      "mode": "100644",
+      "sha": "f3695ded63c87b269813ffc4aecf547ca623c03f",
+      "size": 1009
+    },
+    {
+      "path": "astroid/brain/brain_ssl.py",
+      "mode": "100644",
+      "sha": "6ca0d5a8aff614231405ddcfeab00fca862b51b4",
+      "size": 3578
+    },
+    {
+      "path": "astroid/brain/brain_subprocess.py",
+      "mode": "100644",
+      "sha": "1a409ba998644a8af7bde52e773ce23fe77b5212",
+      "size": 2773
+    },
+    {
+      "path": "astroid/brain/brain_threading.py",
+      "mode": "100644",
+      "sha": "a85055d87122a39cf1c9931ec70f0a1d13bddb2f",
+      "size": 855
+    },
+    {
+      "path": "astroid/brain/brain_type.py",
+      "mode": "100644",
+      "sha": "f9c3ff4712f134ac4bb7810aeaf91211f5eb0678",
+      "size": 2472
+    },
+    {
+      "path": "astroid/brain/brain_typing.py",
+      "mode": "100644",
+      "sha": "807ba96e6e184648687f67be0dd8880183e91abf",
+      "size": 14192
+    },
+    {
+      "path": "astroid/brain/brain_unittest.py",
+      "mode": "100644",
+      "sha": "b34e1cf573bae0d5c92c606ffe3059889481ef96",
+      "size": 1136
+    },
+    {
+      "path": "astroid/brain/brain_uuid.py",
+      "mode": "100644",
+      "sha": "f6ba888372ef7f941c3bd0bc2a0fa28f582ad0f4",
+      "size": 649
+    },
+    {
+      "path": "astroid/brain/helpers.py",
+      "mode": "100644",
+      "sha": "d74f595073d5a6a7a824a086d08c223a6b3ad83b",
+      "size": 718
+    },
+    {
+      "path": "astroid/builder.py",
+      "mode": "100644",
+      "sha": "24caa0c6e091d238f599582c46551634ec36f4a5",
+      "size": 17254
+    },
+    {
+      "path": "astroid/const.py",
+      "mode": "100644",
+      "sha": "87682c942f9b01398432ec9bf6ac0f9a1efb44a3",
+      "size": 930
+    },
+    {
+      "path": "astroid/context.py",
+      "mode": "100644",
+      "sha": "12ef3e061be1a69491a646fb356005f43cf362df",
+      "size": 5741
+    },
+    {
+      "path": "astroid/decorators.py",
+      "mode": "100644",
+      "sha": "03b345867c8ecfce3badba17c2e690f1fa3e0ebe",
+      "size": 9608
+    },
+    {
+      "path": "astroid/exceptions.py",
+      "mode": "100644",
+      "sha": "dcacd6a6db081abf6a10d6b342c23360ac26956b",
+      "size": 8571
+    },
+    {
+      "path": "astroid/filter_statements.py",
+      "mode": "100644",
+      "sha": "f649cdb8bb711324ca5b46b8d704bafcc558e813",
+      "size": 9632
+    },
+    {
+      "path": "astroid/helpers.py",
+      "mode": "100644",
+      "sha": "8462f87db720ba83c89fd3cea52569449841443f",
+      "size": 10276
+    },
+    {
+      "path": "astroid/inference.py",
+      "mode": "100644",
+      "sha": "f24e4975c311727a16e4949fe071053bc70273df",
+      "size": 36244
+    },
+    {
+      "path": "astroid/inference_tip.py",
+      "mode": "100644",
+      "sha": "341efd631e3a17619ef65d0e106fa40264478f50",
+      "size": 2998
+    },
+    {
+      "path": "astroid/interpreter/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "astroid/interpreter/_import/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "astroid/interpreter/_import/spec.py",
+      "mode": "100644",
+      "sha": "af693002f55f236566f1be8cda389e4cacd2ca0f",
+      "size": 13101
+    },
+    {
+      "path": "astroid/interpreter/_import/util.py",
+      "mode": "100644",
+      "sha": "ab3aa652fb929b6c25b13bab8e2de0f49ab46818",
+      "size": 3244
+    },
+    {
+      "path": "astroid/interpreter/dunder_lookup.py",
+      "mode": "100644",
+      "sha": "b0c7ae5520aba10b3e122a9054fae24da9caec47",
+      "size": 2139
+    },
+    {
+      "path": "astroid/interpreter/objectmodel.py",
+      "mode": "100644",
+      "sha": "90085d7dcab850447e286aff1393f9652b9b7114",
+      "size": 27838
+    },
+    {
+      "path": "astroid/manager.py",
+      "mode": "100644",
+      "sha": "c796cfbc9ec1cd8a274720c4fc11537cb81c0529",
+      "size": 15594
+    },
+    {
+      "path": "astroid/mixins.py",
+      "mode": "100644",
+      "sha": "700df095e59056f43a549cd0b188776cb9916c92",
+      "size": 5510
+    },
+    {
+      "path": "astroid/modutils.py",
+      "mode": "100644",
+      "sha": "1cd950956cb140ef7e7b5da1fa670631c5596357",
+      "size": 21436
+    },
+    {
+      "path": "astroid/node_classes.py",
+      "mode": "100644",
+      "sha": "3711309bbff6587a672be56bf329a69c2a966604",
+      "size": 1802
+    },
+    {
+      "path": "astroid/nodes/__init__.py",
+      "mode": "100644",
+      "sha": "0a98ed19850184e2e396696b170a90a516becf76",
+      "size": 4836
+    },
+    {
+      "path": "astroid/nodes/as_string.py",
+      "mode": "100644",
+      "sha": "acfe02745758068c4e1c6b973dce1a2fe5ff2bd5",
+      "size": 23791
+    },
+    {
+      "path": "astroid/nodes/const.py",
+      "mode": "100644",
+      "sha": "6782cc3678802790ed2121529f12e8643a81bda3",
+      "size": 797
+    },
+    {
+      "path": "astroid/nodes/node_classes.py",
+      "mode": "100644",
+      "sha": "11136f8c773758e1f6e46ec848ca17211344a885",
+      "size": 162629
+    },
+    {
+      "path": "astroid/nodes/node_ng.py",
+      "mode": "100644",
+      "sha": "5c09320a9d09a2196a8b28cd6b38fb09f87ef014",
+      "size": 27825
+    },
+    {
+      "path": "astroid/nodes/scoped_nodes/__init__.py",
+      "mode": "100644",
+      "sha": "816bd83a9163874a3eca86762ab2cf36d5c26f49",
+      "size": 1218
+    },
+    {
+      "path": "astroid/nodes/scoped_nodes/mixin.py",
+      "mode": "100644",
+      "sha": "929b4b3da9b11f21e1adc6bc2a0f45d635adaa2e",
+      "size": 5932
+    },
+    {
+      "path": "astroid/nodes/scoped_nodes/scoped_nodes.py",
+      "mode": "100644",
+      "sha": "9a91ec24eb012eadbbe701bd26004d0b88c5286f",
+      "size": 105180
+    },
+    {
+      "path": "astroid/nodes/scoped_nodes/utils.py",
+      "mode": "100644",
+      "sha": "043cb01ca4b803bb639050416dd1eea165dcbdcb",
+      "size": 1190
+    },
+    {
+      "path": "astroid/nodes/utils.py",
+      "mode": "100644",
+      "sha": "5afa718ae45c327b4252727c866167ab6debd982",
+      "size": 423
+    },
+    {
+      "path": "astroid/objects.py",
+      "mode": "100644",
+      "sha": "6f9637c8ffa3d9aef25adbb35b2b9a80a036ebeb",
+      "size": 11912
+    },
+    {
+      "path": "astroid/protocols.py",
+      "mode": "100644",
+      "sha": "5fb35958f5351ca142bbf86d666fba5e969b35eb",
+      "size": 30191
+    },
+    {
+      "path": "astroid/raw_building.py",
+      "mode": "100644",
+      "sha": "2cddb8516011ac05d81d6b69348172701a4ed491",
+      "size": 19888
+    },
+    {
+      "path": "astroid/rebuilder.py",
+      "mode": "100644",
+      "sha": "e4f9ee5a1abddc46db2403ea2141a65a99e4a102",
+      "size": 77325
+    },
+    {
+      "path": "astroid/scoped_nodes.py",
+      "mode": "100644",
+      "sha": "677f892578c87a2a46bb7e3337e318cab8ce1624",
+      "size": 933
+    },
+    {
+      "path": "astroid/test_utils.py",
+      "mode": "100644",
+      "sha": "80c6614a5b8c288ddcfc1f5a1482d9aa6f920b31",
+      "size": 2436
+    },
+    {
+      "path": "astroid/transforms.py",
+      "mode": "100644",
+      "sha": "3f36d75791066d3344f16dbd7c0bd5bde1a379e0",
+      "size": 3378
+    },
+    {
+      "path": "astroid/typing.py",
+      "mode": "100644",
+      "sha": "8e8bbbc928e5f2a0a77c1c00c7904906287e9db5",
+      "size": 1119
+    },
+    {
+      "path": "astroid/util.py",
+      "mode": "100644",
+      "sha": "b07128528fca124842bbb055d74355dc15ec207a",
+      "size": 4256
+    },
+    {
+      "path": "doc/Makefile",
+      "mode": "100644",
+      "sha": "f90e635fc37ae0bd54870c3bf917230e384872be",
+      "size": 4596
+    },
+    {
+      "path": "doc/api/astroid.exceptions.rst",
+      "mode": "100644",
+      "sha": "65abeaf817d4a109776b65311a3cffa8beb2a482",
+      "size": 745
+    },
+    {
+      "path": "doc/api/astroid.nodes.rst",
+      "mode": "100644",
+      "sha": "7372cdd5464ceaa26b3033a1179a257dd9a472bc",
+      "size": 5106
+    },
+    {
+      "path": "doc/api/base_nodes.rst",
+      "mode": "100644",
+      "sha": "7b2d4a5026064b523b581d39f30ea4f85e8b115c",
+      "size": 1134
+    },
+    {
+      "path": "doc/api/general.rst",
+      "mode": "100644",
+      "sha": "74f022e494d38985407d2569631bf88661f69fc3",
+      "size": 50
+    },
+    {
+      "path": "doc/api/index.rst",
+      "mode": "100644",
+      "sha": "6277acddaa7f07faaf862cc3df7bc3927ecc9dff",
+      "size": 120
+    },
+    {
+      "path": "doc/ast_objects.inv",
+      "mode": "100644",
+      "sha": "15683ac47e5cd5b246a29541f581e79208046c85",
+      "size": 1122
+    },
+    {
+      "path": "doc/changelog.rst",
+      "mode": "100644",
+      "sha": "e0f208533f11fa8c0456fe18a77bf4a213edbd2b",
+      "size": 26
+    },
+    {
+      "path": "doc/conf.py",
+      "mode": "100644",
+      "sha": "8c5a03af796c7aa3f9b5aa64e70cbeba500c1813",
+      "size": 8091
+    },
+    {
+      "path": "doc/extending.rst",
+      "mode": "100644",
+      "sha": "7fedc16c2f0046938f13fc406275eb63f19096ff",
+      "size": 9272
+    },
+    {
+      "path": "doc/index.rst",
+      "mode": "100644",
+      "sha": "bf01378d6e3a46487d7a889dff352c40447b3f5e",
+      "size": 2199
+    },
+    {
+      "path": "doc/inference.rst",
+      "mode": "100644",
+      "sha": "8d2c7e43d3e8b51ca7b5cb3b8572bb79439ac688",
+      "size": 3623
+    },
+    {
+      "path": "doc/make.bat",
+      "mode": "100644",
+      "sha": "e34edeeba916634d502952070052efc9e5a4089b",
+      "size": 4517
+    },
+    {
+      "path": "doc/media/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White.png",
+      "mode": "100644",
+      "sha": "317dc4d9852df72ba34e10a6f61d1838cbbd969e",
+      "size": 4069
+    },
+    {
+      "path": "doc/media/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White_small.png",
+      "mode": "100644",
+      "sha": "53b9c0fc3f37d546a2f8c1b8fedcf95de3f3331d",
+      "size": 7070
+    },
+    {
+      "path": "doc/release.md",
+      "mode": "100644",
+      "sha": "d9bc628c46d94dbb132b68a274acde4274770fd8",
+      "size": 3615
+    },
+    {
+      "path": "doc/requirements.txt",
+      "mode": "100644",
+      "sha": "2a684dfdf22e7276d80c436dac33dfd81305fe06",
+      "size": 17
+    },
+    {
+      "path": "doc/whatsnew.rst",
+      "mode": "100644",
+      "sha": "e26a3c7b596df493da6db1ce4f61a7d9a0f05c7b",
+      "size": 201
+    },
+    {
+      "path": "pylintrc",
+      "mode": "100644",
+      "sha": "ace5fb572811e1d7dca1c2373237d8c394c88b27",
+      "size": 11075
+    },
+    {
+      "path": "requirements_test.txt",
+      "mode": "100644",
+      "sha": "a64bd313c84a93e495361abc7cf74fa34fef513d",
+      "size": 264
+    },
+    {
+      "path": "requirements_test_brain.txt",
+      "mode": "100644",
+      "sha": "76f0ebd159275ebce919f8fcc1ad0ca303ec6683",
+      "size": 118
+    },
+    {
+      "path": "requirements_test_min.txt",
+      "mode": "100644",
+      "sha": "d447024285fa056d65f771d0f76866706de2082a",
+      "size": 31
+    },
+    {
+      "path": "requirements_test_pre_commit.txt",
+      "mode": "100644",
+      "sha": "0e06ff09d4aa3ff0bb1996b57e7c383de2c20e57",
+      "size": 99
+    },
+    {
+      "path": "script/.contributors_aliases.json",
+      "mode": "100644",
+      "sha": "60fabfa86e571f4ef88ac002f5346c3bd2f7efb4",
+      "size": 5022
+    },
+    {
+      "path": "script/bump_changelog.py",
+      "mode": "100644",
+      "sha": "e00cf783254f1800be3db40d5ca81af1c7fddb60",
+      "size": 6011
+    },
+    {
+      "path": "script/copyright.txt",
+      "mode": "100644",
+      "sha": "25341a52ce9c93933d6631db066d70aa9f59f843",
+      "size": 228
+    },
+    {
+      "path": "script/create_contributor_list.py",
+      "mode": "100644",
+      "sha": "6e95948b0160b879e10ad4c78e968935b98f78bb",
+      "size": 680
+    },
+    {
+      "path": "script/test_bump_changelog.py",
+      "mode": "100644",
+      "sha": "8ed36400b00deb42621f4d2db2a1aaacc52ff0c6",
+      "size": 5914
+    },
+    {
+      "path": "setup.cfg",
+      "mode": "100644",
+      "sha": "1e2341a8828a56e965eb92ec6db62c14e4a2d383",
+      "size": 2554
+    },
+    {
+      "path": "setup.py",
+      "mode": "100644",
+      "sha": "606849326a4002007fd42060b51e69a19c18675c",
+      "size": 38
+    },
+    {
+      "path": "tbump.toml",
+      "mode": "100644",
+      "sha": "72775ee6c7642869da1aa29b831f6adce50d787e",
+      "size": 1414
+    },
+    {
+      "path": "tests/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/resources.py",
+      "mode": "100644",
+      "sha": "3eb833fcde37bc73f899434e56190f17d7454b92",
+      "size": 2041
+    },
+    {
+      "path": "tests/testdata/python3/data/MyPyPa-0.1.0-py2.5.egg",
+      "mode": "100644",
+      "sha": "f62599c7b10469b9eadabb31e9a42128a769c7cd",
+      "size": 1222
+    },
+    {
+      "path": "tests/testdata/python3/data/MyPyPa-0.1.0-py2.5.zip",
+      "mode": "100644",
+      "sha": "f62599c7b10469b9eadabb31e9a42128a769c7cd",
+      "size": 1222
+    },
+    {
+      "path": "tests/testdata/python3/data/SSL1/Connection1.py",
+      "mode": "100644",
+      "sha": "1307b2391a5a66fd0450b0a4310160fd5c234716",
+      "size": 93
+    },
+    {
+      "path": "tests/testdata/python3/data/SSL1/__init__.py",
+      "mode": "100644",
+      "sha": "c83ededce5c5e859c17f4043a5ba059a09ecdf04",
+      "size": 36
+    },
+    {
+      "path": "tests/testdata/python3/data/__init__.py",
+      "mode": "100644",
+      "sha": "332e2e7236c7c9624b57d2693cc9ecb15a71c068",
+      "size": 68
+    },
+    {
+      "path": "tests/testdata/python3/data/absimp/__init__.py",
+      "mode": "100644",
+      "sha": "b98444df6e01550b0c2964644351e219b0987447",
+      "size": 89
+    },
+    {
+      "path": "tests/testdata/python3/data/absimp/sidepackage/__init__.py",
+      "mode": "100644",
+      "sha": "239499a6865416d8df5957b4d82fb2d44783525a",
+      "size": 42
+    },
+    {
+      "path": "tests/testdata/python3/data/absimp/string.py",
+      "mode": "100644",
+      "sha": "e68e74965db4ea523e448f911bb40486f06227b1",
+      "size": 83
+    },
+    {
+      "path": "tests/testdata/python3/data/absimport.py",
+      "mode": "100644",
+      "sha": "88f9d955d19fc719a3f0b4a4e544731a4a75bef7",
+      "size": 40
+    },
+    {
+      "path": "tests/testdata/python3/data/all.py",
+      "mode": "100644",
+      "sha": "587765b5a7b05ebfb4a8c670406d0cdc61d4085a",
+      "size": 107
+    },
+    {
+      "path": "tests/testdata/python3/data/appl/__init__.py",
+      "mode": "100644",
+      "sha": "d652ffd93c3f3bb2ccd0e37aa64aa14639b19c34",
+      "size": 13
+    },
+    {
+      "path": "tests/testdata/python3/data/appl/myConnection.py",
+      "mode": "100644",
+      "sha": "492695343fb10b4d96681b63c41d88e290e2d08c",
+      "size": 261
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level/import_package.py",
+      "mode": "100644",
+      "sha": "885d4c541a6d3122a4d0a68deb96b31a14c3c578",
+      "size": 84
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level/namespace_package/lower_level/helper_function.py",
+      "mode": "100644",
+      "sha": "1d0b12b347d41dc1b60e9193260303a6565d24dc",
+      "size": 114
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level/namespace_package/plugin_api.py",
+      "mode": "100644",
+      "sha": "3941f197ecc42c58e91a9d37e558fc199930282d",
+      "size": 57
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level/namespace_package/top_level_function.py",
+      "mode": "100644",
+      "sha": "8342bd09f9f9bbe4e606425da226548f890fc781",
+      "size": 130
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/double_name/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/double_name/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/double_name/function.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/sub_module/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/sub_module/sub_sub_module/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_three/module/sub_module/sub_sub_module/main.py",
+      "mode": "100644",
+      "sha": "b9cd0bbc478bb42bd317298ab761e5af483f8198",
+      "size": 36
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_two/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_two/a.py",
+      "mode": "100644",
+      "sha": "4b238deacab8a0831ca33068f4cd88b8c06523a3",
+      "size": 163
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_two/level1/__init__.py",
+      "mode": "100644",
+      "sha": "1a886aa4f600903a11f0cc6bccd3f99116a874c9",
+      "size": 24
+    },
+    {
+      "path": "tests/testdata/python3/data/beyond_top_level_two/level1/beyond_top_level_two.py",
+      "mode": "100644",
+      "sha": "cc28914eb71020f3ba22e7a33c4872a4fb561b7f",
+      "size": 40
+    },
+    {
+      "path": "tests/testdata/python3/data/conditional.py",
+      "mode": "100644",
+      "sha": "8f607c234c6e8447c3b201c84670dd1d1be26b73",
+      "size": 87
+    },
+    {
+      "path": "tests/testdata/python3/data/conditional_import/__init__.py",
+      "mode": "100644",
+      "sha": "38306e34521617c1bc58c8c5079254fdf038a0d7",
+      "size": 172
+    },
+    {
+      "path": "tests/testdata/python3/data/contribute_to_namespace/namespace_pep_420/submodule.py",
+      "mode": "100644",
+      "sha": "6fbcff414a681ceb18a429af44b8a853c9ff2750",
+      "size": 8
+    },
+    {
+      "path": "tests/testdata/python3/data/descriptor_crash.py",
+      "mode": "100644",
+      "sha": "11fbb4a22107c207d7067159b58ec2ee6e5f4a2c",
+      "size": 217
+    },
+    {
+      "path": "tests/testdata/python3/data/email.py",
+      "mode": "100644",
+      "sha": "dc593564ff180f9a5a01704359e10ba206527534",
+      "size": 70
+    },
+    {
+      "path": "tests/testdata/python3/data/find_test/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/find_test/module.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/find_test/module2.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/find_test/noendingnewline.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/find_test/nonregr.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/foogle/fax/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/foogle/fax/a.py",
+      "mode": "100644",
+      "sha": "3d2b4b14efe535966493ee555dd7faa81063a251",
+      "size": 5
+    },
+    {
+      "path": "tests/testdata/python3/data/foogle_fax-0.12.5-py2.7-nspkg.pth",
+      "mode": "100644",
+      "sha": "eeb7ecac699a4454c657f12ee32d343581c05d67",
+      "size": 629
+    },
+    {
+      "path": "tests/testdata/python3/data/format.py",
+      "mode": "100644",
+      "sha": "7379706192ee2e0ed51b6a333a8865c7fae27ee9",
+      "size": 421
+    },
+    {
+      "path": "tests/testdata/python3/data/invalid_encoding.py",
+      "mode": "100644",
+      "sha": "dddd208e6a08f989a75658c10d4fd3bc0e8dbed3",
+      "size": 22
+    },
+    {
+      "path": "tests/testdata/python3/data/lmfp/__init__.py",
+      "mode": "100644",
+      "sha": "74b26b82caf5237de227f7b451201c2938883ea0",
+      "size": 51
+    },
+    {
+      "path": "tests/testdata/python3/data/lmfp/foo.py",
+      "mode": "100644",
+      "sha": "8f7de1e803e0301946729ded20ed064e971f06d1",
+      "size": 170
+    },
+    {
+      "path": "tests/testdata/python3/data/max_inferable_limit_for_classes/main.py",
+      "mode": "100644",
+      "sha": "2588d916feb972891e01af3701d7bf4c184e2622",
+      "size": 662
+    },
+    {
+      "path": "tests/testdata/python3/data/max_inferable_limit_for_classes/nodes/roles.py",
+      "mode": "100644",
+      "sha": "2f58f1b5088d4748e08b34a0f7f2dbe5d8b33288",
+      "size": 1072
+    },
+    {
+      "path": "tests/testdata/python3/data/max_inferable_limit_for_classes/other_funcs.py",
+      "mode": "100644",
+      "sha": "f737fbf5a8fd29d61c09dcadfa6fc90fd6bde223",
+      "size": 459
+    },
+    {
+      "path": "tests/testdata/python3/data/metaclass_recursion/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/metaclass_recursion/monkeypatch.py",
+      "mode": "100644",
+      "sha": "757bb3f88838107f24a2cd174fb4eefa2c9e3cef",
+      "size": 609
+    },
+    {
+      "path": "tests/testdata/python3/data/metaclass_recursion/parent.py",
+      "mode": "100644",
+      "sha": "5cff73e0f8d4aa7498cdc36b65d0adaf9a13cb4a",
+      "size": 76
+    },
+    {
+      "path": "tests/testdata/python3/data/module.py",
+      "mode": "100644",
+      "sha": "af4a75f7d44d31a7fda1c03c008e223d428e26f3",
+      "size": 1784
+    },
+    {
+      "path": "tests/testdata/python3/data/module1abs/__init__.py",
+      "mode": "100644",
+      "sha": "f9d5b686f8a0272488f0d9bb86851fdc55afbdbe",
+      "size": 59
+    },
+    {
+      "path": "tests/testdata/python3/data/module1abs/core.py",
+      "mode": "100644",
+      "sha": "de101117c2d1418b4b3c68ee693ac74b4bc071a6",
+      "size": 11
+    },
+    {
+      "path": "tests/testdata/python3/data/module2.py",
+      "mode": "100644",
+      "sha": "c4da10d2ee077d852b1950f8d6386f1159554fa0",
+      "size": 1949
+    },
+    {
+      "path": "tests/testdata/python3/data/module_dict_items_call/models.py",
+      "mode": "100644",
+      "sha": "212bc011b5e07c2caf495d5ef97f159cfa84f662",
+      "size": 51
+    },
+    {
+      "path": "tests/testdata/python3/data/module_dict_items_call/test.py",
+      "mode": "100644",
+      "sha": "4a52b18e97bb3e8b7d1a573719fb6721610b7bdc",
+      "size": 148
+    },
+    {
+      "path": "tests/testdata/python3/data/namespace_pep_420/module.py",
+      "mode": "100644",
+      "sha": "a4d111e6eaae1ba5a97f02408f23249a71b60ddc",
+      "size": 43
+    },
+    {
+      "path": "tests/testdata/python3/data/noendingnewline.py",
+      "mode": "100644",
+      "sha": "e17b92cc63b2e2e14a300fa2a39af4d98d49842f",
+      "size": 506
+    },
+    {
+      "path": "tests/testdata/python3/data/nonregr.py",
+      "mode": "100644",
+      "sha": "073135d2331e1186351e4093d2082412b3816403",
+      "size": 1010
+    },
+    {
+      "path": "tests/testdata/python3/data/notall.py",
+      "mode": "100644",
+      "sha": "9d35aa3a021c530730a2dad28c68ce90a583370a",
+      "size": 75
+    },
+    {
+      "path": "tests/testdata/python3/data/notamodule/file.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/operator_precedence.py",
+      "mode": "100644",
+      "sha": "b4333375b0d41accfe008e08ee463699ec703c86",
+      "size": 823
+    },
+    {
+      "path": "tests/testdata/python3/data/package/__init__.py",
+      "mode": "100644",
+      "sha": "575d18b16ad1c1ed1489249f82c3bfc65d44d60f",
+      "size": 57
+    },
+    {
+      "path": "tests/testdata/python3/data/package/absimport.py",
+      "mode": "100644",
+      "sha": "33ed117c143f625747d3f12bc64254e10ab4b94d",
+      "size": 172
+    },
+    {
+      "path": "tests/testdata/python3/data/package/hello.py",
+      "mode": "100644",
+      "sha": "b154c844f7e7d2be679e46dc588c6997a48b528a",
+      "size": 20
+    },
+    {
+      "path": "tests/testdata/python3/data/package/import_package_subpackage_module.py",
+      "mode": "100644",
+      "sha": "ad442c166252f9394dcf580c1ebb0291af5f84f5",
+      "size": 2242
+    },
+    {
+      "path": "tests/testdata/python3/data/package/subpackage/__init__.py",
+      "mode": "100644",
+      "sha": "dc4782e6cf3a6635fb86165e75e76ed0bdf4a16e",
+      "size": 25
+    },
+    {
+      "path": "tests/testdata/python3/data/package/subpackage/module.py",
+      "mode": "100644",
+      "sha": "4b7244ba001a3c7be05f59f737bc6a5664480ce4",
+      "size": 32
+    },
+    {
+      "path": "tests/testdata/python3/data/parent_of_homonym/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/parent_of_homonym/doc/README.md",
+      "mode": "100644",
+      "sha": "d24e89432b495af799aaf4df1dbca003dea33127",
+      "size": 160
+    },
+    {
+      "path": "tests/testdata/python3/data/parent_of_homonym/doc/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_1/package/__init__.py",
+      "mode": "100644",
+      "sha": "b0d64337177a1e8746c76fa985041055a863f915",
+      "size": 55
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_1/package/foo.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_2/package/__init__.py",
+      "mode": "100644",
+      "sha": "b0d64337177a1e8746c76fa985041055a863f915",
+      "size": 55
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_2/package/bar.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_3/package/__init__.py",
+      "mode": "100644",
+      "sha": "b0d64337177a1e8746c76fa985041055a863f915",
+      "size": 55
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkg_resources_3/package/baz.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_1/package/__init__.py",
+      "mode": "100644",
+      "sha": "0bfb5a62b4f6c2c8cb1a6a865bc2d4b36ebfa64e",
+      "size": 74
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_1/package/foo.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_2/package/__init__.py",
+      "mode": "100644",
+      "sha": "0bfb5a62b4f6c2c8cb1a6a865bc2d4b36ebfa64e",
+      "size": 74
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_2/package/bar.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_3/package/__init__.py",
+      "mode": "100644",
+      "sha": "0bfb5a62b4f6c2c8cb1a6a865bc2d4b36ebfa64e",
+      "size": 74
+    },
+    {
+      "path": "tests/testdata/python3/data/path_pkgutil_3/package/baz.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/recursion.py",
+      "mode": "100644",
+      "sha": "85f6513493214850bc0863394958fc14499369c2",
+      "size": 50
+    },
+    {
+      "path": "tests/testdata/python3/data/tmp__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/testdata/python3/data/unicode_package/__init__.py",
+      "mode": "100644",
+      "sha": "713e5591a98bd11765e9e01b3167e8013974161f",
+      "size": 17
+    },
+    {
+      "path": "tests/testdata/python3/data/unicode_package/core/__init__.py",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "path": "tests/unittest_brain.py",
+      "mode": "100644",
+      "sha": "d86c273f324e1a0330b5adbe715d76be28e46670",
+      "size": 99753
+    },
+    {
+      "path": "tests/unittest_brain_builtin.py",
+      "mode": "100644",
+      "sha": "0d7493034a0466f808e1e8438f9a99d2a1559bbd",
+      "size": 813
+    },
+    {
+      "path": "tests/unittest_brain_ctypes.py",
+      "mode": "100644",
+      "sha": "cae95409f534eb184495a20b61346b8702cad7ae",
+      "size": 3463
+    },
+    {
+      "path": "tests/unittest_brain_dataclasses.py",
+      "mode": "100644",
+      "sha": "6d45c0c7ec9886917a2dcf2acd9d9182e98b226c",
+      "size": 17998
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_fromnumeric.py",
+      "mode": "100644",
+      "sha": "bbb6ba92af5e156a11993a0a49279ee6ee8abcbf",
+      "size": 1694
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_function_base.py",
+      "mode": "100644",
+      "sha": "f0d561d6d60f97a7f8692bf7dc30a60a206cfd14",
+      "size": 1831
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_multiarray.py",
+      "mode": "100644",
+      "sha": "bbf2497383850e7149140e8bbd6caf32af61c501",
+      "size": 7814
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_numeric.py",
+      "mode": "100644",
+      "sha": "bc2b490259388203993f9a91b598f06a6a36bfc4",
+      "size": 2621
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_numerictypes.py",
+      "mode": "100644",
+      "sha": "2ed91c1c9f6e7f01971f02199a4b392052220e7e",
+      "size": 11250
+    },
+    {
+      "path": "tests/unittest_brain_numpy_core_umath.py",
+      "mode": "100644",
+      "sha": "27d79a92004de3950d7f29f7f4835388eead3452",
+      "size": 7934
+    },
+    {
+      "path": "tests/unittest_brain_numpy_ma.py",
+      "mode": "100644",
+      "sha": "830e7299155a575b4ae389bc604e8b8227282e0a",
+      "size": 1575
+    },
+    {
+      "path": "tests/unittest_brain_numpy_ndarray.py",
+      "mode": "100644",
+      "sha": "fb216de4c8fa8b6dd3b749ab9ed50cb31eaa9065",
+      "size": 4996
+    },
+    {
+      "path": "tests/unittest_brain_numpy_random_mtrand.py",
+      "mode": "100644",
+      "sha": "beb8fb6e5cc9d1f94db18acd6f256c72c6211926",
+      "size": 4518
+    },
+    {
+      "path": "tests/unittest_brain_qt.py",
+      "mode": "100644",
+      "sha": "93ef4dd110ff908b00dfa7820e07a72e22aff274",
+      "size": 2771
+    },
+    {
+      "path": "tests/unittest_brain_signal.py",
+      "mode": "100644",
+      "sha": "fdd4f4270c4930a6ddcfe25881269cb320725510",
+      "size": 1314
+    },
+    {
+      "path": "tests/unittest_brain_unittest.py",
+      "mode": "100644",
+      "sha": "d8d638a3e6ff321ab5be25fe1a7ec36683643082",
+      "size": 1046
+    },
+    {
+      "path": "tests/unittest_builder.py",
+      "mode": "100644",
+      "sha": "61ef1bba3a0465736d3b4cb603c6da4abb9aeb72",
+      "size": 35211
+    },
+    {
+      "path": "tests/unittest_decorators.py",
+      "mode": "100644",
+      "sha": "eca20b2e38af447cdbfec51d844b030341746745",
+      "size": 4353
+    },
+    {
+      "path": "tests/unittest_filter_statements.py",
+      "mode": "100644",
+      "sha": "9377b1e2308c8b9a73120ef3e804a2429f6f9042",
+      "size": 668
+    },
+    {
+      "path": "tests/unittest_helpers.py",
+      "mode": "100644",
+      "sha": "e0da009aa712f22ba3d85d614892e5bcd3a17852",
+      "size": 9201
+    },
+    {
+      "path": "tests/unittest_inference.py",
+      "mode": "100644",
+      "sha": "b4313fa378387ddd33c7e26912e24b1fff7695c1",
+      "size": 209232
+    },
+    {
+      "path": "tests/unittest_inference_calls.py",
+      "mode": "100644",
+      "sha": "61f57eb02a6b19680f16c7f38c36c3165cdee4a6",
+      "size": 14675
+    },
+    {
+      "path": "tests/unittest_lookup.py",
+      "mode": "100644",
+      "sha": "1cb252618860bf6a9bcb0d125b10b1bc8ff5efe1",
+      "size": 34892
+    },
+    {
+      "path": "tests/unittest_manager.py",
+      "mode": "100644",
+      "sha": "9cf02aff866114fbbc75c69b6c1e951e48bb8478",
+      "size": 16505
+    },
+    {
+      "path": "tests/unittest_modutils.py",
+      "mode": "100644",
+      "sha": "96418b01acfd4b852f4d0c26d42d960b36c1b490",
+      "size": 16854
+    },
+    {
+      "path": "tests/unittest_nodes.py",
+      "mode": "100644",
+      "sha": "a3e2e1293587a9457322ce60f98daf29060fd7dd",
+      "size": 63321
+    },
+    {
+      "path": "tests/unittest_nodes_lineno.py",
+      "mode": "100644",
+      "sha": "c1c089ac07265eba88729477023b9a8376c8a23d",
+      "size": 54520
+    },
+    {
+      "path": "tests/unittest_nodes_position.py",
+      "mode": "100644",
+      "sha": "9a637657b6c604671735c8a15a406889ec9a981a",
+      "size": 4157
+    },
+    {
+      "path": "tests/unittest_object_model.py",
+      "mode": "100644",
+      "sha": "3cf2e4aee3adc303cbd9a72f9860dfe100252404",
+      "size": 22424
+    },
+    {
+      "path": "tests/unittest_objects.py",
+      "mode": "100644",
+      "sha": "1b8f3119b47e3738aed78fb59656ffc070fbb2f2",
+      "size": 19475
+    },
+    {
+      "path": "tests/unittest_protocols.py",
+      "mode": "100644",
+      "sha": "9a477d024d1375440a0cbc92074d9ad277ab7631",
+      "size": 14163
+    },
+    {
+      "path": "tests/unittest_python3.py",
+      "mode": "100644",
+      "sha": "9f60833e8ee4195d91c5ba0041d94a9910d095d8",
+      "size": 13649
+    },
+    {
+      "path": "tests/unittest_raw_building.py",
+      "mode": "100644",
+      "sha": "387a3f43206b636558c2f2f43a4cc5b1bba3c040",
+      "size": 3447
+    },
+    {
+      "path": "tests/unittest_regrtest.py",
+      "mode": "100644",
+      "sha": "06fa7da4db82cc2ea0d7f1efc274a61ebfc1d1c8",
+      "size": 13478
+    },
+    {
+      "path": "tests/unittest_scoped_nodes.py",
+      "mode": "100644",
+      "sha": "0236fcab2752c096905ca5fe268dd1b755c16ca5",
+      "size": 90097
+    },
+    {
+      "path": "tests/unittest_transforms.py",
+      "mode": "100644",
+      "sha": "ce44d2309357c1379129e492d378f79ebf184d90",
+      "size": 8407
+    },
+    {
+      "path": "tests/unittest_utils.py",
+      "mode": "100644",
+      "sha": "1b8d7123f18b3cd48a5a303a2dccb442b99eac6e",
+      "size": 3760
+    },
+    {
+      "path": "tox.ini",
+      "mode": "100644",
+      "sha": "35e7d9e8dca629102eb820e3b14bdd0db920c19c",
+      "size": 1676
+    }
+  ]
+}

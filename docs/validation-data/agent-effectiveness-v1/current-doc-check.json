@@ -1,0 +1,20 @@
+{
+  "files": [
+    "docs\\note\\project-context.md",
+    "docs\\note\\project-context-plain-zh.md",
+    "docs\\note\\project-overview.md",
+    "docs\\plan\\TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md",
+    "docs\\deal\\086-agent-effectiveness-overnight.md",
+    "docs\\validation-data\\agent-effectiveness-v1\\RESULTS.md",
+    "docs\\validation-data\\agent-effectiveness-v1\\INTERVIEW_NOTES.md"
+  ],
+  "relative_links_checked": 993,
+  "fences_balanced": true,
+  "secret_pattern_check": true,
+  "formal_plain_sections_updated": [
+    "12.5",
+    "12.6",
+    "12.7",
+    "13.11"
+  ]
+}

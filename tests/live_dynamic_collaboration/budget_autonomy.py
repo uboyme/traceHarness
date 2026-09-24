@@ -13,6 +13,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from evaluation_fixtures import capture_fixture_tree, fixture_tree_limits
 from live_unified_evaluation.baseline import connection
 
 from live_dynamic_collaboration.diagnosis_audit import events_at
@@ -20,7 +21,7 @@ from live_dynamic_collaboration.materials import budgets, write
 from traceh.api.json_types import fingerprint
 from traceh.evaluation.inputs import digest_bytes, read_input
 from traceh.evaluation.plan import RunOptions
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 from traceh.evaluation.runner import EvaluationRunner
 from traceh.evaluation.variants import source_digest, source_files
 from traceh.llm.retry import NO_MODEL_RETRY
@@ -223,10 +224,11 @@ def prepare(repository: Path, sandbox: Path, output: Path) -> None:
                 else _complex_requirement(scenario_id == "constrained-headroom")
             ),
             "initial_tree": "initial",
-            "sha256": initial_tree_digest(capture_initial_tree(initial)),
+            "initial_tree_limits": fixture_tree_limits(),
+            "sha256": initial_tree_digest(capture_fixture_tree(initial)),
             "verification": _verification(initial, paths, simple=simple),
         }
-        write(root / "dataset.json", {"format": 2, "cases": [case]})
+        write(root / "dataset.json", {"format": 3, "cases": [case]})
         manifest = {
             "protocol_version": 3,
             "benchmark_id": "traceh-budget-autonomy-" + scenario_id,

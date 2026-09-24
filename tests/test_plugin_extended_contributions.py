@@ -14,7 +14,7 @@ from plugin_fixtures import (
     provider_for,
 )
 
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall
+from traceh.api.llm import CompletionCategory, ModelRequest, ModelResponse, ToolCall
 from traceh.api.services import ServiceKey
 from traceh.api.tools import ToolOutput
 from traceh.kernel import ScopedPolicyBinding, ScopeKind
@@ -336,7 +336,7 @@ async def test_plugin_policy_and_middleware_execute_on_the_tool_mainline(
         (
             ModelResponse(
                 tool_calls=(ToolCall("call-1", tool.name, {}),),
-                finish_reason="tool_calls",
+                completion=CompletionCategory.TOOL_HANDOFF,
             ),
             ModelResponse(content="done"),
         )

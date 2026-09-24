@@ -1,0 +1,164 @@
+{
+  "experiment": "A - task-type Single/Multi (collection plan section 5)",
+  "frozen_at_utc": "2026-09-23T11:26:14.589765+00:00",
+  "source_digest": "63b8c92773b622afad42ed78eeff3559882364776dc4b7b3570be4e5bb92b932",
+  "benchmark": ".traceh/tt1-exp-governed/material",
+  "benchmark_digest": "77d24c78ade81a317b3019dfe0980576c975493f2d964f6f2826e42a6bf8312d",
+  "benchmark_template_sha256": "8f898ed2a2d9b6f10c3e37a4a98e3402e72d2975cc9d14c304d009fb6801b55d",
+  "calibration_sha256": "0bf72f711c5ca89249c9b8104e0b2630997afead2ac597820cd082e2a5686495",
+  "model": {
+    "provider": "openai-compatible",
+    "model": "qwen3.6-plus",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key_env": "DASHSCOPE_API_KEY",
+    "retry_policy": {
+      "max_attempts": 1,
+      "max_elapsed_seconds": 0,
+      "base_delay_seconds": 0,
+      "max_delay_seconds": 0,
+      "retry_after_cap_seconds": 0,
+      "jitter_ratio": 0
+    }
+  },
+  "network": "direct: paired plans only; each arm runs in a private worker with *_PROXY cleared and urllib ProxyHandler({}); the batch process also clears *_PROXY",
+  "multi_authorization": {
+    "max_children": 3,
+    "patch_author": true
+  },
+  "budgets": {
+    "task_budget": {
+      "max_tokens": 1500000,
+      "max_steps": 150,
+      "max_tool_calls": 300,
+      "max_wall_milliseconds": 1800000,
+      "max_children": 3,
+      "max_depth": 2,
+      "max_processes": 3
+    },
+    "coder": {
+      "max_tokens": 950000,
+      "max_steps": 70,
+      "max_tool_calls": 150,
+      "max_wall_milliseconds": 1200000,
+      "max_children": 3,
+      "max_depth": 1,
+      "max_processes": 1
+    }
+  },
+  "context_policy": {
+    "encoding": "cl100k_base",
+    "window_tokens": 96000,
+    "output_reserve_tokens": 8192,
+    "safety_margin_tokens": 2048,
+    "trigger_percent": 60,
+    "fold_relief_percent": 35,
+    "fold_protect_recent_groups": 2,
+    "compaction_trigger_utf8_bytes": 4000000,
+    "compaction_max_summary_utf8_bytes": 4096,
+    "compaction_keep_recent_turns": 1,
+    "fold_protect_readback_utf8_bytes": 40000
+  },
+  "repetitions": 2,
+  "order": "plans run sequentially in manifest order (case order of spec, r1 then r2); first arm single in r1, multi in r2",
+  "plans": [
+    {
+      "case_id": "a1-small-hashlib-blake2",
+      "repetition": 1,
+      "plan": ".traceh\\tt1-plans-a\\a1-small-hashlib-blake2-r1\\run-plan.json",
+      "sha256": "91e6c06e89a7dcecff02d5787868633c56dc19c7403bcf29b6495b72573c1ac6"
+    },
+    {
+      "case_id": "a1-small-hashlib-blake2",
+      "repetition": 2,
+      "plan": ".traceh\\tt1-plans-a\\a1-small-hashlib-blake2-r2\\run-plan.json",
+      "sha256": "12074e9fe4f92f15fa30bd0c88526fe06da5a0e8b8164ed8ddec60166e4fe416"
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "repetition": 1,
+      "plan": ".traceh\\tt1-plans-a\\a2-parallel-read-brain-registry-r1\\run-plan.json",
+      "sha256": "ebb7049533dd7df45e3afcec65d9844d395643fdf4fa9a4620a2864f7e580393"
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "repetition": 2,
+      "plan": ".traceh\\tt1-plans-a\\a2-parallel-read-brain-registry-r2\\run-plan.json",
+      "sha256": "0427962b98851afe26568b9a6935006adadf5c6b928c73d89cbf9b5f0c63acea"
+    },
+    {
+      "case_id": "a3-parallel-fix-three-brains",
+      "repetition": 1,
+      "plan": ".traceh\\tt1-plans-a\\a3-parallel-fix-three-brains-r1\\run-plan.json",
+      "sha256": "1de74992e59aad13b113d810b3358f3cb294e4e16db5b0b685bbbb71b8a55c57"
+    },
+    {
+      "case_id": "a3-parallel-fix-three-brains",
+      "repetition": 2,
+      "plan": ".traceh\\tt1-plans-a\\a3-parallel-fix-three-brains-r2\\run-plan.json",
+      "sha256": "4d1e3092507fee7958352c69b934cf4b67a193b11c3abf648e46c6f7ed4bec9b"
+    },
+    {
+      "case_id": "a4-investigate-negative-subscript",
+      "repetition": 1,
+      "plan": ".traceh\\tt1-plans-a\\a4-investigate-negative-subscript-r1\\run-plan.json",
+      "sha256": "8f13e45ab9c4e5a2c8086f4a40051725a6df3a15bc7a176df5d7f6774551431f"
+    },
+    {
+      "case_id": "a4-investigate-negative-subscript",
+      "repetition": 2,
+      "plan": ".traceh\\tt1-plans-a\\a4-investigate-negative-subscript-r2\\run-plan.json",
+      "sha256": "9d4b09dbfa500f66a0e63eee9164432b75f0c7fa5c808599606f2a260a9c12e9"
+    },
+    {
+      "case_id": "a5-dependent-sample-arguments",
+      "repetition": 1,
+      "plan": ".traceh\\tt1-plans-a\\a5-dependent-sample-arguments-r1\\run-plan.json",
+      "sha256": "fc1448fab485072c4ffeb5648bec61d9fc7eaca55f0fbb46a356ab2367836c87"
+    },
+    {
+      "case_id": "a5-dependent-sample-arguments",
+      "repetition": 2,
+      "plan": ".traceh\\tt1-plans-a\\a5-dependent-sample-arguments-r2\\run-plan.json",
+      "sha256": "8ca108e13ad9b913c5f71369975cb13038eb23a41d9e49b20c9f6eecbc4f6b8c"
+    }
+  ],
+  "expectations": {
+    "a1-small-hashlib-blake2": "single: lower cost at equal quality",
+    "a2-parallel-read-brain-registry": "multi: possibly shorter wall time at similar tokens",
+    "a3-parallel-fix-three-brains": "multi: possibly shorter wall time, higher tokens",
+    "a4-investigate-negative-subscript": "uncertain",
+    "a5-dependent-sample-arguments": "single: better (steps change the same function in order)"
+  },
+  "report": [
+    "fixed verifier outcome",
+    "whole-tree tokens by role",
+    "wall",
+    "calls",
+    "allocation and child count",
+    "child delivery status",
+    "S0-A context diagnostics per session"
+  ],
+  "stop_rules": [
+    "invariant violation stops the batch",
+    "two consecutive plans with provider failure or unknown usage stop the batch",
+    "no re-run replaces a failure",
+    "no parallel heavy work"
+  ],
+  "cost_recording": "user monitors provider billing; known exact usage and unknown-usage entries are recorded, unknown never counted as zero",
+  "b_selection_rule": "after A: categories whose multi arm has any agent with provider-reported input peak >= trigger_tokens or tool folds > 0; up to two, highest peak first",
+  "claims_limit": "one case per category; observations per category, no significance, no general superiority claim",
+  "amendments": [
+    {
+      "at": "2026-09-23T17:50+08:00",
+      "what": "output root moved to C:/Users/caojie/tta1 with short per-plan names p01..p10",
+      "why": "first launch under .traceh/tta-runs failed twice with workspace-git-failed before any model call (0 tokens, both arms of each pair either failed or not started); Git for Windows worktree paths exceeded the length limit. Evidence kept in .traceh/tta-runs; batch stopped by its own rule. Source digest, plans and conditions unchanged."
+    },
+    {
+      "at": "2026-09-23T11:26:14.590766+00:00",
+      "what": "restart A from p01 on a new source digest after ADR-0083 (collaboration plan main work flattened to three top-level strings); output C:/Users/caojie/tta2",
+      "why": "run tta1 stopped after p03: 2 of 3 multi arms failed with provider-tool-arguments-json-value-expected. Replaying the frozen failed requests showed the nested main_work object invalid 7/8, flattened 0/8 (docs/validation-data/task-type-evolution-v1/tool-arguments-diagnosis.json). tta1 results stay as the stopped earlier condition and are not merged.",
+      "previous_source_digest": "8f5de8406c4e60de9621a72b742460a307d680ed5635d3be707a3cca3daa1b95",
+      "verification": "affected collaboration, Product (real Docker), architecture and optimization-contract tests pass; the full suite was not re-run after this change"
+    }
+  ]
+}

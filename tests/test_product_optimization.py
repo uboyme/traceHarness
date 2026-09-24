@@ -37,10 +37,13 @@ def product_ao_root():
         yield Path(directory)
 
 
-async def test_product_candidate_crosses_original_ao_and_reopens_without_adoption(product_ao_root):
+@pytest.mark.parametrize("mode", ["single", "multi"])
+async def test_product_candidate_crosses_original_ao_and_reopens_without_adoption(
+    product_ao_root, mode
+):
     tmp_path = product_ao_root
     policy = real_sandbox_policy()
-    benchmark = build_benchmark(tmp_path / "benchmark", arms=(("multi", 1),))
+    benchmark = build_benchmark(tmp_path / "benchmark", arms=((mode, 1),))
     manifest = json.loads((benchmark / "benchmark.json").read_text())
     cases = json.loads((benchmark / "dataset.json").read_text())["cases"]
     assert len(cases) == 1
@@ -60,12 +63,12 @@ async def test_product_candidate_crosses_original_ao_and_reopens_without_adoptio
         "rubric": {"file": rubric.name, "sha256": digest_bytes(rubric.read_bytes())},
         "requires_review": True,
     }
-    write_dataset(benchmark, manifest, cases, format_version=2)
+    write_dataset(benchmark, manifest, cases, format_version=3)
     plan_file = pair_plan(tmp_path, execution={"timeout_seconds": 180})
     plan = json.loads(plan_file.read_text())
     plan["benchmark_digest"] = digest_bytes((benchmark / "benchmark.json").read_bytes())
     plan["trials"] = {"repetitions": 1}
-    plan["comparison"]["requested_modes"] = ["multi", "multi"]
+    plan["comparison"]["requested_modes"] = [mode, mode]
     plan["comparison"]["min_pass_gain"] = 1
     plan["execution"]["sandbox_config"] = "sandbox.json"
     plan_file.write_text(json.dumps(plan))
@@ -105,13 +108,17 @@ async def test_product_candidate_crosses_original_ao_and_reopens_without_adoptio
         {"content": "Added the requested file and used the source report."},
         {"content": "Delivery review: file edited; functional checks not run by this fixture."},
     ]
+    if mode == "single":
+        replies = replies[3:]
     for reply in replies:
         reply["usage"] = {"input_tokens": 20, "output_tokens": 10}
     (tmp_path / "script.json").write_text(json.dumps(replies))
     files = source_files()[1]
-    edits = editable_text(
-        files, (("supervision/structured_collaboration.py", "ALLOCATION_GUIDANCE"),)
+    selector = (
+        ("product/execution.py", "CODER_GUIDANCE") if mode == "single"
+        else ("supervision/structured_collaboration.py", "ALLOCATION_GUIDANCE")
     )
+    edits = editable_text(files, (selector,))
     proposal = {
         "kind": "candidate",
         "rationale": "Explicit fixture tests the Product integration.",
@@ -121,7 +128,7 @@ async def test_product_candidate_crosses_original_ao_and_reopens_without_adoptio
             {
                 "file": edits[0].file,
                 "selector": edits[0].selector,
-                "new_text": edits[0].text + " Reuse available evidence before delegating.",
+                "new_text": edits[0].text + " Reuse available evidence before investigating.",
             }
         ],
     }

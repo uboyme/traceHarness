@@ -1,0 +1,32 @@
+{
+  "selection": {
+    "path": "benchmarks/real_repository_v1/selection.json",
+    "sha256": "98d9ab01cfd5ae2b5fb847b9a74f1bf66bf3c26d91fcfdbe187c625522b4d910",
+    "bytes": 4946
+  },
+  "new_dataset": {
+    "path": ".traceh/rm3/material/dataset.json",
+    "sha256": "a015a24f67b8d882a3bf9735cb49affd0123c75ea942c718578282f9fd4a3fee",
+    "bytes": 47798
+  },
+  "new_benchmark": {
+    "path": ".traceh/rm3/material/benchmark.json",
+    "sha256": "a6ea2ffd9c872bd5d8d97fb439010033ec4e5f92ee443f4b5edcba7d5d88c007",
+    "bytes": 2239
+  },
+  "new_provenance": {
+    "path": ".traceh/rm3/provenance.json",
+    "sha256": "b1779f0f7c5d5153af8e10a1fe9cfccb3454046f48b8911b57151e1925bb7df3",
+    "bytes": 10892
+  },
+  "new_material_producer": {
+    "path": "tests/real_repository_evaluation/materials.py",
+    "sha256": "e17e35a3c2da160085f85d85e41ecff27321e29e3bd47dbae252834d16393077",
+    "bytes": 11270
+  },
+  "regenerated_after_path_pattern_fix": {
+    "material/dataset.json": true,
+    "material/benchmark.json": true,
+    "provenance.json": true
+  }
+}

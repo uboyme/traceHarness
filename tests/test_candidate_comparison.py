@@ -84,7 +84,7 @@ def _write_suite(root: Path) -> Path:
     initial.mkdir(parents=True)
     (initial / "project.txt").write_text("fixed host input\n", encoding="utf-8")
     (root / "case" / "script.json").write_text(
-        '[{"content": "done", "finish_reason": "stop"}]\n',
+        '[{"content": "done"}]\n',
         encoding="utf-8",
     )
     manifest = {
@@ -312,7 +312,7 @@ def _write_probe_case(root: Path, *, verifier_program: str = "{python}") -> dict
     initial.mkdir(parents=True)
     (initial / "project.txt").write_text("probe input\n", encoding="utf-8")
     (root / "script.json").write_text(
-        '[{"content": "done", "finish_reason": "stop"}]\n',
+        '[{"content": "done"}]\n',
         encoding="utf-8",
     )
     return {
@@ -526,13 +526,17 @@ async def test_probe_uses_the_real_runtime_and_collects_persisted_evidence(
 
     assert facts["completed"] is True
     assert facts["evidence_complete"] is True
-    assert facts["verification_passed"] is True
+    # L3 does not yet supply a Sandbox. The current command verifier must
+    # fail closed, while still leaving complete, reconstructible evidence.
+    assert facts["verification_passed"] is False
+    assert facts["verification_exit_code"] is None
+    assert facts["reason"] == "verification_failed"
     assert facts["invariant_violations"] == 0
     assert facts["reconstruction_violations"] == 0
 
 
 @pytest.mark.asyncio
-async def test_probe_runtime_failure_does_not_claim_missing_evidence_is_clean(
+async def test_probe_missing_sandbox_does_not_attempt_a_host_executable(
     tmp_path: Path,
 ) -> None:
     suite = tmp_path / "probe-suite"
@@ -547,9 +551,11 @@ async def test_probe_runtime_failure_does_not_claim_missing_evidence_is_clean(
         plugin_version="1.0",
     )
 
-    assert facts["completed"] is False
+    assert facts["completed"] is True
     assert facts["evidence_complete"] is True
-    assert facts["reason"] == "failed"
+    assert facts["reason"] == "verification_failed"
+    assert facts["verification_passed"] is False
+    assert facts["verification_exit_code"] is None
 
 
 @pytest.mark.asyncio

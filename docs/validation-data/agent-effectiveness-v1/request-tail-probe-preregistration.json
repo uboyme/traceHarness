@@ -1,0 +1,22 @@
+{
+  "frozen_at_utc": "2026-09-21T20:30:52.900632+00:00",
+  "purpose": "Distinguish whether synthetic final user reference package contributes to repeated task restart. No tools executed, not a task score or completed patch.",
+  "source_run": ".traceh/ae01",
+  "source_stream": "session:wf-session-e85d983f17ceb1dc60f3e03df060e5354ae67271c0f6aace753f9830a0f3675e",
+  "source_seq": 247,
+  "source_request_sha256": "b8ed754980273df663ee0d7bbf994af55b1491b2bc13d77bc3dcbb939e838798",
+  "conditions": [
+    "original",
+    "omit_final_reference_package",
+    "omit_final_reference_package",
+    "original"
+  ],
+  "calls": 4,
+  "max_output_tokens": 8192,
+  "model": "qwen3-coder-next",
+  "timeout_seconds": 120,
+  "retry": 0,
+  "reserved_cny": 1,
+  "conservative_total_before_probe": 12.911015,
+  "decision": "No model change or runtime modification during probe. Observe parameter adherence, repeated read versus progressing edit; inconclusive results must remain inconclusive."
+}

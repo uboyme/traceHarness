@@ -1,0 +1,135 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.https
+#1 transferring dockerfile: 467B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/traceh-ae:py39-v1
+#2 DONE 3.4s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/traceh-ae:py39-v1@sha256:e5fad140e978a96358eb4e3dbd8ee62a921514033b2511921e2828f50c6e89b9
+#4 resolve docker.io/library/traceh-ae:py39-v1@sha256:e5fad140e978a96358eb4e3dbd8ee62a921514033b2511921e2828f50c6e89b9 0.0s done
+#4 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 38B done
+#5 DONE 0.0s
+
+#6 [2/4] RUN sed -i 's@http://@https://@g' /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends libgl1 libxrender1 libxt6 && rm -rf /var/lib/apt/lists/*
+#6 1.424 Get:1 https://deb.debian.org/debian bullseye InRelease [75.1 kB]
+#6 1.875 Get:2 https://deb.debian.org/debian-security bullseye-security InRelease [27.1 kB]
+#6 2.043 Get:3 https://deb.debian.org/debian bullseye-updates InRelease [44.0 kB]
+#6 2.246 Get:4 https://deb.debian.org/debian bullseye/main amd64 Packages [8066 kB]
+#6 3.469 Get:5 https://deb.debian.org/debian-security bullseye-security/main amd64 Packages [475 kB]
+#6 3.621 Get:6 https://deb.debian.org/debian bullseye-updates/main amd64 Packages [18.8 kB]
+#6 4.146 Fetched 8706 kB in 4s (2223 kB/s)
+#6 4.146 Reading package lists...
+#6 4.545 Reading package lists...
+#6 4.952 Building dependency tree...
+#6 5.085 Reading state information...
+#6 5.208 The following additional packages will be installed:
+#6 5.208   libbsd0 libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm-nouveau2
+#6 5.208   libdrm-radeon1 libdrm2 libedit2 libelf1 libexpat1 libgl1-mesa-dri
+#6 5.209   libglapi-mesa libglvnd0 libglx-mesa0 libglx0 libice6 libllvm11 libmd0
+#6 5.209   libpciaccess0 libsensors-config libsensors5 libsm6 libvulkan1 libx11-6
+#6 5.209   libx11-data libx11-xcb1 libxau6 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0
+#6 5.209   libxcb-present0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb1 libxdamage1
+#6 5.209   libxdmcp6 libxext6 libxfixes3 libxshmfence1 libxxf86vm1 libz3-4 x11-common
+#6 5.212 Suggested packages:
+#6 5.212   pciutils lm-sensors
+#6 5.212 Recommended packages:
+#6 5.212   mesa-vulkan-drivers | vulkan-icd
+#6 5.341 The following NEW packages will be installed:
+#6 5.341   libbsd0 libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm-nouveau2
+#6 5.341   libdrm-radeon1 libdrm2 libedit2 libelf1 libexpat1 libgl1 libgl1-mesa-dri
+#6 5.341   libglapi-mesa libglvnd0 libglx-mesa0 libglx0 libice6 libllvm11 libmd0
+#6 5.341   libpciaccess0 libsensors-config libsensors5 libsm6 libvulkan1 libx11-6
+#6 5.341   libx11-data libx11-xcb1 libxau6 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0
+#6 5.341   libxcb-present0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb1 libxdamage1
+#6 5.341   libxdmcp6 libxext6 libxfixes3 libxrender1 libxshmfence1 libxt6 libxxf86vm1
+#6 5.342   libz3-4 x11-common
+#6 5.997 0 upgraded, 46 newly installed, 0 to remove and 21 not upgraded.
+#6 5.997 Need to get 38.8 MB of archives.
+#6 5.997 After this operation, 155 MB of additional disk space will be used.
+#6 5.997 Get:1 https://deb.debian.org/debian bullseye/main amd64 libmd0 amd64 1.0.3-3 [28.0 kB]
+#6 6.278 Get:2 https://deb.debian.org/debian bullseye/main amd64 libbsd0 amd64 0.11.3-1+deb11u1 [108 kB]
+#6 6.501 Get:3 https://deb.debian.org/debian bullseye/main amd64 libdrm-common all 2.4.104-1 [14.9 kB]
+#6 6.552 Get:4 https://deb.debian.org/debian bullseye/main amd64 libdrm2 amd64 2.4.104-1 [41.5 kB]
+#6 6.589 Get:5 https://deb.debian.org/debian bullseye/main amd64 libdrm-amdgpu1 amd64 2.4.104-1 [28.5 kB]
+#6 6.616 Get:6 https://deb.debian.org/debian bullseye/main amd64 libpciaccess0 amd64 0.16-1 [53.6 kB]
+#6 6.691 Get:7 https://deb.debian.org/debian bullseye/main amd64 libdrm-intel1 amd64 2.4.104-1 [71.8 kB]
+#6 6.740 Get:8 https://deb.debian.org/debian bullseye/main amd64 libdrm-nouveau2 amd64 2.4.104-1 [26.8 kB]
+#6 6.756 Get:9 https://deb.debian.org/debian bullseye/main amd64 libdrm-radeon1 amd64 2.4.104-1 [30.2 kB]
+#6 6.767 Get:10 https://deb.debian.org/debian bullseye/main amd64 libedit2 amd64 3.1-20191231-2+b1 [96.7 kB]
+#6 6.812 Get:11 https://deb.debian.org/debian bullseye/main amd64 libelf1 amd64 0.183-1 [165 kB]
+#6 6.881 Err:12 https://deb.debian.org/debian-security bullseye-security/main amd64 libexpat1 amd64 2.2.10-2+deb11u7
+#6 6.881   404  Not Found [IP: 146.75.46.132 443]
+#6 6.923 Err:13 https://deb.debian.org/debian-security bullseye-security/main amd64 libglapi-mesa amd64 20.3.5-1+deb11u1
+#6 6.923   404  Not Found [IP: 146.75.46.132 443]
+#6 6.924 Get:14 https://deb.debian.org/debian bullseye/main amd64 libz3-4 amd64 4.8.10-1 [6949 kB]
+#6 7.586 Get:15 https://deb.debian.org/debian bullseye/main amd64 libllvm11 amd64 1:11.0.1-2 [17.9 MB]
+#6 8.776 Get:16 https://deb.debian.org/debian bullseye/main amd64 libsensors-config all 1:3.6.0-7 [32.3 kB]
+#6 8.778 Get:17 https://deb.debian.org/debian bullseye/main amd64 libsensors5 amd64 1:3.6.0-7 [52.3 kB]
+#6 8.784 Get:18 https://deb.debian.org/debian bullseye/main amd64 libvulkan1 amd64 1.2.162.0-1 [103 kB]
+#6 8.786 Err:19 https://deb.debian.org/debian-security bullseye-security/main amd64 libgl1-mesa-dri amd64 20.3.5-1+deb11u1
+#6 8.786   404  Not Found [IP: 146.75.46.132 443]
+#6 8.786 Get:20 https://deb.debian.org/debian bullseye/main amd64 libglvnd0 amd64 1.3.2-1 [53.6 kB]
+#6 8.791 Get:21 https://deb.debian.org/debian bullseye/main amd64 libxau6 amd64 1:1.0.9-1 [19.7 kB]
+#6 8.793 Get:22 https://deb.debian.org/debian bullseye/main amd64 libxdmcp6 amd64 1:1.1.2-3 [26.3 kB]
+#6 8.794 Get:23 https://deb.debian.org/debian bullseye/main amd64 libxcb1 amd64 1.14-3 [140 kB]
+#6 8.802 Get:24 https://deb.debian.org/debian bullseye/main amd64 libx11-data all 2:1.7.2-1+deb11u2 [311 kB]
+#6 8.928 Get:25 https://deb.debian.org/debian bullseye/main amd64 libx11-6 amd64 2:1.7.2-1+deb11u2 [772 kB]
+#6 8.970 Get:26 https://deb.debian.org/debian bullseye/main amd64 libx11-xcb1 amd64 2:1.7.2-1+deb11u2 [204 kB]
+#6 8.979 Get:27 https://deb.debian.org/debian bullseye/main amd64 libxcb-dri2-0 amd64 1.14-3 [103 kB]
+#6 8.996 Get:28 https://deb.debian.org/debian bullseye/main amd64 libxcb-dri3-0 amd64 1.14-3 [102 kB]
+#6 9.003 Get:29 https://deb.debian.org/debian bullseye/main amd64 libxcb-glx0 amd64 1.14-3 [118 kB]
+#6 9.017 Get:30 https://deb.debian.org/debian bullseye/main amd64 libxcb-present0 amd64 1.14-3 [101 kB]
+#6 9.020 Get:31 https://deb.debian.org/debian bullseye/main amd64 libxcb-shm0 amd64 1.14-3 [101 kB]
+#6 9.027 Get:32 https://deb.debian.org/debian bullseye/main amd64 libxcb-sync1 amd64 1.14-3 [105 kB]
+#6 9.035 Get:33 https://deb.debian.org/debian bullseye/main amd64 libxcb-xfixes0 amd64 1.14-3 [105 kB]
+#6 9.044 Get:34 https://deb.debian.org/debian bullseye/main amd64 libxdamage1 amd64 1:1.1.5-2 [15.7 kB]
+#6 9.115 Get:35 https://deb.debian.org/debian bullseye/main amd64 libxext6 amd64 2:1.3.3-1.1 [52.7 kB]
+#6 9.127 Get:36 https://deb.debian.org/debian bullseye/main amd64 libxfixes3 amd64 1:5.0.3-2 [22.1 kB]
+#6 9.132 Get:37 https://deb.debian.org/debian bullseye/main amd64 libxshmfence1 amd64 1.3-1 [8820 B]
+#6 9.153 Get:38 https://deb.debian.org/debian bullseye/main amd64 libxxf86vm1 amd64 1:1.1.4-1+b2 [20.8 kB]
+#6 9.297 Err:39 https://deb.debian.org/debian-security bullseye-security/main amd64 libglx-mesa0 amd64 20.3.5-1+deb11u1
+#6 9.297   404  Not Found [IP: 146.75.46.132 443]
+#6 9.306 Get:40 https://deb.debian.org/debian bullseye/main amd64 x11-common all 1:7.7+22 [252 kB]
+#6 9.314 Get:41 https://deb.debian.org/debian bullseye/main amd64 libice6 amd64 2:1.0.10-1 [58.5 kB]
+#6 9.314 Get:42 https://deb.debian.org/debian bullseye/main amd64 libsm6 amd64 2:1.2.3-1 [35.1 kB]
+#6 9.316 Get:43 https://deb.debian.org/debian bullseye/main amd64 libxrender1 amd64 1:0.9.10-1 [33.0 kB]
+#6 9.319 Get:44 https://deb.debian.org/debian bullseye/main amd64 libxt6 amd64 1:1.2.0-1 [189 kB]
+#6 9.327 Get:45 https://deb.debian.org/debian bullseye/main amd64 libglx0 amd64 1.3.2-1 [35.7 kB]
+#6 9.330 Get:46 https://deb.debian.org/debian bullseye/main amd64 libgl1 amd64 1.3.2-1 [89.5 kB]
+#6 9.339 Fetched 28.8 MB in 4s (7220 kB/s)
+#6 9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/e/expat/libexpat1_2.2.10-2%2bdeb11u7_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+#6 9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libglapi-mesa_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+#6 9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libgl1-mesa-dri_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+#6 9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libglx-mesa0_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+#6 9.340 E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+#6 ERROR: process "/bin/sh -c sed -i 's@http://@https://@g' /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends libgl1 libxrender1 libxt6 && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100
+------
+ > [2/4] RUN sed -i 's@http://@https://@g' /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends libgl1 libxrender1 libxt6 && rm -rf /var/lib/apt/lists/*:
+9.316 Get:43 https://deb.debian.org/debian bullseye/main amd64 libxrender1 amd64 1:0.9.10-1 [33.0 kB]
+9.319 Get:44 https://deb.debian.org/debian bullseye/main amd64 libxt6 amd64 1:1.2.0-1 [189 kB]
+9.327 Get:45 https://deb.debian.org/debian bullseye/main amd64 libglx0 amd64 1.3.2-1 [35.7 kB]
+9.330 Get:46 https://deb.debian.org/debian bullseye/main amd64 libgl1 amd64 1.3.2-1 [89.5 kB]
+9.339 Fetched 28.8 MB in 4s (7220 kB/s)
+9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/e/expat/libexpat1_2.2.10-2%2bdeb11u7_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libglapi-mesa_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libgl1-mesa-dri_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+9.340 E: Failed to fetch https://deb.debian.org/debian-security/pool/updates/main/m/mesa/libglx-mesa0_20.3.5-1%2bdeb11u1_amd64.deb  404  Not Found [IP: 146.75.46.132 443]
+9.340 E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+------
+Dockerfile.https:2
+--------------------
+   1 |     FROM traceh-ae:py39-v1
+   2 | >>> RUN sed -i 's@http://@https://@g' /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends libgl1 libxrender1 libxt6 && rm -rf /var/lib/apt/lists/*
+   3 |     COPY requirements.txt /opt/traceh/pyvista-requirements.txt
+   4 |     RUN python -m pip install --no-cache-dir --only-binary=:all: -r /opt/traceh/pyvista-requirements.txt && python -m pip freeze --all > /opt/traceh/installed.txt
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c sed -i 's@http://@https://@g' /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends libgl1 libxrender1 libxt6 && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100

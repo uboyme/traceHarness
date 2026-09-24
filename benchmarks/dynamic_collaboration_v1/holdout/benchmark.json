@@ -77,7 +77,7 @@
   },
   "dataset": {
     "file": "dataset.json",
-    "sha256": "24d810475339ce211564648f2678b0fd25ccfaa8db434084e98edc5120f75a16"
+    "sha256": "8690c6a4e3502de73fc7afaaaeecfd2c91ef0b08e726e6e45b3d2b4b7e0de5b4"
   },
   "assessment": {
     "scorer_id": "product-durable-semantic-v1",

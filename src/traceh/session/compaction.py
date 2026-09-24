@@ -42,14 +42,19 @@ from traceh.concurrency import await_worker_convergence
 from traceh.session.event_store import ConcurrencyConflict
 from traceh.session.service import SessionService
 from traceh.session.surface_replacement import (
+    FOLD_STEP,
+    FOLD_TURN,
     MAX_SURFACE_SUMMARY_UTF8_BYTES,
     SURFACE_REPLACE,
+    FoldBoundary,
     SummarizerIdentity,
     SurfacePrefix,
     SurfaceReplacement,
     SurfaceToolFold,
     bounded_summary,
+    closed_step_ends,
     closed_turn_ends,
+    fold_source_call,
     parse_surface_replacement,
     split_tool_calls,
     surface_prefix,
@@ -216,6 +221,9 @@ class CompactionReport:
     history_utf8_bytes: int
     source_utf8_bytes: int
     summary_truncated: bool
+    #: Present only for a tool fold, and it is the authority on which unit the
+    #: protection was counted in. ``kept_recent_turns`` above cannot say that.
+    fold_boundary: FoldBoundary | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -464,12 +472,83 @@ class CompactionService:
         cut = _cut_boundary(events, through_seq=None, keep_recent_turns=policy.keep_recent_turns)
         if cut is None:
             return None
-        plan = tool_fold_plan(events, cut_seq=cut)
+        plan = tool_fold_plan(events, cut_seq=cut, unit=FOLD_TURN)
         return (
             plan
             if plan and (ignore_bytes or plan.history_utf8_bytes >= policy.trigger_utf8_bytes)
             else None
         )
+
+    def _step_fold_plan(
+        self,
+        events: tuple[EventEnvelope, ...],
+        *,
+        kept_recent_groups: int,
+        readback_protect_utf8_bytes: int,
+    ) -> SurfacePrefix | None:
+        """One foldable result inside a closed Step that is no longer protected."""
+
+        ends = closed_step_ends(events)
+        candidates = ends[: max(0, len(ends) - kept_recent_groups)]
+        if not candidates:
+            return None
+        return tool_fold_plan(
+            events,
+            cut_seq=candidates[-1],
+            unit=FOLD_STEP,
+            readback_protect_utf8_bytes=readback_protect_utf8_bytes,
+        )
+
+    async def fold_closed_steps(
+        self,
+        session_id: str,
+        *,
+        kept_recent_groups: int,
+        readback_protect_utf8_bytes: int,
+        policy_digest: str,
+        still_over_watermark: Callable[[], Awaitable[bool]] | None = None,
+    ) -> int:
+        """Fold finished tool groups of the current Turn until relief or exhaustion.
+
+        This is the in-Turn counterpart of `compact_before_turn`. The important
+        difference is not the unit but the *caller's* situation: this one runs
+        inside request preparation, where the alternative to folding is sending
+        an oversized request. It therefore reports how many results it folded
+        and lets `CompactionError` reach the caller, instead of the maintenance
+        path's "carry on with full history" behaviour.
+        """
+
+        if type(kept_recent_groups) is not int or kept_recent_groups < 0:
+            raise CompactionError("compaction-kept-groups-invalid")
+        boundary = FoldBoundary(
+            unit=FOLD_STEP,
+            kept_recent=kept_recent_groups,
+            kept_recent_readback_utf8_bytes=readback_protect_utf8_bytes,
+        )
+        folded = 0
+        while True:
+            if still_over_watermark is not None and not await still_over_watermark():
+                return folded
+            report = await self._append(
+                session_id,
+                method="tool-fold",
+                select=lambda events: self._step_fold_plan(
+                    events,
+                    kept_recent_groups=kept_recent_groups,
+                    readback_protect_utf8_bytes=readback_protect_utf8_bytes,
+                ),
+                summarize=lambda plan: _ready(""),
+                kept_recent_turns=0,
+                max_summary_utf8_bytes=MAX_SURFACE_SUMMARY_UTF8_BYTES,
+                policy_digest=policy_digest,
+                summarizer=None,
+                fold_boundary=boundary,
+            )
+            if report is None:
+                # No legal candidate left. That is an explained no-op, not a
+                # failure; the caller's water-mark rules decide what follows.
+                return folded
+            folded += 1
 
     # -- selection --------------------------------------------------------
 
@@ -511,6 +590,7 @@ class CompactionService:
         policy_digest: str | None,
         summarizer: SummarizerIdentity | None,
         causation_id=None,
+        fold_boundary: FoldBoundary | None = None,
     ) -> CompactionReport | None:
         """Select, summarize and commit against one unchanged Session head.
 
@@ -554,7 +634,14 @@ class CompactionService:
                         digest=reference["digest"],
                     )
                     data = tool_fold_data(
-                        plan, kept_recent_turns=kept_recent_turns, policy_digest=policy_digest
+                        plan,
+                        call=fold_source_call(events, source),
+                        boundary=(
+                            fold_boundary
+                            if fold_boundary is not None
+                            else FoldBoundary(unit=FOLD_TURN, kept_recent=kept_recent_turns)
+                        ),
+                        policy_digest=policy_digest,
                     )
                 else:
                     summary = await summarize(plan)
@@ -677,7 +764,20 @@ def _report(
         summary=replacement.summary if isinstance(replacement, SurfaceReplacement) else "",
         method=replacement.method,
         cut_seq=replacement.cut_seq,
-        kept_recent_turns=replacement.kept_recent_turns,
+        # A fold reports the protection it actually used, in its own unit; the
+        # report field stays Turn-shaped only for summaries, which only ever cut
+        # at Turns. A Step fold reports 0 kept Turns rather than pretending its
+        # group count is a Turn count.
+        kept_recent_turns=(
+            replacement.kept_recent_turns
+            if isinstance(replacement, SurfaceReplacement)
+            else replacement.boundary.kept_recent
+            if replacement.boundary.unit == FOLD_TURN
+            else 0
+        ),
+        fold_boundary=(
+            replacement.boundary if isinstance(replacement, SurfaceToolFold) else None
+        ),
         history_utf8_bytes=replacement.history_utf8_bytes,
         source_utf8_bytes=replacement.source_utf8_bytes,
         summary_truncated=(

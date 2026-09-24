@@ -51,7 +51,7 @@ class PartialBudgetProvider:
             return product._response("Ready to decide.")
         assert not names & {"decide_investigation_budget", "followup_investigation"}
         self.report = next(
-            json.loads(m.content)["child"]
+            json.loads(m.content)["children"][0]
             for m in request.messages
             if m.role == "tool" and m.name == "submit_collaboration_plan"
         )
@@ -72,9 +72,11 @@ def negotiation_profile(mode):
                 max_tokens=30000,
                 max_steps=10,
                 max_tool_calls=10,
-                max_wall_milliseconds=120000,
+                # This fixture exercises a waiting budget report, not concurrent
+                # dispatch. Keep its explicit child lifetime inside the Tool hold.
+                max_wall_milliseconds=30000,
             ),
-            max_turn_wall_milliseconds=60000,
+            max_turn_wall_milliseconds=30000,
         ),
         coder=replace(base.coder, max_turn_wall_milliseconds=120000),
     )
@@ -109,5 +111,8 @@ async def test_product_returns_partial_budget_report_without_grant_or_followup(
             if e.type == "tool/result" and e.data.get("tool_name") == "submit_collaboration_plan"
         )
         assert result["outcome"] == "child_incomplete"
-        assert result["child"]["budget_requests"][0]["decision"] is None
-        assert result["child"]["budget"]["allocated_tokens"] == 20000
+        assert len(result["children"]) == 1
+        child = result["children"][0]
+        assert child["assignment_id"] == PLAN["children"][0]["assignment_id"]
+        assert child["budget_requests"][0]["decision"] is None
+        assert child["budget"]["allocated_tokens"] == 20000

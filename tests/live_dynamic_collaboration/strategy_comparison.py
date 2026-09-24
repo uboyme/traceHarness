@@ -135,6 +135,8 @@ def prepare(repository, sandbox, output, env_file):
                 "retry_after_cap_seconds": 0,
                 "jitter_ratio": 0,
             },
+            # The wait these runs had, now frozen instead of an inherited default.
+            "timeout_seconds": 120,
         },
         "execution": {
             "sandbox_config": "../sandbox.json",

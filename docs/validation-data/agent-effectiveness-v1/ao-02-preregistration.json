@@ -1,0 +1,39 @@
+{
+  "contract": {
+    "experiment_id": "agent-effectiveness-allocation-v2",
+    "base_source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+    "benchmark_digest": "fb8438a534bb13a333f61902dc35c964988d0e7964dbf44b1f3a3c97f7a54fff",
+    "run_plan_digest": "d14f3a3ba1e5a72a0d9c36ef9cee5810452933454b48c64028a8b07b0a61dfea",
+    "development_dataset_digest": "109aabcde2555f2bc84e66dccef9d85885d926486133179d8ba221f701ab6360",
+    "development_case_ids": [
+      "pylint-dev__astroid-1196"
+    ],
+    "editable_text": [
+      {
+        "file": "supervision/structured_collaboration.py",
+        "selector": "ALLOCATION_GUIDANCE",
+        "old_sha256": "88cc81ee6ced05fc83b90e874824db83afcc7c3b410882a490e7ebc5e70d6069",
+        "text": "Submit exactly one submit_collaboration_plan call containing main_work and children.\nThere is no local execution option in the confirmed multi mode. Allocate a\nsubstantive, bounded deliverable to each assignment and retain substantive\nintegration, implementation, or analysis for the main agent.\n\nDefine each assignment's goal, scope, exclusions, deliverable, and necessary briefing.\nState what you retain and exactly how you will use each result. Assign\neach substantive deliverable to one owner. Do not give an assistant your\nwhole task, ask it to restate a known answer, or call a vague duplicate\nreview a separate contribution. Shared source files are allowed for reading. Targeted\nverification of an assistant's claims is required and is not duplicate assignment.\n\nEvery assistant works on the host-bound original revision. It cannot inspect your\nfuture or uncommitted edits, another assistant's workspace, or unfinished sibling work. Do not create a dependency on those edits, assign\nwriting or execution beyond an assignment's granted tools, or request another agent. A\nuseful report may precede your work; simultaneous execution is not required.\n\nDecide how many assignments the work actually contains. Look for independently deliverable units: a unit has its own checkable acceptance condition, needs no other assignment's output to be written, and (for writable work) touches its own files. Give every such unit its own assignment with its own assignment_id, role and exact paths, and keep integration, cross-cutting decisions and final verification for yourself. Two units that are specified independently can be written at the same time even though one calls the other at runtime: a stated interface is enough.\n\nDo not split what shares a file, needs a sibling's result first, or is too small to carry its own briefing and budget. When the work genuinely holds one unit, one assignment is a complete plan. The host ceiling bounds how many you may ask for; within it the count is your judgment about the work, not a quota to fill or avoid. If a batch does not fit the host's allowance, the rejection says so and you may resubmit with fewer assignments.\n\nDistinguish an identified source whose contents are not yet read from a source that is unavailable. When available evidence identifies relevant sources within an assistant's host-granted readonly capabilities, their unknown contents may be the subject of the assignment. Define which questions it should resolve, which sources it should inspect, and what evidence and limitations it should return. You do not need to know those contents or perform that investigation before allocating it. Retain the work that uses the resulting findings. Do not treat unread content alone as a blocking reason, or equate unread with missing. This does not establish access permission or guarantee that a source exists: do not invent sources, and let the assistant report denied, missing or insufficient evidence when observed.\n\nUse only available evidence and clearly mark unknowns. Do not invent sources,\ncompleted checks, permissions, or findings. If a valid allocation cannot be\nmade, state the blocking reason; this stops the run and does not select single.\nBefore submitting, check coverage of the task, ownership of each deliverable,\nfeasible inputs, evidence requirements, and exclusions. You may correct rejected input before delegation starts. After an accepted plan, do not submit another plan."
+      }
+    ],
+    "limits": {
+      "max_rounds": 1,
+      "max_candidates": 1,
+      "max_trials": 2,
+      "max_consecutive_no_gain": 1,
+      "max_invalid_proposals": 1,
+      "max_duplicate_proposals": 1,
+      "max_analysis_calls": 1,
+      "max_analysis_tokens": 16000,
+      "max_request_bytes": 200000
+    },
+    "deadline_utc": "2026-09-21T22:13:38.325074+00:00",
+    "format": 1
+  },
+  "prior_known_cny": 0.0,
+  "prior_unknown_reserved_cny": 0.0,
+  "reserved_cny": 29,
+  "batch_cap_cny": 29.0,
+  "assessment": "original product-durable-v1 fixed verification and Product Review; no optional semantic-quality claim",
+  "adoption_authorized": false
+}

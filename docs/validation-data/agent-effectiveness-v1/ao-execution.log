@@ -1,0 +1,1 @@
+{"reason": "strategy-experiment-failed", "action": "stop", "adoption_authorized": false, "cost": {"analysis": {"attempts": 1, "estimated_attempts": 0, "input_tokens": null, "known_subtotal": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}, "output_tokens": null, "total_tokens": null, "unknown_attempts": 1}, "review_calls": 0, "review_tokens": 0}}

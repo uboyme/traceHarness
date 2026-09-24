@@ -1,0 +1,42 @@
+{
+  "kind": "cost-diagnostic-not-provider-bill",
+  "rows": [
+    {
+      "arm": "01",
+      "known_input_tokens": 448100,
+      "known_output_tokens": 16618,
+      "known_estimated_cny": 1.029144,
+      "unknown_attempts": [],
+      "unknown_byte_based_planning_cny": 0.0
+    },
+    {
+      "arm": "02",
+      "known_input_tokens": 660884,
+      "known_output_tokens": 37443,
+      "known_estimated_cny": 1.621312,
+      "unknown_attempts": [
+        {
+          "session": "session:agent-tool-investigation-session-41f0ebc7-397a-59e7-a9b7-8f00ba52bd27",
+          "attempt": "caf30f0a-4bb4-4e95-b8db-dace677fe045",
+          "error_type": "BudgetExhaustedError",
+          "request_bytes_and_output": 100308
+        },
+        {
+          "session": "session:agent-tool-investigation-session-f599c71f-ddc1-5f2f-9417-17a433cb8793",
+          "attempt": "7df688f7-aab3-4c66-96e1-c8e1fb91f365",
+          "error_type": "BudgetExhaustedError",
+          "request_bytes_and_output": 104042
+        },
+        {
+          "session": "session:wf-session-cb4da846dbcc46d2c8e2ab3d752c73f1556162ebc16b6eec5b1ff06111c74005",
+          "attempt": "be077db6-8fcf-4e4c-95fd-44d90715666a",
+          "error_type": "BudgetExhaustedError",
+          "request_bytes_and_output": 133390
+        }
+      ],
+      "unknown_byte_based_planning_cny": 2.70192
+    }
+  ],
+  "max_observed_actual_input_to_cl100k_ratio": 1.052266081871345,
+  "ratio_is_future_guarantee": false
+}

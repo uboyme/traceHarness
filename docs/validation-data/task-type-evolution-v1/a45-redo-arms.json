@@ -1,0 +1,324 @@
+[
+  {
+    "plan": "p01",
+    "variant": "single",
+    "ran": true,
+    "case_id": "a4-investigate-negative-subscript",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 222890,
+    "total_tokens": 311504,
+    "token_quality": "exact",
+    "model_attempts": 22,
+    "tool_calls": 26,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 311504,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 21
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 19130,
+          "input_limit": 85760,
+          "input_mean": 13975.7,
+          "input_peak": 19130,
+          "metered_peak": 18515,
+          "metered_requests": 22,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 22,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a4-investigate-negative-subscript",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 582827,
+    "total_tokens": 684141,
+    "token_quality": "exact",
+    "model_attempts": 42,
+    "tool_calls": 38,
+    "children": 1,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 666551,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 3,
+            "tool_handoff": 35
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 24161,
+          "input_limit": 85760,
+          "input_mean": 17276.1,
+          "input_peak": 29496,
+          "metered_peak": 27601,
+          "metered_requests": 38,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 38,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      },
+      {
+        "label": "patch_author.agent-tool-patch-author-65535447-84b3-5e7d-a225-cd6aef3598e1",
+        "tokens": 17590,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 3
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 4827,
+          "input_limit": 85760,
+          "input_mean": 4201.8,
+          "input_peak": 4827,
+          "metered_peak": 4281,
+          "metered_requests": 4,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 4,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "single",
+    "ran": true,
+    "case_id": "a5-dependent-sample-arguments",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 184609,
+    "total_tokens": 172235,
+    "token_quality": "exact",
+    "model_attempts": 18,
+    "tool_calls": 18,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 172235,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 17
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 14271,
+          "input_limit": 85760,
+          "input_mean": 9309.7,
+          "input_peak": 14271,
+          "metered_peak": 14007,
+          "metered_requests": 18,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 18,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a5-dependent-sample-arguments",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 253530,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 21,
+    "tool_calls": 21,
+    "children": 1,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 124462,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 12
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 12678,
+          "input_limit": 85760,
+          "input_mean": 10043.2,
+          "input_peak": 12678,
+          "metered_peak": 11831,
+          "metered_requests": 12,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 12,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      },
+      {
+        "label": "patch_author.agent-tool-patch-author-42fa9186-9442-5d5e-a447-8d4e873382e8",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 8
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 12736,
+          "metered_requests": 9,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 9,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p03",
+    "variant": "single",
+    "ran": false
+  },
+  {
+    "plan": "p03",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a5-dependent-sample-arguments",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 669733,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 37,
+    "tool_calls": 38,
+    "children": 1,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 2,
+            "tool_handoff": 30
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 30549,
+          "metered_requests": 33,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 33,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      },
+      {
+        "label": "patch_author.agent-tool-patch-author-067cb220-ce1a-59bc-bddf-b8647606905d",
+        "tokens": 23681,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 3
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 7128,
+          "input_limit": 85760,
+          "input_mean": 5445.0,
+          "input_peak": 7128,
+          "metered_peak": 6693,
+          "metered_requests": 4,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 4,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  }
+]

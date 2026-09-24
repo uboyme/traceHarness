@@ -4,7 +4,7 @@
   "task_type": "product_task",
   "dataset": {
     "file": "dataset.json",
-    "sha256": "061d872b54ddc4731109f8a1411c9091c11ba23028643294cb1b7cf1498c4da5"
+    "sha256": "9f930a629acaf0d4281a5677c5f34f636b8151ca208bbd64356f8bf80d123825"
   },
   "task_settings": {
     "profile_id": "product-benchmark-v1",

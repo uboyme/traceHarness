@@ -1,0 +1,1142 @@
+.......F.F.........EEEEEEEEEEEEEEEEE                                     [100%]
+=================================== ERRORS ====================================
+____ ERROR at setup of test_wheels_install_together_in_a_clean_environment ____
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+______ ERROR at setup of test_wheel_metadata_version_matches_the_package ______
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+____________ ERROR at setup of test_real_entry_point_is_discovered ____________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_____ ERROR at setup of test_discovery_reports_the_plugin_without_issues ______
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_______ ERROR at setup of test_cli_list_inspect_and_doctor_all_succeed ________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_ ERROR at setup of test_python_quality_plugin_runs_tool_policy_and_named_verifier _
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_ ERROR at setup of test_plugin_creator_skill_runs_through_the_existing_mainline _
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+________ ERROR at setup of test_model_sees_the_plugin_tool_and_prompt _________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+____ ERROR at setup of test_turn_completes_and_the_plugin_tool_really_ran _____
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_________ ERROR at setup of test_tool_calls_and_results_pair_exactly __________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_______ ERROR at setup of test_effect_intents_and_outcomes_pair_exactly _______
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_ ERROR at setup of test_composition_snapshot_contains_the_real_plugin_identity _
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_________ ERROR at setup of test_session_records_the_plugin_identity __________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_______________ ERROR at setup of test_no_invariant_violations ________________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_________ ERROR at setup of test_no_request_reconstruction_violations _________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+_ ERROR at setup of test_default_runtime_is_untouched_even_though_the_plugin_is_installed _
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+___________ ERROR at setup of test_dispose_removes_the_plugin_tool ____________
+tests\test_plugin_wheel_e2e.py:154: in e2e_report
+    assert completed.returncode == 0, (
+E   AssertionError: driver failed inside the clean venv:
+E     traceh plugins list
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins inspect
+E       traceh.example.skill: discovered (traceh-example-skill-plugin 0.1.0)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.example.skill: active (traceh-example-skill-plugin 0.1.0)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.python.quality: discovered (traceh-python-quality-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.python.quality: active (traceh-python-quality-plugin 0.2.2)
+E     ok=true
+E     traceh plugins inspect
+E       traceh.plugin.creator: discovered (traceh-plugin-creator-skill-plugin 0.2.2)
+E         skills: available after successful activation
+E     ok=true
+E     traceh plugins doctor
+E       traceh.plugin.creator: active (traceh-plugin-creator-skill-plugin 0.2.2)
+E     ok=true
+E     
+E     Traceback (most recent call last):
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 350, in <module>
+E         payload = asyncio.run(main(scratch_dir))
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 194, in run
+E         return runner.run(main)
+E                ^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\runners.py", line 118, in run
+E         return self._loop.run_until_complete(task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\mydownload\anaconda\Lib\asyncio\base_events.py", line 687, in run_until_complete
+E         return future.result()
+E                ^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\e2e-scratch0\plugin_e2e_driver.py", line 287, in main
+E         quality_result = await quality_runtime.run(
+E                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 413, in run
+E         return await self.run_existing(session_id, task)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_runtime.py", line 442, in run_existing
+E         return await task_handle
+E                ^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\runtime\agent_loop.py", line 363, in run_turn
+E         response = await admission.dispatch(
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       File "C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6157\venv-root0\venv\Lib\site-packages\traceh\llm\runtime.py", line 186, in dispatch
+E         raise ProviderFailure(
+E     traceh.llm.failures.ProviderFailure: provider-failure-unclassified
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6157\\venv-root0\\venv\\Scri...ne 186, in dispatch\n    raise ProviderFailure(\ntraceh.llm.failures.ProviderFailure: provider-failure-unclassified\n').returncode
+================================== FAILURES ===================================
+__ test_frozen_sources_prepare_on_original_owners_without_network[o-nonzero] __
+tests\test_active_retrieval_grid.py:83: in test_frozen_sources_prepare_on_original_owners_without_network
+    runtime, store, session, scope, value = await prepare_runtime(
+tests\live_active_retrieval\grid.py:212: in prepare_runtime
+    parse_sandbox_config(frozen["sandbox_config"]).policy,
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\traceh\sandbox\config.py:63: in parse_sandbox_config
+    raise ValueError("sandbox-host-config-invalid") from None
+E   ValueError: sandbox-host-config-invalid
+____ test_output_runner_scores_actual_retained_evidence_and_one_execution _____
+tests\test_active_retrieval_grid.py:164: in test_output_runner_scores_actual_retained_evidence_and_one_execution
+    assert report["closed"] and report["provisional_joint_pass"], report
+E   AssertionError: {'identity': '113-o-direct', 'case_id': 'o-direct', 'seed': 113, 'family': 'output', ...}
+E   assert (True and False)
+=========================== short test summary info ===========================
+FAILED tests/test_active_retrieval_grid.py::test_frozen_sources_prepare_on_original_owners_without_network[o-nonzero]
+FAILED tests/test_active_retrieval_grid.py::test_output_runner_scores_actual_retained_evidence_and_one_execution
+ERROR tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+ERROR tests/test_plugin_wheel_e2e.py::test_wheel_metadata_version_matches_the_package
+ERROR tests/test_plugin_wheel_e2e.py::test_real_entry_point_is_discovered - A...
+ERROR tests/test_plugin_wheel_e2e.py::test_discovery_reports_the_plugin_without_issues
+ERROR tests/test_plugin_wheel_e2e.py::test_cli_list_inspect_and_doctor_all_succeed
+ERROR tests/test_plugin_wheel_e2e.py::test_python_quality_plugin_runs_tool_policy_and_named_verifier
+ERROR tests/test_plugin_wheel_e2e.py::test_plugin_creator_skill_runs_through_the_existing_mainline
+ERROR tests/test_plugin_wheel_e2e.py::test_model_sees_the_plugin_tool_and_prompt
+ERROR tests/test_plugin_wheel_e2e.py::test_turn_completes_and_the_plugin_tool_really_ran
+ERROR tests/test_plugin_wheel_e2e.py::test_tool_calls_and_results_pair_exactly
+ERROR tests/test_plugin_wheel_e2e.py::test_effect_intents_and_outcomes_pair_exactly
+ERROR tests/test_plugin_wheel_e2e.py::test_composition_snapshot_contains_the_real_plugin_identity
+ERROR tests/test_plugin_wheel_e2e.py::test_session_records_the_plugin_identity
+ERROR tests/test_plugin_wheel_e2e.py::test_no_invariant_violations - Assertio...
+ERROR tests/test_plugin_wheel_e2e.py::test_no_request_reconstruction_violations
+ERROR tests/test_plugin_wheel_e2e.py::test_default_runtime_is_untouched_even_though_the_plugin_is_installed
+ERROR tests/test_plugin_wheel_e2e.py::test_dispose_removes_the_plugin_tool - ...

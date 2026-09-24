@@ -1,0 +1,16 @@
+{
+  "case_id": "pydicom__pydicom-901",
+  "material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aei\\v1\\02\\material",
+  "plan": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aei\\v1\\02\\pair.json",
+  "benchmark_sha256": "deba062aadeb00563d4411203b7f5795bd7620c4d19687ef8769a7b7672d20b8",
+  "plan_sha256": "18a9d171a0e6288e2031de3616d8ea92d09c5cfaf82a62fbfd741c303e8b0070",
+  "source_digest": "feb4d0c807e8b17ead38e116679fac9b6455bae05064f1c89380fda70327d4e6",
+  "run_output": "C:/Users/caojie/tae-v02",
+  "selection_basis": "Original internal validation queue order, entries 02-09. Entry 01 was used to develop Single AO v3 and is excluded from this holdout denominator.",
+  "authorized_at_utc": "2026-09-23T03:43:36.150805+00:00",
+  "reserved_cny": 28.0,
+  "prior_known_cny": 11.864005,
+  "prior_unknown_reserved_cny": 73.0,
+  "total_cap_cny": 120.0,
+  "stop": "Original C4 provider/invariant/replay/convergence/unknown-usage conditions; only finite-cap cancellation is explained unknown, retaining trial reservation."
+}

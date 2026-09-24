@@ -1,0 +1,471 @@
+{
+  "assessment_complete": true,
+  "benchmark_id": "traceh-real-repository-dev-v1",
+  "complete": true,
+  "errors": [],
+  "frozen_digest": "b477baf4eee356dd281fbbc7d5286c7261b779eebd7ad407ca23944aafbc7de8",
+  "protocol_version": 3,
+  "run_id": "df4e327d-8822-43d9-9d8d-530079892042",
+  "task_report": {
+    "approval_policy": "programmatic-immediate",
+    "attempts": [
+      {
+        "attempt_id": "dad0722d11fb2db616e63aa9149386024e4d714470dac1e22efe77c689dffdda",
+        "benchmark_task_id": "pylint-dev__astroid-1196",
+        "directory": "attempts/001",
+        "error_code": null,
+        "evidence": {
+          "budget": {
+            "accounts": 2,
+            "accounts_closed": 2,
+            "charged_steps": 29,
+            "charged_tool_calls": 41,
+            "child_reservations": 1,
+            "child_reservations_terminal": 1,
+            "converged": true,
+            "settled_tokens": 416294,
+            "usage_reservations": 30,
+            "usage_reservations_terminal": 30
+          },
+          "collaboration": {
+            "available_reports": 0,
+            "identical_work_extra_deliveries": 0,
+            "identical_work_groups": 0,
+            "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+            "observed_peak_active_turns": 1,
+            "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+            "reports_dispatched_to_parent": 0
+          },
+          "definition_hash": "196025cf8d153d28b74bfe94b52f703f5b4d141b9efb080d918b9b6df5e1f295",
+          "execution": {
+            "cumulative_work_duration_ms": 496182,
+            "final_model_results": [
+              {
+                "agent_id": "wf-agent-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7",
+                "result": "succeeded",
+                "session_id": "wf-session-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7"
+              }
+            ],
+            "model_attempts": 29,
+            "provider_active_milliseconds": 152110,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "sessions": [
+              {
+                "agent_id": "wf-agent-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7",
+                "final_model_result": "succeeded",
+                "model_attempts": 29,
+                "provider_active_milliseconds": 152110,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "wf-session-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7",
+                "steps": 29,
+                "tokens": {
+                  "input_tokens": 404158,
+                  "output_tokens": 12136,
+                  "quality": "exact",
+                  "total_tokens": 416294
+                },
+                "tool_calls": 41,
+                "turns": 1,
+                "work_duration_ms": 496182
+              }
+            ],
+            "steps": 29,
+            "tokens": {
+              "input_tokens": 404158,
+              "output_tokens": 12136,
+              "quality": "exact",
+              "total_tokens": 416294
+            },
+            "tool_calls": 41,
+            "turns": 1
+          },
+          "failure_code": "workflow-node-failed",
+          "investigations": [],
+          "mode_source": "confirmed_proposal",
+          "new_revision": null,
+          "preflight_digest": "bb90db9a47ddd1b097dd1568f8ebb57cbd8d399f97184de681a81b50e3273a69",
+          "previous_revision": null,
+          "product_status": "failed",
+          "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+          "promotion_id": null,
+          "reason_code": null,
+          "requirement_digest": "8bb25ba50ba9b202930e3121890fee646d7f8173216816d51ba835a08e20b275",
+          "resolved_mode": "single",
+          "review_id": "review-d09d6146cb7c2968256544bb85e1f7895e3c89aa83940a20885f13fdc4d08140",
+          "review_passed": false,
+          "source_base_revision": "c6e41ae6f7e2be851b6a4006657d1e75020f2eb9",
+          "target_ref": "refs/heads/main",
+          "target_revision": "c6e41ae6f7e2be851b6a4006657d1e75020f2eb9",
+          "task_id": "product-task-3ebef2d0452f520ef3b69c78f4540a529badd1dc59c9b9e8359f4ce9dd647fb1",
+          "unattributed": {
+            "sessions": [],
+            "tokens": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "quality": "exact",
+              "total_tokens": 0
+            }
+          },
+          "unavailable": [],
+          "verifier_definition_digest": "1f428cfc6ff98ba1c931060fefe520c3f367ae13f97a6aa14e913929579436be",
+          "workflow_status": "failed",
+          "workspaces": {
+            "converged": true,
+            "live": 0,
+            "quarantined": 1,
+            "released": 1,
+            "workspaces": 2
+          }
+        },
+        "measured": true,
+        "repetition": 1,
+        "requested_mode": "single",
+        "retrieval": null,
+        "success": false,
+        "timing": {
+          "active_ms": 527828,
+          "approval_policy": "programmatic-immediate",
+          "approval_wait_ms": 0,
+          "wall_ms": 527828
+        }
+      }
+    ],
+    "attempts_measured": 1,
+    "attempts_run": 1,
+    "attempts_with_unavailable_metrics": 0,
+    "benchmark_id": "traceh-real-repository-dev-v1",
+    "complete": true,
+    "model_id": "deepseek-v4.1-flash",
+    "notes": [
+      "quality arms follow explicit single/multi modes; execution cost includes the owned tree.",
+      "approval policy is programmatic-immediate: the benchmark host approves its own one-shot local bare target as soon as the Approval barrier is reached.",
+      "approval wait is measured separately and excluded from active elapsed; wall elapsed includes it.",
+      "aggregates are descriptive only. No statistical significance is claimed.",
+      "success requires a ProductTask terminal, a Workflow terminal, a passed Review and a Promotion receipt whose new revision is what the target ref actually points at.",
+      "the frozen verifier proves the declared checks passed on the reviewed bytes. It does not prove a candidate left those checks as strong as it found them."
+    ],
+    "profile_id": "real-repository-pilot-v3",
+    "protocol_version": 3,
+    "provider_id": "openai-compatible",
+    "quality_arms": [
+      {
+        "active_ms": {
+          "maximum": 527828,
+          "mean": 527828.0,
+          "minimum": 527828,
+          "observations": 1,
+          "total": 527828,
+          "unavailable": 0,
+          "values": [
+            527828
+          ]
+        },
+        "approval_wait_ms": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "cumulative_work_duration_ms": {
+          "maximum": 496182,
+          "mean": 496182.0,
+          "minimum": 496182,
+          "observations": 1,
+          "total": 496182,
+          "unavailable": 0,
+          "values": [
+            496182
+          ]
+        },
+        "execution_tokens": {
+          "maximum": 416294,
+          "mean": 416294.0,
+          "minimum": 416294,
+          "observations": 1,
+          "total": 416294,
+          "unavailable": 0,
+          "values": [
+            416294
+          ]
+        },
+        "final_model_results": {
+          "counts": {
+            "succeeded": 1
+          },
+          "unavailable": 0
+        },
+        "ledger_settled_tokens": {
+          "maximum": 416294,
+          "mean": 416294.0,
+          "minimum": 416294,
+          "observations": 1,
+          "total": 416294,
+          "unavailable": 0,
+          "values": [
+            416294
+          ]
+        },
+        "model_attempts": {
+          "maximum": 29,
+          "mean": 29.0,
+          "minimum": 29,
+          "observations": 1,
+          "total": 29,
+          "unavailable": 0,
+          "values": [
+            29
+          ]
+        },
+        "observations": 1,
+        "provider_active_milliseconds": {
+          "maximum": 152110,
+          "mean": 152110.0,
+          "minimum": 152110,
+          "observations": 1,
+          "total": 152110,
+          "unavailable": 0,
+          "values": [
+            152110
+          ]
+        },
+        "provider_failure_categories": [],
+        "requested_modes": {
+          "single": 1
+        },
+        "resolved_mode": "single",
+        "retry_wait_milliseconds": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "single_observation": true,
+        "steps": {
+          "maximum": 29,
+          "mean": 29.0,
+          "minimum": 29,
+          "observations": 1,
+          "total": 29,
+          "unavailable": 0,
+          "values": [
+            29
+          ]
+        },
+        "successes": 0,
+        "tool_calls": {
+          "maximum": 41,
+          "mean": 41.0,
+          "minimum": 41,
+          "observations": 1,
+          "total": 41,
+          "unavailable": 0,
+          "values": [
+            41
+          ]
+        },
+        "wall_ms": {
+          "maximum": 527828,
+          "mean": 527828.0,
+          "minimum": 527828,
+          "observations": 1,
+          "total": 527828,
+          "unavailable": 0,
+          "values": [
+            527828
+          ]
+        }
+      }
+    ],
+    "retry_policy": {
+      "base_delay_seconds": 0.0,
+      "jitter_ratio": 0.0,
+      "max_attempts": 1,
+      "max_delay_seconds": 0.0,
+      "max_elapsed_seconds": 0.0,
+      "retry_after_cap_seconds": 0.0,
+      "retryable_categories": [
+        "disconnected",
+        "dns",
+        "rate_limited",
+        "server_transient",
+        "timeout",
+        "tls_eof"
+      ]
+    },
+    "tasks": [
+      {
+        "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "df18455ce3a941de39f96847a1beec73da00ab6974da7965cfe67025cb99fc49"
+      },
+      {
+        "benchmark_task_id": "pydicom__pydicom-1694",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "2ad59878987152f9541f34d2f9890ab4e44c9a5bb88a234cea88e5554d28cdf7"
+      },
+      {
+        "benchmark_task_id": "pylint-dev__astroid-1196",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+        "requirement_digest": "8bb25ba50ba9b202930e3121890fee646d7f8173216816d51ba835a08e20b275",
+        "source_base_revision": "c6e41ae6f7e2be851b6a4006657d1e75020f2eb9",
+        "unproven_fields": [],
+        "verifier_definition_digest": "1f428cfc6ff98ba1c931060fefe520c3f367ae13f97a6aa14e913929579436be"
+      }
+    ]
+  },
+  "task_type": "product_task",
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "a915a760e994d836d1b0fe0e2ca05980fec3ace644cf533c93f1849d5992bc6d",
+          "stream_id": "agent-delivery:wf-agent-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "be87f0acaf99a834a45449d7297fe5f17fed78457745b0f3cc92f26c09401721",
+          "stream_id": "agent-inbox:wf-agent-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "1290fbff686eed168a60e1320c2419f8b5b536f2bb806acddeb51ad91bd628bc",
+          "stream_id": "agents:directory"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "b4515d8df99d4f9ca4fb651bc2591c21e107983732a043b06e1933bc94d4251a",
+          "stream_id": "artifacts:catalog"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 152,
+          "sha256": "10e52c35f7d16b1430d2a7d3d764598c02b4929cd9c80f128d4211ab47f0bde1",
+          "stream_id": "budgets:ledger"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 160,
+          "sha256": "dbef5e309e3400dd694cf251db4eb7888b61e3f6eb6a4cfc386579105f4aee39",
+          "stream_id": "effects:wf-session-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "9afbfc1e682e297d15cab8580a64dcf7624ba2b5ad600758e911da4b0c118fd5",
+          "stream_id": "patch-promotions:ledger"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "cec0d9afb3a7176bf0142edbce1b6c279bb439871fcaf9b0650ca62bf35ce81b",
+          "stream_id": "product-task:product-task-3ebef2d0452f520ef3b69c78f4540a529badd1dc59c9b9e8359f4ce9dd647fb1"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "0148ec4308368f817f44b365375f4f7c6d5efd415ecc8dec60a28e8953143909",
+          "stream_id": "session:c591b85f-bb70-4411-b352-352607c05865"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "9b77934489d4d0670b448fb070f5d7c8203ec115c0356ac3650b0badc77b09a5",
+          "stream_id": "session:product-owner-session-product-task-3ebef2d0452f520ef3b69c78f4540a529badd1dc59c9b9e8359f4ce9dd647fb1"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 364,
+          "sha256": "3800db6eef0bdcb36ab68ceffa05adb326a81359d45d4a86a3439ed5c3e108f9",
+          "stream_id": "session:wf-session-f0d84589e0ac2e7a1d5bc301f986d475c0928c4fbf497a375dc94ad4250ac6c7"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "b637691582563d0c5614473faabd9c9357c637a7e4c10bc9389b0f624cb4cb13",
+          "stream_id": "workflow:product-task-3ebef2d0452f520ef3b69c78f4540a529badd1dc59c9b9e8359f4ce9dd647fb1"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 6,
+          "sha256": "b262370fe834f8c3eb72924eb0726ef644daf52a2881db6238b0113fc24e44ce",
+          "stream_id": "workspaces:catalog"
+        }
+      ],
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "identity": {
+        "case_id": "pylint-dev__astroid-1196",
+        "group_id": "pylint-dev--astroid",
+        "material_digest": "9db2116f01cc813e65eaa1d230d39af8ef347d962525f037e25d287bd03289f3",
+        "material_seed": null,
+        "replicate": 1,
+        "requested_mode": "single",
+        "trial_id": "dad0722d11fb2db616e63aa9149386024e4d714470dac1e22efe77c689dffdda",
+        "variant_id": "single-arm"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "execution": {
+          "input_tokens": 404158,
+          "output_tokens": 12136,
+          "quality": "exact"
+        },
+        "unattributed": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "quality": "exact"
+        }
+      }
+    }
+  ]
+}

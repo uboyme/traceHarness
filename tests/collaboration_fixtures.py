@@ -17,7 +17,16 @@ READONLY_ASSIGNMENT = {
     "role": "investigator",
     **CHILD_WORK,
 }
-PLAN = {"main_work": MAIN_WORK, "children": [READONLY_ASSIGNMENT]}
+def flat_main_work(main_work):
+    """The plan tool's three top-level main-work arguments for one work object."""
+    return {
+        "main_goal": main_work["goal"],
+        "main_deliverable": main_work["deliverable"],
+        "main_uses_child_report": main_work["uses_child_report"],
+    }
+
+
+PLAN = {**flat_main_work(MAIN_WORK), "children": [READONLY_ASSIGNMENT]}
 
 
 def assignment(assignment_id, role="investigator", **overrides):

@@ -1,0 +1,17 @@
+{
+  "recorded_at_utc": "2026-09-21T21:38:35.550173+00:00",
+  "first_AO": "Original one-proposal experiment stopped at 120s control-call wall deadline; cancelled finite-output-cap attempt, no provider terminal response and no candidate or trial. Not a successful optimization or proof of model unwillingness.",
+  "unknown_reserved_cny": 1,
+  "released_unused_trial_reservation_cny": 28,
+  "known_cost_cny": 0,
+  "known_cost_is_subtotal_only": true,
+  "second_AO": "One additional experiment, identical observations/edit surface and qwen3.6-plus task models; only analysis model qwen3-coder-next. Previous development showed substantially shorter coder-next responses but worse tool argument use; this task has no tools. This is a discriminating model-condition hypothesis, not a demonstrated latency cause or an automatic retry. No third analysis experiment if inconclusive.",
+  "second_AO_cap_cny": 29,
+  "other_caps": {
+    "context": 21,
+    "validation": 39
+  },
+  "prior_known_cny": 3.087295,
+  "prior_unknown_reserved_cny": 26,
+  "total_reserved_and_known_cny": 119.087295
+}

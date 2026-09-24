@@ -1,0 +1,24 @@
+{
+  "kind": "offline-existing-review-input-sizing-not-semantic-assessment",
+  "model_calls": 0,
+  "rows": [
+    {
+      "case": "marshmallow-code__marshmallow-1359",
+      "original_files": 78,
+      "serialized_input_bytes": 923168,
+      "estimated_input_cl100k": 291682
+    },
+    {
+      "case": "pydicom__pydicom-1694",
+      "original_files": 478,
+      "serialized_input_bytes": 14873733,
+      "estimated_input_cl100k": 6586957
+    },
+    {
+      "case": "pylint-dev__astroid-1196",
+      "original_files": 272,
+      "serialized_input_bytes": 2180132,
+      "estimated_input_cl100k": 659482
+    }
+  ]
+}

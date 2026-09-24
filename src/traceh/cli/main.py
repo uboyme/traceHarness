@@ -152,6 +152,19 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_model_retry_arguments(parser: argparse.ArgumentParser) -> None:
+    # How long one HTTP request to the provider may take. It belongs with the
+    # retry knobs because it decides what counts as a failure to retry, and it
+    # is stated by the host rather than derived: deriving it from the output
+    # ceiling would mean assuming a tokens-per-second rate for a model the host
+    # has not measured.
+    #
+    # The 120-second default suits a Step that calls a tool. It does not suit
+    # the one Step that has to produce a whole report: in one trial the
+    # assistant's final report took 71 seconds when the provider was fast, and
+    # in a later trial the same provider had slowed to 2.3x its median, so the
+    # equivalent report ran past 120 seconds, timed out, and the assistant
+    # delivered nothing.
+    parser.add_argument("--model-timeout-seconds", type=float, default=None)
     parser.add_argument("--model-retry-max-attempts", type=int, default=None)
     parser.add_argument("--model-retry-max-elapsed-seconds", type=float, default=None)
     parser.add_argument("--model-retry-base-delay-seconds", type=float, default=None)
@@ -293,6 +306,13 @@ def _nonnegative_integer(value: object, *, variable: str) -> int:
     return parsed
 
 
+def _positive_float(value: object, *, variable: str) -> float:
+    parsed = _nonnegative_float(value, variable=variable)
+    if parsed == 0:
+        raise CliConfigurationError(f"{variable} must be greater than zero")
+    return parsed
+
+
 def _nonnegative_float(value: object, *, variable: str) -> float:
     try:
         parsed = float(str(value))
@@ -399,6 +419,14 @@ def _resolve_environment(args: argparse.Namespace) -> EnvLoadReport:
                 3,
             ),
             variable="TRACEH_MODEL_RETRY_MAX_ATTEMPTS",
+        )
+        # A zero request timeout fails every call before it is sent, so this one
+        # is bounded below rather than merely non-negative.
+        args.model_timeout_seconds = _positive_float(
+            _from_environment(
+                args, "model_timeout_seconds", "TRACEH_MODEL_TIMEOUT_SECONDS", 120.0
+            ),
+            variable="TRACEH_MODEL_TIMEOUT_SECONDS",
         )
         for attribute, variable, default in (
             ("model_retry_max_elapsed_seconds", "TRACEH_MODEL_RETRY_MAX_ELAPSED_SECONDS", 30.0),
@@ -535,10 +563,12 @@ def _provider_and_model(args: argparse.Namespace):
         raise CliConfigurationError(
             "openai-compatible requires --model or TRACEH_MODEL in the environment file"
         )
+    timeout = getattr(args, "model_timeout_seconds", None)
     provider = OpenAICompatibleProvider(
         args.base_url,
         api_key=getattr(args, "tui_api_key", None),
         api_key_env=args.api_key_env,
+        **({} if timeout is None else {"timeout_seconds": timeout}),
     )
     return provider, args.model
 

@@ -1,0 +1,37 @@
+[
+  {
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "arm": "b",
+    "input": ".traceh\\aei\\c1b",
+    "output": ".traceh\\aec1b",
+    "first_arm": "a"
+  },
+  {
+    "case_id": "pydicom__pydicom-1694",
+    "arm": "a",
+    "input": ".traceh\\aei\\c2a",
+    "output": ".traceh\\aec2a",
+    "first_arm": "b"
+  },
+  {
+    "case_id": "pydicom__pydicom-1694",
+    "arm": "b",
+    "input": ".traceh\\aei\\c2b",
+    "output": ".traceh\\aec2b",
+    "first_arm": "b"
+  },
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "arm": "a",
+    "input": ".traceh\\aei\\c3a",
+    "output": ".traceh\\aec3a",
+    "first_arm": "a"
+  },
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "arm": "b",
+    "input": ".traceh\\aei\\c3b",
+    "output": ".traceh\\aec3b",
+    "first_arm": "a"
+  }
+]

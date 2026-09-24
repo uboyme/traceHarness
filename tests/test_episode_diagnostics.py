@@ -14,6 +14,7 @@ from traceh.session.service import SessionService
 from traceh.session.sqlite import SqliteEventStore
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("case_id", ["h-direct", "m-direct"])
 async def test_complete_search_excerpt_is_evidence_without_a_read(tmp_path, case_id):
     report = await runner(tmp_path, case_id).run()
@@ -27,6 +28,7 @@ async def test_complete_search_excerpt_is_evidence_without_a_read(tmp_path, case
     assert report.trials[0].assessment.value == "pending_review"
 
 
+@pytest.mark.frozen_unicode
 async def test_correct_guess_after_directory_is_still_missing_body_evidence(tmp_path):
     case = selected("s-direct")
     report = await runner(tmp_path, "s-direct", NavigatingProvider(case, guess=True)).run()
@@ -40,6 +42,7 @@ async def test_correct_guess_after_directory_is_still_missing_body_evidence(tmp_
     assert "candidate-without-evidence" in (tmp_path / "run/report.md").read_text(encoding="utf-8")
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("invalid", [True, False])
 async def test_failed_read_and_successful_wrong_section_are_not_body_delivery(tmp_path, invalid):
     case = selected("s-direct")
@@ -86,6 +89,7 @@ async def test_failed_read_and_successful_wrong_section_are_not_body_delivery(tm
     assert diagnostic["evidence"]["status"] == "not_observed"
 
 
+@pytest.mark.frozen_unicode
 async def test_failed_model_attempt_does_not_count_its_prepared_directory(tmp_path):
     seen = []
 
@@ -108,6 +112,7 @@ async def test_failed_model_attempt_does_not_count_its_prepared_directory(tmp_pa
     assert report.trials[0].assessment.value == "unassessable"
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize(
     "answer", ["The entire manual has no such fact.", "当前可见资料未找到这项信息。"]
 )
@@ -126,6 +131,7 @@ async def test_negative_wording_never_becomes_a_second_automatic_scorer(tmp_path
     assert report.trials[0].assessment.value == "pending_review"
 
 
+@pytest.mark.frozen_unicode
 async def test_offline_diagnostics_rederive_and_follow_explicit_human_assessment(tmp_path):
     report = await runner(tmp_path, "m-direct").run()
     original = (tmp_path / "run/report.json").read_bytes()
@@ -155,6 +161,7 @@ async def test_offline_diagnostics_rederive_and_follow_explicit_human_assessment
     assert (tmp_path / "run/report.json").read_bytes() == original
 
 
+@pytest.mark.frozen_unicode
 async def test_context_prepared_but_absent_from_dispatch_does_not_count(tmp_path):
     report = await runner(
         tmp_path, "s-direct", NavigatingProvider(selected("s-direct"), guess=True)

@@ -105,6 +105,7 @@ def model_server(loop, *, blocked=False, regression=False, disconnect=False):
         thread.join()
 
 
+@pytest.mark.frozen_unicode
 async def test_deliberately_regressed_candidate_uses_real_requests_and_original_memory(
     tmp_path, monkeypatch
 ):
@@ -126,6 +127,7 @@ async def test_deliberately_regressed_candidate_uses_real_requests_and_original_
     assert result["changes"]["loss"] == 1 and result["cost_delta"]["total_tokens"] > 0
 
 
+@pytest.mark.frozen_unicode
 async def test_repeated_cancel_waits_for_child_runtime_and_preserves_unstarted_arm(
     tmp_path, monkeypatch
 ):
@@ -161,20 +163,34 @@ async def test_repeated_cancel_waits_for_child_runtime_and_preserves_unstarted_a
     assert report["pairs"][0]["execution"][0]["status"] == "cancelled"
 
 
-async def test_connection_failure_remains_unassessable_and_is_not_a_quality_loss(
-    tmp_path, monkeypatch
-):
+@pytest.mark.frozen_unicode
+async def test_connection_failure_stops_the_pair_before_the_other_arm_spends(tmp_path, monkeypatch):
     monkeypatch.setenv("UNUSED_EVALUATION_KEY", "local-fixture-not-a-real-key")
     with model_server(asyncio.get_running_loop(), disconnect=True) as (model, _, _, requests):
         root, code = await run_pair(tmp_path, case_id="m-direct", model=model)
-    report = json.loads((root / "comparison/report.json").read_text())
-    assert code == 0 and report["complete"], report
-    assert len(requests) == 2 and report["status"] == "inconclusive"
-    pair = report["pairs"][0]
-    assert pair["change"] == "unknown" and pair["assessment"] == ["unassessable"] * 2
-    assert all(m["total_tokens"] is None and m["unknown_attempts"] > 0 for m in pair["metrics"])
+    execution = json.loads((root / "execution.json").read_text(encoding="utf-8"))
+    report = json.loads((root / "comparison/report.json").read_text(encoding="utf-8"))
+    # The first arm's cost is unknown after a failed connection; paying for the
+    # second arm could no longer produce a comparable pair.
+    assert len(requests) == 1 and execution["errors"] == ["evaluation-arm-usage-unknown"]
+    assert len(execution["outcomes"]) == 1 and not (root / "arms/02/run").exists()
+    assert not report["complete"] and report["status"] == "inconclusive", report
+    first = json.loads((root / "arms/01/run/report.json").read_text(encoding="utf-8"))
+    assert first["trials"][0]["assessment"]["status"] == "unassessable"
+    assert first["trials"][0]["usage"]["all"]["unknown_attempts"] > 0
 
 
+@pytest.mark.frozen_unicode
+async def test_a_settled_first_arm_still_lets_the_second_arm_run(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNUSED_EVALUATION_KEY", "local-fixture-not-a-real-key")
+    with model_server(asyncio.get_running_loop()) as (model, _, _, requests):
+        root, code = await run_pair(tmp_path, case_id="m-direct", model=model)
+    execution = json.loads((root / "execution.json").read_text(encoding="utf-8"))
+    assert code == 0 and execution["errors"] == [] and len(execution["outcomes"]) == 2
+    assert (root / "arms/02/run/report.json").is_file() and len(requests) >= 2
+
+
+@pytest.mark.frozen_unicode
 async def test_forced_child_exit_is_unproven_and_does_not_start_the_other_arm(
     tmp_path, monkeypatch
 ):
@@ -204,3 +220,34 @@ async def test_forced_child_exit_is_unproven_and_does_not_start_the_other_arm(
     report = json.loads((root / "comparison/report.json").read_text())
     assert not report["complete"] and len(report["planned_trials"]) == 2
     assert report["hard_constraints"] == "unproven"
+
+
+def _write_run(tmp_path, *, usage, attempts=()):
+    run = tmp_path / "run"
+    run.mkdir()
+    report = {
+        "trials": [{"measured": True, "usage": usage}],
+        "task_report": {"attempts": list(attempts)},
+    }
+    (run / "report.json").write_text(json.dumps(report), encoding="utf-8")
+    return run
+
+
+def test_a_provider_failure_with_known_usage_still_stops_the_pair(tmp_path):
+    from traceh.evaluation.variant_execution import _arm_stop_reason
+
+    tokens = {"input_tokens": 10, "output_tokens": 2, "total_tokens": 12, "quality": "exact"}
+    failed = {"evidence": {"execution": {"provider_failure_categories": ["protocol"]}}}
+    run = _write_run(tmp_path, usage={"execution": tokens}, attempts=(failed,))
+    assert _arm_stop_reason(run) == "evaluation-arm-provider-failure"
+    assert _arm_stop_reason(tmp_path / "missing") == "evaluation-arm-report-missing"
+
+
+def test_a_clean_product_arm_has_no_stop_reason(tmp_path):
+    from traceh.evaluation.variant_execution import _arm_stop_reason
+
+    tokens = {"input_tokens": 10, "output_tokens": 2, "total_tokens": 12, "quality": "exact"}
+    clean = {"evidence": {"execution": {"provider_failure_categories": []}}}
+    usage = {"execution": tokens, "unattributed": tokens}
+    run = _write_run(tmp_path, usage=usage, attempts=(clean,))
+    assert _arm_stop_reason(run) is None

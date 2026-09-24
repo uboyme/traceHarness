@@ -23,14 +23,14 @@ def write_pyproject(workspace: Path, body: str) -> None:
     (workspace / "pyproject.toml").write_text(body, encoding="utf-8")
 
 
-def test_distribution_and_manifest_use_one_v08_compatible_identity() -> None:
+def test_distribution_and_manifest_use_one_current_compatible_identity() -> None:
     root = Path(__file__).resolve().parents[1]
     project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert project["project"]["version"] == PLUGIN_VERSION == "0.2.2"
-    assert project["project"]["dependencies"] == ["traceharness-py>=0.5,<0.9"]
+    assert project["project"]["dependencies"] == ["traceharness-py>=0.5,<0.12"]
     assert PythonQualityPlugin.manifest.version == PLUGIN_VERSION
-    assert PythonQualityPlugin.manifest.requires_traceh == ">=0.5,<0.9"
+    assert PythonQualityPlugin.manifest.requires_traceh == ">=0.5,<0.12"
 
 
 def test_explicit_project_command_is_resolved_without_echoing_it(tmp_path: Path) -> None:
@@ -165,26 +165,28 @@ async def test_policy_defers_safe_or_unrelated_commands(tmp_path: Path) -> None:
         assert decision.kind is DecisionKind.DEFER
 
 
-async def test_named_verifier_runs_the_explicit_project_command(tmp_path: Path) -> None:
-    test_module = tmp_path / "test_quality.py"
-    test_module.write_text(
-        "import unittest\n\n"
-        "class QualityTest(unittest.TestCase):\n"
-        "    def test_truth(self):\n"
-        "        self.assertTrue(True)\n",
-        encoding="utf-8",
-    )
-    command = json.dumps([sys.executable, "-m", "unittest", "-v"])
+async def test_named_verifier_resolves_the_explicit_command_and_needs_isolation(
+    tmp_path: Path,
+) -> None:
+    """The verifier runs only the declared command, and only in an isolated sandbox.
+
+    TraceHarness verifiers no longer fall back to the host when no sandbox is
+    bound; the core CommandVerifier refuses instead. Without a host sandbox
+    here, the plugin must resolve exactly the declared argv and report that
+    refusal rather than a pass.
+    """
+    argv = [sys.executable, "-m", "unittest", "-v"]
     write_pyproject(
         tmp_path,
-        f"[tool.traceh-python-quality]\ntest-command = {command}\n",
+        f"[tool.traceh-python-quality]\ntest-command = {json.dumps(argv)}\n",
     )
 
+    assert inspect_python_project(tmp_path).verification.argv == tuple(argv)
     result = await PythonTestsVerifier().verify(tmp_path)
 
-    assert result.passed is True
-    assert result.exit_code == 0
-    assert "OK" in result.stderr
+    assert result.passed is False
+    assert result.summary.startswith("sandbox-not-configured")
+    assert result.exit_code is None
 
 
 async def test_named_verifier_fails_without_project_evidence(tmp_path: Path) -> None:

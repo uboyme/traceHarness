@@ -1,0 +1,50 @@
+[
+  {
+    "path": "docs\\note\\project-context.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\note\\project-context-plain-zh.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\note\\project-overview.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\plan\\TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\plan\\TRACEHARNESS_CONTEXT_CONVERGENCE_HANDOFF.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\plan\\TRACEHARNESS_PROVIDER_SAMPLING_DECISION.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\deal\\086-agent-effectiveness-overnight.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  },
+  {
+    "path": "docs\\validation-data\\agent-effectiveness-v1\\RESULTS.md",
+    "missing_links": [],
+    "fences_closed": true,
+    "secret_pattern_hits": 0
+  }
+]

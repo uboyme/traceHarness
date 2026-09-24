@@ -1,0 +1,9 @@
+Starting pair 1 pvlib__pvlib-python-1154
+Finished pair 1 success [[True], [True]] known CNY 10.764001 unknown reserve 73.0
+Traceback (most recent call last):
+  File "C:\Users\caojie\Desktop\instudy\traceharness\.traceh\agent-effectiveness-v1\run_validation_pairs.py", line 106, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\caojie\Desktop\instudy\traceharness\.traceh\agent-effectiveness-v1\run_validation_pairs.py", line 89, in main
+    raise ValueError('comparison-incomplete-stop')
+ValueError: comparison-incomplete-stop

@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "benchmark_digest": "70dcd466bb6adcacbc4fecdbc9785e2d3d213c8311f9ce7431ae49b30b3da3fb",
+  "benchmark_digest": "145894e2c50091c981bf960c9829b5b488e6ccd6ae083b0b5748ed6d6d6f5391",
   "variants": [
     {
       "variant_id": "current-example",
@@ -21,7 +21,8 @@
       "max_delay_seconds": 0,
       "retry_after_cap_seconds": 0,
       "jitter_ratio": 0
-    }
+    },
+    "timeout_seconds": 300
   },
   "execution": {
     "sandbox_config": "./sandbox.json",

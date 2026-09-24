@@ -1,0 +1,21 @@
+{
+  "case_id": "pylint-dev__astroid-1196",
+  "mode": "single",
+  "model": "qwen3.6-plus",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "api_key_env": "DASHSCOPE_API_KEY",
+  "source_digest_at_preparation": "b14349b43ea4f3df167670ca6fbc8ea448924ff8a8cedb073751215180bb4b0c",
+  "benchmark_sha256": "c960ae02a11c95cebb3f8b271f129e43980913a6fddc26f2b51d9ea76f901796",
+  "dataset_sha256": "109aabcde2555f2bc84e66dccef9d85885d926486133179d8ba221f701ab6360",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "settings_sha256": "bc3478bbd768f5560e14d4f5e879cd6de0c4c3ae3cc07093965fd0da01eeb238",
+  "source_material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aei\\c3a\\material",
+  "output": "C:\\Users\\caojie\\tae-c3a",
+  "status": "prepared; source/configuration and budget must be rechecked before execution",
+  "configuration_arm": "a",
+  "frozen_at_utc": "2026-09-22T10:25:19.644852+00:00",
+  "prior_known_cny": 9.063381,
+  "prior_unknown_reserved_cny": 73.0,
+  "reserved_cny": 14,
+  "batch_cap_cny": 120.0
+}

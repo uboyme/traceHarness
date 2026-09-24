@@ -1,0 +1,18 @@
+{
+  "completed_observed_utc": "2026-09-22T01:53:25.322900+00:00",
+  "exit_code": 1,
+  "collected": 4392,
+  "passed": 4383,
+  "failed": 1,
+  "errors": 0,
+  "skipped": 8,
+  "count_basis": "Complete outer pytest progress characters; excludes nested L2 diagnostic counts.",
+  "failures": [
+    "FAILED tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate"
+  ],
+  "log_sha256": "5ec88d17963380868f459e416edffc5562d1579a41a6e213e8a7a10d34cbe8e2",
+  "canonical_source_digest": "2c24b47952e48b7a0a15a85d8b3c2837e3d2b857260a13fb61350786ffa5a428",
+  "source_matches_start": true,
+  "integration_inputs_match_midrun": true,
+  "status": "failed; only L2 fixture metadata/dependency defects remain; final green rerun required"
+}

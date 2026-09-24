@@ -1,0 +1,10 @@
+{
+  "started_utc": "2026-09-21T23:30:10.489105+00:00",
+  "source_digest": "2c24b47952e48b7a0a15a85d8b3c2837e3d2b857260a13fb61350786ffa5a428",
+  "collected": 4392,
+  "command": ".traceh/aev/Scripts/python.exe -m pytest -q --durations=30 -ra",
+  "docker_context": "desktop-linux",
+  "docker_image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe",
+  "status": "running",
+  "paid_calls_stopped": true
+}

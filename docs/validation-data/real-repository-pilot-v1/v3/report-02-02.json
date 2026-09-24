@@ -1,0 +1,606 @@
+{
+  "assessment_complete": true,
+  "benchmark_id": "traceh-real-repository-dev-v1",
+  "complete": true,
+  "errors": [],
+  "frozen_digest": "b87a1e167bc826ab4cdb6ef824ec81351b38bfa29cec89f19e8427b5f1141bdc",
+  "protocol_version": 3,
+  "run_id": "9dfb788f-b706-4c31-bc70-ffff1d7adf57",
+  "task_report": {
+    "approval_policy": "programmatic-immediate",
+    "attempts": [
+      {
+        "attempt_id": "476d35c8c7cfd0c884f0e1418cf4b78fef160b477c2f2ef9dba1555bb05b74ab",
+        "benchmark_task_id": "pydicom__pydicom-1694",
+        "directory": "attempts/001",
+        "error_code": null,
+        "evidence": {
+          "budget": {
+            "accounts": 4,
+            "accounts_closed": 4,
+            "charged_steps": 42,
+            "charged_tool_calls": 80,
+            "child_reservations": 3,
+            "child_reservations_terminal": 3,
+            "converged": true,
+            "settled_tokens": 656262,
+            "usage_reservations": 42,
+            "usage_reservations_terminal": 42
+          },
+          "collaboration": {
+            "available_reports": 2,
+            "identical_work_extra_deliveries": 0,
+            "identical_work_groups": 0,
+            "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+            "observed_peak_active_turns": 3,
+            "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+            "reports_dispatched_to_parent": 0
+          },
+          "definition_hash": "e41e7a0c367eeca1c38d8914c40c843c101f69df19b073ab428ae938969bcedb",
+          "execution": {
+            "cumulative_work_duration_ms": 686966,
+            "final_model_results": [
+              {
+                "agent_id": "wf-agent-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0",
+                "result": "succeeded",
+                "session_id": "wf-session-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0"
+              },
+              {
+                "agent_id": "2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156",
+                "result": "succeeded",
+                "session_id": "agent-tool-investigation-session-8d0f6547-918a-5772-b3f2-b2112fec7e2a"
+              },
+              {
+                "agent_id": "7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5",
+                "result": "succeeded",
+                "session_id": "agent-tool-investigation-session-991171ac-3139-5ca9-ae47-180233cfde6d"
+              }
+            ],
+            "model_attempts": 39,
+            "provider_active_milliseconds": 399469,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "sessions": [
+              {
+                "agent_id": "wf-agent-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0",
+                "final_model_result": "succeeded",
+                "model_attempts": 17,
+                "provider_active_milliseconds": 282707,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "wf-session-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0",
+                "steps": 18,
+                "tokens": {
+                  "input_tokens": 371084,
+                  "output_tokens": 18903,
+                  "quality": "exact",
+                  "total_tokens": 389987
+                },
+                "tool_calls": 36,
+                "turns": 1,
+                "work_duration_ms": 486492
+              },
+              {
+                "agent_id": "2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156",
+                "final_model_result": "succeeded",
+                "model_attempts": 11,
+                "provider_active_milliseconds": 48293,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "agent-tool-investigation-session-8d0f6547-918a-5772-b3f2-b2112fec7e2a",
+                "steps": 12,
+                "tokens": {
+                  "input_tokens": 126330,
+                  "output_tokens": 2642,
+                  "quality": "exact",
+                  "total_tokens": 128972
+                },
+                "tool_calls": 22,
+                "turns": 1,
+                "work_duration_ms": 90256
+              },
+              {
+                "agent_id": "7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5",
+                "final_model_result": "succeeded",
+                "model_attempts": 11,
+                "provider_active_milliseconds": 68469,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "agent-tool-investigation-session-991171ac-3139-5ca9-ae47-180233cfde6d",
+                "steps": 12,
+                "tokens": {
+                  "input_tokens": 132889,
+                  "output_tokens": 4414,
+                  "quality": "exact",
+                  "total_tokens": 137303
+                },
+                "tool_calls": 22,
+                "turns": 1,
+                "work_duration_ms": 110218
+              }
+            ],
+            "steps": 42,
+            "tokens": {
+              "input_tokens": 630303,
+              "output_tokens": 25959,
+              "quality": "exact",
+              "total_tokens": 656262
+            },
+            "tool_calls": 80,
+            "turns": 3
+          },
+          "failure_code": "workflow-node-failed",
+          "investigations": [
+            {
+              "agent_id": "7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5",
+              "assignment_id": "fix_scope",
+              "child_visible_source_outputs": [],
+              "goal": "Determine the complete set of statements reachable from Dataset.to_json_dict that can raise while materializing/encoding an invalid raw data element, and the minimal correct change, with exact file:line evidence.",
+              "input_digest": "e3c75b9f6a0b301f912bf9b4e44b6e6829825a69254c00f67f9facf2c48c3148",
+              "interpretation": "Visibility and completion only; relevance and correctness require assessment.",
+              "message_id": "agent-tool-investigation-message-ee775d98-1c0a-5350-bce6-80cb39aa63e8",
+              "parent_report_dispatches": [],
+              "report_available": true,
+              "report_refs": [
+                "agent-inbox:7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5#1",
+                "agent-delivery:7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5#2"
+              ],
+              "report_status": "failed",
+              "revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+              "role": "investigator",
+              "session_id": "agent-tool-investigation-session-991171ac-3139-5ca9-ae47-180233cfde6d",
+              "source_id": "benchmark-source",
+              "work_digest": "e3cdc96927b73ba9a7d4d51b35e9b9983c8828a1e8368bf7459621b35c9dcce1"
+            },
+            {
+              "agent_id": "2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156",
+              "assignment_id": "repro_and_tests",
+              "child_visible_source_outputs": [],
+              "goal": "Produce a concrete host-runnable reproduction recipe for the invalid-IS failure plus the repo's conventions for a matching regression test and release-note entry.",
+              "input_digest": "e1dbfc7147e8e922d3f1db347d9d7612d5ac5cde74ca0cc3d4cc3dcc55c446e0",
+              "interpretation": "Visibility and completion only; relevance and correctness require assessment.",
+              "message_id": "agent-tool-investigation-message-31fd5816-515e-55c0-b898-d85540f795bb",
+              "parent_report_dispatches": [],
+              "report_available": true,
+              "report_refs": [
+                "agent-inbox:2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156#1",
+                "agent-delivery:2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156#2"
+              ],
+              "report_status": "failed",
+              "revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+              "role": "investigator",
+              "session_id": "agent-tool-investigation-session-8d0f6547-918a-5772-b3f2-b2112fec7e2a",
+              "source_id": "benchmark-source",
+              "work_digest": "989c6a26b20257f68050f025c6f05a90b594dfbe11328bc886439892ed907d41"
+            }
+          ],
+          "mode_source": "confirmed_proposal",
+          "new_revision": null,
+          "preflight_digest": "8fcad7bd37ca4ae628a299ce0d315675bdc528d95e192c1b0b38a9afb0c59788",
+          "previous_revision": null,
+          "product_status": "failed",
+          "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+          "promotion_id": null,
+          "reason_code": null,
+          "requirement_digest": "da6ba12ed2e825195ffcd9f49c99d98961bb017caf075042c14e09de2ed31b4c",
+          "resolved_mode": "multi",
+          "review_id": null,
+          "review_passed": null,
+          "source_base_revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+          "target_ref": "refs/heads/main",
+          "target_revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+          "task_id": "product-task-87a0a96440519033053bd4b444ac50c7b292ba707dd9977ea734866bd69746bd",
+          "unattributed": {
+            "sessions": [],
+            "tokens": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "quality": "exact",
+              "total_tokens": 0
+            }
+          },
+          "unavailable": [],
+          "verifier_definition_digest": null,
+          "workflow_status": "failed",
+          "workspaces": {
+            "converged": true,
+            "live": 0,
+            "quarantined": 0,
+            "released": 4,
+            "workspaces": 4
+          }
+        },
+        "measured": true,
+        "repetition": 1,
+        "requested_mode": "multi",
+        "retrieval": null,
+        "success": false,
+        "timing": {
+          "active_ms": 502718,
+          "approval_policy": "programmatic-immediate",
+          "approval_wait_ms": 0,
+          "wall_ms": 502718
+        }
+      }
+    ],
+    "attempts_measured": 1,
+    "attempts_run": 1,
+    "attempts_with_unavailable_metrics": 0,
+    "benchmark_id": "traceh-real-repository-dev-v1",
+    "complete": true,
+    "model_id": "deepseek-v4.1-flash",
+    "notes": [
+      "quality arms follow explicit single/multi modes; execution cost includes the owned tree.",
+      "approval policy is programmatic-immediate: the benchmark host approves its own one-shot local bare target as soon as the Approval barrier is reached.",
+      "approval wait is measured separately and excluded from active elapsed; wall elapsed includes it.",
+      "aggregates are descriptive only. No statistical significance is claimed.",
+      "success requires a ProductTask terminal, a Workflow terminal, a passed Review and a Promotion receipt whose new revision is what the target ref actually points at.",
+      "the frozen verifier proves the declared checks passed on the reviewed bytes. It does not prove a candidate left those checks as strong as it found them."
+    ],
+    "profile_id": "real-repository-pilot-v3",
+    "protocol_version": 3,
+    "provider_id": "openai-compatible",
+    "quality_arms": [
+      {
+        "active_ms": {
+          "maximum": 502718,
+          "mean": 502718.0,
+          "minimum": 502718,
+          "observations": 1,
+          "total": 502718,
+          "unavailable": 0,
+          "values": [
+            502718
+          ]
+        },
+        "approval_wait_ms": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "cumulative_work_duration_ms": {
+          "maximum": 686966,
+          "mean": 686966.0,
+          "minimum": 686966,
+          "observations": 1,
+          "total": 686966,
+          "unavailable": 0,
+          "values": [
+            686966
+          ]
+        },
+        "execution_tokens": {
+          "maximum": 656262,
+          "mean": 656262.0,
+          "minimum": 656262,
+          "observations": 1,
+          "total": 656262,
+          "unavailable": 0,
+          "values": [
+            656262
+          ]
+        },
+        "final_model_results": {
+          "counts": {
+            "succeeded": 3
+          },
+          "unavailable": 0
+        },
+        "ledger_settled_tokens": {
+          "maximum": 656262,
+          "mean": 656262.0,
+          "minimum": 656262,
+          "observations": 1,
+          "total": 656262,
+          "unavailable": 0,
+          "values": [
+            656262
+          ]
+        },
+        "model_attempts": {
+          "maximum": 39,
+          "mean": 39.0,
+          "minimum": 39,
+          "observations": 1,
+          "total": 39,
+          "unavailable": 0,
+          "values": [
+            39
+          ]
+        },
+        "observations": 1,
+        "provider_active_milliseconds": {
+          "maximum": 399469,
+          "mean": 399469.0,
+          "minimum": 399469,
+          "observations": 1,
+          "total": 399469,
+          "unavailable": 0,
+          "values": [
+            399469
+          ]
+        },
+        "provider_failure_categories": [],
+        "requested_modes": {
+          "multi": 1
+        },
+        "resolved_mode": "multi",
+        "retry_wait_milliseconds": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "single_observation": true,
+        "steps": {
+          "maximum": 42,
+          "mean": 42.0,
+          "minimum": 42,
+          "observations": 1,
+          "total": 42,
+          "unavailable": 0,
+          "values": [
+            42
+          ]
+        },
+        "successes": 0,
+        "tool_calls": {
+          "maximum": 80,
+          "mean": 80.0,
+          "minimum": 80,
+          "observations": 1,
+          "total": 80,
+          "unavailable": 0,
+          "values": [
+            80
+          ]
+        },
+        "wall_ms": {
+          "maximum": 502718,
+          "mean": 502718.0,
+          "minimum": 502718,
+          "observations": 1,
+          "total": 502718,
+          "unavailable": 0,
+          "values": [
+            502718
+          ]
+        }
+      }
+    ],
+    "retry_policy": {
+      "base_delay_seconds": 0.0,
+      "jitter_ratio": 0.0,
+      "max_attempts": 1,
+      "max_delay_seconds": 0.0,
+      "max_elapsed_seconds": 0.0,
+      "retry_after_cap_seconds": 0.0,
+      "retryable_categories": [
+        "disconnected",
+        "dns",
+        "rate_limited",
+        "server_transient",
+        "timeout",
+        "tls_eof"
+      ]
+    },
+    "tasks": [
+      {
+        "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "df18455ce3a941de39f96847a1beec73da00ab6974da7965cfe67025cb99fc49"
+      },
+      {
+        "benchmark_task_id": "pydicom__pydicom-1694",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+        "requirement_digest": "da6ba12ed2e825195ffcd9f49c99d98961bb017caf075042c14e09de2ed31b4c",
+        "source_base_revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+        "unproven_fields": [
+          "verifier_definition_digest"
+        ],
+        "verifier_definition_digest": "2ad59878987152f9541f34d2f9890ab4e44c9a5bb88a234cea88e5554d28cdf7"
+      },
+      {
+        "benchmark_task_id": "pylint-dev__astroid-1196",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "1f428cfc6ff98ba1c931060fefe520c3f367ae13f97a6aa14e913929579436be"
+      }
+    ]
+  },
+  "task_type": "product_task",
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "64304d83284a0764baf6dcdf50db704913a60c53cc3c141cdd64a719868634b7",
+          "stream_id": "agent-delivery:2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "1a7d12e23108edbf51afc66b3d11b2303c97e8fa9657ba006f58e89a9a455294",
+          "stream_id": "agent-delivery:7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "a24677a004418420dac7eeeb1b5e6a58438e2b90858902e23d7743fe4cf43c91",
+          "stream_id": "agent-delivery:wf-agent-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "62a773a5deb0c914879a4007073a09416b2fd602cc13faa156221347348885da",
+          "stream_id": "agent-inbox:2b84c6a7292cdfabeaa1981225a2b6f1f65d5a491a35c94dcc257c00d5477156"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "1f300f339730d67ed0921505a4ebfb63633beabff50cfc55a5b0d714b9f43b8f",
+          "stream_id": "agent-inbox:7aedc2b598ec44eff7eca500fe8057aef1b6e1cd59f9333654e511df258e7cd5"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "0bdbdfd117059a9d92714fef688c3c54ce78d1fcf24d864d13b812869c3ebb32",
+          "stream_id": "agent-inbox:wf-agent-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "5a3b4a1221f630a3b77920f3fa3f4e6fc0157e8053bfd0be95d3384b3b9b6ff5",
+          "stream_id": "agents:directory"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 218,
+          "sha256": "9e4a623501709691f94c9dc011833f74c610f2747569c3190422bea5cec9adaa",
+          "stream_id": "budgets:ledger"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 66,
+          "sha256": "fd54096e79f607dfe997846c70c15c09cc730abd2bdf34d863a4b1fd5c618a91",
+          "stream_id": "effects:agent-tool-investigation-session-8d0f6547-918a-5772-b3f2-b2112fec7e2a"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 66,
+          "sha256": "577d0ff15c262ffbc22652f8961e5de0dd4624ebc5f3fb2d1ecf4f78409d267d",
+          "stream_id": "effects:agent-tool-investigation-session-991171ac-3139-5ca9-ae47-180233cfde6d"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 117,
+          "sha256": "8e8cff236fa253dc9a9879b106c5b5d23820c241df7cc81cf49255d41606f696",
+          "stream_id": "effects:wf-session-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "bc7853140df1809af19e38e0db79a3ff2e68a9f41afdd6e7f8ccb924fa42528a",
+          "stream_id": "product-task:product-task-87a0a96440519033053bd4b444ac50c7b292ba707dd9977ea734866bd69746bd"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "de5c4b69793c9e652e79f6616dd88dcb877f9fc0786bdf320588da403a44446d",
+          "stream_id": "session:598f5096-69c2-4a9e-b1f1-ac1309316ec9"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 166,
+          "sha256": "357a1f007557ec4fe87e2b5d52252c77767b593241093c6b2625c2c29eac61f1",
+          "stream_id": "session:agent-tool-investigation-session-8d0f6547-918a-5772-b3f2-b2112fec7e2a"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 166,
+          "sha256": "0ab5986b9894921a53f4f7160a731801adad213e1680f6b59b86185ca6eb33c8",
+          "stream_id": "session:agent-tool-investigation-session-991171ac-3139-5ca9-ae47-180233cfde6d"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "d5b35eacf93c9dfcdedbca7055474a8fab49586456e74423095aa3684cbf1e82",
+          "stream_id": "session:product-owner-session-product-task-87a0a96440519033053bd4b444ac50c7b292ba707dd9977ea734866bd69746bd"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 278,
+          "sha256": "697b8762b698969438060f3a6be476491142331b3e1e2c1438890466c661375d",
+          "stream_id": "session:wf-session-dbd008d7d36e6d7051b5d3b6f2a4e560f030a6a28211f796382bf7755c7517b0"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "fc377ee5bf38e02624845a4e8958820e10ae89f534172791d97dadf0ccb85f58",
+          "stream_id": "workflow:product-task-87a0a96440519033053bd4b444ac50c7b292ba707dd9977ea734866bd69746bd"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 12,
+          "sha256": "d642fb038786dd0b749c23f89661cfad67216c5975ac115f0ba9bec50cf15169",
+          "stream_id": "workspaces:catalog"
+        }
+      ],
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "identity": {
+        "case_id": "pydicom__pydicom-1694",
+        "group_id": "pydicom--pydicom",
+        "material_digest": "02c1708bbf602fbcb30cfc72fce51cf6bb2ab0d8e2f3f2c70724832834d3562e",
+        "material_seed": null,
+        "replicate": 1,
+        "requested_mode": "multi",
+        "trial_id": "476d35c8c7cfd0c884f0e1418cf4b78fef160b477c2f2ef9dba1555bb05b74ab",
+        "variant_id": "multi-arm"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "execution": {
+          "input_tokens": 630303,
+          "output_tokens": 25959,
+          "quality": "exact"
+        },
+        "unattributed": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "quality": "exact"
+        }
+      }
+    }
+  ]
+}

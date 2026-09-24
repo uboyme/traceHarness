@@ -6,7 +6,6 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 pytest.importorskip("textual")
-from test_tui import _Provider, _runtime
 from textual.widgets import Button, Input, Static
 
 from traceh.api.json_types import fingerprint
@@ -22,8 +21,33 @@ from traceh.tui.app import TracehTuiApp
 from traceh.tui.optimization import OptimizationScreen
 
 
-async def test_tui_chat_then_feedback_panel_starts_background_and_retains_evidence(tmp_path):
-    provider = _Provider()
+class _FailingReadProvider:
+    """Each Turn first reads a missing file (a failed tool result), then answers."""
+
+    name = "tui-provider"
+
+    def __init__(self) -> None:
+        self.requests = []
+
+    async def complete(self, request):
+        from traceh.api.llm import CompletionCategory, ModelResponse, ToolCall
+
+        self.requests.append(request)
+        if len(self.requests) % 2:
+            return ModelResponse(
+                content="",
+                tool_calls=(
+                    ToolCall(f"c{len(self.requests)}", "read_file", {"path": "missing.txt"}),
+                ),
+                completion=CompletionCategory.TOOL_HANDOFF,
+            )
+        return ModelResponse(content="I could not find that file.")
+
+
+async def test_two_real_chat_turns_with_failed_tools_produce_a_suggestion_after_them(tmp_path):
+    from test_tui import _runtime
+
+    provider = _FailingReadProvider()
     runtime, _ = _runtime(tmp_path, provider)
     opened = await open_chat_session(runtime, workspace=tmp_path, session_id=None)
     observed, done = [], asyncio.Event()
@@ -31,7 +55,7 @@ async def test_tui_chat_then_feedback_panel_starts_background_and_retains_eviden
     async def execute(identity, observations, seen, deadline):
         observed.extend(observations)
         done.set()
-        return EpisodeSettlement("explicit-ui-test-evidence", None, False, True, True)
+        return EpisodeSettlement("explicit-ui-test-evidence", None, True, True)
 
     host = BackgroundOptimizationHost(
         runtime.sessions,
@@ -42,15 +66,15 @@ async def test_tui_chat_then_feedback_panel_starts_background_and_retains_eviden
             fingerprint("plan"),
             datetime.now(UTC) + timedelta(hours=1),
             1,
-            2,
             20000,
             10,
             60,
         ),
-        reservation=EpisodeReservation(2, 20000),
+        reservation=EpisodeReservation(20000),
         execute=execute,
     )
     await host.open()
+    await host.set_enabled(True)
     app = TracehTuiApp(
         runtime,
         opened,
@@ -60,38 +84,41 @@ async def test_tui_chat_then_feedback_panel_starts_background_and_retains_eviden
         background=host,
         product=None,
     )
+
+    async def ask(pilot, text, ends):
+        app.query_one("#chat-input", Input).value = text
+        await pilot.press("enter")
+        for _ in range(100):
+            await pilot.pause()
+            events = await runtime.sessions.read_session(opened.session.session_id)
+            if sum(e.type == "turn/end" for e in events) >= ends and not app._busy:
+                return
+        raise AssertionError("turn did not finish")
+
     try:
         async with app.run_test(size=(120, 40)) as pilot:
-            app.query_one("#chat-input", Input).value = "A short question"
-            await pilot.press("enter")
-            await provider.started.wait()
-            for _ in range(20):
-                await pilot.pause()
-                events = await runtime.sessions.read_session(opened.session.session_id)
-                if any(e.type == "turn/end" for e in events):
-                    break
+            await ask(pilot, "Read the missing file", 1)
+            # One Turn is one source: nothing is spent on a single occurrence.
+            assert not done.is_set() and (await host.view())["episodes"] == 0
+            await ask(pilot, "Try reading it again", 2)
+            # Each Turn ran as a foreground operation; the idle pulse admits it after.
+            await asyncio.wait_for(done.wait(), 10)
+            assert {o.failure_class for o in observed} == {"tool-failed"}
+            assert len({o.turn_id for o in observed}) == 2
+            assert all(o.session_id == opened.session.session_id for o in observed)
+            assert len(provider.requests) == 4  # Detection never asked the chat model.
             await pilot.press("f6")
             await pilot.pause()
             assert isinstance(app.screen, OptimizationScreen)
-            for name in ("optimization-enable", "optimization-submit"):
-                app.screen.query_one("#" + name, Button).active_effect_duration = 0
-            await pilot.click("#optimization-enable")
-            await pilot.pause()
-            app.screen.query_one("#optimization-feedback", Input).value = "The evidence is unclear."
-            await pilot.click("#optimization-submit")
-            await asyncio.wait_for(done.wait(), 10)
-            await pilot.pause()
             await app.screen.refresh_state()
-            assert "explicit-ui-test-evidence" in str(
-                app.screen.query_one("#optimization-state", Static).render()
-            )
-            assert observed[0].session_id == opened.session.session_id
-            assert len(provider.requests) == 1  # Feedback wasn't sent as another chat question.
+            state = str(app.screen.query_one("#optimization-state", Static).render())
+            assert "explicit-ui-test-evidence" in state
     finally:
         await host.aclose()
         await runtime.dispose()
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("product", [False, True])
 async def test_user_case_selection_generates_valid_original_paired_plan_without_calls(
     tmp_path, product
@@ -142,7 +169,7 @@ async def test_user_case_selection_generates_valid_original_paired_plan_without_
             "rubric": {"file": rubric.name, "sha256": digest_bytes(rubric.read_bytes())},
             "requires_review": True,
         }
-        write_dataset(benchmark, manifest, cases, format_version=2)
+        write_dataset(benchmark, manifest, cases, format_version=3)
         sandbox = tmp_path / "sandbox.json"
         sandbox.write_text(
             json.dumps(

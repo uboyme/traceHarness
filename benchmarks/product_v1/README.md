@@ -17,7 +17,7 @@ numbered `attempts/001/` directories (mapped to task/mode/repetition in the repo
 because its Budget accounts, worktrees and Activations converged, not because its
 evidence was removed.
 
-The frozen verifier now uses protocol 2 and the explicitly selected host sandbox.
+The frozen verifier uses protocol 3 and the explicitly selected host sandbox.
 Its guest environment does not inherit the host PATH or temporary directories.
 Sandbox receipts and output digests use the attempt's original EventStore and CAS;
 missing sandbox configuration refuses process execution. No image is pulled automatically.
@@ -26,7 +26,9 @@ missing sandbox configuration refuses process execution. No image is pulled auto
 
 It names the Profile, coder and readonly investigator templates and their Budgets,
 the aggregate task Budget, capture limits, single/multi modes and a separately
-hashed dataset. Each dataset case freezes its own verification plan. Repetitions
+hashed format-3 Product dataset. Each case freezes its verification plan and explicit
+`initial_tree_limits` (`max_files`, `max_file_bytes`, `max_total_bytes`). Format 2
+is rejected without automatic migration. Repetitions
 belong to RunOptions / run plan. Removed auto/multi and Router fields are rejected.
 
 It **cannot** name a repository, a promotion target, a Workflow node, an edge, an

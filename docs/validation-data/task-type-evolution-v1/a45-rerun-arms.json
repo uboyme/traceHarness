@@ -1,0 +1,268 @@
+[
+  {
+    "plan": "p01",
+    "variant": "single",
+    "ran": true,
+    "case_id": "a4-investigate-negative-subscript",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 235030,
+    "total_tokens": 272703,
+    "token_quality": "exact",
+    "model_attempts": 22,
+    "tool_calls": 21,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 272703,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 21
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 17037,
+          "input_limit": 85760,
+          "input_mean": 12232.6,
+          "input_peak": 17037,
+          "metered_peak": 16302,
+          "metered_requests": 22,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 22,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a4-investigate-negative-subscript",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 445297,
+    "total_tokens": 654739,
+    "token_quality": "exact",
+    "model_attempts": 37,
+    "tool_calls": 39,
+    "children": 1,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 642887,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 2,
+            "tool_handoff": 32
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 30412,
+          "input_limit": 85760,
+          "input_mean": 18686.4,
+          "input_peak": 30412,
+          "metered_peak": 29800,
+          "metered_requests": 35,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 34,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      },
+      {
+        "label": "patch_author.agent-tool-patch-author-855fafc2-b6a0-5958-95e1-ac2c589180ee",
+        "tokens": 11852,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 2
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 4039,
+          "input_limit": 85760,
+          "input_mean": 3769.0,
+          "input_peak": 4039,
+          "metered_peak": 3505,
+          "metered_requests": 3,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 3,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "single",
+    "ran": false
+  },
+  {
+    "plan": "p02",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a4-investigate-negative-subscript",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 156733,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 7,
+    "tool_calls": 10,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 6
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 11603,
+          "metered_requests": 7,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 7,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p03",
+    "variant": "single",
+    "ran": true,
+    "case_id": "a5-dependent-sample-arguments",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 284218,
+    "total_tokens": 325193,
+    "token_quality": "exact",
+    "model_attempts": 26,
+    "tool_calls": 25,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 325193,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 25
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 18877,
+          "input_limit": 85760,
+          "input_mean": 12231.7,
+          "input_peak": 18877,
+          "metered_peak": 18621,
+          "metered_requests": 26,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 26,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p03",
+    "variant": "multi",
+    "ran": true,
+    "case_id": "a5-dependent-sample-arguments",
+    "mode": "multi",
+    "resolved": "multi",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 128655,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 2,
+    "tool_calls": 1,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 1
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 6310,
+          "metered_requests": 2,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 2,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  }
+]

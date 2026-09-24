@@ -1,0 +1,870 @@
+{
+  "format": 1,
+  "study": "development pilot; descriptive only; no official SWE-bench score",
+  "planned_trials": 12,
+  "executed_trials": 12,
+  "independent_tasks": 3,
+  "rows": [
+    {
+      "pair": 1,
+      "case": "marshmallow-code__marshmallow-1359",
+      "mode": "single",
+      "product_status": "completed",
+      "workflow_status": "completed",
+      "review_passed": true,
+      "failure_code": null,
+      "execution_usage": {
+        "input_tokens": 135953,
+        "output_tokens": 3827,
+        "quality": "exact",
+        "total_tokens": 139780
+      },
+      "known_estimated_cny": 0.302522,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.302522,
+      "model_attempts": 15,
+      "report_sha256": "947c49fb9ad59683ecb7e359684c0d25d4aa9e56c26b30248fab5d3dc48a0c07",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": true,
+      "timing": {
+        "active_ms": 186563,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 186563
+      },
+      "cumulative_work_duration_ms": 157269,
+      "provider_active_milliseconds": 60413,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 15,
+          "known_input_tokens": 135953,
+          "known_output_tokens": 3827,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 15,
+        "charged_tool_calls": 20,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 139780,
+        "usage_reservations": 16,
+        "usage_reservations_terminal": 16
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "65eca8b4-ad59-432a-8f0f-4510465bd276",
+        "frozen_digest": "430306306567ca361303fdd235d98b8657356645fb104657a60ca7b85d5a7beb",
+        "evidence_digest": "24b3ac8d64a3101c498085725a0a9a3706178b97e8ce6222ee78b384e2f66c7a",
+        "report_digest": "947c49fb9ad59683ecb7e359684c0d25d4aa9e56c26b30248fab5d3dc48a0c07"
+      },
+      "verified_request_snapshots": 17
+    },
+    {
+      "pair": 1,
+      "case": "marshmallow-code__marshmallow-1359",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": null,
+      "known_estimated_cny": 0.59499,
+      "cancelled_unknown_usage": [
+        {
+          "attempt_id": "e8d71856-a197-4b27-a8fd-54b17490ca0b",
+          "request_bytes_and_output": 27970,
+          "planning_cny": 0.22376
+        }
+      ],
+      "planning_cny": 0.81875,
+      "model_attempts": 14,
+      "report_sha256": "b8503e8e577b400cec2eb89e6943e2876aac50f96a4fd976e8efaad1a3a76e43",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": false,
+      "timing": {
+        "active_ms": 326077,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 326077
+      },
+      "cumulative_work_duration_ms": 317517,
+      "provider_active_milliseconds": 262573,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 1,
+          "known_input_tokens": 0,
+          "known_output_tokens": 0,
+          "unknown_usage_attempts": 1
+        },
+        "collaboration-plan": {
+          "model_attempts": 13,
+          "known_input_tokens": 223143,
+          "known_output_tokens": 18588,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 14,
+        "charged_tool_calls": 31,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 259129,
+        "usage_reservations": 16,
+        "usage_reservations_terminal": 16
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      },
+      "evidence_binding": {
+        "run_id": "b0820579-7506-48ee-8ff2-2f781796afcd",
+        "frozen_digest": "00fe4b0d358ff3f015ea0f2c46165fc1d550c349ae6e7b32860fcd074364f48a",
+        "evidence_digest": "f85a08e706a0b9bba4bb64ee155e46ce890817cb3fb962f376ef27f643a9cadb",
+        "report_digest": "b8503e8e577b400cec2eb89e6943e2876aac50f96a4fd976e8efaad1a3a76e43"
+      },
+      "verified_request_snapshots": 16
+    },
+    {
+      "pair": 2,
+      "case": "pydicom__pydicom-1694",
+      "mode": "single",
+      "product_status": "completed",
+      "workflow_status": "completed",
+      "review_passed": true,
+      "failure_code": null,
+      "execution_usage": {
+        "input_tokens": 334166,
+        "output_tokens": 6458,
+        "quality": "exact",
+        "total_tokens": 340624
+      },
+      "known_estimated_cny": 0.719996,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.719996,
+      "model_attempts": 26,
+      "report_sha256": "027b26ad4471cce08aaf9e4668127c312a4eac5cb5a44a72d8fbf5d8fc52b3b5",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": true,
+      "timing": {
+        "active_ms": 777155,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 777155
+      },
+      "cumulative_work_duration_ms": 716189,
+      "provider_active_milliseconds": 129300,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 26,
+          "known_input_tokens": 334166,
+          "known_output_tokens": 6458,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 26,
+        "charged_tool_calls": 37,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 340624,
+        "usage_reservations": 27,
+        "usage_reservations_terminal": 27
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "67e174a3-7960-4e55-950a-fee1c2abe350",
+        "frozen_digest": "d8eb043cd78b44d321ebfd11af93e04f394d2b74c79a9ecdf14c019b8724b671",
+        "evidence_digest": "7073b644f41f204a9077821ea00216991fd519e28fc23b5bc29d2df65773d034",
+        "report_digest": "027b26ad4471cce08aaf9e4668127c312a4eac5cb5a44a72d8fbf5d8fc52b3b5"
+      },
+      "verified_request_snapshots": 28
+    },
+    {
+      "pair": 2,
+      "case": "pydicom__pydicom-1694",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 630303,
+        "output_tokens": 25959,
+        "quality": "exact",
+        "total_tokens": 656262
+      },
+      "known_estimated_cny": 1.468278,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 1.468278,
+      "model_attempts": 39,
+      "report_sha256": "2e5a632fd3a0bbcf8dd79027332632fe51df44d11d12ceaf1a78aaf0ca620213",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": false,
+      "timing": {
+        "active_ms": 502718,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 502718
+      },
+      "cumulative_work_duration_ms": 686966,
+      "provider_active_milliseconds": 399469,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 22,
+          "known_input_tokens": 259219,
+          "known_output_tokens": 7056,
+          "unknown_usage_attempts": 0
+        },
+        "collaboration-plan": {
+          "model_attempts": 12,
+          "known_input_tokens": 202944,
+          "known_output_tokens": 16019,
+          "unknown_usage_attempts": 0
+        },
+        "collaboration-execute": {
+          "model_attempts": 5,
+          "known_input_tokens": 168140,
+          "known_output_tokens": 2884,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 4,
+        "accounts_closed": 4,
+        "charged_steps": 42,
+        "charged_tool_calls": 80,
+        "child_reservations": 3,
+        "child_reservations_terminal": 3,
+        "converged": true,
+        "settled_tokens": 656262,
+        "usage_reservations": 42,
+        "usage_reservations_terminal": 42
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 4,
+        "workspaces": 4
+      },
+      "evidence_binding": {
+        "run_id": "9dfb788f-b706-4c31-bc70-ffff1d7adf57",
+        "frozen_digest": "b87a1e167bc826ab4cdb6ef824ec81351b38bfa29cec89f19e8427b5f1141bdc",
+        "evidence_digest": "e22d2ef8ec0af6ae9c474fe3df089c90a7f6d39889bcd9a086083e824609a8ab",
+        "report_digest": "2e5a632fd3a0bbcf8dd79027332632fe51df44d11d12ceaf1a78aaf0ca620213"
+      },
+      "verified_request_snapshots": 41
+    },
+    {
+      "pair": 3,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "single",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 313062,
+        "output_tokens": 27702,
+        "quality": "exact",
+        "total_tokens": 340764
+      },
+      "known_estimated_cny": 0.84774,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.84774,
+      "model_attempts": 22,
+      "report_sha256": "07eafdba93e8297b5b2241ce47bce48c412e715b9997f973aef8b9a60a2c14e0",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": false,
+      "timing": {
+        "active_ms": 914859,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 914859
+      },
+      "cumulative_work_duration_ms": 902133,
+      "provider_active_milliseconds": 346783,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 22,
+          "known_input_tokens": 313062,
+          "known_output_tokens": 27702,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 22,
+        "charged_tool_calls": 42,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 340764,
+        "usage_reservations": 23,
+        "usage_reservations_terminal": 23
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 1,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "06661098-adf2-4c73-93a6-96d1afa933af",
+        "frozen_digest": "fe4bc6ece2151b61c4db130e7d7a536b38490c6372007e555430eba6452c0c0e",
+        "evidence_digest": "1cbc8bef796a24a28b4177d42d07604a6a2b859690f93108ec55f1dc13bf1704",
+        "report_digest": "07eafdba93e8297b5b2241ce47bce48c412e715b9997f973aef8b9a60a2c14e0"
+      },
+      "verified_request_snapshots": 24
+    },
+    {
+      "pair": 3,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 541338,
+        "output_tokens": 53705,
+        "quality": "exact",
+        "total_tokens": 595043
+      },
+      "known_estimated_cny": 1.512316,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 1.512316,
+      "model_attempts": 22,
+      "report_sha256": "7db5740f342bff9d272f239e4c79998260d9a4f6d2cb22eb1ef3f9444ff44432",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "success": false,
+      "timing": {
+        "active_ms": 735468,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 735468
+      },
+      "cumulative_work_duration_ms": 721078,
+      "provider_active_milliseconds": 591598,
+      "phase_usage": {
+        "collaboration-plan": {
+          "model_attempts": 22,
+          "known_input_tokens": 541338,
+          "known_output_tokens": 53705,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 22,
+        "charged_tool_calls": 54,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 595043,
+        "usage_reservations": 23,
+        "usage_reservations_terminal": 23
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "da56d87b-e287-4715-871f-fc9eadeb78ac",
+        "frozen_digest": "744b740d0dce2d4fcafb5d65f1a062b6eae9c76371abad602c432a56ad275ff2",
+        "evidence_digest": "8037e38084d638bdefe41de1d02f468bfb1409544f043ccbf9b7cd87db03ee56",
+        "report_digest": "7db5740f342bff9d272f239e4c79998260d9a4f6d2cb22eb1ef3f9444ff44432"
+      },
+      "verified_request_snapshots": 24
+    },
+    {
+      "pair": 4,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "single",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": false,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 404158,
+        "output_tokens": 12136,
+        "quality": "exact",
+        "total_tokens": 416294
+      },
+      "known_estimated_cny": 0.905404,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.905404,
+      "model_attempts": 29,
+      "report_sha256": "846c8af9f778829cf228f98619e2124548d2bcd77236db773a7a5e144ea704b4",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": false,
+      "timing": {
+        "active_ms": 527828,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 527828
+      },
+      "cumulative_work_duration_ms": 496182,
+      "provider_active_milliseconds": 152110,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 29,
+          "known_input_tokens": 404158,
+          "known_output_tokens": 12136,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 29,
+        "charged_tool_calls": 41,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 416294,
+        "usage_reservations": 30,
+        "usage_reservations_terminal": 30
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 1,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "df4e327d-8822-43d9-9d8d-530079892042",
+        "frozen_digest": "b477baf4eee356dd281fbbc7d5286c7261b779eebd7ad407ca23944aafbc7de8",
+        "evidence_digest": "1799d06531a65941966046209d91ca50eca06bae55857c4a76387aecbd393348",
+        "report_digest": "846c8af9f778829cf228f98619e2124548d2bcd77236db773a7a5e144ea704b4"
+      },
+      "verified_request_snapshots": 31
+    },
+    {
+      "pair": 4,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 599711,
+        "output_tokens": 51754,
+        "quality": "exact",
+        "total_tokens": 651465
+      },
+      "known_estimated_cny": 1.613454,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 1.613454,
+      "model_attempts": 37,
+      "report_sha256": "5087027e47d64f42210dbe41d99979f4c6b642b6b75e8b567a037f08f3b18aae",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": false,
+      "timing": {
+        "active_ms": 613578,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 613578
+      },
+      "cumulative_work_duration_ms": 772512,
+      "provider_active_milliseconds": 627652,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 21,
+          "known_input_tokens": 258721,
+          "known_output_tokens": 8211,
+          "unknown_usage_attempts": 0
+        },
+        "collaboration-plan": {
+          "model_attempts": 12,
+          "known_input_tokens": 204311,
+          "known_output_tokens": 30380,
+          "unknown_usage_attempts": 0
+        },
+        "collaboration-execute": {
+          "model_attempts": 4,
+          "known_input_tokens": 136679,
+          "known_output_tokens": 13163,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 4,
+        "accounts_closed": 4,
+        "charged_steps": 40,
+        "charged_tool_calls": 93,
+        "child_reservations": 3,
+        "child_reservations_terminal": 3,
+        "converged": true,
+        "settled_tokens": 651465,
+        "usage_reservations": 40,
+        "usage_reservations_terminal": 40
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 3,
+        "workspaces": 4
+      },
+      "evidence_binding": {
+        "run_id": "b6d44ec5-98c1-4346-a791-83d149d1bd6e",
+        "frozen_digest": "1612f988792ece20f081777cd26bc5fe2b526dd72801e650553b754fd2bf74c7",
+        "evidence_digest": "0bd9be3a9f4aa662b715bbb13347f0f090bcfc1cf1173e49cbe6affedafaaba1",
+        "report_digest": "5087027e47d64f42210dbe41d99979f4c6b642b6b75e8b567a037f08f3b18aae"
+      },
+      "verified_request_snapshots": 39
+    },
+    {
+      "pair": 5,
+      "case": "pydicom__pydicom-1694",
+      "mode": "single",
+      "product_status": "completed",
+      "workflow_status": "completed",
+      "review_passed": true,
+      "failure_code": null,
+      "execution_usage": {
+        "input_tokens": 232880,
+        "output_tokens": 8484,
+        "quality": "exact",
+        "total_tokens": 241364
+      },
+      "known_estimated_cny": 0.533632,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.533632,
+      "model_attempts": 22,
+      "report_sha256": "17efdf45c0828a7557a764e3689c29a441ebcfaa0612d4ec52a651ec54714fd1",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": true,
+      "timing": {
+        "active_ms": 359718,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 359718
+      },
+      "cumulative_work_duration_ms": 316920,
+      "provider_active_milliseconds": 121519,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 22,
+          "known_input_tokens": 232880,
+          "known_output_tokens": 8484,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 22,
+        "charged_tool_calls": 30,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 241364,
+        "usage_reservations": 23,
+        "usage_reservations_terminal": 23
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 2,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "906b45d0-24b5-4524-9f65-861b4598fd20",
+        "frozen_digest": "229fc64803c5bcd3330e368b42373833a2f93cb044a53138899b69935d2697e0",
+        "evidence_digest": "ed597ade497c769f91cac89ddb7dea2be6c45328e0d0e68d44cf1cd38c810ffa",
+        "report_digest": "17efdf45c0828a7557a764e3689c29a441ebcfaa0612d4ec52a651ec54714fd1"
+      },
+      "verified_request_snapshots": 24
+    },
+    {
+      "pair": 5,
+      "case": "pydicom__pydicom-1694",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": null,
+      "known_estimated_cny": 0.659014,
+      "cancelled_unknown_usage": [
+        {
+          "attempt_id": "73b0c643-ab1b-41ef-99fb-d6cf21b8e614",
+          "request_bytes_and_output": 27266,
+          "planning_cny": 0.218128
+        }
+      ],
+      "planning_cny": 0.877142,
+      "model_attempts": 19,
+      "report_sha256": "a29a87e1e597fa067e4e130f4fed804538daf54f859d96d118b030bd0ea856bf",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": false,
+      "timing": {
+        "active_ms": 327765,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 327765
+      },
+      "cumulative_work_duration_ms": 312967,
+      "provider_active_milliseconds": null,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 1,
+          "known_input_tokens": 0,
+          "known_output_tokens": 0,
+          "unknown_usage_attempts": 1
+        },
+        "collaboration-plan": {
+          "model_attempts": 18,
+          "known_input_tokens": 245811,
+          "known_output_tokens": 20924,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 19,
+        "charged_tool_calls": 34,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 283579,
+        "usage_reservations": 21,
+        "usage_reservations_terminal": 21
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      },
+      "evidence_binding": {
+        "run_id": "5810cc0f-078f-48db-b050-98bc42333ae0",
+        "frozen_digest": "c28f7da183fe9b9116913f594808c38e0ae4d891ad00e2fa71015e450ec7c470",
+        "evidence_digest": "246d518526101416c58edff272d2325dc4d87501d2a3a7d1b42bd87a83a2b602",
+        "report_digest": "a29a87e1e597fa067e4e130f4fed804538daf54f859d96d118b030bd0ea856bf"
+      },
+      "verified_request_snapshots": 21
+    },
+    {
+      "pair": 6,
+      "case": "marshmallow-code__marshmallow-1359",
+      "mode": "single",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": false,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 208217,
+        "output_tokens": 6350,
+        "quality": "exact",
+        "total_tokens": 214567
+      },
+      "known_estimated_cny": 0.467234,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.467234,
+      "model_attempts": 18,
+      "report_sha256": "ce3e3a3a58902d44174825aa41930d20a0b497d2beca18895632db314df2b492",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": false,
+      "timing": {
+        "active_ms": 194890,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 194890
+      },
+      "cumulative_work_duration_ms": 174331,
+      "provider_active_milliseconds": 85979,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 18,
+          "known_input_tokens": 208217,
+          "known_output_tokens": 6350,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 18,
+        "charged_tool_calls": 23,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 214567,
+        "usage_reservations": 19,
+        "usage_reservations_terminal": 19
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 1,
+        "workspaces": 2
+      },
+      "evidence_binding": {
+        "run_id": "3ff89131-79fa-4e5c-98f8-31e291c866ab",
+        "frozen_digest": "29a128e2dd50ff2326c73b6b3f53196ff274aa079270c352adf195f3794e6ce0",
+        "evidence_digest": "57eb9ae5d479c0230f680e0f8b6a0e4853dfe40b1542ca5755471465e67e8b42",
+        "report_digest": "ce3e3a3a58902d44174825aa41930d20a0b497d2beca18895632db314df2b492"
+      },
+      "verified_request_snapshots": 20
+    },
+    {
+      "pair": 6,
+      "case": "marshmallow-code__marshmallow-1359",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": null,
+      "known_estimated_cny": 0.904942,
+      "cancelled_unknown_usage": [
+        {
+          "attempt_id": "882f2e56-209a-45a4-a4b0-f8076fd62792",
+          "request_bytes_and_output": 33366,
+          "planning_cny": 0.266928
+        }
+      ],
+      "planning_cny": 1.17187,
+      "model_attempts": 18,
+      "report_sha256": "479c381234042f07b52f65d21c808416c58fd7215f17c207179ed5f127cf17f2",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "success": false,
+      "timing": {
+        "active_ms": 490156,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 490156
+      },
+      "cumulative_work_duration_ms": 481229,
+      "provider_active_milliseconds": null,
+      "phase_usage": {
+        "unlabelled-execution": {
+          "model_attempts": 1,
+          "known_input_tokens": 0,
+          "known_output_tokens": 0,
+          "unknown_usage_attempts": 1
+        },
+        "collaboration-plan": {
+          "model_attempts": 17,
+          "known_input_tokens": 313511,
+          "known_output_tokens": 34740,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "budget": {
+        "accounts": 3,
+        "accounts_closed": 3,
+        "charged_steps": 18,
+        "charged_tool_calls": 40,
+        "child_reservations": 2,
+        "child_reservations_terminal": 2,
+        "converged": true,
+        "settled_tokens": 368345,
+        "usage_reservations": 20,
+        "usage_reservations_terminal": 20
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 0,
+        "released": 3,
+        "workspaces": 3
+      },
+      "evidence_binding": {
+        "run_id": "fae42e57-1aad-4a4d-8cf8-1c4e0645fbed",
+        "frozen_digest": "1d9ed0b5f40fa28d65264de6fc9e265de36ed3339e2455dd0fe91836aa630d15",
+        "evidence_digest": "9b485cb83905cb52166e7044115bc2a4d2edf4a3dc6b59832a69ce87d8d608ba",
+        "report_digest": "479c381234042f07b52f65d21c808416c58fd7215f17c207179ed5f127cf17f2"
+      },
+      "verified_request_snapshots": 20
+    }
+  ],
+  "by_mode": {
+    "multi": {
+      "executed_trials": 6,
+      "independent_tasks": 3,
+      "successful_trials": 0,
+      "model_attempts": 149,
+      "complete_usage_available": false,
+      "total_execution_tokens": null,
+      "known_estimated_cny": 6.752994,
+      "cancelled_unknown_calls": 3,
+      "planning_cny": 7.46181,
+      "estimated_cny_per_success": null
+    },
+    "single": {
+      "executed_trials": 6,
+      "independent_tasks": 3,
+      "successful_trials": 3,
+      "model_attempts": 132,
+      "complete_usage_available": true,
+      "total_execution_tokens": 1693393,
+      "known_estimated_cny": 3.776528,
+      "cancelled_unknown_calls": 0,
+      "planning_cny": 3.776528,
+      "estimated_cny_per_success": 1.258843
+    }
+  },
+  "verified_request_snapshots": 305,
+  "all_budget_and_workspaces_converged": true,
+  "caveats": [
+    "Known usage is priced at frozen published rates, not an actual invoice.",
+    "Cancelled unknown usage is unavailable; planning charges do not restore actual usage.",
+    "Timing is descriptive: shared host was used for diagnostic work during early runs.",
+    "Three public development tasks and two repetitions do not establish statistical benefit.",
+    "Mandatory multi allocation with readonly assistants; no adaptive-mode claim.",
+    "Earlier v1 failures are retained separately, not pooled with v3."
+  ]
+}

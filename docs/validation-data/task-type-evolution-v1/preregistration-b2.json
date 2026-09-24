@@ -1,0 +1,41 @@
+{
+  "experiment": "B2 - same governed-48k condition after ADR-0084 (re-run after a fold counts as reopen demand)",
+  "frozen_at_utc": "2026-09-23T18:02:33.377416+00:00",
+  "source_digest": "0ec510ff2ad06443bb2c72964091ab40ccb308f93219060201341728cdeb2c8e",
+  "change_vs_b": "only src/traceh/session/surface_replacement.py (ADR-0084); plan, benchmark, template, model, budgets identical to B governed-48k",
+  "plans": [
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "plan": ".traceh\\tt1-plans-b\\governed48\\a2-parallel-read-brain-registry\\run-plan.json",
+      "sha256": "c593cf49af6b7efb4190c7fe0ae603655f88701e167f0f779e2e45e4c7f0ef18"
+    }
+  ],
+  "benchmark": ".traceh/tt1-exp-governed48/material",
+  "repetitions": 2,
+  "comparators": {
+    "B governed-48k (source d16fcdde)": "0/2, reruns after fold 11/4, read-backs 0",
+    "B ungoverned": "2/2, coordinator input mean 21,583 / 23,402"
+  },
+  "hypothesis": "re-run copies stay visible, so the repair loop no longer re-fetches the same files and finishes within the Turn deadline",
+  "report": [
+    "fixed verifier outcome",
+    "coordinator input peak/mean",
+    "tool folds",
+    "read-backs",
+    "reruns after fold",
+    "tool calls",
+    "whole-tree tokens",
+    "wall"
+  ],
+  "success_reading": "quality: fixed-verifier passes equal to ungoverned (2/2) counts as no observed regression, not statistical non-inferiority; saving is read from per-request input mean vs ungoverned and whole-tree tokens, reported whatever the sign",
+  "stop_rules": "as batch A; nothing re-run to replace a failure",
+  "network": "direct: paired plan, private workers with *_PROXY cleared and ProxyHandler({})",
+  "amendments": [
+    {
+      "at_utc": "2026-09-23T18:07:31.764080+00:00",
+      "event": "attempt 1 (C:/Users/caojie/ttb2-gov/p01): arm 1 failed with provider-timeout on its 5th request, before any fold (0 tool folds, 5 requests, one usage unknown); arm-stop rule left arm 2 unstarted",
+      "decision": "one repeat of the same frozen plan into C:/Users/caojie/ttb2b-gov; attempt 1 stays reported as an infrastructure failure; the repeat counts whatever its outcome; if the repeat also ends in a provider failure, stop and report without further repeats",
+      "reason": "the failure preceded the mechanism under test, so attempt 1 carries no evidence about it"
+    }
+  ]
+}

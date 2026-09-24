@@ -1,0 +1,165 @@
+{
+  "complete": true,
+  "disclosed_condition_changes_from_v10": [
+    "Both roles' max_output_tokens raised from 16384 (coder) / 8192 (investigator) to 32768.",
+    "Both roles gained an explicit context_policy (window 96000, output reserve 32768, margin 2048, trigger 60%, relief 35%, protect 2 recent tool groups).",
+    "Both roles granted read_tool_output / list_tool_outputs / search_tool_output."
+  ],
+  "errors": [],
+  "exit_code": 0,
+  "interpretation_limits": [
+    "One trial on one case. No savings rate, no quality equivalence, no mode benefit.",
+    "Token totals are provider-reported, not a reconciled invoice.",
+    "A success here does not retroactively explain v10, and a failure here does not invalidate the offline folding evidence."
+  ],
+  "kind": "c4-context-governance-trial",
+  "per_session": {
+    "pylint-dev__astroid-1196/session:agent-tool-investigation-session-41887ada-c557-5789-b483-d6652da7790f": {
+      "completion_categories": [
+        "tool_handoff"
+      ],
+      "estimated_inputs": [
+        6685,
+        7134,
+        10321,
+        12446,
+        15974,
+        18971,
+        22498,
+        25430,
+        28057,
+        28717,
+        33141,
+        36290,
+        21332,
+        26749,
+        32706,
+        36493,
+        28612,
+        33755,
+        36374,
+        30458,
+        36667,
+        37129,
+        37561,
+        39439,
+        43358,
+        42676,
+        43847
+      ],
+      "exact_usage_calls": 26,
+      "folding_outcome": "folded",
+      "identical_recalls_after_their_result_was_folded": 11,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 724920,
+      "largest_estimated_input": 43847,
+      "model_calls": 30,
+      "output_tokens": 26971,
+      "read_back_calls": 60,
+      "reasoning_tokens": 15699,
+      "reasoning_tokens_reported_calls": 26,
+      "relief_tokens": 21414,
+      "replacements": 82,
+      "step_fold_failures": [],
+      "step_folds": 82,
+      "succeeded_calls": 26,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    },
+    "pylint-dev__astroid-1196/session:fc8009f8-5395-4d2e-9c6a-93aff7ac5b1e": {
+      "completion_categories": [
+        "normal"
+      ],
+      "estimated_inputs": [],
+      "exact_usage_calls": 2,
+      "folding_outcome": "disabled-no-water-marks-configured",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 0,
+      "largest_estimated_input": null,
+      "model_calls": 2,
+      "output_tokens": 0,
+      "read_back_calls": 0,
+      "reasoning_tokens": 0,
+      "reasoning_tokens_reported_calls": 0,
+      "relief_tokens": null,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 2,
+      "trigger_tokens": null,
+      "unknown_usage_calls": 0
+    },
+    "pylint-dev__astroid-1196/session:wf-session-87ae015867f6f2f617d7b15777e7af576809ceec16d681d493298e2c133611a2": {
+      "completion_categories": [
+        "tool_handoff"
+      ],
+      "estimated_inputs": [
+        5996,
+        6700,
+        8785,
+        11099,
+        13643,
+        15314,
+        18433,
+        19781,
+        24551,
+        26623,
+        28943,
+        30560,
+        32671,
+        34636,
+        35075,
+        20913,
+        23247,
+        23610,
+        24977,
+        25710,
+        26588,
+        27112,
+        28453,
+        28638,
+        29514,
+        30831,
+        31335,
+        32256,
+        33122,
+        33588,
+        34088
+      ],
+      "exact_usage_calls": 30,
+      "folding_outcome": "folded",
+      "identical_recalls_after_their_result_was_folded": 3,
+      "identical_recalls_while_result_still_visible": 2,
+      "input_tokens": 742212,
+      "largest_estimated_input": 35075,
+      "model_calls": 34,
+      "output_tokens": 52626,
+      "read_back_calls": 0,
+      "reasoning_tokens": 39198,
+      "reasoning_tokens_reported_calls": 30,
+      "relief_tokens": 21414,
+      "replacements": 23,
+      "step_fold_failures": [],
+      "step_folds": 23,
+      "succeeded_calls": 30,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    }
+  },
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "case_id": "pylint-dev__astroid-1196",
+      "convergence": "converged",
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "invariants": "passed",
+      "reason": null
+    }
+  ]
+}

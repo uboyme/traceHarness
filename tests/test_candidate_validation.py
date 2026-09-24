@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import shutil
@@ -14,6 +15,7 @@ import pytest
 
 import traceh.evolution.candidate_validation as candidate_validation_module
 from traceh.cli.main import build_parser
+from traceh.evaluation.inputs import referenced_input
 from traceh.evolution import contract_probe
 from traceh.evolution.artifacts import (
     ArtifactContractError,
@@ -717,8 +719,10 @@ async def test_subprocess_runner_converges_child_before_cancellation_returns(
 )
 @pytest.mark.asyncio
 async def test_real_candidate_validation_runs_every_l2_gate(tmp_path: Path) -> None:
-    if not _head_contains_l2_validator():
-        pytest.skip("real L2 recursion guard requires the validator to exist in core HEAD")
+    # The validator deliberately tests its supplied trusted HEAD, not a dirty
+    # checkout. Give it a test-owned immutable snapshot of the code under test;
+    # never commit to or change the developer's repository to prepare this gate.
+    trusted_core = _current_core_fixture(tmp_path / "trusted-core")
     candidate = tmp_path / "candidate"
     shutil.copytree(PLUGIN_CREATOR, candidate)
     (candidate / "CANDIDATE.md").write_text(
@@ -732,11 +736,14 @@ async def test_real_candidate_validation_runs_every_l2_gate(tmp_path: Path) -> N
     report = await CandidateValidator(
         CandidateValidationConfig(
             candidate=candidate,
-            core_project=PROJECT_ROOT,
+            core_project=trusted_core,
             output=output,
             allow_index=True,
             command_timeout_seconds=600.0,
-            core_timeout_seconds=1800.0,
+            core_timeout_seconds=3600.0,
+            # Core fixtures exercise token metering and its Rich presentation.
+            # The clean test environment must provide both optional features.
+            test_requirements=("tiktoken>=0.9,<1", "rich>=14.2.0"),
         ),
         runner=runner,
     ).run()
@@ -784,18 +791,63 @@ def _path_exists(path: Path) -> bool:
     return path.exists()
 
 
-def _head_contains_l2_validator() -> bool:
-    completed = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(PROJECT_ROOT),
-            "cat-file",
-            "-e",
-            "HEAD:src/traceh/evolution/candidate_validation.py",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
+def _current_core_fixture(destination: Path) -> Path:
+    paths = subprocess.run(
+        ["git", "-C", str(PROJECT_ROOT), "ls-files", "-z", "--cached", "--others",
+         "--exclude-standard"],
+        stdout=subprocess.PIPE, check=True,
+    ).stdout.decode("utf-8").split("\0")
+    roots = {"src", "tests", "examples", "benchmarks", "docs", "scripts", ".github"}
+    destination.mkdir()
+    for relative in sorted(set(paths) - {""}):
+        path = Path(relative)
+        if path.name == ".env" or any(part == ".git" for part in path.parts):
+            continue
+        if path.parts[0] not in roots and not (
+            len(path.parts) == 1
+            and (path.suffix in {".md", ".toml"} or path.name == ".gitattributes")
+        ):
+            continue
+        source = PROJECT_ROOT / path
+        if not source.exists():  # A deleted tracked input is absent from this snapshot.
+            continue
+        assert source.is_file() and not source.is_symlink()
+        target = destination / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+    for argv in (
+        ["init", "--quiet"],
+        ["config", "core.autocrlf", "false"],
+        ["add", "--all"],
+        ["-c", "user.name=TraceHarness Test", "-c", "user.email=test@example.invalid",
+         "commit", "--quiet", "-m", "Immutable core fixture for L2 integration"],
+    ):
+        subprocess.run(["git", "-C", str(destination), *argv], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    return destination
+
+
+def test_current_core_fixture_preserves_frozen_bytes_after_windows_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = tmp_path / "explicit-test-project"
+    project.mkdir()
+    material = project / "benchmarks" / "fixture"
+    material.mkdir(parents=True)
+    content = b'{\n  "fixture": true\n}\n'
+    (material / "input.json").write_bytes(content)
+    (project / ".gitattributes").write_bytes(b"benchmarks/** -text\n")
+    subprocess.run(["git", "init", "--quiet", str(project)], check=True)
+    monkeypatch.setitem(globals(), "PROJECT_ROOT", project)
+    frozen = _current_core_fixture(tmp_path / "frozen")
+    clone = tmp_path / "windows-checkout"
+    subprocess.run(
+        ["git", "-c", "core.autocrlf=true", "clone", "--quiet", "--no-hardlinks",
+         str(frozen), str(clone)],
+        check=True, capture_output=True,
     )
-    return completed.returncode == 0
+    actual = referenced_input(
+        clone / "benchmarks" / "fixture",
+        {"file": "input.json", "sha256": hashlib.sha256(content).hexdigest()},
+    )
+    assert actual.content == content

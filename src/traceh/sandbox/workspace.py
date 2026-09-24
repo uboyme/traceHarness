@@ -99,7 +99,10 @@ def snapshot(root: Path, policy: SandboxPolicy) -> WorkspaceSnapshot:
                     opened = os.fstat(stream.fileno())
                     if (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
                         raise ValueError("sandbox-workspace-changed")
-                    content = stream.read(remaining + 1)
+                    # Bound the transient read buffer to this observed file,
+                    # not the entire workspace allowance. One extra byte still
+                    # detects growth; identity and final metadata checks remain.
+                    content = stream.read(before.st_size + 1)
                 after = _ordinary(path)
                 if (before.st_ino, before.st_size, before.st_mtime_ns) != (
                     after.st_ino,

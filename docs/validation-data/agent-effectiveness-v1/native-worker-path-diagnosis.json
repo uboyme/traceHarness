@@ -1,0 +1,38 @@
+{
+  "results": [
+    {
+      "output": ".traceh\\aelongprobe\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run",
+      "failure": "workspace-git-failed",
+      "model_requests": 0,
+      "convergence": "unknown"
+    },
+    {
+      "output": "C:\\Users\\caojie\\tae-path-probe",
+      "failure": "workflow-node-failed",
+      "model_requests": 1,
+      "convergence": "converged"
+    }
+  ],
+  "git_failures": [
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aelongprobe\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run\\attempts\\001\\source",
+        "worktree",
+        "add",
+        "--detach",
+        "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aelongprobe\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run\\attempts\\001\\work\\ws-446672822098c24f0aade62d4b2f6b847b8020baad4b961a4d7bff4410a0bef7",
+        "c6e41ae6f7e2be851b6a4006657d1e75020f2eb9"
+      ],
+      "cwd": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aelongprobe\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run\\attempts\\001\\source",
+      "exit_code": 128
+    }
+  ],
+  "owned_offline_git_reproduction": {
+    "exit_code": 128,
+    "stderr": "warning: encountered old-style '/dev/null' that should be '%(prefix)//dev/null'\nPreparing worktree (detached HEAD c6e41ae)\nwarning: encountered old-style '/dev/null' that should be '%(prefix)//dev/null'\nwarning: encountered old-style '/dev/null' that should be '%(prefix)//dev/null'\nerror: unable to create file doc/media/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White_small.png: Filename too long\nfatal: cannot create directory at 'tests/testdata/python3/data/beyond_top_level/namespace_package': Filename too long\n"
+  }
+}

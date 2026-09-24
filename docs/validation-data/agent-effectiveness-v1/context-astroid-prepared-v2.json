@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "arm": "a",
+    "input": "C:/Users/caojie/tae-c3ai",
+    "output": "C:/Users/caojie/tae-c3a",
+    "first_arm": "a"
+  },
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "arm": "b",
+    "input": "C:/Users/caojie/tae-c3bi",
+    "output": "C:/Users/caojie/tae-c3b",
+    "first_arm": "a"
+  }
+]

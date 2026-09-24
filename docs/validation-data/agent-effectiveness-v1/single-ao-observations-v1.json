@@ -1,0 +1,11 @@
+[
+  {
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "failure_class": "local-fix-without-nested-behavior-validation",
+    "summary": "Two development Single runs produced the same patch and both failed fixed verification. The direct reproduction was addressed but an option lookup in nested objects did not retain the enclosing configuration behavior. The agent used many investigation calls yet missed that neighboring behavior. Derive general coding and validation guidance from this failure: no repository names, identifiers, expected patch, or fixed-test details may enter the candidate. Preserve the original instruction to implement, run relevant checks, and report honestly. No held-out task evidence is supplied.",
+    "evidence_refs": [
+      "docs/validation-data/agent-effectiveness-v1/observed-pairs.json",
+      "docs/validation-data/agent-effectiveness-v1/RESULTS.md"
+    ]
+  }
+]

@@ -1,0 +1,92 @@
+{
+  "kind": "independent-new-material-diagnostic-not-original-trial-result",
+  "original_binding": {
+    "run_id": "df4e327d-8822-43d9-9d8d-530079892042",
+    "frozen_digest": "b477baf4eee356dd281fbbc7d5286c7261b779eebd7ad407ca23944aafbc7de8",
+    "evidence_digest": "1799d06531a65941966046209d91ca50eca06bae55857c4a76387aecbd393348",
+    "report_digest": "846c8af9f778829cf228f98619e2124548d2bcd77236db773a7a5e144ea704b4"
+  },
+  "original_report_sha256": "846c8af9f778829cf228f98619e2124548d2bcd77236db773a7a5e144ea704b4",
+  "original_success": false,
+  "case_id": "pylint-dev__astroid-1196",
+  "original_patch_sha256": "2696cccbede368d2ffc46130f9206295258cc42d3f91544603eefc612e0c7c4f",
+  "new_material_verifier_plan_version": 3,
+  "candidate_workspace_unchanged": true,
+  "status": "finished",
+  "exit_code": 0,
+  "report": {
+    "errors": [],
+    "failed": [],
+    "missing": [],
+    "passed": [
+      "tests/unittest_python3.py::Python3TC::test_annotation_as_string",
+      "tests/unittest_python3.py::Python3TC::test_annotation_support",
+      "tests/unittest_python3.py::Python3TC::test_as_string",
+      "tests/unittest_python3.py::Python3TC::test_async_comprehensions",
+      "tests/unittest_python3.py::Python3TC::test_async_comprehensions_as_string",
+      "tests/unittest_python3.py::Python3TC::test_async_comprehensions_outside_coroutine",
+      "tests/unittest_python3.py::Python3TC::test_format_string",
+      "tests/unittest_python3.py::Python3TC::test_kwonlyargs_annotations_supper",
+      "tests/unittest_python3.py::Python3TC::test_metaclass_ancestors",
+      "tests/unittest_python3.py::Python3TC::test_metaclass_error",
+      "tests/unittest_python3.py::Python3TC::test_metaclass_imported",
+      "tests/unittest_python3.py::Python3TC::test_metaclass_multiple_keywords",
+      "tests/unittest_python3.py::Python3TC::test_metaclass_yes_leak",
+      "tests/unittest_python3.py::Python3TC::test_nested_unpacking_in_dicts",
+      "tests/unittest_python3.py::Python3TC::test_old_syntax_works",
+      "tests/unittest_python3.py::Python3TC::test_parent_metaclass",
+      "tests/unittest_python3.py::Python3TC::test_simple_metaclass",
+      "tests/unittest_python3.py::Python3TC::test_starred_notation",
+      "tests/unittest_python3.py::Python3TC::test_underscores_in_numeral_literal",
+      "tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem",
+      "tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem_uninferable",
+      "tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem_with_ref",
+      "tests/unittest_python3.py::Python3TC::test_unpacking_in_dicts",
+      "tests/unittest_python3.py::Python3TC::test_yield_from",
+      "tests/unittest_python3.py::Python3TC::test_yield_from_as_string",
+      "tests/unittest_python3.py::Python3TC::test_yield_from_is_generator"
+    ],
+    "pytest_exit": 0,
+    "skipped": []
+  },
+  "receipt": {
+    "format": 1,
+    "execution_id": "682e10fd43924676bcdead154a9fd7a9",
+    "owner": {
+      "kind": "verification",
+      "owner_id": "candidate-material-diagnostic",
+      "session_id": null,
+      "turn_id": null,
+      "step_id": null,
+      "tool_call_id": null,
+      "agent_id": null,
+      "budget_reservation": null,
+      "budget_admission": null,
+      "plugin_id": null,
+      "plugin_version": null,
+      "activation_id": null
+    },
+    "request_digest": "1d731c8f53beb42375a8edc28cf93194c16d7220c07479a0f4e59571c1c137db",
+    "policy_digest": "14bfc2e1a00548c625f1991d8036fd8853bed6c12563800b1f0c35aed0e8088b",
+    "status": "finished",
+    "converged": true,
+    "container_id": "a7c33638a65488d77c7416b4fb002671fe61312059c64a2b202d5ca59bff5543",
+    "backend": {
+      "Version": "29.2.1",
+      "ApiVersion": "1.53",
+      "Os": "linux",
+      "Arch": "amd64"
+    },
+    "started_at": "2026-09-20T11:23:51.723425593Z",
+    "finished_at": "2026-09-20T11:23:52.483468896Z",
+    "failure_code": null,
+    "cleanup_failures": [],
+    "output_blob": {
+      "sha256": "665a243f88d9b852c8e4af12b49df0de3694733841c1a8a7621dd56afa142631",
+      "size_bytes": 3394,
+      "address": "sha256/665a243f88d9b852c8e4af12b49df0de3694733841c1a8a7621dd56afa142631",
+      "protocol_version": 1
+    },
+    "digest": "2427a4039301e48110ee66fc2395e64a370c764f1977c41e69f3697222c27cff"
+  }
+}

@@ -1,0 +1,1 @@
+{"reason": "execution-incomplete", "action": "stop", "adoption_authorized": false, "cost": {"analysis": {"attempts": 1, "estimated_attempts": 0, "input_tokens": 3285, "known_subtotal": {"input_tokens": 3285, "output_tokens": 890, "total_tokens": 4175}, "output_tokens": 890, "total_tokens": 4175, "unknown_attempts": 0}, "review_calls": 0, "review_tokens": 0}}

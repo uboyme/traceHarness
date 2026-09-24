@@ -15,6 +15,7 @@ from traceh.evaluation.manifest import load_benchmark_manifest
 from traceh.evaluation.review import export_review
 
 
+@pytest.mark.frozen_unicode
 async def test_retrieval_plan_runs_through_cli_and_assess_remains_offline(tmp_path, capsys):
     plan = json.loads((BENCHMARK / "run-plan.example.json").read_text(encoding="utf-8"))
     plan["model"].update(
@@ -36,7 +37,7 @@ async def test_retrieval_plan_runs_through_cli_and_assess_remains_offline(tmp_pa
     assert json.loads(capsys.readouterr().out)["task_type"] == "retrieval_episode"
     export_review(tmp_path / "run", tmp_path / "review")
     path = tmp_path / "review/judgment-template.json"
-    judgment = json.loads(path.read_text())
+    judgment = json.loads(path.read_text(encoding="utf-8"))
     judgment["reviewer"] = "test-reviewer"
     path.write_text(json.dumps(judgment))
     args = build_parser().parse_args(
@@ -54,7 +55,7 @@ async def test_retrieval_plan_runs_through_cli_and_assess_remains_offline(tmp_pa
     assert await _eval(args) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["assessment_counts"]["pending_review"] == 1
-    report = json.loads((tmp_path / "assessment/report.json").read_text())
+    report = json.loads((tmp_path / "assessment/report.json").read_text(encoding="utf-8"))
     assert report["execution_run"] == str((tmp_path / "run").resolve())
     packet = json.loads((tmp_path / "review/review.json").read_text(encoding="utf-8"))
     event_file = tmp_path / "review" / packet["episodes"][0]["target_events"]
@@ -81,6 +82,7 @@ def test_review_rejects_execution_configuration_before_loading_anything(flag, va
         _configure_from_environment(args)
 
 
+@pytest.mark.frozen_unicode
 async def test_review_cli_is_offline_even_with_model_environment(tmp_path, monkeypatch, capsys):
     await runner(tmp_path, "m-direct").run()
     import traceh.cli.main as cli
@@ -98,6 +100,7 @@ async def test_review_cli_is_offline_even_with_model_environment(tmp_path, monke
     assert json.loads(capsys.readouterr().out)["entries"] == 1
 
 
+@pytest.mark.frozen_unicode
 async def test_changed_durable_evidence_is_rejected_before_export(tmp_path):
     await runner(tmp_path, "m-direct").run()
     path = tmp_path / "run/attempts/001/events/events.sqlite3"

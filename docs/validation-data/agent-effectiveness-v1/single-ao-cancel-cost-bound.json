@@ -1,0 +1,33 @@
+{
+  "price_source": "https://help.aliyun.com/zh/model-studio/qwen3-6-plus",
+  "region": "China Beijing as frozen dashscope.aliyuncs.com endpoint",
+  "method": "Full documented 1M input upper bound at highest tier, requested max_tokens for completion, no discounts; ceiling estimate, not recovered usage or invoice. Original trial reservations remain in preregistrations. Only these two closed unknown attempts are re-reserved.",
+  "rows": [
+    {
+      "arm": "01",
+      "database": "C:\\Users\\caojie\\tae-s1\\experiment\\rounds\\0001\\evaluation\\arms\\01\\run\\attempts\\001\\ev\\events.sqlite3",
+      "attempt_id": "13c9ee2f-77d1-464c-8b8e-75a12ac51584",
+      "model": "qwen3.6-plus",
+      "output_cap": 8192,
+      "input_bound": 1000000,
+      "input_cny_per_million": 8,
+      "output_cny_per_million": 48,
+      "upper_estimated_cny": "8.393216",
+      "rounded_reservation_cny": 9,
+      "usage_still_unknown": true
+    },
+    {
+      "arm": "02",
+      "database": "C:\\Users\\caojie\\tae-s1\\experiment\\rounds\\0001\\evaluation\\arms\\02\\run\\attempts\\001\\ev\\events.sqlite3",
+      "attempt_id": "285837f2-c3ec-407a-a67c-473c340e6eee",
+      "model": "qwen3.6-plus",
+      "output_cap": 8192,
+      "input_bound": 1000000,
+      "input_cny_per_million": 8,
+      "output_cny_per_million": 48,
+      "upper_estimated_cny": "8.393216",
+      "rounded_reservation_cny": 9,
+      "usage_still_unknown": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+[
+  {
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "failure_class": "local-fix-without-nested-behavior-validation",
+    "summary": "Two development Single runs produced the same patch and both failed fixed verification. The direct reproduction was addressed but an option lookup in nested objects did not retain the enclosing configuration behavior. The agent used many investigation calls yet missed that neighboring behavior. Derive general coding and validation guidance from this failure: no repository names, identifiers, expected patch, or fixed-test details may enter the candidate. Preserve the original instruction to implement, run relevant checks, and report honestly. No held-out task evidence is supplied.",
+    "evidence_refs": [
+      "docs/validation-data/agent-effectiveness-v1/observed-pairs.json",
+      "docs/validation-data/agent-effectiveness-v1/RESULTS.md"
+    ]
+  },
+  {
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "failure_class": "validation-command-waste-and-missed-handoff",
+    "summary": "The first Single guidance candidate explicitly asked for adjacent/nested checks. In a real paired evaluation both arms exhausted the 10-minute Turn and were cancelled without fixed verification. The baseline made 36 paid attempts and candidate 38. Both repeatedly sent shell redirection and pipes although the tool executes an argv command, producing unrecognized-argument errors. The candidate eventually ran a large verbose test selection, generating about 68KB output, then attempted more readback tools after the host had withdrawn all tools for final handoff. The existing proposal was not adopted. Propose one small general instruction that keeps focused validation of neighboring behavior but avoids command-syntax retries, indiscriminate/full verbose suites and continued tool requests after the host requires a text-only handoff. Do not encode repository names, filenames, exact commands or answers. The allowed tools and host deadlines remain authoritative. This is the second and final development candidate for this immediate batch.",
+    "evidence_refs": [
+      "docs/validation-data/agent-effectiveness-v1/single-ao-baseline-v1.json",
+      "docs/validation-data/agent-effectiveness-v1/single-ao-candidate-v1.json",
+      "C:/Users/caojie/tae-s1/proposal.json"
+    ]
+  }
+]

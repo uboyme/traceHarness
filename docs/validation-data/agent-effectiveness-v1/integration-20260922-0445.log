@@ -1,0 +1,2384 @@
+........................................................................ [  1%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+.............F.......................................................... [ 14%]
+........................................................................ [ 16%]
+.....................................F.................................. [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+............................s........................................... [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+..................F..................................................... [ 34%]
+......................................................FF................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+.....s.................................................................. [ 42%]
+........................................................................ [ 44%]
+..............................................................s......... [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+..........................s............................................. [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+....................................................................F... [ 64%]
+........................................................................ [ 65%]
+......................F......F.......................................... [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+................................................................F.....FF [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+..................................................s..................... [ 87%]
+.................................ss.........................F........... [ 88%]
+................F...FF........F..........s.............................. [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+............FFFFFF...................................................... [ 97%]
+........................................................................ [ 98%]
+.............................................FFFF..........              [100%]
+================================== FAILURES ===================================
+___ test_original_background_adapter_runs_candidate_in_independent_workers ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_original_background_adapt0')
+
+    async def test_original_background_adapter_runs_candidate_in_independent_workers(tmp_path):
+        import json
+    
+        from test_control_model_calls import config
+        from test_strategy_optimization import setup
+    
+        from traceh.api.llm import ModelResponse, Usage, UsageQuality
+        from traceh.evolution.background_experiment import (
+            BackgroundExperiment,
+            inspect_background_experiment,
+        )
+        from traceh.llm.scripted import ScriptedLlmProvider
+    
+        runner, contract, observations, proposal = setup(tmp_path)
+        provider = ScriptedLlmProvider(
+            tuple(
+                ModelResponse(content=text, usage=Usage(30, 20, UsageQuality.EXACT))
+                for text in (
+                    json.dumps(proposal),
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                    '{"status":"passed","reason":"Fixture evidence supports the answer."}',
+                )
+            )
+        )
+        adapter = BackgroundExperiment(
+            runner,
+            provider=provider,
+            analysis_config=config(),
+            judge_config=config(),
+            output=tmp_path / "actual-experiments",
+            timeout_seconds=120,
+            selectors=tuple((e.file, e.selector) for e in contract.editable_text),
+            max_request_bytes=200000,
+        )
+        settlement = await adapter("candidate-fixture", observations, (), contract.deadline_utc)
+>       assert settlement.converged and settlement.usage_known and settlement.candidate_digest
+E       AssertionError: assert (False)
+E        +  where False = EpisodeSettlement(evidence_path='C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_original...80be0a81f8fe0c4f7b72dfdcf82645d5b6c3984979a6a407d375072297ea49', await_review=False, usage_known=True, converged=False).converged
+
+tests\test_background_optimization.py:290: AssertionError
+______________ test_real_candidate_validation_runs_every_l2_gate ______________
+real L2 core regression failed:
+................FFFFFFs.sF.ssss....sss.................................. [  1%]
+
+........................................................................ [  3%]
+
+........................................................................ [  5%]
+
+........................................................................ [  6%]
+
+........................................................................ [  8%]
+
+........................................................................ [ 10%]
+
+........................................................................ [ 12%]
+
+........................................................................ [ 13%]
+
+...........F.FF......................................................... [ 15%]
+
+........................................................................ [ 17%]
+
+.....................................s.................................. [ 19%]
+
+........................................................................ [ 20%]
+
+........................................................................ [ 22%]
+
+........................................................................ [ 24%]
+
+............................s........................................... [ 26%]
+
+........................................................................ [ 27%]
+
+........................................................................ [ 29%]
+
+........................................................................ [ 31%]
+
+........................................................................ [ 33%]
+
+........................................................................ [ 34%]
+
+..................s.....................................FF.s.F.......... [ 36%]
+
+.......................................FFFFFFF........ss.FFFFFFFFFFFFFF. [ 38%]
+
+...FF.......FF..............FEEEEEEEE.E.E............................... [ 39%]
+
+...FFssss...........ssFFFF.............................................. [ 41%]
+
+........................................................................ [ 43%]
+
+.....s.................................................................. [ 45%]
+
+......................FFFF..FF.FFFFF.................................... [ 46%]
+
+.......................................................s...............F [ 48%]
+
+FFFFFFFFFFF.......FFs................................................... [ 50%]
+
+................................................s....................... [ 52%]
+
+.................................FFFFFFF................................ [ 53%]
+
+........F............................................................... [ 55%]
+
+.................................................................sssssss [ 57%]
+
+ssssssssssssssssss.s.sssssssssssssssssssssssssssssss.................... [ 59%]
+
+........................................................................ [ 60%]
+
+........................................................................ [ 62%]
+
+........................................................................ [ 64%]
+
+........................sssssssssssssssssss............................. [ 66%]
+
+.......................................sssssssss.ssssssssss.ss.......... [ 67%]
+
+........................................................................ [ 69%]
+
+...........sssssss.ssssssssssss.ss...................................... [ 71%]
+
+.............................s...................s...................... [ 72%]
+
+.....................................................s.................. [ 74%]
+
+........................................................................ [ 76%]
+
+..................................................................FFFs.. [ 78%]
+
+........F.....................................................F......... [ 79%]
+
+.............................sssssssssssssssssss.sssssFFFFFFFsssFFFFFsss [ 81%]
+
+s...........s..........................................s..ssss.......... [ 83%]
+
+............ss..................ssssss..sss.sssssssss.sssssss....ssssss. [ 85%]
+
+....sssss............................................................... [ 86%]
+
+......ssss.............................................................. [ 88%]
+
+..................................................s..................... [ 90%]
+
+.................................ss.............FFFFFFFF....sss......... [ 92%]
+
+..............sssssssssssssssss..ss......s..................s........... [ 93%]
+
+..................ssF
+
+__________ test_concurrent_writable_product_collects_then_integrates __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_concurrent_writable_produ0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D520A4F50>
+
+    @pytest.mark.asyncio
+    async def test_concurrent_writable_product_collects_then_integrates(tmp_path, monkeypatch):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product,
+            "_host_profile",
+            lambda mode: replace(original(mode), profile=writable_profile(mode)),
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        git("config", "core.autocrlf", "false", cwd=source)
+        (source / "tracked.txt").write_bytes(b"base\n")
+        (source / "kept.txt").write_bytes(b"kept\n")
+        git("add", "--renormalize", ".", cwd=source)
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+        provider = ConcurrentIntegratingProvider()
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_concurrent_writable_product.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_concurrent_writable_produ0')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D51E66120>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_concurrent_writable_produ0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_concurrent_writable_produ0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D51FA7340>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_concurrent_writable_product.ConcurrentIntegratingProvider object at 0x0000024D51FA7AD0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=ea1a7edc-d797-4a36-8ded-35efe5de1cc9 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_concurrent_writable_produ0\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'ea1a7edc-d797-4a36-8ded-35efe5de1cc9' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_concurrent_writable_produ0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_concurrent_writable_produ0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-c73a60cd88e271277add340724f8d28a2ffd0f347b22983ae1316f60b636df5d
+E           task if confirmed: product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e: explicit START authorized by host user
+E         task product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e: failed; workflow=failed; mode=multi
+E         task product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'ea1a7edc-d797-4a36-8ded-35efe5de1cc9' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_concurrent_writable_produ0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_concurrent_writable_produ0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+_____ test_review_refreshes_actual_extra_files_and_replays[diagnostic.py] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D52A2ABA0>
+extra = 'diagnostic.py'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("extra", ["diagnostic.py", "notes.txt"])
+    async def test_review_refreshes_actual_extra_files_and_replays(tmp_path, monkeypatch, extra):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            packets = []
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    return await super().complete(request)
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                self.packets.append(packet["delivery"])
+                if len(self.packets) == 1:
+                    assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "extra",
+                            "apply_patch",
+                            {
+                                "path": extra,
+                                "old_text": "",
+                                "new_text": "extra",
+                                "create": True,
+                            },
+                        ),
+                    )
+                assert packet["delivery"]["changed_paths"] == sorted(["added.txt", extra])
+                assert self.packets[0]["candidate_tree"] != self.packets[1]["candidate_tree"]
+                return product._response("An extra file exists; no scope-compliance claim.")
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_delivery_review.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e0')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D488DFE00>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D488DC7C0>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_delivery_review.test_review_refreshes_actual_extra_files_and_replays.<locals>.Provider object at 0x0000024D488DF3B0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=3a2c62e5-ba0a-4893-9a5c-f461b698dae2 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e0\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id '3a2c62e5-ba0a-4893-9a5c-f461b698dae2' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-fb9d61c8269d0f265113ce21ebe786873648b8799017e6c6611221e4890d98f0
+E           task if confirmed: product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded: explicit START authorized by host user
+E         task product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded: failed; workflow=failed; mode=multi
+E         task product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id '3a2c62e5-ba0a-4893-9a5c-f461b698dae2' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+_______ test_review_refreshes_actual_extra_files_and_replays[notes.txt] _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D488DC650>
+extra = 'notes.txt'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("extra", ["diagnostic.py", "notes.txt"])
+    async def test_review_refreshes_actual_extra_files_and_replays(tmp_path, monkeypatch, extra):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            packets = []
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    return await super().complete(request)
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                self.packets.append(packet["delivery"])
+                if len(self.packets) == 1:
+                    assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "extra",
+                            "apply_patch",
+                            {
+                                "path": extra,
+                                "old_text": "",
+                                "new_text": "extra",
+                                "create": True,
+                            },
+                        ),
+                    )
+                assert packet["delivery"]["changed_paths"] == sorted(["added.txt", extra])
+                assert self.packets[0]["candidate_tree"] != self.packets[1]["candidate_tree"]
+                return product._response("An extra file exists; no scope-compliance claim.")
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_delivery_review.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e1')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D52A1FF80>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e1/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_refreshes_actual_e1/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D4F51E710>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_delivery_review.test_review_refreshes_actual_extra_files_and_replays.<locals>.Provider object at 0x0000024D4F51C920>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=3202daa1-bc4b-4c11-84d3-8c74adafed98 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e1\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id '3202daa1-bc4b-4c11-84d3-8c74adafed98' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e1\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e1\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-7ef93222dfc9b55d65c4ba5694e01001bc75970eea30553a381cd26f7bac5383
+E           task if confirmed: product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5: explicit START authorized by host user
+E         task product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5: failed; workflow=failed; mode=multi
+E         task product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id '3202daa1-bc4b-4c11-84d3-8c74adafed98' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e1\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_refreshes_actual_e1\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+____ test_product_returns_partial_budget_report_without_grant_or_followup _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_product_returns_partial_b0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D4EE15370>
+
+    @pytest.mark.asyncio
+    async def test_product_returns_partial_budget_report_without_grant_or_followup(
+        tmp_path, monkeypatch
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product,
+            "_host_profile",
+            lambda mode: replace(original(mode), profile=negotiation_profile(mode)),
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        provider = PartialBudgetProvider()
+        async with SqliteEventStore(tmp_path / "events.sqlite") as store:
+            from collaboration_fixtures import run_failed_product
+    
+            _, events = await run_failed_product(tmp_path, store, source, target, provider)
+>           assert provider.child_steps == 2
+E           assert 0 == 2
+E            +  where 0 = <test_product_budget_negotiation.PartialBudgetProvider object at 0x0000024D51FCA3C0>.child_steps
+
+tests\test_product_budget_negotiation.py:100: AssertionError
+___ test_multi_product_mainline_converges_with_the_production_sqlite_store ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_multi_product_mainline_co0')
+
+    async def test_multi_product_mainline_converges_with_the_production_sqlite_store(
+        tmp_path: Path,
+    ) -> None:
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = SqliteEventStore(tmp_path / "events")
+        try:
+>           task_id, _, _ = await asyncio.wait_for(
+                _run_to_barrier(
+                    tmp_path,
+                    store,
+                    source,
+                    target,
+                    LocalArtifactCas(tmp_path / "cas"),
+                    RequestedTaskMode.MULTI,
+                    _ThreadedProductProvider(),
+                ),
+                timeout=30,
+            )
+
+tests\test_product_f3_e2e.py:1010: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\mydownload\anaconda\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_multi_product_mainline_co0')
+store = <traceh.session.sqlite.SqliteEventStore object at 0x0000024D52264EF0>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_multi_product_mainline_co0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_multi_product_mainline_co0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D488C09D0>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_product_f3_e2e._ThreadedProductProvider object at 0x0000024D000DE6C0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+>       assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+E       assert 130 == 0
+
+tests\test_product_f3_e2e.py:625: AssertionError
+____ test_approval_screen_uses_durable_evidence_and_separate_request_caps _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_approval_screen_uses_dura0')
+
+    async def test_approval_screen_uses_durable_evidence_and_separate_request_caps(
+        tmp_path: Path,
+    ) -> None:
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        requests: list[ModelRequest] = []
+    
+        _, _, output = await _run_to_barrier(
+            tmp_path,
+            InMemoryEventStore(),
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            _ProductProvider(requests),
+        )
+    
+        assert requests
+>       assert {request.max_output_tokens for request in requests} == {4_096}
+E       assert {1024, 4096} == {4096}
+E         
+E         Extra items in the left set:
+E         1024
+E         Use -v to get more diff
+
+tests\test_product_f3_e2e.py:1376: AssertionError
+_________ test_search_restart_then_expand_on_real_runtime_and_sqlite __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_search_restart_then_expan0')
+
+    async def test_search_restart_then_expand_on_real_runtime_and_sqlite(tmp_path):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        command, expected = write_emitter(workspace)
+        root = tmp_path / "data"
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("emit", "shell", {"command": command}),)),
+                ModelResponse(content="captured"),
+            ],
+        )
+        try:
+            sid = await runtime.create_session(workspace)
+            await runtime.run_existing(sid, "Execute once")
+            events = await runtime.sessions.read_session(sid)
+            ref = next(e.data["output_ref"] for e in events if e.type == "tool/result")
+            preview = json.loads(next(e.data["content"] for e in events if e.type == "tool/result"))
+            assert preview["search_tool"] == "search_tool_output"
+            assert "read_action" not in preview
+            assert "preview" not in preview
+            assert "Content is not loaded here" in preview["notice"]
+            assert expected[:200] not in canonical_json(preview)
+            await runtime.compaction.replace_through(
+                sid, through_seq=events[-1].seq, summary="A diagnostic was executed."
+            )
+        finally:
+            await runtime.dispose()
+            await store.aclose()
+        identity = {key: ref[key] for key in ("effect_id", "digest")}
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("list", "list_tool_outputs", {}),)),
+                ModelResponse(
+                    tool_calls=(ToolCall("grep", "search_tool_output", identity | {"query": "END:"}),)
+                ),
+                ModelResponse(content="found"),
+            ],
+        )
+        try:
+            await runtime.run_existing(sid, "Find the terminal record")
+            events = await runtime.sessions.read_session(sid)
+            result = next(
+                e
+                for e in events
+                if e.type == "tool/result" and e.data["tool_name"] == "search_tool_output"
+            )
+            assert result.data["status"] == "succeeded"
+>           assert "output_ref" not in result.data
+E           assert 'output_ref' not in {'content': '{"case_sensitive":true,"digest":"7a3c707d6b25bef3339deb2fd69cb203587bb6f4eb74dd8562b431b6c047796c","effec...:"END:","total_chars":5309}', 'data': {}, 'effect_id': '47d357d8-0f71-4191-bc70-bd778d9f070a', 'error_type': None, ...}
+E            +  where {'content': '{"case_sensitive":true,"digest":"7a3c707d6b25bef3339deb2fd69cb203587bb6f4eb74dd8562b431b6c047796c","effec...:"END:","total_chars":5309}', 'data': {}, 'effect_id': '47d357d8-0f71-4191-bc70-bd778d9f070a', 'error_type': None, ...} = EventEnvelope(event_id=UUID('d2b6ebb8-235f-43fa-b050-d24b04c12b8d'), stream_id='session:5e072212-c003-41b3-91f0-d8b6b9...lation_id=None, actor_id=None, composition_revision='45868d4abda731568cd397e9872240776ef2da6166f906d4f7510d5c1ca0b8ca').data
+
+tests\test_retained_tool_output.py:195: AssertionError
+____ test_real_shell_survives_restart_and_pages_without_reexecution[False] ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_real_shell_survives_resta0')
+failing = False
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_real_shell_survives_restart_and_pages_without_reexecution(tmp_path, failing):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        command, expected = write_emitter(workspace, failing=failing)
+        root = tmp_path / "data"
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("emit", "shell", {"command": command}),)),
+                ModelResponse(content="captured"),
+            ],
+        )
+        try:
+            sid = await runtime.create_session(workspace)
+            await runtime.run_existing(sid, "Run the diagnostic once.")
+            events = await runtime.sessions.read_session(sid)
+            result = next(e for e in events if e.type == "tool/result")
+            reference = result.data["output_ref"]
+            assert result.data["data"] == {}
+            assert "END: station-Q" not in result.data["content"]
+            assert len(result.data["content"]) < 3000
+            effects = await runtime.sessions.read_effects(sid)
+            original = resolve_tool_output(
+                events,
+                effects,
+                session_id=sid,
+                effect_id=reference["effect_id"],
+                digest=reference["digest"],
+            )
+            assert expected in original["content"]
+            assert original["data"]["exit_code"] == (7 if failing else 0)
+            assert original["data"]["stdout"] == expected
+            assert not await verify_request_snapshots(runtime.sessions, runtime.surface, sid)
+            assert not runtime.invariants.check(events, effects)
+            # Compaction removes the original preview from Surface, not its source.
+            await runtime.compaction.replace_through(
+                sid,
+                through_seq=events[-1].seq,
+                summary="A diagnostic was executed. Original Tool output remains available.",
+            )
+        finally:
+            await runtime.dispose()
+            await store.aclose()
+    
+        text = original["content"]
+        calls = tuple(
+            ToolCall(
+                f"page-{offset}",
+                "read_tool_output",
+                {
+                    "effect_id": reference["effect_id"],
+                    "digest": reference["digest"],
+                    "offset": offset,
+                    "count": 400,
+                },
+            )
+            for offset in range(0, len(text), 400)
+        )
+        calls += (
+            ToolCall(
+                "data-page",
+                "read_tool_output",
+                {
+                    "effect_id": reference["effect_id"],
+                    "digest": reference["digest"],
+                    "part": "data",
+                    "offset": 0,
+                    "count": 120,
+                },
+            ),
+        )
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("directory", "list_tool_outputs", {}),)),
+                ModelResponse(tool_calls=calls),
+                ModelResponse(content="read"),
+            ],
+        )
+        try:
+            await runtime.run_existing(sid, "Read the original diagnostic evidence.")
+            events = await runtime.sessions.read_session(sid)
+            catalog = next(
+                e
+                for e in events
+                if e.type == "tool/result" and e.data["tool_name"] == "list_tool_outputs"
+            )
+            assert json.loads(catalog.data["content"])["outputs"][0]["output_ref"] == reference
+            results = [
+                e
+                for e in events
+                if e.type == "tool/result" and e.data["tool_name"] == "read_tool_output"
+            ]
+            assert all(e.data["status"] == "succeeded" for e in results)
+>           assert all("output_ref" not in e.data for e in results)  # No recursive persistence.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           assert False
+E            +  where False = all(<generator object test_real_shell_survives_restart_and_pages_without_reexecution.<locals>.<genexpr> at 0x0000024D00600A00>)
+
+tests\test_retained_tool_output.py:381: AssertionError
+____ test_real_shell_survives_restart_and_pages_without_reexecution[True] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_real_shell_survives_resta1')
+failing = True
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_real_shell_survives_restart_and_pages_without_reexecution(tmp_path, failing):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        command, expected = write_emitter(workspace, failing=failing)
+        root = tmp_path / "data"
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("emit", "shell", {"command": command}),)),
+                ModelResponse(content="captured"),
+            ],
+        )
+        try:
+            sid = await runtime.create_session(workspace)
+            await runtime.run_existing(sid, "Run the diagnostic once.")
+            events = await runtime.sessions.read_session(sid)
+            result = next(e for e in events if e.type == "tool/result")
+            reference = result.data["output_ref"]
+            assert result.data["data"] == {}
+            assert "END: station-Q" not in result.data["content"]
+            assert len(result.data["content"]) < 3000
+            effects = await runtime.sessions.read_effects(sid)
+            original = resolve_tool_output(
+                events,
+                effects,
+                session_id=sid,
+                effect_id=reference["effect_id"],
+                digest=reference["digest"],
+            )
+            assert expected in original["content"]
+            assert original["data"]["exit_code"] == (7 if failing else 0)
+            assert original["data"]["stdout"] == expected
+            assert not await verify_request_snapshots(runtime.sessions, runtime.surface, sid)
+            assert not runtime.invariants.check(events, effects)
+            # Compaction removes the original preview from Surface, not its source.
+            await runtime.compaction.replace_through(
+                sid,
+                through_seq=events[-1].seq,
+                summary="A diagnostic was executed. Original Tool output remains available.",
+            )
+        finally:
+            await runtime.dispose()
+            await store.aclose()
+    
+        text = original["content"]
+        calls = tuple(
+            ToolCall(
+                f"page-{offset}",
+                "read_tool_output",
+                {
+                    "effect_id": reference["effect_id"],
+                    "digest": reference["digest"],
+                    "offset": offset,
+                    "count": 400,
+                },
+            )
+            for offset in range(0, len(text), 400)
+        )
+        calls += (
+            ToolCall(
+                "data-page",
+                "read_tool_output",
+                {
+                    "effect_id": reference["effect_id"],
+                    "digest": reference["digest"],
+                    "part": "data",
+                    "offset": 0,
+                    "count": 120,
+                },
+            ),
+        )
+        runtime, store = make_runtime(
+            root,
+            [
+                ModelResponse(tool_calls=(ToolCall("directory", "list_tool_outputs", {}),)),
+                ModelResponse(tool_calls=calls),
+                ModelResponse(content="read"),
+            ],
+        )
+        try:
+            await runtime.run_existing(sid, "Read the original diagnostic evidence.")
+            events = await runtime.sessions.read_session(sid)
+            catalog = next(
+                e
+                for e in events
+                if e.type == "tool/result" and e.data["tool_name"] == "list_tool_outputs"
+            )
+            assert json.loads(catalog.data["content"])["outputs"][0]["output_ref"] == reference
+            results = [
+                e
+                for e in events
+                if e.type == "tool/result" and e.data["tool_name"] == "read_tool_output"
+            ]
+            assert all(e.data["status"] == "succeeded" for e in results)
+>           assert all("output_ref" not in e.data for e in results)  # No recursive persistence.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           assert False
+E            +  where False = all(<generator object test_real_shell_survives_restart_and_pages_without_reexecution.<locals>.<genexpr> at 0x0000024D00193100>)
+
+tests\test_retained_tool_output.py:381: AssertionError
+_______ test_structured_product_reaches_approval_and_replays[delegate] ________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_structured_product_reache0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D4F46ACF0>
+action = 'delegate'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("action", ["delegate"])
+    async def test_structured_product_reaches_approval_and_replays(tmp_path, monkeypatch, action):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, revision = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+        provider = StructuredProvider(action)
+        try:
+>           await product._run_to_barrier(
+                tmp_path,
+                store,
+                source,
+                target,
+                LocalArtifactCas(tmp_path / "cas"),
+                RequestedTaskMode.MULTI,
+                provider,
+            )
+
+tests\test_structured_product.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_structured_product_reache0')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D52AE3DA0>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_structured_product_reache0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_structured_product_reache0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D52AE33D0>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_structured_product.StructuredProvider object at 0x0000024D52AE1670>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=c0320085-cc38-4aa9-90a5-f4481b36b169 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_structured_product_reache0\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'c0320085-cc38-4aa9-90a5-f4481b36b169' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_structured_product_reache0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_structured_product_reache0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-9fb4147ead2f9eb06eeb2279fca6bc1fd6c2d584a0c3f136d8c4aa30682e2c26
+E           task if confirmed: product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88: explicit START authorized by host user
+E         task product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88: failed; workflow=failed; mode=multi
+E         task product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'c0320085-cc38-4aa9-90a5-f4481b36b169' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_structured_product_reache0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_structured_product_reache0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+---------------------------- Captured stdout call -----------------------------
+model/attempt-end {'turn_id': '8acad8f9-cada-490f-ba70-9370f2d60257', 'step_id': '6ef31704-36f0-48d1-9765-b68081890c0b', 'attempt_id': '7534e7df-b4af-42ec-8714-a13704c33eb1', 'ordinal': 1, 'request_snapshot_seq': 9, 'dispatch_fingerprint': '4f77db38406c4dc265d74a1f9be5423577b2eecb34990f1d810bd2f8175453a3', 'reservation_id': '1252dda9156c1d4f413c7ccb39218ba99e589bd784eceeb2f159f9e17151e7ed', 'status': 'failed', 'provider_active_milliseconds': 0, 'failure_code': 'provider-failure-unclassified', 'failure_category': 'unknown'}
+_______ test_fold_skips_disabled_protected_or_unhelpful_sources[inline] _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fold_skips_disabled_prote2')
+boundary = 'inline'
+
+    @pytest.mark.parametrize("boundary", ["disabled", "recent", "inline"])
+    async def test_fold_skips_disabled_protected_or_unhelpful_sources(tmp_path, boundary):
+        sid, _, _, before, _ = await prepare_history(
+            tmp_path, output_limit=1_000_000 if boundary == "inline" else 2000
+        )
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [ModelResponse(content="answer")],
+            threshold=1,
+            enabled=boundary != "disabled",
+            keep=2 if boundary == "recent" else 1,
+        )
+        try:
+            report = await runtime.compaction.compact_before_turn(sid)
+            events = await runtime.sessions.read_session(sid)
+>           assert not any(
+                e.type == SURFACE_REPLACE and e.data["method"] == "tool-fold" for e in events
+            )
+E           assert not True
+E            +  where True = any(<generator object test_fold_skips_disabled_protected_or_unhelpful_sources.<locals>.<genexpr> at 0x0000024D00A10C70>)
+
+tests\test_tool_result_folding.py:102: AssertionError
+_ test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_automatic_fold_keeps_pair0')
+failing = False
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart(tmp_path, failing):
+        sid, original, before_events, before, threshold = await prepare_history(
+            tmp_path, failing=failing, pair=True
+        )
+        ref = original.data["output_ref"]
+        identity = {k: ref[k] for k in ("effect_id", "digest")}
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [
+                ModelResponse(
+                    tool_calls=(ToolCall("find", "search_tool_output", identity | {"query": "END:"}),)
+                ),
+                ModelResponse(content="found original"),
+            ],
+            threshold=threshold,
+        )
+        try:
+            await runtime.run_existing(sid, "Find the original endpoint.")
+            events = await runtime.sessions.read_session(sid)
+            folds = [e for e in events if e.type == SURFACE_REPLACE]
+            assert len(folds) == 1
+            fold = parse_surface_replacement(folds[0])
+            assert isinstance(fold, SurfaceToolFold)
+            assert fold.source_seqs == (original.seq,)
+            assert fold.message.tool_call_id == "original"
+            assert fold.message.name == "shell"
+>           assert json.loads(fold.message.content)["output_ref"] == ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'output_ref'
+
+tests\test_tool_result_folding.py:202: KeyError
+_ test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_automatic_fold_keeps_pair1')
+failing = True
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart(tmp_path, failing):
+        sid, original, before_events, before, threshold = await prepare_history(
+            tmp_path, failing=failing, pair=True
+        )
+        ref = original.data["output_ref"]
+        identity = {k: ref[k] for k in ("effect_id", "digest")}
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [
+                ModelResponse(
+                    tool_calls=(ToolCall("find", "search_tool_output", identity | {"query": "END:"}),)
+                ),
+                ModelResponse(content="found original"),
+            ],
+            threshold=threshold,
+        )
+        try:
+            await runtime.run_existing(sid, "Find the original endpoint.")
+            events = await runtime.sessions.read_session(sid)
+            folds = [e for e in events if e.type == SURFACE_REPLACE]
+            assert len(folds) == 1
+            fold = parse_surface_replacement(folds[0])
+            assert isinstance(fold, SurfaceToolFold)
+            assert fold.source_seqs == (original.seq,)
+            assert fold.message.tool_call_id == "original"
+            assert fold.message.name == "shell"
+>           assert json.loads(fold.message.content)["output_ref"] == ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'output_ref'
+
+tests\test_tool_result_folding.py:202: KeyError
+__________ test_fold_forgery_rejected_by_shared_source_checker[kept] __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fold_forgery_rejected_by_4')
+change = 'kept'
+
+    @pytest.mark.parametrize("change", ["message", "source", "cut", "bytes", "kept"])
+    async def test_fold_forgery_rejected_by_shared_source_checker(tmp_path, change):
+        from traceh.session.invariants import check_surface_replacement_sources
+    
+        sid, _, _, _, threshold = await prepare_history(tmp_path)
+        runtime, store = open_runtime(
+            tmp_path / "data", [ModelResponse(content="answer")], threshold=threshold
+        )
+        try:
+            await runtime.compaction.compact_before_turn(sid)
+            events = await runtime.sessions.read_session(sid)
+            fold = next(e for e in events if e.type == SURFACE_REPLACE)
+            data = json.loads(canonical_json(fold.data))
+            if change == "message":
+                data["replacement"]["tool_call_id"] = "another-call"
+            elif change == "source":
+                data["source_seqs"] = [next(e.seq for e in events if e.type == "user/message")]
+            elif change == "cut":
+                data["cut_seq"] -= 1
+            elif change == "kept":
+>               data["kept_recent_turns"] += 1
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'kept_recent_turns'
+
+tests\test_tool_result_folding.py:338: KeyError
+___ test_review_reconciles_actual_calls_without_inventing_tests[False-None] ___
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D02CF4E00>
+exit_code = None, checked_before_review = False
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_0')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D00714F20>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D48914940>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D48917110>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=df7f866e-4c84-4ca2-abb7-2d6d1d7cdc6c workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_0\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'df7f866e-4c84-4ca2-abb7-2d6d1d7cdc6c' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-4823b26726df3da153dff9e7d27fc95a63752c678b68c1ece9b2faf995cdbe7a
+E           task if confirmed: product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c: explicit START authorized by host user
+E         task product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c: failed; workflow=failed; mode=multi
+E         task product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'df7f866e-4c84-4ca2-abb7-2d6d1d7cdc6c' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+____ test_review_reconciles_actual_calls_without_inventing_tests[False-0] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D02CF5C40>
+exit_code = 0, checked_before_review = False
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_1')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D02CF4920>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_1/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_1/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D488FD0F0>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D488FCCB0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=ba097ea1-483d-4f4f-a2de-77a763407468 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_1\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'ba097ea1-483d-4f4f-a2de-77a763407468' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_1\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_1\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-4f8997762487879a924300882cc20937cddb5ee189dc422b0e444cd9464fffd0
+E           task if confirmed: product-task-9b6bb2267b1b5a1701c190d22c92b69c0a4d789716de6d567ae28e62e473fe90
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-9b6bb2267b1b5a1701c190d22c92b69c0a4d789716de6d567ae28e62e473fe90: explicit START authorized by host user
+E         task product-task-9b6bb2267b1b5a1701c190d22c92b69c0a4d789716de6d567ae28e62e473fe90: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-9b6bb2267b1b5a1701c190d22c92b69c0a4d789716de6d567ae28e62e473fe90: failed; workflow=failed; mode=multi
+E         task product-task-9b6bb2267b1b5a1701c190d22c92b69c0a4d789716de6d567ae28e62e473fe90: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'ba097ea1-483d-4f4f-a2de-77a763407468' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_1\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_1\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+____ test_review_reconciles_actual_calls_without_inventing_tests[False-1] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D52E5E030>
+exit_code = 1, checked_before_review = False
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_2')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D02DF75C0>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_2/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_2/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D52E5C460>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D02DF6AB0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=e96d1a84-858d-4401-87a0-5185bb8ae742 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_2\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'e96d1a84-858d-4401-87a0-5185bb8ae742' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_2\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_2\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-675d0d1f4a372e1a15a465d217d96ecf05f715273e88b52a67691b5127dfc985
+E           task if confirmed: product-task-6ed18a97508386f517ce1492e3e727d2d2da9639b7b8e87cf1012185e7ab9e5d
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-6ed18a97508386f517ce1492e3e727d2d2da9639b7b8e87cf1012185e7ab9e5d: explicit START authorized by host user
+E         task product-task-6ed18a97508386f517ce1492e3e727d2d2da9639b7b8e87cf1012185e7ab9e5d: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-6ed18a97508386f517ce1492e3e727d2d2da9639b7b8e87cf1012185e7ab9e5d: failed; workflow=failed; mode=multi
+E         task product-task-6ed18a97508386f517ce1492e3e727d2d2da9639b7b8e87cf1012185e7ab9e5d: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'e96d1a84-858d-4401-87a0-5185bb8ae742' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_2\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_2\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+___ test_review_reconciles_actual_calls_without_inventing_tests[True-None] ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D02DF6D80>
+exit_code = None, checked_before_review = True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_3')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D488FEBA0>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_3/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_3/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D015AC5B0>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D015AF6B0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=33856683-5114-4f24-8b4c-bbac686a73a4 workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_3\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id '33856683-5114-4f24-8b4c-bbac686a73a4' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_3\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_3\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-2f0907f089efbe7ea395dfd9cb12c1a56e9b1146ca40b495f73a4393e1034cca
+E           task if confirmed: product-task-b5efb7b28d44d3da426e1d540df9735ced2d04f38e629f28478e858e998c6576
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-b5efb7b28d44d3da426e1d540df9735ced2d04f38e629f28478e858e998c6576: explicit START authorized by host user
+E         task product-task-b5efb7b28d44d3da426e1d540df9735ced2d04f38e629f28478e858e998c6576: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-b5efb7b28d44d3da426e1d540df9735ced2d04f38e629f28478e858e998c6576: failed; workflow=failed; mode=multi
+E         task product-task-b5efb7b28d44d3da426e1d540df9735ced2d04f38e629f28478e858e998c6576: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id '33856683-5114-4f24-8b4c-bbac686a73a4' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_3\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_3\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+_____ test_review_reconciles_actual_calls_without_inventing_tests[True-0] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D007787A0>
+exit_code = 0, checked_before_review = True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_4')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D00779430>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_4/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_4/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D0077B400>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D007798E0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=563b805f-6fd8-44d3-b6d3-b560c506b17a workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_4\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id '563b805f-6fd8-44d3-b6d3-b560c506b17a' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_4\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_4\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-12293a41c965748456500eb90db20832384c3efd8e2846cdd8ce390c168d6494
+E           task if confirmed: product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466: explicit START authorized by host user
+E         task product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466: failed; workflow=failed; mode=multi
+E         task product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id '563b805f-6fd8-44d3-b6d3-b560c506b17a' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_4\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_4\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+_____ test_review_reconciles_actual_calls_without_inventing_tests[True-1] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D007785C0>
+exit_code = 1, checked_before_review = True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("exit_code", [None, 0, 1])
+    @pytest.mark.parametrize("checked_before_review", [False, True])
+    async def test_review_reconciles_actual_calls_without_inventing_tests(
+        tmp_path, monkeypatch, exit_code, checked_before_review
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product, "_host_profile", lambda mode: replace(original(mode), profile=profile(mode))
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+    
+        class Provider(StructuredProvider):
+            review_requests = 0
+    
+            async def complete(self, request):
+                if REVIEW_GUIDANCE not in request.system_prompt:
+                    if (
+                        checked_before_review and exit_code is not None
+                        and any(m.role == "tool" and m.name == "apply_patch"
+                                for m in request.messages)
+                        and not any(m.role == "tool" and m.name == "shell"
+                                    for m in request.messages)
+                    ):
+                        return product._response(
+                            "", ToolCall("observed-check", "shell", {
+                                "command": f'python -c "assert {exit_code} == 0"'
+                            })
+                        )
+                    return await super().complete(request)
+                self.review_requests += 1
+                assert "entering this checkpoint does not require rereading" in request.system_prompt
+                assert "The host has returned the report" not in request.system_prompt
+                packet = json.loads(request.system_prompt.split(REVIEW_GUIDANCE, 1)[1])
+                assert packet["delivery"]["status"] == "observed"
+                assert packet["delivery"]["changed_paths"] == ["added.txt"]
+                assert "no semantic" in packet["delivery"]["interpretation"]
+                assert packet["total_calls"] == len(packet["receipts"])
+                assert all(r["tool_call_id"] != "child-read" for r in packet["receipts"])
+                checks = [r for r in packet["receipts"] if r["tool"] == "shell"]
+                if exit_code is not None and not checks:
+                    return product._response(
+                        "",
+                        ToolCall(
+                            "observed-check",
+                            "shell",
+                            {"command": f'python -c "assert {exit_code} == 0"'},
+                        ),
+                    )
+                if exit_code is None:
+                    assert checks == []
+                    return product._response("File modified. No functional verification was executed.")
+                assert len(checks) == 1
+                assert checks[0]["tool_status"] == "succeeded"
+                assert checks[0]["exit_code"] == exit_code
+                return product._response(
+                    f"observed-check exited {exit_code}; this is a fixture check only."
+                )
+    
+        provider = Provider("delegate")
+>       await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+
+tests\test_verification_review.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_5')
+store = <traceh.session.event_store.InMemoryEventStore object at 0x0000024D018424E0>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_5/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_review_reconciles_actual_5/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x0000024D007DF190>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_verification_review.test_review_reconciles_actual_calls_without_inventing_tests.<locals>.Provider object at 0x0000024D007DC7D0>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+        assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+        matched = re.search(r"task ([^:]+): awaiting_approval", first.output)
+>       assert matched is not None, first.output
+E       AssertionError: session_id=4608e467-7879-4b6b-9eb6-ec35146c000b workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_5\chat-workspace provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id '4608e467-7879-4b6b-9eb6-ec35146c000b' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_5\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_5\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-92fc211bd6088d786e6b53726668d3f5819a6df8d75d787b566c62281d04ddd6
+E           task if confirmed: product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     multi
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50: explicit START authorized by host user
+E         task product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50: confirmation accepted; starting execution
+E           requested mode: multi
+E         task product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50: failed; workflow=failed; mode=multi
+E         task product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id '4608e467-7879-4b6b-9eb6-ec35146c000b' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_5\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6161\test_review_reconciles_actual_5\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert None is not None
+
+tests\test_product_f3_e2e.py:636: AssertionError
+__ test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope] ___
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fixed_completion_rejects_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D00779220>
+defect = 'scope'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('defect', ['scope', 'input', 'both', 'ignore'])
+    async def test_fixed_completion_rejects_repairs_and_stops_at_original_bound(
+        tmp_path, monkeypatch, defect,
+    ):
+        source, target = configure(tmp_path, monkeypatch)
+        store = InMemoryEventStore()
+        provider = RepairingProvider(defect)
+        if defect == 'ignore':
+            await run_failed_product(tmp_path, store, source, target, provider)
+        else:
+            await product._run_to_barrier(
+                tmp_path, store, source, target, LocalArtifactCas(tmp_path / 'cas'),
+                RequestedTaskMode.MULTI, provider,
+            )
+        sessions = SessionService(store)
+        verifications = []
+        events = []
+        for stream in await store.list_streams(prefix='session:'):
+            current = await sessions.read_session(stream.removeprefix('session:'))
+            events.extend(current)
+            verifications.extend(e for e in current if e.type == 'verification/result')
+            assert not await product.verify_request_snapshots(
+                sessions, product.SurfaceProjector(), stream.removeprefix('session:'),
+            )
+        assert len(verifications) == 2
+        assert [e.data['passed'] for e in verifications] == [False, defect != 'ignore']
+        assert len(provider.feedback) == 1
+        for event in verifications:
+            view = next(e for e in events if e.type == 'request/view'
+                        and e.data['step_id'] == event.data['step_id'])
+            assert view.data['label'] == 'collaboration-review'
+            result = json.loads(event.data['summary'])
+            assert result['results'][0]['public_requirement'] == 'Delivery scope and input behavior.'
+            assert result['raw_output_availability'] == 'not-retained'
+            assert result['failure_cause'] == 'unknown'
+            assert result['candidate_unchanged']
+>           assert result['integration']['tool_call_id'] == 'integrate'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: list indices must be integers or slices, not str
+
+tests\test_writable_completion.py:154: TypeError
+__ test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input] ___
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fixed_completion_rejects_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D02E8A450>
+defect = 'input'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('defect', ['scope', 'input', 'both', 'ignore'])
+    async def test_fixed_completion_rejects_repairs_and_stops_at_original_bound(
+        tmp_path, monkeypatch, defect,
+    ):
+        source, target = configure(tmp_path, monkeypatch)
+        store = InMemoryEventStore()
+        provider = RepairingProvider(defect)
+        if defect == 'ignore':
+            await run_failed_product(tmp_path, store, source, target, provider)
+        else:
+            await product._run_to_barrier(
+                tmp_path, store, source, target, LocalArtifactCas(tmp_path / 'cas'),
+                RequestedTaskMode.MULTI, provider,
+            )
+        sessions = SessionService(store)
+        verifications = []
+        events = []
+        for stream in await store.list_streams(prefix='session:'):
+            current = await sessions.read_session(stream.removeprefix('session:'))
+            events.extend(current)
+            verifications.extend(e for e in current if e.type == 'verification/result')
+            assert not await product.verify_request_snapshots(
+                sessions, product.SurfaceProjector(), stream.removeprefix('session:'),
+            )
+        assert len(verifications) == 2
+        assert [e.data['passed'] for e in verifications] == [False, defect != 'ignore']
+        assert len(provider.feedback) == 1
+        for event in verifications:
+            view = next(e for e in events if e.type == 'request/view'
+                        and e.data['step_id'] == event.data['step_id'])
+            assert view.data['label'] == 'collaboration-review'
+            result = json.loads(event.data['summary'])
+            assert result['results'][0]['public_requirement'] == 'Delivery scope and input behavior.'
+            assert result['raw_output_availability'] == 'not-retained'
+            assert result['failure_cause'] == 'unknown'
+            assert result['candidate_unchanged']
+>           assert result['integration']['tool_call_id'] == 'integrate'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: list indices must be integers or slices, not str
+
+tests\test_writable_completion.py:154: TypeError
+___ test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both] ___
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fixed_completion_rejects_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D4F65DD00>
+defect = 'both'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('defect', ['scope', 'input', 'both', 'ignore'])
+    async def test_fixed_completion_rejects_repairs_and_stops_at_original_bound(
+        tmp_path, monkeypatch, defect,
+    ):
+        source, target = configure(tmp_path, monkeypatch)
+        store = InMemoryEventStore()
+        provider = RepairingProvider(defect)
+        if defect == 'ignore':
+            await run_failed_product(tmp_path, store, source, target, provider)
+        else:
+            await product._run_to_barrier(
+                tmp_path, store, source, target, LocalArtifactCas(tmp_path / 'cas'),
+                RequestedTaskMode.MULTI, provider,
+            )
+        sessions = SessionService(store)
+        verifications = []
+        events = []
+        for stream in await store.list_streams(prefix='session:'):
+            current = await sessions.read_session(stream.removeprefix('session:'))
+            events.extend(current)
+            verifications.extend(e for e in current if e.type == 'verification/result')
+            assert not await product.verify_request_snapshots(
+                sessions, product.SurfaceProjector(), stream.removeprefix('session:'),
+            )
+        assert len(verifications) == 2
+        assert [e.data['passed'] for e in verifications] == [False, defect != 'ignore']
+        assert len(provider.feedback) == 1
+        for event in verifications:
+            view = next(e for e in events if e.type == 'request/view'
+                        and e.data['step_id'] == event.data['step_id'])
+            assert view.data['label'] == 'collaboration-review'
+            result = json.loads(event.data['summary'])
+            assert result['results'][0]['public_requirement'] == 'Delivery scope and input behavior.'
+            assert result['raw_output_availability'] == 'not-retained'
+            assert result['failure_cause'] == 'unknown'
+            assert result['candidate_unchanged']
+>           assert result['integration']['tool_call_id'] == 'integrate'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: list indices must be integers or slices, not str
+
+tests\test_writable_completion.py:154: TypeError
+__ test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore] __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6161/test_fixed_completion_rejects_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024D4ECE5D00>
+defect = 'ignore'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('defect', ['scope', 'input', 'both', 'ignore'])
+    async def test_fixed_completion_rejects_repairs_and_stops_at_original_bound(
+        tmp_path, monkeypatch, defect,
+    ):
+        source, target = configure(tmp_path, monkeypatch)
+        store = InMemoryEventStore()
+        provider = RepairingProvider(defect)
+        if defect == 'ignore':
+            await run_failed_product(tmp_path, store, source, target, provider)
+        else:
+            await product._run_to_barrier(
+                tmp_path, store, source, target, LocalArtifactCas(tmp_path / 'cas'),
+                RequestedTaskMode.MULTI, provider,
+            )
+        sessions = SessionService(store)
+        verifications = []
+        events = []
+        for stream in await store.list_streams(prefix='session:'):
+            current = await sessions.read_session(stream.removeprefix('session:'))
+            events.extend(current)
+            verifications.extend(e for e in current if e.type == 'verification/result')
+            assert not await product.verify_request_snapshots(
+                sessions, product.SurfaceProjector(), stream.removeprefix('session:'),
+            )
+        assert len(verifications) == 2
+        assert [e.data['passed'] for e in verifications] == [False, defect != 'ignore']
+        assert len(provider.feedback) == 1
+        for event in verifications:
+            view = next(e for e in events if e.type == 'request/view'
+                        and e.data['step_id'] == event.data['step_id'])
+            assert view.data['label'] == 'collaboration-review'
+            result = json.loads(event.data['summary'])
+            assert result['results'][0]['public_requirement'] == 'Delivery scope and input behavior.'
+            assert result['raw_output_availability'] == 'not-retained'
+            assert result['failure_cause'] == 'unknown'
+            assert result['candidate_unchanged']
+>           assert result['integration']['tool_call_id'] == 'integrate'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: list indices must be integers or slices, not str
+
+tests\test_writable_completion.py:154: TypeError
+============================ slowest 30 durations =============================
+2943.40s call     tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+727.61s call     tests/test_retrieval_evaluation.py::test_shipped_frozen_baseline_uses_real_plugin_lifecycle
+126.51s call     tests/test_manual_optimization.py::test_manual_product_queue_real_git_sandbox_no_gain_dedup_and_limit
+105.10s call     tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption
+69.19s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[goals.code-True-exact]
+67.44s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[unmatched-stellar-question-False-zero-hit]
+65.03s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]
+64.15s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]
+60.28s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[False]
+59.81s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]
+59.13s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[\u9879\u76ee\u76ee\u6807\u4fdd\u6301\u8fb9\u754c\u6e05\u695a-True-lexical]
+58.90s call     tests/test_writable_evaluation.py::test_writable_product_evaluation_counts_child_and_converges[None]
+54.59s setup    tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+52.59s call     tests/test_product_semantic_review.py::test_product_model_judgment_is_bound_to_patch_and_cannot_override_hard_failure
+51.21s call     tests/test_adaptive_evaluation.py::test_verifier_belongs_to_each_case_and_is_not_in_the_source_tree
+50.21s call     tests/test_product_benchmark_e2e.py::test_single_and_multi_share_one_experiment_condition
+49.97s call     tests/test_product_benchmark_e2e.py::test_the_two_reports_carry_the_same_values
+48.02s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]
+44.41s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[True]
+42.17s call     tests/test_writable_collaboration.py::test_writable_product_isolated_capture_and_failures[None]
+41.98s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[paged]
+41.94s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[None]
+41.83s call     tests/test_product_benchmark_e2e.py::test_repeating_one_arm_aggregates_and_drops_the_n1_label
+40.75s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[repeat]
+39.89s call     tests/test_adaptive_evaluation.py::test_evaluator_counts_completed_and_failed_child[False]
+39.77s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[conflict]
+39.40s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[unread]
+35.84s call     tests/test_writable_completion.py::test_completion_never_labels_another_commands_result
+35.81s call     tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-late-page]
+33.92s call     tests/test_episode_diagnostics.py::test_complete_search_excerpt_is_evidence_without_a_read[h-direct]
+=========================== short test summary info ===========================
+FAILED tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+FAILED tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+FAILED tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+FAILED tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[diagnostic.py]
+FAILED tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[notes.txt]
+FAILED tests/test_product_budget_negotiation.py::test_product_returns_partial_budget_report_without_grant_or_followup
+FAILED tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+FAILED tests/test_product_f3_e2e.py::test_approval_screen_uses_durable_evidence_and_separate_request_caps
+FAILED tests/test_retained_tool_output.py::test_search_restart_then_expand_on_real_runtime_and_sqlite
+FAILED tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[False]
+FAILED tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[True]
+FAILED tests/test_structured_product.py::test_structured_product_reaches_approval_and_replays[delegate]
+FAILED tests/test_tool_result_folding.py::test_fold_skips_disabled_protected_or_unhelpful_sources[inline]
+FAILED tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[False]
+FAILED tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True]
+FAILED tests/test_tool_result_folding.py::test_fold_forgery_rejected_by_shared_source_checker[kept]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-None]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-0]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-1]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-None]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-0]
+FAILED tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-1]
+FAILED tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]
+FAILED tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]
+FAILED tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]
+FAILED tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]

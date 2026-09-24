@@ -1,0 +1,170 @@
+{
+  "protocol_version": 3,
+  "benchmark_id": "traceh-task-type-v1",
+  "task_type": "product_task",
+  "dataset": {
+    "file": "dataset.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "task_settings": {
+    "profile_id": "task-type-v1-governed-48k",
+    "approver_id": "benchmark-host",
+    "default_mode": "single",
+    "roles": {
+      "coder": {
+        "preset": "product-benchmark-coder",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text",
+          "apply_patch",
+          "shell",
+          "read_tool_output",
+          "list_tool_outputs",
+          "search_tool_output"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 950000,
+          "max_steps": 70,
+          "max_tool_calls": 150,
+          "max_wall_milliseconds": 1200000,
+          "max_children": 3,
+          "max_depth": 1,
+          "max_processes": 1
+        },
+        "max_turn_wall_milliseconds": 600000,
+        "context_policy": {
+          "encoding": "cl100k_base",
+          "window_tokens": 48000,
+          "output_reserve_tokens": 8192,
+          "safety_margin_tokens": 2048,
+          "trigger_percent": 60,
+          "fold_relief_percent": 35,
+          "fold_protect_recent_groups": 2,
+          "compaction_trigger_utf8_bytes": 4000000,
+          "compaction_max_summary_utf8_bytes": 4096,
+          "compaction_keep_recent_turns": 1,
+          "fold_protect_readback_utf8_bytes": 40000
+        },
+        "wrap_up_reserve": {
+          "steps": 4,
+          "tool_calls": 12,
+          "wall_milliseconds": 90000
+        }
+      },
+      "investigator": {
+        "preset": "product-benchmark-investigator",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text",
+          "read_tool_output",
+          "list_tool_outputs",
+          "search_tool_output"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 250000,
+          "max_steps": 18,
+          "max_tool_calls": 36,
+          "max_wall_milliseconds": 300000,
+          "max_children": 0,
+          "max_depth": 0,
+          "max_processes": 0
+        },
+        "max_turn_wall_milliseconds": 300000,
+        "context_policy": {
+          "encoding": "cl100k_base",
+          "window_tokens": 48000,
+          "output_reserve_tokens": 8192,
+          "safety_margin_tokens": 2048,
+          "trigger_percent": 60,
+          "fold_relief_percent": 35,
+          "fold_protect_recent_groups": 2,
+          "compaction_trigger_utf8_bytes": 4000000,
+          "compaction_max_summary_utf8_bytes": 4096,
+          "compaction_keep_recent_turns": 1,
+          "fold_protect_readback_utf8_bytes": 40000
+        },
+        "wrap_up_reserve": {
+          "steps": 2,
+          "tool_calls": 4,
+          "wall_milliseconds": 60000
+        }
+      },
+      "patch_author": {
+        "preset": "product-benchmark-patch-author",
+        "capability_grants": [
+          "list_files",
+          "read_file",
+          "search_text",
+          "apply_patch"
+        ],
+        "max_output_tokens": 8192,
+        "budget": {
+          "max_tokens": 250000,
+          "max_steps": 24,
+          "max_tool_calls": 48,
+          "max_wall_milliseconds": 300000,
+          "max_children": 0,
+          "max_depth": 0,
+          "max_processes": 0
+        },
+        "max_turn_wall_milliseconds": 300000,
+        "context_policy": {
+          "encoding": "cl100k_base",
+          "window_tokens": 48000,
+          "output_reserve_tokens": 8192,
+          "safety_margin_tokens": 2048,
+          "trigger_percent": 60,
+          "fold_relief_percent": 35,
+          "fold_protect_recent_groups": 2,
+          "compaction_trigger_utf8_bytes": 4000000,
+          "compaction_max_summary_utf8_bytes": 4096,
+          "compaction_keep_recent_turns": 1,
+          "fold_protect_readback_utf8_bytes": 40000
+        },
+        "wrap_up_reserve": {
+          "steps": 2,
+          "tool_calls": 4,
+          "wall_milliseconds": 60000
+        }
+      }
+    },
+    "task_budget": {
+      "max_tokens": 1500000,
+      "max_steps": 150,
+      "max_tool_calls": 300,
+      "max_wall_milliseconds": 1800000,
+      "max_children": 3,
+      "max_depth": 2,
+      "max_processes": 3
+    },
+    "capture_limits": {
+      "max_changed_paths": 100,
+      "max_path_bytes": 1024,
+      "max_file_bytes": 1048576,
+      "max_total_file_bytes": 4194304,
+      "max_patch_bytes": 4194304
+    },
+    "max_report_chars": 4096,
+    "retrieval": null,
+    "modes": [
+      "single",
+      "multi"
+    ],
+    "retained_tokens": 200000,
+    "investigator_initial_tokens": 250000,
+    "token_estimate": {
+      "encoding": "cl100k_base",
+      "margin_percent": 100
+    }
+  },
+  "assessment": {
+    "scorer_id": "product-durable-v1",
+    "version": 1,
+    "rubric": null,
+    "requires_review": false
+  }
+}

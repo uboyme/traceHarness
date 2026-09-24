@@ -39,7 +39,7 @@ writes the implementation.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol
@@ -506,6 +506,52 @@ def product_started_mode(facts: ProductTaskFacts) -> ResolvedTaskMode | None:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductContextPolicy:
+    """One role's request-window governance, stated in full or not at all.
+
+    Product previously passed no window policy at all, so its Agents had no
+    request metering and therefore no compaction: a long task simply carried
+    every tool result into every later request. Turning that on is a host
+    decision with real cost consequences, so there is no partial form and no
+    inferred value - a role either states every field or governs nothing.
+
+    The fold marks are optional *within* a stated policy: metering without
+    in-Turn folding is a legitimate choice, and `TokenBudgetPolicy` refuses a
+    half-configured pair on its own.
+    """
+
+    encoding: str
+    window_tokens: int
+    output_reserve_tokens: int
+    safety_margin_tokens: int
+    trigger_percent: int
+    fold_relief_percent: int | None
+    fold_protect_recent_groups: int | None
+    fold_protect_readback_utf8_bytes: int
+    compaction_trigger_utf8_bytes: int
+    compaction_max_summary_utf8_bytes: int
+    compaction_keep_recent_turns: int
+
+    def to_dict(self) -> dict[str, object]:
+        # Derived from the fields rather than a literal key list, so adding a
+        # field cannot leave the digest silently blind to it - and so this
+        # module keeps its rule that it contains no example-shaped literals.
+        return {field.name: getattr(self, field.name) for field in fields(self)}
+
+
+@dataclass(frozen=True, slots=True)
+class ProductWrapUpReserve:
+    """Budget held back from investigation so a report can still be written."""
+
+    steps: int
+    tool_calls: int
+    wall_milliseconds: int
+
+    def to_dict(self) -> dict[str, object]:
+        return {field.name: getattr(self, field.name) for field in fields(self)}
+
+
+@dataclass(frozen=True, slots=True)
 class ProductRoleProfile:
     """A bounded host template whose slot determines its authority.
 
@@ -518,6 +564,14 @@ class ProductRoleProfile:
     max_output_tokens: int
     budget: BudgetLimits
     max_turn_wall_milliseconds: int
+    #: ``None`` keeps the historical behaviour: no metering, no compaction. It
+    #: is an explicit choice recorded in the frozen assembly digest, not a
+    #: silently absent capability.
+    context_policy: ProductContextPolicy | None = None
+    #: How much of this role's granted budget is held back so it can still
+    #: deliver. ``None`` keeps the historical behaviour: the role investigates
+    #: until something cancels it, and delivers nothing.
+    wrap_up_reserve: ProductWrapUpReserve | None = None
 
 
 @dataclass(frozen=True, slots=True)

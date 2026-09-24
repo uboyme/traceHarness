@@ -1,5 +1,5 @@
 {
-  "format": 2,
+  "format": 3,
   "cases": [
     {
       "case_id": "fix_failing_check",
@@ -37,6 +37,11 @@
         },
         "max_output_bytes": 1048576,
         "protocol_version": 3
+      },
+      "initial_tree_limits": {
+        "max_files": 256,
+        "max_file_bytes": 1048576,
+        "max_total_bytes": 8388608
       }
     },
     {
@@ -75,6 +80,11 @@
         },
         "max_output_bytes": 1048576,
         "protocol_version": 3
+      },
+      "initial_tree_limits": {
+        "max_files": 256,
+        "max_file_bytes": 1048576,
+        "max_total_bytes": 8388608
       }
     },
     {
@@ -113,6 +123,11 @@
         },
         "max_output_bytes": 1048576,
         "protocol_version": 3
+      },
+      "initial_tree_limits": {
+        "max_files": 256,
+        "max_file_bytes": 1048576,
+        "max_total_bytes": 8388608
       }
     }
   ]

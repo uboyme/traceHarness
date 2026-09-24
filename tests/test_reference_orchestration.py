@@ -123,7 +123,11 @@ async def test_skill_memory_and_history_share_final_budget_and_replay(tmp_path, 
         assert data["retrieval"]["skill"] is not None and data["retrieval"]["memory"] is not None
         assert len(data["retrieval"]["fusion"]) == 2
         rendered = render_context_message(parse_context_input(data)).content
-        assert len(rendered.encode("utf-8")) <= total
+        assert data["budget"]["reference_bytes"] <= total
+        assert data["budget"]["reference_limit"] == total
+        assert len(rendered.encode("utf-8")) == data["budget"]["rendered_bytes"]
+        assert data["budget"]["rendered_bytes"] <= data["budget"]["total_limit"]
+        assert data["budget"]["total_limit"] == total + data["budget"]["active_request_bytes"]
         if total == 30000:
             assert {b["kind"] for b in data["blocks"]} == {"history", "skill", "memory"}
         else:

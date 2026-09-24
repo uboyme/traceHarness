@@ -5,9 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 
+from evaluation_fixtures import capture_fixture_tree, fixture_tree_limits
+
 from live_dynamic_collaboration.materials import write
 from traceh.evaluation.inputs import digest_bytes
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 
 SOURCE_FILES = (
     "src/traceh/product/runtime.py",
@@ -125,7 +127,8 @@ def build(repository: Path, output: Path):
                 group_id=name,
                 requirement=requirement,
                 initial_tree=initial.relative_to(output).as_posix(),
-                sha256=initial_tree_digest(capture_initial_tree(initial)),
+                initial_tree_limits=fixture_tree_limits(),
+                sha256=initial_tree_digest(capture_fixture_tree(initial)),
                 verification=dict(
                     plan_id="diagnostic-" + name,
                     plan_version=1,
@@ -147,7 +150,7 @@ def build(repository: Path, output: Path):
                 ),
             )
         )
-    write(output / "dataset.json", dict(format=2, cases=cases))
+    write(output / "dataset.json", dict(format=3, cases=cases))
     template.update(
         benchmark_id="traceh-autonomy-diagnostic-v1",
         dataset=dict(

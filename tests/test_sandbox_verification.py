@@ -13,6 +13,7 @@ from sandbox_fixtures import real_sandbox_service, wait_for_guest
 from traceh.api.llm import ModelResponse
 from traceh.artifacts.cas import LocalArtifactCas
 from traceh.runtime.continuation import Continue, DefaultContinuationRuntime, VerificationFeedback
+from traceh.runtime.response_completeness import judge_response
 from traceh.runtime.verification import SUMMARY_TAIL_CHARS, CommandVerifier, invoke_verifier
 from traceh.session.event_store import InMemoryEventStore
 from traceh.session.service import SessionService
@@ -51,8 +52,10 @@ async def test_timeout_keeps_flushed_output_and_reaches_continuation(tmp_path):
     assert not result.passed and result.sandbox_receipt["converged"]
     assert result.stdout == "EARLY-STDOUT"
     assert result.stderr == "EARLY-STDERR"
+    response = ModelResponse(content="looks done")
     directive = await DefaultContinuationRuntime().decide(
-        response=ModelResponse(content="looks done"),
+        response=response,
+        completeness=judge_response(response),
         step_number=1,
         max_steps=20,
         verification=VerificationFeedback(result.passed, result.summary),

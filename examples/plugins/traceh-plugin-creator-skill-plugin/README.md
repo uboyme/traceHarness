@@ -1,5 +1,7 @@
 # traceh-plugin-creator-skill-plugin
 
+当前插件自身安装范围为 `traceharness-py>=0.6,<0.12`，Manifest 一致；下列历史 v0.8 候选模板范围独立，不代表模板已升级。
+
 TraceHarness 的“插件创建技能”L1 实现。它本身是一个独立 Wheel，通过现有
 `traceh.plugins` Entry Point 接入，只给模型一段简短 Prompt 和一个读取打包指南的
 `PURE_READ` 工具。它不会生成第二套插件运行时，也不会自动安装或执行候选代码。

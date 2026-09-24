@@ -26,6 +26,7 @@ async def review(root, *, provider=None, **changes):
     )
 
 
+@pytest.mark.frozen_unicode
 async def test_model_judgment_is_explicit_and_original_evidence_is_unchanged(tmp_path):
     await runner(tmp_path, "m-direct").run()
     original = (tmp_path / "run/report.json").read_bytes()
@@ -37,6 +38,7 @@ async def test_model_judgment_is_explicit_and_original_evidence_is_unchanged(tmp
     assert (tmp_path / "run/report.json").read_bytes() == original
 
 
+@pytest.mark.frozen_unicode
 async def test_model_grade_cannot_be_edited_after_actual_call(tmp_path):
     await runner(tmp_path, "m-direct").run()
     await review(tmp_path)
@@ -49,12 +51,14 @@ async def test_model_grade_cannot_be_edited_after_actual_call(tmp_path):
     assert error.value.code == "evaluation-judgment-stale"
 
 
+@pytest.mark.frozen_unicode
 async def test_invalid_judge_json_remains_pending(tmp_path):
     await runner(tmp_path, "m-direct").run()
     result = await review(tmp_path, provider=responder("PASS!"))
     assert result["assessment_counts"]["pending_review"] == 1
 
 
+@pytest.mark.frozen_unicode
 async def test_guessed_answer_is_failed_by_program_without_calling_judge(tmp_path):
     case = selected("s-direct")
     await runner(tmp_path, "s-direct", NavigatingProvider(case, guess=True)).run()
@@ -64,6 +68,7 @@ async def test_guessed_answer_is_failed_by_program_without_calling_judge(tmp_pat
     assert result["cost"]["calls"] == 0 and not judge.requests
 
 
+@pytest.mark.frozen_unicode
 async def test_review_oversized_batch_is_refused_before_model(tmp_path):
     await runner(tmp_path, "m-direct").run()
     judge = responder()
@@ -80,6 +85,7 @@ async def test_review_oversized_batch_is_refused_before_model(tmp_path):
     assert not judge.requests and not (tmp_path / "review").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_review_rejects_old_ambiguous_origin_format(tmp_path):
     await runner(tmp_path, "m-direct").run()
     export_review(tmp_path / "run", tmp_path / "human")
@@ -93,6 +99,7 @@ async def test_review_rejects_old_ambiguous_origin_format(tmp_path):
         reviewed_report(tmp_path / "run", path)
 
 
+@pytest.mark.frozen_unicode
 async def test_judge_failure_and_assessment_publication_failure_are_preserved(
     tmp_path, monkeypatch
 ):

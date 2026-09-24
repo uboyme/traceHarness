@@ -6,6 +6,7 @@ import argparse
 import asyncio
 from pathlib import Path
 
+from evaluation_fixtures import capture_fixture_tree, fixture_tree_limits
 from live_unified_evaluation.baseline import connection
 
 from live_dynamic_collaboration.budget_autonomy import CappedProvider
@@ -25,7 +26,7 @@ from live_dynamic_collaboration.materials import write
 from traceh.api.json_types import fingerprint
 from traceh.evaluation.inputs import digest_bytes, read_input
 from traceh.evaluation.plan import RunOptions
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 from traceh.evaluation.runner import EvaluationRunner
 from traceh.evaluation.variants import source_digest, source_files
 from traceh.llm.retry import NO_MODEL_RETRY
@@ -153,10 +154,11 @@ def prepare(repository: Path, sandbox: Path, output: Path) -> None:
             "group_id": name,
             "requirement": requirement(scenario["kind"]),
             "initial_tree": "initial",
-            "sha256": initial_tree_digest(capture_initial_tree(initial)),
+            "initial_tree_limits": fixture_tree_limits(),
+            "sha256": initial_tree_digest(capture_fixture_tree(initial)),
             "verification": verification,
         }
-        write(root / "dataset.json", {"format": 2, "cases": [case]})
+        write(root / "dataset.json", {"format": 3, "cases": [case]})
         manifest = {
             "protocol_version": 3,
             "benchmark_id": "traceh-da13-" + name,
@@ -233,7 +235,7 @@ def validate_inputs(output: Path) -> dict:
             if read_input(root, filename).sha256 != frozen[key]:
                 raise ValueError("da13-material-drift")
         if (
-            initial_tree_digest(capture_initial_tree(root / "initial"))
+            initial_tree_digest(capture_fixture_tree(root / "initial"))
             != frozen["initial_tree_digest"]
         ):
             raise ValueError("da13-source-material-drift")

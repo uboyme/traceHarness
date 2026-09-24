@@ -1,0 +1,6 @@
+.                                                                        [100%]
+============================= slowest 5 durations =============================
+40.87s call     tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+0.10s setup    tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+
+(1 durations < 0.005s hidden.  Use -vv to show these durations.)

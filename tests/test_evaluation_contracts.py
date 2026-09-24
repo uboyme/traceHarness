@@ -34,6 +34,7 @@ def plan_file(root, benchmark, **changes):
                 "retry_after_cap_seconds": 0,
                 "jitter_ratio": 0,
             },
+            "timeout_seconds": 120,
         },
         "execution": {"sandbox_config": None, "max_trials": 10, "timeout_seconds": 120},
         "trials": {"repetitions": 1},
@@ -107,7 +108,7 @@ def test_dataset_copy_and_identity_are_detached_from_mutable_callers(tmp_path):
     cases = loaded.dataset.data["cases"]
     cases.append(cases[0])
     document = loaded.document.data
-    write_dataset(root, document, cases, format_version=2)
+    write_dataset(root, document, cases, format_version=3)
     with pytest.raises(BenchmarkManifestError) as raised:
         EvaluationRunner(
             root, tmp_path / "out", provider=_ProductProvider(), model_id=PRODUCT_MODEL_ID
@@ -174,6 +175,52 @@ def test_explicit_plan_nulls_do_not_inherit_environment_configuration(tmp_path):
     assert args.model_retry_max_attempts == 1
 
 
+def test_the_provider_request_timeout_is_a_host_setting_with_a_kept_default(tmp_path):
+    """The longest call a Turn makes is the one that has to deliver.
+
+    120 seconds suits a Step that calls a tool, and it was the only value
+    available: the adapter's default had no flag and no variable behind it. A
+    trial then lost its assistant twice over - the final report took 71 seconds
+    while the provider was fast, and when the same provider slowed to 2.3x its
+    median the equivalent report ran past 120 seconds, timed out, and nothing
+    was delivered. The value is stated by the host rather than derived from the
+    output ceiling, which would mean assuming a rate for an unmeasured model.
+    """
+
+    from traceh.cli.main import CliConfigurationError, _provider_and_model
+
+    def resolved(*extra, environment=None):
+        args = build_parser().parse_args(
+            [
+                "eval",
+                str(tmp_path / "b"),
+                "--output",
+                str(tmp_path / "out"),
+                "--provider",
+                "openai-compatible",
+                "--model",
+                "m",
+                "--base-url",
+                "https://unused.invalid",
+                *extra,
+            ]
+        )
+        _configure_from_environment(args, environment=environment or {})
+        return _provider_and_model(args)[0]
+
+    # Unchanged unless the host says otherwise, and it reaches the adapter.
+    assert resolved().timeout_seconds == 120.0
+    assert resolved("--model-timeout-seconds", "600").timeout_seconds == 600.0
+    assert (
+        resolved(environment={"TRACEH_MODEL_TIMEOUT_SECONDS": "300"}).timeout_seconds == 300.0
+    )
+
+    # Zero would fail every call before it is sent, so it is refused outright
+    # rather than accepted as a non-negative number.
+    with pytest.raises(CliConfigurationError, match="greater than zero"):
+        resolved("--model-timeout-seconds", "0")
+
+
 @pytest.mark.parametrize("field,value", [("comparison", {}), ("variants", []), ("format", True)])
 def test_later_comparison_and_invalid_plan_contracts_are_refused(tmp_path, field, value):
     root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
@@ -183,7 +230,12 @@ def test_later_comparison_and_invalid_plan_contracts_are_refused(tmp_path, field
 
 @pytest.mark.parametrize(
     "flag,value",
-    [("--model", "override"), ("--repetitions", "2"), ("--model-retry-after-cap-seconds", "5")],
+    [
+        ("--model", "override"),
+        ("--repetitions", "2"),
+        ("--model-retry-after-cap-seconds", "5"),
+        ("--model-timeout-seconds", "300"),
+    ],
 )
 def test_plan_rejects_explicit_overrides(tmp_path, flag, value):
     root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
@@ -322,3 +374,98 @@ def test_git_does_not_rewrite_shipped_frozen_bytes(suite):
             check=True,
         ).stdout
         assert stored == raw, relative
+
+
+def _network_plan(tmp_path, root, **model):
+    path = plan_file(tmp_path, root)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["model"].update(
+        provider="openai-compatible",
+        model="network-fixture",
+        base_url="https://unused.invalid/v1",
+        timeout_seconds=300,
+    )
+    data["model"].update(model)
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize("value", ["absent", 0, -1, None, "300", float("inf"), True])
+def test_a_plan_must_freeze_a_positive_request_timeout(tmp_path, value):
+    """The request wait decides whether a long answer arrives; it is never implied."""
+
+    root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
+    path = _network_plan(tmp_path, root)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if value == "absent":
+        del data["model"]["timeout_seconds"]
+    else:
+        data["model"]["timeout_seconds"] = value
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(BenchmarkManifestError) as raised:
+        load_run_options(path)
+    assert raised.value.code == "evaluation-manifest-invalid"
+
+
+def test_the_frozen_request_timeout_reaches_the_provider_and_ignores_the_environment(tmp_path):
+    """A worker inherits its parent's environment; the plan, not that, sets the wait.
+
+    Real runs cut off every answer longer than about 6,600 tokens at a 120s
+    wait nobody had written down, and read the result as a hung provider.
+    """
+
+    from traceh.cli.main import _provider_and_model
+
+    root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
+    path = _network_plan(tmp_path, root)
+    args = build_parser().parse_args(
+        ["eval", str(root), "--output", str(tmp_path / "out"), "--run-plan", str(path)]
+    )
+    _configure_from_environment(args, environment={"TRACEH_MODEL_TIMEOUT_SECONDS": "7"})
+    assert _provider_and_model(args)[0].timeout_seconds == 300
+
+
+def test_a_provider_waiting_other_than_the_plan_is_refused(tmp_path):
+    from traceh.llm.openai_compatible import OpenAICompatibleProvider
+
+    root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
+    path = _network_plan(tmp_path, root)
+    provider = OpenAICompatibleProvider(
+        "https://unused.invalid/v1", api_key_env="UNUSED_TEST_KEY", timeout_seconds=120
+    )
+    with pytest.raises(BenchmarkManifestError) as raised:
+        EvaluationRunner(
+            root,
+            tmp_path / "out",
+            provider=provider,
+            model_id="network-fixture",
+            options=load_run_options(path),
+        )
+    assert raised.value.code == "evaluation-run-plan-conflict"
+
+
+async def test_the_request_timeout_is_frozen_with_the_run(tmp_path):
+    from traceh.llm.openai_compatible import OpenAICompatibleProvider
+
+    root = build_benchmark(tmp_path / "b", arms=(("single", 1),))
+    path = _network_plan(
+        tmp_path,
+        root,
+    )
+    data = json.loads(path.read_text(encoding="utf-8"))
+    # Expires before any request, so nothing is sent to the unused endpoint.
+    data["execution"] = {"sandbox_config": None, "max_trials": 1, "timeout_seconds": 1e-9}
+    path.write_text(json.dumps(data), encoding="utf-8")
+    provider = OpenAICompatibleProvider(
+        "https://unused.invalid/v1", api_key_env="UNUSED_TEST_KEY", timeout_seconds=300
+    )
+    runner = EvaluationRunner(
+        root,
+        tmp_path / "out",
+        provider=provider,
+        model_id="network-fixture",
+        options=load_run_options(path),
+    )
+    await runner.run()
+    frozen = json.loads((tmp_path / "out" / "frozen.json").read_text(encoding="utf-8"))
+    assert frozen["model"]["request_timeout_seconds"] == 300

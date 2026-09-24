@@ -1,0 +1,661 @@
+........................................................................ [  1%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 16%]
+.....................................F.................................. [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+............................s........................................... [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+.....s.................................................................. [ 42%]
+........................................................................ [ 44%]
+..............................................................s......... [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+..........................s............................................. [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+...............................................................s........ [ 86%]
+..............................................ss........................ [ 88%]
+......................................................s................. [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+........................................................................ [100%]
+================================== FAILURES ===================================
+______________ test_real_candidate_validation_runs_every_l2_gate ______________
+real L2 core regression failed:
+................................... [ 61%]
+
+........................................................................ [ 63%]
+
+...............................sssssssssssssssssss...................... [ 64%]
+
+..............................................sssssssss.ssssssssss.ss... [ 66%]
+
+........................................................................ [ 68%]
+
+..................sssssssssssss.ssssssssssss.ss......................... [ 70%]
+
+..........................................s...................s......... [ 71%]
+
+..................................................................s..... [ 73%]
+
+........................................................................ [ 75%]
+
+........................................................................ [ 76%]
+
+..........s............................................................. [ 78%]
+
+.................................F...........s........................ss [ 80%]
+
+sssssssssssssssss.sssssFFFFFFFsssFFFFFssss...........s.................. [ 82%]
+
+........................s..ssss......................ss................. [ 83%]
+
+.ssssss..sss.sssssssss.sssssss...........ssssss.....sssss............... [ 85%]
+
+........................................................................ [ 87%]
+
+...ssss................................................................. [ 88%]
+
+...............................................s........................ [ 90%]
+
+..............................ss.............FFFFFFFF....sss............ [ 92%]
+
+...........sssssssssssssssss..ss......s..................s.............. [ 94%]
+
+...............ss...........................................sssssss..... [ 95%]
+
+.............ssssssssssssssssss......................................... [ 97%]
+
+...........sssssss...................................................... [ 99%]
+
+...........sss.......ssssss.....ssss                                     [100%]
+
+=================================== ERRORS ====================================
+
+______ ERROR at setup of test_actual_run_drift_is_not_comparable[source] ______
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+______ ERROR at setup of test_actual_run_drift_is_not_comparable[model] _______
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+______ ERROR at setup of test_actual_run_drift_is_not_comparable[score] _______
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+______ ERROR at setup of test_actual_run_drift_is_not_comparable[worker] ______
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_____ ERROR at setup of test_actual_run_drift_is_not_comparable[evidence] _____
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_ ERROR at setup of test_comparison_cli_is_offline_and_keeps_original_pending _
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_____ ERROR at setup of test_assessment_for_other_experiment_is_rejected ______
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_ ERROR at setup of test_edited_derived_assessment_cannot_replace_immutable_judgment _
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_ ERROR at setup of test_single_field_approval_report_change_is_detected_by_worker_digest _
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+_ ERROR at setup of test_public_comparison_closes_every_real_read_connection __
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+================================== FAILURES ===================================
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\cli\main.py:1183: traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\cli\main.py:1183: traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+E   traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\cli\main.py:1183: traceh.cli.errors.CliConfigurationError: evaluation-frozen-input-drift
+
+E   AssertionError: Regex pattern did not match.
+
+      Expected regex: 'max_trials'
+
+      Actual message: 'benchmark sha256 is not usable'
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\trusted-core\tests\test_evaluation_comparison.py:291: AssertionError: Regex pattern did not match.
+
+E   AssertionError: benchmarks/product_v1/add_missing_helper/initial/.gitignore
+
+    assert b'43ae0e2a6c6...e64194fec7c\n' == b'a6e065db080...ff631f051b8\n'
+
+      
+
+      At index 0 diff: b'4' != b'a'
+
+      Use -v to get more diff
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\trusted-core\tests\test_evaluation_contracts.py:370: AssertionError: benchmarks/product_v1/add_missing_helper/initial/.gitignore
+
+E   AssertionError: benchmarks/retrieval_v1/dataset.json
+
+    assert b'f364720d705...1fa3a1c36c0\n' == b'd05fd421a1b...a2416674e2b\n'
+
+      
+
+      At index 0 diff: b'f' != b'd'
+
+      Use -v to get more diff
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\trusted-core\tests\test_evaluation_contracts.py:370: AssertionError: benchmarks/retrieval_v1/dataset.json
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   ModuleNotFoundError: No module named 'rich'
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\tui\presentation.py:543: ModuleNotFoundError: No module named 'rich'
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+E   traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+C:\Users\caojie\AppData\Local\Temp\thv-d9ohf9gs\regression-environment\Lib\site-packages\traceh\evaluation\inputs.py:120: traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+=========================== short test summary info ===========================
+
+FAILED tests/test_background_optimization.py::test_background_runtime_observation_crosses_original_strategy_and_reopens
+
+FAILED tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+
+FAILED tests/test_background_optimization.py::test_distinct_feedback_runs_two_original_analysis_episodes
+
+FAILED tests/test_episode_diagnostics.py::test_complete_search_excerpt_is_evidence_without_a_read[h-direct]
+
+FAILED tests/test_episode_diagnostics.py::test_complete_search_excerpt_is_evidence_without_a_read[m-direct]
+
+FAILED tests/test_episode_diagnostics.py::test_correct_guess_after_directory_is_still_missing_body_evidence
+
+FAILED tests/test_episode_diagnostics.py::test_failed_read_and_successful_wrong_section_are_not_body_delivery[True]
+
+FAILED tests/test_episode_diagnostics.py::test_failed_read_and_successful_wrong_section_are_not_body_delivery[False]
+
+FAILED tests/test_episode_diagnostics.py::test_failed_model_attempt_does_not_count_its_prepared_directory
+
+FAILED tests/test_episode_diagnostics.py::test_negative_wording_never_becomes_a_second_automatic_scorer[The entire manual has no such fact.]
+
+FAILED tests/test_episode_diagnostics.py::test_negative_wording_never_becomes_a_second_automatic_scorer[\u5f53\u524d\u53ef\u89c1\u8d44\u6599\u672a\u627e\u5230\u8fd9\u9879\u4fe1\u606f\u3002]
+
+FAILED tests/test_episode_diagnostics.py::test_offline_diagnostics_rederive_and_follow_explicit_human_assessment
+
+FAILED tests/test_episode_diagnostics.py::test_context_prepared_but_absent_from_dispatch_does_not_count
+
+FAILED tests/test_episode_dispatch_binding.py::test_disclosure_requires_successful_owned_dispatch[failed-attempt]
+
+FAILED tests/test_episode_dispatch_binding.py::test_disclosure_requires_successful_owned_dispatch[foreign-snapshot]
+
+FAILED tests/test_episode_dispatch_binding.py::test_disclosure_requires_successful_owned_dispatch[not-dispatched]
+
+FAILED tests/test_episode_review_contract.py::test_retrieval_plan_runs_through_cli_and_assess_remains_offline
+
+FAILED tests/test_episode_review_contract.py::test_review_cli_is_offline_even_with_model_environment
+
+FAILED tests/test_episode_review_contract.py::test_changed_durable_evidence_is_rejected_before_export
+
+FAILED tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[False]
+
+FAILED tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[True]
+
+FAILED tests/test_evaluation_comparison.py::test_two_variant_max_trials_counts_both_arms
+
+FAILED tests/test_evaluation_contracts.py::test_git_does_not_rewrite_shipped_frozen_bytes[product_v1]
+
+FAILED tests/test_evaluation_contracts.py::test_git_does_not_rewrite_shipped_frozen_bytes[retrieval_v1]
+
+FAILED tests/test_evaluation_workers.py::test_deliberately_regressed_candidate_uses_real_requests_and_original_memory
+
+FAILED tests/test_evaluation_workers.py::test_repeated_cancel_waits_for_child_runtime_and_preserves_unstarted_arm
+
+FAILED tests/test_evaluation_workers.py::test_connection_failure_remains_unassessable_and_is_not_a_quality_loss
+
+FAILED tests/test_evaluation_workers.py::test_forced_child_exit_is_unproven_and_does_not_start_the_other_arm
+
+FAILED tests/test_manual_optimization.py::test_actual_candidate_dispatch_pending_review_and_offline_inspection
+
+FAILED tests/test_manual_optimization.py::test_preflight_refuses_drift_without_creating_execution[source]
+
+FAILED tests/test_manual_optimization.py::test_preflight_refuses_drift_without_creating_execution[scope]
+
+FAILED tests/test_manual_optimization.py::test_preflight_refuses_drift_without_creating_execution[thresholds]
+
+FAILED tests/test_manual_optimization.py::test_preflight_refuses_drift_without_creating_execution[plan]
+
+FAILED tests/test_manual_optimization.py::test_whole_batch_budget_and_expired_deadline_do_not_start_trials[trial-trial-batch-exceeds-limit]
+
+FAILED tests/test_manual_optimization.py::test_whole_batch_budget_and_expired_deadline_do_not_start_trials[deadline-deadline]
+
+FAILED tests/test_manual_optimization.py::test_invalid_proposal_limits_and_scope_violation_never_launch_workers
+
+FAILED tests/test_manual_optimization.py::test_unknown_usage_stops_without_inventing_zero_cost
+
+FAILED tests/test_manual_optimization.py::test_transport_failure_preserves_actual_attempts_and_stops
+
+FAILED tests/test_manual_optimization.py::test_repeated_cancellation_converges_actual_child_before_return[False]
+
+FAILED tests/test_manual_optimization.py::test_repeated_cancellation_converges_actual_child_before_return[True]
+
+FAILED tests/test_manual_optimization.py::test_offline_inspector_rejects_another_run_and_corrupted_original_evidence
+
+FAILED tests/test_manual_optimization.py::test_deadline_cancels_inflight_real_worker
+
+FAILED tests/test_model_review.py::test_model_judgment_is_explicit_and_original_evidence_is_unchanged
+
+FAILED tests/test_model_review.py::test_model_grade_cannot_be_edited_after_actual_call
+
+FAILED tests/test_model_review.py::test_invalid_judge_json_remains_pending - ...
+
+FAILED tests/test_model_review.py::test_guessed_answer_is_failed_by_program_without_calling_judge
+
+FAILED tests/test_model_review.py::test_review_oversized_batch_is_refused_before_model
+
+FAILED tests/test_model_review.py::test_review_rejects_old_ambiguous_origin_format
+
+FAILED tests/test_model_review.py::test_judge_failure_and_assessment_publication_failure_are_preserved
+
+FAILED tests/test_request_token_meter.py::test_real_runtime_records_meter_and_actual_usage_then_reopens
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-direct]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-late-page]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[s-direct]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[s-resource]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[m-direct]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[m-superseded]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[m-revoked]
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_guessing_value_without_reading_is_pending_and_cannot_be_approved
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_offline_review_binding_pending_and_immutable_original
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_missing_sandbox_is_measured_setup_failure
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_repeated_cancel_waits_for_provider_and_store
+
+FAILED tests/test_retrieval_episode_evaluator.py::test_materials_and_selection_are_frozen_and_distinct
+
+FAILED tests/test_strategy_optimization.py::test_real_generation_lease_proposal_enters_original_workers
+
+FAILED tests/test_strategy_optimization.py::test_no_candidate_stops_without_trials
+
+FAILED tests/test_strategy_optimization.py::test_outside_scope_edit_is_rejected_without_trials
+
+FAILED tests/test_strategy_optimization.py::test_real_observed_array_tradeoff_is_rejected_without_coercion
+
+FAILED tests/test_strategy_optimization.py::test_whole_trial_budget_is_reserved_before_analysis
+
+FAILED tests/test_strategy_optimization.py::test_generated_candidate_cannot_be_replaced_by_edited_receipt
+
+FAILED tests/test_strategy_optimization.py::test_unknown_judge_usage_stops_before_other_arm
+
+FAILED tests/test_strategy_optimization.py::test_strategy_cancel_converges_actual_analysis_without_starting_trials
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[source]
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[model]
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[score]
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[worker]
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[evidence]
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_comparison_cli_is_offline_and_keeps_original_pending
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_assessment_for_other_experiment_is_rejected
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_edited_derived_assessment_cannot_replace_immutable_judgment
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_single_field_approval_report_change_is_detected_by_worker_digest
+
+ERROR tests/test_evaluation_comparison_evidence.py::test_public_comparison_closes_every_real_read_connection
+
+70 failed, 3825 passed, 316 skipped, 10 errors in 1398.28s (0:23:18)
+
+============================ slowest 30 durations =============================
+1600.28s call     tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+693.15s call     tests/test_retrieval_evaluation.py::test_shipped_frozen_baseline_uses_real_plugin_lifecycle
+128.97s call     tests/test_manual_optimization.py::test_manual_product_queue_real_git_sandbox_no_gain_dedup_and_limit
+106.52s call     tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption
+70.92s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]
+68.57s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]
+68.08s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]
+66.47s call     tests/test_writable_evaluation.py::test_writable_product_evaluation_counts_child_and_converges[None]
+65.40s setup    tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+62.82s call     tests/test_product_benchmark_e2e.py::test_single_and_multi_share_one_experiment_condition
+61.77s call     tests/test_product_benchmark_e2e.py::test_the_two_reports_carry_the_same_values
+61.52s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[unmatched-stellar-question-False-zero-hit]
+61.09s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[False]
+60.35s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[\u9879\u76ee\u76ee\u6807\u4fdd\u6301\u8fb9\u754c\u6e05\u695a-True-lexical]
+59.80s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[goals.code-True-exact]
+54.62s call     tests/test_product_benchmark_e2e.py::test_repeating_one_arm_aggregates_and_drops_the_n1_label
+51.80s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]
+51.00s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[paged]
+50.29s call     tests/test_product_semantic_review.py::test_product_model_judgment_is_bound_to_patch_and_cannot_override_hard_failure
+50.00s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[True]
+49.72s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[repeat]
+48.93s call     tests/test_adaptive_evaluation.py::test_verifier_belongs_to_each_case_and_is_not_in_the_source_tree
+48.65s call     tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+47.52s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[None]
+46.88s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[unread]
+46.50s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[conflict]
+46.31s call     tests/test_writable_collaboration.py::test_writable_product_isolated_capture_and_failures[None]
+40.14s call     tests/test_writable_completion.py::test_completion_never_labels_another_commands_result
+37.49s call     tests/test_product_benchmark_e2e.py::test_no_evaluator_approval_or_promotion_value_reaches_the_model
+37.43s call     tests/test_product_benchmark_e2e.py::test_an_explicit_arm_runs_the_whole_product_mainline[multi-multi]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_cli_resume_safety.py:251: a path cannot contain NUL
+SKIPPED [1] tests\test_git_patch_capture.py:242: symlink creation is unavailable
+SKIPPED [1] tests\test_local_git_workspaces.py:273: directory symlink creation is unavailable
+SKIPPED [1] tests\test_patch_promotion.py:748: this platform or user cannot create directory symlinks
+SKIPPED [1] tests\test_skill_resources.py:273: Windows account lacks symlink privilege
+SKIPPED [1] tests\test_sqlite_event_store.py:187: file symlink unavailable: [WinError 1314] 客户端没有所需的特权。: 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6182\\test_database_symlink_is_refus0\\external\\events.sqlite3' -> 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6182\\test_database_symlink_is_refus0\\linked\\events.sqlite3'
+SKIPPED [1] tests\test_sqlite_event_store.py:199: file symlink unavailable: [WinError 1314] 客户端没有所需的特权。: 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6182\\test_broken_database_symlink_i0\\missing.sqlite3' -> 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6182\\test_broken_database_symlink_i0\\broken-link\\events.sqlite3'
+SKIPPED [1] tests\test_tools.py:78: directory symlink creation is unavailable
+FAILED tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate

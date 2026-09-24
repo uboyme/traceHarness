@@ -11,9 +11,11 @@ from collections import Counter
 from pathlib import Path
 from tempfile import TemporaryDirectory, gettempdir
 
+from evaluation_fixtures import capture_fixture_tree, fixture_tree_limits
+
 from live_dynamic_collaboration.cases import CASES
 from traceh.evaluation.inputs import digest_bytes
-from traceh.evaluation.repositories import capture_initial_tree, initial_tree_digest
+from traceh.evaluation.repositories import initial_tree_digest
 
 
 def write(path, value):
@@ -111,7 +113,8 @@ def build(repository, output, *, refresh=False):
                     group_id=case.name,
                     requirement=case.requirement,
                     initial_tree=directory.relative_to(root).as_posix(),
-                    sha256=initial_tree_digest(capture_initial_tree(directory)),
+                    initial_tree_limits=fixture_tree_limits(),
+                    sha256=initial_tree_digest(capture_fixture_tree(directory)),
                     verification=verification,
                 )
             )
@@ -136,7 +139,7 @@ def build(repository, output, *, refresh=False):
                     source_contracts=sources,
                 )
             )
-        write(root / "dataset.json", dict(format=2, cases=cases))
+        write(root / "dataset.json", dict(format=3, cases=cases))
         write(root / "rubric.json", dict(format=1, criteria=criteria))
         manifest = dict(
             protocol_version=3,
@@ -185,7 +188,7 @@ def validate(output, *, image, docker_context):
         )
         initial = root / frozen["initial_tree"]
         if (
-            initial_tree_digest(capture_initial_tree(initial)) != frozen["sha256"]
+            initial_tree_digest(capture_fixture_tree(initial)) != frozen["sha256"]
             or frozen["verification"]["commands"][0]["argv"] != ["python", "-B", "-c", case.checks]
             or any(
                 (initial / name).read_text(encoding="utf-8") != text

@@ -1,0 +1,53 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 216B 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/traceh-ae:pyvista-v3
+#2 DONE 3.4s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/2] FROM docker.io/library/traceh-ae:pyvista-v3@sha256:95088bb1cc262a8c351da04b8d42c412a1989c97a50e7818b87aa419481d6910
+#4 resolve docker.io/library/traceh-ae:pyvista-v3@sha256:95088bb1cc262a8c351da04b8d42c412a1989c97a50e7818b87aa419481d6910 0.0s done
+#4 DONE 0.1s
+
+#5 [2/2] RUN python -m pip install --no-cache-dir --only-binary=:all: tqdm==4.65.0 meshio==5.3.4 && python -m pip freeze --all > /opt/traceh-rr/installed.txt
+#5 1.500 Collecting tqdm==4.65.0
+#5 2.202   Downloading tqdm-4.65.0-py3-none-any.whl (77 kB)
+#5 2.510      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 77.1/77.1 kB 287.8 kB/s eta 0:00:00
+#5 2.829 Collecting meshio==5.3.4
+#5 2.997   Downloading meshio-5.3.4-py3-none-any.whl (167 kB)
+#5 3.202      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 167.7/167.7 kB 806.2 kB/s eta 0:00:00
+#5 3.552 Collecting rich
+#5 3.713   Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+#5 3.884      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 310.7/310.7 kB 1.8 MB/s eta 0:00:00
+#5 3.887 Requirement already satisfied: numpy in /usr/local/lib/python3.10/site-packages (from meshio==5.3.4) (1.24.4)
+#5 3.892 Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/site-packages (from rich->meshio==5.3.4) (2.21.0)
+#5 4.117 Collecting markdown-it-py>=2.2.0
+#5 4.271   Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+#5 4.288      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 91.7/91.7 kB 5.9 MB/s eta 0:00:00
+#5 4.492 Collecting mdurl~=0.1
+#5 4.645   Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+#5 4.944 Installing collected packages: tqdm, mdurl, markdown-it-py, rich, meshio
+#5 5.330 Successfully installed markdown-it-py-4.2.0 mdurl-0.1.2 meshio-5.3.4 rich-15.0.0 tqdm-4.65.0
+#5 5.334 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#5 6.214 
+#5 6.214 [notice] A new release of pip is available: 23.0.1 -> 26.2.1
+#5 6.214 [notice] To update, run: pip install --upgrade pip
+#5 DONE 6.8s
+
+#6 exporting to image
+#6 exporting layers
+#6 exporting layers 0.4s done
+#6 exporting manifest sha256:5f041da141e5af9e6f5d7e514f455adf827ff38faab792ebae5930d33201968f 0.0s done
+#6 exporting config sha256:f3a8046484abd7b2580753338163191c03f2386d7dded405e9d9e793bfe7f500 0.0s done
+#6 exporting attestation manifest sha256:8e30fccf689d225788fa459b72c57343a87f18b47ac8705fde28fc82e4fff2ec 0.0s done
+#6 exporting manifest list sha256:b09d49de2b58c6c87d648fb62bcd5a6e847ca73fddb8cbf0b9ce48b2cccbd3ec 0.0s done
+#6 naming to docker.io/library/traceh-ae:pyvista-v4 done
+#6 unpacking to docker.io/library/traceh-ae:pyvista-v4
+#6 unpacking to docker.io/library/traceh-ae:pyvista-v4 0.1s done
+#6 DONE 0.7s

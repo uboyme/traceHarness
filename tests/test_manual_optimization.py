@@ -116,6 +116,7 @@ async def execute(root, *, prepare=None, model=None, candidates=None, contract_c
     )
 
 
+@pytest.mark.frozen_unicode
 async def test_actual_candidate_dispatch_pending_review_and_offline_inspection(tmp_path):
     report = await execute(tmp_path)
     root = tmp_path / "optimization"
@@ -157,6 +158,7 @@ async def test_actual_candidate_dispatch_pending_review_and_offline_inspection(t
     assert (root / "optimization.json").read_bytes() == frozen_before
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("fault", ["source", "scope", "thresholds", "plan"])
 async def test_preflight_refuses_drift_without_creating_execution(tmp_path, fault):
     runner, contract, draft, observations = configured(tmp_path)
@@ -184,6 +186,7 @@ async def test_preflight_refuses_drift_without_creating_execution(tmp_path, faul
     assert not (tmp_path / "out").exists()
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize(
     "limit,reason", [("trial", "trial-batch-exceeds-limit"), ("deadline", "deadline")]
 )
@@ -198,6 +201,7 @@ async def test_whole_batch_budget_and_expired_deadline_do_not_start_trials(tmp_p
     assert report["progress"]["trials_started"] == 0
 
 
+@pytest.mark.frozen_unicode
 async def test_invalid_proposal_limits_and_scope_violation_never_launch_workers(tmp_path):
     report = await execute(
         tmp_path / "invalid", candidates=lambda d: (replace(d, rationale=""),) * 3
@@ -216,26 +220,32 @@ async def test_invalid_proposal_limits_and_scope_violation_never_launch_workers(
     assert report["remaining_candidates"] == 1 and report["progress"]["trials_started"] == 0
 
 
+@pytest.mark.frozen_unicode
 async def test_unknown_usage_stops_without_inventing_zero_cost(tmp_path):
     def prepare(root, raw):
         (root / "script.json").write_text(json.dumps([{"content": "fixture answer"}]))
 
     report = await execute(tmp_path, prepare=prepare)
-    assert report["reason"] == "evaluation-usage-unknown"
+    # The first arm's cost is unknown, so the executor never starts the second arm
+    # (ADR-0082 / plan S0-C); the round is incomplete and still not zero-cost.
+    assert report["action"] == "stop" and report["reason"] == "execution-incomplete"
     assert report["rounds"][0]["comparison"]["arms"][0]["cost"]["total_tokens"] is None
+    assert report["progress"]["trials_started"] == 1
     assert report["progress"]["consecutive_no_gain"] == 0
 
 
+@pytest.mark.frozen_unicode
 async def test_transport_failure_preserves_actual_attempts_and_stops(tmp_path, monkeypatch):
     monkeypatch.setenv("UNUSED_EVALUATION_KEY", "explicit-local-http-fixture")
     with model_server(asyncio.get_running_loop(), disconnect=True) as (model, _, _, requests):
         report = await execute(tmp_path, model=model)
-    assert len(requests) == 2
-    assert report["action"] == "stop" and report["progress"]["trials_started"] == 2
+    assert len(requests) == 1
+    assert report["action"] == "stop" and report["progress"]["trials_started"] == 1
     assert report["rounds"][0]["comparison"]["changes"]["loss"] == 0
     assert report["remaining_candidates"] == 1
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("publication_failure", [False, True])
 async def test_repeated_cancellation_converges_actual_child_before_return(
     tmp_path,
@@ -322,6 +332,7 @@ def test_policy_interprets_original_dimensions_without_cost_hiding_quality_loss(
     assert candidate_decision(c) == expected
 
 
+@pytest.mark.frozen_unicode
 async def test_offline_inspector_rejects_another_run_and_corrupted_original_evidence(tmp_path):
     await execute(tmp_path)
     root = tmp_path / "optimization"
@@ -335,15 +346,16 @@ async def test_offline_inspector_rejects_another_run_and_corrupted_original_evid
         inspect_optimization(root)
     outcome.write_bytes(original)
     native_report = directory / "evaluation/arms/02/run/report.json"
-    data = json.loads(native_report.read_text())
+    data = json.loads(native_report.read_text(encoding="utf-8"))
     data["trials"][0]["assessment"]["status"] = "passed"
-    native_report.write_text(json.dumps(data))
+    native_report.write_text(json.dumps(data), encoding="utf-8")
     report = inspect_optimization(root)
     assert report["action"] == "stop" and report["reason"] == "evidence-not-comparable"
     assert report["progress"]["evidence"] == "unproven"
     assert report["progress"]["convergence"] == "unknown"
 
 
+@pytest.mark.frozen_unicode
 async def test_deadline_cancels_inflight_real_worker(tmp_path, monkeypatch):
     import traceh.evolution.optimization as optimization
 

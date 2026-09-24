@@ -1,0 +1,1 @@
+{"reason": "evaluation-usage-unknown", "action": "stop", "adoption_authorized": false, "cost": {"analysis": {"attempts": 1, "estimated_attempts": 0, "input_tokens": 1584, "known_subtotal": {"input_tokens": 1584, "output_tokens": 189, "total_tokens": 1773}, "output_tokens": 189, "total_tokens": 1773, "unknown_attempts": 0}, "review_calls": 0, "review_tokens": 0}}

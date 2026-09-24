@@ -1,0 +1,76 @@
+{
+  "profile_id": "real-repository-pilot-v3",
+  "approver_id": "benchmark-host",
+  "default_mode": "single",
+  "roles": {
+    "coder": {
+      "preset": "product-benchmark-coder",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text",
+        "apply_patch",
+        "shell"
+      ],
+      "max_output_tokens": 16384,
+      "budget": {
+        "max_tokens": 760000,
+        "max_steps": 100,
+        "max_tool_calls": 140,
+        "max_wall_milliseconds": 1260000,
+        "max_children": 2,
+        "max_depth": 1,
+        "max_processes": 2
+      },
+      "max_turn_wall_milliseconds": 900000
+    },
+    "investigator": {
+      "preset": "product-benchmark-investigator",
+      "capability_grants": [
+        "list_files",
+        "read_file",
+        "search_text"
+      ],
+      "max_output_tokens": 8192,
+      "budget": {
+        "max_tokens": 160000,
+        "max_steps": 24,
+        "max_tool_calls": 32,
+        "max_wall_milliseconds": 180000,
+        "max_children": 0,
+        "max_depth": 0,
+        "max_processes": 0
+      },
+      "max_turn_wall_milliseconds": 180000
+    },
+    "patch_author": null
+  },
+  "task_budget": {
+    "max_tokens": 800000,
+    "max_steps": 120,
+    "max_tool_calls": 160,
+    "max_wall_milliseconds": 1500000,
+    "max_children": 3,
+    "max_depth": 2,
+    "max_processes": 3
+  },
+  "capture_limits": {
+    "max_changed_paths": 100,
+    "max_path_bytes": 1024,
+    "max_file_bytes": 1048576,
+    "max_total_file_bytes": 4194304,
+    "max_patch_bytes": 4194304
+  },
+  "max_report_chars": 4096,
+  "retrieval": null,
+  "modes": [
+    "single",
+    "multi"
+  ],
+  "retained_tokens": 200000,
+  "investigator_initial_tokens": 160000,
+  "token_estimate": {
+    "encoding": "cl100k_base",
+    "margin_percent": 100
+  }
+}

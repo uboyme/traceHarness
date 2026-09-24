@@ -1,0 +1,284 @@
+[
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pyvista__pyvista-4315",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 566250,
+    "total_tokens": 413983,
+    "token_quality": "exact",
+    "model_attempts": 30,
+    "tool_calls": 29,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 413983,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 29
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 19908,
+          "input_limit": 85760,
+          "input_mean": 13263.8,
+          "input_peak": 19908,
+          "metered_peak": 19497,
+          "metered_requests": 30,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 30,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pyvista__pyvista-4315",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 623344,
+    "total_tokens": 783384,
+    "token_quality": "exact",
+    "model_attempts": 38,
+    "tool_calls": 38,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 783384,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 37
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 30227,
+          "input_limit": 85760,
+          "input_mean": 20348.3,
+          "input_peak": 31813,
+          "metered_peak": 30930,
+          "metered_requests": 38,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 38,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 447952,
+    "total_tokens": 406520,
+    "token_quality": "exact",
+    "model_attempts": 34,
+    "tool_calls": 33,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 406520,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 33
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 15836,
+          "input_limit": 85760,
+          "input_mean": 11686.0,
+          "input_peak": 15836,
+          "metered_peak": 15782,
+          "metered_requests": 34,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 34,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 314312,
+    "total_tokens": 306471,
+    "token_quality": "exact",
+    "model_attempts": 28,
+    "tool_calls": 27,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 306471,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 27
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 13981,
+          "input_limit": 85760,
+          "input_mean": 10741.1,
+          "input_peak": 13981,
+          "metered_peak": 13911,
+          "metered_requests": 28,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 28,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 348062,
+    "total_tokens": 350039,
+    "token_quality": "exact",
+    "model_attempts": 28,
+    "tool_calls": 30,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 350039,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 27
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 16099,
+          "input_limit": 85760,
+          "input_mean": 12244.0,
+          "input_peak": 16099,
+          "metered_peak": 16090,
+          "metered_requests": 28,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 28,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 236907,
+    "total_tokens": 209134,
+    "token_quality": "exact",
+    "model_attempts": 22,
+    "tool_calls": 21,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 209134,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 21
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 12365,
+          "input_limit": 85760,
+          "input_mean": 9200.1,
+          "input_peak": 12365,
+          "metered_peak": 12127,
+          "metered_requests": 22,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 22,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  }
+]

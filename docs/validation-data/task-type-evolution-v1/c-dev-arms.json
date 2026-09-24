@@ -1,0 +1,284 @@
+[
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 594579,
+    "total_tokens": 495592,
+    "token_quality": "exact",
+    "model_attempts": 39,
+    "tool_calls": 38,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 495592,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 38
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 16241,
+          "input_limit": 85760,
+          "input_mean": 12441.4,
+          "input_peak": 17772,
+          "metered_peak": 17652,
+          "metered_requests": 39,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 39,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1359",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 601062,
+    "total_tokens": 520299,
+    "token_quality": "exact",
+    "model_attempts": 40,
+    "tool_calls": 39,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 520299,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 39
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 18921,
+          "input_limit": 85760,
+          "input_mean": 12777.1,
+          "input_peak": 19734,
+          "metered_peak": 19740,
+          "metered_requests": 40,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 40,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1196",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 348921,
+    "total_tokens": 264682,
+    "token_quality": "exact",
+    "model_attempts": 25,
+    "tool_calls": 24,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 264682,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 24
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 15806,
+          "input_limit": 85760,
+          "input_mean": 10280.0,
+          "input_peak": 15806,
+          "metered_peak": 15653,
+          "metered_requests": 25,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 25,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1196",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 342219,
+    "total_tokens": 306643,
+    "token_quality": "exact",
+    "model_attempts": 28,
+    "tool_calls": 27,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 306643,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 27
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 15722,
+          "input_limit": 85760,
+          "input_mean": 10738.2,
+          "input_peak": 15722,
+          "metered_peak": 15544,
+          "metered_requests": 28,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 28,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p03",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pvlib__pvlib-python-1154",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 224625,
+    "total_tokens": 138800,
+    "token_quality": "exact",
+    "model_attempts": 14,
+    "tool_calls": 13,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 138800,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 13
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 12755,
+          "input_limit": 85760,
+          "input_mean": 9456.4,
+          "input_peak": 12755,
+          "metered_peak": 11648,
+          "metered_requests": 14,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 14,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p03",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pvlib__pvlib-python-1154",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 252234,
+    "total_tokens": 176019,
+    "token_quality": "exact",
+    "model_attempts": 18,
+    "tool_calls": 17,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 176019,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 17
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 13869,
+          "input_limit": 85760,
+          "input_mean": 9324.4,
+          "input_peak": 13869,
+          "metered_peak": 12628,
+          "metered_requests": 18,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 18,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  }
+]

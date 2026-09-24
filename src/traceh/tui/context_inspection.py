@@ -69,6 +69,11 @@ class ContextCompactionRecord:
     summary_utf8_bytes: int
     summary_truncated: bool
     kept_recent_turns: int
+    #: For a tool fold, the unit its protection was counted in and how many it
+    #: kept. A Step fold protects recent tool groups, not recent Turns, and
+    #: showing one number under the other's label would misreport the panel.
+    fold_unit: str | None
+    fold_kept_recent: int | None
     policy_digest: str | None
     summarizer_name: str | None
     summarizer_version: str | None
@@ -297,7 +302,9 @@ class ContextInspectionReader:
                     history_utf8_bytes=replacement.history_utf8_bytes,
                     summary_utf8_bytes=len(summary.encode("utf-8")),
                     summary_truncated=replacement.summary_truncated if is_summary else False,
-                    kept_recent_turns=replacement.kept_recent_turns,
+                    kept_recent_turns=replacement.kept_recent_turns if is_summary else 0,
+                    fold_unit=None if is_summary else replacement.boundary.unit,
+                    fold_kept_recent=None if is_summary else replacement.boundary.kept_recent,
                     policy_digest=replacement.policy_digest,
                     summarizer_name=None if summarizer is None else summarizer.name,
                     summarizer_version=(None if summarizer is None else summarizer.version),

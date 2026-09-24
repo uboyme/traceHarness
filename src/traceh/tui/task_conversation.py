@@ -198,7 +198,7 @@ def _investigation_input(value):
     """Present the existing work envelope; this display confers no authority."""
     try:
         work = json.loads(value)
-        if work.get("format") != 2 or work.get("kind") != "readonly-investigation":
+        if work.get("format") != 3 or work.get("kind") != "readonly-investigation":
             return value
         labels = (
             ("goal", "调查目标"),

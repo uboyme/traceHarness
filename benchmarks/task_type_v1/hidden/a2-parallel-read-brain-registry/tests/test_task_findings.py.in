@@ -1,0 +1,36 @@
+"""Host-only acceptance for a2-parallel-read-brain-registry.
+
+EXPECTED is computed by the host from the pristine source's syntax tree when the
+material is built; it is never shown to the Agent.
+"""
+
+import json
+from pathlib import Path
+
+import pytest
+
+EXPECTED = json.loads(r"""__EXPECTED__""")
+
+
+def _findings():
+    path = Path.cwd() / "FINDINGS.json"
+    assert path.is_file(), "FINDINGS.json is missing"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_findings_cover_exactly_the_requested_modules():
+    assert set(_findings()) == set(EXPECTED)
+
+
+@pytest.mark.parametrize("module", sorted(EXPECTED))
+def test_module_findings_match_the_source(module):
+    actual = _findings()[module]
+    expected = EXPECTED[module]
+    assert set(actual) == {"functions", "transforms", "module_extenders"}
+    assert sorted(actual["functions"]) == expected["functions"]
+
+    def pairs(items):
+        return sorted((item["node_class"], item["transform"]) for item in items)
+
+    assert pairs(actual["transforms"]) == pairs(expected["transforms"])
+    assert sorted(actual["module_extenders"]) == sorted(expected["module_extenders"])

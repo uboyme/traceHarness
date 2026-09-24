@@ -89,11 +89,13 @@ class DelegatingProvider:
             )
         if "apply_patch" not in names:
             return product_test._response("Ready for decision.")
-        report = next(
-            json.loads(m.content)["child"]
+        reports = next(
+            json.loads(m.content)["children"]
             for m in request.messages
             if m.role == "tool" and m.name == "submit_collaboration_plan"
         )
+        assert len(reports) == 1
+        report = reports[0]
         assert report["status"] == ("failed" if self.child_failure else "completed")
         if not self.child_failure:
             assert "contains base" in report["statement"]
@@ -189,7 +191,7 @@ async def test_multi_collects_or_converges_children_before_capture(
 
         async def execute(identity, observations, seen, deadline):
             received.extend(observations)
-            return EpisodeSettlement("explicit-product-test-evidence", None, False, True, True)
+            return EpisodeSettlement("explicit-product-test-evidence", None, True, True)
 
         background = BackgroundOptimizationHost(
             sessions,
@@ -200,31 +202,21 @@ async def test_multi_collects_or_converges_children_before_capture(
                 fingerprint("plan"),
                 datetime.now(UTC) + timedelta(hours=1),
                 1,
-                2,
                 1000,
                 10,
                 1,
             ),
-            reservation=EpisodeReservation(2, 1000),
+            reservation=EpisodeReservation(1000),
             execute=execute,
         )
         try:
             await background.foreground(True)
             await background.set_enabled(True)
-            assert await background.observe_product(reopened.observation, task_id) is child_failure
+            # A clean collaborative task shows no mechanism, so nothing is recorded.
             assert not await background.observe_product(reopened.observation, task_id)
-            assert not received  # Admission waits until the foreground returns.
             await background.foreground(False)
-            await background.kick()
             await background.wait_idle()
-            assert bool(received) is child_failure
-            if received:
-                assert received[0].failure_class == "product-signal-unverified"
-                assert "do not prove a wrong answer" in received[0].summary
-                assert all(
-                    any(child.session_id in ref for ref in received[0].evidence_locations)
-                    for child in children
-                )
+            assert not received
             from types import SimpleNamespace
 
             with pytest.raises(ValueError, match="store-mismatch"):
@@ -234,12 +226,10 @@ async def test_multi_collects_or_converges_children_before_capture(
             background.period = replace(
                 background.period, workspace=str((tmp_path / "elsewhere").resolve())
             )
-            from traceh.evolution.product_feedback import product_observation
+            from traceh.evolution.product_feedback import product_findings
 
             with pytest.raises(ValueError, match="outside-scope"):
-                await product_observation(
-                    sessions, background.period, reopened.observation, task_id
-                )
+                await product_findings(sessions, background.period, reopened.observation, task_id)
         finally:
             await background.aclose()
         # An old observation cannot silently adopt a child stream it never saw.

@@ -1,0 +1,42 @@
+{
+  "contract": {
+    "experiment_id": "single-agent-effectiveness-development-v1",
+    "base_source_digest": "b14349b43ea4f3df167670ca6fbc8ea448924ff8a8cedb073751215180bb4b0c",
+    "benchmark_digest": "1e853f64369cc027787a937918ad98248ae33d39b3607edea06146827c473653",
+    "run_plan_digest": "d44efd72e7070d78ef809f554322c6a0bab60a77a07db5fc5f511c980774676a",
+    "development_dataset_digest": "7b99b4479c751a6487a7f5d3793bc256a42dc6c1dd0a112c42e139ec947f799b",
+    "development_case_ids": [
+      "marshmallow-code__marshmallow-1359"
+    ],
+    "editable_text": [
+      {
+        "file": "product/execution.py",
+        "selector": "CODER_GUIDANCE",
+        "old_sha256": "54eed772df23fa28c63c80c3edc6a637ad7903057591b4f51f1a213cb10e88e0",
+        "text": "Implement the requirement in the managed workspace, then run the relevant checks and report the result."
+      }
+    ],
+    "limits": {
+      "max_rounds": 1,
+      "max_candidates": 1,
+      "max_trials": 2,
+      "max_consecutive_no_gain": 1,
+      "max_invalid_proposals": 1,
+      "max_duplicate_proposals": 1,
+      "max_analysis_calls": 1,
+      "max_analysis_tokens": 16000,
+      "max_request_bytes": 200000
+    },
+    "deadline_utc": "2026-09-22T06:47:27.741507+00:00",
+    "format": 1
+  },
+  "prior_known_cny": 5.519262,
+  "prior_unknown_reserved_cny": 55.0,
+  "reserved_cny": 29,
+  "batch_cap_cny": 120.0,
+  "assessment": "original product-durable-v1 fixed verification and Product Review; no optional semantic-quality claim",
+  "adoption_authorized": false,
+  "network_mode": "direct",
+  "retry_policy": "one attempt per request; no new retry mechanism",
+  "authorization": "User reaffirmed completion within 120 CNY after failure-policy discussion; Single is primary. Historical unknown reservations retained. New Provider failure stops this batch."
+}

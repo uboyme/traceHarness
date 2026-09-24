@@ -235,7 +235,9 @@ async def test_equal_and_complementary_coverage_preserve_multiple_sources(tmp_pa
 
 async def test_over_budget_superset_does_not_suppress_a_smaller_useful_reference(tmp_path):
     small = skill("packing.handbook", "compression")
-    context = context_policy(memory=retrieval_policy(), item_bytes=1400)
+    # The complete rendered Skill includes current read_action and provenance.
+    # Keep it admissible while the raw Memory body alone exceeds the same limit.
+    context = context_policy(memory=retrieval_policy(), item_bytes=4096)
     # Make the raw fixture exceed the explicit limit independently of view overhead.
     body = "compression encryption " + "p" * context.item_bytes
     async with precision_case(

@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "benchmark_digest": "21613ba779ba0e976378182e78957c57fa04b92be78b88fb2c83a2b652805e22",
+  "variants": [
+    {
+      "variant_id": "single-arm",
+      "role": "baseline",
+      "source": "current"
+    },
+    {
+      "variant_id": "multi-arm",
+      "role": "candidate",
+      "source": "current"
+    }
+  ],
+  "model": {
+    "provider": "openai-compatible",
+    "model": "deepseek-v4.1-flash",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key_env": "DASHSCOPE_API_KEY",
+    "script": null,
+    "retry_policy": {
+      "max_attempts": 1,
+      "max_elapsed_seconds": 0,
+      "base_delay_seconds": 0,
+      "max_delay_seconds": 0,
+      "retry_after_cap_seconds": 0,
+      "jitter_ratio": 0
+    }
+  },
+  "execution": {
+    "sandbox_config": "sandbox.json",
+    "max_trials": 2,
+    "timeout_seconds": 3600,
+    "shutdown_seconds": 180,
+    "network_mode": "direct",
+    "first_arm": "candidate"
+  },
+  "trials": {
+    "repetitions": 1,
+    "selection": {
+      "case_ids": [
+        "pylint-dev__astroid-1196"
+      ],
+      "material_seeds": null
+    }
+  },
+  "comparison": {
+    "format": 3,
+    "kind": "execution_strategy",
+    "requested_modes": [
+      "single",
+      "multi"
+    ],
+    "min_pass_gain": null,
+    "max_token_ratio": null,
+    "max_tool_call_delta": null
+  }
+}

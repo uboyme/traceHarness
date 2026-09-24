@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 from collaboration_fixtures import PLAN
-from evaluation_fixtures import material_case, product_manifest, write_dataset
+from evaluation_fixtures import FIXTURE_TREE_LIMITS, material_case, product_manifest, write_dataset
 from sandbox_fixtures import real_sandbox_policy
 
 import traceh.evaluation.attempt as attempt_module
@@ -334,7 +334,10 @@ def build_benchmark(
             max_tool_calls=4,
             max_processes=0,
             max_tokens=12000,
-            max_wall_milliseconds=120000,
+            # The fixture uses await_report; its complete child grant must fit
+            # the parent's one-call wait authority (55 seconds), not just the
+            # child's per-Turn clock.
+            max_wall_milliseconds=30000,
         )
         settings["roles"]["investigator"]["max_turn_wall_milliseconds"] = 30000
         settings["roles"]["investigator"]["max_output_tokens"] = 1024
@@ -349,7 +352,7 @@ def build_benchmark(
     ]
     for case in cases:
         case["verification"] = verification
-    write_dataset(root, manifest, cases, format_version=2)
+    write_dataset(root, manifest, cases, format_version=3)
     return root
 
 
@@ -584,7 +587,10 @@ async def test_attempt_retains_execution_and_store_close_failures(
     monkeypatch.setattr(attempt_module, "_run_attempt_with_store", fail_attempt)
     request = SimpleNamespace(
         directory=tmp_path / "attempt",
-        task=SimpleNamespace(initial_dir=tmp_path / "initial", material_digest="fixture-digest"),
+        task=SimpleNamespace(
+            initial_dir=tmp_path / "initial", material_digest="fixture-digest",
+            initial_tree_limits=FIXTURE_TREE_LIMITS,
+        ),
     )
 
     with pytest.raises(BaseExceptionGroup) as caught:
@@ -810,7 +816,8 @@ async def test_a_session_that_breaks_the_core_invariants_is_refused(
                     "step_id": "forged-step",
                     "attempt_id": "forged-attempt",
                     "status": "succeeded",
-                    "finish_reason": "stop",
+                    "completion": "normal",
+                    "provider_finish_reason": "stop",
                     "usage": {
                         "input_tokens": 1_000_000,
                         "output_tokens": 1_000_000,

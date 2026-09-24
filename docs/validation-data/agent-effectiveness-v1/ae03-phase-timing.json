@@ -1,0 +1,144 @@
+{
+  "run": ".traceh\\ae03",
+  "meaning": "Event-boundary elapsed spans, not CPU-exclusive profiling. Parallel spans must not be added as wall time.",
+  "prepare_seconds": 90.17793273925781,
+  "tool_spans": [
+    {
+      "tool": "list_files",
+      "count": 1,
+      "total_seconds": 0.76,
+      "max_seconds": 0.76
+    },
+    {
+      "tool": "search_text",
+      "count": 3,
+      "total_seconds": 4.0809999999999995,
+      "max_seconds": 1.45
+    },
+    {
+      "tool": "read_file",
+      "count": 6,
+      "total_seconds": 7.498,
+      "max_seconds": 1.666
+    },
+    {
+      "tool": "shell",
+      "count": 9,
+      "total_seconds": 298.387,
+      "max_seconds": 53.422
+    },
+    {
+      "tool": "apply_patch",
+      "count": 2,
+      "total_seconds": 3.114,
+      "max_seconds": 1.763
+    }
+  ],
+  "calls": [
+    {
+      "tool": "list_files",
+      "status": "succeeded",
+      "seconds": 0.76
+    },
+    {
+      "tool": "search_text",
+      "status": "succeeded",
+      "seconds": 1.45
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 1.018
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 0.918
+    },
+    {
+      "tool": "search_text",
+      "status": "succeeded",
+      "seconds": 1.203
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 1.22
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 1.268
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 1.408
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 33.891
+    },
+    {
+      "tool": "apply_patch",
+      "status": "succeeded",
+      "seconds": 1.351
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 39.533
+    },
+    {
+      "tool": "search_text",
+      "status": "succeeded",
+      "seconds": 1.428
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 34.683
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 30.836
+    },
+    {
+      "tool": "read_file",
+      "status": "succeeded",
+      "seconds": 1.666
+    },
+    {
+      "tool": "apply_patch",
+      "status": "succeeded",
+      "seconds": 1.763
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 35.93
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 35.078
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 53.422
+    },
+    {
+      "tool": "shell",
+      "status": "succeeded",
+      "seconds": 34.815
+    },
+    {
+      "tool": "shell",
+      "status": "denied",
+      "seconds": 0.199
+    }
+  ]
+}

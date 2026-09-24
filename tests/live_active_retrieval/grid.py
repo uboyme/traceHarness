@@ -6,7 +6,7 @@ import json
 import math
 import re
 import time
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 from memory_fixtures import Resolver, memory_policy
@@ -21,12 +21,14 @@ from live_active_retrieval.fixtures import materialize
 from live_active_retrieval.history_smoke import file_digest, load_provider
 from traceh.api.history import HistoryReadPolicy
 from traceh.api.memory import ProjectMemoryConfig, ProjectScopeLimits
+from traceh.api.sandbox import SandboxConfiguration
 from traceh.api.skills import SkillResourceRoot, SkillSection, SkillSectionContent
 from traceh.llm.retry import ModelRetryPolicy
 from traceh.llm.token_meter import TokenBudgetPolicy
 from traceh.projects.events import reference
 from traceh.runtime.agent_runtime import RuntimeConfig, build_default_runtime_async
 from traceh.runtime.request_builder import verify_request_snapshots
+from traceh.sandbox.config import load_sandbox_file, parse_sandbox_config
 from traceh.session.context_input import ContextInputPolicy
 from traceh.session.sqlite import SqliteEventStore
 from traceh.tools.policy import DecisionKind, ToolDecision
@@ -205,6 +207,14 @@ async def prepare_runtime(folder, fixture, frozen, provider, model):
         model_retry_policy=ModelRetryPolicy(limits["max_model_attempts"], 180, 1, 5, 5, 0),
         context_input=context_policy(limits, family),
         memory=memory,
+        sandbox=(
+            SandboxConfiguration(
+                parse_sandbox_config(frozen["sandbox_config"]).policy,
+                (folder / "sandbox-cas").resolve(),
+            )
+            if frozen.get("sandbox_config") is not None
+            else None
+        ),
     )
     options = {}
     value = None
@@ -584,6 +594,14 @@ def freeze(args):
         ),
         "provider_identity_reference": identity,
     }
+    settings = load_sandbox_file(args.sandbox_config) if args.sandbox_config else None
+    if settings is not None and settings.plugin_grants:
+        raise ValueError("active-retrieval-grid-plugin-grants-unsupported")
+    frozen["sandbox_config"] = (
+        {"format": 2, "policy": asdict(settings.policy), "plugin_grants": []}
+        if settings is not None
+        else None
+    )
     write(root / "fixtures.json", materialize(manifest), exclusive=True)
     frozen["fixtures_sha256"] = file_digest(root / "fixtures.json")
     write(root / "frozen.json", frozen, exclusive=True)
@@ -675,6 +693,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--freeze", action="store_true")
     parser.add_argument("--baseline-source", type=Path)
+    parser.add_argument("--sandbox-config", type=Path)
     parser.add_argument("--arm", choices=("baseline", "candidate"))
     parser.add_argument("--worker", type=int, choices=(0, 1), default=0)
     arguments = parser.parse_args()

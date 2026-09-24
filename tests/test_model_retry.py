@@ -163,6 +163,9 @@ async def test_transient_failure_then_success_reuses_one_frozen_request(
         "output_tokens": 0,
         "total_tokens": 0,
         "quality": "exact",
+        # This provider reports no reasoning split; absent is recorded as
+        # unknown rather than as zero tokens spent there.
+        "reasoning_tokens": None,
     }
     assert [event.data["provider_active_milliseconds"] for event in ends] == [20, 20]
     assert scheduler.delays == [0.25]
@@ -625,6 +628,7 @@ async def build_budgeted_execution(
     *,
     max_tokens: int = 20,
     token_counter: object | None = _DEFAULT_COUNTER,
+    retry_attempts: int = 2,
 ):
     await AgentRegistrar(store).create_agent(
         AgentSpec(preset="managed", workspace_id="workspace"),
@@ -661,7 +665,7 @@ async def build_budgeted_execution(
             model="model",
             max_steps=1,
             max_output_tokens=5,
-            model_retry_policy=retry_policy(),
+            model_retry_policy=retry_policy(max_attempts=retry_attempts),
         ),
         provider=provider,
         event_store=store,
@@ -710,6 +714,62 @@ async def test_a_bounded_reservation_leaves_room_for_the_mandated_retry(
         if event.type == "model/attempt-start"
     ]
     assert [event.data["ordinal"] for event in starts] == [1, 2]
+
+
+async def test_retrying_one_request_is_charged_once_not_once_per_attempt(
+    tmp_path: Path,
+) -> None:
+    """A bounded retry recovers one request; it does not buy a second one.
+
+    Charging every attempt that reported no usage the whole worst case bills a
+    single request several times over, and it is the reliable path that pays:
+    the flakier the transport, the more of the task's grant disappears into
+    calls that returned nothing. A real run settled 2,000,546 tokens across
+    twenty failed attempts - more than its entire successful workload - and
+    exhausted a two-million grant after 725,467 tokens of actual work.
+
+    The unobservable charge is still made, once, by the attempt that first met
+    the failure. That is what keeps spend from escaping the ledger; what it
+    must not do is multiply.
+    """
+
+    scheduler = FakeScheduler()
+    store = InMemoryEventStore()
+    provider = OutcomeProvider(
+        scheduler,
+        (
+            ProviderFailure("provider-timeout", ProviderFailureCategory.TIMEOUT),
+            ProviderFailure("provider-timeout", ProviderFailureCategory.TIMEOUT),
+            ProviderFailure("provider-timeout", ProviderFailureCategory.TIMEOUT),
+            ModelResponse(content="done", usage=Usage(1, 1, UsageQuality.EXACT)),
+        ),
+    )
+    runtime, execution, budgets = await build_budgeted_execution(
+        tmp_path,
+        scheduler,
+        store,
+        provider,
+        max_tokens=200,
+        retry_attempts=4,
+    )
+    try:
+        result = await execution.run_turn(TurnInput("perform the task", "message-root"))
+    finally:
+        await execution.dispose()
+
+    assert result.final_text == "done" and provider.calls == 4
+
+    ledger = await budgets.ledger()
+    reservations = ledger.usage_reservations
+    assert len(reservations) == 4, "one reservation per attempt is still the shape"
+    worst_case = reservations[0].amounts.tokens
+    assert worst_case > 1, "a reservation of nothing would prove nothing"
+
+    account = ledger.account("agent-root")
+    assert account is not None
+    # One worst case for the request, plus the exact usage the call that
+    # actually answered reported. Per-attempt charging would be 3 * worst_case.
+    assert account.charged.tokens == worst_case + 2
 
 
 async def test_an_uncounted_reservation_leaves_no_budget_for_the_mandated_retry(

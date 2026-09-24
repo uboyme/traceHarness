@@ -185,6 +185,18 @@ async def test_conversation_drag_copy_in_place_without_writes(tmp_path, clipboar
 async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
     tmp_path, mounted_screens, monkeypatch
 ):
+    conversation_ready = asyncio.Event()
+    original_render = TracehTuiApp._render_initial_conversation
+
+    def record_conversation_render(app, *args):
+        original_render(app, *args)
+        # RichLog writes invalidate its auto-height. Wait for that layout before
+        # Pilot converts the widget-relative offset to screen coordinates.
+        app.call_after_refresh(conversation_ready.set)
+
+    monkeypatch.setattr(
+        TracehTuiApp, "_render_initial_conversation", record_conversation_render
+    )
     copy_mounted = asyncio.Queue()
     original_mount = CopyMenu.on_mount
 
@@ -204,10 +216,10 @@ async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
             clock=default_clock(),
         )
         async with app.run_test(size=(85, 35)) as pilot:
-            await pilot.pause()
+            await asyncio.wait_for(conversation_ready.wait(), 10)
             head = await store.head(f"session:{session_id}")
             log = app.query_one("#conversation", SelectableLog)
-            await pilot.click(log, offset=(2, 1), button=3)
+            assert await pilot.click(log, offset=(2, 1), button=3)
             assert await asyncio.wait_for(copy_mounted.get(), 10) is app.screen
             assert isinstance(app.screen, CopyMenu)
             assert app.screen.query_one("#selection-copy", Button).disabled
@@ -220,7 +232,7 @@ async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
             await pilot.press("f7")
             expected = area.selected_text
             assert "可选择" in expected
-            await pilot.click(area, offset=(3, 1), button=3)
+            assert await pilot.click(area, offset=(3, 1), button=3)
             assert await asyncio.wait_for(copy_mounted.get(), 10) is app.screen
             assert isinstance(app.screen, CopyMenu)
             await pilot.click("#selection-copy")

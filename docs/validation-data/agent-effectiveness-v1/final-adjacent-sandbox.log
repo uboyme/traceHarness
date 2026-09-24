@@ -1,0 +1,12 @@
+.....................                                                    [100%]
+============================ slowest 10 durations =============================
+64.91s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]
+64.15s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]
+61.51s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]
+52.07s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]
+37.12s call     tests/test_writable_completion.py::test_completion_never_labels_another_commands_result
+33.51s call     tests/test_writable_completion.py::test_cancel_during_completion_converges_observed_guest
+31.48s call     tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-1]
+30.80s call     tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-0]
+28.24s call     tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-0]
+26.45s call     tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-1]

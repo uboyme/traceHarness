@@ -21,8 +21,9 @@ from pathlib import Path
 from traceh.session.event_store import InMemoryEventStore
 
 
-async def main(scratch: Path) -> dict:
+async def main(scratch: Path, sandbox_config: Path) -> dict:
     from traceh.api.llm import ModelResponse, ToolCall
+    from traceh.api.sandbox import SandboxConfiguration
     from traceh.cli.plugins import doctor_plugins, inspect_plugin, list_plugins
     from traceh.llm.scripted import ScriptedLlmProvider
     from traceh.plugins.discovery import ENTRY_POINT_GROUP, PluginDiscovery
@@ -32,6 +33,7 @@ async def main(scratch: Path) -> dict:
         build_default_runtime_async,
     )
     from traceh.runtime.request_builder import verify_request_snapshots
+    from traceh.sandbox.config import load_sandbox_file
     from traceh.version import __version__
 
     report: dict = {"traceh_version": __version__}
@@ -241,7 +243,7 @@ async def main(scratch: Path) -> dict:
     # named Verifier must run through the Step's Generation Lease.
     quality_workspace = scratch / "quality-ws"
     quality_workspace.mkdir(parents=True, exist_ok=True)
-    command = json.dumps([sys.executable, "-m", "unittest", "-v"])
+    command = json.dumps(["python", "-m", "unittest", "-v"])
     (quality_workspace / "pyproject.toml").write_text(
         "[project]\n"
         "name = 'quality-e2e'\n"
@@ -278,6 +280,10 @@ async def main(scratch: Path) -> dict:
         RuntimeConfig(
             data_dir=scratch / "quality-data",
             verifier_name="python-tests",
+            sandbox=SandboxConfiguration(
+                load_sandbox_file(sandbox_config).policy,
+                (scratch / "sandbox-cas").resolve(),
+            ),
         ),
         provider=quality_provider,
         enabled_plugins=("traceh.python.quality",),
@@ -347,6 +353,6 @@ async def main(scratch: Path) -> dict:
 if __name__ == "__main__":
     scratch_dir = Path(sys.argv[1])
     scratch_dir.mkdir(parents=True, exist_ok=True)
-    payload = asyncio.run(main(scratch_dir))
+    payload = asyncio.run(main(scratch_dir, Path(sys.argv[2])))
     print("<<<E2E_JSON>>>")
     print(json.dumps(payload, indent=2, default=str))

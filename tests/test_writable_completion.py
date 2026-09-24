@@ -151,7 +151,8 @@ async def test_fixed_completion_rejects_repairs_and_stops_at_original_bound(
         assert result['raw_output_availability'] == 'not-retained'
         assert result['failure_cause'] == 'unknown'
         assert result['candidate_unchanged']
-        assert result['integration']['tool_call_id'] == 'integrate'
+        integration, = result['integration']
+        assert integration['tool_call_id'] == 'integrate'
         execution = result['results'][0]['execution']
         outcome = next(e for e in events if e.type == 'sandbox/outcome'
                        and e.data['execution_id'] == execution['execution_id'])

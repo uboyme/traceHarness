@@ -1,0 +1,16 @@
+{
+  "frozen_at_utc": "2026-09-21T21:31:06.960424+00:00",
+  "authorized_total_cny": 120,
+  "prior_known_cny": 3.087295,
+  "prior_unknown_reserved_cny": 26,
+  "batch_caps_cny": {
+    "one_candidate_AO": 29,
+    "context_six_runs": 21,
+    "validation_nine_pairs": 39
+  },
+  "unallocated_cny": 1.912705,
+  "maximum_concurrent_paid_batches": 2,
+  "within_pair": "Arms remain sequential; first arm alternates by frozen case order.",
+  "wall_time_limit": "Shared host also runs integration checks. At most two distinct experiment batches may overlap. Wall times are observations under this recorded workload, not isolated performance estimates; report tokens/correctness as primary paired outcomes.",
+  "scope": "Disjoint caps, not each batch independently spending the entire CNY120. Within-batch cost counters start at zero; historical cost/reserves above counted once. Unspent allocation released only after batch settles; no repeated task output directory."
+}

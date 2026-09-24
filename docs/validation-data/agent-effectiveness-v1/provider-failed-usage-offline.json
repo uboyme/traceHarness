@@ -1,0 +1,35 @@
+{
+  "kind": "offline public Provider diagnostic, no source modification",
+  "rows": [
+    {
+      "case": "valid",
+      "outcome": "succeeded",
+      "usage": [
+        7,
+        3
+      ]
+    },
+    {
+      "case": "malformed-valid-usage",
+      "outcome": "failed",
+      "category": "protocol",
+      "code": "provider-tool-arguments-json-value-expected",
+      "usage_retained": false
+    },
+    {
+      "case": "malformed-invalid-usage",
+      "outcome": "failed",
+      "category": "protocol",
+      "code": "provider-tool-arguments-json-value-expected",
+      "usage_retained": false
+    },
+    {
+      "case": "truncated-arguments",
+      "outcome": "failed",
+      "category": "protocol",
+      "code": "provider-tool-arguments-json-value-expected",
+      "usage_retained": false
+    }
+  ],
+  "inference_limit": "Proves valid usage is currently lost for a controlled malformed-arguments response. Does not prove remote failed responses supplied usage or whether their finish_reason was length; current parser also masks that distinction."
+}

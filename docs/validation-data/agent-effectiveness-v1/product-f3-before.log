@@ -1,0 +1,110 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+___ test_multi_product_mainline_converges_with_the_production_sqlite_store ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6172/test_multi_product_mainline_co0')
+
+    async def test_multi_product_mainline_converges_with_the_production_sqlite_store(
+        tmp_path: Path,
+    ) -> None:
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = SqliteEventStore(tmp_path / "events")
+        try:
+>           task_id, _, _ = await asyncio.wait_for(
+                _run_to_barrier(
+                    tmp_path,
+                    store,
+                    source,
+                    target,
+                    LocalArtifactCas(tmp_path / "cas"),
+                    RequestedTaskMode.MULTI,
+                    _ThreadedProductProvider(),
+                ),
+                timeout=30,
+            )
+
+tests\test_product_f3_e2e.py:1010: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\mydownload\anaconda\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6172/test_multi_product_mainline_co0')
+store = <traceh.session.sqlite.SqliteEventStore object at 0x000001BEF6CF2180>
+source = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6172/test_multi_product_mainline_co0/source')
+target = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6172/test_multi_product_mainline_co0/target.git')
+cas = <traceh.artifacts.cas.LocalArtifactCas object at 0x000001BEF7410040>
+mode = <RequestedTaskMode.MULTI: 'multi'>
+product_provider = <test_product_f3_e2e._ThreadedProductProvider object at 0x000001BEF7471910>
+
+    async def _run_to_barrier(
+        tmp_path: Path,
+        store: InMemoryEventStore,
+        source: Path,
+        target: Path,
+        cas: LocalArtifactCas,
+        mode: RequestedTaskMode,
+        product_provider: object | None = None,
+    ) -> tuple[str, str, str]:
+        actions = ProductTurnActions()
+        product = await _build_host(
+            tmp_path, store, source, target, cas, actions, mode, product_provider
+        )
+        runtime = _chat_runtime(tmp_path, store, actions)
+        first = _Console(("please add the accepted file", "yes, do it", "START"))
+        chat_workspace = tmp_path / "chat-workspace"
+        chat_workspace.mkdir(exist_ok=True)
+>       assert (
+            await run_chat(
+                runtime,
+                first.console,
+                workspace=chat_workspace,
+                timeline=False,
+                product=product,
+            )
+            == 0
+        )
+E       assert 130 == 0
+
+tests\test_product_f3_e2e.py:625: AssertionError
+____ test_approval_screen_uses_durable_evidence_and_separate_request_caps _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6172/test_approval_screen_uses_dura0')
+
+    async def test_approval_screen_uses_durable_evidence_and_separate_request_caps(
+        tmp_path: Path,
+    ) -> None:
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        requests: list[ModelRequest] = []
+    
+        _, _, output = await _run_to_barrier(
+            tmp_path,
+            InMemoryEventStore(),
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            _ProductProvider(requests),
+        )
+    
+        assert requests
+>       assert {request.max_output_tokens for request in requests} == {4_096}
+E       assert {1024, 4096} == {4096}
+E         
+E         Extra items in the left set:
+E         1024
+E         Use -v to get more diff
+
+tests\test_product_f3_e2e.py:1376: AssertionError
+============================= slowest 5 durations =============================
+34.78s call     tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+28.54s call     tests/test_product_f3_e2e.py::test_approval_screen_uses_durable_evidence_and_separate_request_caps
+0.13s setup    tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store
+FAILED tests/test_product_f3_e2e.py::test_approval_screen_uses_durable_evidence_and_separate_request_caps

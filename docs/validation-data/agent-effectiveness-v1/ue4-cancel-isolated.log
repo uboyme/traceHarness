@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\caojie\Desktop\instudy\traceharness\.traceh\aev\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\caojie\Desktop\instudy\traceharness
+configfile: pyproject.toml
+plugins: anyio-4.2.0, Faker-40.18.0, langsmith-0.8.5, asyncio-1.4.0, typeguard-4.5.2
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_ue4_controls.py::test_repeat_cancel_waits_for_original_runtime_then_closes_store PASSED [100%]
+
+============================== 1 passed in 1.82s ==============================

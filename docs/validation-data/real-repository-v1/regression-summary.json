@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "kind": "scoped-regression-batches-not-full-suite",
+  "reports": [
+    {
+      "file": ".traceh/rr-eval/regression.xml",
+      "sha256": "d4cdc52bbfede4457e81b06760a4410c2905069936e83d33e0b6cf8a53ae332a",
+      "tests": 211,
+      "counts": {
+        "passed": 200,
+        "failed": 11,
+        "error": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": ".traceh/rr-eval/final-fixture-gate.xml",
+      "sha256": "4cb32ce848df82fda49a9097fc0e898a60573048c32b68b7961585cd10d9bb84",
+      "tests": 28,
+      "counts": {
+        "passed": 27,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": ".traceh/rr-eval/final-retrieval-gate.xml",
+      "sha256": "f75ddf1f8562bf7fe587d52b64ef362fada229fbae133116c10df04749fdf444",
+      "tests": 38,
+      "counts": {
+        "passed": 35,
+        "failed": 3,
+        "error": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "file": ".traceh/rr-eval/final-adjacent-gate.xml",
+      "sha256": "e49eba5d3ac044657dc02350501ddde5b950a96329194436f9462f11d223b66a",
+      "tests": 61,
+      "counts": {
+        "passed": 61,
+        "failed": 0,
+        "error": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "distinct_test_nodes": 269,
+  "latest_status_counts": {
+    "passed": 269
+  },
+  "note": "Chronological batches retain original failures. Later owner reruns supersede affected nodes; this is not one clean full-suite run. Compileall, collection, Ruff, architecture/material and documentation checks are recorded separately in record 077."
+}

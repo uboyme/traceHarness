@@ -1,0 +1,17 @@
+diagnostic finished 1
+.scope())
+            if parent_function:
+                _, stmts = parent_function.lookup(self.name)
+    
+            if not stmts:
+>               raise NameInferenceError(
+                    name=self.name, scope=self.scope(), context=context
+                )
+E               astroid.exceptions.NameInferenceError: 'a' not found in <Module l.0 at 0x7df94d6a0af0>.
+
+astroid/inference.py:201: NameInferenceError
+=========================== short test summary info ============================
+FAILED tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem_uninferable
+1 failed, 25 passed in 0.35s
+TRACEH_RR_RESULT={"errors": [], "failed": ["tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem_uninferable"], "missing": [], "passed": ["tests/unittest_python3.py::Python3TC::test_annotation_as_string", "tests/unittest_python3.py::Python3TC::test_annotation_support", "tests/unittest_python3.py::Python3TC::test_as_string", "tests/unittest_python3.py::Python3TC::test_async_comprehensions", "tests/unittest_python3.py::Python3TC::test_async_comprehensions_as_string", "tests/unittest_python3.py::Python3TC::test_async_comprehensions_outside_coroutine", "tests/unittest_python3.py::Python3TC::test_format_string", "tests/unittest_python3.py::Python3TC::test_kwonlyargs_annotations_supper", "tests/unittest_python3.py::Python3TC::test_metaclass_ancestors", "tests/unittest_python3.py::Python3TC::test_metaclass_error", "tests/unittest_python3.py::Python3TC::test_metaclass_imported", "tests/unittest_python3.py::Python3TC::test_metaclass_multiple_keywords", "tests/unittest_python3.py::Python3TC::test_metaclass_yes_leak", "tests/unittest_python3.py::Python3TC::test_nested_unpacking_in_dicts", "tests/unittest_python3.py::Python3TC::test_old_syntax_works", "tests/unittest_python3.py::Python3TC::test_parent_metaclass", "tests/unittest_python3.py::Python3TC::test_simple_metaclass", "tests/unittest_python3.py::Python3TC::test_starred_notation", "tests/unittest_python3.py::Python3TC::test_underscores_in_numeral_literal", "tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem", "tests/unittest_python3.py::Python3TC::test_unpacking_in_dict_getitem_with_ref", "tests/unittest_python3.py::Python3TC::test_unpacking_in_dicts", "tests/unittest_python3.py::Python3TC::test_yield_from", "tests/unittest_python3.py::Python3TC::test_yield_from_as_string", "tests/unittest_python3.py::Python3TC::test_yield_from_is_generator"], "pytest_exit": 1, "skipped": []}
+

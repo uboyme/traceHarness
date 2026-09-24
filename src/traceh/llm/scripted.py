@@ -7,7 +7,14 @@ import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from traceh.api.llm import ModelRequest, ModelResponse, ToolCall, Usage, UsageQuality
+from traceh.api.llm import (
+    CompletionCategory,
+    ModelRequest,
+    ModelResponse,
+    ToolCall,
+    Usage,
+    UsageQuality,
+)
 
 
 class ScriptExhaustedError(RuntimeError):
@@ -31,7 +38,7 @@ class ScriptedLlmProvider:
         self.requests: list[ModelRequest] = []
 
     @classmethod
-    def from_file(cls, path: Path) -> "ScriptedLlmProvider":
+    def from_file(cls, path: Path) -> ScriptedLlmProvider:
         raw = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(raw, list):
             raise ValueError("script file must contain a JSON array")
@@ -68,10 +75,29 @@ class ScriptedLlmProvider:
             and type(usage_raw.get("output_tokens")) is int
             and usage_raw["output_tokens"] >= 0
         )
+        # A script is host-authored, so an omitted category is the author saying
+        # "an ordinary response", not a provider failing to tell us how it ended.
+        # That is why omission resolves here but never in the network adapter.
+        # A script that wants a truncated or unknown ending states it, and a
+        # value this host does not define is a script bug, not an UNKNOWN reply.
+        declared = raw.get("completion")
+        if declared is None:
+            completion = CompletionCategory.TOOL_HANDOFF if calls else CompletionCategory.NORMAL
+        else:
+            try:
+                completion = CompletionCategory(str(declared))
+            except ValueError:
+                raise ValueError(
+                    f"scripted completion is not a known category: {declared!r}"
+                ) from None
+        provider_finish_reason = raw.get("provider_finish_reason")
         return ModelResponse(
             content=str(raw.get("content") or ""),
             tool_calls=tuple(calls),
-            finish_reason=str(raw.get("finish_reason") or ("tool_calls" if calls else "stop")),
+            completion=completion,
+            provider_finish_reason=(
+                str(provider_finish_reason) if provider_finish_reason is not None else None
+            ),
             usage=Usage(
                 input_tokens=int(usage_raw.get("input_tokens", 0)),
                 output_tokens=int(usage_raw.get("output_tokens", 0)),

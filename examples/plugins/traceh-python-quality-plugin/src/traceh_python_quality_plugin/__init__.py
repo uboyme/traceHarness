@@ -369,7 +369,7 @@ class PythonQualityPlugin:
     manifest = PluginManifest(
         plugin_id=PLUGIN_ID,
         version=PLUGIN_VERSION,
-        requires_traceh=">=0.5,<0.9",
+        requires_traceh=">=0.5,<0.12",
         allowed_scopes=("application",),
         trust_mode="trusted",
         provides=(

@@ -46,6 +46,7 @@ def plan(manifest, model_settings, sandbox_file, cases, modes, first_arm):
             **model_settings,
             "script": None,
             "retry_policy": {name: getattr(NO_MODEL_RETRY, name) for name in RETRY_FIELDS},
+            "timeout_seconds": 90,
         },
         "execution": {
             "sandbox_config": str(sandbox_file),

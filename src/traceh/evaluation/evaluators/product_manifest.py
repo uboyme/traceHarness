@@ -15,7 +15,7 @@ from traceh.evaluation.inputs import (
     referenced_input,
     text_field,
 )
-from traceh.evaluation.repositories import BENCHMARK_SOURCE_REVISION
+from traceh.evaluation.repositories import BENCHMARK_SOURCE_REVISION, InitialTreeLimits
 from traceh.evaluation.retrieval import FrozenRetrieval, load_retrieval
 from traceh.product.config import (
     PRODUCT_HOST_SETTINGS_KEYS,
@@ -38,7 +38,8 @@ PRODUCT_SUITE_SETTINGS_KEYS = (PRODUCT_HOST_SETTINGS_KEYS - {"verification"}) | 
     "retrieval",
 }
 _TASK_KEYS = frozenset(
-    {"case_id", "group_id", "requirement", "initial_tree", "sha256", "verification"}
+    {"case_id", "group_id", "requirement", "initial_tree", "initial_tree_limits",
+     "sha256", "verification"}
 )
 
 
@@ -55,6 +56,7 @@ class BenchmarkTask:
     material_digest: str
     requirement: str
     initial_dir: Path
+    initial_tree_limits: InitialTreeLimits
     settings: ProductHostSettings
 
     @property
@@ -100,7 +102,7 @@ def load_product_suite(manifest, *, provider_id: str, model_id: str) -> ProductS
     ):
         raise BenchmarkManifestError("evaluation-manifest-invalid", "assessment")
     dataset = _object(manifest.dataset.data, {"format", "cases"}, "dataset")
-    if type(dataset["format"]) is not int or dataset["format"] != 2:
+    if type(dataset["format"]) is not int or dataset["format"] != 3:
         raise BenchmarkManifestError("evaluation-version-unsupported", "dataset")
     tasks = _tasks(
         dataset["cases"],
@@ -165,6 +167,15 @@ def _tasks(
     for index, item in enumerate(value):
         field = f"tasks.{index}"
         entry = _object(item, _TASK_KEYS, field)
+        bounds = _object(entry["initial_tree_limits"], {
+            "max_files", "max_file_bytes", "max_total_bytes"
+        }, f"{field}.initial_tree_limits")
+        try:
+            initial_tree_limits = InitialTreeLimits(**bounds)
+        except (TypeError, ValueError):
+            raise BenchmarkManifestError(
+                "evaluation-manifest-invalid", f"{field}.initial_tree_limits"
+            ) from None
         task_id = _identifier(entry["case_id"], f"{field}.task_id")
         if task_id in seen:
             raise BenchmarkManifestError("benchmark-manifest-task-duplicate", f"{field}.task_id")
@@ -192,6 +203,7 @@ def _tasks(
                 material_digest=_text(entry["sha256"], "sha256"),
                 requirement=requirement,
                 initial_dir=_initial_dir(entry["initial_tree"], directory, f"{field}.initial_dir"),
+                initial_tree_limits=initial_tree_limits,
                 settings=settings,
             )
         )

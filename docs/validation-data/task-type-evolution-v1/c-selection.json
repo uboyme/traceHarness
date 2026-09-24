@@ -1,0 +1,58 @@
+{
+  "selected_at_utc": "2026-09-23T15:25:09.507656+00:00",
+  "selected_by": "user (AskUserQuestion in the collection session)",
+  "suggestions_offered": [
+    {
+      "experiment_id": "343a28ee-4cbe-40cf-af14-42c1d861199c",
+      "outcome": "strategy-proposal-failed: provider-http-authentication (headless tool did not load .env; fixed, acknowledged in the period ledger; usage recorded unknown, quota spent)"
+    },
+    {
+      "experiment_id": "dbbbae06-8fa9-4b63-902a-22afca35add5",
+      "outcome": "selected",
+      "target_class": "tool-failed",
+      "sources": 4,
+      "analysis_tokens_exact": 4625,
+      "candidate_sha256": "fd7f4e1a72f6ff9228558b6c91d1d2d6fcbebd36fb80f66318a5b810e3003773"
+    }
+  ],
+  "evidence_note": "cited tool failures are all shell start-failed from shell syntax (VAR=value, cd &&, pipes) the argv tool does not interpret; detections pass counts only, so the suggestion is generic",
+  "validation_plans": [
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "repetition": 1,
+      "plan": ".traceh\\c-plans-validate\\pylint-dev__astroid-1978-r1\\run-plan.json",
+      "sha256": "461ed1568290a3309ca75fddd1c1b3a7e9e0e1b8b119096a537835318a207eaf"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "repetition": 2,
+      "plan": ".traceh\\c-plans-validate\\pylint-dev__astroid-1978-r2\\run-plan.json",
+      "sha256": "1b7e8bc64d30bef46b829b70c3f0c9ba2eed5bb8709da0bc066e95f812dccb52"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "repetition": 1,
+      "plan": ".traceh\\c-plans-validate\\pyvista__pyvista-4315-r1\\run-plan.json",
+      "sha256": "067efbc3206f776e38d3db6079e0b3c85deda0dd8697c6e056443713674a6390"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "repetition": 2,
+      "plan": ".traceh\\c-plans-validate\\pyvista__pyvista-4315-r2\\run-plan.json",
+      "sha256": "4eb809a88eb87eecf5b26a6fb214f774e569d55d28975b3476951f8e68c86c8f"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "repetition": 1,
+      "plan": ".traceh\\c-plans-validate\\marshmallow-code__marshmallow-1343-r1\\run-plan.json",
+      "sha256": "a4d4b1242c09332f3f81b1e716c74c29b75445ef6629ea8ddde714293113bec3"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "repetition": 2,
+      "plan": ".traceh\\c-plans-validate\\marshmallow-code__marshmallow-1343-r2\\run-plan.json",
+      "sha256": "abf397f69bc22ac9498d08f52a879853343e05361b13966875304dab921a1fb6"
+    }
+  ],
+  "adoption_gate": "as preregistration-c"
+}

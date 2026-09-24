@@ -1,0 +1,20 @@
+{
+  "scope": "Local read-only Docker CLI calls; shared host with integration suite; no model API, no container mutation; descriptive only",
+  "measurements": [
+    {
+      "operation": "version",
+      "seconds": 0.214,
+      "returncode": 0
+    },
+    {
+      "operation": "info",
+      "seconds": 0.511,
+      "returncode": 0
+    },
+    {
+      "operation": "image",
+      "seconds": 0.212,
+      "returncode": 0
+    }
+  ]
+}

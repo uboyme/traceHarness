@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "platform": "linux/amd64 guest on Windows host",
+  "python": "3.10.18",
+  "base_image": "registry-1.docker.io/library/python@sha256:445b9efb2c047a7ccdb30d293fd6b1aa0f62a55062dc2b69051df91e10848749",
+  "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe",
+  "network": "none",
+  "installed": {
+    "exceptiongroup": "1.2.1",
+    "iniconfig": "2.0.0",
+    "lazy-object-proxy": "1.9.0",
+    "numpy": "1.24.4",
+    "packaging": "24.0",
+    "pip": "23.0.1",
+    "pluggy": "1.5.0",
+    "pytest": "7.4.4",
+    "pytz": "2024.1",
+    "setuptools": "65.5.1",
+    "simplejson": "3.19.3",
+    "tomli": "2.0.1",
+    "typing_extensions": "4.12.2",
+    "wheel": "0.45.1",
+    "wrapt": "1.16.0"
+  }
+}

@@ -1,0 +1,32 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________ test_public_comparison_binary_quota_and_tamper_rejection ___________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6196/test_public_comparison_binary_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000012DBD18C260>
+
+    async def test_public_comparison_binary_quota_and_tamper_rejection(tmp_path, monkeypatch):
+        root, code = await run_pair(tmp_path)
+        assert code == 0
+        # Keep all actual JSON readable while making genuine frozen ZIPs exceed
+        # the document quota. Both the experiment and per-arm evidence are checked.
+        json_limit = max(p.stat().st_size for p in root.rglob("*.json")) + 1
+        archive = root / "artifacts/base-source.zip"
+        assert archive.stat().st_size > json_limit
+        monkeypatch.setattr(inputs, "MAX_DOCUMENT_BYTES", json_limit)
+        report = compare_experiment(root, tmp_path / "offline-recheck")
+>       assert report["complete"], report
+E       AssertionError: {'format': 1, 'run_id': 'cff022e9-1d56-45fe-a8c3-d32019962873', 'benchmark_id': 'retrieval-episodes-development-v1', 'task_type': 'retrieval_episode', ...}
+E       assert False
+
+tests\test_evaluation_artifact_digest.py:37: AssertionError
+---------------------------- Captured stdout call -----------------------------
+{
+  "command": "eval",
+  "run_id": "cff022e9-1d56-45fe-a8c3-d32019962873",
+  "complete": true,
+  "comparison": "inconclusive",
+  "report_json": "C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6196\\test_public_comparison_binary_0\\experiment\\comparison\\report.json"
+}
+=========================== short test summary info ===========================
+FAILED tests/test_evaluation_artifact_digest.py::test_public_comparison_binary_quota_and_tamper_rejection

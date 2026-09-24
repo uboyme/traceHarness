@@ -1,0 +1,193 @@
+{
+  "collected_original": 4379,
+  "passed": 4345,
+  "failed": 26,
+  "skipped": 8,
+  "errors": 0,
+  "exit_code": 1,
+  "stable_source": false,
+  "note": "Production delivery reserve changed during run; fixtures collected before fixes; final fresh full required",
+  "failures": [
+    {
+      "test": "test_real_candidate_validation_runs_every_l2_gate",
+      "errors": []
+    },
+    {
+      "test": "test_concurrent_writable_product_collects_then_integrates",
+      "errors": [
+        "E       AssertionError: session_id=ea1a7edc-d797-4a36-8ded-35efe5de1cc9 workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_concurrent_writable_produ0\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id 'ea1a7edc-d797-4a36-8ded-35efe5de1cc9' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_concurrent_writable_produ0\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_concurrent_writable_produ0\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-c73a60cd88e271277add340724f8d28a2ffd0f347b22983ae1316f60b636df5d",
+        "E           task if confirmed: product-task-281b1e2413a051c5f67f18344c185d3c30b7cbefc07a302294ea4cb88f013b5e",
+        "E           requirement: please add the accepted file"
+      ]
+    },
+    {
+      "test": "test_review_refreshes_actual_extra_files_and_replays[diagnostic.py]",
+      "errors": [
+        "E       AssertionError: session_id=3a2c62e5-ba0a-4893-9a5c-f461b698dae2 workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e0\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id '3a2c62e5-ba0a-4893-9a5c-f461b698dae2' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e0\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e0\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-fb9d61c8269d0f265113ce21ebe786873648b8799017e6c6611221e4890d98f0",
+        "E           task if confirmed: product-task-e46f656a19b967a0e374d5fd799601fd0d4a792d91b954021a95165817befded",
+        "E           requirement: please add the accepted file"
+      ]
+    },
+    {
+      "test": "test_review_refreshes_actual_extra_files_and_replays[notes.txt]",
+      "errors": [
+        "E       AssertionError: session_id=3202daa1-bc4b-4c11-84d3-8c74adafed98 workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e1\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id '3202daa1-bc4b-4c11-84d3-8c74adafed98' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e1\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_refreshes_actual_e1\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-7ef93222dfc9b55d65c4ba5694e01001bc75970eea30553a381cd26f7bac5383",
+        "E           task if confirmed: product-task-ae900991fd15924598678fb3410da5d4f970dd38510cc42457c606dda88dbfc5",
+        "E           requirement: please add the accepted file"
+      ]
+    },
+    {
+      "test": "test_search_restart_then_expand_on_real_runtime_and_sqlite",
+      "errors": [
+        "E           assert 'output_ref' not in {'content': '{\"case_sensitive\":true,\"digest\":\"7a3c707d6b25bef3339deb2fd69cb203587bb6f4eb74dd8562b431b6c047796c\",\"effec...:\"END:\",\"total_chars\":5309}', 'data': {}, 'effect_id': '47d357d8-0f71-4191-bc70-bd778d9f070a', 'error_type': None, ...}",
+        "E            +  where {'content': '{\"case_sensitive\":true,\"digest\":\"7a3c707d6b25bef3339deb2fd69cb203587bb6f4eb74dd8562b431b6c047796c\",\"effec...:\"END:\",\"total_chars\":5309}', 'data': {}, 'effect_id': '47d357d8-0f71-4191-bc70-bd778d9f070a', 'error_type': None, ...} = EventEnvelope(event_id=UUID('d2b6ebb8-235f-43fa-b050-d24b04c12b8d'), stream_id='session:5e072212-c003-41b3-91f0-d8b6b9...lation_id=None, actor_id=None, composition_revision='45868d4abda731568cd397e9872240776ef2da6166f906d4f7510d5c1ca0b8ca').data",
+        "E           assert False",
+        "E            +  where False = all(<generator object test_real_shell_survives_restart_and_pages_without_reexecution.<locals>.<genexpr> at 0x0000024D00600A00>)",
+        "E           assert False",
+        "E            +  where False = all(<generator object test_real_shell_survives_restart_and_pages_without_reexecution.<locals>.<genexpr> at 0x0000024D00193100>)"
+      ]
+    },
+    {
+      "test": "test_structured_product_reaches_approval_and_replays[delegate]",
+      "errors": [
+        "E       AssertionError: session_id=c0320085-cc38-4aa9-90a5-f4481b36b169 workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_structured_product_reache0\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id 'c0320085-cc38-4aa9-90a5-f4481b36b169' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_structured_product_reache0\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_structured_product_reache0\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-9fb4147ead2f9eb06eeb2279fca6bc1fd6c2d584a0c3f136d8c4aa30682e2c26",
+        "E           task if confirmed: product-task-b7376a2e200f94ef57477bded7c466ac0b9fb9a79e5b1c5b5015ace2e0a55a88",
+        "E           requirement: please add the accepted file"
+      ]
+    },
+    {
+      "test": "test_fold_skips_disabled_protected_or_unhelpful_sources[inline]",
+      "errors": [
+        "E           assert not True",
+        "E            +  where True = any(<generator object test_fold_skips_disabled_protected_or_unhelpful_sources.<locals>.<genexpr> at 0x0000024D00A10C70>)",
+        "E           KeyError: 'output_ref'",
+        "E           KeyError: 'output_ref'"
+      ]
+    },
+    {
+      "test": "test_fold_forgery_rejected_by_shared_source_checker[kept]",
+      "errors": [
+        "E               KeyError: 'kept_recent_turns'",
+        "E       AssertionError: session_id=df7f866e-4c84-4ca2-abb7-2d6d1d7cdc6c workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_0\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id 'df7f866e-4c84-4ca2-abb7-2d6d1d7cdc6c' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_0\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_0\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-4823b26726df3da153dff9e7d27fc95a63752c678b68c1ece9b2faf995cdbe7a",
+        "E           task if confirmed: product-task-863f996fae22aba0a6cd0d328b4fd40ebdf7e9f61f1c096029a5a637c5f17c1c"
+      ]
+    },
+    {
+      "test": "test_review_reconciles_actual_calls_without_inventing_tests[True-0]",
+      "errors": [
+        "E       AssertionError: session_id=563b805f-6fd8-44d3-b6d3-b560c506b17a workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_4\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id '563b805f-6fd8-44d3-b6d3-b560c506b17a' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_4\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_4\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-12293a41c965748456500eb90db20832384c3efd8e2846cdd8ce390c168d6494",
+        "E           task if confirmed: product-task-f1c8d020399d04ea3df0628876c1f715fc3070470d3449983a9ef7400a063466",
+        "E           requirement: please add the accepted file"
+      ]
+    },
+    {
+      "test": "test_review_reconciles_actual_calls_without_inventing_tests[True-1]",
+      "errors": [
+        "E       AssertionError: session_id=4608e467-7879-4b6b-9eb6-ec35146c000b workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_5\\chat-workspace provider=scripted model=chat-model",
+        "E         resume later (PowerShell):",
+        "E           traceh chat --session-id '4608e467-7879-4b6b-9eb6-ec35146c000b' --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_5\\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'",
+        "E           traceh sessions --data-dir 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6161\\test_review_reconciles_actual_5\\chat-data'",
+        "E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.",
+        "E         Type /help for commands, /exit to leave.",
+        "E         assistant> host action proposed",
+        "E         [reason=completed steps=2 tokens=30 verification=None]",
+        "E         task proposal (not started):",
+        "E           proposal: proposal-92fc211bd6088d786e6b53726668d3f5819a6df8d75d787b566c62281d04ddd6",
+        "E           task if confirmed: product-task-3a8ad0f1ed7760fe7cc8e5c86d799126f491ad99826e207526c2a1537d7f5b50",
+        "E           requirement: please add the accepted file"
+      ]
+    }
+  ],
+  "failed_nodeids": [
+    "tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers",
+    "tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate",
+    "tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates",
+    "tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[diagnostic.py]",
+    "tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[notes.txt]",
+    "tests/test_product_budget_negotiation.py::test_product_returns_partial_budget_report_without_grant_or_followup",
+    "tests/test_product_f3_e2e.py::test_multi_product_mainline_converges_with_the_production_sqlite_store",
+    "tests/test_product_f3_e2e.py::test_approval_screen_uses_durable_evidence_and_separate_request_caps",
+    "tests/test_retained_tool_output.py::test_search_restart_then_expand_on_real_runtime_and_sqlite",
+    "tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[False]",
+    "tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[True]",
+    "tests/test_structured_product.py::test_structured_product_reaches_approval_and_replays[delegate]",
+    "tests/test_tool_result_folding.py::test_fold_skips_disabled_protected_or_unhelpful_sources[inline]",
+    "tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[False]",
+    "tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True]",
+    "tests/test_tool_result_folding.py::test_fold_forgery_rejected_by_shared_source_checker[kept]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-None]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-0]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[False-1]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-None]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-0]",
+    "tests/test_verification_review.py::test_review_reconciles_actual_calls_without_inventing_tests[True-1]",
+    "tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]",
+    "tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]",
+    "tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]",
+    "tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]"
+  ],
+  "failure_groups": {
+    "test_background_optimization": "Source edited while this full run was active; frozen-input drift; isolated 13-test file subsequently passed.",
+    "test_candidate_validation": "Old clean L2 fixture lacked tiktoken; cancellation fixture could await provider entry after setup failed; stuck owned nested child terminated to expose failure. New fixture supplies dependency and observes task completion. Fresh real L2 still required.",
+    "test_concurrent_writable_product": "Old single-child, catalog-count, and integration receipt assertions.",
+    "test_delivery_review/test_structured_product/test_verification_review": "Shared StructuredProvider consumed obsolete investigation envelope prefix/version; current fixture uses canonical format 3 and assignment identity.",
+    "test_product_budget_negotiation": "Synchronous child lifetime 120s exceeded tool hold 55s before dispatch; explicit fixture now 30s and children list.",
+    "test_product_f3_e2e": "30s outer watchdog cancelled valid verification; separate assertion ignored role-specific output caps.",
+    "test_retained_tool_output/test_tool_result_folding": "Assertions retained obsolete reference eligibility, fold placeholder, and boundary fields.",
+    "test_writable_completion": "Current integration evidence is a list; four assertions indexed it as a dict."
+  }
+}

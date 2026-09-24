@@ -1,0 +1,7 @@
+................................................................         [100%]
+============================= slowest 5 durations =============================
+13.96s setup    tests/test_evaluation_comparison_evidence.py::test_actual_run_drift_is_not_comparable[source]
+12.38s call     tests/test_evaluation_artifact_digest.py::test_public_comparison_binary_quota_and_tamper_rejection
+7.43s call     tests/test_episode_review_contract.py::test_changed_durable_evidence_is_rejected_before_export
+7.10s call     tests/test_episode_review_contract.py::test_review_cli_is_offline_even_with_model_environment
+2.17s call     tests/test_episode_review_contract.py::test_retrieval_plan_runs_through_cli_and_assess_remains_offline

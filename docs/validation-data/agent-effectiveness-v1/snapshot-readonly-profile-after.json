@@ -1,0 +1,119 @@
+{
+  "scope": "One read-only snapshot of quarantined ae02 workspace under its original explicit policy; shared host; no API or source changes; not the already released ae03 workspace",
+  "elapsed_seconds": 0.25634840002749115,
+  "files": 375,
+  "directories": 73,
+  "total_bytes": 3203799,
+  "top_self_time": [
+    {
+      "function": "<built-in method nt.stat>",
+      "file": "~",
+      "line": 0,
+      "calls": 835,
+      "self_seconds": 0.054667900000000005,
+      "cumulative_seconds": 0.0552655
+    },
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "calls": 375,
+      "self_seconds": 0.041850500000000006,
+      "cumulative_seconds": 0.042138300000000004
+    },
+    {
+      "function": "<method 'read' of '_io.BufferedReader' objects>",
+      "file": "~",
+      "line": 0,
+      "calls": 375,
+      "self_seconds": 0.0168342,
+      "cumulative_seconds": 0.0168342
+    },
+    {
+      "function": "visit",
+      "file": "workspace.py",
+      "line": 68,
+      "calls": 74,
+      "self_seconds": 0.013745400000000001,
+      "cumulative_seconds": 0.2556972
+    },
+    {
+      "function": "__init__",
+      "file": "pathlib.py",
+      "line": 358,
+      "calls": 8428,
+      "self_seconds": 0.0081734,
+      "cumulative_seconds": 0.0128173
+    },
+    {
+      "function": "_parse_path",
+      "file": "pathlib.py",
+      "line": 387,
+      "calls": 1796,
+      "self_seconds": 0.007058300000000001,
+      "cumulative_seconds": 0.0147478
+    },
+    {
+      "function": "__getitem__",
+      "file": "pathlib.py",
+      "line": 277,
+      "calls": 7081,
+      "self_seconds": 0.0061777,
+      "cumulative_seconds": 0.038910600000000004
+    },
+    {
+      "function": "splitroot",
+      "file": "<frozen ntpath>",
+      "line": 179,
+      "calls": 7492,
+      "self_seconds": 0.005698300000000001,
+      "cumulative_seconds": 0.008595400000000001
+    },
+    {
+      "function": "with_segments",
+      "file": "pathlib.py",
+      "line": 380,
+      "calls": 7979,
+      "self_seconds": 0.0048295000000000005,
+      "cumulative_seconds": 0.023111600000000003
+    },
+    {
+      "function": "<built-in method builtins.len>",
+      "file": "~",
+      "line": 0,
+      "calls": 32711,
+      "self_seconds": 0.004743000000000001,
+      "cumulative_seconds": 0.0067751
+    },
+    {
+      "function": "relative_to",
+      "file": "pathlib.py",
+      "line": 663,
+      "calls": 449,
+      "self_seconds": 0.0043945,
+      "cumulative_seconds": 0.0882724
+    },
+    {
+      "function": "<built-in method builtins.isinstance>",
+      "file": "~",
+      "line": 0,
+      "calls": 38614,
+      "self_seconds": 0.004388700000000001,
+      "cumulative_seconds": 0.004388700000000001
+    }
+  ],
+  "read_size_comparison": [
+    {
+      "mode": "file_size_plus_one",
+      "seconds": 0.05613610002910718,
+      "files": 375,
+      "all_bytes_identical": true
+    },
+    {
+      "mode": "remaining_budget_plus_one",
+      "seconds": 10.692248800012749,
+      "files": 375,
+      "all_bytes_identical": true
+    }
+  ]
+}

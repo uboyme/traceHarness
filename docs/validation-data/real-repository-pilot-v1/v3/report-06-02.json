@@ -1,0 +1,512 @@
+{
+  "assessment_complete": true,
+  "benchmark_id": "traceh-real-repository-dev-v1",
+  "complete": true,
+  "errors": [],
+  "frozen_digest": "1d9ed0b5f40fa28d65264de6fc9e265de36ed3339e2455dd0fe91836aa630d15",
+  "protocol_version": 3,
+  "run_id": "fae42e57-1aad-4a4d-8cf8-1c4e0645fbed",
+  "task_report": {
+    "approval_policy": "programmatic-immediate",
+    "attempts": [
+      {
+        "attempt_id": "412663b22fa652c62c892ad25951541e5042cd3a0adc0a1908dce62919299fc4",
+        "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+        "directory": "attempts/001",
+        "error_code": null,
+        "evidence": {
+          "budget": {
+            "accounts": 3,
+            "accounts_closed": 3,
+            "charged_steps": 18,
+            "charged_tool_calls": 40,
+            "child_reservations": 2,
+            "child_reservations_terminal": 2,
+            "converged": true,
+            "settled_tokens": 368345,
+            "usage_reservations": 20,
+            "usage_reservations_terminal": 20
+          },
+          "collaboration": {
+            "available_reports": 1,
+            "identical_work_extra_deliveries": 0,
+            "identical_work_groups": 0,
+            "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+            "observed_peak_active_turns": 2,
+            "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+            "reports_dispatched_to_parent": 0
+          },
+          "definition_hash": "e41e7a0c367eeca1c38d8914c40c843c101f69df19b073ab428ae938969bcedb",
+          "execution": {
+            "cumulative_work_duration_ms": 481229,
+            "final_model_results": [
+              {
+                "agent_id": "wf-agent-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251",
+                "result": "succeeded",
+                "session_id": "wf-session-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251"
+              },
+              {
+                "agent_id": "7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57",
+                "result": "cancelled",
+                "session_id": "agent-tool-investigation-session-c32b3980-de23-5da4-b430-4c297d0f8c2f"
+              }
+            ],
+            "model_attempts": 18,
+            "provider_active_milliseconds": null,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "sessions": [
+              {
+                "agent_id": "wf-agent-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251",
+                "final_model_result": "succeeded",
+                "model_attempts": 17,
+                "provider_active_milliseconds": 424461,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "wf-session-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251",
+                "steps": 17,
+                "tokens": {
+                  "input_tokens": 313511,
+                  "output_tokens": 34740,
+                  "quality": "exact",
+                  "total_tokens": 348251
+                },
+                "tool_calls": 40,
+                "turns": 1,
+                "work_duration_ms": 480911
+              },
+              {
+                "agent_id": "7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57",
+                "final_model_result": "cancelled",
+                "model_attempts": 1,
+                "provider_active_milliseconds": null,
+                "provider_failure_categories": [],
+                "retry_wait_milliseconds": 0,
+                "session_id": "agent-tool-investigation-session-c32b3980-de23-5da4-b430-4c297d0f8c2f",
+                "steps": 1,
+                "tokens": null,
+                "tool_calls": 0,
+                "turns": 1,
+                "work_duration_ms": 318
+              }
+            ],
+            "steps": 18,
+            "tokens": null,
+            "tool_calls": 40,
+            "turns": 2
+          },
+          "failure_code": "workflow-node-failed",
+          "investigations": [
+            {
+              "agent_id": "7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57",
+              "assignment_id": "bind-path-scope-audit",
+              "child_visible_source_outputs": [],
+              "goal": "Determine the exact scope of the reported regression by auditing every `_bind_to_schema(field_name, schema)` implementation and call site in the marshmallow source, answering: which implementations dereference `schema.opts` (or otherwise assume the bind argument is a Schema), which of those can receive a container Field instead of a Schema, and whether `Field.root` is guaranteed to return the owning Schema at the time the inner field is bound. The purpose is to let the main agent make one minimal, correctly scoped source change.",
+              "input_digest": "ed5c44e350bddd77d0d4f29ff8416ce1d3725353a424c1daf03fa9eb74b487a6",
+              "interpretation": "Visibility and completion only; relevance and correctness require assessment.",
+              "message_id": "agent-tool-investigation-message-523c58ca-ae66-5133-a2ee-40079f2ae68e",
+              "parent_report_dispatches": [],
+              "report_available": true,
+              "report_refs": [
+                "agent-inbox:7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57#1",
+                "agent-delivery:7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57#2"
+              ],
+              "report_status": "cancelled",
+              "revision": "3d372d0c492f2acfa32fee685a06d1a34148747d",
+              "role": "investigator",
+              "session_id": "agent-tool-investigation-session-c32b3980-de23-5da4-b430-4c297d0f8c2f",
+              "source_id": "benchmark-source",
+              "work_digest": "d94257adcfd8b7b5708b2111e47915470e5c7967b340b7b93b0661abbb3553d3"
+            }
+          ],
+          "mode_source": "confirmed_proposal",
+          "new_revision": null,
+          "preflight_digest": "6691d1e571bcfac9fc452cfdfd64d17944b73eec883adeeef025d675e53bb001",
+          "previous_revision": null,
+          "product_status": "failed",
+          "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+          "promotion_id": null,
+          "reason_code": null,
+          "requirement_digest": "09de6645240f33cd99f450c77cbe9c4238b2f29c44ca6212ea2fa9fa5d798ec6",
+          "resolved_mode": "multi",
+          "review_id": null,
+          "review_passed": null,
+          "source_base_revision": "3d372d0c492f2acfa32fee685a06d1a34148747d",
+          "target_ref": "refs/heads/main",
+          "target_revision": "3d372d0c492f2acfa32fee685a06d1a34148747d",
+          "task_id": "product-task-2b37f9453d12e6b28b0e92e129d1cdbe5839232325cef6fca64ef5d4d8a39715",
+          "unattributed": {
+            "sessions": [],
+            "tokens": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "quality": "exact",
+              "total_tokens": 0
+            }
+          },
+          "unavailable": [
+            "execution.investigator.7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57.tokens",
+            "execution.investigator.7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57.provider_active_milliseconds"
+          ],
+          "verifier_definition_digest": null,
+          "workflow_status": "failed",
+          "workspaces": {
+            "converged": true,
+            "live": 0,
+            "quarantined": 0,
+            "released": 3,
+            "workspaces": 3
+          }
+        },
+        "measured": true,
+        "repetition": 1,
+        "requested_mode": "multi",
+        "retrieval": null,
+        "success": false,
+        "timing": {
+          "active_ms": 490156,
+          "approval_policy": "programmatic-immediate",
+          "approval_wait_ms": 0,
+          "wall_ms": 490156
+        }
+      }
+    ],
+    "attempts_measured": 1,
+    "attempts_run": 1,
+    "attempts_with_unavailable_metrics": 1,
+    "benchmark_id": "traceh-real-repository-dev-v1",
+    "complete": true,
+    "model_id": "deepseek-v4.1-flash",
+    "notes": [
+      "quality arms follow explicit single/multi modes; execution cost includes the owned tree.",
+      "approval policy is programmatic-immediate: the benchmark host approves its own one-shot local bare target as soon as the Approval barrier is reached.",
+      "approval wait is measured separately and excluded from active elapsed; wall elapsed includes it.",
+      "aggregates are descriptive only. No statistical significance is claimed.",
+      "success requires a ProductTask terminal, a Workflow terminal, a passed Review and a Promotion receipt whose new revision is what the target ref actually points at.",
+      "the frozen verifier proves the declared checks passed on the reviewed bytes. It does not prove a candidate left those checks as strong as it found them."
+    ],
+    "profile_id": "real-repository-pilot-v3",
+    "protocol_version": 3,
+    "provider_id": "openai-compatible",
+    "quality_arms": [
+      {
+        "active_ms": {
+          "maximum": 490156,
+          "mean": 490156.0,
+          "minimum": 490156,
+          "observations": 1,
+          "total": 490156,
+          "unavailable": 0,
+          "values": [
+            490156
+          ]
+        },
+        "approval_wait_ms": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "cumulative_work_duration_ms": {
+          "maximum": 481229,
+          "mean": 481229.0,
+          "minimum": 481229,
+          "observations": 1,
+          "total": 481229,
+          "unavailable": 0,
+          "values": [
+            481229
+          ]
+        },
+        "execution_tokens": {
+          "maximum": null,
+          "mean": null,
+          "minimum": null,
+          "observations": 0,
+          "total": 0,
+          "unavailable": 1,
+          "values": []
+        },
+        "final_model_results": {
+          "counts": {
+            "cancelled": 1,
+            "succeeded": 1
+          },
+          "unavailable": 0
+        },
+        "ledger_settled_tokens": {
+          "maximum": 368345,
+          "mean": 368345.0,
+          "minimum": 368345,
+          "observations": 1,
+          "total": 368345,
+          "unavailable": 0,
+          "values": [
+            368345
+          ]
+        },
+        "model_attempts": {
+          "maximum": 18,
+          "mean": 18.0,
+          "minimum": 18,
+          "observations": 1,
+          "total": 18,
+          "unavailable": 0,
+          "values": [
+            18
+          ]
+        },
+        "observations": 1,
+        "provider_active_milliseconds": {
+          "maximum": null,
+          "mean": null,
+          "minimum": null,
+          "observations": 0,
+          "total": 0,
+          "unavailable": 1,
+          "values": []
+        },
+        "provider_failure_categories": [],
+        "requested_modes": {
+          "multi": 1
+        },
+        "resolved_mode": "multi",
+        "retry_wait_milliseconds": {
+          "maximum": 0,
+          "mean": 0.0,
+          "minimum": 0,
+          "observations": 1,
+          "total": 0,
+          "unavailable": 0,
+          "values": [
+            0
+          ]
+        },
+        "single_observation": true,
+        "steps": {
+          "maximum": 18,
+          "mean": 18.0,
+          "minimum": 18,
+          "observations": 1,
+          "total": 18,
+          "unavailable": 0,
+          "values": [
+            18
+          ]
+        },
+        "successes": 0,
+        "tool_calls": {
+          "maximum": 40,
+          "mean": 40.0,
+          "minimum": 40,
+          "observations": 1,
+          "total": 40,
+          "unavailable": 0,
+          "values": [
+            40
+          ]
+        },
+        "wall_ms": {
+          "maximum": 490156,
+          "mean": 490156.0,
+          "minimum": 490156,
+          "observations": 1,
+          "total": 490156,
+          "unavailable": 0,
+          "values": [
+            490156
+          ]
+        }
+      }
+    ],
+    "retry_policy": {
+      "base_delay_seconds": 0.0,
+      "jitter_ratio": 0.0,
+      "max_attempts": 1,
+      "max_delay_seconds": 0.0,
+      "max_elapsed_seconds": 0.0,
+      "retry_after_cap_seconds": 0.0,
+      "retryable_categories": [
+        "disconnected",
+        "dns",
+        "rate_limited",
+        "server_transient",
+        "timeout",
+        "tls_eof"
+      ]
+    },
+    "tasks": [
+      {
+        "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": "b5685245545758b09262a2e1827e930026e182ce133ee0dee137475c8787db23",
+        "requirement_digest": "09de6645240f33cd99f450c77cbe9c4238b2f29c44ca6212ea2fa9fa5d798ec6",
+        "source_base_revision": "3d372d0c492f2acfa32fee685a06d1a34148747d",
+        "unproven_fields": [
+          "verifier_definition_digest"
+        ],
+        "verifier_definition_digest": "df18455ce3a941de39f96847a1beec73da00ab6974da7965cfe67025cb99fc49"
+      },
+      {
+        "benchmark_task_id": "pydicom__pydicom-1694",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "2ad59878987152f9541f34d2f9890ab4e44c9a5bb88a234cea88e5554d28cdf7"
+      },
+      {
+        "benchmark_task_id": "pylint-dev__astroid-1196",
+        "coherent": true,
+        "divergent_fields": [],
+        "profile_digest": null,
+        "requirement_digest": null,
+        "source_base_revision": null,
+        "unproven_fields": [],
+        "verifier_definition_digest": "1f428cfc6ff98ba1c931060fefe520c3f367ae13f97a6aa14e913929579436be"
+      }
+    ]
+  },
+  "task_type": "product_task",
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "convergence": "converged",
+      "errors": [],
+      "evidence": [
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "b6ddfc31b03b42fcd47df069931a839ae08304c1f8106744251a3d3d0fc4e091",
+          "stream_id": "agent-delivery:7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 2,
+          "sha256": "dea9f2a37a7d42416dea21211b1c95b476f7110076bc089b4a20434e72ef066f",
+          "stream_id": "agent-delivery:wf-agent-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "fc19a3265f5ed1da9b1df712189fb67a721169b1cf68fc0e3dc4839384b7c318",
+          "stream_id": "agent-inbox:7f7adb724114c99f77659066cd32940a578a80082592c21c558bdc7186ea3f57"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "475871fe10a4ad7df1c10fc18c10dba580784376c89f20924b5720b8430e82d5",
+          "stream_id": "agent-inbox:wf-agent-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "011d06fe31512cb918c83f290ad97354c6fa18327a036355fdbe5720e3145c0e",
+          "stream_id": "agents:directory"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 103,
+          "sha256": "c59561982654d60c1f5330765383d40bd23e739a91665d130a7a344ac8ee59da",
+          "stream_id": "budgets:ledger"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 120,
+          "sha256": "92a2fd22c2cb17f0c1399a7fc69da52b0f12ac86c90acdffe11d7a6769722bee",
+          "stream_id": "effects:wf-session-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 3,
+          "sha256": "2a8e36d5a41de8746291bd2bc6ebee3ebc53be967ccb3c5d6dd277836f65a042",
+          "stream_id": "product-task:product-task-2b37f9453d12e6b28b0e92e129d1cdbe5839232325cef6fca64ef5d4d8a39715"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 29,
+          "sha256": "bcabb8559279c12b27df65201722a06c51c4d9b763e4196d47340a371437ee22",
+          "stream_id": "session:881e34d5-9b5b-49dd-a308-285827745622"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 13,
+          "sha256": "4d15946e93721f40a074339720004dbe39b2a4daebef1514b51ab88e54f24e55",
+          "stream_id": "session:agent-tool-investigation-session-c32b3980-de23-5da4-b430-4c297d0f8c2f"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 1,
+          "sha256": "0d53fe0f1cf85794091e3010f330d8d31a73fc1777990310c2f2cf90fad72dce",
+          "stream_id": "session:product-owner-session-product-task-2b37f9453d12e6b28b0e92e129d1cdbe5839232325cef6fca64ef5d4d8a39715"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 282,
+          "sha256": "70c553d2b0a7c88708e6dc3ccb60467c51609af3884b3d8377966bea80787e04",
+          "stream_id": "session:wf-session-ea27760ff87d8938129793bbf4244bce4cc36234f397f691e7fffc94e455c251"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 4,
+          "sha256": "0df959c73afe1c1fbb0df7f362e40e6e7597163e4aa2bb2ddc7063177e531000",
+          "stream_id": "workflow:product-task-2b37f9453d12e6b28b0e92e129d1cdbe5839232325cef6fca64ef5d4d8a39715"
+        },
+        {
+          "file": "attempts/001/ev/events.sqlite3",
+          "first_seq": 1,
+          "last_seq": 9,
+          "sha256": "c2a0db05233763a840100060288cafd15e44dc06d0f3d5f88d213d3e404d8d20",
+          "stream_id": "workspaces:catalog"
+        }
+      ],
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "identity": {
+        "case_id": "marshmallow-code__marshmallow-1359",
+        "group_id": "marshmallow-code--marshmallow",
+        "material_digest": "eb2d28b3a2f234e68adec7d644e084f2f01764b602e4cb667eee58e409527751",
+        "material_seed": null,
+        "replicate": 1,
+        "requested_mode": "multi",
+        "trial_id": "412663b22fa652c62c892ad25951541e5042cd3a0adc0a1908dce62919299fc4",
+        "variant_id": "multi-arm"
+      },
+      "invariants": "passed",
+      "measured": true,
+      "usage": {
+        "execution": null,
+        "unattributed": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "quality": "exact"
+        }
+      }
+    }
+  ]
+}

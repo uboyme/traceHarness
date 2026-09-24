@@ -1,0 +1,12 @@
+{
+  "binding": {
+    "run_id": "4745d47d-4ed4-4c58-8d62-10df29b837ac",
+    "frozen_digest": "f7bb83a71a7bc70c2f78be944c9e77e48793453d7cbb9bdb5d59494544dbd787",
+    "evidence_digest": "6119f0789c9bd580cb5f6212af63a29c698cbf29ed09ef361a4b8c5099ba3b19",
+    "report_digest": "727438a2d3eba2a86494bf7dd63e0e912c1e2b13af9b5c135061b151d528677e"
+  },
+  "attempts": 1,
+  "snapshots": 22,
+  "original_databases_unchanged": true,
+  "target_and_evidence_rederived": true
+}

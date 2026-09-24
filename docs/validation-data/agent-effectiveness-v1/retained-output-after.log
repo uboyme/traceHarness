@@ -1,0 +1,7 @@
+............................................                             [100%]
+============================= slowest 5 durations =============================
+9.84s call     tests/test_retained_tool_output.py::test_output_directory_keeps_its_observed_page_boundary_and_session_scope
+8.27s call     tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[True]
+7.71s call     tests/test_retained_tool_output.py::test_real_shell_survives_restart_and_pages_without_reexecution[False]
+5.72s call     tests/test_retained_tool_output.py::test_search_restart_then_expand_on_real_runtime_and_sqlite
+3.60s call     tests/test_retained_tool_output.py::test_cross_session_and_forged_digest_are_denied_by_real_tool_path

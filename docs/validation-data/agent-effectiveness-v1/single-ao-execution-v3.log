@@ -1,0 +1,1 @@
+{"reason": "max-rounds", "action": "stop", "adoption_authorized": false, "cost": {"analysis": {"attempts": 1, "estimated_attempts": 0, "input_tokens": 1872, "known_subtotal": {"input_tokens": 1872, "output_tokens": 181, "total_tokens": 2053}, "output_tokens": 181, "total_tokens": 2053, "unknown_attempts": 0}, "review_calls": 0, "review_tokens": 0}}

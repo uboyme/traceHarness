@@ -1,0 +1,11 @@
+{
+  "attempts_measured": 1,
+  "attempts_run": 1,
+  "benchmark_id": "traceh-real-repository-dev-v1",
+  "command": "eval",
+  "complete": true,
+  "report_json": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aec1a\\report.json",
+  "report_markdown": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aec1a\\report.md",
+  "run_id": "363af735-2b76-4a8a-8259-2deae13c6626",
+  "task_type": "product_task"
+}

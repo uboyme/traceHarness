@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": "pydicom__pydicom-1694",
+    "arm": "a",
+    "input": "C:/Users/caojie/tae-c2aiv3",
+    "output": "C:/Users/caojie/tae-c2av3",
+    "first_arm": "b"
+  },
+  {
+    "case_id": "pydicom__pydicom-1694",
+    "arm": "b",
+    "input": "C:/Users/caojie/tae-c2biv3",
+    "output": "C:/Users/caojie/tae-c2bv3",
+    "first_arm": "b"
+  }
+]

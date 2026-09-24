@@ -1,0 +1,34 @@
+{
+  "experiment": "C2 - same dev evidence and validation design, detection quotes host-recorded tool-failure causes (ADR-0085)",
+  "frozen_at_utc": "2026-09-23T18:58:04.920898+00:00",
+  "source_digest": "bbe085ddecc19bb2bbb957ce3b0a4f0bba6af77e583ee9a4a1887fa0f7076f74",
+  "dev_evidence": "the same six dev runs C:/Users/caojie/ttc-dev/p0{1,2,3}/arms/0{1,2}/run (produced on source d16fcdde; detection reads their events)",
+  "background": {
+    "settings": ".traceh/c-bg2/background.json",
+    "new_period": true,
+    "selectors": [
+      [
+        "product/execution.py",
+        "CODER_GUIDANCE"
+      ]
+    ],
+    "min_sources": 2,
+    "max_suggestions": 2,
+    "settings_sha256": "282d8140947e893dd538c85803640b952d065a33637b755cf21fab9f76a437bf",
+    "period_id": "b91e94e3-ee9f-4b90-9183-b2e538760b54"
+  },
+  "validation": "as preregistration-c: astroid-1978, pyvista-4315, marshmallow-1343 x 2 repetitions, baseline vs candidate, first arm alternating",
+  "adoption_gate": "as preregistration-c",
+  "selection": "a person selects at most one suggestion or rejects all",
+  "isolation": "analysis sees structural detections of dev runs plus bounded host-recorded failure lines from those dev runs; no validation case, hidden test or scorer",
+  "network": "direct",
+  "amendments": [
+    {
+      "at_utc": "2026-09-24T01:21:43.250216+00:00",
+      "event": "pairs pyvista-4315 r1, marshmallow-1343 r1 and r2 carried no evidence: provider-timeout (one request, 120s without a response) before or instead of the paired arm, or the batch stopped",
+      "decision": "repeat exactly these frozen plans once, same source bbe085dd, into C:/Users/caojie/ttc2b-val04 and ttc2b-val05; the repeat counts whatever its outcome; a pair that again ends in a provider failure is reported as such and not repeated; the original attempts stay reported",
+      "authorized_by": "user, 2026-09-24",
+      "network": "direct: paired plans, private workers with *_PROXY cleared and ProxyHandler({})"
+    }
+  ]
+}

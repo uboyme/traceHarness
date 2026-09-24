@@ -1,0 +1,21 @@
+{
+  "checked_at_utc": "2026-09-21T21:26:58.655052+00:00",
+  "original_evaluator_verify_inputs_passed": [
+    ".traceh\\aei\\v1\\01",
+    ".traceh\\aei\\v1\\02",
+    ".traceh\\aei\\v1\\03",
+    ".traceh\\aei\\v1\\04",
+    ".traceh\\aei\\v1\\05",
+    ".traceh\\aei\\v1\\06",
+    ".traceh\\aei\\v1\\07",
+    ".traceh\\aei\\v1\\08",
+    ".traceh\\aei\\v1\\09",
+    ".traceh\\aei\\c1a",
+    ".traceh\\aei\\c1b",
+    ".traceh\\aei\\c2a",
+    ".traceh\\aei\\c2b",
+    ".traceh\\aei\\c3a",
+    ".traceh\\aei\\c3b"
+  ],
+  "note": "An accidental broad compile created Python bytecode only in acquisition trees. Cleanup was blocked by approval policy and not bypassed. These previously copied frozen experiment inputs remain valid and are the only trial inputs."
+}

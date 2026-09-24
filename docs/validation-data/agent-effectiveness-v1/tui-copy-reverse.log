@@ -1,0 +1,25 @@
+..........F...F.....                                                     [100%]
+================================== FAILURES ===================================
+____ test_governance_right_click_copy_and_empty_selection_do_not_exit[10] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6194/test_governance_right_click_co10')
+mounted_screens = <Queue at 0x15d36411010 maxsize=0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000015D36413E60>
+
+>   ???
+E   AssertionError
+
+<reverse-copy-readiness>:38: AssertionError
+____ test_governance_right_click_copy_and_empty_selection_do_not_exit[14] _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6194/test_governance_right_click_co14')
+mounted_screens = <Queue at 0x15d3697d160 maxsize=0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000015D3697EFC0>
+
+>   ???
+E   AssertionError
+
+<reverse-copy-readiness>:38: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_tui_governance.py::test_governance_right_click_copy_and_empty_selection_do_not_exit[10]
+FAILED tests/test_tui_governance.py::test_governance_right_click_copy_and_empty_selection_do_not_exit[14]

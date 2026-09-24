@@ -1,0 +1,65 @@
+{
+  "case_id": "pylint-dev__astroid-1196",
+  "mode": "single",
+  "model": "qwen3-coder-next",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "api_key_env": "DASHSCOPE_API_KEY",
+  "source_digest_at_preparation": "2b2965f4f5d69bce3174a515335a4aaa50df2be7bd3cc1bc88f72366e02df004",
+  "benchmark_sha256": "c960ae02a11c95cebb3f8b271f129e43980913a6fddc26f2b51d9ea76f901796",
+  "dataset_sha256": "109aabcde2555f2bc84e66dccef9d85885d926486133179d8ba221f701ab6360",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "settings_sha256": "bc3478bbd768f5560e14d4f5e879cd6de0c4c3ae3cc07093965fd0da01eeb238",
+  "source_material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\rr-eval\\material-v3-correct\\material",
+  "output": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ae01",
+  "status": "authorized and frozen before first model call",
+  "source_digest": "2b2965f4f5d69bce3174a515335a4aaa50df2be7bd3cc1bc88f72366e02df004",
+  "frozen_at_utc": "2026-09-21T20:18:18.124968+00:00",
+  "api_budget_cny": 120,
+  "known_new_spend_cny": 0,
+  "next_trial_reserved_cny": 12,
+  "model_timeout_seconds": 120,
+  "model_retry_max_attempts": 1,
+  "eval_timeout_seconds": 900,
+  "network_mode": "direct via process-local NO_PROXY=dashscope.aliyuncs.com",
+  "integration": "Completed full baseline: 16 failures and 17 installation errors match handoff list. Classified known integration failures remain to repair; no new unexpected failure. Not a green final delivery.",
+  "purpose": "Development astroid-1196 single diagnostic; new model/resource condition, not a comparison to C4.",
+  "pricing": {
+    "source": "https://help.aliyun.com/zh/model-studio/model-pricing",
+    "input_cny_per_million_by_upper_bound": [
+      [
+        32768,
+        1
+      ],
+      [
+        131072,
+        1.5
+      ],
+      [
+        262144,
+        2.5
+      ]
+    ],
+    "output_cny_per_million_by_input_upper_bound": [
+      [
+        32768,
+        4
+      ],
+      [
+        131072,
+        6
+      ],
+      [
+        262144,
+        10
+      ]
+    ],
+    "cache_or_free_discount": false
+  },
+  "stop_conditions": [
+    "unknown usage",
+    "provider failure",
+    "identity/replay/invariant violation",
+    "nonconverged cancellation",
+    "frozen resource/budget exhaustion"
+  ]
+}

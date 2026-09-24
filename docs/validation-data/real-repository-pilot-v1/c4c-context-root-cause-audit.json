@@ -1,0 +1,219 @@
+{
+  "run": ".traceh/c4c-run",
+  "database_sha256": "f7ec0f6978d76be5357350393a0deb985b8255806b7512ac85941e9ff2f9da4a",
+  "database_unchanged": true,
+  "session": "session:agent-tool-investigation-session-06db9285-aefe-5f14-9aa6-26aae0cae592",
+  "measurement_seq": 670,
+  "source_seq": 669,
+  "reconstructed_fingerprint_matches": true,
+  "measured": {
+    "format": 1,
+    "request_fingerprint": "a8e757b738585116c542c61ea32b085b1422abf51bb6adb2be87306266bb614b",
+    "provider": "openai-compatible",
+    "model": "deepseek-v4.1-flash",
+    "counter": {
+      "method": "canonical-parts-bpe-v1",
+      "encoding": "cl100k_base",
+      "library_version": "0.13.0",
+      "quality": "estimated"
+    },
+    "policy": {
+      "encoding": "cl100k_base",
+      "window_tokens": 96000,
+      "output_reserve_tokens": 32768,
+      "safety_margin_tokens": 2048,
+      "trigger_percent": 60,
+      "fold_relief_percent": 35,
+      "fold_protect_recent_groups": 2
+    },
+    "parts": {
+      "system": 1741,
+      "product": 0,
+      "conversation": 61022,
+      "references_and_current_request": 1607,
+      "tools": 1362,
+      "envelope": 27
+    },
+    "input_tokens": 65759,
+    "input_limit": 61184,
+    "trigger_tokens": 36710,
+    "relief_tokens": 21414,
+    "output_reserve_tokens": 32768,
+    "safety_margin_tokens": 2048,
+    "window_tokens": 96000,
+    "over_limit": true,
+    "product_messages": 0,
+    "context_messages": 1
+  },
+  "conversation_tokens": {
+    "user": 1254,
+    "assistant": 7358,
+    "inspect_investigation_budget": 149,
+    "folded_result": 19766,
+    "search_text": 1078,
+    "read_tool_output": 27970,
+    "read_file": 3447
+  },
+  "conversation_counts": {
+    "user": 1,
+    "assistant": 26,
+    "inspect_investigation_budget": 1,
+    "folded_result": 67,
+    "search_text": 13,
+    "read_tool_output": 28,
+    "read_file": 5
+  },
+  "duplicate_page_groups": [],
+  "static_counterfactual": {
+    "meaning": "Presentation-only offline estimate, no execution or success claim; existing folded message would have nested pointers, not a proposed production fix.",
+    "older_readback_results": 23,
+    "older_readback_fold_savings": 15824,
+    "estimated_input_after_older_readback_fold": 49935,
+    "redundant_exact_pages": 0,
+    "redundant_exact_page_fold_savings": 0,
+    "estimated_input_after_redundant_page_fold": 65759,
+    "compact_placeholder_tokens": 8485,
+    "compact_placeholder_savings": 11281,
+    "estimated_input_with_compact_placeholders": 54478,
+    "compact_placeholder_caveat": "Offline presentation estimate only. Shared historical-evidence instructions would need to be placed once in the request; their new cost is not included. No model run or quality claim."
+  },
+  "main_after_known_child_failure": {
+    "session": "session:wf-session-8d2e52a85e9e1c6252aa040b0a20f564d362c6c80faa25becd1657cf83d29e3f",
+    "first_failed_collect_seq": 384,
+    "first_failed_collect_time": "2026-09-20T20:55:17.091019+00:00",
+    "terminal_seq": 716,
+    "terminal_time": "2026-09-20T21:13:48.487656+00:00",
+    "subsequent_model_attempts": 17,
+    "input_tokens": 539625,
+    "output_tokens": 23102,
+    "elapsed_seconds": 1111.396637,
+    "child_remaining_budget": {
+      "max_children": 0,
+      "max_depth": 0,
+      "max_processes": 0,
+      "max_steps": 73,
+      "max_tokens": 1077250,
+      "max_tool_calls": 66,
+      "max_wall_milliseconds": 855688
+    }
+  },
+  "frozen_source_matches": [
+    {
+      "path": "src\\traceh\\session\\surface_replacement.py",
+      "archived_names": [
+        "session/surface_replacement.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\runtime\\request_builder.py",
+      "archived_names": [
+        "runtime/request_builder.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\session\\compaction.py",
+      "archived_names": [
+        "session/compaction.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\session\\tool_output.py",
+      "archived_names": [
+        "session/tool_output.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\product\\collaboration.py",
+      "archived_names": [
+        "product/collaboration.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\supervision\\delegation.py",
+      "archived_names": [
+        "supervision/delegation.py"
+      ],
+      "exact_match": true
+    },
+    {
+      "path": "src\\traceh\\llm\\token_meter.py",
+      "archived_names": [
+        "llm/token_meter.py"
+      ],
+      "exact_match": true
+    }
+  ],
+  "verification": {
+    "request_snapshots_checked": 68,
+    "failures": [],
+    "database_unchanged": true
+  },
+  "method": "Read-only local audit. Request composition values are local estimates, usage sums are Provider-reported. Static counterfactuals do not claim model success or measured savings.",
+  "sessions": {
+    "session:agent-tool-investigation-session-06db9285-aefe-5f14-9aa6-26aae0cae592": {
+      "attempts": 26,
+      "input_tokens": 904411,
+      "output_tokens": 18339,
+      "completion": {
+        "tool_handoff": 26
+      },
+      "tool_calls": {
+        "inspect_investigation_budget": 1,
+        "list_files": 1,
+        "search_text": 21,
+        "read_file": 63,
+        "read_tool_output": 28
+      },
+      "output_caps": [
+        [
+          32768,
+          32768
+        ]
+      ]
+    },
+    "session:fe161a74-350d-46c7-bfb7-1429a6aa0afa": {
+      "attempts": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "completion": {
+        "normal": 2
+      },
+      "tool_calls": {},
+      "output_caps": [
+        [
+          null,
+          null
+        ]
+      ]
+    },
+    "session:wf-session-8d2e52a85e9e1c6252aa040b0a20f564d362c6c80faa25becd1657cf83d29e3f": {
+      "attempts": 40,
+      "input_tokens": 1035834,
+      "output_tokens": 62893,
+      "completion": {
+        "tool_handoff": 38,
+        "normal": 2
+      },
+      "tool_calls": {
+        "list_files": 2,
+        "search_text": 14,
+        "read_file": 26,
+        "submit_collaboration_plan": 3,
+        "shell": 22,
+        "apply_patch": 9,
+        "collect_investigation": 4
+      },
+      "output_caps": [
+        [
+          32768,
+          32768
+        ]
+      ]
+    }
+  }
+}

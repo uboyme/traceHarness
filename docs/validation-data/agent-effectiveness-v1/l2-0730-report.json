@@ -1,0 +1,128 @@
+{
+  "artifact": null,
+  "boundaries_zh": [
+    "验证使用仓库外临时源码副本和虚拟环境，不修改候选、核心工作区或宿主 Python。",
+    "候选测试属于候选自测；静态合同、Wheel 审计、安装元数据、doctor 和核心回归由宿主管控。",
+    "子进程环境不继承 Key、Token、Secret 等变量，报告不保存候选 stdout/stderr。",
+    "虚拟环境和临时目录不是操作系统沙箱；候选代码仍拥有当前用户权限，且只保证直接子进程收敛。",
+    "验证产物在候选执行结束后重审并核对初始摘要；整个输出目录作为一个事务提交。",
+    "L2 只证明构建与既定门禁，不证明能力优于基线，也不构成批准、安装或发布。"
+  ],
+  "candidate": {
+    "distribution": "traceh-plugin-creator-skill-plugin",
+    "entry_module": "traceh_plugin_creator_skill",
+    "entry_value": "traceh_plugin_creator_skill:PluginCreatorSkillPlugin",
+    "plugin_id": "traceh.plugin.creator",
+    "version": "0.2.2"
+  },
+  "checks": [
+    {
+      "code": "candidate-source-contract-passed",
+      "duration_seconds": 52.209,
+      "exit_code": null,
+      "name": "candidate-source-contract",
+      "status": "passed",
+      "summary_zh": "候选源码、身份、依赖和专用工作区合同通过。"
+    },
+    {
+      "code": "trusted-core-snapshot-passed",
+      "duration_seconds": 52.172,
+      "exit_code": 0,
+      "name": "trusted-core-snapshot",
+      "status": "passed",
+      "summary_zh": "核心回归输入及兼容性版本已固定为显式仓库的 Git HEAD。"
+    },
+    {
+      "code": "core-wheel-build-passed",
+      "duration_seconds": 18.638,
+      "exit_code": 0,
+      "name": "core-wheel-build",
+      "status": "passed",
+      "summary_zh": "可信核心 Wheel 构建成功。"
+    },
+    {
+      "code": "candidate-wheel-build-passed",
+      "duration_seconds": 7.634,
+      "exit_code": 0,
+      "name": "candidate-wheel-build",
+      "status": "passed",
+      "summary_zh": "候选 Wheel 从干净源码副本构建成功。"
+    },
+    {
+      "code": "candidate-wheel-audit-passed",
+      "duration_seconds": 0.012,
+      "exit_code": null,
+      "name": "candidate-wheel-audit",
+      "status": "passed",
+      "summary_zh": "候选 Wheel 不含缓存、启动钩子或入口外顶层模块。"
+    },
+    {
+      "code": "candidate-environment-install-passed",
+      "duration_seconds": 32.59,
+      "exit_code": 0,
+      "name": "candidate-environment-install",
+      "status": "passed",
+      "summary_zh": "候选与可信核心已安装到独立临时虚拟环境。"
+    },
+    {
+      "code": "installed-metadata-contract-passed",
+      "duration_seconds": 0.55,
+      "exit_code": 0,
+      "name": "installed-metadata-contract",
+      "status": "passed",
+      "summary_zh": "安装元数据、Entry Point 与宿主 discovery 合同一致。"
+    },
+    {
+      "code": "plugin-doctor-passed",
+      "duration_seconds": 0.598,
+      "exit_code": 0,
+      "name": "plugin-doctor",
+      "status": "passed",
+      "summary_zh": "真实插件 discovery、setup、health check 与 dispose 通过。"
+    },
+    {
+      "code": "candidate-test-collection-passed",
+      "duration_seconds": 0.803,
+      "exit_code": 0,
+      "name": "candidate-test-collection",
+      "status": "passed",
+      "summary_zh": "候选测试由宿主 pytest 配置成功收集，且不是空测试集。"
+    },
+    {
+      "code": "candidate-tests-passed",
+      "duration_seconds": 0.824,
+      "exit_code": 0,
+      "name": "candidate-tests",
+      "status": "passed",
+      "summary_zh": "候选自带测试在已安装 Wheel 上通过。"
+    },
+    {
+      "code": "regression-environment-install-passed",
+      "duration_seconds": 22.003,
+      "exit_code": 0,
+      "name": "regression-environment-install",
+      "status": "passed",
+      "summary_zh": "候选与可信核心已安装到独立临时虚拟环境。"
+    },
+    {
+      "code": "core-regression-failed",
+      "duration_seconds": 1399.871,
+      "exit_code": 1,
+      "name": "core-regression",
+      "status": "failed",
+      "summary_zh": "可信核心回归未通过。"
+    },
+    {
+      "code": "validated-artifact-publication-blocked",
+      "duration_seconds": 0.0,
+      "exit_code": null,
+      "name": "validated-artifact-publication",
+      "status": "blocked",
+      "summary_zh": "前置门禁未通过，本项未执行。"
+    }
+  ],
+  "core_commit": "bf99d29a7a28b6e4f468230143b1a075d0d3d0dc",
+  "created_at": "2026-09-22T00:00:12.634432+00:00",
+  "ok": false,
+  "schema_version": 1
+}

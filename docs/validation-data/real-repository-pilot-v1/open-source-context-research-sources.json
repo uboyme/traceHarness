@@ -1,0 +1,176 @@
+{
+  "date": "2026-09-21",
+  "scope": "Public source and documentation review only; external software was not executed and no model was called. Source algorithms are reference designs, not adopted TraceHarness behavior.",
+  "repositories": [
+    {
+      "repo": "anomalyco/opencode",
+      "resolved_repo": "anomalyco/opencode",
+      "branch": "dev",
+      "sha": "0e3dfd17694471b55f1cc0db578bff8920341e2d",
+      "date": "2026-09-21T02:15:03Z",
+      "tree_truncated": false
+    },
+    {
+      "repo": "badlogic/pi-mono",
+      "resolved_repo": "earendil-works/pi",
+      "branch": "main",
+      "sha": "890f920884f6d21fc7617d236ef9e1cc5d7a0ef8",
+      "date": "2026-09-20T23:14:53Z",
+      "tree_truncated": false
+    },
+    {
+      "repo": "gitlawb/openclaude",
+      "resolved_repo": "Gitlawb/openclaude",
+      "branch": "main",
+      "sha": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "date": "2026-09-21T01:12:45Z",
+      "tree_truncated": false
+    },
+    {
+      "repo": "google-gemini/gemini-cli",
+      "resolved_repo": "google-gemini/gemini-cli",
+      "branch": "main",
+      "sha": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "date": "2026-09-18T20:34:32Z",
+      "tree_truncated": false
+    }
+  ],
+  "sources": [
+    {
+      "repository": "Gitlawb/openclaude",
+      "commit": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "path": "src/services/api/compressToolHistory.ts",
+      "sha256": "b0189cd7d1c91472b822f91cd95ead6f564d73904d0592b090122c12c66d5d1c",
+      "bytes": 18053,
+      "url": "https://github.com/Gitlawb/openclaude/blob/a07b06cee6af87723c6fba131bf1d9b0680e7e0d/src/services/api/compressToolHistory.ts"
+    },
+    {
+      "repository": "Gitlawb/openclaude",
+      "commit": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "path": "src/utils/config.ts",
+      "sha256": "e2ff3b2c2cf7ca30133ce2357c1926a1f328336b5ebcbb5087214650e4928dd6",
+      "bytes": 81333,
+      "url": "https://github.com/Gitlawb/openclaude/blob/a07b06cee6af87723c6fba131bf1d9b0680e7e0d/src/utils/config.ts"
+    },
+    {
+      "repository": "Gitlawb/openclaude",
+      "commit": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "path": "src/services/api/openaiShim/requestPreparation.ts",
+      "sha256": "b55d46973212162b307bdedc6ce29d5414696cc83b0fe5370069050c316b4225",
+      "bytes": 13279,
+      "url": "https://github.com/Gitlawb/openclaude/blob/a07b06cee6af87723c6fba131bf1d9b0680e7e0d/src/services/api/openaiShim/requestPreparation.ts"
+    },
+    {
+      "repository": "anomalyco/opencode",
+      "commit": "0e3dfd17694471b55f1cc0db578bff8920341e2d",
+      "path": "packages/opencode/src/session/compaction.ts",
+      "sha256": "8d478570a7e4ad32b746030d4f86a1c673949b1e2259bd716b3885d99283289a",
+      "bytes": 21236,
+      "url": "https://github.com/anomalyco/opencode/blob/0e3dfd17694471b55f1cc0db578bff8920341e2d/packages/opencode/src/session/compaction.ts"
+    },
+    {
+      "repository": "anomalyco/opencode",
+      "commit": "0e3dfd17694471b55f1cc0db578bff8920341e2d",
+      "path": "packages/opencode/src/session/message-v2.ts",
+      "sha256": "828789508afda97a1570b96413dd40ee9d9119dd25d057b5f0a985154378e619",
+      "bytes": 25761,
+      "url": "https://github.com/anomalyco/opencode/blob/0e3dfd17694471b55f1cc0db578bff8920341e2d/packages/opencode/src/session/message-v2.ts"
+    },
+    {
+      "repository": "anomalyco/opencode",
+      "commit": "0e3dfd17694471b55f1cc0db578bff8920341e2d",
+      "path": "packages/opencode/src/tool/truncate.ts",
+      "sha256": "d3dc9e7402de74a7652ceb9f7796c970efc4958597b51a94fa264697366ccea5",
+      "bytes": 6152,
+      "url": "https://github.com/anomalyco/opencode/blob/0e3dfd17694471b55f1cc0db578bff8920341e2d/packages/opencode/src/tool/truncate.ts"
+    },
+    {
+      "repository": "google-gemini/gemini-cli",
+      "commit": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "path": "packages/core/src/context/toolOutputMaskingService.ts",
+      "sha256": "fc1e6b84250abb959cd4045fb898b324aff5ca1d00610beaa1bfbf8f3145a182",
+      "bytes": 12790,
+      "url": "https://github.com/google-gemini/gemini-cli/blob/cfbcaa8df13ea4610bb379b377b56d62980c0032/packages/core/src/context/toolOutputMaskingService.ts"
+    },
+    {
+      "repository": "google-gemini/gemini-cli",
+      "commit": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "path": "packages/core/src/core/client.ts",
+      "sha256": "6a6935054eedede5561272c9e53026ac50e604721ec9fbed95fe14d615a6676c",
+      "bytes": 41384,
+      "url": "https://github.com/google-gemini/gemini-cli/blob/cfbcaa8df13ea4610bb379b377b56d62980c0032/packages/core/src/core/client.ts"
+    },
+    {
+      "repository": "google-gemini/gemini-cli",
+      "commit": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "path": "packages/core/src/context/chatCompressionService.ts",
+      "sha256": "796b43770e9de160c2aa2db8f729eb3141072b82d5cfc380543e0e95bdb0567e",
+      "bytes": 16644,
+      "url": "https://github.com/google-gemini/gemini-cli/blob/cfbcaa8df13ea4610bb379b377b56d62980c0032/packages/core/src/context/chatCompressionService.ts"
+    },
+    {
+      "repository": "google-gemini/gemini-cli",
+      "commit": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "path": "packages/core/src/agents/local-executor.ts",
+      "sha256": "5441708ace2518cf447a065e24d34129763b628e6714e9ed375b0ba10f1d3854",
+      "bytes": 51797,
+      "url": "https://github.com/google-gemini/gemini-cli/blob/cfbcaa8df13ea4610bb379b377b56d62980c0032/packages/core/src/agents/local-executor.ts"
+    },
+    {
+      "repository": "earendil-works/pi",
+      "commit": "890f920884f6d21fc7617d236ef9e1cc5d7a0ef8",
+      "path": "packages/coding-agent/docs/compaction.md",
+      "sha256": "f70e26e5d54aa0d9d131dbc49cd316deb0909030fab2b66d6a071b5f0ae72c26",
+      "bytes": 21186,
+      "url": "https://github.com/earendil-works/pi/blob/890f920884f6d21fc7617d236ef9e1cc5d7a0ef8/packages/coding-agent/docs/compaction.md"
+    },
+    {
+      "repository": "earendil-works/pi",
+      "commit": "890f920884f6d21fc7617d236ef9e1cc5d7a0ef8",
+      "path": "packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "48a515082128b096677c8caa53290b164b169af8872ce214983bfc8d646f2d97",
+      "bytes": 31095,
+      "url": "https://github.com/earendil-works/pi/blob/890f920884f6d21fc7617d236ef9e1cc5d7a0ef8/packages/coding-agent/src/core/compaction/compaction.ts"
+    },
+    {
+      "repository": "earendil-works/pi",
+      "commit": "890f920884f6d21fc7617d236ef9e1cc5d7a0ef8",
+      "path": "packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "8e254c4326ce4ad1bea3adf7f16189d5ff0b87a15a6e476a5f96cdc8a808973e",
+      "bytes": 129158,
+      "url": "https://github.com/earendil-works/pi/blob/890f920884f6d21fc7617d236ef9e1cc5d7a0ef8/packages/coding-agent/src/core/agent-session.ts"
+    },
+    {
+      "repository": "google-gemini/gemini-cli",
+      "commit": "cfbcaa8df13ea4610bb379b377b56d62980c0032",
+      "path": "packages/core/src/tools/complete-task.ts",
+      "sha256": "5c508407397b651a4caedc5eab7ba750967e3969aeec5cab48f0393a0f86f184",
+      "bytes": 5306,
+      "url": "https://github.com/google-gemini/gemini-cli/blob/cfbcaa8df13ea4610bb379b377b56d62980c0032/packages/core/src/tools/complete-task.ts"
+    },
+    {
+      "repository": "Gitlawb/openclaude",
+      "commit": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "path": "src/tools/AgentTool/runAgent.ts",
+      "sha256": "75bdc3c57ce1898b778419c1ec2d13b59e673b08b4ad006eb1cc4a4a5559ee6a",
+      "bytes": 41982,
+      "url": "https://github.com/Gitlawb/openclaude/blob/a07b06cee6af87723c6fba131bf1d9b0680e7e0d/src/tools/AgentTool/runAgent.ts"
+    },
+    {
+      "repository": "Gitlawb/openclaude",
+      "commit": "a07b06cee6af87723c6fba131bf1d9b0680e7e0d",
+      "path": "src/query.ts",
+      "sha256": "9e1cf7bfc09202a4070b9ed5ef9332e8fa003c627174587242dff85fc45cf2bb",
+      "bytes": 126871,
+      "url": "https://github.com/Gitlawb/openclaude/blob/a07b06cee6af87723c6fba131bf1d9b0680e7e0d/src/query.ts"
+    },
+    {
+      "repository": "anomalyco/opencode",
+      "commit": "0e3dfd17694471b55f1cc0db578bff8920341e2d",
+      "path": "packages/opencode/src/tool/task.ts",
+      "sha256": "db09fa5868ad3ecfdd83aa2bb7243f85e9e2cd13d0b19fd6f307f7a337b2b36e",
+      "bytes": 14200,
+      "url": "https://github.com/anomalyco/opencode/blob/0e3dfd17694471b55f1cc0db578bff8920341e2d/packages/opencode/src/tool/task.ts"
+    }
+  ]
+}

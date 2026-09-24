@@ -1,0 +1,81 @@
+{
+  "complete": true,
+  "disclosed_condition_changes_from_v10": [
+    "Both roles' max_output_tokens raised from 16384 (coder) / 8192 (investigator) to 32768.",
+    "Both roles gained an explicit context_policy (window 96000, output reserve 32768, margin 2048, trigger 60%, relief 35%, protect 2 recent tool groups).",
+    "Both roles granted read_tool_output / list_tool_outputs / search_tool_output."
+  ],
+  "errors": [],
+  "exit_code": 0,
+  "interpretation_limits": [
+    "One trial on one case. No savings rate, no quality equivalence, no mode benefit.",
+    "Token totals are provider-reported, not a reconciled invoice.",
+    "A success here does not retroactively explain v10, and a failure here does not invalidate the offline folding evidence."
+  ],
+  "kind": "c4-context-governance-trial",
+  "per_session": {
+    "pylint-dev__astroid-1196/session:a8761ba9-254f-4941-8219-77452c33f99a": {
+      "completion_categories": [
+        "normal"
+      ],
+      "estimated_inputs": [],
+      "exact_usage_calls": 2,
+      "folding_outcome": "disabled-no-water-marks-configured",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 0,
+      "largest_estimated_input": null,
+      "model_calls": 2,
+      "output_tokens": 0,
+      "read_back_calls": 0,
+      "reasoning_tokens": 0,
+      "reasoning_tokens_reported_calls": 0,
+      "relief_tokens": null,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 2,
+      "trigger_tokens": null,
+      "unknown_usage_calls": 0
+    },
+    "pylint-dev__astroid-1196/session:wf-session-19648f3f35846d30a2ae9dda7953ecafe18d50ded2083c4bb46b70db6098a44f": {
+      "completion_categories": [],
+      "estimated_inputs": [
+        5991
+      ],
+      "exact_usage_calls": 0,
+      "folding_outcome": "never-reached-the-high-water-mark",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 0,
+      "largest_estimated_input": 5991,
+      "model_calls": 3,
+      "output_tokens": 0,
+      "read_back_calls": 0,
+      "reasoning_tokens": 0,
+      "reasoning_tokens_reported_calls": 0,
+      "relief_tokens": 21414,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 0,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    }
+  },
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "case_id": "pylint-dev__astroid-1196",
+      "convergence": "converged",
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "invariants": "passed",
+      "reason": null
+    }
+  ]
+}

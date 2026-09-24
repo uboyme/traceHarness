@@ -1,0 +1,21 @@
+{
+  "reason": "Both first-validation arms passed yet candidate increased entire-task tokens; logs show wider reads and checks. One new bounded cycle to remove over-broad instruction; no edits to old observations or scores.",
+  "development_case": "pvlib__pvlib-python-1154",
+  "development_disclosure": "This case was prior validation for v2; its outcome is now used for v3 development and cannot count as v3 independent validation.",
+  "next_independent_case": "pydicom__pydicom-901",
+  "selection_basis": "second entry in original frozen internal-validation queue; no result-based substitution",
+  "max_new_proposals": 1,
+  "development_arms": 2,
+  "validation_arms_if_qualified": 2,
+  "validation_launch_rule": "only if original optimizer qualifies development candidate, all usage known or explained within cap, no provider/invariant/replay stop; freeze candidate unchanged",
+  "prior_known_cny": 11.256765,
+  "prior_unknown_reserved_cny": 73,
+  "batch_reserve_cny": 29,
+  "validation_pair_reserve_cny": 28,
+  "authorized_cap_cny": 120,
+  "current_total_plus_development_reserve_cny": 113.256765,
+  "network_mode": "direct; empty proxy handler and removed proxy variables",
+  "api_model_attempts_per_request": 1,
+  "adoption_authorized": false,
+  "no_further_candidate_in_this_cycle": true
+}

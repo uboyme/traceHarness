@@ -1,0 +1,6 @@
+{
+  "pytest_exit_code": 1,
+  "expected_public_failure_observed": true,
+  "mutation": "In-process removal of .gitattributes from the real fixture copy rule",
+  "repository_source_edited": false
+}

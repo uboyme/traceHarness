@@ -1,0 +1,61 @@
+{
+  "selected_at_utc": "2026-09-23T19:10:48.609284+00:00",
+  "selected_by": "user (AskUserQuestion)",
+  "period_id": "b91e94e3-ee9f-4b90-9183-b2e538760b54",
+  "suggestions_offered": [
+    {
+      "experiment_id": "b2fd922e-673f-473e-b465-8d3e93d9259e",
+      "target_class": "tool-denied",
+      "sources": 2,
+      "analysis_tokens_exact": 4497,
+      "outcome": "dismissed by the user so the host could admit the tool-failed cluster; candidate kept on disk"
+    },
+    {
+      "experiment_id": "a9837ab4-3486-4880-9e6a-66287c237bd0",
+      "target_class": "tool-failed",
+      "sources": 4,
+      "analysis_tokens_exact": 5635,
+      "outcome": "selected",
+      "candidate_sha256": "23cc65b37f718b1e490973fa146cdd30020b3e35fafedd78c2449c9d3285c527",
+      "names_cause": "shell built-ins ('cd') and inline environment assignments ('PYTHONPATH=src') run as executables"
+    }
+  ],
+  "validation_plans": [
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "repetition": 1,
+      "plan": ".traceh\\c2-plans-validate\\pylint-dev__astroid-1978-r1\\run-plan.json",
+      "sha256": "d74f0226d021f69df4f83cf904ec58bdb8ba300ecd01988436fe39dd9425d1ad"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "repetition": 2,
+      "plan": ".traceh\\c2-plans-validate\\pylint-dev__astroid-1978-r2\\run-plan.json",
+      "sha256": "abb0430c290edd5eccfed2dc38229e5526deca5d8d49a34cca3443ac7ebd4535"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "repetition": 1,
+      "plan": ".traceh\\c2-plans-validate\\pyvista__pyvista-4315-r1\\run-plan.json",
+      "sha256": "01f1a468cdb11df1cd8f0ff029f1f08b6cd085d65085991d090577594978049e"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "repetition": 2,
+      "plan": ".traceh\\c2-plans-validate\\pyvista__pyvista-4315-r2\\run-plan.json",
+      "sha256": "e9e481a36e0789404b5037ac3835619f8cc4064be82900159a5f51ec9ec5cb37"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "repetition": 1,
+      "plan": ".traceh\\c2-plans-validate\\marshmallow-code__marshmallow-1343-r1\\run-plan.json",
+      "sha256": "a82ad3dbeefb819f82783a5d99eaa9e354480dc28cbf25954fd79158076c0116"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "repetition": 2,
+      "plan": ".traceh\\c2-plans-validate\\marshmallow-code__marshmallow-1343-r2\\run-plan.json",
+      "sha256": "d46b358cf2365a12dd26800659a7b45db27da3351274688bb3e277b13b6f2657"
+    }
+  ]
+}

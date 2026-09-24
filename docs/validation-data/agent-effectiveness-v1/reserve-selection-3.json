@@ -1,0 +1,112 @@
+{
+  "format": 1,
+  "recorded_at_utc": "2026-09-21T19:44:04.025392+00:00",
+  "authorization": "User explicitly requested goal mode, completion of the three experimental objectives and resume update; confirmed a new total API spending ceiling of CNY 120.",
+  "api_budget_cny": 120,
+  "includes": [
+    "diagnosis",
+    "task experiments",
+    "strategy search",
+    "semantic review"
+  ],
+  "source_dataset": "princeton-nlp/SWE-bench_Lite",
+  "dataset_revision": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+  "queue_sha256": "4125ee71aabd223d19a9a6c01810c49074a53226483d8f12c0caaff5bc6e3b73",
+  "development_case_ids": [
+    "marshmallow-code__marshmallow-1359",
+    "pydicom__pydicom-1694",
+    "pylint-dev__astroid-1196"
+  ],
+  "internal_validation_candidates": [
+    {
+      "instance_id": "pylint-dev__astroid-1333",
+      "repo": "pylint-dev/astroid",
+      "base_commit": "d2a5b3c7b1e203fec3c7ca73c30eb1785d3d4d0a",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 46,
+      "state": "pending_material_admission"
+    }
+  ],
+  "reserve_candidates": [
+    {
+      "instance_id": "pydicom__pydicom-1139",
+      "repo": "pydicom/pydicom",
+      "base_commit": "b9fb05c177b685bf683f7f57b2d57374eb7d882d",
+      "fail_to_pass_count": 3,
+      "pass_to_pass_count": 38,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "sqlfluff__sqlfluff-2419",
+      "repo": "sqlfluff/sqlfluff",
+      "base_commit": "f1dba0e1dd764ae72d67c3d5e1471cf14d3db030",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 0,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "pvlib__pvlib-python-1854",
+      "repo": "pvlib/pvlib-python",
+      "base_commit": "27a3a07ebc84b11014d3753e4923902adf9a38c0",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 281,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "pylint-dev__astroid-1333",
+      "repo": "pylint-dev/astroid",
+      "base_commit": "d2a5b3c7b1e203fec3c7ca73c30eb1785d3d4d0a",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 46,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "sqlfluff__sqlfluff-1517",
+      "repo": "sqlfluff/sqlfluff",
+      "base_commit": "304a197829f98e7425a46d872ada73176137e5ae",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 42,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "pvlib__pvlib-python-1707",
+      "repo": "pvlib/pvlib-python",
+      "base_commit": "40e9e978c170bdde4eeee1547729417665dbc34c",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 30,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "pydicom__pydicom-1413",
+      "repo": "pydicom/pydicom",
+      "base_commit": "f909c76e31f759246cec3708dadd173c5d6e84b1",
+      "fail_to_pass_count": 3,
+      "pass_to_pass_count": 301,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "pylint-dev__astroid-1268",
+      "repo": "pylint-dev/astroid",
+      "base_commit": "ce5cbce5ba11cdc2f8139ade66feea1e181a7944",
+      "fail_to_pass_count": 1,
+      "pass_to_pass_count": 91,
+      "state": "pending_material_admission"
+    },
+    {
+      "instance_id": "sqlfluff__sqlfluff-1763",
+      "repo": "sqlfluff/sqlfluff",
+      "base_commit": "a10057635e5b2559293a676486f0b730981f037a",
+      "fail_to_pass_count": 3,
+      "pass_to_pass_count": 63,
+      "state": "pending_material_admission"
+    }
+  ],
+  "known_exclusions": {
+    "sqlfluff__sqlfluff-1625": "prior admission found inadequate defect oracle",
+    "sqlfluff__sqlfluff-1733": "full tree contains symlink unsupported by current ordinary-file contract"
+  },
+  "selection_rule": "First nine entries of the pre-existing dev queue after removing already exposed development cases and prior documented exclusions; admission before model outcomes; replacements only for evidenced material/environment inadmissibility, preserving the reserve order.",
+  "status": "candidate selection frozen; additional material admission pending; no model calls yet",
+  "limits": "Public dev subset, not official test or model-unseen; historical run budgets do not count toward this new authorization; no source commits or pushes authorized.",
+  "preparation_reason": "Next pre-frozen reserve; prepare material while plugin fixture/environment admission remains unresolved. Does not replace a model outcome."
+}

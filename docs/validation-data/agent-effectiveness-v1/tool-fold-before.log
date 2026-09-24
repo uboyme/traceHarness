@@ -1,0 +1,138 @@
+FFFF                                                                     [100%]
+================================== FAILURES ===================================
+_______ test_fold_skips_disabled_protected_or_unhelpful_sources[inline] _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6177/test_fold_skips_disabled_prote0')
+boundary = 'inline'
+
+    @pytest.mark.parametrize("boundary", ["disabled", "recent", "inline"])
+    async def test_fold_skips_disabled_protected_or_unhelpful_sources(tmp_path, boundary):
+        sid, _, _, before, _ = await prepare_history(
+            tmp_path, output_limit=1_000_000 if boundary == "inline" else 2000
+        )
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [ModelResponse(content="answer")],
+            threshold=1,
+            enabled=boundary != "disabled",
+            keep=2 if boundary == "recent" else 1,
+        )
+        try:
+            report = await runtime.compaction.compact_before_turn(sid)
+            events = await runtime.sessions.read_session(sid)
+>           assert not any(
+                e.type == SURFACE_REPLACE and e.data["method"] == "tool-fold" for e in events
+            )
+E           assert not True
+E            +  where True = any(<generator object test_fold_skips_disabled_protected_or_unhelpful_sources.<locals>.<genexpr> at 0x0000026DF157DE50>)
+
+tests\test_tool_result_folding.py:102: AssertionError
+_ test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6177/test_automatic_fold_keeps_pair0')
+failing = False
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart(tmp_path, failing):
+        sid, original, before_events, before, threshold = await prepare_history(
+            tmp_path, failing=failing, pair=True
+        )
+        ref = original.data["output_ref"]
+        identity = {k: ref[k] for k in ("effect_id", "digest")}
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [
+                ModelResponse(
+                    tool_calls=(ToolCall("find", "search_tool_output", identity | {"query": "END:"}),)
+                ),
+                ModelResponse(content="found original"),
+            ],
+            threshold=threshold,
+        )
+        try:
+            await runtime.run_existing(sid, "Find the original endpoint.")
+            events = await runtime.sessions.read_session(sid)
+            folds = [e for e in events if e.type == SURFACE_REPLACE]
+            assert len(folds) == 1
+            fold = parse_surface_replacement(folds[0])
+            assert isinstance(fold, SurfaceToolFold)
+            assert fold.source_seqs == (original.seq,)
+            assert fold.message.tool_call_id == "original"
+            assert fold.message.name == "shell"
+>           assert json.loads(fold.message.content)["output_ref"] == ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'output_ref'
+
+tests\test_tool_result_folding.py:202: KeyError
+_ test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6177/test_automatic_fold_keeps_pair1')
+failing = True
+
+    @pytest.mark.parametrize("failing", [False, True])
+    async def test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart(tmp_path, failing):
+        sid, original, before_events, before, threshold = await prepare_history(
+            tmp_path, failing=failing, pair=True
+        )
+        ref = original.data["output_ref"]
+        identity = {k: ref[k] for k in ("effect_id", "digest")}
+        runtime, store = open_runtime(
+            tmp_path / "data",
+            [
+                ModelResponse(
+                    tool_calls=(ToolCall("find", "search_tool_output", identity | {"query": "END:"}),)
+                ),
+                ModelResponse(content="found original"),
+            ],
+            threshold=threshold,
+        )
+        try:
+            await runtime.run_existing(sid, "Find the original endpoint.")
+            events = await runtime.sessions.read_session(sid)
+            folds = [e for e in events if e.type == SURFACE_REPLACE]
+            assert len(folds) == 1
+            fold = parse_surface_replacement(folds[0])
+            assert isinstance(fold, SurfaceToolFold)
+            assert fold.source_seqs == (original.seq,)
+            assert fold.message.tool_call_id == "original"
+            assert fold.message.name == "shell"
+>           assert json.loads(fold.message.content)["output_ref"] == ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'output_ref'
+
+tests\test_tool_result_folding.py:202: KeyError
+__________ test_fold_forgery_rejected_by_shared_source_checker[kept] __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6177/test_fold_forgery_rejected_by_0')
+change = 'kept'
+
+    @pytest.mark.parametrize("change", ["message", "source", "cut", "bytes", "kept"])
+    async def test_fold_forgery_rejected_by_shared_source_checker(tmp_path, change):
+        from traceh.session.invariants import check_surface_replacement_sources
+    
+        sid, _, _, _, threshold = await prepare_history(tmp_path)
+        runtime, store = open_runtime(
+            tmp_path / "data", [ModelResponse(content="answer")], threshold=threshold
+        )
+        try:
+            await runtime.compaction.compact_before_turn(sid)
+            events = await runtime.sessions.read_session(sid)
+            fold = next(e for e in events if e.type == SURFACE_REPLACE)
+            data = json.loads(canonical_json(fold.data))
+            if change == "message":
+                data["replacement"]["tool_call_id"] = "another-call"
+            elif change == "source":
+                data["source_seqs"] = [next(e.seq for e in events if e.type == "user/message")]
+            elif change == "cut":
+                data["cut_seq"] -= 1
+            elif change == "kept":
+>               data["kept_recent_turns"] += 1
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'kept_recent_turns'
+
+tests\test_tool_result_folding.py:338: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_tool_result_folding.py::test_fold_skips_disabled_protected_or_unhelpful_sources[inline]
+FAILED tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[False]
+FAILED tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True]
+FAILED tests/test_tool_result_folding.py::test_fold_forgery_rejected_by_shared_source_checker[kept]

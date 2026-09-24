@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "failure_class": "redundant-late-delegation",
+    "summary": "In the frozen development multi run, the main agent inspected the same implementation and test ranges before delegating those exact ranges for source reproduction. It even attempted a write during the plan-only phase and had malformed plan arguments. The accepted investigator used only two model calls and completed its report; the main continued many more calls. This run does not support blaming an unwilling-to-stop child. Request a useful independent unresolved decision early, deliver bounded evidence, and avoid requesting repetition of evidence already available. The original fixed verifier subsequently failed; resource convergence and 34 original request snapshots were independently rechecked.",
+    "evidence_refs": [
+      ".traceh/ae04/attempts/001/ev/events.sqlite3"
+    ]
+  },
+  {
+    "case_id": "pylint-dev__astroid-1196",
+    "failure_class": "missing-independent-boundary-check",
+    "summary": "The development multi patch passed the ordinary reproduction but failed one of 26 fixed upstream checks: an existing unresolvable-input behavior now propagated an inference exception. A host-only diagnostic on the retained workspace reproduced 1 failed and 25 passed without changing the trial score. The delegated role had only repeated existing source, not checked a distinct uncertainty or negative behavior. Do not encode this repository, test names, exception classes, or a patch solution into generic guidance. This is a development observation; no internal-validation result is provided.",
+    "evidence_refs": [
+      ".traceh/ae04/report.json",
+      ".traceh/ae04check1/stdout.txt"
+    ]
+  }
+]

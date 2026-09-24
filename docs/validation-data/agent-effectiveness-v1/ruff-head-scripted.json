@@ -1,0 +1,6 @@
+{
+  "origin": "git show HEAD:src/traceh/llm/scripted.py; unchanged project Ruff configuration",
+  "exit_code": 1,
+  "stdout": "UP037 [*] Remove quotes from type annotation\n  --> .traceh\\agent-effectiveness-v1\\scripted-head.py:34:39\n   |\n33 |     @classmethod\n34 |     def from_file(cls, path: Path) -> \"ScriptedLlmProvider\":\n   |                                       ^^^^^^^^^^^^^^^^^^^^^\n35 |         raw = json.loads(path.read_text(encoding=\"utf-8\"))\n36 |         if not isinstance(raw, list):\n   |\nhelp: Remove quotes\n   |\n33 |     @classmethod\n   -     def from_file(cls, path: Path) -> \"ScriptedLlmProvider\":\n34 +     def from_file(cls, path: Path) -> ScriptedLlmProvider:\n35 |         raw = json.loads(path.read_text(encoding=\"utf-8\"))\n   |\n\nFound 1 error.\n[*] 1 fixable with the `--fix` option.\n",
+  "stderr": ""
+}

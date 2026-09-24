@@ -1,0 +1,25 @@
+{
+  "format": 2,
+  "plugin_grants": [],
+  "policy": {
+    "docker_context": "desktop-linux",
+    "image": "sha256:b09d49de2b58c6c87d648fb62bcd5a6e847ca73fddb8cbf0b9ce48b2cccbd3ec",
+    "limits": {
+      "memory_bytes": 536870912,
+      "workspace_bytes": 134217728,
+      "workspace_files": 8192,
+      "output_bytes": 1048576,
+      "pids": 64,
+      "cpus": 2.0,
+      "wall_seconds": 180
+    },
+    "read_paths": [
+      "."
+    ],
+    "write_paths": [
+      "."
+    ],
+    "excluded_paths": [],
+    "network": "none"
+  }
+}

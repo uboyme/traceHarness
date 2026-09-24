@@ -1,0 +1,246 @@
+........................................................................ [  1%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+.............................s.......................................... [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+......s................................................................. [ 42%]
+........................................................................ [ 44%]
+...............................................................s........ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+...........................s............................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+................................................................s....... [ 86%]
+...............................................ss....................... [ 88%]
+.......................................................s................ [ 90%]
+........................................................................ [ 91%]
+.................................F...................................... [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+================================== FAILURES ===================================
+______ test_governance_right_click_copy_and_empty_selection_do_not_exit _______
+
+fut = <coroutine object Queue.get at 0x0000020C4A9BAB20>, timeout = 10
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+C:\mydownload\anaconda\Lib\asyncio\tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Queue at 0x20c4b618740 maxsize=0>
+
+    async def get(self):
+        """Remove and return an item from the queue.
+    
+        If queue is empty, wait until an item is available.
+        """
+        while self.empty():
+            getter = self._get_loop().create_future()
+            self._getters.append(getter)
+            try:
+>               await getter
+E               asyncio.exceptions.CancelledError
+
+C:\mydownload\anaconda\Lib\asyncio\queues.py:158: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6187/test_governance_right_click_co0')
+mounted_screens = <Queue at 0x20c4b2abb30 maxsize=0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000020C4B2ABC50>
+
+    async def test_governance_right_click_copy_and_empty_selection_do_not_exit(
+        tmp_path, mounted_screens, monkeypatch
+    ):
+        copy_mounted = asyncio.Queue()
+        original_mount = CopyMenu.on_mount
+    
+        def record_copy_mount(screen):
+            original_mount(screen)
+            copy_mounted.put_nowait(screen)
+    
+        monkeypatch.setattr(CopyMenu, "on_mount", record_copy_mount)
+        async with memory_case(tmp_path) as (runtime, store, provider, session_id, _, _):
+            opened = await open_chat_session(runtime, workspace=None, session_id=session_id)
+            app = TracehTuiApp(
+                runtime,
+                opened,
+                timeline=False,
+                heartbeat_seconds=0,
+                product=None,
+                clock=default_clock(),
+            )
+            async with app.run_test(size=(85, 35)) as pilot:
+                await pilot.pause()
+                head = await store.head(f"session:{session_id}")
+                log = app.query_one("#conversation", SelectableLog)
+                await pilot.click(log, offset=(2, 1), button=3)
+>               assert await asyncio.wait_for(copy_mounted.get(), 10) is app.screen
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_tui_governance.py:211: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\mydownload\anaconda\Lib\asyncio\tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x0000020C4ADEA200>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+C:\mydownload\anaconda\Lib\asyncio\timeouts.py:115: TimeoutError
+============================ slowest 30 durations =============================
+2002.14s call     tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+695.10s call     tests/test_retrieval_evaluation.py::test_shipped_frozen_baseline_uses_real_plugin_lifecycle
+127.42s call     tests/test_manual_optimization.py::test_manual_product_queue_real_git_sandbox_no_gain_dedup_and_limit
+91.45s call     tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption
+64.07s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[both]
+63.26s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[scope]
+60.80s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[unmatched-stellar-question-False-zero-hit]
+60.72s call     tests/test_writable_evaluation.py::test_writable_product_evaluation_counts_child_and_converges[None]
+60.69s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[goals.code-True-exact]
+59.54s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[input]
+59.20s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[False]
+58.52s setup    tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+56.88s call     tests/test_retrieval_evaluation.py::test_frozen_corpus_is_seeded_before_host_and_measured_from_real_steps[\u9879\u76ee\u76ee\u6807\u4fdd\u6301\u8fb9\u754c\u6e05\u695a-True-lexical]
+56.84s call     tests/test_product_benchmark_e2e.py::test_single_and_multi_share_one_experiment_condition
+56.50s call     tests/test_product_benchmark_e2e.py::test_the_two_reports_carry_the_same_values
+49.94s call     tests/test_product_semantic_review.py::test_product_model_judgment_is_bound_to_patch_and_cannot_override_hard_failure
+48.17s call     tests/test_product_benchmark_e2e.py::test_repeating_one_arm_aggregates_and_drops_the_n1_label
+47.89s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[paged]
+47.56s call     tests/test_adaptive_evaluation.py::test_verifier_belongs_to_each_case_and_is_not_in_the_source_tree
+47.21s call     tests/test_writable_completion.py::test_fixed_completion_rejects_repairs_and_stops_at_original_bound[ignore]
+46.51s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[None]
+46.35s call     tests/test_evaluation_variants_product.py::test_product_pair_uses_real_git_and_sandbox_without_a_second_success_rule[True]
+46.31s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[repeat]
+45.37s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[conflict]
+44.70s call     tests/test_patch_integration.py::test_product_explicit_patch_integration[unread]
+44.65s call     tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+40.62s call     tests/test_writable_collaboration.py::test_writable_product_isolated_capture_and_failures[None]
+38.77s call     tests/test_adaptive_evaluation.py::test_evaluator_counts_completed_and_failed_child[False]
+36.01s call     tests/test_writable_completion.py::test_cancel_during_completion_converges_observed_guest
+35.38s call     tests/test_writable_completion.py::test_completion_never_labels_another_commands_result
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_cli_resume_safety.py:251: a path cannot contain NUL
+SKIPPED [1] tests\test_git_patch_capture.py:242: symlink creation is unavailable
+SKIPPED [1] tests\test_local_git_workspaces.py:273: directory symlink creation is unavailable
+SKIPPED [1] tests\test_patch_promotion.py:748: this platform or user cannot create directory symlinks
+SKIPPED [1] tests\test_skill_resources.py:273: Windows account lacks symlink privilege
+SKIPPED [1] tests\test_sqlite_event_store.py:187: file symlink unavailable: [WinError 1314] 客户端没有所需的特权。: 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6187\\test_database_symlink_is_refus0\\external\\events.sqlite3' -> 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6187\\test_database_symlink_is_refus0\\linked\\events.sqlite3'
+SKIPPED [1] tests\test_sqlite_event_store.py:199: file symlink unavailable: [WinError 1314] 客户端没有所需的特权。: 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6187\\test_broken_database_symlink_i0\\missing.sqlite3' -> 'C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6187\\test_broken_database_symlink_i0\\broken-link\\events.sqlite3'
+SKIPPED [1] tests\test_tools.py:78: directory symlink creation is unavailable
+FAILED tests/test_tui_governance.py::test_governance_right_click_copy_and_empty_selection_do_not_exit

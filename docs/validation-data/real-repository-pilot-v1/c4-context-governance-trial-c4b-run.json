@@ -1,0 +1,92 @@
+{
+  "complete": true,
+  "errors": [],
+  "interpretation_limits": [
+    "One trial on one case. No savings rate, no quality equivalence, no mode benefit.",
+    "Token totals are provider-reported, not a reconciled invoice.",
+    "A success here does not retroactively explain v10, and a failure here does not invalidate the offline folding evidence."
+  ],
+  "kind": "c4-context-governance-trial",
+  "per_session": {
+    "session:2276a3fd-7004-4934-87cf-a8318e796aa8": {
+      "completion_categories": [
+        "normal"
+      ],
+      "estimated_inputs": [],
+      "exact_usage_calls": 2,
+      "folding_outcome": "disabled-no-water-marks-configured",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 0,
+      "largest_estimated_input": null,
+      "model_calls": 2,
+      "output_tokens": 0,
+      "read_back_calls": 0,
+      "reasoning_tokens": 0,
+      "reasoning_tokens_reported_calls": 0,
+      "relief_tokens": null,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 2,
+      "trigger_tokens": null,
+      "unknown_usage_calls": 0
+    },
+    "session:wf-session-e6413715e5cf9d71af88ecb4d1ce1a8e9edb8d97b829dfebf1c8bd73944369ee": {
+      "completion_categories": [
+        "tool_handoff"
+      ],
+      "estimated_inputs": [
+        5989,
+        6674,
+        9080,
+        10939,
+        12829,
+        13533,
+        15808,
+        18178,
+        20561,
+        22685,
+        25868,
+        26957,
+        28386,
+        30400,
+        33827,
+        35552
+      ],
+      "exact_usage_calls": 15,
+      "folding_outcome": "never-reached-the-high-water-mark",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 280626,
+      "largest_estimated_input": 35552,
+      "model_calls": 16,
+      "output_tokens": 37034,
+      "read_back_calls": 0,
+      "reasoning_tokens": 34668,
+      "reasoning_tokens_reported_calls": 14,
+      "relief_tokens": 21414,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 15,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    }
+  },
+  "run_directory": ".traceh\\c4b-run",
+  "trials": [
+    {
+      "assessment": {
+        "status": "failed"
+      },
+      "case_id": "pylint-dev__astroid-1196",
+      "convergence": "converged",
+      "execution": {
+        "reason": "workflow-node-failed",
+        "status": "failed"
+      },
+      "invariants": "passed"
+    }
+  ]
+}

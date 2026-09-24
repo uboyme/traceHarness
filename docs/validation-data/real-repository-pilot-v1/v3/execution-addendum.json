@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "applies_from_pair": 2,
+  "retains_original_preregistration": true,
+  "reason": "Pair 1 produced a converged cancelled HTTP attempt with unavailable usage; distinguish it from unexplained usage loss.",
+  "continuation_rule": "Only when original readers establish convergence and every missing usage is a cancelled attempt bound to a frozen dispatch request with finite output cap, retain unavailable usage, add separate conservative planning charge, and continue unchanged model, budget, material and assessment conditions.",
+  "stop_on": [
+    "unexplained unknown usage",
+    "provider failure",
+    "unproven convergence",
+    "condition drift",
+    "operational budget reached"
+  ],
+  "planning_is_invoice_guarantee": false,
+  "output_layout_reason": "Explicit shorter roots for pairs 2-6 avoid a reproduced Git for Windows path-length failure; pair 1 and older failed evidence stay in place.",
+  "scripts": {
+    "run-pilot-batch.py": "131d73d3e28268de17db82b1278d942d175ca90b2c40c22fb1d4efba86db0044",
+    "summarize-pilot.py": "4902a0fe5b6e6297c8c0563638e2f0e4ed929d0ce05800ac8386d1b8b4ee745b"
+  },
+  "output_layout_sha256": "d0ecdcb21b22b778a9ce9efd7ea7ccedc854ce576e30198a5ff5825f486fbf58",
+  "record": "docs/deal/078-real-model-repository-pilot.md"
+}

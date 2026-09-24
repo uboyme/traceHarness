@@ -1,0 +1,46 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+___ test_current_core_fixture_preserves_frozen_bytes_after_windows_checkout ___
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6183/test_current_core_fixture_pres0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022653856090>
+
+    def test_current_core_fixture_preserves_frozen_bytes_after_windows_checkout(
+        tmp_path, monkeypatch
+    ):
+        project = tmp_path / "explicit-test-project"
+        project.mkdir()
+        material = project / "benchmarks" / "fixture"
+        material.mkdir(parents=True)
+        content = b'{\n  "fixture": true\n}\n'
+        (material / "input.json").write_bytes(content)
+        (project / ".gitattributes").write_bytes(b"benchmarks/** -text\n")
+        subprocess.run(["git", "init", "--quiet", str(project)], check=True)
+        monkeypatch.setattr(fixture_module, "PROJECT_ROOT", project)
+        frozen = fixture_module._current_core_fixture(tmp_path / "frozen")
+        clone = tmp_path / "windows-checkout"
+        subprocess.run(
+            ["git", "-c", "core.autocrlf=true", "clone", "--quiet", "--no-hardlinks",
+             str(frozen), str(clone)], check=True, capture_output=True,
+        )
+>       actual = referenced_input(
+            clone / "benchmarks" / "fixture",
+            {"file": "input.json", "sha256": hashlib.sha256(content).hexdigest()},
+        )
+
+.traceh\agent-effectiveness-v1\test_l2_fixture_bytes.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6183/test_current_core_fixture_pres0/windows-checkout/benchmarks/fixture')
+value = {'file': 'input.json', 'sha256': '7717520110454c6532689344cdf5a63dddf8235f8d968feec83d1f1c6019600b'}
+
+    def referenced_input(root: Path, value: object) -> FrozenFile:
+        ref = object_fields(value, {"file", "sha256"}, "reference")
+        item = read_input(root, ref["file"])
+        if ref["sha256"] != item.sha256:
+>           raise BenchmarkManifestError("evaluation-frozen-input-drift", "sha256")
+E           traceh.evaluation.errors.BenchmarkManifestError: benchmark sha256 is not usable
+
+src\traceh\evaluation\inputs.py:120: BenchmarkManifestError
+=========================== short test summary info ===========================
+FAILED .traceh/agent-effectiveness-v1/test_l2_fixture_bytes.py::test_current_core_fixture_preserves_frozen_bytes_after_windows_checkout

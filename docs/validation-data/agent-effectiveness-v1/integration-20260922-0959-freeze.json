@@ -1,0 +1,10 @@
+{
+  "started_utc": "2026-09-22T01:59:36.8637972Z",
+  "collected": 4393,
+  "source_digest": "2c24b47952e48b7a0a15a85d8b3c2837e3d2b857260a13fb61350786ffa5a428",
+  "integration_inputs_digest": "da961183b4a7e4e29cb70465c28dc862e4c6a9593defe46394ab290a467521d3",
+  "command": "python -m pytest -q --durations=30 -ra --junitxml=<same-prefix>.xml",
+  "docker_context": "desktop-linux",
+  "docker_image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe",
+  "paid_calls_stopped": true
+}

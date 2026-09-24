@@ -1,0 +1,54 @@
+F......................                                                  [100%]
+================================== FAILURES ===================================
+__________ test_concurrent_writable_product_collects_then_integrates __________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6167/test_concurrent_writable_produ0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000127EA1B1A30>
+
+    @pytest.mark.asyncio
+    async def test_concurrent_writable_product_collects_then_integrates(tmp_path, monkeypatch):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product,
+            "_host_profile",
+            lambda mode: replace(original(mode), profile=writable_profile(mode)),
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        git("config", "core.autocrlf", "false", cwd=source)
+        (source / "tracked.txt").write_bytes(b"base\n")
+        (source / "kept.txt").write_bytes(b"kept\n")
+        git("add", "--renormalize", ".", cwd=source)
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+        provider = ConcurrentIntegratingProvider()
+        await product._run_to_barrier(
+            tmp_path,
+            store,
+            source,
+            target,
+            LocalArtifactCas(tmp_path / "cas"),
+            RequestedTaskMode.MULTI,
+            provider,
+        )
+        assert provider.dispatch["children"][0]["status"] == "accepted"
+        artifact = provider.collected[-1]["artifact"]
+        assert artifact["changed_paths"] == ["tracked.txt"]
+>       assert len(tuple(await PatchArtifactCatalogReader(store).load())) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len((PatchManifest(artifact_id='patch-9f04ceb90b7a9224031b081c812a6078fd92eb43d77160ab99c1e3e798f67f2f', capture_key='9f04...rotocol_version=1, manifest_digest='7ddcb6124dfe9f5d27120a216c5d8ed8127711d4afcb8cc079c6bf6f14395ba3', recorded_seq=2)))
+E        +    where (PatchManifest(artifact_id='patch-9f04ceb90b7a9224031b081c812a6078fd92eb43d77160ab99c1e3e798f67f2f', capture_key='9f04...rotocol_version=1, manifest_digest='7ddcb6124dfe9f5d27120a216c5d8ed8127711d4afcb8cc079c6bf6f14395ba3', recorded_seq=2)) = tuple(<traceh.artifacts.catalog.PatchArtifactCatalog object at 0x00000127EA255FD0>)
+
+tests\test_concurrent_writable_product.py:112: AssertionError
+============================ slowest 10 durations =============================
+49.15s call     tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates
+33.09s call     tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[notes.txt]
+27.32s call     tests/test_delivery_review.py::test_review_refreshes_actual_extra_files_and_replays[diagnostic.py]
+26.40s call     tests/test_structured_product.py::test_structured_product_reaches_approval_and_replays[delegate]
+25.32s call     tests/test_ue4_controls.py::test_native_sources_and_output_preparation[competing-memory]
+19.67s call     tests/test_ue4_controls.py::test_native_sources_and_output_preparation[ordinary-arithmetic]
+14.07s call     tests/test_active_retrieval_grid.py::test_frozen_sources_prepare_on_original_owners_without_network[h-direct]
+9.38s call     tests/test_structured_product.py::test_multi_cannot_complete_without_required_child[missing-plan]
+9.26s call     tests/test_structured_product.py::test_multi_cannot_complete_without_required_child[budget]
+6.99s call     tests/test_active_retrieval_grid.py::test_output_runner_scores_actual_retained_evidence_and_one_execution
+=========================== short test summary info ===========================
+FAILED tests/test_concurrent_writable_product.py::test_concurrent_writable_product_collects_then_integrates

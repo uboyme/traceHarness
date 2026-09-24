@@ -1,0 +1,479 @@
+[
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1978",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 120108,
+    "total_tokens": 107826,
+    "token_quality": "exact",
+    "model_attempts": 16,
+    "tool_calls": 15,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 107826,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 15
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 8964,
+          "input_limit": 85760,
+          "input_mean": 6592.7,
+          "input_peak": 8964,
+          "metered_peak": 8675,
+          "metered_requests": 16,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 16,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1978",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 88594,
+    "total_tokens": 104693,
+    "token_quality": "exact",
+    "model_attempts": 12,
+    "tool_calls": 14,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 104693,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 11
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 12121,
+          "input_limit": 85760,
+          "input_mean": 8563.4,
+          "input_peak": 12121,
+          "metered_peak": 11764,
+          "metered_requests": 12,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 12,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1978",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 220295,
+    "total_tokens": 213236,
+    "token_quality": "exact",
+    "model_attempts": 21,
+    "tool_calls": 20,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 213236,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 20
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 14603,
+          "input_limit": 85760,
+          "input_mean": 9982.1,
+          "input_peak": 14603,
+          "metered_peak": 13927,
+          "metered_requests": 21,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 21,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pylint-dev__astroid-1978",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 119922,
+    "total_tokens": 128410,
+    "token_quality": "exact",
+    "model_attempts": 15,
+    "tool_calls": 14,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 128410,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 14
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 10439,
+          "input_limit": 85760,
+          "input_mean": 8383.1,
+          "input_peak": 10439,
+          "metered_peak": 10041,
+          "metered_requests": 15,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 15,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pyvista__pyvista-4315",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 220327,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 8,
+    "tool_calls": 7,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 7
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 8250,
+          "metered_requests": 8,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 8,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": false
+  },
+  {
+    "plan": "p02",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "pyvista__pyvista-4315",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": false,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 395687,
+    "total_tokens": 399826,
+    "token_quality": "exact",
+    "model_attempts": 28,
+    "tool_calls": 27,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 399826,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 27
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 22194,
+          "input_limit": 85760,
+          "input_mean": 13981.5,
+          "input_peak": 22194,
+          "metered_peak": 21045,
+          "metered_requests": 28,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 28,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "pyvista__pyvista-4315",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 364797,
+    "total_tokens": 440577,
+    "token_quality": "exact",
+    "model_attempts": 28,
+    "tool_calls": 27,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 440577,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 27
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 24620,
+          "input_limit": 85760,
+          "input_mean": 15509.0,
+          "input_peak": 24620,
+          "metered_peak": 23855,
+          "metered_requests": 28,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 28,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 222938,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 13,
+    "tool_calls": 12,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 12
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 10837,
+          "metered_requests": 13,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 13,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p01",
+    "variant": "candidate",
+    "ran": false
+  },
+  {
+    "plan": "p02",
+    "variant": "baseline",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": false,
+    "review_passed": null,
+    "failure_code": "workflow-node-failed",
+    "wall_ms": 195922,
+    "total_tokens": null,
+    "token_quality": null,
+    "model_attempts": 10,
+    "tool_calls": 9,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": null,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "tool_handoff": 9
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": null,
+          "input_limit": 85760,
+          "input_mean": null,
+          "input_peak": null,
+          "metered_peak": 7767,
+          "metered_requests": 10,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 10,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 1
+        }
+      }
+    ]
+  },
+  {
+    "plan": "p02",
+    "variant": "candidate",
+    "ran": true,
+    "case_id": "marshmallow-code__marshmallow-1343",
+    "mode": "single",
+    "resolved": "single",
+    "success": true,
+    "review_passed": true,
+    "failure_code": null,
+    "wall_ms": 218890,
+    "total_tokens": 193814,
+    "token_quality": "exact",
+    "model_attempts": 22,
+    "tool_calls": 21,
+    "children": 0,
+    "sessions": [
+      {
+        "label": "coder",
+        "tokens": 193814,
+        "context": {
+          "compaction_failures": 0,
+          "completions": {
+            "normal": 1,
+            "tool_handoff": 21
+          },
+          "empty_responses": 0,
+          "folded_source_utf8_bytes": 0,
+          "input_last": 11399,
+          "input_limit": 85760,
+          "input_mean": 8624.5,
+          "input_peak": 11399,
+          "metered_peak": 11328,
+          "metered_requests": 22,
+          "over_limit_requests": 0,
+          "readback_calls": 0,
+          "readback_repeats": 0,
+          "requests": 22,
+          "reruns_after_fold": 0,
+          "summaries": 0,
+          "tool_folds": 0,
+          "trigger_tokens": 51456,
+          "unknown_usage_requests": 0
+        }
+      }
+    ]
+  }
+]

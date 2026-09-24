@@ -1,0 +1,12 @@
+[
+  {
+    "case_id": "pvlib__pvlib-python-1154",
+    "failure_class": "unbounded-adjacent-validation-cost",
+    "summary": "The frozen second Single coding-guidance candidate preserved fixed verification on the first independent validation case, but cost regressed: 147323 to 166048 exact tokens, 16 to 17 paid model attempts and 15 to 16 tool calls. Compared with baseline it made two additional file reads and one additional shell call; both passed the same fixed verifier. Its patch and test commands were larger. Earlier development on a different case showed a broad verbose test selection and timeout. The general root cause is guidance that unconditionally asks for adjacent or nested checks, making an already correctly validated task use broader investigation. Propose one short generic coder instruction: implement, choose the smallest relevant checks based on changed behavior, use valid argv commands without shell pipes or redirection, and stop tool use at host handoff. Do not include project names, issue IDs, exact expected patches or hidden-test content. A third proposal is allowed only in this newly registered batch after the first validation was demoted to development; the next case remains untouched for independent validation.",
+    "evidence_refs": [
+      "docs/validation-data/agent-effectiveness-v1/single-validation-v1/01-summary.json",
+      "docs/validation-data/agent-effectiveness-v1/single-validation-v1/comparison-rechecked/report.json",
+      "docs/validation-data/agent-effectiveness-v1/single-ao-observations-v2.json"
+    ]
+  }
+]

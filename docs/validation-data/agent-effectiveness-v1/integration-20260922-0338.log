@@ -1,0 +1,1773 @@
+......................F.F..........sss.................................. [  1%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+............................................FF.......................... [ 16%]
+.....................................F.................................. [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+............................s........................................... [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+..................s..................................................... [ 34%]
+......................................................ss..............F. [ 36%]
+............FF......................F................................... [ 37%]
+.....ssss...........ssF................................................. [ 39%]
+........................................................................ [ 41%]
+.....s.................................................................. [ 42%]
+........................................................................ [ 44%]
+..............................................................s......... [ 46%]
+......F..................F.s............................................ [ 47%]
+.......................................................F................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+sssssssssssssssssssssssss.s.sssssssssssssssssssssssssssssss............. [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+...............................EEEEEEEEEEEEEEEEEss...................... [ 62%]
+..............................................sssssssss.ssssssssss.ss... [ 64%]
+........................................................................ [ 65%]
+..................sssssss.ssssssssssss.ss............................... [ 67%]
+....................................s...................s............... [ 69%]
+............................................................s........... [ 70%]
+........................................................................ [ 72%]
+..................................................................F..... [ 73%]
+....s................................................................... [ 75%]
+.......................................s........................ssssssss [ 77%]
+sssssssssss.sssss.......sss.....ssss...........s........................ [ 78%]
+..F...............s..ssss......................ss..................sssss [ 80%]
+s...ss.sssssssss.sssssss....ssssss.....sssss............................ [ 82%]
+..............................................................ssss...... [ 83%]
+........................................................................ [ 85%]
+..................................................s..................... [ 87%]
+.................................ss.........................sss......... [ 88%]
+..............sssssssssssssssss..ss......s...........................s.. [ 90%]
+.s...................................................................... [ 92%]
+............s............s.................................s............ [ 93%]
+......................................ss................................ [ 95%]
+...........sssssss...F..............ssssssssssssssssss.................. [ 97%]
+..................................sssssss............................... [ 98%]
+..................................sss.......ssssss.....ssss              [100%]
+=================================== ERRORS ====================================
+____ ERROR at setup of test_wheels_install_together_in_a_clean_environment ____
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+______ ERROR at setup of test_wheel_metadata_version_matches_the_package ______
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+____________ ERROR at setup of test_real_entry_point_is_discovered ____________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_____ ERROR at setup of test_discovery_reports_the_plugin_without_issues ______
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_______ ERROR at setup of test_cli_list_inspect_and_doctor_all_succeed ________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_ ERROR at setup of test_python_quality_plugin_runs_tool_policy_and_named_verifier _
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_ ERROR at setup of test_plugin_creator_skill_runs_through_the_existing_mainline _
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+________ ERROR at setup of test_model_sees_the_plugin_tool_and_prompt _________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+____ ERROR at setup of test_turn_completes_and_the_plugin_tool_really_ran _____
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_________ ERROR at setup of test_tool_calls_and_results_pair_exactly __________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_______ ERROR at setup of test_effect_intents_and_outcomes_pair_exactly _______
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_ ERROR at setup of test_composition_snapshot_contains_the_real_plugin_identity _
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_________ ERROR at setup of test_session_records_the_plugin_identity __________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_______________ ERROR at setup of test_no_invariant_violations ________________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_________ ERROR at setup of test_no_request_reconstruction_violations _________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+_ ERROR at setup of test_default_runtime_is_untouched_even_though_the_plugin_is_installed _
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+___________ ERROR at setup of test_dispose_removes_the_plugin_tool ____________
+
+wheelhouse = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/wheelhouse0')
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x0000020B20F10320>, _basetemp=WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def clean_environment(wheelhouse: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+        venv = tmp_path_factory.mktemp("venv-root") / "venv"
+        created = run([sys.executable, "-m", "venv", str(venv)])
+        assert created.returncode == 0, f"venv creation failed:\n{created.stderr}"
+    
+        python = venv_python(venv)
+        installed = run(
+            [
+                str(python), "-m", "pip", "install",
+                "--no-index", "--find-links", str(wheelhouse),
+                "traceharness-py",
+                "traceh-example-skill-plugin",
+                "traceh-plugin-creator-skill-plugin",
+                "traceh-python-quality-plugin",
+            ]
+        )
+>       assert installed.returncode == 0, (
+            f"offline install failed:\n{installed.stdout}\n{installed.stderr}"
+        )
+E       AssertionError: offline install failed:
+E         Looking in links: c:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\wheelhouse0
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceharness_py-0.11.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_example_skill_plugin-0.1.0-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_plugin_creator_skill_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\traceh_python_quality_plugin-0.2.2-py3-none-any.whl
+E         Processing c:\users\caojie\appdata\local\temp\pytest-of-caojie\pytest-6155\wheelhouse0\packaging-26.3-py3-none-any.whl (from traceharness-py)
+E         INFO: pip is looking at multiple versions of traceh-plugin-creator-skill-plugin to determine which version is compatible with other requirements. This could take a while.
+E         
+E         The conflict is caused by:
+E             The user requested traceharness-py
+E             traceh-example-skill-plugin 0.1.0 depends on traceharness-py<1.0 and >=0.4
+E             traceh-plugin-creator-skill-plugin 0.2.2 depends on traceharness-py<0.9 and >=0.6
+E         
+E         To fix this you could try to:
+E         1. loosen the range of package versions you've specified
+E         2. remove package versions to allow pip to attempt to solve the dependency conflict
+E         
+E         
+E         ERROR: Cannot install traceh-example-skill-plugin==0.1.0, traceh-plugin-creator-skill-plugin==0.2.2 and traceharness-py because these package versions have conflicting dependencies.
+E         ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\venv-root0\\venv\\Scri...sible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts\n').returncode
+
+tests\test_plugin_wheel_e2e.py:141: AssertionError
+================================== FAILURES ===================================
+__ test_frozen_sources_prepare_on_original_owners_without_network[o-nonzero] __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_frozen_sources_prepare_on6')
+case_id = 'o-nonzero'
+
+    @pytest.mark.parametrize(
+        "case_id",
+        [
+            "h-direct",
+            "s-large-directory",
+            "s-resource",
+            "m-direct",
+            "m-superseded",
+            "m-revoked",
+            "o-nonzero",
+        ],
+    )
+    async def test_frozen_sources_prepare_on_original_owners_without_network(tmp_path, case_id):
+        manifest = load_manifest(MANIFEST)
+        fixture = next(f for f in materialize(manifest) if f["id"] == case_id)
+        responses = (
+            [
+                ModelResponse(
+                    tool_calls=(ToolCall("execute", "shell", {"command": "python check.py"}),)
+                ),
+                ModelResponse(content="done"),
+            ]
+            if fixture["family"] == "output"
+            else [ModelResponse(content="noted")]
+        )
+        provider = ScriptedLlmProvider(tuple(responses), repeat_last=True)
+        runtime, store, session, scope, value = await prepare_runtime(
+            tmp_path, fixture, {"manifest": manifest}, provider, "fixture-model"
+        )
+        try:
+>           await setup_source(runtime, session, scope, value, fixture, manifest)
+
+tests\test_active_retrieval_grid.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+runtime = <traceh.runtime.agent_runtime.AgentRuntime object at 0x0000020B29D27D40>
+session = '40828ef9-b6c7-42e7-8357-6d11042faef1'
+scope = <live_active_retrieval.grid.SourceOnly object at 0x0000020B2ABB2DE0>
+value = None
+fixture = {'id': 'o-nonzero', 'family': 'output', 'domain': 1, 'mode': 'nonzero', ...}
+manifest = {'format': 1, 'purpose': 'AR-A frozen synthetic evaluation; not production defaults', 'baseline_commit': 'a54d431', 'model_selection': 'existing authorized profile; freeze resolved provider/model before first scored request', ...}
+
+    async def setup_source(runtime, session, scope, value, fixture, manifest):
+        family = fixture["family"]
+        if family == "history":
+            for index, text in enumerate(fixture["history_turns"]):
+                await runtime.run_existing(session, "�����������¼��ֻ�ظ��Ѽ��£�" + text)
+                print(json.dumps({"case": fixture["identity"], "setup_turn": index + 1}), flush=True)
+            events = await runtime.sessions.read_session(session)
+            await runtime.compaction.replace_through(
+                session, through_seq=events[-1].seq, summary=manifest["fixtures"]["compaction_summary"]
+            )
+        elif family == "memory":
+            if fixture["mode"] != "unbound":
+                await prepare_memory(runtime, session, fixture)
+        elif family == "skill":
+            await runtime.skill_context.select(
+                session,
+                operation_id="select",
+                expected_head=0,
+                actor_id="evaluation-host",
+                skills=({"skill_id": value.descriptor.skill_id, "version": value.descriptor.version},),
+            )
+            await runtime.skill_context.rebuild_index(session)
+        else:
+            (scope.workspace / "check.py").write_text(output_program(fixture), encoding="utf-8")
+            await runtime.run_existing(
+                session, "ִ�� python check.py һ�Ρ����Ǳ��μ�飻���к����֪������������������"
+            )
+            counter = scope.workspace / "execution-count.txt"
+            if not counter.exists() or counter.read_text() != "1":
+>               raise ValueError("ar-output-setup-not-executed-once")
+E               ValueError: ar-output-setup-not-executed-once
+
+tests\live_active_retrieval\grid.py:371: ValueError
+____ test_output_runner_scores_actual_retained_evidence_and_one_execution _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_output_runner_scores_actu0')
+
+    async def test_output_runner_scores_actual_retained_evidence_and_one_execution(tmp_path):
+        manifest = load_manifest(MANIFEST)
+        fixture = next(f for f in materialize(manifest) if f["id"] == "o-direct")
+    
+        def search_output(request):
+            listing = next(
+                json.loads(m.content)
+                for m in reversed(request.messages)
+                if m.role == "tool" and '"outputs"' in m.content
+            )
+            ref = listing["outputs"][0]["output_ref"]
+            return ModelResponse(
+                tool_calls=(
+                    ToolCall(
+                        "search",
+                        "search_tool_output",
+                        {"effect_id": ref["effect_id"], "digest": ref["digest"], "query": "����У����"},
+                    ),
+                )
+            )
+    
+        provider = SelectingProvider(
+            [
+                ModelResponse(
+                    tool_calls=(
+                        ToolCall("execute", "shell", {"command": "python check.py"}),
+                        ToolCall("duplicate", "shell", {"command": "python check.py"}),
+                    )
+                ),
+                ModelResponse(content="done"),
+                ModelResponse(tool_calls=(ToolCall("list", "list_tool_outputs", {}),)),
+                search_output,
+                ModelResponse(content=fixture["value"]),
+            ]
+        )
+        report = await run_case(
+            tmp_path / "case", fixture, {"manifest": manifest}, provider, "fixture-model"
+        )
+>       assert report["closed"] and report["provisional_joint_pass"], report
+E       AssertionError: {'identity': '113-o-direct', 'case_id': 'o-direct', 'seed': 113, 'family': 'output', ...}
+E       assert (True and False)
+
+tests\test_active_retrieval_grid.py:154: AssertionError
+______ test_probe_uses_the_real_runtime_and_collects_persisted_evidence _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_probe_uses_the_real_runti0')
+
+    @pytest.mark.asyncio
+    async def test_probe_uses_the_real_runtime_and_collects_persisted_evidence(
+        tmp_path: Path,
+    ) -> None:
+        suite = tmp_path / "probe-suite"
+        case = _write_probe_case(suite)
+    
+        facts = await probe_module._run_case(
+            suite=suite,
+            run_root=tmp_path / "probe-run",
+            case=case,
+            arm="baseline",
+            plugin_id="unused.plugin",
+            plugin_version="1.0",
+        )
+    
+        assert facts["completed"] is True
+        assert facts["evidence_complete"] is True
+>       assert facts["verification_passed"] is True
+E       assert False is True
+
+tests\test_candidate_comparison.py:529: AssertionError
+_____ test_probe_runtime_failure_does_not_claim_missing_evidence_is_clean _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_probe_runtime_failure_doe0')
+
+    @pytest.mark.asyncio
+    async def test_probe_runtime_failure_does_not_claim_missing_evidence_is_clean(
+        tmp_path: Path,
+    ) -> None:
+        suite = tmp_path / "probe-suite"
+        case = _write_probe_case(suite, verifier_program="missing-l3-verifier-fixture")
+    
+        facts = await probe_module._run_case(
+            suite=suite,
+            run_root=tmp_path / "probe-run",
+            case=case,
+            arm="baseline",
+            plugin_id="unused.plugin",
+            plugin_version="1.0",
+        )
+    
+>       assert facts["completed"] is False
+E       assert True is False
+
+tests\test_candidate_comparison.py:550: AssertionError
+______________ test_real_candidate_validation_runs_every_l2_gate ______________
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_real_candidate_validation0')
+
+    @pytest.mark.slow
+    @pytest.mark.skipif(
+        os.environ.get("TRACEH_CANDIDATE_VALIDATION") == "1",
+        reason="avoid recursively running the validator inside its own core regression",
+    )
+    @pytest.mark.asyncio
+    async def test_real_candidate_validation_runs_every_l2_gate(tmp_path: Path) -> None:
+        if not _head_contains_l2_validator():
+            pytest.skip("real L2 recursion guard requires the validator to exist in core HEAD")
+        candidate = tmp_path / "candidate"
+        shutil.copytree(PLUGIN_CREATOR, candidate)
+        (candidate / "CANDIDATE.md").write_text(
+            "# Plugin Creator validation fixture\n\n"
+            "UNVALIDATED (L1 SOURCE ONLY)\n",
+            encoding="utf-8",
+        )
+        output = tmp_path / "evidence"
+        runner = RecordingSubprocessRunner()
+    
+        report = await CandidateValidator(
+            CandidateValidationConfig(
+                candidate=candidate,
+                core_project=PROJECT_ROOT,
+                output=output,
+                allow_index=True,
+                command_timeout_seconds=600.0,
+                core_timeout_seconds=1800.0,
+            ),
+            runner=runner,
+        ).run()
+    
+        if not report.ok:
+            diagnostic = output / "diagnostics" / "core-regression.txt"
+            if diagnostic.is_file():
+                pytest.fail(
+                    "real L2 core regression failed:\n"
+                    + diagnostic.read_text(encoding="utf-8"),
+                    pytrace=False,
+                )
+>       assert report.ok is True, {
+            "checks": {check.name: (check.status, check.code) for check in report.checks},
+            "core_regression": runner.outcomes.get("core-regression"),
+        }
+E       AssertionError: {'checks': {'candidate-source-contract': ('failed', 'candidate-traceh-dependency-incompatible'), 'trusted-core-snapsho...-build-blocked'), 'candidate-wheel-build': ('blocked', 'candidate-wheel-build-blocked'), ...}, 'core_regression': None}
+E       assert False is True
+E        +  where False = CandidateValidationReport(schema_version=1, ok=False, created_at='2026-09-21T19:40:50.772157+00:00', core_commit='2e3a...�ǲ���ϵͳɳ�䣻��ѡ������ӵ�е�ǰ�û�Ȩ�ޣ���ֻ��ֱ֤���ӽ���������', '��֤�����ں�ѡִ�н��������󲢺˶Գ�ʼժҪ���������Ŀ¼��Ϊһ�������ύ��', 'L2 ֻ֤��������ȶ��Ž�����֤���������ڻ��ߣ�Ҳ��������׼����װ�򷢲���')).ok
+
+tests\test_candidate_validation.py:752: AssertionError
+_______ test_retrieval_plan_runs_through_cli_and_assess_remains_offline _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_retrieval_plan_runs_throu0')
+capsys = <_pytest.capture.CaptureFixture object at 0x0000020B2A03F860>
+
+    async def test_retrieval_plan_runs_through_cli_and_assess_remains_offline(tmp_path, capsys):
+        plan = json.loads((BENCHMARK / "run-plan.example.json").read_text(encoding="utf-8"))
+        plan["model"].update(
+            provider="scripted",
+            model="test-model",
+            base_url=None,
+            api_key_env="UNUSED_TEST_KEY",
+            script=None,
+        )
+        plan["execution"].update(sandbox_config=None, max_trials=1)
+        plan["trials"]["selection"] = {"case_ids": ["s-absent"], "material_seeds": [113]}
+        path = tmp_path / "plan.json"
+        path.write_text(json.dumps(plan), encoding="utf-8")
+        args = build_parser().parse_args(
+            ["eval", str(BENCHMARK), "--run-plan", str(path), "--output", str(tmp_path / "run")]
+        )
+        _configure_from_environment(args, environment={})
+        assert await _eval(args) == 0
+        assert json.loads(capsys.readouterr().out)["task_type"] == "retrieval_episode"
+        export_review(tmp_path / "run", tmp_path / "review")
+        path = tmp_path / "review/judgment-template.json"
+        judgment = json.loads(path.read_text())
+        judgment["reviewer"] = "test-reviewer"
+        path.write_text(json.dumps(judgment))
+        args = build_parser().parse_args(
+            [
+                "eval",
+                "--assess",
+                str(tmp_path / "run"),
+                "--judgment-file",
+                str(path),
+                "--output",
+                str(tmp_path / "assessment"),
+            ]
+        )
+        _configure_from_environment(args, environment={"TRACEH_MODEL": "must-not-be-used"})
+        assert await _eval(args) == 0
+        result = json.loads(capsys.readouterr().out)
+        assert result["assessment_counts"]["pending_review"] == 1
+>       report = json.loads((tmp_path / "assessment/report.json").read_text())
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_episode_review_contract.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_retrieval_plan_runs_throu0/assessment/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xac in position 1009: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+_ test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[False] _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_public_cli_isolated_worke0')
+patch = False
+
+    @pytest.mark.parametrize("patch", [False, True])
+    async def test_public_cli_isolated_workers_load_exact_sources_and_keep_pending(tmp_path, patch):
+        root, code = await run_pair(tmp_path, patch=patch)
+        report = json.loads((root / "comparison/report.json").read_text())
+        assert code == 0, report
+        assert report["complete"] and report["status"] == "inconclusive"
+        assert report["planned_pairs"] == 1 and report["changes"]["unknown"] == 1
+        assert report["cost_delta"] == {"total_tokens": 0, "tool_calls": 0}
+        receipts = [
+            json.loads((root / f"arms/{i:02d}/worker-receipt.json").read_text()) for i in (1, 2)
+        ]
+        assert receipts[0]["pid"] != receipts[1]["pid"] != os.getpid()
+        assert all(Path(r["source_root"]).is_relative_to(root) for r in receipts)
+        assert (receipts[0]["source_digest"] != receipts[1]["source_digest"]) is patch
+        if patch:
+            original = (root / "arms/01/code/traceh/runtime/prompt.py").read_bytes()
+            changed = (root / "arms/02/code/traceh/runtime/prompt.py").read_bytes()
+            assert b"EXPLICIT TEST CANDIDATE TEXT" not in original
+            assert b"EXPLICIT TEST CANDIDATE TEXT" in changed
+            with sqlite3.connect(root / "arms/02/run/attempts/001/events/events.sqlite3") as db:
+                rows = db.execute("SELECT envelope_json FROM events").fetchall()
+                rows = [r for r in rows if json.loads(r[0])["type"] == "request/snapshot"]
+            assert rows and any("EXPLICIT TEST CANDIDATE TEXT" in r[0] for r in rows)
+>       judged = judge_pair(root, ("passed", "passed"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_evaluation_comparison.py:184: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_evaluation_comparison.py:129: in judge_pair
+    report = json.loads((run / "report.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_public_cli_isolated_worke0/experiment/arms/01/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xad in position 490: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+---------------------------- Captured stdout call -----------------------------
+{
+  "command": "eval",
+  "run_id": "1a4a096d-578c-4421-9d42-e94fb132cd94",
+  "complete": true,
+  "comparison": "inconclusive",
+  "report_json": "C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\test_public_cli_isolated_worke0\\experiment\\comparison\\report.json"
+}
+_ test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[True] __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_public_cli_isolated_worke1')
+patch = True
+
+    @pytest.mark.parametrize("patch", [False, True])
+    async def test_public_cli_isolated_workers_load_exact_sources_and_keep_pending(tmp_path, patch):
+        root, code = await run_pair(tmp_path, patch=patch)
+        report = json.loads((root / "comparison/report.json").read_text())
+        assert code == 0, report
+        assert report["complete"] and report["status"] == "inconclusive"
+        assert report["planned_pairs"] == 1 and report["changes"]["unknown"] == 1
+        assert report["cost_delta"] == {"total_tokens": 0, "tool_calls": 0}
+        receipts = [
+            json.loads((root / f"arms/{i:02d}/worker-receipt.json").read_text()) for i in (1, 2)
+        ]
+        assert receipts[0]["pid"] != receipts[1]["pid"] != os.getpid()
+        assert all(Path(r["source_root"]).is_relative_to(root) for r in receipts)
+        assert (receipts[0]["source_digest"] != receipts[1]["source_digest"]) is patch
+        if patch:
+            original = (root / "arms/01/code/traceh/runtime/prompt.py").read_bytes()
+            changed = (root / "arms/02/code/traceh/runtime/prompt.py").read_bytes()
+            assert b"EXPLICIT TEST CANDIDATE TEXT" not in original
+            assert b"EXPLICIT TEST CANDIDATE TEXT" in changed
+            with sqlite3.connect(root / "arms/02/run/attempts/001/events/events.sqlite3") as db:
+                rows = db.execute("SELECT envelope_json FROM events").fetchall()
+                rows = [r for r in rows if json.loads(r[0])["type"] == "request/snapshot"]
+            assert rows and any("EXPLICIT TEST CANDIDATE TEXT" in r[0] for r in rows)
+>       judged = judge_pair(root, ("passed", "passed"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_evaluation_comparison.py:184: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_evaluation_comparison.py:129: in judge_pair
+    report = json.loads((run / "report.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_public_cli_isolated_worke1/experiment/arms/01/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xad in position 490: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+---------------------------- Captured stdout call -----------------------------
+{
+  "command": "eval",
+  "run_id": "3f8d7189-ef63-4851-a488-839bdd85123a",
+  "complete": true,
+  "comparison": "inconclusive",
+  "report_json": "C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\test_public_cli_isolated_worke1\\experiment\\comparison\\report.json"
+}
+______ test_edited_derived_assessment_cannot_replace_immutable_judgment _______
+
+experiment = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/comparison-evidence0/experiment')
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_edited_derived_assessment0')
+
+    def test_edited_derived_assessment_cannot_replace_immutable_judgment(experiment, tmp_path):
+>       manifest = judge_pair(experiment, ("failed", "failed"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_evaluation_comparison_evidence.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_evaluation_comparison.py:129: in judge_pair
+    report = json.loads((run / "report.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/comparison-evidence0/experiment/arms/01/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xad in position 490: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+_ test_deliberately_regressed_candidate_uses_real_requests_and_original_memory _
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_deliberately_regressed_ca0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000020B29D3E120>
+
+    async def test_deliberately_regressed_candidate_uses_real_requests_and_original_memory(
+        tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("UNUSED_EVALUATION_KEY", "local-fixture-not-a-real-key")
+        with model_server(asyncio.get_running_loop(), regression=True) as (model, _, _, requests):
+            root, code = await run_pair(tmp_path, patch=True, case_id="m-direct", model=model)
+        assert code == 0
+        assert len(requests) >= 3
+        reports = [
+            json.loads((root / f"arms/{i:02d}/run/report.json").read_text(encoding="utf-8"))
+            for i in (1, 2)
+        ]
+        assert reports[0]["task_report"]["episodes"][0]["dispatched_evidence"]
+        assert not reports[1]["task_report"]["episodes"][0]["dispatched_evidence"]
+>       path = judge_pair(root, ("passed", "failed"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_evaluation_workers.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_evaluation_comparison.py:129: in judge_pair
+    report = json.loads((run / "report.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_deliberately_regressed_ca0/experiment/arms/01/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xae in position 486: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+---------------------------- Captured stdout call -----------------------------
+{
+  "command": "eval",
+  "run_id": "dc7df83a-2432-4eb7-b31c-887aef27ca71",
+  "complete": true,
+  "comparison": "inconclusive",
+  "report_json": "C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\test_deliberately_regressed_ca0\\experiment\\comparison\\report.json"
+}
+____ test_actual_candidate_dispatch_pending_review_and_offline_inspection _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_actual_candidate_dispatch0')
+
+    async def test_actual_candidate_dispatch_pending_review_and_offline_inspection(tmp_path):
+        report = await execute(tmp_path)
+        root = tmp_path / "optimization"
+        native = root / "rounds/0001/evaluation"
+        assert report["action"] == "await_review" and report["progress"]["pending_reviews"] == 2
+        assert report["progress"]["trials_started"] == 2 and report["remaining_candidates"] == 1
+        assert report["adoption_authorized"] is False
+        assert report["progress"]["evidence"] == "passed"
+        assert report["progress"]["convergence"] == "converged"
+        receipts = [
+            json.loads((native / f"arms/{i:02d}/worker-receipt.json").read_text()) for i in (1, 2)
+        ]
+        assert len({os.getpid(), *(r["pid"] for r in receipts)}) == 3
+        for i in (1, 2):
+            dbfile = native / f"arms/{i:02d}/run/attempts/001/events/events.sqlite3"
+            with sqlite3.connect(dbfile) as db:
+                snapshots = [
+                    r[0]
+                    for r in db.execute("SELECT envelope_json FROM events")
+                    if json.loads(r[0])["type"] == "request/snapshot"
+                ]
+            assert snapshots
+            assert any("EXPLICIT TEST CANDIDATE TEXT" in s for s in snapshots) == (i == 2)
+        # Cached scores are not authority. An explicit original review fixture is.
+        (native / "comparison/report.json").write_text("{}")
+        (root / "report/report.json").write_text("{}")
+        assert inspect_optimization(root)["action"] == "await_review"
+>       assessment = judge_pair(native, ("passed", "passed"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_manual_optimization.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_evaluation_comparison.py:129: in judge_pair
+    report = json.loads((run / "report.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_actual_candidate_dispatch0/optimization/rounds/0001/evaluation/arms/01/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xad in position 490: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+_ test_offline_inspector_rejects_another_run_and_corrupted_original_evidence __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_offline_inspector_rejects0')
+
+    async def test_offline_inspector_rejects_another_run_and_corrupted_original_evidence(tmp_path):
+        await execute(tmp_path)
+        root = tmp_path / "optimization"
+        directory = root / "rounds/0001"
+        outcome = directory / "outcome.json"
+        original = outcome.read_bytes()
+        data = json.loads(original)
+        data["experiment_digest"] = "e" * 64
+        outcome.write_text(json.dumps(data))
+        with pytest.raises(OptimizationContractError, match="run-drift"):
+            inspect_optimization(root)
+        outcome.write_bytes(original)
+        native_report = directory / "evaluation/arms/02/run/report.json"
+>       data = json.loads(native_report.read_text())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_manual_optimization.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_offline_inspector_rejects0/optimization/rounds/0001/evaluation/arms/02/run/report.json')
+encoding = 'locale', errors = None
+
+    def read_text(self, encoding=None, errors=None):
+        """
+        Open the file in text mode, read it, and close the file.
+        """
+        encoding = io.text_encoding(encoding)
+        with self.open(mode='r', encoding=encoding, errors=errors) as f:
+>           return f.read()
+                   ^^^^^^^^
+E           UnicodeDecodeError: 'gbk' codec can't decode byte 0xad in position 490: illegal multibyte sequence
+
+C:\mydownload\anaconda\Lib\pathlib.py:1028: UnicodeDecodeError
+_______ test_real_product_worktrees_inherit_before_first_model_dispatch _______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_real_product_worktrees_in0')
+
+    async def test_real_product_worktrees_inherit_before_first_model_dispatch(tmp_path):
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        store = InMemoryEventStore()
+        actions = ProductTurnActions()
+        runtime = _chat_runtime(tmp_path, store, actions, _ChatProvider())
+        await runtime.create_session(source, session_id="requester")
+        provider = LocalGitWorkspaceProvider(
+            managed_root=tmp_path / "managed", sources={"product-source": source}
+        )
+        scope = ProjectScopeService(runtime.sessions, provider, ProjectScopeLimits(120, 100))
+        await bind(scope, "requester", source_id="product-source")
+        authority = MemoryService(scope, memory_policy())
+        proposal = await declare(authority)
+        await approve(authority, proposal)
+    
+        class CheckingProvider(_ProductProvider):
+            def __init__(self):
+                super().__init__()
+                self.checked = 0
+    
+            async def complete(self, request):
+                # Observe durable association at the actual Provider call, not after creation.
+                workspaces = await WorkspaceCatalogReader(store).load()
+                assert workspaces.workspaces
+                for record in workspaces.workspaces:
+                    if record.session_id is not None:
+                        assert (await authority.read(record.session_id)).active[
+                            0
+                        ].memory_id == "memory-goal"
+                        self.checked += 1
+                return await super().complete(request)
+    
+        product_provider = CheckingProvider()
+        host = await build_product_chat_host(
+            store=runtime.sessions.store,
+            sessions=runtime.sessions,
+            data_dir=tmp_path / "product-data",
+            host_profile=_host_profile(RequestedTaskMode.SINGLE),
+            providers={"product-provider": product_provider},
+            workspace_provider=provider,
+            artifact_cas=LocalArtifactCas(tmp_path / "cas"),
+            promotion_targets=promotion_targets("product-target", target),
+            capture_limits=capture_limits(),
+            approver_id="local-human",
+            max_report_chars=4096,
+            event_feed=runtime.events,
+            actions=actions,
+            project_scope=scope,
+        )
+        console = _Console(("please add the accepted file", "yes, do it", "START"))
+        assert (
+            await run_chat(
+                runtime,
+                console.console,
+                session_id="requester",
+                timeline=False,
+                product=LineProductAdapter(host, data_dir=tmp_path / "product-data"),
+            )
+            == 0
+        )
+>       assert "awaiting_approval" in console.output, console.output
+E       AssertionError: session_id=requester workspace=C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\test_real_product_worktrees_in0\source provider=scripted model=chat-model
+E         resume later (PowerShell):
+E           traceh chat --session-id 'requester' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\test_real_product_worktrees_in0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\test_real_product_worktrees_in0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E         Type /help for commands, /exit to leave.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task proposal (not started):
+E           proposal: proposal-0669dead662afc786c50884f9325b189d851ef4f1497c44dcdc5419642ab62af
+E           task if confirmed: product-task-54438c382fc676a0d5cf4bf78144e339d1cb50c7b624ba27ab3acdfd987caaef
+E           requirement: please add the accepted file
+E           profile:  product-profile
+E           mode:     single
+E           mode source: profile
+E           source:   ad899f96aada5b5fd9905357760ec4c968593932
+E           target:   refs/heads/main at ad899f96aada5b5fd9905357760ec4c968593932
+E           safety: fixed Workflow, host verification, human approval
+E         Reply naturally in a later message. If acceptance is detected, the host will require exact START authorization before any task begins.
+E         assistant> host action proposed
+E         [reason=completed steps=2 tokens=30 verification=None]
+E         task product-task-54438c382fc676a0d5cf4bf78144e339d1cb50c7b624ba27ab3acdfd987caaef: explicit START authorized by host user
+E         task product-task-54438c382fc676a0d5cf4bf78144e339d1cb50c7b624ba27ab3acdfd987caaef: confirmation accepted; starting execution
+E           requested mode: single
+E         task product-task-54438c382fc676a0d5cf4bf78144e339d1cb50c7b624ba27ab3acdfd987caaef: failed; workflow=failed; mode=single
+E         task product-task-54438c382fc676a0d5cf4bf78144e339d1cb50c7b624ba27ab3acdfd987caaef: failed
+E           failure: workflow-node-failed
+E         
+E         resume later (PowerShell):
+E           traceh chat --session-id 'requester' --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\test_real_product_worktrees_in0\chat-data' --provider 'scripted' --model 'chat-model' --max-steps '8' --denial-warn-after '2' --denial-stop-after '3' --model-retry-max-attempts '1' --model-retry-max-elapsed-seconds '0.0' --model-retry-base-delay-seconds '0.0' --model-retry-max-delay-seconds '0.0' --model-retry-after-cap-seconds '0.0' --model-retry-jitter-ratio '0.0'
+E           traceh sessions --data-dir 'C:\Users\caojie\AppData\Local\Temp\pytest-of-caojie\pytest-6155\test_real_product_worktrees_in0\chat-data'
+E           note: this restores the session and its non-secret settings; it is not a complete configuration snapshot.
+E       assert 'awaiting_approval' in "session_id=requester workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\test_real_prod...hat-data'\n  note: this restores the session and its non-secret settings; it is not a complete configuration snapshot."
+E        +  where "session_id=requester workspace=C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6155\\test_real_prod...hat-data'\n  note: this restores the session and its non-secret settings; it is not a complete configuration snapshot." = <test_product_f3_e2e._Console object at 0x0000020B2D2C2810>.output
+
+tests\test_memory_product.py:156: AssertionError
+______ test_skill_memory_and_history_share_final_budget_and_replay[2400] ______
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_skill_memory_and_history_1')
+total = 2400
+
+    @pytest.mark.parametrize("total", [30000, 2400])
+    async def test_skill_memory_and_history_share_final_budget_and_replay(tmp_path, total):
+        config = ProjectMemoryConfig(
+            ProjectScopeLimits(100, 100), memory_policy(), Resolver({"source-orion": tmp_path})
+        )
+        context = context_policy(
+            memory=retrieval_policy(),
+            history_tier="directory",
+            history_bytes=4000,
+            history=history_context().history,
+            total_bytes=total,
+        )
+        runtime, store, provider, session, values = await build_case(
+            tmp_path, context=context, config_changes={"memory": config}
+        )
+        try:
+            await bind(runtime.project_scope, session)
+            await select(runtime, session, values[0])
+            proposal = await declare(
+                runtime.memory, session_id=session, body="boundary.notes shared evidence"
+            )
+            await approve(runtime.memory, proposal, session_id=session)
+            await runtime.skill_context.rebuild_index(session)
+            await runtime.memory.rebuild_index(session)
+            await runtime.run_existing(session, "seed")
+            events = await runtime.sessions.read_session(session)
+            await runtime.compaction.replace_through(
+                session, through_seq=events[-1].seq, summary="Earlier work"
+            )
+            await runtime.run_existing(session, "boundary.notes")
+            events = await runtime.sessions.read_session(session)
+            data = [e for e in events if e.type == "context/input"][-1].data
+            assert len(data["query"]["source_refs"]) == 1
+            assert data["retrieval"]["skill"] is not None and data["retrieval"]["memory"] is not None
+            assert len(data["retrieval"]["fusion"]) == 2
+            rendered = render_context_message(parse_context_input(data)).content
+>           assert len(rendered.encode("utf-8")) <= total
+E           assert 2589 <= 2400
+E            +  where 2589 = len(b'Current references for the active user request. Host-generated navigation identifies records and the corresponding r...swers are conversation history, not an unfinished task. Use this Turn\'s Tool and verification results to complete it.')
+E            +    where b'Current references for the active user request. Host-generated navigation identifies records and the corresponding r...swers are conversation history, not an unfinished task. Use this Turn\'s Tool and verification results to complete it.' = <built-in method encode of str object at 0x0000020B283821F0>('utf-8')
+E            +      where <built-in method encode of str object at 0x0000020B283821F0> = "Current references for the active user request. Host-generated navigation identifies records and the corresponding re...nswers are conversation history, not an unfinished task. Use this Turn's Tool and verification results to complete it.".encode
+
+tests\test_reference_orchestration.py:126: AssertionError
+___ test_over_budget_superset_does_not_suppress_a_smaller_useful_reference ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6155/test_over_budget_superset_does0')
+
+    async def test_over_budget_superset_does_not_suppress_a_smaller_useful_reference(tmp_path):
+        small = skill("packing.handbook", "compression")
+        context = context_policy(memory=retrieval_policy(), item_bytes=1400)
+        # Make the raw fixture exceed the explicit limit independently of view overhead.
+        body = "compression encryption " + "p" * context.item_bytes
+        async with precision_case(
+            tmp_path,
+            values=(small,),
+            facts=(("memo.willow", body),),
+            context=context,
+            memory_limits=memory_policy(max_body_bytes=len(body.encode("utf-8"))),
+        ) as (runtime, _, provider, session):
+            await runtime.run_existing(session, "compression encryption")
+            data = await dispatched_context(runtime, provider, session)
+>           assert identities(data) == {("skill", "packing.handbook")}
+E           AssertionError: assert set() == {('skill', 'p...ng.handbook')}
+E             
+E             Extra items in the right set:
+E             ('skill', 'packing.handbook')
+E             Use -v to get more diff
+
+tests\test_retrieval_precision.py:250: AssertionError
+___________ test_installed_distribution_metadata_matches_the_module ___________
+
+    def test_installed_distribution_metadata_matches_the_module() -> None:
+        """The built/installed wheel and the imported package must agree.
+    
+        pyproject declares the version dynamically from ``traceh.version.__version__``,
+        so a mismatch here means the installed distribution is stale.
+        """
+    
+>       assert metadata.version(DISTRIBUTION_NAME) == __version__
+E       AssertionError: assert '0.9.0' == '0.11.0'
+E         
+E         - 0.11.0
+E         + 0.9.0
+
+tests\test_version_contract.py:46: AssertionError
+============================ slowest 30 durations =============================
+42.07s setup    tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+30.78s call     tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-late-page]
+29.60s call     tests/test_reference_receipt_retention.py::test_retained_search_and_read_receipts_still_disclose_next_step[h-direct-\u53e3\u4ee4]
+26.88s call     tests/test_retrieval_episode_evaluator.py::test_real_production_sources_and_dispatched_evidence[h-direct]
+25.29s call     tests/test_memory_product.py::test_real_product_worktrees_inherit_before_first_model_dispatch
+23.00s call     tests/test_background_optimization.py::test_original_background_adapter_runs_candidate_in_independent_workers
+21.82s call     tests/test_retrieval_evaluation_failures.py::test_product_index_preparation_failure_converges_attached_worktree[True]
+21.06s call     tests/test_live_reference_journeys.py::test_journey_preconditions_and_real_owner_evidence[all_three_sources]
+21.03s call     tests/test_evaluation_workers.py::test_deliberately_regressed_candidate_uses_real_requests_and_original_memory
+20.31s call     tests/test_strategy_optimization.py::test_real_generation_lease_proposal_enters_original_workers
+19.70s call     tests/test_retrieval_evaluation_failures.py::test_product_index_preparation_failure_converges_attached_worktree[False]
+19.56s call     tests/test_episode_diagnostics.py::test_complete_search_excerpt_is_evidence_without_a_read[h-direct]
+19.39s call     tests/test_live_reference_journeys.py::test_journey_preconditions_and_real_owner_evidence[history_stale_and_current_file]
+19.20s call     tests/test_in_turn_step_folding.py::test_the_budget_holds_the_page_the_model_keeps_asking_for
+18.68s call     tests/test_strategy_optimization.py::test_unknown_judge_usage_stops_before_other_arm
+17.48s call     tests/test_multi_child_collaboration.py::test_two_writable_assistants_deliver_independent_patches
+17.30s call     tests/test_strategy_optimization.py::test_generated_candidate_cannot_be_replaced_by_edited_receipt
+16.70s call     tests/test_evaluation_workers.py::test_connection_failure_remains_unassessable_and_is_not_a_quality_loss
+16.08s call     tests/test_live_reference_journeys.py::test_journey_preconditions_and_real_owner_evidence[history_two_pages]
+15.58s call     tests/test_manual_optimization.py::test_actual_candidate_dispatch_pending_review_and_offline_inspection
+15.37s call     tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+15.31s call     tests/test_manual_optimization.py::test_transport_failure_preserves_actual_attempts_and_stops
+15.30s call     tests/test_manual_optimization.py::test_offline_inspector_rejects_another_run_and_corrupted_original_evidence
+15.00s call     tests/test_manual_optimization.py::test_unknown_usage_stops_without_inventing_zero_cost
+14.80s call     tests/test_live_reference_journeys.py::test_journey_preconditions_and_real_owner_evidence[memory_and_history]
+13.72s call     tests/test_concurrent_collaboration.py::test_concurrent_writable_handoff_supplies_the_completion_receipt
+13.47s call     tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[True]
+13.39s call     tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[False]
+13.17s call     tests/test_in_turn_step_folding.py::test_without_a_budget_a_reopened_page_folds_back_to_its_original_address
+13.04s call     tests/test_in_turn_step_folding.py::test_reopened_evidence_is_protected_up_to_its_byte_budget
+=========================== short test summary info ===========================
+FAILED tests/test_active_retrieval_grid.py::test_frozen_sources_prepare_on_original_owners_without_network[o-nonzero]
+FAILED tests/test_active_retrieval_grid.py::test_output_runner_scores_actual_retained_evidence_and_one_execution
+FAILED tests/test_candidate_comparison.py::test_probe_uses_the_real_runtime_and_collects_persisted_evidence
+FAILED tests/test_candidate_comparison.py::test_probe_runtime_failure_does_not_claim_missing_evidence_is_clean
+FAILED tests/test_candidate_validation.py::test_real_candidate_validation_runs_every_l2_gate
+FAILED tests/test_episode_review_contract.py::test_retrieval_plan_runs_through_cli_and_assess_remains_offline
+FAILED tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[False]
+FAILED tests/test_evaluation_comparison.py::test_public_cli_isolated_workers_load_exact_sources_and_keep_pending[True]
+FAILED tests/test_evaluation_comparison_evidence.py::test_edited_derived_assessment_cannot_replace_immutable_judgment
+FAILED tests/test_evaluation_workers.py::test_deliberately_regressed_candidate_uses_real_requests_and_original_memory
+FAILED tests/test_manual_optimization.py::test_actual_candidate_dispatch_pending_review_and_offline_inspection
+FAILED tests/test_manual_optimization.py::test_offline_inspector_rejects_another_run_and_corrupted_original_evidence
+FAILED tests/test_memory_product.py::test_real_product_worktrees_inherit_before_first_model_dispatch
+FAILED tests/test_reference_orchestration.py::test_skill_memory_and_history_share_final_budget_and_replay[2400]
+FAILED tests/test_retrieval_precision.py::test_over_budget_superset_does_not_suppress_a_smaller_useful_reference
+FAILED tests/test_version_contract.py::test_installed_distribution_metadata_matches_the_module
+ERROR tests/test_plugin_wheel_e2e.py::test_wheels_install_together_in_a_clean_environment
+ERROR tests/test_plugin_wheel_e2e.py::test_wheel_metadata_version_matches_the_package
+ERROR tests/test_plugin_wheel_e2e.py::test_real_entry_point_is_discovered - A...
+ERROR tests/test_plugin_wheel_e2e.py::test_discovery_reports_the_plugin_without_issues
+ERROR tests/test_plugin_wheel_e2e.py::test_cli_list_inspect_and_doctor_all_succeed
+ERROR tests/test_plugin_wheel_e2e.py::test_python_quality_plugin_runs_tool_policy_and_named_verifier
+ERROR tests/test_plugin_wheel_e2e.py::test_plugin_creator_skill_runs_through_the_existing_mainline
+ERROR tests/test_plugin_wheel_e2e.py::test_model_sees_the_plugin_tool_and_prompt
+ERROR tests/test_plugin_wheel_e2e.py::test_turn_completes_and_the_plugin_tool_really_ran
+ERROR tests/test_plugin_wheel_e2e.py::test_tool_calls_and_results_pair_exactly
+ERROR tests/test_plugin_wheel_e2e.py::test_effect_intents_and_outcomes_pair_exactly
+ERROR tests/test_plugin_wheel_e2e.py::test_composition_snapshot_contains_the_real_plugin_identity
+ERROR tests/test_plugin_wheel_e2e.py::test_session_records_the_plugin_identity
+ERROR tests/test_plugin_wheel_e2e.py::test_no_invariant_violations - Assertio...
+ERROR tests/test_plugin_wheel_e2e.py::test_no_request_reconstruction_violations
+ERROR tests/test_plugin_wheel_e2e.py::test_default_runtime_is_untouched_even_though_the_plugin_is_installed
+ERROR tests/test_plugin_wheel_e2e.py::test_dispose_removes_the_plugin_tool - ...

@@ -1,0 +1,46 @@
+{
+  "comparison_status": "regressed",
+  "rows": [
+    {
+      "pair": 4,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "single",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": false,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 404158,
+        "output_tokens": 12136,
+        "quality": "exact",
+        "total_tokens": 416294
+      },
+      "known_estimated_cny": 0.905404,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.905404,
+      "model_attempts": 29,
+      "report_sha256": "846c8af9f778829cf228f98619e2124548d2bcd77236db773a7a5e144ea704b4"
+    },
+    {
+      "pair": 4,
+      "case": "pylint-dev__astroid-1196",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": {
+        "input_tokens": 599711,
+        "output_tokens": 51754,
+        "quality": "exact",
+        "total_tokens": 651465
+      },
+      "known_estimated_cny": 1.613454,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 1.613454,
+      "model_attempts": 37,
+      "report_sha256": "5087027e47d64f42210dbe41d99979f4c6b642b6b75e8b567a037f08f3b18aae"
+    }
+  ],
+  "planning_cny": 2.518858
+}

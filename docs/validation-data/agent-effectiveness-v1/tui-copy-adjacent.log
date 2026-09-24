@@ -1,0 +1,12 @@
+.......................................................                  [100%]
+============================ slowest 10 durations =============================
+2.49s call     tests/test_tui_governance.py::test_memory_form_selects_real_proposal_then_cancel_and_approve
+2.40s call     tests/test_tui_governance.py::test_tui_reads_and_confirms_without_sending_slash_commands_to_model
+1.72s call     tests/test_tui.py::test_model_confirmation_cannot_bypass_the_tui_start_gesture
+1.64s call     tests/test_tui_governance.py::test_governance_right_click_copy_and_empty_selection_do_not_exit
+1.59s call     tests/test_tui_governance.py::test_conversation_drag_copy_in_place_without_writes[menu]
+1.47s call     tests/test_tui_governance.py::test_conversation_drag_copy_in_place_without_writes[keyboard]
+1.42s call     tests/test_tui.py::test_task_conversation_keeps_more_than_two_thousand_rows_scrollable
+1.42s call     tests/test_tui_governance.py::test_memory_form_targets_active_fact_through_original_review[supersede]
+1.29s call     tests/test_tui.py::test_new_confirmed_proposal_replaces_a_terminal_task_view
+1.29s call     tests/test_tui.py::test_approval_button_requires_durable_review_and_serializes_clicks

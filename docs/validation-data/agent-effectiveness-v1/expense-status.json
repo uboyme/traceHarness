@@ -1,0 +1,156 @@
+{
+  "authorized_cap_cny": 120,
+  "known_estimated_cny": 12.344993,
+  "unknown_reservation_cny": 101,
+  "rows": [
+    {
+      "item": "development-coder-next",
+      "known_cny": 0.911015,
+      "unknown_reserved_cny": 12
+    },
+    {
+      "item": "request-tail-probes",
+      "known_cny": 0.05526,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "development-plus-before-fix",
+      "known_cny": 0.575928,
+      "unknown_reserved_cny": 14
+    },
+    {
+      "item": "single-after-fix",
+      "known_cny": 0.614284,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "multi-after-fix",
+      "known_cny": 0.930808,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-baseline",
+      "known_cny": 0.887938,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-fold-candidate",
+      "known_cny": 0.838704,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "ao-analysis-timeout",
+      "known_cny": 0,
+      "unknown_reserved_cny": 1
+    },
+    {
+      "item": "ao-analysis-coder-next",
+      "known_cny": 0.006845,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "ao-retained-baseline",
+      "known_cny": 0.478328,
+      "unknown_reserved_cny": 14
+    },
+    {
+      "item": "ao-retained-candidate",
+      "known_cny": 0.220152,
+      "unknown_reserved_cny": 14
+    },
+    {
+      "item": "single-ao-v1-analysis",
+      "known_cny": 0.00234,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v1-baseline",
+      "known_cny": 1.023122,
+      "unknown_reserved_cny": 9,
+      "original_unknown_reserved_cny": 14,
+      "reservation_basis": "single-ao-cancel-cost-bound.json"
+    },
+    {
+      "item": "single-ao-v1-candidate",
+      "known_cny": 1.190996,
+      "unknown_reserved_cny": 9,
+      "original_unknown_reserved_cny": 14,
+      "reservation_basis": "single-ao-cancel-cost-bound.json"
+    },
+    {
+      "item": "single-ao-v2-analysis",
+      "known_cny": 0.003059,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v2-baseline",
+      "known_cny": 0.68426,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v2-candidate",
+      "known_cny": 0.640342,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-astroid-v2-baseline",
+      "known_cny": 0.450842,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-astroid-v2-candidate",
+      "known_cny": 0.447366,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-validation-v1-1",
+      "known_cny": 0.394846,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-validation-v1-2",
+      "known_cny": 0.407566,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-pydicom-v3-a",
+      "known_cny": 0.223324,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "context-pydicom-v3-b",
+      "known_cny": 0.26944,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v3-analysis",
+      "known_cny": 0.002596,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v3-baseline",
+      "known_cny": 0.294702,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "single-ao-v3-candidate",
+      "known_cny": 0.309942,
+      "unknown_reserved_cny": 0
+    },
+    {
+      "item": "mode-v2-pair01-multi",
+      "known_cny": 0.395668,
+      "unknown_reserved_cny": 14
+    },
+    {
+      "item": "mode-v2-pair01-single-interrupted",
+      "known_cny": 0.08532,
+      "unknown_reserved_cny": 14
+    }
+  ],
+  "basis": "Returned exact token usage and documented undiscounted unit prices; not supplier invoice. Missing usage is not zero. Unknown reservations retained at conservative per-trial amounts.",
+  "new_paid_work": "Stopped after first Multi arm provider protocol error; partial Single arm interrupted; seven remaining pairs unstarted; no paid work active",
+  "active_paid_processes": 0,
+  "known_plus_reserved_cny": 113.344993,
+  "active_reservation_cny": 0
+}

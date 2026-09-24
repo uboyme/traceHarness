@@ -1,0 +1,22 @@
+{
+  "scope": "Two explicit local Git fixtures; no main repository history changes or network",
+  "material": "benchmarks\\retrieval_episodes_v1",
+  "rows": [
+    {
+      "attributes_present": false,
+      "source_sha256": "b99364b25522b10bda5a757ee1d9694c8c3646a44834765a44665cf781521d59",
+      "clone_sha256": "33af2746653c46a07402399367bc7574b57486e28873a39c88a01ab8faa8d054",
+      "bytes_identical": false,
+      "same_decoded_document": true,
+      "public_reader_failure": "evaluation-frozen-input-drift"
+    },
+    {
+      "attributes_present": true,
+      "source_sha256": "b99364b25522b10bda5a757ee1d9694c8c3646a44834765a44665cf781521d59",
+      "clone_sha256": "b99364b25522b10bda5a757ee1d9694c8c3646a44834765a44665cf781521d59",
+      "bytes_identical": true,
+      "same_decoded_document": true,
+      "public_reader_failure": null
+    }
+  ]
+}

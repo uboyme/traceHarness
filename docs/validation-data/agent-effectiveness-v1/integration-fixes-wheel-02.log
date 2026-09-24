@@ -1,0 +1,12 @@
+................F.                                                       [100%]
+================================== FAILURES ===================================
+____ test_default_runtime_is_untouched_even_though_the_plugin_is_installed ____
+tests\test_plugin_wheel_e2e.py:342: in test_default_runtime_is_untouched_even_though_the_plugin_is_installed
+    assert plain["tools"] == [
+E   AssertionError: assert ['apply_patch...ch_text', ...] == ['apply_patch...ext', 'shell']
+E     
+E     At index 2 diff: 'list_tool_outputs' != 'read_file'
+E     Left contains 3 more items, first extra item: 'search_text'
+E     Use -v to get more diff
+=========================== short test summary info ===========================
+FAILED tests/test_plugin_wheel_e2e.py::test_default_runtime_is_untouched_even_though_the_plugin_is_installed

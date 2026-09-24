@@ -1,0 +1,10 @@
+{
+  "status": "failed; turn deadline; fixed verifier not executed",
+  "known_paid_calls": 50,
+  "known_cost_cny": 0.911015,
+  "unknown_attempts": 1,
+  "reserved_unknown_upper_cny": 12,
+  "unknown_interpretation": "Cancelled attempt bound to frozen request with finite 8192 output cap; C4 stop condition explicitly exempts this explained bounded cancellation. Full original trial reservation retained conservatively, not presented as exact invoice.",
+  "evidence": ".traceh/ae01/report.json",
+  "model": "qwen3-coder-next"
+}

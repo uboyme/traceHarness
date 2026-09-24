@@ -1,0 +1,31 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____ test_product_returns_partial_budget_report_without_grant_or_followup _____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6170/test_product_returns_partial_b0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000029556460410>
+
+    @pytest.mark.asyncio
+    async def test_product_returns_partial_budget_report_without_grant_or_followup(
+        tmp_path, monkeypatch
+    ):
+        original = product._host_profile
+        monkeypatch.setattr(
+            product,
+            "_host_profile",
+            lambda mode: replace(original(mode), profile=negotiation_profile(mode)),
+        )
+        source, _ = build_source_repository(tmp_path / "source")
+        target = make_bare_target(source, tmp_path / "target.git")
+        provider = PartialBudgetProvider()
+        async with SqliteEventStore(tmp_path / "events.sqlite") as store:
+            from collaboration_fixtures import run_failed_product
+    
+            _, events = await run_failed_product(tmp_path, store, source, target, provider)
+>           assert provider.child_steps == 2
+E           assert 0 == 2
+E            +  where 0 = <test_product_budget_negotiation.PartialBudgetProvider object at 0x000002955639AFF0>.child_steps
+
+tests\test_product_budget_negotiation.py:100: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_product_budget_negotiation.py::test_product_returns_partial_budget_report_without_grant_or_followup

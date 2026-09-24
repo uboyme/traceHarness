@@ -1,0 +1,182 @@
+{
+  "condition": "v1-stopped-not-primary-score",
+  "planned_trials": 12,
+  "executed_trials": 2,
+  "not_started_trials": 10,
+  "attempts": [
+    {
+      "attempt_id": "623aa8264681d8d397a962c5822b2f301aa4c257dbc374e780346a712ea61c12",
+      "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+      "requested_mode": "single",
+      "error_code": null,
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": false,
+      "failure_code": "workflow-node-failed",
+      "budget": {
+        "accounts": 2,
+        "accounts_closed": 2,
+        "charged_steps": 28,
+        "charged_tool_calls": 46,
+        "child_reservations": 1,
+        "child_reservations_terminal": 1,
+        "converged": true,
+        "settled_tokens": 464718,
+        "usage_reservations": 29,
+        "usage_reservations_terminal": 29
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 1,
+        "workspaces": 2
+      },
+      "execution": {
+        "cumulative_work_duration_ms": 405968,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-0fadb538da3931bce201d920d8d6eadb5f1484dddd14dceb4bfd38e4700d6ab2",
+            "result": "succeeded",
+            "session_id": "wf-session-0fadb538da3931bce201d920d8d6eadb5f1484dddd14dceb4bfd38e4700d6ab2"
+          }
+        ],
+        "model_attempts": 28,
+        "provider_active_milliseconds": 230790,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-0fadb538da3931bce201d920d8d6eadb5f1484dddd14dceb4bfd38e4700d6ab2",
+            "final_model_result": "succeeded",
+            "model_attempts": 28,
+            "provider_active_milliseconds": 230790,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-0fadb538da3931bce201d920d8d6eadb5f1484dddd14dceb4bfd38e4700d6ab2",
+            "steps": 28,
+            "tokens": {
+              "input_tokens": 448100,
+              "output_tokens": 16618,
+              "quality": "exact",
+              "total_tokens": 464718
+            },
+            "tool_calls": 46,
+            "turns": 1,
+            "work_duration_ms": 405968
+          }
+        ],
+        "steps": 28,
+        "tokens": {
+          "input_tokens": 448100,
+          "output_tokens": 16618,
+          "quality": "exact",
+          "total_tokens": 464718
+        },
+        "tool_calls": 46,
+        "turns": 1
+      }
+    },
+    {
+      "attempt_id": "412663b22fa652c62c892ad25951541e5042cd3a0adc0a1908dce62919299fc4",
+      "benchmark_task_id": "marshmallow-code__marshmallow-1359",
+      "requested_mode": "multi",
+      "error_code": null,
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "budget": {
+        "accounts": 4,
+        "accounts_closed": 4,
+        "charged_steps": 43,
+        "charged_tool_calls": 92,
+        "child_reservations": 3,
+        "child_reservations_terminal": 3,
+        "converged": true,
+        "settled_tokens": 760000,
+        "usage_reservations": 46,
+        "usage_reservations_terminal": 46
+      },
+      "workspaces": {
+        "converged": true,
+        "live": 0,
+        "quarantined": 1,
+        "released": 3,
+        "workspaces": 4
+      },
+      "execution": {
+        "cumulative_work_duration_ms": 805892,
+        "final_model_results": [
+          {
+            "agent_id": "wf-agent-cb4da846dbcc46d2c8e2ab3d752c73f1556162ebc16b6eec5b1ff06111c74005",
+            "result": "failed",
+            "session_id": "wf-session-cb4da846dbcc46d2c8e2ab3d752c73f1556162ebc16b6eec5b1ff06111c74005"
+          },
+          {
+            "agent_id": "2e8f6624f84d6593960e150beb9cd29d7ec88ccecf0f9b3f9fd51ae9f5d58837",
+            "result": "failed",
+            "session_id": "agent-tool-investigation-session-41f0ebc7-397a-59e7-a9b7-8f00ba52bd27"
+          },
+          {
+            "agent_id": "ca90fe89723ca4188a2281801214951722f32d5ec05b69c54ffec8b8ef7f7102",
+            "result": "failed",
+            "session_id": "agent-tool-investigation-session-f599c71f-ddc1-5f2f-9417-17a433cb8793"
+          }
+        ],
+        "model_attempts": 43,
+        "provider_active_milliseconds": 597181,
+        "provider_failure_categories": [],
+        "retry_wait_milliseconds": 0,
+        "sessions": [
+          {
+            "agent_id": "wf-agent-cb4da846dbcc46d2c8e2ab3d752c73f1556162ebc16b6eec5b1ff06111c74005",
+            "final_model_result": "failed",
+            "model_attempts": 21,
+            "provider_active_milliseconds": 431817,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "wf-session-cb4da846dbcc46d2c8e2ab3d752c73f1556162ebc16b6eec5b1ff06111c74005",
+            "steps": 21,
+            "tokens": null,
+            "tool_calls": 38,
+            "turns": 1,
+            "work_duration_ms": 573383
+          },
+          {
+            "agent_id": "2e8f6624f84d6593960e150beb9cd29d7ec88ccecf0f9b3f9fd51ae9f5d58837",
+            "final_model_result": "failed",
+            "model_attempts": 11,
+            "provider_active_milliseconds": 78527,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-41f0ebc7-397a-59e7-a9b7-8f00ba52bd27",
+            "steps": 11,
+            "tokens": null,
+            "tool_calls": 23,
+            "turns": 1,
+            "work_duration_ms": 110669
+          },
+          {
+            "agent_id": "ca90fe89723ca4188a2281801214951722f32d5ec05b69c54ffec8b8ef7f7102",
+            "final_model_result": "failed",
+            "model_attempts": 11,
+            "provider_active_milliseconds": 86837,
+            "provider_failure_categories": [],
+            "retry_wait_milliseconds": 0,
+            "session_id": "agent-tool-investigation-session-f599c71f-ddc1-5f2f-9417-17a433cb8793",
+            "steps": 11,
+            "tokens": null,
+            "tool_calls": 31,
+            "turns": 1,
+            "work_duration_ms": 121840
+          }
+        ],
+        "steps": 43,
+        "tokens": null,
+        "tool_calls": 92,
+        "turns": 3
+      }
+    }
+  ]
+}

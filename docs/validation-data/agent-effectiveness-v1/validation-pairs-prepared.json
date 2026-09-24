@@ -1,0 +1,88 @@
+{
+  "prepared_at_utc": "2026-09-21T21:07:24.207693+00:00",
+  "status": "prepared only; budget and stop-conditions checked before each paid pair",
+  "conditions": "same model/settings/tree budget/tools/fixed verifier within each pair; sequential arms; first arm alternates by preselected case order; no task result substitution",
+  "pairs": [
+    {
+      "case_id": "pvlib__pvlib-python-1154",
+      "material": ".traceh\\aei\\v1\\01\\material",
+      "plan": ".traceh\\aei\\v1\\01\\pair.json",
+      "benchmark_sha256": "caf77ac91cf79a7b73a7318e22fdae3636327f5405b12303c1672d1b52a76770",
+      "plan_sha256": "eab78c4f99db18a30e945386c29f6d21dc40a38c64214c0bdbde22d98da83295",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp01"
+    },
+    {
+      "case_id": "pydicom__pydicom-901",
+      "material": ".traceh\\aei\\v1\\02\\material",
+      "plan": ".traceh\\aei\\v1\\02\\pair.json",
+      "benchmark_sha256": "deba062aadeb00563d4411203b7f5795bd7620c4d19687ef8769a7b7672d20b8",
+      "plan_sha256": "18a9d171a0e6288e2031de3616d8ea92d09c5cfaf82a62fbfd741c303e8b0070",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp02"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "material": ".traceh\\aei\\v1\\03\\material",
+      "plan": ".traceh\\aei\\v1\\03\\pair.json",
+      "benchmark_sha256": "feb25af485de1a6dae82e5fe3879f8b4d34778042abc2cc031b9f941521656f9",
+      "plan_sha256": "d5d95659968bb1174abf4399d2ff4bce2b83553498d44910a65e2c13e00c3ec4",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp03"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "material": ".traceh\\aei\\v1\\04\\material",
+      "plan": ".traceh\\aei\\v1\\04\\pair.json",
+      "benchmark_sha256": "0db959ae31dd586f6285b5b4c999233461fbdc1c7b2edde7653050a4a04d78c4",
+      "plan_sha256": "05d3a37213a400eccc9346dc4262bf3af0f41641974c866460a93475bed2888c",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp04"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "material": ".traceh\\aei\\v1\\05\\material",
+      "plan": ".traceh\\aei\\v1\\05\\pair.json",
+      "benchmark_sha256": "3fc79775db3f9461718f1b0c500b61412122671ce55b8d753d63277122d95d42",
+      "plan_sha256": "356c611bae2425821fc5b4c479ea1cd8e1c13800a3114debc947c7afe107554d",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp05"
+    },
+    {
+      "case_id": "pydicom__pydicom-1256",
+      "material": ".traceh\\aei\\v1\\06\\material",
+      "plan": ".traceh\\aei\\v1\\06\\pair.json",
+      "benchmark_sha256": "d4daeba32c04bcb65e5e8e56a64f3454b2b08e3f1b1a5da725a27fa133cf4e53",
+      "plan_sha256": "8dab2f5af00119f10ad19ba04c8b1b749ee432e8ba44baa364442fec4a4d1e2a",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp06"
+    },
+    {
+      "case_id": "pvlib__pvlib-python-1072",
+      "material": ".traceh\\aei\\v1\\07\\material",
+      "plan": ".traceh\\aei\\v1\\07\\pair.json",
+      "benchmark_sha256": "cbd81108d6a8e6c340ea576f71c43a2bec65c7449f98eabe4a95a2ad61d11563",
+      "plan_sha256": "e76c63b28e21f9ce64619981f73428d744378566cf8fb991b4721ed20695d3a3",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp07"
+    },
+    {
+      "case_id": "pydicom__pydicom-1139",
+      "material": ".traceh\\aei\\v1\\08\\material",
+      "plan": ".traceh\\aei\\v1\\08\\pair.json",
+      "benchmark_sha256": "d21577af89d9d9ef01fbb4f5da648780cfd35a144484033fcd1665173aeb2d9e",
+      "plan_sha256": "32f9e0e136e677bd3cae025c4a6c9f2af57bf2dd0b7f8d1047dd3b9f428fb9ff",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp08"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1333",
+      "material": ".traceh\\aei\\v1\\09\\material",
+      "plan": ".traceh\\aei\\v1\\09\\pair.json",
+      "benchmark_sha256": "f05279d98d96085ebaec9521cb10c7c443fc0bc4fd3b20aa3dddf1e68c1b322b",
+      "plan_sha256": "01d75a86dc52f229064eb09d43ae27282aca24744c705df6f7a6a53557d3169b",
+      "source_digest": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+      "run_output": ".traceh/aevp09"
+    }
+  ]
+}

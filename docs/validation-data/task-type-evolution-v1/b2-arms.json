@@ -1,0 +1,159 @@
+{
+  "note": "attempt 1 (C:/Users/caojie/ttb2-gov/p01) ended in provider-timeout before any fold and is reported separately; these rows are the preregistered repeat C:/Users/caojie/ttb2b-gov/p01. Variant ids read 'ungoverned-1/2' because of the plan builder naming quirk.",
+  "rows": [
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "governed-48k, ADR-0084 (source 0ec510ff)",
+      "failure_code": null,
+      "mechanism_note": "first delivery had the brain_uuid <lambda> error; one verifier rejection; repaired and passed within the Turn deadline; 12 post-fold reruns, 2 older copies folded again",
+      "mode": "multi",
+      "model_attempts": 27,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": true,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 3,
+              "tool_handoff": 21
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 50484,
+            "input_last": 24240,
+            "input_limit": 37760,
+            "input_mean": 20331.4,
+            "input_peak": 28816,
+            "metered_peak": 27897,
+            "metered_requests": 24,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 24,
+            "reruns_after_fold": 12,
+            "summaries": 0,
+            "tool_folds": 19,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "coder",
+          "tokens": 507963
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 2
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 5624,
+            "input_limit": 37760,
+            "input_mean": 4824.7,
+            "input_peak": 5624,
+            "metered_peak": 5516,
+            "metered_requests": 3,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 3,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-c3648bfa-58d3-5008-8d06-8c70950e20f4",
+          "tokens": 15671
+        }
+      ],
+      "success": true,
+      "token_quality": "exact",
+      "tool_calls": 37,
+      "total_tokens": 523634,
+      "variant": "ungoverned-1",
+      "wall_ms": 586609
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "governed-48k, ADR-0084 (source 0ec510ff)",
+      "failure_code": null,
+      "mechanism_note": "first delivery correct; no verifier rejection; zero post-fold reruns, so ADR-0084 was not exercised",
+      "mode": "multi",
+      "model_attempts": 18,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": true,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 2,
+              "tool_handoff": 13
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 40468,
+            "input_last": 19648,
+            "input_limit": 37760,
+            "input_mean": 17670.3,
+            "input_peak": 23333,
+            "metered_peak": 22643,
+            "metered_requests": 15,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 15,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 12,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "coder",
+          "tokens": 277963
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 2
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 6989,
+            "input_limit": 37760,
+            "input_mean": 5971.0,
+            "input_peak": 6989,
+            "metered_peak": 6843,
+            "metered_requests": 3,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 3,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-e011fd33-056d-51ee-acb4-9930174c4ebf",
+          "tokens": 19454
+        }
+      ],
+      "success": true,
+      "token_quality": "exact",
+      "tool_calls": 22,
+      "total_tokens": 297417,
+      "variant": "ungoverned-2",
+      "wall_ms": 347047
+    }
+  ]
+}

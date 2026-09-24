@@ -1,0 +1,139 @@
+{
+  "complete": false,
+  "disclosed_condition_changes_from_v10": [
+    "Both roles' max_output_tokens raised from 16384 (coder) / 8192 (investigator) to 32768.",
+    "Both roles gained an explicit context_policy (window 96000, output reserve 32768, margin 2048, trigger 60%, relief 35%, protect 2 recent tool groups).",
+    "Both roles granted read_tool_output / list_tool_outputs / search_tool_output."
+  ],
+  "errors": [],
+  "exit_code": 4,
+  "interpretation_limits": [
+    "One trial on one case. No savings rate, no quality equivalence, no mode benefit.",
+    "Token totals are provider-reported, not a reconciled invoice.",
+    "A success here does not retroactively explain v10, and a failure here does not invalidate the offline folding evidence."
+  ],
+  "kind": "c4-context-governance-trial",
+  "per_session": {
+    "pylint-dev__astroid-1196/session:4a9180c2-d055-4e5c-bf7b-ea1cb2d94876": {
+      "completion_categories": [
+        "normal"
+      ],
+      "estimated_inputs": [],
+      "exact_usage_calls": 2,
+      "folding_outcome": "disabled-no-water-marks-configured",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 0,
+      "largest_estimated_input": null,
+      "model_calls": 2,
+      "output_tokens": 0,
+      "read_back_calls": 0,
+      "reasoning_tokens": 0,
+      "reasoning_tokens_reported_calls": 0,
+      "relief_tokens": null,
+      "replacements": 0,
+      "step_fold_failures": [],
+      "step_folds": 0,
+      "succeeded_calls": 2,
+      "trigger_tokens": null,
+      "unknown_usage_calls": 0
+    },
+    "pylint-dev__astroid-1196/session:agent-tool-investigation-session-355a4302-28d5-54f5-b9ca-be04fe5dfa2a": {
+      "completion_categories": [
+        "tool_handoff"
+      ],
+      "estimated_inputs": [
+        7094,
+        7883,
+        9942,
+        13902,
+        18079,
+        20314,
+        24378,
+        26453,
+        31807,
+        34283,
+        20949,
+        24155,
+        24679
+      ],
+      "exact_usage_calls": 13,
+      "folding_outcome": "folded",
+      "identical_recalls_after_their_result_was_folded": 0,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 266792,
+      "largest_estimated_input": 34283,
+      "model_calls": 13,
+      "output_tokens": 5639,
+      "read_back_calls": 6,
+      "reasoning_tokens": 2703,
+      "reasoning_tokens_reported_calls": 13,
+      "relief_tokens": 21414,
+      "replacements": 21,
+      "step_fold_failures": [],
+      "step_folds": 21,
+      "succeeded_calls": 13,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    },
+    "pylint-dev__astroid-1196/session:wf-session-57e2eaf9f09da0dd3a0879693804bba0fc326efea7f1a538553346a8265cbabe": {
+      "completion_categories": [
+        "tool_handoff"
+      ],
+      "estimated_inputs": [
+        5995,
+        6826,
+        8341,
+        10562,
+        11149,
+        13668,
+        16151,
+        19171,
+        21305,
+        23373,
+        26319,
+        28311,
+        31620,
+        34848,
+        20568,
+        22362,
+        24839,
+        26315,
+        30935
+      ],
+      "exact_usage_calls": 19,
+      "folding_outcome": "folded",
+      "identical_recalls_after_their_result_was_folded": 2,
+      "identical_recalls_while_result_still_visible": 0,
+      "input_tokens": 385669,
+      "largest_estimated_input": 34848,
+      "model_calls": 19,
+      "output_tokens": 63635,
+      "read_back_calls": 0,
+      "reasoning_tokens": 54097,
+      "reasoning_tokens_reported_calls": 19,
+      "relief_tokens": 21414,
+      "replacements": 25,
+      "step_fold_failures": [],
+      "step_folds": 25,
+      "succeeded_calls": 19,
+      "trigger_tokens": 36710,
+      "unknown_usage_calls": 0
+    }
+  },
+  "trials": [
+    {
+      "assessment": {
+        "status": "unassessable"
+      },
+      "case_id": "pylint-dev__astroid-1196",
+      "convergence": "converged",
+      "execution": {
+        "reason": "benchmark-session-invariants-violated",
+        "status": "failed"
+      },
+      "invariants": "unproven",
+      "reason": null
+    }
+  ]
+}

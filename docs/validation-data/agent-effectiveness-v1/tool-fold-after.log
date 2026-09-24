@@ -1,0 +1,7 @@
+...............................                                          [100%]
+============================= slowest 5 durations =============================
+25.25s call     tests/test_in_turn_step_folding.py::test_the_budget_holds_the_page_the_model_keeps_asking_for
+19.54s call     tests/test_in_turn_step_folding.py::test_reopened_evidence_is_protected_up_to_its_byte_budget
+16.72s call     tests/test_in_turn_step_folding.py::test_without_a_budget_a_reopened_page_folds_back_to_its_original_address
+9.32s call     tests/test_in_turn_step_folding.py::test_folding_actually_removes_the_old_text_from_later_requests
+6.20s call     tests/test_tool_result_folding.py::test_automatic_fold_keeps_pair_recent_turn_and_readback_after_restart[True]

@@ -1,0 +1,21 @@
+{
+  "case_id": "marshmallow-code__marshmallow-1359",
+  "mode": "single",
+  "model": "qwen3.6-plus",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "api_key_env": "DASHSCOPE_API_KEY",
+  "source_digest_at_preparation": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+  "benchmark_sha256": "d6679435e2770883c47d92f546341e6c6269c8c92a4aa4ca97ebe65f04d90a9e",
+  "dataset_sha256": "7b99b4479c751a6487a7f5d3793bc256a42dc6c1dd0a112c42e139ec947f799b",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "settings_sha256": "daab3165d5fe89e53d4ed52f6814c3bac0383f61858065728b7dff7b8adb5e0c",
+  "source_material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\rr-eval\\material-v3-correct\\material",
+  "output": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aec1b",
+  "status": "prepared; source/configuration and budget must be rechecked before execution",
+  "configuration_arm": "b",
+  "frozen_at_utc": "2026-09-21T21:44:30.108582+00:00",
+  "prior_known_cny": 0.887938,
+  "prior_unknown_reserved_cny": 0.0,
+  "reserved_cny": 14,
+  "batch_cap_cny": 21.0
+}

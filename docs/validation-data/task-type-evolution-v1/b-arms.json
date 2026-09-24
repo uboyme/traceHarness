@@ -1,0 +1,313 @@
+{
+  "note": "variant ids read 'ungoverned-1/2' in both conditions (plan builder naming quirk); 'condition' is authoritative and follows the run directory",
+  "rows": [
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "governed-48k",
+      "failure_code": "workflow-node-failed",
+      "mode": "multi",
+      "model_attempts": 31,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": null,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 3,
+              "tool_handoff": 21
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 60046,
+            "input_last": 19452,
+            "input_limit": 37760,
+            "input_mean": 18217.0,
+            "input_peak": 27262,
+            "metered_peak": 26292,
+            "metered_requests": 24,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 24,
+            "reruns_after_fold": 11,
+            "summaries": 0,
+            "tool_folds": 22,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "coder",
+          "tokens": 457295
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 6
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 14907,
+            "input_limit": 37760,
+            "input_mean": 10231.1,
+            "input_peak": 14907,
+            "metered_peak": 14905,
+            "metered_requests": 7,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 7,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-49ff56ba-835a-5198-bd31-75a72c34b428",
+          "tokens": 74766
+        }
+      ],
+      "source_dir": "C:/Users/caojie/ttb-gov/p01",
+      "success": false,
+      "token_quality": "exact",
+      "tool_calls": 47,
+      "total_tokens": 532061,
+      "variant": "ungoverned-1",
+      "wall_ms": 606797
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "governed-48k",
+      "failure_code": "workflow-node-failed",
+      "mode": "multi",
+      "model_attempts": 30,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": null,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 2,
+              "tool_handoff": 24
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 64208,
+            "input_last": null,
+            "input_limit": 37760,
+            "input_mean": null,
+            "input_peak": null,
+            "metered_peak": 22069,
+            "metered_requests": 27,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 27,
+            "reruns_after_fold": 4,
+            "summaries": 0,
+            "tool_folds": 25,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 1
+          },
+          "label": "coder",
+          "tokens": null
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 2
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 5947,
+            "input_limit": 37760,
+            "input_mean": 5147.7,
+            "input_peak": 5947,
+            "metered_peak": 6027,
+            "metered_requests": 3,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 3,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": 22656,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-eacc3806-e7d7-5723-9a8c-cff32b481763",
+          "tokens": 16301
+        }
+      ],
+      "source_dir": "C:/Users/caojie/ttb-gov/p01",
+      "success": false,
+      "token_quality": null,
+      "tool_calls": 59,
+      "total_tokens": null,
+      "variant": "ungoverned-2",
+      "wall_ms": 623077
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "ungoverned",
+      "failure_code": null,
+      "mode": "multi",
+      "model_attempts": 26,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": true,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 2,
+              "tool_handoff": 21
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 32730,
+            "input_limit": null,
+            "input_mean": 21582.9,
+            "input_peak": 32730,
+            "metered_peak": null,
+            "metered_requests": 0,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 23,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": null,
+            "unknown_usage_requests": 0
+          },
+          "label": "coder",
+          "tokens": 512429
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 2
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 5384,
+            "input_limit": null,
+            "input_mean": 4817.3,
+            "input_peak": 5384,
+            "metered_peak": null,
+            "metered_requests": 0,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 3,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": null,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-dec98838-664d-5620-8029-973d8f7fd25d",
+          "tokens": 15426
+        }
+      ],
+      "source_dir": "C:/Users/caojie/ttb-ungov/p01",
+      "success": true,
+      "token_quality": "exact",
+      "tool_calls": 34,
+      "total_tokens": 527855,
+      "variant": "ungoverned-1",
+      "wall_ms": 430233
+    },
+    {
+      "case_id": "a2-parallel-read-brain-registry",
+      "children": 1,
+      "condition": "ungoverned",
+      "failure_code": null,
+      "mode": "multi",
+      "model_attempts": 26,
+      "plan": "p01",
+      "ran": true,
+      "resolved": "multi",
+      "review_passed": true,
+      "sessions": [
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 3,
+              "tool_handoff": 21
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 29007,
+            "input_limit": null,
+            "input_mean": 23402.1,
+            "input_peak": 33610,
+            "metered_peak": null,
+            "metered_requests": 0,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 24,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": null,
+            "unknown_usage_requests": 0
+          },
+          "label": "coder",
+          "tokens": 584621
+        },
+        {
+          "context": {
+            "compaction_failures": 0,
+            "completions": {
+              "normal": 1,
+              "tool_handoff": 1
+            },
+            "empty_responses": 0,
+            "folded_source_utf8_bytes": 0,
+            "input_last": 5159,
+            "input_limit": null,
+            "input_mean": 4856.0,
+            "input_peak": 5159,
+            "metered_peak": null,
+            "metered_requests": 0,
+            "over_limit_requests": 0,
+            "readback_calls": 0,
+            "readback_repeats": 0,
+            "requests": 2,
+            "reruns_after_fold": 0,
+            "summaries": 0,
+            "tool_folds": 0,
+            "trigger_tokens": null,
+            "unknown_usage_requests": 0
+          },
+          "label": "patch_author.agent-tool-patch-author-8febbb55-c120-5e11-ae9a-c394b328551b",
+          "tokens": 10627
+        }
+      ],
+      "source_dir": "C:/Users/caojie/ttb-ungov/p01",
+      "success": true,
+      "token_quality": "exact",
+      "tool_calls": 29,
+      "total_tokens": 595248,
+      "variant": "ungoverned-2",
+      "wall_ms": 559905
+    }
+  ]
+}

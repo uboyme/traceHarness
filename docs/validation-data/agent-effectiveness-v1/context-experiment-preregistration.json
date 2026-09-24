@@ -1,0 +1,17 @@
+{
+  "frozen_at_utc": "2026-09-21T21:08:49.673609+00:00",
+  "question": "Does earlier Step folding reduce whole-task cost while preserving fixed verification?",
+  "cases": [
+    "marshmallow-code__marshmallow-1359",
+    "pydicom__pydicom-1694",
+    "pylint-dev__astroid-1196"
+  ],
+  "mode": "single",
+  "model": "qwen3.6-plus",
+  "baseline": "development-settings-v1.json; fold band 60/35",
+  "candidate": "context-candidate-settings-v1.json; fold band 15/8",
+  "changed_factor": "fold schedule (trigger and hysteresis target form one policy band); hard input/output and tree budgets unchanged",
+  "design": "fresh baseline/candidate task runs, sequential arms, alternate first arm in listed case order; independent fixed verifier, all failures retained; no claim from untriggered cases",
+  "reason": "Earlier model-only diagnostics reached 12k+ input before delivery; default soft trigger ~51k never acted. Test one explicitly aggressive schedule for earlier closed-Step removal; possible repeat-reading cost is an outcome, not suppressed.",
+  "stop": "original C4 evidence/provider/usage conditions; no result-driven task replacement; one candidate only"
+}

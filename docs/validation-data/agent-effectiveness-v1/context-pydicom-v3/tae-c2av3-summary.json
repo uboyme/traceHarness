@@ -1,0 +1,196 @@
+{
+  "run": "C:\\Users\\caojie\\tae-c2av3",
+  "complete": true,
+  "totals": {
+    "paid_attempts": 12,
+    "provider_active_milliseconds": 44699,
+    "input_tokens": 99578,
+    "output_tokens": 2014,
+    "reasoning_tokens": 866,
+    "known_cost_cny": 0.223324
+  },
+  "unknown": [],
+  "provider_failures": [],
+  "attempts": [
+    {
+      "case_id": "pydicom__pydicom-1694",
+      "mode": "single",
+      "success": true,
+      "error_code": null,
+      "convergence": "converged",
+      "invariants": "passed",
+      "evidence": {
+        "budget": {
+          "accounts": 2,
+          "accounts_closed": 2,
+          "charged_steps": 12,
+          "charged_tool_calls": 11,
+          "child_reservations": 1,
+          "child_reservations_terminal": 1,
+          "converged": true,
+          "settled_tokens": 101592,
+          "usage_reservations": 13,
+          "usage_reservations_terminal": 13
+        },
+        "collaboration": {
+          "available_reports": 0,
+          "identical_work_extra_deliveries": 0,
+          "identical_work_groups": 0,
+          "interpretation": "Identical work is not necessarily wasted work; visibility is not correctness.",
+          "observed_peak_active_turns": 1,
+          "overlap_measurement": "same-host recorded UTC half-open Turn intervals; not CPU parallelism",
+          "reports_dispatched_to_parent": 0
+        },
+        "definition_hash": "196025cf8d153d28b74bfe94b52f703f5b4d141b9efb080d918b9b6df5e1f295",
+        "execution": {
+          "cumulative_work_duration_ms": 89685,
+          "final_model_results": [
+            {
+              "agent_id": "wf-agent-df8b667423a1e83ddcfacc22ff5ca688a952cb61adb961ac5c913c0cc2e9babc",
+              "result": "succeeded",
+              "session_id": "wf-session-df8b667423a1e83ddcfacc22ff5ca688a952cb61adb961ac5c913c0cc2e9babc"
+            }
+          ],
+          "model_attempts": 12,
+          "provider_active_milliseconds": 44699,
+          "provider_failure_categories": [],
+          "retry_wait_milliseconds": 0,
+          "sessions": [
+            {
+              "agent_id": "wf-agent-df8b667423a1e83ddcfacc22ff5ca688a952cb61adb961ac5c913c0cc2e9babc",
+              "final_model_result": "succeeded",
+              "model_attempts": 12,
+              "provider_active_milliseconds": 44699,
+              "provider_failure_categories": [],
+              "retry_wait_milliseconds": 0,
+              "session_id": "wf-session-df8b667423a1e83ddcfacc22ff5ca688a952cb61adb961ac5c913c0cc2e9babc",
+              "steps": 12,
+              "tokens": {
+                "input_tokens": 99578,
+                "output_tokens": 2014,
+                "quality": "exact",
+                "total_tokens": 101592
+              },
+              "tool_calls": 11,
+              "turns": 1,
+              "work_duration_ms": 89685
+            }
+          ],
+          "steps": 12,
+          "tokens": {
+            "input_tokens": 99578,
+            "output_tokens": 2014,
+            "quality": "exact",
+            "total_tokens": 101592
+          },
+          "tool_calls": 11,
+          "turns": 1
+        },
+        "failure_code": null,
+        "investigations": [],
+        "mode_source": "confirmed_proposal",
+        "new_revision": "b3fa134ab850dc4e5df744dc81eb6033ca8507d4",
+        "preflight_digest": "99efe97a3473e70ffbd330fc4a9f2a9ce26cb4b6234be33d6af28f13cb7b1bb1",
+        "previous_revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+        "product_status": "completed",
+        "profile_digest": "56bcda215bc573ed2163d34561e7831f3c6533be1c35de7d5e9b9f6e2f3bffcd",
+        "promotion_id": "promotion-53a0b5c2b0dd5cf8558806fa90fa0ae82c18b6a34e78d11f988101c62ccb393a",
+        "reason_code": null,
+        "requirement_digest": "da6ba12ed2e825195ffcd9f49c99d98961bb017caf075042c14e09de2ed31b4c",
+        "resolved_mode": "single",
+        "review_id": "review-781d0a02c4041e99ce4a0330eeb4f07f4100a4051b73d4bd704004988853e7ed",
+        "review_passed": true,
+        "source_base_revision": "7e976d1c96814cd7a0e319835b01e2639ce58fa8",
+        "target_ref": "refs/heads/main",
+        "target_revision": "b3fa134ab850dc4e5df744dc81eb6033ca8507d4",
+        "task_id": "product-task-4ec4282b85be7cce0ac5ddf9e8df42d9a4375e72c5695a4fe693e70eca250bd3",
+        "unattributed": {
+          "sessions": [],
+          "tokens": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "quality": "exact",
+            "total_tokens": 0
+          }
+        },
+        "unavailable": [],
+        "verifier_definition_digest": "66661503d573f7063766ff894db54d4572f84c0cfde23680b1b14d1e09934110",
+        "workflow_status": "completed",
+        "workspaces": {
+          "converged": true,
+          "live": 0,
+          "quarantined": 0,
+          "released": 2,
+          "workspaces": 2
+        }
+      },
+      "timing": {
+        "active_ms": 117250,
+        "approval_policy": "programmatic-immediate",
+        "approval_wait_ms": 0,
+        "wall_ms": 117250
+      },
+      "event_counts": {
+        "agent/message-claimed": 1,
+        "agent/message-completed": 1,
+        "agent/message-accepted": 1,
+        "agent/created": 2,
+        "artifact/patch-captured": 1,
+        "budget/root-granted": 1,
+        "budget/child-reserved": 1,
+        "budget/reservation-committed": 1,
+        "budget/usage-reserved": 13,
+        "budget/usage-started": 13,
+        "budget/usage-settled": 13,
+        "budget/usage-charged": 23,
+        "budget/account-closed": 2,
+        "effect/intent": 11,
+        "effect/dispatched": 11,
+        "effect/outcome": 11,
+        "sandbox/request": 4,
+        "sandbox/outcome": 4,
+        "sandbox/publication": 3,
+        "patch/review-recorded": 1,
+        "patch/approval-recorded": 1,
+        "patch/promotion-committed": 1,
+        "product/task-opened": 1,
+        "product/task-started": 1,
+        "product/task-awaiting": 1,
+        "product/task-completed": 1,
+        "session/created": 3,
+        "inbox/accepted": 3,
+        "inbox/claimed": 3,
+        "turn/start": 3,
+        "step/start": 14,
+        "user/message": 3,
+        "context/input": 14,
+        "composition/snapshot": 14,
+        "request/snapshot": 14,
+        "model/attempt-start": 14,
+        "assistant/chunk": 3,
+        "assistant/message": 14,
+        "model/attempt-end": 14,
+        "step/end": 14,
+        "turn/end": 3,
+        "request/view": 12,
+        "request/token-measurement": 12,
+        "tool/call": 11,
+        "tool/admitted": 11,
+        "tool/result": 11,
+        "workflow/run-started": 1,
+        "workflow/node-started": 3,
+        "workflow/node-completed": 3,
+        "workflow/approval-awaited": 1,
+        "workflow/run-finished": 1,
+        "workspace/provisioned": 2,
+        "workspace/attached": 2,
+        "workspace/released": 2
+      }
+    }
+  ],
+  "price_source": "https://help.aliyun.com/zh/model-studio/qwen3-6-plus",
+  "price_basis": "CNY 2/M input, 12/M output; no discounts; not supplier invoice",
+  "exit_code": 0,
+  "cumulative_known_cny": 11.256765,
+  "cumulative_unknown_reserved_cny": 73.0
+}

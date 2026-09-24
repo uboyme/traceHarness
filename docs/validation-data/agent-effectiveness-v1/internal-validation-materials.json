@@ -1,0 +1,88 @@
+{
+  "frozen_at_utc": "2026-09-21T20:31:59.322163+00:00",
+  "kind": "internal validation subset of public dev; not official test",
+  "selection": "Original queue and material-only exclusions frozen before trial results. No model has run these nine cases.",
+  "cases": [
+    {
+      "case_id": "pvlib__pvlib-python-1154",
+      "material": ".traceh/agent-effectiveness-v1/acquired/pvlib__pvlib-python-1154/prepared/material",
+      "admission": ".traceh/aep2/pvlib__pvlib-python-1154/admission.json",
+      "admission_sha256": "c0647155ac6f3b12042341dcca9b831024561c2d0dc79eb2d524f8e14a5c10d9",
+      "sandbox": "docs/validation-data/agent-effectiveness-v1/sandbox-py39-v1.json",
+      "sandbox_sha256": "f6f3b676fcc19ecd59fb2e9aef27b401f0e80ca29d026c50b7cc7056737834f4",
+      "image": "sha256:e5fad140e978a96358eb4e3dbd8ee62a921514033b2511921e2828f50c6e89b9"
+    },
+    {
+      "case_id": "pydicom__pydicom-901",
+      "material": ".traceh/agent-effectiveness-v1/acquired/pydicom__pydicom-901/prepared/material",
+      "admission": ".traceh/aep1/pydicom__pydicom-901/admission.json",
+      "admission_sha256": "e29d50b1b3e06df3bb67fe9e37d08c82a4817e98bc19099fffd1f10e0f266821",
+      "sandbox": ".traceh/rr-eval/feasibility-v10/sandbox.json",
+      "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+      "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1978",
+      "material": ".traceh/agent-effectiveness-v1/acquired/pylint-dev__astroid-1978/prepared/material",
+      "admission": ".traceh/aep1/pylint-dev__astroid-1978/admission.json",
+      "admission_sha256": "f6a3e197e1ce659a711f43bdf6eb0234293aa3b0a8ba3216261bdfbbe0aeb7f8",
+      "sandbox": ".traceh/rr-eval/feasibility-v10/sandbox.json",
+      "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+      "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe"
+    },
+    {
+      "case_id": "pyvista__pyvista-4315",
+      "material": ".traceh/agent-effectiveness-v1/acquired-large/pyvista__pyvista-4315/prepared/material",
+      "admission": ".traceh/aep4/pyvista__pyvista-4315/admission.json",
+      "admission_sha256": "b039218f8b4187cb3a79ede04b4ba6c1e1f976c85261e0d1193936587107da4b",
+      "sandbox": "docs/validation-data/agent-effectiveness-v1/sandbox-pyvista-v4.json",
+      "sandbox_sha256": "28214a00ceb5cd4341c8ef18f9c0a7312cb3fd78456cb8b2cbe30cca9e54e089",
+      "image": "sha256:b09d49de2b58c6c87d648fb62bcd5a6e847ca73fddb8cbf0b9ce48b2cccbd3ec"
+    },
+    {
+      "case_id": "marshmallow-code__marshmallow-1343",
+      "material": ".traceh/agent-effectiveness-v1/acquired/marshmallow-code__marshmallow-1343/prepared/material",
+      "admission": ".traceh/aep2/marshmallow-code__marshmallow-1343/admission.json",
+      "admission_sha256": "efbc37779146e0a10ee325778ae4f1b6ca9ecb0e0e6d697107968ba33b79c5e8",
+      "sandbox": "docs/validation-data/agent-effectiveness-v1/sandbox-py39-v1.json",
+      "sandbox_sha256": "f6f3b676fcc19ecd59fb2e9aef27b401f0e80ca29d026c50b7cc7056737834f4",
+      "image": "sha256:e5fad140e978a96358eb4e3dbd8ee62a921514033b2511921e2828f50c6e89b9"
+    },
+    {
+      "case_id": "pydicom__pydicom-1256",
+      "material": ".traceh/agent-effectiveness-v1/acquired/pydicom__pydicom-1256/prepared/material",
+      "admission": ".traceh/aep1/pydicom__pydicom-1256/admission.json",
+      "admission_sha256": "5c2356eb6abd7febdd34ad2f17cad59eeb52312c123204eb1a105d20966968e0",
+      "sandbox": ".traceh/rr-eval/feasibility-v10/sandbox.json",
+      "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+      "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe"
+    },
+    {
+      "case_id": "pvlib__pvlib-python-1072",
+      "material": ".traceh/agent-effectiveness-v1/acquired/pvlib__pvlib-python-1072/prepared/material",
+      "admission": ".traceh/aep2/pvlib__pvlib-python-1072/admission.json",
+      "admission_sha256": "0072b43a2e0d2a7bb04b32556732907b8ff1a0a15d83632efb9c5ed486d8c5e7",
+      "sandbox": "docs/validation-data/agent-effectiveness-v1/sandbox-py39-v1.json",
+      "sandbox_sha256": "f6f3b676fcc19ecd59fb2e9aef27b401f0e80ca29d026c50b7cc7056737834f4",
+      "image": "sha256:e5fad140e978a96358eb4e3dbd8ee62a921514033b2511921e2828f50c6e89b9"
+    },
+    {
+      "case_id": "pydicom__pydicom-1139",
+      "material": ".traceh/aer1/pydicom__pydicom-1139/prepared/material",
+      "admission": ".traceh/aep1/pydicom__pydicom-1139/admission.json",
+      "admission_sha256": "b27b02eff71e11f6af035738393193f809936daf8d3211a5cc1b5dde2f98f640",
+      "sandbox": ".traceh/rr-eval/feasibility-v10/sandbox.json",
+      "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+      "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1333",
+      "material": ".traceh/aer3/pylint-dev__astroid-1333/prepared/material",
+      "admission": ".traceh/aep1/pylint-dev__astroid-1333/admission.json",
+      "admission_sha256": "03b0564f7728d25150aab36e3a610099b570e35189f34b4da60e1f7ca6003244",
+      "sandbox": ".traceh/rr-eval/feasibility-v10/sandbox.json",
+      "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+      "image": "sha256:4aa70636a73796d1fa51b3f26dfa52a402b088d8f6707a3eef3a000c4ddf34fe"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "case_id": "pylint-dev__astroid-1196",
+  "mode": "single",
+  "model": "qwen3.6-plus",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "api_key_env": "DASHSCOPE_API_KEY",
+  "source_digest_at_preparation": "7428289f6eb2dff30334cadc0e657df3880e06e349d0cc59b746bafdbb50f807",
+  "benchmark_sha256": "c960ae02a11c95cebb3f8b271f129e43980913a6fddc26f2b51d9ea76f901796",
+  "dataset_sha256": "109aabcde2555f2bc84e66dccef9d85885d926486133179d8ba221f701ab6360",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "settings_sha256": "bc3478bbd768f5560e14d4f5e879cd6de0c4c3ae3cc07093965fd0da01eeb238",
+  "source_material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\rr-eval\\material-v3-correct\\material",
+  "output": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\ae03",
+  "status": "authorized and frozen",
+  "frozen_at_utc": "2026-09-21T21:05:24.067051+00:00",
+  "purpose": "Same task/model/settings after Product reserve wiring and earlier Turn deadline repair; six positive/failure/denied-tool end-to-end tests passed; two independent source-copy negative checks failed at intended tool-withdrawal assertion. No budget or verification relaxation.",
+  "reserved_cny": 14,
+  "prior_known_cny": 1.542203,
+  "prior_unknown_reserved_cny": 26,
+  "api_total_cap_cny": 120,
+  "pricing": {
+    "input_cny_per_million": 2,
+    "output_cny_per_million": 12,
+    "max_request_input": 96000,
+    "source": "https://help.aliyun.com/zh/model-studio/qwen3-6-plus"
+  },
+  "model_timeout_seconds": 120,
+  "retry_max_attempts": 1,
+  "eval_timeout_seconds": 900,
+  "stop_conditions": "C4: invariant/provider failures and unexplained unknown usage; bounded cancellation retains full reservation. No automatic retry of task."
+}

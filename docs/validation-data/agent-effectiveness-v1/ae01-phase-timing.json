@@ -1,0 +1,597 @@
+[
+  {
+    "seq": 1,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 4,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 7,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 10,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 13,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 16,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 19,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 22,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 25,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 28,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 31,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 34,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 37,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 40,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 43,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 46,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 49,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 52,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 55,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 60,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 63,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 66,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 69,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 72,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 75,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 78,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 81,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 84,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 87,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 90,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 93,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 96,
+    "prepare": null,
+    "model_stage": null,
+    "tools": null,
+    "step": null
+  },
+  {
+    "seq": 5,
+    "prepare": 0.10629,
+    "model_stage": 0.078681,
+    "tools": null,
+    "step": 0.212951
+  },
+  {
+    "seq": 19,
+    "prepare": 0.138421,
+    "model_stage": 0.085394,
+    "tools": null,
+    "step": 0.253019
+  },
+  {
+    "seq": 5,
+    "prepare": 0.327114,
+    "model_stage": 1.568457,
+    "tools": 0.712912,
+    "step": 2.701987
+  },
+  {
+    "seq": 19,
+    "prepare": 0.499707,
+    "model_stage": 1.129638,
+    "tools": 0.940971,
+    "step": 2.6874
+  },
+  {
+    "seq": 32,
+    "prepare": 0.77171,
+    "model_stage": 1.705102,
+    "tools": 0.041351,
+    "step": 2.633913
+  },
+  {
+    "seq": 44,
+    "prepare": 0.671268,
+    "model_stage": 1.265327,
+    "tools": 0.050341,
+    "step": 2.157806
+  },
+  {
+    "seq": 56,
+    "prepare": 0.808962,
+    "model_stage": 1.223885,
+    "tools": 0.054808,
+    "step": 2.272531
+  },
+  {
+    "seq": 68,
+    "prepare": 0.959524,
+    "model_stage": 1.435876,
+    "tools": 0.054996,
+    "step": 2.636218
+  },
+  {
+    "seq": 80,
+    "prepare": 1.197339,
+    "model_stage": 1.551294,
+    "tools": 0.075604,
+    "step": 3.001848
+  },
+  {
+    "seq": 92,
+    "prepare": 1.212705,
+    "model_stage": 1.51313,
+    "tools": 0.87432,
+    "step": 3.85632
+  },
+  {
+    "seq": 105,
+    "prepare": 1.4963,
+    "model_stage": 1.274467,
+    "tools": 0.094858,
+    "step": 3.102652
+  },
+  {
+    "seq": 117,
+    "prepare": 1.63922,
+    "model_stage": 1.199787,
+    "tools": 1.0461,
+    "step": 4.175247
+  },
+  {
+    "seq": 130,
+    "prepare": 1.685681,
+    "model_stage": 1.247231,
+    "tools": 0.119031,
+    "step": 3.358252
+  },
+  {
+    "seq": 142,
+    "prepare": 1.907839,
+    "model_stage": 1.404417,
+    "tools": 1.063764,
+    "step": 4.745914
+  },
+  {
+    "seq": 155,
+    "prepare": 2.137155,
+    "model_stage": 1.794865,
+    "tools": 0.125264,
+    "step": 4.446986
+  },
+  {
+    "seq": 167,
+    "prepare": 2.318183,
+    "model_stage": 1.74798,
+    "tools": 1.352389,
+    "step": 6.030467
+  },
+  {
+    "seq": 180,
+    "prepare": 2.659926,
+    "model_stage": 1.684807,
+    "tools": 0.165192,
+    "step": 4.957349
+  },
+  {
+    "seq": 192,
+    "prepare": 2.831303,
+    "model_stage": 1.684482,
+    "tools": 1.533149,
+    "step": 6.522875
+  },
+  {
+    "seq": 205,
+    "prepare": 3.326524,
+    "model_stage": 1.958361,
+    "tools": 0.176988,
+    "step": 6.025501
+  },
+  {
+    "seq": 217,
+    "prepare": 3.957027,
+    "model_stage": 1.907435,
+    "tools": 1.730454,
+    "step": 8.133729
+  },
+  {
+    "seq": 230,
+    "prepare": 4.187388,
+    "model_stage": 2.576219,
+    "tools": 1.742829,
+    "step": 9.275196
+  },
+  {
+    "seq": 243,
+    "prepare": 4.104597,
+    "model_stage": 2.017893,
+    "tools": 0.236624,
+    "step": 6.984024
+  },
+  {
+    "seq": 255,
+    "prepare": 3.48354,
+    "model_stage": 2.755313,
+    "tools": 1.426194,
+    "step": 8.26016
+  },
+  {
+    "seq": 268,
+    "prepare": 3.571015,
+    "model_stage": 2.646741,
+    "tools": 0.23278,
+    "step": 7.143979
+  },
+  {
+    "seq": 280,
+    "prepare": 3.676958,
+    "model_stage": 2.257293,
+    "tools": 1.495131,
+    "step": 8.06843
+  },
+  {
+    "seq": 293,
+    "prepare": 3.970961,
+    "model_stage": 2.128849,
+    "tools": 1.792719,
+    "step": 8.659893
+  },
+  {
+    "seq": 306,
+    "prepare": 4.806752,
+    "model_stage": 2.555972,
+    "tools": 1.775357,
+    "step": 9.983278
+  },
+  {
+    "seq": 319,
+    "prepare": 4.988916,
+    "model_stage": 3.123851,
+    "tools": 0.370837,
+    "step": 9.47588
+  },
+  {
+    "seq": 331,
+    "prepare": 5.819976,
+    "model_stage": 2.5045,
+    "tools": 2.168435,
+    "step": 11.487213
+  },
+  {
+    "seq": 344,
+    "prepare": 6.089878,
+    "model_stage": 3.487864,
+    "tools": 0.341819,
+    "step": 10.878839
+  },
+  {
+    "seq": 356,
+    "prepare": 6.548007,
+    "model_stage": 2.905379,
+    "tools": 2.613987,
+    "step": 13.2138
+  },
+  {
+    "seq": 369,
+    "prepare": 6.27815,
+    "model_stage": 2.857552,
+    "tools": 2.538478,
+    "step": 12.860201
+  },
+  {
+    "seq": 382,
+    "prepare": 5.900108,
+    "model_stage": 2.524216,
+    "tools": 1.814073,
+    "step": 11.153165
+  },
+  {
+    "seq": 395,
+    "prepare": 5.47208,
+    "model_stage": 3.079817,
+    "tools": 1.901203,
+    "step": 11.257834
+  },
+  {
+    "seq": 408,
+    "prepare": 5.867824,
+    "model_stage": 7.723799,
+    "tools": 17.526791,
+    "step": 32.079405
+  },
+  {
+    "seq": 421,
+    "prepare": 6.685337,
+    "model_stage": 4.410713,
+    "tools": 2.495888,
+    "step": 14.765057
+  },
+  {
+    "seq": 434,
+    "prepare": 8.932877,
+    "model_stage": 3.321424,
+    "tools": 2.568668,
+    "step": 16.011647
+  },
+  {
+    "seq": 447,
+    "prepare": 7.997906,
+    "model_stage": 3.791961,
+    "tools": 0.530757,
+    "step": 13.625642
+  },
+  {
+    "seq": 459,
+    "prepare": 7.565979,
+    "model_stage": 3.06452,
+    "tools": 2.628658,
+    "step": 14.38163
+  },
+  {
+    "seq": 472,
+    "prepare": 7.14306,
+    "model_stage": 11.553188,
+    "tools": 2.271296,
+    "step": 22.133152
+  },
+  {
+    "seq": 485,
+    "prepare": 6.814143,
+    "model_stage": 3.818416,
+    "tools": 2.294351,
+    "step": 13.906882
+  },
+  {
+    "seq": 498,
+    "prepare": 7.933727,
+    "model_stage": 3.475492,
+    "tools": 2.754983,
+    "step": 15.580276
+  },
+  {
+    "seq": 511,
+    "prepare": 9.731301,
+    "model_stage": 3.530061,
+    "tools": 3.055729,
+    "step": 17.83358
+  },
+  {
+    "seq": 524,
+    "prepare": 9.747771,
+    "model_stage": 3.381942,
+    "tools": 3.064376,
+    "step": 17.65291
+  },
+  {
+    "seq": 537,
+    "prepare": 8.53618,
+    "model_stage": 3.211617,
+    "tools": 2.76003,
+    "step": 15.859999
+  },
+  {
+    "seq": 550,
+    "prepare": 10.171491,
+    "model_stage": 7.040445,
+    "tools": 2.723201,
+    "step": 21.441193
+  },
+  {
+    "seq": 563,
+    "prepare": 9.586358,
+    "model_stage": 3.690531,
+    "tools": 2.699623,
+    "step": 17.318848
+  },
+  {
+    "seq": 576,
+    "prepare": 9.431383,
+    "model_stage": 3.607482,
+    "tools": 2.7796,
+    "step": 17.250871
+  },
+  {
+    "seq": 589,
+    "prepare": 9.743457,
+    "model_stage": 4.155488,
+    "tools": 0.552366,
+    "step": 15.914576
+  },
+  {
+    "seq": 601,
+    "prepare": 10.08019,
+    "model_stage": 3.167148,
+    "tools": 3.041939,
+    "step": 17.872969
+  },
+  {
+    "seq": 614,
+    "prepare": 10.57166,
+    "model_stage": 3.593969,
+    "tools": 0.49354,
+    "step": 16.223354
+  },
+  {
+    "seq": 626,
+    "prepare": 10.230149,
+    "model_stage": 3.134273,
+    "tools": 0.498259,
+    "step": 15.225167
+  },
+  {
+    "seq": 638,
+    "prepare": 11.070827,
+    "model_stage": 1.145872,
+    "tools": null,
+    "step": 12.677873
+  }
+]

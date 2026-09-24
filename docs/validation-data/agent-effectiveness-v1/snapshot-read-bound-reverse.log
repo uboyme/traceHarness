@@ -1,0 +1,159 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+____ test_snapshot_read_allocation_is_bounded_by_observed_file_size[empty] ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6181/test_snapshot_read_allocation_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000263A5A19D30>
+content = b''
+
+    @pytest.mark.parametrize(
+        "content", [b"", b"independent fixture", b"x" * 4096], ids=["empty", "small", "4096-bytes"]
+    )
+    def test_snapshot_read_allocation_is_bounded_by_observed_file_size(
+        tmp_path, monkeypatch, content
+    ):
+        target = tmp_path / "value"
+        target.write_bytes(content)
+        rules = policy()
+        rules = replace(rules, limits=replace(rules.limits, workspace_bytes=128 * 1024 * 1024))
+    
+        def bounded_read(stream, count, original_open):
+            # Model an allocator that can hold this file and one growth sentinel,
+            # but not a workspace-sized transient allocation for every small file.
+            if count > len(content) + 1:
+                raise MemoryError("read allocation exceeds observed file size plus sentinel")
+            return stream.read(count)
+    
+        calls = observe_read(monkeypatch, target, bounded_read)
+>       result = snapshot(tmp_path, rules)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_sandbox_snapshot_read_bound.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\sandbox\workspace.py:116: in snapshot
+    visit(root)
+src\traceh\sandbox\workspace.py:105: in visit
+    content = stream.read(before.st_size + 1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_sandbox_snapshot_read_bound.py:30: in read
+    return read(self.stream, count, original_open)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+stream = <_io.BufferedReader name='C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6181\\test_snapshot_read_allocation_0\\value'>
+count = 134217729, original_open = <function Path.open at 0x000002639FB0F920>
+
+    def bounded_read(stream, count, original_open):
+        # Model an allocator that can hold this file and one growth sentinel,
+        # but not a workspace-sized transient allocation for every small file.
+        if count > len(content) + 1:
+>           raise MemoryError("read allocation exceeds observed file size plus sentinel")
+E           MemoryError: read allocation exceeds observed file size plus sentinel
+
+tests\test_sandbox_snapshot_read_bound.py:55: MemoryError
+____ test_snapshot_read_allocation_is_bounded_by_observed_file_size[small] ____
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6181/test_snapshot_read_allocation_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000263A59C7620>
+content = b'independent fixture'
+
+    @pytest.mark.parametrize(
+        "content", [b"", b"independent fixture", b"x" * 4096], ids=["empty", "small", "4096-bytes"]
+    )
+    def test_snapshot_read_allocation_is_bounded_by_observed_file_size(
+        tmp_path, monkeypatch, content
+    ):
+        target = tmp_path / "value"
+        target.write_bytes(content)
+        rules = policy()
+        rules = replace(rules, limits=replace(rules.limits, workspace_bytes=128 * 1024 * 1024))
+    
+        def bounded_read(stream, count, original_open):
+            # Model an allocator that can hold this file and one growth sentinel,
+            # but not a workspace-sized transient allocation for every small file.
+            if count > len(content) + 1:
+                raise MemoryError("read allocation exceeds observed file size plus sentinel")
+            return stream.read(count)
+    
+        calls = observe_read(monkeypatch, target, bounded_read)
+>       result = snapshot(tmp_path, rules)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_sandbox_snapshot_read_bound.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\sandbox\workspace.py:116: in snapshot
+    visit(root)
+src\traceh\sandbox\workspace.py:105: in visit
+    content = stream.read(before.st_size + 1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_sandbox_snapshot_read_bound.py:30: in read
+    return read(self.stream, count, original_open)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+stream = <_io.BufferedReader name='C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6181\\test_snapshot_read_allocation_1\\value'>
+count = 134217729, original_open = <function Path.open at 0x000002639FB0F920>
+
+    def bounded_read(stream, count, original_open):
+        # Model an allocator that can hold this file and one growth sentinel,
+        # but not a workspace-sized transient allocation for every small file.
+        if count > len(content) + 1:
+>           raise MemoryError("read allocation exceeds observed file size plus sentinel")
+E           MemoryError: read allocation exceeds observed file size plus sentinel
+
+tests\test_sandbox_snapshot_read_bound.py:55: MemoryError
+_ test_snapshot_read_allocation_is_bounded_by_observed_file_size[4096-bytes] __
+
+tmp_path = WindowsPath('C:/Users/caojie/AppData/Local/Temp/pytest-of-caojie/pytest-6181/test_snapshot_read_allocation_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000263A59AC7A0>
+content = b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    @pytest.mark.parametrize(
+        "content", [b"", b"independent fixture", b"x" * 4096], ids=["empty", "small", "4096-bytes"]
+    )
+    def test_snapshot_read_allocation_is_bounded_by_observed_file_size(
+        tmp_path, monkeypatch, content
+    ):
+        target = tmp_path / "value"
+        target.write_bytes(content)
+        rules = policy()
+        rules = replace(rules, limits=replace(rules.limits, workspace_bytes=128 * 1024 * 1024))
+    
+        def bounded_read(stream, count, original_open):
+            # Model an allocator that can hold this file and one growth sentinel,
+            # but not a workspace-sized transient allocation for every small file.
+            if count > len(content) + 1:
+                raise MemoryError("read allocation exceeds observed file size plus sentinel")
+            return stream.read(count)
+    
+        calls = observe_read(monkeypatch, target, bounded_read)
+>       result = snapshot(tmp_path, rules)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_sandbox_snapshot_read_bound.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\traceh\sandbox\workspace.py:116: in snapshot
+    visit(root)
+src\traceh\sandbox\workspace.py:105: in visit
+    content = stream.read(before.st_size + 1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_sandbox_snapshot_read_bound.py:30: in read
+    return read(self.stream, count, original_open)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+stream = <_io.BufferedReader name='C:\\Users\\caojie\\AppData\\Local\\Temp\\pytest-of-caojie\\pytest-6181\\test_snapshot_read_allocation_2\\value'>
+count = 134217729, original_open = <function Path.open at 0x000002639FB0F920>
+
+    def bounded_read(stream, count, original_open):
+        # Model an allocator that can hold this file and one growth sentinel,
+        # but not a workspace-sized transient allocation for every small file.
+        if count > len(content) + 1:
+>           raise MemoryError("read allocation exceeds observed file size plus sentinel")
+E           MemoryError: read allocation exceeds observed file size plus sentinel
+
+tests\test_sandbox_snapshot_read_bound.py:55: MemoryError
+=========================== short test summary info ===========================
+FAILED tests/test_sandbox_snapshot_read_bound.py::test_snapshot_read_allocation_is_bounded_by_observed_file_size[empty]
+FAILED tests/test_sandbox_snapshot_read_bound.py::test_snapshot_read_allocation_is_bounded_by_observed_file_size[small]
+FAILED tests/test_sandbox_snapshot_read_bound.py::test_snapshot_read_allocation_is_bounded_by_observed_file_size[4096-bytes]

@@ -1,0 +1,68 @@
+{
+  "experiment": "C - bounded self-evolution on Single, SWE-bench Lite 3 dev + 3 validation (collection plan section 7)",
+  "frozen_at_utc": "2026-09-23T13:41:09.688263+00:00",
+  "source_digest": "d16fcdde23f8e01a4fa59d8c1609d630e3f9e5ce496fa407f8c9278f915a1aa8",
+  "dev_cases": [
+    "marshmallow-code__marshmallow-1359",
+    "pylint-dev__astroid-1196",
+    "pvlib__pvlib-python-1154"
+  ],
+  "dev_benchmark": {
+    "path": ".traceh/c-dev-material",
+    "digest": "3543d8fb8c7bd19d8abefc98519be76fc299c82a9f15f160526c91aba973315c",
+    "combined_from": ".traceh/c-dev-material-provenance.json"
+  },
+  "dev_plans": [
+    {
+      "case_id": "marshmallow-code__marshmallow-1359",
+      "plan": ".traceh\\c-plans-dev\\marshmallow-code__marshmallow-1359\\run-plan.json",
+      "sha256": "f080ec2b572b7bf84ff969af1df3d221a67498a20d0fa6f01a27ca7e2967a3cf"
+    },
+    {
+      "case_id": "pylint-dev__astroid-1196",
+      "plan": ".traceh\\c-plans-dev\\pylint-dev__astroid-1196\\run-plan.json",
+      "sha256": "4e0978aec55945091dfce15bb501914eebd915f546d6b60e3c0c9ec864a279b0"
+    },
+    {
+      "case_id": "pvlib__pvlib-python-1154",
+      "plan": ".traceh\\c-plans-dev\\pvlib__pvlib-python-1154\\run-plan.json",
+      "sha256": "722ec94c534ce58eafdcc97f0b7af8f8a74c2730dcd37150f561b066455fd80a"
+    }
+  ],
+  "template_plan": {
+    "plan": ".traceh\\c-plans-dev\\template\\run-plan.json",
+    "sha256": "10c1b1c744a57a8e803881c51d0fc35ec88774bfb62e7d73658a0d10a4afff69"
+  },
+  "validation_cases": [
+    "pylint-dev__astroid-1978",
+    "pyvista__pyvista-4315",
+    "marshmallow-code__marshmallow-1343"
+  ],
+  "validation_materials": {
+    "pylint-dev__astroid-1978": ".traceh/aei/v1/03",
+    "pyvista__pyvista-4315": ".traceh/aei/v1/04",
+    "marshmallow-code__marshmallow-1343": ".traceh/aei/v1/05"
+  },
+  "background": {
+    "settings": ".traceh/c-bg/background.json",
+    "settings_sha256": "5b2c1b16c3520c23f5661a241e7ec7245b2030a3ae111efd5fbe414292138acd",
+    "selectors": [
+      [
+        "product/execution.py",
+        "CODER_GUIDANCE"
+      ]
+    ],
+    "min_sources": 2,
+    "max_suggestions": 2
+  },
+  "flow": [
+    "dev: one A/A single pair per dev case (two runs each)",
+    "background host imports the dev evaluation runs (same host code the TUI uses), clusters by mechanism across >=2 sources, proposes at most 2 suggestions",
+    "a person selects at most one suggestion or rejects all",
+    "validation: baseline vs candidate text_candidate, 3 cases x 2 repetitions, first arm alternating"
+  ],
+  "adoption_gate": "no validation case where candidate fails and baseline passes; and pass count increases, or whole-tree token ratio <= 0.95 with tool-call increase <= 2",
+  "stability_definition": "every dev run has a detection record; each suggestion cites original evidence from >=2 runs; candidate passes the original whitelist admission; verdict comes from the original comparison",
+  "isolation": "the analysis model sees only structural detections of dev runs; no validation case, hidden test or scorer",
+  "network": "direct: paired plans for runs; the suggest step clears *_PROXY and installs ProxyHandler({}) in its own process"
+}

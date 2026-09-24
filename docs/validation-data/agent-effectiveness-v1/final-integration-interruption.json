@@ -1,0 +1,9 @@
+{
+  "status": "interrupted",
+  "reason": "user prioritized completing meaningful cross-task experiments over the historical long L2 full-suite wait",
+  "observed_progress": "16%",
+  "outcome": "no complete suite result",
+  "paid_provider_calls": 0,
+  "python_test_processes_remaining": 0,
+  "partial_log": "final-integration.log"
+}

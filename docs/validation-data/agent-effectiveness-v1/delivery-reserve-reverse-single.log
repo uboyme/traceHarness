@@ -1,0 +1,74 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_single_reserve_delivers_or_fails_without_bypassing_verification[deliver-steps] _
+
+tmp_path = WindowsPath('C:/Users/caojie/Desktop/instudy/traceharness/.traceh/aereverse1tmp/test_single_reserve_delivers_o0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023BAAD3F5F0>
+trigger = 'steps', ending = 'deliver'
+
+    @pytest.mark.parametrize("trigger", ["steps", "turn-wall"])
+    @pytest.mark.parametrize("ending", ["deliver", "provider-failure", "withdrawn-tool"])
+    async def test_single_reserve_delivers_or_fails_without_bypassing_verification(
+        tmp_path: Path, monkeypatch, trigger: str, ending: str
+    ):
+        benchmark = build_benchmark(tmp_path / "benchmark", arms=(("single", 1),))
+        path = benchmark / "benchmark.json"
+        manifest = json.loads(path.read_bytes())
+        coder = manifest["task_settings"]["roles"]["coder"]
+        coder["budget"].update(max_steps=4, max_wall_milliseconds=120_000)
+        coder["max_turn_wall_milliseconds"] = 60_000
+        coder["wrap_up_reserve"] = {
+            "steps": 2 if trigger == "steps" else 0,
+            "tool_calls": 0,
+            "wall_milliseconds": 10_000,
+        }
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        if trigger == "turn-wall":
+            # Deterministic elapsed-time input at the existing clock projection
+            # seam: the first real write has finished; no arbitrary sleep.
+            monkeypatch.setattr(
+                "traceh.supervision.investigation_wrap_up._elapsed_milliseconds",
+                lambda events, turn_id: 55_000 if any(
+                    e.type == "tool/result" and e.data.get("tool_name") == "apply_patch"
+                    for e in events
+                ) else 0,
+            )
+    
+        class Provider(_ProductProvider):
+            async def complete(self, request):
+                if request.tools:
+                    if any(m.role == "tool" for m in request.messages):
+                        self.requests.append(request)
+                        return _response(
+                            "", ToolCall("keep-reading", "read_file", {"path": "kept.txt"})
+                        )
+                    return await super().complete(request)
+                self.requests.append(request)
+                assert "Deliver now" in request.system_prompt
+                if ending == "provider-failure":
+                    raise ProviderFailure(
+                        "provider-dns-temporary", ProviderFailureCategory.DNS,
+                        usage=Usage(0, 0, UsageQuality.EXACT),
+                    )
+                if ending == "withdrawn-tool" and len(self.requests) == 2:
+                    return _response("", ToolCall("forbidden", "apply_patch", {
+                        "path": "added.txt", "old_text": "added\n", "new_text": "corrupted\n",
+                    }))
+                return _response("Wrote added.txt; the host's fixed check has not yet run.")
+    
+        requests = []
+        runner = EvaluationRunner(
+            benchmark, tmp_path / "run", provider=Provider(requests), model_id=PRODUCT_MODEL_ID,
+            sandbox=real_sandbox_policy(), retry_policy=NO_MODEL_RETRY,
+        )
+        report = (await runner.run()).task_report
+        attempt, = report.attempts
+>       assert len(requests) >= 2 and requests[0].tools and not requests[1].tools
+E       assert (3 >= 2 and (ToolSchema(name='apply_patch', description="Replace exact text in one workspace file. For a new file, use old_text=''...perators are literal.', 'type': 'string'}, 'timeout': {'type': 'number'}}, 'required': ['command'], 'type': 'object'})) and not (ToolSchema(name='apply_patch', description="Replace exact text in one workspace file. For a new file, use old_text=''...perators are literal.', 'type': 'string'}, 'timeout': {'type': 'number'}}, 'required': ['command'], 'type': 'object'})))
+E        +  where 3 = len([ModelRequest(provider='benchmark-test-provider', model='benchmark-test-model', messages=(ModelMessage(role='user', co... 'context_input_seq': 29, 'context_input_digest': '55761e17ab00251d299187993e5c6f0bae089cd277a00e6c81bcaa1afdaaae89'})])
+E        +  and   (ToolSchema(name='apply_patch', description="Replace exact text in one workspace file. For a new file, use old_text=''...perators are literal.', 'type': 'string'}, 'timeout': {'type': 'number'}}, 'required': ['command'], 'type': 'object'})) = ModelRequest(provider='benchmark-test-provider', model='benchmark-test-model', messages=(ModelMessage(role='user', con...', 'context_input_seq': 7, 'context_input_digest': '899de4638df8b721076a8b35346ce58e6b06921e362eacc4c1b852514e0d696c'}).tools
+E        +  and   (ToolSchema(name='apply_patch', description="Replace exact text in one workspace file. For a new file, use old_text=''...perators are literal.', 'type': 'string'}, 'timeout': {'type': 'number'}}, 'required': ['command'], 'type': 'object'})) = ModelRequest(provider='benchmark-test-provider', model='benchmark-test-model', messages=(ModelMessage(role='user', con..., 'context_input_seq': 18, 'context_input_digest': '6f35a1dc6f2e8f99c91f57de361905e8319e4509e94edcf12cf4cb849a84fa71'}).tools
+
+tests\test_product_delivery_reserve.py:78: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_product_delivery_reserve.py::test_single_reserve_delivers_or_fails_without_bypassing_verification[deliver-steps]

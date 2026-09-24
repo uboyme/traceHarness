@@ -1,0 +1,47 @@
+{
+  "comparison_status": "regressed",
+  "rows": [
+    {
+      "pair": 5,
+      "case": "pydicom__pydicom-1694",
+      "mode": "single",
+      "product_status": "completed",
+      "workflow_status": "completed",
+      "review_passed": true,
+      "failure_code": null,
+      "execution_usage": {
+        "input_tokens": 232880,
+        "output_tokens": 8484,
+        "quality": "exact",
+        "total_tokens": 241364
+      },
+      "known_estimated_cny": 0.533632,
+      "cancelled_unknown_usage": [],
+      "planning_cny": 0.533632,
+      "model_attempts": 22,
+      "report_sha256": "17efdf45c0828a7557a764e3689c29a441ebcfaa0612d4ec52a651ec54714fd1"
+    },
+    {
+      "pair": 5,
+      "case": "pydicom__pydicom-1694",
+      "mode": "multi",
+      "product_status": "failed",
+      "workflow_status": "failed",
+      "review_passed": null,
+      "failure_code": "workflow-node-failed",
+      "execution_usage": null,
+      "known_estimated_cny": 0.659014,
+      "cancelled_unknown_usage": [
+        {
+          "attempt_id": "73b0c643-ab1b-41ef-99fb-d6cf21b8e614",
+          "request_bytes_and_output": 27266,
+          "planning_cny": 0.218128
+        }
+      ],
+      "planning_cny": 0.877142,
+      "model_attempts": 19,
+      "report_sha256": "a29a87e1e597fa067e4e130f4fed804538daf54f859d96d118b030bd0ea856bf"
+    }
+  ],
+  "planning_cny": 1.410774
+}

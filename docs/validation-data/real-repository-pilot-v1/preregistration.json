@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "model": {
+    "provider": "openai-compatible",
+    "model": "deepseek-v4.1-flash",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "api_key_env": "DASHSCOPE_API_KEY",
+    "script": null,
+    "retry_policy": {
+      "max_attempts": 1,
+      "max_elapsed_seconds": 0,
+      "base_delay_seconds": 0,
+      "max_delay_seconds": 0,
+      "retry_after_cap_seconds": 0,
+      "jitter_ratio": 0
+    }
+  },
+  "source_digest": "b37fde99816a17142ace8e693e551f133f3578a004a8d7b68aa8f3912e501533",
+  "benchmark_sha256": "e447ec3102825a823334e8300365458eb745fd98db8e911d85cfcd2b9326a84f",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "schedule": [
+    {
+      "pair": 1,
+      "case": "marshmallow-code__marshmallow-1359",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "plan": "pair-01.json",
+      "plan_sha256": "19d2c51a94e3436bd4020ba9c429803a89ee4caa0dfafb4d811de910c79a68d8"
+    },
+    {
+      "pair": 2,
+      "case": "pydicom__pydicom-1694",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "plan": "pair-02.json",
+      "plan_sha256": "fcb05b39b0c74bd1dcfee9afe4ec61c9892f3887d91e6f6413a2657ddeeb8918"
+    },
+    {
+      "pair": 3,
+      "case": "pylint-dev__astroid-1196",
+      "repetition": 1,
+      "first_arm": "baseline",
+      "plan": "pair-03.json",
+      "plan_sha256": "24f24c49cc1a3d896e5a426d951fca0ea5bb8276e09c860a9ba41910ca01f33f"
+    },
+    {
+      "pair": 4,
+      "case": "pylint-dev__astroid-1196",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "plan": "pair-04.json",
+      "plan_sha256": "70292090fb478936ee2c6370393f41022958cf602a778fb9ab70a93dec0fc9d6"
+    },
+    {
+      "pair": 5,
+      "case": "pydicom__pydicom-1694",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "plan": "pair-05.json",
+      "plan_sha256": "657f81d52df2e2902e8034bb9c28e5ddd9d9aabf3e1baeb768287025bd2c39a2"
+    },
+    {
+      "pair": 6,
+      "case": "marshmallow-code__marshmallow-1359",
+      "repetition": 2,
+      "first_arm": "candidate",
+      "plan": "pair-06.json",
+      "plan_sha256": "ae1e0a89b635a618fcc0ccf8ef603f858b49e83e3810c6c4049a98e4c6c8b5dc"
+    }
+  ],
+  "planned_trials": 12,
+  "operational_budget_cny": 100,
+  "planned_token_cost_ceiling_cny": 76.8,
+  "cost_is_bill_guarantee": false,
+  "input_cny_per_million": 2,
+  "output_cny_per_million": 8,
+  "reasoning_mode": "provider-default-unpinned",
+  "price_source": "https://help.aliyun.com/zh/model-studio/model-pricing",
+  "stop_after_pair_on": [
+    "provider_failure",
+    "unknown_usage",
+    "unproven_convergence",
+    "cost_anomaly",
+    "operational_budget_reached"
+  ],
+  "replication": "separate process calls; no model seed control",
+  "multi": "mandatory structured allocation, 1-2 read-only investigators",
+  "study": "development pilot, no statistical benefit claim"
+}

@@ -1,0 +1,21 @@
+{
+  "case_id": "pydicom__pydicom-1694",
+  "mode": "single",
+  "model": "qwen3.6-plus",
+  "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "api_key_env": "DASHSCOPE_API_KEY",
+  "source_digest_at_preparation": "feb4d0c807e8b17ead38e116679fac9b6455bae05064f1c89380fda70327d4e6",
+  "benchmark_sha256": "61e42587d9aa8ad87d535a74db1be433d39b813059916de04975b24c15ae3343",
+  "dataset_sha256": "2ec958d14796df14d9b3087037971afc3cac908e6f7f93a8f5488ad9e851b7a3",
+  "sandbox_sha256": "f14fcb794c582eaee9c0f7543a90bed353c38e4360e5aee57fe7b01b29559d3d",
+  "settings_sha256": "daab3165d5fe89e53d4ed52f6814c3bac0383f61858065728b7dff7b8adb5e0c",
+  "source_material": "C:\\Users\\caojie\\Desktop\\instudy\\traceharness\\.traceh\\aei\\c2b\\material",
+  "output": "C:\\Users\\caojie\\tae-c2bv3",
+  "status": "prepared; source/configuration and budget must be rechecked before execution",
+  "configuration_arm": "b",
+  "frozen_at_utc": "2026-09-22T15:53:30.082443+00:00",
+  "prior_known_cny": 10.764001,
+  "prior_unknown_reserved_cny": 73.0,
+  "reserved_cny": 14,
+  "batch_cap_cny": 120.0
+}

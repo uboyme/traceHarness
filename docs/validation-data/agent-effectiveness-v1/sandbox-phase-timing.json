@@ -1,0 +1,117 @@
+{
+  "run": ".traceh\\ae03",
+  "scope": "Event boundaries; container timestamps use Docker daemon clock. Shared host, no causal attribution to individual functions.",
+  "rows": [
+    {
+      "tool_call_id": "call_fc31d26d02de4c3eb291aeff",
+      "status": "succeeded",
+      "call_to_result_seconds": 33.891008,
+      "call_to_admitted": 1.323399,
+      "admitted_to_request": 16.908644,
+      "request_to_container_start": 2.627495,
+      "container_running": 0.754297,
+      "container_finish_to_outcome": 2.553754,
+      "outcome_to_publication": 9.440397,
+      "publication_to_result": 0.283022
+    },
+    {
+      "tool_call_id": "call_732eb9e8ca054f949973ca4c",
+      "status": "succeeded",
+      "call_to_result_seconds": 39.533238,
+      "call_to_admitted": 1.236037,
+      "admitted_to_request": 15.556921,
+      "request_to_container_start": 2.489957,
+      "container_running": 0.755302,
+      "container_finish_to_outcome": 2.201747,
+      "outcome_to_publication": 16.850527,
+      "publication_to_result": 0.442747
+    },
+    {
+      "tool_call_id": "call_cf5f4f0ba5b44e7abdc3c93f",
+      "status": "succeeded",
+      "call_to_result_seconds": 34.683136,
+      "call_to_admitted": 1.079084,
+      "admitted_to_request": 12.23964,
+      "request_to_container_start": 2.659517,
+      "container_running": 2.066835,
+      "container_finish_to_outcome": 2.436411,
+      "outcome_to_publication": 13.671683,
+      "publication_to_result": 0.529966
+    },
+    {
+      "tool_call_id": "call_ba407c74701147029dc2833e",
+      "status": "succeeded",
+      "call_to_result_seconds": 30.836276,
+      "call_to_admitted": 1.061637,
+      "admitted_to_request": 10.545179,
+      "request_to_container_start": 2.316535,
+      "container_running": 1.416299,
+      "container_finish_to_outcome": 2.14891,
+      "outcome_to_publication": 12.984272,
+      "publication_to_result": 0.363444
+    },
+    {
+      "tool_call_id": "call_0c346a6b70ab451a88784edc",
+      "status": "succeeded",
+      "call_to_result_seconds": 35.930328,
+      "call_to_admitted": 1.632274,
+      "admitted_to_request": 13.031696,
+      "request_to_container_start": 2.425425,
+      "container_running": 1.37009,
+      "container_finish_to_outcome": 2.489192,
+      "outcome_to_publication": 14.540946,
+      "publication_to_result": 0.440705
+    },
+    {
+      "tool_call_id": "call_efc85e82f68942cfb52b5be4",
+      "status": "succeeded",
+      "call_to_result_seconds": 35.078431,
+      "call_to_admitted": 1.423133,
+      "admitted_to_request": 11.583702,
+      "request_to_container_start": 2.692676,
+      "container_running": 0.891591,
+      "container_finish_to_outcome": 2.88244,
+      "outcome_to_publication": 15.046186,
+      "publication_to_result": 0.558703
+    },
+    {
+      "tool_call_id": "call_93837ccee9094bd6a392fb72",
+      "status": "succeeded",
+      "call_to_result_seconds": 53.422148,
+      "call_to_admitted": 1.591904,
+      "admitted_to_request": 19.201811,
+      "request_to_container_start": 4.644677,
+      "container_running": 1.44731,
+      "container_finish_to_outcome": 4.973227,
+      "outcome_to_publication": 20.949987,
+      "publication_to_result": 0.613232
+    },
+    {
+      "tool_call_id": "call_eda10dccbd6f4615bb86419d",
+      "status": "succeeded",
+      "call_to_result_seconds": 34.814658,
+      "call_to_admitted": 1.361868,
+      "admitted_to_request": 11.603556,
+      "request_to_container_start": 2.605227,
+      "container_running": 1.794,
+      "container_finish_to_outcome": 2.614927,
+      "outcome_to_publication": 14.244551,
+      "publication_to_result": 0.590529
+    },
+    {
+      "tool_call_id": "call_33bdde4414b44397928ac5d9",
+      "status": "denied",
+      "call_to_result_seconds": 0.199389
+    }
+  ],
+  "totals": {
+    "call_to_result_seconds": 298.388612,
+    "call_to_admitted": 10.709336,
+    "admitted_to_request": 110.671149,
+    "request_to_container_start": 22.461509,
+    "container_running": 10.495724,
+    "container_finish_to_outcome": 22.300608,
+    "outcome_to_publication": 117.728549,
+    "publication_to_result": 3.822348
+  }
+}

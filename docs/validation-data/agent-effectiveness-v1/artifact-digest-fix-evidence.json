@@ -1,0 +1,23 @@
+{
+  "root_cause": "binary materials ZIP incorrectly read under JSON MAX_DOCUMENT_BYTES",
+  "real_artifact_bytes": 28148442,
+  "json_limit_unchanged": 4194304,
+  "changed_owners": [
+    "evaluation/inputs.py",
+    "evaluation/evidence.py",
+    "evaluation/comparison.py"
+  ],
+  "source_digest": "feb4d0c807e8b17ead38e116679fac9b6455bae05064f1c89380fda70327d4e6",
+  "targeted_tests_passed": 19,
+  "adjacent_tests_passed": 64,
+  "counts_overlap": true,
+  "reverse_log": "artifact-digest-reverse.log",
+  "reverse_result": "failed at public comparison complete assertion after restoring old binary-reading logic in process",
+  "original_comparison_sha256": "d4bb333acfb545ea9771a5a376a9d5be7b677c02f52ffc0ce5a5f173294dfbe4",
+  "new_comparison": "single-validation-v1/comparison-rechecked/report.json",
+  "compileall": "passed",
+  "ruff": "passed",
+  "collect_only": "passed",
+  "diff_check": "passed",
+  "full_suite_after_fix": "not_run"
+}

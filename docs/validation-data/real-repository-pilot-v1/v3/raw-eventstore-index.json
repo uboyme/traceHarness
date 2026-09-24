@@ -1,0 +1,86 @@
+[
+  {
+    "pair": 1,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/rr-eval/live-pilot-v3/pair-01/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 2146304,
+    "events_sha256": "36d88187204dac09df33d37e36f4f41977aebde597b4857bfa2a82c63ff2703f"
+  },
+  {
+    "pair": 1,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/rr-eval/live-pilot-v3/pair-01/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 3530752,
+    "events_sha256": "4935236d92066e58d5ae4a630ada1847cfc386bceb3bbbeab800db3d49bc8a29"
+  },
+  {
+    "pair": 2,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p02/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 4345856,
+    "events_sha256": "1a3bac3d11f9aed63041504f70068f5450c1fc6f5313869c5243d5b77442e6c6"
+  },
+  {
+    "pair": 2,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p02/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 8478720,
+    "events_sha256": "f26d6034b13debe1cb29cadeeff9f4cbe2585a548d0d45315d561f415c50bffa"
+  },
+  {
+    "pair": 3,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p03/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 4251648,
+    "events_sha256": "71ee63ffe2659a5ec9abb65af59938e90ce4cdf3f6c3563d9b0b5e6b699b09f0"
+  },
+  {
+    "pair": 3,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p03/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 6701056,
+    "events_sha256": "4f3dc2d38691ab0df6a0b8f45bea583b14e41ccef0f1a01a53f1c826455666eb"
+  },
+  {
+    "pair": 4,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p04/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 5074944,
+    "events_sha256": "ac2bcfec844f23f5650b66370d94c399735830e0e989cd4c786f49c65e592d23"
+  },
+  {
+    "pair": 4,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p04/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 8384512,
+    "events_sha256": "161dc18274be48fabf8c3c57035e6b66f331095cb39ffa4feab607300c595f96"
+  },
+  {
+    "pair": 5,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p05/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 3162112,
+    "events_sha256": "4736f5c1c4f4babf9dd107b9bf472f3d036540104b2c0b8d0c83a91fb0ad2fea"
+  },
+  {
+    "pair": 5,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p05/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 3969024,
+    "events_sha256": "19b70e2cd51d6064ee9518f96a2ba350426d497a48870754d01ec7a1228ded1f"
+  },
+  {
+    "pair": 6,
+    "arm": "01",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p06/arms/01/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 2805760,
+    "events_sha256": "d9c511c5330ec5a2b8b75320bbd13f8d8c9e390b62b849a335036b7644031683"
+  },
+  {
+    "pair": 6,
+    "arm": "02",
+    "local_original_events": "C:/Users/caojie/Desktop/instudy/traceharness/.traceh/p3/p06/arms/02/run/attempts/001/ev/events.sqlite3",
+    "events_bytes": 4591616,
+    "events_sha256": "eecacb06a1c4a65c62aea1f9e780b715c40fe670786478ea543b9380e9b39e10"
+  }
+]

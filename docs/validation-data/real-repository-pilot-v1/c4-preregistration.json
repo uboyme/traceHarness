@@ -1,0 +1,119 @@
+{
+  "case": {
+    "case_id": "pylint-dev__astroid-1196",
+    "material_directory": ".traceh/c4-material",
+    "material_origin": "Extracted verbatim from the frozen v10 run archive .traceh/f10a/artifacts/materials.zip; dataset.json is unmodified and its declared digest still verifies.",
+    "requested_mode": "multi"
+  },
+  "disclosed_condition_changes_from_v10": [
+    {
+      "change": "Both roles' max_output_tokens raised from 16384 (coder) / 8192 (investigator) to 32768.",
+      "consequence": "This trial is therefore NOT a controlled comparison against v10. Any difference in outcome has at least two candidate causes.",
+      "reason": "C0-2 observed this model spend an entire output budget on reasoning_content with zero text tokens and finish_reason=length. Re-running under a ceiling already shown to be consumed by reasoning would reproduce the empty delivery and teach nothing about context governance."
+    },
+    {
+      "change": "Both roles gained an explicit context_policy (window 96000, output reserve 32768, margin 2048, trigger 60%, relief 35%, protect 2 recent tool groups).",
+      "reason": "v10 passed no token_budget or compaction to Product at all, so no metering and no folding could occur. Without this the C3 work is inert in a real run.",
+      "window_justification": "96000 minus reserve and margin gives an input limit of 61184. v10 successfully sent 67984 input tokens to this same model, so this limit is inside what the model already accepted. It is a host carrying decision, not a claim about the model's true context window."
+    },
+    {
+      "change": "Both roles granted read_tool_output / list_tool_outputs / search_tool_output.",
+      "reason": "A folded result must be reopenable, or folding destroys access to evidence rather than deferring it."
+    }
+  ],
+  "format": 1,
+  "infrastructure_interruptions": {
+    "c4f_run": "provider-tls-eof at 5 calls",
+    "c4g_run": "provider-tls-eof at investigator step 35; the retry policy did recover an earlier step but the 30s default elapsed cap allowed only two attempts",
+    "c4h_run": "provider-tls-eof with both sessions failing simultaneously across 5 and 3 attempts; investigation-wrap-up had already fired",
+    "c4i_run": "14 of 24 calls failed (tls_eof 8, disconnected 5, timeout 1); never finished the collaboration plan",
+    "decision": "Stopped launching further real runs. Repeating a forty-minute paid run against a provider that is currently down is not diagnosis.",
+    "note": "Recorded so these runs are not read as mechanism results. Three consecutive runs ended on provider transport failure, not on any host decision."
+  },
+  "interpretation_limits": [
+    "One trial on one case. No savings rate, no quality equivalence, no mode benefit.",
+    "Token totals are provider-reported, not a reconciled invoice.",
+    "A success here does not retroactively explain v10, and a failure here does not invalidate the offline folding evidence."
+  ],
+  "kind": "c4-context-governance-trial-preregistration",
+  "model": {
+    "model_id": "deepseek-v4.1-flash",
+    "provider_id": "openai-compatible",
+    "request_timeout_seconds": 300.0,
+    "request_timeout_why": "The wrap-up Step produces the longest single output of the whole Turn. In c4e-run the assistant's 12,732-character report took 71 seconds of provider time while this provider was fast (median call 6.6s). By c4p-run the same provider had slowed to a 15.5s median - 2.3x - and the wrap-up call hit the 120-second adapter default exactly (provider_active_milliseconds 120781), failed as provider-timeout, and the retry was cancelled when the 25-minute Turn wall clock expired. Nothing was delivered. 120 seconds had no configuration entry at all before this change; it is now an explicit host setting. 300 is four times the report that did succeed and roughly 1.8x the same report projected at the provider's current slower rate, and it pairs with a wrap-up reserve of exactly two full attempts. Disclosed condition change, from run15 onward.",
+    "retry": {
+      "max_attempts": 5,
+      "max_elapsed_seconds": 600.0,
+      "why": "This provider takes ten to sixty seconds to fail a handshake, so the CLI default of three attempts within thirty seconds delivered only two, and a widened five-attempt policy still delivered only three before the elapsed cap. Retry is demonstrably effective - across runs it recovered most failing requests, several of which needed the third or fourth attempt. The elapsed cap was kept tight because each failed attempt used to be charged the full worst-case reservation; that defect is fixed (later ordinals of one frozen request now settle at zero, confirmed on c4n-run evidence: three ordinal-2/3 settlements for 0 tokens), so additional attempts no longer consume the task's grant. Widened to five attempts within 600 seconds, which is under two percent of the task's wall clock. This recovers one frozen request; it does not retry a task, re-dispatch a Turn, or change any stop condition. Disclosed condition change."
+    },
+    "same_as_v10": true,
+    "streaming": false
+  },
+  "on_stop": "End through the original failure or cancellation path and report it. Do not change parameters and rerun, and do not quietly retry.",
+  "post_hoc_correction": {
+    "corrected_measure": "Count tool calls that repeat an earlier call's exact tool name and arguments, split by whether the earlier result had already been folded. Paging through one large output is not counted; only re-asking for bytes the Session already holds.",
+    "declared_after_the_trial": true,
+    "honesty_note": "This measure was added after the trial and is NOT a preregistered stop condition. It is reported as an observation on this run's evidence, not as a gate that passed.",
+    "multiplicity_of_reopened_pages": {
+      "c4g_run_before_demand_weighting": {
+        "identical_reader_repeats": 31,
+        "opened_2x": 3,
+        "opened_3x": 4,
+        "opened_4x": 5,
+        "read_file_repeats": 1,
+        "reader_calls": 60
+      },
+      "c4h_run_after_demand_weighting": {
+        "identical_reader_repeats": 13,
+        "opened_2x": 13,
+        "opened_3x": 0,
+        "opened_4x": 0,
+        "read_file_repeats": 4,
+        "reader_calls": 42
+      },
+      "declared_after_the_trial": true,
+      "honesty_note": "Also added after the fact and also not a preregistered gate. Reported as an observation.",
+      "measure": "For reader calls only, how many distinct stored pages were fetched exactly N times with identical (effect_id, digest). This is the shape the count of repeats hides: a page opened four times is a treadmill, a page opened twice usually is not.",
+      "reading": "Deep cycling disappeared: the maximum multiplicity fell from four to two. Re-running the original tool had already been cured before this change (read_file repeats 22 in run1, 1 in c4g-run), which is what exposed the reader-side thrash underneath it."
+    },
+    "observed_on_this_run": {
+      "investigator": {
+        "identical_recalls_after_their_result_was_folded": 22,
+        "identical_recalls_while_result_still_visible": 0,
+        "read_back_calls": 14,
+        "replacements": 132
+      },
+      "main": {
+        "identical_recalls_after_their_result_was_folded": 0,
+        "identical_recalls_while_result_still_visible": 6,
+        "read_back_calls": 0,
+        "replacements": 24
+      }
+    },
+    "reading": "The two roles separate completely: every one of the investigator's repeats followed a fold, and none of the main agent's did. The investigator's own messages state the cause in its own words ('I need to re-read key sources since earlier outputs were folded'), including adapting its strategy to defeat folding ('Batching folds older outputs, so I'll read the remaining evidence one or two at a time').",
+    "why": "The preregistered thrash condition watched for the same effect_id/digest/part/page being folded, read back and folded again. It measured zero - and zero was meaningless, because that is not the shape the waste takes. A folded result is re-obtained by RE-RUNNING the original tool, which produces a new Effect with a new reference, so a detector keyed on fold identity is structurally blind to it."
+  },
+  "purpose": "Verify that the 080 C0-C3 changes reach a real task without sacrificing delivery. This is one trial on one already-admitted development case. It cannot establish multi-over-single benefit, a savings rate, or equal quality.",
+  "readouts_to_record": [
+    "per role: model call count, exact input/output totals, reasoning_tokens where reported, wall clock, failures and unknown usage",
+    "per request: local input estimate, largest input, and the estimate before and after folding",
+    "per request: composed and dispatch max_output_tokens and whether the budget clamped it",
+    "replacement count, read-back count, and when no folding happened, which of disabled / below threshold / no safe candidate / preparation failure applies",
+    "what the assistant actually submitted and which main-agent conclusions trace to it"
+  ],
+  "record": "docs/deal/081-long-task-context-and-completion-implementation.md",
+  "stop_conditions": [
+    "any safety contract failure: unreadable original output, replay mismatch, invariant violation, or non-converged cancellation",
+    "an unexplained unknown usage that is not a cancelled attempt bound to a frozen request with a finite output cap",
+    "a provider failure category appearing in the execution evidence",
+    "the run exceeding its own frozen wall-clock and token budgets"
+  ],
+  "unchanged": [
+    "dataset.json and every task material byte",
+    "the fixed verifier, Review, Approval and Promotion chain",
+    "the assessment scorer",
+    "task and role budgets other than the output ceiling",
+    "provider, model and non-streaming mode"
+  ],
+  "wrap_up_reserve_why": "The reserve must cover at least two full request timeouts, because the observed failure is one timeout followed by a retry that the Turn wall clock cancels. At a 300-second request timeout that is 600,000 ms. Deliberately not larger: a 900,000 ms reserve on the investigator's 1,500,000 ms wall clock would cut investigation from about 21 minutes to 10 and would be changing the experiment rather than fixing the mechanism."
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "docs/note/project-context.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  },
+  {
+    "file": "docs/note/project-context-plain-zh.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  },
+  {
+    "file": "docs/note/project-overview.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  },
+  {
+    "file": "docs/plan/TRACEHARNESS_AGENT_EFFECTIVENESS_PLAN.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  },
+  {
+    "file": "docs/plan/TRACEHARNESS_CONTEXT_CONVERGENCE_HANDOFF.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  },
+  {
+    "file": "docs/deal/086-agent-effectiveness-overnight.md",
+    "missing_relative_links": [],
+    "closed_code_fences": true
+  }
+]

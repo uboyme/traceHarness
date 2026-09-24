@@ -1,0 +1,13 @@
+........................................................................ [ 56%]
+.......................................................                  [100%]
+============================ slowest 10 durations =============================
+77.77s call     tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption[multi]
+63.37s call     tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption[single]
+2.27s call     tests/test_optimization_contract.py::test_candidate_is_an_original_ue3_patch_and_only_selected_strings_change
+0.97s call     tests/test_product_architecture.py::test_only_cli_and_declared_optimization_owners_depend_on_evaluation
+0.21s teardown tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption[multi]
+0.20s teardown tests/test_product_optimization.py::test_product_candidate_crosses_original_ao_and_reopens_without_adoption[single]
+0.10s call     tests/test_product_architecture.py::test_the_product_task_stream_is_the_only_new_fact_source
+0.10s call     tests/test_product_contract.py::test_the_workflow_does_not_learn_about_the_product_surface
+0.09s call     tests/test_product_architecture.py::test_the_product_domain_executes_nothing_it_records
+0.09s call     tests/test_product_architecture.py::test_no_test_fixture_identity_leaks_into_production_code

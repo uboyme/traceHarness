@@ -1,0 +1,69 @@
+{
+  "kind": "provider response diagnosis (not an agent score)",
+  "date": "2026-09-23",
+  "model": "qwen3.6-plus via DashScope OpenAI-compatible, direct connection",
+  "sources": {
+    "p02": "C:/Users/caojie/tta1/p02/arms/02 (A1 multi, repetition 2)",
+    "p03": "C:/Users/caojie/tta1/p03/arms/02 (A2 multi, repetition 1)"
+  },
+  "method": "tests/task_type_evaluation/replay_probe.py re-sends the failed attempt's frozen dispatch_request through the adapter's own _complete_sync and keeps the raw HTTP body; no tool executed, no Session written",
+  "variants": {
+    "p02": {
+      "outcomes": [
+        "empty-main_work",
+        "empty-main_work",
+        "empty-main_work",
+        "empty-main_work"
+      ],
+      "provider_reported_tokens": 38283
+    },
+    "p03": {
+      "outcomes": [
+        "valid",
+        "empty-main_work",
+        "empty-main_work",
+        "empty-main_work"
+      ],
+      "provider_reported_tokens": 77426
+    },
+    "p02-main-first": {
+      "outcomes": [
+        "template-leak",
+        "valid-json-missing-main-fields",
+        "empty-main_work",
+        "empty-main_work"
+      ],
+      "provider_reported_tokens": 38080
+    },
+    "p03-main-first": {
+      "outcomes": [
+        "valid",
+        "valid",
+        "valid",
+        "valid-json-missing-main-fields",
+        "valid-json-missing-main-fields"
+      ],
+      "provider_reported_tokens": 76341
+    },
+    "p02-flat": {
+      "outcomes": [
+        "valid",
+        "valid",
+        "valid",
+        "valid"
+      ],
+      "provider_reported_tokens": 38355
+    },
+    "p03-flat": {
+      "outcomes": [
+        "valid",
+        "valid",
+        "valid",
+        "valid"
+      ],
+      "provider_reported_tokens": 77133
+    }
+  },
+  "raw_evidence": ".traceh/tta-diag/<variant>/response-N.json",
+  "diagnosis_total_tokens": 345618
+}

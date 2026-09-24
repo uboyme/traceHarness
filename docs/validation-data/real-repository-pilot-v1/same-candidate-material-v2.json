@@ -1,0 +1,51 @@
+{
+  "kind": "counterfactual-material-diagnostic-not-reclassified-original-trial",
+  "patch_sha256": "0f117041db7d9f2b4120588e0b469a8770de00acdfd25ecb0cbd36407f96ce76",
+  "exit_code": 0,
+  "status": "finished",
+  "passed": 77,
+  "failed": 0,
+  "errors": [],
+  "missing": [],
+  "candidate_test_unchanged": true,
+  "receipt": {
+    "format": 1,
+    "execution_id": "3979c9cdc84b4ba6bc62ba1bf0b6eb53",
+    "owner": {
+      "kind": "verification",
+      "owner_id": "v1-candidate-v2-material-diagnostic",
+      "session_id": null,
+      "turn_id": null,
+      "step_id": null,
+      "tool_call_id": null,
+      "agent_id": null,
+      "budget_reservation": null,
+      "budget_admission": null,
+      "plugin_id": null,
+      "plugin_version": null,
+      "activation_id": null
+    },
+    "request_digest": "88861a6b3358e3e2a15373e5be621c96309aa4a98d76d477ec1f3c424b7446ba",
+    "policy_digest": "14bfc2e1a00548c625f1991d8036fd8853bed6c12563800b1f0c35aed0e8088b",
+    "status": "finished",
+    "converged": true,
+    "container_id": "335b127e0273fdbef66ed0f9bafbe397e06a13e5ff18c07021dcfa3d446da57c",
+    "backend": {
+      "Version": "29.2.1",
+      "ApiVersion": "1.53",
+      "Os": "linux",
+      "Arch": "amd64"
+    },
+    "started_at": "2026-09-20T09:13:03.449097437Z",
+    "finished_at": "2026-09-20T09:13:04.071445284Z",
+    "failure_code": null,
+    "cleanup_failures": [],
+    "output_blob": {
+      "sha256": "a04997021bc9183ecd3c84b4921b205fb76db4b50d77a17b754b5d74ea3afe81",
+      "size_bytes": 10387,
+      "address": "sha256/a04997021bc9183ecd3c84b4921b205fb76db4b50d77a17b754b5d74ea3afe81",
+      "protocol_version": 1
+    },
+    "digest": "72a446c37475ec43c14a1503c29fb79a474b1e3ccef556278960b5843921191c"
+  }
+}

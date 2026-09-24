@@ -1,0 +1,17 @@
+{
+  "at_utc": "2026-09-21T21:55:45.713461+00:00",
+  "trigger": "AO native baseline and candidate both recorded protocol / provider-tool-arguments-json-value-expected with unknown billed usage",
+  "new_paid_dispatch": "stopped",
+  "in_flight_context": "aec1b allowed to converge under its already frozen budgets; only run_context launcher PID46128 was stopped after identity check, not child evaluator PID43620",
+  "retained_unknown_reserves_cny": {
+    "earlier_cancelled_trials": 26,
+    "ao_analysis_cancelled": 1,
+    "ao_native_baseline": 14,
+    "ao_native_candidate": 14
+  },
+  "known_before_context_candidate_cny": 4.680558,
+  "remaining_unrun": "context pairs 2/3; nine internal validation pairs; valid bounded-optimization comparison",
+  "original_reports_preserved": true,
+  "no_retry_or_protocol_change": true,
+  "diagnostic_limit": "Raw malformed response deliberately not retained by provider; fixed parser error category is evidence, exact generated argument body is unknown."
+}

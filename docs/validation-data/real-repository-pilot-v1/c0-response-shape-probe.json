@@ -1,0 +1,114 @@
+{
+  "adapter_read": {
+    "completion_category": "length",
+    "content_blank": true,
+    "content_chars": 0,
+    "input_tokens": 82,
+    "output_tokens": 64,
+    "provider_finish_reason": "length",
+    "tool_calls": 0,
+    "usage_quality": "exact"
+  },
+  "binding": {
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "deviation_disclosed": "The pilot allowed 8192 output tokens; this probe allows 64 to make a truncated ending cheap to observe. Frequency of truncation under the pilot's own ceiling is therefore NOT measured here.",
+    "model": "deepseek-v4.1-flash",
+    "pilot_max_tokens": 8192,
+    "requested_max_tokens": 64,
+    "stream": false
+  },
+  "interpretation_limits": [
+    "One call describes this call. It does not establish what the v10 response contained, and key names alone never would.",
+    "A reasoning channel being present does not mean the pilot lost its answer there; a reasoning channel being absent does not mean the pilot's empty answer had another cause that this probe identified."
+  ],
+  "kind": "provider-response-shape-probe",
+  "purpose": "C0-2: does this model return a reasoning channel the adapter drops",
+  "recorded_at": "2026-09-20T17:57:01.581073+00:00",
+  "wire_shape": {
+    "choice_keys": [
+      "finish_reason",
+      "index",
+      "message"
+    ],
+    "finish_reason_present": true,
+    "finish_reason_raw": "length",
+    "message_fields": {
+      "content": {
+        "blank": true,
+        "chars": 0,
+        "type": "string"
+      },
+      "reasoning_content": {
+        "blank": false,
+        "chars": 241,
+        "type": "string"
+      },
+      "role": {
+        "blank": false,
+        "chars": 9,
+        "type": "string"
+      }
+    },
+    "message_keys": [
+      "content",
+      "reasoning_content",
+      "role"
+    ],
+    "tool_call_count": 0,
+    "top_level_keys": [
+      "choices",
+      "created",
+      "id",
+      "model",
+      "object",
+      "usage"
+    ],
+    "usage_keys": [
+      "completion_tokens",
+      "completion_tokens_details",
+      "prompt_tokens",
+      "prompt_tokens_details",
+      "total_tokens"
+    ],
+    "usage_shape": {
+      "completion_tokens": {
+        "type": "number",
+        "value": 64
+      },
+      "completion_tokens_details": {
+        "fields": {
+          "reasoning_tokens": {
+            "type": "number",
+            "value": 64
+          },
+          "text_tokens": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        "type": "object"
+      },
+      "prompt_tokens": {
+        "type": "number",
+        "value": 82
+      },
+      "prompt_tokens_details": {
+        "fields": {
+          "cached_tokens": {
+            "type": "number",
+            "value": 0
+          },
+          "text_tokens": {
+            "type": "number",
+            "value": 82
+          }
+        },
+        "type": "object"
+      },
+      "total_tokens": {
+        "type": "number",
+        "value": 146
+      }
+    }
+  }
+}

@@ -41,8 +41,8 @@ def test_manifest_and_entry_point_use_one_identity() -> None:
         PLUGIN_ID: "traceh_plugin_creator_skill:PluginCreatorSkillPlugin"
     }
     assert project["project"]["version"] == PLUGIN_VERSION == "0.2.2"
-    assert project["project"]["dependencies"] == ["traceharness-py>=0.6,<0.9"]
-    assert PluginCreatorSkillPlugin.manifest.requires_traceh == ">=0.6,<0.9"
+    assert project["project"]["dependencies"] == ["traceharness-py>=0.6,<0.12"]
+    assert PluginCreatorSkillPlugin.manifest.requires_traceh == ">=0.6,<0.12"
 
 
 @pytest.mark.parametrize(

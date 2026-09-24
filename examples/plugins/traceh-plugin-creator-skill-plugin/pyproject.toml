@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "TraceHarness contributors" }]
 dependencies = [
-  "traceharness-py>=0.6,<0.9",
+  "traceharness-py>=0.6,<0.12",
 ]
 
 [project.entry-points."traceh.plugins"]

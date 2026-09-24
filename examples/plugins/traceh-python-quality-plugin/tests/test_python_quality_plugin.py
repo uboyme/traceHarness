@@ -23,14 +23,14 @@ def write_pyproject(workspace: Path, body: str) -> None:
     (workspace / "pyproject.toml").write_text(body, encoding="utf-8")
 
 
-def test_distribution_and_manifest_use_one_v08_compatible_identity() -> None:
+def test_distribution_and_manifest_use_one_current_compatible_identity() -> None:
     root = Path(__file__).resolve().parents[1]
     project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert project["project"]["version"] == PLUGIN_VERSION == "0.2.2"
-    assert project["project"]["dependencies"] == ["traceharness-py>=0.5,<0.9"]
+    assert project["project"]["dependencies"] == ["traceharness-py>=0.5,<0.12"]
     assert PythonQualityPlugin.manifest.version == PLUGIN_VERSION
-    assert PythonQualityPlugin.manifest.requires_traceh == ">=0.5,<0.9"
+    assert PythonQualityPlugin.manifest.requires_traceh == ">=0.5,<0.12"
 
 
 def test_explicit_project_command_is_resolved_without_echoing_it(tmp_path: Path) -> None:

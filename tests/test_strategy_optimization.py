@@ -168,3 +168,66 @@ async def test_strategy_cancel_converges_actual_analysis_without_starting_trials
     assert result["stop"]["errors"] == ["CancelledError"]
     assert result["evaluation"] is None
     assert not (tmp_path / "strategy/experiment").exists()
+
+
+async def suggest(root, *, text=None, mutate=None, seen=()):
+    from traceh.evolution.strategy import propose_strategy
+
+    runner, contract, observations, response = setup(root)
+    if mutate:
+        mutate(response)
+    return await propose_strategy(
+        runner,
+        contract,
+        observations=observations,
+        provider=responder(json.dumps(response) if text is None else text),
+        analysis_config=config(),
+        output_dir=root / "suggestion",
+        seen_candidate_digests=seen,
+    )
+
+
+async def test_a_suggestion_is_one_analysis_and_a_ready_patch_with_no_trials(tmp_path):
+    from traceh.evaluation.variants import apply_candidate, source_files
+
+    result = await suggest(tmp_path)
+    root = tmp_path / "suggestion"
+    assert (result["mode"], result["action"], result["reason"]) == (
+        "proposal-only",
+        "review_candidate",
+        "suggestion-ready",
+    )
+    assert result["cost"]["analysis"]["attempts"] == 1 and result["evaluation"] is None
+    assert not (root / "experiment").exists() and result["adoption_authorized"] is False
+    # The file is the exact AO patch a text_candidate run plan references as its source.
+    patch = json.loads((root / "candidate.json").read_text(encoding="utf-8"))
+    apply_candidate(source_files()[1], patch)
+    assert inspect_strategy_optimization(root) == result
+
+
+async def test_a_suggestion_cannot_be_swapped_after_the_model_answered(tmp_path):
+    await suggest(tmp_path)
+    path = tmp_path / "suggestion/candidate.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["edits"][0]["new_text"] = "A text the model never proposed."
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(OptimizationContractError, match="optimization-candidate-drift"):
+        inspect_strategy_optimization(tmp_path / "suggestion")
+
+
+async def test_no_candidate_and_invalid_answers_leave_no_patch(tmp_path):
+    none = await suggest(
+        tmp_path / "none", text='{"kind":"no_candidate","reason":"No supported change."}'
+    )
+    assert (none["action"], none["reason"], none["candidate"]) == ("stop", "no-candidate", None)
+    bad = await suggest(tmp_path / "bad", mutate=lambda p: p.update(expected_tradeoffs=["x"]))
+    assert bad["stop"]["errors"] == ["optimization-proposal-invalid"]
+    for name in ("none", "bad"):
+        assert not (tmp_path / name / "suggestion/candidate.json").exists()
+
+
+async def test_a_suggestion_already_seen_is_refused_as_a_duplicate(tmp_path):
+    first = await suggest(tmp_path / "first")
+    again = await suggest(tmp_path / "again", seen=(first["candidate"]["digest"],))
+    assert again["stop"]["errors"] == ["optimization-duplicate-candidate"]
+    assert again["candidate"] is None

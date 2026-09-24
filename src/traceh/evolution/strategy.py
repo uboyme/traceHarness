@@ -222,19 +222,10 @@ async def _propose(analysis, root):
     return result
 
 
-async def run_strategy_optimization(
-    template,
-    contract,
-    *,
-    observations,
-    provider,
-    analysis_config,
-    output_dir,
-    judge_provider=None,
-    judge_config=None,
-    seen_candidate_digests=(),
+def _freeze_strategy(
+    template, contract, *, observations, analysis_config, judge_config, output_dir, mode, seen
 ):
-    """Freeze one proposal experiment. Never adopt, resume or generate another candidate."""
+    """Admit the frozen request and write its definition; nothing has run yet."""
     _inputs(template)
     files = source_files()[1]
     controls = _controls(template)
@@ -249,14 +240,11 @@ async def run_strategy_optimization(
         "optimization-control-drift",
     )
     _require(
-        len(template.trials) <= contract.limits.max_trials
+        (mode == "proposal-only" or len(template.trials) <= contract.limits.max_trials)
         and analysis_config.token_limit <= contract.limits.max_analysis_tokens
         and contract.limits.max_analysis_calls >= 1
         and datetime.now(UTC) < contract.deadline_utc,
         "optimization-analysis-budget-insufficient",
-    )
-    _require(
-        (judge_config is None) == (judge_provider is None), "optimization-review-config-invalid"
     )
     root = Path(output_dir).resolve()  # noqa: ASYNC240 - synchronous admission before first await
     _require(
@@ -276,11 +264,16 @@ async def run_strategy_optimization(
             "reserved_judge_tokens": 0
             if judge_config is None
             else len(template.trials) * judge_config.token_limit,
-            "mode": "one-proposal",
+            "mode": mode,
             "adoption_authorized": False,
-            "seen_candidate_digests": list(seen_candidate_digests),
+            "seen_candidate_digests": list(seen),
         },
     )
+    return root, request, files
+
+
+async def _proposal(contract, request, files, *, provider, analysis_config, root, seen):
+    """One analysis through the original plugin Lease, then the original AO-0 admission."""
     analysis = HostAnalysis(
         contract,
         request,
@@ -290,16 +283,105 @@ async def run_strategy_optimization(
         root / "analysis",
         fingerprint(read_input(root, "strategy.json").data),
     )
+    proposal = await _propose(analysis, root)
+    admitted = admit_proposal(contract, request, proposal, files, seen_candidate_digests=seen)
+    write_json(root / "proposal.json", to_json_value(proposal))
+    if isinstance(admitted, NoCandidate):
+        write_json(root / "stop.json", {"reason": "no-candidate", "errors": []})
+    return proposal, admitted
+
+
+def _record_failure(root, error, reason):
     try:
-        proposal = await _propose(analysis, root)
-        admitted = admit_proposal(
-            contract, request, proposal, files,
-            seen_candidate_digests=seen_candidate_digests,
+        write_json(root / "stop.json", {"reason": reason, "errors": error_codes(error)})
+    except BaseException as publication:
+        raise combine_failures(error, publication, "strategy and publication failed") from None
+    if not isinstance(error, Exception) or isinstance(error, BaseExceptionGroup):
+        raise error
+
+
+async def propose_strategy(
+    template,
+    contract,
+    *,
+    observations,
+    provider,
+    analysis_config,
+    output_dir,
+    seen_candidate_digests=(),
+):
+    """Freeze one request and obtain one admitted suggestion. Never evaluate or adopt.
+
+    A legal candidate is written as ``candidate.json`` in the exact AO patch form, so
+    a user who chooses to verify it references that file as the candidate ``source``
+    of an ordinary ``text_candidate`` run plan and runs ``traceh eval``.
+    """
+    root, request, files = _freeze_strategy(
+        template,
+        contract,
+        observations=observations,
+        analysis_config=analysis_config,
+        judge_config=None,
+        output_dir=output_dir,
+        mode="proposal-only",
+        seen=seen_candidate_digests,
+    )
+    try:
+        _, admitted = await _proposal(
+            contract,
+            request,
+            files,
+            provider=provider,
+            analysis_config=analysis_config,
+            root=root,
+            seen=seen_candidate_digests,
         )
-        write_json(root / "proposal.json", to_json_value(proposal))
-        if isinstance(admitted, NoCandidate):
-            write_json(root / "stop.json", {"reason": "no-candidate", "errors": []})
-        else:
+        if not isinstance(admitted, NoCandidate):
+            write_json(root / "candidate.json", json.loads(admitted.patch_json))
+    except BaseException as error:
+        _record_failure(root, error, "strategy-proposal-failed")
+    result = inspect_strategy_optimization(root)
+    write_json(root / "report.json", result)
+    return result
+
+
+async def run_strategy_optimization(
+    template,
+    contract,
+    *,
+    observations,
+    provider,
+    analysis_config,
+    output_dir,
+    judge_provider=None,
+    judge_config=None,
+    seen_candidate_digests=(),
+):
+    """Freeze one proposal experiment. Never adopt, resume or generate another candidate."""
+    _require(
+        (judge_config is None) == (judge_provider is None), "optimization-review-config-invalid"
+    )
+    root, request, files = _freeze_strategy(
+        template,
+        contract,
+        observations=observations,
+        analysis_config=analysis_config,
+        judge_config=judge_config,
+        output_dir=output_dir,
+        mode="one-proposal",
+        seen=seen_candidate_digests,
+    )
+    try:
+        proposal, admitted = await _proposal(
+            contract,
+            request,
+            files,
+            provider=provider,
+            analysis_config=analysis_config,
+            root=root,
+            seen=seen_candidate_digests,
+        )
+        if not isinstance(admitted, NoCandidate):
             draft = ManualCandidate(
                 proposal.rationale,
                 proposal.targeted_failure_classes,
@@ -324,15 +406,7 @@ async def run_strategy_optimization(
                         deadline=contract.deadline_utc,
                     )
     except BaseException as error:
-        try:
-            write_json(
-                root / "stop.json",
-                {"reason": "strategy-experiment-failed", "errors": error_codes(error)},
-            )
-        except BaseException as publication:
-            raise combine_failures(error, publication, "strategy and publication failed") from None
-        if not isinstance(error, Exception) or isinstance(error, BaseExceptionGroup):
-            raise
+        _record_failure(root, error, "strategy-experiment-failed")
     result = inspect_strategy_optimization(root)
     write_json(root / "report.json", result)
     return result
@@ -367,25 +441,83 @@ async def _review_pair(native, output, *, provider, config, deadline):
     )
 
 
+def _verified_proposal(definition, receipt):
+    """The model response, not a later edited proposal file, owns the generated change."""
+    from traceh.api.optimization import EditableText, OptimizationRequest, observation_from_dict
+
+    raw = definition["request"]
+    request = OptimizationRequest(
+        raw["contract_digest"],
+        raw["base_source_digest"],
+        raw["development_dataset_digest"],
+        raw["round_number"],
+        raw["analysis_max_tokens"],
+        tuple(observation_from_dict(o) for o in raw["observations"]),
+        tuple(EditableText(**e) for e in raw["editable_text"]),
+        (),
+    )
+    return to_json_value(parse_proposal(request, receipt["observation"]["text"]))
+
+
+def _require_complete_analysis(receipt):
+    _require(
+        receipt["converged"]
+        and not receipt["errors"]
+        and receipt["observation"]["completed"]
+        and receipt["observation"]["budget_usage_exact"],
+        "optimization-analysis-incomplete",
+    )
+
+
+def _suggested_candidate(root, definition, receipt):
+    """Rebuild the admitted patch from the verified proposal; no current source needed."""
+    if not (root / "proposal.json").exists():
+        _require(not (root / "candidate.json").exists(), "optimization-proposal-drift")
+        return None
+    _require_complete_analysis(receipt)
+    proposal = read_input(root, "proposal.json").data
+    _require(_verified_proposal(definition, receipt) == proposal, "optimization-proposal-drift")
+    if not (root / "candidate.json").exists():
+        return None
+    _require(proposal.get("edits"), "optimization-proposal-drift")
+    patch = {
+        "format": 1,
+        "base_source_digest": definition["contract"]["base_source_digest"],
+        "edits": sorted(proposal["edits"], key=lambda edit: (edit["file"], edit["selector"])),
+    }
+    _require(read_input(root, "candidate.json").data == patch, "optimization-candidate-drift")
+    _require(
+        fingerprint(patch) not in definition["seen_candidate_digests"],
+        "optimization-duplicate-candidate",
+    )
+    return {"digest": fingerprint(patch), "file": "candidate.json"}
+
+
 def inspect_strategy_optimization(root):
     """Reopen the real analysis and original comparison, never trust cached reports."""
     root = Path(root).resolve()
     definition = read_input(root, "strategy.json").data
+    mode = definition["mode"]
     _require(
-        definition["format"] == 1 and definition["mode"] == "one-proposal",
+        definition["format"] == 1 and mode in {"one-proposal", "proposal-only"},
         "optimization-strategy-format-invalid",
     )
     stop = read_input(root, "stop.json").data if (root / "stop.json").exists() else None
     if not (root / "analysis/result.json").exists():
-        _require(not (root / "experiment").exists(), "optimization-analysis-evidence-missing")
+        _require(
+            not (root / "experiment").exists() and not (root / "proposal.json").exists(),
+            "optimization-analysis-evidence-missing",
+        )
         return {
             "format": 1,
             "experiment_id": definition["contract"]["experiment_id"],
+            "mode": mode,
             "action": "stop",
             "reason": "analysis-evidence-missing",
             "adoption_authorized": False,
             "analysis_evidence": None,
             "cost": {"analysis": None, "review_calls": 0, "review_tokens": 0},
+            "candidate": None,
             "evaluation": None,
             "stop": stop,
         }
@@ -403,15 +535,13 @@ def inspect_strategy_optimization(root):
         "optimization-analysis-binding-invalid",
     )
     analysis_cost = receipt["observation"]["usage"]
+    candidate = None
     experiment = None
-    if (root / "experiment/optimization.json").exists():
-        _require(
-            receipt["converged"]
-            and not receipt["errors"]
-            and receipt["observation"]["completed"]
-            and receipt["observation"]["budget_usage_exact"],
-            "optimization-analysis-incomplete",
-        )
+    if mode == "proposal-only":
+        _require(not (root / "experiment").exists(), "optimization-strategy-format-invalid")
+        candidate = _suggested_candidate(root, definition, receipt)
+    elif (root / "experiment/optimization.json").exists():
+        _require_complete_analysis(receipt)
         manual = read_input(root / "experiment", "optimization.json").data
         _require(manual["contract"] == definition["contract"], "optimization-contract-drift")
         proposal = read_input(root, "proposal.json").data
@@ -430,31 +560,7 @@ def inspect_strategy_optimization(root):
             ],
             "optimization-proposal-drift",
         )
-        # The model response, not a later edited proposal file, owns the generated change.
-        from traceh.api.optimization import (
-            EditableText,
-            OptimizationRequest,
-            observation_from_dict,
-        )
-
-        raw = definition["request"]
-        request = OptimizationRequest(
-            raw["contract_digest"],
-            raw["base_source_digest"],
-            raw["development_dataset_digest"],
-            raw["round_number"],
-            raw["analysis_max_tokens"],
-            tuple(
-                observation_from_dict(o)
-                for o in raw["observations"]
-            ),
-            tuple(EditableText(**e) for e in raw["editable_text"]),
-            (),
-        )
-        _require(
-            to_json_value(parse_proposal(request, receipt["observation"]["text"])) == proposal,
-            "optimization-proposal-drift",
-        )
+        _require(_verified_proposal(definition, receipt) == proposal, "optimization-proposal-drift")
         manifest = root / "review/assessments.json"
         experiment = inspect_optimization(
             root / "experiment", assessments={1: manifest} if manifest.exists() else None
@@ -474,13 +580,21 @@ def inspect_strategy_optimization(root):
         "optimization-review-budget-exceeded",
     )
     total_review = sum(review_costs) if all(t is not None for t in review_costs) else None
+    if stop:
+        action, reason = "stop", stop["reason"]
+    elif mode == "proposal-only":
+        action, reason = (
+            ("review_candidate", "suggestion-ready") if candidate else ("stop", "no-candidate")
+        )
+    else:
+        action = experiment["action"] if experiment else "stop"
+        reason = experiment["reason"] if experiment else "no-candidate"
     return {
         "format": 1,
         "experiment_id": definition["contract"]["experiment_id"],
-        "action": "stop" if stop else (experiment["action"] if experiment else "stop"),
-        "reason": stop["reason"]
-        if stop
-        else (experiment["reason"] if experiment else "no-candidate"),
+        "mode": mode,
+        "action": action,
+        "reason": reason,
         "adoption_authorized": False,
         "analysis_evidence": digest,
         "cost": {
@@ -488,6 +602,7 @@ def inspect_strategy_optimization(root):
             "review_calls": len(review_costs),
             "review_tokens": total_review,
         },
+        "candidate": candidate,
         "evaluation": experiment,
         "stop": stop,
     }

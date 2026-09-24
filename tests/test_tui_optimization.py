@@ -118,6 +118,7 @@ async def test_two_real_chat_turns_with_failed_tools_produce_a_suggestion_after_
         await runtime.dispose()
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("product", [False, True])
 async def test_user_case_selection_generates_valid_original_paired_plan_without_calls(
     tmp_path, product

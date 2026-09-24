@@ -134,6 +134,7 @@ def runner(tmp_path, case_id, provider=None, sandbox=None):
     )
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize(
     "case_id",
     ["h-direct", "h-late-page", "s-direct", "s-resource", "m-direct", "m-superseded", "m-revoked"],
@@ -175,6 +176,7 @@ async def test_output_uses_real_sandbox_once(tmp_path, case_id):
         assert any(c["name"] == "read_tool_output" for c in packet["calls"])
 
 
+@pytest.mark.frozen_unicode
 async def test_guessing_value_without_reading_is_pending_and_cannot_be_approved(tmp_path):
     case = selected("s-direct")
     report = await runner(tmp_path, "s-direct", NavigatingProvider(case, guess=True)).run()
@@ -195,6 +197,7 @@ async def test_guessing_value_without_reading_is_pending_and_cannot_be_approved(
     assert not (tmp_path / "assessment").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_offline_review_binding_pending_and_immutable_original(tmp_path):
     report = await runner(tmp_path, "m-direct").run()
     original = (tmp_path / "run/report.json").read_bytes()
@@ -222,6 +225,7 @@ async def test_offline_review_binding_pending_and_immutable_original(tmp_path):
         assess_run(tmp_path / "run", path, tmp_path / "stale")
 
 
+@pytest.mark.frozen_unicode
 async def test_missing_sandbox_is_measured_setup_failure(tmp_path):
     report = await runner(tmp_path, "o-direct").run()
     packet = report.task_report.to_dict()["episodes"][0]
@@ -231,6 +235,7 @@ async def test_missing_sandbox_is_measured_setup_failure(tmp_path):
     assert packet["output_executions"] == 0
 
 
+@pytest.mark.frozen_unicode
 async def test_repeated_cancel_waits_for_provider_and_store(tmp_path):
     entered, closing, release = asyncio.Event(), asyncio.Event(), asyncio.Event()
 
@@ -266,6 +271,7 @@ async def test_repeated_cancel_waits_for_provider_and_store(tmp_path):
     assert diagnostics["rows"][0]["assessment"]["status"] == "unassessable"
 
 
+@pytest.mark.frozen_unicode
 def test_materials_and_selection_are_frozen_and_distinct():
     manifest = load_benchmark_manifest(BENCHMARK)
     suite = load_episode_suite(manifest)

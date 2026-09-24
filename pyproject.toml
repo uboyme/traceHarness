@@ -59,6 +59,7 @@ testpaths = ["tests"]
 addopts = "-q"
 markers = [
   "slow: builds wheels and a clean virtual environment; deselect with -m 'not slow'",
+  "frozen_unicode: runs the retrieval-episode benchmark, which freezes the Unicode database version; skipped on an interpreter with another version",
 ]
 
 [tool.ruff]

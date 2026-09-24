@@ -109,7 +109,7 @@ TUI 已同步当前多子能力：multi 文案说明主 Agent 可自主使用一
 | Python 包 | `traceh` |
 | 当前版本 | `v0.11.0` Educational alpha，发布至现有 GitHub 仓库 Releases；本轮限定验证见第 15 节；唯一版本事实源是 [`src/traceh/version.py`](../../src/traceh/version.py) 的 `__version__`。`pyproject.toml` 用 `[tool.setuptools.dynamic]` 读取同一属性，因此 Wheel metadata、被导入的包版本与源码 ZIP 文件名由同一值派生 |
 | 成熟度 | Educational alpha；可运行、可测试，公共 API 尚未承诺生产稳定性 |
-| Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12 |
+| Python | `>=3.12`；CI 覆盖 Ubuntu 3.12/3.13 与 Windows 3.12。`retrieval_episodes_v1` 冻结 Unicode 15.0.0，检索策略按设计拒绝其他 Unicode 数据库；依赖它的测试标记 `frozen_unicode`，在版本不同的解释器（如 3.13 的 15.1.0）上由 `tests/conftest.py` 明确跳过，拒绝本身由 `test_retrieval_unicode_pin.py` 在所有解释器上覆盖 |
 | 运行时依赖 | 核心安装只有 `packaging>=24.0,<27`；v0.8-F4 新增可选 `tui` extra：`textual>=8.2.8,<9`。Line Chat、Eval 与核心 import 不依赖 Textual，未安装 extra 时 `traceh chat --tui` 在创建 Store/Session 前明确失败且不回退 Line |
 | 开发依赖 | pytest、pytest-asyncio、ruff |
 | 当前开发阶段 | v0.9 Skill/Memory/History、主动检索与分层压缩已经收口；v0.10 S0–S4（含 S3-A、不含 S3-B）沙箱、原执行回执与 TUI 环境选择完成限定验收。用户已授权 GitHub 发行，具体门禁见第 15 节；未运行本次发布级全量或 L2 |

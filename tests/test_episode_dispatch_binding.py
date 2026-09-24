@@ -11,6 +11,7 @@ from traceh.session.service import SessionService
 from traceh.session.sqlite import SqliteEventStore
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("corruption", ["failed-attempt", "foreign-snapshot", "not-dispatched"])
 async def test_disclosure_requires_successful_owned_dispatch(tmp_path, corruption):
     report = await runner(tmp_path, "m-direct").run()

@@ -95,6 +95,7 @@ def test_background_settings_are_the_current_format(tmp_path):
     assert loaded.document.data["selectors"] == [["product/execution.py", "CODER_GUIDANCE"]]
 
 
+@pytest.mark.frozen_unicode
 def test_the_batch_runner_records_each_plan_and_refuses_edited_plans(tmp_path, monkeypatch):
     import hashlib
 

@@ -105,6 +105,7 @@ def model_server(loop, *, blocked=False, regression=False, disconnect=False):
         thread.join()
 
 
+@pytest.mark.frozen_unicode
 async def test_deliberately_regressed_candidate_uses_real_requests_and_original_memory(
     tmp_path, monkeypatch
 ):
@@ -126,6 +127,7 @@ async def test_deliberately_regressed_candidate_uses_real_requests_and_original_
     assert result["changes"]["loss"] == 1 and result["cost_delta"]["total_tokens"] > 0
 
 
+@pytest.mark.frozen_unicode
 async def test_repeated_cancel_waits_for_child_runtime_and_preserves_unstarted_arm(
     tmp_path, monkeypatch
 ):
@@ -161,6 +163,7 @@ async def test_repeated_cancel_waits_for_child_runtime_and_preserves_unstarted_a
     assert report["pairs"][0]["execution"][0]["status"] == "cancelled"
 
 
+@pytest.mark.frozen_unicode
 async def test_connection_failure_stops_the_pair_before_the_other_arm_spends(tmp_path, monkeypatch):
     monkeypatch.setenv("UNUSED_EVALUATION_KEY", "local-fixture-not-a-real-key")
     with model_server(asyncio.get_running_loop(), disconnect=True) as (model, _, _, requests):
@@ -177,6 +180,7 @@ async def test_connection_failure_stops_the_pair_before_the_other_arm_spends(tmp
     assert first["trials"][0]["usage"]["all"]["unknown_attempts"] > 0
 
 
+@pytest.mark.frozen_unicode
 async def test_a_settled_first_arm_still_lets_the_second_arm_run(tmp_path, monkeypatch):
     monkeypatch.setenv("UNUSED_EVALUATION_KEY", "local-fixture-not-a-real-key")
     with model_server(asyncio.get_running_loop()) as (model, _, _, requests):
@@ -186,6 +190,7 @@ async def test_a_settled_first_arm_still_lets_the_second_arm_run(tmp_path, monke
     assert (root / "arms/02/run/report.json").is_file() and len(requests) >= 2
 
 
+@pytest.mark.frozen_unicode
 async def test_forced_child_exit_is_unproven_and_does_not_start_the_other_arm(
     tmp_path, monkeypatch
 ):

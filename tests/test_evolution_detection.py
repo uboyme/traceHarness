@@ -57,6 +57,7 @@ async def truncated_evaluation(root, monkeypatch):
     return output / "arms/01/run"
 
 
+@pytest.mark.frozen_unicode
 async def test_evaluation_findings_cite_the_original_trial_streams(tmp_path, monkeypatch):
     run = await truncated_evaluation(tmp_path, monkeypatch)
     findings = evaluation_findings(run)
@@ -73,6 +74,7 @@ async def test_evaluation_findings_cite_the_original_trial_streams(tmp_path, mon
     assert "partial answer cut" not in repr(findings)
 
 
+@pytest.mark.frozen_unicode
 async def test_a_run_whose_evidence_was_altered_is_refused(tmp_path, monkeypatch):
     run = await truncated_evaluation(tmp_path, monkeypatch)
     report = json.loads((run / "report.json").read_text(encoding="utf-8"))
@@ -85,6 +87,7 @@ async def test_a_run_whose_evidence_was_altered_is_refused(tmp_path, monkeypatch
     assert refused.value.code == "evaluation-evidence-mismatch"
 
 
+@pytest.mark.frozen_unicode
 async def test_the_host_only_accepts_runs_of_its_own_benchmark(tmp_path, monkeypatch):
     run = await truncated_evaluation(tmp_path, monkeypatch)
     sessions = SessionService(InMemoryEventStore())

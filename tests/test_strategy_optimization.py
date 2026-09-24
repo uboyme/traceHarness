@@ -56,6 +56,7 @@ async def execute(root, *, text=None, with_judge=False, mutate=None):
     )
 
 
+@pytest.mark.frozen_unicode
 async def test_real_generation_lease_proposal_enters_original_workers(tmp_path):
     result = await execute(tmp_path, with_judge=True)
     assert result["stop"] is None, result
@@ -71,6 +72,7 @@ async def test_real_generation_lease_proposal_enters_original_workers(tmp_path):
     assert "expectation" not in json.loads(definition["input"])
 
 
+@pytest.mark.frozen_unicode
 async def test_no_candidate_stops_without_trials(tmp_path):
     result = await execute(tmp_path, text='{"kind":"no_candidate","reason":"No supported change."}')
     assert result["reason"] == "no-candidate" and result["evaluation"] is None
@@ -78,6 +80,7 @@ async def test_no_candidate_stops_without_trials(tmp_path):
     assert not (tmp_path / "strategy/experiment").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_outside_scope_edit_is_rejected_without_trials(tmp_path):
     result = await execute(
         tmp_path, mutate=lambda p: p["edits"][0].update(file="evaluation/review.py")
@@ -87,6 +90,7 @@ async def test_outside_scope_edit_is_rejected_without_trials(tmp_path):
     assert not (tmp_path / "strategy/experiment").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_real_observed_array_tradeoff_is_rejected_without_coercion(tmp_path):
     result = await execute(tmp_path, mutate=lambda p: p.update(expected_tradeoffs=["more tokens"]))
     assert result["stop"]["errors"] == ["optimization-proposal-invalid"]
@@ -94,6 +98,7 @@ async def test_real_observed_array_tradeoff_is_rejected_without_coercion(tmp_pat
     assert result["cost"]["analysis"]["attempts"] == 1
 
 
+@pytest.mark.frozen_unicode
 async def test_whole_trial_budget_is_reserved_before_analysis(tmp_path):
     runner, contract, observations, _ = setup(tmp_path)
     contract = replace(contract, limits=replace(contract.limits, max_trials=1))
@@ -110,6 +115,7 @@ async def test_whole_trial_budget_is_reserved_before_analysis(tmp_path):
     assert not provider.requests and not (tmp_path / "strategy").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_generated_candidate_cannot_be_replaced_by_edited_receipt(tmp_path):
     result = await execute(tmp_path)
     assert result["evaluation"] is not None
@@ -121,6 +127,7 @@ async def test_generated_candidate_cannot_be_replaced_by_edited_receipt(tmp_path
         inspect_strategy_optimization(tmp_path / "strategy")
 
 
+@pytest.mark.frozen_unicode
 async def test_unknown_judge_usage_stops_before_other_arm(tmp_path):
     runner, contract, observations, response = setup(tmp_path)
     judge = responder(usage=Usage(0, 0, UsageQuality.UNKNOWN))
@@ -142,6 +149,7 @@ async def test_unknown_judge_usage_stops_before_other_arm(tmp_path):
     assert not (tmp_path / "strategy/review/02").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_strategy_cancel_converges_actual_analysis_without_starting_trials(tmp_path):
     runner, contract, observations, _ = setup(tmp_path)
     provider = GatedProvider()
@@ -187,6 +195,7 @@ async def suggest(root, *, text=None, mutate=None, seen=()):
     )
 
 
+@pytest.mark.frozen_unicode
 async def test_a_suggestion_is_one_analysis_and_a_ready_patch_with_no_trials(tmp_path):
     from traceh.evaluation.variants import apply_candidate, source_files
 
@@ -205,6 +214,7 @@ async def test_a_suggestion_is_one_analysis_and_a_ready_patch_with_no_trials(tmp
     assert inspect_strategy_optimization(root) == result
 
 
+@pytest.mark.frozen_unicode
 async def test_a_suggestion_cannot_be_swapped_after_the_model_answered(tmp_path):
     await suggest(tmp_path)
     path = tmp_path / "suggestion/candidate.json"
@@ -215,6 +225,7 @@ async def test_a_suggestion_cannot_be_swapped_after_the_model_answered(tmp_path)
         inspect_strategy_optimization(tmp_path / "suggestion")
 
 
+@pytest.mark.frozen_unicode
 async def test_no_candidate_and_invalid_answers_leave_no_patch(tmp_path):
     none = await suggest(
         tmp_path / "none", text='{"kind":"no_candidate","reason":"No supported change."}'
@@ -226,6 +237,7 @@ async def test_no_candidate_and_invalid_answers_leave_no_patch(tmp_path):
         assert not (tmp_path / name / "suggestion/candidate.json").exists()
 
 
+@pytest.mark.frozen_unicode
 async def test_a_suggestion_already_seen_is_refused_as_a_duplicate(tmp_path):
     first = await suggest(tmp_path / "first")
     again = await suggest(tmp_path / "again", seen=(first["candidate"]["digest"],))

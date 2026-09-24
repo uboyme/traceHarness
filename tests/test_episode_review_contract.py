@@ -15,6 +15,7 @@ from traceh.evaluation.manifest import load_benchmark_manifest
 from traceh.evaluation.review import export_review
 
 
+@pytest.mark.frozen_unicode
 async def test_retrieval_plan_runs_through_cli_and_assess_remains_offline(tmp_path, capsys):
     plan = json.loads((BENCHMARK / "run-plan.example.json").read_text(encoding="utf-8"))
     plan["model"].update(
@@ -81,6 +82,7 @@ def test_review_rejects_execution_configuration_before_loading_anything(flag, va
         _configure_from_environment(args)
 
 
+@pytest.mark.frozen_unicode
 async def test_review_cli_is_offline_even_with_model_environment(tmp_path, monkeypatch, capsys):
     await runner(tmp_path, "m-direct").run()
     import traceh.cli.main as cli
@@ -98,6 +100,7 @@ async def test_review_cli_is_offline_even_with_model_environment(tmp_path, monke
     assert json.loads(capsys.readouterr().out)["entries"] == 1
 
 
+@pytest.mark.frozen_unicode
 async def test_changed_durable_evidence_is_rejected_before_export(tmp_path):
     await runner(tmp_path, "m-direct").run()
     path = tmp_path / "run/attempts/001/events/events.sqlite3"

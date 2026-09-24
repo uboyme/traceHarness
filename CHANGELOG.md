@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- CI is green on Python 3.13 and in the packaging job.
+  - The shipped retrieval-episode benchmark freezes Unicode 15.0.0, and the
+    retrieval policy refuses any other Unicode database by design. Tests that
+    run that benchmark are now marked `frozen_unicode` and skipped with an
+    explicit reason where the interpreter differs.
+  - The refusal itself is tested on every interpreter.
+  - The Python Quality example plugin's verifier test now asserts the current
+    contract: the plugin resolves exactly the declared command, and without an
+    isolated sandbox it refuses instead of running on the host.
+
 - Single's coder guidance now asks the model to run checks with direct executable
   commands, without shell built-ins such as `cd` or inline environment assignments
   (ADR-0087). This is the first background suggestion adopted by a person after it

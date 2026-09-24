@@ -158,6 +158,7 @@ def judge_pair(root, statuses):
     return manifest
 
 
+@pytest.mark.frozen_unicode
 @pytest.mark.parametrize("patch", [False, True])
 async def test_public_cli_isolated_workers_load_exact_sources_and_keep_pending(tmp_path, patch):
     root, code = await run_pair(tmp_path, patch=patch)
@@ -283,6 +284,7 @@ def test_pure_comparison_keeps_denominator_and_distinguishes_cost_and_failure(ch
         assert result["thresholds"]["max_token_ratio"] is None
 
 
+@pytest.mark.frozen_unicode
 def test_two_variant_max_trials_counts_both_arms(tmp_path):
     plan = pair_plan(tmp_path, execution={"max_trials": 1})
     from traceh.evaluation.runner import EvaluationRunner

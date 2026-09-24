@@ -24,6 +24,7 @@ def test_binary_digest_keeps_document_limit_and_rejects_missing_or_outside(tmp_p
             inputs.artifact_digest(tmp_path, name)
 
 
+@pytest.mark.frozen_unicode
 async def test_public_comparison_binary_quota_and_tamper_rejection(tmp_path, monkeypatch):
     root, code = await run_pair(tmp_path)
     assert code == 0

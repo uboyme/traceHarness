@@ -79,6 +79,7 @@ async def test_native_sources_and_output_preparation(tmp_path, case_id):
         assert not row["calls"] and not row["evidence"]
 
 
+@pytest.mark.frozen_unicode
 async def test_failed_preparation_preserves_native_attempt_evidence(tmp_path):
     spec, settings = materials()
     seen = []
@@ -98,6 +99,7 @@ async def test_failed_preparation_preserves_native_attempt_evidence(tmp_path):
     assert not row["evidence"] and row["target_start_seq"] == 0
 
 
+@pytest.mark.frozen_unicode
 async def test_repeat_cancel_waits_for_original_runtime_then_closes_store(tmp_path):
     spec, settings = materials()
     entered, closing, release = asyncio.Event(), asyncio.Event(), asyncio.Event()

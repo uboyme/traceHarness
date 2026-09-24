@@ -473,6 +473,7 @@ def proposal_adapter(tmp_path, response, output):
     return adapter, contract, observations, provider
 
 
+@pytest.mark.frozen_unicode
 async def test_the_proposal_adapter_suggests_without_running_any_trial(tmp_path):
     from traceh.chat.background import background_proposal_text
     from traceh.evolution.background_proposal import inspect_background_proposal
@@ -495,6 +496,7 @@ async def test_the_proposal_adapter_suggests_without_running_any_trial(tmp_path)
         inspect_background_proposal(root)
 
 
+@pytest.mark.frozen_unicode
 async def test_two_clusters_run_two_original_analyses_with_distinct_inputs(tmp_path):
     from traceh.evaluation.model_evidence import load_model_call
 
